@@ -922,7 +922,7 @@ fn api_func_shape(
                 impl_kind = ImplKind::Trait {
                     record: record.clone(),
                     trait_name: TraitName::Other {
-                        name: Rc::from(format!("::std::ops::{trait_name}")),
+                        name: Rc::from(format!("::core::ops::{trait_name}")),
                         params: Rc::from(&param_types[1..]),
                         is_unsafe_fn: false,
                     },
@@ -967,7 +967,7 @@ fn api_func_shape(
                 impl_kind = ImplKind::Trait {
                     record: record.clone(),
                     trait_name: TraitName::Other {
-                        name: Rc::from(format!("::std::ops::{trait_name}")),
+                        name: Rc::from(format!("::core::ops::{trait_name}")),
                         params: Rc::from(&param_types[1..]),
                         is_unsafe_fn: false,
                     },
@@ -1347,7 +1347,7 @@ fn generate_func(
                 // reference fields). TODO(b/213243309): Double-check if
                 // zero-initialization is desirable here.
                 quote! {
-                    let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                    let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
                         #crate_root_path::detail::#thunk_ident( &mut tmp #( , #thunk_args )* );
                         tmp.assume_init()
@@ -1372,8 +1372,8 @@ fn generate_func(
                     };
                     let return_type_or_self = return_type.to_token_stream_replacing_by_self(record);
                     quote! {
-                        ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<#return_type_or_self>>| {
-                            #crate_root_path::detail::#thunk_ident(::std::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
+                        ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<#return_type_or_self>>| {
+                            #crate_root_path::detail::#thunk_ident(::core::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
                         })
                     }
                 };
@@ -1668,7 +1668,7 @@ fn function_signature(
             };
             api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#quoted_type_or_self>});
             thunk_args
-                .push(quote! {::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
+                .push(quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
         } else {
             let quoted_type_or_self = if let Some(impl_record) = impl_kind_record {
                 type_.to_token_stream_replacing_by_self(Some(impl_record))
@@ -1828,7 +1828,7 @@ fn generate_func_thunk(
         // For nontrivial return types, create a new out parameter.
         // The lifetime doesn't matter, so we can insert a new anonymous lifetime here.
         out_param = Some(quote! {
-            &mut ::std::mem::MaybeUninit< #return_type >
+            &mut ::core::mem::MaybeUninit< #return_type >
         });
         out_param_ident = Some(make_rs_ident("__return"));
         return_type_fragment = quote! {};
@@ -2024,7 +2024,7 @@ fn get_field_rs_type_for_layout(field: &Field) -> Result<&RsType, &str> {
 /// specified number of bits, rounded up to the next multiple of 8.
 fn bit_padding(padding_size_in_bits: usize) -> TokenStream {
     let padding_size = Literal::usize_unsuffixed((padding_size_in_bits + 7) / 8);
-    quote! { [::std::mem::MaybeUninit<u8>; #padding_size] }
+    quote! { [::core::mem::MaybeUninit<u8>; #padding_size] }
 }
 
 /// Generates Rust source code for a given `Record` and associated assertions as
@@ -2188,7 +2188,7 @@ fn generate_record(
                             // if we can ask Rust to preserve field destruction order if the
                             // destructor is the SpecialMemberFunc::NontrivialMembers
                             // case.
-                            formatted = quote! { ::std::mem::ManuallyDrop<#formatted> }
+                            formatted = quote! { ::core::mem::ManuallyDrop<#formatted> }
                         } else {
                             field_copy_trait_assertions.push(quote! {
                                 const _: () = {
@@ -2298,7 +2298,7 @@ fn generate_record(
     let head_padding = if head_padding > 0 || !allow_direct_init {
         let n = proc_macro2::Literal::usize_unsuffixed(head_padding);
         quote! {
-            __non_field_data: [::std::mem::MaybeUninit<u8>; #n],
+            __non_field_data: [::core::mem::MaybeUninit<u8>; #n],
         }
     } else {
         quote! {}
@@ -2389,8 +2389,8 @@ fn generate_record(
         assertions
     };
     let assertion_tokens = quote! {
-        const _: () = assert!(::std::mem::size_of::<#qualified_ident>() == #size);
-        const _: () = assert!(::std::mem::align_of::<#qualified_ident>() == #alignment);
+        const _: () = assert!(::core::mem::size_of::<#qualified_ident>() == #size);
+        const _: () = assert!(::core::mem::align_of::<#qualified_ident>() == #alignment);
         #( #record_trait_assertions )*
         #( #field_offset_assertions )*
         #( #field_copy_trait_assertions )*
@@ -2764,7 +2764,7 @@ fn generate_bindings_tokens(
     // assumption to make, but to provide some safeguard, assert that
     // `Option<&i32>` and `&i32` have the same size.
     assertions.push(quote! {
-        const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+        const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
     });
 
     let mut features = BTreeSet::new();
@@ -3055,7 +3055,7 @@ impl RsTypeKind {
         match self {
             RsTypeKind::Reference { referent, lifetime, mutability: Mutability::Mut } => {
                 let lifetime = lifetime.format_for_reference();
-                Ok(quote! { & #lifetime mut ::std::mem::MaybeUninit< #referent > })
+                Ok(quote! { & #lifetime mut ::core::mem::MaybeUninit< #referent > })
             }
             _ => bail!("Expected reference to format as MaybeUninit, got: {:?}", self),
         }
@@ -3096,9 +3096,9 @@ impl RsTypeKind {
         let mut_ = mutability.format_for_reference();
         let lifetime = lifetime.format_for_reference();
         if mutability == &Mutability::Mut && !referent.is_unpin() {
-            // TODO(b/239661934): Add a `use ::std::pin::Pin` to the crate, and use
+            // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
             // `Pin`.
-            Ok(quote! {self: ::std::pin::Pin< & #lifetime #mut_ Self>})
+            Ok(quote! {self: ::core::pin::Pin< & #lifetime #mut_ Self>})
         } else {
             Ok(quote! { & #lifetime #mut_ self })
         }
@@ -3210,11 +3210,11 @@ impl RsTypeKind {
                 let referent_ = referent.to_token_stream_replacing_by_self(self_record);
                 let reference = quote! {& #lifetime #mut_ #referent_};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    // TODO(b/239661934): Add a `use ::std::pin::Pin` to the crate, and use
+                    // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
                     // `Pin`. This either requires deciding how to qualify pin at
                     // RsTypeKind-creation time, or returning a non-TokenStream type from here (and
                     // not implementing ToTokens, but instead some other interface.)
-                    quote! {::std::pin::Pin< #reference >}
+                    quote! {::core::pin::Pin< #reference >}
                 } else {
                     reference
                 }
@@ -3271,11 +3271,11 @@ impl ToTokens for RsTypeKind {
                 let lifetime = lifetime.format_for_reference();
                 let reference = quote! {& #lifetime #mut_ #referent};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    // TODO(b/239661934): Add a `use ::std::pin::Pin` to the crate, and use
+                    // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
                     // `Pin`. This either requires deciding how to qualify pin at
                     // RsTypeKind-creation time, or returning a non-TokenStream type from here (and
                     // not implementing ToTokens, but instead some other interface.)
-                    quote! {::std::pin::Pin< #reference >}
+                    quote! {::core::pin::Pin< #reference >}
                 } else {
                     reference
                 }
@@ -3306,7 +3306,7 @@ impl ToTokens for RsTypeKind {
             }
             // This doesn't affect void in function return values, as those are special-cased to be
             // omitted.
-            RsTypeKind::Unit => quote! {::std::os::raw::c_void},
+            RsTypeKind::Unit => quote! {::core::ffi::c_void},
             RsTypeKind::Other { name, type_args } => {
                 let ident = make_rs_ident(name);
                 let generic_params =
@@ -4303,21 +4303,21 @@ mod tests {
                 #[::ctor::recursively_pinned(PinnedDrop)]
                 #[repr(C, align(4))]
                 pub struct SomeStruct {
-                    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+                    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
                     pub public_int: i32,
                     #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
-                    pub(crate) protected_int: [::std::mem::MaybeUninit<u8>; 4],
+                    pub(crate) protected_int: [::core::mem::MaybeUninit<u8>; 4],
                     #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
-                    pub(crate) private_int: [::std::mem::MaybeUninit<u8>; 4],
+                    pub(crate) private_int: [::core::mem::MaybeUninit<u8>; 4],
                 }
             }
         );
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
-                const _: () = assert!(::std::mem::size_of::<crate::SomeStruct>() == 12);
-                const _: () = assert!(::std::mem::align_of::<crate::SomeStruct>() == 4);
+                const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
+                const _: () = assert!(::core::mem::size_of::<crate::SomeStruct>() == 12);
+                const _: () = assert!(::core::mem::align_of::<crate::SomeStruct>() == 4);
                 const _: () = { static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy); };
                 const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Drop); };
                 const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, public_int) == 0);
@@ -4410,19 +4410,19 @@ mod tests {
         // In Rust, both have align == 16 and size == 16.
         assert_rs_matches!(
             rs_api,
-            quote! { assert!(::std::mem::size_of::<crate::SomeStruct>() == 16); }
+            quote! { assert!(::core::mem::size_of::<crate::SomeStruct>() == 16); }
         );
         assert_rs_matches!(
             rs_api,
-            quote! { assert!(::std::mem::align_of::<crate::SomeStruct>() == 16); }
+            quote! { assert!(::core::mem::align_of::<crate::SomeStruct>() == 16); }
         );
         assert_rs_matches!(
             rs_api,
-            quote! { assert!(::std::mem::size_of::<crate::SomeAnonStruct>() == 16); }
+            quote! { assert!(::core::mem::size_of::<crate::SomeAnonStruct>() == 16); }
         );
         assert_rs_matches!(
             rs_api,
-            quote! { assert!(::std::mem::align_of::<crate::SomeAnonStruct>() == 16); }
+            quote! { assert!(::core::mem::align_of::<crate::SomeAnonStruct>() == 16); }
         );
 
         Ok(())
@@ -4560,7 +4560,7 @@ mod tests {
                 #[repr(C, align(4))]
                 pub struct StructWithUnsupportedField {
                     #[doc = " Doc comment for `my_field`.\n \n Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnsupportedField::NestedStruct': No generated bindings found for 'NestedStruct'"]
-                    pub(crate) my_field: [::std::mem::MaybeUninit<u8>; 4],
+                    pub(crate) my_field: [::core::mem::MaybeUninit<u8>; 4],
                 }
                 ...
                 const _: () = assert!(
@@ -4590,7 +4590,7 @@ mod tests {
                #[repr(C)]
                pub struct SomeStruct {
                    pub first_field: i32, ...
-                   __bitfields1: [::std::mem::MaybeUninit<u8>; 4],
+                   __bitfields1: [::core::mem::MaybeUninit<u8>; 4],
                    pub last_field: i32,
                }
                ...
@@ -4795,9 +4795,9 @@ mod tests {
                pub struct StructWithUnnamedMembers {
                    pub first_field: i32,
                    #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:7:15)': No generated bindings found for ''"]
-                   pub(crate) __unnamed_field1: [::std::mem::MaybeUninit<u8>; 8],
+                   pub(crate) __unnamed_field1: [::core::mem::MaybeUninit<u8>; 8],
                    #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'union StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:11:15)': No generated bindings found for ''"]
-                   pub(crate) __unnamed_field2: [::std::mem::MaybeUninit<u8>; 4],
+                   pub(crate) __unnamed_field2: [::core::mem::MaybeUninit<u8>; 4],
                    pub last_field: i32,
                }
                ...
@@ -5263,7 +5263,7 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Derived {
-                    __non_field_data: [::std::mem::MaybeUninit<u8>; 10],
+                    __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
                     pub z: i16,
                 }
             }
@@ -5288,7 +5288,7 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Derived {
-                    __non_field_data: [::std::mem::MaybeUninit<u8>; 10],
+                    __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
                     pub z: i16,
                 }
             }
@@ -5313,7 +5313,7 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Derived {
-                    __non_field_data: [::std::mem::MaybeUninit<u8>; 10],
+                    __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
                     pub z: i16,
                 }
             }
@@ -5337,7 +5337,7 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Derived {
-                    __non_field_data: [::std::mem::MaybeUninit<u8>; 16],
+                    __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
                 }
             }
         );
@@ -5358,7 +5358,7 @@ mod tests {
             quote! {
                 #[repr(C)]
                 pub struct Derived {
-                    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+                    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
                 }
             }
         );
@@ -5405,7 +5405,7 @@ mod tests {
             rs_api,
             quote! {
                 pub struct NonAggregate {
-                    __non_field_data:  [::std::mem::MaybeUninit<u8>; 0],
+                    __non_field_data:  [::core::mem::MaybeUninit<u8>; 0],
                     pub x: i16,
                 }
             }
@@ -5434,8 +5434,8 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Struct {
-                    pub(crate) field1: [::std::mem::MaybeUninit<u8>; 8],
-                    pub(crate) field2: [::std::mem::MaybeUninit<u8>; 2],
+                    pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
+                    pub(crate) field2: [::core::mem::MaybeUninit<u8>; 2],
                     pub z: i16,
                 }
             }
@@ -5476,8 +5476,8 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Struct {
-                    pub(crate) field1: [::std::mem::MaybeUninit<u8>; 8],
-                    pub(crate) field2: [::std::mem::MaybeUninit<u8>; 8],
+                    pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
+                    pub(crate) field2: [::core::mem::MaybeUninit<u8>; 8],
                 }
             }
         );
@@ -5501,7 +5501,7 @@ mod tests {
             quote! {
                 #[repr(C, align(4))]
                 pub struct Struct {
-                    pub(crate) field: [::std::mem::MaybeUninit<u8>; 0],
+                    pub(crate) field: [::core::mem::MaybeUninit<u8>; 0],
                     pub x: i32,
                 }
             }
@@ -5525,7 +5525,7 @@ mod tests {
             quote! {
                 #[repr(C)]
                 pub struct Struct {
-                    pub(crate) field: [::std::mem::MaybeUninit<u8>; 1],
+                    pub(crate) field: [::core::mem::MaybeUninit<u8>; 1],
                 }
             }
         );
@@ -5888,7 +5888,7 @@ mod tests {
             quote! {
                 #[repr(C, align(4))]
                 pub union MyUnion { ...
-                    first_field: [::std::mem::MaybeUninit<u8>; 56],
+                    first_field: [::core::mem::MaybeUninit<u8>; 56],
                     pub second_field: i32,
                 }
             }
@@ -5896,11 +5896,11 @@ mod tests {
 
         assert_rs_matches!(
             rs_api,
-            quote! { const _: () = assert!(::std::mem::size_of::<crate::MyUnion>() == 56); }
+            quote! { const _: () = assert!(::core::mem::size_of::<crate::MyUnion>() == 56); }
         );
         assert_rs_matches!(
             rs_api,
-            quote! {  const _: () = assert!(::std::mem::align_of::<crate::MyUnion>() == 4); }
+            quote! {  const _: () = assert!(::core::mem::align_of::<crate::MyUnion>() == 4); }
         );
         Ok(())
     }
@@ -5945,7 +5945,7 @@ mod tests {
                 pub union SomeUnionWithPrivateFields {
                     pub public_field: i32,
                     #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
-                    pub(crate) private_field: [::std::mem::MaybeUninit<u8>; 8],
+                    pub(crate) private_field: [::core::mem::MaybeUninit<u8>; 8],
                 }
             }
         );
@@ -5953,8 +5953,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(::std::mem::size_of::<crate::SomeUnionWithPrivateFields>() == 8);
-                const _: () = assert!(::std::mem::align_of::<crate::SomeUnionWithPrivateFields>() == 8);
+                const _: () = assert!(::core::mem::size_of::<crate::SomeUnionWithPrivateFields>() == 8);
+                const _: () = assert!(::core::mem::align_of::<crate::SomeUnionWithPrivateFields>() == 8);
                 const _: () = {
                   static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Clone);
                 };
@@ -6013,7 +6013,7 @@ mod tests {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
                 pub struct EmptyStruct {
-                    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+                    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
                 }
             }
         );
@@ -6021,8 +6021,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(::std::mem::size_of::<crate::EmptyStruct>() == 1);
-                const _: () = assert!(::std::mem::align_of::<crate::EmptyStruct>() == 1);
+                const _: () = assert!(::core::mem::size_of::<crate::EmptyStruct>() == 1);
+                const _: () = assert!(::core::mem::align_of::<crate::EmptyStruct>() == 1);
             }
         );
 
@@ -6044,7 +6044,7 @@ mod tests {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
                 pub union EmptyUnion {
-                    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+                    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
                 }
             }
         );
@@ -6052,8 +6052,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(::std::mem::size_of::<crate::EmptyUnion>() == 1);
-                const _: () = assert!(::std::mem::align_of::<crate::EmptyUnion>() == 1);
+                const _: () = assert!(::core::mem::size_of::<crate::EmptyUnion>() == 1);
+                const _: () = assert!(::core::mem::align_of::<crate::EmptyUnion>() == 1);
             }
         );
 
@@ -6079,7 +6079,7 @@ mod tests {
                 #[repr(C)]
                 pub union UnionWithNontrivialField {
                     pub trivial_field: i32,
-                    pub nontrivial_field: ::std::mem::ManuallyDrop<crate::NontrivialStruct>,
+                    pub nontrivial_field: ::core::mem::ManuallyDrop<crate::NontrivialStruct>,
                 }
             }
         );
@@ -6087,8 +6087,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(::std::mem::size_of::<crate::UnionWithNontrivialField>() == 4);
-                const _: () = assert!(::std::mem::align_of::<crate::UnionWithNontrivialField>() == 4);
+                const _: () = assert!(::core::mem::size_of::<crate::UnionWithNontrivialField>() == 4);
+                const _: () = assert!(::core::mem::align_of::<crate::UnionWithNontrivialField>() == 4);
             }
         );
         Ok(())
@@ -6123,7 +6123,7 @@ mod tests {
                 impl Default for UnionWithDefaultConstructors {
                     #[inline(always)]
                     fn default() -> Self {
-                        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1Ev(&mut tmp);
                             tmp.assume_init()
@@ -6139,7 +6139,7 @@ mod tests {
                 impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithDefaultConstructors {
                     #[inline(always)]
                     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-                        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1EOS_(&mut tmp, __param_0);
                             tmp.assume_init()
@@ -6355,7 +6355,7 @@ mod tests {
             quote! {
                 impl ::ctor::PinnedDrop for UserDefinedDestructor {
                     #[inline(always)]
-                    unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+                    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
                         crate::detail::__rust_thunk___ZN21UserDefinedDestructorD1Ev(self)
                     }
                 }
@@ -6364,7 +6364,7 @@ mod tests {
         assert_rs_matches!(rs_api, quote! {pub x: i32,});
         assert_rs_matches!(
             rs_api,
-            quote! {pub nts: ::std::mem::ManuallyDrop<crate::NontrivialStruct>,}
+            quote! {pub nts: ::core::mem::ManuallyDrop<crate::NontrivialStruct>,}
         );
         Ok(())
     }
@@ -6393,7 +6393,7 @@ mod tests {
             quote! {
                 impl ::ctor::PinnedDrop for NontrivialMembers {
                     #[inline(always)]
-                    unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+                    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
                         crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self)
                     }
                 }
@@ -6403,7 +6403,7 @@ mod tests {
         assert_rs_matches!(rs_api, quote! {pub ts: crate::TrivialStruct,});
         assert_rs_matches!(
             rs_api,
-            quote! {pub udd: ::std::mem::ManuallyDrop<crate::UserDefinedDestructor>,}
+            quote! {pub udd: ::core::mem::ManuallyDrop<crate::UserDefinedDestructor>,}
         );
         Ok(())
     }
@@ -6441,7 +6441,7 @@ mod tests {
                 impl Default for DefaultedConstructor {
                     #[inline(always)]
                     fn default() -> Self {
-                        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             crate::detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(&mut tmp);
                             tmp.assume_init()
@@ -6547,7 +6547,7 @@ mod tests {
                     impl From<i32> for SomeStruct {
                         #[inline(always)]
                         fn from(i: i32) -> Self {
-                            let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                             unsafe {
                                 crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&mut tmp, i);
                                 tmp.assume_init()
@@ -6579,7 +6579,7 @@ mod tests {
                 impl<'b> From<&'b crate::SomeOtherStruct> for StructUnderTest {
                     #[inline(always)]
                     fn from(other: &'b crate::SomeOtherStruct) -> Self {
-                        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             crate::detail::__rust_thunk___ZN15StructUnderTestC1ERK15SomeOtherStruct(
                                 &mut tmp, other);
@@ -6865,7 +6865,7 @@ mod tests {
             quote! {
                 impl<'b> ::ctor::Assign<&'b Self> for SomeStruct {
                     #[inline(always)]
-                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b Self) {
+                    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, other: &'b Self) {
                         unsafe {
                             crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, other);
                         }
@@ -6891,7 +6891,7 @@ mod tests {
             quote! {
                 impl<'b> ::ctor::Assign<&'b Self> for SomeStruct {
                     #[inline(always)]
-                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+                    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
                         unsafe {
                             crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, __param_0);
                         }
@@ -6917,7 +6917,7 @@ mod tests {
             quote! {
                 impl<'b> ::ctor::Assign<&'b Self> for SomeStruct {
                     #[inline(always)]
-                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b Self) {
+                    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, other: &'b Self) {
                         unsafe {
                             crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, other);
                         }
@@ -7261,19 +7261,19 @@ mod tests {
             Test {
                 cc: "void*",
                 lifetimes: false,
-                rs: "* mut :: std :: os :: raw :: c_void",
+                rs: "* mut :: core :: ffi :: c_void",
                 is_copy: true,
             },
             Test {
                 cc: "const void*",
                 lifetimes: false,
-                rs: "* const :: std :: os :: raw :: c_void",
+                rs: "* const :: core :: ffi :: c_void",
                 is_copy: true,
             },
             Test {
                 cc: "void* const*",
                 lifetimes: false,
-                rs: "* const * mut :: std :: os :: raw :: c_void",
+                rs: "* const * mut :: core :: ffi :: c_void",
                 is_copy: true,
             },
             // Tests below have been thought-through and verified "manually".
@@ -7542,7 +7542,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                fn Function<'a>(s: ::std::pin::Pin<&'a mut crate::S>) { ... }
+                fn Function<'a>(s: ::core::pin::Pin<&'a mut crate::S>) { ... }
             }
         );
         Ok(())
@@ -7586,7 +7586,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                fn Function<'a>(self: ::std::pin::Pin<&'a mut Self>) { ... }
+                fn Function<'a>(self: ::core::pin::Pin<&'a mut Self>) { ... }
             }
         );
         Ok(())
@@ -7604,7 +7604,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) { ... }
+                unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) { ... }
             }
         );
         Ok(())
@@ -7629,8 +7629,8 @@ mod tests {
                     fn ctor_new(args: ()) -> Self::CtorType {
                         let () = args;
                         unsafe {
-                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                                crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(::std::pin::Pin::into_inner_unchecked(dest));
+                            ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                                crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(::core::pin::Pin::into_inner_unchecked(dest));
                             })
                         }
                     }
@@ -7659,8 +7659,8 @@ mod tests {
                     fn ctor_new(args: u8) -> Self::CtorType {
                         let input = args;
                         unsafe {
-                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                                crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(::std::pin::Pin::into_inner_unchecked(dest), input);
+                            ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                                crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(::core::pin::Pin::into_inner_unchecked(dest), input);
                             })
                         }
                     }
@@ -7689,8 +7689,8 @@ mod tests {
                     fn ctor_new(args: (u8, i8)) -> Self::CtorType {
                         let (input1, input2) = args;
                         unsafe {
-                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                                crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(::std::pin::Pin::into_inner_unchecked(dest), input1, input2);
+                            ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                                crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(::core::pin::Pin::into_inner_unchecked(dest), input1, input2);
                             })
                         }
                     }
@@ -7742,8 +7742,8 @@ mod tests {
                     ) -> Self::CtorType {
                         let (x, y, b) = args;
                         unsafe {
-                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                                crate::detail::__rust_thunk___ZN14HasConstructorC1ERKiS_S_(::std::pin::Pin::into_inner_unchecked(dest), x, y, b);
+                            ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                                crate::detail::__rust_thunk___ZN14HasConstructorC1ERKiS_S_(::core::pin::Pin::into_inner_unchecked(dest), x, y, b);
                             })
                         }
                     }
@@ -7772,8 +7772,8 @@ mod tests {
                  + ::ctor::Captures<'a>
                  + ::ctor::Captures<'b> {
                     unsafe {
-                        ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {
-                            crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::std::pin::Pin::into_inner_unchecked(dest), x, y);
+                        ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<crate::Nontrivial>>| {
+                            crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::core::pin::Pin::into_inner_unchecked(dest), x, y);
                         })
                     }
 
@@ -7812,12 +7812,12 @@ mod tests {
             quote! {
                 impl<'b> ::ctor::Assign<&'b Self> for Nontrivial {
                     #[inline(always)]
-                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b Self) {
+                    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, other: &'b Self) {
                         unsafe {
                             let _ = ::ctor::emplace!(::ctor::FnCtor::new(
-                                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                                     crate::detail::__rust_thunk___ZN10NontrivialaSERKS_(
-                                        ::std::pin::Pin::into_inner_unchecked(dest),
+                                        ::core::pin::Pin::into_inner_unchecked(dest),
                                         self,
                                         other
                                     );
@@ -7862,7 +7862,7 @@ mod tests {
             quote! {
                 pub fn TakesByValue(x: impl ::ctor::Ctor<Output=crate::Nontrivial>) {
                     unsafe {
-                        crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(x)))
+                        crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(x)))
                     }
                 }
             }
@@ -7902,7 +7902,7 @@ mod tests {
                 impl<'__param_0> From<::ctor::RvalueReference<'__param_0, crate::Nontrivial>> for Trivial {
                     #[inline(always)]
                     fn from(__param_0: ::ctor::RvalueReference<'__param_0, crate::Nontrivial>) -> Self {
-                        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             crate::detail::__rust_thunk___ZN7TrivialC1E10Nontrivial(
                                 &mut tmp,
@@ -8107,8 +8107,8 @@ mod tests {
                     ...
                 }
                 ...
-                const _: () = assert!(::std::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
-                const _: () = assert!(::std::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
+                const _: () = assert!(::core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
+                const _: () = assert!(::core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
                 ...
                 const _: () = assert!(memoffset::offset_of!(crate::test_namespace_bindings::S, i) == 0);
             }
@@ -8309,11 +8309,11 @@ mod tests {
                 ...
                 pub struct #my_struct_int {...}
                 ...
-                const _: () = assert!(::std::mem::size_of::<crate::#my_struct_bool>() == 1);
+                const _: () = assert!(::core::mem::size_of::<crate::#my_struct_bool>() == 1);
                 ...
-                const _: () = assert!(::std::mem::size_of::<crate::#my_struct_double>() == 1);
+                const _: () = assert!(::core::mem::size_of::<crate::#my_struct_double>() == 1);
                 ...
-                const _: () = assert!(::std::mem::size_of::<crate::#my_struct_int>() == 1);
+                const _: () = assert!(::core::mem::size_of::<crate::#my_struct_int>() == 1);
                 ...
             }
         );

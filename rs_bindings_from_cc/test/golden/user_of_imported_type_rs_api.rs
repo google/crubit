@@ -38,7 +38,7 @@ forward_declare::unsafe_define!(
 impl Default for UserOfImportedType {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(&mut tmp);
             tmp.assume_init()
@@ -50,7 +50,7 @@ impl Default for UserOfImportedType {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for UserOfImportedType {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -89,10 +89,10 @@ mod detail {
             t: trivial_type_cc::ns::Trivial,
         ) -> trivial_type_cc::ns::Trivial;
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::UserOfImportedType>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::UserOfImportedType>,
         );
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::UserOfImportedType>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::UserOfImportedType>,
             __param_0: ::ctor::RvalueReference<'b, crate::UserOfImportedType>,
         );
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeaSERKS_<'a, 'b>(
@@ -106,10 +106,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::UserOfImportedType>() == 8);
-const _: () = assert!(::std::mem::align_of::<crate::UserOfImportedType>() == 8);
+const _: () = assert!(::core::mem::size_of::<crate::UserOfImportedType>() == 8);
+const _: () = assert!(::core::mem::align_of::<crate::UserOfImportedType>() == 8);
 const _: () = {
     static_assertions::assert_impl_all!(crate::UserOfImportedType: Clone);
 };

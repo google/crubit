@@ -22,11 +22,11 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy)]
     #[repr(C, align(4))]
     pub struct SomeClass {
-        __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         pub public_member_variable_: i32,
         /// Reason for representing this field as a blob of bytes:
         /// Types of non-public C++ fields can be elided away
-        pub(crate) private_member_variable_: [::std::mem::MaybeUninit<u8>; 4],
+        pub(crate) private_member_variable_: [::core::mem::MaybeUninit<u8>; 4],
     }
     forward_declare::unsafe_define!(
         forward_declare::symbol!("SomeClass"),
@@ -37,7 +37,7 @@ pub mod test_namespace_bindings {
     impl Default for SomeClass {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(&mut tmp);
                 tmp.assume_init()
@@ -49,7 +49,7 @@ pub mod test_namespace_bindings {
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-            let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassC1EOS0_(
                     &mut tmp, __param_0,
@@ -115,10 +115,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::SomeClass>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::SomeClass>,
         );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1EOS0_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::SomeClass>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::SomeClass>,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::SomeClass>,
         );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClassaSERKS0_<'a, 'b>(
@@ -138,10 +138,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::test_namespace_bindings::SomeClass>() == 8);
-const _: () = assert!(::std::mem::align_of::<crate::test_namespace_bindings::SomeClass>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::test_namespace_bindings::SomeClass>() == 8);
+const _: () = assert!(::core::mem::align_of::<crate::test_namespace_bindings::SomeClass>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::SomeClass: Clone);
 };

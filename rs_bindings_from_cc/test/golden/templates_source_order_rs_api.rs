@@ -25,7 +25,7 @@
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct TopLevel {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("TopLevel"), crate::TopLevel);
 
@@ -72,7 +72,7 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct Inner {
-        __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+        __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     forward_declare::unsafe_define!(
         forward_declare::symbol!("Inner"),
@@ -117,10 +117,10 @@ pub mod test_namespace_bindings {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateI8TopLevelE {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) t: [::std::mem::MaybeUninit<u8>; 1],
+    pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<TopLevel>"),
@@ -159,10 +159,10 @@ impl __CcTemplateInst10MyTemplateI8TopLevelE {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) t: [::std::mem::MaybeUninit<u8>; 1],
+    pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<test_namespace_bindings::Inner>"),
@@ -201,10 +201,10 @@ impl __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) t: [::std::mem::MaybeUninit<u8>; 1],
+    pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<MyTemplate<TopLevel>>"),
@@ -243,10 +243,10 @@ impl __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) t: [::std::mem::MaybeUninit<u8>; 1],
+    pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<MyTemplate<test_namespace_bindings::Inner>>"),
@@ -288,10 +288,10 @@ impl __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIbE {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) t: [::std::mem::MaybeUninit<u8>; 1],
+    pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<bool>"),
@@ -330,10 +330,10 @@ impl __CcTemplateInst10MyTemplateIbE {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIcE {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) t: [::std::mem::MaybeUninit<u8>; 1],
+    pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<char>"),
@@ -372,10 +372,10 @@ impl __CcTemplateInst10MyTemplateIcE {
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
 pub struct __CcTemplateInst10MyTemplateIdE {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) t: [::std::mem::MaybeUninit<u8>; 8],
+    pub(crate) t: [::core::mem::MaybeUninit<u8>; 8],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<double>"),
@@ -414,10 +414,10 @@ impl __CcTemplateInst10MyTemplateIdE {
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct __CcTemplateInst10MyTemplateIfE {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) t: [::std::mem::MaybeUninit<u8>; 4],
+    pub(crate) t: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<float>"),
@@ -456,10 +456,10 @@ impl __CcTemplateInst10MyTemplateIfE {
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct __CcTemplateInst10MyTemplateIiE {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) t: [::std::mem::MaybeUninit<u8>; 4],
+    pub(crate) t: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<int>"),
@@ -537,10 +537,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::TopLevel>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::TopLevel>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::TopLevel>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::TopLevel>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::TopLevel: Clone);
 };
@@ -551,8 +551,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::TopLevel: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::test_namespace_bindings::Inner>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::test_namespace_bindings::Inner>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::test_namespace_bindings::Inner>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::test_namespace_bindings::Inner>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::Inner: Clone);
 };
@@ -563,9 +563,10 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::Inner: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateI8TopLevelE>() == 1);
 const _: () =
-    assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateI8TopLevelE>() == 1);
+    assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateI8TopLevelE>() == 1);
+const _: () =
+    assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateI8TopLevelE>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Clone);
 };
@@ -579,11 +580,11 @@ const _: () =
     assert!(memoffset::offset_of!(crate::__CcTemplateInst10MyTemplateI8TopLevelE, t) == 0);
 
 const _: () = assert!(
-    ::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE>()
-        == 1
+    ::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE>(
+    ) == 1
 );
 const _: () = assert!(
-    ::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE>(
+    ::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE>(
     ) == 1
 );
 const _: () = {
@@ -609,9 +610,9 @@ const _: () = assert!(
 );
 
 const _: () =
-    assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE>() == 1);
+    assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE>() == 1);
 const _: () =
-    assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE>() == 1);
+    assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE: Clone);
 };
@@ -627,11 +628,12 @@ const _: () =
     assert!(memoffset::offset_of!(crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE, t) == 0);
 
 const _: () = assert!(
-    ::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE>(
-    ) == 1
+    ::core::mem::size_of::<
+        crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE,
+    >() == 1
 );
 const _: () = assert!(
-    ::std::mem::align_of::<
+    ::core::mem::align_of::<
         crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE,
     >() == 1
 );
@@ -657,8 +659,8 @@ const _: () = assert!(
     ) == 0
 );
 
-const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIbE>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIbE>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIbE>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIbE>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIbE: Clone);
 };
@@ -670,8 +672,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::__CcTemplateInst10MyTemplateIbE, t) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIcE>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIcE>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIcE>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIcE>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIcE: Clone);
 };
@@ -683,8 +685,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::__CcTemplateInst10MyTemplateIcE, t) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIdE>() == 8);
-const _: () = assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIdE>() == 8);
+const _: () = assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIdE>() == 8);
+const _: () = assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIdE>() == 8);
 const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIdE: Clone);
 };
@@ -696,8 +698,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::__CcTemplateInst10MyTemplateIdE, t) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Clone);
 };
@@ -709,8 +711,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::__CcTemplateInst10MyTemplateIfE, t) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Clone);
 };

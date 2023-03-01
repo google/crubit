@@ -21,7 +21,7 @@
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct Noninline {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Noninline"), crate::Noninline);
 
@@ -89,7 +89,7 @@ impl Noninline {
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct Inline {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Inline"), crate::Inline);
 
@@ -183,10 +183,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::Noninline>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::Noninline>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::Noninline>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::Noninline>() == 1);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Noninline: Copy);
 };
@@ -194,8 +194,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::Noninline: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::Inline>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::Inline>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::Inline>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::Inline>() == 1);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Inline: Copy);
 };

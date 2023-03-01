@@ -29,7 +29,7 @@
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
@@ -37,7 +37,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::S
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&mut tmp);
             tmp.assume_init()
@@ -49,7 +49,7 @@ impl Default for SomeStruct {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -104,16 +104,16 @@ pub struct FieldTypeTestStruct {
     pub signed_long_long_field: i64,
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'PtrDiff': No generated bindings found for 'PtrDiff'
-    pub(crate) ptrdiff_t_field: [::std::mem::MaybeUninit<u8>; 8],
+    pub(crate) ptrdiff_t_field: [::core::mem::MaybeUninit<u8>; 8],
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'Size': No generated bindings found for 'Size'
-    pub(crate) size_t_field: [::std::mem::MaybeUninit<u8>; 8],
+    pub(crate) size_t_field: [::core::mem::MaybeUninit<u8>; 8],
     pub float_field: f32,
     pub double_field: f64,
     pub ptr_field: *mut i32,
-    pub void_ptr_field: *mut ::std::os::raw::c_void,
-    pub const_void_ptr_field: *const ::std::os::raw::c_void,
-    pub void_double_ptr_field: *mut *mut ::std::os::raw::c_void,
+    pub void_ptr_field: *mut ::core::ffi::c_void,
+    pub const_void_ptr_field: *const ::core::ffi::c_void,
+    pub void_double_ptr_field: *mut *mut ::core::ffi::c_void,
     pub struct_field: crate::SomeStruct,
     pub struct_ptr_field: *mut crate::SomeStruct,
     pub const_struct_ptr_field: *const crate::SomeStruct,
@@ -133,7 +133,7 @@ forward_declare::unsafe_define!(
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -162,9 +162,9 @@ pub fn FunctionPointerReturningFunction() -> Option<extern "C" fn(*const i32, *m
 /// Generated from: rs_bindings_from_cc/test/golden/types.h;l=77
 #[inline(always)]
 pub unsafe fn FunctionWithVoidPointers(
-    __param_0: *mut ::std::os::raw::c_void,
-    __param_1: *const ::std::os::raw::c_void,
-) -> *mut ::std::os::raw::c_void {
+    __param_0: *mut ::core::ffi::c_void,
+    __param_1: *const ::core::ffi::c_void,
+) -> *mut ::core::ffi::c_void {
     crate::detail::__rust_thunk___Z24FunctionWithVoidPointersPvPKv(__param_0, __param_1)
 }
 
@@ -175,10 +175,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeStruct>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeStruct>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN10SomeStructaSERKS_<'a, 'b>(
@@ -190,23 +190,23 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         ) -> &'a mut crate::SomeStruct;
         pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::FieldTypeTestStruct>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::FieldTypeTestStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
         pub(crate) fn __rust_thunk___Z32FunctionPointerReturningFunctionv()
         -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>;
         pub(crate) fn __rust_thunk___Z24FunctionWithVoidPointersPvPKv(
-            __param_0: *mut ::std::os::raw::c_void,
-            __param_1: *const ::std::os::raw::c_void,
-        ) -> *mut ::std::os::raw::c_void;
+            __param_0: *mut ::core::ffi::c_void,
+            __param_1: *const ::core::ffi::c_void,
+        ) -> *mut ::core::ffi::c_void;
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::SomeStruct>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::SomeStruct>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::SomeStruct>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::SomeStruct>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::SomeStruct: Clone);
 };
@@ -217,8 +217,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::FieldTypeTestStruct>() == 200);
-const _: () = assert!(::std::mem::align_of::<crate::FieldTypeTestStruct>() == 8);
+const _: () = assert!(::core::mem::size_of::<crate::FieldTypeTestStruct>() == 200);
+const _: () = assert!(::core::mem::align_of::<crate::FieldTypeTestStruct>() == 8);
 const _: () = {
     static_assertions::assert_impl_all!(crate::FieldTypeTestStruct: Clone);
 };

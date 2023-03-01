@@ -32,7 +32,7 @@ forward_declare::unsafe_define!(
 impl Default for TrivialCustomType {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1Ev(&mut tmp);
             tmp.assume_init()
@@ -44,7 +44,7 @@ impl Default for TrivialCustomType {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -84,7 +84,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialCusto
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct NontrivialCustomType {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub i: i32,
 }
 forward_declare::unsafe_define!(
@@ -99,12 +99,14 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialCustom
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -139,7 +141,7 @@ pub struct ContainingStruct {
     ///
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'struct ContainingStruct::NestedStruct': No generated bindings found for 'NestedStruct'
-    pub(crate) nested_struct: [::std::mem::MaybeUninit<u8>; 1],
+    pub(crate) nested_struct: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("ContainingStruct"),
@@ -150,7 +152,7 @@ forward_declare::unsafe_define!(
 impl Default for ContainingStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16ContainingStructC1Ev(&mut tmp);
             tmp.assume_init()
@@ -162,7 +164,7 @@ impl Default for ContainingStruct {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16ContainingStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -201,10 +203,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN17TrivialCustomTypeC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::TrivialCustomType>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::TrivialCustomType>,
         );
         pub(crate) fn __rust_thunk___ZN17TrivialCustomTypeC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::TrivialCustomType>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::TrivialCustomType>,
             __param_0: ::ctor::RvalueReference<'b, crate::TrivialCustomType>,
         );
         pub(crate) fn __rust_thunk___ZN17TrivialCustomTypeaSERKS_<'a, 'b>(
@@ -217,14 +219,14 @@ mod detail {
         ) -> &'a mut crate::TrivialCustomType;
         #[link_name = "_ZN20NontrivialCustomTypeC1EOS_"]
         pub(crate) fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::NontrivialCustomType>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::NontrivialCustomType>,
             __param_0: ::ctor::RvalueReference<'b, crate::NontrivialCustomType>,
         );
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::ContainingStruct>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::ContainingStruct>,
         );
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::ContainingStruct>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::ContainingStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::ContainingStruct>,
         );
         pub(crate) fn __rust_thunk___ZN16ContainingStructaSERKS_<'a, 'b>(
@@ -238,10 +240,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::TrivialCustomType>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::TrivialCustomType>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::TrivialCustomType>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::TrivialCustomType>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::TrivialCustomType: Clone);
 };
@@ -253,8 +255,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::TrivialCustomType, i) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::NontrivialCustomType>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::NontrivialCustomType>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::NontrivialCustomType>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::NontrivialCustomType>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::NontrivialCustomType: Copy);
 };
@@ -263,8 +265,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::NontrivialCustomType, i) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::ContainingStruct>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::ContainingStruct>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::ContainingStruct>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::ContainingStruct>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::ContainingStruct: Clone);
 };

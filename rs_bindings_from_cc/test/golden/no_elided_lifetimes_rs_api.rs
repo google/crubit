@@ -27,7 +27,7 @@ pub unsafe fn free_function(p1: *mut i32) -> *mut i32 {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct S {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
@@ -71,7 +71,7 @@ impl S {
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct TriviallyCopyableButNontriviallyDestructible {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TriviallyCopyableButNontriviallyDestructible"),
@@ -89,7 +89,7 @@ forward_declare::unsafe_define!(
 /// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=18
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(self)
     }
 }
@@ -104,10 +104,10 @@ pub unsafe fn take_pointer(p: *mut i32) {
 #[::ctor::recursively_pinned]
 #[repr(C, align(4))]
 pub struct WrappedValue {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) value_: [::std::mem::MaybeUninit<u8>; 4],
+    pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate::WrappedValue);
 
@@ -157,17 +157,17 @@ mod detail {
         ) -> *mut i32;
         #[link_name = "_ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev"]
         pub(crate) fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<'a>(
-            __this: ::std::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
+            __this: ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
         );
         #[link_name = "_Z12take_pointerPi"]
         pub(crate) fn __rust_thunk___Z12take_pointerPi(p: *mut i32);
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::S>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::S>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::S>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::S>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::S: Clone);
 };
@@ -179,9 +179,9 @@ const _: () = {
 };
 
 const _: () =
-    assert!(::std::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
+    assert!(::core::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
 const _: () =
-    assert!(::std::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
+    assert!(::core::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
 const _: () = {
     static_assertions::assert_not_impl_any!(
         crate::TriviallyCopyableButNontriviallyDestructible: Copy
@@ -191,8 +191,8 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::TriviallyCopyableButNontriviallyDestructible: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::WrappedValue>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::WrappedValue>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::WrappedValue>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::WrappedValue>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::WrappedValue: Copy);
 };

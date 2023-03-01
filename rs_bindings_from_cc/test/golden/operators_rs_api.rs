@@ -21,10 +21,10 @@
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct AddableConstMember {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::std::mem::MaybeUninit<u8>; 4],
+    pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableConstMember"),
@@ -35,7 +35,7 @@ forward_declare::unsafe_define!(
 impl Default for AddableConstMember {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddableConstMemberC1Ev(&mut tmp);
             tmp.assume_init()
@@ -47,7 +47,7 @@ impl Default for AddableConstMember {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddableConstMemberC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -76,7 +76,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableConst
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=12
-impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMember> for &'a crate::AddableConstMember {
+impl<'a, 'b> ::core::ops::Add<&'b crate::AddableConstMember> for &'a crate::AddableConstMember {
     type Output = crate::AddableConstMember;
     #[inline(always)]
     fn add(self, rhs: &'b crate::AddableConstMember) -> Self::Output {
@@ -88,10 +88,10 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMember> for &'a crate::Addab
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct AddableNonConstMember {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::std::mem::MaybeUninit<u8>; 4],
+    pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableNonConstMember"),
@@ -102,7 +102,7 @@ forward_declare::unsafe_define!(
 impl Default for AddableNonConstMember {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN21AddableNonConstMemberC1Ev(&mut tmp);
             tmp.assume_init()
@@ -114,7 +114,7 @@ impl Default for AddableNonConstMember {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN21AddableNonConstMemberC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -143,7 +143,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableNonCo
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=20
-impl<'a, 'b> ::std::ops::Add<&'b crate::AddableNonConstMember>
+impl<'a, 'b> ::core::ops::Add<&'b crate::AddableNonConstMember>
     for &'a mut crate::AddableNonConstMember
 {
     type Output = crate::AddableNonConstMember;
@@ -157,10 +157,10 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableNonConstMember>
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct AddableFriend {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::std::mem::MaybeUninit<u8>; 4],
+    pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("AddableFriend"), crate::AddableFriend);
 
@@ -168,7 +168,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("AddableFriend"), crate
 impl Default for AddableFriend {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13AddableFriendC1Ev(&mut tmp);
             tmp.assume_init()
@@ -180,7 +180,7 @@ impl Default for AddableFriend {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFriend {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13AddableFriendC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -209,7 +209,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFrien
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=28
-impl<'a, 'b> ::std::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFriend {
+impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFriend {
     type Output = crate::AddableFriend;
     #[inline(always)]
     fn add(self, rhs: &'b crate::AddableFriend) -> Self::Output {
@@ -221,7 +221,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFri
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddableFree {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("AddableFree"), crate::AddableFree);
 
@@ -229,7 +229,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("AddableFree"), crate::
 impl Default for AddableFree {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11AddableFreeC1Ev(&mut tmp);
             tmp.assume_init()
@@ -241,7 +241,7 @@ impl Default for AddableFree {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFree {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11AddableFreeC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -270,7 +270,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFree 
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=36
-impl<'a, 'b> ::std::ops::Add<&'b crate::AddableFree> for &'a crate::AddableFree {
+impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFree> for &'a crate::AddableFree {
     type Output = crate::AddableFree;
     #[inline(always)]
     fn add(self, rhs: &'b crate::AddableFree) -> Self::Output {
@@ -279,7 +279,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableFree> for &'a crate::AddableFree 
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=37
-impl<'a, 'b> ::std::ops::Add<&'b mut crate::AddableFree> for &'a mut crate::AddableFree {
+impl<'a, 'b> ::core::ops::Add<&'b mut crate::AddableFree> for &'a mut crate::AddableFree {
     type Output = crate::AddableFree;
     #[inline(always)]
     fn add(self, rhs: &'b mut crate::AddableFree) -> Self::Output {
@@ -288,7 +288,7 @@ impl<'a, 'b> ::std::ops::Add<&'b mut crate::AddableFree> for &'a mut crate::Adda
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=38
-impl ::std::ops::Add<Self> for AddableFree {
+impl ::core::ops::Add<Self> for AddableFree {
     type Output = crate::AddableFree;
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
@@ -304,7 +304,7 @@ impl ::std::ops::Add<Self> for AddableFree {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Overloaded {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Overloaded"), crate::Overloaded);
 
@@ -312,7 +312,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Overloaded"), crate::O
 impl Default for Overloaded {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10OverloadedC1Ev(&mut tmp);
             tmp.assume_init()
@@ -324,7 +324,7 @@ impl Default for Overloaded {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for Overloaded {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10OverloadedC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -353,7 +353,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Overloaded {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=42
-impl<'a> ::std::ops::Add<i32> for &'a crate::Overloaded {
+impl<'a> ::core::ops::Add<i32> for &'a crate::Overloaded {
     type Output = i32;
     #[inline(always)]
     fn add(self, rhs: i32) -> Self::Output {
@@ -362,7 +362,7 @@ impl<'a> ::std::ops::Add<i32> for &'a crate::Overloaded {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=43
-impl<'a> ::std::ops::Add<u32> for &'a crate::Overloaded {
+impl<'a> ::core::ops::Add<u32> for &'a crate::Overloaded {
     type Output = i32;
     #[inline(always)]
     fn add(self, rhs: u32) -> Self::Output {
@@ -374,7 +374,7 @@ impl<'a> ::std::ops::Add<u32> for &'a crate::Overloaded {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct IncompatibleLHS {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("IncompatibleLHS"),
@@ -385,7 +385,7 @@ forward_declare::unsafe_define!(
 impl Default for IncompatibleLHS {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15IncompatibleLHSC1Ev(&mut tmp);
             tmp.assume_init()
@@ -397,7 +397,7 @@ impl Default for IncompatibleLHS {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15IncompatibleLHSC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -437,10 +437,10 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Incompatible
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct AddableReturnsVoid {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::std::mem::MaybeUninit<u8>; 4],
+    pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableReturnsVoid"),
@@ -451,7 +451,7 @@ forward_declare::unsafe_define!(
 impl Default for AddableReturnsVoid {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddableReturnsVoidC1Ev(&mut tmp);
             tmp.assume_init()
@@ -463,7 +463,7 @@ impl Default for AddableReturnsVoid {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddableReturnsVoidC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -492,7 +492,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableRetur
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=51
-impl<'a, 'b> ::std::ops::Add<&'b crate::AddableReturnsVoid> for &'a crate::AddableReturnsVoid {
+impl<'a, 'b> ::core::ops::Add<&'b crate::AddableReturnsVoid> for &'a crate::AddableReturnsVoid {
     type Output = ();
     #[inline(always)]
     fn add(self, rhs: &'b crate::AddableReturnsVoid) -> Self::Output {
@@ -504,10 +504,10 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableReturnsVoid> for &'a crate::Addab
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
 pub struct AddableConstMemberNonunpin {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::std::mem::MaybeUninit<u8>; 4],
+    pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableConstMemberNonunpin"),
@@ -521,11 +521,13 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
         }
     }
 }
@@ -537,12 +539,14 @@ impl<'b> ::ctor::CtorNew<&'b Self> for AddableConstMemberNonunpin {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -558,7 +562,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for AddableConstMemberNonunpin {
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=57
 impl<'b> ::ctor::Assign<&'b Self> for AddableConstMemberNonunpin {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinaSERKS_(self, __param_0);
         }
@@ -566,7 +570,7 @@ impl<'b> ::ctor::Assign<&'b Self> for AddableConstMemberNonunpin {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=59
-impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMemberNonunpin>
+impl<'a, 'b> ::core::ops::Add<&'b crate::AddableConstMemberNonunpin>
     for &'a crate::AddableConstMemberNonunpin
 {
     type Output = impl ::ctor::Ctor<Output = crate::AddableConstMemberNonunpin>
@@ -576,11 +580,11 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMemberNonunpin>
     fn add(self, rhs: &'b crate::AddableConstMemberNonunpin) -> Self::Output {
         unsafe {
             ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
+                move |dest: ::core::pin::Pin<
+                    &mut ::core::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
                 >| {
                     crate::detail::__rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest),
                         self,
                         rhs,
                     );
@@ -593,7 +597,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMemberNonunpin>
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=61
 impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinD1Ev(self)
     }
 }
@@ -602,7 +606,7 @@ impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignMemberInt {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignMemberInt"),
@@ -613,7 +617,7 @@ forward_declare::unsafe_define!(
 impl Default for AddAssignMemberInt {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddAssignMemberIntC1Ev(&mut tmp);
             tmp.assume_init()
@@ -625,7 +629,7 @@ impl Default for AddAssignMemberInt {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddAssignMemberIntC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -654,7 +658,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignMem
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=68
-impl ::std::ops::AddAssign<i32> for AddAssignMemberInt {
+impl ::core::ops::AddAssign<i32> for AddAssignMemberInt {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: i32) {
         unsafe {
@@ -667,7 +671,7 @@ impl ::std::ops::AddAssign<i32> for AddAssignMemberInt {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignMemberByConstRef {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignMemberByConstRef"),
@@ -678,7 +682,7 @@ forward_declare::unsafe_define!(
 impl Default for AddAssignMemberByConstRef {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(&mut tmp);
             tmp.assume_init()
@@ -690,7 +694,7 @@ impl Default for AddAssignMemberByConstRef {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -719,7 +723,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignMem
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=72
-impl<'b> ::std::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
+impl<'b> ::core::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
@@ -732,7 +736,7 @@ impl<'b> ::std::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignFreeByConstRef {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFreeByConstRef"),
@@ -743,7 +747,7 @@ forward_declare::unsafe_define!(
 impl Default for AddAssignFreeByConstRef {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefC1Ev(&mut tmp);
             tmp.assume_init()
@@ -755,7 +759,7 @@ impl Default for AddAssignFreeByConstRef {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -791,7 +795,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFre
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignFreeByValue {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFreeByValue"),
@@ -802,7 +806,7 @@ forward_declare::unsafe_define!(
 impl Default for AddAssignFreeByValue {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20AddAssignFreeByValueC1Ev(&mut tmp);
             tmp.assume_init()
@@ -814,7 +818,7 @@ impl Default for AddAssignFreeByValue {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20AddAssignFreeByValueC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -843,7 +847,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFre
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=80
-impl ::std::ops::AddAssign<Self> for AddAssignFreeByValue {
+impl ::core::ops::AddAssign<Self> for AddAssignFreeByValue {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: Self) {
         unsafe {
@@ -856,7 +860,7 @@ impl ::std::ops::AddAssign<Self> for AddAssignFreeByValue {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignFriendByConstRef {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFriendByConstRef"),
@@ -867,7 +871,7 @@ forward_declare::unsafe_define!(
 impl Default for AddAssignFriendByConstRef {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefC1Ev(&mut tmp);
             tmp.assume_init()
@@ -879,7 +883,7 @@ impl Default for AddAssignFriendByConstRef {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -911,7 +915,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFri
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignFriendByValue {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFriendByValue"),
@@ -922,7 +926,7 @@ forward_declare::unsafe_define!(
 impl Default for AddAssignFriendByValue {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN22AddAssignFriendByValueC1Ev(&mut tmp);
             tmp.assume_init()
@@ -934,7 +938,7 @@ impl Default for AddAssignFriendByValue {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN22AddAssignFriendByValueC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -963,7 +967,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFri
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=89
-impl ::std::ops::AddAssign<Self> for AddAssignFriendByValue {
+impl ::core::ops::AddAssign<Self> for AddAssignFriendByValue {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: Self) {
         unsafe {
@@ -976,7 +980,7 @@ impl ::std::ops::AddAssign<Self> for AddAssignFriendByValue {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignProhibitedConstMember {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignProhibitedConstMember"),
@@ -987,7 +991,7 @@ forward_declare::unsafe_define!(
 impl Default for AddAssignProhibitedConstMember {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev(&mut tmp);
             tmp.assume_init()
@@ -999,7 +1003,7 @@ impl Default for AddAssignProhibitedConstMember {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMember {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberC1EOS_(
                 &mut tmp, __param_0,
@@ -1039,7 +1043,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignPro
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignProhibitedFriendConstLhs {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignProhibitedFriendConstLhs"),
@@ -1050,7 +1054,7 @@ forward_declare::unsafe_define!(
 impl Default for AddAssignProhibitedFriendConstLhs {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev(&mut tmp);
             tmp.assume_init()
@@ -1062,7 +1066,7 @@ impl Default for AddAssignProhibitedFriendConstLhs {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedFriendConstLhs {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1EOS_(
                 &mut tmp, __param_0,
@@ -1106,7 +1110,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct ManyOperators {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("ManyOperators"), crate::ManyOperators);
 
@@ -1114,7 +1118,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("ManyOperators"), crate
 impl Default for ManyOperators {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorsC1Ev(&mut tmp);
             tmp.assume_init()
@@ -1126,7 +1130,7 @@ impl Default for ManyOperators {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for ManyOperators {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorsC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -1159,7 +1163,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ManyOperator
 // Bindings for this kind of operator (operator + with 1 parameter(s)) are not supported
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=103
-impl<'a> ::std::ops::Neg for &'a crate::ManyOperators {
+impl<'a> ::core::ops::Neg for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn neg(self) -> Self::Output {
@@ -1168,7 +1172,7 @@ impl<'a> ::std::ops::Neg for &'a crate::ManyOperators {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=104
-impl<'a> ::std::ops::Not for &'a crate::ManyOperators {
+impl<'a> ::core::ops::Not for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn not(self) -> Self::Output {
@@ -1181,7 +1185,7 @@ impl<'a> ::std::ops::Not for &'a crate::ManyOperators {
 // Bindings for this kind of operator (operator ~ with 1 parameter(s)) are not supported
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=107
-impl<'a, 'b> ::std::ops::Add<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+impl<'a, 'b> ::core::ops::Add<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn add(self, rhs: &'b crate::ManyOperators) -> Self::Output {
@@ -1190,7 +1194,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::ManyOperators> for &'a crate::ManyOperat
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=108
-impl<'a, 'b> ::std::ops::Sub<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+impl<'a, 'b> ::core::ops::Sub<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn sub(self, rhs: &'b crate::ManyOperators) -> Self::Output {
@@ -1199,7 +1203,7 @@ impl<'a, 'b> ::std::ops::Sub<&'b crate::ManyOperators> for &'a crate::ManyOperat
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=109
-impl<'a, 'b> ::std::ops::Mul<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+impl<'a, 'b> ::core::ops::Mul<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn mul(self, rhs: &'b crate::ManyOperators) -> Self::Output {
@@ -1208,7 +1212,7 @@ impl<'a, 'b> ::std::ops::Mul<&'b crate::ManyOperators> for &'a crate::ManyOperat
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=110
-impl<'a, 'b> ::std::ops::Div<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+impl<'a, 'b> ::core::ops::Div<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn div(self, rhs: &'b crate::ManyOperators) -> Self::Output {
@@ -1217,7 +1221,7 @@ impl<'a, 'b> ::std::ops::Div<&'b crate::ManyOperators> for &'a crate::ManyOperat
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=111
-impl<'a, 'b> ::std::ops::Rem<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+impl<'a, 'b> ::core::ops::Rem<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn rem(self, rhs: &'b crate::ManyOperators) -> Self::Output {
@@ -1226,7 +1230,7 @@ impl<'a, 'b> ::std::ops::Rem<&'b crate::ManyOperators> for &'a crate::ManyOperat
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=112
-impl<'a, 'b> ::std::ops::BitAnd<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+impl<'a, 'b> ::core::ops::BitAnd<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn bitand(self, rhs: &'b crate::ManyOperators) -> Self::Output {
@@ -1235,7 +1239,7 @@ impl<'a, 'b> ::std::ops::BitAnd<&'b crate::ManyOperators> for &'a crate::ManyOpe
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=113
-impl<'a, 'b> ::std::ops::BitOr<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+impl<'a, 'b> ::core::ops::BitOr<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn bitor(self, rhs: &'b crate::ManyOperators) -> Self::Output {
@@ -1244,7 +1248,7 @@ impl<'a, 'b> ::std::ops::BitOr<&'b crate::ManyOperators> for &'a crate::ManyOper
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=114
-impl<'a, 'b> ::std::ops::BitXor<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+impl<'a, 'b> ::core::ops::BitXor<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn bitxor(self, rhs: &'b crate::ManyOperators) -> Self::Output {
@@ -1253,7 +1257,7 @@ impl<'a, 'b> ::std::ops::BitXor<&'b crate::ManyOperators> for &'a crate::ManyOpe
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=115
-impl<'a, 'b> ::std::ops::Shl<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+impl<'a, 'b> ::core::ops::Shl<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn shl(self, rhs: &'b crate::ManyOperators) -> Self::Output {
@@ -1262,7 +1266,7 @@ impl<'a, 'b> ::std::ops::Shl<&'b crate::ManyOperators> for &'a crate::ManyOperat
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=116
-impl<'a, 'b> ::std::ops::Shr<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+impl<'a, 'b> ::core::ops::Shr<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn shr(self, rhs: &'b crate::ManyOperators) -> Self::Output {
@@ -1271,7 +1275,7 @@ impl<'a, 'b> ::std::ops::Shr<&'b crate::ManyOperators> for &'a crate::ManyOperat
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=118
-impl<'b> ::std::ops::AddAssign<&'b Self> for ManyOperators {
+impl<'b> ::core::ops::AddAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
@@ -1281,7 +1285,7 @@ impl<'b> ::std::ops::AddAssign<&'b Self> for ManyOperators {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=119
-impl<'b> ::std::ops::SubAssign<&'b Self> for ManyOperators {
+impl<'b> ::core::ops::SubAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn sub_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
@@ -1291,7 +1295,7 @@ impl<'b> ::std::ops::SubAssign<&'b Self> for ManyOperators {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=120
-impl<'b> ::std::ops::MulAssign<&'b Self> for ManyOperators {
+impl<'b> ::core::ops::MulAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn mul_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
@@ -1301,7 +1305,7 @@ impl<'b> ::std::ops::MulAssign<&'b Self> for ManyOperators {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=121
-impl<'b> ::std::ops::DivAssign<&'b Self> for ManyOperators {
+impl<'b> ::core::ops::DivAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn div_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
@@ -1311,7 +1315,7 @@ impl<'b> ::std::ops::DivAssign<&'b Self> for ManyOperators {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=122
-impl<'b> ::std::ops::RemAssign<&'b Self> for ManyOperators {
+impl<'b> ::core::ops::RemAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn rem_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
@@ -1321,7 +1325,7 @@ impl<'b> ::std::ops::RemAssign<&'b Self> for ManyOperators {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=123
-impl<'b> ::std::ops::BitAndAssign<&'b Self> for ManyOperators {
+impl<'b> ::core::ops::BitAndAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn bitand_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
@@ -1331,7 +1335,7 @@ impl<'b> ::std::ops::BitAndAssign<&'b Self> for ManyOperators {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=124
-impl<'b> ::std::ops::BitOrAssign<&'b Self> for ManyOperators {
+impl<'b> ::core::ops::BitOrAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn bitor_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
@@ -1341,7 +1345,7 @@ impl<'b> ::std::ops::BitOrAssign<&'b Self> for ManyOperators {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=125
-impl<'b> ::std::ops::BitXorAssign<&'b Self> for ManyOperators {
+impl<'b> ::core::ops::BitXorAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn bitxor_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
@@ -1351,7 +1355,7 @@ impl<'b> ::std::ops::BitXorAssign<&'b Self> for ManyOperators {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=126
-impl<'b> ::std::ops::ShlAssign<&'b Self> for ManyOperators {
+impl<'b> ::core::ops::ShlAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn shl_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
@@ -1361,7 +1365,7 @@ impl<'b> ::std::ops::ShlAssign<&'b Self> for ManyOperators {
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=127
-impl<'b> ::std::ops::ShrAssign<&'b Self> for ManyOperators {
+impl<'b> ::core::ops::ShrAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn shr_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
@@ -1377,10 +1381,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN18AddableConstMemberC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableConstMember>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableConstMember>,
         );
         pub(crate) fn __rust_thunk___ZN18AddableConstMemberC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableConstMember>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableConstMember>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableConstMember>,
         );
         pub(crate) fn __rust_thunk___ZN18AddableConstMemberaSERKS_<'a, 'b>(
@@ -1397,10 +1401,10 @@ mod detail {
             rhs: &'b crate::AddableConstMember,
         ) -> crate::AddableConstMember;
         pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableNonConstMember>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableNonConstMember>,
         );
         pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableNonConstMember>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableNonConstMember>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableNonConstMember>,
         );
         pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberaSERKS_<'a, 'b>(
@@ -1417,10 +1421,10 @@ mod detail {
             rhs: &'b crate::AddableNonConstMember,
         ) -> crate::AddableNonConstMember;
         pub(crate) fn __rust_thunk___ZN13AddableFriendC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableFriend>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFriend>,
         );
         pub(crate) fn __rust_thunk___ZN13AddableFriendC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableFriend>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFriend>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFriend>,
         );
         pub(crate) fn __rust_thunk___ZN13AddableFriendaSERKS_<'a, 'b>(
@@ -1437,10 +1441,10 @@ mod detail {
             rhs: &'b crate::AddableFriend,
         ) -> crate::AddableFriend;
         pub(crate) fn __rust_thunk___ZN11AddableFreeC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableFree>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFree>,
         );
         pub(crate) fn __rust_thunk___ZN11AddableFreeC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableFree>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFree>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFree>,
         );
         pub(crate) fn __rust_thunk___ZN11AddableFreeaSERKS_<'a, 'b>(
@@ -1467,10 +1471,10 @@ mod detail {
             rhs: crate::AddableFree,
         ) -> crate::AddableFree;
         pub(crate) fn __rust_thunk___ZN10OverloadedC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::Overloaded>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::Overloaded>,
         );
         pub(crate) fn __rust_thunk___ZN10OverloadedC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::Overloaded>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::Overloaded>,
             __param_0: ::ctor::RvalueReference<'b, crate::Overloaded>,
         );
         pub(crate) fn __rust_thunk___ZN10OverloadedaSERKS_<'a, 'b>(
@@ -1492,10 +1496,10 @@ mod detail {
             rhs: u32,
         ) -> i32;
         pub(crate) fn __rust_thunk___ZN15IncompatibleLHSC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::IncompatibleLHS>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::IncompatibleLHS>,
         );
         pub(crate) fn __rust_thunk___ZN15IncompatibleLHSC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::IncompatibleLHS>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::IncompatibleLHS>,
             __param_0: ::ctor::RvalueReference<'b, crate::IncompatibleLHS>,
         );
         pub(crate) fn __rust_thunk___ZN15IncompatibleLHSaSERKS_<'a, 'b>(
@@ -1507,10 +1511,10 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::IncompatibleLHS>,
         ) -> &'a mut crate::IncompatibleLHS;
         pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableReturnsVoid>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableReturnsVoid>,
         );
         pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableReturnsVoid>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableReturnsVoid>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableReturnsVoid>,
         );
         pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidaSERKS_<'a, 'b>(
@@ -1527,29 +1531,29 @@ mod detail {
             rhs: &'b crate::AddableReturnsVoid,
         );
         pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
         );
         pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
             __param_0: &'b crate::AddableConstMemberNonunpin,
         );
         pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinaSERKS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
+            __this: ::core::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
             __param_0: &'b crate::AddableConstMemberNonunpin,
-        ) -> ::std::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>;
+        ) -> ::core::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>;
         pub(crate) fn __rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_<'a, 'b>(
-            __return: &mut ::std::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
+            __return: &mut ::core::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
             __this: &'a crate::AddableConstMemberNonunpin,
             rhs: &'b crate::AddableConstMemberNonunpin,
         );
         pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinD1Ev<'a>(
-            __this: ::std::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
+            __this: ::core::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
         );
         pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignMemberInt>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignMemberInt>,
         );
         pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignMemberInt>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignMemberInt>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberInt>,
         );
         pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntaSERKS_<'a, 'b>(
@@ -1566,10 +1570,10 @@ mod detail {
             rhs: i32,
         ) -> i32;
         pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignMemberByConstRef>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignMemberByConstRef>,
         );
         pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignMemberByConstRef>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignMemberByConstRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>,
         );
         pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefaSERKS_<'a, 'b>(
@@ -1586,10 +1590,10 @@ mod detail {
             rhs: &'b crate::AddAssignMemberByConstRef,
         ) -> &'a mut crate::AddAssignMemberByConstRef;
         pub(crate) fn __rust_thunk___ZN23AddAssignFreeByConstRefC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFreeByConstRef>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFreeByConstRef>,
         );
         pub(crate) fn __rust_thunk___ZN23AddAssignFreeByConstRefC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFreeByConstRef>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFreeByConstRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>,
         );
         pub(crate) fn __rust_thunk___ZN23AddAssignFreeByConstRefaSERKS_<'a, 'b>(
@@ -1601,10 +1605,10 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>,
         ) -> &'a mut crate::AddAssignFreeByConstRef;
         pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFreeByValue>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFreeByValue>,
         );
         pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFreeByValue>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFreeByValue>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>,
         );
         pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueaSERKS_<'a, 'b>(
@@ -1621,10 +1625,10 @@ mod detail {
             rhs: crate::AddAssignFreeByValue,
         ) -> &'a mut crate::AddAssignFreeByValue;
         pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFriendByConstRef>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFriendByConstRef>,
         );
         pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFriendByConstRef>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFriendByConstRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>,
         );
         pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefaSERKS_<'a, 'b>(
@@ -1636,10 +1640,10 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>,
         ) -> &'a mut crate::AddAssignFriendByConstRef;
         pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFriendByValue>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFriendByValue>,
         );
         pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFriendByValue>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFriendByValue>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>,
         );
         pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueaSERKS_<'a, 'b>(
@@ -1656,10 +1660,10 @@ mod detail {
             rhs: crate::AddAssignFriendByValue,
         ) -> &'a mut crate::AddAssignFriendByValue;
         pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedConstMember>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignProhibitedConstMember>,
         );
         pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedConstMember>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignProhibitedConstMember>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>,
         );
         pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberaSERKS_<'a, 'b>(
@@ -1671,10 +1675,10 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>,
         ) -> &'a mut crate::AddAssignProhibitedConstMember;
         pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedFriendConstLhs>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignProhibitedFriendConstLhs>,
         );
         pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedFriendConstLhs>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignProhibitedFriendConstLhs>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
         );
         pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSERKS_<'a, 'b>(
@@ -1686,10 +1690,10 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
         ) -> &'a mut crate::AddAssignProhibitedFriendConstLhs;
         pub(crate) fn __rust_thunk___ZN13ManyOperatorsC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::ManyOperators>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::ManyOperators>,
         );
         pub(crate) fn __rust_thunk___ZN13ManyOperatorsC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::ManyOperators>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>,
         );
         pub(crate) fn __rust_thunk___ZN13ManyOperatorsaSERKS_<'a, 'b>(
@@ -1811,10 +1815,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::AddableConstMember>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::AddableConstMember>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::AddableConstMember>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::AddableConstMember>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddableConstMember: Clone);
 };
@@ -1826,8 +1830,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::AddableConstMember, field_) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::AddableNonConstMember>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::AddableNonConstMember>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::AddableNonConstMember>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::AddableNonConstMember>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddableNonConstMember: Clone);
 };
@@ -1839,8 +1843,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::AddableNonConstMember, field_) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::AddableFriend>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::AddableFriend>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::AddableFriend>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::AddableFriend>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddableFriend: Clone);
 };
@@ -1852,8 +1856,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::AddableFriend, field_) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::AddableFree>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::AddableFree>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::AddableFree>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddableFree>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddableFree: Clone);
 };
@@ -1864,8 +1868,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableFree: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::Overloaded>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::Overloaded>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::Overloaded>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::Overloaded>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::Overloaded: Clone);
 };
@@ -1876,8 +1880,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::Overloaded: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::IncompatibleLHS>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::IncompatibleLHS>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::IncompatibleLHS>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::IncompatibleLHS>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::IncompatibleLHS: Clone);
 };
@@ -1888,8 +1892,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::IncompatibleLHS: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::AddableReturnsVoid>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::AddableReturnsVoid>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::AddableReturnsVoid>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::AddableReturnsVoid>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddableReturnsVoid: Clone);
 };
@@ -1901,8 +1905,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::AddableReturnsVoid, field_) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::AddableConstMemberNonunpin>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::AddableConstMemberNonunpin>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::AddableConstMemberNonunpin>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::AddableConstMemberNonunpin>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableConstMemberNonunpin: Copy);
 };
@@ -1911,8 +1915,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::AddableConstMemberNonunpin, field_) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::AddAssignMemberInt>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::AddAssignMemberInt>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::AddAssignMemberInt>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddAssignMemberInt>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignMemberInt: Clone);
 };
@@ -1923,8 +1927,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignMemberInt: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::AddAssignMemberByConstRef>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::AddAssignMemberByConstRef>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::AddAssignMemberByConstRef>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddAssignMemberByConstRef>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignMemberByConstRef: Clone);
 };
@@ -1935,8 +1939,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignMemberByConstRef: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::AddAssignFreeByConstRef>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::AddAssignFreeByConstRef>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::AddAssignFreeByConstRef>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddAssignFreeByConstRef>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignFreeByConstRef: Clone);
 };
@@ -1947,8 +1951,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignFreeByConstRef: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::AddAssignFreeByValue>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::AddAssignFreeByValue>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::AddAssignFreeByValue>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddAssignFreeByValue>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignFreeByValue: Clone);
 };
@@ -1959,8 +1963,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignFreeByValue: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::AddAssignFriendByConstRef>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::AddAssignFriendByConstRef>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::AddAssignFriendByConstRef>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddAssignFriendByConstRef>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignFriendByConstRef: Clone);
 };
@@ -1971,8 +1975,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignFriendByConstRef: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::AddAssignFriendByValue>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::AddAssignFriendByValue>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::AddAssignFriendByValue>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddAssignFriendByValue>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignFriendByValue: Clone);
 };
@@ -1983,8 +1987,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignFriendByValue: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::AddAssignProhibitedConstMember>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::AddAssignProhibitedConstMember>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::AddAssignProhibitedConstMember>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddAssignProhibitedConstMember>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignProhibitedConstMember: Clone);
 };
@@ -1995,8 +1999,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignProhibitedConstMember: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignProhibitedFriendConstLhs: Clone);
 };
@@ -2007,8 +2011,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignProhibitedFriendConstLhs: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::ManyOperators>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::ManyOperators>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::ManyOperators>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::ManyOperators>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::ManyOperators: Clone);
 };

@@ -24,7 +24,7 @@ pub fn UseNontrivialCustomType(
 ) {
     unsafe {
         crate::detail::__rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
-            ::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(non_trivial_custom_type)),
+            ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(non_trivial_custom_type)),
         )
     }
 }
@@ -41,4 +41,4 @@ mod detail {
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());

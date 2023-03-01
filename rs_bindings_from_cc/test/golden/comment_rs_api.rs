@@ -40,7 +40,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 impl Default for Foo {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3FooC1Ev(&mut tmp);
             tmp.assume_init()
@@ -52,7 +52,7 @@ impl Default for Foo {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for Foo {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3FooC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -117,7 +117,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Bar"), crate::Bar);
 impl Default for Bar {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3BarC1Ev(&mut tmp);
             tmp.assume_init()
@@ -129,7 +129,7 @@ impl Default for Bar {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for Bar {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3BarC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -171,7 +171,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("HasNoComments"), crate
 impl Default for HasNoComments {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(&mut tmp);
             tmp.assume_init()
@@ -183,7 +183,7 @@ impl Default for HasNoComments {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasNoComments {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13HasNoCommentsC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -220,10 +220,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN3FooC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::Foo>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::Foo>,
         );
         pub(crate) fn __rust_thunk___ZN3FooC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::Foo>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::Foo>,
             __param_0: ::ctor::RvalueReference<'b, crate::Foo>,
         );
         pub(crate) fn __rust_thunk___ZN3FooaSERKS_<'a, 'b>(
@@ -236,10 +236,10 @@ mod detail {
         ) -> &'a mut crate::Foo;
         pub(crate) fn __rust_thunk___Z3foov();
         pub(crate) fn __rust_thunk___ZN3BarC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::Bar>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::Bar>,
         );
         pub(crate) fn __rust_thunk___ZN3BarC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::Bar>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::Bar>,
             __param_0: ::ctor::RvalueReference<'b, crate::Bar>,
         );
         pub(crate) fn __rust_thunk___ZN3BaraSERKS_<'a, 'b>(
@@ -251,10 +251,10 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::Bar>,
         ) -> &'a mut crate::Bar;
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::HasNoComments>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::HasNoComments>,
         );
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::HasNoComments>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::HasNoComments>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasNoComments>,
         );
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsaSERKS_<'a, 'b>(
@@ -268,10 +268,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::Foo>() == 8);
-const _: () = assert!(::std::mem::align_of::<crate::Foo>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::Foo>() == 8);
+const _: () = assert!(::core::mem::align_of::<crate::Foo>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::Foo: Clone);
 };
@@ -284,8 +284,8 @@ const _: () = {
 const _: () = assert!(memoffset::offset_of!(crate::Foo, i) == 0);
 const _: () = assert!(memoffset::offset_of!(crate::Foo, j) == 4);
 
-const _: () = assert!(::std::mem::size_of::<crate::Bar>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::Bar>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::Bar>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::Bar>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::Bar: Clone);
 };
@@ -297,8 +297,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::Bar, i) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::HasNoComments>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::HasNoComments>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::HasNoComments>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::HasNoComments>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::HasNoComments: Clone);
 };

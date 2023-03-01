@@ -101,7 +101,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::S
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct SomeStruct3 {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct3"), crate::SomeStruct3);
 
@@ -132,10 +132,10 @@ forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct3"), crate::
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_SOURCE_LOCATION_DOC_COMMENTS_H_
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::StructFromMacro>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::StructFromMacro>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::StructFromMacro>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::StructFromMacro>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::StructFromMacro: Clone);
 };
@@ -147,8 +147,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::StructFromMacro, val) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::SomeStruct>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::SomeStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::SomeStruct>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::SomeStruct>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy);
 };
@@ -157,8 +157,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, some_field) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::SomeStruct3>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::SomeStruct3>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::SomeStruct3>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::SomeStruct3>() == 1);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeStruct3: Copy);
 };

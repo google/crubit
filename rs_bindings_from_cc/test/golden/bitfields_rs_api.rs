@@ -22,18 +22,18 @@
 #[repr(C, align(4))]
 pub struct WithBitfields {
     // f1 : 2 bits
-    __bitfields0: [::std::mem::MaybeUninit<u8>; 1],
+    __bitfields0: [::core::mem::MaybeUninit<u8>; 1],
     pub f2: i32,
     // f3 : 4 bits
     // f4 : 8 bits
     //  : 45 bits
-    __bitfields2: [::std::mem::MaybeUninit<u8>; 10],
+    __bitfields2: [::core::mem::MaybeUninit<u8>; 10],
     pub f5: i32,
     // f6 : 23 bits
-    __bitfields4: [::std::mem::MaybeUninit<u8>; 3],
-    pub(crate) f7: [::std::mem::MaybeUninit<u8>; 1],
+    __bitfields4: [::core::mem::MaybeUninit<u8>; 3],
+    pub(crate) f7: [::core::mem::MaybeUninit<u8>; 1],
     // f8 : 2 bits
-    __bitfields6: [::std::mem::MaybeUninit<u8>; 1],
+    __bitfields6: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("WithBitfields"), crate::WithBitfields);
 impl WithBitfields {
@@ -49,11 +49,13 @@ impl ::ctor::CtorNew<()> for WithBitfields {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN13WithBitfieldsC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN13WithBitfieldsC1Ev(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
         }
     }
 }
@@ -65,12 +67,14 @@ impl<'b> ::ctor::CtorNew<&'b Self> for WithBitfields {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN13WithBitfieldsC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN13WithBitfieldsC1ERKS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -90,12 +94,14 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for WithBitfields {
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN13WithBitfieldsC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN13WithBitfieldsC1EOS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -111,7 +117,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for WithBitfields
 /// Generated from: rs_bindings_from_cc/test/golden/bitfields.h;l=10
 impl<'b> ::ctor::Assign<&'b Self> for WithBitfields {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13WithBitfieldsaSERKS_(self, __param_0);
         }
@@ -122,7 +128,7 @@ impl<'b> ::ctor::Assign<&'b Self> for WithBitfields {
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for WithBitfields {
     #[inline(always)]
     fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
+        self: ::core::pin::Pin<&'a mut Self>,
         __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
@@ -138,31 +144,31 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN13WithBitfieldsC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::WithBitfields>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::WithBitfields>,
         );
         pub(crate) fn __rust_thunk___ZN13WithBitfieldsC1ERKS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::WithBitfields>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::WithBitfields>,
             __param_0: &'b crate::WithBitfields,
         );
         pub(crate) fn __rust_thunk___ZN13WithBitfieldsC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::WithBitfields>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::WithBitfields>,
             __param_0: ::ctor::RvalueReference<'b, crate::WithBitfields>,
         );
         pub(crate) fn __rust_thunk___ZN13WithBitfieldsaSERKS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::WithBitfields>,
+            __this: ::core::pin::Pin<&'a mut crate::WithBitfields>,
             __param_0: &'b crate::WithBitfields,
-        ) -> ::std::pin::Pin<&'a mut crate::WithBitfields>;
+        ) -> ::core::pin::Pin<&'a mut crate::WithBitfields>;
         pub(crate) fn __rust_thunk___ZN13WithBitfieldsaSEOS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::WithBitfields>,
+            __this: ::core::pin::Pin<&'a mut crate::WithBitfields>,
             __param_0: ::ctor::RvalueReference<'b, crate::WithBitfields>,
-        ) -> ::std::pin::Pin<&'a mut crate::WithBitfields>;
+        ) -> ::core::pin::Pin<&'a mut crate::WithBitfields>;
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::WithBitfields>() == 32);
-const _: () = assert!(::std::mem::align_of::<crate::WithBitfields>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::WithBitfields>() == 32);
+const _: () = assert!(::core::mem::align_of::<crate::WithBitfields>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::WithBitfields: Copy);
 };

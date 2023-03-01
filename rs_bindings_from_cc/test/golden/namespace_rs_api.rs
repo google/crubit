@@ -33,7 +33,7 @@ pub mod test_namespace_bindings {
     impl Default for S {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings1SC1Ev(&mut tmp);
                 tmp.assume_init()
@@ -45,7 +45,7 @@ pub mod test_namespace_bindings {
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for S {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-            let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings1SC1EOS0_(
                     &mut tmp, __param_0,
@@ -122,7 +122,7 @@ pub mod test_namespace_bindings_reopened_0 {
         #[derive(Clone, Copy)]
         #[repr(C)]
         pub struct S {
-            __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         forward_declare::unsafe_define!(
             forward_declare::symbol!("S"),
@@ -133,7 +133,7 @@ pub mod test_namespace_bindings_reopened_0 {
         impl Default for S {
             #[inline(always)]
             fn default() -> Self {
-                let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev(
                         &mut tmp,
@@ -147,7 +147,7 @@ pub mod test_namespace_bindings_reopened_0 {
         impl<'b> From<::ctor::RvalueReference<'b, Self>> for S {
             #[inline(always)]
             fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-                let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_(&mut tmp,__param_0);
                     tmp.assume_init()
@@ -215,7 +215,7 @@ pub mod test_namespace_bindings_inline {
         #[derive(Clone, Copy)]
         #[repr(C)]
         pub struct StructInInlineNamespace {
-            __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+            __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         forward_declare::unsafe_define!(
             forward_declare::symbol!("StructInInlineNamespace"),
@@ -226,7 +226,7 @@ pub mod test_namespace_bindings_inline {
         impl Default for StructInInlineNamespace {
             #[inline(always)]
             fn default() -> Self {
-                let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(&mut tmp);
                     tmp.assume_init()
@@ -238,7 +238,7 @@ pub mod test_namespace_bindings_inline {
         impl<'b> From<::ctor::RvalueReference<'b, Self>> for StructInInlineNamespace {
             #[inline(always)]
             fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-                let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1EOS1_(&mut tmp,__param_0);
                     tmp.assume_init()
@@ -312,10 +312,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::S>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::S>,
         );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SC1EOS0_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::S>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::S>,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,
         );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SaSERKS0_<'a, 'b>(
@@ -340,12 +340,12 @@ mod detail {
         #[link_name = "_ZN32test_namespace_bindings_reopened1xEv"]
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened1xEv();
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<
+            __this: &'a mut ::core::mem::MaybeUninit<
                 crate::test_namespace_bindings_reopened::inner::S,
             >,
         );
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<
+            __this: &'a mut ::core::mem::MaybeUninit<
                 crate::test_namespace_bindings_reopened::inner::S,
             >,
             __param_0: ::ctor::RvalueReference<
@@ -373,7 +373,7 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev<
             'a,
         >(
-            __this: &'a mut ::std::mem::MaybeUninit<
+            __this: &'a mut ::core::mem::MaybeUninit<
                 crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
             >,
         );
@@ -381,7 +381,7 @@ mod detail {
             'a,
             'b,
         >(
-            __this: &'a mut ::std::mem::MaybeUninit<
+            __this: &'a mut ::core::mem::MaybeUninit<
                 crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
             >,
             __param_0: ::ctor::RvalueReference<
@@ -418,10 +418,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::S: Clone);
 };
@@ -434,9 +434,9 @@ const _: () = {
 const _: () = assert!(memoffset::offset_of!(crate::test_namespace_bindings::S, i) == 0);
 
 const _: () =
-    assert!(::std::mem::size_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);
+    assert!(::core::mem::size_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);
 const _: () =
-    assert!(::std::mem::align_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);
+    assert!(::core::mem::align_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings_reopened::inner::S: Clone);
 };
@@ -450,12 +450,12 @@ const _: () = {
 };
 
 const _: () = assert!(
-    ::std::mem::size_of::<crate::test_namespace_bindings_inline::inner::StructInInlineNamespace>()
+    ::core::mem::size_of::<crate::test_namespace_bindings_inline::inner::StructInInlineNamespace>()
         == 1
 );
 const _: () = assert!(
-    ::std::mem::align_of::<crate::test_namespace_bindings_inline::inner::StructInInlineNamespace>()
-        == 1
+    ::core::mem::align_of::<crate::test_namespace_bindings_inline::inner::StructInInlineNamespace>(
+    ) == 1
 );
 const _: () = {
     static_assertions::assert_impl_all!(

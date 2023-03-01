@@ -21,7 +21,7 @@
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct SomeStruct {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
@@ -32,11 +32,13 @@ impl ::ctor::CtorNew<()> for SomeStruct {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN10SomeStructC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN10SomeStructC1Ev(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
         }
     }
 }
@@ -48,12 +50,14 @@ impl<'b> ::ctor::CtorNew<&'b Self> for SomeStruct {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN10SomeStructC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN10SomeStructC1ERKS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -73,12 +77,14 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -94,7 +100,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for SomeStruct {
 /// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=10
 impl<'b> ::ctor::Assign<&'b Self> for SomeStruct {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, __param_0);
         }
@@ -105,7 +111,7 @@ impl<'b> ::ctor::Assign<&'b Self> for SomeStruct {
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     #[inline(always)]
     fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
+        self: ::core::pin::Pin<&'a mut Self>,
         __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
@@ -126,7 +132,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct SomeOtherStruct {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("SomeOtherStruct"),
@@ -140,11 +146,13 @@ impl ::ctor::CtorNew<()> for SomeOtherStruct {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN15SomeOtherStructC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN15SomeOtherStructC1Ev(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
         }
     }
 }
@@ -156,12 +164,14 @@ impl<'b> ::ctor::CtorNew<&'b Self> for SomeOtherStruct {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN15SomeOtherStructC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN15SomeOtherStructC1ERKS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -181,12 +191,14 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct 
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN15SomeOtherStructC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN15SomeOtherStructC1EOS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -202,7 +214,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for SomeOtherStru
 /// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=15
 impl<'b> ::ctor::Assign<&'b Self> for SomeOtherStruct {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN15SomeOtherStructaSERKS_(self, __param_0);
         }
@@ -213,7 +225,7 @@ impl<'b> ::ctor::Assign<&'b Self> for SomeOtherStruct {
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
     #[inline(always)]
     fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
+        self: ::core::pin::Pin<&'a mut Self>,
         __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
@@ -226,7 +238,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union SomeUnion {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeUnion"), crate::SomeUnion);
 
@@ -234,7 +246,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("SomeUnion"), crate::So
 impl Default for SomeUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN9SomeUnionC1Ev(&mut tmp);
             tmp.assume_init()
@@ -246,7 +258,7 @@ impl Default for SomeUnion {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeUnion {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN9SomeUnionC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -282,7 +294,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeUnion {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union SomeOtherUnion {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeOtherUnion"), crate::SomeOtherUnion);
 
@@ -290,7 +302,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("SomeOtherUnion"), crat
 impl Default for SomeOtherUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14SomeOtherUnionC1Ev(&mut tmp);
             tmp.assume_init()
@@ -302,7 +314,7 @@ impl Default for SomeOtherUnion {
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14SomeOtherUnionC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -343,48 +355,48 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeStruct>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN10SomeStructC1ERKS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeStruct>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeStruct>,
             __param_0: &'b crate::SomeStruct,
         );
         pub(crate) fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeStruct>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN10SomeStructaSERKS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::SomeStruct>,
+            __this: ::core::pin::Pin<&'a mut crate::SomeStruct>,
             __param_0: &'b crate::SomeStruct,
-        ) -> ::std::pin::Pin<&'a mut crate::SomeStruct>;
+        ) -> ::core::pin::Pin<&'a mut crate::SomeStruct>;
         pub(crate) fn __rust_thunk___ZN10SomeStructaSEOS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::SomeStruct>,
+            __this: ::core::pin::Pin<&'a mut crate::SomeStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
-        ) -> ::std::pin::Pin<&'a mut crate::SomeStruct>;
+        ) -> ::core::pin::Pin<&'a mut crate::SomeStruct>;
         pub(crate) fn __rust_thunk___ZN15SomeOtherStructC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeOtherStruct>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherStruct>,
         );
         pub(crate) fn __rust_thunk___ZN15SomeOtherStructC1ERKS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeOtherStruct>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherStruct>,
             __param_0: &'b crate::SomeOtherStruct,
         );
         pub(crate) fn __rust_thunk___ZN15SomeOtherStructC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeOtherStruct>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherStruct>,
         );
         pub(crate) fn __rust_thunk___ZN15SomeOtherStructaSERKS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::SomeOtherStruct>,
+            __this: ::core::pin::Pin<&'a mut crate::SomeOtherStruct>,
             __param_0: &'b crate::SomeOtherStruct,
-        ) -> ::std::pin::Pin<&'a mut crate::SomeOtherStruct>;
+        ) -> ::core::pin::Pin<&'a mut crate::SomeOtherStruct>;
         pub(crate) fn __rust_thunk___ZN15SomeOtherStructaSEOS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::SomeOtherStruct>,
+            __this: ::core::pin::Pin<&'a mut crate::SomeOtherStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherStruct>,
-        ) -> ::std::pin::Pin<&'a mut crate::SomeOtherStruct>;
+        ) -> ::core::pin::Pin<&'a mut crate::SomeOtherStruct>;
         pub(crate) fn __rust_thunk___ZN9SomeUnionC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeUnion>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeUnion>,
         );
         pub(crate) fn __rust_thunk___ZN9SomeUnionC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeUnion>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeUnion>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
         );
         pub(crate) fn __rust_thunk___ZN9SomeUnionaSERKS_<'a, 'b>(
@@ -396,10 +408,10 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
         ) -> &'a mut crate::SomeUnion;
         pub(crate) fn __rust_thunk___ZN14SomeOtherUnionC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeOtherUnion>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherUnion>,
         );
         pub(crate) fn __rust_thunk___ZN14SomeOtherUnionC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeOtherUnion>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherUnion>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
         );
         pub(crate) fn __rust_thunk___ZN14SomeOtherUnionaSERKS_<'a, 'b>(
@@ -415,10 +427,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::SomeStruct>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::SomeStruct>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::SomeStruct>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::SomeStruct>() == 1);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy);
 };
@@ -426,8 +438,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::SomeOtherStruct>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::SomeOtherStruct>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::SomeOtherStruct>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::SomeOtherStruct>() == 1);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeOtherStruct: Copy);
 };
@@ -435,8 +447,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeOtherStruct: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::SomeUnion>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::SomeUnion>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::SomeUnion>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::SomeUnion>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::SomeUnion: Clone);
 };
@@ -447,8 +459,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeUnion: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::SomeOtherUnion>() == 1);
-const _: () = assert!(::std::mem::align_of::<crate::SomeOtherUnion>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::SomeOtherUnion>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::SomeOtherUnion>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::SomeOtherUnion: Clone);
 };

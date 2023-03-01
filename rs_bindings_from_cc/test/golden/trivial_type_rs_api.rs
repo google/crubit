@@ -33,7 +33,7 @@ pub mod ns {
     impl Default for Trivial {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns7TrivialC1Ev(&mut tmp);
                 tmp.assume_init()
@@ -45,7 +45,7 @@ pub mod ns {
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for Trivial {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-            let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns7TrivialC1EOS0_(&mut tmp, __param_0);
                 tmp.assume_init()
@@ -91,7 +91,7 @@ pub mod ns {
     impl Default for TrivialWithDefaulted {
         #[inline(always)]
         fn default() -> Self {
-            let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns20TrivialWithDefaultedC1Ev(&mut tmp);
                 tmp.assume_init()
@@ -113,7 +113,7 @@ pub mod ns {
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialWithDefaulted {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-            let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns20TrivialWithDefaultedC1EOS0_(
                     &mut tmp, __param_0,
@@ -219,9 +219,9 @@ pub mod ns {
             let () = args;
             unsafe {
                 ::ctor::FnCtor::new(
-                    move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                    move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                         crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1Ev(
-                            ::std::pin::Pin::into_inner_unchecked(dest),
+                            ::core::pin::Pin::into_inner_unchecked(dest),
                         );
                     },
                 )
@@ -237,9 +237,9 @@ pub mod ns {
             let __param_0 = args;
             unsafe {
                 ::ctor::FnCtor::new(
-                    move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                    move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                         crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1ERKS0_(
-                            ::std::pin::Pin::into_inner_unchecked(dest),
+                            ::core::pin::Pin::into_inner_unchecked(dest),
                             __param_0,
                         );
                     },
@@ -264,9 +264,9 @@ pub mod ns {
             let __param_0 = args;
             unsafe {
                 ::ctor::FnCtor::new(
-                    move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                    move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                         crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_(
-                            ::std::pin::Pin::into_inner_unchecked(dest),
+                            ::core::pin::Pin::into_inner_unchecked(dest),
                             __param_0,
                         );
                     },
@@ -286,7 +286,7 @@ pub mod ns {
     /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     impl<'b> ::ctor::Assign<&'b Self> for TrivialNonfinal {
         #[inline(always)]
-        fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+        fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalaSERKS0_(self, __param_0);
             }
@@ -297,7 +297,7 @@ pub mod ns {
     impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
         #[inline(always)]
         fn assign<'a>(
-            self: ::std::pin::Pin<&'a mut Self>,
+            self: ::core::pin::Pin<&'a mut Self>,
             __param_0: ::ctor::RvalueReference<'b, Self>,
         ) {
             unsafe {
@@ -329,10 +329,10 @@ pub mod ns {
     ) -> impl ::ctor::Ctor<Output = crate::ns::TrivialNonfinal> {
         unsafe {
             ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
+                move |dest: ::core::pin::Pin<
+                    &mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
                 >| {
-                    crate::detail::__rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(::std::pin::Pin::into_inner_unchecked(dest),::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(trivial)));
+                    crate::detail::__rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(::core::pin::Pin::into_inner_unchecked(dest),::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(trivial)));
                 },
             )
         }
@@ -357,8 +357,8 @@ pub mod ns {
     /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=52
     #[inline(always)]
     pub fn TakesTrivialNonfinalByReference<'a>(
-        trivial: ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
-    ) -> ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal> {
+        trivial: ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
+    ) -> ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal> {
         unsafe {
             crate::detail::__rust_thunk___ZN2ns31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE(trivial)
         }
@@ -462,10 +462,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN2ns7TrivialC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::ns::Trivial>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::Trivial>,
         );
         pub(crate) fn __rust_thunk___ZN2ns7TrivialC1EOS0_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::ns::Trivial>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::Trivial>,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::Trivial>,
         );
         pub(crate) fn __rust_thunk___ZN2ns7TrivialaSERKS0_<'a, 'b>(
@@ -477,14 +477,14 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::ns::Trivial>,
         ) -> &'a mut crate::ns::Trivial;
         pub(crate) fn __rust_thunk___ZN2ns20TrivialWithDefaultedC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::ns::TrivialWithDefaulted>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialWithDefaulted>,
         );
         pub(crate) fn __rust_thunk___ZN2ns20TrivialWithDefaultedaSERKS0_<'a, 'b>(
             __this: &'a mut crate::ns::TrivialWithDefaulted,
             __param_0: &'b crate::ns::TrivialWithDefaulted,
         ) -> &'a mut crate::ns::TrivialWithDefaulted;
         pub(crate) fn __rust_thunk___ZN2ns20TrivialWithDefaultedC1EOS0_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::ns::TrivialWithDefaulted>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialWithDefaulted>,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialWithDefaulted>,
         );
         pub(crate) fn __rust_thunk___ZN2ns20TrivialWithDefaultedaSEOS0_<'a, 'b>(
@@ -516,24 +516,24 @@ mod detail {
             __this: &'a crate::ns::TrivialWithDefaulted,
         );
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
         );
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalC1ERKS0_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
             __param_0: &'b crate::ns::TrivialNonfinal,
         );
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
         );
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalaSERKS0_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
+            __this: ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
             __param_0: &'b crate::ns::TrivialNonfinal,
-        ) -> ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
+        ) -> ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalaSEOS0_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
+            __this: ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
-        ) -> ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
+        ) -> ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
         #[link_name = "_ZN2ns12TakesByValueENS_7TrivialE"]
         pub(crate) fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
             trivial: crate::ns::Trivial,
@@ -543,7 +543,7 @@ mod detail {
             trivial: crate::ns::TrivialWithDefaulted,
         ) -> crate::ns::TrivialWithDefaulted;
         pub(crate) fn __rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
-            __return: &mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
+            __return: &mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
             trivial: &mut crate::ns::TrivialNonfinal,
         );
         #[link_name = "_ZN2ns16TakesByReferenceERNS_7TrivialE"]
@@ -560,8 +560,8 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN2ns31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE<
             'a,
         >(
-            trivial: ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
-        ) -> ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
+            trivial: ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
+        ) -> ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
         #[link_name = "_ZN2ns21TakesByConstReferenceERKNS_7TrivialE"]
         pub(crate) fn __rust_thunk___ZN2ns21TakesByConstReferenceERKNS_7TrivialE<'a>(
             trivial: &'a crate::ns::Trivial,
@@ -613,10 +613,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::ns::Trivial>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::ns::Trivial>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::ns::Trivial>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::ns::Trivial>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::ns::Trivial: Clone);
 };
@@ -627,8 +627,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::ns::Trivial: Drop);
 };
 const _: () = assert!(memoffset::offset_of!(crate::ns::Trivial, trivial_field) == 0);
-const _: () = assert!(::std::mem::size_of::<crate::ns::TrivialWithDefaulted>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::ns::TrivialWithDefaulted>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::ns::TrivialWithDefaulted>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::ns::TrivialWithDefaulted>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::ns::TrivialWithDefaulted: Clone);
 };
@@ -639,8 +639,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::ns::TrivialWithDefaulted: Drop);
 };
 const _: () = assert!(memoffset::offset_of!(crate::ns::TrivialWithDefaulted, trivial_field) == 0);
-const _: () = assert!(::std::mem::size_of::<crate::ns::TrivialNonfinal>() == 4);
-const _: () = assert!(::std::mem::align_of::<crate::ns::TrivialNonfinal>() == 4);
+const _: () = assert!(::core::mem::size_of::<crate::ns::TrivialNonfinal>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::ns::TrivialNonfinal>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::ns::TrivialNonfinal: Copy);
 };

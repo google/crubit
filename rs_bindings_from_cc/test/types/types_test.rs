@@ -4,7 +4,7 @@
 
 #![allow(unreachable_code)] // compilation-only test.
 
-use std::ffi::c_void;
+use core::ffi::c_void;
 
 macro_rules! struct_field_type_is {
   ($mod:ident, $($cc_name:ident => $rs_type:ty),* $(,)?) => {

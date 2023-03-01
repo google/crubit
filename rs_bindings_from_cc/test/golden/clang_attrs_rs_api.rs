@@ -21,7 +21,7 @@
 #[::ctor::recursively_pinned]
 #[repr(C, align(64))]
 pub struct HasCustomAlignment {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 64],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasCustomAlignment"),
@@ -35,11 +35,13 @@ impl ::ctor::CtorNew<()> for HasCustomAlignment {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1Ev(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
         }
     }
 }
@@ -51,12 +53,14 @@ impl<'b> ::ctor::CtorNew<&'b Self> for HasCustomAlignment {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1ERKS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -76,12 +80,14 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasCustomAlignme
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1EOS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -97,7 +103,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for HasCustomAlig
 /// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignment {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN18HasCustomAlignmentaSERKS_(self, __param_0);
         }
@@ -108,7 +114,7 @@ impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignment {
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasCustomAlignment {
     #[inline(always)]
     fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
+        self: ::core::pin::Pin<&'a mut Self>,
         __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
@@ -135,11 +141,13 @@ impl ::ctor::CtorNew<()> for HasFieldWithCustomAlignment {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
         }
     }
 }
@@ -151,12 +159,14 @@ impl<'b> ::ctor::CtorNew<&'b Self> for HasFieldWithCustomAlignment {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentC1ERKS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -176,12 +186,14 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasFieldWithCust
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentC1EOS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -197,7 +209,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for HasFieldWithC
 /// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=12
 impl<'b> ::ctor::Assign<&'b Self> for HasFieldWithCustomAlignment {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentaSERKS_(self, __param_0);
         }
@@ -208,7 +220,7 @@ impl<'b> ::ctor::Assign<&'b Self> for HasFieldWithCustomAlignment {
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasFieldWithCustomAlignment {
     #[inline(always)]
     fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
+        self: ::core::pin::Pin<&'a mut Self>,
         __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
@@ -221,7 +233,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasFieldWithCusto
 #[::ctor::recursively_pinned]
 #[repr(C, align(64))]
 pub struct InheritsFromBaseWithCustomAlignment {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 64],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("InheritsFromBaseWithCustomAlignment"),
@@ -235,11 +247,13 @@ impl ::ctor::CtorNew<()> for InheritsFromBaseWithCustomAlignment {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
         }
     }
 }
@@ -251,12 +265,14 @@ impl<'b> ::ctor::CtorNew<&'b Self> for InheritsFromBaseWithCustomAlignment {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1ERKS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -278,12 +294,14 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1EOS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -301,7 +319,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)>
 /// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 impl<'b> ::ctor::Assign<&'b Self> for InheritsFromBaseWithCustomAlignment {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSERKS_(
                 self, __param_0,
@@ -314,7 +332,7 @@ impl<'b> ::ctor::Assign<&'b Self> for InheritsFromBaseWithCustomAlignment {
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for InheritsFromBaseWithCustomAlignment {
     #[inline(always)]
     fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
+        self: ::core::pin::Pin<&'a mut Self>,
         __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
@@ -337,7 +355,7 @@ unsafe impl oops::Inherits<crate::HasCustomAlignment>
 #[::ctor::recursively_pinned]
 #[repr(C, align(64))]
 pub struct HasCustomAlignmentWithGnuAttr {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 64],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasCustomAlignmentWithGnuAttr"),
@@ -351,11 +369,13 @@ impl ::ctor::CtorNew<()> for HasCustomAlignmentWithGnuAttr {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
         }
     }
 }
@@ -367,12 +387,14 @@ impl<'b> ::ctor::CtorNew<&'b Self> for HasCustomAlignmentWithGnuAttr {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1ERKS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -392,12 +414,14 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasCustomAlignme
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1EOS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
         }
     }
 }
@@ -413,7 +437,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for HasCustomAlig
 /// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=18
 impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignmentWithGnuAttr {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSERKS_(self, __param_0);
         }
@@ -424,7 +448,7 @@ impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignmentWithGnuAttr {
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmentWithGnuAttr {
     #[inline(always)]
     fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
+        self: ::core::pin::Pin<&'a mut Self>,
         __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
@@ -461,7 +485,7 @@ pub mod template_with_preferred_name {
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
-    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("template_with_preferred_name::SomeTemplate<int>"),
@@ -475,9 +499,11 @@ impl ::ctor::CtorNew<()> for __CcTemplateInstN28template_with_preferred_name12So
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(::std::pin::Pin::into_inner_unchecked(dest));
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(::core::pin::Pin::into_inner_unchecked(dest));
+                },
+            )
         }
     }
 }
@@ -491,9 +517,11 @@ impl<'b> ::ctor::CtorNew<&'b Self>
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(::core::pin::Pin::into_inner_unchecked(dest),__param_0);
+                },
+            )
         }
     }
 }
@@ -517,9 +545,11 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
-            })
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(::core::pin::Pin::into_inner_unchecked(dest),__param_0);
+                },
+            )
         }
     }
 }
@@ -539,7 +569,7 @@ impl<'b> ::ctor::Assign<&'b Self>
     for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(self,__param_0);
         }
@@ -552,7 +582,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
+        self: ::core::pin::Pin<&'a mut Self>,
         __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
@@ -564,7 +594,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
 impl __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
     /// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=39
     #[inline(always)]
-    pub fn foo<'a>(self: ::std::pin::Pin<&'a mut Self>) -> i32 {
+    pub fn foo<'a>(self: ::core::pin::Pin<&'a mut Self>) -> i32 {
         unsafe {
             crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiE3fooEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(self)
         }
@@ -576,85 +606,85 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::HasCustomAlignment>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::HasCustomAlignment>,
         );
         pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentC1ERKS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::HasCustomAlignment>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::HasCustomAlignment>,
             __param_0: &'b crate::HasCustomAlignment,
         );
         pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::HasCustomAlignment>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::HasCustomAlignment>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasCustomAlignment>,
         );
         pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentaSERKS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::HasCustomAlignment>,
+            __this: ::core::pin::Pin<&'a mut crate::HasCustomAlignment>,
             __param_0: &'b crate::HasCustomAlignment,
-        ) -> ::std::pin::Pin<&'a mut crate::HasCustomAlignment>;
+        ) -> ::core::pin::Pin<&'a mut crate::HasCustomAlignment>;
         pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentaSEOS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::HasCustomAlignment>,
+            __this: ::core::pin::Pin<&'a mut crate::HasCustomAlignment>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasCustomAlignment>,
-        ) -> ::std::pin::Pin<&'a mut crate::HasCustomAlignment>;
+        ) -> ::core::pin::Pin<&'a mut crate::HasCustomAlignment>;
         pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
         );
         pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1ERKS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
             __param_0: &'b crate::HasFieldWithCustomAlignment,
         );
         pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
         );
         pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentaSERKS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>,
+            __this: ::core::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>,
             __param_0: &'b crate::HasFieldWithCustomAlignment,
-        ) -> ::std::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>;
+        ) -> ::core::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>;
         pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentaSEOS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>,
+            __this: ::core::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
-        ) -> ::std::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>;
+        ) -> ::core::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>;
         pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::InheritsFromBaseWithCustomAlignment>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::InheritsFromBaseWithCustomAlignment>,
         );
         pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1ERKS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::InheritsFromBaseWithCustomAlignment>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::InheritsFromBaseWithCustomAlignment>,
             __param_0: &'b crate::InheritsFromBaseWithCustomAlignment,
         );
         pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::InheritsFromBaseWithCustomAlignment>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::InheritsFromBaseWithCustomAlignment>,
             __param_0: ::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
         );
         pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSERKS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>,
+            __this: ::core::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>,
             __param_0: &'b crate::InheritsFromBaseWithCustomAlignment,
-        ) -> ::std::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>;
+        ) -> ::core::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>;
         pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSEOS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>,
+            __this: ::core::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>,
             __param_0: ::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
-        ) -> ::std::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>;
+        ) -> ::core::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>;
         pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev<'a>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
         );
         pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1ERKS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
             __param_0: &'b crate::HasCustomAlignmentWithGnuAttr,
         );
         pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
+            __this: &'a mut ::core::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
         );
         pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSERKS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>,
+            __this: ::core::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>,
             __param_0: &'b crate::HasCustomAlignmentWithGnuAttr,
-        ) -> ::std::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>;
+        ) -> ::core::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>;
         pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSEOS_<'a, 'b>(
-            __this: ::std::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>,
+            __this: ::core::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
-        ) -> ::std::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>;
+        ) -> ::core::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>;
         pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
             'a,
         >(
-            __this: &'a mut ::std::mem::MaybeUninit<
+            __this: &'a mut ::core::mem::MaybeUninit<
                 crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             >,
         );
@@ -662,7 +692,7 @@ mod detail {
             'a,
             'b,
         >(
-            __this: &'a mut ::std::mem::MaybeUninit<
+            __this: &'a mut ::core::mem::MaybeUninit<
                 crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             >,
             __param_0: &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
@@ -671,7 +701,7 @@ mod detail {
             'a,
             'b,
         >(
-            __this: &'a mut ::std::mem::MaybeUninit<
+            __this: &'a mut ::core::mem::MaybeUninit<
                 crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             >,
             __param_0: ::ctor::RvalueReference<
@@ -683,41 +713,41 @@ mod detail {
             'a,
             'b,
         >(
-            __this: ::std::pin::Pin<
+            __this: ::core::pin::Pin<
                 &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             >,
             __param_0: &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-        ) -> ::std::pin::Pin<
+        ) -> ::core::pin::Pin<
             &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
         >;
         pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
             'a,
             'b,
         >(
-            __this: ::std::pin::Pin<
+            __this: ::core::pin::Pin<
                 &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             >,
             __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             >,
-        ) -> ::std::pin::Pin<
+        ) -> ::core::pin::Pin<
             &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
         >;
         pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiE3fooEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
             'a,
         >(
-            __this: ::std::pin::Pin<
+            __this: ::core::pin::Pin<
                 &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             >,
         ) -> i32;
     }
 }
 
-const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
+const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
 
-const _: () = assert!(::std::mem::size_of::<crate::HasCustomAlignment>() == 64);
-const _: () = assert!(::std::mem::align_of::<crate::HasCustomAlignment>() == 64);
+const _: () = assert!(::core::mem::size_of::<crate::HasCustomAlignment>() == 64);
+const _: () = assert!(::core::mem::align_of::<crate::HasCustomAlignment>() == 64);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::HasCustomAlignment: Copy);
 };
@@ -725,8 +755,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::HasCustomAlignment: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::HasFieldWithCustomAlignment>() == 64);
-const _: () = assert!(::std::mem::align_of::<crate::HasFieldWithCustomAlignment>() == 64);
+const _: () = assert!(::core::mem::size_of::<crate::HasFieldWithCustomAlignment>() == 64);
+const _: () = assert!(::core::mem::align_of::<crate::HasFieldWithCustomAlignment>() == 64);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::HasFieldWithCustomAlignment: Copy);
 };
@@ -735,8 +765,8 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::HasFieldWithCustomAlignment, field) == 0);
 
-const _: () = assert!(::std::mem::size_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
-const _: () = assert!(::std::mem::align_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
+const _: () = assert!(::core::mem::size_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
+const _: () = assert!(::core::mem::align_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::InheritsFromBaseWithCustomAlignment: Copy);
 };
@@ -744,8 +774,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::InheritsFromBaseWithCustomAlignment: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
-const _: () = assert!(::std::mem::align_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
+const _: () = assert!(::core::mem::size_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
+const _: () = assert!(::core::mem::align_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::HasCustomAlignmentWithGnuAttr: Copy);
 };
@@ -754,11 +784,11 @@ const _: () = {
 };
 
 const _: () = assert!(
-    ::std::mem::size_of::<crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE>(
+    ::core::mem::size_of::<crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE>(
     ) == 1
 );
 const _: () = assert!(
-    ::std::mem::align_of::<crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE>(
+    ::core::mem::align_of::<crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE>(
     ) == 1
 );
 const _: () = {
