@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -82,6 +83,11 @@ class Cmdline {
     return headers_to_targets_;
   }
 
+  const absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>&
+  target_to_features() const {
+    return target_to_features_;
+  }
+
  private:
   Cmdline();
 
@@ -117,6 +123,8 @@ class Cmdline {
   std::string instantiations_out_;
 
   std::string namespaces_out_;
+  absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
+      target_to_features_;
 };
 
 }  // namespace crubit

@@ -35,12 +35,14 @@ pub const TESTING_TARGET: &str = "//test:testing_target";
 /// Create a testing `IR` instance from given items, using mock values for other
 /// fields.
 pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
+    let target: ir::BazelLabel = TESTING_TARGET.into();
     make_ir_from_parts(
         items.into_iter().collect_vec(),
         /* public_headers= */ vec![],
-        /* current_target= */ TESTING_TARGET.into(),
+        /* current_target= */ target.clone(),
         /* top_level_item_ids= */ vec![],
         /* crate_root_path= */ None,
+        /* crubit_features= */ [(target, ir::CrubitFeature::Experimental)].into()
     )
 }
 

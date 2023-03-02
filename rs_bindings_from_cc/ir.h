@@ -788,6 +788,9 @@ struct IR {
   // TODO(hlopko): Replace empty strings with std::optional<std::string>
   // throughout the codebase
   std::string crate_root_path;
+
+  absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
+      crubit_features;
 };
 
 inline std::string IrToJson(const IR& ir) {

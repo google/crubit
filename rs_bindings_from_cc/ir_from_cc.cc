@@ -39,7 +39,9 @@ absl::StatusOr<IR> IrFromCc(
     absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets,
     absl::Span<const std::string> extra_rs_srcs,
     absl::Span<const absl::string_view> clang_args,
-    absl::Span<const std::string> extra_instantiations) {
+    absl::Span<const std::string> extra_instantiations,
+    const absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>&
+        crubit_features) {
   // Caller should verify that the inputs are not empty.
   CHECK(!extra_source_code_for_testing.empty() || !public_headers.empty() ||
         !extra_instantiations.empty());
@@ -115,6 +117,7 @@ absl::StatusOr<IR> IrFromCc(
     invocation.ir_.top_level_item_ids.push_back(id);
     ++i;
   }
+  invocation.ir_.crubit_features = std::move(crubit_features);
   return invocation.ir_;
 }
 

@@ -72,7 +72,8 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
           /* extra_source_code_for_testing= */ "", cmdline.current_target(),
           cmdline.public_headers(), virtual_headers_contents_for_testing,
           cmdline.headers_to_targets(), cmdline.extra_rs_srcs(),
-          clang_args_view, requested_instantiations));
+          clang_args_view, requested_instantiations,
+          cmdline.target_to_features()));
 
   if (!cmdline.instantiations_out().empty()) {
     ir.crate_root_path = "__cc_template_instantiations_rs_api";

@@ -44,6 +44,7 @@ TAGS = {}
 [cc_library(
     name = name + "_cc",
     hdrs = [name + ".h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
     copts = ["-Wno-google3-inline-namespace"],
     deps = [
         ((d + "_cc") if d in TESTS else d)

@@ -51,6 +51,9 @@ crates_repository(
         "anyhow": crate.spec(
             version = ">0.0.0",
         ),
+        "flagset": crate.spec(
+            version = ">0.0.0",
+        ),
         "itertools": crate.spec(
             version = ">0.0.0",
         ),

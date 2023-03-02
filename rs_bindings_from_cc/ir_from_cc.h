@@ -8,6 +8,7 @@
 #include <string>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -41,9 +42,10 @@ static constexpr absl::string_view kInstantiationsNamespaceName =
 //   `virtual_headers_contents_for_testing` are not added automatically.
 // * `clang_args`: additional command line arguments for Clang
 // * `extra_rs_srcs`: A list of paths for additional rust files to include into
-//   the crate. This is done via `#[path="..."] mod <...>; pub use <...>::*;`.
+//    the crate. This is done via `#[path="..."] mod <...>; pub use <...>::*;`.
 // * `extra_instantiations`: names of full C++ class template specializations
-// to instantiate and generate bindings from.
+//   to instantiate and generate bindings from.
+// * `crubit_features`: The set of Crubit features to enable for each target.
 //
 absl::StatusOr<IR> IrFromCc(
     absl::string_view extra_source_code_for_testing,
@@ -54,7 +56,9 @@ absl::StatusOr<IR> IrFromCc(
     absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets = {},
     absl::Span<const std::string> extra_rs_srcs = {},
     absl::Span<const absl::string_view> clang_args = {},
-    absl::Span<const std::string> extra_instantiations = {});
+    absl::Span<const std::string> extra_instantiations = {},
+    const absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>&
+        crubit_features = {});
 
 }  // namespace crubit
 

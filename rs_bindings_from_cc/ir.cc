@@ -542,11 +542,21 @@ llvm::json::Value IR::ToJson() const {
     top_level_ids.push_back(id.value());
   }
 
+  llvm::json::Object features_json;
+  for (const auto& [target, features] : crubit_features) {
+    std::vector<llvm::json::Value> feature_array;
+    for (const std::string& feature : features) {
+      feature_array.push_back(feature);
+    }
+    features_json[target.value()] = std::move(feature_array);
+  }
+
   llvm::json::Object result{
       {"public_headers", public_headers},
       {"current_target", current_target},
       {"items", std::move(json_items)},
       {"top_level_item_ids", std::move(top_level_ids)},
+      {"crubit_features", std::move(features_json)},
   };
   if (!crate_root_path.empty()) {
     result["crate_root_path"] = crate_root_path;

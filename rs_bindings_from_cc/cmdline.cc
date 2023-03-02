@@ -87,13 +87,15 @@ namespace {
 struct TargetArgs {
   std::string target;
   std::vector<std::string> headers;
+  std::vector<std::string> features;
 };
 
 bool fromJSON(const llvm::json::Value& json, TargetArgs& out,
               llvm::json::Path path) {
   llvm::json::ObjectMapper mapper(json, path);
   return mapper && mapper.map("t", out.target) &&
-         mapper.mapOptional("h", out.headers);
+         mapper.mapOptional("h", out.headers) &&
+         mapper.mapOptional("f", out.features);
 }
 
 }  // namespace
@@ -215,6 +217,14 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
           it->second = std::move(target_label);
         }
       }
+    }
+    for (const std::string& feature : it.features) {
+      if (feature.empty()) {
+        return absl::InvalidArgumentError(
+            "Expected `f` (feature) fields of `--target_args` to be an "
+            "array of non-empty strings");
+      }
+      cmdline.target_to_features_[BazelLabel(target)].insert(feature);
     }
   }
 

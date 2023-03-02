@@ -191,9 +191,24 @@ fn generate_bindings(
         //
         // TODO(b/255784681): Consider including cmdline arguments.
         let target = &ir.current_target().0;
+
+        let crubit_features = {
+            let mut crubit_features: Vec<&str> = ir
+                .target_crubit_features(ir.current_target())
+                .into_iter()
+                .map(|feature| feature.short_name())
+                .collect();
+            crubit_features.sort();
+            if crubit_features.is_empty() {
+                "<none>".to_string()
+            } else {
+                crubit_features.join(", ")
+            }
+        };
         format!(
             "// Automatically @generated Rust bindings for the following C++ target:\n\
-            // {target}\n"
+            // {target}\n\
+            // Features: {crubit_features}\n"
         )
     };
     // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't

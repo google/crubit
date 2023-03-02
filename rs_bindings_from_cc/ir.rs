@@ -26,14 +26,28 @@ pub fn deserialize_ir<R: Read>(reader: R) -> Result<IR> {
 
 /// Create a testing `IR` instance from given parts. This function does not use
 /// any mock values.
-pub fn make_ir_from_parts(
+pub fn make_ir_from_parts<CrubitFeatures>(
     items: Vec<Item>,
     public_headers: Vec<HeaderName>,
     current_target: BazelLabel,
     top_level_item_ids: Vec<ItemId>,
     crate_root_path: Option<Rc<str>>,
-) -> Result<IR> {
-    make_ir(FlatIR { public_headers, current_target, items, top_level_item_ids, crate_root_path })
+    crubit_features: HashMap<BazelLabel, CrubitFeatures>,
+) -> Result<IR>
+where
+    CrubitFeatures: Into<flagset::FlagSet<CrubitFeature>>,
+{
+    make_ir(FlatIR {
+        public_headers,
+        current_target,
+        items,
+        top_level_item_ids,
+        crate_root_path,
+        crubit_features: crubit_features
+            .into_iter()
+            .map(|(label, features)| (label, CrubitFeaturesIR(features.into())))
+            .collect(),
+    })
 }
 
 fn make_ir(flat_ir: FlatIR) -> Result<IR> {
@@ -683,7 +697,52 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Comment> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+flagset::flags! {
+    pub enum CrubitFeature : u8 {
+        Supported,
+        /// Experimental is never *set* without also setting Supported, but we allow it to be
+        /// *required* without also requiring Supported, so that error messages can be more direct.
+        Experimental,
+    }
+}
+
+impl CrubitFeature {
+    /// The name of this feature.
+    pub fn short_name(&self) -> &'static str {
+        match self {
+            Self::Supported => "supported",
+            Self::Experimental => "experimental",
+        }
+    }
+}
+
+/// A newtype around a flagset of features, so that it can be deserialized from
+/// an array of strings instead of an integer.
+#[derive(Debug, Default, PartialEq, Eq, Clone)]
+struct CrubitFeaturesIR(pub(crate) flagset::FlagSet<CrubitFeature>);
+
+impl<'de> serde::Deserialize<'de> for CrubitFeaturesIR {
+    fn deserialize<D>(deserializer: D) -> Result<CrubitFeaturesIR, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let mut features = flagset::FlagSet::<CrubitFeature>::default();
+        for feature in <Vec<String> as serde::Deserialize<'de>>::deserialize(deserializer)? {
+            features |= match &*feature {
+                "experimental" => CrubitFeature::Experimental,
+                "supported" => CrubitFeature::Supported,
+                other => {
+                    return Err(<D::Error as serde::de::Error>::custom(format!(
+                        "Unexpected Crubit feature: {other}"
+                    )));
+                }
+            };
+        }
+        Ok(CrubitFeaturesIR(features))
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
 #[serde(rename(deserialize = "IR"))]
 struct FlatIR {
     #[serde(default)]
@@ -695,6 +754,8 @@ struct FlatIR {
     top_level_item_ids: Vec<ItemId>,
     #[serde(default)]
     crate_root_path: Option<Rc<str>>,
+    #[serde(default)]
+    crubit_features: HashMap<BazelLabel, CrubitFeaturesIR>,
 }
 
 /// Struct providing the necessary information about the API of a C++ target to
@@ -793,11 +854,17 @@ impl IR {
         self.flat_ir.items.get(idx).with_context(|| format!("Couldn't find an item at idx {}", idx))
     }
 
-    // Returns whether `target` is the current target.
+    /// Returns whether `target` is the current target.
     pub fn is_current_target(&self, target: &BazelLabel) -> bool {
         // TODO(hlopko): Make this be a pointer comparison, now it's comparing string
         // values.
         *target == *self.current_target()
+    }
+
+    /// Returns the Crubit features enabled for the given `target`.
+    #[must_use]
+    pub fn target_crubit_features(&self, target: &BazelLabel) -> flagset::FlagSet<CrubitFeature> {
+        self.flat_ir.crubit_features.get(target).cloned().unwrap_or_default().0
     }
 
     pub fn current_target(&self) -> &BazelLabel {
@@ -896,6 +963,7 @@ mod tests {
             top_level_item_ids: vec![],
             items: vec![],
             crate_root_path: None,
+            crubit_features: Default::default(),
         };
         assert_eq!(ir.flat_ir, expected);
     }

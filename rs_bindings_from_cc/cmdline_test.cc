@@ -212,6 +212,28 @@ TEST(CmdlineTest, PublicHeadersCoveringMultipleTargets) {
                            Pair(HeaderName("d.h"), BazelLabel("//:target2"))));
 }
 
+TEST(CmdlineTest, TargetArgsIntInsteadOfFeaturesArray) {
+  ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "t1", "f": 123}])"),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       AllOf(HasSubstr("--target_args"), HasSubstr(".f"),
+                             HasSubstr("array"))));
+}
+
+TEST(CmdlineTest, TargetArgsEmptyFeature) {
+  ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "t1", "f": ["", "h2"]}])"),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       AllOf(HasSubstr("--target_args"), HasSubstr("`f`"),
+                             HasSubstr("empty string"))));
+}
+
+TEST(CmdlineTest, TargetArgsIntInsteadOfFeature) {
+  ASSERT_THAT(
+      TestCmdline({"h1"}, R"([{"t": "t1", "f": [123, "experimental"]}])"),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               AllOf(HasSubstr("--target_args"), HasSubstr(".f"),
+                     HasSubstr("string"))));
+}
+
 TEST(CmdlineTest, InstantiationsOutEmpty) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "//:target1", "h": ["a.h", "b.h"]}

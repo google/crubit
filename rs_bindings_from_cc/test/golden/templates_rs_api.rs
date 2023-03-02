@@ -4,6 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/golden:templates_cc
+// Features: experimental, supported
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls, type_alias_impl_trait)]
