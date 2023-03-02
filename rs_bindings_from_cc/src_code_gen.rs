@@ -1160,12 +1160,8 @@ fn get_binding(
     expected_param_types: Vec<RsTypeKind>,
 ) -> Option<(Ident, ImplKind)> {
     db.ir()
-        // TODO(jeanpierreda): make this O(1) using a hash table lookup.
-        .functions()
-        .filter(|function| {
-            function.name == expected_function_name
-                && generate_func(db, (*function).clone()).ok().flatten().is_some()
-        })
+        .get_functions_by_name(&expected_function_name)
+        .filter(|function| generate_func(db, (*function).clone()).ok().flatten().is_some())
         .find_map(|function| {
             let mut function_param_types = function
                 .params
@@ -1189,12 +1185,10 @@ fn is_record_clonable(db: &dyn BindingsGenerator, record: Rc<Record>) -> bool {
     should_derive_clone(&record)
         || db
             .ir()
-            // TODO(jeanpierreda): make this O(1) using a hash table lookup.
-            .functions()
+            .get_functions_by_name(&UnqualifiedIdentifier::Constructor)
             .filter(|function| {
-                function.name == UnqualifiedIdentifier::Constructor
                 // __this is always the first parameter of constructors
-                && function.params.len() == 2
+                function.params.len() == 2
             })
             .any(|function| {
                 let mut function_param_types = function
@@ -7041,12 +7035,12 @@ mod tests {
         let ir = ir_from_cc("struct Class {};").unwrap();
 
         let destructor =
-            ir.functions().find(|f| f.name == UnqualifiedIdentifier::Destructor).unwrap();
+            ir.get_functions_by_name(&UnqualifiedIdentifier::Destructor).next().unwrap();
         assert_eq!(thunk_ident(destructor), make_rs_ident("__rust_thunk___ZN5ClassD1Ev"));
 
         let default_constructor = ir
-            .functions()
-            .find(|f| f.name == UnqualifiedIdentifier::Constructor && f.params.len() == 1)
+            .get_functions_by_name(&UnqualifiedIdentifier::Constructor)
+            .find(|f| f.params.len() == 1)
             .unwrap();
         assert_eq!(thunk_ident(default_constructor), make_rs_ident("__rust_thunk___ZN5ClassC1Ev"));
     }

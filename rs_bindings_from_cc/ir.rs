@@ -106,12 +106,25 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
             namespace_id_to_number_of_reopened_namespaces.insert(canonical_id, current_count + 1);
         });
 
+    let mut function_name_to_functions = HashMap::<UnqualifiedIdentifier, Vec<Rc<Func>>>::new();
+    flat_ir
+        .items
+        .iter()
+        .filter_map(|item| match item {
+            Item::Func(func) => Some(func),
+            _ => None,
+        })
+        .for_each(|f| {
+            function_name_to_functions.entry(f.name.clone()).or_default().push(f.clone());
+        });
+
     Ok(IR {
         flat_ir,
         item_id_to_item_idx,
         lifetimes,
         namespace_id_to_number_of_reopened_namespaces,
         reopened_namespace_id_to_idx,
+        function_name_to_functions,
     })
 }
 
@@ -769,6 +782,7 @@ pub struct IR {
     lifetimes: HashMap<LifetimeId, LifetimeName>,
     namespace_id_to_number_of_reopened_namespaces: HashMap<ItemId, usize>,
     reopened_namespace_id_to_idx: HashMap<ItemId, usize>,
+    function_name_to_functions: HashMap<UnqualifiedIdentifier, Vec<Rc<Func>>>,
 }
 
 impl IR {
@@ -923,6 +937,13 @@ impl IR {
 
     pub fn crate_root_path(&self) -> Option<Rc<str>> {
         self.flat_ir.crate_root_path.clone()
+    }
+
+    pub fn get_functions_by_name(
+        &self,
+        function_name: &UnqualifiedIdentifier,
+    ) -> impl Iterator<Item = &Rc<Func>> {
+        self.function_name_to_functions.get(function_name).map_or([].iter(), |v| v.iter())
     }
 }
 
