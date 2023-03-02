@@ -109,6 +109,15 @@ where
     F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
     R: Send,
 {
+    /// Configures how `rustc` internals work when invoked via `run_compiler`.
+    /// Note that `run_compiler_for_testing` uses a separate `Config`.
+    fn config(&mut self, config: &mut rustc_interface::interface::Config) {
+        // Silence warnings in the target crate to avoid reporting them twice: once when
+        // compiling the crate via `rustc` and once when "compiling" the crate
+        // via `cc_bindings_from_rs` (the `config` here affects the latter one).
+        config.opts.lint_opts.push(("warnings".to_string(), rustc_lint_defs::Level::Allow));
+    }
+
     fn after_analysis<'tcx>(
         &mut self,
         _compiler: &Compiler,

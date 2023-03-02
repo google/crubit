@@ -145,4 +145,40 @@ function test::invalid_h_out() {
     "std::fs-generated part of the error message should be present"
 }
 
+# This test verifies that running `cc_bindings_from_rs` will not emit the
+# following warning: use of deprecated function `deprecated_function` (note:
+# `#[warn(deprecated)]` on by default).  The motivation for silencing the
+# warnings is the desire to avoid reporting warnings twice (once via `rustc` +
+# once via `cc_bindings_from_rs`).
+function test::rustc_warnings_are_silenced() {
+  local RS_INPUT_PATH="${TEST_TMPDIR}/crate_name.rs"
+  echo >"$RS_INPUT_PATH" "
+      #[deprecated]
+      fn deprecated_function() {
+          unimplemented!()
+      }
+
+      pub fn public_function() {
+          deprecated_function()
+      }
+  "
+
+  delete_all_test_outputs
+  EXPECT_SUCCEED \
+    "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
+        \"--h-out=${H_OUT_PATH}\" \
+        \"--rs-out=${RS_OUT_PATH}\" \
+        \"--crubit-support-path=crubit/support/for/tests\" \
+        \"--clang-format-exe-path=${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
+        \"--rustfmt-exe-path=${DEFAULT_RUSTFMT_EXE_PATH}\" \
+        -- \
+        \"$RS_INPUT_PATH\" \
+        --crate-type=lib \
+        --codegen=panic=abort" \
+    "Expecting that this invocation of cc_bindings_from_rs will succeed"
+
+  EXPECT_STR_EMPTY "$(cat $STDOUT_PATH)"
+  EXPECT_STR_EMPTY "$(cat $STDERR_PATH)"
+}
+
 gbash::unit::main "$@"
