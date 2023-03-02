@@ -14,9 +14,3 @@ bzl_library(
         "//visibility:private",  # Only private by automation, not intent. Owner may accept CLs adding visibility. See <internal link>.
     ],
 )
-
-alias(
-    name = "cc_deps_for_bindings",
-    actual = "//support/rs_std:rs_char",
-    visibility = ["//visibility:public"],
-)
