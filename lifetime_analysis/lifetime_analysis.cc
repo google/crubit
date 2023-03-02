@@ -35,7 +35,6 @@
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/Optional.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
 
