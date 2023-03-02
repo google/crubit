@@ -13,6 +13,8 @@
 namespace rs_std {
 
 // `rs_std::rs_char` is a C++ representation of the `char` type from Rust.
+// `rust_builtin_type_abi_assumptions.md` documents the ABI compatiblity of
+// these types.
 class rs_char final {
  public:
   // Creates a default `rs_char` - one that represents ASCII NUL character.

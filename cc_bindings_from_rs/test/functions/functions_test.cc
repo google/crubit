@@ -51,10 +51,10 @@ TEST(FnParamTyTests, Int32) {
 }
 
 TEST(FnParamTyTests, rs_char) {
-  std::optional<const rs_std::rs_char> input = rs_std::rs_char::from_u32(U'🦀');
+  std::optional<const rs_std::rs_char> input = rs_std::rs_char::from_u32(U'A');
   ASSERT_TRUE(input.has_value());
-  rs_std::rs_char output = fn_param_ty_tests::char_identity(*input);
-  EXPECT_EQ(input, output);
+  rs_std::rs_char output = fn_param_ty_tests::char_to_ascii_lowercase(*input);
+  EXPECT_EQ(std::uint32_t{U'a'}, std::uint32_t{output});
 }
 
 TEST(FnParamTyTests, Int32Ptr) {

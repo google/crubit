@@ -69,8 +69,12 @@ pub mod fn_param_ty_tests {
         }
     }
 
-    pub fn char_identity(c: char) -> char {
-        c
+    pub fn char_to_ascii_lowercase(c: char) -> char {
+        // This function used to return unmodified `c` value, but (as we learned when
+        // authoring `rs_bindings_from_cc/test/struct/abi_class` tests) making
+        // some simple calculations below helps to exercise the ABI
+        // compatibility between Rust `char` and C++ `rs_std::rs_char`.
+        c.to_ascii_lowercase()
     }
 }
 

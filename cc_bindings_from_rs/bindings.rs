@@ -16,7 +16,7 @@ use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::Symbol;
-use rustc_target::spec::abi::Abi;
+use rustc_target::abi::{Abi, Integer, Primitive, Scalar};
 use rustc_target::spec::PanicStrategy;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -255,7 +255,7 @@ impl FullyQualifiedName {
     }
 }
 
-fn format_ret_ty_for_cc(input: &Input, ty: Ty) -> Result<CcSnippet> {
+fn format_ret_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet> {
     let void = Ok(CcSnippet::new(quote! { void }));
     match ty.kind() {
         ty::TyKind::Never => void,  // `!`
@@ -283,7 +283,7 @@ fn format_cc_thunk_arg<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>, value: TokenStream
 /// spelled in a C++ declaration of a function parameter or field.
 //
 // TODO(b/259724276): This function's results should be memoized.
-fn format_ty_for_cc(input: &Input, ty: Ty) -> Result<CcSnippet> {
+fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet> {
     fn cstdint(tokens: TokenStream) -> CcSnippet {
         CcSnippet::with_include(tokens, CcInclude::cstdint())
     }
@@ -324,6 +324,21 @@ fn format_ty_for_cc(input: &Input, ty: Ty) -> Result<CcSnippet> {
         // `crubit/support/rs_std/rs_char.h` and `crubit/support/rs_std/char_test.cc` (search for
         // "Layout tests").
         ty::TyKind::Char => {
+            // Asserting that the target architecture meets the assumption from Crubit's
+            // `rust_builtin_type_abi_assumptions.md` - we assume that Rust's `char` has the same
+            // ABI as `u32`.
+            let param_env = ty::ParamEnv::empty();
+            let layout = input
+                .tcx
+                .layout_of(param_env.and(ty))
+                .expect("`layout_of` is expected to succeed for the builtin `char` type")
+                .layout;
+            assert_eq!(4, layout.align().abi.bytes());
+            assert_eq!(4, layout.size().bytes());
+            assert!(matches!(layout.abi(), Abi::Scalar(Scalar::Initialized{
+                                 value: Primitive::Int(Integer::I32, /* signedness = */false), ..
+                             })));
+
             let rs_char_path = format!("{}/rs_std/rs_char.h", &*input.crubit_support_path);
             CcSnippet::with_include(
                 quote! { rs_std::rs_char },
@@ -560,14 +575,14 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
         //
         // After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a Rust panic that
         // tries to "escape" a "C" ABI function will terminate the program.  This is okay.
-        Abi::C { unwind: false } => {
+        rustc_target::spec::abi::Abi::C { unwind: false } => {
             needs_thunk = false;
         },
 
         // "C-unwind" ABI is okay: After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a
         // new "C-unwind" ABI may be used by Rust functions that want to safely propagate Rust
         // panics through frames that may belong to another language.
-        Abi::C { unwind: true } => {
+        rustc_target::spec::abi::Abi::C { unwind: true } => {
             needs_thunk = false;
         },
 
