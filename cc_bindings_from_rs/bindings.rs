@@ -838,7 +838,7 @@ fn is_directly_public(tcx: TyCtxt, def_id: DefId) -> bool {
 //
 // TODO(b/259724276): This function's results should be memoized.
 fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
-    let ty = tcx.type_of(def_id);
+    let ty = tcx.type_of(def_id).subst_identity();
     assert!(ty.is_adt());
     assert!(is_directly_public(tcx, def_id), "Caller should verify");
 
