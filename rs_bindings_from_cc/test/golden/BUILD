@@ -3,6 +3,10 @@ load(
     "//rs_bindings_from_cc/test/golden:generate_bindings.bzl",
     "generate_bindings",
 )
+load(
+    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_cli_flag_aspect_hint.bzl",
+    "rust_bindings_from_cc_cli_flag",
+)
 load("@rules_rust//rust:defs.bzl", "rust_test")
 
 package(default_applicable_licenses = ["//third_party/crubit:license"])
@@ -41,10 +45,18 @@ DEPS = {
 
 TAGS = {}
 
+rust_bindings_from_cc_cli_flag(
+    name = "enable_source_location_in_doc_comment",
+    flags = "--generate_source_location_in_doc_comment=True",
+)
+
 [cc_library(
     name = name + "_cc",
     hdrs = [name + ".h"],
-    aspect_hints = ["//third_party/crubit:experimental"],
+    aspect_hints = [
+        "//third_party/crubit:experimental",
+        ":enable_source_location_in_doc_comment",
+    ],
     copts = ["-Wno-google3-inline-namespace"],
     deps = [
         ((d + "_cc") if d in TESTS else d)
@@ -97,6 +109,9 @@ TAGS = {}
 cc_library(
     name = "namespaces_json",
     hdrs = ["namespaces_json.h"],
+    aspect_hints = [
+        ":enable_source_location_in_doc_comment",
+    ],
     copts = ["-Wno-google3-inline-namespace"],
 )
 

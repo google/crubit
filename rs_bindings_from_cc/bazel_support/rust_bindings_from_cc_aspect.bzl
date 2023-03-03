@@ -26,6 +26,10 @@ load(
     "//rs_bindings_from_cc/bazel_support:crubit_feature_hint.bzl",
     "find_crubit_features",
 )
+load(
+    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_cli_flag_aspect_hint.bzl",
+    "collect_rust_bindings_from_cc_cli_flags",
+)
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
 # `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
@@ -199,6 +203,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             if RustBindingsFromCcInfo in dep
         ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
         extra_cc_compilation_action_inputs = extra_cc_compilation_action_inputs,
+        extra_rs_bindings_from_cc_cli_flags = collect_rust_bindings_from_cc_cli_flags(target, ctx),
     )
 
 rust_bindings_from_cc_aspect = aspect(

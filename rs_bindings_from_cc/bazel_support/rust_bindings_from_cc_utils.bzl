@@ -29,7 +29,8 @@ def generate_and_compile_bindings(
         extra_rs_srcs,
         deps_for_cc_file,
         deps_for_rs_file,
-        extra_cc_compilation_action_inputs = []):
+        extra_cc_compilation_action_inputs = [],
+        extra_rs_bindings_from_cc_cli_flags = []):
     """Runs the bindings generator.
 
     Args:
@@ -45,7 +46,8 @@ def generate_and_compile_bindings(
       deps_for_cc_file: list[CcInfo]: CcInfos needed by the generated C++ source file.
       deps_for_rs_file: list[DepVariantInfo]: DepVariantInfos needed by the generated Rust source file.
       extra_cc_compilation_action_inputs: A list of input files for the C++ compilation action.
-
+      extra_rs_bindings_from_cc_cli_flags: CLI flags to pass to `rs_bindings_from_cc`, in addition
+                                           to the flags that are passed by the build rule.
     Returns:
       A RustBindingsFromCcInfo containing the result of the compilation of the generated source
       files, as well a GeneratedBindingsInfo provider containing the generated source files.
@@ -70,6 +72,7 @@ def generate_and_compile_bindings(
         action_inputs = action_inputs,
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
+        extra_rs_bindings_from_cc_cli_flags = extra_rs_bindings_from_cc_cli_flags,
     )
 
     # Relocate the rs files so that they can be read by rustc using relative paths.

@@ -27,7 +27,8 @@ def generate_bindings(
         header_includes,
         action_inputs,
         target_args,
-        extra_rs_srcs):
+        extra_rs_srcs,
+        extra_rs_bindings_from_cc_cli_flags):
     """Runs the bindings generator.
 
     Args:
@@ -42,6 +43,7 @@ def generate_bindings(
       target_args: A depset of strings, each one representing mapping of target to
                         its per-target arguments (headers, features) in json format.
       extra_rs_srcs: A list of extra source files to add.
+      extra_rs_bindings_from_cc_cli_flags: CLI flags to be passed to `rs_bindings_from_cc`.
 
     Returns:
       tuple(cc_output, rs_output, namespaces_output, error_report_output): The generated source files.
@@ -68,7 +70,7 @@ def generate_bindings(
         ctx.file._rustfmt.path,
         "--rustfmt_config_path",
         ctx.file._rustfmt_cfg.path,
-    ]
+    ] + extra_rs_bindings_from_cc_cli_flags
     if ctx.attr._generate_error_report[BuildSettingInfo].value:
         error_report_output = ctx.actions.declare_file(ctx.label.name + "_rust_api_error_report.json")
         rs_bindings_from_cc_flags += [

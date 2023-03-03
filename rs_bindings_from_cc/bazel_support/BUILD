@@ -21,6 +21,7 @@ bzl_library(
     deps = [
         ":crubit_feature_hint_bzl",
         ":providers_bzl",
+        ":rust_bindings_from_cc_cli_flag_aspect_hint",
         ":rust_bindings_from_cc_utils_bzl",
     ],
 )
@@ -104,6 +105,11 @@ bzl_library(
     name = "compile_rust_bzl",
     srcs = ["compile_rust.bzl"],
     deps = ["@rules_rust//rust/private:bzl_lib"],
+)
+
+bzl_library(
+    name = "rust_bindings_from_cc_cli_flag_aspect_hint",
+    srcs = ["rust_bindings_from_cc_cli_flag_aspect_hint.bzl"],
 )
 
 alias(
