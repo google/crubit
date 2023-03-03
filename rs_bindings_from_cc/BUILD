@@ -167,6 +167,8 @@ cc_library(
     deps = [
         ":bazel_types",
         ":cc_ir",
+        "//common:cc_ffi_types",
+        "//common:rust_allocator_shims",
         "//common:status_macros",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
@@ -386,6 +388,7 @@ cc_library(
     hdrs = ["src_code_gen.h"],
     deps = [
         ":cc_ir",
+        ":cmdline",
         ":src_code_gen_impl",  # buildcleaner: keep
         "//common:cc_ffi_types",
         "//common:status_macros",

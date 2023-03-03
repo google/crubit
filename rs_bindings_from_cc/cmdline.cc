@@ -79,6 +79,9 @@ ABSL_FLAG(std::string, namespaces_out, "",
           "namespace hierarchy.");
 ABSL_FLAG(std::string, error_report_out, "",
           "(optional) output path for the JSON error report");
+ABSL_FLAG(bool, generate_source_location_in_doc_comment, true,
+          "add the source code location from which the binding originates in"
+          "the doc comment of the binding");
 
 namespace crubit {
 
@@ -113,7 +116,10 @@ absl::StatusOr<Cmdline> Cmdline::Create() {
       absl::GetFlag(FLAGS_extra_rs_srcs),
       absl::GetFlag(FLAGS_srcs_to_scan_for_instantiations),
       absl::GetFlag(FLAGS_instantiations_out),
-      absl::GetFlag(FLAGS_error_report_out));
+      absl::GetFlag(FLAGS_error_report_out),
+      absl::GetFlag(FLAGS_generate_source_location_in_doc_comment)
+          ? SourceLocationDocComment::Enabled
+          : SourceLocationDocComment::Disabled);
 }
 
 absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
@@ -124,7 +130,8 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
     bool do_nothing, std::vector<std::string> public_headers,
     std::string target_args_str, std::vector<std::string> extra_rs_srcs,
     std::vector<std::string> srcs_to_scan_for_instantiations,
-    std::string instantiations_out, std::string error_report_out) {
+    std::string instantiations_out, std::string error_report_out,
+    SourceLocationDocComment generate_source_location_in_doc_comment) {
   Cmdline cmdline;
   if (current_target.empty()) {
     return absl::InvalidArgumentError("please specify --target");
@@ -162,6 +169,8 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
 
   cmdline.rustfmt_config_path_ = std::move(rustfmt_config_path);
   cmdline.do_nothing_ = do_nothing;
+  cmdline.generate_source_location_in_doc_comment_ =
+      generate_source_location_in_doc_comment;
 
   if (public_headers.empty()) {
     return absl::InvalidArgumentError("please specify --public_headers");

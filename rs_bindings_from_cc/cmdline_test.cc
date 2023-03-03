@@ -35,7 +35,7 @@ absl::StatusOr<Cmdline> TestCmdline(std::string target,
       /* extra_rs_srcs= */ {},
       /* srcs_to_scan_for_instantiations= */ {},
       /* instantiations_out= */ "",
-      /* error_report_out= */ "");
+      /* error_report_out= */ "", SourceLocationDocComment::Disabled);
 }
 
 absl::StatusOr<Cmdline> TestCmdline(std::vector<std::string> public_headers,
@@ -56,7 +56,7 @@ TEST(CmdlineTest, BasicCorrectInput) {
           /* do_nothing= */ false, {"h1"},
           R"([{"t": "//:t1", "h": ["h1", "h2"]}])", {"extra_file.rs"},
           {"scan_for_instantiations.rs"}, "instantiations_out",
-          "error_report_out"));
+          "error_report_out", SourceLocationDocComment::Disabled));
   EXPECT_EQ(cmdline.cc_out(), "cc_out");
   EXPECT_EQ(cmdline.rs_out(), "rs_out");
   EXPECT_EQ(cmdline.ir_out(), "ir_out");
@@ -77,6 +77,8 @@ TEST(CmdlineTest, BasicCorrectInput) {
       cmdline.headers_to_targets(),
       UnorderedElementsAre(Pair(HeaderName("h1"), BazelLabel("//:t1")),
                            Pair(HeaderName("h2"), BazelLabel("//:t1"))));
+  EXPECT_EQ(cmdline.generate_source_location_in_doc_comment(),
+            SourceLocationDocComment::Disabled);
 }
 
 TEST(CmdlineTest, TargetArgsEmpty) {
@@ -245,7 +247,8 @@ TEST(CmdlineTest, InstantiationsOutEmpty) {
           "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {}, {"lib.rs"},
-          /* instantiations_out= */ "", "error_report_out")),
+          /* instantiations_out= */ "", "error_report_out",
+          SourceLocationDocComment::Enabled)),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           HasSubstr(
@@ -265,7 +268,7 @@ TEST(CmdlineTest, RustSourcesEmpty) {
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {}, "instantiations_out",
-          "error_report_out"),
+          "error_report_out", SourceLocationDocComment::Enabled),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           HasSubstr(
@@ -286,7 +289,8 @@ TEST(CmdlineTest, CcOutEmpty) {
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ "", "error_report_out"),
+          /* instantiations_out= */ "", "error_report_out",
+          SourceLocationDocComment::Enabled),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("please specify --cc_out")));
 }
@@ -303,7 +307,8 @@ TEST(CmdlineTest, RsOutEmpty) {
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ "", "error_report_out"),
+          /* instantiations_out= */ "", "error_report_out",
+          SourceLocationDocComment::Enabled),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("please specify --rs_out")));
 }
@@ -319,7 +324,8 @@ TEST(CmdlineTest, IrOutEmpty) {
       /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
       /* extra_rs_srcs= */ {},
       /* srcs_to_scan_for_instantiations= */ {},
-      /* instantiations_out= */ "", "error_report_out"));
+      /* instantiations_out= */ "", "error_report_out",
+      SourceLocationDocComment::Enabled));
 }
 
 TEST(CmdlineTest, ClangFormatExePathEmpty) {
@@ -335,7 +341,8 @@ TEST(CmdlineTest, ClangFormatExePathEmpty) {
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ "", "error_report_out"),
+          /* instantiations_out= */ "", "error_report_out",
+          SourceLocationDocComment::Enabled),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("please specify --clang_format_exe_path")));
 }
@@ -352,10 +359,10 @@ TEST(CmdlineTest, RustfmtExePathEmpty) {
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ "", "error_report_out"),
+          /* instantiations_out= */ "", "error_report_out",
+          SourceLocationDocComment::Enabled),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("please specify --rustfmt_exe_path")));
 }
-
 }  // namespace
 }  // namespace crubit

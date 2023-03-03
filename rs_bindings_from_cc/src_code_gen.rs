@@ -64,6 +64,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     rustfmt_exe_path: FfiU8Slice,
     rustfmt_config_path: FfiU8Slice,
     generate_error_report: bool,
+    generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> FfiBindings {
     let json: &[u8] = json.as_slice();
     let crubit_support_path: &str = std::str::from_utf8(crubit_support_path.as_slice()).unwrap();
@@ -91,6 +92,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
             &rustfmt_exe_path,
             &rustfmt_config_path,
             errors,
+            generate_source_loc_doc_comment,
         )
         .unwrap();
         FfiBindings {
@@ -110,6 +112,8 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
 trait BindingsGenerator {
     #[salsa::input]
     fn ir(&self) -> Rc<IR>;
+    #[salsa::input]
+    fn generate_source_loc_doc_comment(&self) -> SourceLocationDocComment;
 
     fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
 
@@ -157,11 +161,16 @@ fn generate_bindings(
     rustfmt_exe_path: &OsStr,
     rustfmt_config_path: &OsStr,
     errors: &mut dyn ErrorReporting,
+    generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<Bindings> {
     let ir = Rc::new(deserialize_ir(json)?);
 
-    let BindingsTokens { rs_api, rs_api_impl } =
-        generate_bindings_tokens(ir.clone(), crubit_support_path, errors)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(
+        ir.clone(),
+        crubit_support_path,
+        errors,
+        generate_source_loc_doc_comment,
+    )?;
     let rs_api = {
         let rustfmt_exe_path = Path::new(rustfmt_exe_path);
         let rustfmt_config_path = if rustfmt_config_path.is_empty() {
@@ -1477,7 +1486,11 @@ fn generate_func(
         }
     };
 
-    let doc_comment = generate_doc_comment(func.doc_comment.as_deref(), Some(&func.source_loc));
+    let doc_comment = generate_doc_comment(
+        func.doc_comment.as_deref(),
+        Some(&func.source_loc),
+        db.generate_source_loc_doc_comment(),
+    );
     let api_func: TokenStream;
     let function_id: FunctionId;
     match impl_kind {
@@ -1861,7 +1874,15 @@ fn generate_func_thunk(
         ) #return_type_fragment ;
     })
 }
-fn generate_doc_comment(comment: Option<&str>, source_loc: Option<&str>) -> TokenStream {
+fn generate_doc_comment(
+    comment: Option<&str>,
+    source_loc: Option<&str>,
+    generate_source_loc_doc_comment: SourceLocationDocComment,
+) -> TokenStream {
+    let source_loc = match generate_source_loc_doc_comment {
+        SourceLocationDocComment::Enabled => source_loc,
+        SourceLocationDocComment::Disabled => None,
+    };
     let (comment, sep, source_loc) = match (comment, source_loc) {
         (None, None) => return quote! {},
         (None, Some(source_loc)) => ("", "", source_loc),
@@ -2050,7 +2071,11 @@ fn generate_record(
     let qualified_ident = {
         quote! { #crate_root_path:: #namespace_qualifier #ident }
     };
-    let doc_comment = generate_doc_comment(record.doc_comment.as_deref(), Some(&record.source_loc));
+    let doc_comment = generate_doc_comment(
+        record.doc_comment.as_deref(),
+        Some(&record.source_loc),
+        db.generate_source_loc_doc_comment(),
+    );
     let mut field_copy_trait_assertions: Vec<TokenStream> = vec![];
 
     let fields_with_bounds = (record.fields.iter())
@@ -2162,7 +2187,11 @@ fn generate_record(
 
             let ident = make_rs_field_ident(field, field_index);
             let doc_comment = match field.type_.as_ref() {
-                Ok(_) => generate_doc_comment(field.doc_comment.as_deref(), None),
+                Ok(_) => generate_doc_comment(
+                    field.doc_comment.as_deref(),
+                    None,
+                    db.generate_source_loc_doc_comment(),
+                ),
                 Err(msg) => {
                     let supplemental_text =
                         format!("Reason for representing this field as a blob of bytes:\n{}", msg);
@@ -2170,7 +2199,11 @@ fn generate_record(
                         None => supplemental_text,
                         Some(old_text) => format!("{}\n\n{}", old_text.as_ref(), supplemental_text),
                     };
-                    generate_doc_comment(Some(new_text.as_str()), None)
+                    generate_doc_comment(
+                        Some(new_text.as_str()),
+                        None,
+                        db.generate_source_loc_doc_comment(),
+                    )
                 }
             };
             let access = if field.access == AccessSpecifier::Public
@@ -2509,8 +2542,11 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
 
 fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<GeneratedItem> {
     let ident = make_rs_ident(&type_alias.identifier.identifier);
-    let doc_comment =
-        generate_doc_comment(type_alias.doc_comment.as_deref(), Some(&type_alias.source_loc));
+    let doc_comment = generate_doc_comment(
+        type_alias.doc_comment.as_deref(),
+        Some(&type_alias.source_loc),
+        db.generate_source_loc_doc_comment(),
+    );
     let underlying_type = db
         .rs_type_kind(type_alias.underlying_type.rs_type.clone())
         .with_context(|| format!("Failed to format underlying type for {:?}", type_alias))?;
@@ -2525,12 +2561,20 @@ fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<Generate
 fn generate_unsupported(
     item: &UnsupportedItem,
     errors: &mut dyn ErrorReporting,
+    generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<GeneratedItem> {
     errors.insert(item.cause());
 
     let message = format!(
-        "{}\nError while generating bindings for item '{}':\n{}",
-        item.source_loc.as_ref(),
+        "{}{}Error while generating bindings for item '{}':\n{}",
+        match generate_source_loc_doc_comment {
+            SourceLocationDocComment::Enabled => item.source_loc.as_ref(),
+            SourceLocationDocComment::Disabled => "",
+        },
+        match generate_source_loc_doc_comment {
+            SourceLocationDocComment::Enabled => "\n",
+            SourceLocationDocComment::Disabled => "",
+        },
         item.name.as_ref(),
         item.message()
     );
@@ -2689,6 +2733,7 @@ fn generate_item(
             Err(e) => generate_unsupported(
                 &make_unsupported_fn(func, &ir, format!("{e}").as_str())?,
                 errors,
+                db.generate_source_loc_doc_comment(),
             )?,
             Ok(None) => GeneratedItem::default(),
             Ok(Some((item, function_id))) => {
@@ -2700,6 +2745,7 @@ fn generate_item(
                             "Cannot generate bindings for overloaded function",
                         )?,
                         errors,
+                        db.generate_source_loc_doc_comment(),
                     )?
                 } else {
                     (*item).clone()
@@ -2712,12 +2758,18 @@ fn generate_item(
         Item::TypeAlias(type_alias) => {
             if type_alias.enclosing_record_id.is_some() {
                 // TODO(b/200067824): support nested type aliases.
-                generate_unsupported(&make_unsupported_nested_type_alias(type_alias)?, errors)?
+                generate_unsupported(
+                    &make_unsupported_nested_type_alias(type_alias)?,
+                    errors,
+                    db.generate_source_loc_doc_comment(),
+                )?
             } else {
                 generate_type_alias(db, type_alias)?
             }
         }
-        Item::UnsupportedItem(unsupported) => generate_unsupported(unsupported, errors)?,
+        Item::UnsupportedItem(unsupported) => {
+            generate_unsupported(unsupported, errors, db.generate_source_loc_doc_comment())?
+        }
         Item::Comment(comment) => generate_comment(comment)?,
         Item::Namespace(namespace) => generate_namespace(db, namespace, errors)?,
         Item::UseMod(use_mod) => {
@@ -2758,10 +2810,11 @@ fn generate_bindings_tokens(
     ir: Rc<IR>,
     crubit_support_path: &str,
     errors: &mut dyn ErrorReporting,
+    generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<BindingsTokens> {
     let mut db = Database::default();
     db.set_ir(ir.clone());
-
+    db.set_generate_source_loc_doc_comment(generate_source_loc_doc_comment);
     let mut items = vec![];
     let mut thunks = vec![];
     let mut thunk_impls = vec![generate_rs_api_impl(&mut db, crubit_support_path)?];
@@ -4009,7 +4062,12 @@ mod tests {
     use token_stream_printer::rs_tokens_to_formatted_string_for_tests;
 
     fn generate_bindings_tokens(ir: Rc<IR>) -> Result<BindingsTokens> {
-        super::generate_bindings_tokens(ir, "crubit/rs_bindings_support", &mut IgnoreErrors)
+        super::generate_bindings_tokens(
+            ir,
+            "crubit/rs_bindings_support",
+            &mut IgnoreErrors,
+            SourceLocationDocComment::Enabled,
+        )
     }
 
     fn db_from_cc(cc_src: &str) -> Result<Database> {
@@ -8436,21 +8494,28 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_doc_comment_with_no_comment_with_no_source_loc() {
-        let actual = generate_doc_comment(None, None);
+    fn test_generate_doc_comment_with_no_comment_with_no_source_loc_with_source_loc_enabled() {
+        let actual = generate_doc_comment(None, None, SourceLocationDocComment::Enabled);
         assert_rs_matches!(actual, quote! {});
     }
 
     #[test]
-    fn test_generate_doc_comment_with_no_comment_with_source_loc() {
-        let actual = generate_doc_comment(None, Some("google3/some/header;l=11"));
+    fn test_generate_doc_comment_with_no_comment_with_source_loc_with_source_loc_enabled() {
+        let actual = generate_doc_comment(
+            None,
+            Some("google3/some/header;l=11"),
+            SourceLocationDocComment::Enabled,
+        );
         assert_rs_matches!(actual, quote! {#[doc = " google3/some/header;l=11"]});
     }
 
     #[test]
-    fn test_generate_doc_comment_with_comment_with_source_loc() {
-        let actual =
-            generate_doc_comment(Some("Some doc comment"), Some("google3/some/header;l=12"));
+    fn test_generate_doc_comment_with_comment_with_source_loc_with_source_loc_enabled() {
+        let actual = generate_doc_comment(
+            Some("Some doc comment"),
+            Some("google3/some/header;l=12"),
+            SourceLocationDocComment::Enabled,
+        );
         assert_rs_matches!(
             actual,
             quote! {#[doc = " Some doc comment\n \n google3/some/header;l=12"]}
@@ -8458,8 +8523,82 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_doc_comment_with_comment_with_no_source_loc() {
-        let actual = generate_doc_comment(Some("Some doc comment"), None);
+    fn test_generate_doc_comment_with_comment_with_no_source_loc_with_source_loc_enabled() {
+        let actual =
+            generate_doc_comment(Some("Some doc comment"), None, SourceLocationDocComment::Enabled);
         assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
+    }
+
+    #[test]
+    fn test_no_generate_doc_comment_with_no_comment_with_no_source_loc_with_source_loc_disabled() {
+        let actual = generate_doc_comment(None, None, SourceLocationDocComment::Disabled);
+        assert_rs_matches!(actual, quote! {});
+    }
+
+    #[test]
+    fn test_no_generate_doc_comment_with_no_comment_with_source_loc_with_source_loc_disabled() {
+        let actual = generate_doc_comment(
+            None,
+            Some("google3/some/header;l=13"),
+            SourceLocationDocComment::Disabled,
+        );
+        assert_rs_matches!(actual, quote! {});
+    }
+
+    #[test]
+    fn test_no_generate_doc_comment_with_comment_with_source_loc_with_source_loc_disabled() {
+        let actual = generate_doc_comment(
+            Some("Some doc comment"),
+            Some("google3/some/header;l=14"),
+            SourceLocationDocComment::Disabled,
+        );
+        assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
+    }
+
+    #[test]
+    fn test_no_generate_doc_comment_with_comment_with_no_source_loc_with_source_loc_disabled() {
+        let actual = generate_doc_comment(
+            Some("Some doc comment"),
+            None,
+            SourceLocationDocComment::Disabled,
+        );
+        assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
+    }
+
+    #[test]
+    fn test_generate_unsupported_item_with_source_loc_enabled() {
+        let unsupported_item = UnsupportedItem::new_with_message(
+            "unsupported_item",
+            "unsupported_message",
+            "Generated from: google3/some/header;l=1".into(),
+            ItemId::new_for_testing(123),
+        );
+        let actual = generate_unsupported(
+            &unsupported_item,
+            &mut ErrorReport::new(),
+            SourceLocationDocComment::Enabled,
+        )
+        .unwrap();
+        let expected = "Generated from: google3/some/header;l=1\nError while generating bindings for item 'unsupported_item':\nunsupported_message";
+        assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+    }
+
+    #[test]
+    fn test_generate_unsupported_item_with_source_loc_disabled() {
+        let unsupported_item = UnsupportedItem::new_with_message(
+            "unsupported_item2",
+            "unsupported_message2",
+            "Generated from: google3/some/header;l=2".into(),
+            ItemId::new_for_testing(1234),
+        );
+        let actual = generate_unsupported(
+            &unsupported_item,
+            &mut ErrorReport::new(),
+            SourceLocationDocComment::Disabled,
+        )
+        .unwrap();
+        let expected =
+            "Error while generating bindings for item 'unsupported_item2':\nunsupported_message2";
+        assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
     }
 }

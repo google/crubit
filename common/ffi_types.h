@@ -39,6 +39,13 @@ extern "C" FfiU8SliceBox AllocFfiU8SliceBox(FfiU8Slice ffi_u8_slice);
 // Implemented in Rust.
 extern "C" void FreeFfiU8SliceBox(FfiU8SliceBox);
 
+// Whether or not the generated binding will have doc comments indicating their
+// source location.
+enum SourceLocationDocComment {
+  Disabled,
+  Enabled,
+};
+
 }  // namespace crubit
 
 #endif  // CRUBIT_COMMON_FFI_TYPES_H_

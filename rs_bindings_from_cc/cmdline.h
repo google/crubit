@@ -13,6 +13,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "common/ffi_types.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 
@@ -34,7 +35,8 @@ class Cmdline {
       bool do_nothing, std::vector<std::string> public_headers,
       std::string target_args_str, std::vector<std::string> extra_rs_sources,
       std::vector<std::string> srcs_to_scan_for_instantiations,
-      std::string instantiations_out, std::string error_report_out) {
+      std::string instantiations_out, std::string error_report_out,
+      SourceLocationDocComment generate_source_location_in_doc_comment) {
     return CreateFromArgs(
         std::move(current_target), std::move(cc_out), std::move(rs_out),
         std::move(ir_out), std::move(namespaces_out),
@@ -42,7 +44,8 @@ class Cmdline {
         std::move(rustfmt_exe_path), std::move(rustfmt_config_path), do_nothing,
         std::move(public_headers), std::move(target_args_str),
         std::move(extra_rs_sources), std::move(srcs_to_scan_for_instantiations),
-        std::move(instantiations_out), std::move(error_report_out));
+        std::move(instantiations_out), std::move(error_report_out),
+        generate_source_location_in_doc_comment);
   }
 
   Cmdline(const Cmdline&) = delete;
@@ -63,7 +66,9 @@ class Cmdline {
   absl::string_view instantiations_out() const { return instantiations_out_; }
   absl::string_view error_report_out() const { return error_report_out_; }
   bool do_nothing() const { return do_nothing_; }
-
+  SourceLocationDocComment generate_source_location_in_doc_comment() const {
+    return generate_source_location_in_doc_comment_;
+  }
   const std::vector<HeaderName>& public_headers() const {
     return public_headers_;
   }
@@ -99,7 +104,8 @@ class Cmdline {
       bool do_nothing, std::vector<std::string> public_headers,
       std::string target_args_str, std::vector<std::string> extra_rs_sources,
       std::vector<std::string> srcs_to_scan_for_instantiations,
-      std::string instantiations_out, std::string error_report_out);
+      std::string instantiations_out, std::string error_report_out,
+      SourceLocationDocComment generate_source_location_in_doc_comment);
 
   absl::StatusOr<BazelLabel> FindHeader(const HeaderName& header) const;
 
@@ -112,6 +118,8 @@ class Cmdline {
   std::string rustfmt_config_path_;
   std::string error_report_out_;
   bool do_nothing_ = true;
+  SourceLocationDocComment generate_source_location_in_doc_comment_ =
+      SourceLocationDocComment::Enabled;
 
   BazelLabel current_target_;
   std::vector<HeaderName> public_headers_;

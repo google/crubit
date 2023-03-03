@@ -91,6 +91,15 @@ impl FfiU8SliceBox {
     }
 }
 
+/// Whether or not the generated binding will have doc comments indicating their
+/// source location.
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub enum SourceLocationDocComment {
+    Disabled,
+    Enabled,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
