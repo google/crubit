@@ -1,12 +1,17 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![cfg_attr(not(test), no_std)]
 
+extern crate alloc;
+
+use alloc::borrow::Cow;
+use alloc::collections::BTreeSet;
+use alloc::format;
+use alloc::vec;
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{quote, quote_spanned, ToTokens as _};
-use std::borrow::Cow;
-use std::collections::HashSet;
 use syn::parse::Parse;
 use syn::spanned::Spanned as _;
 use syn::Token;
@@ -65,14 +70,14 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
 
         impl ::ctor::Ctor for #struct_ctor_name {
             type Output = #struct_name;
-            unsafe fn ctor(self, dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self::Output>>) {
+            unsafe fn ctor(self, dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self::Output>>) {
                 ::ctor::ctor!(
                     #struct_name #fields
                 ).ctor(dest)
             }
         }
 
-        impl !::std::marker::Unpin for #struct_ctor_name {}
+        impl !::core::marker::Unpin for #struct_ctor_name {}
 
         impl ::ctor::CtorNew<()> for #struct_name {
             type CtorType = #struct_ctor_name;
@@ -143,7 +148,7 @@ fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenS
     let project_field = |field: &mut syn::Field| {
         field.attrs.clear();
         let field_ty = &field.ty;
-        let pin_ty = syn::parse_quote!(::std::pin::Pin<& #lifetime mut #field_ty>);
+        let pin_ty = syn::parse_quote!(::core::pin::Pin<& #lifetime mut #field_ty>);
         field.ty = syn::Type::Path(pin_ty);
     };
     // returns the braced parts of a projection pattern and return value.
@@ -166,7 +171,7 @@ fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenS
                 rhs = Ident::new(&format!("item_{i}"), Span::call_site());
                 pat.extend(quote! {#lhs: #rhs,});
             }
-            project.extend(quote! {#lhs: ::std::pin::Pin::new_unchecked(#rhs),});
+            project.extend(quote! {#lhs: ::core::pin::Pin::new_unchecked(#rhs),});
         }
         // Also ignore the __must_use_ctor_to_initialize field, if present.
         pat.extend(quote! {..});
@@ -218,9 +223,9 @@ fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenS
 
         impl #input_impl_generics #input_ident #input_ty_generics #input_where_clause {
             #[must_use]
-            pub fn project_pin<#lifetime>(self: ::std::pin::Pin<& #lifetime mut Self>) -> #projected_ident #projected_generics {
+            pub fn project_pin<#lifetime>(self: ::core::pin::Pin<& #lifetime mut Self>) -> #projected_ident #projected_generics {
                 unsafe {
-                    let from = ::std::pin::Pin::into_inner_unchecked(self);
+                    let from = ::core::pin::Pin::into_inner_unchecked(self);
                     #project_body
                 }
             }
@@ -230,7 +235,7 @@ fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenS
 
 /// Adds a new lifetime to `generics`, returning the quoted lifetime name.
 fn add_lifetime(generics: &mut syn::Generics, prefix: &str) -> proc_macro2::TokenStream {
-    let taken_lifetimes: HashSet<&syn::Lifetime> =
+    let taken_lifetimes: BTreeSet<&syn::Lifetime> =
         generics.lifetimes().map(|def| &def.lifetime).collect();
     let mut name = Cow::Borrowed(prefix);
     let mut i = 1;
@@ -456,7 +461,7 @@ fn recursively_pinned_impl(
         quote! {
             impl #input_impl_generics Drop for #name #input_ty_generics #input_where_clause {
                 fn drop(&mut self) {
-                    unsafe {::ctor::PinnedDrop::pinned_drop(::std::pin::Pin::new_unchecked(self))}
+                    unsafe {::ctor::PinnedDrop::pinned_drop(::core::pin::Pin::new_unchecked(self))}
                 }
             }
         }
@@ -466,7 +471,7 @@ fn recursively_pinned_impl(
             /// A no-op PinnedDrop that will cause an error if the user also defines PinnedDrop,
             /// due to forgetting to pass `PinnedDrop` to #[recursively_pinned(PinnedDrop)]`.
             impl #input_impl_generics ::ctor::PinnedDrop for #name #input_ty_generics #input_where_clause {
-                unsafe fn pinned_drop(self: ::std::pin::Pin<&mut Self>) {}
+                unsafe fn pinned_drop(self: ::core::pin::Pin<&mut Self>) {}
             }
         }
     };
