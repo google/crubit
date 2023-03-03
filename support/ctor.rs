@@ -1,6 +1,7 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![cfg_attr(not(test), no_std)]
 #![feature(negative_impls)]
 //! Traits for memory management operations on wrapped C++ objects, based on
 //! moveit.
@@ -101,10 +102,13 @@
 //! `PhantomPinned`. It knows no conflict exists if, instead, types impl
 //! `!Unpin`.
 
-use std::marker::PhantomData;
-use std::mem::{ManuallyDrop, MaybeUninit};
-use std::ops::Deref;
-use std::pin::Pin;
+extern crate alloc;
+
+use alloc::boxed::Box;
+use core::marker::PhantomData;
+use core::mem::{ManuallyDrop, MaybeUninit};
+use core::ops::Deref;
+use core::pin::Pin;
 
 pub use ctor_proc_macros::*;
 
@@ -316,7 +320,7 @@ impl<'a, T> !Unpin for ConstRvalueReference<'a, T> {}
 #[macro_export]
 macro_rules! mov {
     ($p:expr) => {
-        $crate::RvalueReference(::std::pin::Pin::as_mut(&mut { $p }))
+        $crate::RvalueReference(::core::pin::Pin::as_mut(&mut { $p }))
     };
 }
 
@@ -537,7 +541,7 @@ impl<T> Slot<T> {
         if self.is_initialized {
             let Self { is_initialized, maybe_uninit } = unsafe { Pin::into_inner_unchecked(self) };
             unsafe {
-                std::ptr::drop_in_place(maybe_uninit.as_mut_ptr());
+                core::ptr::drop_in_place(maybe_uninit.as_mut_ptr());
             }
             *is_initialized = false;
         }
@@ -615,8 +619,8 @@ impl<T> Slot<T> {
 #[doc(hidden)]
 pub mod macro_internal {
     use super::*;
-    pub use std::mem::MaybeUninit;
-    pub use std::pin::Pin;
+    pub use core::mem::MaybeUninit;
+    pub use core::pin::Pin;
 
     /// Workaround for more_qualified_paths.
     /// Instead of `<Foo as Bar>::Assoc { ... }`, which requires that feature,
@@ -643,7 +647,7 @@ pub mod macro_internal {
     pub struct UnsafeDropGuard<T>(*mut T);
     impl<T> Drop for UnsafeDropGuard<T> {
         fn drop(&mut self) {
-            unsafe { std::ptr::drop_in_place(self.0) };
+            unsafe { core::ptr::drop_in_place(self.0) };
         }
     }
 
@@ -791,7 +795,7 @@ macro_rules! ctor {
             use $t $(:: $ts)* as Type;
             $crate::FnCtor::new(|x: $crate::macro_internal::Pin<&mut $crate::macro_internal::MaybeUninit<Type>>| {
                 // Unused if Type is fieldless.
-                #[allow(unused_imports)] use ::std::ptr::addr_of_mut;
+                #[allow(unused_imports)] use ::core::ptr::addr_of_mut;
                 struct DropGuard;
                 let drop_guard = DropGuard;
                 let x_mut = unsafe{$crate::macro_internal::Pin::into_inner_unchecked(x)}.as_mut_ptr();
@@ -830,7 +834,7 @@ macro_rules! ctor {
                     };
                     let drop_guard = (drop_guard, field_drop);
                 )*
-                ::std::mem::forget(drop_guard);
+                ::core::mem::forget(drop_guard);
             })
         }
     };
@@ -899,7 +903,7 @@ pub trait ReconstructUnchecked: Sized {
     /// See trait documentation.
     unsafe fn reconstruct_unchecked(self: Pin<&mut Self>, ctor: impl Ctor<Output = Self>) {
         let self_ptr = Pin::into_inner_unchecked(self) as *mut _;
-        std::ptr::drop_in_place(self_ptr);
+        core::ptr::drop_in_place(self_ptr);
         abort_on_unwind(move || {
             let maybe_uninit_self = &mut *(self_ptr as *mut MaybeUninit<Self>);
             ctor.ctor(Pin::new_unchecked(maybe_uninit_self));
@@ -994,7 +998,7 @@ fn abort_on_unwind<T, F: FnOnce() -> T>(f: F) -> T {
 
     let bomb = Bomb;
     let rv = f();
-    std::mem::forget(bomb);
+    core::mem::forget(bomb);
     rv
 }
 
@@ -1017,7 +1021,7 @@ impl<T: for<'a> Assign<&'a T>, P: Deref<Target = T>> Assign<Copy<P>> for T {
 
 impl<'a, T: Unpin + CtorNew<&'a T>> Assign<&'a T> for T {
     fn assign(mut self: Pin<&mut Self>, src: &'a Self) {
-        if std::mem::needs_drop::<Self>() {
+        if core::mem::needs_drop::<Self>() {
             let mut constructed = MaybeUninit::uninit();
             unsafe {
                 T::ctor_new(src).ctor(Pin::new(&mut constructed));
@@ -1031,7 +1035,7 @@ impl<'a, T: Unpin + CtorNew<&'a T>> Assign<&'a T> for T {
 
 impl<'a, T: Unpin + CtorNew<RvalueReference<'a, T>>> Assign<RvalueReference<'a, T>> for T {
     fn assign(mut self: Pin<&mut Self>, src: RvalueReference<'a, Self>) {
-        if std::mem::needs_drop::<Self>() {
+        if core::mem::needs_drop::<Self>() {
             let mut constructed = MaybeUninit::uninit();
             unsafe {
                 T::ctor_new(src).ctor(Pin::new(&mut constructed));
@@ -1047,7 +1051,7 @@ impl<'a, T: Unpin + CtorNew<ConstRvalueReference<'a, T>>> Assign<ConstRvalueRefe
     for T
 {
     fn assign(mut self: Pin<&mut Self>, src: ConstRvalueReference<'a, Self>) {
-        if std::mem::needs_drop::<Self>() {
+        if core::mem::needs_drop::<Self>() {
             let mut constructed = MaybeUninit::uninit();
             unsafe {
                 T::ctor_new(src).ctor(Pin::new(&mut constructed));
@@ -1126,9 +1130,9 @@ pub trait CtorNew<ConstructorArgs> {
 /// type locally, we cannot give foreign impls.
 pub struct PhantomPinnedCtor;
 impl Ctor for PhantomPinnedCtor {
-    type Output = std::marker::PhantomPinned;
+    type Output = core::marker::PhantomPinned;
     unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<Self::Output>>) {
-        RustMoveCtor(std::marker::PhantomPinned).ctor(dest)
+        RustMoveCtor(core::marker::PhantomPinned).ctor(dest)
     }
 }
 impl !Unpin for PhantomPinnedCtor {}
@@ -1686,7 +1690,7 @@ mod test {
             x: &'a i32,
             y: &'b i32,
         ) -> impl Ctor<Output = i32> + Captures<'a> + Captures<'b> {
-            FnCtor::new(|mut dest: Pin<&mut std::mem::MaybeUninit<i32>>| {
+            FnCtor::new(|mut dest: Pin<&mut core::mem::MaybeUninit<i32>>| {
                 dest.write(*x + *y);
             })
         }
