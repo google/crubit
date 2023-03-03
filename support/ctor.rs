@@ -792,7 +792,8 @@ macro_rules! ctor {
             $crate::FnCtor::new(|x: $crate::macro_internal::Pin<&mut $crate::macro_internal::MaybeUninit<Type>>| {
                 // Unused if Type is fieldless.
                 #[allow(unused_imports)] use ::std::ptr::addr_of_mut;
-                let drop_guard = ();
+                struct DropGuard;
+                let drop_guard = DropGuard;
                 let x_mut = unsafe{$crate::macro_internal::Pin::into_inner_unchecked(x)}.as_mut_ptr();
                 let _ = &x_mut; // silence unused_variables warning if Type is fieldless.
 
