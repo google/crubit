@@ -18,37 +18,29 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Generated from: rs_bindings_from_cc/test/golden/overloads.h;l=8
 // Error while generating bindings for item 'Overload':
 // Cannot generate bindings for overloaded function
 
-// Generated from: rs_bindings_from_cc/test/golden/overloads.h;l=9
 // Error while generating bindings for item 'Overload':
 // Cannot generate bindings for overloaded function
 
-// Generated from: rs_bindings_from_cc/test/golden/overloads.h;l=14
 // Error while generating bindings for item 'UncallableOverload':
 // Cannot generate bindings for overloaded function
 
-// Generated from: rs_bindings_from_cc/test/golden/overloads.h;l=17
 // Error while generating bindings for item 'UncallableOverload':
 // Cannot generate bindings for overloaded function
 
-// Generated from: rs_bindings_from_cc/test/golden/overloads.h;l=19
 // Error while generating bindings for item 'Sizeof':
 // Class templates are not supported yet
 
-// Generated from: rs_bindings_from_cc/test/golden/overloads.h;l=28
 // Error while generating bindings for item 'UncallableOverload':
 // Function templates are not supported yet
 
-/// Generated from: rs_bindings_from_cc/test/golden/overloads.h;l=31
 #[inline(always)]
 pub fn AlsoTemplateOverload() {
     unsafe { crate::detail::__rust_thunk___Z20AlsoTemplateOverloadv() }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/overloads.h;l=32
 // Error while generating bindings for item 'AlsoTemplateOverload':
 // Function templates are not supported yet
 

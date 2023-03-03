@@ -19,7 +19,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 pub mod test_namespace_bindings {
-    /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=11
     #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct S {
@@ -30,7 +29,6 @@ pub mod test_namespace_bindings {
         crate::test_namespace_bindings::S
     );
 
-    /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=11
     impl Default for S {
         #[inline(always)]
         fn default() -> Self {
@@ -42,7 +40,6 @@ pub mod test_namespace_bindings {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=11
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for S {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -56,7 +53,6 @@ pub mod test_namespace_bindings {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=11
     impl<'b> ::ctor::UnpinAssign<&'b Self> for S {
         #[inline(always)]
         fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -68,7 +64,6 @@ pub mod test_namespace_bindings {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=11
     impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for S {
         #[inline(always)]
         fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -79,21 +74,17 @@ pub mod test_namespace_bindings {
     }
 
     /// Free comment inside namespace
-    ///
-    /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=17
     #[inline(always)]
     pub fn f(s: crate::test_namespace_bindings::S) -> i32 {
         unsafe { crate::detail::__rust_thunk___ZN23test_namespace_bindings1fENS_1SE(s) }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=19
     #[inline(always)]
     pub fn inline_function() {
         unsafe { crate::detail::__rust_thunk___ZN23test_namespace_bindings15inline_functionEv() }
     }
 
     pub mod inner {
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=22
         #[inline(always)]
         pub fn i() {
             unsafe { crate::detail::__rust_thunk___ZN23test_namespace_bindings5inner1iEv() }
@@ -105,21 +96,18 @@ pub mod test_namespace_bindings {
 
 // namespace test_namespace_bindings
 
-/// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=26
 #[inline(always)]
 pub fn identity(s: crate::test_namespace_bindings::S) -> crate::test_namespace_bindings::S {
     unsafe { crate::detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(s) }
 }
 
 pub mod test_namespace_bindings_reopened_0 {
-    /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=29
     #[inline(always)]
     pub fn x() {
         unsafe { crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened1xEv() }
     }
 
     pub mod inner_0 {
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=31
         #[derive(Clone, Copy)]
         #[repr(C)]
         pub struct S {
@@ -130,7 +118,6 @@ pub mod test_namespace_bindings_reopened_0 {
             crate::test_namespace_bindings_reopened::inner::S
         );
 
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=31
         impl Default for S {
             #[inline(always)]
             fn default() -> Self {
@@ -144,7 +131,6 @@ pub mod test_namespace_bindings_reopened_0 {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=31
         impl<'b> From<::ctor::RvalueReference<'b, Self>> for S {
             #[inline(always)]
             fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -156,7 +142,6 @@ pub mod test_namespace_bindings_reopened_0 {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=31
         impl<'b> ::ctor::UnpinAssign<&'b Self> for S {
             #[inline(always)]
             fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -166,7 +151,6 @@ pub mod test_namespace_bindings_reopened_0 {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=31
         impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for S {
             #[inline(always)]
             fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -185,7 +169,6 @@ pub mod test_namespace_bindings_reopened_0 {
 pub mod test_namespace_bindings_reopened {
     pub use super::test_namespace_bindings_reopened_0::*;
 
-    /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=36
     #[inline(always)]
     pub fn y() {
         unsafe { crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened1yEv() }
@@ -194,7 +177,6 @@ pub mod test_namespace_bindings_reopened {
     pub mod inner {
         pub use super::inner_0::*;
 
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=38
         #[inline(always)]
         pub fn z(s: crate::test_namespace_bindings_reopened::inner::S) {
             unsafe {
@@ -212,7 +194,6 @@ pub mod test_namespace_bindings_reopened {
 
 pub mod test_namespace_bindings_inline {
     pub mod inner {
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=44
         #[derive(Clone, Copy)]
         #[repr(C)]
         pub struct StructInInlineNamespace {
@@ -223,7 +204,6 @@ pub mod test_namespace_bindings_inline {
             crate::test_namespace_bindings_inline::inner::StructInInlineNamespace
         );
 
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=44
         impl Default for StructInInlineNamespace {
             #[inline(always)]
             fn default() -> Self {
@@ -235,7 +215,6 @@ pub mod test_namespace_bindings_inline {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=44
         impl<'b> From<::ctor::RvalueReference<'b, Self>> for StructInInlineNamespace {
             #[inline(always)]
             fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -247,7 +226,6 @@ pub mod test_namespace_bindings_inline {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=44
         impl<'b> ::ctor::UnpinAssign<&'b Self> for StructInInlineNamespace {
             #[inline(always)]
             fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -257,7 +235,6 @@ pub mod test_namespace_bindings_inline {
             }
         }
 
-        /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=44
         impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for StructInInlineNamespace {
             #[inline(always)]
             fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -274,7 +251,6 @@ pub mod test_namespace_bindings_inline {
 
 // namespace test_namespace_bindings_inline
 
-/// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=48
 #[inline(always)]
 pub fn useStructInInlineNamespaceWithFullQualifier(
     s: crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
@@ -284,7 +260,6 @@ pub fn useStructInInlineNamespaceWithFullQualifier(
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=50
 #[inline(always)]
 pub fn useStructInInlineNamespaceSkipInlineQualifier(
     s: crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
@@ -297,7 +272,6 @@ pub fn useStructInInlineNamespaceSkipInlineQualifier(
 pub mod r#impl {
     // `impl` is a reserved keyword in Rust
 
-    /// Generated from: rs_bindings_from_cc/test/golden/namespace.h;l=54
     #[inline(always)]
     pub fn foo() {
         unsafe { crate::detail::__rust_thunk___ZN4impl3fooEv() }

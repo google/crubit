@@ -18,7 +18,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=10
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 pub struct PolymorphicBase {
@@ -29,7 +28,6 @@ forward_declare::unsafe_define!(
     crate::PolymorphicBase
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=10
 impl ::ctor::CtorNew<()> for PolymorphicBase {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -47,7 +45,6 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=10
 impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -74,7 +71,6 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicBase {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=10
 impl<'b> ::ctor::Assign<&'b Self> for PolymorphicBase {
     #[inline(always)]
     fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -84,7 +80,6 @@ impl<'b> ::ctor::Assign<&'b Self> for PolymorphicBase {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=12
 impl ::ctor::PinnedDrop for PolymorphicBase {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
@@ -92,7 +87,6 @@ impl ::ctor::PinnedDrop for PolymorphicBase {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=14
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 pub struct PolymorphicBase2 {
@@ -103,7 +97,6 @@ forward_declare::unsafe_define!(
     crate::PolymorphicBase2
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=14
 impl ::ctor::CtorNew<()> for PolymorphicBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -121,7 +114,6 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=14
 impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -148,7 +140,6 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicBase2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=14
 impl<'b> ::ctor::Assign<&'b Self> for PolymorphicBase2 {
     #[inline(always)]
     fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -159,14 +150,12 @@ impl<'b> ::ctor::Assign<&'b Self> for PolymorphicBase2 {
 }
 
 impl PolymorphicBase2 {
-    /// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=16
     #[inline(always)]
     pub fn Foo<'a>(self: ::core::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase23FooEv(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=17
 impl ::ctor::PinnedDrop for PolymorphicBase2 {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
@@ -174,7 +163,6 @@ impl ::ctor::PinnedDrop for PolymorphicBase2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=20
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 pub struct PolymorphicDerived {
@@ -185,7 +173,6 @@ forward_declare::unsafe_define!(
     crate::PolymorphicDerived
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=20
 impl ::ctor::CtorNew<()> for PolymorphicDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -203,7 +190,6 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=20
 impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -230,7 +216,6 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicDerived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=20
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for PolymorphicDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -257,7 +242,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for PolymorphicDe
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=20
 impl ::ctor::PinnedDrop for PolymorphicDerived {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
@@ -265,7 +249,6 @@ impl ::ctor::PinnedDrop for PolymorphicDerived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=20
 impl<'b> ::ctor::Assign<&'b Self> for PolymorphicDerived {
     #[inline(always)]
     fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -275,7 +258,6 @@ impl<'b> ::ctor::Assign<&'b Self> for PolymorphicDerived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/polymorphic.h;l=20
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for PolymorphicDerived {
     #[inline(always)]
     fn assign<'a>(

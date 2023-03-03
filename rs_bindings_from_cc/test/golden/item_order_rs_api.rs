@@ -18,7 +18,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct FirstStruct {
@@ -26,7 +25,6 @@ pub struct FirstStruct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("FirstStruct"), crate::FirstStruct);
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
 impl Default for FirstStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -38,7 +36,6 @@ impl Default for FirstStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for FirstStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -50,7 +47,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for FirstStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
 impl<'b> ::ctor::UnpinAssign<&'b Self> for FirstStruct {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -60,7 +56,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for FirstStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for FirstStruct {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -70,13 +65,11 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for FirstStruct 
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=14
 #[inline(always)]
 pub fn first_func() -> i32 {
     unsafe { crate::detail::__rust_thunk___Z10first_funcv() }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SecondStruct {
@@ -84,7 +77,6 @@ pub struct SecondStruct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SecondStruct"), crate::SecondStruct);
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
 impl Default for SecondStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -96,7 +88,6 @@ impl Default for SecondStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SecondStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -108,7 +99,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SecondStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
 impl<'b> ::ctor::UnpinAssign<&'b Self> for SecondStruct {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -118,7 +108,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for SecondStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SecondStruct {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -128,7 +117,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SecondStruct
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=20
 #[inline(always)]
 pub fn second_func() -> i32 {
     unsafe { crate::detail::__rust_thunk___Z11second_funcv() }

@@ -21,8 +21,6 @@
 pub mod ns {
     /// Implicitly defined special member functions are trivial on a struct with
     /// only trivial members.
-    ///
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=13
     #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct Trivial {
@@ -30,7 +28,6 @@ pub mod ns {
     }
     forward_declare::unsafe_define!(forward_declare::symbol!("Trivial"), crate::ns::Trivial);
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=13
     impl Default for Trivial {
         #[inline(always)]
         fn default() -> Self {
@@ -42,7 +39,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=13
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for Trivial {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -54,7 +50,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=13
     impl<'b> ::ctor::UnpinAssign<&'b Self> for Trivial {
         #[inline(always)]
         fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -64,7 +59,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=13
     impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Trivial {
         #[inline(always)]
         fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -76,8 +70,6 @@ pub mod ns {
 
     /// Defaulted special member functions are trivial on a struct with only trivial
     /// members.
-    ///
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=19
     #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct TrivialWithDefaulted {
@@ -88,7 +80,6 @@ pub mod ns {
         crate::ns::TrivialWithDefaulted
     );
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=20
     impl Default for TrivialWithDefaulted {
         #[inline(always)]
         fn default() -> Self {
@@ -100,7 +91,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=23
     impl<'b> ::ctor::UnpinAssign<&'b Self> for TrivialWithDefaulted {
         #[inline(always)]
         fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -110,7 +100,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=24
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialWithDefaulted {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -124,7 +113,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=25
     impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialWithDefaulted {
         #[inline(always)]
         fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -135,7 +123,6 @@ pub mod ns {
     }
 
     impl TrivialWithDefaulted {
-        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=31
         #[inline(always)]
         pub fn Unqualified<'a>(&'a mut self) {
             unsafe {
@@ -145,7 +132,6 @@ pub mod ns {
     }
 
     impl TrivialWithDefaulted {
-        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=32
         #[inline(always)]
         pub fn ConstQualified<'a>(&'a self) {
             unsafe {
@@ -155,7 +141,6 @@ pub mod ns {
     }
 
     impl TrivialWithDefaulted {
-        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=33
         #[inline(always)]
         pub fn LvalueRefQualified<'a>(&'a mut self) {
             unsafe {
@@ -167,7 +152,6 @@ pub mod ns {
     }
 
     impl TrivialWithDefaulted {
-        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=34
         #[inline(always)]
         pub fn ConstLvalueRefQualified<'a>(&'a self) {
             unsafe {
@@ -177,7 +161,6 @@ pub mod ns {
     }
 
     impl TrivialWithDefaulted {
-        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=35
         #[inline(always)]
         pub fn RvalueRefQualified<'a>(&'a mut self) {
             unsafe {
@@ -189,7 +172,6 @@ pub mod ns {
     }
 
     impl TrivialWithDefaulted {
-        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=36
         #[inline(always)]
         pub fn ConstRvalueRefQualified<'a>(&'a self) {
             unsafe {
@@ -200,8 +182,6 @@ pub mod ns {
 
     /// This struct is trivial, and therefore trivially relocatable etc., but still
     /// not safe to pass by reference as it is not final.
-    ///
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     #[::ctor::recursively_pinned]
     #[repr(C)]
     pub struct TrivialNonfinal {
@@ -212,7 +192,6 @@ pub mod ns {
         crate::ns::TrivialNonfinal
     );
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     impl ::ctor::CtorNew<()> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self>;
         #[inline(always)]
@@ -230,7 +209,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     impl<'b> ::ctor::CtorNew<&'b Self> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
@@ -257,7 +235,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
@@ -284,7 +261,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     impl<'b> ::ctor::Assign<&'b Self> for TrivialNonfinal {
         #[inline(always)]
         fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -294,7 +270,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
         #[inline(always)]
         fn assign<'a>(
@@ -307,13 +282,11 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=45
     #[inline(always)]
     pub fn TakesByValue(trivial: crate::ns::Trivial) -> crate::ns::Trivial {
         unsafe { crate::detail::__rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(trivial) }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=46
     #[inline(always)]
     pub fn TakesWithDefaultedByValue(
         trivial: crate::ns::TrivialWithDefaulted,
@@ -323,7 +296,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=47
     #[inline(always)]
     pub fn TakesTrivialNonfinalByValue(
         trivial: impl ::ctor::Ctor<Output = crate::ns::TrivialNonfinal>,
@@ -339,13 +311,11 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=49
     #[inline(always)]
     pub fn TakesByReference<'a>(trivial: &'a mut crate::ns::Trivial) -> &'a mut crate::ns::Trivial {
         unsafe { crate::detail::__rust_thunk___ZN2ns16TakesByReferenceERNS_7TrivialE(trivial) }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=50
     #[inline(always)]
     pub fn TakesWithDefaultedByReference<'a>(
         trivial: &'a mut crate::ns::TrivialWithDefaulted,
@@ -355,7 +325,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=52
     #[inline(always)]
     pub fn TakesTrivialNonfinalByReference<'a>(
         trivial: ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
@@ -365,7 +334,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=54
     #[inline(always)]
     pub fn TakesByConstReference<'a>(trivial: &'a crate::ns::Trivial) -> &'a crate::ns::Trivial {
         unsafe {
@@ -373,7 +341,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=55
     #[inline(always)]
     pub fn TakesWithDefaultedByConstReference<'a>(
         trivial: &'a crate::ns::TrivialWithDefaulted,
@@ -383,7 +350,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=57
     #[inline(always)]
     pub fn TakesTrivialNonfinalByConstReference<'a>(
         trivial: &'a crate::ns::TrivialNonfinal,
@@ -393,7 +359,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=60
     #[inline(always)]
     pub fn TakesByRvalueReference<'a>(
         trivial: ::ctor::RvalueReference<'a, crate::ns::Trivial>,
@@ -403,7 +368,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=61
     #[inline(always)]
     pub fn TakesWithDefaultedByRvalueReference<'a>(
         trivial: ::ctor::RvalueReference<'a, crate::ns::TrivialWithDefaulted>,
@@ -413,7 +377,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=63
     #[inline(always)]
     pub fn TakesTrivialNonfinalByRvalueReference<'a>(
         trivial: ::ctor::RvalueReference<'a, crate::ns::TrivialNonfinal>,
@@ -423,7 +386,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=66
     #[inline(always)]
     pub fn TakesByConstRvalueReference<'a>(
         trivial: ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>,
@@ -433,7 +395,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=67
     #[inline(always)]
     pub fn TakesWithDefaultedByConstRvalueReference<'a>(
         trivial: ::ctor::ConstRvalueReference<'a, crate::ns::TrivialWithDefaulted>,
@@ -443,7 +404,6 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=69
     #[inline(always)]
     pub fn TakesTrivialNonfinalByConstRvalueReference<'a>(
         trivial: ::ctor::ConstRvalueReference<'a, crate::ns::TrivialNonfinal>,

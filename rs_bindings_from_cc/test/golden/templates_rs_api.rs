@@ -18,7 +18,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct DifferentScope {
@@ -26,7 +25,6 @@ pub struct DifferentScope {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("DifferentScope"), crate::DifferentScope);
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=10
 impl Default for DifferentScope {
     #[inline(always)]
     fn default() -> Self {
@@ -38,7 +36,6 @@ impl Default for DifferentScope {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=10
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for DifferentScope {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -50,7 +47,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DifferentScope {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=10
 impl<'b> ::ctor::UnpinAssign<&'b Self> for DifferentScope {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -60,7 +56,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for DifferentScope {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=10
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for DifferentScope {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -71,18 +66,14 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for DifferentSco
 }
 
 pub mod test_namespace_bindings {
-    // Generated from: rs_bindings_from_cc/test/golden/templates.h;l=14
     // Error while generating bindings for item 'test_namespace_bindings::MyTemplate':
     // Class templates are not supported yet
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=29
     pub type MyTypeAlias = crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=30
     pub type OtherTypeAliasInSameTarget =
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=32
     #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct TemplateParam {
@@ -93,7 +84,6 @@ pub mod test_namespace_bindings {
         crate::test_namespace_bindings::TemplateParam
     );
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=32
     impl Default for TemplateParam {
         #[inline(always)]
         fn default() -> Self {
@@ -107,7 +97,6 @@ pub mod test_namespace_bindings {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=32
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for TemplateParam {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -121,7 +110,6 @@ pub mod test_namespace_bindings {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=32
     impl<'b> ::ctor::UnpinAssign<&'b Self> for TemplateParam {
         #[inline(always)]
         fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -133,7 +121,6 @@ pub mod test_namespace_bindings {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=32
     impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TemplateParam {
         #[inline(always)]
         fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -145,27 +132,21 @@ pub mod test_namespace_bindings {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=33
     pub type TemplateWithStructTemplateParam =
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE;
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=34
     pub type ParamFromDifferentScope =
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE;
 
-    // Generated from: rs_bindings_from_cc/test/golden/templates.h;l=36
     // Error while generating bindings for item 'test_namespace_bindings::TemplateWithTwoParams':
     // Class templates are not supported yet
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=42
     pub type AliasToTemplateWithTwoParams =
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE;
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=44
     pub type AliasToTemplateOfATemplate =
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE;
 
-    // Generated from: rs_bindings_from_cc/test/golden/templates.h;l=47
     // Error while generating bindings for item 'test_namespace_bindings::MyStruct':
     // Class templates are not supported yet
 
@@ -175,7 +156,6 @@ pub mod test_namespace_bindings {
     // Explicit class template specialization with definition should be imported
     // even when not instantiated if there is a type alias for it.
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=61
     pub type MyCharStruct = crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE;
 
     // Forward declared explicit class template specialization should be imported
@@ -191,15 +171,12 @@ pub mod test_namespace_bindings {
 
 // namespace test_namespace_bindings
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=79
 // Error while generating bindings for item 'MyTopLevelTemplate':
 // Class templates are not supported yet
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=84
 pub type TopLevelTemplateWithNonTopLevelParam =
     crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE;
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=90
 #[inline(always)]
 pub fn processForwardDeclaredSpecialization<'a>(
     i: Option<::core::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>>,
@@ -210,15 +187,12 @@ pub fn processForwardDeclaredSpecialization<'a>(
 }
 
 pub mod template_template_params {
-    // Generated from: rs_bindings_from_cc/test/golden/templates.h;l=94
     // Error while generating bindings for item 'template_template_params::Policy':
     // Class templates are not supported yet
 
-    // Generated from: rs_bindings_from_cc/test/golden/templates.h;l=104
     // Error while generating bindings for item 'template_template_params::MyTemplate':
     // Class templates are not supported yet
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=110
     pub type MyTypeAlias =
         crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE;
 }
@@ -226,11 +200,9 @@ pub mod template_template_params {
 // namespace template_template_params
 
 pub mod forward_declared_template {
-    // Generated from: rs_bindings_from_cc/test/golden/templates.h;l=122
     // Error while generating bindings for item 'forward_declared_template::ForwardDeclaredTemplate':
     // Class templates are not supported yet
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=125
     pub type TypeAliasToForwardDeclaredTemplate =
         crate::__CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE;
 }
@@ -238,7 +210,6 @@ pub mod forward_declared_template {
 // namespace forward_declared_template
 
 pub mod private_classes {
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=131
     #[::ctor::recursively_pinned]
     #[repr(C)]
     pub struct HasPrivateType {
@@ -249,7 +220,6 @@ pub mod private_classes {
         crate::private_classes::HasPrivateType
     );
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=131
     impl<'b> ::ctor::CtorNew<&'b Self> for HasPrivateType {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
@@ -276,7 +246,6 @@ pub mod private_classes {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=131
     impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasPrivateType {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
@@ -303,7 +272,6 @@ pub mod private_classes {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=131
     impl<'b> ::ctor::Assign<&'b Self> for HasPrivateType {
         #[inline(always)]
         fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -315,7 +283,6 @@ pub mod private_classes {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=131
     impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasPrivateType {
         #[inline(always)]
         fn assign<'a>(
@@ -335,7 +302,6 @@ pub mod private_classes {
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
@@ -349,7 +315,6 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
     #[inline(always)]
     fn default() -> Self {
@@ -361,7 +326,6 @@ impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14Differ
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl<'b> From<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
@@ -375,7 +339,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl<'b> ::ctor::UnpinAssign<&'b Self>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
@@ -387,7 +350,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
@@ -400,7 +362,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 }
 
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=17
     #[inline(always)]
     pub fn Create(
         value: crate::DifferentScope,
@@ -412,7 +373,6 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
 }
 
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=23
     #[inline(always)]
     pub fn value<'a>(&'a self) -> &'a crate::DifferentScope {
         unsafe {
@@ -421,7 +381,6 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
@@ -437,7 +396,6 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
     #[inline(always)]
     fn default() -> Self {
@@ -449,7 +407,6 @@ impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13Tem
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl<'b> From<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
@@ -463,7 +420,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl<'b> ::ctor::UnpinAssign<&'b Self>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
@@ -475,7 +431,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
@@ -488,7 +443,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 }
 
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=17
     #[inline(always)]
     pub fn Create(
         value: crate::test_namespace_bindings::TemplateParam,
@@ -500,7 +454,6 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE
 }
 
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=23
     #[inline(always)]
     pub fn value<'a>(&'a self) -> &'a crate::test_namespace_bindings::TemplateParam {
         unsafe {
@@ -509,7 +462,6 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
@@ -523,7 +475,6 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     #[inline(always)]
     fn default() -> Self {
@@ -535,7 +486,6 @@ impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl<'b> From<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
@@ -549,7 +499,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl<'b> ::ctor::UnpinAssign<&'b Self>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
@@ -561,7 +510,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
@@ -574,7 +522,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 }
 
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=17
     #[inline(always)]
     pub fn Create(value: i32) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
         unsafe {
@@ -584,7 +531,6 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
 }
 
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=23
     #[inline(always)]
     pub fn value<'a>(&'a self) -> &'a i32 {
         unsafe {
@@ -593,7 +539,6 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {
@@ -607,7 +552,6 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {
     #[inline(always)]
     fn default() -> Self {
@@ -619,7 +563,6 @@ impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoPara
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl<'b> From<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
@@ -633,7 +576,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl<'b> ::ctor::UnpinAssign<&'b Self>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
@@ -645,7 +587,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
@@ -657,7 +598,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {
@@ -669,7 +609,6 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {
     #[inline(always)]
     fn default() -> Self {
@@ -681,7 +620,6 @@ impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoPara
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl<'b> From<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
@@ -695,7 +633,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl<'b> ::ctor::UnpinAssign<&'b Self>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
@@ -707,7 +644,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
@@ -719,7 +655,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
@@ -731,7 +666,6 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
     #[inline(always)]
     fn default() -> Self {
@@ -743,7 +677,6 @@ impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoPara
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl<'b> From<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
 {
@@ -757,7 +690,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl<'b> ::ctor::UnpinAssign<&'b Self>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
 {
@@ -769,7 +701,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
 {
@@ -783,8 +714,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 
 /// Explicit class template specialization with definition should be imported
 /// even when not instantiated if there is a type alias for it.
-///
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=60
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
@@ -795,7 +724,6 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=60
 impl ::ctor::CtorNew<()> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -811,7 +739,6 @@ impl ::ctor::CtorNew<()> for __CcTemplateInstN23test_namespace_bindings8MyStruct
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=60
 impl<'b> ::ctor::CtorNew<&'b Self> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -835,7 +762,6 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for __CcTemplateInstN23test_namespace_bind
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=60
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
 {
@@ -863,7 +789,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=60
 impl<'b> ::ctor::Assign<&'b Self> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
     #[inline(always)]
     fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -873,7 +798,6 @@ impl<'b> ::ctor::Assign<&'b Self> for __CcTemplateInstN23test_namespace_bindings
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=60
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
 {
@@ -888,7 +812,6 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=80
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE {
@@ -899,7 +822,6 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=80
 impl Default for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE {
     #[inline(always)]
     fn default() -> Self {
@@ -911,7 +833,6 @@ impl Default for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=80
 impl<'b> From<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
@@ -925,7 +846,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=80
 impl<'b> ::ctor::UnpinAssign<&'b Self>
     for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
@@ -937,7 +857,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=80
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
@@ -951,7 +870,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 
 forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = forward_declare::symbol!("__CcTemplateInst18MyTopLevelTemplateIiE"));
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=105
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
@@ -964,7 +882,6 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=105
 impl ::ctor::CtorNew<()> for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -980,7 +897,6 @@ impl ::ctor::CtorNew<()> for __CcTemplateInstN24template_template_params10MyTemp
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=105
 impl<'b> ::ctor::CtorNew<&'b Self>
     for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
@@ -1008,7 +924,6 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=105
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
@@ -1036,7 +951,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=105
 impl<'b> ::ctor::Assign<&'b Self>
     for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
@@ -1048,7 +962,6 @@ impl<'b> ::ctor::Assign<&'b Self>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=105
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
@@ -1064,7 +977,6 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
 }
 
 impl __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
-    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=107
     #[inline(always)]
     pub fn GetPolicy() -> i32 {
         unsafe {

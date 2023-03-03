@@ -18,7 +18,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Generated from: rs_bindings_from_cc/test/golden/bitfields.h;l=10
 #[::ctor::recursively_pinned]
 #[repr(C, align(4))]
 pub struct WithBitfields {
@@ -43,7 +42,6 @@ impl WithBitfields {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/bitfields.h;l=10
 impl ::ctor::CtorNew<()> for WithBitfields {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -61,7 +59,6 @@ impl ::ctor::CtorNew<()> for WithBitfields {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/bitfields.h;l=10
 impl<'b> ::ctor::CtorNew<&'b Self> for WithBitfields {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -88,7 +85,6 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for WithBitfields {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/bitfields.h;l=10
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for WithBitfields {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -115,7 +111,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for WithBitfields
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/bitfields.h;l=10
 impl<'b> ::ctor::Assign<&'b Self> for WithBitfields {
     #[inline(always)]
     fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -125,7 +120,6 @@ impl<'b> ::ctor::Assign<&'b Self> for WithBitfields {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/bitfields.h;l=10
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for WithBitfields {
     #[inline(always)]
     fn assign<'a>(

@@ -18,13 +18,11 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=8
 #[inline(always)]
 pub unsafe fn free_function(p1: *mut i32) -> *mut i32 {
     crate::detail::__rust_thunk___Z13free_functionRi(p1)
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct S {
@@ -32,28 +30,22 @@ pub struct S {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::S':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::S':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::S':
 // Parameter #0 is not supported: Unsupported type 'S &&': Unsupported type: && without lifetime
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::operator=':
 // Parameter #0 is not supported: Unsupported type 'S &&': Unsupported type: && without lifetime
 
 impl S {
-    /// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=11
     #[inline(always)]
     pub unsafe fn const_method(__this: *const Self, p1: *mut i32, p2: *mut i32) -> *mut i32 {
         crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
@@ -61,14 +53,12 @@ impl S {
 }
 
 impl S {
-    /// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=12
     #[inline(always)]
     pub unsafe fn method(__this: *mut Self, p1: *mut i32, p2: *mut i32) -> *mut i32 {
         crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=15
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct TriviallyCopyableButNontriviallyDestructible {
@@ -79,15 +69,12 @@ forward_declare::unsafe_define!(
     crate::TriviallyCopyableButNontriviallyDestructible
 );
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=15
 // Error while generating bindings for item 'TriviallyCopyableButNontriviallyDestructible::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=16
 // Error while generating bindings for item 'TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-/// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=18
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
@@ -95,13 +82,11 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=21
 #[inline(always)]
 pub unsafe fn take_pointer(p: *mut i32) {
     crate::detail::__rust_thunk___Z12take_pointerPi(p)
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
 #[::ctor::recursively_pinned]
 #[repr(C, align(4))]
 pub struct WrappedValue {
@@ -112,27 +97,21 @@ pub struct WrappedValue {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate::WrappedValue);
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
 // Error while generating bindings for item 'WrappedValue::WrappedValue':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
 // Error while generating bindings for item 'WrappedValue::WrappedValue':
 // Parameter #0 is not supported: Unsupported type 'WrappedValue &&': Unsupported type: && without lifetime
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
 // Error while generating bindings for item 'WrappedValue::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
 // Error while generating bindings for item 'WrappedValue::operator=':
 // Parameter #0 is not supported: Unsupported type 'WrappedValue &&': Unsupported type: && without lifetime
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=25
 // Error while generating bindings for item 'WrappedValue::WrappedValue':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=27
 // Error while generating bindings for item 'WrappedValue::operator+':
 // Expected first parameter to be a record or reference
 

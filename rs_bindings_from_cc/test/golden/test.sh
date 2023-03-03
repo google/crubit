@@ -7,13 +7,13 @@ function prepend_license() {
   cat rs_bindings_from_cc/test/golden/LICENSE_HEADER "$1"
 }
 
-diff -u -I '// Generated from: ' -I '// Expanded at: ' "$1" <(prepend_license "$2")
+diff -u "$1" <(prepend_license "$2")
 STATUS1=$?
 
 if [ "$#" == 2 ]; then
   STATUS2=0
 else
-  diff -u -I '// Generated from: ' -I '// Expanded at: ' "$3" <(prepend_license "$4")
+  diff -u "$3" <(prepend_license "$4")
   STATUS2=$?
 fi
 

@@ -25,8 +25,6 @@
 // a
 
 /// Foo
-///
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=17
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Foo {
@@ -37,7 +35,6 @@ pub struct Foo {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=17
 impl Default for Foo {
     #[inline(always)]
     fn default() -> Self {
@@ -49,7 +46,6 @@ impl Default for Foo {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=17
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for Foo {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -61,7 +57,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Foo {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=17
 impl<'b> ::ctor::UnpinAssign<&'b Self> for Foo {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -71,7 +66,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for Foo {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=17
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Foo {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -97,16 +91,12 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Foo {
 // c
 
 /// foo
-///
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=41
 #[inline(always)]
 pub fn foo() {
     unsafe { crate::detail::__rust_thunk___Z3foov() }
 }
 
 /// Bar
-///
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=46
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Bar {
@@ -114,7 +104,6 @@ pub struct Bar {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Bar"), crate::Bar);
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=46
 impl Default for Bar {
     #[inline(always)]
     fn default() -> Self {
@@ -126,7 +115,6 @@ impl Default for Bar {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=46
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for Bar {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -138,7 +126,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Bar {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=46
 impl<'b> ::ctor::UnpinAssign<&'b Self> for Bar {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -148,7 +135,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for Bar {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=46
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Bar {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -159,8 +145,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Bar {
 }
 
 /// d
-///
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=52
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct HasNoComments {
@@ -168,7 +152,6 @@ pub struct HasNoComments {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("HasNoComments"), crate::HasNoComments);
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=52
 impl Default for HasNoComments {
     #[inline(always)]
     fn default() -> Self {
@@ -180,7 +163,6 @@ impl Default for HasNoComments {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=52
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasNoComments {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -192,7 +174,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasNoComments {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=52
 impl<'b> ::ctor::UnpinAssign<&'b Self> for HasNoComments {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -202,7 +183,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for HasNoComments {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=52
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasNoComments {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {

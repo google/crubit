@@ -19,7 +19,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 pub mod test_namespace_bindings {
-    /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
     #[derive(Clone, Copy)]
     #[repr(C, align(4))]
     pub struct SomeClass {
@@ -34,7 +33,6 @@ pub mod test_namespace_bindings {
         crate::test_namespace_bindings::SomeClass
     );
 
-    /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
     impl Default for SomeClass {
         #[inline(always)]
         fn default() -> Self {
@@ -46,7 +44,6 @@ pub mod test_namespace_bindings {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -60,7 +57,6 @@ pub mod test_namespace_bindings {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
     impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeClass {
         #[inline(always)]
         fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -72,7 +68,6 @@ pub mod test_namespace_bindings {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
     impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeClass {
         #[inline(always)]
         fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -85,7 +80,6 @@ pub mod test_namespace_bindings {
     }
 
     impl SomeClass {
-        /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=13
         #[inline(always)]
         pub fn public_method<'a>(&'a mut self) {
             unsafe {
@@ -97,7 +91,6 @@ pub mod test_namespace_bindings {
     }
 
     impl SomeClass {
-        /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=14
         #[inline(always)]
         pub fn public_static_method() {
             unsafe {

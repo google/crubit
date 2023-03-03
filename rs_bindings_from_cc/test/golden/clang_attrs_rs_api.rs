@@ -18,7 +18,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 #[::ctor::recursively_pinned]
 #[repr(C, align(64))]
 pub struct HasCustomAlignment {
@@ -29,7 +28,6 @@ forward_declare::unsafe_define!(
     crate::HasCustomAlignment
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 impl ::ctor::CtorNew<()> for HasCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -47,7 +45,6 @@ impl ::ctor::CtorNew<()> for HasCustomAlignment {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 impl<'b> ::ctor::CtorNew<&'b Self> for HasCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -74,7 +71,6 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for HasCustomAlignment {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -101,7 +97,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for HasCustomAlig
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignment {
     #[inline(always)]
     fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -111,7 +106,6 @@ impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignment {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasCustomAlignment {
     #[inline(always)]
     fn assign<'a>(
@@ -124,7 +118,6 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmen
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=12
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct HasFieldWithCustomAlignment {
@@ -135,7 +128,6 @@ forward_declare::unsafe_define!(
     crate::HasFieldWithCustomAlignment
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=12
 impl ::ctor::CtorNew<()> for HasFieldWithCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -153,7 +145,6 @@ impl ::ctor::CtorNew<()> for HasFieldWithCustomAlignment {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=12
 impl<'b> ::ctor::CtorNew<&'b Self> for HasFieldWithCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -180,7 +171,6 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for HasFieldWithCustomAlignment {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=12
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasFieldWithCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -207,7 +197,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for HasFieldWithC
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=12
 impl<'b> ::ctor::Assign<&'b Self> for HasFieldWithCustomAlignment {
     #[inline(always)]
     fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -217,7 +206,6 @@ impl<'b> ::ctor::Assign<&'b Self> for HasFieldWithCustomAlignment {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=12
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasFieldWithCustomAlignment {
     #[inline(always)]
     fn assign<'a>(
@@ -230,7 +218,6 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasFieldWithCusto
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 #[::ctor::recursively_pinned]
 #[repr(C, align(64))]
 pub struct InheritsFromBaseWithCustomAlignment {
@@ -241,7 +228,6 @@ forward_declare::unsafe_define!(
     crate::InheritsFromBaseWithCustomAlignment
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 impl ::ctor::CtorNew<()> for InheritsFromBaseWithCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -259,7 +245,6 @@ impl ::ctor::CtorNew<()> for InheritsFromBaseWithCustomAlignment {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 impl<'b> ::ctor::CtorNew<&'b Self> for InheritsFromBaseWithCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -286,7 +271,6 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for InheritsFromBaseWithCustomAlignment {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for InheritsFromBaseWithCustomAlignment
 {
@@ -317,7 +301,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 impl<'b> ::ctor::Assign<&'b Self> for InheritsFromBaseWithCustomAlignment {
     #[inline(always)]
     fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -329,7 +312,6 @@ impl<'b> ::ctor::Assign<&'b Self> for InheritsFromBaseWithCustomAlignment {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for InheritsFromBaseWithCustomAlignment {
     #[inline(always)]
     fn assign<'a>(
@@ -352,7 +334,6 @@ unsafe impl oops::Inherits<crate::HasCustomAlignment>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=18
 #[::ctor::recursively_pinned]
 #[repr(C, align(64))]
 pub struct HasCustomAlignmentWithGnuAttr {
@@ -363,7 +344,6 @@ forward_declare::unsafe_define!(
     crate::HasCustomAlignmentWithGnuAttr
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=18
 impl ::ctor::CtorNew<()> for HasCustomAlignmentWithGnuAttr {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -381,7 +361,6 @@ impl ::ctor::CtorNew<()> for HasCustomAlignmentWithGnuAttr {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=18
 impl<'b> ::ctor::CtorNew<&'b Self> for HasCustomAlignmentWithGnuAttr {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -408,7 +387,6 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for HasCustomAlignmentWithGnuAttr {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=18
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmentWithGnuAttr {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -435,7 +413,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for HasCustomAlig
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=18
 impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignmentWithGnuAttr {
     #[inline(always)]
     fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -445,7 +422,6 @@ impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignmentWithGnuAttr {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=18
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmentWithGnuAttr {
     #[inline(always)]
     fn assign<'a>(
@@ -459,14 +435,11 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmen
 }
 
 pub mod template_with_preferred_name {
-    // Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=27
     // Error while generating bindings for item 'template_with_preferred_name::SomeTemplate':
     // Class templates are not supported yet
 
     /// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
     /// definition of the `string_view` type alias.
-    ///
-    /// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=32
     pub type SpecializedTypeAlias =
         crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE;
 
@@ -481,8 +454,6 @@ pub mod template_with_preferred_name {
 
 /// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
 /// forward declaration of `basic_string_view` class template.
-///
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=38
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
@@ -493,7 +464,6 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=38
 impl ::ctor::CtorNew<()> for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -509,7 +479,6 @@ impl ::ctor::CtorNew<()> for __CcTemplateInstN28template_with_preferred_name12So
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=38
 impl<'b> ::ctor::CtorNew<&'b Self>
     for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
@@ -537,7 +506,6 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=38
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
@@ -565,7 +533,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=38
 impl<'b> ::ctor::Assign<&'b Self>
     for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
@@ -577,7 +544,6 @@ impl<'b> ::ctor::Assign<&'b Self>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=38
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
@@ -593,7 +559,6 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
 }
 
 impl __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
-    /// Generated from: rs_bindings_from_cc/test/golden/clang_attrs.h;l=39
     #[inline(always)]
     pub fn foo<'a>(self: ::core::pin::Pin<&'a mut Self>) -> i32 {
         unsafe {

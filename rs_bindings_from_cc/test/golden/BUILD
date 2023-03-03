@@ -46,8 +46,8 @@ DEPS = {
 TAGS = {}
 
 rust_bindings_from_cc_cli_flag(
-    name = "enable_source_location_in_doc_comment",
-    flags = "--generate_source_location_in_doc_comment=True",
+    name = "disable_source_location_in_doc_comment",
+    flags = "--generate_source_location_in_doc_comment=False",
 )
 
 [cc_library(
@@ -55,7 +55,7 @@ rust_bindings_from_cc_cli_flag(
     hdrs = [name + ".h"],
     aspect_hints = [
         "//third_party/crubit:experimental",
-        ":enable_source_location_in_doc_comment",
+        ":disable_source_location_in_doc_comment",
     ],
     copts = ["-Wno-google3-inline-namespace"],
     deps = [
@@ -110,7 +110,7 @@ cc_library(
     name = "namespaces_json",
     hdrs = ["namespaces_json.h"],
     aspect_hints = [
-        ":enable_source_location_in_doc_comment",
+        ":disable_source_location_in_doc_comment",
     ],
     copts = ["-Wno-google3-inline-namespace"],
 )

@@ -18,7 +18,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct TrivialCustomType {
@@ -29,7 +28,6 @@ forward_declare::unsafe_define!(
     crate::TrivialCustomType
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=10
 impl Default for TrivialCustomType {
     #[inline(always)]
     fn default() -> Self {
@@ -41,7 +39,6 @@ impl Default for TrivialCustomType {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=10
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -53,7 +50,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=10
 impl<'b> ::ctor::UnpinAssign<&'b Self> for TrivialCustomType {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -63,7 +59,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for TrivialCustomType {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=10
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -73,15 +68,12 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialCusto
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=13
 // Error while generating bindings for item 'TrivialCustomType::operator||':
 // Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
-// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=16
 // Error while generating bindings for item 'TrivialCustomType::operator int':
 // Function name is not supported: Unsupported name: operator int
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=21
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct NontrivialCustomType {
@@ -93,7 +85,6 @@ forward_declare::unsafe_define!(
     crate::NontrivialCustomType
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=22
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialCustomType {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -120,21 +111,17 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialCus
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=25
 // Error while generating bindings for item 'NontrivialCustomType::operator||':
 // Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
-// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=31
 // Error while generating bindings for item 'PackedLayout':
 // Records with packed layout are not supported
 
-// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=42
 // Error while generating bindings for item 'MultipleReasons':
 // Parameter #0 is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
 //
 // Return type is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=44
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct ContainingStruct {
@@ -149,7 +136,6 @@ forward_declare::unsafe_define!(
     crate::ContainingStruct
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=44
 impl Default for ContainingStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -161,7 +147,6 @@ impl Default for ContainingStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=44
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -173,7 +158,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=44
 impl<'b> ::ctor::UnpinAssign<&'b Self> for ContainingStruct {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -183,7 +167,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for ContainingStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=44
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -193,7 +176,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ContainingSt
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=45
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
 // Nested classes are not supported yet
 

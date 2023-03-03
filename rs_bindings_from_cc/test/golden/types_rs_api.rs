@@ -18,15 +18,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Generated from: rs_bindings_from_cc/test/golden/types.h;l=11
 // Error while generating bindings for item 'PtrDiff':
 // Unsupported type 'decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr))': Unsupported clang::Type class 'Decltype'
 
-// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'Size':
 // Unsupported type 'decltype(sizeof (0))': Unsupported clang::Type class 'Decltype'
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=15
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
@@ -34,7 +31,6 @@ pub struct SomeStruct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=15
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -46,7 +42,6 @@ impl Default for SomeStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=15
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -58,7 +53,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=15
 impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeStruct {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -68,7 +62,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=15
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -80,7 +73,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
 
 forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=19
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
 pub struct FieldTypeTestStruct {
@@ -130,7 +122,6 @@ forward_declare::unsafe_define!(
     crate::FieldTypeTestStruct
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=19
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -142,7 +133,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=67
 #[inline(always)]
 pub fn VoidReturningFunction() {
     unsafe { crate::detail::__rust_thunk___Z21VoidReturningFunctionv() }
@@ -152,15 +142,12 @@ pub fn VoidReturningFunction() {
 /// this becomes un-compilable. The syntax here is awful, but this is a function
 /// returning a function. In ML-like syntax:
 /// FunctionPointerReturningFunction : () -> (const int&, int*) -> int&
-///
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=73
 #[inline(always)]
 pub fn FunctionPointerReturningFunction() -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>
 {
     unsafe { crate::detail::__rust_thunk___Z32FunctionPointerReturningFunctionv() }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=77
 #[inline(always)]
 pub unsafe fn FunctionWithVoidPointers(
     __param_0: *mut ::core::ffi::c_void,

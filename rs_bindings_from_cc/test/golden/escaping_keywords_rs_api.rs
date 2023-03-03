@@ -18,7 +18,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct r#type {
@@ -26,7 +25,6 @@ pub struct r#type {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("type"), crate::r#type);
 
-/// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 impl Default for r#type {
     #[inline(always)]
     fn default() -> Self {
@@ -38,7 +36,6 @@ impl Default for r#type {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for r#type {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -50,7 +47,6 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for r#type {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 impl<'b> ::ctor::UnpinAssign<&'b Self> for r#type {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -60,7 +56,6 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for r#type {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for r#type {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -70,17 +65,14 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for r#type {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=14
 #[inline(always)]
 pub fn r#impl(r#match: i32) {
     unsafe { crate::detail::__rust_thunk___Z4impli(r#match) }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=16
 // Error while generating bindings for item 'await':
 // Class templates are not supported yet
 
-// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=21
 // Error while generating bindings for item 'become':
 // Function templates are not supported yet
 
