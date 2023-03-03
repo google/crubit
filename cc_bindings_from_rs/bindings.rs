@@ -80,23 +80,9 @@ pub fn generate_bindings(input: &Input) -> Result<Output> {
     let rs_body = quote! {
         #top_comment
 
-        // Rust warns about non-`#[repr(C)]` structs being used as parameter types or return
-        // type of `extern "C"` functions (such as thunks that might be present in `rs_body`).
-        // This warning makes sense, because in absence of a guaranteed / well-defined ABI
-        // for this structs, one can't author C/C++ definitions compatible with that ABI.
-        // Unless... the author is `cc_bindings_from_rs` invoked with exactly the same version
-        // and cmdline flags as `rustc`.  Given this, we just disable warnings like the one
-        // in the example below:
-        //
-        //   warning: `extern` fn uses type `DefaultReprPoint`, which is not FFI-safe
-        //   --> .../cc_bindings_from_rs/test/structs/structs_cc_api_impl.rs:25:6
-        //       |
-        //    25 | ) -> structs::DefaultReprPoint {
-        //       |      ^^^^^^^^^^^^^^^^^^^^^^^^^ not FFI-safe
-        //       |
-        //       = help: consider adding a `#[repr(C)]` or `#[repr(transparent)]` attribute...
-        //       = note: this struct has unspecified layout
-        //       = note: `#[warn(improper_ctypes_definitions)]` on by default
+        // `rust_builtin_type_abi_assumptions.md` documents why the generated
+        // bindings need to relax the `improper_ctypes_definitions` warning
+        // for `char` (and possibly for other built-in types in the future).
         #![allow(improper_ctypes_definitions)] __NEWLINE__
         __NEWLINE__
 
