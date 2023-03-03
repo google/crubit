@@ -2877,6 +2877,7 @@ fn generate_bindings_tokens(
     Ok(BindingsTokens {
         rs_api: quote! {
             #features __NEWLINE__
+            #![no_std] __NEWLINE__
             #![allow(non_camel_case_types)] __NEWLINE__
             #![allow(non_snake_case)] __NEWLINE__
             #![allow(non_upper_case_globals)] __NEWLINE__
