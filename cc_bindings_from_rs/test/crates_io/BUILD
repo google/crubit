@@ -90,13 +90,7 @@ TEST_TARGETS = [
     "@crate_index//:easy_cast",
     "@crate_index//:egui_glow",
     "@crate_index//:either",
-    # TODO: Uncomment and test the crates below - after investigating and fixing
-    # the following bug in `cc_bindings_from_rs`:
-    # thread 'rustc' panicked at '`Dependency::predecessor` should refer to a
-    # NodeId in the `nodes` parameter',
-    # cc_bindings_from_rs/toposort.rs:139
-    #"@crate_index//:emath",
-    #"@crate_index//:nu_ansi_term",
+    "@crate_index//:emath",
     "@crate_index//:env_logger",
     "@crate_index//:fallible_iterator",
     "@crate_index//:fast_image_resize",
@@ -171,6 +165,7 @@ TEST_TARGETS = [
     "@crate_index//:new_debug_unreachable",
     "@crate_index//:nohash_hasher",
     "@crate_index//:nom",
+    "@crate_index//:nu_ansi_term",
     "@crate_index//:num_cpus",
     "@crate_index//:num_iter",
     # TODO: Uncomment and test the crate below - after investigating and fixing

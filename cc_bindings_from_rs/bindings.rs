@@ -13,6 +13,7 @@ use quote::{format_ident, quote};
 use rustc_hir::{AssocItemKind, ImplItemKind, ImplicitSelfKind, Item, ItemKind, Node, Unsafety};
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
+use rustc_middle::ty::DefIdTree;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::Symbol;
@@ -369,6 +370,9 @@ fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet
 
         ty::TyKind::Adt(adt, substs) => {
             ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
+            ensure!(
+                is_directly_public(input.tcx, adt.did()),
+                "Not directly public type (re-exports are not supported yet - b/262052635)");
 
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
@@ -799,6 +803,21 @@ struct AdtCoreBindings {
     size_in_bytes: u64,
 }
 
+/// Like `TyCtxt::is_directly_public`, but works not only with `LocalDefId`, but
+/// also with `DefId`.
+fn is_directly_public(tcx: TyCtxt, def_id: DefId) -> bool {
+    match def_id.as_local() {
+        None => {
+            // This mimics the checks in `try_print_visible_def_path_recur` in
+            // `compiler/rustc_middle/src/ty/print/pretty.rs`.
+            let actual_parent = tcx.opt_parent(def_id);
+            let visible_parent = tcx.visible_parent_map(()).get(&def_id).copied();
+            actual_parent == visible_parent
+        }
+        Some(local_def_id) => tcx.effective_visibilities(()).is_directly_public(local_def_id),
+    }
+}
+
 /// Formats the core of an algebraic data type (an ADT - a struct, an enum, or a
 /// union) represented by `def_id`.
 ///
@@ -819,10 +838,13 @@ struct AdtCoreBindings {
 //
 // TODO(b/259724276): This function's results should be memoized.
 fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
+    let ty = tcx.type_of(def_id);
+    assert!(ty.is_adt());
+    assert!(is_directly_public(tcx, def_id), "Caller should verify");
+
     // TODO(b/259749095): Support non-empty set of generic parameters.
     let param_env = ty::ParamEnv::empty();
 
-    let ty = tcx.type_of(def_id);
     if ty.needs_drop(tcx, param_env) {
         // TODO(b/258251148): Support custom `Drop` impls.
         bail!("`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
@@ -1099,8 +1121,10 @@ fn format_item(input: &Input, def_id: LocalDefId) -> Result<Vec<(SnippetKey, Mix
     let tcx = input.tcx;
 
     // TODO(b/262052635): When adding support for re-exports we may need to change
-    // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is
-    // undesirable, because it would mean exposing items from a private module.)
+    // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is undesirable,
+    // because it would mean exposing items from a private module.  Exposing a private module is
+    // undesirable, because it would mean that changes of private implementation details of the
+    // crate could become breaking changes for users of the generated C++ bindings.)
     if !tcx.effective_visibilities(()).is_directly_public(def_id) {
         return Ok(vec![]);
     }
@@ -3813,6 +3837,22 @@ pub mod tests {
                 "Option<i8>",
                 "Generic types are not supported yet (b/259749095)",
             ),
+            (
+                "PublicReexportOfStruct",
+                "Not directly public type (re-exports are not supported yet - b/262052635)",
+            ),
+            (
+                // This testcase is like `PublicReexportOfStruct`, but the private type and the
+                // re-export are in another crate.  When authoring this test
+                // `core::alloc::LayoutError` was a public re-export of
+                // `core::alloc::layout::LayoutError`:
+                // `https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=d2b5528af9b33b25abe44cc4646d65e3`
+                // TODO(b/258261328): Once cross-crate bindings are supported we should try
+                // to test them via a test crate that we control (rather than testing via
+                // implementation details of the std crate).
+                "core::alloc::LayoutError",
+                "Not directly public type (re-exports are not supported yet - b/262052635)",
+            ),
         ];
         let preamble = quote! {
             #![feature(never_type)]
@@ -3842,6 +3882,12 @@ pub mod tests {
             pub struct LifetimeGenericStruct<'a> {
                 pub reference: &'a u8,
             }
+
+            mod private_submodule {
+                pub struct PublicStructInPrivateModule;
+            }
+            pub use private_submodule::PublicStructInPrivateModule
+                as PublicReexportOfStruct;
         };
         test_ty(&testcases, preamble, |desc, tcx, ty, expected_msg| {
             let input = bindings_input_for_tests(tcx);

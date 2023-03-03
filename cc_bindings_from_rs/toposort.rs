@@ -4,6 +4,7 @@
 
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
+use std::fmt::Debug;
 use std::hash::Hash;
 
 /// The `toposort` function sorts `nodes` in a topological order.
@@ -122,7 +123,7 @@ pub fn toposort<NodeId, CmpFn>(
     preferred_order: CmpFn,
 ) -> TopoSortResult<NodeId>
 where
-    NodeId: Clone + Eq + Hash,
+    NodeId: Clone + Debug + Eq + Hash,
     CmpFn: Fn(&NodeId, &NodeId) -> Ordering,
 {
     // Translating `nodes` and `deps` into a `graph` that maps node ids into 1)
@@ -132,11 +133,15 @@ where
     for Dependency { predecessor, successor } in deps.into_iter() {
         graph
             .get_mut(&successor)
-            .expect("`Dependency::successor` should refer to a NodeId in the `nodes` parameter")
+            .unwrap_or_else(|| panic!(
+                "`Dependency::successor` should refer to a NodeId in the `nodes` parameter. \
+                 predecessor = {predecessor:?}; successor = {successor:?}"))
             .count_of_predecessors += 1;
         graph
             .get_mut(&predecessor)
-            .expect("`Dependency::predecessor` should refer to a NodeId in the `nodes` parameter")
+            .unwrap_or_else(|| panic!(
+                "`Dependency::predecessor` should refer to a NodeId in the `nodes` parameter. \
+                 predecessor = {predecessor:?}; successor = {successor:?}"))
             .successors
             .push(successor);
     }
