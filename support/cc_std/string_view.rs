@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::std::string_view;
-use std::convert::TryFrom;
-use std::ptr;
+use core::convert::TryFrom;
+use core::ptr;
 
 impl From<string_view> for *const [u8] {
     fn from(sv: string_view) -> Self {
@@ -44,9 +44,9 @@ impl From<string_view> for &'static [u8] {
 // TODO(b/246425449): This should implement correct lifetimes, once string_view
 // has lifetime annotations.
 impl TryFrom<string_view> for &'static str {
-    type Error = std::str::Utf8Error;
+    type Error = core::str::Utf8Error;
     fn try_from(sv: string_view) -> Result<Self, Self::Error> {
-        std::str::from_utf8(sv.into())
+        core::str::from_utf8(sv.into())
     }
 }
 
@@ -64,9 +64,9 @@ impl From<&'static [u8]> for string_view {
         // This little maneuver's gonna cost us 51 years of annoying build breakages
         // later, so really we should try to get the constructors callable.
         unsafe {
-            let mut sv = <std::mem::MaybeUninit<string_view>>::zeroed().assume_init();
-            sv.__data_ = std::mem::transmute(ptr);
-            sv.__size_ = std::mem::transmute(size);
+            let mut sv = <core::mem::MaybeUninit<string_view>>::zeroed().assume_init();
+            sv.__data_ = core::mem::transmute(ptr);
+            sv.__size_ = core::mem::transmute(size);
             sv
         }
     }
