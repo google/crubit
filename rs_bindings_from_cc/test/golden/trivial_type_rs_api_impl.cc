@@ -32,27 +32,6 @@ extern "C" struct ns::Trivial* __rust_thunk___ZN2ns7TrivialaSEOS0_(
     struct ns::Trivial* __this, struct ns::Trivial* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
-extern "C" void __rust_thunk___ZN2ns20TrivialWithDefaultedC1Ev(
-    struct ns::TrivialWithDefaulted* __this) {
-  crubit::construct_at(__this);
-}
-extern "C" struct ns::TrivialWithDefaulted*
-__rust_thunk___ZN2ns20TrivialWithDefaultedaSERKS0_(
-    struct ns::TrivialWithDefaulted* __this,
-    const struct ns::TrivialWithDefaulted* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-extern "C" void __rust_thunk___ZN2ns20TrivialWithDefaultedC1EOS0_(
-    struct ns::TrivialWithDefaulted* __this,
-    struct ns::TrivialWithDefaulted* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-extern "C" struct ns::TrivialWithDefaulted*
-__rust_thunk___ZN2ns20TrivialWithDefaultedaSEOS0_(
-    struct ns::TrivialWithDefaulted* __this,
-    struct ns::TrivialWithDefaulted* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
 extern "C" void __rust_thunk___ZN2ns15TrivialNonfinalC1Ev(
     struct ns::TrivialNonfinal* __this) {
   crubit::construct_at(__this);
@@ -86,11 +65,6 @@ __rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
 static_assert(sizeof(struct ns::Trivial) == 4);
 static_assert(alignof(struct ns::Trivial) == 4);
 static_assert(CRUBIT_OFFSET_OF(trivial_field, struct ns::Trivial) == 0);
-
-static_assert(sizeof(struct ns::TrivialWithDefaulted) == 4);
-static_assert(alignof(struct ns::TrivialWithDefaulted) == 4);
-static_assert(CRUBIT_OFFSET_OF(trivial_field,
-                               struct ns::TrivialWithDefaulted) == 0);
 
 static_assert(sizeof(struct ns::TrivialNonfinal) == 4);
 static_assert(alignof(struct ns::TrivialNonfinal) == 4);
