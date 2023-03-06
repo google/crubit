@@ -15,6 +15,15 @@ std::optional<absl::string_view> MapKnownCcTypeToRsType(
     absl::string_view cc_type) {
   static const auto* const kWellKnownTypes =
       new absl::flat_hash_map<absl::string_view, absl::string_view>({
+          // TODO(lukasza): Try to deduplicate the entries below - for example:
+          // - Try to unify `std::int32_t` and `int32_t`
+          // - Try to unify `class rs_std::rs_char` and `rs_std::rs_char`
+          // One approach would be to desugar the types before calling
+          // `MapKnownCcTypeToRsType`, but note that desugaring of type aliases
+          // may be undesirable (i.e.  we may want the bindings to refer to
+          // `TypeAlias` rather than directly to the type that it desugars to).
+          // Note that b/254096006 tracks desire to preserve type aliases in
+          // `cc_bindings_from_rs`.
           {"ptrdiff_t", "isize"},
           {"intptr_t", "isize"},
           {"size_t", "usize"},
@@ -46,6 +55,13 @@ std::optional<absl::string_view> MapKnownCcTypeToRsType(
           {"char16_t", "u16"},
           {"char32_t", "u32"},
           {"wchar_t", "i32"},
+
+          // `class rs_std::rs_char` key covers direct usage of
+          // `rs_std::rs_char`.  `rs_std::rs_char` key covers scenarios when
+          // `using` has imported `rs_char` into another namespace.  See also
+          // the deduplication TODO comment above.
+          {"class rs_std::rs_char", "char"},
+          {"rs_std::rs_char", "char"},
       });
   auto it = kWellKnownTypes->find(cc_type);
   if (it == kWellKnownTypes->end()) return std::nullopt;
