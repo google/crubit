@@ -120,7 +120,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         public_hdrs = retain_proto_dot_h_headers(target[CcInfo].compilation_context.direct_headers)
         all_standalone_hdrs = public_hdrs
         extra_rule_specific_deps = [ctx.rule.attr._cc_lib]
-    elif ctx.rule.kind == "cc_embed_data":
+    elif ctx.rule.kind == "cc_embed_data" or ctx.rule.kind == "upb_proto_library":
         public_hdrs = target[CcInfo].compilation_context.direct_public_headers
         all_standalone_hdrs = target[CcInfo].compilation_context.direct_headers
 
