@@ -32,7 +32,6 @@ TEST_TARGETS = [
     "@crate_index//:argh",
     "@crate_index//:atomic_refcell",
     "@crate_index//:atomic",
-    "@crate_index//:autocxx_parser",
     "@crate_index//:backoff",
     "@crate_index//:backtrace",
     "//third_party/rust/base16ct/v0_1:base16ct",
