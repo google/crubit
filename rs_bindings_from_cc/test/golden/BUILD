@@ -39,7 +39,6 @@ DEPS = {
         "unions",
         "unsupported",
     ],
-    "source_location_doc_comments": ["source_location_doc_comments_macro_def"],
     "types": ["//support/rs_std:rs_char"],
 }
 
