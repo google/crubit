@@ -251,21 +251,6 @@ fn format_ret_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSni
     }
 }
 
-/// Formats an argument of a thunk.  For example:
-/// - most primitive types are passed as-is - e.g. `123`
-/// - structs need to be moved: `std::move(value)`
-/// - in the future additional processing may be needed for other types (this is
-///   speculative so please take these examples with a grain of salt):
-///     - `&str`: utf-8 verification (see b/262580415)
-///     - `&T`: calling into `crubit::MutRef::unsafe_get_ptr` (see b/258235219)
-fn format_cc_thunk_arg<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>, value: TokenStream) -> CcSnippet {
-    if ty.is_copy_modulo_regions(tcx, ty::ParamEnv::empty()) {
-        CcSnippet::new(value)
-    } else {
-        CcSnippet::with_include(quote! { std::move(#value) }, CcInclude::utility())
-    }
-}
-
 /// Formats `ty` into a `CcSnippet` that represents how the type should be
 /// spelled in a C++ declaration of a function parameter or field.
 //
@@ -707,8 +692,13 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
             let thunk_params = &main_api_params;
             let thunk_args = params
                 .iter()
-                .map(|Param{ cc_name, ty, ..}| format_cc_thunk_arg(tcx, *ty, cc_name.clone())
-                     .into_tokens(&mut prereqs))
+                .map(|Param{ cc_name, ty, ..}|
+                     if ty.is_copy_modulo_regions(tcx, ty::ParamEnv::empty()) {
+                        quote!{ #cc_name }
+                    } else {
+                        prereqs.includes.insert(CcInclude::utility());
+                        quote!{ std::move(#cc_name) }
+                    })
                 .collect_vec();
             let thunk_ret_type = &main_api_ret_type;
             CcSnippet {
@@ -1302,7 +1292,7 @@ pub mod tests {
     use rustc_span::def_id::LocalDefId;
 
     use crate::run_compiler::tests::run_compiler_for_testing;
-    use code_gen_utils::{format_cc_ident, format_cc_includes};
+    use code_gen_utils::format_cc_includes;
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
@@ -2593,6 +2583,88 @@ pub mod tests {
                     extern "C"
                     fn ...(x: f64, y: f64) -> f64 {
                         ::rust_out::add(x, y)
+                    }
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_fn_rust_abi_with_param_taking_struct_by_value() {
+        let test_src = r#"
+                pub struct S(i32);
+                pub fn into_i32(s: S) -> i32 { s.0 }
+            "#;
+        test_format_item(test_src, "into_i32", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    inline std::int32_t into_i32(::rust_out::S s);
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                        extern "C" std::int32_t ...(::rust_out::S s);
+                    }
+                    ...
+                    inline std::int32_t into_i32(::rust_out::S s) {
+                        return __crubit_internal::...(std::move(s));
+                    }
+                }
+            );
+            assert_rs_matches!(
+                impl_details.rs,
+                quote! {
+                    #[no_mangle]
+                    extern "C"
+                    fn ...(s: ::rust_out::S) -> i32 {
+                        ::rust_out::into_i32(s)
+                    }
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_fn_rust_abi_returning_struct_by_value() {
+        let test_src = r#"
+                pub struct S(i32);
+                pub fn create(i: i32) -> S { S(i) }
+            "#;
+        test_format_item(test_src, "create", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    inline ::rust_out::S create(std::int32_t i);
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                        extern "C" ::rust_out::S ...(std::int32_t i);
+                    }
+                    ...
+                    inline ::rust_out::S create(std::int32_t i) {
+                        return __crubit_internal::...(i);
+                    }
+                }
+            );
+            assert_rs_matches!(
+                impl_details.rs,
+                quote! {
+                    #[no_mangle]
+                    extern "C"
+                    fn ...(i: i32) -> ::rust_out::S {
+                        ::rust_out::create(i)
                     }
                 }
             );
@@ -4013,40 +4085,6 @@ pub mod tests {
             let anyhow_err = format_ty_for_rs(tcx, ty).unwrap_err();
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
-        });
-    }
-
-    #[test]
-    fn test_format_cc_thunk_arg() {
-        let testcases = [
-            // ( <Rust type>, (<expected C++ type>, <expected #include>) )
-            ("i32", ("value", "")),
-            ("SomeStruct", ("std::move(value)", "utility")),
-        ];
-        let preamble = quote! {
-            pub struct SomeStruct {
-                pub x: i32,
-                pub y: i32,
-            }
-        };
-        test_ty(&testcases, preamble, |desc, tcx, ty, (expected_tokens, expected_include)| {
-            let (actual_tokens, actual_includes) = {
-                let cc_snippet = format_cc_thunk_arg(tcx, ty, quote! { value });
-                (cc_snippet.tokens.to_string(), cc_snippet.prereqs.includes)
-            };
-
-            let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
-            assert_eq!(actual_tokens, expected_tokens, "{desc}");
-
-            if expected_include.is_empty() {
-                assert!(actual_includes.is_empty());
-            } else {
-                let expected_header = format_cc_ident(expected_include).unwrap();
-                assert_cc_matches!(
-                    format_cc_includes(&actual_includes),
-                    quote! { include <#expected_header> }
-                );
-            }
         });
     }
 
