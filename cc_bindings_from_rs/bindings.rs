@@ -8,7 +8,7 @@ use code_gen_utils::{
     CcInclude, NamespaceQualifier,
 };
 use itertools::Itertools;
-use proc_macro2::{Literal, TokenStream};
+use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote};
 use rustc_hir::{AssocItemKind, ImplItemKind, ImplicitSelfKind, Item, ItemKind, Node, Unsafety};
 use rustc_middle::dep_graph::DepContext;
@@ -587,32 +587,59 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
     };
 
     let FullyQualifiedName { krate, mod_path, name, .. } = FullyQualifiedName::new(tcx, def_id);
-    let name = name.expect("Functions are assumed to always have a name");
+    let fn_name = name.expect("Functions are assumed to always have a name");
+    let main_api_fn_name =
+        format_cc_ident(fn_name.as_str()).context("Error formatting function name")?;
 
-    let mut prereqs = CcPrerequisites::default();
-    let cc_ret_type = format_ret_ty_for_cc(input, sig.output())
+    let mut main_api_prereqs = CcPrerequisites::default();
+    let main_api_ret_type = format_ret_ty_for_cc(input, sig.output())
         .context("Error formatting function return type")?
-        .into_tokens(&mut prereqs);
-    let cc_fn_name = format_cc_ident(name.as_str()).context("Error formatting function name")?;
-    let cc_arg_names = tcx
-        .fn_arg_names(def_id)
+        .into_tokens(&mut main_api_prereqs);
+    let is_static_method = match tcx.hir().get_by_def_id(local_def_id) {
+        Node::ImplItem(impl_item) => match &impl_item.kind {
+            ImplItemKind::Fn(fn_sig, _) => match fn_sig.decl.implicit_self {
+                ImplicitSelfKind::None => true,
+                _ => bail!("`self` parameter is not supported yet"),
+            },
+            _ => panic!("`format_fn` can only work with functions"),
+        },
+        Node::Item(_) => false, // Free function
+        other => panic!("Unexpected HIR node kind: {other:?}"),
+    };
+
+    struct Param<'tcx> {
+        cc_name: TokenStream,
+        cc_type: TokenStream,
+        rs_name: Ident,
+        rs_type: TokenStream,
+        ty: Ty<'tcx>,
+    }
+    let params = {
+        let names = tcx.fn_arg_names(def_id).iter();
+        let types = sig.inputs().iter();
+        names
+            .zip(types)
+            .enumerate()
+            .map(|(i, (name, &ty))| -> Result<Param> {
+                let cc_name = format_cc_ident(name.as_str())
+                    .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{i}")).unwrap());
+                let cc_type = format_ty_for_cc(input, ty)?.into_tokens(&mut main_api_prereqs);
+                let rs_name = if name.as_str().is_empty() {
+                    format_ident!("__param_{i}")
+                } else {
+                    make_rs_ident(name.as_str())
+                };
+                let rs_type = format_ty_for_rs(tcx, ty)?;
+                Ok(Param { cc_name, cc_type, rs_name, rs_type, ty })
+            })
+            .enumerate()
+            .map(|(i, result)| result.with_context(|| format!("Error handling parameter #{i}")))
+            .collect::<Result<Vec<_>>>()?
+    };
+    let main_api_params = params
         .iter()
-        .enumerate()
-        .map(|(index, ident)| {
-            format_cc_ident(ident.as_str())
-                .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{index}")).unwrap())
-        })
+        .map(|Param { cc_name, cc_type, .. }| quote! { #cc_type #cc_name })
         .collect_vec();
-    let cc_arg_types = sig
-        .inputs()
-        .iter()
-        .enumerate()
-        .map(|(index, ty)| {
-            Ok(format_ty_for_cc(input, *ty)
-                .with_context(|| format!("Error formatting the type of parameter #{index}"))?
-                .into_tokens(&mut prereqs))
-        })
-        .collect::<Result<Vec<_>>>()?;
 
     let struct_name = match tcx.impl_of_method(def_id) {
         Some(impl_id) => match tcx.impl_subject(impl_id) {
@@ -627,27 +654,21 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
         },
         None => None,
     };
-    let needs_definition = name.as_str() != symbol_name.name;
+    let needs_definition = fn_name.as_str() != symbol_name.name;
     let main_api = {
         let doc_comment = {
             let doc_comment = format_doc_comment(tcx, local_def_id);
             quote! { __NEWLINE__ #doc_comment }
         };
 
-        let static_ = match tcx.hir().get_by_def_id(local_def_id) {
-            Node::ImplItem(impl_item) => match &impl_item.kind {
-                ImplItemKind::Fn(fn_sig, _) => match fn_sig.decl.implicit_self {
-                    ImplicitSelfKind::None => quote! { static },
-                    _ => bail!("`self` parameter is not supported yet"),
-                },
-                _ => panic!("`format_fn` can only work with functions"),
-            },
-            Node::Item(_) => quote! {}, // Free function ==> no `static` qualifier.
-            other => panic!("Unexpected HIR node kind: {other:?}"),
-        };
-
-        let mut prereqs = prereqs.clone();
+        let mut prereqs = main_api_prereqs.clone();
         prereqs.move_defs_to_fwd_decls();
+
+        let static_ = if is_static_method {
+            quote! { static }
+        } else {
+            quote! {}
+        };
         let extern_c_or_inline = if !needs_definition {
             quote! { extern "C" }
         } else {
@@ -658,9 +679,8 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
             tokens: quote! {
                 __NEWLINE__
                 #doc_comment
-                #static_ #extern_c_or_inline #cc_ret_type #cc_fn_name (
-                        #( #cc_arg_types #cc_arg_names ),*
-                );
+                #static_ #extern_c_or_inline
+                    #main_api_ret_type #main_api_fn_name ( #( #main_api_params ),* );
                 __NEWLINE__
             },
         }
@@ -668,79 +688,73 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
     let impl_details = if !needs_definition {
         None
     } else {
-        let cc_exported_name =
-            format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
-        let cc_struct_name = match struct_name.as_ref() {
-            None => quote! {},
-            Some(symbol) => {
-                let name = format_cc_ident(symbol.as_str())
-                    .expect("Caller of format_fn should verify struct name via format_adt_core");
-                quote! { #name :: }
+        let cc = {
+            let thunk_name =
+                format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
+            let struct_name = match struct_name.as_ref() {
+                None => quote! {},
+                Some(symbol) => {
+                    let name = format_cc_ident(symbol.as_str())
+                        .expect("Caller of format_fn should verify struct via format_adt_core");
+                    quote! { #name :: }
+                }
+            };
+
+            // TODO(b/270454629): Tweak `thunk_ret_type`, `thunk_params`, and `thunk_args` as
+            // needed to pass some arguments and/or a return value by pointer, rather than by
+            // value.
+            let mut prereqs = main_api_prereqs;
+            let thunk_params = &main_api_params;
+            let thunk_args = params
+                .iter()
+                .map(|Param{ cc_name, ty, ..}| format_cc_thunk_arg(tcx, *ty, cc_name.clone())
+                     .into_tokens(&mut prereqs))
+                .collect_vec();
+            let thunk_ret_type = &main_api_ret_type;
+            CcSnippet {
+                prereqs,
+                tokens: quote! {
+                    __NEWLINE__
+                    namespace __crubit_internal {
+                        extern "C" #thunk_ret_type #thunk_name ( #( #thunk_params ),* );
+                    }
+                    inline #main_api_ret_type #struct_name #main_api_fn_name (
+                            #( #main_api_params ),* ) {
+                        return __crubit_internal :: #thunk_name( #( #thunk_args ),* );
+                    }
+                    __NEWLINE__
+                },
             }
-        };
-        let thunk_args = cc_arg_names
-            .clone()
-            .into_iter()
-            .zip(sig.inputs().iter())
-            .map(|(arg, &ty)| format_cc_thunk_arg(tcx, ty, arg).into_tokens(&mut prereqs))
-            .collect_vec();
-        let cc = CcSnippet {
-            prereqs,
-            tokens: quote! {
-                __NEWLINE__
-                namespace __crubit_internal {
-                    extern "C" #cc_ret_type #cc_exported_name (
-                            #( #cc_arg_types #cc_arg_names ),*
-                    );
-                }
-                inline #cc_ret_type #cc_struct_name #cc_fn_name (
-                        #( #cc_arg_types #cc_arg_names ),* ) {
-                    return __crubit_internal :: #cc_exported_name( #( #thunk_args ),* );
-                }
-                __NEWLINE__
-            },
         };
 
         let rs = if !needs_thunk {
             quote! {}
         } else {
-            let crate_name = make_rs_ident(krate.as_str());
-            let mod_path = mod_path.format_for_rs();
-            let rs_fn_name = make_rs_ident(name.as_str());
-            let rs_exported_name = make_rs_ident(symbol_name.name);
-            let rs_struct_name = match struct_name.as_ref() {
-                None => quote! {},
-                Some(symbol) => {
-                    let name = make_rs_ident(symbol.as_str());
-                    quote! { #name :: }
+            let thunk_name = make_rs_ident(symbol_name.name);
+            let thunk_params = params
+                .iter()
+                .map(|Param{ rs_name, rs_type, ..}| quote!{ #rs_name: #rs_type });
+            let thunk_ret_type = format_ty_for_rs(tcx, sig.output())?;
+            let thunk_body = {
+                let crate_name = make_rs_ident(krate.as_str());
+                let mod_path = mod_path.format_for_rs();
+                let fn_name = make_rs_ident(fn_name.as_str());
+                let struct_name = match struct_name.as_ref() {
+                    None => quote! {},
+                    Some(symbol) => {
+                        let name = make_rs_ident(symbol.as_str());
+                        quote! { #name :: }
+                    }
+                };
+                let fn_args = params.iter().map(|Param{ rs_name, .. }| rs_name);
+                quote!{
+                    :: #crate_name :: #mod_path #struct_name #fn_name( #( #fn_args ),* )
                 }
             };
-            let rs_ret_type = format_ty_for_rs(tcx, sig.output())?;
-            let rs_arg_names = tcx
-                .fn_arg_names(def_id)
-                .iter()
-                .enumerate()
-                .map(|(index, ident)| {
-                    if ident.as_str().is_empty() {
-                        format_ident!("__param_{index}")
-                    } else {
-                        make_rs_ident(ident.as_str())
-                    }
-                })
-                .collect_vec();
-            let rs_arg_types = sig
-                .inputs()
-                .iter()
-                .copied()
-                .map(|ty| format_ty_for_rs(tcx, ty))
-                .collect::<Result<Vec<_>>>()?;
             quote! {
                 #[no_mangle]
-                extern "C" fn #rs_exported_name( #( #rs_arg_names: #rs_arg_types ),* )
-                        -> #rs_ret_type {
-                    :: #crate_name :: #mod_path #rs_struct_name #rs_fn_name(
-                        #( #rs_arg_names ),*
-                    )
+                extern "C" fn #thunk_name( #( #thunk_params ),* ) -> #thunk_ret_type {
+                    #thunk_body
                 }
             }
         };
@@ -2797,7 +2811,7 @@ pub mod tests {
             "#;
         test_format_item(test_src, "foo", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Error formatting the type of parameter #0: \
+            assert_eq!(err, "Error handling parameter #0: \
                              Tuples are not supported yet: (i32, i32) (b/254099023)");
         });
     }
@@ -2810,7 +2824,7 @@ pub mod tests {
             "#;
         test_format_item(test_src, "fn_with_params", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Error formatting the type of parameter #0: \
+            assert_eq!(err, "Error handling parameter #0: \
                              `()` / `void` is only supported as a return type (b/254507801)");
         });
     }
@@ -2827,7 +2841,7 @@ pub mod tests {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
-                "Error formatting the type of parameter #0: \
+                "Error handling parameter #0: \
                  The never type `!` is only supported as a return type (b/254507801)"
             );
         });
