@@ -41,7 +41,8 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
         /* current_target= */ target.clone(),
         /* top_level_item_ids= */ vec![],
         /* crate_root_path= */ None,
-        /* crubit_features= */ [(target, ir::CrubitFeature::Experimental)].into()
+        /* crubit_features= */
+        [(target, ir::CrubitFeature::Experimental | ir::CrubitFeature::Supported)].into(),
     )
 }
 
