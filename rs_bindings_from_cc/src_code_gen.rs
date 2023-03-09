@@ -4070,9 +4070,9 @@ mod tests {
     };
     use token_stream_printer::rs_tokens_to_formatted_string_for_tests;
 
-    fn generate_bindings_tokens(ir: Rc<IR>) -> Result<BindingsTokens> {
+    fn generate_bindings_tokens(ir: IR) -> Result<BindingsTokens> {
         super::generate_bindings_tokens(
-            ir,
+            Rc::new(ir),
             "crubit/rs_bindings_support",
             &mut IgnoreErrors,
             SourceLocationDocComment::Enabled,
@@ -4081,7 +4081,7 @@ mod tests {
 
     fn db_from_cc(cc_src: &str) -> Result<Database> {
         let mut db = Database::default();
-        db.set_ir(ir_from_cc(cc_src)?);
+        db.set_ir(Rc::new(ir_from_cc(cc_src)?));
         Ok(db)
     }
 

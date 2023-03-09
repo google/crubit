@@ -7,10 +7,9 @@ use arc_anyhow::Result;
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{self, make_ir_from_parts, Func, Identifier, Item, Record, IR};
 use itertools::Itertools;
-use std::rc::Rc;
 
 /// Generates `IR` from a header containing `header_source`.
-pub fn ir_from_cc(header_source: &str) -> Result<Rc<IR>> {
+pub fn ir_from_cc(header_source: &str) -> Result<IR> {
     ir_from_cc_dependency(header_source, "// empty header")
 }
 
@@ -55,10 +54,7 @@ pub const DEPENDENCY_TARGET: &str = "//test:dependency";
 /// `header_source` of the header will be updated to contain the `#include` line
 /// for the header with `dependency_header_source`. The name of the dependency
 /// target is exposed as `DEPENDENCY_TARGET`.
-pub fn ir_from_cc_dependency(
-    header_source: &str,
-    dependency_header_source: &str,
-) -> Result<Rc<IR>> {
+pub fn ir_from_cc_dependency(header_source: &str, dependency_header_source: &str) -> Result<IR> {
     const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
 
     extern "C" {
@@ -79,7 +75,7 @@ pub fn ir_from_cc_dependency(
         )
         .into_boxed_slice()
     };
-    Ok(Rc::new(ir::deserialize_ir(&*json_utf8)?))
+    ir::deserialize_ir(&*json_utf8)
 }
 
 /// Creates an identifier
