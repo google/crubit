@@ -129,21 +129,25 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct HeaderName {
     pub name: Rc<str>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
+#[serde(deny_unknown_fields)]
 #[serde(transparent)]
 pub struct LifetimeId(pub i32);
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct LifetimeName {
     pub name: Rc<str>,
     pub id: LifetimeId,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RsType {
     pub name: Option<Rc<str>>,
     pub lifetime_args: Rc<[LifetimeId]>,
@@ -158,6 +162,7 @@ impl RsType {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CcType {
     pub name: Option<Rc<str>>,
     pub is_const: bool,
@@ -182,12 +187,14 @@ impl TypeWithDeclId for CcType {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MappedType {
     pub rs_type: RsType,
     pub cc_type: CcType,
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Identifier {
     pub identifier: Rc<str>,
 }
@@ -199,12 +206,14 @@ impl fmt::Debug for Identifier {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct IntegerConstant {
     pub is_negative: bool,
     pub wrapped_value: u64,
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Operator {
     pub name: Rc<str>,
 }
@@ -296,6 +305,7 @@ pub enum ReferenceQualification {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct InstanceMethodMetadata {
     pub reference: ReferenceQualification,
     pub is_const: bool,
@@ -303,12 +313,14 @@ pub struct InstanceMethodMetadata {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MemberFuncMetadata {
     pub record_id: ItemId,
     pub instance_method_metadata: Option<InstanceMethodMetadata>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct FuncParam {
     #[serde(rename(deserialize = "type"))]
     pub type_: MappedType,
@@ -316,6 +328,7 @@ pub struct FuncParam {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Func {
     pub name: UnqualifiedIdentifier,
     pub owning_target: BazelLabel,
@@ -356,6 +369,7 @@ pub enum AccessSpecifier {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Field {
     pub identifier: Option<Identifier>,
     pub doc_comment: Option<Rc<str>>,
@@ -380,12 +394,14 @@ pub enum SpecialMemberFunc {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BaseClass {
     pub base_record_id: ItemId,
     pub offset: Option<i64>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct IncompleteRecord {
     pub cc_name: Rc<str>,
     pub rs_name: Rc<str>,
@@ -414,6 +430,7 @@ impl ToTokens for RecordType {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Record {
     pub rs_name: Rc<str>,
     pub cc_name: Rc<str>,
@@ -483,6 +500,7 @@ impl Record {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Enum {
     pub identifier: Identifier,
     pub id: ItemId,
@@ -494,12 +512,14 @@ pub struct Enum {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Enumerator {
     pub identifier: Identifier,
     pub value: IntegerConstant,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct TypeAlias {
     pub identifier: Identifier,
     pub id: ItemId,
@@ -535,6 +555,7 @@ impl<T> Hash for IgnoredField<T> {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct UnsupportedItem {
     pub name: Rc<str>,
     message: Rc<str>,
@@ -573,12 +594,14 @@ impl UnsupportedItem {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Comment {
     pub text: Rc<str>,
     pub id: ItemId,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Namespace {
     pub name: Identifier,
     pub id: ItemId,
@@ -591,6 +614,7 @@ pub struct Namespace {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct UseMod {
     pub path: Rc<str>,
     pub mod_name: Identifier,
@@ -756,7 +780,7 @@ impl<'de> serde::Deserialize<'de> for CrubitFeaturesIR {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
-#[serde(rename(deserialize = "IR"))]
+#[serde(deny_unknown_fields, rename(deserialize = "IR"))]
 struct FlatIR {
     #[serde(default)]
     public_headers: Vec<HeaderName>,
