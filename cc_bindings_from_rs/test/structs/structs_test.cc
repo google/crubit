@@ -47,8 +47,7 @@ TEST(StructsTest, StructInteger) {
   EXPECT_EQ(123 * 456, test::StructInteger::inspect(std::move(product)));
 }
 
-// TODO(b/270454629): Re-enable the test after fixing the bug.
-TEST(StructsTest, DISABLED_StructFloat) {
+TEST(StructsTest, StructFloat) {
   namespace test = structs::abi_classification;
   test::StructFloat x = test::StructFloat::create(456.0);
   test::StructFloat y = test::StructFloat::create(789.0);
@@ -57,8 +56,7 @@ TEST(StructsTest, DISABLED_StructFloat) {
   EXPECT_EQ(456.0 * 789.0, test::StructFloat::inspect(std::move(product)));
 }
 
-// TODO(b/270454629): Re-enable the test after fixing the bug.
-TEST(StructsTest, DISABLED_StructMemory) {
+TEST(StructsTest, StructMemory) {
   namespace test = structs::abi_classification;
   test::StructMemory x = test::StructMemory::create(321);
   test::StructMemory y = test::StructMemory::create(654);

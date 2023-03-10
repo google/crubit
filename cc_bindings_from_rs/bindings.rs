@@ -753,19 +753,30 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
                 }
             };
 
-            // TODO(b/270454629): Tweak `thunk_params`, and `thunk_args` as needed to pass some
-            // arguments by pointer, rather than by value.
             let mut prereqs = main_api_prereqs;
-            let mut thunk_params = main_api_params.clone();
+            let mut thunk_params = params
+                .iter()
+                .map(|Param { cc_name, cc_type, ty, .. }| -> Result<TokenStream> {
+                     if is_c_abi_compatible_by_value(*ty) {
+                         Ok(quote! { #cc_type #cc_name })
+                     } else {
+                         // Rust thunk will move a value via memcpy - we need to `ensure` that
+                         // invoking the C++ destructor (on the moved-away value) is safe.
+                         // TODO(b/259749095): Support generic structs (with non-empty ParamEnv).
+                         ensure!(!ty.needs_drop(tcx, ty::ParamEnv::empty()),
+                                 "Only trivially-movable and trivially-destructible types \
+                                  may be passed by value over the FFI boundary");
+                         Ok(quote! { #cc_type* #cc_name })
+                     }})
+                .collect::<Result<Vec<_>>>()?;
             let mut thunk_args = params
                 .iter()
                 .map(|Param{ cc_name, ty, ..}|
-                     if ty.is_copy_modulo_regions(tcx, ty::ParamEnv::empty()) {
-                        quote!{ #cc_name }
-                    } else {
-                        prereqs.includes.insert(CcInclude::utility());
-                        quote!{ std::move(#cc_name) }
-                    })
+                     if is_c_abi_compatible_by_value(*ty) {
+                         quote!{ #cc_name }
+                     } else {
+                         quote!{ & #cc_name }
+                     })
                 .collect_vec();
             let thunk_ret_type: TokenStream;
             let impl_body: TokenStream;
@@ -808,7 +819,12 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
             let thunk_name = make_rs_ident(symbol_name.name);
             let mut thunk_params = params
                 .iter()
-                .map(|Param{ rs_name, rs_type, ..}| quote!{ #rs_name: #rs_type })
+                .map(|Param{ rs_name, rs_type, ty, ..}|
+                    if is_c_abi_compatible_by_value(*ty) {
+                        quote!{ #rs_name: #rs_type }
+                    } else {
+                        quote!{ #rs_name: &mut ::core::mem::MaybeUninit<#rs_type> }
+                    })
                 .collect_vec();
             let mut thunk_ret_type = format_ty_for_rs(tcx, sig.output())?;
             let mut thunk_body = {
@@ -822,7 +838,12 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
                         quote! { #name :: }
                     }
                 };
-                let fn_args = params.iter().map(|Param{ rs_name, .. }| rs_name);
+                let fn_args = params.iter().map(|Param{ rs_name, ty, .. }|
+                    if is_c_abi_compatible_by_value(*ty) {
+                        quote!{ #rs_name }
+                    } else {
+                        quote!{ unsafe { #rs_name.assume_init_read() } }
+                    });
                 quote!{
                     :: #crate_name :: #mod_path #struct_name #fn_name( #( #fn_args ),* )
                 }
@@ -1632,7 +1653,7 @@ pub mod tests {
                         };
                         ...
                         namespace __crubit_internal {
-                            extern "C" bool ...(::rust_out::S s);
+                            extern "C" bool ...(::rust_out::S* s);
                         }
                         ...
                         inline bool f(::rust_out::S s) { ... }
@@ -1648,7 +1669,7 @@ pub mod tests {
                 quote! {
                     #[no_mangle]
                     extern "C"
-                    fn ...(s: ::rust_out::S) -> bool { ...  }
+                    fn ...(s: &mut ::core::mem::MaybeUninit<::rust_out::S>) -> bool { ...  }
                     ...
                     const _: () = assert!(::std::mem::size_of::<::rust_out::S>() == ...);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::S>() == ...);
@@ -2708,11 +2729,11 @@ pub mod tests {
                 impl_details.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" std::int32_t ...(::rust_out::S s);
+                        extern "C" std::int32_t ...(::rust_out::S* s);
                     }
                     ...
                     inline std::int32_t into_i32(::rust_out::S s) {
-                        return __crubit_internal::...(std::move(s));
+                        return __crubit_internal::...(&s);
                     }
                 }
             );
@@ -2721,8 +2742,8 @@ pub mod tests {
                 quote! {
                     #[no_mangle]
                     extern "C"
-                    fn ...(s: ::rust_out::S) -> i32 {
-                        ::rust_out::into_i32(s)
+                    fn ...(s: &mut ::core::mem::MaybeUninit<::rust_out::S>) -> i32 {
+                        ::rust_out::into_i32(unsafe { s.assume_init_read() })
                     }
                 }
             );
@@ -2960,11 +2981,11 @@ pub mod tests {
                 impl_details.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" std::int32_t ...(::rust_out::S __param_0);
+                        extern "C" std::int32_t ...(::rust_out::S* __param_0);
                     }
                     ...
                     inline std::int32_t func(::rust_out::S __param_0) {
-                        return __crubit_internal::...(std::move(__param_0));
+                        return __crubit_internal::...(&__param_0);
                     }
                 }
             );
@@ -2972,8 +2993,10 @@ pub mod tests {
                 impl_details.rs,
                 quote! {
                     #[no_mangle]
-                    extern "C" fn ...(__param_0: ::rust_out::S) -> i32 {
-                        ::rust_out::func(__param_0)
+                    extern "C" fn ...(
+                        __param_0: &mut ::core::mem::MaybeUninit<::rust_out::S>
+                    ) -> i32 {
+                        ::rust_out::func(unsafe {__param_0.assume_init_read() })
                     }
                 }
             );
