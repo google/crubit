@@ -42,6 +42,17 @@ pub struct Input<'tcx> {
     pub _crate_to_include_map: (),
 }
 
+impl<'tcx> Input<'tcx> {
+    // TODO(b/259724276): This function's results should be memoized.  It may be
+    // easier if separate functions are provided for each support header - e.g.
+    // `rs_char()`, `return_value_slot()`, etc.
+    fn support_header(&self, suffix: &str) -> CcInclude {
+        let support_path = &*self.crubit_support_path;
+        let full_path = format!("{support_path}/{suffix}");
+        CcInclude::user_header(full_path.into())
+    }
+}
+
 pub struct Output {
     pub h_body: TokenStream,
     pub rs_body: TokenStream,
@@ -251,6 +262,64 @@ fn format_ret_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSni
     }
 }
 
+/// Whether functions using `extern "C"` ABI can safely handle values of type
+/// `ty` (e.g. when passing by value arguments or return values of such type).
+fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
+    match ty.kind() {
+        // `improper_ctypes_definitions` warning doesn't complain about the following types:
+        ty::TyKind::Bool |
+        ty::TyKind::Float{..} |
+        ty::TyKind::Int{..} |
+        ty::TyKind::Uint{..} |
+        ty::TyKind::Never |
+        ty::TyKind::RawPtr{..} |
+        ty::TyKind::FnPtr{..} => true,
+        ty::TyKind::Tuple(types) if types.len() == 0 => true,
+
+        // Crubit assumes that `char` is compatible with a certain `extern "C"` ABI.
+        // See `rust_builtin_type_abi_assumptions.md` for more details.
+        ty::TyKind::Char => true,
+
+        // Crubit's C++ bindings for tuples, structs, and other ADTs may not preserve
+        // their ABI (even if they *do* preserve their memory layout).  For example:
+        // - In System V ABI replacing a field with a fixed-length array of bytes may affect
+        //   whether the whole struct is classified as an integer and passed in general purpose
+        //   registers VS classified as SSE2 and passed in floating-point registers like xmm0).
+        //   See also b/270454629.
+        // - To replicate field offsets, Crubit may insert explicit padding fields. These
+        //   extra fields may also impact the ABI of the generated bindings.
+        //
+        // TODO(lukasza): In the future, some additional performance gains may be realized by
+        // returning `true` in a few limited cases (this may require additional complexity to
+        // ensure that `format_adt` never injects explicit padding into such structs):
+        // - `#[repr(C)]` structs and unions,
+        // - `#[repr(transparent)]` struct that wraps an ABI-safe type,
+        // - Discriminant-only enums (b/259984090).
+        ty::TyKind::Tuple{..} |  // An empty tuple (`()` - the unit type) is handled above.
+        ty::TyKind::Adt{..} => false,
+
+        // These kinds of reference-related types are not implemented yet - `is_c_abi_compatible_by_value`
+        // should never need to handle them, because `format_ty_for_cc` fails for such types.
+        //
+        // TODO(b/258235219): When implementing support for references we should
+        // consider returning `true` for `TyKind::Ref` and document the rationale
+        // for such decision - maybe something like this will be sufficient:
+        // - In general `TyKind::Ref` should have the same ABI as `TyKind::RawPtr`
+        // - References to slices (`&[T]`) or strings (`&str`) rely on assumptions
+        //   spelled out in `rust_builtin_type_abi_assumptions.md`..
+        ty::TyKind::Ref{..} |
+        ty::TyKind::Str |
+        ty::TyKind::Array{..} |
+        ty::TyKind::Slice{..} =>
+            unimplemented!(),
+
+        // `format_ty_for_cc` is expected to fail for other kinds of types
+        // and therefore `is_c_abi_compatible_by_value` should never be called for
+        // these other types
+        _ => unimplemented!(),
+    }
+}
+
 /// Formats `ty` into a `CcSnippet` that represents how the type should be
 /// spelled in a C++ declaration of a function parameter or field.
 //
@@ -311,10 +380,9 @@ fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet
                                  value: Primitive::Int(Integer::I32, /* signedness = */false), ..
                              })));
 
-            let rs_char_path = format!("{}/rs_std/rs_char.h", &*input.crubit_support_path);
             CcSnippet::with_include(
                 quote! { rs_std::rs_char },
-                CcInclude::user_header(rs_char_path.into()),
+                input.support_header("rs_std/rs_char.h"),
             )
         },
 
@@ -685,12 +753,11 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
                 }
             };
 
-            // TODO(b/270454629): Tweak `thunk_ret_type`, `thunk_params`, and `thunk_args` as
-            // needed to pass some arguments and/or a return value by pointer, rather than by
-            // value.
+            // TODO(b/270454629): Tweak `thunk_params`, and `thunk_args` as needed to pass some
+            // arguments by pointer, rather than by value.
             let mut prereqs = main_api_prereqs;
-            let thunk_params = &main_api_params;
-            let thunk_args = params
+            let mut thunk_params = main_api_params.clone();
+            let mut thunk_args = params
                 .iter()
                 .map(|Param{ cc_name, ty, ..}|
                      if ty.is_copy_modulo_regions(tcx, ty::ParamEnv::empty()) {
@@ -700,7 +767,25 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
                         quote!{ std::move(#cc_name) }
                     })
                 .collect_vec();
-            let thunk_ret_type = &main_api_ret_type;
+            let thunk_ret_type: TokenStream;
+            let impl_body: TokenStream;
+            if is_c_abi_compatible_by_value(sig.output()) {
+                thunk_ret_type = main_api_ret_type.clone();
+                impl_body = quote!{
+                    return __crubit_internal :: #thunk_name( #( #thunk_args ),* );
+                };
+            } else {
+                thunk_ret_type = quote!{ void };
+                thunk_params.push(quote!{ #main_api_ret_type* __ret_ptr });
+                thunk_args.push(quote!{ __ret_slot.Get() });
+                impl_body = quote!{
+                    crubit::ReturnValueSlot<#main_api_ret_type> __ret_slot;
+                    __crubit_internal :: #thunk_name( #( #thunk_args ),* );
+                    return std::move(__ret_slot).AssumeInitAndTakeValue();
+                };
+                prereqs.includes.insert(CcInclude::utility());
+                prereqs.includes.insert(input.support_header("internal/return_value_slot.h"));
+            };
             CcSnippet {
                 prereqs,
                 tokens: quote! {
@@ -710,7 +795,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
                     }
                     inline #main_api_ret_type #struct_name #main_api_fn_name (
                             #( #main_api_params ),* ) {
-                        return __crubit_internal :: #thunk_name( #( #thunk_args ),* );
+                        #impl_body
                     }
                     __NEWLINE__
                 },
@@ -721,11 +806,12 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
             quote! {}
         } else {
             let thunk_name = make_rs_ident(symbol_name.name);
-            let thunk_params = params
+            let mut thunk_params = params
                 .iter()
-                .map(|Param{ rs_name, rs_type, ..}| quote!{ #rs_name: #rs_type });
-            let thunk_ret_type = format_ty_for_rs(tcx, sig.output())?;
-            let thunk_body = {
+                .map(|Param{ rs_name, rs_type, ..}| quote!{ #rs_name: #rs_type })
+                .collect_vec();
+            let mut thunk_ret_type = format_ty_for_rs(tcx, sig.output())?;
+            let mut thunk_body = {
                 let crate_name = make_rs_ident(krate.as_str());
                 let mod_path = mod_path.format_for_rs();
                 let fn_name = make_rs_ident(fn_name.as_str());
@@ -740,6 +826,19 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
                 quote!{
                     :: #crate_name :: #mod_path #struct_name #fn_name( #( #fn_args ),* )
                 }
+            };
+            quote! {
+                #[no_mangle]
+                extern "C" fn #thunk_name( #( #thunk_params ),* ) -> #thunk_ret_type {
+                    #thunk_body
+                }
+            };
+            if !is_c_abi_compatible_by_value(sig.output()) {
+                thunk_params.push(quote!{
+                    __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
+                });
+                thunk_ret_type = quote!{ () };
+                thunk_body = quote!{ __ret_slot.write(#thunk_body); };
             };
             quote! {
                 #[no_mangle]
@@ -2650,11 +2749,13 @@ pub mod tests {
                 impl_details.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" ::rust_out::S ...(std::int32_t i);
+                        extern "C" void ...(std::int32_t i, ::rust_out::S* __ret_ptr);
                     }
                     ...
                     inline ::rust_out::S create(std::int32_t i) {
-                        return __crubit_internal::...(i);
+                        crubit::ReturnValueSlot<::rust_out::S> __ret_slot;
+                        __crubit_internal::...(i, __ret_slot.Get());
+                        return std::move(__ret_slot).AssumeInitAndTakeValue();
                     }
                 }
             );
@@ -2663,8 +2764,11 @@ pub mod tests {
                 quote! {
                     #[no_mangle]
                     extern "C"
-                    fn ...(i: i32) -> ::rust_out::S {
-                        ::rust_out::create(i)
+                    fn ...(
+                        i: i32,
+                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::S>
+                    ) -> () {
+                        __ret_slot.write(::rust_out::create(i));
                     }
                 }
             );

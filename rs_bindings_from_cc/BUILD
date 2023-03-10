@@ -41,7 +41,7 @@ rust_bindings_from_cc_binary(
 deps_for_bindings(
     name = "deps_for_bindings",
     deps_for_generated_cc_file = [
-        "//support/internal:rs_api_impl_support",
+        "//support/internal:bindings_support",
     ],
     deps_for_generated_rs_file = [
         # Required for struct layout assertions added to the generated
