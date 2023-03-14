@@ -6,6 +6,7 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
+extern crate rustc_attr;
 extern crate rustc_driver;
 extern crate rustc_error_codes;
 extern crate rustc_errors;

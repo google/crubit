@@ -9,7 +9,7 @@ use code_gen_utils::{
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
-use quote::{format_ident, quote};
+use quote::{format_ident, quote, ToTokens};
 use rustc_hir::{AssocItemKind, ImplItemKind, ImplicitSelfKind, Item, ItemKind, Node, Unsafety};
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
@@ -17,7 +17,7 @@ use rustc_middle::ty::DefIdTree;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::Symbol;
-use rustc_target::abi::{Abi, Integer, Primitive, Scalar};
+use rustc_target::abi::{Abi, FieldsShape, Integer, Primitive, Scalar};
 use rustc_target::spec::PanicStrategy;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -1091,8 +1091,70 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
 fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSnippet)> {
     let tcx = input.tcx;
 
+    // TODO(b/259749095): Support non-empty set of generic parameters.
+    let param_env = ty::ParamEnv::empty();
+    let substs_ref = ty::List::empty().as_substs();
+
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
+
+    struct Field {
+        cc_name: TokenStream,
+        cc_type: CcSnippet,
+        offset: u64,
+    }
+    let ty = tcx.type_of(core.def_id).subst_identity();
+    let layout = tcx
+        .layout_of(param_env.and(ty))
+        .expect("Layout should be already verified by `format_adt_core`")
+        .layout;
+    let fields: Result<Vec<Field>> = if ty.is_enum() || ty.is_union() {
+        // Note that `#[repr(Rust)]` unions don't guarantee that all their fields
+        // have offset 0.
+        Err(anyhow!(
+            "No support for bindings of individual fields of \
+                     `union` (b/272801632) or `enum`"
+        ))
+    } else {
+        let all_fields_in_source_order = ty
+            .ty_adt_def()
+            .expect("`core.def_id` needs to identify an ADT")
+            .all_fields()
+            .sorted_by_key(|f| tcx.def_span(f.did));
+        all_fields_in_source_order
+            .enumerate()
+            .map(|(index, field_def)| -> Result<Field> {
+                let cc_name = format_cc_ident(field_def.ident(tcx).as_str())
+                    .unwrap_or_else(|_err| format_ident!("__field{index}").into_token_stream());
+                // TODO(lukasza): Upon `format_ty_for_cc` errors we should replace *individual*
+                // fields with an opaque blob of bytes (rather than failing to format *all*
+                // fields and replacing all of them with a blob of bytes).
+                let cc_type = format_ty_for_cc(input, field_def.ty(tcx, substs_ref))?;
+                let offset = 0; // Offsets will be fixed by FieldsShape::Arbitrary branch below..
+                Ok(Field { cc_name, cc_type, offset })
+            })
+            .collect::<Result<Vec<_>>>()
+            .map(|mut fields| {
+                match layout.fields() {
+                    FieldsShape::Arbitrary { offsets, .. } => {
+                        for (index, offset) in offsets.iter().enumerate() {
+                            // Documentation of `FieldsShape::Arbitrary says that the offsets are
+                            // "ordered to match the source definition order".  This matches
+                            // `all_fields_in_source_order` above (and the current, temporary order
+                            // of the `fields` vector).
+                            fields[index].offset = offset.bytes();
+                        }
+                        // Deterministic outcome of `fields.sort_by_key` depends on each field
+                        // having a unique offset (this assumption might be broken in the future by
+                        // ZSTs).
+                        assert!(fields.iter().map(|f| f.offset).all_unique());
+                        fields.sort_by_key(|field| field.offset);
+                        fields
+                    }
+                    unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
+                }
+            })
+    };
 
     let (impl_item_main_apis, impl_item_other_snippets) = tcx
         .inherent_impls(core.def_id)
@@ -1119,11 +1181,44 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
     let cc_name = &core.cc_name;
     let main_api = {
+        let cc_packed_attribute = {
+            let has_packed_attribute = tcx
+                .get_attrs(core.def_id, rustc_span::symbol::sym::repr)
+                .flat_map(|attr| rustc_attr::parse_repr_attr(tcx.sess(), attr))
+                .any(|repr| matches!(repr, rustc_attr::ReprPacked { .. }));
+            if has_packed_attribute {
+                quote! { __attribute__((packed)) }
+            } else {
+                quote! {}
+            }
+        };
+
         let doc_comment = format_doc_comment(tcx, core.def_id.expect_local());
         let keyword = &core.keyword;
         let core = &core.core;
 
         let mut prereqs = CcPrerequisites::default();
+        let fields = match fields {
+            Err(err) => {
+                let msg = format!("Fields have been replaced with a blob of bytes: {err:#}");
+                quote! {
+                    __COMMENT__ #msg
+                    unsigned char __opaque_blob_of_bytes[#size];
+                }
+            }
+            Ok(fields) => fields
+                .into_iter()
+                .map(|Field { cc_name, cc_type, .. }| {
+                    // TODO(b/271176095): Some layouts may require inserting an explicit padding
+                    // before fields.  Incorrectly preserved layout should either be
+                    // caught by 1) compile-time struct-size assertions in the
+                    // generated code or 2) have no observable effect (since all the
+                    // fields are currently private - see b/271002281).
+                    let cc_type = cc_type.into_tokens(&mut prereqs);
+                    quote! { #cc_type #cc_name; }
+                })
+                .collect(),
+        };
         let impl_item_decls = if impl_item_main_apis.is_empty() {
             quote! {}
         } else {
@@ -1131,7 +1226,8 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
             let tokens = impl_item_main_apis
                 .into_iter()
                 .sorted_by(|(key1, _), (key2, _)| cmp(key1, key2))
-                .map(|(_key, snippet)| snippet.cc.into_tokens(&mut prereqs));
+                .map(|(_key, snippet)| snippet.cc.into_tokens(&mut prereqs))
+                .collect_vec();
             quote! {
                 public:
                     #( #tokens )*
@@ -1143,12 +1239,13 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
             prereqs,
             tokens: quote! {
                 __NEWLINE__ #doc_comment
-                #keyword alignas(#alignment) #cc_name final {
+                #keyword alignas(#alignment) #cc_packed_attribute #cc_name final {
                     #core
                     #impl_item_decls
-                    private:
-                        // TODO(b/258233850): Emit individual fields.
-                        unsigned char opaque_blob_of_bytes[#size];
+
+                    // TODO(b/271002281): Preserve actual field visibility.
+                    private: __NEWLINE__
+                        #fields
                 };
                 __NEWLINE__
             },
@@ -1241,14 +1338,12 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
 fn format_item(input: &Input, def_id: LocalDefId) -> Result<Vec<(SnippetKey, MixedSnippet)>> {
-    let tcx = input.tcx;
-
     // TODO(b/262052635): When adding support for re-exports we may need to change
     // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is undesirable,
     // because it would mean exposing items from a private module.  Exposing a private module is
     // undesirable, because it would mean that changes of private implementation details of the
     // crate could become breaking changes for users of the generated C++ bindings.)
-    if !tcx.effective_visibilities(()).is_directly_public(def_id) {
+    if !input.tcx.effective_visibilities(()).is_directly_public(def_id) {
         return Ok(vec![]);
     }
 
@@ -1261,7 +1356,7 @@ fn format_item(input: &Input, def_id: LocalDefId) -> Result<Vec<(SnippetKey, Mix
         },
         Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id),
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
-            format_adt_core(tcx, def_id.to_def_id())
+            format_adt_core(input.tcx, def_id.to_def_id())
                 .map(|core| format_adt(input, &core)),
         Item { kind: ItemKind::Impl(_), .. } |  // Handled by `format_adt`
         Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
@@ -1631,12 +1726,13 @@ pub mod tests {
         });
     }
 
+    /// Tests that `toposort` is used to reorder item bindings.
     #[test]
-    fn test_generated_bindings_prereq_defs_require_different_order() {
+    fn test_generated_bindings_prereq_defs_field_deps_require_reordering() {
         let test_src = r#"
-                // In the generated bindings `f` needs to come *after* `S`.
-                pub fn f(s: S) -> bool { s.0 }
-                pub struct S(bool);
+                // In the generated bindings `Outer` needs to come *after* `Inner`.
+                pub struct Outer(Inner);
+                pub struct Inner(bool);
             "#;
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
@@ -1644,34 +1740,18 @@ pub mod tests {
                 bindings.h_body,
                 quote! {
                     namespace rust_out {
-                        ...
-                        struct ... S final {
-                            // No point replicating test coverage of
-                            // `test_format_item_struct_with_fields`.
-                            ...
-                        };
-                        ...
-                        namespace __crubit_internal {
-                            extern "C" bool ...(::rust_out::S* s);
-                        }
-                        ...
-                        inline bool f(::rust_out::S s) { ... }
-                        ...
-                        static_assert(sizeof(S) == ..., ...);
-                        static_assert(alignof(S) == ..., ...);
-                        ...
-                    }  // namespace rust_out
-                }
-            );
-            assert_rs_matches!(
-                bindings.rs_body,
-                quote! {
-                    #[no_mangle]
-                    extern "C"
-                    fn ...(s: &mut ::core::mem::MaybeUninit<::rust_out::S>) -> bool { ...  }
                     ...
-                    const _: () = assert!(::std::mem::size_of::<::rust_out::S>() == ...);
-                    const _: () = assert!(::std::mem::align_of::<::rust_out::S>() == ...);
+                        struct alignas(1) Inner final {
+                          ...
+                          bool __field0;
+                        };
+                    ...
+                        struct alignas(1) Outer final {
+                          ...
+                          ::rust_out::Inner __field0;
+                        };
+                    ...
+                    }  // namespace rust_out
                 }
             );
         });
@@ -1866,17 +1946,29 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_prereq_fwd_decls_not_needed_inside_struct_definition() {
         let test_src = r#"
-                pub struct S(bool);
+                #![allow(dead_code)]
+
+                pub struct S {
+                    // This shouldn't require a fwd decl of S.
+                    field: *const S,
+                }
 
                 impl S {
                     // This shouldn't require a fwd decl of S.
-                    pub fn create() -> S { Self(true) }
+                    pub fn create() -> S { Self{ field: std::ptr::null() } }
                 }
             "#;
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_not_matches!(bindings.h_body, quote! { struct S; });
-            assert_cc_matches!(bindings.h_body, quote! { S create(); });
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    static inline ::rust_out::S create();
+                    ...
+                    const ::rust_out::S* field;
+                }
+            );
         });
     }
 
@@ -3063,7 +3155,7 @@ pub mod tests {
             let result = result.unwrap();
             let main_api = get_main_api_snippet(&result);
             let impl_details = get_impl_details_snippet(&result);
-            assert!(main_api.prereqs.is_empty());
+            assert!(!main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -3087,7 +3179,8 @@ pub mod tests {
                             // just use the `default` destructor.
                             ~SomeStruct() = default;
                         private:
-                            unsigned char opaque_blob_of_bytes[8];
+                            ...  std::int32_t x;
+                            ...  std::int32_t y;
                     };
                 }
             );
@@ -3121,7 +3214,7 @@ pub mod tests {
             let result = result.unwrap();
             let main_api = get_main_api_snippet(&result);
             let impl_details = get_impl_details_snippet(&result);
-            assert!(main_api.prereqs.is_empty());
+            assert!(!main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -3145,7 +3238,8 @@ pub mod tests {
                             // just use the `default` destructor.
                             ~TupleStruct() = default;
                         private:
-                            unsigned char opaque_blob_of_bytes[8];
+                            ...  std::int32_t __field0;
+                            ...  std::int32_t __field1;
                     };
                 }
             );
@@ -3161,6 +3255,103 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::TupleStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::TupleStruct>() == 4);
+                }
+            );
+        });
+    }
+
+    /// This test the scenario where Rust lays out field in a different order
+    /// than the source order.
+    #[test]
+    fn test_format_item_struct_with_reordered_field_offsets() {
+        let test_src = r#"
+                pub struct SomeStruct {
+                    pub field1: i16,
+                    pub field2: i32,
+                    pub field3: i16,
+                }
+
+                const _: () = assert!(std::mem::size_of::<SomeStruct>() == 8);
+                const _: () = assert!(std::mem::align_of::<SomeStruct>() == 4);
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct alignas(4) SomeStruct final {
+                        ...
+                        private:
+                            // The particular order below is not guaranteed,
+                            // so we may need to adjust this test assertion
+                            // (if Rust changes how it lays out the fields).
+                            ...  std::int32_t field2;
+                            ...  std::int16_t field1;
+                            ...  std::int16_t field3;
+                    };
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
+                    static_assert(sizeof(SomeStruct) == 8, ...);
+                    static_assert(alignof(SomeStruct) == 4, ...);
+                }
+            );
+            assert_rs_matches!(
+                impl_details.rs,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_struct_with_packed_layout() {
+        let test_src = r#"
+                #[repr(packed(1))]
+                pub struct SomeStruct {
+                    pub field1: u16,
+                    pub field2: u32,
+                }
+                const _: () = assert!(::std::mem::size_of::<SomeStruct>() == 6);
+                const _: () = assert!(::std::mem::align_of::<SomeStruct>() == 1);
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct alignas(1) __attribute__((packed)) SomeStruct final {
+                        ...
+                        std::uint16_t field1;
+                        ...
+                        std::uint32_t field2;
+                    };
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
+                    static_assert(sizeof(SomeStruct) == 6, ...);
+                    static_assert(alignof(SomeStruct) == 1, ...);
+                }
+            );
+            assert_rs_matches!(
+                impl_details.rs,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 6);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 1);
                 }
             );
         });
@@ -3429,6 +3620,51 @@ pub mod tests {
     }
 
     #[test]
+    fn test_format_item_unsupported_struct_field_type() {
+        let test_src = r#"
+                pub struct SomeStruct {
+                    pub some_field: Option<[i32; 3]>,
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            let broken_field_msg = "Fields have been replaced with a blob of bytes: \
+                                    Generic types are not supported yet (b/259749095)";
+            assert!(main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        private:
+                            __COMMENT__ #broken_field_msg
+                            unsigned char __opaque_blob_of_bytes[16];
+                        ...
+                    };
+                    ...
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
+                    static_assert(sizeof(SomeStruct) == 16, ...);
+                    static_assert(alignof(SomeStruct) == 4, ...);
+                }
+            );
+            assert_rs_matches!(
+                impl_details.rs,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 16);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
+                }
+            );
+        });
+    }
+
+    #[test]
     fn test_format_item_unsupported_struct_with_custom_drop_impl() {
         let test_src = r#"
                 pub struct StructWithCustomDropImpl {
@@ -3474,7 +3710,7 @@ pub mod tests {
     /// https://doc.rust-lang.org/reference/items/structs.html refers to this kind of struct as a
     /// "unit-like struct".
     #[test]
-    fn test_format_item_unsupported_struct_zero_sized_type() {
+    fn test_format_item_unsupported_struct_zero_sized_type_with_no_fields() {
         let test_src = r#"
                 pub struct ZeroSizedType1;
                 pub struct ZeroSizedType2();
@@ -3486,6 +3722,21 @@ pub mod tests {
                 assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)");
             });
         }
+    }
+
+    #[test]
+    fn test_format_item_unsupported_struct_with_only_zero_sized_type_fields() {
+        let test_src = r#"
+                pub struct ZeroSizedType;
+                pub struct SomeStruct {
+                    pub zst1: ZeroSizedType,
+                    pub zst2: ZeroSizedType,
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)",);
+        });
     }
 
     /// This is a test for an enum that only has `EnumItemDiscriminant` items
@@ -3507,6 +3758,9 @@ pub mod tests {
             let result = result.unwrap();
             let main_api = get_main_api_snippet(&result);
             let impl_details = get_impl_details_snippet(&result);
+            let no_fields_msg = "Fields have been replaced with a blob of bytes: \
+                                 No support for bindings of individual fields of \
+                                 `union` (b/272801632) or `enum`";
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3531,7 +3785,8 @@ pub mod tests {
                             // just use the `default` destructor.
                             ~SomeEnum() = default;
                         private:
-                            unsigned char opaque_blob_of_bytes[1];
+                            __COMMENT__ #no_fields_msg
+                            unsigned char __opaque_blob_of_bytes[1];
                     };
                 }
             );
@@ -3569,6 +3824,9 @@ pub mod tests {
             let result = result.unwrap();
             let main_api = get_main_api_snippet(&result);
             let impl_details = get_impl_details_snippet(&result);
+            let no_fields_msg = "Fields have been replaced with a blob of bytes: \
+                                 No support for bindings of individual fields of \
+                                 `union` (b/272801632) or `enum`";
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3593,7 +3851,8 @@ pub mod tests {
                             // just use the `default` destructor.
                             ~Point() = default;
                         private:
-                            unsigned char opaque_blob_of_bytes[12];
+                            __COMMENT__ #no_fields_msg
+                            unsigned char __opaque_blob_of_bytes[12];
                     };
                 }
             );
@@ -3644,6 +3903,9 @@ pub mod tests {
             let result = result.unwrap();
             let main_api = get_main_api_snippet(&result);
             let impl_details = get_impl_details_snippet(&result);
+            let no_fields_msg = "Fields have been replaced with a blob of bytes: \
+                                 No support for bindings of individual fields of \
+                                 `union` (b/272801632) or `enum`";
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3668,7 +3930,8 @@ pub mod tests {
                             // just use the `default` destructor.
                             ~SomeUnion() = default;
                         private:
-                            unsigned char opaque_blob_of_bytes[8];
+                            __COMMENT__ #no_fields_msg
+                            unsigned char __opaque_blob_of_bytes[8];
                     };
                 }
             );
@@ -3894,7 +4157,7 @@ pub mod tests {
         test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap();
             let main_api = get_main_api_snippet(&result);
-            assert!(main_api.prereqs.is_empty());
+            assert!(!main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::CONST_VALUE` \
                                    defined at <crubit_unittests.rs>;l=5: \
                                    Unsupported `impl` item kind: Const";
@@ -4157,6 +4420,11 @@ pub mod tests {
                 // implementation details of the std crate).
                 "core::alloc::LayoutError",
                 "Not directly public type (re-exports are not supported yet - b/262052635)",
+            ),
+            (
+                "*const Option<i8>",
+                "Failed to format the pointee of the pointer type `std::option::Option<i8>`: \
+                 Generic types are not supported yet (b/259749095)",
             ),
         ];
         let preamble = quote! {

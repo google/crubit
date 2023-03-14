@@ -45,6 +45,8 @@ struct MonitoringHelper {
   }
 
   ~MonitoringHelper() {
+    // It is okay for the destructor to assume that `this` has been initialized
+    // + that there is no double-free.
     CHECK_NE(state, kUninitializedState);
     CHECK_NE(state, kDestroyedState);
     destroyed_states->push_back(state);
