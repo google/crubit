@@ -1101,6 +1101,8 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
     struct Field {
         cc_name: TokenStream,
         cc_type: CcSnippet,
+        rs_name: TokenStream,
+        is_public: bool,
         offset: u64,
     }
     let ty = tcx.type_of(core.def_id).subst_identity();
@@ -1124,14 +1126,31 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
         all_fields_in_source_order
             .enumerate()
             .map(|(index, field_def)| -> Result<Field> {
-                let cc_name = format_cc_ident(field_def.ident(tcx).as_str())
+                let name = field_def.ident(tcx);
+                let cc_name = format_cc_ident(name.as_str())
                     .unwrap_or_else(|_err| format_ident!("__field{index}").into_token_stream());
                 // TODO(lukasza): Upon `format_ty_for_cc` errors we should replace *individual*
                 // fields with an opaque blob of bytes (rather than failing to format *all*
                 // fields and replacing all of them with a blob of bytes).
                 let cc_type = format_ty_for_cc(input, field_def.ty(tcx, substs_ref))?;
+                let rs_name = {
+                    let name_starts_with_digit = name
+                        .as_str()
+                        .chars()
+                        .next()
+                        .expect("Empty names are unexpected (here and in general)")
+                        .is_ascii_digit();
+                    if name_starts_with_digit {
+                        let index = Literal::usize_unsuffixed(index);
+                        quote! { #index }
+                    } else {
+                        let name = make_rs_ident(name.as_str());
+                        quote! { #name }
+                    }
+                };
+                let is_public = field_def.vis == ty::Visibility::Public;
                 let offset = 0; // Offsets will be fixed by FieldsShape::Arbitrary branch below..
-                Ok(Field { cc_name, cc_type, offset })
+                Ok(Field { cc_name, cc_type, rs_name, is_public, offset })
             })
             .collect::<Result<Vec<_>>>()
             .map(|mut fields| {
@@ -1156,13 +1175,26 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
             })
     };
     let adt_cc_name = &core.cc_name;
-    let field_assertions = match fields.as_ref() {
+    let adt_rs_name = &core.rs_name;
+    let cc_field_assertions = match fields.as_ref() {
         Err(_err) => quote! {},
         Ok(fields) => fields
             .iter()
             .map(|Field { cc_name, offset, .. }| {
                 let offset = Literal::u64_unsuffixed(*offset);
                 quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
+            })
+            .collect(),
+    };
+    let rs_field_assertions = match fields.as_ref() {
+        Err(_err) => quote! {},
+        Ok(fields) => fields
+            .iter()
+            .filter(|Field { is_public, .. }| *is_public)
+            .map(|Field { rs_name, offset, .. }| {
+                let expected_offset = Literal::u64_unsuffixed(*offset);
+                let actual_offset = quote! { memoffset::offset_of!(#adt_rs_name, #rs_name) };
+                quote! { const _: () = assert!(#actual_offset == #expected_offset); }
             })
             .collect(),
     };
@@ -1244,7 +1276,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
             }
         };
         prereqs.fwd_decls.remove(&local_def_id);
-        let assertions_method_decl = if field_assertions.is_empty() {
+        let assertions_method_decl = if cc_field_assertions.is_empty() {
             quote! {}
         } else {
             // We put the assertions in a method so that they can read private member
@@ -1271,12 +1303,12 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
     };
     let impl_details = {
         let mut cc = {
-            let assertions_method_def = if field_assertions.is_empty() {
+            let assertions_method_def = if cc_field_assertions.is_empty() {
                 quote! {}
             } else {
                 quote! {
                     inline void #adt_cc_name::__crubit_field_offset_assertions() {
-                        #field_assertions
+                        #cc_field_assertions
                     }
                 }
             };
@@ -1294,10 +1326,10 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
         };
         cc.prereqs.defs.insert(local_def_id);
         let rs = {
-            let rs_name = &core.rs_name;
             quote! {
-                const _: () = assert!(::std::mem::size_of::<#rs_name>() == #size);
-                const _: () = assert!(::std::mem::align_of::<#rs_name>() == #alignment);
+                const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
+                const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
+                #rs_field_assertions
             }
         };
         MixedSnippet { cc, rs }
@@ -1671,8 +1703,12 @@ pub mod tests {
             assert_rs_matches!(
                 bindings.rs_body,
                 quote! {
+                    // No point replicating test coverage of
+                    // `test_format_item_struct_with_fields`.
                     const _: () = assert!(::std::mem::size_of::<::rust_out::Point>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::Point>() == 4);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::Point, x) == 0);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::Point, y) == 4);
                 }
             );
         });
@@ -3230,6 +3266,8 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, x) == 0);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, y) == 4);
                 }
             );
         });
@@ -3240,7 +3278,7 @@ pub mod tests {
     #[test]
     fn test_format_item_struct_with_tuple() {
         let test_src = r#"
-                pub struct TupleStruct(i32, i32);
+                pub struct TupleStruct(pub i32, pub i32);
                 const _: () = assert!(std::mem::size_of::<TupleStruct>() == 8);
                 const _: () = assert!(std::mem::align_of::<TupleStruct>() == 4);
             "#;
@@ -3294,6 +3332,8 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::TupleStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::TupleStruct>() == 4);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::TupleStruct, 0) == 0);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::TupleStruct, 1) == 4);
                 }
             );
         });
@@ -3352,6 +3392,12 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, field2)
+                                           == 0);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, field1)
+                                           == 4);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, field3)
+                                           == 6);
                 }
             );
         });
@@ -3402,6 +3448,10 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 6);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 1);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, field1)
+                                           == 0);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, field2)
+                                           == 2);
                 }
             );
         });
