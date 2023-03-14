@@ -1155,6 +1155,17 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
                 }
             })
     };
+    let adt_cc_name = &core.cc_name;
+    let field_assertions = match fields.as_ref() {
+        Err(_err) => quote! {},
+        Ok(fields) => fields
+            .iter()
+            .map(|Field { cc_name, offset, .. }| {
+                let offset = Literal::u64_unsuffixed(*offset);
+                quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
+            })
+            .collect(),
+    };
 
     let (impl_item_main_apis, impl_item_other_snippets) = tcx
         .inherent_impls(core.def_id)
@@ -1179,7 +1190,6 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
 
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
-    let cc_name = &core.cc_name;
     let main_api = {
         let cc_packed_attribute = {
             let has_packed_attribute = tcx
@@ -1234,34 +1244,54 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
             }
         };
         prereqs.fwd_decls.remove(&local_def_id);
+        let assertions_method_decl = if field_assertions.is_empty() {
+            quote! {}
+        } else {
+            // We put the assertions in a method so that they can read private member
+            // variables.
+            quote! { inline static void __crubit_field_offset_assertions(); }
+        };
 
         CcSnippet {
             prereqs,
             tokens: quote! {
                 __NEWLINE__ #doc_comment
-                #keyword alignas(#alignment) #cc_packed_attribute #cc_name final {
+                #keyword alignas(#alignment) #cc_packed_attribute #adt_cc_name final {
                     #core
                     #impl_item_decls
 
                     // TODO(b/271002281): Preserve actual field visibility.
                     private: __NEWLINE__
                         #fields
+                        #assertions_method_decl
                 };
                 __NEWLINE__
             },
         }
     };
     let impl_details = {
-        let mut cc = CcSnippet::new(quote! {
-            __NEWLINE__
-            static_assert(
-                sizeof(#cc_name) == #size,
-                "Verify that struct layout didn't change since this header got generated");
-            static_assert(
-                alignof(#cc_name) == #alignment,
-                "Verify that struct layout didn't change since this header got generated");
-            __NEWLINE__
-        });
+        let mut cc = {
+            let assertions_method_def = if field_assertions.is_empty() {
+                quote! {}
+            } else {
+                quote! {
+                    inline void #adt_cc_name::__crubit_field_offset_assertions() {
+                        #field_assertions
+                    }
+                }
+            };
+            CcSnippet::new(quote! {
+                __NEWLINE__
+                static_assert(
+                    sizeof(#adt_cc_name) == #size,
+                    "Verify that struct layout didn't change since this header got generated");
+                static_assert(
+                    alignof(#adt_cc_name) == #alignment,
+                    "Verify that struct layout didn't change since this header got generated");
+                __NEWLINE__
+                #assertions_method_def
+            })
+        };
         cc.prereqs.defs.insert(local_def_id);
         let rs = {
             let rs_name = &core.rs_name;
@@ -1633,6 +1663,8 @@ pub mod tests {
                         };
                         static_assert(sizeof(Point) == 8, ...);
                         static_assert(alignof(Point) == 4, ...);
+                        ... // Other static_asserts are covered by
+                            // `test_format_item_struct_with_fields`
                     }  // namespace rust_out
                 }
             );
@@ -1742,13 +1774,11 @@ pub mod tests {
                     namespace rust_out {
                     ...
                         struct alignas(1) Inner final {
-                          ...
-                          bool __field0;
+                          ...  bool __field0; ...
                         };
                     ...
                         struct alignas(1) Outer final {
-                          ...
-                          ::rust_out::Inner __field0;
+                          ...  ::rust_out::Inner __field0; ...
                         };
                     ...
                     }  // namespace rust_out
@@ -1964,9 +1994,8 @@ pub mod tests {
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
-                    static inline ::rust_out::S create();
-                    ...
-                    const ::rust_out::S* field;
+                    static inline ::rust_out::S create(); ...
+                    const ::rust_out::S* field; ...
                 }
             );
         });
@@ -3181,6 +3210,7 @@ pub mod tests {
                         private:
                             ...  std::int32_t x;
                             ...  std::int32_t y;
+                            inline static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -3189,6 +3219,10 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    inline void SomeStruct::__crubit_field_offset_assertions() {
+                      static_assert(0 == offsetof(SomeStruct, x));
+                      static_assert(4 == offsetof(SomeStruct, y));
+                    }
                 }
             );
             assert_rs_matches!(
@@ -3240,6 +3274,7 @@ pub mod tests {
                         private:
                             ...  std::int32_t __field0;
                             ...  std::int32_t __field1;
+                            inline static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -3248,6 +3283,10 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(TupleStruct) == 8, ...);
                     static_assert(alignof(TupleStruct) == 4, ...);
+                    inline void TupleStruct::__crubit_field_offset_assertions() {
+                      static_assert(0 == offsetof(TupleStruct, __field0));
+                      static_assert(4 == offsetof(TupleStruct, __field1));
+                    }
                 }
             );
             assert_rs_matches!(
@@ -3292,6 +3331,7 @@ pub mod tests {
                             ...  std::int32_t field2;
                             ...  std::int16_t field1;
                             ...  std::int16_t field3;
+                            inline static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -3300,6 +3340,11 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    inline void SomeStruct::__crubit_field_offset_assertions() {
+                      static_assert(0 == offsetof(SomeStruct, field2));
+                      static_assert(4 == offsetof(SomeStruct, field1));
+                      static_assert(6 == offsetof(SomeStruct, field3));
+                    }
                 }
             );
             assert_rs_matches!(
@@ -3337,6 +3382,7 @@ pub mod tests {
                         std::uint16_t field1;
                         ...
                         std::uint32_t field2;
+                        inline static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -3345,6 +3391,10 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 6, ...);
                     static_assert(alignof(SomeStruct) == 1, ...);
+                    inline void SomeStruct::__crubit_field_offset_assertions() {
+                      static_assert(0 == offsetof(SomeStruct, field1));
+                      static_assert(2 == offsetof(SomeStruct, field2));
+                    }
                 }
             );
             assert_rs_matches!(
