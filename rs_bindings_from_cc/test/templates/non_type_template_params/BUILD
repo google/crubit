@@ -9,6 +9,7 @@ licenses(["notice"])
 cc_library(
     name = "non_type_template_params",
     hdrs = ["non_type_template_params.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

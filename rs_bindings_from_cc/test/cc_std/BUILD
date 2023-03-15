@@ -25,6 +25,7 @@ rust_test(
 cc_library(
     name = "stl_in_deps",
     hdrs = ["empty.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
     deps = ["//third_party/stl"],
 )
 

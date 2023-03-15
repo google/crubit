@@ -37,5 +37,7 @@ crubit_feature_hint(
 crubit_feature_hint(
     name = "experimental",
     crubit_features = _SUPPORTED_FEATURES + ["experimental"],
-    visibility = ["//:__subpackages__"],
+    visibility = [
+        "//:__subpackages__",
+    ],
 )

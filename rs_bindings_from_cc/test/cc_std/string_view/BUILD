@@ -9,6 +9,7 @@ package(default_applicable_licenses = ["//third_party/crubit:license"])
 cc_library(
     name = "string_view_apis",
     hdrs = ["string_view_apis.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

@@ -9,6 +9,7 @@ licenses(["notice"])
 cc_library(
     name = "void_pointers",
     hdrs = ["void_pointers.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

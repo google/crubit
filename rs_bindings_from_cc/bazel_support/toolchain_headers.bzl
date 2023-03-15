@@ -53,7 +53,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
             json.encode({
                 "t": str(ctx.label),
                 "h": [hdr.path for hdr in std_files + builtin_libcxx_files],
-                "f": ["supported"],
+                "f": ["supported", "experimental"],
             }),
             json.encode({
                 "t": "//:_nothing_should_depend_on_private_builtin_hdrs",

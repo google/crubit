@@ -7,17 +7,20 @@ licenses(["notice"])
 cc_library(
     name = "defines_macro",
     hdrs = ["defines_macro.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 cc_library(
     name = "defines_macro_that_uses_macro",
     hdrs = ["defines_macro_that_uses_macro.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [":defines_macro"],
 )
 
 cc_library(
     name = "uses_macro",
     hdrs = ["uses_macro.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [":defines_macro_that_uses_macro"],
 )
 

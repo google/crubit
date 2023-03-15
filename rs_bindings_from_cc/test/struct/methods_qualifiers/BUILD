@@ -8,6 +8,7 @@ cc_library(
     name = "methods_qualifiers",
     srcs = ["methods_qualifiers.cc"],
     hdrs = ["methods_qualifiers.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

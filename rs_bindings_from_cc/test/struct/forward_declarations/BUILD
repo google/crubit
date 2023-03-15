@@ -10,11 +10,13 @@ cc_library(
     name = "definition",
     srcs = ["definition.cc"],
     hdrs = ["definition.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 cc_library(
     name = "declaration_1",
     hdrs = ["declaration_1.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [
         ":definition",  # build_cleaner: keep
     ],
@@ -23,6 +25,7 @@ cc_library(
 cc_library(
     name = "declaration_2",
     hdrs = ["declaration_2.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [
         ":definition",  # build_cleaner: keep
     ],
@@ -31,6 +34,7 @@ cc_library(
 cc_library(
     name = "no_definition_in_headers",
     hdrs = ["no_definition_in_headers.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

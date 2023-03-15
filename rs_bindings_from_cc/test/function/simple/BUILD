@@ -10,6 +10,7 @@ cc_library(
     name = "simple_functions",
     srcs = ["simple_functions.cc"],
     hdrs = ["simple_functions.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

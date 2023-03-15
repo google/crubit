@@ -16,6 +16,7 @@ genrule(
 cc_library(
     name = "generated_header",
     hdrs = ["generated_header.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

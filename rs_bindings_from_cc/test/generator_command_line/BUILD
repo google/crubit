@@ -9,12 +9,14 @@ licenses(["notice"])
 
 cc_library(
     name = "propagates_define",
+    aspect_hints = ["//third_party/crubit:experimental"],
     defines = ["DEFINE_FROM_DEPENDENCY"],
 )
 
 cc_library(
     name = "consumes_define",
     hdrs = ["consumes_define.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [":propagates_define"],
 )
 

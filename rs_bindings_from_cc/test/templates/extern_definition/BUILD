@@ -9,11 +9,13 @@ licenses(["notice"])
 cc_library(
     name = "extern_definition",
     hdrs = ["extern_definition.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 cc_library(
     name = "actual_instantiation",
     hdrs = ["actual_instantiation.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [":extern_definition"],
 )
 

@@ -10,6 +10,7 @@ cc_library(
     name = "field_destruction_order",
     srcs = ["field_destruction_order.cc"],
     hdrs = ["field_destruction_order.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

@@ -10,6 +10,7 @@ cc_library(
     name = "methods",
     srcs = ["methods.cc"],
     hdrs = ["methods.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

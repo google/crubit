@@ -9,11 +9,13 @@ package(default_applicable_licenses = ["//third_party/crubit:license"])
 cc_library(
     name = "two",
     hdrs = ["two.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 cc_library(
     name = "three",
     hdrs = ["three.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_library(

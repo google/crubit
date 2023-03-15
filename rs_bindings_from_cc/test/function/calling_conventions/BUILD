@@ -10,6 +10,7 @@ cc_library(
     name = "calling_conventions",
     srcs = ["calling_conventions.cc"],
     hdrs = ["calling_conventions.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

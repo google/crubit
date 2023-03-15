@@ -9,6 +9,7 @@ licenses(["notice"])
 cc_library(
     name = "fields",
     hdrs = ["fields.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

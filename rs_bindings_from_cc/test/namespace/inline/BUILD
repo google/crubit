@@ -9,6 +9,7 @@ licenses(["notice"])
 cc_library(
     name = "inline",
     hdrs = ["inline.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

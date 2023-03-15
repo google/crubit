@@ -10,6 +10,7 @@ cc_library(
     name = "definition_in_cc",
     srcs = ["definition_in_cc.cc"],
     hdrs = ["definition_in_cc.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

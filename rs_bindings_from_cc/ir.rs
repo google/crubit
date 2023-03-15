@@ -269,6 +269,12 @@ impl<T: Into<String>> From<T> for BazelLabel {
     }
 }
 
+impl std::fmt::Display for BazelLabel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &*self.0)
+    }
+}
+
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum UnqualifiedIdentifier {
     Identifier(Identifier),
@@ -662,6 +668,12 @@ impl Item {
         }
     }
 
+    /// Returns the target that this was defined in.
+    pub fn defining_target(&self) -> Option<&BazelLabel> {
+        // TODO(b/266727458): return the template target where applicable.
+        self.owning_target()
+    }
+
     /// Returns the target that this should generate source code in.
     pub fn owning_target(&self) -> Option<&BazelLabel> {
         match self {
@@ -749,6 +761,14 @@ impl CrubitFeature {
         match self {
             Self::Supported => "supported",
             Self::Experimental => "experimental",
+        }
+    }
+
+    /// The aspect hint required to enable this feature.
+    pub fn aspect_hint(&self) -> &'static str {
+        match self {
+            Self::Supported => "//third_party/crubit:supported",
+            Self::Experimental => "//third_party/crubit:experimental",
         }
     }
 }

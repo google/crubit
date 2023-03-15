@@ -13,6 +13,7 @@ cc_library(
         "includes_dir/myheader.h",
         "using_includes.h",
     ],
+    aspect_hints = ["//third_party/crubit:experimental"],
     includes = ["includes_dir/"],
 )
 

@@ -9,6 +9,7 @@ licenses(["notice"])
 cc_library(
     name = "out_of_line_definition",
     hdrs = ["out_of_line_definition.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

@@ -7,12 +7,14 @@ licenses(["notice"])
 cc_library(
     name = "has-dashes-in-name",
     hdrs = ["has-dashes-in-name.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 cc_library(
     name = "uses-target-with-dashes",
     srcs = ["uses-target-with-dashes.cc"],
     hdrs = ["uses-target-with-dashes.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [":has-dashes-in-name"],
 )
 

@@ -7,21 +7,25 @@ licenses(["notice"])
 cc_library(
     name = "types_nonptr",
     hdrs = ["types_nonptr.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 cc_library(
     name = "types_lifetimes",
     hdrs = ["types_lifetimes.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 cc_library(
     name = "types_nolifetimes",
     hdrs = ["types_nolifetimes.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 cc_library(
     name = "types_inferred_lifetimes",
     hdrs = ["types_inferred_lifetimes.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

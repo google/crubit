@@ -9,6 +9,7 @@ licenses(["notice"])
 cc_library(
     name = "no_unique_address",
     hdrs = ["no_unique_address.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

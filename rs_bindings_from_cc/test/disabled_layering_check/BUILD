@@ -23,12 +23,14 @@ cc_library(
     name = "top_lib",
     srcs = ["top_lib.cc"],
     hdrs = ["top_lib.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
     features = ["-layering_check"],
     deps = [":middleperson_without_public_headers"],
 )
 
 cc_library(
     name = "middleperson_without_public_headers",
+    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [":my_lib"],
 )
 
@@ -36,6 +38,7 @@ cc_library(
     name = "my_lib",
     srcs = ["my_lib.cc"],
     hdrs = ["my_lib.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 # This test only exists to make sure :top_lib is disabling layering check correctly (layering

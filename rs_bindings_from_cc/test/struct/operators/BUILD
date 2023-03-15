@@ -10,6 +10,7 @@ cc_library(
     name = "add",
     srcs = ["add.cc"],
     hdrs = ["add.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(
@@ -25,6 +26,7 @@ cc_library(
     name = "add_assign",
     srcs = ["add_assign.cc"],
     hdrs = ["add_assign.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(
@@ -41,6 +43,7 @@ cc_library(
     name = "operators",
     srcs = ["operators.cc"],
     hdrs = ["operators.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

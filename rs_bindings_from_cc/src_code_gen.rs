@@ -2449,6 +2449,7 @@ fn generate_record(
         assertions: assertion_tokens,
         thunks: thunk_tokens,
         thunk_impls: quote! {#(#thunk_impls_from_record_items __NEWLINE__ __NEWLINE__)*},
+        ..Default::default()
     })
 }
 
@@ -2578,7 +2579,11 @@ fn generate_unsupported(
         item.name.as_ref(),
         item.message()
     );
-    Ok(quote! { __COMMENT__ #message }.into())
+    Ok(GeneratedItem {
+        item: quote! { __COMMENT__ #message },
+        crubit_features: Default::default(),
+        ..Default::default()
+    })
 }
 
 /// Generates Rust source code for a given `Comment`.
@@ -2666,7 +2671,7 @@ fn generate_namespace(
     })
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 struct GeneratedItem {
     item: TokenStream,
     thunks: TokenStream,
@@ -2674,11 +2679,29 @@ struct GeneratedItem {
     thunk_impls: TokenStream,
     assertions: TokenStream,
     features: BTreeSet<Ident>,
+
+    /// The Crubit features used by this snippet.
+    crubit_features: flagset::FlagSet<ir::CrubitFeature>,
 }
 
 impl From<TokenStream> for GeneratedItem {
     fn from(item: TokenStream) -> Self {
         GeneratedItem { item, ..Default::default() }
+    }
+}
+
+/// We manually define a `Default` impl so that the default features are
+/// experimental.
+impl Default for GeneratedItem {
+    fn default() -> Self {
+        Self {
+            item: Default::default(),
+            thunks: Default::default(),
+            thunk_impls: Default::default(),
+            assertions: Default::default(),
+            features: Default::default(),
+            crubit_features: ir::CrubitFeature::Experimental.into(),
+        }
     }
 }
 
@@ -2688,7 +2711,8 @@ impl PartialEq for GeneratedItem {
     fn eq(&self, other: &Self) -> bool {
         fn to_comparable_tuple(
             _x: &GeneratedItem,
-        ) -> (&BTreeSet<Ident>, String, String, String, String) {
+        ) -> (&BTreeSet<Ident>, String, String, String, String, flagset::FlagSet<ir::CrubitFeature>)
+        {
             // TokenStream doesn't implement `PartialEq`, so we convert to an equivalent
             // `String`. This is a bit expensive, but should be okay (especially
             // given that this code doesn't execute at this point).  Having a
@@ -2710,6 +2734,7 @@ impl PartialEq for GeneratedItem {
                 _x.thunks.to_string(),
                 _x.thunk_impls.to_string(),
                 _x.assertions.to_string(),
+                _x.crubit_features,
             )
         }
         to_comparable_tuple(self) == to_comparable_tuple(other)
@@ -2783,6 +2808,16 @@ fn generate_item(
             .into()
         }
     };
+
+    if let Some(defining_target) = item.defining_target() {
+        let missing_features =
+            generated_item.crubit_features - ir.target_crubit_features(defining_target);
+        if !missing_features.is_empty() {
+            // TODO(b/266727458): Insert a useful comment here.
+            // Ideally listing what didn't generate, and what features it required.
+            return Ok(GeneratedItem::default());
+        }
+    }
 
     Ok(generated_item)
 }
@@ -8609,5 +8644,17 @@ mod tests {
         let expected =
             "Error while generating bindings for item 'unsupported_item2':\nunsupported_message2";
         assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+    }
+
+    /// The default crubit feature set currently results in no bindings at all.
+    #[test]
+    fn test_default_crubit_features_disabled() -> Result<()> {
+        for item in ["struct NotPresent {};", "void NotPresent();", "using NotPresent = int;"] {
+            let mut ir = ir_from_cc(item)?;
+            ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
+
+            assert_rs_not_matches!(generate_bindings_tokens(ir)?.rs_api, quote! {NotPresent});
+        }
+        Ok(())
     }
 }

@@ -9,6 +9,7 @@ licenses(["notice"])
 cc_library(
     name = "nonunpin",
     hdrs = ["nonunpin.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

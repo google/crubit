@@ -10,6 +10,7 @@ cc_library(
     name = "no_elided_lifetimes",
     srcs = ["no_elided_lifetimes.cc"],
     hdrs = ["no_elided_lifetimes.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

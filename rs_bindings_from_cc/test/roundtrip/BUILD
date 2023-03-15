@@ -9,6 +9,7 @@ licenses(["notice"])
 cc_library(
     name = "roundtrip",
     hdrs = ["roundtrip.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [
         "//support/rs_std:rs_char",
     ],

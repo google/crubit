@@ -10,6 +10,7 @@ cc_library(
     name = "func_return_and_param_types",
     srcs = ["func_return_and_param_types.cc"],
     hdrs = ["func_return_and_param_types.h"],
+    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(
