@@ -329,7 +329,20 @@ rust_library(
         ":json_from_cc",
         "//common:arc_anyhow",
         "//common:ffi_types",
+        "@crate_index//:flagset",
         "@crate_index//:itertools",
+        "@crate_index//:once_cell",
+    ],
+)
+
+rust_test(
+    name = "ir_testing_test",
+    crate = ":ir_testing",
+    deps = [
+        ":ir_matchers",
+        ":ir_testing",
+        "//common:rust_allocator_shims",
+        "@crate_index//:quote",
     ],
 )
 

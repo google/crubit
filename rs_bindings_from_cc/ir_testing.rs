@@ -2,11 +2,14 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use std::collections::hash_map::HashMap;
+
 use arc_anyhow::Result;
+use itertools::Itertools;
+use once_cell::sync::Lazy;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{self, make_ir_from_parts, Func, Identifier, Item, Record, IR};
-use itertools::Itertools;
 
 /// Generates `IR` from a header containing `header_source`.
 pub fn ir_from_cc(header_source: &str) -> Result<IR> {
@@ -30,20 +33,31 @@ pub fn with_lifetime_macros(source: &str) -> String {
 
 /// Name of the current target used by `ir_from_cc` and `ir_from_cc_dependency`.
 pub const TESTING_TARGET: &str = "//test:testing_target";
+static TESTING_FEATURES: Lazy<flagset::FlagSet<ir::CrubitFeature>> =
+    Lazy::new(|| ir::CrubitFeature::Experimental | ir::CrubitFeature::Supported);
+
+/// Update the IR to have common test-only items.
+///
+/// This provides one place to update the IR that affects both
+/// `make_ir_from_items` and `ir_from_cc_dependency`.
+fn update_test_ir(ir: &mut IR) {
+    *ir.target_crubit_features_mut(&ir.current_target().clone()) = *TESTING_FEATURES;
+}
 
 /// Create a testing `IR` instance from given items, using mock values for other
 /// fields.
 pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
-    let target: ir::BazelLabel = TESTING_TARGET.into();
-    make_ir_from_parts(
+    let mut ir = make_ir_from_parts(
         items.into_iter().collect_vec(),
         /* public_headers= */ vec![],
-        /* current_target= */ target.clone(),
+        /* current_target= */ TESTING_TARGET.into(),
         /* top_level_item_ids= */ vec![],
         /* crate_root_path= */ None,
         /* crubit_features= */
-        [(target, ir::CrubitFeature::Experimental | ir::CrubitFeature::Supported)].into(),
-    )
+        <HashMap<ir::BazelLabel, flagset::FlagSet<ir::CrubitFeature>>>::new(),
+    )?;
+    update_test_ir(&mut ir);
+    Ok(ir)
 }
 
 /// Target of the dependency used by `ir_from_cc_dependency`.
@@ -76,7 +90,9 @@ pub fn ir_from_cc_dependency(header_source: &str, dependency_header_source: &str
         )
         .into_boxed_slice()
     };
-    ir::deserialize_ir(&*json_utf8)
+    let mut ir = ir::deserialize_ir(&*json_utf8)?;
+    update_test_ir(&mut ir);
+    Ok(ir)
 }
 
 /// Creates an identifier
@@ -118,4 +134,36 @@ pub fn retrieve_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
         }
     }
     panic!("Didn't find record with cc_name {}", cc_name);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ir_matchers::assert_ir_matches;
+    use quote::quote;
+
+    #[test]
+    fn test_features_ir_from_cc() -> Result<()> {
+        assert_ir_matches!(
+            ir_from_cc("")?,
+            quote! {
+                crubit_features: hash_map!{
+                    BazelLabel("//test:testing_target"): CrubitFeaturesIR(FlagSet(Supported|Experimental))
+                }
+            }
+        );
+        Ok(())
+    }
+    #[test]
+    fn test_features_ir_from_items() -> Result<()> {
+        assert_ir_matches!(
+            make_ir_from_items([])?,
+            quote! {
+                crubit_features: hash_map!{
+                    BazelLabel("//test:testing_target"): CrubitFeaturesIR(FlagSet(Supported|Experimental))
+                }
+            }
+        );
+        Ok(())
+    }
 }

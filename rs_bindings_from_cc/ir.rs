@@ -779,7 +779,7 @@ impl<'de> serde::Deserialize<'de> for CrubitFeaturesIR {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Deserialize)]
 #[serde(deny_unknown_fields, rename(deserialize = "IR"))]
 struct FlatIR {
     #[serde(default)]
@@ -793,6 +793,42 @@ struct FlatIR {
     crate_root_path: Option<Rc<str>>,
     #[serde(default)]
     crubit_features: HashMap<BazelLabel, CrubitFeaturesIR>,
+}
+
+/// A custom debug impl that wraps the HashMap in rustfmt-friendly notation.
+///
+/// See b/272530008.
+impl std::fmt::Debug for FlatIR {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        struct DebugHashMap<T: Debug>(pub T);
+        impl<T: Debug> std::fmt::Debug for DebugHashMap<T> {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                // prefix the hash map with `hash_map!` so that the output can be fed to
+                // rustfmt. The end result is something like `hash_map!{k:v,
+                // k2:v2}`, which reads well.
+                write!(f, "hash_map!")?;
+                std::fmt::Debug::fmt(&self.0, f)
+            }
+        }
+        // exhaustive-match so we don't forget to add fields to Debug when we add to
+        // FlatIR.
+        let FlatIR {
+            public_headers,
+            current_target,
+            items,
+            top_level_item_ids,
+            crate_root_path,
+            crubit_features,
+        } = self;
+        f.debug_struct("FlatIR")
+            .field("public_headers", public_headers)
+            .field("current_target", current_target)
+            .field("items", items)
+            .field("top_level_item_ids", top_level_item_ids)
+            .field("crate_root_path", crate_root_path)
+            .field("crubit_features", &DebugHashMap(crubit_features))
+            .finish()
+    }
 }
 
 /// Struct providing the necessary information about the API of a C++ target to
@@ -903,6 +939,22 @@ impl IR {
     #[must_use]
     pub fn target_crubit_features(&self, target: &BazelLabel) -> flagset::FlagSet<CrubitFeature> {
         self.flat_ir.crubit_features.get(target).cloned().unwrap_or_default().0
+    }
+
+    /// Returns a mutable reference to the Crubit features enabled for the given
+    /// `target`.
+    ///
+    /// Since IR is generally only held immutably, this is only useful for
+    /// testing.
+    #[must_use]
+    pub fn target_crubit_features_mut(
+        &mut self,
+        target: &BazelLabel,
+    ) -> &mut flagset::FlagSet<CrubitFeature> {
+        // TODO(jeanpierreda): migrate to raw_entry_mut when stable.
+        // (target is taken by reference exactly because ideally this function would use
+        // the raw entry API.)
+        &mut self.flat_ir.crubit_features.entry(target.clone()).or_default().0
     }
 
     pub fn current_target(&self) -> &BazelLabel {
