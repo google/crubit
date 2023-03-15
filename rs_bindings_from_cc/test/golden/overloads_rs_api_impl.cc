@@ -16,6 +16,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+
 extern "C" void __rust_thunk___Z20AlsoTemplateOverloadv() {
   AlsoTemplateOverload();
 }

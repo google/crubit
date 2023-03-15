@@ -17,28 +17,32 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+
+static_assert(sizeof(struct UserOfImportedType) == 8);
+static_assert(alignof(struct UserOfImportedType) == 8);
+static_assert(CRUBIT_OFFSET_OF(trivial, struct UserOfImportedType) == 0);
+
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1Ev(
     struct UserOfImportedType* __this) {
   crubit::construct_at(__this);
 }
+
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1EOS_(
     struct UserOfImportedType* __this, struct UserOfImportedType* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+
 extern "C" struct UserOfImportedType*
 __rust_thunk___ZN18UserOfImportedTypeaSERKS_(
     struct UserOfImportedType* __this,
     const struct UserOfImportedType* __param_0) {
   return &__this->operator=(*__param_0);
 }
+
 extern "C" struct UserOfImportedType*
 __rust_thunk___ZN18UserOfImportedTypeaSEOS_(
     struct UserOfImportedType* __this, struct UserOfImportedType* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
-
-static_assert(sizeof(struct UserOfImportedType) == 8);
-static_assert(alignof(struct UserOfImportedType) == 8);
-static_assert(CRUBIT_OFFSET_OF(trivial, struct UserOfImportedType) == 0);
 
 #pragma clang diagnostic pop

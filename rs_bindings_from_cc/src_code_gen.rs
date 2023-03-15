@@ -1611,8 +1611,13 @@ fn generate_func(
         }
     }
 
-    let generated_item =
-        GeneratedItem { item: api_func, thunks: thunk, features, ..Default::default() };
+    let generated_item = GeneratedItem {
+        item: api_func,
+        thunks: thunk,
+        features,
+        thunk_impls: generate_func_thunk_impl(db, &func)?,
+        ..Default::default()
+    };
     Ok(Some((Rc::new(generated_item), Rc::new(function_id))))
 }
 
@@ -2369,7 +2374,7 @@ fn generate_record(
 
     let mut items = vec![];
     let mut thunks_from_record_items = vec![];
-    let mut thunk_impls_from_record_items = vec![];
+    let mut thunk_impls_from_record_items = vec![cc_struct_layout_assertion(db, record)?];
     let mut assertions_from_record_items = vec![];
 
     for generated in record_generated_items {
@@ -2852,7 +2857,15 @@ fn generate_bindings_tokens(
     db.set_generate_source_loc_doc_comment(generate_source_loc_doc_comment);
     let mut items = vec![];
     let mut thunks = vec![];
-    let mut thunk_impls = vec![generate_rs_api_impl(&mut db, crubit_support_path)?];
+    let mut thunk_impls = vec![
+        generate_rs_api_impl_includes(&mut db, crubit_support_path)?,
+        quote! {
+            __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
+            // Disable Clang thread-safety-analysis warnings that would otherwise
+            // complain about thunks that call mutex locking functions in an unpaired way.
+            __HASH_TOKEN__ pragma clang diagnostic ignored "-Wthread-safety-analysis" __NEWLINE__
+        },
+    ];
     let mut assertions = vec![];
 
     // We import nullable pointers as an Option<&T> and assume that at the ABI
@@ -2885,6 +2898,13 @@ fn generate_bindings_tokens(
         }
         features.extend(generated.features);
     }
+
+    thunk_impls.push(quote! {
+        __NEWLINE__
+        __HASH_TOKEN__ pragma clang diagnostic pop __NEWLINE__
+        // To satisfy http://cs/symbol:devtools.metadata.Presubmit.CheckTerminatingNewline check.
+        __NEWLINE__
+    });
 
     let mod_detail = if thunks.is_empty() {
         quote! {}
@@ -3718,12 +3738,9 @@ fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result
     }
 }
 
-fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
-    if !ir.is_current_target(&record.owning_target) {
-        return Ok(quote! {});
-    }
+fn cc_struct_layout_assertion(db: &Database, record: &Record) -> Result<TokenStream> {
     let record_ident = format_cc_ident(record.cc_name.as_ref());
-    let namespace_qualifier = namespace_qualifier_of_item(record.id, ir)?.format_for_cc()?;
+    let namespace_qualifier = namespace_qualifier_of_item(record.id, &db.ir())?.format_for_cc()?;
     let cc_size = Literal::usize_unsuffixed(record.original_cc_size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let tag_kind = cc_tag_kind(record);
@@ -3861,194 +3878,170 @@ fn thunk_ident(func: &Func) -> Ident {
     format_ident!("__rust_thunk__{}", func.mangled_name.as_ref())
 }
 
-fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<TokenStream> {
-    // This function uses quote! to generate C++ source code out of convenience.
-    // This is a bold idea so we have to continously evaluate if it still makes
-    // sense or the cost of working around differences in Rust and C++ tokens is
-    // greather than the value added.
-    //
-    // See rs_bindings_from_cc/
-    // token_stream_printer.rs for a list of supported placeholders.
-    let mut thunks = vec![];
+fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<TokenStream> {
+    if can_skip_cc_thunk(db, func) {
+        return Ok(quote! {});
+    }
     let ir = db.ir();
-    for func in ir.functions() {
-        if can_skip_cc_thunk(db, func) {
-            continue;
+    let thunk_ident = thunk_ident(func);
+    let implementation_function = match &func.name {
+        UnqualifiedIdentifier::Operator(op) => {
+            let name = syn::parse_str::<TokenStream>(&op.name)?;
+            quote! { operator #name }
         }
-        match db.generate_func(func.clone()).unwrap_or_default() {
-            None => {
-                // No function was generated that will call this thunk.
-                continue;
-            }
-            Some(generated) => {
-                let (.., function_id) = &generated;
-                // TODO(jeanpierreda): this should be moved into can_skip_cc_thunk, but that'd be
-                // cyclic right now, because overloaded_funcs calls generate_func calls
-                // can_skip_cc_thunk. We probably need to break generate_func apart.
-                if db.overloaded_funcs().contains(function_id) {
-                    continue;
-                }
-            }
-        }
-
-        let thunk_ident = thunk_ident(func);
-        let implementation_function = match &func.name {
-            UnqualifiedIdentifier::Operator(op) => {
-                let name = syn::parse_str::<TokenStream>(&op.name)?;
-                quote! { operator #name }
-            }
-            UnqualifiedIdentifier::Identifier(id) => {
-                let fn_ident = format_cc_ident(&id.identifier);
-                match func.member_func_metadata.as_ref() {
-                    Some(meta) => {
-                        if let Some(_) = meta.instance_method_metadata {
-                            quote! { #fn_ident }
-                        } else {
-                            let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
-                            let record_ident = format_cc_ident(record.cc_name.as_ref());
-                            let namespace_qualifier =
-                                namespace_qualifier_of_item(record.id, &ir)?.format_for_cc()?;
-                            quote! { #namespace_qualifier #record_ident :: #fn_ident }
-                        }
-                    }
-                    None => {
+        UnqualifiedIdentifier::Identifier(id) => {
+            let fn_ident = format_cc_ident(&id.identifier);
+            match func.member_func_metadata.as_ref() {
+                Some(meta) => {
+                    if let Some(_) = meta.instance_method_metadata {
+                        quote! { #fn_ident }
+                    } else {
+                        let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
+                        let record_ident = format_cc_ident(record.cc_name.as_ref());
                         let namespace_qualifier =
-                            namespace_qualifier_of_item(func.id, &ir)?.format_for_cc()?;
-                        quote! { #namespace_qualifier #fn_ident }
+                            namespace_qualifier_of_item(record.id, &ir)?.format_for_cc()?;
+                        quote! { #namespace_qualifier #record_ident :: #fn_ident }
                     }
                 }
-            }
-            // Use `destroy_at` to avoid needing to spell out the class name. Destructor identiifers
-            // use the name of the type itself, without namespace qualification, template
-            // parameters, or aliases. We do not need to use that naming scheme anywhere else in
-            // the bindings, and it can be difficult (impossible?) to spell in the general case. By
-            // using destroy_at, we avoid needing to determine or remember what the correct spelling
-            // is. Similar arguments apply to `construct_at`.
-            UnqualifiedIdentifier::Constructor => {
-                quote! { crubit::construct_at }
-            }
-            UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
-        };
-
-        let mut param_idents =
-            func.params.iter().map(|p| format_cc_ident(&p.identifier.identifier)).collect_vec();
-
-        let mut param_types = func
-            .params
-            .iter()
-            .map(|p| {
-                let formatted = format_cc_type(&p.type_.cc_type, &ir)?;
-                if !db.rs_type_kind(p.type_.rs_type.clone())?.is_unpin() {
-                    // non-Unpin types are wrapped by a pointer in the thunk.
-                    Ok(quote! {#formatted *})
-                } else {
-                    Ok(formatted)
+                None => {
+                    let namespace_qualifier =
+                        namespace_qualifier_of_item(func.id, &ir)?.format_for_cc()?;
+                    quote! { #namespace_qualifier #fn_ident }
                 }
-            })
-            .collect::<Result<Vec<_>>>()?;
-
-        let arg_expressions = func
-            .params
-            .iter()
-            .map(|p| {
-                let ident = format_cc_ident(&p.identifier.identifier);
-                match p.type_.cc_type.name.as_deref() {
-                    Some("&") => Ok(quote! { * #ident }),
-                    Some("&&") => Ok(quote! { std::move(* #ident) }),
-                    _ => {
-                        // non-Unpin types are wrapped by a pointer in the thunk.
-                        if !db.rs_type_kind(p.type_.rs_type.clone())?.is_unpin() {
-                            Ok(quote! { std::move(* #ident) })
-                        } else {
-                            Ok(quote! { #ident })
-                        }
-                    }
-                }
-            })
-            .collect::<Result<Vec<_>>>()?;
-
-        // Here, we add a __return parameter if the return type is not trivially
-        // relocatable. (We do this after the arg_expressions computation, so
-        // that it's only in the parameter list, not the argument list.)
-        //
-        // RsTypeKind is where, as much as anywhere, where the information about trivial
-        // relocatability is stored.
-        let is_trivial_return = db.rs_type_kind(func.return_type.rs_type.clone())?.is_unpin();
-        let mut return_type_name = format_cc_type(&func.return_type.cc_type, &ir)?;
-        if !is_trivial_return {
-            param_idents.insert(0, format_cc_ident("__return"));
-            param_types.insert(0, quote! {#return_type_name *});
-            return_type_name = quote! {void};
+            }
         }
+        // Use `destroy_at` to avoid needing to spell out the class name. Destructor identiifers
+        // use the name of the type itself, without namespace qualification, template
+        // parameters, or aliases. We do not need to use that naming scheme anywhere else in
+        // the bindings, and it can be difficult (impossible?) to spell in the general case. By
+        // using destroy_at, we avoid needing to determine or remember what the correct spelling
+        // is. Similar arguments apply to `construct_at`.
+        UnqualifiedIdentifier::Constructor => {
+            quote! { crubit::construct_at }
+        }
+        UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
+    };
 
-        let this_ref_qualification =
-            func.member_func_metadata.as_ref().and_then(|meta| match &func.name {
-                UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
-                UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => meta
-                    .instance_method_metadata
-                    .as_ref()
-                    .map(|instance_method| instance_method.reference),
-            });
-        let (implementation_function, arg_expressions) =
-            if let Some(this_ref_qualification) = this_ref_qualification {
-                let this_param = func
-                    .params
-                    .first()
-                    .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
+    let mut param_idents =
+        func.params.iter().map(|p| format_cc_ident(&p.identifier.identifier)).collect_vec();
 
-                let this_arg = format_cc_ident(&this_param.identifier.identifier);
-                let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
-                    quote! {std::move(*#this_arg).}
-                } else {
-                    quote! {#this_arg->}
-                };
-                (
-                    quote! { #this_dot #implementation_function},
-                    arg_expressions.iter().skip(1).cloned().collect_vec(),
-                )
+    let mut param_types = func
+        .params
+        .iter()
+        .map(|p| {
+            let formatted = format_cc_type(&p.type_.cc_type, &ir)?;
+            if !db.rs_type_kind(p.type_.rs_type.clone())?.is_unpin() {
+                // non-Unpin types are wrapped by a pointer in the thunk.
+                Ok(quote! {#formatted *})
             } else {
-                (implementation_function, arg_expressions.clone())
-            };
+                Ok(formatted)
+            }
+        })
+        .collect::<Result<Vec<_>>>()?;
 
-        let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
-        let return_stmt = if !is_trivial_return {
-            // Explicitly use placement new so that we get guaranteed copy elision in C++17.
-            let out_param = &param_idents[0];
-            quote! {new(#out_param) auto(#return_expr)}
-        } else {
-            match func.return_type.cc_type.name.as_deref() {
-                Some("void") => return_expr,
-                Some("&") => quote! { return & #return_expr },
-                Some("&&") => {
-                    // The code below replicates bits of `format_cc_type`, but formats an rvalue
-                    // reference (which `format_cc_type` would format as a pointer).
-                    // `const_fragment` from `format_cc_type` is ignored - it is not applicable for
-                    // references.
-                    let ty = &func.return_type.cc_type;
-                    if ty.type_args.len() != 1 {
-                        bail!("Invalid reference type (need exactly 1 type argument): {:?}", ty);
-                    }
-                    let nested_type = format_cc_type(&ty.type_args[0], &ir)?;
-                    quote! {
-                        #nested_type && lvalue = #return_expr;
-                        return &lvalue
+    let arg_expressions = func
+        .params
+        .iter()
+        .map(|p| {
+            let ident = format_cc_ident(&p.identifier.identifier);
+            match p.type_.cc_type.name.as_deref() {
+                Some("&") => Ok(quote! { * #ident }),
+                Some("&&") => Ok(quote! { std::move(* #ident) }),
+                _ => {
+                    // non-Unpin types are wrapped by a pointer in the thunk.
+                    if !db.rs_type_kind(p.type_.rs_type.clone())?.is_unpin() {
+                        Ok(quote! { std::move(* #ident) })
+                    } else {
+                        Ok(quote! { #ident })
                     }
                 }
-                _ => quote! { return #return_expr },
             }
-        };
+        })
+        .collect::<Result<Vec<_>>>()?;
 
-        thunks.push(quote! {
-            extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
-                #return_stmt;
-            }
-        });
+    // Here, we add a __return parameter if the return type is not trivially
+    // relocatable. (We do this after the arg_expressions computation, so
+    // that it's only in the parameter list, not the argument list.)
+    //
+    // RsTypeKind is where, as much as anywhere, where the information about trivial
+    // relocatability is stored.
+    let is_trivial_return = db.rs_type_kind(func.return_type.rs_type.clone())?.is_unpin();
+    let mut return_type_name = format_cc_type(&func.return_type.cc_type, &ir)?;
+    if !is_trivial_return {
+        param_idents.insert(0, format_cc_ident("__return"));
+        param_types.insert(0, quote! {#return_type_name *});
+        return_type_name = quote! {void};
     }
 
-    let layout_assertions = ir
-        .records()
-        .map(|record| cc_struct_layout_assertion(record, &ir))
-        .collect::<Result<Vec<_>>>()?;
+    let this_ref_qualification =
+        func.member_func_metadata.as_ref().and_then(|meta| match &func.name {
+            UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
+            UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => meta
+                .instance_method_metadata
+                .as_ref()
+                .map(|instance_method| instance_method.reference),
+        });
+    let (implementation_function, arg_expressions) =
+        if let Some(this_ref_qualification) = this_ref_qualification {
+            let this_param = func
+                .params
+                .first()
+                .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
+
+            let this_arg = format_cc_ident(&this_param.identifier.identifier);
+            let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
+                quote! {std::move(*#this_arg).}
+            } else {
+                quote! {#this_arg->}
+            };
+            (
+                quote! { #this_dot #implementation_function},
+                arg_expressions.iter().skip(1).cloned().collect_vec(),
+            )
+        } else {
+            (implementation_function, arg_expressions.clone())
+        };
+
+    let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
+    let return_stmt = if !is_trivial_return {
+        // Explicitly use placement new so that we get guaranteed copy elision in C++17.
+        let out_param = &param_idents[0];
+        quote! {new(#out_param) auto(#return_expr)}
+    } else {
+        match func.return_type.cc_type.name.as_deref() {
+            Some("void") => return_expr,
+            Some("&") => quote! { return & #return_expr },
+            Some("&&") => {
+                // The code below replicates bits of `format_cc_type`, but formats an rvalue
+                // reference (which `format_cc_type` would format as a pointer).
+                // `const_fragment` from `format_cc_type` is ignored - it is not applicable for
+                // references.
+                let ty = &func.return_type.cc_type;
+                if ty.type_args.len() != 1 {
+                    bail!("Invalid reference type (need exactly 1 type argument): {:?}", ty);
+                }
+                let nested_type = format_cc_type(&ty.type_args[0], &ir)?;
+                quote! {
+                    #nested_type && lvalue = #return_expr;
+                    return &lvalue
+                }
+            }
+            _ => quote! { return #return_expr },
+        }
+    };
+
+    Ok(quote! {
+        extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
+            #return_stmt;
+        }
+    })
+}
+
+fn generate_rs_api_impl_includes(
+    db: &mut Database,
+    crubit_support_path: &str,
+) -> Result<TokenStream> {
+    let ir = db.ir();
 
     let mut internal_includes = BTreeSet::new();
     internal_includes.insert(CcInclude::memory()); // ubiquitous.
@@ -4075,19 +4068,6 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
         __NEWLINE__
         __COMMENT__ "Public headers of the C++ library being wrapped."
         #( #ir_includes )* __NEWLINE__
-        __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
-        // Disable Clang thread-safety-analysis warnings that would otherwise
-        // complain about thunks that call mutex locking functions in an unpaired way.
-        __HASH_TOKEN__ pragma clang diagnostic ignored "-Wthread-safety-analysis" __NEWLINE__
-
-        #( #thunks )* __NEWLINE__ __NEWLINE__
-
-        #( #layout_assertions __NEWLINE__ __NEWLINE__ )*
-
-        __NEWLINE__
-        __HASH_TOKEN__ pragma clang diagnostic pop __NEWLINE__
-        // To satisfy http://cs/symbol:devtools.metadata.Presubmit.CheckTerminatingNewline check.
-        __NEWLINE__
     })
 }
 
@@ -8649,11 +8629,14 @@ mod tests {
     /// The default crubit feature set currently results in no bindings at all.
     #[test]
     fn test_default_crubit_features_disabled() -> Result<()> {
-        for item in ["struct NotPresent {};", "void NotPresent();", "using NotPresent = int;"] {
+        for item in
+            ["struct NotPresent {};", "inline void NotPresent() {}", "using NotPresent = int;"]
+        {
             let mut ir = ir_from_cc(item)?;
             ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
-
-            assert_rs_not_matches!(generate_bindings_tokens(ir)?.rs_api, quote! {NotPresent});
+            let bindings = generate_bindings_tokens(ir)?;
+            assert_rs_not_matches!(bindings.rs_api, quote! {NotPresent});
+            assert_cc_not_matches!(bindings.rs_api_impl, quote! {NotPresent});
         }
         Ok(())
     }
