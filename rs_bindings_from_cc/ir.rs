@@ -1019,15 +1019,15 @@ impl IR {
     /// Returns the `Record` defining `func`, or `None` if `func` is not a
     /// member function.
     ///
-    /// If `Func` is a member function, but its `Record` is somehow not in
-    /// `self`, returns an error.
-    pub fn record_for_member_func(&self, func: &Func) -> Result<Option<&Rc<Record>>> {
+    /// Panics if `Func` is a member function, but its `Record` is somehow not
+    /// in `self`.
+    pub fn record_for_member_func(&self, func: &Func) -> Option<&Rc<Record>> {
         if let Some(meta) = func.member_func_metadata.as_ref() {
-            Ok(Some(self.find_decl(meta.record_id).with_context(|| {
+            Some(self.find_decl(meta.record_id).with_context(|| {
                 format!("Failed to retrieve Record for MemberFuncMetadata of {:?}", func)
-            })?))
+            }).unwrap())
         } else {
-            Ok(None)
+            None
         }
     }
 

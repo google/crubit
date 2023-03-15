@@ -348,8 +348,8 @@ struct FunctionId {
 }
 
 /// Returns the name of `func` in C++ syntax.
-fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
-    let record: Option<&str> = ir.record_for_member_func(func)?.map(|r| r.cc_name.as_ref());
+fn cxx_function_name(func: &Func, ir: &IR) -> String {
+    let record: Option<&str> = ir.record_for_member_func(func).map(|r| r.cc_name.as_ref());
 
     let func_name = match &func.name {
         UnqualifiedIdentifier::Identifier(id) => id.identifier.to_string(),
@@ -363,15 +363,15 @@ fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
     };
 
     if let Some(record_name) = record {
-        Ok(format!("{}::{}", record_name, func_name))
+        format!("{}::{}", record_name, func_name)
     } else {
-        Ok(func_name)
+        func_name
     }
 }
 
 fn make_unsupported_fn(func: &Func, ir: &IR, message: &str) -> Result<UnsupportedItem> {
     Ok(UnsupportedItem::new_with_message(
-        cxx_function_name(func, ir)?.as_ref(),
+        cxx_function_name(func, ir).as_ref(),
         message,
         func.source_loc.clone(),
         func.id,
@@ -743,7 +743,7 @@ fn api_func_shape(
     let ir = db.ir();
     let op_meta = &*OPERATOR_METADATA;
 
-    let maybe_record: Option<&Rc<Record>> = ir.record_for_member_func(func)?;
+    let maybe_record: Option<&Rc<Record>> = ir.record_for_member_func(func);
     let has_pointer_params = param_types.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
     let impl_kind: ImplKind;
     let func_name: syn::Ident;

@@ -2990,7 +2990,6 @@ fn test_operator_names() {
         .filter(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
             ir.record_for_member_func(f)
-                .unwrap()
                 .map(|r| r.rs_name.as_ref() == "SomeStruct")
                 .unwrap_or_default()
         })
