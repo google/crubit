@@ -250,16 +250,21 @@ impl ToTokens for ItemId {
     }
 }
 
+/// A Bazel label, e.g. `//foo:bar`.
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct BazelLabel(pub Rc<str>);
 
 impl BazelLabel {
+    /// Returns the target name. E.g. `bar` for `//foo:bar`.
     pub fn target_name(&self) -> &str {
-        match self.0.split_once(':') {
-            Some((_package, target_name)) => target_name,
-            None => panic!("Unsupported label format {:?}", self.0),
+        if let Some((_package, target_name)) = self.0.split_once(':') {
+            return target_name;
         }
+        if let Some((_, last_package_component)) = self.0.rsplit_once('/') {
+            return last_package_component;
+        }
+        &self.0
     }
 }
 
@@ -1102,5 +1107,33 @@ mod tests {
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         assert_eq!(ir.crate_root_path().as_deref(), Some("__cc_template_instantiations_rs_api"));
+    }
+
+    #[test]
+    fn test_bazel_label_target() {
+        let label: BazelLabel = "//foo:bar".into();
+        assert_eq!(label.target_name(), "bar");
+    }
+
+    #[test]
+    fn test_bazel_label_target_dotless() {
+        let label: BazelLabel = "//foo".into();
+        assert_eq!(label.target_name(), "foo");
+    }
+
+    #[test]
+    fn test_bazel_label_dotless_slashless() {
+        let label: BazelLabel = "foo".into();
+        assert_eq!(label.target_name(), "foo");
+    }
+
+    /// These are not labels, but there is an unambiguous interpretation of
+    /// what their target should be that lets us keep going.
+    #[test]
+    fn test_bazel_label_empty_target() {
+        for s in ["foo:", "foo/", ""] {
+            let label: BazelLabel = s.into();
+            assert_eq!(label.target_name(), "", "label={s:?}");
+        }
     }
 }
