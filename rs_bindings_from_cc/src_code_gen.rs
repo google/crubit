@@ -633,8 +633,8 @@ enum ImplFor {
 fn adl_expands_to(record: &Record, rs_type_kind: &RsTypeKind) -> bool {
     match rs_type_kind {
         RsTypeKind::Record { record: nested_record, .. } => ptr::eq(record, &**nested_record),
-        RsTypeKind::Reference { referent, .. } => adl_expands_to(record, &**referent),
-        RsTypeKind::RvalueReference { referent, .. } => adl_expands_to(record, &**referent),
+        RsTypeKind::Reference { referent, .. } => adl_expands_to(record, referent),
+        RsTypeKind::RvalueReference { referent, .. } => adl_expands_to(record, referent),
         _ => false,
     }
 }
@@ -1834,8 +1834,8 @@ fn generate_func_thunk(
     let lifetimes: Vec<_> = unique_lifetimes(param_types).collect();
 
     // The first parameter is the output parameter, if any.
-    let mut param_types = param_types.into_iter();
-    let mut param_idents = param_idents.into_iter();
+    let mut param_types = param_types.iter();
+    let mut param_idents = param_idents.iter();
     let mut out_param = None;
     let mut out_param_ident = None;
     let mut return_type_fragment = return_type.format_as_return_type_fragment(None);
@@ -1861,7 +1861,7 @@ fn generate_func_thunk(
         return_type_fragment = quote! {};
     }
 
-    let thunk_ident = thunk_ident(&func);
+    let thunk_ident = thunk_ident(func);
 
     let generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
     let param_idents = out_param_ident.as_ref().into_iter().chain(param_idents);
@@ -2134,7 +2134,7 @@ fn generate_record(
         .tuple_windows()
         .map(|(prev, cur, next)| {
             let (field, offset, end, desc) = cur.unwrap();
-            let prev_end = prev.as_ref().map(|(_, _, e, _)| *e).flatten().unwrap_or(offset);
+            let prev_end = prev.as_ref().and_then(|(_, _, e, _)| *e).unwrap_or(offset);
             let next_offset = next.map(|(_, o, _, _)| o);
             let end = end.or(next_offset).unwrap_or(record.size * 8);
 
@@ -2668,7 +2668,7 @@ fn generate_namespace(
 
     Ok(GeneratedItem {
         item: namespace_tokens,
-        features: features,
+        features,
         thunks: quote! { #( #thunks )* },
         thunk_impls: quote! { #( #thunk_impls )* },
         assertions: quote! { #( #assertions )* },
@@ -3291,7 +3291,7 @@ impl RsTypeKind {
 
     /// Iterates over `self` and all the nested types (e.g. pointees, generic
     /// type args, etc.) in DFS order.
-    pub fn dfs_iter<'ty>(&'ty self) -> impl Iterator<Item = &'ty RsTypeKind> + '_ {
+    pub fn dfs_iter(&self) -> impl Iterator<Item = &RsTypeKind> + '_ {
         RsTypeKindIter::new(self)
     }
 
@@ -3893,7 +3893,7 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
             let fn_ident = format_cc_ident(&id.identifier);
             match func.member_func_metadata.as_ref() {
                 Some(meta) => {
-                    if let Some(_) = meta.instance_method_metadata {
+                    if meta.instance_method_metadata.is_some() {
                         quote! { #fn_ident }
                     } else {
                         let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
@@ -3999,7 +3999,7 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
                 arg_expressions.iter().skip(1).cloned().collect_vec(),
             )
         } else {
-            (implementation_function, arg_expressions.clone())
+            (implementation_function, arg_expressions)
         };
 
     let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
@@ -7108,7 +7108,7 @@ mod tests {
     fn test_thunk_ident_function() -> Result<()> {
         let ir = ir_from_cc("inline int foo() {}")?;
         let func = retrieve_func(&ir, "foo");
-        assert_eq!(thunk_ident(&func), make_rs_ident("__rust_thunk___Z3foov"));
+        assert_eq!(thunk_ident(func), make_rs_ident("__rust_thunk___Z3foov"));
         Ok(())
     }
 
@@ -8498,7 +8498,7 @@ mod tests {
         let type_args: &[RsTypeKind] = &[];
         let referent = Rc::new(RsTypeKind::Other { name: "T".into(), type_args: type_args.into() });
         let reference = RsTypeKind::Reference {
-            referent: referent,
+            referent,
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),
         };
@@ -8510,7 +8510,7 @@ mod tests {
         let type_args: &[RsTypeKind] = &[];
         let referent = Rc::new(RsTypeKind::Other { name: "T".into(), type_args: type_args.into() });
         let reference = RsTypeKind::RvalueReference {
-            referent: referent,
+            referent,
             mutability: Mutability::Mut,
             lifetime: Lifetime::new("_"),
         };

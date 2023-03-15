@@ -2686,7 +2686,7 @@ fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&
 ) {
     let record =
         ir.records().find(|r| r.rs_name.as_ref() == record_name).expect("Struct not found");
-    let function = ir.functions().find(|f| func_predicate(*f));
+    let function = ir.functions().find(|f| func_predicate(f));
     let meta = function
         .expect("Function not found")
         .member_func_metadata
@@ -3515,21 +3515,19 @@ fn test_namespace_stored_data_in_ir() {
     assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[0].id).unwrap(), 0);
     assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[1].id).unwrap(), 1);
 
-    assert_eq!(
-        ir.is_last_reopened_namespace(
+    assert!(
+        !ir.is_last_reopened_namespace(
             outer_namespaces[0].id,
             outer_namespaces[0].canonical_namespace_id
         )
-        .unwrap(),
-        false
+        .unwrap()
     );
-    assert_eq!(
+    assert!(
         ir.is_last_reopened_namespace(
             outer_namespaces[1].id,
             outer_namespaces[1].canonical_namespace_id
         )
-        .unwrap(),
-        true
+        .unwrap()
     );
 
     let inner_namespaces = ir.namespaces().filter(|ns| ns.name == ir_id("inner")).collect_vec();
@@ -3539,29 +3537,26 @@ fn test_namespace_stored_data_in_ir() {
     assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[1].id).unwrap(), 1);
     assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[2].id).unwrap(), 2);
 
-    assert_eq!(
-        ir.is_last_reopened_namespace(
+    assert!(
+        !ir.is_last_reopened_namespace(
             inner_namespaces[0].id,
             inner_namespaces[0].canonical_namespace_id
         )
-        .unwrap(),
-        false
+        .unwrap()
     );
-    assert_eq!(
-        ir.is_last_reopened_namespace(
+    assert!(
+        !ir.is_last_reopened_namespace(
             inner_namespaces[1].id,
             inner_namespaces[1].canonical_namespace_id
         )
-        .unwrap(),
-        false
+        .unwrap()
     );
-    assert_eq!(
+    assert!(
         ir.is_last_reopened_namespace(
             inner_namespaces[2].id,
             inner_namespaces[2].canonical_namespace_id
         )
-        .unwrap(),
-        true
+        .unwrap()
     );
 }
 

@@ -1021,7 +1021,7 @@ impl IR {
     ///
     /// If `Func` is a member function, but its `Record` is somehow not in
     /// `self`, returns an error.
-    pub fn record_for_member_func<'a>(&self, func: &'a Func) -> Result<Option<&Rc<Record>>> {
+    pub fn record_for_member_func(&self, func: &Func) -> Result<Option<&Rc<Record>>> {
         if let Some(meta) = func.member_func_metadata.as_ref() {
             Ok(Some(self.find_decl(meta.record_id).with_context(|| {
                 format!("Failed to retrieve Record for MemberFuncMetadata of {:?}", func)
