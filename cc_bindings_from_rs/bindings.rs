@@ -1102,13 +1102,16 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
 
-    struct Field {
-        cc_name: TokenStream,
+    struct FieldTypeInfo {
+        size: u64,
         cc_type: CcSnippet,
+    }
+    struct Field {
+        type_info: Result<FieldTypeInfo>,
+        cc_name: TokenStream,
         rs_name: TokenStream,
         is_public: bool,
         index: usize,
-        size: u64,
         offset: u64,
         offset_of_next_field: u64,
     }
@@ -1117,31 +1120,38 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
         .layout_of(param_env.and(ty))
         .expect("Layout should be already verified by `format_adt_core`")
         .layout;
-    let fields: Result<Vec<Field>> = if ty.is_enum() || ty.is_union() {
+    let fields: Vec<Field> = if ty.is_enum() || ty.is_union() {
         // Note that `#[repr(Rust)]` unions don't guarantee that all their fields
         // have offset 0.
-        Err(anyhow!(
-            "No support for bindings of individual fields of \
-                     `union` (b/272801632) or `enum`"
-        ))
+        vec![Field {
+            type_info: Err(anyhow!(
+                "No support for bindings of individual fields of \
+                                    `union` (b/272801632) or `enum`"
+            )),
+            cc_name: quote! { __opaque_blob_of_bytes },
+            rs_name: quote! { __opaque_blob_of_bytes },
+            is_public: false,
+            index: 0,
+            offset: 0,
+            offset_of_next_field: core.size_in_bytes,
+        }]
     } else {
-        let all_fields_in_source_order = ty
+        let mut fields = ty
             .ty_adt_def()
             .expect("`core.def_id` needs to identify an ADT")
             .all_fields()
-            .sorted_by_key(|f| tcx.def_span(f.did));
-        all_fields_in_source_order
+            .sorted_by_key(|f| tcx.def_span(f.did))
             .enumerate()
-            .map(|(index, field_def)| -> Result<Field> {
-                let name = field_def.ident(tcx);
-                let cc_name = format_cc_ident(name.as_str())
-                    .unwrap_or_else(|_err| format_ident!("__field{index}").into_token_stream());
-                // TODO(lukasza): Upon errors we should replace *individual* fields with an
-                // opaque blob of bytes (rather than failing to format *all*
-                // fields and replacing all of them with a blob of bytes).
+            .map(|(index, field_def)| {
                 let field_ty = field_def.ty(tcx, substs_ref);
-                let size = get_layout(tcx, field_ty)?.size().bytes();
-                let cc_type = format_ty_for_cc(input, field_ty)?;
+                let size = get_layout(tcx, field_ty).map(|layout| layout.size().bytes());
+                let type_info = size.and_then(|size| {
+                    Ok(FieldTypeInfo { size, cc_type: format_ty_for_cc(input, field_ty)? })
+                });
+                let name = field_def.ident(tcx);
+                let cc_name = format_cc_ident(name.as_str()).unwrap_or_else(|_err|
+                    format_ident!("__field{index}").into_token_stream()
+                );
                 let rs_name = {
                     let name_starts_with_digit = name
                         .as_str()
@@ -1164,72 +1174,63 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
                 let offset = 0;
                 let offset_of_next_field = 0;
 
-                Ok(Field {
+                Field {
+                    type_info,
                     cc_name,
-                    cc_type,
                     rs_name,
                     is_public,
                     index,
-                    size,
                     offset,
                     offset_of_next_field,
-                })
-            })
-            .collect::<Result<Vec<_>>>()
-            .map(|mut fields| {
-                match layout.fields() {
-                    FieldsShape::Arbitrary { offsets, .. } => {
-                        for (index, offset) in offsets.iter().enumerate() {
-                            // Documentation of `FieldsShape::Arbitrary says that the offsets are
-                            // "ordered to match the source definition order".  This matches
-                            // `all_fields_in_source_order` above (and the current, temporary order
-                            // of the `fields` vector).
-                            fields[index].offset = offset.bytes();
-                        }
-                        // Deterministic outcome of `fields.sort_by_key` depends on each field
-                        // having a unique offset (this assumption might be broken in the future by
-                        // ZSTs).
-                        assert!(fields.iter().map(|f| f.offset).all_unique());
-                        fields.sort_by_key(|field| field.offset);
-                        let next_offsets = fields
-                            .iter()
-                            .map(|Field { offset, .. }| *offset)
-                            .skip(1)
-                            .chain(once(core.size_in_bytes))
-                            .collect_vec();
-                        for (field, next_offset) in fields.iter_mut().zip(next_offsets) {
-                            field.offset_of_next_field = next_offset;
-                        }
-                        fields
-                    }
-                    unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
                 }
             })
+            .collect_vec();
+        match layout.fields() {
+            FieldsShape::Arbitrary { offsets, .. } => {
+                for (index, offset) in offsets.iter().enumerate() {
+                    // Documentation of `FieldsShape::Arbitrary says that the offsets are "ordered
+                    // to match the source definition order".  We can coorelate them with elements
+                    // of the `fields` vector because we've explicitly `sorted_by_key` using
+                    // `def_span`.
+                    fields[index].offset = offset.bytes();
+                }
+                // Deterministic outcome of `fields.sort_by_key` depends on each field
+                // having a unique offset (this assumption might be broken in the future by
+                // ZSTs).
+                assert!(fields.iter().map(|f| f.offset).all_unique());
+                fields.sort_by_key(|field| field.offset);
+                let next_offsets = fields
+                    .iter()
+                    .map(|Field { offset, .. }| *offset)
+                    .skip(1)
+                    .chain(once(core.size_in_bytes))
+                    .collect_vec();
+                for (field, next_offset) in fields.iter_mut().zip(next_offsets) {
+                    field.offset_of_next_field = next_offset;
+                }
+                fields
+            }
+            unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
+        }
     };
     let adt_cc_name = &core.cc_name;
     let adt_rs_name = &core.rs_name;
-    let cc_field_assertions = match fields.as_ref() {
-        Err(_err) => quote! {},
-        Ok(fields) => fields
-            .iter()
-            .map(|Field { cc_name, offset, .. }| {
-                let offset = Literal::u64_unsuffixed(*offset);
-                quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
-            })
-            .collect(),
-    };
-    let rs_field_assertions = match fields.as_ref() {
-        Err(_err) => quote! {},
-        Ok(fields) => fields
-            .iter()
-            .filter(|Field { is_public, .. }| *is_public)
-            .map(|Field { rs_name, offset, .. }| {
-                let expected_offset = Literal::u64_unsuffixed(*offset);
-                let actual_offset = quote! { memoffset::offset_of!(#adt_rs_name, #rs_name) };
-                quote! { const _: () = assert!(#actual_offset == #expected_offset); }
-            })
-            .collect(),
-    };
+    let cc_field_assertions: TokenStream = fields
+        .iter()
+        .map(|Field { cc_name, offset, .. }| {
+            let offset = Literal::u64_unsuffixed(*offset);
+            quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
+        })
+        .collect();
+    let rs_field_assertions: TokenStream = fields
+        .iter()
+        .filter(|Field { is_public, .. }| *is_public)
+        .map(|Field { rs_name, offset, .. }| {
+            let expected_offset = Literal::u64_unsuffixed(*offset);
+            let actual_offset = quote! { memoffset::offset_of!(#adt_rs_name, #rs_name) };
+            quote! { const _: () = assert!(#actual_offset == #expected_offset); }
+        })
+        .collect();
 
     let (impl_item_main_apis, impl_item_other_snippets) = tcx
         .inherent_impls(core.def_id)
@@ -1272,31 +1273,36 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
         let core = &core.core;
 
         let mut prereqs = CcPrerequisites::default();
-        let fields = match fields {
-            Err(err) => {
-                let msg = format!("Fields have been replaced with a blob of bytes: {err:#}");
-                quote! {
-                    __COMMENT__ #msg
-                    unsigned char __opaque_blob_of_bytes[#size];
+        let fields: TokenStream = fields
+            .into_iter()
+            .map(|field| {
+                let cc_name = field.cc_name;
+                match field.type_info {
+                    Err(err) => {
+                        let size =
+                            Literal::u64_unsuffixed(field.offset_of_next_field - field.offset);
+                        let msg =
+                            format!("Field type has been replaced with a blob of bytes: {err:#}");
+                        quote! {
+                            __COMMENT__ #msg
+                            unsigned char #cc_name[#size];
+                        }
+                    }
+                    Ok(FieldTypeInfo { cc_type, size }) => {
+                        let padding = field.offset_of_next_field - field.offset - size;
+                        let padding = if padding == 0 {
+                            quote! {}
+                        } else {
+                            let padding = Literal::u64_unsuffixed(padding);
+                            let ident = format_ident!("__padding{}", field.index);
+                            quote! { unsigned char #ident[#padding]; }
+                        };
+                        let cc_type = cc_type.into_tokens(&mut prereqs);
+                        quote! { #cc_type #cc_name; #padding }
+                    }
                 }
-            }
-            Ok(fields) => fields
-                .into_iter()
-                .map(|field| {
-                    let padding = field.offset_of_next_field - field.offset - field.size;
-                    let padding = if padding == 0 {
-                        quote! {}
-                    } else {
-                        let padding = Literal::u64_unsuffixed(padding);
-                        let ident = format_ident!("__padding{}", field.index);
-                        quote! { unsigned char #ident[#padding]; }
-                    };
-                    let cc_name = field.cc_name;
-                    let cc_type = field.cc_type.into_tokens(&mut prereqs);
-                    quote! { #cc_type #cc_name; #padding }
-                })
-                .collect(),
-        };
+            })
+            .collect();
         let impl_item_decls = if impl_item_main_apis.is_empty() {
             quote! {}
         } else {
@@ -3806,19 +3812,19 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_item_unsupported_struct_field_type() {
+    fn test_format_item_struct_with_unsupported_field_type() {
         let test_src = r#"
                 pub struct SomeStruct {
-                    pub some_field: Option<[i32; 3]>,
+                    pub successful_field: i32,
+                    pub unsupported_field: Option<[i32; 3]>,
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap();
             let main_api = get_main_api_snippet(&result);
             let impl_details = get_impl_details_snippet(&result);
-            let broken_field_msg = "Fields have been replaced with a blob of bytes: \
+            let broken_field_msg = "Field type has been replaced with a blob of bytes: \
                                     Generic types are not supported yet (b/259749095)";
-            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -3827,8 +3833,9 @@ pub mod tests {
                         ...
                         private:
                             __COMMENT__ #broken_field_msg
-                            unsigned char __opaque_blob_of_bytes[16];
-                        ...
+                            unsigned char unsupported_field[16];
+                            std::int32_t successful_field;
+                            inline static void __crubit_field_offset_assertions();
                     };
                     ...
                 }
@@ -3836,15 +3843,23 @@ pub mod tests {
             assert_cc_matches!(
                 impl_details.cc.tokens,
                 quote! {
-                    static_assert(sizeof(SomeStruct) == 16, ...);
+                    static_assert(sizeof(SomeStruct) == 20, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    inline void SomeStruct::__crubit_field_offset_assertions() {
+                      static_assert(0 == offsetof(SomeStruct, unsupported_field));
+                      static_assert(16 == offsetof(SomeStruct, successful_field));
+                    }
                 }
             );
             assert_rs_matches!(
                 impl_details.rs,
                 quote! {
-                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 16);
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 20);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct,
+                                                                 unsupported_field) == 0);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct,
+                                                                 successful_field) == 16);
                 }
             );
         });
@@ -3944,7 +3959,7 @@ pub mod tests {
             let result = result.unwrap();
             let main_api = get_main_api_snippet(&result);
             let impl_details = get_impl_details_snippet(&result);
-            let no_fields_msg = "Fields have been replaced with a blob of bytes: \
+            let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
                                  `union` (b/272801632) or `enum`";
             assert!(main_api.prereqs.is_empty());
@@ -3973,6 +3988,7 @@ pub mod tests {
                         private:
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[1];
+                            inline static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -4010,7 +4026,7 @@ pub mod tests {
             let result = result.unwrap();
             let main_api = get_main_api_snippet(&result);
             let impl_details = get_impl_details_snippet(&result);
-            let no_fields_msg = "Fields have been replaced with a blob of bytes: \
+            let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
                                  `union` (b/272801632) or `enum`";
             assert!(main_api.prereqs.is_empty());
@@ -4039,6 +4055,7 @@ pub mod tests {
                         private:
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[12];
+                            inline static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -4089,7 +4106,7 @@ pub mod tests {
             let result = result.unwrap();
             let main_api = get_main_api_snippet(&result);
             let impl_details = get_impl_details_snippet(&result);
-            let no_fields_msg = "Fields have been replaced with a blob of bytes: \
+            let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
                                  `union` (b/272801632) or `enum`";
             assert!(main_api.prereqs.is_empty());
@@ -4118,6 +4135,7 @@ pub mod tests {
                         private:
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[8];
+                            inline static void __crubit_field_offset_assertions();
                     };
                 }
             );
