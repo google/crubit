@@ -17,7 +17,7 @@ use rustc_middle::ty::DefIdTree;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::Symbol;
-use rustc_target::abi::{Abi, FieldsShape, Integer, Primitive, Scalar};
+use rustc_target::abi::{Abi, FieldsShape, Integer, Layout, Primitive, Scalar};
 use rustc_target::spec::PanicStrategy;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -942,6 +942,19 @@ fn is_directly_public(tcx: TyCtxt, def_id: DefId) -> bool {
     }
 }
 
+fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
+    // TODO(b/259749095): Support non-empty set of generic parameters.
+    let param_env = ty::ParamEnv::empty();
+
+    tcx.layout_of(param_env.and(ty)).map(|ty_and_layout| ty_and_layout.layout).map_err(
+        |layout_err| {
+            // Have to use `.map_err`, because `LayoutError` doesn't satisfy the
+            // `anyhow::context::ext::StdError` trait bound.
+            anyhow!("Error computing the layout: {layout_err}")
+        },
+    )
+}
+
 /// Formats the core of an algebraic data type (an ADT - a struct, an enum, or a
 /// union) represented by `def_id`.
 ///
@@ -980,21 +993,12 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
         ty::AdtKind::Union => quote! { union },
     };
 
+    let item_name = tcx.item_name(def_id);
     let rs_name = format_ty_for_rs(tcx, ty)?;
-    let cc_name = {
-        let item_name = tcx.item_name(def_id);
-        format_cc_ident(item_name.as_str()).context("Error formatting item name")?
-    };
+    let cc_name = format_cc_ident(item_name.as_str()).context("Error formatting item name")?;
 
-    let layout = tcx
-        .layout_of(param_env.and(ty))
-        // Have to use `.map_err` instead of `.with_context`, because `LayoutError` doesn't
-        // satisfy the `anyhow::context::ext::StdError` trait bound.
-        .map_err(|layout_err| {
-            let item_name = tcx.item_name(def_id);
-            anyhow!("Error computing the layout of #{item_name}: {layout_err}")
-        })?
-        .layout;
+    let layout = get_layout(tcx, ty)
+        .with_context(|| format!("Error computing the layout of #{item_name}"))?;
     let alignment_in_bytes = {
         // Only the ABI-mandated alignment is considered (i.e. `AbiAndPrefAlign::pref`
         // is ignored), because 1) Rust's `std::mem::align_of` returns the
@@ -1103,7 +1107,10 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
         cc_type: CcSnippet,
         rs_name: TokenStream,
         is_public: bool,
+        index: usize,
+        size: u64,
         offset: u64,
+        offset_of_next_field: u64,
     }
     let ty = tcx.type_of(core.def_id).subst_identity();
     let layout = tcx
@@ -1129,10 +1136,12 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
                 let name = field_def.ident(tcx);
                 let cc_name = format_cc_ident(name.as_str())
                     .unwrap_or_else(|_err| format_ident!("__field{index}").into_token_stream());
-                // TODO(lukasza): Upon `format_ty_for_cc` errors we should replace *individual*
-                // fields with an opaque blob of bytes (rather than failing to format *all*
+                // TODO(lukasza): Upon errors we should replace *individual* fields with an
+                // opaque blob of bytes (rather than failing to format *all*
                 // fields and replacing all of them with a blob of bytes).
-                let cc_type = format_ty_for_cc(input, field_def.ty(tcx, substs_ref))?;
+                let field_ty = field_def.ty(tcx, substs_ref);
+                let size = get_layout(tcx, field_ty)?.size().bytes();
+                let cc_type = format_ty_for_cc(input, field_ty)?;
                 let rs_name = {
                     let name_starts_with_digit = name
                         .as_str()
@@ -1149,8 +1158,22 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
                     }
                 };
                 let is_public = field_def.vis == ty::Visibility::Public;
-                let offset = 0; // Offsets will be fixed by FieldsShape::Arbitrary branch below..
-                Ok(Field { cc_name, cc_type, rs_name, is_public, offset })
+
+                // `offset` and `offset_of_next_field` will be fixed by FieldsShape::Arbitrary
+                // branch below.
+                let offset = 0;
+                let offset_of_next_field = 0;
+
+                Ok(Field {
+                    cc_name,
+                    cc_type,
+                    rs_name,
+                    is_public,
+                    index,
+                    size,
+                    offset,
+                    offset_of_next_field,
+                })
             })
             .collect::<Result<Vec<_>>>()
             .map(|mut fields| {
@@ -1168,6 +1191,15 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
                         // ZSTs).
                         assert!(fields.iter().map(|f| f.offset).all_unique());
                         fields.sort_by_key(|field| field.offset);
+                        let next_offsets = fields
+                            .iter()
+                            .map(|Field { offset, .. }| *offset)
+                            .skip(1)
+                            .chain(once(core.size_in_bytes))
+                            .collect_vec();
+                        for (field, next_offset) in fields.iter_mut().zip(next_offsets) {
+                            field.offset_of_next_field = next_offset;
+                        }
                         fields
                     }
                     unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
@@ -1250,14 +1282,18 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
             }
             Ok(fields) => fields
                 .into_iter()
-                .map(|Field { cc_name, cc_type, .. }| {
-                    // TODO(b/271176095): Some layouts may require inserting an explicit padding
-                    // before fields.  Incorrectly preserved layout should either be
-                    // caught by 1) compile-time struct-size assertions in the
-                    // generated code or 2) have no observable effect (since all the
-                    // fields are currently private - see b/271002281).
-                    let cc_type = cc_type.into_tokens(&mut prereqs);
-                    quote! { #cc_type #cc_name; }
+                .map(|field| {
+                    let padding = field.offset_of_next_field - field.offset - field.size;
+                    let padding = if padding == 0 {
+                        quote! {}
+                    } else {
+                        let padding = Literal::u64_unsuffixed(padding);
+                        let ident = format_ident!("__padding{}", field.index);
+                        quote! { unsigned char #ident[#padding]; }
+                    };
+                    let cc_name = field.cc_name;
+                    let cc_type = field.cc_type.into_tokens(&mut prereqs);
+                    quote! { #cc_type #cc_name; #padding }
                 })
                 .collect(),
         };
@@ -3426,7 +3462,6 @@ pub mod tests {
                     struct alignas(1) __attribute__((packed)) SomeStruct final {
                         ...
                         std::uint16_t field1;
-                        ...
                         std::uint32_t field2;
                         inline static void __crubit_field_offset_assertions();
                     };
@@ -3452,6 +3487,57 @@ pub mod tests {
                                            == 0);
                     const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, field2)
                                            == 2);
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_struct_with_explicit_padding_in_generated_code() {
+        let test_src = r#"
+                pub struct SomeStruct {
+                    pub f1: u8,
+                    pub f2: u32,
+                }
+                const _: () = assert!(::std::mem::size_of::<SomeStruct>() == 8);
+                const _: () = assert!(::std::mem::align_of::<SomeStruct>() == 4);
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct alignas(4) SomeStruct final {
+                        ...
+                        std::uint32_t f2;
+                        std::uint8_t f1;
+                        unsigned char __padding0[3];
+                        inline static void __crubit_field_offset_assertions();
+                    };
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
+                    static_assert(sizeof(SomeStruct) == 8, ...);
+                    static_assert(alignof(SomeStruct) == 4, ...);
+                    inline void SomeStruct::__crubit_field_offset_assertions() {
+                      static_assert(0 == offsetof(SomeStruct, f2));
+                      static_assert(4 == offsetof(SomeStruct, f1));
+                    }
+                }
+            );
+            assert_rs_matches!(
+                impl_details.rs,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, f2) == 0);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, f1) == 4);
                 }
             );
         });
