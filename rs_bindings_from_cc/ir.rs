@@ -665,7 +665,7 @@ impl Item {
     /// Returns the target that this should generate source code in.
     pub fn owning_target(&self) -> Option<&BazelLabel> {
         match self {
-            Item::Func(..) => None,
+            Item::Func(func) => Some(&func.owning_target),
             Item::IncompleteRecord(record) => Some(&record.owning_target),
             Item::Record(record) => Some(&record.owning_target),
             Item::Enum(e) => Some(&e.owning_target),
