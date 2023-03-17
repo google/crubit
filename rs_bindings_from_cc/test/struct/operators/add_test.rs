@@ -64,22 +64,22 @@ mod tests {
 
     #[test]
     fn test_add_free_by_const_ref() {
-        let s1 = UnpinStruct { i: 11 };
-        let s2 = UnpinStruct { i: 22 };
+        let s1 = UnpinStructByConstRef { i: 11 };
+        let s2 = UnpinStructByConstRef { i: 22 };
         assert_eq!(33, (&s1 + &s2).i);
     }
 
     #[test]
-    fn test_add_free_by_ref() {
-        let mut s1 = UnpinStruct { i: 11 };
-        let mut s2 = UnpinStruct { i: 22 };
+    fn test_add_free_by_mut_ref() {
+        let mut s1 = UnpinStructByMutRef { i: 11 };
+        let mut s2 = UnpinStructByMutRef { i: 22 };
         assert_eq!(33, (&mut s1 + &mut s2).i);
     }
 
     #[test]
     fn test_add_free_by_value() {
-        let s1 = UnpinStruct { i: 11 };
-        let s2 = UnpinStruct { i: 22 };
+        let s1 = UnpinStructByValue { i: 11 };
+        let s2 = UnpinStructByValue { i: 22 };
         assert_eq!(33, (s1 + s2).i);
     }
 

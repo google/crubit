@@ -4,16 +4,18 @@
 
 #include "rs_bindings_from_cc/test/struct/operators/add.h"
 
-UnpinStruct operator+(const UnpinStruct& lhs, const UnpinStruct& rhs) {
-  return UnpinStruct{lhs.i + rhs.i};
+UnpinStructByConstRef operator+(const UnpinStructByConstRef& lhs,
+                                const UnpinStructByConstRef& rhs) {
+  return UnpinStructByConstRef{lhs.i + rhs.i};
 }
 
-UnpinStruct operator+(UnpinStruct& lhs, UnpinStruct& rhs) {
-  return UnpinStruct{lhs.i + rhs.i};
+UnpinStructByMutRef operator+(UnpinStructByMutRef& lhs,
+                              UnpinStructByMutRef& rhs) {
+  return UnpinStructByMutRef{lhs.i + rhs.i};
 }
 
-UnpinStruct operator+(UnpinStruct lhs, UnpinStruct rhs) {
-  return UnpinStruct{lhs.i + rhs.i};
+UnpinStructByValue operator+(UnpinStructByValue lhs, UnpinStructByValue rhs) {
+  return UnpinStructByValue{lhs.i + rhs.i};
 }
 
 char operator+(AddableOverloaded lhs, std::int16_t rhs) {

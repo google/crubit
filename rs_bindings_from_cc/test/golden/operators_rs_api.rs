@@ -204,72 +204,229 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFr
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct AddableFree {
+pub struct AddableFreeByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("AddableFree"), crate::AddableFree);
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddableFreeByConstRef"),
+    crate::AddableFreeByConstRef
+);
 
-impl Default for AddableFree {
+impl Default for AddableFreeByConstRef {
     #[inline(always)]
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11AddableFreeC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN21AddableFreeByConstRefC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFree {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByConstRef {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11AddableFreeC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN21AddableFreeByConstRefC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
 }
 
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFree {
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFreeByConstRef {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
         unsafe {
-            crate::detail::__rust_thunk___ZN11AddableFreeaSERKS_(self, __param_0);
+            crate::detail::__rust_thunk___ZN21AddableFreeByConstRefaSERKS_(self, __param_0);
         }
     }
 }
 
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFree {
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeByConstRef {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
         unsafe {
-            crate::detail::__rust_thunk___ZN11AddableFreeaSEOS_(self, __param_0);
+            crate::detail::__rust_thunk___ZN21AddableFreeByConstRefaSEOS_(self, __param_0);
         }
     }
 }
 
-impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFree> for &'a crate::AddableFree {
-    type Output = crate::AddableFree;
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct AddableFreeByMutRef {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddableFreeByMutRef"),
+    crate::AddableFreeByMutRef
+);
+
+impl Default for AddableFreeByMutRef {
     #[inline(always)]
-    fn add(self, rhs: &'b crate::AddableFree) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZplRK11AddableFreeS1_(self, rhs) }
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN19AddableFreeByMutRefC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
     }
 }
 
-impl<'a, 'b> ::core::ops::Add<&'b mut crate::AddableFree> for &'a mut crate::AddableFree {
-    type Output = crate::AddableFree;
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByMutRef {
     #[inline(always)]
-    fn add(self, rhs: &'b mut crate::AddableFree) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZplR11AddableFreeS0_(self, rhs) }
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN19AddableFreeByMutRefC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
     }
 }
 
-impl ::core::ops::Add<Self> for AddableFree {
-    type Output = crate::AddableFree;
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFreeByMutRef {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN19AddableFreeByMutRefaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeByMutRef {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN19AddableFreeByMutRefaSEOS_(self, __param_0);
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct AddableFreeByValue {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddableFreeByValue"),
+    crate::AddableFreeByValue
+);
+
+impl Default for AddableFreeByValue {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddableFreeByValueC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByValue {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddableFreeByValueC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFreeByValue {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddableFreeByValueaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeByValue {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddableFreeByValueaSEOS_(self, __param_0);
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct AddableFreeByRValueRef {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddableFreeByRValueRef"),
+    crate::AddableFreeByRValueRef
+);
+
+impl Default for AddableFreeByRValueRef {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN22AddableFreeByRValueRefC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByRValueRef {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN22AddableFreeByRValueRefC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFreeByRValueRef {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN22AddableFreeByRValueRefaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeByRValueRef {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN22AddableFreeByRValueRefaSEOS_(self, __param_0);
+        }
+    }
+}
+
+impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFreeByConstRef>
+    for &'a crate::AddableFreeByConstRef
+{
+    type Output = crate::AddableFreeByConstRef;
+    #[inline(always)]
+    fn add(self, rhs: &'b crate::AddableFreeByConstRef) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZplRK21AddableFreeByConstRefS1_(self, rhs) }
+    }
+}
+
+impl<'a, 'b> ::core::ops::Add<&'b mut crate::AddableFreeByMutRef>
+    for &'a mut crate::AddableFreeByMutRef
+{
+    type Output = crate::AddableFreeByMutRef;
+    #[inline(always)]
+    fn add(self, rhs: &'b mut crate::AddableFreeByMutRef) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZplR19AddableFreeByMutRefS0_(self, rhs) }
+    }
+}
+
+impl ::core::ops::Add<Self> for AddableFreeByValue {
+    type Output = crate::AddableFreeByValue;
     #[inline(always)]
     fn add(self, rhs: Self) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___Zpl11AddableFreeS_(self, rhs) }
+        unsafe { crate::detail::__rust_thunk___Zpl18AddableFreeByValueS_(self, rhs) }
     }
 }
 
@@ -1314,36 +1471,81 @@ mod detail {
             lhs: &'a crate::AddableFriend,
             rhs: &'b crate::AddableFriend,
         ) -> crate::AddableFriend;
-        pub(crate) fn __rust_thunk___ZN11AddableFreeC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFree>,
+        pub(crate) fn __rust_thunk___ZN21AddableFreeByConstRefC1Ev<'a>(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByConstRef>,
         );
-        pub(crate) fn __rust_thunk___ZN11AddableFreeC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFree>,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFree>,
+        pub(crate) fn __rust_thunk___ZN21AddableFreeByConstRefC1EOS_<'a, 'b>(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByConstRef>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByConstRef>,
         );
-        pub(crate) fn __rust_thunk___ZN11AddableFreeaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddableFree,
-            __param_0: &'b crate::AddableFree,
-        ) -> &'a mut crate::AddableFree;
-        pub(crate) fn __rust_thunk___ZN11AddableFreeaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddableFree,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFree>,
-        ) -> &'a mut crate::AddableFree;
-        #[link_name = "_ZplRK11AddableFreeS1_"]
-        pub(crate) fn __rust_thunk___ZplRK11AddableFreeS1_<'a, 'b>(
-            lhs: &'a crate::AddableFree,
-            rhs: &'b crate::AddableFree,
-        ) -> crate::AddableFree;
-        #[link_name = "_ZplR11AddableFreeS0_"]
-        pub(crate) fn __rust_thunk___ZplR11AddableFreeS0_<'a, 'b>(
-            lhs: &'a mut crate::AddableFree,
-            rhs: &'b mut crate::AddableFree,
-        ) -> crate::AddableFree;
-        #[link_name = "_Zpl11AddableFreeS_"]
-        pub(crate) fn __rust_thunk___Zpl11AddableFreeS_(
-            lhs: crate::AddableFree,
-            rhs: crate::AddableFree,
-        ) -> crate::AddableFree;
+        pub(crate) fn __rust_thunk___ZN21AddableFreeByConstRefaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddableFreeByConstRef,
+            __param_0: &'b crate::AddableFreeByConstRef,
+        ) -> &'a mut crate::AddableFreeByConstRef;
+        pub(crate) fn __rust_thunk___ZN21AddableFreeByConstRefaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddableFreeByConstRef,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByConstRef>,
+        ) -> &'a mut crate::AddableFreeByConstRef;
+        pub(crate) fn __rust_thunk___ZN19AddableFreeByMutRefC1Ev<'a>(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByMutRef>,
+        );
+        pub(crate) fn __rust_thunk___ZN19AddableFreeByMutRefC1EOS_<'a, 'b>(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByMutRef>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByMutRef>,
+        );
+        pub(crate) fn __rust_thunk___ZN19AddableFreeByMutRefaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddableFreeByMutRef,
+            __param_0: &'b crate::AddableFreeByMutRef,
+        ) -> &'a mut crate::AddableFreeByMutRef;
+        pub(crate) fn __rust_thunk___ZN19AddableFreeByMutRefaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddableFreeByMutRef,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByMutRef>,
+        ) -> &'a mut crate::AddableFreeByMutRef;
+        pub(crate) fn __rust_thunk___ZN18AddableFreeByValueC1Ev<'a>(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByValue>,
+        );
+        pub(crate) fn __rust_thunk___ZN18AddableFreeByValueC1EOS_<'a, 'b>(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByValue>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByValue>,
+        );
+        pub(crate) fn __rust_thunk___ZN18AddableFreeByValueaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddableFreeByValue,
+            __param_0: &'b crate::AddableFreeByValue,
+        ) -> &'a mut crate::AddableFreeByValue;
+        pub(crate) fn __rust_thunk___ZN18AddableFreeByValueaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddableFreeByValue,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByValue>,
+        ) -> &'a mut crate::AddableFreeByValue;
+        pub(crate) fn __rust_thunk___ZN22AddableFreeByRValueRefC1Ev<'a>(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByRValueRef>,
+        );
+        pub(crate) fn __rust_thunk___ZN22AddableFreeByRValueRefC1EOS_<'a, 'b>(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByRValueRef>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByRValueRef>,
+        );
+        pub(crate) fn __rust_thunk___ZN22AddableFreeByRValueRefaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddableFreeByRValueRef,
+            __param_0: &'b crate::AddableFreeByRValueRef,
+        ) -> &'a mut crate::AddableFreeByRValueRef;
+        pub(crate) fn __rust_thunk___ZN22AddableFreeByRValueRefaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddableFreeByRValueRef,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByRValueRef>,
+        ) -> &'a mut crate::AddableFreeByRValueRef;
+        #[link_name = "_ZplRK21AddableFreeByConstRefS1_"]
+        pub(crate) fn __rust_thunk___ZplRK21AddableFreeByConstRefS1_<'a, 'b>(
+            lhs: &'a crate::AddableFreeByConstRef,
+            rhs: &'b crate::AddableFreeByConstRef,
+        ) -> crate::AddableFreeByConstRef;
+        #[link_name = "_ZplR19AddableFreeByMutRefS0_"]
+        pub(crate) fn __rust_thunk___ZplR19AddableFreeByMutRefS0_<'a, 'b>(
+            lhs: &'a mut crate::AddableFreeByMutRef,
+            rhs: &'b mut crate::AddableFreeByMutRef,
+        ) -> crate::AddableFreeByMutRef;
+        #[link_name = "_Zpl18AddableFreeByValueS_"]
+        pub(crate) fn __rust_thunk___Zpl18AddableFreeByValueS_(
+            lhs: crate::AddableFreeByValue,
+            rhs: crate::AddableFreeByValue,
+        ) -> crate::AddableFreeByValue;
         pub(crate) fn __rust_thunk___ZN10OverloadedC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Overloaded>,
         );
@@ -1730,16 +1932,52 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::AddableFriend, field_) == 0);
 
-const _: () = assert!(::core::mem::size_of::<crate::AddableFree>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddableFree>() == 1);
+const _: () = assert!(::core::mem::size_of::<crate::AddableFreeByConstRef>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddableFreeByConstRef>() == 1);
 const _: () = {
-    static_assertions::assert_impl_all!(crate::AddableFree: Clone);
+    static_assertions::assert_impl_all!(crate::AddableFreeByConstRef: Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::AddableFree: Copy);
+    static_assertions::assert_impl_all!(crate::AddableFreeByConstRef: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::AddableFree: Drop);
+    static_assertions::assert_not_impl_any!(crate::AddableFreeByConstRef: Drop);
+};
+
+const _: () = assert!(::core::mem::size_of::<crate::AddableFreeByMutRef>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddableFreeByMutRef>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddableFreeByMutRef: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddableFreeByMutRef: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddableFreeByMutRef: Drop);
+};
+
+const _: () = assert!(::core::mem::size_of::<crate::AddableFreeByValue>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddableFreeByValue>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddableFreeByValue: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddableFreeByValue: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddableFreeByValue: Drop);
+};
+
+const _: () = assert!(::core::mem::size_of::<crate::AddableFreeByRValueRef>() == 1);
+const _: () = assert!(::core::mem::align_of::<crate::AddableFreeByRValueRef>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddableFreeByRValueRef: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddableFreeByRValueRef: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddableFreeByRValueRef: Drop);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::Overloaded>() == 1);

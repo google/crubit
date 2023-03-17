@@ -95,25 +95,111 @@ extern "C" class AddableFriend* __rust_thunk___ZN13AddableFriendaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(class AddableFree) == 1);
-static_assert(alignof(class AddableFree) == 1);
+static_assert(sizeof(class AddableFreeByConstRef) == 1);
+static_assert(alignof(class AddableFreeByConstRef) == 1);
 
-extern "C" void __rust_thunk___ZN11AddableFreeC1Ev(class AddableFree* __this) {
+extern "C" void __rust_thunk___ZN21AddableFreeByConstRefC1Ev(
+    class AddableFreeByConstRef* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN11AddableFreeC1EOS_(
-    class AddableFree* __this, class AddableFree* __param_0) {
+extern "C" void __rust_thunk___ZN21AddableFreeByConstRefC1EOS_(
+    class AddableFreeByConstRef* __this,
+    class AddableFreeByConstRef* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
 
-extern "C" class AddableFree* __rust_thunk___ZN11AddableFreeaSERKS_(
-    class AddableFree* __this, const class AddableFree* __param_0) {
+extern "C" class AddableFreeByConstRef*
+__rust_thunk___ZN21AddableFreeByConstRefaSERKS_(
+    class AddableFreeByConstRef* __this,
+    const class AddableFreeByConstRef* __param_0) {
   return &__this->operator=(*__param_0);
 }
 
-extern "C" class AddableFree* __rust_thunk___ZN11AddableFreeaSEOS_(
-    class AddableFree* __this, class AddableFree* __param_0) {
+extern "C" class AddableFreeByConstRef*
+__rust_thunk___ZN21AddableFreeByConstRefaSEOS_(
+    class AddableFreeByConstRef* __this,
+    class AddableFreeByConstRef* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
+static_assert(sizeof(class AddableFreeByMutRef) == 1);
+static_assert(alignof(class AddableFreeByMutRef) == 1);
+
+extern "C" void __rust_thunk___ZN19AddableFreeByMutRefC1Ev(
+    class AddableFreeByMutRef* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN19AddableFreeByMutRefC1EOS_(
+    class AddableFreeByMutRef* __this, class AddableFreeByMutRef* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" class AddableFreeByMutRef*
+__rust_thunk___ZN19AddableFreeByMutRefaSERKS_(
+    class AddableFreeByMutRef* __this,
+    const class AddableFreeByMutRef* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" class AddableFreeByMutRef*
+__rust_thunk___ZN19AddableFreeByMutRefaSEOS_(
+    class AddableFreeByMutRef* __this, class AddableFreeByMutRef* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
+static_assert(sizeof(class AddableFreeByValue) == 1);
+static_assert(alignof(class AddableFreeByValue) == 1);
+
+extern "C" void __rust_thunk___ZN18AddableFreeByValueC1Ev(
+    class AddableFreeByValue* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN18AddableFreeByValueC1EOS_(
+    class AddableFreeByValue* __this, class AddableFreeByValue* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" class AddableFreeByValue*
+__rust_thunk___ZN18AddableFreeByValueaSERKS_(
+    class AddableFreeByValue* __this,
+    const class AddableFreeByValue* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" class AddableFreeByValue*
+__rust_thunk___ZN18AddableFreeByValueaSEOS_(
+    class AddableFreeByValue* __this, class AddableFreeByValue* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
+static_assert(sizeof(class AddableFreeByRValueRef) == 1);
+static_assert(alignof(class AddableFreeByRValueRef) == 1);
+
+extern "C" void __rust_thunk___ZN22AddableFreeByRValueRefC1Ev(
+    class AddableFreeByRValueRef* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN22AddableFreeByRValueRefC1EOS_(
+    class AddableFreeByRValueRef* __this,
+    class AddableFreeByRValueRef* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" class AddableFreeByRValueRef*
+__rust_thunk___ZN22AddableFreeByRValueRefaSERKS_(
+    class AddableFreeByRValueRef* __this,
+    const class AddableFreeByRValueRef* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" class AddableFreeByRValueRef*
+__rust_thunk___ZN22AddableFreeByRValueRefaSEOS_(
+    class AddableFreeByRValueRef* __this,
+    class AddableFreeByRValueRef* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
 

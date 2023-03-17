@@ -32,11 +32,17 @@ class AddableFriend final {
   int field_;
 };
 
-class AddableFree final {};
-AddableFree operator+(const AddableFree& lhs, const AddableFree& rhs);
-AddableFree operator+(AddableFree& lhs, AddableFree& rhs);
-AddableFree operator+(AddableFree lhs, AddableFree rhs);
-AddableFree operator+(AddableFree&& lhs, AddableFree rhs);
+class AddableFreeByConstRef final {};
+class AddableFreeByMutRef final {};
+class AddableFreeByValue final {};
+class AddableFreeByRValueRef final {};
+AddableFreeByConstRef operator+(const AddableFreeByConstRef& lhs,
+                                const AddableFreeByConstRef& rhs);
+AddableFreeByMutRef operator+(AddableFreeByMutRef& lhs,
+                              AddableFreeByMutRef& rhs);
+AddableFreeByValue operator+(AddableFreeByValue lhs, AddableFreeByValue rhs);
+AddableFreeByRValueRef operator+(AddableFreeByRValueRef&& lhs,
+                                 AddableFreeByRValueRef rhs);
 
 class Overloaded final {};
 int operator+(const Overloaded& lhs, int rhs);

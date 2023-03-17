@@ -79,27 +79,37 @@ struct AddableNontrivialByValue final {
   int i;
 };
 
-struct UnpinStruct final {
+struct UnpinStructByConstRef final {
   int i;
 };
 
-// impl Add<&UnpinStruct> for &UnpinStruct {
-//     type Output = UnpinStruct;
-//     ..
-// }
-UnpinStruct operator+(const UnpinStruct& lhs, const UnpinStruct& rhs);
+struct UnpinStructByMutRef final {
+  int i;
+};
 
-// impl Add<&mut UnpinStruct> for &mut UnpinStruct {
-//     type Output = UnpinStruct;
-//     ..
-// }
-UnpinStruct operator+(UnpinStruct& lhs, UnpinStruct& rhs);
+struct UnpinStructByValue final {
+  int i;
+};
 
-// impl Add<UnpinStruct> for UnpinStruct {
-//     type Output = UnpinStruct;
+// impl Add<&UnpinStructByConstRef> for &UnpinStructByConstRef {
+//     type Output = UnpinStructByConstRef;
 //     ..
 // }
-UnpinStruct operator+(UnpinStruct lhs, UnpinStruct rhs);
+UnpinStructByConstRef operator+(const UnpinStructByConstRef& lhs,
+                                const UnpinStructByConstRef& rhs);
+
+// impl Add<&mut UnpinStructByMutRef> for &mut UnpinStructByMutRef {
+//     type Output = UnpinStructByMutRef;
+//     ..
+// }
+UnpinStructByMutRef operator+(UnpinStructByMutRef& lhs,
+                              UnpinStructByMutRef& rhs);
+
+// impl Add<UnpinStructByValue> for UnpinStructByValue {
+//     type Output = UnpinStructByValue;
+//     ..
+// }
+UnpinStructByValue operator+(UnpinStructByValue lhs, UnpinStructByValue rhs);
 
 struct AddableOverloaded final {
   char int16_char;
