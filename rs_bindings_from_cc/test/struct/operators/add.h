@@ -136,4 +136,14 @@ struct AddableFriendByValue final {
   int i;
 };
 
+struct AddableReturnsNontrivial final {
+  ~AddableReturnsNontrivial() {}
+  AddableReturnsNontrivial operator+(
+      const AddableReturnsNontrivial& rhs) const {
+    return AddableReturnsNontrivial{i + rhs.i};
+  }
+
+  int i;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_ADD_H_

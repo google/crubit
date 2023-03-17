@@ -110,4 +110,13 @@ mod tests {
         let s2 = AddableFriendByValue { i: 22 };
         assert_eq!(33, (s1 + s2).i);
     }
+
+    #[test]
+    fn test_add_returns_nontrivial() {
+        ctor::emplace! {
+            let s1 = ctor::ctor!(AddableReturnsNontrivial {i: 11});
+            let s2 = ctor::ctor!(AddableReturnsNontrivial {i: 22});
+        }
+        assert_eq!(ctor::emplace!(&*s1 + &*s2).i, 33);
+    }
 }
