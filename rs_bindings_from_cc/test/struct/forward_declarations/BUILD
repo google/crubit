@@ -1,40 +1,37 @@
 """End-to-end test of forward declarations."""
 
 load("@rules_rust//rust:defs.bzl", "rust_test")
+load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//third_party/crubit:license"])
 
 licenses(["notice"])
 
-cc_library(
+crubit_test_cc_library(
     name = "definition",
     srcs = ["definition.cc"],
     hdrs = ["definition.h"],
-    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "declaration_1",
     hdrs = ["declaration_1.h"],
-    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [
         ":definition",  # build_cleaner: keep
     ],
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "declaration_2",
     hdrs = ["declaration_2.h"],
-    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [
         ":definition",  # build_cleaner: keep
     ],
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "no_definition_in_headers",
     hdrs = ["no_definition_in_headers.h"],
-    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

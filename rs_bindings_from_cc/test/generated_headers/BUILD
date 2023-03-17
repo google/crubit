@@ -1,6 +1,7 @@
 """End-to-end example of using generated headers."""
 
 load("@rules_rust//rust:defs.bzl", "rust_test")
+load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//third_party/crubit:license"])
 
@@ -13,10 +14,9 @@ genrule(
     cmd = "cat $(location generated_header_content.h) > \"$@\"",
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "generated_header",
     hdrs = ["generated_header.h"],
-    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(

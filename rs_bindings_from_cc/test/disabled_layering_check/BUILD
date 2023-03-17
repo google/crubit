@@ -3,6 +3,7 @@
 # but to be safe we work around it for generated bindings Rust code.
 
 load("@rules_rust//rust:defs.bzl", "rust_test")
+load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//third_party/crubit:license"])
 
@@ -19,26 +20,23 @@ rust_test(
     ],
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "top_lib",
     srcs = ["top_lib.cc"],
     hdrs = ["top_lib.h"],
-    aspect_hints = ["//third_party/crubit:experimental"],
     features = ["-layering_check"],
     deps = [":middleperson_without_public_headers"],
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "middleperson_without_public_headers",
-    aspect_hints = ["//third_party/crubit:experimental"],
     deps = [":my_lib"],
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "my_lib",
     srcs = ["my_lib.cc"],
     hdrs = ["my_lib.h"],
-    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 # This test only exists to make sure :top_lib is disabling layering check correctly (layering

@@ -1,12 +1,12 @@
 load("@rules_rust//rust:defs.bzl", "rust_test")
+load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//third_party/crubit:license"])
 
 licenses(["notice"])
 
-cc_library(
+crubit_test_cc_library(
     name = "has_textual_hdrs",
-    aspect_hints = ["//third_party/crubit:experimental"],
     textual_hdrs = ["textual.h"],
 )
 
@@ -16,10 +16,9 @@ rust_test(
     cc_deps = [":has_textual_hdrs"],
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "has_inc_header",
     hdrs = ["textual.inc"],
-    aspect_hints = ["//third_party/crubit:experimental"],
 )
 
 rust_test(
@@ -28,24 +27,21 @@ rust_test(
     cc_deps = [":has_inc_header"],
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "defines_struct_in_textual_hdr",
-    aspect_hints = ["//third_party/crubit:experimental"],
     textual_hdrs = ["struct_in_textual_header.inc"],
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "uses_struct_from_textual_hdr_in_textual_hdr",
     hdrs = ["includes_struct_through_layers_of_textual_headers.h"],
-    aspect_hints = ["//third_party/crubit:experimental"],
     textual_hdrs = ["includes_textual_header.inc"],
     deps = [":defines_struct_in_textual_hdr"],
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "uses_struct_from_textual_hdr",
     hdrs = ["includes_textual_header.h"],
-    aspect_hints = ["//third_party/crubit:experimental"],
     deps = ["defines_struct_in_textual_hdr"],
 )
 
