@@ -13,7 +13,6 @@ use quote::{format_ident, quote, ToTokens};
 use rustc_hir::{AssocItemKind, ImplItemKind, ImplicitSelfKind, Item, ItemKind, Node, Unsafety};
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
-use rustc_middle::ty::DefIdTree;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::Symbol;
