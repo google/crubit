@@ -77,7 +77,11 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableConstMember> for &'a crate::Adda
     type Output = crate::AddableConstMember;
     #[inline(always)]
     fn add(self, rhs: &'b crate::AddableConstMember) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK18AddableConstMemberplERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::AddableConstMember>::uninit();
+            crate::detail::__rust_thunk___ZNK18AddableConstMemberplERKS_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -140,7 +144,15 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableNonConstMember>
     type Output = crate::AddableNonConstMember;
     #[inline(always)]
     fn add(self, rhs: &'b crate::AddableNonConstMember) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZN21AddableNonConstMemberplERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::AddableNonConstMember>::uninit();
+            crate::detail::__rust_thunk___ZN21AddableNonConstMemberplERKS_(
+                &mut __return,
+                self,
+                rhs,
+            );
+            __return.assume_init()
+        }
     }
 }
 
@@ -198,7 +210,11 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFr
     type Output = crate::AddableFriend;
     #[inline(always)]
     fn add(self, rhs: &'b crate::AddableFriend) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZplRK13AddableFriendS1_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::AddableFriend>::uninit();
+            crate::detail::__rust_thunk___ZplRK13AddableFriendS1_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -408,7 +424,11 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFreeByConstRef>
     type Output = crate::AddableFreeByConstRef;
     #[inline(always)]
     fn add(self, rhs: &'b crate::AddableFreeByConstRef) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZplRK21AddableFreeByConstRefS1_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::AddableFreeByConstRef>::uninit();
+            crate::detail::__rust_thunk___ZplRK21AddableFreeByConstRefS1_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -418,15 +438,27 @@ impl<'a, 'b> ::core::ops::Add<&'b mut crate::AddableFreeByMutRef>
     type Output = crate::AddableFreeByMutRef;
     #[inline(always)]
     fn add(self, rhs: &'b mut crate::AddableFreeByMutRef) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZplR19AddableFreeByMutRefS0_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::AddableFreeByMutRef>::uninit();
+            crate::detail::__rust_thunk___ZplR19AddableFreeByMutRefS0_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
 impl ::core::ops::Add<Self> for AddableFreeByValue {
     type Output = crate::AddableFreeByValue;
     #[inline(always)]
-    fn add(self, rhs: Self) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___Zpl18AddableFreeByValueS_(self, rhs) }
+    fn add(mut self, mut rhs: Self) -> Self::Output {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___Zpl18AddableFreeByValueS_(
+                &mut __return,
+                &mut self,
+                &mut rhs,
+            );
+            __return.assume_init()
+        }
     }
 }
 
@@ -932,9 +964,9 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFre
 
 impl ::core::ops::AddAssign<Self> for AddAssignFreeByValue {
     #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: Self) {
+    fn add_assign<'a>(&'a mut self, mut rhs: Self) {
         unsafe {
-            crate::detail::__rust_thunk___ZpLR20AddAssignFreeByValueS_(self, rhs);
+            crate::detail::__rust_thunk___ZpLR20AddAssignFreeByValueS_(self, &mut rhs);
         }
     }
 }
@@ -1041,9 +1073,9 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFri
 
 impl ::core::ops::AddAssign<Self> for AddAssignFriendByValue {
     #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: Self) {
+    fn add_assign<'a>(&'a mut self, mut rhs: Self) {
         unsafe {
-            crate::detail::__rust_thunk___ZpLR22AddAssignFriendByValueS_(self, rhs);
+            crate::detail::__rust_thunk___ZpLR22AddAssignFriendByValueS_(self, &mut rhs);
         }
     }
 }
@@ -1220,7 +1252,11 @@ impl<'a> ::core::ops::Neg for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn neg(self) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsngEv(self) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorsngEv(&mut __return, self);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1228,7 +1264,11 @@ impl<'a> ::core::ops::Not for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn not(self) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsntEv(self) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorsntEv(&mut __return, self);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1239,7 +1279,11 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::ManyOperators> for &'a crate::ManyOpera
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn add(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsplERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorsplERKS_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1247,7 +1291,11 @@ impl<'a, 'b> ::core::ops::Sub<&'b crate::ManyOperators> for &'a crate::ManyOpera
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn sub(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsmiERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorsmiERKS_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1255,7 +1303,11 @@ impl<'a, 'b> ::core::ops::Mul<&'b crate::ManyOperators> for &'a crate::ManyOpera
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn mul(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsmlERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorsmlERKS_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1263,7 +1315,11 @@ impl<'a, 'b> ::core::ops::Div<&'b crate::ManyOperators> for &'a crate::ManyOpera
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn div(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsdvERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorsdvERKS_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1271,7 +1327,11 @@ impl<'a, 'b> ::core::ops::Rem<&'b crate::ManyOperators> for &'a crate::ManyOpera
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn rem(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsrmERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorsrmERKS_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1279,7 +1339,11 @@ impl<'a, 'b> ::core::ops::BitAnd<&'b crate::ManyOperators> for &'a crate::ManyOp
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn bitand(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsanERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorsanERKS_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1287,7 +1351,11 @@ impl<'a, 'b> ::core::ops::BitOr<&'b crate::ManyOperators> for &'a crate::ManyOpe
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn bitor(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsorERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorsorERKS_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1295,7 +1363,11 @@ impl<'a, 'b> ::core::ops::BitXor<&'b crate::ManyOperators> for &'a crate::ManyOp
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn bitxor(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorseoERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorseoERKS_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1303,7 +1375,11 @@ impl<'a, 'b> ::core::ops::Shl<&'b crate::ManyOperators> for &'a crate::ManyOpera
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn shl(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorslsERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorslsERKS_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1311,7 +1387,11 @@ impl<'a, 'b> ::core::ops::Shr<&'b crate::ManyOperators> for &'a crate::ManyOpera
     type Output = crate::ManyOperators;
     #[inline(always)]
     fn shr(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsrsERKS_(self, rhs) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorsrsERKS_(&mut __return, self, rhs);
+            __return.assume_init()
+        }
     }
 }
 
@@ -1426,11 +1506,11 @@ mod detail {
             __this: &'a mut crate::AddableConstMember,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableConstMember>,
         ) -> &'a mut crate::AddableConstMember;
-        #[link_name = "_ZNK18AddableConstMemberplERKS_"]
         pub(crate) fn __rust_thunk___ZNK18AddableConstMemberplERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::AddableConstMember>,
             __this: &'a crate::AddableConstMember,
             rhs: &'b crate::AddableConstMember,
-        ) -> crate::AddableConstMember;
+        );
         pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableNonConstMember>,
         );
@@ -1446,11 +1526,11 @@ mod detail {
             __this: &'a mut crate::AddableNonConstMember,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableNonConstMember>,
         ) -> &'a mut crate::AddableNonConstMember;
-        #[link_name = "_ZN21AddableNonConstMemberplERKS_"]
         pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberplERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::AddableNonConstMember>,
             __this: &'a mut crate::AddableNonConstMember,
             rhs: &'b crate::AddableNonConstMember,
-        ) -> crate::AddableNonConstMember;
+        );
         pub(crate) fn __rust_thunk___ZN13AddableFriendC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFriend>,
         );
@@ -1466,11 +1546,11 @@ mod detail {
             __this: &'a mut crate::AddableFriend,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFriend>,
         ) -> &'a mut crate::AddableFriend;
-        #[link_name = "_ZplRK13AddableFriendS1_"]
         pub(crate) fn __rust_thunk___ZplRK13AddableFriendS1_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::AddableFriend>,
             lhs: &'a crate::AddableFriend,
             rhs: &'b crate::AddableFriend,
-        ) -> crate::AddableFriend;
+        );
         pub(crate) fn __rust_thunk___ZN21AddableFreeByConstRefC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByConstRef>,
         );
@@ -1531,21 +1611,21 @@ mod detail {
             __this: &'a mut crate::AddableFreeByRValueRef,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByRValueRef>,
         ) -> &'a mut crate::AddableFreeByRValueRef;
-        #[link_name = "_ZplRK21AddableFreeByConstRefS1_"]
         pub(crate) fn __rust_thunk___ZplRK21AddableFreeByConstRefS1_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::AddableFreeByConstRef>,
             lhs: &'a crate::AddableFreeByConstRef,
             rhs: &'b crate::AddableFreeByConstRef,
-        ) -> crate::AddableFreeByConstRef;
-        #[link_name = "_ZplR19AddableFreeByMutRefS0_"]
+        );
         pub(crate) fn __rust_thunk___ZplR19AddableFreeByMutRefS0_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::AddableFreeByMutRef>,
             lhs: &'a mut crate::AddableFreeByMutRef,
             rhs: &'b mut crate::AddableFreeByMutRef,
-        ) -> crate::AddableFreeByMutRef;
-        #[link_name = "_Zpl18AddableFreeByValueS_"]
+        );
         pub(crate) fn __rust_thunk___Zpl18AddableFreeByValueS_(
-            lhs: crate::AddableFreeByValue,
-            rhs: crate::AddableFreeByValue,
-        ) -> crate::AddableFreeByValue;
+            __return: &mut ::core::mem::MaybeUninit<crate::AddableFreeByValue>,
+            lhs: &mut crate::AddableFreeByValue,
+            rhs: &mut crate::AddableFreeByValue,
+        );
         pub(crate) fn __rust_thunk___ZN10OverloadedC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Overloaded>,
         );
@@ -1695,10 +1775,9 @@ mod detail {
             __this: &'a mut crate::AddAssignFreeByValue,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>,
         ) -> &'a mut crate::AddAssignFreeByValue;
-        #[link_name = "_ZpLR20AddAssignFreeByValueS_"]
         pub(crate) fn __rust_thunk___ZpLR20AddAssignFreeByValueS_<'a>(
             lhs: &'a mut crate::AddAssignFreeByValue,
-            rhs: crate::AddAssignFreeByValue,
+            rhs: &mut crate::AddAssignFreeByValue,
         ) -> &'a mut crate::AddAssignFreeByValue;
         pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFriendByConstRef>,
@@ -1730,10 +1809,9 @@ mod detail {
             __this: &'a mut crate::AddAssignFriendByValue,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>,
         ) -> &'a mut crate::AddAssignFriendByValue;
-        #[link_name = "_ZpLR22AddAssignFriendByValueS_"]
         pub(crate) fn __rust_thunk___ZpLR22AddAssignFriendByValueS_<'a>(
             lhs: &'a mut crate::AddAssignFriendByValue,
-            rhs: crate::AddAssignFriendByValue,
+            rhs: &mut crate::AddAssignFriendByValue,
         ) -> &'a mut crate::AddAssignFriendByValue;
         pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignProhibitedConstMember>,
@@ -1780,64 +1858,64 @@ mod detail {
             __this: &'a mut crate::ManyOperators,
             __param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>,
         ) -> &'a mut crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorsngEv"]
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsngEv<'a>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
-        ) -> crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorsntEv"]
+        );
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsntEv<'a>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
-        ) -> crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorsplERKS_"]
+        );
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsplERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
-        ) -> crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorsmiERKS_"]
+        );
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsmiERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
-        ) -> crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorsmlERKS_"]
+        );
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsmlERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
-        ) -> crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorsdvERKS_"]
+        );
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsdvERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
-        ) -> crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorsrmERKS_"]
+        );
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsrmERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
-        ) -> crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorsanERKS_"]
+        );
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsanERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
-        ) -> crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorsorERKS_"]
+        );
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsorERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
-        ) -> crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorseoERKS_"]
+        );
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorseoERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
-        ) -> crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorslsERKS_"]
+        );
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorslsERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
-        ) -> crate::ManyOperators;
-        #[link_name = "_ZNK13ManyOperatorsrsERKS_"]
+        );
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsrsERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
-        ) -> crate::ManyOperators;
+        );
         #[link_name = "_ZN13ManyOperatorspLERKS_"]
         pub(crate) fn __rust_thunk___ZN13ManyOperatorspLERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,

@@ -75,9 +75,12 @@ impl SomeClass {
     #[inline(always)]
     pub fn static_factory_method(initial_value_of_field: i32) -> crate::SomeClass {
         unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
+                &mut __return,
                 initial_value_of_field,
-            )
+            );
+            __return.assume_init()
         }
     }
 }
@@ -115,10 +118,10 @@ mod detail {
             __this: &'a mut crate::SomeClass,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeClass>,
         ) -> &'a mut crate::SomeClass;
-        #[link_name = "_ZN9SomeClass21static_factory_methodEi"]
         pub(crate) fn __rust_thunk___ZN9SomeClass21static_factory_methodEi(
+            __return: &mut ::core::mem::MaybeUninit<crate::SomeClass>,
             initial_value_of_field: i32,
-        ) -> crate::SomeClass;
+        );
         #[link_name = "_ZN9SomeClass38static_method_that_multiplies_its_argsEii"]
         pub(crate) fn __rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
             x: i32,

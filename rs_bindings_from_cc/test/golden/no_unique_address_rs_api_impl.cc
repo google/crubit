@@ -42,8 +42,9 @@ extern "C" struct Struct* __rust_thunk___ZN6StructaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-extern "C" struct Struct __rust_thunk___ZN6Struct4MakeEic(int f1, char f2) {
-  return Struct::Make(f1, f2);
+extern "C" void __rust_thunk___ZN6Struct4MakeEic(struct Struct* __return,
+                                                 int f1, char f2) {
+  new (__return) auto(Struct::Make(f1, f2));
 }
 
 static_assert(sizeof(struct PaddingBetweenFields) == 8);
@@ -76,9 +77,9 @@ __rust_thunk___ZN20PaddingBetweenFieldsaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-extern "C" struct PaddingBetweenFields
-__rust_thunk___ZN20PaddingBetweenFields4MakeEci(char f1, int f2) {
-  return PaddingBetweenFields::Make(f1, f2);
+extern "C" void __rust_thunk___ZN20PaddingBetweenFields4MakeEci(
+    struct PaddingBetweenFields* __return, char f1, int f2) {
+  new (__return) auto(PaddingBetweenFields::Make(f1, f2));
 }
 
 static_assert(sizeof(struct FieldInTailPadding_InnerStruct) == 8);

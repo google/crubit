@@ -132,10 +132,13 @@ __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEaSEOS2__
   return &__this->operator=(std::move(*__param_0));
 }
 
-extern "C" class test_namespace_bindings::MyTemplate<DifferentScope>
+extern "C" void
 __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-    struct DifferentScope value) {
-  return test_namespace_bindings::MyTemplate<DifferentScope>::Create(value);
+    class test_namespace_bindings::MyTemplate<DifferentScope>* __return,
+    struct DifferentScope* value) {
+  new (__return) auto(
+      test_namespace_bindings::MyTemplate<DifferentScope>::Create(
+          std::move(*value)));
 }
 
 extern "C" const struct DifferentScope*
@@ -185,12 +188,14 @@ __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEaSEOS
   return &__this->operator=(std::move(*__param_0));
 }
 
-extern "C" class test_namespace_bindings::MyTemplate<
-    test_namespace_bindings::TemplateParam>
+extern "C" void
 __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-    struct test_namespace_bindings::TemplateParam value) {
-  return test_namespace_bindings::MyTemplate<
-      test_namespace_bindings::TemplateParam>::Create(value);
+    class test_namespace_bindings::MyTemplate<
+        test_namespace_bindings::TemplateParam>* __return,
+    struct test_namespace_bindings::TemplateParam* value) {
+  new (__return) auto(
+      test_namespace_bindings::MyTemplate<
+          test_namespace_bindings::TemplateParam>::Create(std::move(*value)));
 }
 
 extern "C" const struct test_namespace_bindings::TemplateParam*
@@ -230,10 +235,10 @@ __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEaSEOS1___2f_2fthird_5fp
   return &__this->operator=(std::move(*__param_0));
 }
 
-extern "C" class test_namespace_bindings::MyTemplate<int>
+extern "C" void
 __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-    int value) {
-  return test_namespace_bindings::MyTemplate<int>::Create(value);
+    class test_namespace_bindings::MyTemplate<int>* __return, int value) {
+  new (__return) auto(test_namespace_bindings::MyTemplate<int>::Create(value));
 }
 
 extern "C" int const*

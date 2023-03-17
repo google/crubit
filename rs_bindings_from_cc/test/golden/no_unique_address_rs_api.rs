@@ -86,7 +86,11 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Struct {
 impl Struct {
     #[inline(always)]
     pub fn Make(f1: i32, f2: u8) -> crate::Struct {
-        unsafe { crate::detail::__rust_thunk___ZN6Struct4MakeEic(f1, f2) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZN6Struct4MakeEic(&mut __return, f1, f2);
+            __return.assume_init()
+        }
     }
 }
 
@@ -157,7 +161,11 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for PaddingBetwe
 impl PaddingBetweenFields {
     #[inline(always)]
     pub fn Make(f1: u8, f2: i32) -> crate::PaddingBetweenFields {
-        unsafe { crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(f1, f2) }
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(&mut __return, f1, f2);
+            __return.assume_init()
+        }
     }
 }
 
@@ -391,7 +399,11 @@ mod detail {
             __this: &'a mut crate::Struct,
             __param_0: ::ctor::RvalueReference<'b, crate::Struct>,
         ) -> &'a mut crate::Struct;
-        pub(crate) fn __rust_thunk___ZN6Struct4MakeEic(f1: i32, f2: u8) -> crate::Struct;
+        pub(crate) fn __rust_thunk___ZN6Struct4MakeEic(
+            __return: &mut ::core::mem::MaybeUninit<crate::Struct>,
+            f1: i32,
+            f2: u8,
+        );
         pub(crate) fn __rust_thunk___ZN20PaddingBetweenFieldsC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::PaddingBetweenFields>,
         );
@@ -408,9 +420,10 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::PaddingBetweenFields>,
         ) -> &'a mut crate::PaddingBetweenFields;
         pub(crate) fn __rust_thunk___ZN20PaddingBetweenFields4MakeEci(
+            __return: &mut ::core::mem::MaybeUninit<crate::PaddingBetweenFields>,
             f1: u8,
             f2: i32,
-        ) -> crate::PaddingBetweenFields;
+        );
         pub(crate) fn __rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::FieldInTailPadding_InnerStruct>,
         );

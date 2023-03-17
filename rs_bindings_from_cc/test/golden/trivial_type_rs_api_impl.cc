@@ -74,6 +74,10 @@ __rust_thunk___ZN2ns15TrivialNonfinalaSEOS0_(
   return &__this->operator=(std::move(*__param_0));
 }
 
+extern "C" void __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
+    struct ns::Trivial* __return, struct ns::Trivial* trivial) {
+  new (__return) auto(ns::TakesByValue(std::move(*trivial)));
+}
 extern "C" void
 __rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
     struct ns::TrivialNonfinal* __return, struct ns::TrivialNonfinal* trivial) {

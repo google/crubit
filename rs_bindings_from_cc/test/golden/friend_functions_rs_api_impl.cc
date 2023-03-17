@@ -40,6 +40,11 @@ extern "C" class SomeClass* __rust_thunk___ZN9SomeClassaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
+extern "C" void __rust_thunk___Z11visible_val9SomeClass(
+    class SomeClass* __param_0) {
+  visible_val(std::move(*__param_0));
+}
+
 extern "C" int __rust_thunk___Z21multiple_declarationsRK9SomeClass(
     const class SomeClass* __param_0) {
   return multiple_declarations(*__param_0);

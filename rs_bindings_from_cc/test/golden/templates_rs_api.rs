@@ -366,10 +366,12 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
     #[inline(always)]
     pub fn Create(
-        value: crate::DifferentScope,
+        mut value: crate::DifferentScope,
     ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
         unsafe {
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(value)
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut __return,&mut value);
+            __return.assume_init()
         }
     }
 }
@@ -447,10 +449,12 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
     #[inline(always)]
     pub fn Create(
-        value: crate::test_namespace_bindings::TemplateParam,
+        mut value: crate::test_namespace_bindings::TemplateParam,
     ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
         unsafe {
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(value)
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut __return,&mut value);
+            __return.assume_init()
         }
     }
 }
@@ -527,7 +531,9 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     #[inline(always)]
     pub fn Create(value: i32) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
         unsafe {
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(value)
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut __return,value);
+            __return.assume_init()
         }
     }
 }
@@ -1082,8 +1088,11 @@ mod detail {
             >,
         ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            value: crate::DifferentScope,
-        ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE;
+            __return: &mut ::core::mem::MaybeUninit<
+                crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
+            >,
+            value: &mut crate::DifferentScope,
+        );
         pub(crate) fn __rust_thunk___ZNK23test_namespace_bindings10MyTemplateI14DifferentScopeE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -1111,8 +1120,11 @@ mod detail {
         pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,__param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE)->&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE;
         pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,__param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>)->&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            value: crate::test_namespace_bindings::TemplateParam,
-        ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE;
+            __return: &mut ::core::mem::MaybeUninit<
+                crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
+            >,
+            value: &mut crate::test_namespace_bindings::TemplateParam,
+        );
         pub(crate) fn __rust_thunk___ZNK23test_namespace_bindings10MyTemplateINS_13TemplateParamEE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -1155,8 +1167,11 @@ mod detail {
             >,
         ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+            __return: &mut ::core::mem::MaybeUninit<
+                crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
+            >,
             value: i32,
-        ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
+        );
         pub(crate) fn __rust_thunk___ZNK23test_namespace_bindings10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(

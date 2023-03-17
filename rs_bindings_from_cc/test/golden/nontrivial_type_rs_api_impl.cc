@@ -134,6 +134,11 @@ extern "C" void __rust_thunk___Z18TakesByValueInline16NontrivialInline(
   new (__return) auto(TakesByValueInline(std::move(*nontrivial)));
 }
 
+extern "C" void __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
+    struct NontrivialUnpin* __return, struct NontrivialUnpin* nontrivial) {
+  new (__return) auto(TakesByValueUnpin(std::move(*nontrivial)));
+}
+
 static_assert(sizeof(struct NontrivialByValue) == 1);
 static_assert(alignof(struct NontrivialByValue) == 1);
 

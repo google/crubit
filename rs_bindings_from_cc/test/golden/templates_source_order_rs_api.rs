@@ -124,8 +124,8 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateI8TopLevelE {
     #[inline(always)]
-    pub unsafe fn processT(__this: *mut Self, t: crate::TopLevel) {
-        crate::detail::__rust_thunk___ZN10MyTemplateI8TopLevelE8processTES0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
+    pub unsafe fn processT(__this: *mut Self, mut t: crate::TopLevel) {
+        crate::detail::__rust_thunk___ZN10MyTemplateI8TopLevelE8processTES0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,&mut t)
     }
 }
 
@@ -159,8 +159,8 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     #[inline(always)]
-    pub unsafe fn processT(__this: *mut Self, t: crate::test_namespace_bindings::Inner) {
-        crate::detail::__rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
+    pub unsafe fn processT(__this: *mut Self, mut t: crate::test_namespace_bindings::Inner) {
+        crate::detail::__rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,&mut t)
     }
 }
 
@@ -194,8 +194,11 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     #[inline(always)]
-    pub unsafe fn processT(__this: *mut Self, t: crate::__CcTemplateInst10MyTemplateI8TopLevelE) {
-        crate::detail::__rust_thunk___ZN10MyTemplateIS_I8TopLevelEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
+    pub unsafe fn processT(
+        __this: *mut Self,
+        mut t: crate::__CcTemplateInst10MyTemplateI8TopLevelE,
+    ) {
+        crate::detail::__rust_thunk___ZN10MyTemplateIS_I8TopLevelEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,&mut t)
     }
 }
 
@@ -231,9 +234,9 @@ impl __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     #[inline(always)]
     pub unsafe fn processT(
         __this: *mut Self,
-        t: crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
+        mut t: crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
     ) {
-        crate::detail::__rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEE8processTES2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
+        crate::detail::__rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEE8processTES2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,&mut t)
     }
 }
 
@@ -418,19 +421,19 @@ mod detail {
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10MyTemplateI8TopLevelE8processTES0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateI8TopLevelE,
-            t: crate::TopLevel,
+            t: &mut crate::TopLevel,
         );
         pub(crate) fn __rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
-            t: crate::test_namespace_bindings::Inner,
+            t: &mut crate::test_namespace_bindings::Inner,
         );
         pub(crate) fn __rust_thunk___ZN10MyTemplateIS_I8TopLevelEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE,
-            t: crate::__CcTemplateInst10MyTemplateI8TopLevelE,
+            t: &mut crate::__CcTemplateInst10MyTemplateI8TopLevelE,
         );
         pub(crate) fn __rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEE8processTES2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE,
-            t: crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
+            t: &mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
         );
         pub(crate) fn __rust_thunk___ZN10MyTemplateIbE8processTEb__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIbE,

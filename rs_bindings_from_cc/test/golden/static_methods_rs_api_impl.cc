@@ -40,4 +40,9 @@ extern "C" class SomeClass* __rust_thunk___ZN9SomeClassaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
+extern "C" void __rust_thunk___ZN9SomeClass21static_factory_methodEi(
+    class SomeClass* __return, int initial_value_of_field) {
+  new (__return) auto(SomeClass::static_factory_method(initial_value_of_field));
+}
+
 #pragma clang diagnostic pop

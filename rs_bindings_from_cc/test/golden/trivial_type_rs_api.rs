@@ -219,8 +219,15 @@ pub mod ns {
     }
 
     #[inline(always)]
-    pub fn TakesByValue(trivial: crate::ns::Trivial) -> crate::ns::Trivial {
-        unsafe { crate::detail::__rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(trivial) }
+    pub fn TakesByValue(mut trivial: crate::ns::Trivial) -> crate::ns::Trivial {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::ns::Trivial>::uninit();
+            crate::detail::__rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
+                &mut __return,
+                &mut trivial,
+            );
+            __return.assume_init()
+        }
     }
 
     #[inline(always)]
@@ -371,10 +378,10 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
         ) -> ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
-        #[link_name = "_ZN2ns12TakesByValueENS_7TrivialE"]
         pub(crate) fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
-            trivial: crate::ns::Trivial,
-        ) -> crate::ns::Trivial;
+            __return: &mut ::core::mem::MaybeUninit<crate::ns::Trivial>,
+            trivial: &mut crate::ns::Trivial,
+        );
         pub(crate) fn __rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
             __return: &mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
             trivial: &mut crate::ns::TrivialNonfinal,

@@ -294,26 +294,24 @@ fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
         return false;
     }
 
-    // ## Nontrivial return types.
+    // ## Returning structs be value.
     //
-    // If the function returns a value which is nontrivial for the purpose of calls,
-    // then in the underlying ABI, it is actually returned via a hidden pointer
-    // parameter not exposed anywhere in the Clang AST or the Crubit IR. For
-    // now, this is worked around via an _explicit_ output parameter, used in
-    // the thunk, which cannot be skipped anymore.
+    // Returning a struct by value requires an explicit thunk, because `rs_bindings_from_cc` may
+    // not preserve the ABI of structs (e.g. when replacing field types with an opaque blob of
+    // bytes - see b/270454629).
     //
     // Note: if the RsTypeKind cannot be parsed / rs_type_kind returns Err, then
     // bindings generation will fail for this function, so it doesn't really matter
     // what we do here.
     if let Ok(return_type) = db.rs_type_kind(func.return_type.rs_type.clone()) {
-        if !return_type.is_unpin() {
+        if !return_type.is_c_abi_compatible_by_value() {
             return false;
         }
     }
     // ## Nontrivial parameter types.
     //
-    // If the function accepts a value which is nontrivial for the purpose of calls,
-    // then in the underlying ABI, it is actually passed by pointer.
+    // If the function accepts a struct by value, then in the underlying ABI, it is actually passed
+    // by pointer.
     //
     // Because there's no way to upgrade an lvalue (e.g. pointer) to a prvalue, we
     // cannot implement guaranteed copy/move elision for inline functions for
@@ -326,7 +324,7 @@ fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
     // ABI-agnostic.)
     for param in &func.params {
         if let Ok(param_type) = db.rs_type_kind(param.type_.rs_type.clone()) {
-            if !param_type.is_unpin() {
+            if !param_type.is_c_abi_compatible_by_value() {
                 return false;
             }
         }
@@ -1297,11 +1295,12 @@ fn generate_func(
     // reference around these Rust func params and clone the records when calling
     // the thunk. Since some params might require cloning while others don't, we
     // need to store this information for each param.
-    let (mut param_types, clone_suffixes) = if let ImplKind::Trait {
+    let (mut param_types, clone_prefixes, clone_suffixes) = if let ImplKind::Trait {
         force_const_reference_params: true,
         ..
     } = impl_kind
     {
+        let mut clone_prefixes = Vec::with_capacity(param_types.len());
         let mut clone_suffixes = Vec::with_capacity(param_types.len());
         (
             param_types
@@ -1315,6 +1314,7 @@ fn generate_func(
                                 func,
                             );
                         }
+                        clone_prefixes.push(quote!{&mut});
                         clone_suffixes.push(quote!{.clone()});
                         Ok(RsTypeKind::Reference {
                             referent: Rc::new(param_type.clone()),
@@ -1322,15 +1322,17 @@ fn generate_func(
                             lifetime: Lifetime::new("_"),
                         })
                     } else {
+                        clone_prefixes.push(quote!{});
                         clone_suffixes.push(quote!{});
                         Ok(param_type)
                     }})
                 .collect::<Result<Vec<_>>>()?,
+            clone_prefixes,
             clone_suffixes,
         )
     } else {
-        let param_len = param_types.len();
-        (param_types, vec![quote! {}; param_len])
+        let empty_clone_snippets = vec![quote! {}; param_types.len()];
+        (param_types, empty_clone_snippets.clone(), empty_clone_snippets)
     };
 
     let BindingsSignature {
@@ -1349,10 +1351,6 @@ fn generate_func(
     )?;
 
     let api_func_def = {
-        // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
-        // MaybeUninit<T> in Pin if T is !Unpin. It should understand
-        // 'structural pinning', so that we do not need into_inner_unchecked()
-        // here.
         let thunk_ident = thunk_ident(&func);
         let func_body = match &impl_kind {
             ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. } => {
@@ -1378,21 +1376,48 @@ fn generate_func(
                 // not generate the thunk at all, but this would be a bit of extra work.
                 //
                 // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
-                let mut body = if return_type.is_unpin() {
-                    quote! { #crate_root_path::detail::#thunk_ident( #( #thunk_args #clone_suffixes ),* ) }
-                } else {
-                    let record = match impl_kind {
-                        ImplKind::Struct { ref record, .. }
-                        | ImplKind::Trait { ref record, impl_for: ImplFor::T, .. } => {
-                            Some(&**record)
-                        }
-                        _ => None,
-                    };
-                    let return_type_or_self = return_type.to_token_stream_replacing_by_self(record);
+                let mut body = if return_type.is_c_abi_compatible_by_value() {
                     quote! {
-                        ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<#return_type_or_self>>| {
-                            #crate_root_path::detail::#thunk_ident(::core::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
-                        })
+                        #crate_root_path::detail::#thunk_ident(
+                            #( #clone_prefixes #thunk_args #clone_suffixes ),*
+                        )
+                    }
+                } else {
+                    let return_type_or_self = {
+                        let record = match impl_kind {
+                            ImplKind::Struct { ref record, .. }
+                            | ImplKind::Trait { ref record, impl_for: ImplFor::T, .. } => {
+                                Some(&**record)
+                            }
+                            _ => None,
+                        };
+                        return_type.to_token_stream_replacing_by_self(record)
+                    };
+                    if return_type.is_unpin() {
+                        quote! {
+                            let mut __return =
+                                ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
+                            #crate_root_path::detail::#thunk_ident(
+                                &mut __return
+                                #( , #clone_prefixes #thunk_args #clone_suffixes )*
+                            );
+                            __return.assume_init()
+                        }
+                    } else {
+                        // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
+                        // MaybeUninit<T> in Pin if T is !Unpin. It should understand
+                        // 'structural pinning', so that we do not need into_inner_unchecked()
+                        // here.
+                        quote! {
+                            ::ctor::FnCtor::new(
+                                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<
+                                                                        #return_type_or_self>>| {
+                                #crate_root_path::detail::#thunk_ident(
+                                    ::core::pin::Pin::into_inner_unchecked(dest)
+                                    #( , #thunk_args )*
+                                );
+                            })
+                        }
                     }
                 };
                 // Discard the return value if requested (for example, when calling a C++
@@ -1702,8 +1727,13 @@ fn function_signature(
             } else {
                 quote! {#type_}
             };
-            api_params.push(quote! {#ident: #quoted_type_or_self});
-            thunk_args.push(quote! {#ident});
+            if type_.is_c_abi_compatible_by_value() {
+                api_params.push(quote! {#ident: #quoted_type_or_self});
+                thunk_args.push(quote! {#ident});
+            } else {
+                api_params.push(quote! {mut #ident: #quoted_type_or_self});
+                thunk_args.push(quote! {&mut #ident});
+            }
         }
     }
 
@@ -1796,8 +1826,13 @@ fn function_signature(
                 // impl block is for `T`. The `self` parameter has a type determined by the
                 // first parameter (typically a reference of some kind) and can be passed to a
                 // thunk via the expression `self`.
-                api_params[0] = first_api_param.format_as_self_param()?;
-                thunk_args[0] = quote! { self };
+                if first_api_param.is_c_abi_compatible_by_value() {
+                    api_params[0] = first_api_param.format_as_self_param()?;
+                    thunk_args[0] = quote! { self };
+                } else {
+                    api_params[0] = quote! { mut self };
+                    thunk_args[0] = quote! { &mut self };
+                }
             }
             ImplKind::Trait { impl_for: ImplFor::RefT, .. } => {
                 // In the ImplFor::RefT reference style the impl block is for a reference type
@@ -1851,8 +1886,8 @@ fn generate_func_thunk(
             )
         })?);
         out_param_ident = Some(param_idents.next().unwrap().clone());
-    } else if !return_type.is_unpin() {
-        // For nontrivial return types, create a new out parameter.
+    } else if !return_type.is_c_abi_compatible_by_value() {
+        // For return types that can't be passed by value, create a new out parameter.
         // The lifetime doesn't matter, so we can insert a new anonymous lifetime here.
         out_param = Some(quote! {
             &mut ::core::mem::MaybeUninit< #return_type >
@@ -1866,7 +1901,7 @@ fn generate_func_thunk(
     let generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
     let param_idents = out_param_ident.as_ref().into_iter().chain(param_idents);
     let param_types = out_param.into_iter().chain(param_types.map(|t| {
-        if !t.is_unpin() {
+        if !t.is_c_abi_compatible_by_value() {
             quote! {&mut #t}
         } else {
             quote! {#t}
@@ -3137,6 +3172,28 @@ impl RsTypeKind {
         }
     }
 
+    /// Returns true if the type can be passed by value through `extern "C"` ABI
+    /// thunks.
+    pub fn is_c_abi_compatible_by_value(&self) -> bool {
+        match self {
+            RsTypeKind::TypeAlias { underlying_type, .. } => {
+                underlying_type.is_c_abi_compatible_by_value()
+            }
+            RsTypeKind::IncompleteRecord { .. } => {
+                panic!("IncompleteRecord is unexpected as a parameter type or return type")
+            }
+            // `rs_bindings_from_cc` can change the type of fields (e.g. using a blob of bytes for
+            // unsupported field types, or for no_unique_address fields).  Changing the type
+            // of fields may change the ABI, which means that we can no longer assume
+            // that `extern "C"` ABI thunks can pass such types by value.
+            //
+            // TODO(b/274177296): Return `true` for structs where bindings replicate the type of
+            // all the fields.
+            RsTypeKind::Record { .. } => false,
+            _ => true,
+        }
+    }
+
     /// Returns true if the type is known to be move-constructible, false
     /// otherwise.
     ///
@@ -3930,7 +3987,7 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
         .iter()
         .map(|p| {
             let formatted = format_cc_type(&p.type_.cc_type, &ir)?;
-            if !db.rs_type_kind(p.type_.rs_type.clone())?.is_unpin() {
+            if !db.rs_type_kind(p.type_.rs_type.clone())?.is_c_abi_compatible_by_value() {
                 // non-Unpin types are wrapped by a pointer in the thunk.
                 Ok(quote! {#formatted *})
             } else {
@@ -3949,7 +4006,7 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
                 Some("&&") => Ok(quote! { std::move(* #ident) }),
                 _ => {
                     // non-Unpin types are wrapped by a pointer in the thunk.
-                    if !db.rs_type_kind(p.type_.rs_type.clone())?.is_unpin() {
+                    if !db.rs_type_kind(p.type_.rs_type.clone())?.is_c_abi_compatible_by_value() {
                         Ok(quote! { std::move(* #ident) })
                     } else {
                         Ok(quote! { #ident })
@@ -3959,15 +4016,14 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
         })
         .collect::<Result<Vec<_>>>()?;
 
-    // Here, we add a __return parameter if the return type is not trivially
-    // relocatable. (We do this after the arg_expressions computation, so
-    // that it's only in the parameter list, not the argument list.)
-    //
-    // RsTypeKind is where, as much as anywhere, where the information about trivial
-    // relocatability is stored.
-    let is_trivial_return = db.rs_type_kind(func.return_type.rs_type.clone())?.is_unpin();
+    // Here, we add a `__return` parameter if the return type can't be passed by
+    // value across `extern "C"` ABI.  (We do this after the arg_expressions
+    // computation, so that it's only in the parameter list, not the argument
+    // list.)
+    let is_return_value_c_abi_compatible =
+        db.rs_type_kind(func.return_type.rs_type.clone())?.is_c_abi_compatible_by_value();
     let mut return_type_name = format_cc_type(&func.return_type.cc_type, &ir)?;
-    if !is_trivial_return {
+    if !is_return_value_c_abi_compatible {
         param_idents.insert(0, format_cc_ident("__return"));
         param_types.insert(0, quote! {#return_type_name *});
         return_type_name = quote! {void};
@@ -4003,8 +4059,8 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
         };
 
     let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
-    let return_stmt = if !is_trivial_return {
-        // Explicitly use placement new so that we get guaranteed copy elision in C++17.
+    let return_stmt = if !is_return_value_c_abi_compatible {
+        // Explicitly use placement `new` so that we get guaranteed copy elision in C++17.
         let out_param = &param_idents[0];
         quote! {new(#out_param) auto(#return_expr)}
     } else {
@@ -4213,9 +4269,15 @@ mod tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub fn DoSomething(param: dependency::ParamStruct)
+                pub fn DoSomething(mut param: dependency::ParamStruct)
                     -> dependency::ReturnStruct {
-                    unsafe { crate::detail::__rust_thunk___Z11DoSomething11ParamStruct(param) }
+                     unsafe {
+                         let mut __return =
+                             ::core::mem::MaybeUninit::<dependency::ReturnStruct>::uninit();
+                         crate::detail::__rust_thunk___Z11DoSomething11ParamStruct(
+                             &mut __return, &mut param);
+                         __return.assume_init()
+                     }
                 }
             }
         );
@@ -4227,7 +4289,9 @@ mod tests {
                 use super::*;
                 extern "C" {
                     pub(crate) fn __rust_thunk___Z11DoSomething11ParamStruct(
-                        param: dependency::ParamStruct) -> dependency::ReturnStruct;
+                        __return: &mut ::core::mem::MaybeUninit<dependency::ReturnStruct>,
+                        param: &mut dependency::ParamStruct
+                    );
                 }
             }}
         );
@@ -4235,9 +4299,9 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" struct ReturnStruct __rust_thunk___Z11DoSomething11ParamStruct(
-                        struct ParamStruct param) {
-                    return DoSomething(param);
+                extern "C" void __rust_thunk___Z11DoSomething11ParamStruct(
+                        struct ReturnStruct* __return, struct ParamStruct* param) {
+                    new (__return) auto(DoSomething(std::move(*param)));
                 }
             }
         );
@@ -4351,10 +4415,10 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" class MyTemplate<int>
+                extern "C" void
                 __rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2ftest_3atesting_5ftarget(
-                        int value) {
-                    return MyTemplate<int>::Create(value);
+                    class MyTemplate<int>* __return, int value) {
+                  new (__return) auto(MyTemplate<int>::Create(value));
                 }
             }
         );
@@ -6800,7 +6864,8 @@ mod tests {
                 impl PartialEq for SomeStruct {
                     #[inline(always)]
                     fn eq(& self, rhs: & Self) -> bool {
-                        unsafe { crate::detail::__rust_thunk___Zeq10SomeStructS_(self.clone(), rhs.clone()) }
+                        unsafe { crate::detail::__rust_thunk___Zeq10SomeStructS_(
+                                &mut self.clone(), &mut rhs.clone()) }
                     }
                 }
             }
@@ -6933,7 +6998,8 @@ mod tests {
                     }
                     #[inline(always)]
                     fn lt(& self, rhs: &Self) -> bool {
-                        unsafe { crate::detail::__rust_thunk___Zlt10SomeStructS_(self.clone(), rhs.clone()) }
+                        unsafe { crate::detail::__rust_thunk___Zlt10SomeStructS_(
+                                &mut self.clone(), &mut rhs.clone()) }
                     }
                 }
             }
@@ -7884,6 +7950,88 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn test_unpin_by_value_param() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct Trivial final {
+              int trivial_field;
+            };
+
+            void foo(Trivial param);
+            "#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[inline(always)]
+                pub fn foo(mut param: crate::Trivial) {
+                    unsafe { crate::detail::__rust_thunk___Z3foo7Trivial(&mut param) }
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub(crate) fn __rust_thunk___Z3foo7Trivial(param: &mut crate::Trivial);
+            }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___Z3foo7Trivial(struct Trivial* param) {
+                    foo(std::move(*param));
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_unpin_by_value_return() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct Trivial final {
+              int trivial_field;
+            };
+
+            Trivial foo();
+            "#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[inline(always)]
+                pub fn foo() -> crate::Trivial {
+                    unsafe {
+                        let mut __return = ::core::mem::MaybeUninit::<crate::Trivial>::uninit();
+                        crate::detail::__rust_thunk___Z3foov(&mut __return);
+                        __return.assume_init()
+                    }
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub(crate) fn __rust_thunk___Z3foov(
+                    __return: &mut ::core::mem::MaybeUninit<crate::Trivial>
+                );
+            }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___Z3foov(struct Trivial* __return) {
+                    new (__return) auto(foo());
+                }
+            }
+        );
+        Ok(())
+    }
+
     /// Assignment is special in that it discards the return type.
     /// So if the return type is !Unpin, it needs to emplace!() it.
     #[test]
@@ -8263,7 +8411,9 @@ mod tests {
                 }
                 ...
                 extern "C" void __rust_thunk___Z4useSN23test_namespace_bindings1SE(
-                    struct test_namespace_bindings::S s) { useS(s); }
+                        struct test_namespace_bindings::S* s) {
+                    useS(std::move(*s));
+                }
                 ...
             }
         );
@@ -8298,13 +8448,16 @@ mod tests {
                     }
                     pub use inner::*;
                     ...
-                    pub fn processMyStruct(s: crate::test_namespace_bindings::inner::MyStruct)
+                    pub fn processMyStruct(
+                        mut s: crate::test_namespace_bindings::inner::MyStruct)
                     ...
                 }
                 ...
-                pub fn processMyStructOutsideNamespace(s: crate::test_namespace_bindings::inner::MyStruct)
+                pub fn processMyStructOutsideNamespace(
+                    mut s: crate::test_namespace_bindings::inner::MyStruct)
                 ...
-                pub fn processMyStructSkipInlineNamespaceQualifier(s: crate::test_namespace_bindings::inner::MyStruct)
+                pub fn processMyStructSkipInlineNamespaceQualifier(
+                    mut s: crate::test_namespace_bindings::inner::MyStruct)
                 ...
             }
         );

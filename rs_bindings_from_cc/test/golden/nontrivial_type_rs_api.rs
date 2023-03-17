@@ -673,8 +673,15 @@ pub fn TakesByValueInline(
 }
 
 #[inline(always)]
-pub fn TakesByValueUnpin(nontrivial: crate::NontrivialUnpin) -> crate::NontrivialUnpin {
-    unsafe { crate::detail::__rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(nontrivial) }
+pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::NontrivialUnpin {
+    unsafe {
+        let mut __return = ::core::mem::MaybeUninit::<crate::NontrivialUnpin>::uninit();
+        crate::detail::__rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
+            &mut __return,
+            &mut nontrivial,
+        );
+        __return.assume_init()
+    }
 }
 
 #[inline(always)]
@@ -1095,10 +1102,10 @@ mod detail {
             __return: &mut ::core::mem::MaybeUninit<crate::NontrivialInline>,
             nontrivial: &mut crate::NontrivialInline,
         );
-        #[link_name = "_Z17TakesByValueUnpin15NontrivialUnpin"]
         pub(crate) fn __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
-            nontrivial: crate::NontrivialUnpin,
-        ) -> crate::NontrivialUnpin;
+            __return: &mut ::core::mem::MaybeUninit<crate::NontrivialUnpin>,
+            nontrivial: &mut crate::NontrivialUnpin,
+        );
         #[link_name = "_Z16TakesByReferenceR10Nontrivial"]
         pub(crate) fn __rust_thunk___Z16TakesByReferenceR10Nontrivial<'a>(
             nontrivial: ::core::pin::Pin<&'a mut crate::Nontrivial>,

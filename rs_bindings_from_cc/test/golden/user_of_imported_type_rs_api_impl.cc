@@ -18,6 +18,11 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
+extern "C" void __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
+    struct ns::Trivial* __return, struct ns::Trivial* t) {
+  new (__return) auto(UsesImportedType(std::move(*t)));
+}
+
 static_assert(sizeof(struct UserOfImportedType) == 8);
 static_assert(alignof(struct UserOfImportedType) == 8);
 static_assert(CRUBIT_OFFSET_OF(trivial, struct UserOfImportedType) == 0);

@@ -21,8 +21,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #[inline(always)]
-pub fn UsesImportedType(t: trivial_type_cc::ns::Trivial) -> trivial_type_cc::ns::Trivial {
-    unsafe { crate::detail::__rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(t) }
+pub fn UsesImportedType(mut t: trivial_type_cc::ns::Trivial) -> trivial_type_cc::ns::Trivial {
+    unsafe {
+        let mut __return = ::core::mem::MaybeUninit::<trivial_type_cc::ns::Trivial>::uninit();
+        crate::detail::__rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(&mut __return, &mut t);
+        __return.assume_init()
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -81,10 +85,10 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        #[link_name = "_Z16UsesImportedTypeN2ns7TrivialE"]
         pub(crate) fn __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
-            t: trivial_type_cc::ns::Trivial,
-        ) -> trivial_type_cc::ns::Trivial;
+            __return: &mut ::core::mem::MaybeUninit<trivial_type_cc::ns::Trivial>,
+            t: &mut trivial_type_cc::ns::Trivial,
+        );
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::UserOfImportedType>,
         );

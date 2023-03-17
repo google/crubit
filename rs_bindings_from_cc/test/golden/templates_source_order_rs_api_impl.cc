@@ -29,8 +29,8 @@ static_assert(alignof(class MyTemplate<TopLevel>) == 1);
 
 extern "C" void
 __rust_thunk___ZN10MyTemplateI8TopLevelE8processTES0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
-    class MyTemplate<TopLevel>* __this, struct TopLevel t) {
-  __this->processT(t);
+    class MyTemplate<TopLevel>* __this, struct TopLevel* t) {
+  __this->processT(std::move(*t));
 }
 
 static_assert(sizeof(class MyTemplate<test_namespace_bindings::Inner>) == 1);
@@ -39,8 +39,8 @@ static_assert(alignof(class MyTemplate<test_namespace_bindings::Inner>) == 1);
 extern "C" void
 __rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
     class MyTemplate<test_namespace_bindings::Inner>* __this,
-    struct test_namespace_bindings::Inner t) {
-  __this->processT(t);
+    struct test_namespace_bindings::Inner* t) {
+  __this->processT(std::move(*t));
 }
 
 static_assert(sizeof(class MyTemplate<MyTemplate<TopLevel>>) == 1);
@@ -49,8 +49,8 @@ static_assert(alignof(class MyTemplate<MyTemplate<TopLevel>>) == 1);
 extern "C" void
 __rust_thunk___ZN10MyTemplateIS_I8TopLevelEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
     class MyTemplate<MyTemplate<TopLevel>>* __this,
-    class MyTemplate<TopLevel> t) {
-  __this->processT(t);
+    class MyTemplate<TopLevel>* t) {
+  __this->processT(std::move(*t));
 }
 
 static_assert(
@@ -61,8 +61,8 @@ static_assert(
 extern "C" void
 __rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEE8processTES2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
     class MyTemplate<MyTemplate<test_namespace_bindings::Inner>>* __this,
-    class MyTemplate<test_namespace_bindings::Inner> t) {
-  __this->processT(t);
+    class MyTemplate<test_namespace_bindings::Inner>* t) {
+  __this->processT(std::move(*t));
 }
 
 static_assert(sizeof(class MyTemplate<bool>) == 1);

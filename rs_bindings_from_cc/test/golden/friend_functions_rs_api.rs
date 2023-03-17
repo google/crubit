@@ -69,8 +69,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeClass {
 
 /// Friend functions that are visible via ADL.
 #[inline(always)]
-pub fn visible_val(__param_0: crate::SomeClass) {
-    unsafe { crate::detail::__rust_thunk___Z11visible_val9SomeClass(__param_0) }
+pub fn visible_val(mut __param_0: crate::SomeClass) {
+    unsafe { crate::detail::__rust_thunk___Z11visible_val9SomeClass(&mut __param_0) }
 }
 
 #[inline(always)]
@@ -118,8 +118,7 @@ mod detail {
             __this: &'a mut crate::SomeClass,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeClass>,
         ) -> &'a mut crate::SomeClass;
-        #[link_name = "_Z11visible_val9SomeClass"]
-        pub(crate) fn __rust_thunk___Z11visible_val9SomeClass(__param_0: crate::SomeClass);
+        pub(crate) fn __rust_thunk___Z11visible_val9SomeClass(__param_0: &mut crate::SomeClass);
         #[link_name = "_Z11visible_refR9SomeClass"]
         pub(crate) fn __rust_thunk___Z11visible_refR9SomeClass<'a>(
             __param_0: &'a mut crate::SomeClass,
