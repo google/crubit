@@ -847,12 +847,6 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
                     :: #crate_name :: #mod_path #struct_name #fn_name( #( #fn_args ),* )
                 }
             };
-            quote! {
-                #[no_mangle]
-                extern "C" fn #thunk_name( #( #thunk_params ),* ) -> #thunk_ret_type {
-                    #thunk_body
-                }
-            };
             if !is_c_abi_compatible_by_value(sig.output()) {
                 thunk_params.push(quote!{
                     __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
