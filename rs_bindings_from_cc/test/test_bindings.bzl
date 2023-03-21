@@ -29,7 +29,10 @@ def crubit_test_cc_library(name, **kwargs):
         cc_library = ":" + name,
         # note: this cannot be just + "_rust_api.rs", etc., because then two different actions would
         # produce the same file.
-        outs = ["generated_bindings/" + name + "_rust_api.rs"],
+        outs = [
+            "generated_bindings/" + name + "_rust_api.rs",
+            "generated_bindings/" + name + "_rust_api_impl.cc",
+        ],
     )
 
 def _write_crubit_outs_impl(ctx):
