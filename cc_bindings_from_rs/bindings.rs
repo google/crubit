@@ -18,7 +18,6 @@ use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::Symbol;
 use rustc_target::abi::{Abi, FieldsShape, Integer, Layout, Primitive, Scalar};
 use rustc_target::spec::PanicStrategy;
-use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::ops::AddAssign;
@@ -111,9 +110,12 @@ struct CcPrerequisites {
     includes: BTreeSet<CcInclude>,
 
     /// Set of local definitions that a `CcSnippet` depends on.  For example if
-    /// `CcSnippet::tokens` expands to `void foo(S s)` then the definition
-    /// of `S` should have appeared earlier - in this case `defs` will
-    /// include the `LocalDefId` corresponding to `S`.
+    /// `CcSnippet::tokens` expands to `void foo(S s) { ... }` then the
+    /// definition of `S` should have appeared earlier - in this case `defs`
+    /// will include the `LocalDefId` corresponding to `S`.  Note that the
+    /// definition of `S` is covered by `ApiSnippets::main_api` (i.e. the
+    /// predecessor of a toposort edge is `ApiSnippets::main_api` - it is not
+    /// possible to depend on `ApiSnippets::cc_details`).
     defs: HashSet<LocalDefId>,
 
     /// Set of forward declarations that a `CcSnippet` depends on.  For example
@@ -187,6 +189,12 @@ impl CcSnippet {
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(include);
         Self { tokens, prereqs }
+    }
+}
+
+impl AddAssign for CcSnippet {
+    fn add_assign(&mut self, rhs: Self) {
+        self.tokens.extend(rhs.into_tokens(&mut self.prereqs));
     }
 }
 
@@ -514,69 +522,42 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
     })
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-enum SnippetKind {
+#[derive(Debug, Default)]
+struct ApiSnippets {
     /// Main API - for example:
     /// - A C++ declaration of a function (with a doc comment),
     /// - A C++ definition of a struct (with a doc comment).
-    MainApi,
+    main_api: CcSnippet,
 
-    /// Implementation details - for example:
+    /// C++ implementation details - for example:
     /// - A C++ declaration of an `extern "C"` thunk,
+    /// - C++ `static_assert`s about struct size, aligment, and field offsets.
+    cc_details: CcSnippet,
+
+    /// Rust implementation details - for exmaple:
     /// - A Rust implementation of an `extern "C"` thunk,
-    /// - C++ or Rust assertions about struct size and aligment.
-    ImplDetails,
+    /// - Rust `assert!`s about struct size, aligment, and field offsets.
+    rs_details: TokenStream,
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-struct SnippetKey {
-    def_id: LocalDefId,
-    kind: SnippetKind,
-}
-
-fn preferred_snippet_order(tcx: TyCtxt) -> impl Fn(&SnippetKey, &SnippetKey) -> Ordering + '_ {
-    move |lhs: &SnippetKey, rhs: &SnippetKey| {
-        let to_ordering_key = |x: &SnippetKey| (x.kind.clone(), tcx.def_span(x.def_id));
-        let lhs = to_ordering_key(lhs);
-        let rhs = to_ordering_key(rhs);
-        lhs.cmp(&rhs)
-    }
-}
-
-/// A C++ snippet (e.g. function declaration for `..._cc_api.h`) and a Rust
-/// snippet (e.g. a thunk definition for `..._cc_api_impl.rs`).
-#[derive(Debug, Default)]
-struct MixedSnippet {
-    cc: CcSnippet,
-    rs: TokenStream,
-}
-
-impl From<CcSnippet> for MixedSnippet {
-    fn from(cc: CcSnippet) -> Self {
-        Self { cc, rs: quote! {} }
+impl FromIterator<ApiSnippets> for ApiSnippets {
+    fn from_iter<I: IntoIterator<Item = ApiSnippets>>(iter: I) -> Self {
+        let mut result = ApiSnippets::default();
+        for ApiSnippets { main_api, cc_details, rs_details } in iter.into_iter() {
+            result.main_api += main_api;
+            result.cc_details += cc_details;
+            result.rs_details.extend(rs_details);
+        }
+        result
     }
 }
 
 /// Formats a function with the given `local_def_id`.
 ///
-/// Returns multiple snippets, so that a function declaration can be emitted
-/// separately from a function definition (and thunk declaration).  This is
-/// mostly needed to handle method declarations (which need to be emitted
-/// separately from method definitions;  they also need to be reordered
-/// separately - see the `non_contiguous_method_decls_and_defs` module in
-/// `cc_bindings_from_rs/test/impls/impls.rs`).  Secondary motivation is to keep
-/// implementation details out of the way (to improve readability of the main
-/// apis).
-///
-/// Multiple snippets are returned as a `Vec` for consistency with
-/// `format_item`.  This is a somewhat arbitrary choice - in theory the return
-/// value could be represented as a pair/tuple or a struct that explicitly only
-/// holds two snippets: a declaration and an (optional) definition.
-///
 /// Will panic if `local_def_id`
 /// - is invalid
 /// - doesn't identify a function,
-fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey, MixedSnippet)>> {
+fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     let tcx = input.tcx;
     let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
 
@@ -737,143 +718,136 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
             },
         }
     };
-    let impl_details = if !needs_definition {
-        None
+    let cc_details = if !needs_definition {
+        CcSnippet::default()
     } else {
-        let cc = {
-            let thunk_name =
-                format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
+        let thunk_name =
+            format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
+        let struct_name = match struct_name.as_ref() {
+            None => quote! {},
+            Some(symbol) => {
+                let name = format_cc_ident(symbol.as_str())
+                    .expect("Caller of format_fn should verify struct via format_adt_core");
+                quote! { #name :: }
+            }
+        };
+
+        let mut prereqs = main_api_prereqs;
+        let mut thunk_params = params
+            .iter()
+            .map(|Param { cc_name, cc_type, ty, .. }| -> Result<TokenStream> {
+                if is_c_abi_compatible_by_value(*ty) {
+                    Ok(quote! { #cc_type #cc_name })
+                } else {
+                    // Rust thunk will move a value via memcpy - we need to `ensure` that
+                    // invoking the C++ destructor (on the moved-away value) is safe.
+                    // TODO(b/259749095): Support generic structs (with non-empty ParamEnv).
+                    ensure!(
+                        !ty.needs_drop(tcx, ty::ParamEnv::empty()),
+                        "Only trivially-movable and trivially-destructible types \
+                              may be passed by value over the FFI boundary"
+                    );
+                    Ok(quote! { #cc_type* #cc_name })
+                }
+            })
+            .collect::<Result<Vec<_>>>()?;
+        let mut thunk_args = params
+            .iter()
+            .map(|Param { cc_name, ty, .. }| {
+                if is_c_abi_compatible_by_value(*ty) {
+                    quote! { #cc_name }
+                } else {
+                    quote! { & #cc_name }
+                }
+            })
+            .collect_vec();
+        let thunk_ret_type: TokenStream;
+        let impl_body: TokenStream;
+        if is_c_abi_compatible_by_value(sig.output()) {
+            thunk_ret_type = main_api_ret_type.clone();
+            impl_body = quote! {
+                return __crubit_internal :: #thunk_name( #( #thunk_args ),* );
+            };
+        } else {
+            thunk_ret_type = quote! { void };
+            thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
+            thunk_args.push(quote! { __ret_slot.Get() });
+            impl_body = quote! {
+                crubit::ReturnValueSlot<#main_api_ret_type> __ret_slot;
+                __crubit_internal :: #thunk_name( #( #thunk_args ),* );
+                return std::move(__ret_slot).AssumeInitAndTakeValue();
+            };
+            prereqs.includes.insert(CcInclude::utility());
+            prereqs.includes.insert(input.support_header("internal/return_value_slot.h"));
+        };
+        CcSnippet {
+            prereqs,
+            tokens: quote! {
+                __NEWLINE__
+                namespace __crubit_internal {
+                    extern "C" #thunk_ret_type #thunk_name ( #( #thunk_params ),* );
+                }
+                inline #main_api_ret_type #struct_name #main_api_fn_name (
+                        #( #main_api_params ),* ) {
+                    #impl_body
+                }
+                __NEWLINE__
+            },
+        }
+    };
+
+    let rs_details = if !needs_thunk {
+        quote! {}
+    } else {
+        let thunk_name = make_rs_ident(symbol_name.name);
+        let mut thunk_params = params
+            .iter()
+            .map(|Param { rs_name, rs_type, ty, .. }| {
+                if is_c_abi_compatible_by_value(*ty) {
+                    quote! { #rs_name: #rs_type }
+                } else {
+                    quote! { #rs_name: &mut ::core::mem::MaybeUninit<#rs_type> }
+                }
+            })
+            .collect_vec();
+        let mut thunk_ret_type = format_ty_for_rs(tcx, sig.output())?;
+        let mut thunk_body = {
+            let crate_name = make_rs_ident(krate.as_str());
+            let mod_path = mod_path.format_for_rs();
+            let fn_name = make_rs_ident(fn_name.as_str());
             let struct_name = match struct_name.as_ref() {
                 None => quote! {},
                 Some(symbol) => {
-                    let name = format_cc_ident(symbol.as_str())
-                        .expect("Caller of format_fn should verify struct via format_adt_core");
+                    let name = make_rs_ident(symbol.as_str());
                     quote! { #name :: }
                 }
             };
-
-            let mut prereqs = main_api_prereqs;
-            let mut thunk_params = params
-                .iter()
-                .map(|Param { cc_name, cc_type, ty, .. }| -> Result<TokenStream> {
-                     if is_c_abi_compatible_by_value(*ty) {
-                         Ok(quote! { #cc_type #cc_name })
-                     } else {
-                         // Rust thunk will move a value via memcpy - we need to `ensure` that
-                         // invoking the C++ destructor (on the moved-away value) is safe.
-                         // TODO(b/259749095): Support generic structs (with non-empty ParamEnv).
-                         ensure!(!ty.needs_drop(tcx, ty::ParamEnv::empty()),
-                                 "Only trivially-movable and trivially-destructible types \
-                                  may be passed by value over the FFI boundary");
-                         Ok(quote! { #cc_type* #cc_name })
-                     }})
-                .collect::<Result<Vec<_>>>()?;
-            let mut thunk_args = params
-                .iter()
-                .map(|Param{ cc_name, ty, ..}|
-                     if is_c_abi_compatible_by_value(*ty) {
-                         quote!{ #cc_name }
-                     } else {
-                         quote!{ & #cc_name }
-                     })
-                .collect_vec();
-            let thunk_ret_type: TokenStream;
-            let impl_body: TokenStream;
-            if is_c_abi_compatible_by_value(sig.output()) {
-                thunk_ret_type = main_api_ret_type.clone();
-                impl_body = quote!{
-                    return __crubit_internal :: #thunk_name( #( #thunk_args ),* );
-                };
-            } else {
-                thunk_ret_type = quote!{ void };
-                thunk_params.push(quote!{ #main_api_ret_type* __ret_ptr });
-                thunk_args.push(quote!{ __ret_slot.Get() });
-                impl_body = quote!{
-                    crubit::ReturnValueSlot<#main_api_ret_type> __ret_slot;
-                    __crubit_internal :: #thunk_name( #( #thunk_args ),* );
-                    return std::move(__ret_slot).AssumeInitAndTakeValue();
-                };
-                prereqs.includes.insert(CcInclude::utility());
-                prereqs.includes.insert(input.support_header("internal/return_value_slot.h"));
-            };
-            CcSnippet {
-                prereqs,
-                tokens: quote! {
-                    __NEWLINE__
-                    namespace __crubit_internal {
-                        extern "C" #thunk_ret_type #thunk_name ( #( #thunk_params ),* );
-                    }
-                    inline #main_api_ret_type #struct_name #main_api_fn_name (
-                            #( #main_api_params ),* ) {
-                        #impl_body
-                    }
-                    __NEWLINE__
-                },
-            }
-        };
-
-        let rs = if !needs_thunk {
-            quote! {}
-        } else {
-            let thunk_name = make_rs_ident(symbol_name.name);
-            let mut thunk_params = params
-                .iter()
-                .map(|Param{ rs_name, rs_type, ty, ..}|
-                    if is_c_abi_compatible_by_value(*ty) {
-                        quote!{ #rs_name: #rs_type }
-                    } else {
-                        quote!{ #rs_name: &mut ::core::mem::MaybeUninit<#rs_type> }
-                    })
-                .collect_vec();
-            let mut thunk_ret_type = format_ty_for_rs(tcx, sig.output())?;
-            let mut thunk_body = {
-                let crate_name = make_rs_ident(krate.as_str());
-                let mod_path = mod_path.format_for_rs();
-                let fn_name = make_rs_ident(fn_name.as_str());
-                let struct_name = match struct_name.as_ref() {
-                    None => quote! {},
-                    Some(symbol) => {
-                        let name = make_rs_ident(symbol.as_str());
-                        quote! { #name :: }
-                    }
-                };
-                let fn_args = params.iter().map(|Param{ rs_name, ty, .. }|
-                    if is_c_abi_compatible_by_value(*ty) {
-                        quote!{ #rs_name }
-                    } else {
-                        quote!{ unsafe { #rs_name.assume_init_read() } }
-                    });
-                quote!{
-                    :: #crate_name :: #mod_path #struct_name #fn_name( #( #fn_args ),* )
+            let fn_args = params.iter().map(|Param { rs_name, ty, .. }| {
+                if is_c_abi_compatible_by_value(*ty) {
+                    quote! { #rs_name }
+                } else {
+                    quote! { unsafe { #rs_name.assume_init_read() } }
                 }
-            };
-            if !is_c_abi_compatible_by_value(sig.output()) {
-                thunk_params.push(quote!{
-                    __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
-                });
-                thunk_ret_type = quote!{ () };
-                thunk_body = quote!{ __ret_slot.write(#thunk_body); };
-            };
+            });
             quote! {
-                #[no_mangle]
-                extern "C" fn #thunk_name( #( #thunk_params ),* ) -> #thunk_ret_type {
-                    #thunk_body
-                }
+                :: #crate_name :: #mod_path #struct_name #fn_name( #( #fn_args ),* )
             }
         };
-
-        Some(MixedSnippet { cc, rs })
+        if !is_c_abi_compatible_by_value(sig.output()) {
+            thunk_params.push(quote! {
+                __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
+            });
+            thunk_ret_type = quote! { () };
+            thunk_body = quote! { __ret_slot.write(#thunk_body); };
+        };
+        quote! {
+            #[no_mangle]
+            extern "C" fn #thunk_name( #( #thunk_params ),* ) -> #thunk_ret_type {
+                #thunk_body
+            }
+        }
     };
-
-    let mut result =
-        vec![(SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi }, main_api.into())];
-    if let Some(impl_details) = impl_details {
-        result.push((
-            SnippetKey { def_id: local_def_id, kind: SnippetKind::ImplDetails },
-            impl_details,
-        ));
-    }
-    Ok(result)
+    Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
 
 /// Represents bindings for the "core" part of an algebraic data type (an ADT -
@@ -1078,14 +1052,7 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
 /// represented by `core`.  This function is infallible - after
 /// `format_adt_core` returns success we have committed to emitting C++ bindings
 /// for the ADT.
-///
-/// Returns multiple snippets to support independent reordering of 1) the struct
-/// definition (including declarations of methods - aka member functions), and
-/// 2) an arbitrary number of method definitions.  For motivation see the
-/// `non_contiguous_method_decls_and_defs` module in `cc_bindings_from_rs/test/
-/// impls/impls.rs`).  Secondary motivation is to keep implementation
-/// details out of the way (to improve readability of the main apis).
-fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSnippet)> {
+fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     let tcx = input.tcx;
 
     // TODO(b/259749095): Support non-empty set of generic parameters.
@@ -1225,7 +1192,11 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
         })
         .collect();
 
-    let (impl_item_main_apis, impl_item_other_snippets) = tcx
+    let ApiSnippets {
+        main_api: impl_items_main_api,
+        cc_details: impl_items_cc_details,
+        rs_details: impl_items_rs_details,
+    } = tcx
         .inherent_impls(core.def_id)
         .iter()
         .map(|impl_id| tcx.hir().expect_item(impl_id.expect_local()))
@@ -1233,18 +1204,22 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
             ItemKind::Impl(impl_) => impl_.items,
             other => panic!("Unexpected `ItemKind` from `inherent_impls`: {other:?}"),
         })
-        .flat_map(|impl_item_ref| {
+        .sorted_by_key(|impl_item_ref| {
+            let def_id = impl_item_ref.id.owner_id.def_id;
+            tcx.def_span(def_id)
+        })
+        .filter_map(|impl_item_ref| {
             let def_id = impl_item_ref.id.owner_id.def_id;
             if !tcx.effective_visibilities(()).is_directly_public(def_id) {
-                return vec![];
+                return None;
             }
             let result = match impl_item_ref.kind {
-                AssocItemKind::Fn { .. } => format_fn(input, def_id),
+                AssocItemKind::Fn { .. } => format_fn(input, def_id).map(Some),
                 other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
             };
-            result.unwrap_or_else(|err| vec![format_unsupported_def(tcx, def_id, err)])
+            result.unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
         })
-        .partition::<Vec<_>, _>(|(SnippetKey { kind, .. }, _)| *kind == SnippetKind::MainApi);
+        .collect();
 
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
@@ -1296,19 +1271,11 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
                 }
             })
             .collect();
-        let impl_item_decls = if impl_item_main_apis.is_empty() {
+        let impl_item_decls = if impl_items_main_api.tokens.is_empty() {
             quote! {}
         } else {
-            let cmp = preferred_snippet_order(tcx);
-            let tokens = impl_item_main_apis
-                .into_iter()
-                .sorted_by(|(key1, _), (key2, _)| cmp(key1, key2))
-                .map(|(_key, snippet)| snippet.cc.into_tokens(&mut prereqs))
-                .collect_vec();
-            quote! {
-                public:
-                    #( #tokens )*
-            }
+            let tokens = impl_items_main_api.into_tokens(&mut prereqs);
+            quote! { public: #tokens }
         };
         prereqs.fwd_decls.remove(&local_def_id);
         let assertions_method_decl = if cc_field_assertions.is_empty() {
@@ -1336,18 +1303,22 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
             },
         }
     };
-    let impl_details = {
-        let mut cc = {
-            let assertions_method_def = if cc_field_assertions.is_empty() {
-                quote! {}
-            } else {
-                quote! {
-                    inline void #adt_cc_name::__crubit_field_offset_assertions() {
-                        #cc_field_assertions
-                    }
+    let cc_details = {
+        let assertions_method_def = if cc_field_assertions.is_empty() {
+            quote! {}
+        } else {
+            quote! {
+                inline void #adt_cc_name::__crubit_field_offset_assertions() {
+                    #cc_field_assertions
                 }
-            };
-            CcSnippet::new(quote! {
+            }
+        };
+        let mut prereqs = CcPrerequisites::default();
+        let impl_items_cc_details = impl_items_cc_details.into_tokens(&mut prereqs);
+        prereqs.defs.insert(local_def_id);
+        CcSnippet {
+            prereqs,
+            tokens: quote! {
                 __NEWLINE__
                 static_assert(
                     sizeof(#adt_cc_name) == #size,
@@ -1357,25 +1328,17 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
                     "Verify that struct layout didn't change since this header got generated");
                 __NEWLINE__
                 #assertions_method_def
-            })
-        };
-        cc.prereqs.defs.insert(local_def_id);
-        let rs = {
-            quote! {
-                const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
-                const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
-                #rs_field_assertions
-            }
-        };
-        MixedSnippet { cc, rs }
+                #impl_items_cc_details
+            },
+        }
     };
-
-    let mut result = vec![
-        (SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi }, main_api.into()),
-        (SnippetKey { def_id: local_def_id, kind: SnippetKind::ImplDetails }, impl_details),
-    ];
-    result.extend(impl_item_other_snippets);
-    result
+    let rs_details = quote! {
+        const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
+        const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
+        #rs_field_assertions
+        #impl_items_rs_details
+    };
+    ApiSnippets { main_api, cc_details, rs_details }
 }
 
 /// Formats the forward declaration of an algebraic data type (an ADT - a
@@ -1434,14 +1397,14 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
 /// can be ignored. Returns an `Err` if the definition couldn't be formatted.
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
-fn format_item(input: &Input, def_id: LocalDefId) -> Result<Vec<(SnippetKey, MixedSnippet)>> {
+fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<ApiSnippets>> {
     // TODO(b/262052635): When adding support for re-exports we may need to change
     // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is undesirable,
     // because it would mean exposing items from a private module.  Exposing a private module is
     // undesirable, because it would mean that changes of private implementation details of the
     // crate could become breaking changes for users of the generated C++ bindings.)
     if !input.tcx.effective_visibilities(()).is_directly_public(def_id) {
-        return Ok(vec![]);
+        return Ok(None);
     }
 
     match input.tcx.hir().expect_item(def_id) {
@@ -1451,13 +1414,13 @@ fn format_item(input: &Input, def_id: LocalDefId) -> Result<Vec<(SnippetKey, Mix
                .. } if !generics.params.is_empty() => {
             bail!("Generic types are not supported yet (b/259749095)");
         },
-        Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id),
+        Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id).map(Some),
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
             format_adt_core(input.tcx, def_id.to_def_id())
-                .map(|core| format_adt(input, &core)),
+                .map(|core| Some(format_adt(input, &core))),
         Item { kind: ItemKind::Impl(_), .. } |  // Handled by `format_adt`
         Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
-            Ok(vec![]),
+            Ok(None),
         Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
     }
 }
@@ -1468,49 +1431,61 @@ fn format_unsupported_def(
     tcx: TyCtxt,
     local_def_id: LocalDefId,
     err: anyhow::Error,
-) -> (SnippetKey, MixedSnippet) {
+) -> ApiSnippets {
     let source_loc = format_source_location(tcx, local_def_id);
     let name = tcx.def_path_str(local_def_id.to_def_id());
 
     // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
     // says: To print causes as well [...], use the alternate selector “{:#}”.
     let msg = format!("Error generating bindings for `{name}` defined at {source_loc}: {err:#}");
-    let cc = CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ });
+    let main_api = CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ });
 
-    (SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi }, cc.into())
+    ApiSnippets { main_api, cc_details: CcSnippet::default(), rs_details: quote! {} }
 }
 
 /// Formats all public items from the Rust crate being compiled.
 fn format_crate(input: &Input) -> Result<Output> {
     let tcx = input.tcx;
-    let mut bindings: HashMap<SnippetKey, MixedSnippet> = tcx
+    let mut cc_details_prereqs = CcPrerequisites::default();
+    let mut cc_details: Vec<(LocalDefId, TokenStream)> = vec![];
+    let mut rs_body = TokenStream::default();
+    let mut main_apis: HashMap<LocalDefId, CcSnippet> = tcx
         .hir()
         .items()
-        .flat_map(|item_id| {
+        .filter_map(|item_id| {
             let def_id: LocalDefId = item_id.owner_id.def_id;
             format_item(input, def_id)
-                .unwrap_or_else(|err| vec![format_unsupported_def(tcx, def_id, err)])
-                .into_iter()
+                .unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
+                .map(|api_snippets| (def_id, api_snippets))
         })
-        .fold(HashMap::new(), |mut map, (key, value)| {
-            let old_item = map.insert(key, value);
-            assert!(old_item.is_none(), "Duplicated key: {key:?}");
-            map
+        .sorted_by_key(|(def_id, _)| tcx.def_span(*def_id))
+        .fold(HashMap::new(), |mut main_apis, (def_id, api_snippets)| {
+            let old_item = main_apis.insert(def_id, api_snippets.main_api);
+            assert!(old_item.is_none(), "Duplicated key: {def_id:?}");
+
+            // `cc_details` don't participate in the toposort, because
+            // `CcPrerequisites::defs` always use `main_api` as the predecessor
+            // - `chain`ing `cc_details` after `ordered_main_apis` trivially
+            // meets the prerequisites.
+            cc_details.push((def_id, api_snippets.cc_details.into_tokens(&mut cc_details_prereqs)));
+            rs_body.extend(api_snippets.rs_details);
+
+            main_apis
         });
 
-    // Find the order of `bindings` that 1) meets the requirements of
+    // Find the order of `main_apis` that 1) meets the requirements of
     // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
-    // `bindings` in the same order as the source order of the Rust APIs.
+    // `main_apis` in the same order as the source order of the Rust APIs.
     let ordered_ids = {
         let toposort::TopoSortResult { ordered: ordered_ids, failed: failed_ids } = {
-            let nodes = bindings.keys().copied();
-            let deps = bindings.iter().flat_map(|(&successor, snippet)| {
-                let predecessors = snippet.cc.prereqs.defs.iter().map(|&def_id|
-                    SnippetKey { def_id, kind: SnippetKind::MainApi }
-                );
+            let nodes = main_apis.keys().copied();
+            let deps = main_apis.iter().flat_map(|(&successor, main_api)| {
+                let predecessors = main_api.prereqs.defs.iter().map(|&def_id| def_id);
                 predecessors.map(move |predecessor| toposort::Dependency { predecessor, successor })
             });
-            toposort::toposort(nodes, deps, preferred_snippet_order(tcx))
+            toposort::toposort(nodes, deps, move |lhs_id, rhs_id| {
+                tcx.def_span(*lhs_id).cmp(&tcx.def_span(*rhs_id))
+            })
         };
         assert_eq!(
             0,
@@ -1522,49 +1497,48 @@ fn format_crate(input: &Input) -> Result<Output> {
         ordered_ids
     };
 
-    // Destructure/rebuild `bindings` (in the same order as `ordered_ids`) into
-    // `includes`, and into separate C++ snippets and Rust snippets.
-    let (includes, ordered_cc, rs_body) = {
+    // Destructure/rebuild `main_apis` (in the same order as `ordered_ids`) into
+    // `includes`, and `ordered_cc` (mixing in `fwd_decls` and `cc_details`).
+    let (includes, ordered_cc) = {
         let mut already_declared = HashSet::new();
         let mut fwd_decls = HashSet::new();
-        let mut includes = BTreeSet::new();
-        let mut ordered_cc = Vec::new();
-        let mut rs_body = quote! {};
-        for key in ordered_ids.into_iter() {
-            let mod_path = FullyQualifiedName::new(tcx, key.def_id.to_def_id()).mod_path;
-            let MixedSnippet {
-                rs: inner_rs,
-                cc: CcSnippet {
-                    tokens: cc_tokens,
-                    prereqs: CcPrerequisites {
-                        includes: mut inner_includes,
-                        fwd_decls: inner_fwd_decls,
-                        .. // `defs` have already been utilized by `toposort` above
-                    }
+        let mut includes = cc_details_prereqs.includes;
+        let mut ordered_main_apis: Vec<(LocalDefId, TokenStream)> = Vec::new();
+        for def_id in ordered_ids.into_iter() {
+            let CcSnippet {
+                tokens: cc_tokens,
+                prereqs: CcPrerequisites {
+                    includes: mut inner_includes,
+                    fwd_decls: inner_fwd_decls,
+                    .. // `defs` have already been utilized by `toposort` above
                 }
-            } = bindings.remove(&key).unwrap();
+            } = main_apis.remove(&def_id).unwrap();
 
             fwd_decls.extend(inner_fwd_decls.difference(&already_declared).copied());
-            already_declared.insert(key.def_id);
+            already_declared.insert(def_id);
             already_declared.extend(inner_fwd_decls.into_iter());
 
             includes.append(&mut inner_includes);
-            ordered_cc.push((mod_path, cc_tokens));
-            rs_body.extend(inner_rs);
+            ordered_main_apis.push((def_id, cc_tokens));
         }
 
-        // Prepend `fwd_decls` (in the original source order) to `ordered_cc`.
         let fwd_decls = fwd_decls
             .into_iter()
             .sorted_by_key(|def_id| tcx.def_span(*def_id))
-            .map(|local_def_id| {
+            .map(|local_def_id| (local_def_id, format_fwd_decl(tcx, local_def_id)))
+            .collect_vec();
+
+        let ordered_cc: Vec<(NamespaceQualifier, TokenStream)> = fwd_decls
+            .into_iter()
+            .chain(ordered_main_apis.into_iter())
+            .chain(cc_details.into_iter())
+            .map(|(local_def_id, tokens)| {
                 let mod_path = FullyQualifiedName::new(tcx, local_def_id.to_def_id()).mod_path;
-                (mod_path, format_fwd_decl(tcx, local_def_id))
+                (mod_path, tokens)
             })
             .collect_vec();
-        let ordered_cc = fwd_decls.into_iter().chain(ordered_cc.into_iter()).collect_vec();
 
-        (includes, ordered_cc, rs_body)
+        (includes, ordered_cc)
     };
 
     // Generate top-level elements of the C++ header file.
@@ -2316,8 +2290,8 @@ pub mod tests {
                 pub extern "C" fn public_function() {}
             "#;
         test_format_item(test_src, "public_function", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -2344,8 +2318,8 @@ pub mod tests {
                 pub extern "C" fn explicit_unit_return_type() -> () {}
             "#;
         test_format_item(test_src, "explicit_unit_return_type", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -2369,8 +2343,8 @@ pub mod tests {
             // attribute.
             // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
             // details).
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -2392,9 +2366,8 @@ pub mod tests {
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
         test_format_item(test_src, "public_function", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -2402,10 +2375,10 @@ pub mod tests {
                     inline double public_function(double x, double y);
                 }
             );
-            assert!(impl_details.rs.is_empty());
-            assert!(impl_details.cc.prereqs.is_empty());
+            assert!(result.rs_details.is_empty());
+            assert!(result.cc_details.prereqs.is_empty());
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -2426,9 +2399,8 @@ pub mod tests {
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
         test_format_item(test_src, "public_function", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -2436,10 +2408,10 @@ pub mod tests {
                     inline double public_function(double x, double y);
                 }
             );
-            assert!(impl_details.rs.is_empty());
-            assert!(impl_details.cc.prereqs.is_empty());
+            assert!(result.rs_details.is_empty());
+            assert!(result.cc_details.prereqs.is_empty());
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double export_name(double x, double y);
@@ -2483,9 +2455,8 @@ pub mod tests {
         test_format_item(test_src, "foo", |result| {
             // TODO(b/254095787): Update test expectations below once `const fn` from Rust
             // is translated into a `consteval` C++ function.
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(!main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -2493,9 +2464,9 @@ pub mod tests {
                     inline std::int32_t foo(std::int32_t i);
                 }
             );
-            assert!(!impl_details.cc.prereqs.is_empty());
+            assert!(!result.cc_details.prereqs.is_empty());
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" std::int32_t ...( std::int32_t i);
@@ -2507,7 +2478,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -2529,8 +2500,8 @@ pub mod tests {
                 pub extern "C-unwind" fn may_throw() {}
             "#;
         test_format_item(test_src, "may_throw", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -2550,16 +2521,15 @@ pub mod tests {
                 pub struct S(i32);
             "#;
         test_format_item(test_src, "foo", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
 
             // Minimal coverage, just to double-check that the test setup works.
             //
             // Note that this is a definition, and therefore `S` should be defined
             // earlier (not just forward declared).
             assert_cc_matches!(main_api.tokens, quote! { S foo(std::int32_t _i);});
-            assert_cc_matches!(impl_details.cc.tokens, quote! { S foo(std::int32_t _i) { ... }});
+            assert_cc_matches!(result.cc_details.tokens, quote! { S foo(std::int32_t _i) { ... }});
 
             // Main checks: `CcPrerequisites::includes`.
             assert_cc_matches!(
@@ -2567,7 +2537,7 @@ pub mod tests {
                 quote! { include <cstdint> }
             );
             assert_cc_matches!(
-                format_cc_includes(&impl_details.cc.prereqs.includes),
+                format_cc_includes(&result.cc_details.prereqs.includes),
                 quote! { include <cstdint> }
             );
 
@@ -2580,8 +2550,8 @@ pub mod tests {
             // Note that `main_api` and `impl_details` have different expectations.
             assert_eq!(0, main_api.prereqs.defs.len());
             assert_eq!(1, main_api.prereqs.fwd_decls.len());
-            assert_eq!(1, impl_details.cc.prereqs.defs.len());
-            assert_eq!(0, impl_details.cc.prereqs.fwd_decls.len());
+            assert_eq!(1, result.cc_details.prereqs.defs.len());
+            assert_eq!(0, result.cc_details.prereqs.fwd_decls.len());
         });
     }
 
@@ -2603,8 +2573,8 @@ pub mod tests {
                 pub struct S(bool);
             "#;
         test_format_item(test_src, "foo", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
 
             // Minimal coverage, just to double-check that the test setup works.
             //
@@ -2637,8 +2607,8 @@ pub mod tests {
                 pub extern "C" fn type_aliased_return() -> MyTypeAlias { 42.0 }
             "#;
         test_format_item(test_src, "type_aliased_return", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -2660,8 +2630,8 @@ pub mod tests {
             pub extern "C" fn fn_with_doc_comment_with_unmangled_name() {}
           "#;
         test_format_item(test_src, "fn_with_doc_comment_with_unmangled_name", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             let doc_comments = [
                 " Outer line doc.",
@@ -2694,8 +2664,8 @@ pub mod tests {
             }
           "#;
         test_format_item(test_src, "fn_with_inner_doc_comment_with_unmangled_name", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             let doc_comments = [
                 " Outer doc comment.",
@@ -2720,8 +2690,8 @@ pub mod tests {
                 pub extern "C" fn fn_with_doc_comment_with_mangled_name() {}
             "#;
         test_format_item(test_src, "fn_with_doc_comment_with_mangled_name", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             let comment = " Doc comment of a function with mangled name.\n\n\
                            Generated from: <crubit_unittests.rs>;l=3";
@@ -2864,9 +2834,8 @@ pub mod tests {
             // TODO(b/261074843): Re-add thunk name verification once we are using stable name
             // mangling (which may be coming in Q1 2023).  (This might mean reverting cl/492333432
             // + manual review and tweaks.)
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -2874,9 +2843,9 @@ pub mod tests {
                     inline double add(double x, double y);
                 }
             );
-            assert!(impl_details.cc.prereqs.is_empty());
+            assert!(result.cc_details.prereqs.is_empty());
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -2888,7 +2857,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -2907,9 +2876,8 @@ pub mod tests {
                 pub fn into_i32(s: S) -> i32 { s.0 }
             "#;
         test_format_item(test_src, "into_i32", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -2917,7 +2885,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" std::int32_t ...(::rust_out::S* s);
@@ -2929,7 +2897,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -2948,9 +2916,8 @@ pub mod tests {
                 pub fn create(i: i32) -> S { S(i) }
             "#;
         test_format_item(test_src, "create", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -2958,7 +2925,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" void ...(std::int32_t i, ::rust_out::S* __ret_ptr);
@@ -2972,7 +2939,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -3009,9 +2976,8 @@ pub mod tests {
                 pub extern "vectorcall" fn add(x: f64, y: f64) -> f64 { x * y }
             "#;
         test_format_item(test_src, "add", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3019,9 +2985,9 @@ pub mod tests {
                     inline double add(double x, double y);
                 }
             );
-            assert!(impl_details.cc.prereqs.is_empty());
+            assert!(result.cc_details.prereqs.is_empty());
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -3033,7 +2999,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -3068,8 +3034,8 @@ pub mod tests {
                 pub extern "C" fn foo(b: bool, f: f64) {}
             "#;
         test_format_item(test_src, "foo", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3089,8 +3055,8 @@ pub mod tests {
                 pub extern "C" fn some_function(reinterpret_cast: f64) {}
             "#;
         test_format_item(test_src, "some_function", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3108,9 +3074,8 @@ pub mod tests {
                 pub fn foo(_: f64, _: f64) {}
             "#;
         test_format_item(test_src, "foo", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3118,9 +3083,9 @@ pub mod tests {
                     inline void foo(double __param_0, double __param_1);
                 }
             );
-            assert!(impl_details.cc.prereqs.is_empty());
+            assert!(result.cc_details.prereqs.is_empty());
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" void ...(
@@ -3133,7 +3098,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     #[no_mangle]
                     extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
@@ -3159,9 +3124,8 @@ pub mod tests {
                 pub fn func(S{f1, f2}: S) -> i32 { f1 + f2 }
             "#;
         test_format_item(test_src, "func", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -3169,7 +3133,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" std::int32_t ...(::rust_out::S* __param_0);
@@ -3181,7 +3145,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     #[no_mangle]
                     extern "C" fn ...(
@@ -3252,9 +3216,8 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<SomeStruct>() == 4);
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(!main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3286,7 +3249,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
@@ -3297,7 +3260,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
@@ -3318,9 +3281,8 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<TupleStruct>() == 4);
             "#;
         test_format_item(test_src, "TupleStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(!main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3352,7 +3314,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     static_assert(sizeof(TupleStruct) == 8, ...);
                     static_assert(alignof(TupleStruct) == 4, ...);
@@ -3363,7 +3325,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::TupleStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::TupleStruct>() == 4);
@@ -3389,9 +3351,8 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<SomeStruct>() == 4);
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(!main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3411,7 +3372,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
@@ -3423,7 +3384,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
@@ -3450,9 +3411,8 @@ pub mod tests {
                 const _: () = assert!(::std::mem::align_of::<SomeStruct>() == 1);
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(!main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3467,7 +3427,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     static_assert(sizeof(SomeStruct) == 6, ...);
                     static_assert(alignof(SomeStruct) == 1, ...);
@@ -3478,7 +3438,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 6);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 1);
@@ -3502,9 +3462,8 @@ pub mod tests {
                 const _: () = assert!(::std::mem::align_of::<SomeStruct>() == 4);
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(!main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3520,7 +3479,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
@@ -3531,7 +3490,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
@@ -3556,9 +3515,8 @@ pub mod tests {
                 }
             "#;
         test_format_item(test_src, "Math", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
@@ -3574,7 +3532,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
                     extern "C" float ... (float x, float y);
@@ -3585,7 +3543,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     #[no_mangle]
                     extern "C" fn ...(x: f32, y: f32) -> f32 {
@@ -3613,9 +3571,8 @@ pub mod tests {
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::generic_method` \
                                    defined at <crubit_unittests.rs>;l=10: \
@@ -3632,8 +3589,8 @@ pub mod tests {
                     ...
                 }
             );
-            assert_cc_not_matches!(impl_details.cc.tokens, quote! { SomeStruct::generic_method },);
-            assert_rs_not_matches!(impl_details.rs, quote! { generic_method },);
+            assert_cc_not_matches!(result.cc_details.tokens, quote! { SomeStruct::generic_method },);
+            assert_rs_not_matches!(result.rs_details, quote! { generic_method },);
         });
     }
 
@@ -3649,9 +3606,8 @@ pub mod tests {
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::fn_taking_reference` \
                                    defined at <crubit_unittests.rs>;l=7: \
@@ -3669,10 +3625,10 @@ pub mod tests {
                 }
             );
             assert_cc_not_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! { SomeStruct::fn_taking_reference },
             );
-            assert_rs_not_matches!(impl_details.rs, quote! { fn_taking_reference },);
+            assert_rs_not_matches!(result.rs_details, quote! { fn_taking_reference },);
         });
     }
 
@@ -3688,9 +3644,8 @@ pub mod tests {
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::into_f32` \
                                    defined at <crubit_unittests.rs>;l=5: \
@@ -3707,8 +3662,8 @@ pub mod tests {
                     ...
                 }
             );
-            assert_cc_not_matches!(impl_details.cc.tokens, quote! { SomeStruct::into_f32 },);
-            assert_rs_not_matches!(impl_details.rs, quote! { into_f32 },);
+            assert_cc_not_matches!(result.cc_details.tokens, quote! { SomeStruct::into_f32 },);
+            assert_rs_not_matches!(result.rs_details, quote! { into_f32 },);
         });
     }
 
@@ -3724,9 +3679,8 @@ pub mod tests {
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::get_f32` \
                                    defined at <crubit_unittests.rs>;l=5: \
@@ -3743,8 +3697,8 @@ pub mod tests {
                     ...
                 }
             );
-            assert_cc_not_matches!(impl_details.cc.tokens, quote! { SomeStruct::get_f32 },);
-            assert_rs_not_matches!(impl_details.rs, quote! { get_f32 },);
+            assert_cc_not_matches!(result.cc_details.tokens, quote! { SomeStruct::get_f32 },);
+            assert_rs_not_matches!(result.rs_details, quote! { get_f32 },);
         });
     }
 
@@ -3760,9 +3714,8 @@ pub mod tests {
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::set_f32` \
                                    defined at <crubit_unittests.rs>;l=5: \
@@ -3779,8 +3732,8 @@ pub mod tests {
                     ...
                 }
             );
-            assert_cc_not_matches!(impl_details.cc.tokens, quote! { SomeStruct::set_f32 },);
-            assert_rs_not_matches!(impl_details.rs, quote! { set_f32 },);
+            assert_cc_not_matches!(result.cc_details.tokens, quote! { SomeStruct::set_f32 },);
+            assert_rs_not_matches!(result.rs_details, quote! { set_f32 },);
         });
     }
 
@@ -3813,9 +3766,8 @@ pub mod tests {
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             let broken_field_msg = "Field type has been replaced with a blob of bytes: \
                                     Generic types are not supported yet (b/259749095)";
             assert_cc_matches!(
@@ -3834,7 +3786,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     static_assert(sizeof(SomeStruct) == 20, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
@@ -3845,7 +3797,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 20);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
@@ -3949,9 +3901,8 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<SomeEnum>() == 1);
             "#;
         test_format_item(test_src, "SomeEnum", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
                                  `union` (b/272801632) or `enum`";
@@ -3986,14 +3937,14 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     static_assert(sizeof(SomeEnum) == 1, ...);
                     static_assert(alignof(SomeEnum) == 1, ...);
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeEnum>() == 1);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeEnum>() == 1);
@@ -4016,9 +3967,8 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<Point>() == 4);
             "#;
         test_format_item(test_src, "Point", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
                                  `union` (b/272801632) or `enum`";
@@ -4053,14 +4003,14 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     static_assert(sizeof(Point) == 12, ...);
                     static_assert(alignof(Point) == 4, ...);
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::Point>() == 12);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::Point>() == 4);
@@ -4096,9 +4046,8 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<SomeUnion>() == 8);
             "#;
         test_format_item(test_src, "SomeUnion", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
                                  `union` (b/272801632) or `enum`";
@@ -4133,14 +4082,14 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                impl_details.cc.tokens,
+                result.cc_details.tokens,
                 quote! {
                     static_assert(sizeof(SomeUnion) == 8, ...);
                     static_assert(alignof(SomeUnion) == 8, ...);
                 }
             );
             assert_rs_matches!(
-                impl_details.rs,
+                result.rs_details,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 8);
@@ -4160,8 +4109,8 @@ pub mod tests {
             }
         "#;
         test_format_item(test_src, "SomeUnionWithDocs", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             let comment = " Doc for some union.\n\n\
                            Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
@@ -4186,8 +4135,8 @@ pub mod tests {
             }
         "#;
         test_format_item(test_src, "SomeEnumWithDocs", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             let comment = " Doc for some enum. \n\n\
                             Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
@@ -4214,8 +4163,8 @@ pub mod tests {
             }
         "#;
         test_format_item(test_src, "SomeStructWithDocs", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             let comment = "Doc for some struct.\n\n\
                            Generated from: <crubit_unittests.rs>;l=4";
             assert_cc_matches!(
@@ -4238,8 +4187,8 @@ pub mod tests {
             pub struct SomeTupleStructWithDocs(i32);
         "#;
         test_format_item(test_src, "SomeTupleStructWithDocs", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             let comment = " Doc for some tuple struct.\n\n\
                            Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
@@ -4268,8 +4217,8 @@ pub mod tests {
             some_tuple_struct_macro_for_testing_source_loc!();
         "#;
         test_format_item(test_src, "SomeTupleStructMacroForTesingSourceLoc", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             let source_loc_comment = " Some doc on SomeTupleStructMacroForTesingSourceLoc.\n\n\
                                       Generated from: <crubit_unittests.rs>;l=5";
             assert_cc_matches!(
@@ -4291,8 +4240,8 @@ pub mod tests {
             pub struct SomeTupleStructWithNoDocComment(i32);
         "#;
         test_format_item(test_src, "SomeTupleStructWithNoDocComment", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             let comment = "Generated from: <crubit_unittests.rs>;l=2";
             assert_cc_matches!(
                 main_api.tokens,
@@ -4352,8 +4301,8 @@ pub mod tests {
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
             assert!(!main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::CONST_VALUE` \
                                    defined at <crubit_unittests.rs>;l=5: \
@@ -4803,38 +4752,6 @@ pub mod tests {
         }
     }
 
-    fn get_main_api_snippet(format_item_result: &Vec<(SnippetKey, MixedSnippet)>) -> &CcSnippet {
-        format_item_result
-            .iter()
-            .filter_map(|(key, snippet)| match key.kind {
-                SnippetKind::MainApi => {
-                    assert!(snippet.rs.is_empty(), "MainApi should be C++-only");
-                    Some(&snippet.cc)
-                }
-                _ => None,
-            })
-            .exactly_one()
-            .expect("Expecting exactly 1 MainApi snippet")
-    }
-
-    /// Combines all ImplDetails snippets into a single MixedSnippet.
-    fn get_impl_details_snippet(
-        format_item_result: &Vec<(SnippetKey, MixedSnippet)>,
-    ) -> MixedSnippet {
-        format_item_result
-            .iter()
-            .filter_map(|(key, snippet)| match key.kind {
-                SnippetKind::ImplDetails => Some(snippet),
-                _ => None,
-            })
-            .fold(Default::default(), |mut acc, snippet| {
-                acc.cc.prereqs += snippet.cc.prereqs.clone();
-                acc.cc.tokens.extend(snippet.cc.tokens.clone());
-                acc.rs.extend(snippet.rs.clone());
-                acc
-            })
-    }
-
     /// Tests invoking `format_item` on the item with the specified `name` from
     /// the given Rust `source`.  Returns the result of calling
     /// `test_function` with `format_item`'s result as an argument.
@@ -4842,22 +4759,12 @@ pub mod tests {
     /// result from `format_item`.)
     fn test_format_item<F, T>(source: &str, name: &str, test_function: F) -> T
     where
-        F: FnOnce(Result<Vec<(SnippetKey, MixedSnippet)>, String>) -> T + Send,
+        F: FnOnce(Result<Option<ApiSnippets>, String>) -> T + Send,
         T: Send,
     {
         run_compiler_for_testing(source, |tcx| {
             let def_id = find_def_id_by_name(tcx, name);
             let result = format_item(&bindings_input_for_tests(tcx), def_id);
-
-            // Sort the vector of results to make the tests more deterministic.  Below (i.e. in
-            // tests) we use a somewhat arbitrary SnippetKey-based order.  The order of these
-            // intermediate results doesn't matter in prod, because they will later get toposorted
-            // based on CcPrerequisites.
-            let result = result.map(|mut vec| {
-                let cmp = preferred_snippet_order(tcx);
-                vec.sort_by(|(key1, _), (key2, _)| cmp(key1, key2));
-                vec
-            });
 
             // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
             // To print causes as well [...], use the alternate selector “{:#}”.
