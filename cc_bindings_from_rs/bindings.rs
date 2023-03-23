@@ -1048,19 +1048,11 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
     })
 }
 
-/// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
-/// represented by `core`.  This function is infallible - after
-/// `format_adt_core` returns success we have committed to emitting C++ bindings
-/// for the ADT.
-fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
+fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     let tcx = input.tcx;
 
     // TODO(b/259749095): Support non-empty set of generic parameters.
-    let param_env = ty::ParamEnv::empty();
     let substs_ref = ty::List::empty().as_substs();
-
-    // `format_adt` should only be called for local ADTs.
-    let local_def_id = core.def_id.expect_local();
 
     struct FieldTypeInfo {
         size: u64,
@@ -1076,10 +1068,8 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         offset_of_next_field: u64,
     }
     let ty = tcx.type_of(core.def_id).subst_identity();
-    let layout = tcx
-        .layout_of(param_env.and(ty))
-        .expect("Layout should be already verified by `format_adt_core`")
-        .layout;
+    let layout =
+        get_layout(tcx, ty).expect("Layout should be already verified by `format_adt_core`");
     let fields: Vec<Field> = if ty.is_enum() || ty.is_union() {
         // Note that `#[repr(Rust)]` unions don't guarantee that all their fields
         // have offset 0.
@@ -1173,72 +1163,44 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
             unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
         }
     };
-    let adt_cc_name = &core.cc_name;
-    let adt_rs_name = &core.rs_name;
-    let cc_field_assertions: TokenStream = fields
-        .iter()
-        .map(|Field { cc_name, offset, .. }| {
-            let offset = Literal::u64_unsuffixed(*offset);
-            quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
-        })
-        .collect();
-    let rs_field_assertions: TokenStream = fields
-        .iter()
-        .filter(|Field { is_public, .. }| *is_public)
-        .map(|Field { rs_name, offset, .. }| {
-            let expected_offset = Literal::u64_unsuffixed(*offset);
-            let actual_offset = quote! { memoffset::offset_of!(#adt_rs_name, #rs_name) };
-            quote! { const _: () = assert!(#actual_offset == #expected_offset); }
-        })
-        .collect();
 
-    let ApiSnippets {
-        main_api: impl_items_main_api,
-        cc_details: impl_items_cc_details,
-        rs_details: impl_items_rs_details,
-    } = tcx
-        .inherent_impls(core.def_id)
-        .iter()
-        .map(|impl_id| tcx.hir().expect_item(impl_id.expect_local()))
-        .flat_map(|item| match &item.kind {
-            ItemKind::Impl(impl_) => impl_.items,
-            other => panic!("Unexpected `ItemKind` from `inherent_impls`: {other:?}"),
-        })
-        .sorted_by_key(|impl_item_ref| {
-            let def_id = impl_item_ref.id.owner_id.def_id;
-            tcx.def_span(def_id)
-        })
-        .filter_map(|impl_item_ref| {
-            let def_id = impl_item_ref.id.owner_id.def_id;
-            if !tcx.effective_visibilities(()).is_directly_public(def_id) {
-                return None;
+    let cc_details = if fields.is_empty() {
+        CcSnippet::default()
+    } else {
+        let adt_cc_name = &core.cc_name;
+        let cc_assertions: TokenStream = fields
+            .iter()
+            .map(|Field { cc_name, offset, .. }| {
+                let offset = Literal::u64_unsuffixed(*offset);
+                quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
+            })
+            .collect();
+        CcSnippet::new(quote! {
+            inline void #adt_cc_name::__crubit_field_offset_assertions() {
+                #cc_assertions
             }
-            let result = match impl_item_ref.kind {
-                AssocItemKind::Fn { .. } => format_fn(input, def_id).map(Some),
-                other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
-            };
-            result.unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
         })
-        .collect();
-
-    let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
-    let size = Literal::u64_unsuffixed(core.size_in_bytes);
+    };
+    let rs_details: TokenStream = {
+        let adt_rs_name = &core.rs_name;
+        fields
+            .iter()
+            .filter(|Field { is_public, .. }| *is_public)
+            .map(|Field { rs_name, offset, .. }| {
+                let expected_offset = Literal::u64_unsuffixed(*offset);
+                let actual_offset = quote! { memoffset::offset_of!(#adt_rs_name, #rs_name) };
+                quote! { const _: () = assert!(#actual_offset == #expected_offset); }
+            })
+            .collect()
+    };
     let main_api = {
-        let cc_packed_attribute = {
-            let has_packed_attribute = tcx
-                .get_attrs(core.def_id, rustc_span::symbol::sym::repr)
-                .flat_map(|attr| rustc_attr::parse_repr_attr(tcx.sess(), attr))
-                .any(|repr| matches!(repr, rustc_attr::ReprPacked { .. }));
-            if has_packed_attribute {
-                quote! { __attribute__((packed)) }
-            } else {
-                quote! {}
-            }
+        let assertions_method_decl = if fields.is_empty() {
+            quote! {}
+        } else {
+            // We put the assertions in a method so that they can read private member
+            // variables.
+            quote! { inline static void __crubit_field_offset_assertions(); }
         };
-
-        let doc_comment = format_doc_comment(tcx, core.def_id.expect_local());
-        let keyword = &core.keyword;
-        let core = &core.core;
 
         let mut prereqs = CcPrerequisites::default();
         let fields: TokenStream = fields
@@ -1271,20 +1233,95 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                 }
             })
             .collect();
-        let impl_item_decls = if impl_items_main_api.tokens.is_empty() {
+
+        CcSnippet {
+            prereqs,
+            tokens: quote! {
+                // TODO(b/271002281): Preserve actual field visibility.
+                private: __NEWLINE__
+                    #fields
+                    #assertions_method_decl
+            },
+        }
+    };
+
+    ApiSnippets { main_api, cc_details, rs_details }
+}
+
+/// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
+/// represented by `core`.  This function is infallible - after
+/// `format_adt_core` returns success we have committed to emitting C++ bindings
+/// for the ADT.
+fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
+    let tcx = input.tcx;
+
+    // `format_adt` should only be called for local ADTs.
+    let local_def_id = core.def_id.expect_local();
+
+    let ApiSnippets {
+        main_api: fields_main_api,
+        cc_details: fields_cc_details,
+        rs_details: fields_rs_details,
+    } = format_fields(input, core);
+
+    let ApiSnippets {
+        main_api: impl_items_main_api,
+        cc_details: impl_items_cc_details,
+        rs_details: impl_items_rs_details,
+    } = tcx
+        .inherent_impls(core.def_id)
+        .iter()
+        .map(|impl_id| tcx.hir().expect_item(impl_id.expect_local()))
+        .flat_map(|item| match &item.kind {
+            ItemKind::Impl(impl_) => impl_.items,
+            other => panic!("Unexpected `ItemKind` from `inherent_impls`: {other:?}"),
+        })
+        .sorted_by_key(|impl_item_ref| {
+            let def_id = impl_item_ref.id.owner_id.def_id;
+            tcx.def_span(def_id)
+        })
+        .filter_map(|impl_item_ref| {
+            let def_id = impl_item_ref.id.owner_id.def_id;
+            if !tcx.effective_visibilities(()).is_directly_public(def_id) {
+                return None;
+            }
+            let result = match impl_item_ref.kind {
+                AssocItemKind::Fn { .. } => format_fn(input, def_id).map(Some),
+                other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
+            };
+            result.unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
+        })
+        .collect();
+
+    let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
+    let size = Literal::u64_unsuffixed(core.size_in_bytes);
+    let adt_cc_name = &core.cc_name;
+    let main_api = {
+        let cc_packed_attribute = {
+            let has_packed_attribute = tcx
+                .get_attrs(core.def_id, rustc_span::symbol::sym::repr)
+                .flat_map(|attr| rustc_attr::parse_repr_attr(tcx.sess(), attr))
+                .any(|repr| matches!(repr, rustc_attr::ReprPacked { .. }));
+            if has_packed_attribute {
+                quote! { __attribute__((packed)) }
+            } else {
+                quote! {}
+            }
+        };
+
+        let doc_comment = format_doc_comment(tcx, core.def_id.expect_local());
+        let keyword = &core.keyword;
+        let core = &core.core;
+
+        let mut prereqs = CcPrerequisites::default();
+        let impl_items_main_api = if impl_items_main_api.tokens.is_empty() {
             quote! {}
         } else {
             let tokens = impl_items_main_api.into_tokens(&mut prereqs);
             quote! { public: #tokens }
         };
+        let fields_main_api = fields_main_api.into_tokens(&mut prereqs);
         prereqs.fwd_decls.remove(&local_def_id);
-        let assertions_method_decl = if cc_field_assertions.is_empty() {
-            quote! {}
-        } else {
-            // We put the assertions in a method so that they can read private member
-            // variables.
-            quote! { inline static void __crubit_field_offset_assertions(); }
-        };
 
         CcSnippet {
             prereqs,
@@ -1292,29 +1329,17 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                 __NEWLINE__ #doc_comment
                 #keyword alignas(#alignment) #cc_packed_attribute #adt_cc_name final {
                     #core
-                    #impl_item_decls
-
-                    // TODO(b/271002281): Preserve actual field visibility.
-                    private: __NEWLINE__
-                        #fields
-                        #assertions_method_decl
+                    #impl_items_main_api
+                    #fields_main_api
                 };
                 __NEWLINE__
             },
         }
     };
     let cc_details = {
-        let assertions_method_def = if cc_field_assertions.is_empty() {
-            quote! {}
-        } else {
-            quote! {
-                inline void #adt_cc_name::__crubit_field_offset_assertions() {
-                    #cc_field_assertions
-                }
-            }
-        };
         let mut prereqs = CcPrerequisites::default();
         let impl_items_cc_details = impl_items_cc_details.into_tokens(&mut prereqs);
+        let fields_cc_details = fields_cc_details.into_tokens(&mut prereqs);
         prereqs.defs.insert(local_def_id);
         CcSnippet {
             prereqs,
@@ -1327,16 +1352,19 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                     alignof(#adt_cc_name) == #alignment,
                     "Verify that struct layout didn't change since this header got generated");
                 __NEWLINE__
-                #assertions_method_def
                 #impl_items_cc_details
+                #fields_cc_details
             },
         }
     };
-    let rs_details = quote! {
-        const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
-        const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
-        #rs_field_assertions
-        #impl_items_rs_details
+    let rs_details = {
+        let adt_rs_name = &core.rs_name;
+        quote! {
+            const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
+            const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
+            #impl_items_rs_details
+            #fields_rs_details
+        }
     };
     ApiSnippets { main_api, cc_details, rs_details }
 }
@@ -1760,6 +1788,7 @@ pub mod tests {
                         std::int32_t SomeStruct::public_static_method() {
                             ...
                         }
+                        ...
                     }  // namespace rust_out
                 }
             );
