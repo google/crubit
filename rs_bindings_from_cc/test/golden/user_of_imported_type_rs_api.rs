@@ -7,6 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
+#![feature(arbitrary_self_types)]
 #![feature(custom_inner_attributes)]
 #![allow(stable_features)]
 #![no_std]

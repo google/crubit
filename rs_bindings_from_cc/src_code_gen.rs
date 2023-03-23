@@ -225,6 +225,7 @@ fn generate_bindings(
     let rs_api = format!(
         "{top_level_comment}\n\
         #![rustfmt::skip]\n\
+        #![feature(arbitrary_self_types)]\n\
         {rs_api}"
     );
     let rs_api_impl = format!(
