@@ -2817,9 +2817,20 @@ fn generate_item(
         let missing_features =
             generated_item.crubit_features - ir.target_crubit_features(defining_target);
         if !missing_features.is_empty() {
-            // TODO(b/266727458): Insert a useful comment here.
-            // Ideally listing what didn't generate, and what features it required.
-            return Ok(GeneratedItem::default());
+            let feature_strings: Vec<&str> =
+                missing_features.into_iter().map(|feature| feature.aspect_hint()).collect();
+            return Ok(generate_unsupported(
+                &UnsupportedItem::new_with_message(
+                    &ir,
+                    item,
+                    format!(
+                        "Missing required features on {defining_target}: [{}]",
+                        feature_strings.join(", ")
+                    ),
+                ),
+                errors,
+                db.generate_source_loc_doc_comment(),
+            )?);
         }
     }
 
@@ -8726,7 +8737,7 @@ mod tests {
         let actual = generate_unsupported(
             &UnsupportedItem::new_with_message(
                 &make_ir_from_items([])?,
-                &TestItem {source_loc: Some("Generated from: google3/some/header;l=1".into())},
+                &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
                 "unsupported_message",
             ),
             &mut ErrorReport::new(),
@@ -8745,7 +8756,7 @@ mod tests {
         let actual = generate_unsupported(
             &UnsupportedItem::new_with_message(
                 &make_ir_from_items([])?,
-                &TestItem {source_loc: None},
+                &TestItem { source_loc: None },
                 "unsupported_message",
             ),
             &mut ErrorReport::new(),
@@ -8761,7 +8772,7 @@ mod tests {
         let actual = generate_unsupported(
             &UnsupportedItem::new_with_message(
                 &make_ir_from_items([])?,
-                &TestItem {source_loc: Some("Generated from: google3/some/header;l=1".into())},
+                &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
                 "unsupported_message",
             ),
             &mut ErrorReport::new(),
@@ -8780,9 +8791,15 @@ mod tests {
         {
             let mut ir = ir_from_cc(item)?;
             ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
-            let bindings = generate_bindings_tokens(ir)?;
-            assert_rs_not_matches!(bindings.rs_api, quote! {NotPresent});
-            assert_cc_not_matches!(bindings.rs_api_impl, quote! {NotPresent});
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            assert_rs_not_matches!(rs_api, quote! {NotPresent});
+            assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
+            let expected = "\
+                Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+                Error while generating bindings for item 'NotPresent':\n\
+                Missing required features on //test:testing_target: [//third_party/crubit:experimental]\
+            ";
+            assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         }
         Ok(())
     }
