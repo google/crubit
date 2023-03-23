@@ -3998,12 +3998,18 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
     // list.)
     let is_return_value_c_abi_compatible =
         db.rs_type_kind(func.return_type.rs_type.clone())?.is_c_abi_compatible_by_value();
-    let mut return_type_name = format_cc_type(&func.return_type.cc_type, &ir)?;
-    if !is_return_value_c_abi_compatible {
+
+    let return_type_name = if !is_return_value_c_abi_compatible {
         param_idents.insert(0, format_cc_ident("__return"));
+        // In order to be modified, the return type can't be const.
+        let mut cc_return_type = func.return_type.cc_type.clone();
+        cc_return_type.is_const = false;
+        let return_type_name = format_cc_type(&cc_return_type, &ir)?;
         param_types.insert(0, quote! {#return_type_name *});
-        return_type_name = quote! {void};
-    }
+        quote! {void}
+    } else {
+        format_cc_type(&func.return_type.cc_type, &ir)?
+    };
 
     let this_ref_qualification =
         func.member_func_metadata.as_ref().and_then(|meta| match &func.name {
@@ -7894,6 +7900,46 @@ mod tests {
             struct Nontrivial {~Nontrivial();};
 
             Nontrivial ReturnsByValue(const int& x, const int& y);
+            "#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub fn ReturnsByValue<'a, 'b>(x: &'a i32, y: &'b i32)
+                -> impl ::ctor::Ctor<Output=crate::Nontrivial>
+                 + ::ctor::Captures<'a>
+                 + ::ctor::Captures<'b> {
+                    unsafe {
+                        ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<crate::Nontrivial>>| {
+                            crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::core::pin::Pin::into_inner_unchecked(dest), x, y);
+                        })
+                    }
+
+                }
+            }
+        );
+
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___Z14ReturnsByValueRKiS0_(
+                        struct Nontrivial* __return, int const* x, int const* y) {
+                    new(__return) auto(ReturnsByValue(*x, *y));
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_nonunpin_const_return() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            // This type must be `!Unpin`.
+            struct Nontrivial {~Nontrivial();};
+
+            const Nontrivial ReturnsByValue(const int& x, const int& y);
             "#,
         )?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
