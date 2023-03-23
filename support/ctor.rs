@@ -263,6 +263,13 @@ impl<T> RvalueReference<'_, T> {
     }
 }
 
+impl<T> Deref for RvalueReference<'_, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        self.get_ref()
+    }
+}
+
 impl<'a, T> Ctor for RvalueReference<'a, T>
 where
     T: CtorNew<Self>,
@@ -288,6 +295,13 @@ pub struct ConstRvalueReference<'a, T>(pub &'a T);
 
 impl<'a, T> ConstRvalueReference<'a, T> {
     pub fn get_ref(&mut self) -> &'a T {
+        self.0
+    }
+}
+
+impl<T> Deref for ConstRvalueReference<'_, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
         self.0
     }
 }
