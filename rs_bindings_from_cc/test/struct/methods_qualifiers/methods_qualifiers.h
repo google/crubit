@@ -7,7 +7,7 @@
 
 #pragma clang lifetime_elision
 
-struct ClassWithQualifiedMethods final {
+struct UnpinStructWithRefQualifiedMethods final {
   int i;
   void increment_i();
   int unqualified_get_i();
