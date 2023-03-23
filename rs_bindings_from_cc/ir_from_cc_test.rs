@@ -3838,109 +3838,86 @@ fn test_private_method() {
 
 #[test]
 fn test_source_location_with_macro() {
-    for (ir_type, cc_snippet, expected_source_loc) in [
-        (
-            quote! {Func},
-            r#"
+    let assert_matches = |cc_snippet: &str, expected: proc_macro2::TokenStream| {
+        let ir = ir_from_cc(cc_snippet).unwrap();
+        assert_ir_matches!(ir, expected);
+    };
+    let loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
+        Expanded at: google3/ir_from_cc_virtual_header.h;l=7";
+    assert_matches(
+        r#"
 #define NO_OP_FUNC(func_name) \
   void fun_name();
 
 NO_OP_FUNC(no_op_func_to_test_source_location_with_macro);"#,
-            "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
-             Expanded at: google3/ir_from_cc_virtual_header.h;l=7",
-        ),
-        (
-            quote! {TypeAlias},
-            r#"
+        quote! {Func { ..., source_loc: #loc, ... } },
+    );
+
+    let loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=4\n\
+        Expanded at: google3/ir_from_cc_virtual_header.h;l=5";
+    assert_matches(
+        r#"
 #define TYPE_ALIAS_TO_INT(type_alias) using type_alias = int;
 TYPE_ALIAS_TO_INT(MyIntToTestSourceLocationWithMacro);"#,
-            "Generated from: google3/ir_from_cc_virtual_header.h;l=4\n\
-             Expanded at: google3/ir_from_cc_virtual_header.h;l=5",
-        ),
-        (
-            quote! {UnsupportedItem},
-            r#"
+        quote! {TypeAlias { ..., source_loc: #loc, ... } },
+    );
+    let loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=4\n\
+        Expanded at: google3/ir_from_cc_virtual_header.h;l=6";
+    assert_matches(
+        r#"
 #define TEMPLATE_NO_OP_FUNC(func_name) \
 template <typename T> void func_name() {};
   TEMPLATE_NO_OP_FUNC(unsupported_templated_no_op_func_to_test_source_location_with_macro);"#,
-            "Generated from: google3/ir_from_cc_virtual_header.h;l=4\n\
-             Expanded at: google3/ir_from_cc_virtual_header.h;l=6",
-        ),
-        (
-            quote! {Enum},
-            r#"
+        quote! {UnsupportedItem { ..., source_loc: Some(#loc,), ... } },
+    );
+
+    let loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
+        Expanded at: google3/ir_from_cc_virtual_header.h;l=6";
+    assert_matches(
+        r#"
 #define DEFINE_EMPTY_ENUM(enum_name) \
   enum enum_name {};
 DEFINE_EMPTY_ENUM(EmptyEnumToTestSourceLocationWithMacro);"#,
-            "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
-             Expanded at: google3/ir_from_cc_virtual_header.h;l=6",
-        ),
-        (
-            quote! {Record},
-            r#"
+        quote! {Enum { ..., source_loc: #loc, ... } },
+    );
+
+    let loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
+        Expanded at: google3/ir_from_cc_virtual_header.h;l=6";
+    assert_matches(
+        r#"
 #define DEFINE_EMPTY_STRUCT(struct_name) \
   struct struct_name {};
 DEFINE_EMPTY_STRUCT(EmptyStructToTestSourceLocationWithMacro);"#,
-            "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
-             Expanded at: google3/ir_from_cc_virtual_header.h;l=6",
-        ),
-    ] {
-        let ir = ir_from_cc(cc_snippet).unwrap();
-        assert_ir_matches!(
-            ir,
-            quote! {
-            #ir_type {
-              ...
-                source_loc: #expected_source_loc,
-              ...
-              }
-            }
-        );
-    }
+        quote! {Record { ..., source_loc: #loc, ... } },
+    );
 }
 
 #[test]
 fn test_source_location() {
-    for (ir_type, cc_snippet, expected_source_loc) in [
-        (
-            quote! {Func},
-            "void no_op_func_to_test_source_location();",
-            "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
-        ),
-        (
-            quote! {TypeAlias},
-            r#"
-typedef float SomeTypedefToTestSourceLocation;"#,
-            "Generated from: google3/ir_from_cc_virtual_header.h;l=4",
-        ),
-        (
-            quote! {UnsupportedItem},
-            r#"  template <typename T> void unsupported_templated_func_to_test_source_location() {}"#,
-            "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
-        ),
-        (
-            quote! {Enum},
-            r#"enum SomeEmptyEnumToTestSourceLocation {};"#,
-            "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
-        ),
-        (
-            quote! {Record},
-            r#"struct SomeEmptyStructToTestSourceLocation {};"#,
-            "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
-        ),
-    ] {
+    let assert_matches = |cc_snippet: &str, expected: proc_macro2::TokenStream| {
         let ir = ir_from_cc(cc_snippet).unwrap();
-        assert_ir_matches!(
-            ir,
-            quote! {
-            #ir_type {
-              ...
-                source_loc: #expected_source_loc,
-              ...
-              }
-            }
-        );
-    }
+        assert_ir_matches!(ir, expected);
+    };
+    assert_matches(
+        "void no_op_func_to_test_source_location();",
+        quote! {Func { ..., source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3", ... } },
+    );
+    assert_matches(
+        r#"typedef float SomeTypedefToTestSourceLocation;"#,
+        quote! {TypeAlias { ..., source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3", ... } },
+    );
+    assert_matches(
+        r#"  template <typename T> void unsupported_templated_func_to_test_source_location() {}"#,
+        quote! {UnsupportedItem { ..., source_loc: Some("Generated from: google3/ir_from_cc_virtual_header.h;l=3"), ... } },
+    );
+    assert_matches(
+        r#"enum SomeEmptyEnumToTestSourceLocation {};"#,
+        quote! {Enum { ..., source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3", ... } },
+    );
+    assert_matches(
+        r#"struct SomeEmptyStructToTestSourceLocation {};"#,
+        quote! {Record { ..., source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3", ... } },
+    );
 }
 
 #[test]

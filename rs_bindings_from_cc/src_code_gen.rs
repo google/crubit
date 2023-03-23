@@ -345,47 +345,6 @@ struct FunctionId {
     function_path: syn::Path,
 }
 
-/// Returns the name of `func` in C++ syntax.
-fn cxx_function_name(func: &Func, ir: &IR) -> String {
-    let record: Option<&str> = ir.record_for_member_func(func).map(|r| r.cc_name.as_ref());
-
-    let func_name = match &func.name {
-        UnqualifiedIdentifier::Identifier(id) => id.identifier.to_string(),
-        UnqualifiedIdentifier::Operator(op) => op.cc_name(),
-        UnqualifiedIdentifier::Destructor => {
-            format!("~{}", record.expect("destructor must be associated with a record"))
-        }
-        UnqualifiedIdentifier::Constructor => {
-            record.expect("constructor must be associated with a record").to_string()
-        }
-    };
-
-    if let Some(record_name) = record {
-        format!("{}::{}", record_name, func_name)
-    } else {
-        func_name
-    }
-}
-
-fn make_unsupported_fn(func: &Func, ir: &IR, message: &str) -> Result<UnsupportedItem> {
-    Ok(UnsupportedItem::new_with_message(
-        cxx_function_name(func, ir).as_ref(),
-        message,
-        func.source_loc.clone(),
-        func.id,
-    ))
-}
-
-fn make_unsupported_nested_type_alias(type_alias: &TypeAlias) -> Result<UnsupportedItem> {
-    Ok(UnsupportedItem::new_with_message(
-        // TODO(jeanpierreda): It would be nice to include the enclosing record name here too.
-        type_alias.identifier.identifier.as_ref(),
-        "Typedefs nested in classes are not supported yet",
-        type_alias.source_loc.clone(),
-        type_alias.id,
-    ))
-}
-
 /// The name of a one-function trait, with extra entries for
 /// specially-understood traits and families of traits.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -2606,16 +2565,17 @@ fn generate_unsupported(
 ) -> Result<GeneratedItem> {
     errors.insert(item.cause());
 
+    let source_loc = item.source_loc();
+    let source_loc = match &source_loc {
+        Some(loc) if generate_source_loc_doc_comment == SourceLocationDocComment::Enabled => {
+            loc.as_ref()
+        }
+        _ => "",
+    };
+
     let message = format!(
-        "{}{}Error while generating bindings for item '{}':\n{}",
-        match generate_source_loc_doc_comment {
-            SourceLocationDocComment::Enabled => item.source_loc.as_ref(),
-            SourceLocationDocComment::Disabled => "",
-        },
-        match generate_source_loc_doc_comment {
-            SourceLocationDocComment::Enabled => "\n",
-            SourceLocationDocComment::Disabled => "",
-        },
+        "{source_loc}{}Error while generating bindings for item '{}':\n{}",
+        if source_loc.len() > 0 { "\n" } else { "" },
         item.name.as_ref(),
         item.message()
     );
@@ -2796,7 +2756,7 @@ fn generate_item(
     let generated_item = match item {
         Item::Func(func) => match db.generate_func(func.clone()) {
             Err(e) => generate_unsupported(
-                &make_unsupported_fn(func, &ir, format!("{e}").as_str())?,
+                &UnsupportedItem::new_with_message(&ir, func, format!("{e}")),
                 errors,
                 db.generate_source_loc_doc_comment(),
             )?,
@@ -2804,11 +2764,11 @@ fn generate_item(
             Ok(Some((item, function_id))) => {
                 if overloaded_funcs.contains(&function_id) {
                     generate_unsupported(
-                        &make_unsupported_fn(
-                            func,
+                        &UnsupportedItem::new_with_message(
                             &ir,
+                            func,
                             "Cannot generate bindings for overloaded function",
-                        )?,
+                        ),
                         errors,
                         db.generate_source_loc_doc_comment(),
                     )?
@@ -2824,7 +2784,11 @@ fn generate_item(
             if type_alias.enclosing_record_id.is_some() {
                 // TODO(b/200067824): support nested type aliases.
                 generate_unsupported(
-                    &make_unsupported_nested_type_alias(type_alias)?,
+                    &UnsupportedItem::new_with_message(
+                        &ir,
+                        type_alias,
+                        "Typedefs nested in classes are not supported yet",
+                    ),
                     errors,
                     db.generate_source_loc_doc_comment(),
                 )?
@@ -8742,41 +8706,70 @@ mod tests {
         assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
     }
 
-    #[test]
-    fn test_generate_unsupported_item_with_source_loc_enabled() {
-        let unsupported_item = UnsupportedItem::new_with_message(
-            "unsupported_item",
-            "unsupported_message",
-            "Generated from: google3/some/header;l=1".into(),
-            ItemId::new_for_testing(123),
-        );
-        let actual = generate_unsupported(
-            &unsupported_item,
-            &mut ErrorReport::new(),
-            SourceLocationDocComment::Enabled,
-        )
-        .unwrap();
-        let expected = "Generated from: google3/some/header;l=1\nError while generating bindings for item 'unsupported_item':\nunsupported_message";
-        assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+    struct TestItem {
+        source_loc: Option<Rc<str>>,
+    }
+    impl ir::GenericItem for TestItem {
+        fn id(&self) -> ItemId {
+            ItemId::new_for_testing(123)
+        }
+        fn debug_name(&self, _: &IR) -> Rc<str> {
+            "test_item".into()
+        }
+        fn source_loc(&self) -> Option<Rc<str>> {
+            self.source_loc.clone()
+        }
     }
 
     #[test]
-    fn test_generate_unsupported_item_with_source_loc_disabled() {
-        let unsupported_item = UnsupportedItem::new_with_message(
-            "unsupported_item2",
-            "unsupported_message2",
-            "Generated from: google3/some/header;l=2".into(),
-            ItemId::new_for_testing(1234),
-        );
+    fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
         let actual = generate_unsupported(
-            &unsupported_item,
+            &UnsupportedItem::new_with_message(
+                &make_ir_from_items([])?,
+                &TestItem {source_loc: Some("Generated from: google3/some/header;l=1".into())},
+                "unsupported_message",
+            ),
+            &mut ErrorReport::new(),
+            SourceLocationDocComment::Enabled,
+        )?;
+        let expected = "Generated from: google3/some/header;l=1\nError while generating bindings for item 'test_item':\nunsupported_message";
+        assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+        Ok(())
+    }
+
+    /// Not all items currently have source_loc(), e.g. comments.
+    ///
+    /// For these, we omit the mention of the location.
+    #[test]
+    fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
+        let actual = generate_unsupported(
+            &UnsupportedItem::new_with_message(
+                &make_ir_from_items([])?,
+                &TestItem {source_loc: None},
+                "unsupported_message",
+            ),
+            &mut ErrorReport::new(),
+            SourceLocationDocComment::Enabled,
+        )?;
+        let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
+        assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_unsupported_item_with_source_loc_disabled() -> Result<()> {
+        let actual = generate_unsupported(
+            &UnsupportedItem::new_with_message(
+                &make_ir_from_items([])?,
+                &TestItem {source_loc: Some("Generated from: google3/some/header;l=1".into())},
+                "unsupported_message",
+            ),
             &mut ErrorReport::new(),
             SourceLocationDocComment::Disabled,
-        )
-        .unwrap();
-        let expected =
-            "Error while generating bindings for item 'unsupported_item2':\nunsupported_message2";
+        )?;
+        let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
         assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+        Ok(())
     }
 
     /// The default crubit feature set currently results in no bindings at all.

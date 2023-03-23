@@ -94,7 +94,7 @@ impl FfiU8SliceBox {
 /// Whether or not the generated binding will have doc comments indicating their
 /// source location.
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum SourceLocationDocComment {
     Disabled,
     Enabled,

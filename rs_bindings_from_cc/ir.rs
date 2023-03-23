@@ -13,10 +13,37 @@ use quote::{quote, ToTokens};
 use serde::Deserialize;
 use std::collections::hash_map::{Entry, HashMap};
 use std::convert::TryFrom;
-use std::fmt::{self, Debug, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::io::Read;
 use std::rc::Rc;
+
+/// Common data about all items.
+pub trait GenericItem {
+    fn id(&self) -> ItemId;
+    /// The name of the item, readable by programmers.
+    ///
+    /// For example, `void Foo();` should have name `Foo`.
+    fn debug_name(&self, ir: &IR) -> Rc<str>;
+
+    /// The recorded source location, or None if none is present.
+    fn source_loc(&self) -> Option<Rc<str>>;
+}
+
+impl<T> GenericItem for Rc<T>
+where
+    T: GenericItem + ?Sized,
+{
+    fn id(&self) -> ItemId {
+        (**self).id()
+    }
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        (**self).debug_name(ir)
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        (**self).source_loc()
+    }
+}
 
 /// Deserialize `IR` from JSON given as a reader.
 pub fn deserialize_ir<R: Read>(reader: R) -> Result<IR> {
@@ -199,9 +226,15 @@ pub struct Identifier {
     pub identifier: Rc<str>,
 }
 
-impl fmt::Debug for Identifier {
+impl Display for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&format!("\"{}\"", &self.identifier))
+        write!(f, "{}", self.identifier)
+    }
+}
+
+impl Debug for Identifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "\"{}\"", self.identifier)
     }
 }
 
@@ -228,9 +261,9 @@ impl Operator {
     }
 }
 
-impl fmt::Debug for Operator {
+impl Debug for Operator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&format!("\"{}\"", &self.cc_name()))
+        write!(f, "\"{}\"", self.cc_name())
     }
 }
 
@@ -274,8 +307,8 @@ impl<T: Into<String>> From<T> for BazelLabel {
     }
 }
 
-impl std::fmt::Display for BazelLabel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for BazelLabel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", &*self.0)
     }
 }
@@ -297,11 +330,11 @@ impl UnqualifiedIdentifier {
     }
 }
 
-impl fmt::Debug for UnqualifiedIdentifier {
+impl Debug for UnqualifiedIdentifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            UnqualifiedIdentifier::Identifier(identifier) => fmt::Debug::fmt(identifier, f),
-            UnqualifiedIdentifier::Operator(op) => fmt::Debug::fmt(op, f),
+            UnqualifiedIdentifier::Identifier(identifier) => Debug::fmt(identifier, f),
+            UnqualifiedIdentifier::Operator(op) => Debug::fmt(op, f),
             UnqualifiedIdentifier::Constructor => f.write_str("Constructor"),
             UnqualifiedIdentifier::Destructor => f.write_str("Destructor"),
         }
@@ -363,6 +396,36 @@ pub struct Func {
     pub adl_enclosing_record: Option<ItemId>,
 }
 
+impl GenericItem for Func {
+    fn id(&self) -> ItemId {
+        self.id
+    }
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        let record: Option<Rc<str>> = ir.record_for_member_func(self).map(|r| r.debug_name(ir));
+        let record: Option<&str> = record.as_deref();
+
+        let func_name = match &self.name {
+            UnqualifiedIdentifier::Identifier(id) => id.identifier.to_string(),
+            UnqualifiedIdentifier::Operator(op) => op.cc_name(),
+            UnqualifiedIdentifier::Destructor => {
+                format!("~{}", record.expect("destructor must be associated with a record"))
+            }
+            UnqualifiedIdentifier::Constructor => {
+                record.expect("constructor must be associated with a record").to_string()
+            }
+        };
+
+        if let Some(record_name) = record {
+            format!("{}::{}", record_name, func_name).into()
+        } else {
+            func_name.into()
+        }
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        Some(self.source_loc.clone())
+    }
+}
+
 impl Func {
     pub fn is_instance_method(&self) -> bool {
         self.member_func_metadata
@@ -422,6 +485,18 @@ pub struct IncompleteRecord {
     pub enclosing_namespace_id: Option<ItemId>,
 }
 
+impl GenericItem for IncompleteRecord {
+    fn id(&self) -> ItemId {
+        self.id
+    }
+    fn debug_name(&self, _: &IR) -> Rc<str> {
+        self.cc_name.clone()
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        None
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 pub enum RecordType {
     Struct,
@@ -469,6 +544,18 @@ pub struct Record {
     pub is_anon_record_with_typedef: bool,
     pub child_item_ids: Vec<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
+}
+
+impl GenericItem for Record {
+    fn id(&self) -> ItemId {
+        self.id
+    }
+    fn debug_name(&self, _: &IR) -> Rc<str> {
+        self.cc_name.clone()
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        Some(self.source_loc.clone())
+    }
 }
 
 impl Record {
@@ -522,6 +609,18 @@ pub struct Enum {
     pub enclosing_namespace_id: Option<ItemId>,
 }
 
+impl GenericItem for Enum {
+    fn id(&self) -> ItemId {
+        self.id
+    }
+    fn debug_name(&self, _: &IR) -> Rc<str> {
+        self.identifier.to_string().into()
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        Some(self.source_loc.clone())
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Enumerator {
@@ -540,6 +639,18 @@ pub struct TypeAlias {
     pub source_loc: Rc<str>,
     pub enclosing_record_id: Option<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
+}
+
+impl GenericItem for TypeAlias {
+    fn id(&self) -> ItemId {
+        self.id
+    }
+    fn debug_name(&self, _: &IR) -> Rc<str> {
+        self.identifier.to_string().into()
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        Some(self.source_loc.clone())
+    }
 }
 
 /// A wrapper type that does not contribute to equality or hashing. All
@@ -570,31 +681,42 @@ impl<T> Hash for IgnoredField<T> {
 pub struct UnsupportedItem {
     pub name: Rc<str>,
     message: Rc<str>,
-    pub source_loc: Rc<str>,
+    pub source_loc: Option<Rc<str>>,
     pub id: ItemId,
     #[serde(skip)]
     cause: IgnoredField<OnceCell<Error>>,
 }
 
+impl GenericItem for UnsupportedItem {
+    fn id(&self) -> ItemId {
+        self.id
+    }
+    fn debug_name(&self, _: &IR) -> Rc<str> {
+        self.name.clone()
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        self.source_loc.clone()
+    }
+}
+
 impl UnsupportedItem {
-    pub fn new_with_message(name: &str, message: &str, source_loc: Rc<str>, id: ItemId) -> Self {
+    fn new(ir: &IR, item: &impl GenericItem, message: Rc<str>, cause: Option<Error>) -> Self {
         Self {
-            name: name.into(),
-            message: message.into(),
-            source_loc,
-            id,
-            cause: Default::default(),
+            name: item.debug_name(ir),
+            message,
+            source_loc: item.source_loc(),
+            id: item.id(),
+            cause: IgnoredField(cause.map(OnceCell::from).unwrap_or_default()),
         }
     }
-    pub fn new_with_cause(name: String, cause: Error, source_loc: Rc<str>, id: ItemId) -> Self {
-        Self {
-            name: name.into(),
-            message: cause.to_string().into(),
-            source_loc,
-            id,
-            cause: IgnoredField(cause.into()),
-        }
+
+    pub fn new_with_message(ir: &IR, item: &impl GenericItem, message: impl Into<Rc<str>>) -> Self {
+        Self::new(ir, item, message.into(), None)
     }
+    pub fn new_with_cause(ir: &IR, item: &impl GenericItem, cause: Error) -> Self {
+        Self::new(ir, item, cause.to_string().into(), Some(cause))
+    }
+
     pub fn message(&self) -> &str {
         self.message.as_ref()
     }
@@ -611,6 +733,18 @@ pub struct Comment {
     pub id: ItemId,
 }
 
+impl GenericItem for Comment {
+    fn id(&self) -> ItemId {
+        self.id
+    }
+    fn debug_name(&self, _: &IR) -> Rc<str> {
+        "comment".into()
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        None
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Namespace {
@@ -624,12 +758,36 @@ pub struct Namespace {
     pub is_inline: bool,
 }
 
+impl GenericItem for Namespace {
+    fn id(&self) -> ItemId {
+        self.id
+    }
+    fn debug_name(&self, _: &IR) -> Rc<str> {
+        self.name.to_string().into()
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        None
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct UseMod {
     pub path: Rc<str>,
     pub mod_name: Identifier,
     pub id: ItemId,
+}
+
+impl GenericItem for UseMod {
+    fn id(&self) -> ItemId {
+        self.id
+    }
+    fn debug_name(&self, _: &IR) -> Rc<str> {
+        format!("[internal] use mod {}::* = {}", self.mod_name, self.path).into()
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        None
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -645,20 +803,47 @@ pub enum Item {
     UseMod(Rc<UseMod>),
 }
 
-impl Item {
+macro_rules! forward_item {
+    (match $item:ident { _($item_name:ident) => $expr:expr $(,)? }) => {
+        match $item {
+                                                    Item::Func($item_name) => $expr,
+                                                    Item::IncompleteRecord($item_name) => $expr,
+                                                    Item::Record($item_name) => $expr,
+                                                    Item::Enum($item_name) => $expr,
+                                                    Item::TypeAlias($item_name) => $expr,
+                                                    Item::UnsupportedItem($item_name) => $expr,
+                                                    Item::Comment($item_name) => $expr,
+                                                    Item::Namespace($item_name) => $expr,
+                                                    Item::UseMod($item_name) => $expr,
+                                                }
+    };
+}
+
+impl GenericItem for Item {
     fn id(&self) -> ItemId {
-        match self {
-            Item::Func(func) => func.id,
-            Item::IncompleteRecord(record) => record.id,
-            Item::Record(record) => record.id,
-            Item::Enum(enum_) => enum_.id,
-            Item::TypeAlias(type_alias) => type_alias.id,
-            Item::UnsupportedItem(unsupported) => unsupported.id,
-            Item::Comment(comment) => comment.id,
-            Item::Namespace(namespace) => namespace.id,
-            Item::UseMod(use_mod) => use_mod.id,
+        forward_item! {
+            match self {
+                _(x) => x.id()
+            }
         }
     }
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        forward_item! {
+            match self {
+                _(x) => x.debug_name(ir)
+            }
+        }
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        forward_item! {
+            match self {
+                _(x) => x.source_loc()
+            }
+        }
+    }
+}
+
+impl Item {
     pub fn enclosing_namespace_id(&self) -> Option<ItemId> {
         match self {
             Item::Record(record) => record.enclosing_namespace_id,
@@ -823,16 +1008,16 @@ struct FlatIR {
 /// A custom debug impl that wraps the HashMap in rustfmt-friendly notation.
 ///
 /// See b/272530008.
-impl std::fmt::Debug for FlatIR {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Debug for FlatIR {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         struct DebugHashMap<T: Debug>(pub T);
-        impl<T: Debug> std::fmt::Debug for DebugHashMap<T> {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        impl<T: Debug> Debug for DebugHashMap<T> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 // prefix the hash map with `hash_map!` so that the output can be fed to
                 // rustfmt. The end result is something like `hash_map!{k:v,
                 // k2:v2}`, which reads well.
                 write!(f, "hash_map!")?;
-                std::fmt::Debug::fmt(&self.0, f)
+                Debug::fmt(&self.0, f)
             }
         }
         // exhaustive-match so we don't forget to add fields to Debug when we add to
@@ -1028,9 +1213,13 @@ impl IR {
     /// in `self`.
     pub fn record_for_member_func(&self, func: &Func) -> Option<&Rc<Record>> {
         if let Some(meta) = func.member_func_metadata.as_ref() {
-            Some(self.find_decl(meta.record_id).with_context(|| {
-                format!("Failed to retrieve Record for MemberFuncMetadata of {:?}", func)
-            }).unwrap())
+            Some(
+                self.find_decl(meta.record_id)
+                    .with_context(|| {
+                        format!("Failed to retrieve Record for MemberFuncMetadata of {:?}", func)
+                    })
+                    .unwrap(),
+            )
         } else {
             None
         }
