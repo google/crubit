@@ -1449,7 +1449,8 @@ fn format_crate(input: &Input) -> Result<Output> {
     let mut cc_details_prereqs = CcPrerequisites::default();
     let mut cc_details: Vec<(LocalDefId, TokenStream)> = vec![];
     let mut rs_body = TokenStream::default();
-    let mut main_apis: HashMap<LocalDefId, CcSnippet> = tcx
+    let mut main_apis = HashMap::<LocalDefId, CcSnippet>::new();
+    let formatted_items = tcx
         .hir()
         .items()
         .filter_map(|item_id| {
@@ -1458,20 +1459,18 @@ fn format_crate(input: &Input) -> Result<Output> {
                 .unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
                 .map(|api_snippets| (def_id, api_snippets))
         })
-        .sorted_by_key(|(def_id, _)| tcx.def_span(*def_id))
-        .fold(HashMap::new(), |mut main_apis, (def_id, api_snippets)| {
-            let old_item = main_apis.insert(def_id, api_snippets.main_api);
-            assert!(old_item.is_none(), "Duplicated key: {def_id:?}");
+        .sorted_by_key(|(def_id, _)| tcx.def_span(*def_id));
+    for (def_id, api_snippets) in formatted_items {
+        let old_item = main_apis.insert(def_id, api_snippets.main_api);
+        assert!(old_item.is_none(), "Duplicated key: {def_id:?}");
 
-            // `cc_details` don't participate in the toposort, because
-            // `CcPrerequisites::defs` always use `main_api` as the predecessor
-            // - `chain`ing `cc_details` after `ordered_main_apis` trivially
-            // meets the prerequisites.
-            cc_details.push((def_id, api_snippets.cc_details.into_tokens(&mut cc_details_prereqs)));
-            rs_body.extend(api_snippets.rs_details);
-
-            main_apis
-        });
+        // `cc_details` don't participate in the toposort, because
+        // `CcPrerequisites::defs` always use `main_api` as the predecessor
+        // - `chain`ing `cc_details` after `ordered_main_apis` trivially
+        // meets the prerequisites.
+        cc_details.push((def_id, api_snippets.cc_details.into_tokens(&mut cc_details_prereqs)));
+        rs_body.extend(api_snippets.rs_details);
+    }
 
     // Find the order of `main_apis` that 1) meets the requirements of
     // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
