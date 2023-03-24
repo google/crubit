@@ -242,9 +242,10 @@ struct MappedType {
     return MappedType{RsType{.decl_id = decl_id}, CcType{.decl_id = decl_id}};
   }
 
-  static MappedType PointerTo(MappedType pointee_type,
-                              std::optional<LifetimeId> lifetime,
-                              bool nullable = true);
+  static MappedType PointerTo(
+      MappedType pointee_type, std::optional<LifetimeId> lifetime,
+      std::optional<clang::RefQualifierKind> ref_qualifier_kind,
+      bool nullable = true);
 
   static MappedType LValueReferenceTo(MappedType pointee_type,
                                       std::optional<LifetimeId> lifetime);

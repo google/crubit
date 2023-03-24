@@ -232,14 +232,14 @@ impl Nontrivial {
 
 impl Nontrivial {
     #[inline(always)]
-    pub fn RvalueRefQualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn RvalueRefQualified<'a>(self: ::ctor::RvalueReference<'a, Self>) {
         unsafe { crate::detail::__rust_thunk___ZNO10Nontrivial18RvalueRefQualifiedEv(self) }
     }
 }
 
 impl Nontrivial {
     #[inline(always)]
-    pub fn ConstRvalueRefQualified<'a>(&'a self) {
+    pub fn ConstRvalueRefQualified<'a>(self: ::ctor::ConstRvalueReference<'a, Self>) {
         unsafe { crate::detail::__rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv(self) }
     }
 }
@@ -982,11 +982,11 @@ mod detail {
         );
         #[link_name = "_ZNO10Nontrivial18RvalueRefQualifiedEv"]
         pub(crate) fn __rust_thunk___ZNO10Nontrivial18RvalueRefQualifiedEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+            __this: ::ctor::RvalueReference<'a, crate::Nontrivial>,
         );
         #[link_name = "_ZNKO10Nontrivial23ConstRvalueRefQualifiedEv"]
         pub(crate) fn __rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv<'a>(
-            __this: &'a crate::Nontrivial,
+            __this: ::ctor::ConstRvalueReference<'a, crate::Nontrivial>,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::NontrivialInline>,

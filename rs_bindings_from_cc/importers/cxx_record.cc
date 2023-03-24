@@ -376,7 +376,8 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
     absl::StatusOr<MappedType> type;
     switch (access) {
       case clang::AS_public:
-        type = ictx_.ConvertQualType(field_decl->getType(), no_lifetimes);
+        type = ictx_.ConvertQualType(field_decl->getType(), no_lifetimes,
+                                     std::nullopt);
         break;
       case clang::AS_protected:
       case clang::AS_private:

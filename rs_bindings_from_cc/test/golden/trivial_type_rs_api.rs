@@ -103,14 +103,14 @@ pub mod ns {
 
     impl Trivial {
         #[inline(always)]
-        pub fn RvalueRefQualified<'a>(&'a mut self) {
+        pub fn RvalueRefQualified<'a>(self: ::ctor::RvalueReference<'a, Self>) {
             unsafe { crate::detail::__rust_thunk___ZNO2ns7Trivial18RvalueRefQualifiedEv(self) }
         }
     }
 
     impl Trivial {
         #[inline(always)]
-        pub fn ConstRvalueRefQualified<'a>(&'a self) {
+        pub fn ConstRvalueRefQualified<'a>(self: ::ctor::ConstRvalueReference<'a, Self>) {
             unsafe {
                 crate::detail::__rust_thunk___ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv(self)
             }
@@ -354,11 +354,11 @@ mod detail {
         );
         #[link_name = "_ZNO2ns7Trivial18RvalueRefQualifiedEv"]
         pub(crate) fn __rust_thunk___ZNO2ns7Trivial18RvalueRefQualifiedEv<'a>(
-            __this: &'a mut crate::ns::Trivial,
+            __this: ::ctor::RvalueReference<'a, crate::ns::Trivial>,
         );
         #[link_name = "_ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv"]
         pub(crate) fn __rust_thunk___ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv<'a>(
-            __this: &'a crate::ns::Trivial,
+            __this: ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>,
         );
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,

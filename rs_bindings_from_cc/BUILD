@@ -202,6 +202,7 @@ cc_library(
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/log:check",
         "@absl//absl/status:statusor",
+        "@llvm-project//clang:ast",
     ],
 )
 

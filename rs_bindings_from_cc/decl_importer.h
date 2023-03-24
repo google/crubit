@@ -13,6 +13,7 @@
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/Type.h"
 
 namespace crubit {
 
@@ -146,6 +147,7 @@ class ImportContext {
   virtual absl::StatusOr<MappedType> ConvertQualType(
       clang::QualType qual_type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+      std::optional<clang::RefQualifierKind> ref_qualifier_kind,
       bool nullable = true) = 0;
 
   // Marks `decl` as successfully imported.  Other pieces of code can check

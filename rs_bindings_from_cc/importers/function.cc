@@ -8,6 +8,7 @@
 
 #include "absl/strings/substitute.h"
 #include "rs_bindings_from_cc/ast_util.h"
+#include "clang/AST/Type.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/StringRef.h"
 
@@ -122,6 +123,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       }
       auto param_type =
           ictx_.ConvertQualType(method_decl->getThisType(), this_lifetimes,
+                                std::optional<clang::RefQualifierKind>(
+                                    method_decl->getRefQualifier()),
                                 /*nullable=*/false);
       if (!param_type.ok()) {
         add_error(absl::StrCat("`this` parameter is not supported: ",
@@ -142,7 +145,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     if (lifetimes) {
       param_lifetimes = lifetimes->GetParamLifetimes(i);
     }
-    auto param_type = ictx_.ConvertQualType(param->getType(), param_lifetimes);
+    auto param_type =
+        ictx_.ConvertQualType(param->getType(), param_lifetimes, std::nullopt);
     if (!param_type.ok()) {
       add_error(absl::Substitute("Parameter #$0 is not supported: $1", i,
                                  param_type.status().message()));
@@ -167,8 +171,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     return_lifetimes = lifetimes->GetReturnLifetimes();
   }
 
-  auto return_type =
-      ictx_.ConvertQualType(function_decl->getReturnType(), return_lifetimes);
+  auto return_type = ictx_.ConvertQualType(function_decl->getReturnType(),
+                                           return_lifetimes, std::nullopt);
   if (!return_type.ok()) {
     add_error(absl::StrCat("Return type is not supported: ",
                            return_type.status().message()));

@@ -36,7 +36,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   }
   std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> type =
-      ictx_.ConvertQualType(cc_type, no_lifetimes);
+      ictx_.ConvertQualType(cc_type, no_lifetimes, std::nullopt);
   if (!type.ok()) {
     return ictx_.ImportUnsupportedItem(enum_decl, type.status().ToString());
   }

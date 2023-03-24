@@ -2790,6 +2790,38 @@ fn test_member_function_rvalue() {
 }
 
 #[test]
+fn test_member_function_rvalue_ref_qualified_this_param_type() {
+    let ir = ir_from_cc(
+        r#" #pragma clang lifetime_elision
+            struct StructWithRvalueRefQualifiedMethod final {
+                void rvalue_ref_qualified_method() &&;
+                void rvalue_ref_const_qualified_method() const &&;
+            };
+        "#,
+    )
+    .unwrap();
+
+    let rvalue_ref_method = ir
+        .functions()
+        .find(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_qualified_method")))
+        .unwrap();
+    let this_param = &rvalue_ref_method.params[0].type_.rs_type.name.as_ref();
+    assert_eq!(this_param.unwrap().as_ref(), "#RvalueReference mut");
+
+    let rvalue_ref_const_method = ir
+        .functions()
+        .find(|f| {
+            f.name == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_const_qualified_method"))
+        })
+        .unwrap();
+    let const_this_param = &rvalue_ref_const_method.params[0];
+    assert_eq!(
+        const_this_param.type_.rs_type.name.as_ref().unwrap().as_ref(),
+        "#RvalueReference const"
+    );
+}
+
+#[test]
 fn test_member_function_explicit_constructor() {
     let ir = ir_from_cc(
         r#"

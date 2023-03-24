@@ -61,6 +61,7 @@ cc_library(
         "@absl//absl/strings",
         "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:decl_importer",
+        "@llvm-project//clang:ast",
         "@llvm-project//clang:sema",
         "@llvm-project//llvm:Support",
     ],

@@ -82,6 +82,7 @@ class Importer final : public ImportContext {
   absl::StatusOr<MappedType> ConvertQualType(
       clang::QualType qual_type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+      std::optional<clang::RefQualifierKind> ref_qualifier_kind,
       bool nullable = true) override;
 
   void MarkAsSuccessfullyImported(const clang::TypeDecl* decl) override;
@@ -117,10 +118,16 @@ class Importer final : public ImportContext {
   // Stores the comments of this target in source order.
   void ImportFreeComments();
 
+  // Converts a type to a MappedType.
+  //
+  // ref_qualifier_kind is the member function reference qualifier, e.g., `&`
+  // means Lvalue-reference-qualified, `&&` means Rvalue-reference-qualified.
+  // This is only meaningful and hence populated when converting the type of
+  // the `this` pointer.
   absl::StatusOr<MappedType> ConvertType(
       const clang::Type* type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-      bool nullable);
+      std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable);
   absl::StatusOr<MappedType> ConvertTypeDecl(clang::TypeDecl* decl);
 
   // Converts `type` into a MappedType, after first importing the Record behind

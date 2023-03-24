@@ -3225,9 +3225,6 @@ impl RsTypeKind {
     ///
     /// If this is !Unpin, however, it uses `self: Pin<&mut Self>` instead.
     pub fn format_as_self_param(&self) -> Result<TokenStream> {
-        let referent;
-        let mutability;
-        let lifetime;
         match self {
             RsTypeKind::Pointer { .. } => {
                 // TODO(jeanpierreda): provide end-user-facing docs, and insert a link to e.g.
@@ -3236,30 +3233,31 @@ impl RsTypeKind {
                     "`self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function."
                 )
             }
-            RsTypeKind::Reference {
-                referent: reference_pointee,
-                lifetime: reference_lifetime,
-                mutability: reference_mutability,
-            } => {
-                referent = reference_pointee;
-                mutability = reference_mutability;
-                lifetime = reference_lifetime;
+            RsTypeKind::Reference { referent, lifetime, mutability } => {
+                let mut_ = mutability.format_for_reference();
+                let lifetime = lifetime.format_for_reference();
+                if mutability == &Mutability::Mut && !referent.is_unpin() {
+                    // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
+                    // `Pin`.
+                    Ok(quote! {self: ::core::pin::Pin< & #lifetime #mut_ Self>})
+                } else {
+                    Ok(quote! { & #lifetime #mut_ self })
+                }
+            }
+            RsTypeKind::RvalueReference { referent:_, lifetime, mutability } => {
+                let lifetime = lifetime.format_for_reference();
+                    // TODO(b/239661934): Add `use ::ctor::{RvalueReference, ConstRvalueReference}`.
+                    match mutability {
+                        Mutability::Mut => Ok(quote! {self: ::ctor::RvalueReference<#lifetime, Self>}),
+                        Mutability::Const => Ok(quote! {self: ::ctor::ConstRvalueReference<#lifetime, Self>}),
+                    }
             }
             RsTypeKind::Record { .. } => {
                 // This case doesn't happen for methods, but is needed for free functions mapped
                 // to a trait impl that take the first argument by value.
-                return Ok(quote! { self });
+                Ok(quote! { self })
             }
             _ => bail!("Unexpected type of `self` parameter: {:?}", self),
-        }
-        let mut_ = mutability.format_for_reference();
-        let lifetime = lifetime.format_for_reference();
-        if mutability == &Mutability::Mut && !referent.is_unpin() {
-            // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
-            // `Pin`.
-            Ok(quote! {self: ::core::pin::Pin< & #lifetime #mut_ Self>})
-        } else {
-            Ok(quote! { & #lifetime #mut_ self })
         }
     }
 
@@ -3292,6 +3290,7 @@ impl RsTypeKind {
     pub fn is_ref_to(&self, expected_record: &Record) -> bool {
         match self {
             RsTypeKind::Reference { referent, .. } => referent.is_record(expected_record),
+            RsTypeKind::RvalueReference { referent, .. } => referent.is_record(expected_record),
             _ => false,
         }
     }
@@ -8049,6 +8048,70 @@ mod tests {
                 extern "C" void __rust_thunk___Z3foov(struct Trivial* __return) {
                     new (__return) auto(foo());
                 }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_unpin_rvalue_ref_qualified_method() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct TrivialWithRvalueRefQualifiedMethod final {
+              void rvalue_ref_qualified_method() &&;
+            };
+            "#,
+        )?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[inline(always)]
+                pub fn rvalue_ref_qualified_method<'a>(self: ::ctor::RvalueReference<'a, Self>) {
+                    unsafe {
+                        crate::detail::__rust_thunk___ZNO35TrivialWithRvalueRefQualifiedMethod27rvalue_ref_qualified_methodEv(self)
+                    }
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[link_name = "_ZNO35TrivialWithRvalueRefQualifiedMethod27rvalue_ref_qualified_methodEv"]
+                pub (crate) fn __rust_thunk___ZNO35TrivialWithRvalueRefQualifiedMethod27rvalue_ref_qualified_methodEv < 'a > (__this :
+                    :: ctor :: RvalueReference < 'a , crate :: TrivialWithRvalueRefQualifiedMethod >) ;
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_unpin_rvalue_ref_const_qualified_method() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct TrivialWithRvalueRefConstQualifiedMethod final {
+              void rvalue_ref_const_qualified_method() const &&;
+            };
+            "#,
+        )?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[inline(always)]
+                pub fn rvalue_ref_const_qualified_method<'a>(self: ::ctor::ConstRvalueReference<'a, Self>) {
+                    unsafe {
+                        crate::detail::__rust_thunk___ZNKO40TrivialWithRvalueRefConstQualifiedMethod33rvalue_ref_const_qualified_methodEv(self)
+                    }
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[link_name = "_ZNKO40TrivialWithRvalueRefConstQualifiedMethod33rvalue_ref_const_qualified_methodEv"]
+                pub (crate) fn __rust_thunk___ZNKO40TrivialWithRvalueRefConstQualifiedMethod33rvalue_ref_const_qualified_methodEv < 'a > (__this :
+                    :: ctor :: ConstRvalueReference < 'a , crate :: TrivialWithRvalueRefConstQualifiedMethod >) ;
             }
         );
         Ok(())

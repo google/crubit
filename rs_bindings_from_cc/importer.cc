@@ -755,7 +755,7 @@ absl::StatusOr<MappedType> Importer::ConvertTypeDecl(clang::TypeDecl* decl) {
 absl::StatusOr<MappedType> Importer::ConvertType(
     const clang::Type* type,
     std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-    bool nullable) {
+    std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
 
@@ -787,14 +787,15 @@ absl::StatusOr<MappedType> Importer::ConvertType(
       CRUBIT_ASSIGN_OR_RETURN(
           absl::string_view rs_abi,
           ConvertCcCallConvIntoRsAbi(func_type->getCallConv()));
-      CRUBIT_ASSIGN_OR_RETURN(
-          MappedType mapped_return_type,
-          ConvertQualType(func_type->getReturnType(), lifetimes));
+      CRUBIT_ASSIGN_OR_RETURN(MappedType mapped_return_type,
+                              ConvertQualType(func_type->getReturnType(),
+                                              lifetimes, ref_qualifier_kind));
 
       std::vector<MappedType> mapped_param_types;
       for (const clang::QualType& param_type : func_type->getParamTypes()) {
-        CRUBIT_ASSIGN_OR_RETURN(MappedType mapped_param_type,
-                                ConvertQualType(param_type, lifetimes));
+        CRUBIT_ASSIGN_OR_RETURN(
+            MappedType mapped_param_type,
+            ConvertQualType(param_type, lifetimes, ref_qualifier_kind));
         mapped_param_types.push_back(std::move(mapped_param_type));
       }
 
@@ -810,11 +811,12 @@ absl::StatusOr<MappedType> Importer::ConvertType(
       }
     }
 
-    CRUBIT_ASSIGN_OR_RETURN(MappedType mapped_pointee_type,
-                            ConvertQualType(pointee_type, lifetimes));
+    CRUBIT_ASSIGN_OR_RETURN(
+        MappedType mapped_pointee_type,
+        ConvertQualType(pointee_type, lifetimes, ref_qualifier_kind));
     if (type->isPointerType()) {
       return MappedType::PointerTo(std::move(mapped_pointee_type), lifetime,
-                                   nullable);
+                                   ref_qualifier_kind, nullable);
     } else if (type->isLValueReferenceType()) {
       return MappedType::LValueReferenceTo(std::move(mapped_pointee_type),
                                            lifetime);
@@ -869,12 +871,14 @@ absl::StatusOr<MappedType> Importer::ConvertType(
     return ConvertTemplateSpecializationType(tst_type);
   } else if (const auto* subst_type =
                  type->getAs<clang::SubstTemplateTypeParmType>()) {
-    return ConvertQualType(subst_type->getReplacementType(), lifetimes);
+    return ConvertQualType(subst_type->getReplacementType(), lifetimes,
+                           ref_qualifier_kind);
   } else if (const auto* deduced_type = type->getAs<clang::DeducedType>()) {
     // Deduction should have taken place earlier (e.g. via DeduceReturnType
     // called from FunctionDeclImporter::Import).
     CHECK(deduced_type->isDeduced());
-    return ConvertQualType(deduced_type->getDeducedType(), lifetimes);
+    return ConvertQualType(deduced_type->getDeducedType(), lifetimes,
+                           ref_qualifier_kind);
   }
 
   return absl::UnimplementedError(absl::StrCat(
@@ -902,11 +906,11 @@ static clang::QualType GetUnelaboratedType(clang::QualType qual_type,
 absl::StatusOr<MappedType> Importer::ConvertQualType(
     clang::QualType qual_type,
     std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-    bool nullable) {
+    std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
   qual_type = GetUnelaboratedType(std::move(qual_type), ctx_);
   std::string type_string = qual_type.getAsString();
-  absl::StatusOr<MappedType> type =
-      ConvertType(qual_type.getTypePtr(), lifetimes, nullable);
+  absl::StatusOr<MappedType> type = ConvertType(
+      qual_type.getTypePtr(), lifetimes, ref_qualifier_kind, nullable);
   if (!type.ok()) {
     absl::Status error = absl::UnimplementedError(absl::Substitute(
         "Unsupported type '$0': $1", type_string, type.status().message()));

@@ -51,7 +51,7 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
 
   std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> underlying_type = ictx_.ConvertQualType(
-      typedef_name_decl->getUnderlyingType(), no_lifetimes);
+      typedef_name_decl->getUnderlyingType(), no_lifetimes, std::nullopt);
 
   if (underlying_type.ok()) {
     if (const auto* tag_decl = type->getAsTagDecl();
