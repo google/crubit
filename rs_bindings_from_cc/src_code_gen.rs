@@ -2576,7 +2576,7 @@ fn generate_unsupported(
 
     let message = format!(
         "{source_loc}{}Error while generating bindings for item '{}':\n{}",
-        if source_loc.len() > 0 { "\n" } else { "" },
+        if source_loc.is_empty() { "" } else { "\n" },
         item.name.as_ref(),
         item.message()
     );
@@ -2820,7 +2820,7 @@ fn generate_item(
         if !missing_features.is_empty() {
             let feature_strings: Vec<&str> =
                 missing_features.into_iter().map(|feature| feature.aspect_hint()).collect();
-            return Ok(generate_unsupported(
+            return generate_unsupported(
                 &UnsupportedItem::new_with_message(
                     &ir,
                     item,
@@ -2831,7 +2831,7 @@ fn generate_item(
                 ),
                 errors,
                 db.generate_source_loc_doc_comment(),
-            )?);
+            );
         }
     }
 
