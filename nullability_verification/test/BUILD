@@ -22,6 +22,16 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "variance",
+    srcs = ["variance.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
 cc_library(
     name = "check_diagnostics",
     testonly = 1,
