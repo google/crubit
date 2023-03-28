@@ -225,7 +225,6 @@ fn generate_bindings(
     let rs_api = format!(
         "{top_level_comment}\n\
         #![rustfmt::skip]\n\
-        #![feature(arbitrary_self_types)]\n\
         {rs_api}"
     );
     let rs_api_impl = format!(
@@ -1787,7 +1786,9 @@ fn function_signature(
                 // first parameter (typically a reference of some kind) and can be passed to a
                 // thunk via the expression `self`.
                 if first_api_param.is_c_abi_compatible_by_value() {
-                    api_params[0] = first_api_param.format_as_self_param()?;
+                    let rs_snippet = first_api_param.format_as_self_param()?;
+                    api_params[0] = rs_snippet.tokens;
+                    features.extend(rs_snippet.features.into_iter());
                     thunk_args[0] = quote! { self };
                 } else {
                     api_params[0] = quote! { mut self };
@@ -3085,6 +3086,21 @@ impl ToTokens for CratePath {
     }
 }
 
+/// A struct with information associated with the formatted Rust code snippet.
+#[derive(Clone, Debug)]
+struct RsSnippet {
+    tokens: TokenStream,
+    // The Rust features that are needed for `tokens` to work.
+    features: HashSet<Ident>,
+}
+
+impl RsSnippet {
+    /// Convenience function to initialize RsSnippet with empty `features`.
+    fn new(tokens: TokenStream) -> RsSnippet {
+        RsSnippet { tokens, features: HashSet::<Ident>::new() }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 enum RsTypeKind {
     Pointer {
@@ -3224,7 +3240,10 @@ impl RsTypeKind {
     /// `&'a mut self`.
     ///
     /// If this is !Unpin, however, it uses `self: Pin<&mut Self>` instead.
-    pub fn format_as_self_param(&self) -> Result<TokenStream> {
+    ///
+    /// If `self` is formatted as RvalueReference or ConstRvalueReference, then
+    /// `arbitrary_self_types` feature flag is returned in the feature flags.
+    pub fn format_as_self_param(&self) -> Result<RsSnippet> {
         match self {
             RsTypeKind::Pointer { .. } => {
                 // TODO(jeanpierreda): provide end-user-facing docs, and insert a link to e.g.
@@ -3239,23 +3258,32 @@ impl RsTypeKind {
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
                     // `Pin`.
-                    Ok(quote! {self: ::core::pin::Pin< & #lifetime #mut_ Self>})
+                    Ok(RsSnippet::new(
+                        quote! {self: ::core::pin::Pin< & #lifetime #mut_ Self>}
+                    ))
                 } else {
-                    Ok(quote! { & #lifetime #mut_ self })
+                    Ok(RsSnippet::new(quote! { & #lifetime #mut_ self }))
                 }
             }
-            RsTypeKind::RvalueReference { referent:_, lifetime, mutability } => {
+            RsTypeKind::RvalueReference { referent: _, lifetime, mutability } => {
                 let lifetime = lifetime.format_for_reference();
-                    // TODO(b/239661934): Add `use ::ctor::{RvalueReference, ConstRvalueReference}`.
-                    match mutability {
-                        Mutability::Mut => Ok(quote! {self: ::ctor::RvalueReference<#lifetime, Self>}),
-                        Mutability::Const => Ok(quote! {self: ::ctor::ConstRvalueReference<#lifetime, Self>}),
-                    }
+                let arbitrary_self_types = make_rs_ident("arbitrary_self_types");
+                // TODO(b/239661934): Add `use ::ctor::{RvalueReference, ConstRvalueReference}`.
+                match mutability {
+                    Mutability::Mut => Ok(RsSnippet{
+                        tokens: quote! {self: ::ctor::RvalueReference<#lifetime, Self>},
+                        features: [arbitrary_self_types].into_iter().collect(),
+                }),
+                    Mutability::Const => Ok(RsSnippet{
+                        tokens: quote! {self: ::ctor::ConstRvalueReference<#lifetime, Self>},
+                        features: [arbitrary_self_types].into_iter().collect(),
+                }),
+                }
             }
             RsTypeKind::Record { .. } => {
                 // This case doesn't happen for methods, but is needed for free functions mapped
                 // to a trait impl that take the first argument by value.
-                Ok(quote! { self })
+                Ok(RsSnippet::new(quote! { self }))
             }
             _ => bail!("Unexpected type of `self` parameter: {:?}", self),
         }
@@ -8911,6 +8939,36 @@ mod tests {
             ";
             assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         }
+        Ok(())
+    }
+
+    #[test]
+    fn test_rstypekind_format_as_self_param_rvalue_reference() -> Result<()> {
+        let type_args: &[RsTypeKind] = &[];
+        let referent = Rc::new(RsTypeKind::Other { name: "T".into(), type_args: type_args.into() });
+        let result = RsTypeKind::RvalueReference {
+            referent,
+            mutability: Mutability::Mut,
+            lifetime: Lifetime::new("a"),
+        }
+        .format_as_self_param()?;
+        assert_rs_matches!(result.tokens, quote! {self: ::ctor::RvalueReference<'a, Self>});
+        assert_eq!(result.features, [make_rs_ident("arbitrary_self_types")].into_iter().collect());
+        Ok(())
+    }
+
+    #[test]
+    fn test_rstypekind_format_as_self_param_const_rvalue_reference() -> Result<()> {
+        let type_args: &[RsTypeKind] = &[];
+        let referent = Rc::new(RsTypeKind::Other { name: "T".into(), type_args: type_args.into() });
+        let result = RsTypeKind::RvalueReference {
+            referent,
+            mutability: Mutability::Const,
+            lifetime: Lifetime::new("a"),
+        }
+        .format_as_self_param()?;
+        assert_rs_matches!(result.tokens, quote! {self: ::ctor::ConstRvalueReference<'a, Self>});
+        assert_eq!(result.features, [make_rs_ident("arbitrary_self_types")].into_iter().collect());
         Ok(())
     }
 }
