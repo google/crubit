@@ -49,6 +49,16 @@ cc_test(
 )
 
 cc_test(
+    name = "comparisons",
+    srcs = ["comparisons.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "variance",
     srcs = ["variance.cc"],
     deps = [
