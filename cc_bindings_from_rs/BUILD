@@ -6,6 +6,7 @@ load(
     "rust_library",
     "rust_test",
 )
+load("@bazel_skylib//lib:selects.bzl", "selects")
 load("//cc_bindings_from_rs/bazel_support:legacy_toolchain_config_setting.bzl", "legacy_rust_toolchain_detector")
 
 package(default_applicable_licenses = ["//third_party/crubit:license"])
@@ -82,7 +83,7 @@ rust_test(
     crate = ":cc_bindings_from_rs",
     data = select({
         ":is_legacy_rust_toolchain": [],
-        "//third_party/crosstool:unstable_config": ["//nowhere/llvm/rust:std_libs"],
+        ":llvm_unstable_but_not_legacy_rust_toolchain": ["//nowhere/llvm/rust:std_libs"],
         "//conditions:default": ["//nowhere/llvm/rust:std_libs"],
     }),
 
@@ -90,7 +91,7 @@ rust_test(
     experimental_use_cc_common_link = 0,
     rustc_flags = select({
         ":is_legacy_rust_toolchain": ["--cfg=legacy_rust_toolchain"],
-        "//third_party/crosstool:unstable_config": ["--cfg=llvm_unstable"],
+        "llvm_unstable_but_not_legacy_rust_toolchain": ["--cfg=llvm_unstable"],
         "//conditions:default": ["--cfg=stable"],
     }),
     # TODO(hlopko): Remove once we roll out the bazel-built toolchain.
@@ -152,4 +153,18 @@ legacy_rust_toolchain_detector(name = "legacy_rust_toolchain_detector")
 config_setting(
     name = "is_legacy_rust_toolchain",
     flag_values = {":legacy_rust_toolchain_detector": "True"},
+)
+
+# TODO(b/262583967): Remove when the legacy toolchain no longer exists.
+config_setting(
+    name = "is_not_legacy_rust_toolchain",
+    flag_values = {":legacy_rust_toolchain_detector": "False"},
+)
+
+selects.config_setting_group(
+    name = "llvm_unstable_but_not_legacy_rust_toolchain",
+    match_all = [
+        ":is_not_legacy_rust_toolchain",
+        "//third_party/crosstool:unstable_config",
+    ],
 )
