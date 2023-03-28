@@ -96,9 +96,7 @@ where
                 // When rustc cmdline arguments (i.e. `self.args`) are empty (or contain
                 // `--help`) then the `after_analysis` callback won't be invoked.  Handle
                 // this case by emitting an explicit error at the Crubit level.
-                Err(anyhow!(
-                    "The Rust compiler had no crate to compile and analyze"
-                ))
+                Err(anyhow!("The Rust compiler had no crate to compile and analyze"))
             })
         })
     }
@@ -243,18 +241,30 @@ pub mod tests {
         Ok(())
     }
 
-    /// Returns the `rustc` sysroot that is suitable for the environment where unit
-    /// tests run.
+    // TODO(b/262583967): Remove when the legacy toolchain no longer exists.
+    #[cfg(legacy_rust_toolchain)]
+    const CROSSTOOL_VERSION: &str = "legacy";
+    #[cfg(llvm_unstable)]
+    const CROSSTOOL_VERSION: &str = "llvm_unstable";
+    #[cfg(stable)]
+    const CROSSTOOL_VERSION: &str = "stable";
+
+    /// Returns the `rustc` sysroot that is suitable for the environment where
+    /// unit tests run.
     ///
     /// The sysroot is used internally by `run_compiler_for_testing`, but it may
-    /// also be passed as `--sysroot=...` in `rustc_args` argument of `run_compiler`
+    /// also be passed as `--sysroot=...` in `rustc_args` argument of
+    /// `run_compiler`
     pub fn get_sysroot_for_testing() -> PathBuf {
         let runfiles = runfiles::Runfiles::create().unwrap();
-        runfiles.rlocation(if std::env::var("LEGACY_TOOLCHAIN_RUST_TEST").is_ok() {
-            "google3/third_party/unsupported_toolchains/rust/toolchains/nightly"
+        let loc = runfiles.rlocation(if CROSSTOOL_VERSION == "legacy" {
+            "google3/third_party/unsupported_toolchains/rust/toolchains/nightly".into()
         } else {
-            "google3/nowhere/llvm/rust"
-        })
+            format!("google3/third_party/crosstool/v18/{CROSSTOOL_VERSION}/rust/main_sysroot")
+        });
+        assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
+        assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
+        loc
     }
 
     #[test]

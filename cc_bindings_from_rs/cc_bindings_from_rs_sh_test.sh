@@ -10,7 +10,6 @@
 source gbash.sh || exit
 source module gbash_unit.sh
 
-readonly CC_BINDINGS_FROM_RS="${RUNFILES}/cc_bindings_from_rs/cc_bindings_from_rs_legacy_toolchain_runner.sar"
 
 readonly STDERR_PATH="${TEST_TMPDIR}/stderr.txt"
 readonly STDOUT_PATH="${TEST_TMPDIR}/stdout.txt"
@@ -19,9 +18,29 @@ readonly RS_OUT_PATH="${TEST_TMPDIR}/cc_api_impl.rs"
 function delete_all_test_outputs() {
   rm -rf "$STDERR_PATH" "$STDOUT_PATH" "$H_OUT_PATH" "$RS_OUT_PATH"
 }
+function cc_bindings_from_rs_path() {
+  if [[ -z "${LEGACY_RUST_TOOLCHAIN}" ]]; then
+    echo "${RUNFILES}/cc_bindings_from_rs/cc_bindings_from_rs"
+  else
+    echo "${RUNFILES}/cc_bindings_from_rs/cc_bindings_from_rs_legacy_toolchain_runner.sar"
+  fi
+}
+
+function sysroot_flag() {
+  if [[ -z "${LEGACY_RUST_TOOLCHAIN}" ]]; then
+      echo "--sysroot=${RUNFILES}/google3/third_party/crosstool/v18/${CROSSTOOL_VERSION}/rust/main_sysroot"
+  fi
+}
+
+function rustfmt_path() {
+  if [[ -z "${LEGACY_RUST_TOOLCHAIN}" ]]; then
+    echo "third_party/crosstool/v18/${CROSSTOOL_VERSION}/rust/main_sysroot/bin/rustfmt"
+  else
+    echo "nowhere/llvm/rust/main_sysroot/bin/rustfmt"
+  fi
+}
 
 readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${RUNFILES}/google3/third_party/crosstool/google3_users/clang-format"
-readonly DEFAULT_RUSTFMT_EXE_PATH="nowhere/llvm/rust/main_sysroot/bin/rustfmt"
 
 # This tests a simple happy, errors-free code path.
 function test::happy_path() {
@@ -36,18 +55,19 @@ function test::happy_path() {
   "
 
   delete_all_test_outputs
-  EXPECT_SUCCEED \
-    "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
+    EXPECT_SUCCEED \
+    "\"$(cc_bindings_from_rs_path)\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         \"--h-out=${H_OUT_PATH}\" \
         \"--rs-out=${RS_OUT_PATH}\" \
         \"--crubit-support-path=crubit/support/for/tests\" \
         \"--clang-format-exe-path=${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
-        \"--rustfmt-exe-path=${DEFAULT_RUSTFMT_EXE_PATH}\" \
+        \"--rustfmt-exe-path=$(rustfmt_path)\" \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
+        $(sysroot_flag) \
         --codegen=panic=abort" \
-    "Expecting that this invocation of cc_bindings_from_rs will succeed"
+        "Expecting that this invocation of cc_bindings_from_rs will succeed"
 
   EXPECT_STR_EMPTY "$(cat $STDOUT_PATH)"
   EXPECT_STR_EMPTY "$(cat $STDERR_PATH)"
@@ -77,7 +97,7 @@ function test::happy_path() {
 function test::crubit_help() {
   delete_all_test_outputs
   EXPECT_SUCCEED \
-    "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
+    "\"$(cc_bindings_from_rs_path)\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         --help" \
     "--help should print the error message and return with 0 exit code"
 
@@ -98,7 +118,7 @@ function test::crubit_help() {
 function test::unrecognized_crubit_flag() {
   delete_all_test_outputs
   EXPECT_FAIL \
-    "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
+    "\"$(cc_bindings_from_rs_path)\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         --no-such-crubit-flag" \
     "Unrecognized cmdline flag should result in non-0 exit code"
 
@@ -121,15 +141,16 @@ function test::invalid_h_out() {
   # chain containing Crubit-level and std::fs-level errors..
   delete_all_test_outputs
   EXPECT_FAIL \
-    "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
+    "\"$(cc_bindings_from_rs_path)\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         --h-out=../.. \
         --rs-out=blah \
         \"--crubit-support-path=crubit/support/for/tests\" \
         \"--clang-format-exe-path=${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
-        \"--rustfmt-exe-path=${DEFAULT_RUSTFMT_EXE_PATH}\" \
+        \"--rustfmt-exe-path=$(rustfmt_path)\" \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
+        $(sysroot_flag) \
         --codegen=panic=abort" \
     "Invalid --h-out path should result in non-0 exit code"
 
@@ -165,15 +186,16 @@ function test::rustc_warnings_are_silenced() {
 
   delete_all_test_outputs
   EXPECT_SUCCEED \
-    "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
+    "\"$(cc_bindings_from_rs_path)\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         \"--h-out=${H_OUT_PATH}\" \
         \"--rs-out=${RS_OUT_PATH}\" \
         \"--crubit-support-path=crubit/support/for/tests\" \
         \"--clang-format-exe-path=${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
-        \"--rustfmt-exe-path=${DEFAULT_RUSTFMT_EXE_PATH}\" \
+        \"--rustfmt-exe-path=$(rustfmt_path)\" \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
+        $(sysroot_flag) \
         --codegen=panic=abort" \
     "Expecting that this invocation of cc_bindings_from_rs will succeed"
 

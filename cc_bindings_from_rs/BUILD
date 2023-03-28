@@ -6,10 +6,21 @@ load(
     "rust_library",
     "rust_test",
 )
+load("//cc_bindings_from_rs/bazel_support:legacy_toolchain_config_setting.bzl", "legacy_rust_toolchain_detector")
 
 package(default_applicable_licenses = ["//third_party/crubit:license"])
 
 licenses(["notice"])
+
+# TODO(b/262583967): Remove when the legacy toolchain no longer exists.
+alias(
+    name = "cc_bindings_from_rs_tool",
+    actual = select({
+        ":is_legacy_rust_toolchain": "cc_bindings_from_rs_legacy_toolchain_runner.sar",
+        "//conditions:default": ":cc_bindings_from_rs",
+    }),
+    visibility = ["//:__subpackages__"],
+)
 
 # The current Rust toolchain uses shared libraries for rustc_driver and friends, and we don't have
 # easily usable support for setting up the environment for shared libraries in Bazel. Either:
@@ -35,6 +46,7 @@ rust_binary(
         "nobuilder",
         "notap",
     ],
+    visibility = ["//:__subpackages__"],
     deps = [
         ":toposort",
         "//common:code_gen_utils",
@@ -68,11 +80,19 @@ sh_binary(
 rust_test(
     name = "cc_bindings_from_rs_test",
     crate = ":cc_bindings_from_rs",
-    data = [
-        "//nowhere/llvm/rust:std_libs",
-    ],
+    data = select({
+        ":is_legacy_rust_toolchain": [],
+        "//third_party/crosstool:unstable_config": ["//nowhere/llvm/rust:std_libs"],
+        "//conditions:default": ["//nowhere/llvm/rust:std_libs"],
+    }),
+
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
     experimental_use_cc_common_link = 0,
+    rustc_flags = select({
+        ":is_legacy_rust_toolchain": ["--cfg=legacy_rust_toolchain"],
+        "//third_party/crosstool:unstable_config": ["--cfg=llvm_unstable"],
+        "//conditions:default": ["--cfg=stable"],
+    }),
     # TODO(hlopko): Remove once we roll out the bazel-built toolchain.
     tags = [
         "manual",
@@ -103,10 +123,11 @@ sh_test(
     name = "cc_bindings_from_rs_sh_test",
     srcs = ["cc_bindings_from_rs_sh_test.sh"],
     data = [
-        # TODO(b/262583967): This should directly depend on the
+        # TODO(b/262583967): This should only directly depend on the
         # `cc_bindings_from_rs` binary (without the indirection of `.sar` or
         # `sh_binary`).  This can be done once we statically link rustc_driver.
         ":cc_bindings_from_rs_legacy_toolchain_runner.sar",
+        ":cc_bindings_from_rs",
     ],
     deps = [
         "//util/shell/gbash",
@@ -122,4 +143,13 @@ rust_library(
 rust_test(
     name = "toposort_test",
     crate = ":toposort",
+)
+
+# TODO(b/262583967): Remove when the legacy toolchain no longer exists.
+legacy_rust_toolchain_detector(name = "legacy_rust_toolchain_detector")
+
+# TODO(b/262583967): Remove when the legacy toolchain no longer exists.
+config_setting(
+    name = "is_legacy_rust_toolchain",
+    flag_values = {":legacy_rust_toolchain_detector": "True"},
 )

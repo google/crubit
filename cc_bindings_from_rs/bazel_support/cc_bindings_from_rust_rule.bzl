@@ -232,7 +232,7 @@ cc_bindings_from_rust = rule(
             providers = [CrateInfo],
         ),
         "_cc_bindings_from_rs_tool": attr.label(
-            default = Label("//cc_bindings_from_rs:cc_bindings_from_rs_legacy_toolchain_runner.sar"),
+            default = Label("//cc_bindings_from_rs:cc_bindings_from_rs_tool"),
             executable = True,
             cfg = "exec",
             allow_single_file = True,
