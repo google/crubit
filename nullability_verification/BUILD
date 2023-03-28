@@ -26,6 +26,7 @@ cc_library(
     name = "pointer_nullability_analysis",
     srcs = ["pointer_nullability_analysis.cc"],
     hdrs = ["pointer_nullability_analysis.h"],
+    visibility = ["//nullability_verification/test:__pkg__"],
     deps = [
         ":pointer_nullability",
         ":pointer_nullability_lattice",
@@ -43,6 +44,7 @@ cc_library(
     name = "pointer_nullability_diagnosis",
     srcs = ["pointer_nullability_diagnosis.cc"],
     hdrs = ["pointer_nullability_diagnosis.h"],
+    visibility = ["//nullability_verification/test:__pkg__"],
     deps = [
         ":pointer_nullability",
         ":pointer_nullability_lattice",
@@ -66,20 +68,5 @@ cc_library(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
-    ],
-)
-
-cc_test(
-    name = "pointer_nullability_verification_test",
-    srcs = ["pointer_nullability_verification_test.cc"],
-    deps = [
-        ":pointer_nullability_analysis",
-        ":pointer_nullability_diagnosis",
-        "@llvm-project//clang:basic",
-        "@llvm-project//clang/unittests:dataflow_testing_support",
-        "@llvm-project//llvm:Support",
-        "@llvm-project//llvm:TestingSupport",
-        "@llvm-project//third-party/unittest:gtest",
-        "@llvm-project//third-party/unittest:gtest_main",
     ],
 )
