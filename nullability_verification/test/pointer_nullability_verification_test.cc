@@ -6,81 +6,13 @@
 #include <set>
 #include <string>
 
-#include "nullability_verification/pointer_nullability_analysis.h"
-#include "nullability_verification/pointer_nullability_diagnosis.h"
-#include "clang/Basic/SourceManager.h"
-#include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/Support/Error.h"
-#include "llvm/Testing/Support/Error.h"
+#include "nullability_verification/test/check_diagnostics.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang {
 namespace tidy {
 namespace nullability {
 namespace {
-
-using dataflow::Environment;
-using dataflow::TransferStateForDiagnostics;
-using dataflow::test::AnalysisInputs;
-using dataflow::test::AnalysisOutputs;
-using dataflow::test::checkDataflow;
-using ::testing::ContainerEq;
-using ::testing::Test;
-
-bool checkDiagnostics(llvm::StringRef SourceCode) {
-  std::vector<CFGElement> Diagnostics;
-  PointerNullabilityDiagnoser Diagnoser;
-  bool Failed = false;
-  EXPECT_THAT_ERROR(
-      checkDataflow<PointerNullabilityAnalysis>(
-          AnalysisInputs<PointerNullabilityAnalysis>(
-              SourceCode, ast_matchers::hasName("target"),
-              [](ASTContext &ASTCtx, Environment &) {
-                return PointerNullabilityAnalysis(ASTCtx);
-              })
-              .withPostVisitCFG([&Diagnostics, &Diagnoser](
-                                    ASTContext &Ctx, const CFGElement &Elt,
-                                    const TransferStateForDiagnostics<
-                                        PointerNullabilityLattice> &State) {
-                auto EltDiagnostics = Diagnoser.diagnose(&Elt, Ctx, State);
-                if (EltDiagnostics.has_value()) {
-                  Diagnostics.push_back(EltDiagnostics.value());
-                }
-              })
-              .withASTBuildArgs({"-fsyntax-only", "-std=c++17",
-                                 "-Wno-unused-value", "-Wno-nonnull"}),
-          [&Diagnostics, &Failed](
-              const llvm::DenseMap<unsigned, std::string> &Annotations,
-              const AnalysisOutputs &AnalysisData) {
-            // Note: use sorted sets for expected and actual lines to improve
-            // readability of the error output in case the test fails.
-            std::set<unsigned> ExpectedLines, ActualLines;
-            for (const auto &[Line, _] : Annotations) {
-              ExpectedLines.insert(Line);
-            }
-            auto &SrcMgr = AnalysisData.ASTCtx.getSourceManager();
-            for (auto Element : Diagnostics) {
-              if (std::optional<CFGStmt> stmt = Element.getAs<CFGStmt>()) {
-                ActualLines.insert(SrcMgr.getPresumedLineNumber(
-                    stmt->getStmt()->getBeginLoc()));
-              } else if (std::optional<CFGInitializer> init =
-                             Element.getAs<CFGInitializer>()) {
-                ActualLines.insert(SrcMgr.getPresumedLineNumber(
-                    init->getInitializer()->getSourceLocation()));
-              } else {
-                ADD_FAILURE() << "this code should not be reached";
-              }
-            }
-            EXPECT_THAT(ActualLines, ContainerEq(ExpectedLines));
-            if (ActualLines != ExpectedLines) {
-              Failed = true;
-            }
-          }),
-      llvm::Succeeded());
-  return !Failed;
-}
 
 TEST(PointerNullabilityTest, NoPointerOperations) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
