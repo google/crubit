@@ -3647,8 +3647,20 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                 match name.strip_prefix("#funcPtr ") {
                     None => RsTypeKind::Other { name: name.into(), type_args: Rc::from(type_args) },
                     Some(abi) => {
-                        // TODO(b/254858027): Consider enforcing `'static` lifetime.
-                        ensure!(!type_args.is_empty(), "No return type in fn type: {:?}", ty);
+                        // Assert that function pointers in the IR either have static lifetime or
+                        // no lifetime.
+                        // TODO(b/275628345): Replace with `assert!(ty.lifetime_args.is_empty())`
+                        // after function pointers are not allowed to have any lifetime
+                        // annotations.
+                        match get_lifetime() {
+                            Err(_) => (),  // No lifetime
+                            Ok(lifetime) => assert_eq!(lifetime.0.as_ref(), "static"),
+                        }
+
+                        assert!(
+                            !type_args.is_empty(),
+                            "In well-formed IR function pointers include at least the return type",
+                        );
                         RsTypeKind::FuncPtr {
                             abi: abi.into(),
                             return_type: Rc::new(type_args.remove(type_args.len() - 1)),

@@ -773,6 +773,8 @@ absl::StatusOr<MappedType> Importer::ConvertType(
     }
     if (const auto* func_type =
             pointee_type->getAs<clang::FunctionProtoType>()) {
+      // TODO(b/275628345): Replace with `CHECK(!lifetime.has_value())` after
+      // function pointers are not allowed to have any lifetime annotations.
       if (lifetime.has_value() &&
           lifetime->value() !=
               clang::tidy::lifetimes::Lifetime::Static().Id()) {
