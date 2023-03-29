@@ -411,6 +411,15 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_SimpleRef) {
 }
 
 TEST_F(LifetimeAnnotationsTest,
+       LifetimeAnnotation_Invalid_LifetimeOnNonReferenceLikeType) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        void f(int $a);
+  )")),
+              IsOkAndHolds(LifetimesAre(
+                  {{"f", "ERROR: Type may not be annotated with lifetimes"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest,
        LifetimeAnnotation_Invalid_MultipleLifetimesOnPointer) {
   EXPECT_THAT(
       GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(

@@ -368,7 +368,13 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
   }
 
   clang::QualType pointee = PointeeType(type);
-  if (pointee.isNull()) return ret;
+  if (pointee.isNull()) {
+    if (lifetime_params.empty() && !lifetime_names.empty())
+      return llvm::createStringError(
+          llvm::inconvertibleErrorCode(),
+          absl::StrCat("Type may not be annotated with lifetimes"));
+    return ret;
+  }
 
   clang::TypeLoc pointee_type_loc;
   if (type_loc) {
