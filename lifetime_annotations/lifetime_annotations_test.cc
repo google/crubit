@@ -326,8 +326,7 @@ TEST_F(LifetimeAnnotationsTest,
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_FunctionReferenceLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
-        typedef void (&FunctionReference)();
-        void f(FunctionReference hook);
+        void f(void (&)());
   )"),
               IsOkAndHolds(LifetimesAre({{"f", "a"}})));
 }
@@ -336,7 +335,8 @@ TEST_F(LifetimeAnnotationsTest,
        LifetimeElision_FunctionReferenceAsTypedefLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
-        void f(void (&)());
+        typedef void (&FunctionReference)();
+        void f(FunctionReference hook);
   )"),
               IsOkAndHolds(LifetimesAre({{"f", "a"}})));
 }
