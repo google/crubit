@@ -791,9 +791,7 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
     Ok(())
 }
 
-// TOOD(rosica): Reenable once b/208377928 is fixed. (Also disallow dead code.)
-// #[test]
-#[allow(dead_code)]
+#[test]
 fn test_type_conversion() -> Result<()> {
     // TODO(mboehme): Add tests for the corresponding versions of the types in
     // the `std` namespace. We currently can't do this because we can't include
@@ -801,8 +799,10 @@ fn test_type_conversion() -> Result<()> {
     // as <stdint.h> (see b/214344126).
     let ir = ir_from_cc(
         r#"
-            #include <stdint.h>
-            #include <stddef.h>
+        // TOOD(b/275876867): Fix the `#include`s below and re-enable asserts below.
+        #if 0
+            // #include <stdint.h>
+            // #include <stddef.h>
 
             // We mock types from the C++ standard library because it's hard to
             // make headers that aren't part of the compiler available to a unit test.
@@ -822,6 +822,7 @@ fn test_type_conversion() -> Result<()> {
               using ::intptr_t;
               using ::uintptr_t;
             }
+        #endif
 
             struct S {
                 bool b;
@@ -848,6 +849,8 @@ fn test_type_conversion() -> Result<()> {
                 signed long sl;
                 signed long long sll;
 
+        // TOOD(b/275876867): Reenable test inputs below after fix the `#include` problem.
+        #if 0
                 int8_t i8;
                 int16_t i16;
                 int32_t i32;
@@ -874,6 +877,7 @@ fn test_type_conversion() -> Result<()> {
                 std::size_t std_st;
                 std::intptr_t std_ip;
                 std::uintptr_t std_up;
+            #endif
 
                 float f;
                 double d;
@@ -916,6 +920,7 @@ fn test_type_conversion() -> Result<()> {
     assert_eq!(type_mapping["long"], "i64");
     assert_eq!(type_mapping["long long"], "i64");
 
+    /* TOOD(b/275876867): Reenable assertions below after fix the `#include` problem.
     assert_eq!(type_mapping["int8_t"], "i8");
     assert_eq!(type_mapping["int16_t"], "i16");
     assert_eq!(type_mapping["int32_t"], "i32");
@@ -942,6 +947,7 @@ fn test_type_conversion() -> Result<()> {
     assert_eq!(type_mapping["std::size_t"], "usize");
     assert_eq!(type_mapping["std::intptr_t"], "isize");
     assert_eq!(type_mapping["std::uintptr_t"], "usize");
+    */
 
     assert_eq!(type_mapping["float"], "f32");
     assert_eq!(type_mapping["double"], "f64");
