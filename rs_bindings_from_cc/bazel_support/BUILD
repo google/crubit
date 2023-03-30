@@ -19,6 +19,7 @@ bzl_library(
         "//:__subpackages__",
     ],
     deps = [
+        ":additional_rust_srcs_for_crubit_bindings_aspect_hint_bzl",
         ":crubit_feature_hint_bzl",
         ":providers_bzl",
         ":rust_bindings_from_cc_cli_flag_aspect_hint",
@@ -110,6 +111,12 @@ bzl_library(
 bzl_library(
     name = "rust_bindings_from_cc_cli_flag_aspect_hint",
     srcs = ["rust_bindings_from_cc_cli_flag_aspect_hint.bzl"],
+)
+
+bzl_library(
+    name = "additional_rust_srcs_for_crubit_bindings_aspect_hint_bzl",
+    srcs = ["additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl"],
+    deps = ["@bazel_skylib//lib:collections"],
 )
 
 alias(
