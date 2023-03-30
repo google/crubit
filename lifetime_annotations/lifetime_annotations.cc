@@ -233,9 +233,18 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
 
       llvm::DenseSet<Lifetime> all_input_lifetimes;
       for (const ValueLifetimes& v : param_lifetimes) {
-        v.Traverse([&all_input_lifetimes](Lifetime l, Variance) {
-          all_input_lifetimes.insert(l);
-        });
+        // Function pointers and function references have an implied static
+        // lifetime, but this shouldn't count as an input lifetime for the
+        // purposes of lifetime elision.
+        const ValueLifetimes& lifetimes_to_traverse =
+            v.Type()->isFunctionPointerType() ||
+                    v.Type()->isFunctionReferenceType()
+                ? v.GetPointeeLifetimes().GetValueLifetimes()
+                : v;
+        lifetimes_to_traverse.Traverse(
+            [&all_input_lifetimes](Lifetime l, Variance) {
+              all_input_lifetimes.insert(l);
+            });
       }
 
       if (all_input_lifetimes.size() == 1) {

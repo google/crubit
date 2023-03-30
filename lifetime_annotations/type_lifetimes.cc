@@ -368,11 +368,14 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
   }
 
   clang::QualType pointee = PointeeType(type);
-  if (pointee.isNull()) {
+  if (pointee.isNull() || type->isFunctionPointerType() ||
+      type->isFunctionReferenceType()) {
     if (lifetime_params.empty() && !lifetime_names.empty())
       return llvm::createStringError(
           llvm::inconvertibleErrorCode(),
           absl::StrCat("Type may not be annotated with lifetimes"));
+  }
+  if (pointee.isNull()) {
     return ret;
   }
 
@@ -393,19 +396,25 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
   }
 
   Lifetime object_lifetime;
-  const clang::Expr* lifetime_name = nullptr;
-  if (!lifetime_names.empty()) {
-    if (lifetime_names.size() != 1) {
-      return llvm::createStringError(
-          llvm::inconvertibleErrorCode(),
-          absl::StrCat("Expected a single lifetime but ", lifetime_names.size(),
-                       " were given"));
+  if (type->isFunctionPointerType() || type->isFunctionReferenceType()) {
+    // Function pointers and function references may not be annotated with a
+    // lifetime. Instead, it is always implied that they have static lifetime.
+    object_lifetime = Lifetime::Static();
+  } else {
+    const clang::Expr* lifetime_name = nullptr;
+    if (!lifetime_names.empty()) {
+      if (lifetime_names.size() != 1) {
+        return llvm::createStringError(
+            llvm::inconvertibleErrorCode(),
+            absl::StrCat("Expected a single lifetime but ",
+                         lifetime_names.size(), " were given"));
+      }
+      lifetime_name = lifetime_names.front();
     }
-    lifetime_name = lifetime_names.front();
-  }
-  if (llvm::Error err =
-          lifetime_factory(lifetime_name).moveInto(object_lifetime)) {
-    return std::move(err);
+    if (llvm::Error err =
+            lifetime_factory(lifetime_name).moveInto(object_lifetime)) {
+      return std::move(err);
+    }
   }
   ret.pointee_lifetimes_ =
       std::make_unique<ObjectLifetimes>(object_lifetime, value_lifetimes);
@@ -445,6 +454,16 @@ ValueLifetimes ValueLifetimes::ForRecord(
 
 std::string ValueLifetimes::DebugString(
     const LifetimeFormatter& formatter) const {
+  if (Type()->isFunctionPointerType() || Type()->isFunctionReferenceType()) {
+    // Function pointers and function references have an implied static
+    // lifetime. This is never annotated, so don't print it either.
+    // Note: If at some point we decide we want to distinguish between regular
+    // pointers (to objects) and function pointers in more places, we could
+    // consider adding a `function_pointee_lifetimes_` in addition to
+    // `pointee_lifetimes_`.
+    assert(pointee_lifetimes_->GetLifetime() == Lifetime::Static());
+    return pointee_lifetimes_->GetValueLifetimes().DebugString(formatter);
+  }
   if (!PointeeType(Type()).isNull()) {
     assert(pointee_lifetimes_);
     return pointee_lifetimes_->DebugString(formatter);

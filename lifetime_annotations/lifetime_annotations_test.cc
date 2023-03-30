@@ -305,40 +305,33 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_ArrayParamAsTypedefLifetimes) {
               IsOkAndHolds(LifetimesAre({{"f", "a"}})));
 }
 
-TEST_F(LifetimeAnnotationsTest, LifetimeElision_FunctionPointerLifetimes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma clang lifetime_elision
-        void f(void (*)());
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
-}
-
 TEST_F(LifetimeAnnotationsTest,
-       LifetimeElision_FunctionPointerAsTypedefLifetimes) {
+       LifetimeElision_LifetimesInsideFunctionPointerParameter) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
-        typedef void (*FunctionPointer)();
-        void f(FunctionPointer hook);
+        void f(void (*)(int *, int *));
   )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+              IsOkAndHolds(LifetimesAre({{"f", "(a, b)"}})));
 }
 
-TEST_F(LifetimeAnnotationsTest, LifetimeElision_FunctionReferenceLifetimes) {
+TEST_F(
+    LifetimeAnnotationsTest,
+    LifetimeElision_FunctionPointerParameterDoesNotCountTowardsInputLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
-        void f(void (&)());
+        int* f(int *, void (*)());
   )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+              IsOkAndHolds(LifetimesAre({{"f", "a, () -> a"}})));
 }
 
-TEST_F(LifetimeAnnotationsTest,
-       LifetimeElision_FunctionReferenceAsTypedefLifetimes) {
+TEST_F(
+    LifetimeAnnotationsTest,
+    LifetimeElision_FunctionReferenceParameterDoesNotCountTowardsInputLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
-        typedef void (&FunctionReference)();
-        void f(FunctionReference hook);
+        int* f(int *, void (&)());
   )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+              IsOkAndHolds(LifetimesAre({{"f", "a, () -> a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest,
@@ -383,6 +376,22 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_NoLifetimes) {
               IsOkAndHolds(LifetimesAre({{"f", "()"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest,
+       LifetimeAnnotation_FunctionPointerHasNoLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
+        void f(void (*)());
+  )_"),
+              IsOkAndHolds(LifetimesAre({{"f", "()"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest,
+       LifetimeAnnotation_FunctionReferenceHasNoLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
+        void f(void (&)());
+  )_"),
+              IsOkAndHolds(LifetimesAre({{"f", "()"}})));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_BadAttributeArgument) {
   EXPECT_THAT(
       GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
@@ -414,6 +423,24 @@ TEST_F(LifetimeAnnotationsTest,
        LifetimeAnnotation_Invalid_LifetimeOnNonReferenceLikeType) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         void f(int $a);
+  )")),
+              IsOkAndHolds(LifetimesAre(
+                  {{"f", "ERROR: Type may not be annotated with lifetimes"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest,
+       LifetimeAnnotation_Invalid_LifetimeOnFunctionPointer) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        void f(void (* $a)());
+  )")),
+              IsOkAndHolds(LifetimesAre(
+                  {{"f", "ERROR: Type may not be annotated with lifetimes"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest,
+       LifetimeAnnotation_Invalid_LifetimeOnFunctionReference) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        void f(void (& $a)());
   )")),
               IsOkAndHolds(LifetimesAre(
                   {{"f", "ERROR: Type may not be annotated with lifetimes"}})));
@@ -681,32 +708,30 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_WrongNumber) {
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Callback) {
-  EXPECT_THAT(
-      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
-        [[clang::annotate("lifetimes", "b, ((a -> a), static) -> b")]]
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        [[clang::annotate("lifetimes", "b, (a -> a) -> b")]]
         int* f1(int*, int* (*)(int*));
-        int* $b f2(int* $b, int* $a (* $static)(int* $a));
+        int* $b f2(int* $b, int* $a (*)(int* $a));
   )")),
-      IsOkAndHolds(LifetimesAre({{"f1", "b, ((a -> a), static) -> b"},
-                                 {"f2", "b, ((a -> a), static) -> b"}})));
+              IsOkAndHolds(LifetimesAre(
+                  {{"f1", "b, (a -> a) -> b"}, {"f2", "b, (a -> a) -> b"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_CallbackMultipleParams) {
-  EXPECT_THAT(
-      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
-        [[clang::annotate("lifetimes", "c, ((a, b -> a), static) -> c")]]
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        [[clang::annotate("lifetimes", "c, ((a, b -> a)) -> c")]]
         int* f1(int*, int* (*)(int*, int*));
-        int* $c f2(int* $c, int* $a (* $static)(int* $a, int* $b));
+        int* $c f2(int* $c, int* $a (*)(int* $a, int* $b));
   )")),
-      IsOkAndHolds(LifetimesAre({{"f1", "c, ((a, b -> a), static) -> c"},
-                                 {"f2", "c, ((a, b -> a), static) -> c"}})));
+              IsOkAndHolds(LifetimesAre({{"f1", "c, (a, b -> a) -> c"},
+                                         {"f2", "c, (a, b -> a) -> c"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_CallbackTmplFunc) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         template <typename Func>
         struct function;
-        [[clang::annotate("lifetimes", "a, ((b -> b)) -> a")]]
+        [[clang::annotate("lifetimes", "a, (b -> b) -> a")]]
         int* f1(int*, function<int*(int*)>);
         int* $a f2(int* $a, function<int* $b(int* $b)>);
   )")),
@@ -715,25 +740,25 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_CallbackTmplFunc) {
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MultipleCallbacks) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
-        [[clang::annotate("lifetimes", "a, ((b -> b), static), ((c -> c), static) -> a")]]
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        [[clang::annotate("lifetimes", "a, (b -> b), (c -> c) -> a")]]
         int* f1(int*, int* (*)(int*), int* (*)(int*));
-        int* $a f2(int* $a, int* $b (* $static)(int* $b), int* $c (* $static)(int* $c));
+        int* $a f2(int* $a, int* $b (*)(int* $b), int* $c (*)(int* $c));
   )")),
-              IsOkAndHolds(LifetimesAre(
-                  {{"f1", "a, ((b -> b), static), ((c -> c), static) -> a"},
-                   {"f2", "a, ((b -> b), static), ((c -> c), static) -> a"}})));
+      IsOkAndHolds(LifetimesAre({{"f1", "a, (b -> b), (c -> c) -> a"},
+                                 {"f2", "a, (b -> b), (c -> c) -> a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_ReturnFunctionPtr) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"_(
         typedef int* (*FP)(int*);
-        [[clang::annotate("lifetimes", "a -> ((b -> b), static)")]]
+        [[clang::annotate("lifetimes", "a -> (b -> b)")]]
         FP f(int*);
         // TODO(mboehme): Need to support lifetime parameters on type aliases to
         // be able to express this in the new syntax.
   )_")),
-              IsOkAndHolds(LifetimesAre({{"f", "a -> ((b -> b), static)"}})));
+              IsOkAndHolds(LifetimesAre({{"f", "a -> (b -> b)"}})));
 }
 
 }  // namespace

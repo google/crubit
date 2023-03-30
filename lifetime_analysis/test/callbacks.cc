@@ -23,7 +23,7 @@ TEST_F(LifetimeAnalysisTest, SimpleCallback) {
       return f(a);
     }
   )"),
-              LifetimesAre({{"target", "a, ((a), b)"}}));
+              LifetimesAre({{"target", "a, (a)"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, SimpleReturningCallback) {
@@ -32,7 +32,7 @@ TEST_F(LifetimeAnalysisTest, SimpleReturningCallback) {
       return f(a);
     }
   )"),
-              LifetimesAre({{"target", "a, ((a -> b), c) -> b"}}));
+              LifetimesAre({{"target", "a, (a -> b) -> b"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, CallWithCallback) {

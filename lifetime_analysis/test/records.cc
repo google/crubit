@@ -371,7 +371,7 @@ TEST_F(LifetimeAnalysisTest, StructReturnAddressOfMemberFunction) {
       return s.f;
     }
   )"),
-              LifetimesContain({{"target", "-> a"}}));
+              LifetimesContain({{"target", "-> ()"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, StructDefaultConstructor) {

@@ -96,4 +96,18 @@ mod tests {
         let mul_fn = maybe_mul_fn.expect("Expecting non-null / non-None function pointer");
         assert_eq!(mul_fn(123, 456), 123 * 456);
     }
+
+    /// Test that function pointers can be accepted as function parameters.
+    #[test]
+    fn test_apply_binary_op() {
+        extern "C" fn multiply(x: i32, y: i32) -> i32 {
+            x * y
+        }
+        extern "C" fn add(x: i32, y: i32) -> i32 {
+            x + y
+        }
+
+        assert_eq!(100 * 200, simple_functions::apply_binary_op(100, 200, Some(multiply)),);
+        assert_eq!(300 + 400, simple_functions::apply_binary_op(300, 400, Some(add)),);
+    }
 }

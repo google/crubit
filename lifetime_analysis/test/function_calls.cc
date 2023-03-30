@@ -343,7 +343,7 @@ TEST_F(LifetimeAnalysisTest, FnCall_PassLambda) {
       call_callback([] {});
     }
   )"),
-              LifetimesContain({{"call_callback", "a"}, {"target", ""}}));
+              LifetimesContain({{"call_callback", "()"}, {"target", ""}}));
 }
 
 TEST_F(LifetimeAnalysisTest, SimpleIndirectFnCall) {

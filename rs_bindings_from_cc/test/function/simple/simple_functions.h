@@ -30,6 +30,10 @@ inline int (*inline_get_pointer_to_multiply_function())(int, int) {
   return multiply;
 }
 
+inline int apply_binary_op(int x, int y, int (*op)(int, int)) {
+  return op(x, y);
+}
+
 // TODO(b/217419782): Add testcases for pointers to functions that take or
 // return takes/returns non-trivially-movable types by value. In particular,
 // some function signatures might require going through a C++ thunk - such
