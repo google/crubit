@@ -171,7 +171,7 @@ class ValueLifetimes {
   }
 
   bool HasLifetimes() const {
-    return pointee_lifetimes_ != nullptr ||
+    return pointee_lifetimes_ != nullptr || function_lifetimes_ != nullptr ||
            !lifetime_parameters_by_name_.GetMapping().empty() ||
            !template_argument_lifetimes_.empty();
   }
