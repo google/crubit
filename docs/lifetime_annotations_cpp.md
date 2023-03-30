@@ -125,9 +125,28 @@ fn get_static_as() -> &'static CxxVector<&'static A>;
 ### Lifetimes {#lifetimes}
 
 Lifetimes are associated with certain types that we call *reference-like types*.
-A reference-like type is a pointer, a reference, or a user-defined type that has
-been annotated as having lifetime parameters. We will explain user-defined
-reference-like types in detail in a later section.
+A reference-like type is one of the following:
+
+*   A pointer (except pointers to functions and pointers to members)
+*   A reference (except references to functions)
+*   A user-defined type that has been annotated as having lifetime parameters.
+    (We will explain user-defined reference-like types in detail in a later
+    section.)
+
+The reason that pointers to functions and references to functions do not have
+lifetimes is to be consistent with Rust, where `fn` types do not have lifetimes
+either. In C++, the function that a pointer or reference refers to almost always
+exists for the duration of the program execution. There are some exceptions,
+such as functions created by a JIT compiler or functions in plugins loaded and
+unloaded at runtime. Such functions may be destroyed before the program exits,
+but we consider them to be unusual enough that we don't support annotating their
+lifetimes.
+
+Pointers to members don't have lifetimes because they aren't pointers in the
+narrower sense. A pointer to member doesn't refer to a specific object in
+memory; rather, it can be used to refer to a specific member of any object of a
+given type. In implementation terms, a pointer to member is not an address but
+an offset.
 
 Lifetimes are annotated using the new attribute `lifetime`[^1]. The attribute
 takes one or several lifetime names as arguments.
