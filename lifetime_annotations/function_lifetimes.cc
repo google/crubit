@@ -236,11 +236,14 @@ void FunctionLifetimes::Traverse(
 std::string FunctionLifetimes::DebugString(LifetimeFormatter formatter) const {
   std::vector<std::string> formatted_param_lifetimes;
 
-  // Add parenteses to non-trivial nested lifetimes, i.e. fn parameters with >1
+  // Add parentheses to non-trivial nested lifetimes, i.e. fn parameters with >1
   // lifetimes, as their DebugString does not contain parentheses.
   auto maybe_add_parentheses = [&](std::string s) {
     if (s.find_first_of(",()") != std::string::npos || s.empty()) {
-      return absl::StrCat("(", s, ")");
+      // However, don't add redundant parentheses.
+      if (!(s.size() >= 2 && s.front() == '(' && s.back() == ')')) {
+        return absl::StrCat("(", s, ")");
+      }
     }
     return s;
   };

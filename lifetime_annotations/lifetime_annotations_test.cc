@@ -710,8 +710,8 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_CallbackTmplFunc) {
         int* f1(int*, function<int*(int*)>);
         int* $a f2(int* $a, function<int* $b(int* $b)>);
   )")),
-              IsOkAndHolds(LifetimesAre({{"f1", "a, ((b -> b)) -> a"},
-                                         {"f2", "a, ((b -> b)) -> a"}})));
+              IsOkAndHolds(LifetimesAre(
+                  {{"f1", "a, (b -> b) -> a"}, {"f2", "a, (b -> b) -> a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MultipleCallbacks) {
