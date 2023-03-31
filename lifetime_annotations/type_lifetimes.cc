@@ -672,11 +672,19 @@ GetTemplateArgs(clang::TypeLoc type_loc) {
 
   // We can't get template arguments from a `SubstTemplateTypeParmTypeLoc`
   // because there is no `TypeLoc` for the type that replaces the template
-  // parameter. Similarly, there is no `TypeLoc` for the type that a
-  // `TypedefTypeLoc` resolves to.
-  if (type_loc.getAs<clang::SubstTemplateTypeParmTypeLoc>() ||
-      type_loc.getAs<clang::TypedefTypeLoc>()) {
+  // parameter.
+  if (type_loc.getAs<clang::SubstTemplateTypeParmTypeLoc>()) {
     assert(!type_loc.getNextTypeLoc());
+    return std::nullopt;
+  }
+
+  // Similarly, there is no `TypeLoc` for the type that a `TypedefType` resolves
+  // to. Note that we intentionally use Type::getAs<TypedefType>() instead of
+  // TypeLoc::getAs<TypedefTypeLoc>() here because the former will strip off any
+  // potential other layers of sugar to get to the `TypedefType`, and we want to
+  // be consistent with `GetTemplateArgs<QualType>`, which obviously uses
+  // `Type::getAs<TypedefType>()`, too.
+  if (type_loc.getType()->getAs<clang::TypedefType>() != nullptr) {
     return std::nullopt;
   }
 

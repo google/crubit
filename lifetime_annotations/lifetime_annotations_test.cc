@@ -616,10 +616,8 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_VariadicTemplateWithCtor) {
                                          {"target", "a, b"}})));
 }
 
-// TODO(b/276419729): This is a reproducer for an assertion failure that we
-// are currently encountering. Re-enable this test when the bug has been fixed.
 TEST_F(LifetimeAnnotationsTest,
-       DISABLED_LifetimeAnnotation_AliasTemplateForClassTemplate) {
+       LifetimeAnnotation_AliasTemplateForClassTemplate) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
     template<class T> struct trait {
       using type = T;
