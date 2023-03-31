@@ -216,7 +216,12 @@ llvm::Error ForEachTemplateArgument(
       template_arg_locs[depth].resize(template_args[depth].size());
     }
   }
-  assert(template_arg_locs.size() == template_args.size());
+  if (template_arg_locs.size() != template_args.size()) {
+    llvm::report_fatal_error(llvm::StringRef(absl::StrCat(
+        "In ForEachTemplateArgument, template_args_locs has ",
+        template_arg_locs.size(), " entries and template_args has ",
+        template_args.size(), " entries, but they should be equal")));
+  }
   for (int depth = 0; depth < template_args.size(); depth++) {
     const auto& args_at_depth = template_args[depth];
     const auto& arg_locs_at_depth = template_arg_locs[depth];
