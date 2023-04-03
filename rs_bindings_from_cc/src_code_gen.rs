@@ -7245,9 +7245,9 @@ mod tests {
 
     #[test]
     fn test_format_generic_params() -> Result<()> {
-        assert_rs_matches!(
-            format_generic_params(/* lifetimes= */ &[], std::iter::empty::<syn::Ident>()),
-            quote! {}
+        assert!(
+            format_generic_params(/* lifetimes= */ &[], std::iter::empty::<syn::Ident>())
+                .is_empty(),
         );
 
         let idents = ["T1", "T2"].iter().map(|s| make_rs_ident(s));
@@ -8778,7 +8778,7 @@ mod tests {
     #[test]
     fn test_generate_doc_comment_with_no_comment_with_no_source_loc_with_source_loc_enabled() {
         let actual = generate_doc_comment(None, None, SourceLocationDocComment::Enabled);
-        assert_rs_matches!(actual, quote! {});
+        assert!(actual.is_empty());
     }
 
     #[test]
@@ -8814,7 +8814,7 @@ mod tests {
     #[test]
     fn test_no_generate_doc_comment_with_no_comment_with_no_source_loc_with_source_loc_disabled() {
         let actual = generate_doc_comment(None, None, SourceLocationDocComment::Disabled);
-        assert_rs_matches!(actual, quote! {});
+        assert!(actual.is_empty());
     }
 
     #[test]
@@ -8824,7 +8824,7 @@ mod tests {
             Some("google3/some/header;l=13"),
             SourceLocationDocComment::Disabled,
         );
-        assert_rs_matches!(actual, quote! {});
+        assert!(actual.is_empty());
     }
 
     #[test]

@@ -134,8 +134,8 @@ mod tests {
 
     #[test]
     fn test_optional_trailing_comma() {
-        assert_ir_matches!(ir_from_cc("").unwrap(), quote! {});
-        assert_ir_matches!(ir_from_cc("").unwrap(), quote! {},);
+        assert_ir_matches!(ir_from_cc("").unwrap(), quote! { FlatIR { ... }});
+        assert_ir_matches!(ir_from_cc("").unwrap(), quote! { FlatIR { ... }},);
 
         assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir});
         assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir},);

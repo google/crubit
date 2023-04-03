@@ -149,6 +149,16 @@ pub mod internal {
     where
         ToStringFn: Fn(TokenStream) -> Result<String>,
     {
+        // `match_tokens` behaves as if the `pattern` implicitly had a wildcard `...` at
+        // the beginning and the end.  Therefore an empty `pattern` is most
+        // likely a mistake.
+        assert!(
+            !pattern.is_empty(),
+            "Empty `pattern` is unexpected, because it always matches. \
+             (Maybe you used `// comment text` instead of `__COMMENT__ \"comment text\"? \
+              Or maybe you want to use `TokenStream::is_empty`?)"
+        );
+
         let iter = input.clone().into_iter();
         let mut best_mismatch = Mismatch::for_no_partial_match();
 
@@ -721,6 +731,34 @@ impl Drop {
             expected 'b c' got 'b b': \
             expected '[a ... b c]' got '[a b b]': \
             input:\n\n```\n[a b b]\n```"
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Empty `pattern` is unexpected, because it always matches. \
+             (Maybe you used `// comment text` instead of `__COMMENT__ \"comment text\"? \
+              Or maybe you want to use `TokenStream::is_empty`?)")]
+    fn test_assert_cc_matches_panics_when_pattern_is_empty() {
+        assert_cc_matches!(
+            quote! { foo bar },
+            quote! {
+                // This comment will be stripped by `quote!`, but some test assertions
+                // mistakenly used the comment syntax instead of `__COMMENT__ "text"`
+            },
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Empty `pattern` is unexpected, because it always matches. \
+             (Maybe you used `// comment text` instead of `__COMMENT__ \"comment text\"? \
+              Or maybe you want to use `TokenStream::is_empty`?)")]
+    fn test_assert_rs_matches_panics_when_pattern_is_empty() {
+        assert_rs_matches!(
+            quote! { foo bar },
+            quote! {
+                // This comment will be stripped by `quote!`, but some test assertions
+                // mistakenly used the comment syntax instead of `__COMMENT__ "text"`
+            },
         );
     }
 }
