@@ -589,35 +589,37 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         }
     }
 
-    let needs_thunk: bool;
-    match sig.abi {
-        // "C" ABI is okay: Before https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a Rust
-        // panic that "escapes" a "C" ABI function leads to Undefined Behavior.  This is
-        // unfortunate, but Crubit's `panics_and_exceptions.md` documents that `-Cpanic=abort` is
-        // the only supported configuration.
-        //
-        // After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a Rust panic that
-        // tries to "escape" a "C" ABI function will terminate the program.  This is okay.
-        rustc_target::spec::abi::Abi::C { unwind: false } => {
-            needs_thunk = false;
-        },
+    let needs_thunk = {
+        let needs_thunk = match sig.abi {
+            // "C" ABI is okay: Before https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a
+            // Rust panic that "escapes" a "C" ABI function leads to Undefined Behavior.  This is
+            // unfortunate, but Crubit's `panics_and_exceptions.md` documents that `-Cpanic=abort`
+            // is the only supported configuration.
+            //
+            // After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a Rust panic that
+            // tries to "escape" a "C" ABI function will terminate the program.  This is okay.
+            rustc_target::spec::abi::Abi::C { unwind: false } => false,
 
-        // "C-unwind" ABI is okay: After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a
-        // new "C-unwind" ABI may be used by Rust functions that want to safely propagate Rust
-        // panics through frames that may belong to another language.
-        rustc_target::spec::abi::Abi::C { unwind: true } => {
-            needs_thunk = false;
-        },
+            // "C-unwind" ABI is okay: After
+            // https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a new "C-unwind" ABI may be
+            // used by Rust functions that want to safely propagate Rust panics through frames that
+            // may belong to another language.
+            rustc_target::spec::abi::Abi::C { unwind: true } => false,
 
-        // All other ABIs trigger thunk generation.  This covers Rust ABI functions, but
-        // also ABIs that theoretically are understood both by C++ and Rust (e.g. see
-        // `format_cc_call_conv_as_clang_attribute` in `rs_bindings_from_cc/src_code_gen.rs`).
-        _ => {
-            let thunk_name = format!("__crubit_thunk_{}", symbol_name.name);
-            symbol_name = ty::SymbolName::new(tcx, &thunk_name);
-            needs_thunk = true;
-        }
+            // All other ABIs trigger thunk generation.  This covers Rust ABI functions, but also
+            // ABIs that theoretically are understood both by C++ and Rust (e.g. see
+            // `format_cc_call_conv_as_clang_attribute` in `rs_bindings_from_cc/src_code_gen.rs`).
+            _ => true,
+        };
+        let needs_thunk = needs_thunk || !is_c_abi_compatible_by_value(sig.output());
+        let needs_thunk =
+            needs_thunk || sig.inputs().iter().any(|&ty| !is_c_abi_compatible_by_value(ty));
+        needs_thunk
     };
+    if needs_thunk {
+        let thunk_name = format!("__crubit_thunk_{}", symbol_name.name);
+        symbol_name = ty::SymbolName::new(tcx, &thunk_name);
+    }
 
     let FullyQualifiedName { krate, mod_path, name, .. } = FullyQualifiedName::new(tcx, def_id);
     let fn_name = name.expect("Functions are assumed to always have a name");
@@ -1896,17 +1898,11 @@ pub mod tests {
 
     /// Tests that a forward declaration is present when it is required to
     /// preserve the original source order.  In this test the
-    /// `CcPrerequisites::fwd_decls` dependency comes from a parameter
-    /// that takes a struct by value, but is only needed in a C++ function
-    /// declaration (not in a C++ function definition).
+    /// `CcPrerequisites::fwd_decls` dependency comes from a
+    /// function declaration that has a parameter that takes a struct by value.
     #[test]
     fn test_generated_bindings_prereq_fwd_decls_for_cpp_fn_decl() {
         let test_src = r#"
-                // `f` will only have a C++ declaration (and no C++ definition)
-                // in the generated `..._cc_api.h` header.
-                //
-                // Therefore `f`'s `CcPrerequisites` should include `S`
-                // as a `fwd_decls` edge, rather than as a `defs` edge.
                 #[no_mangle]
                 pub extern "C" fn f(s: S) -> bool { s.0 }
 
@@ -1922,13 +1918,15 @@ pub mod tests {
                     namespace rust_out {
                         ...
                         // Verifing the presence of this forward declaration
-                        // it the essence of this test.  The order also matters:
+                        // is the essence of this test.  The order also matters:
                         // 1. The fwd decl of `S` should come first,
                         // 2. Declaration of `f` and definition of `S` should come next
                         //    (in their original order - `f` first and then `S`).
                         struct S;
                         ...
-                        extern "C" bool f(::rust_out::S s);
+                        // `CcPrerequisites` of `f` declaration below (the main api of `f`) should
+                        // include `S` as a `fwd_decls` edge, rather than as a `defs` edge.
+                        inline bool f(::rust_out::S s);
                         ...
                         struct alignas(...) S final { ... }
                         ...
@@ -2327,6 +2325,13 @@ pub mod tests {
                     extern "C" void public_function();
                 }
             );
+
+            // Sufficient to just re-declare the Rust API in C++.
+            // (i.e. there is no need to have a C++-side definition of `public_function`).
+            assert!(result.cc_details.tokens.is_empty());
+
+            // There is no need to have a separate thunk for an `extern "C"` function.
+            assert!(result.rs_details.is_empty());
         });
     }
 
@@ -2436,7 +2441,12 @@ pub mod tests {
                     inline double public_function(double x, double y);
                 }
             );
+
+            // There is no need to have a separate thunk for an `extern "C"` function.
             assert!(result.rs_details.is_empty());
+
+            // We generate a C++-side definition of `public_function` so that we
+            // can call a differently-named (but same-signature) `export_name` function.
             assert!(result.cc_details.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc_details.tokens,
@@ -2584,16 +2594,11 @@ pub mod tests {
     }
 
     /// This test verifies that `format_item` uses `CcPrerequisites::fwd_decls`
-    /// rather than `CcPrerequisites::defs` for functions that only need a
-    /// C++ declaration (and don't need a C++ definition).
+    /// rather than `CcPrerequisites::defs` for function declarations in the
+    /// `main_api`.
     #[test]
     fn test_format_item_fn_cc_prerequisites_if_only_cpp_declaration_needed() {
         let test_src = r#"
-                // `foo` will only have a C++ declaration (and no C++ definition)
-                // in the generated `..._cc_api.h` header.
-                //
-                // Therefore `foo`'s `CcPrerequisites` should include `S`
-                // as a `fwd_decls` edge, rather than as a `defs` edge.
                 #[no_mangle]
                 pub extern "C" fn foo(s: S) -> bool { s.0 }
 
@@ -2609,7 +2614,7 @@ pub mod tests {
             // Note that this is only a function *declaration* (not a function definition -
             // there is no function body), and therefore `S` just needs to be
             // forward-declared earlier.
-            assert_cc_matches!(main_api.tokens, quote! { extern "C" bool foo(::rust_out::S s); });
+            assert_cc_matches!(main_api.tokens, quote! { inline bool foo(::rust_out::S s); });
 
             // Main checks: `CcPrerequisites::defs` and `CcPrerequisites::fwd_decls`.
             //

@@ -72,7 +72,12 @@ pub mod abi_classification {
 
     /// Expected ABI classification: SSE.  (For indirect confirmation, see the
     /// disassembly at https://godbolt.org/z/b7eeGcrGn).
-    pub struct StructFloat(f32);
+    pub struct StructFloat(
+        f64,
+        f32,
+        // In Q1 2023 the bindings include explicit padding here - the presence of the padding
+        // changes the ABI classification of the struct.
+    );
 
     /// Expected ABI classification: memory.  (For indirect confirmation, see
     /// the disassembly at https://godbolt.org/z/b7eeGcrGn).
@@ -96,13 +101,16 @@ pub mod abi_classification {
 
     impl StructFloat {
         pub fn create(f: f32) -> Self {
-            Self(f)
+            Self(12.34, f)
         }
         pub fn multiply(x: Self, y: Self) -> Self {
-            Self(x.0 * y.0)
+            assert_eq!(12.34, x.0);
+            assert_eq!(12.34, y.0);
+            Self::create(x.1 * y.1)
         }
         pub fn inspect(s: Self) -> f32 {
-            s.0
+            assert_eq!(12.34, s.0);
+            s.1
         }
     }
 
@@ -116,5 +124,84 @@ pub mod abi_classification {
         pub fn inspect(s: Self) -> i32 {
             s.i
         }
+    }
+}
+
+/// Test that definition-less, thunk-less functions can pass structs by value.
+///
+/// Some Rust functions can just be redeclared on C++ side (i.e. without
+/// requiring a separate thunk implemented in `..._cc_api_impl.rs`.  The
+/// redeclaration needs to always replicate the Rust-side function signature.
+/// This means that special-handling of passing structs-by-value (e.g. injecting
+/// an `__ret_slot` output pointer/parameter) should be disabled for such
+/// thunk-less functions.
+///
+/// The structure of this test mimics to some extent a subset of the
+/// `abi_classification` test above.
+pub mod struct_by_float_passing_with_no_cc_definition {
+    #[repr(C)]
+    pub struct StructFloat(
+        f64,
+        f32,
+        // In Q1 2023 the bindings include explicit padding here - the presence of the padding
+        // changes the ABI classification of the struct.
+    );
+
+    #[no_mangle]
+    pub extern "C" fn no_mangle_create(f: f32) -> StructFloat {
+        StructFloat(12.34, f)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn no_mangle_multiply(x: StructFloat, y: StructFloat) -> StructFloat {
+        assert_eq!(12.34, x.0);
+        assert_eq!(12.34, y.0);
+        no_mangle_create(x.1 * y.1)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn no_mangle_inspect(s: StructFloat) -> f32 {
+        assert_eq!(12.34, s.0);
+        s.1
+    }
+}
+
+/// Test that thunk-less functions (that still have a C++-side definition due to
+/// naming difference) can pass structs by value.
+///
+/// Some Rust functions can just be redeclared on C++ side (i.e. without
+/// requiring a separate thunk implemented in `..._cc_api_impl.rs`.  The
+/// redeclaration needs to always replicate the Rust-side function signature.
+/// This means that special-handling of passing structs-by-value (e.g. injecting
+/// an `__ret_slot` output pointer/parameter) should be disabled for such
+/// thunk-less functions.
+///
+/// The structure of this test mimics to some extent a subset of the
+/// `abi_classification` test above.
+pub mod struct_by_float_passing_with_no_thunk {
+    #[repr(C)]
+    pub struct StructFloat(
+        f64,
+        f32,
+        // In Q1 2023 the bindings include explicit padding here - the presence of the padding
+        // changes the ABI classification of the struct.
+    );
+
+    #[export_name = "struct_by_float_passing_with_no_thunk__thunkless_create"]
+    pub extern "C" fn thunkless_create(f: f32) -> StructFloat {
+        StructFloat(12.34, f)
+    }
+
+    #[export_name = "struct_by_float_passing_with_no_thunk__thunkless_multiply"]
+    pub extern "C" fn thunkless_multiply(x: StructFloat, y: StructFloat) -> StructFloat {
+        assert_eq!(12.34, x.0);
+        assert_eq!(12.34, y.0);
+        thunkless_create(x.1 * y.1)
+    }
+
+    #[export_name = "struct_by_float_passing_with_no_thunk__thunkless_inspect"]
+    pub extern "C" fn thunkless_inspect(s: StructFloat) -> f32 {
+        assert_eq!(12.34, s.0);
+        s.1
     }
 }

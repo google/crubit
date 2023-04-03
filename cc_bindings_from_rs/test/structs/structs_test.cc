@@ -48,5 +48,23 @@ TEST(StructsTest, StructMemory) {
   EXPECT_EQ(321 * 654, test::StructMemory::inspect(std::move(product)));
 }
 
+TEST(StructsTest, DefinitionlessStructFloat) {
+  namespace test = structs::struct_by_float_passing_with_no_cc_definition;
+  test::StructFloat x = test::no_mangle_create(111.0);
+  test::StructFloat y = test::no_mangle_create(222.0);
+  test::StructFloat product =
+      test::no_mangle_multiply(std::move(x), std::move(y));
+  EXPECT_EQ(111.0 * 222.0, test::no_mangle_inspect(std::move(product)));
+}
+
+TEST(StructsTest, ThunklessStructFloat) {
+  namespace test = structs::struct_by_float_passing_with_no_thunk;
+  test::StructFloat x = test::thunkless_create(111.0);
+  test::StructFloat y = test::thunkless_create(222.0);
+  test::StructFloat product =
+      test::thunkless_multiply(std::move(x), std::move(y));
+  EXPECT_EQ(111.0 * 222.0, test::thunkless_inspect(std::move(product)));
+}
+
 }  // namespace
 }  // namespace crubit
