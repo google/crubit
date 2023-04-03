@@ -1,11 +1,30 @@
 # Crubit: C++/Rust Bidirectional Interop Tool
 
+
 [![Build status](https://badge.buildkite.com/7a57a14e68aa3a0ab70972cbf2a35fd79d342ba152fee4a5b4.svg)](https://buildkite.com/bazel/crubit)
 
-Extremely experimental interop tooling for C++ and Rust.
+Crubit is an experimental bidirectional bindings generator for C++ and Rust.
 
 Please don't use, this is an experiment and we don't yet know where will it take
-us. There will be breaking changes without warning. Unfortunately, we can't take contributions at this point.
+us. There will be breaking changes without warning.  Unfortunately, we can't
+take contributions at this point.
+
+Crubit allows for C++ code and Rust code to call each other without manually wrapping the APIs in an FFI-friendly interop layer. For example, a C++ function like
+this:
+
+```c++
+bool IsAbsPath(std::string_view path);
+```
+
+... becomes callable from Rust as if it were defined as:
+
+```rs
+pub fn IsAbsPath(path: std::string_view) -> bool {...}
+```
+
+Crubit automatically generates ABI-compatible bindings for structs (which can be
+passed both by value and by reference), functions, and methods, for a large
+variety of types. (Trivial types, nontrivial types, templated types, etc.)
 
 ## Building Crubit
 

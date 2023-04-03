@@ -7,8 +7,8 @@ Bidirectional Interop Tool.
 
 ## C++/Rust interop goal
 
-**The primary goal of C++/Rust interop tooling is to enable Rust to be used
-side-by-side with C++ in large existing codebases.**
+**The primary goal of Crubit is to enable Rust to be used side-by-side with C++
+in large existing codebases.**
 
 In the short term we would like to focus on codebases that roughly follow the
 Google C++ style guide to improve the interop fidelity. Other, more diverse
