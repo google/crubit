@@ -39,6 +39,16 @@ cc_test(
 )
 
 cc_test(
+    name = "binary_ops",
+    srcs = ["binary_ops.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "casts",
     srcs = ["casts.cc"],
     deps = [
