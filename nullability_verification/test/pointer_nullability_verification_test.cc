@@ -14,24 +14,6 @@ namespace tidy {
 namespace nullability {
 namespace {
 
-TEST(PointerNullabilityTest, ThisPointer) {
-  // (->) implicit `this`
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct Foo {
-      void foo();
-      void target() { foo(); }
-    };
-  )cc"));
-
-  // (->) explicit `this`
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct Foo {
-      void foo();
-      void target() { this->foo(); }
-    };
-  )cc"));
-}
-
 TEST(PointerNullabilityTest, NonNullFieldsOfPointerType) {
   // dereference field of pointer type
   EXPECT_TRUE(checkDiagnostics(R"cc(
