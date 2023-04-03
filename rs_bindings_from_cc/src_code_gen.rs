@@ -3649,9 +3649,6 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                     Some(abi) => {
                         // Assert that function pointers in the IR either have static lifetime or
                         // no lifetime.
-                        // TODO(b/275628345): Replace with `assert!(ty.lifetime_args.is_empty())`
-                        // after function pointers are not allowed to have any lifetime
-                        // annotations.
                         match get_lifetime() {
                             Err(_) => (),  // No lifetime
                             Ok(lifetime) => assert_eq!(lifetime.0.as_ref(), "static"),
@@ -5184,23 +5181,6 @@ mod tests {
                 pub fn get_ref_to_func() -> extern "C" fn (f32, f64) -> i32 {
                     unsafe { crate::detail::__rust_thunk___Z15get_ref_to_funcv() }
                 }
-            }
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn test_func_ptr_with_non_static_lifetime() -> Result<()> {
-        let ir = ir_from_cc(&with_lifetime_macros(
-            r#"
-            int (* $a get_ptr_to_func())(float, double); "#,
-        ))?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        assert_rs_matches!(
-            rs_api,
-            quote! {
-                // Error while generating bindings for item 'get_ptr_to_func':
-                // Return type is not supported: Function pointers with non-'static lifetimes are not supported: int (*)(float, double)
             }
         );
         Ok(())
