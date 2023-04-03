@@ -100,6 +100,76 @@ TEST(PointerNullabilityTest, DerefUnknownPtrWithoutACheck) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ArrowOperatorOnNonNullPtr) {
+  // (->) member field
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Foo {
+      Foo *foo;
+    };
+    void target(Foo *_Nonnull foo) { foo->foo; }
+  )cc"));
+
+  // (->) member function
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Foo {
+      Foo *foo();
+    };
+    void target(Foo *_Nonnull foo) { foo->foo(); }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, ArrowOperatorOnNullablePtr) {
+  // (->) member field
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Foo {
+      Foo *foo;
+    };
+    void target(Foo *_Nullable foo) {
+      foo->foo;  // [[unsafe]]
+      if (foo) {
+        foo->foo;
+      } else {
+        foo->foo;  // [[unsafe]]
+      }
+      foo->foo;  // [[unsafe]]
+    }
+  )cc"));
+
+  // (->) member function
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Foo {
+      Foo *foo();
+    };
+    void target(Foo *_Nullable foo) {
+      foo->foo();  // [[unsafe]]
+      if (foo) {
+        foo->foo();
+      } else {
+        foo->foo();  // [[unsafe]]
+      }
+      foo->foo();  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, ArrowOperatorOnUnknownPtr) {
+  // (->) member field
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Foo {
+      Foo *foo;
+    };
+    void target(Foo *foo) { foo->foo; }
+  )cc"));
+
+  // (->) member function
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Foo {
+      Foo *foo();
+    };
+    void target(Foo *foo) { foo->foo(); }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy
