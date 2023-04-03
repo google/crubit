@@ -376,6 +376,8 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
     absl::StatusOr<MappedType> type;
     switch (access) {
       case clang::AS_public:
+        // TODO(mboehme): Once lifetime_annotations supports retrieving
+        // lifetimes in field types, pass these to ConvertQualType().
         type = ictx_.ConvertQualType(field_decl->getType(), no_lifetimes,
                                      std::nullopt);
         break;
