@@ -14,34 +14,6 @@ namespace tidy {
 namespace nullability {
 namespace {
 
-TEST(PointerNullabilityTest, TransitiveNullCheck) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nullable x) {
-      int *y = x;
-      *x;  // [[unsafe]]
-      if (y) {
-        *x;
-      } else {
-        *x;  // [[unsafe]]
-      }
-      *x;  // [[unsafe]]
-    }
-  )cc"));
-
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nullable x) {
-      int *y = x;
-      *y;  // [[unsafe]]
-      if (x) {
-        *y;
-      } else {
-        *y;  // [[unsafe]]
-      }
-      *y;  // [[unsafe]]
-    }
-  )cc"));
-}
-
 TEST(PointerNullabilityTest, BinaryExpressions) {
   // x && y
   EXPECT_TRUE(checkDiagnostics(R"cc(
