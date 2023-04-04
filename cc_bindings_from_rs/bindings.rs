@@ -559,6 +559,59 @@ fn get_fn_sig<'tcx>(tcx: TyCtxt<'tcx>, fn_def_id: LocalDefId) -> Result<ty::FnSi
     }
 }
 
+/// Formats a C++ function declaration of a thunk that wraps a Rust function
+/// identified by `fn_def_id`.  `format_thunk_impl` may panic if `fn_def_id`
+/// doesn't identify a function.
+fn format_thunk_decl(input: &Input, fn_def_id: LocalDefId, thunk_name: &str) -> Result<CcSnippet> {
+    let tcx = input.tcx;
+    let thunk_name = format_cc_ident(thunk_name)?;
+
+    let mut prereqs = CcPrerequisites::default();
+    let sig = get_fn_sig(tcx, fn_def_id)?;
+    let main_api_ret_type = format_ret_ty_for_cc(input, sig.output())
+        .context("Error formatting function return type")?
+        .into_tokens(&mut prereqs);
+
+    let mut thunk_params = sig
+        .inputs()
+        .iter()
+        .map(|&ty| -> Result<TokenStream> {
+            let cc_type = format_ty_for_cc(input, ty)?.into_tokens(&mut prereqs);
+            if is_c_abi_compatible_by_value(ty) {
+                Ok(quote! { #cc_type })
+            } else {
+                // Rust thunk will move a value via memcpy - we need to `ensure` that
+                // invoking the C++ destructor (on the moved-away value) is safe.
+                // TODO(b/259749095): Support generic structs (with non-empty ParamEnv).
+                ensure!(
+                    !ty.needs_drop(tcx, ty::ParamEnv::empty()),
+                    "Only trivially-movable and trivially-destructible types \
+                          may be passed by value over the FFI boundary"
+                );
+                Ok(quote! { #cc_type* })
+            }
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let thunk_ret_type: TokenStream;
+    if is_c_abi_compatible_by_value(sig.output()) {
+        thunk_ret_type = main_api_ret_type.clone();
+    } else {
+        thunk_ret_type = quote! { void };
+        thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
+        prereqs.includes.insert(CcInclude::utility());
+        prereqs.includes.insert(input.support_header("internal/return_value_slot.h"));
+    };
+    Ok(CcSnippet {
+        prereqs,
+        tokens: quote! {
+            namespace __crubit_internal {
+                extern "C" #thunk_ret_type #thunk_name ( #( #thunk_params ),* );
+            }
+        },
+    })
+}
+
 /// Formats a thunk implementation in Rust that provides an `extern "C"` ABI for
 /// calling a Rust function identified by `fn_def_id`.  `format_thunk_impl` may
 /// panic if `fn_def_id` doesn't identify a function.
@@ -792,7 +845,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         CcSnippet::default()
     } else {
         let thunk_name =
-            format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
+            format_cc_ident(symbol_name.name).context("Error formatting thunk name")?;
         let struct_name = match struct_name.as_ref() {
             None => quote! {},
             Some(symbol) => {
@@ -803,24 +856,9 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         };
 
         let mut prereqs = main_api_prereqs;
-        let mut thunk_params = params
-            .iter()
-            .map(|Param { cc_name, cc_type, ty, .. }| -> Result<TokenStream> {
-                if is_c_abi_compatible_by_value(*ty) {
-                    Ok(quote! { #cc_type #cc_name })
-                } else {
-                    // Rust thunk will move a value via memcpy - we need to `ensure` that
-                    // invoking the C++ destructor (on the moved-away value) is safe.
-                    // TODO(b/259749095): Support generic structs (with non-empty ParamEnv).
-                    ensure!(
-                        !ty.needs_drop(tcx, ty::ParamEnv::empty()),
-                        "Only trivially-movable and trivially-destructible types \
-                              may be passed by value over the FFI boundary"
-                    );
-                    Ok(quote! { #cc_type* #cc_name })
-                }
-            })
-            .collect::<Result<Vec<_>>>()?;
+        let thunk_decl = format_thunk_decl(input, local_def_id, symbol_name.name)?
+            .into_tokens(&mut prereqs);
+
         let mut thunk_args = params
             .iter()
             .map(|Param { cc_name, ty, .. }| {
@@ -831,16 +869,12 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
                 }
             })
             .collect_vec();
-        let thunk_ret_type: TokenStream;
         let impl_body: TokenStream;
         if is_c_abi_compatible_by_value(sig.output()) {
-            thunk_ret_type = main_api_ret_type.clone();
             impl_body = quote! {
                 return __crubit_internal :: #thunk_name( #( #thunk_args ),* );
             };
         } else {
-            thunk_ret_type = quote! { void };
-            thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
             thunk_args.push(quote! { __ret_slot.Get() });
             impl_body = quote! {
                 crubit::ReturnValueSlot<#main_api_ret_type> __ret_slot;
@@ -854,9 +888,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
             prereqs,
             tokens: quote! {
                 __NEWLINE__
-                namespace __crubit_internal {
-                    extern "C" #thunk_ret_type #thunk_name ( #( #thunk_params ),* );
-                }
+                #thunk_decl
                 inline #main_api_ret_type #struct_name #main_api_fn_name (
                         #( #main_api_params ),* ) {
                     #impl_body
@@ -1721,7 +1753,7 @@ pub mod tests {
                         ...
                         inline double public_function(double x, double y);
                         namespace __crubit_internal {
-                            extern "C" double export_name(double x, double y);
+                            extern "C" double export_name(double, double);
                         }
                         inline double public_function(double x, double y) {
                             return __crubit_internal::export_name(x, y);
@@ -2447,7 +2479,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" double ...(double x, double y);
+                        extern "C" double ...(double, double);
                     }
                     ...
                     inline double public_function(double x, double y) {
@@ -2485,7 +2517,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" double export_name(double x, double y);
+                        extern "C" double export_name(double, double);
                     }
                     ...
                     inline double public_function(double x, double y) {
@@ -2540,7 +2572,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" std::int32_t ...( std::int32_t i);
+                        extern "C" std::int32_t ...( std::int32_t);
                     }
                     ...
                     inline std::int32_t foo(std::int32_t i) {
@@ -2914,7 +2946,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" double ...(double x, double y);
+                        extern "C" double ...(double, double);
                     }
                     ...
                     inline double add(double x, double y) {
@@ -2954,7 +2986,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" std::int32_t ...(::rust_out::S* s);
+                        extern "C" std::int32_t ...(::rust_out::S*);
                     }
                     ...
                     inline std::int32_t into_i32(::rust_out::S s) {
@@ -2994,7 +3026,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" void ...(std::int32_t i, ::rust_out::S* __ret_ptr);
+                        extern "C" void ...(std::int32_t, ::rust_out::S* __ret_ptr);
                     }
                     ...
                     inline ::rust_out::S create(std::int32_t i) {
@@ -3056,7 +3088,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" double ...(double x, double y);
+                        extern "C" double ...(double, double);
                     }
                     ...
                     inline double add(double x, double y) {
@@ -3154,8 +3186,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" void ...(
-                            double __param_0, double __param_1);
+                        extern "C" void ...(double, double);
                     }
                     ...
                     inline void foo(double __param_0, double __param_1) {
@@ -3202,7 +3233,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" std::int32_t ...(::rust_out::S* __param_0);
+                        extern "C" std::int32_t ...(::rust_out::S*);
                     }
                     ...
                     inline std::int32_t func(::rust_out::S __param_0) {
@@ -3601,7 +3632,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
-                    extern "C" float ... (float x, float y);
+                        extern "C" float ... (float, float);
                     }
                     inline float Math::add_i32(float x, float y) {
                       return __crubit_internal::...(x, y);
