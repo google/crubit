@@ -385,6 +385,14 @@ TEST_F(LifetimeAnnotationsTest,
 }
 
 TEST_F(LifetimeAnnotationsTest,
+       LifetimeAnnotation_FunctionPointerReturnTypeHasNoLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
+        int (* f())(float, double);
+  )_"),
+              IsOkAndHolds(LifetimesAre({{"f", "-> ((), ())"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest,
        LifetimeAnnotation_FunctionReferenceHasNoLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
         void f(void (&)());
@@ -432,6 +440,15 @@ TEST_F(LifetimeAnnotationsTest,
        LifetimeAnnotation_Invalid_LifetimeOnFunctionPointer) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         void f(void (* $a)());
+  )")),
+              IsOkAndHolds(LifetimesAre(
+                  {{"f", "ERROR: Type may not be annotated with lifetimes"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest,
+       LifetimeAnnotation_Invalid_LifetimeOnFunctionPointerReturnType) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        int (* $a f())(float, double);
   )")),
               IsOkAndHolds(LifetimesAre(
                   {{"f", "ERROR: Type may not be annotated with lifetimes"}})));
