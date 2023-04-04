@@ -105,9 +105,9 @@
 extern crate alloc;
 
 use alloc::boxed::Box;
-use core::marker::PhantomData;
+use core::marker::{PhantomData, Unpin};
 use core::mem::{ManuallyDrop, MaybeUninit};
-use core::ops::Deref;
+use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 
 pub use ctor_proc_macros::*;
@@ -281,6 +281,37 @@ where
     }
 }
 
+/// Converts to an RvalueReference.
+///
+/// Do not use this trait directly, instead, cast to an RvalueReference using
+/// the `mov!()` macro.
+pub trait DerefRvalueReference: Deref
+where
+    Self::Target: Sized,
+{
+    fn deref_rvalue_reference(&mut self) -> RvalueReference<'_, Self::Target>;
+}
+
+impl<T> DerefRvalueReference for Pin<T>
+where
+    T: DerefMut,
+    Self::Target: Sized,
+{
+    fn deref_rvalue_reference(&mut self) -> RvalueReference<'_, Self::Target> {
+        RvalueReference(self.as_mut())
+    }
+}
+
+impl<T> DerefRvalueReference for &mut T
+where
+    T: Unpin,
+    Self::Target: Sized,
+{
+    fn deref_rvalue_reference(&mut self) -> RvalueReference<'_, Self::Target> {
+        RvalueReference(Pin::new(self))
+    }
+}
+
 /// !Unpin to override the blanket `Ctor` impl.
 impl<'a, T> !Unpin for RvalueReference<'a, T> {}
 
@@ -334,7 +365,7 @@ impl<'a, T> !Unpin for ConstRvalueReference<'a, T> {}
 #[macro_export]
 macro_rules! mov {
     ($p:expr) => {
-        $crate::RvalueReference(::core::pin::Pin::as_mut(&mut { $p }))
+        $crate::DerefRvalueReference::deref_rvalue_reference(&mut { $p })
     };
 }
 
@@ -1638,6 +1669,7 @@ mod test {
         assert_eq!(*log.borrow(), vec!["move ctor", "drop"]);
     }
 
+    fn takes_rvalue_reference<T>(_: RvalueReference<T>) {}
     /// Non-obvious fact: you can mov() an owned reference type! Moving anything
     /// also performs a rust move, but the resulting rvalue reference is
     /// still valid for a temporary's lifetime.
@@ -1645,9 +1677,20 @@ mod test {
     fn test_mov_box() {
         struct S;
         let x: Pin<Box<S>> = Box::pin(S);
-        fn takes_rvalue_reference(_: RvalueReference<S>) {}
         takes_rvalue_reference(mov!(x));
         // let _x = x; // fails to compile: x is moved!
+    }
+
+    #[test]
+    fn test_mov_mut_ref_to_unpin() {
+        takes_rvalue_reference(mov!(&mut 1));
+    }
+
+    #[test]
+    fn test_mov_pinned_mut_ref() {
+        let x = &mut 2;
+        let pinned_mut_ref = Pin::new(x);
+        takes_rvalue_reference(mov!(pinned_mut_ref));
     }
 
     #[test]
