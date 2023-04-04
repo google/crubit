@@ -552,6 +552,85 @@ impl FromIterator<ApiSnippets> for ApiSnippets {
     }
 }
 
+fn get_fn_sig<'tcx>(tcx: TyCtxt<'tcx>, fn_def_id: LocalDefId) -> Result<ty::FnSig<'tcx>> {
+    match tcx.fn_sig(fn_def_id).subst_identity().no_bound_vars() {
+        None => bail!("Generic functions are not supported yet (b/259749023)"),
+        Some(sig) => Ok(sig),
+    }
+}
+
+/// Formats a thunk implementation in Rust that provides an `extern "C"` ABI for
+/// calling a Rust function identified by `fn_def_id`.  `format_thunk_impl` may
+/// panic if `fn_def_id` doesn't identify a function.
+///
+/// `fully_qualified_fn_name` specifies how the thunk can identify the function
+/// to call. Examples of valid arguments:
+/// - `::crate_name::some_module::free_function`
+/// - `::crate_name::some_module::SomeStruct::method`
+/// - `<::create_name::some_module::SomeStruct as
+///   ::core::default::Default>::default`
+fn format_thunk_impl(
+    tcx: TyCtxt,
+    fn_def_id: LocalDefId,
+    thunk_name: &str,
+    fully_qualified_fn_name: TokenStream,
+) -> Result<TokenStream> {
+    let sig = get_fn_sig(tcx, fn_def_id)?;
+    let param_names_and_types: Vec<(Ident, Ty)> = {
+        let param_names = tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, name)| {
+            if name.as_str().is_empty() {
+                format_ident!("__param_{i}")
+            } else {
+                make_rs_ident(name.as_str())
+            }
+        });
+        let param_types = sig.inputs().iter().copied();
+        param_names.zip(param_types).collect_vec()
+    };
+
+    let mut thunk_params = param_names_and_types
+        .iter()
+        .map(|(param_name, ty)| {
+            let rs_type = format_ty_for_rs(tcx, *ty)
+                .with_context(|| format!("Error handling parameter `{param_name}`"))?;
+            Ok(if is_c_abi_compatible_by_value(*ty) {
+                quote! { #param_name: #rs_type }
+            } else {
+                quote! { #param_name: &mut ::core::mem::MaybeUninit<#rs_type> }
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let mut thunk_ret_type = format_ty_for_rs(tcx, sig.output())?;
+    let mut thunk_body = {
+        let fn_args = param_names_and_types.iter().map(|(rs_name, ty)| {
+            if is_c_abi_compatible_by_value(*ty) {
+                quote! { #rs_name }
+            } else {
+                quote! { unsafe { #rs_name.assume_init_read() } }
+            }
+        });
+        quote! {
+            #fully_qualified_fn_name( #( #fn_args ),* )
+        }
+    };
+    if !is_c_abi_compatible_by_value(sig.output()) {
+        thunk_params.push(quote! {
+            __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
+        });
+        thunk_ret_type = quote! { () };
+        thunk_body = quote! { __ret_slot.write(#thunk_body); };
+    };
+
+    let thunk_name = make_rs_ident(thunk_name);
+    Ok(quote! {
+        #[no_mangle]
+        extern "C" fn #thunk_name( #( #thunk_params ),* ) -> #thunk_ret_type {
+            #thunk_body
+        }
+    })
+}
+
 /// Formats a function with the given `local_def_id`.
 ///
 /// Will panic if `local_def_id`
@@ -565,10 +644,6 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         tcx.generics_of(def_id).count() == 0,
         "Generic functions are not supported yet (b/259749023)"
     );
-    let sig = match tcx.fn_sig(def_id).subst_identity().no_bound_vars() {
-        None => bail!("Generic functions are not supported yet (b/259749023)"),
-        Some(sig) => sig,
-    };
 
     let mut symbol_name = {
         // Call to `mono` is ok - `generics_of` have been checked above.
@@ -576,6 +651,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         tcx.symbol_name(instance)
     };
 
+    let sig = get_fn_sig(tcx, local_def_id)?;
     if sig.c_variadic {
         // TODO(b/254097223): Add support for variadic functions.
         bail!("C variadic functions are not supported (b/254097223)");
@@ -621,7 +697,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         symbol_name = ty::SymbolName::new(tcx, &thunk_name);
     }
 
-    let FullyQualifiedName { krate, mod_path, name, .. } = FullyQualifiedName::new(tcx, def_id);
+    let FullyQualifiedName { krate, mod_path, name } = FullyQualifiedName::new(tcx, def_id);
     let fn_name = name.expect("Functions are assumed to always have a name");
     let main_api_fn_name =
         format_cc_ident(fn_name.as_str()).context("Error formatting function name")?;
@@ -645,8 +721,6 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     struct Param<'tcx> {
         cc_name: TokenStream,
         cc_type: TokenStream,
-        rs_name: Ident,
-        rs_type: TokenStream,
         ty: Ty<'tcx>,
     }
     let params = {
@@ -659,13 +733,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
                 let cc_name = format_cc_ident(name.as_str())
                     .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{i}")).unwrap());
                 let cc_type = format_ty_for_cc(input, ty)?.into_tokens(&mut main_api_prereqs);
-                let rs_name = if name.as_str().is_empty() {
-                    format_ident!("__param_{i}")
-                } else {
-                    make_rs_ident(name.as_str())
-                };
-                let rs_type = format_ty_for_rs(tcx, ty)?;
-                Ok(Param { cc_name, cc_type, rs_name, rs_type, ty })
+                Ok(Param { cc_name, cc_type, ty })
             })
             .enumerate()
             .map(|(i, result)| result.with_context(|| format!("Error handling parameter #{i}")))
@@ -801,53 +869,18 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     let rs_details = if !needs_thunk {
         quote! {}
     } else {
-        let thunk_name = make_rs_ident(symbol_name.name);
-        let mut thunk_params = params
-            .iter()
-            .map(|Param { rs_name, rs_type, ty, .. }| {
-                if is_c_abi_compatible_by_value(*ty) {
-                    quote! { #rs_name: #rs_type }
-                } else {
-                    quote! { #rs_name: &mut ::core::mem::MaybeUninit<#rs_type> }
-                }
-            })
-            .collect_vec();
-        let mut thunk_ret_type = format_ty_for_rs(tcx, sig.output())?;
-        let mut thunk_body = {
-            let crate_name = make_rs_ident(krate.as_str());
-            let mod_path = mod_path.format_for_rs();
-            let fn_name = make_rs_ident(fn_name.as_str());
-            let struct_name = match struct_name.as_ref() {
-                None => quote! {},
-                Some(symbol) => {
-                    let name = make_rs_ident(symbol.as_str());
-                    quote! { #name :: }
-                }
-            };
-            let fn_args = params.iter().map(|Param { rs_name, ty, .. }| {
-                if is_c_abi_compatible_by_value(*ty) {
-                    quote! { #rs_name }
-                } else {
-                    quote! { unsafe { #rs_name.assume_init_read() } }
-                }
-            });
-            quote! {
-                :: #crate_name :: #mod_path #struct_name #fn_name( #( #fn_args ),* )
+        let crate_name = make_rs_ident(krate.as_str());
+        let mod_path = mod_path.format_for_rs();
+        let fn_name = make_rs_ident(fn_name.as_str());
+        let struct_name = match struct_name.as_ref() {
+            None => quote! {},
+            Some(symbol) => {
+                let name = make_rs_ident(symbol.as_str());
+                quote! { #name :: }
             }
         };
-        if !is_c_abi_compatible_by_value(sig.output()) {
-            thunk_params.push(quote! {
-                __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
-            });
-            thunk_ret_type = quote! { () };
-            thunk_body = quote! { __ret_slot.write(#thunk_body); };
-        };
-        quote! {
-            #[no_mangle]
-            extern "C" fn #thunk_name( #( #thunk_params ),* ) -> #thunk_ret_type {
-                #thunk_body
-            }
-        }
+        let fully_qualified_fn_name = quote!{ :: #crate_name :: #mod_path #struct_name #fn_name };
+        format_thunk_impl(tcx, local_def_id, symbol_name.name, fully_qualified_fn_name)?
     };
     Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
