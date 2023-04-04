@@ -40,6 +40,9 @@ bzl_library(
 bzl_library(
     name = "toolchain_headers_bzl",
     srcs = ["toolchain_headers.bzl"],
+    visibility = [
+        "//visibility:private",  # Only private by automation, not intent. Owner may accept CLs adding visibility. See <internal link>.
+    ],
     deps = [
         ":providers_bzl",
         ":rust_bindings_from_cc_utils_bzl",
@@ -54,13 +57,15 @@ bzl_library(
 bzl_library(
     name = "rust_bindings_from_cc_binary_bzl",
     srcs = ["rust_bindings_from_cc_binary.bzl"],
+    visibility = [
+        "//visibility:private",  # Only private by automation, not intent. Owner may accept CLs adding visibility. See <internal link>.
+    ],
     deps = [":rust_bindings_from_cc_transition"],
 )
 
 bzl_library(
     name = "deps_for_bindings_bzl",
     srcs = ["deps_for_bindings.bzl"],
-    visibility = ["//:__subpackages__"],
     deps = [
         ":providers_bzl",
         ":rust_bindings_from_cc_transition",
