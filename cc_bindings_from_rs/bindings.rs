@@ -4,18 +4,20 @@
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use code_gen_utils::{
-    format_cc_ident, format_cc_includes, format_namespace_bound_cc_tokens, make_rs_ident,
-    CcInclude, NamespaceQualifier,
+    escape_non_identifier_chars, format_cc_ident, format_cc_includes,
+    format_namespace_bound_cc_tokens, make_rs_ident, CcInclude, NamespaceQualifier,
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
-use rustc_hir::{AssocItemKind, ImplItemKind, ImplicitSelfKind, Item, ItemKind, Node, Unsafety};
+use rustc_hir::{
+    AssocItemKind, Impl, ImplItemKind, ImplicitSelfKind, Item, ItemKind, Node, Unsafety,
+};
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
-use rustc_span::symbol::Symbol;
+use rustc_span::symbol::{sym, Symbol};
 use rustc_target::abi::{Abi, FieldsShape, Integer, Layout, Primitive, Scalar};
 use rustc_target::spec::PanicStrategy;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -562,9 +564,12 @@ fn get_fn_sig<'tcx>(tcx: TyCtxt<'tcx>, fn_def_id: LocalDefId) -> Result<ty::FnSi
 /// Formats a C++ function declaration of a thunk that wraps a Rust function
 /// identified by `fn_def_id`.  `format_thunk_impl` may panic if `fn_def_id`
 /// doesn't identify a function.
-fn format_thunk_decl(input: &Input, fn_def_id: LocalDefId, thunk_name: &str) -> Result<CcSnippet> {
+fn format_thunk_decl(
+    input: &Input,
+    fn_def_id: LocalDefId,
+    thunk_name: &TokenStream,
+) -> Result<CcSnippet> {
     let tcx = input.tcx;
-    let thunk_name = format_cc_ident(thunk_name)?;
 
     let mut prereqs = CcPrerequisites::default();
     let sig = get_fn_sig(tcx, fn_def_id)?;
@@ -684,6 +689,22 @@ fn format_thunk_impl(
     })
 }
 
+fn get_symbol_name<'tcx>(tcx: TyCtxt<'tcx>, def_id: LocalDefId) -> Result<&'tcx str> {
+    ensure!(
+        tcx.generics_of(def_id).count() == 0,
+        "Generic functions are not supported yet (b/259749023) - caller should filter them out",
+    );
+
+    // Call to `mono` is ok - `generics_of` have been checked above.
+    let instance = ty::Instance::mono(tcx, def_id.to_def_id());
+
+    Ok(tcx.symbol_name(instance).name)
+}
+
+fn get_thunk_name(symbol_name: &str) -> String {
+    format!("__crubit_thunk_{}", &escape_non_identifier_chars(symbol_name))
+}
+
 /// Formats a function with the given `local_def_id`.
 ///
 /// Will panic if `local_def_id`
@@ -697,12 +718,6 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         tcx.generics_of(def_id).count() == 0,
         "Generic functions are not supported yet (b/259749023)"
     );
-
-    let mut symbol_name = {
-        // Call to `mono` is ok - `generics_of` have been checked above.
-        let instance = ty::Instance::mono(tcx, def_id);
-        tcx.symbol_name(instance)
-    };
 
     let sig = get_fn_sig(tcx, local_def_id)?;
     if sig.c_variadic {
@@ -745,10 +760,10 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
             needs_thunk || sig.inputs().iter().any(|&ty| !is_c_abi_compatible_by_value(ty));
         needs_thunk
     };
-    if needs_thunk {
-        let thunk_name = format!("__crubit_thunk_{}", symbol_name.name);
-        symbol_name = ty::SymbolName::new(tcx, &thunk_name);
-    }
+    let thunk_name = {
+        let symbol_name = get_symbol_name(tcx, local_def_id)?;
+        if needs_thunk { get_thunk_name(symbol_name) } else { symbol_name.to_string() }
+    };
 
     let FullyQualifiedName { krate, mod_path, name } = FullyQualifiedName::new(tcx, def_id);
     let fn_name = name.expect("Functions are assumed to always have a name");
@@ -810,7 +825,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         },
         None => None,
     };
-    let needs_definition = fn_name.as_str() != symbol_name.name;
+    let needs_definition = fn_name.as_str() != thunk_name;
     let main_api = {
         let doc_comment = {
             let doc_comment = format_doc_comment(tcx, local_def_id);
@@ -845,7 +860,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         CcSnippet::default()
     } else {
         let thunk_name =
-            format_cc_ident(symbol_name.name).context("Error formatting thunk name")?;
+            format_cc_ident(&thunk_name).context("Error formatting thunk name")?;
         let struct_name = match struct_name.as_ref() {
             None => quote! {},
             Some(symbol) => {
@@ -856,7 +871,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         };
 
         let mut prereqs = main_api_prereqs;
-        let thunk_decl = format_thunk_decl(input, local_def_id, symbol_name.name)?
+        let thunk_decl = format_thunk_decl(input, local_def_id, &thunk_name)?
             .into_tokens(&mut prereqs);
 
         let mut thunk_args = params
@@ -912,7 +927,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
             }
         };
         let fully_qualified_fn_name = quote!{ :: #crate_name :: #mod_path #struct_name #fn_name };
-        format_thunk_impl(tcx, local_def_id, symbol_name.name, fully_qualified_fn_name)?
+        format_thunk_impl(tcx, local_def_id, &thunk_name, fully_qualified_fn_name)?
     };
     Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
@@ -1050,65 +1065,59 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
     ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
 
     let core = quote! {
-        public:
-            // TODO(b/258249980): If the wrapped type implements the `Default` trait, then we
-            // should call its `impl` from the default C++ constructor (instead of `delete`ing
-            // the default C++ constructor).
-            #cc_short_name() = delete;
+        // TODO(b/258249993): Provide `default` copy constructor and assignment operator if
+        // the wrapped type is `Copy` on Rust side.
+        // TODO(b/259741191): If the wrapped type implements the `Clone` trait, then we should
+        // *consider* calling `clone` from the copy constructor and `clone_from` from the copy
+        // assignment operator.
+        #cc_short_name(const #cc_short_name&) = delete;
 
-            // TODO(b/258249993): Provide `default` copy constructor and assignment operator if
-            // the wrapped type is `Copy` on Rust side.
-            // TODO(b/259741191): If the wrapped type implements the `Clone` trait, then we should
-            // *consider* calling `clone` from the copy constructor and `clone_from` from the copy
-            // assignment operator.
-            #cc_short_name(const #cc_short_name&) = delete;
+        // The generated bindings have to follow Rust move semantics:
+        // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
+        //   that "Every type must be ready for it to be blindly memcopied to somewhere else
+        //   in memory")
+        // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
+        //   it.
+        //
+        // The generated C++ bindings match the required semantics because they:
+        // * Generate trivial` C++ move constructor and move assignment operator. Per
+        //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial move
+        //   constructor is a constructor that performs the same action as the trivial copy
+        //   constructor, that is, makes a copy of the object representation as if by
+        //   std::memmove."
+        // * Generate trivial C++ destructor. (Types that implement `Drop` trait or require
+        //   "drop glue" are not *yet* supported - this might eventually change as part of the
+        //   work tracked under b/258251148). Per
+        //   <internal link>/cpp/language/destructor#Trivial_destructor: "A trivial destructor is a
+        //   destructor that performs no action."
+        //
+        // In particular, note that the following C++ code and Rust code are exactly equivalent
+        // (except that in Rust, reuse of `y` is forbidden at compile time, whereas in C++,
+        // it's only prohibited by convention):
+        // * C++, assumming trivial move constructor and trivial destructor:
+        //   `auto x = std::move(y);`
+        // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
+        //   `let x = y;`
+        //
+        // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop glue,
+        // then extra care should be taken to ensure the C++ destructor can handle the
+        // moved-from object in a way that meets Rust move semantics.  For example, the
+        // generated C++ move constructor might need to assign `Default::default()` to the
+        // moved-from object.
+        #cc_short_name(#cc_short_name&&) = default;
 
-            // The generated bindings have to follow Rust move semantics:
-            // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
-            //   that "Every type must be ready for it to be blindly memcopied to somewhere else
-            //   in memory")
-            // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
-            //   it.
-            //
-            // The generated C++ bindings match the required semantics because they:
-            // * Generate trivial` C++ move constructor and move assignment operator. Per
-            //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial move
-            //   constructor is a constructor that performs the same action as the trivial copy
-            //   constructor, that is, makes a copy of the object representation as if by
-            //   std::memmove."
-            // * Generate trivial C++ destructor. (Types that implement `Drop` trait or require
-            //   "drop glue" are not *yet* supported - this might eventually change as part of the
-            //   work tracked under b/258251148). Per
-            //   <internal link>/cpp/language/destructor#Trivial_destructor: "A trivial destructor is a
-            //   destructor that performs no action."
-            //
-            // In particular, note that the following C++ code and Rust code are exactly equivalent
-            // (except that in Rust, reuse of `y` is forbidden at compile time, whereas in C++,
-            // it's only prohibited by convention):
-            // * C++, assumming trivial move constructor and trivial destructor:
-            //   `auto x = std::move(y);`
-            // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
-            //   `let x = y;`
-            //
-            // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop glue,
-            // then extra care should be taken to ensure the C++ destructor can handle the
-            // moved-from object in a way that meets Rust move semantics.  For example, the
-            // generated C++ move constructor might need to assign `Default::default()` to the
-            // moved-from object.
-            #cc_short_name(#cc_short_name&&) = default;
+        // TODO(b/258235219): Providing assignment operators enables mutation which
+        // may negatively interact with support for references.  Therefore until we
+        // have more confidence in our reference-handling-plans, we are deleting the
+        // assignment operators.
+        //
+        // (Move assignment operator has another set of concerns and constraints - see the
+        // comment for the move constructor above).
+        #cc_short_name& operator=(const #cc_short_name&) = delete;
+        #cc_short_name& operator=(#cc_short_name&&) = delete;
 
-            // TODO(b/258235219): Providing assignment operators enables mutation which
-            // may negatively interact with support for references.  Therefore until we
-            // have more confidence in our reference-handling-plans, we are deleting the
-            // assignment operators.
-            //
-            // (Move assignment operator has another set of concerns and constraints - see the
-            // comment for the move constructor above).
-            #cc_short_name& operator=(const #cc_short_name&) = delete;
-            #cc_short_name& operator=(#cc_short_name&&) = delete;
-
-            // TODO(b/258251148): Support custom `Drop` impls and drop glue.
-            ~#cc_short_name() = default;
+        // TODO(b/258251148): Support custom `Drop` impls and drop glue.
+        ~#cc_short_name() = default;
     };
     Ok(AdtCoreBindings {
         def_id,
@@ -1321,15 +1330,101 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     ApiSnippets { main_api, cc_details, rs_details }
 }
 
+/// Finds the `Impl` of a trait impl for `self_ty`.  Returns an error if the
+/// impl wasn't found.
+///
+/// `self_ty` should specify a *local* type (i.e. type defined in the crate
+/// being "compiled").
+///
+/// `trait_name` should specify the name of a `core` trait - e.g.
+/// [`sym::Default`](https://doc.rust-lang.org/beta/nightly-rustc/rustc_span/symbol/sym/constant.Default.html) is a valid
+/// argument.
+fn find_core_trait_impl<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    self_ty: Ty<'tcx>,
+    trait_name: Symbol,
+) -> Result<&'tcx Impl<'tcx>> {
+    let trait_id = tcx
+        .get_diagnostic_item(trait_name)
+        .expect("`find_core_trait_impl` should only be called with `core`, always-present traits");
+    // TODO(b/275387739): Eventually we might need to support blanket impls.
+    let mut impls = tcx.non_blanket_impls_for_ty(trait_id, self_ty);
+    let impl_id = impls.next();
+    if impl_id.is_some() {
+        assert_eq!(None, impls.next(), "Expecting only a single trait impl");
+    }
+    let impl_id =
+        impl_id.ok_or_else(|| anyhow!("`{self_ty}` doesn't implement the `{trait_name}` trait"))?;
+    let impl_id = impl_id.expect_local(); // Expecting that `self_ty` is a local type.
+    match &tcx.hir().expect_item(impl_id).kind {
+        ItemKind::Impl(impl_) => Ok(impl_),
+        other => panic!("Unexpected `ItemKind` from `non_blanket_impls_for_ty`: {other:?}"),
+    }
+}
+
+/// Formats a default constructor for an ADT if possible (i.e. if the `Default`
+/// trait is implemented for the ADT).  Returns an error otherwise (e.g. if
+/// there is no `Default` impl).
+fn format_default_ctor(input: &Input, core: &AdtCoreBindings) -> Result<ApiSnippets> {
+    let tcx = input.tcx;
+    let ty = tcx.type_of(core.def_id).subst_identity();
+
+    let trait_impl = find_core_trait_impl(input.tcx, ty, sym::Default)?;
+    assert_eq!(trait_impl.items.len(), 1, "Only the `default` method is expected");
+    assert_eq!(trait_impl.items[0].ident.name.as_str(), "default");
+    let cc_struct_name = &core.cc_short_name;
+    let main_api = CcSnippet::new(quote! {
+        __NEWLINE__ __COMMENT__ "Default::default"
+        inline #cc_struct_name(); __NEWLINE__ __NEWLINE__
+    });
+    let fn_def_id = trait_impl.items[0].id.owner_id.def_id;
+    let thunk_name = get_thunk_name(get_symbol_name(tcx, fn_def_id)?);
+    let cc_details = {
+        let thunk_name = format_cc_ident(&thunk_name)?;
+        let CcSnippet { tokens: thunk_decl, prereqs } =
+            format_thunk_decl(input, fn_def_id, &thunk_name)?;
+        let tokens = quote! {
+            #thunk_decl
+            #cc_struct_name::#cc_struct_name() {
+                __crubit_internal::#thunk_name(this);
+            }
+        };
+        CcSnippet { tokens, prereqs }
+    };
+    let rs_details = {
+        let struct_name = &core.rs_fully_qualified_name;
+        let fully_qualified_fn_name =
+            quote! { <#struct_name as ::core::default::Default>::default };
+        format_thunk_impl(tcx, fn_def_id, &thunk_name, fully_qualified_fn_name)?
+    };
+    Ok(ApiSnippets { main_api, cc_details, rs_details })
+}
+
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
 /// represented by `core`.  This function is infallible - after
 /// `format_adt_core` returns success we have committed to emitting C++ bindings
 /// for the ADT.
 fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     let tcx = input.tcx;
+    let adt_cc_name = &core.cc_short_name;
 
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
+
+    let ApiSnippets {
+        main_api: default_ctor_main_api,
+        cc_details: default_ctor_cc_details,
+        rs_details: default_ctor_rs_details,
+    } = format_default_ctor(input, core).unwrap_or_else(|err| {
+        let msg = format!("{err:#}");
+        ApiSnippets {
+            main_api: CcSnippet::new(quote! {
+                __NEWLINE__ __COMMENT__ #msg
+                #adt_cc_name() = delete; __NEWLINE__
+            }),
+            ..Default::default()
+        }
+    });
 
     let ApiSnippets {
         main_api: fields_main_api,
@@ -1368,7 +1463,6 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
 
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
-    let adt_cc_name = &core.cc_short_name;
     let main_api = {
         let cc_packed_attribute = {
             let has_packed_attribute = tcx
@@ -1387,6 +1481,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         let core = &core.core;
 
         let mut prereqs = CcPrerequisites::default();
+        let default_ctor_main_api = default_ctor_main_api.into_tokens(&mut prereqs);
         let impl_items_main_api = if impl_items_main_api.tokens.is_empty() {
             quote! {}
         } else {
@@ -1401,7 +1496,9 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
             tokens: quote! {
                 __NEWLINE__ #doc_comment
                 #keyword alignas(#alignment) #cc_packed_attribute #adt_cc_name final {
-                    #core
+                    public:
+                        #default_ctor_main_api
+                        #core
                     #impl_items_main_api
                     #fields_main_api
                 };
@@ -1411,6 +1508,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     };
     let cc_details = {
         let mut prereqs = CcPrerequisites::default();
+        let default_ctor_cc_details = default_ctor_cc_details.into_tokens(&mut prereqs);
         let impl_items_cc_details = impl_items_cc_details.into_tokens(&mut prereqs);
         let fields_cc_details = fields_cc_details.into_tokens(&mut prereqs);
         prereqs.defs.insert(local_def_id);
@@ -1425,6 +1523,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                     alignof(#adt_cc_name) == #alignment,
                     "Verify that struct layout didn't change since this header got generated");
                 __NEWLINE__
+                #default_ctor_cc_details
                 #impl_items_cc_details
                 #fields_cc_details
             },
@@ -1435,6 +1534,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         quote! {
             const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
             const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
+            #default_ctor_rs_details
             #impl_items_rs_details
             #fields_rs_details
         }
@@ -3328,7 +3428,7 @@ pub mod tests {
                     ...
                     struct alignas(4) SomeStruct final {
                         public:
-                            // In this test there is no `Default` implementation.
+                            __COMMENT__ "`SomeStruct` doesn't implement the `Default` trait"
                             SomeStruct() = delete;
 
                             // In this test there is no `Copy` implementation / derive.
@@ -3393,7 +3493,7 @@ pub mod tests {
                     ...
                     struct alignas(4) TupleStruct final {
                         public:
-                            // In this test there is no `Default` implementation.
+                            __COMMENT__ "`TupleStruct` doesn't implement the `Default` trait"
                             TupleStruct() = delete;
 
                             // In this test there is no `Copy` implementation / derive.
@@ -3841,6 +3941,53 @@ pub mod tests {
     }
 
     #[test]
+    fn test_format_item_struct_with_default_constructor() {
+        let test_src = r#"
+                #[derive(Default)]
+                pub struct Point(i32, i32);
+            "#;
+        test_format_item(test_src, "Point", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... Point final {
+                        ...
+                        public:
+                          __COMMENT__ "Default::default"
+                          inline Point();
+                        ...
+                    };
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                        extern "C" void ...(::rust_out::Point* __ret_ptr);
+                    }
+                    Point::Point() {
+                        ...(this);
+                    }
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                   #[no_mangle]
+                   extern "C" fn ...(
+                       __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::Point>
+                   ) -> () {
+                       __ret_slot.write(<::rust_out::Point as ::core::default::Default>::default());
+                   }
+                }
+            );
+        });
+    }
+
+    #[test]
     fn test_format_item_unsupported_struct_with_name_that_is_reserved_keyword() {
         let test_src = r#"
                 #[allow(non_camel_case_types)]
@@ -4016,7 +4163,7 @@ pub mod tests {
                     ...
                     struct alignas(1) SomeEnum final {
                         public:
-                            // In this test there is no `Default` implementation.
+                            __COMMENT__ "`SomeEnum` doesn't implement the `Default` trait"
                             SomeEnum() = delete;
 
                             // In this test there is no `Copy` implementation / derive.
@@ -4082,7 +4229,7 @@ pub mod tests {
                     ...
                     struct alignas(4) Point final {
                         public:
-                            // In this test there is no `Default` implementation.
+                            __COMMENT__ "`Point` doesn't implement the `Default` trait"
                             Point() = delete;
 
                             // In this test there is no `Copy` implementation / derive.
@@ -4161,7 +4308,7 @@ pub mod tests {
                     ...
                     union alignas(8) SomeUnion final {
                         public:
-                            // In this test there is no `Default` implementation.
+                            __COMMENT__ "`SomeUnion` doesn't implement the `Default` trait"
                             SomeUnion() = delete;
 
                             // In this test there is no `Copy` implementation / derive.

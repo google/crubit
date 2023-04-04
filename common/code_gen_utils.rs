@@ -56,6 +56,52 @@ pub fn make_rs_ident(ident: &str) -> Ident {
     }
 }
 
+/// Escapes characters that may not appear in a C++ or Rust identifier.
+///
+/// The implemented escaping algorithm guarantess that different inputs will
+/// always produce different outputs (i.e. unique symbols will remain unique
+/// after escaping).  Other than that, the implemented escaping algorithm is
+/// somewhat arbitrary and should be treated as an implementation detail and not
+/// depended upon.
+///
+/// This transformation allows using escaped symbol names as part of Rust and/or
+/// C++ identifiers. In particular note that in practice Rust uses `$` and `.`
+/// characters in symbols - for example: "_ZN58_$LT$rust_out..
+/// Point$u20$as$u20$core..default..Default$GT$7default17h144069f0ad7be325E".
+pub fn escape_non_identifier_chars(symbol: &str) -> String {
+    // EXTRA_CAPACITY_PREDICTION has been haphazardly chosen based on a single
+    // example encountered in practice where there were 16 characters that needed
+    // escaping: 2 x '_', 8 x '$', 6 x '.': "_ZN58_$LT$rust_out..
+    // Point$u20$as$u20$core..default..Default$GT$7default17h144069f0ad7be325E"
+    const EXTRA_CAPACITY_PREDICTION: usize = 20;
+    let mut result = String::with_capacity(symbol.len() + EXTRA_CAPACITY_PREDICTION);
+
+    for (i, c) in symbol.chars().enumerate() {
+        match c {
+            '_' => result.push_str("_u"),
+            '$' => result.push_str("_d"),
+            '.' => result.push_str("_p"),
+            c => {
+                let is_valid_identifier_char = if i == 0 {
+                    // `is_xid_start` doesn't cover `'_'` character, but it is okay because we
+                    // explicitly handle this character in a match branch above.
+                    unicode_ident::is_xid_start(c)
+                } else {
+                    unicode_ident::is_xid_continue(c)
+                };
+                if is_valid_identifier_char {
+                    result.push(c);
+                } else {
+                    result.push_str("_x");
+                    result.push_str(&format!("{:08x}", c as u32));
+                };
+            }
+        }
+    }
+
+    result
+}
+
 /// Representation of `foo::bar::baz` where each component is either the name
 /// of a C++ namespace, or the name of a Rust module.
 #[derive(Debug, PartialEq, Eq, Clone, Hash, PartialOrd, Ord)]
@@ -693,5 +739,36 @@ pub mod tests {
                 }  // namespace foo::working_module::bar
             },
         );
+    }
+
+    #[test]
+    fn test_escape_non_identifier_chars() {
+        let tests = vec![
+            ("", ""),
+            ("foo", "foo"),
+            ("0abc", "_x00000030abc"),
+            ("abc$xyz", "abc_dxyz"),
+            ("abc.xyz", "abc_pxyz"),
+            ("abc_xyz", "abc_uxyz"),
+            ("abc🦀xyz", "abc_x0001f980xyz"),
+            // With an escaping scheme like `$` => "_d", `<utf8 dd80 char>` => "_dd80", the
+            // following 2 tests would fail the injectivity requirement (they both would map to
+            // "_dd80"):
+            ("$d80", "_dd80"),
+            ("\u{740}", "_x00000740"),
+        ];
+
+        for (input, expected_output) in tests.iter() {
+            let actual_output = escape_non_identifier_chars(input);
+            assert_eq!(&actual_output, expected_output);
+        }
+
+        // Asserting that each distinct, unique test input should result in a unique,
+        // non-duplicated output.  (This can be seen as a rather lightweight and
+        // indirect verification of the injectivity requirement.)
+        let duplicate_expectations =
+            tests.iter().map(|(_, expected)| *expected).duplicates().collect_vec();
+        let empty_vec: Vec<&'static str> = vec![];
+        assert_eq!(empty_vec, duplicate_expectations);
     }
 }
