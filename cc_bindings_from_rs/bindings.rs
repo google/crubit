@@ -265,8 +265,8 @@ impl FullyQualifiedName {
 fn format_ret_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet> {
     let void = Ok(CcSnippet::new(quote! { void }));
     match ty.kind() {
-        ty::TyKind::Never => void,  // `!`
-        ty::TyKind::Tuple(types) if types.len() == 0 => void,  // `()`
+        ty::TyKind::Never => void,                            // `!`
+        ty::TyKind::Tuple(types) if types.len() == 0 => void, // `()`
         _ => format_ty_for_cc(input, ty),
     }
 }
@@ -344,7 +344,7 @@ fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet
         ty::TyKind::Never => {
             // TODO(b/254507801): Maybe translate into `crubit::Never`?
             bail!("The never type `!` is only supported as a return type (b/254507801)");
-        },
+        }
         ty::TyKind::Tuple(types) => {
             if types.len() == 0 {
                 // TODO(b/254507801): Maybe translate into `crubit::Unit`?
@@ -375,8 +375,8 @@ fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet
         // "Layout tests").
         ty::TyKind::Char => {
             // Asserting that the target architecture meets the assumption from Crubit's
-            // `rust_builtin_type_abi_assumptions.md` - we assume that Rust's `char` has the same
-            // ABI as `u32`.
+            // `rust_builtin_type_abi_assumptions.md` - we assume that Rust's `char` has the
+            // same ABI as `u32`.
             let param_env = ty::ParamEnv::empty();
             let layout = input
                 .tcx
@@ -385,15 +385,19 @@ fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet
                 .layout;
             assert_eq!(4, layout.align().abi.bytes());
             assert_eq!(4, layout.size().bytes());
-            assert!(matches!(layout.abi(), Abi::Scalar(Scalar::Initialized{
-                                 value: Primitive::Int(Integer::I32, /* signedness = */false), ..
-                             })));
+            assert!(matches!(
+                layout.abi(),
+                Abi::Scalar(Scalar::Initialized {
+                    value: Primitive::Int(Integer::I32, /* signedness = */ false),
+                    ..
+                })
+            ));
 
             CcSnippet::with_include(
                 quote! { rs_std::rs_char },
                 input.support_header("rs_std/rs_char.h"),
             )
-        },
+        }
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
         // documents that "Rust's signed and unsigned fixed-width integer types {i,u}{8,16,32,64}
@@ -405,20 +409,20 @@ fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet
         // documents that "Rust does not support C platforms on which the C native integer type are
         // not compatible with any of Rust's fixed-width integer type (e.g. because of
         // padding-bits, lack of 2's complement, etc.)."
-        ty::TyKind::Int(ty::IntTy::I8) => cstdint(quote!{ std::int8_t }),
-        ty::TyKind::Int(ty::IntTy::I16) => cstdint(quote!{ std::int16_t }),
-        ty::TyKind::Int(ty::IntTy::I32) => cstdint(quote!{ std::int32_t }),
-        ty::TyKind::Int(ty::IntTy::I64) => cstdint(quote!{ std::int64_t }),
-        ty::TyKind::Uint(ty::UintTy::U8) => cstdint(quote!{ std::uint8_t }),
-        ty::TyKind::Uint(ty::UintTy::U16) => cstdint(quote!{ std::uint16_t }),
-        ty::TyKind::Uint(ty::UintTy::U32) => cstdint(quote!{ std::uint32_t }),
-        ty::TyKind::Uint(ty::UintTy::U64) => cstdint(quote!{ std::uint64_t }),
+        ty::TyKind::Int(ty::IntTy::I8) => cstdint(quote! { std::int8_t }),
+        ty::TyKind::Int(ty::IntTy::I16) => cstdint(quote! { std::int16_t }),
+        ty::TyKind::Int(ty::IntTy::I32) => cstdint(quote! { std::int32_t }),
+        ty::TyKind::Int(ty::IntTy::I64) => cstdint(quote! { std::int64_t }),
+        ty::TyKind::Uint(ty::UintTy::U8) => cstdint(quote! { std::uint8_t }),
+        ty::TyKind::Uint(ty::UintTy::U16) => cstdint(quote! { std::uint16_t }),
+        ty::TyKind::Uint(ty::UintTy::U32) => cstdint(quote! { std::uint32_t }),
+        ty::TyKind::Uint(ty::UintTy::U64) => cstdint(quote! { std::uint64_t }),
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
         // documents that "The isize and usize types are [...] layout compatible with C's uintptr_t
         // and intptr_t types.".
-        ty::TyKind::Int(ty::IntTy::Isize) => cstdint(quote!{ std::intptr_t }),
-        ty::TyKind::Uint(ty::UintTy::Usize) => cstdint(quote!{ std::uintptr_t }),
+        ty::TyKind::Int(ty::IntTy::Isize) => cstdint(quote! { std::intptr_t }),
+        ty::TyKind::Uint(ty::UintTy::Usize) => cstdint(quote! { std::uintptr_t }),
 
         ty::TyKind::Int(ty::IntTy::I128) | ty::TyKind::Uint(ty::UintTy::U128) => {
             // Note that "the alignment of Rust's {i,u}128 is unspecified and allowed to
@@ -434,7 +438,8 @@ fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet
             ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
             ensure!(
                 is_directly_public(input.tcx, adt.did()),
-                "Not directly public type (re-exports are not supported yet - b/262052635)");
+                "Not directly public type (re-exports are not supported yet - b/262052635)"
+            );
 
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
@@ -446,30 +451,28 @@ fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet
             };
 
             // Verify if definition of `ty` can be succesfully imported and bail otherwise.
-            format_adt_core(input.tcx, def_id)
-                .with_context(|| format!(
-                        "Failed to generate bindings for the definition of `{ty}`"))?;
+            format_adt_core(input.tcx, def_id).with_context(|| {
+                format!("Failed to generate bindings for the definition of `{ty}`")
+            })?;
 
             CcSnippet {
                 tokens: FullyQualifiedName::new(input.tcx, def_id).format_for_cc()?,
-                prereqs
-            }
-        },
-
-        ty::TyKind::RawPtr(ty::TypeAndMut{ty, mutbl}) => {
-            let const_qualifier = match mutbl {
-                Mutability::Mut => quote!{},
-                Mutability::Not => quote!{ const },
-            };
-            let CcSnippet{ tokens, mut prereqs } = format_ty_for_cc(input, *ty)
-                .with_context(|| format!(
-                        "Failed to format the pointee of the pointer type `{ty}`"))?;
-            prereqs.move_defs_to_fwd_decls();
-            CcSnippet {
                 prereqs,
-                tokens: quote!{ #const_qualifier #tokens * },
             }
-        },
+        }
+
+        ty::TyKind::RawPtr(ty::TypeAndMut { ty, mutbl }) => {
+            let const_qualifier = match mutbl {
+                Mutability::Mut => quote! {},
+                Mutability::Not => quote! { const },
+            };
+            let CcSnippet { tokens, mut prereqs } =
+                format_ty_for_cc(input, *ty).with_context(|| {
+                    format!("Failed to format the pointee of the pointer type `{ty}`")
+                })?;
+            prereqs.move_defs_to_fwd_decls();
+            CcSnippet { prereqs, tokens: quote! { #const_qualifier #tokens * } }
+        }
 
         // TODO(b/260268230, b/260729464): When recursively processing nested types (e.g. an
         // element type of an Array, a referent of a Ref, a parameter type of an FnPtr, etc), one
@@ -509,17 +512,17 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
         ty::TyKind::Adt(adt, substs) => {
             ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
             FullyQualifiedName::new(tcx, adt.did()).format_for_rs()
-        },
-        ty::TyKind::RawPtr(ty::TypeAndMut{ty, mutbl}) => {
+        }
+        ty::TyKind::RawPtr(ty::TypeAndMut { ty, mutbl }) => {
             let qualifier = match mutbl {
-                Mutability::Mut => quote!{ mut },
-                Mutability::Not => quote!{ const },
+                Mutability::Mut => quote! { mut },
+                Mutability::Not => quote! { const },
             };
-            let ty = format_ty_for_rs(tcx, *ty)
-                .with_context(|| format!(
-                        "Failed to format the pointee of the pointer type `{ty}`"))?;
-            quote!{ * #qualifier #ty }
-        },
+            let ty = format_ty_for_rs(tcx, *ty).with_context(|| {
+                format!("Failed to format the pointee of the pointer type `{ty}`")
+            })?;
+            quote! { * #qualifier #ty }
+        }
         _ => bail!("The following Rust type is not supported yet: {ty}"),
     })
 }
@@ -859,8 +862,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     let cc_details = if !needs_definition {
         CcSnippet::default()
     } else {
-        let thunk_name =
-            format_cc_ident(&thunk_name).context("Error formatting thunk name")?;
+        let thunk_name = format_cc_ident(&thunk_name).context("Error formatting thunk name")?;
         let struct_name = match struct_name.as_ref() {
             None => quote! {},
             Some(symbol) => {
@@ -871,8 +873,8 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         };
 
         let mut prereqs = main_api_prereqs;
-        let thunk_decl = format_thunk_decl(input, local_def_id, &thunk_name)?
-            .into_tokens(&mut prereqs);
+        let thunk_decl =
+            format_thunk_decl(input, local_def_id, &thunk_name)?.into_tokens(&mut prereqs);
 
         let mut thunk_args = params
             .iter()
@@ -926,7 +928,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
                 quote! { #name :: }
             }
         };
-        let fully_qualified_fn_name = quote!{ :: #crate_name :: #mod_path #struct_name #fn_name };
+        let fully_qualified_fn_name = quote! { :: #crate_name :: #mod_path #struct_name #fn_name };
         format_thunk_impl(tcx, local_def_id, &thunk_name, fully_qualified_fn_name)?
     };
     Ok(ApiSnippets { main_api, cc_details, rs_details })
@@ -1181,9 +1183,8 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                     Ok(FieldTypeInfo { size, cc_type: format_ty_for_cc(input, field_ty)? })
                 });
                 let name = field_def.ident(tcx);
-                let cc_name = format_cc_ident(name.as_str()).unwrap_or_else(|_err|
-                    format_ident!("__field{index}").into_token_stream()
-                );
+                let cc_name = format_cc_ident(name.as_str())
+                    .unwrap_or_else(|_err| format_ident!("__field{index}").into_token_stream());
                 let rs_name = {
                     let name_starts_with_digit = name
                         .as_str()
@@ -1600,10 +1601,11 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
 fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<ApiSnippets>> {
     // TODO(b/262052635): When adding support for re-exports we may need to change
-    // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is undesirable,
-    // because it would mean exposing items from a private module.  Exposing a private module is
-    // undesirable, because it would mean that changes of private implementation details of the
-    // crate could become breaking changes for users of the generated C++ bindings.)
+    // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is
+    // undesirable, because it would mean exposing items from a private module.
+    // Exposing a private module is undesirable, because it would mean that
+    // changes of private implementation details of the crate could become
+    // breaking changes for users of the generated C++ bindings.)
     if !input.tcx.effective_visibilities(()).is_directly_public(def_id) {
         return Ok(None);
     }
@@ -1837,7 +1839,7 @@ pub mod tests {
             );
 
             // No Rust thunks should be generated in this test scenario.
-            assert_rs_not_matches!(bindings.rs_body, quote!{ public_function });
+            assert_rs_not_matches!(bindings.rs_body, quote! { public_function });
         });
     }
 
@@ -2377,8 +2379,7 @@ pub mod tests {
         let test_src = "pub fn public_function() {}";
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
-            let expected_comment_txt =
-                "Automatically @generated C++ bindings for the following Rust crate:\n\
+            let expected_comment_txt = "Automatically @generated C++ bindings for the following Rust crate:\n\
                  rust_out";
             assert_cc_matches!(
                 bindings.h_body,
@@ -3023,9 +3024,12 @@ pub mod tests {
             "#;
         test_format_item(test_src, "async_function", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Error formatting function return type: \
+            assert_eq!(
+                err,
+                "Error formatting function return type: \
                              The following Rust type is not supported yet: \
-                             impl std::future::Future<Output = ()>");
+                             impl std::future::Future<Output = ()>"
+            );
         });
     }
 
@@ -3035,9 +3039,9 @@ pub mod tests {
                 pub fn add(x: f64, y: f64) -> f64 { x * y }
             "#;
         test_format_item(test_src, "add", |result| {
-            // TODO(b/261074843): Re-add thunk name verification once we are using stable name
-            // mangling (which may be coming in Q1 2023).  (This might mean reverting cl/492333432
-            // + manual review and tweaks.)
+            // TODO(b/261074843): Re-add thunk name verification once we are using stable
+            // name mangling (which may be coming in Q1 2023).  (This might mean
+            // reverting cl/492333432 + manual review and tweaks.)
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             assert!(main_api.prereqs.is_empty());
@@ -3368,8 +3372,11 @@ pub mod tests {
             "#;
         test_format_item(test_src, "foo", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Error handling parameter #0: \
-                             Tuples are not supported yet: (i32, i32) (b/254099023)");
+            assert_eq!(
+                err,
+                "Error handling parameter #0: \
+                             Tuples are not supported yet: (i32, i32) (b/254099023)"
+            );
         });
     }
 
@@ -3381,8 +3388,11 @@ pub mod tests {
             "#;
         test_format_item(test_src, "fn_with_params", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Error handling parameter #0: \
-                             `()` / `void` is only supported as a return type (b/254507801)");
+            assert_eq!(
+                err,
+                "Error handling parameter #0: \
+                             `()` / `void` is only supported as a return type (b/254507801)"
+            );
         });
     }
 
@@ -4729,13 +4739,13 @@ pub mod tests {
             // ( <Rust type>, <expected error message> )
             (
                 "()", // Empty TyKind::Tuple
-                "`()` / `void` is only supported as a return type (b/254507801)"
+                "`()` / `void` is only supported as a return type (b/254507801)",
             ),
             (
                 // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
                 // details).
                 "!", // TyKind::Never
-                "The never type `!` is only supported as a return type (b/254507801)"
+                "The never type `!` is only supported as a return type (b/254507801)",
             ),
             (
                 "(i32, i32)", // Non-empty TyKind::Tuple
@@ -4772,16 +4782,10 @@ pub mod tests {
             (
                 "StructWithCustomDrop",
                 "Failed to generate bindings for the definition of `StructWithCustomDrop`: \
-                 `Drop` trait and \"drop glue\" are not supported yet (b/258251148)"
+                 `Drop` trait and \"drop glue\" are not supported yet (b/258251148)",
             ),
-            (
-                "ConstGenericStruct<42>",
-                "Generic types are not supported yet (b/259749095)",
-            ),
-            (
-                "TypeGenericStruct<u8>",
-                "Generic types are not supported yet (b/259749095)",
-            ),
+            ("ConstGenericStruct<42>", "Generic types are not supported yet (b/259749095)"),
+            ("TypeGenericStruct<u8>", "Generic types are not supported yet (b/259749095)"),
             (
                 // This double-checks that TyKind::Adt(..., substs) are present
                 // even if the type parameter argument is not explicitly specified
@@ -4789,18 +4793,9 @@ pub mod tests {
                 "TypeGenericStruct",
                 "Generic types are not supported yet (b/259749095)",
             ),
-            (
-                "LifetimeGenericStruct<'static>",
-                "Generic types are not supported yet (b/259749095)",
-            ),
-            (
-                "std::cmp::Ordering",
-                "Cross-crate dependencies are not supported yet (b/258261328)",
-            ),
-            (
-                "Option<i8>",
-                "Generic types are not supported yet (b/259749095)",
-            ),
+            ("LifetimeGenericStruct<'static>", "Generic types are not supported yet (b/259749095)"),
+            ("std::cmp::Ordering", "Cross-crate dependencies are not supported yet (b/258261328)"),
+            ("Option<i8>", "Generic types are not supported yet (b/259749095)"),
             (
                 "PublicReexportOfStruct",
                 "Not directly public type (re-exports are not supported yet - b/262052635)",
