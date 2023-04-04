@@ -37,7 +37,7 @@ load(
 )
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain", "use_cpp_toolchain")
 
-def _generate_bindings(ctx, basename, inputs, rustc_args):
+def _generate_bindings(ctx, basename, inputs, rustc_args, rustc_env):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
     Args:
@@ -68,6 +68,7 @@ def _generate_bindings(ctx, basename, inputs, rustc_args):
             [ctx.file._clang_format, ctx.file._rustfmt, ctx.file._rustfmt_cfg],
             transitive = [inputs],
         ),
+        env = rustc_env,
         executable = ctx.executable._cc_bindings_from_rs_tool,
         mnemonic = "CcBindingsFromRust",
         progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
@@ -175,7 +176,7 @@ def _cc_bindings_from_rust_rule_impl(ctx):
         experimental_use_cc_common_link = False,
     )
 
-    args, _ = construct_arguments(
+    args, env = construct_arguments(
         ctx = ctx,
         attr = ctx.attr,
         file = ctx.file,
@@ -206,6 +207,7 @@ def _cc_bindings_from_rust_rule_impl(ctx):
         basename,
         compile_inputs,
         args.rustc_flags,
+        env,
     )
 
     impl_linking_context = _compile_rs_out_file(ctx, rs_out_file, ctx.attr.crate)
