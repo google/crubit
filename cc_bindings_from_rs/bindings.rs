@@ -942,11 +942,16 @@ struct AdtCoreBindings {
     keyword: TokenStream,
 
     /// C++ translation of the ADT identifier - e.g. `SomeStruct`.
-    cc_name: TokenStream,
+    ///
+    /// A _short_ name is sufficient (i.e. there is no need to use a
+    /// namespace-qualified name), for `CcSnippet`s that are emitted into
+    /// the same namespace as the ADT.  (This seems to be all the snippets
+    /// today.)
+    cc_short_name: TokenStream,
 
     /// Rust spelling of the ADT type - e.g.
-    /// `some_crate::some_module::SomeStruct`.
-    rs_name: TokenStream,
+    /// `::some_crate::some_module::SomeStruct`.
+    rs_fully_qualified_name: TokenStream,
 
     /// `core` contains declarations of
     /// - the default constructor
@@ -1028,8 +1033,9 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
     };
 
     let item_name = tcx.item_name(def_id);
-    let rs_name = format_ty_for_rs(tcx, ty)?;
-    let cc_name = format_cc_ident(item_name.as_str()).context("Error formatting item name")?;
+    let rs_fully_qualified_name = format_ty_for_rs(tcx, ty)?;
+    let cc_short_name =
+        format_cc_ident(item_name.as_str()).context("Error formatting item name")?;
 
     let layout = get_layout(tcx, ty)
         .with_context(|| format!("Error computing the layout of #{item_name}"))?;
@@ -1048,14 +1054,14 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
             // TODO(b/258249980): If the wrapped type implements the `Default` trait, then we
             // should call its `impl` from the default C++ constructor (instead of `delete`ing
             // the default C++ constructor).
-            #cc_name() = delete;
+            #cc_short_name() = delete;
 
             // TODO(b/258249993): Provide `default` copy constructor and assignment operator if
             // the wrapped type is `Copy` on Rust side.
             // TODO(b/259741191): If the wrapped type implements the `Clone` trait, then we should
             // *consider* calling `clone` from the copy constructor and `clone_from` from the copy
             // assignment operator.
-            #cc_name(const #cc_name&) = delete;
+            #cc_short_name(const #cc_short_name&) = delete;
 
             // The generated bindings have to follow Rust move semantics:
             // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
@@ -1089,7 +1095,7 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
             // moved-from object in a way that meets Rust move semantics.  For example, the
             // generated C++ move constructor might need to assign `Default::default()` to the
             // moved-from object.
-            #cc_name(#cc_name&&) = default;
+            #cc_short_name(#cc_short_name&&) = default;
 
             // TODO(b/258235219): Providing assignment operators enables mutation which
             // may negatively interact with support for references.  Therefore until we
@@ -1098,17 +1104,17 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
             //
             // (Move assignment operator has another set of concerns and constraints - see the
             // comment for the move constructor above).
-            #cc_name& operator=(const #cc_name&) = delete;
-            #cc_name& operator=(#cc_name&&) = delete;
+            #cc_short_name& operator=(const #cc_short_name&) = delete;
+            #cc_short_name& operator=(#cc_short_name&&) = delete;
 
             // TODO(b/258251148): Support custom `Drop` impls and drop glue.
-            ~#cc_name() = default;
+            ~#cc_short_name() = default;
     };
     Ok(AdtCoreBindings {
         def_id,
         keyword,
-        cc_name,
-        rs_name,
+        cc_short_name,
+        rs_fully_qualified_name,
         core,
         alignment_in_bytes,
         size_in_bytes,
@@ -1234,7 +1240,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     let cc_details = if fields.is_empty() {
         CcSnippet::default()
     } else {
-        let adt_cc_name = &core.cc_name;
+        let adt_cc_name = &core.cc_short_name;
         let cc_assertions: TokenStream = fields
             .iter()
             .map(|Field { cc_name, offset, .. }| {
@@ -1249,7 +1255,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         })
     };
     let rs_details: TokenStream = {
-        let adt_rs_name = &core.rs_name;
+        let adt_rs_name = &core.rs_fully_qualified_name;
         fields
             .iter()
             .filter(|Field { is_public, .. }| *is_public)
@@ -1362,7 +1368,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
 
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
-    let adt_cc_name = &core.cc_name;
+    let adt_cc_name = &core.cc_short_name;
     let main_api = {
         let cc_packed_attribute = {
             let has_packed_attribute = tcx
@@ -1425,7 +1431,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         }
     };
     let rs_details = {
-        let adt_rs_name = &core.rs_name;
+        let adt_rs_name = &core.rs_fully_qualified_name;
         quote! {
             const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
             const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
@@ -1448,10 +1454,10 @@ fn format_fwd_decl(tcx: TyCtxt, def_id: LocalDefId) -> TokenStream {
     // `format_fwd_decl` should only be called for items from
     // `CcPrerequisites::fwd_decls` and `fwd_decls` should only contain ADTs
     // that `format_adt_core` succeeds for.
-    let AdtCoreBindings { keyword, cc_name, .. } = format_adt_core(tcx, def_id)
+    let AdtCoreBindings { keyword, cc_short_name, .. } = format_adt_core(tcx, def_id)
         .expect("`format_fwd_decl` should only be called if `format_adt_core` succeeded");
 
-    quote! { #keyword #cc_name; }
+    quote! { #keyword #cc_short_name; }
 }
 
 fn format_source_location(tcx: TyCtxt, local_def_id: LocalDefId) -> String {
