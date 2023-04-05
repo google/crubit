@@ -9,6 +9,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "lifetime_annotations/lifetime.h"
+#include "lifetime_annotations/lifetime_error.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
@@ -120,8 +121,8 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
   }
 
   if (this_type.isNull() && !lifetime_names.empty()) {
-    return llvm::createStringError(
-        llvm::inconvertibleErrorCode(),
+    return llvm::make_error<LifetimeError>(
+        LifetimeError::Type::Other,
         absl::StrCat("Encountered a `this` lifetime on a function with no "
                      "`this` parameter"));
   }
@@ -131,8 +132,8 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
     const clang::Expr* lifetime_name = nullptr;
     if (!lifetime_names.empty()) {
       if (lifetime_names.size() != 1) {
-        return llvm::createStringError(
-            llvm::inconvertibleErrorCode(),
+        return llvm::make_error<LifetimeError>(
+            LifetimeError::Type::Other,
             absl::StrCat("Expected a single lifetime but ",
                          lifetime_names.size(), " were given"));
       }

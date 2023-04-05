@@ -14,6 +14,14 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "lifetime_error",
+    hdrs = ["lifetime_error.h"],
+    deps = [
+        "@llvm-project//llvm:Support",
+    ],
+)
+
 cc_test(
     name = "lifetime_test",
     srcs = ["lifetime_test.cc"],
@@ -35,6 +43,7 @@ cc_library(
     ],
     deps = [
         ":lifetime",
+        ":lifetime_error",
         ":lifetime_substitutions",
         ":lifetime_symbol_table",
         ":pointee_type",
@@ -51,6 +60,7 @@ cc_library(
     srcs = ["lifetime_annotations.cc"],
     hdrs = ["lifetime_annotations.h"],
     deps = [
+        ":lifetime_error",
         ":lifetime_symbol_table",
         ":pointee_type",
         ":type_lifetimes",
@@ -68,6 +78,7 @@ cc_test(
     srcs = ["lifetime_annotations_test.cc"],
     deps = [
         ":lifetime_annotations",
+        ":lifetime_error",
         ":type_lifetimes",
         "@com_google_googletest//:gtest_main",
         "@absl//absl/status",

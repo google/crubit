@@ -12,6 +12,7 @@
 
 #include "absl/strings/str_cat.h"
 #include "lifetime_annotations/function_lifetimes.h"
+#include "lifetime_annotations/lifetime_error.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "lifetime_annotations/pointee_type.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -74,8 +75,8 @@ llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
        &next_lifetime](const clang::Expr*) -> llvm::Expected<Lifetime> {
         llvm::StringRef next = next_lifetime();
         if (next.empty()) {
-          return llvm::createStringError(
-              llvm::inconvertibleErrorCode(),
+          return llvm::make_error<LifetimeError>(
+              LifetimeError::Type::Other,
               "Invalid lifetime annotation: too few lifetimes");
         }
         return symbol_table.LookupNameAndMaybeDeclare(next);
@@ -84,8 +85,8 @@ llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
   auto ret = FunctionLifetimes::CreateForDecl(func, factory);
 
   if (!next_lifetime().empty()) {
-    return llvm::createStringError(
-        llvm::inconvertibleErrorCode(),
+    return llvm::make_error<LifetimeError>(
+        LifetimeError::Type::Other,
         "Invalid lifetime annotation: too many lifetimes");
   }
   return ret;
@@ -103,7 +104,7 @@ llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
     if (!detail.empty()) {
       absl::StrAppend(&msg, ": ", detail);
     }
-    return llvm::createStringError(llvm::inconvertibleErrorCode(), msg);
+    return llvm::make_error<LifetimeError>(LifetimeError::Type::Other, msg);
   };
 
   if (attr->args_size() != 1) {
@@ -129,8 +130,8 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
     if (auto annotate = clang::dyn_cast<clang::AnnotateAttr>(attr)) {
       if (annotate->getAnnotation() == "lifetimes") {
         if (lifetime_annotation != nullptr) {
-          return llvm::createStringError(
-              llvm::inconvertibleErrorCode(),
+          return llvm::make_error<LifetimeError>(
+              LifetimeError::Type::Other,
               absl::StrCat("Can't extract lifetimes as '",
                            func->getNameAsString(),
                            "' has multiple lifetime annotations"));
@@ -178,8 +179,8 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
         // safely even if elision is disabled.
         if (!elision_enabled && func->getDeclName().getNameKind() !=
                                     clang::DeclarationName::CXXDestructorName) {
-          return llvm::createStringError(
-              llvm::inconvertibleErrorCode(),
+          return llvm::make_error<LifetimeError>(
+              LifetimeError::Type::ElisionNotEnabled,
               absl::StrCat("Lifetime elision not enabled for '",
                            func->getNameAsString(), "'"));
         }
@@ -279,8 +280,8 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
             }
 
             if (!elision_enabled) {
-              return llvm::createStringError(
-                  llvm::inconvertibleErrorCode(),
+              return llvm::make_error<LifetimeError>(
+                  LifetimeError::Type::ElisionNotEnabled,
                   absl::StrCat("Lifetime elision not enabled for '",
                                func->getNameAsString(), "'"));
             }
@@ -291,8 +292,8 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
               return *input_lifetime;
             } else {
               // Otherwise, we don't know how to elide the output lifetime.
-              return llvm::createStringError(
-                  llvm::inconvertibleErrorCode(),
+              return llvm::make_error<LifetimeError>(
+                  LifetimeError::Type::CannotElideOutputLifetimes,
                   absl::StrCat("Cannot elide output lifetimes for '",
                                func->getNameAsString(),
                                "' because it is a non-member function that "
@@ -311,6 +312,8 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
   return FunctionLifetimes::CreateForDecl(func, factory);
 }
 }  // namespace
+
+char LifetimeError::ID;
 
 llvm::Expected<FunctionLifetimes> GetLifetimeAnnotations(
     const clang::FunctionDecl* func, const LifetimeAnnotationContext& context,

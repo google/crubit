@@ -15,6 +15,7 @@
 #include "absl/strings/str_join.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
+#include "lifetime_annotations/lifetime_error.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "lifetime_annotations/pointee_type.h"
 #include "clang/AST/Attr.h"
@@ -91,8 +92,8 @@ llvm::Expected<llvm::SmallVector<const clang::Expr*>> GetAttributeLifetimes(
       continue;
 
     if (saw_annotate_type) {
-      return llvm::createStringError(
-          llvm::inconvertibleErrorCode(),
+      return llvm::make_error<LifetimeError>(
+          LifetimeError::Type::Other,
           "Only one `[[annotate_type(\"lifetime\", ...)]]` attribute may be "
           "placed on a type");
     }
@@ -328,8 +329,8 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
   llvm::SmallVector<std::string> lifetime_params = GetLifetimeParameters(type);
   if (!lifetime_params.empty() && !lifetime_names.empty() &&
       lifetime_names.size() != lifetime_params.size()) {
-    return llvm::createStringError(
-        llvm::inconvertibleErrorCode(),
+    return llvm::make_error<LifetimeError>(
+        LifetimeError::Type::Other,
         absl::StrCat("Type has ", lifetime_params.size(),
                      " lifetime parameters but ", lifetime_names.size(),
                      " lifetime arguments were given"));
@@ -376,8 +377,8 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
   if (pointee.isNull() || type->isFunctionPointerType() ||
       type->isFunctionReferenceType()) {
     if (lifetime_params.empty() && !lifetime_names.empty())
-      return llvm::createStringError(
-          llvm::inconvertibleErrorCode(),
+      return llvm::make_error<LifetimeError>(
+          LifetimeError::Type::Other,
           absl::StrCat("Type may not be annotated with lifetimes"));
   }
   if (pointee.isNull()) {
@@ -409,8 +410,8 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
     const clang::Expr* lifetime_name = nullptr;
     if (!lifetime_names.empty()) {
       if (lifetime_names.size() != 1) {
-        return llvm::createStringError(
-            llvm::inconvertibleErrorCode(),
+        return llvm::make_error<LifetimeError>(
+            LifetimeError::Type::Other,
             absl::StrCat("Expected a single lifetime but ",
                          lifetime_names.size(), " were given"));
       }
@@ -929,8 +930,8 @@ void ObjectLifetimes::Traverse(
 llvm::Expected<llvm::StringRef> EvaluateAsStringLiteral(
     const clang::Expr* expr, const clang::ASTContext& ast_context) {
   auto error = []() {
-    return llvm::createStringError(
-        llvm::inconvertibleErrorCode(),
+    return llvm::make_error<LifetimeError>(
+        LifetimeError::Type::Other,
         "cannot evaluate argument as a string literal");
   };
 

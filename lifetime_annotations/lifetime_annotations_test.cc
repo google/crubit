@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "common/status_test_matchers.h"
+#include "lifetime_annotations/lifetime_error.h"
 #include "lifetime_annotations/test/named_func_lifetimes.h"
 #include "lifetime_annotations/test/run_on_code.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -70,6 +71,29 @@ std::string WithLifetimeMacros(absl::string_view code) {
   return result;
 }
 
+std::string FormatErrorString(llvm::Error err) {
+  std::string result;
+  err = llvm::handleErrors(
+      std::move(err), [&result](const LifetimeError& lifetime_err) {
+        switch (lifetime_err.type()) {
+          case LifetimeError::Type::ElisionNotEnabled:
+            result = "ERROR(ElisionNotEnabled): ";
+            break;
+          case LifetimeError::Type::CannotElideOutputLifetimes:
+            result = "ERROR(CannotElideOutputLifetimes): ";
+            break;
+          case LifetimeError::Type::Other:
+            result = "ERROR(Other): ";
+            break;
+        }
+        absl::StrAppend(&result, lifetime_err.message());
+      });
+  if (err) {
+    result = absl::StrCat("ERROR: ", llvm::toString(std::move(err)));
+  }
+  return result;
+}
+
 class LifetimeAnnotationsTest : public testing::Test {
  protected:
   absl::StatusOr<NamedFuncLifetimes> GetNamedLifetimeAnnotations(
@@ -115,8 +139,7 @@ class LifetimeAnnotationsTest : public testing::Test {
               if (func_lifetimes) {
                 new_entry = NameLifetimes(*func_lifetimes, symbol_table);
               } else {
-                new_entry = absl::StrCat(
-                    "ERROR: ", llvm::toString(func_lifetimes.takeError()));
+                new_entry = FormatErrorString(func_lifetimes.takeError());
               }
 
               std::string func_name = QualifiedName(func);
@@ -172,8 +195,9 @@ TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsNoLifetimeElision) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         int** f(int*);
   )"),
-              IsOkAndHolds(LifetimesAre(
-                  {{"f", "ERROR: Lifetime elision not enabled for 'f'"}})));
+              IsOkAndHolds(LifetimesAre({{"f",
+                                          "ERROR(ElisionNotEnabled): Lifetime "
+                                          "elision not enabled for 'f'"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, Failure_NoOutputAnnotationNoLifetimeElision) {
@@ -182,8 +206,9 @@ TEST_F(LifetimeAnnotationsTest, Failure_NoOutputAnnotationNoLifetimeElision) {
   )"),
               // We specifically want to see this error message rather than
               // "Cannot elide output lifetimes".
-              IsOkAndHolds(LifetimesAre(
-                  {{"f", "ERROR: Lifetime elision not enabled for 'f'"}})));
+              IsOkAndHolds(LifetimesAre({{"f",
+                                          "ERROR(ElisionNotEnabled): Lifetime "
+                                          "elision not enabled for 'f'"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsElisionPragmaInWrongFile) {
@@ -194,8 +219,9 @@ TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsElisionPragmaInWrongFile) {
                                           {std::make_pair("header.h", R"(
         int** f(int*);
   )")}),
-              IsOkAndHolds(LifetimesAre(
-                  {{"f", "ERROR: Lifetime elision not enabled for 'f'"}})));
+              IsOkAndHolds(LifetimesAre({{"f",
+                                          "ERROR(ElisionNotEnabled): Lifetime "
+                                          "elision not enabled for 'f'"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_OneInputLifetime) {
@@ -351,9 +377,9 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooFewInputLifetimes) {
   )"),
               IsOkAndHolds(LifetimesAre(
                   {{"f",
-                    "ERROR: Cannot elide output lifetimes for 'f' because it "
-                    "is a non-member function that does not have exactly one "
-                    "input lifetime"}})));
+                    "ERROR(CannotElideOutputLifetimes): Cannot elide output "
+                    "lifetimes for 'f' because it is a non-member function "
+                    "that does not have exactly one input lifetime"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooManyInputLifetimes) {
@@ -363,9 +389,9 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooManyInputLifetimes) {
   )"),
               IsOkAndHolds(LifetimesAre(
                   {{"f",
-                    "ERROR: Cannot elide output lifetimes for 'f' because it "
-                    "is a non-member function that does not have exactly one "
-                    "input lifetime"}})));
+                    "ERROR(CannotElideOutputLifetimes): Cannot elide output "
+                    "lifetimes for 'f' because it is a non-member function "
+                    "that does not have exactly one input lifetime"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_NoLifetimes) {
@@ -406,7 +432,8 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_BadAttributeArgument) {
         void f(int* [[clang::annotate_type("lifetime", 1)]]);
   )")),
       IsOkAndHolds(LifetimesAre(
-          {{"f", "ERROR: cannot evaluate argument as a string literal"}})));
+          {{"f",
+            "ERROR(Other): cannot evaluate argument as a string literal"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Simple) {
@@ -429,38 +456,42 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_SimpleRef) {
 
 TEST_F(LifetimeAnnotationsTest,
        LifetimeAnnotation_Invalid_LifetimeOnNonReferenceLikeType) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         void f(int $a);
   )")),
-              IsOkAndHolds(LifetimesAre(
-                  {{"f", "ERROR: Type may not be annotated with lifetimes"}})));
+      IsOkAndHolds(LifetimesAre(
+          {{"f", "ERROR(Other): Type may not be annotated with lifetimes"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest,
        LifetimeAnnotation_Invalid_LifetimeOnFunctionPointer) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         void f(void (* $a)());
   )")),
-              IsOkAndHolds(LifetimesAre(
-                  {{"f", "ERROR: Type may not be annotated with lifetimes"}})));
+      IsOkAndHolds(LifetimesAre(
+          {{"f", "ERROR(Other): Type may not be annotated with lifetimes"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest,
        LifetimeAnnotation_Invalid_LifetimeOnFunctionPointerReturnType) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         int (* $a f())(float, double);
   )")),
-              IsOkAndHolds(LifetimesAre(
-                  {{"f", "ERROR: Type may not be annotated with lifetimes"}})));
+      IsOkAndHolds(LifetimesAre(
+          {{"f", "ERROR(Other): Type may not be annotated with lifetimes"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest,
        LifetimeAnnotation_Invalid_LifetimeOnFunctionReference) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         void f(void (& $a)());
   )")),
-              IsOkAndHolds(LifetimesAre(
-                  {{"f", "ERROR: Type may not be annotated with lifetimes"}})));
+      IsOkAndHolds(LifetimesAre(
+          {{"f", "ERROR(Other): Type may not be annotated with lifetimes"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest,
@@ -470,7 +501,8 @@ TEST_F(LifetimeAnnotationsTest,
         void f(int* $2(a, b));
   )")),
       IsOkAndHolds(LifetimesAre(
-          {{"f", "ERROR: Expected a single lifetime but 2 were given"}})));
+          {{"f",
+            "ERROR(Other): Expected a single lifetime but 2 were given"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Static) {
@@ -548,29 +580,30 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_LifetimeParameterizedType) {
 TEST_F(
     LifetimeAnnotationsTest,
     LifetimeAnnotation_LifetimeParameterizedType_Invalid_WrongNumberOfLifetimes) {
-  EXPECT_THAT(
-      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
     struct [[clang::annotate("lifetime_params", "a", "b")]] S_param {};
 
     void f(S_param $3(a, b, c) s);
   )")),
-      IsOkAndHolds(LifetimesAre({{"f",
-                                  "ERROR: Type has 2 lifetime parameters but 3 "
-                                  "lifetime arguments were given"}})));
+              IsOkAndHolds(LifetimesAre(
+                  {{"f",
+                    "ERROR(Other): Type has 2 lifetime parameters but 3 "
+                    "lifetime arguments were given"}})));
 }
 
 TEST_F(
     LifetimeAnnotationsTest,
     LifetimeAnnotation_LifetimeParameterizedType_Invalid_MultipleAnnotateAttributes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
     struct [[clang::annotate("lifetime_params", "a", "b")]] S_param {};
 
     void f(S_param $a $b s);
   )")),
-              IsOkAndHolds(LifetimesAre(
-                  {{"f",
-                    "ERROR: Only one `[[annotate_type(\"lifetime\", ...)]]` "
-                    "attribute may be placed on a type"}})));
+      IsOkAndHolds(LifetimesAre(
+          {{"f",
+            "ERROR(Other): Only one `[[annotate_type(\"lifetime\", ...)]]` "
+            "attribute may be placed on a type"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Template) {
@@ -700,31 +733,32 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_MissingThis) {
   )")),
       IsOkAndHolds(LifetimesAre(
           {{"S::f",
-            "ERROR: Invalid lifetime annotation: too few lifetimes"}})));
+            "ERROR(Other): Invalid lifetime annotation: too few lifetimes"}})));
   EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         struct S {
           int* $a f();
         };
   )")),
-              IsOkAndHolds(LifetimesAre(
-                  {{"S::f", "ERROR: Lifetime elision not enabled for 'f'"}})));
+              IsOkAndHolds(LifetimesAre({{"S::f",
+                                          "ERROR(ElisionNotEnabled): Lifetime "
+                                          "elision not enabled for 'f'"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_ThisOnFreeFunction) {
-  EXPECT_THAT(
-      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         [[clang::annotate("lifetimes", "a: a -> a")]]
         int* f(int*);
   )")),
-      IsOkAndHolds(LifetimesAre(
-          {{"f", "ERROR: Invalid lifetime annotation: too many lifetimes"}})));
-  EXPECT_THAT(
-      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+              IsOkAndHolds(LifetimesAre({{"f",
+                                          "ERROR(Other): Invalid lifetime "
+                                          "annotation: too many lifetimes"}})));
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         int* $a f(int* $a) $a;
   )")),
-      IsOkAndHolds(LifetimesAre({{"f",
-                                  "ERROR: Encountered a `this` lifetime on a "
-                                  "function with no `this` parameter"}})));
+              IsOkAndHolds(LifetimesAre(
+                  {{"f",
+                    "ERROR(Other): Encountered a `this` lifetime on a "
+                    "function with no `this` parameter"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_WrongNumber) {
@@ -734,7 +768,8 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_WrongNumber) {
         int* f(int**);
   )"),
       IsOkAndHolds(LifetimesAre(
-          {{"f", "ERROR: Invalid lifetime annotation: too few lifetimes"}})));
+          {{"f",
+            "ERROR(Other): Invalid lifetime annotation: too few lifetimes"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Callback) {
