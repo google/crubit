@@ -55,7 +55,8 @@ void computeNullability(const Expr* E,
         ExpectedSize != Nullability.size()) {
       // A nullability vector must have one entry per pointer in the type.
       // If this is violated, we probably failed to handle some AST node.
-      llvm::dbgs() << "=== Bad computed nullability: ===\n";
+      llvm::dbgs()
+          << "=== Nullability vector has wrong number of entries: ===\n";
       llvm::dbgs() << "Expression: \n";
       dump(E, llvm::dbgs());
       llvm::dbgs() << "\nNullability (" << Nullability.size()
