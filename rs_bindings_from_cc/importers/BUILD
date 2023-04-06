@@ -59,6 +59,7 @@ cc_library(
     hdrs = ["function.h"],
     deps = [
         "@absl//absl/strings",
+        "//lifetime_annotations:lifetime_error",
         "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",

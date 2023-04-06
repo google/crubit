@@ -5187,6 +5187,22 @@ mod tests {
     }
 
     #[test]
+    fn test_func_ptr_with_non_static_lifetime() -> Result<()> {
+        let ir = ir_from_cc(&with_lifetime_macros(
+            r#"
+            int (* $a get_ptr_to_func())(float, double); "#,
+        ))?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_cc_matches!(rs_api, {
+            let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=33\n\
+                           Error while generating bindings for item 'get_ptr_to_func':\n\
+                           Type may not be annotated with lifetimes";
+            quote! { __COMMENT__ #txt }
+        });
+        Ok(())
+    }
+
+    #[test]
     fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
         let ir = ir_from_cc(r#" const int* (*get_ptr_to_func())(const int*); "#)?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;

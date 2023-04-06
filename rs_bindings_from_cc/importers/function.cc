@@ -7,10 +7,12 @@
 #include <optional>
 
 #include "absl/strings/substitute.h"
+#include "lifetime_annotations/lifetime_error.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "clang/AST/Type.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 
 namespace crubit {
 
@@ -84,15 +86,38 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
   }
 
-  // TODO(lukasza, mboehme): Consider changing the GetLifetimeAnnotations API to
-  // distinguish 1) no lifetime annotations found vs 2) erroneous lifetime
-  // annotations found.  This will allow avoiding the call to
-  // `expectedToOptional` which can sometimes indicate design problems.
   clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
-  std::optional<clang::tidy::lifetimes::FunctionLifetimes> lifetimes =
-      expectedToOptional(clang::tidy::lifetimes::GetLifetimeAnnotations(
+  std::optional<clang::tidy::lifetimes::FunctionLifetimes> lifetimes;
+  llvm::Expected<clang::tidy::lifetimes::FunctionLifetimes> lifetimes_or_err =
+      clang::tidy::lifetimes::GetLifetimeAnnotations(
           function_decl, *ictx_.invocation_.lifetime_context_,
-          &lifetime_symbol_table));
+          &lifetime_symbol_table);
+  if (lifetimes_or_err) {
+    lifetimes = std::move(*lifetimes_or_err);
+  } else {
+    using clang::tidy::lifetimes::LifetimeError;
+    llvm::Error remaining_err = llvm::handleErrors(
+        lifetimes_or_err.takeError(),
+        [](std::unique_ptr<LifetimeError> lifetime_err) -> llvm::Error {
+          switch (lifetime_err->type()) {
+            case LifetimeError::Type::ElisionNotEnabled:
+            case LifetimeError::Type::CannotElideOutputLifetimes:
+              // If elision is not enabled or output lifetimes cannot be elided,
+              // we want to import the function with raw lifetime-less pointers.
+              // Just return success here; this will leave the `lifetimes`
+              // optional empty, and we will then handle this accordingly below.
+              return llvm::Error::success();
+              break;
+            default:
+              return llvm::Error(std::move(lifetime_err));
+              break;
+          }
+        });
+    if (remaining_err) {
+      return ictx_.ImportUnsupportedItem(
+          function_decl, llvm::toString(std::move(remaining_err)));
+    }
+  }
 
   absl::StatusOr<UnqualifiedIdentifier> translated_name =
       ictx_.GetTranslatedName(function_decl);
