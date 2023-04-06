@@ -16,6 +16,11 @@ TEST(StructsTest, ReprCPointReturnedOrTakenByValue) {
   EXPECT_EQ(123, structs::repr_c::get_x(std::move(p)));
 }
 
+TEST(StructsTest, ZstFieldsReturnedOrTakenByValue) {
+  structs::zst_fields::ZstFields x = structs::zst_fields::create(42);
+  EXPECT_EQ(structs::zst_fields::get_value(std::move(x)), 42);
+}
+
 TEST(StructsTest, DefaultReprPointReturnedOrTakenByValue) {
   structs::default_repr::Point p = structs::default_repr::create(123, 456);
   EXPECT_EQ(123, structs::default_repr::get_x(std::move(p)));

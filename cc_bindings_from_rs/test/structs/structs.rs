@@ -44,6 +44,29 @@ pub mod default_repr {
     }
 }
 
+/// Test for a struct containing zero-sized fields.
+pub mod zst_fields {
+
+    pub struct Zst1;
+    pub struct Zst2();
+    pub struct Zst3 {}
+
+    pub struct ZstFields {
+        pub zst1: Zst1,
+        pub zst2: Zst2,
+        pub zst3: Zst3,
+        pub value: i32,
+    }
+
+    pub fn create(value: i32) -> ZstFields {
+        ZstFields { zst1: Zst1, zst2: Zst2(), zst3: Zst3 {}, value }
+    }
+
+    pub fn get_value(x: ZstFields) -> i32 {
+        x.value
+    }
+}
+
 /// Test of ABI classification.
 ///
 /// System V ABI can classify function parameter and return types into broad
