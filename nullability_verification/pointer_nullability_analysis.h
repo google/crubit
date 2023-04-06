@@ -30,7 +30,7 @@ class PointerNullabilityAnalysis
   explicit PointerNullabilityAnalysis(ASTContext& context);
 
   PointerNullabilityLattice initialElement() {
-    return PointerNullabilityLattice(&ExprToNullability);
+    return PointerNullabilityLattice(ExprToNullability);
   }
 
   void transfer(const CFGElement& Elt, PointerNullabilityLattice& Lattice,

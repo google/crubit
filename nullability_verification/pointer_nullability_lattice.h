@@ -23,19 +23,19 @@ class PointerNullabilityLattice {
   // Owned by the PointerNullabilityAnalysis object, shared by all lattice
   // elements within one analysis run.
   absl::flat_hash_map<const Expr *, std::vector<NullabilityKind>>
-      *ExprToNullability;
+      &ExprToNullability;
 
  public:
   PointerNullabilityLattice(
       absl::flat_hash_map<const Expr *, std::vector<NullabilityKind>>
-          *ExprToNullability)
+          &ExprToNullability)
       : ExprToNullability(ExprToNullability) {}
 
   std::optional<ArrayRef<NullabilityKind>> getExprNullability(
       const Expr *E) const {
     E = &dataflow::ignoreCFGOmittedNodes(*E);
-    auto I = ExprToNullability->find(&dataflow::ignoreCFGOmittedNodes(*E));
-    return I == ExprToNullability->end()
+    auto I = ExprToNullability.find(&dataflow::ignoreCFGOmittedNodes(*E));
+    return I == ExprToNullability.end()
                ? std::nullopt
                : std::optional<ArrayRef<NullabilityKind>>(I->second);
   }
@@ -48,12 +48,11 @@ class PointerNullabilityLattice {
       const Expr *E,
       const std::function<std::vector<NullabilityKind>()> &GetNullability) {
     E = &dataflow::ignoreCFGOmittedNodes(*E);
-    if (auto It = ExprToNullability->find(E); It != ExprToNullability->end())
+    if (auto It = ExprToNullability.find(E); It != ExprToNullability.end())
       return It->second;
     // Deliberately perform a separate lookup after calling GetNullability.
     // It may invalidate iterators, e.g. inserting missing vectors for children.
-    auto [Iterator, Inserted] =
-        ExprToNullability->insert({E, GetNullability()});
+    auto [Iterator, Inserted] = ExprToNullability.insert({E, GetNullability()});
     CHECK(Inserted) << "GetNullability inserted same " << E->getStmtClassName();
     return Iterator->second;
   }
