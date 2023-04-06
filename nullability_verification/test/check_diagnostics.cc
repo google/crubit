@@ -15,6 +15,17 @@ namespace clang {
 namespace tidy {
 namespace nullability {
 
+constexpr char kPreamble[] = R"cc(
+  enum NullabilityKind {
+    NK_nonnull,
+    NK_nullable,
+    NK_unspecified,
+  };
+
+  template <NullabilityKind... NK, typename T>
+  void __assert_nullability(const T&);
+)cc";
+
 bool checkDiagnostics(llvm::StringRef SourceCode) {
   std::vector<CFGElement> Diagnostics;
   PointerNullabilityDiagnoser Diagnoser;
@@ -35,8 +46,10 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
                   Diagnostics.push_back(EltDiagnostics.value());
                 }
               })
+              .withASTBuildVirtualMappedFiles({{"preamble.h", kPreamble}})
               .withASTBuildArgs({"-fsyntax-only", "-std=c++17",
-                                 "-Wno-unused-value", "-Wno-nonnull"}),
+                                 "-Wno-unused-value", "-Wno-nonnull",
+                                 "-include", "preamble.h"}),
           [&Diagnostics, &Failed](
               const llvm::DenseMap<unsigned, std::string> &Annotations,
               const dataflow::test::AnalysisOutputs &AnalysisData) {

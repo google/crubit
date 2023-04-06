@@ -1607,22 +1607,9 @@ TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
   )cc"));
 }
 
-// TODO: Move the definitions of `NullabilityKind` and `__assert_nullability()`
-// into a preamble that `checkDiagnostics()` prepends to every test.
 TEST(PointerNullabilityTest, AssertNullability) {
-  const std::string Declarations = R"cc(
-    enum NullabilityKind {
-      NK_nonnull,
-      NK_nullable,
-      NK_unspecified,
-    };
-
-    template <NullabilityKind... NK, typename T>
-    void __assert_nullability(const T&);
-  )cc";
-
   // Concrete struct.
-  EXPECT_TRUE(checkDiagnostics(Declarations + R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct StructNonnullNullable {
       int* _Nonnull nonnull;
       int* _Nullable nullable;
@@ -1641,7 +1628,7 @@ TEST(PointerNullabilityTest, AssertNullability) {
   )cc"));
 
   // Struct with two template type parameters.
-  EXPECT_TRUE(checkDiagnostics(Declarations + R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0, typename T1>
     struct Struct2Arg {};
 
@@ -1663,7 +1650,7 @@ TEST(PointerNullabilityTest, AssertNullability) {
   )cc"));
 
   // Struct with one type and non-type template parameters.
-  EXPECT_TRUE(checkDiagnostics(Declarations + R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <int I0, typename T1, typename T2>
     struct Struct3ArgWithInt {};
 
@@ -1685,7 +1672,7 @@ TEST(PointerNullabilityTest, AssertNullability) {
   )cc"));
 
   // Nested template arguments.
-  EXPECT_TRUE(checkDiagnostics(Declarations + R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0, typename T1>
     struct Struct2Arg {};
 
@@ -1708,7 +1695,7 @@ TEST(PointerNullabilityTest, AssertNullability) {
   )cc"));
 
   // Struct with two template parameters substituted with concrete structs.
-  EXPECT_TRUE(checkDiagnostics(Declarations + R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct StructUnknownNullable {
       int* unknown;
       int* _Nullable nullable;
@@ -1739,7 +1726,7 @@ TEST(PointerNullabilityTest, AssertNullability) {
     }
   )cc"));
 
-  EXPECT_TRUE(checkDiagnostics(Declarations + R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0, typename T1>
     struct Struct2Arg {
       T0 arg0;
@@ -1793,7 +1780,7 @@ TEST(PointerNullabilityTest, AssertNullability) {
     }
   )cc"));
 
-  EXPECT_TRUE(checkDiagnostics(Declarations + R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable p, int* _Nonnull q, int* r) {
       __assert_nullability<NK_nonnull, NK_nullable>(&p);
       __assert_nullability<NK_nonnull, NK_nonnull>(&q);
@@ -1974,15 +1961,6 @@ TEST(PointerNullabilityTest, FunctionTemplates) {
 
   // Call expression with template parameter substituted with a concrete struct.
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    enum NullabilityKind {
-      NK_nonnull,
-      NK_nullable,
-      NK_unspecified,
-    };
-
-    template <NullabilityKind... NK, typename T>
-    void __assert_nullability(const T &);
-
     struct StructUnknownNullable {
       int *var0;
       int *_Nullable var1;
