@@ -101,7 +101,7 @@ crates_repository(
             features = ["extra-traits"],
             version = ">0.0.0",
         ),
-        "unicode_ident": crate.spec(
+        "unicode-ident": crate.spec(
             version = ">0.0.0",
         ),
     },

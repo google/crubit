@@ -1,5 +1,5 @@
 {
-  "checksum": "9ff9244763c6b3d1042c615cab53f32cdfe8c4ddd91b46b75bec95daad71f2a7",
+  "checksum": "3c338cb62f49dddf894d80598ea1396db232781726def6c31ffca294d141cddc",
   "crates": {
     "anyhow 1.0.70": {
       "name": "anyhow",
@@ -309,6 +309,10 @@
             {
               "id": "syn 2.0.13",
               "target": "syn"
+            },
+            {
+              "id": "unicode-ident 1.0.8",
+              "target": "unicode_ident"
             }
           ],
           "selects": {}
