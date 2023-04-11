@@ -33,7 +33,6 @@ class PointerNullabilityLattice {
 
   std::optional<ArrayRef<NullabilityKind>> getExprNullability(
       const Expr *E) const {
-    E = &dataflow::ignoreCFGOmittedNodes(*E);
     auto I = ExprToNullability.find(&dataflow::ignoreCFGOmittedNodes(*E));
     return I == ExprToNullability.end()
                ? std::nullopt
