@@ -1,11 +1,11 @@
-load("@bazel_tools//tools/build_defs/license:license.bzl", "license")
+load("@rules_license//rules:license.bzl", "license")
 load(
     "//rs_bindings_from_cc/bazel_support:crubit_feature_hint.bzl",
     "crubit_feature_hint",
 )
 
 package(
-    default_applicable_licenses = ["//third_party/crubit:license"],
+    default_applicable_licenses = ["//:license"],
     default_visibility = ["//visibility:private"],
 )
 

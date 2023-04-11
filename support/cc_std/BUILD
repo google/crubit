@@ -7,7 +7,7 @@ load(
     "bindings_for_toolchain_headers",
 )
 
-package(default_applicable_licenses = ["//third_party/crubit:license"])
+package(default_applicable_licenses = ["//:license"])
 
 filegroup(
     name = "extra_rs_srcs_for_cc_std",

@@ -1,7 +1,7 @@
 # Support libraries that the generated Rust/C++ bindings depend upon.
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro", "rust_test")
 
-package(default_applicable_licenses = ["//third_party/crubit:license"])
+package(default_applicable_licenses = ["//:license"])
 
 licenses(["notice"])
 

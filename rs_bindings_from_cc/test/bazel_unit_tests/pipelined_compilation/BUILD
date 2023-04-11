@@ -3,7 +3,7 @@ be used yet."""
 
 load(":pipelined_compilation_test.bzl", "pipelined_compilation_test")
 
-package(default_applicable_licenses = ["//third_party/crubit:license"])
+package(default_applicable_licenses = ["//:license"])
 
 licenses(["notice"])
 

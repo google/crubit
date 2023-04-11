@@ -326,8 +326,8 @@ target_features_nonempty_test = analysistest.make(_target_features_nonempty_test
 
 def _test_target_features_nonempty():
     native.cc_library(name = "mylib_nonempty_features", hdrs = ["lib.h"], aspect_hints = [
-        "//third_party/crubit:supported",
-        "//third_party/crubit:experimental",  # merged in as well
+        "//:supported",
+        "//:experimental",  # merged in as well
     ])
     attach_aspect(name = "mylib_nonempty_features_with_aspect", dep = ":mylib_nonempty_features")
 

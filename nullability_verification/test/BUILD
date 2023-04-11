@@ -1,6 +1,6 @@
 # Integration tests for nullability verification.
 
-package(default_applicable_licenses = ["//third_party/crubit:license"])
+package(default_applicable_licenses = ["//:license"])
 
 cc_test(
     name = "pointer_nullability_verification_test",

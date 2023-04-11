@@ -9,7 +9,7 @@ load(
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("//cc_bindings_from_rs/bazel_support:legacy_toolchain_config_setting.bzl", "legacy_rust_toolchain_detector")
 
-package(default_applicable_licenses = ["//third_party/crubit:license"])
+package(default_applicable_licenses = ["//:license"])
 
 licenses(["notice"])
 

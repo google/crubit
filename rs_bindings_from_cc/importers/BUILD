@@ -1,7 +1,7 @@
 """Importers for various types of `Decl`s"""
 
 package(
-    default_applicable_licenses = ["//third_party/crubit:license"],
+    default_applicable_licenses = ["//:license"],
     default_visibility = ["//rs_bindings_from_cc:__pkg__"],
 )
 

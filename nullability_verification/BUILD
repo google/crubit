@@ -1,6 +1,6 @@
 # Verification for null safety
 
-package(default_applicable_licenses = ["//third_party/crubit:license"])
+package(default_applicable_licenses = ["//:license"])
 
 cc_library(
     name = "pointer_nullability_lattice",

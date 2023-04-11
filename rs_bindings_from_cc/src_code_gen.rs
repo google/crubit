@@ -8943,7 +8943,7 @@ mod tests {
             let expected = "\
                 Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
                 Error while generating bindings for item 'NotPresent':\n\
-                Missing required features on //test:testing_target: [//third_party/crubit:experimental]\
+                Missing required features on //test:testing_target: [//:experimental]\
             ";
             assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         }

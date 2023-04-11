@@ -4,7 +4,7 @@ be used yet."""
 load(":target_args_test.bzl", "target_args_test")
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
-package(default_applicable_licenses = ["//third_party/crubit:license"])
+package(default_applicable_licenses = ["//:license"])
 
 licenses(["notice"])
 

@@ -18,7 +18,7 @@ def crubit_test_cc_library(name, **kwargs):
 
     This is equivalent to cc_library, but it sets the default aspect_hints to `:experimental`.
     """
-    kwargs.setdefault("aspect_hints", ["//third_party/crubit:experimental"])
+    kwargs.setdefault("aspect_hints", ["//:experimental"])
     native.cc_library(
         name = name,
         **kwargs

@@ -9,7 +9,7 @@ load(
 )
 load("@rules_rust//rust:defs.bzl", "rust_test")
 
-package(default_applicable_licenses = ["//third_party/crubit:license"])
+package(default_applicable_licenses = ["//:license"])
 
 licenses(["notice"])
 
@@ -53,7 +53,7 @@ rust_bindings_from_cc_cli_flag(
     name = name + "_cc",
     hdrs = [name + ".h"],
     aspect_hints = [
-        "//third_party/crubit:experimental",
+        "//:experimental",
         ":disable_source_location_in_doc_comment",
     ],
     copts = ["-Wno-google3-inline-namespace"],
