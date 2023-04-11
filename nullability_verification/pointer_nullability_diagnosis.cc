@@ -36,7 +36,8 @@ bool isNullableOrUntracked(const Expr* E, const Environment& Env) {
   if (ActualVal == nullptr) {
     llvm::dbgs()
         << "The dataflow analysis framework does not model a PointerValue for "
-           "the following Expr, and thus its dereference is marked as unsafe:";
+           "the following Expr, and thus its dereference is marked as "
+           "unsafe:\n";
     E->dump();
   }
   return !ActualVal || isNullable(*ActualVal, Env);
