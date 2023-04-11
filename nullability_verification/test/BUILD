@@ -79,6 +79,16 @@ cc_test(
 )
 
 cc_test(
+    name = "function_calls",
+    srcs = ["function_calls.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "initialization",
     srcs = ["initialization.cc"],
     deps = [
