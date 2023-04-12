@@ -296,9 +296,9 @@ fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
 
     // ## Returning structs be value.
     //
-    // Returning a struct by value requires an explicit thunk, because `rs_bindings_from_cc` may
-    // not preserve the ABI of structs (e.g. when replacing field types with an opaque blob of
-    // bytes - see b/270454629).
+    // Returning a struct by value requires an explicit thunk, because
+    // `rs_bindings_from_cc` may not preserve the ABI of structs (e.g. when
+    // replacing field types with an opaque blob of bytes - see b/270454629).
     //
     // Note: if the RsTypeKind cannot be parsed / rs_type_kind returns Err, then
     // bindings generation will fail for this function, so it doesn't really matter
@@ -310,8 +310,8 @@ fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
     }
     // ## Nontrivial parameter types.
     //
-    // If the function accepts a struct by value, then in the underlying ABI, it is actually passed
-    // by pointer.
+    // If the function accepts a struct by value, then in the underlying ABI, it is
+    // actually passed by pointer.
     //
     // Because there's no way to upgrade an lvalue (e.g. pointer) to a prvalue, we
     // cannot implement guaranteed copy/move elision for inline functions for
@@ -3258,9 +3258,7 @@ impl RsTypeKind {
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
                     // `Pin`.
-                    Ok(RsSnippet::new(
-                        quote! {self: ::core::pin::Pin< & #lifetime #mut_ Self>}
-                    ))
+                    Ok(RsSnippet::new(quote! {self: ::core::pin::Pin< & #lifetime #mut_ Self>}))
                 } else {
                     Ok(RsSnippet::new(quote! { & #lifetime #mut_ self }))
                 }
@@ -3270,14 +3268,14 @@ impl RsTypeKind {
                 let arbitrary_self_types = make_rs_ident("arbitrary_self_types");
                 // TODO(b/239661934): Add `use ::ctor::{RvalueReference, ConstRvalueReference}`.
                 match mutability {
-                    Mutability::Mut => Ok(RsSnippet{
+                    Mutability::Mut => Ok(RsSnippet {
                         tokens: quote! {self: ::ctor::RvalueReference<#lifetime, Self>},
                         features: [arbitrary_self_types].into_iter().collect(),
-                }),
-                    Mutability::Const => Ok(RsSnippet{
+                    }),
+                    Mutability::Const => Ok(RsSnippet {
                         tokens: quote! {self: ::ctor::ConstRvalueReference<#lifetime, Self>},
                         features: [arbitrary_self_types].into_iter().collect(),
-                }),
+                    }),
                 }
             }
             RsTypeKind::Record { .. } => {
@@ -3650,7 +3648,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                         // Assert that function pointers in the IR either have static lifetime or
                         // no lifetime.
                         match get_lifetime() {
-                            Err(_) => (),  // No lifetime
+                            Err(_) => (), // No lifetime
                             Ok(lifetime) => assert_eq!(lifetime.0.as_ref(), "static"),
                         }
 
@@ -4078,7 +4076,8 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
 
     let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
     let return_stmt = if !is_return_value_c_abi_compatible {
-        // Explicitly use placement `new` so that we get guaranteed copy elision in C++17.
+        // Explicitly use placement `new` so that we get guaranteed copy elision in
+        // C++17.
         let out_param = &param_idents[0];
         quote! {new(#out_param) auto(#return_expr)}
     } else {
