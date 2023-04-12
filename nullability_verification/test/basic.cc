@@ -100,6 +100,71 @@ TEST(PointerNullabilityTest, DerefUnknownPtrWithoutACheck) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, DoubleDereference) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int** p) {
+      *p;
+      **p;
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int** _Nonnull p) {
+      *p;
+      **p;
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* _Nonnull* p) {
+      *p;
+      **p;
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* _Nonnull* _Nonnull p) {
+      *p;
+      **p;
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int** _Nullable p) {
+      *p;   // [[unsafe]]
+      **p;  // [[unsafe]]
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* _Nullable* p) {
+      *p;
+      **p;  // [[unsafe]]
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* _Nullable* _Nullable p) {
+      *p;   // [[unsafe]]
+      **p;  // [[unsafe]]
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* _Nullable* _Nonnull p) {
+      *p;
+      **p;  // [[unsafe]]
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* _Nonnull* _Nullable p) {
+      *p;   // [[unsafe]]
+      **p;  // [[unsafe]]
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, ArrowOperatorOnNonNullPtr) {
   // (->) member field
   EXPECT_TRUE(checkDiagnostics(R"cc(
