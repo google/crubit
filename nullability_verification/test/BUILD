@@ -109,6 +109,16 @@ cc_test(
 )
 
 cc_test(
+    name = "return_statements",
+    srcs = ["return_statements.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "templates",
     srcs = ["templates.cc"],
     deps = [
