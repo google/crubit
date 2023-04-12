@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use serde::Serialize;
@@ -110,16 +111,19 @@ macro_rules! ensure {
     };
 }
 
-pub trait ErrorReporting {
-    fn insert(&mut self, error: &arc_anyhow::Error);
+pub trait ErrorReporting: std::fmt::Debug {
+    /// Inserts a new error. Uses interior mutability so that references can be
+    /// shared freely.
+    fn insert(&self, error: &arc_anyhow::Error);
     fn serialize_to_vec(&self) -> anyhow::Result<Vec<u8>>;
 }
 
 /// A null [`ErrorReporting`] strategy.
+#[derive(Debug)]
 pub struct IgnoreErrors;
 
 impl ErrorReporting for IgnoreErrors {
-    fn insert(&mut self, _error: &arc_anyhow::Error) {}
+    fn insert(&self, _error: &arc_anyhow::Error) {}
 
     fn serialize_to_vec(&self) -> anyhow::Result<Vec<u8>> {
         Ok(vec![])
@@ -127,10 +131,11 @@ impl ErrorReporting for IgnoreErrors {
 }
 
 /// An aggregate of zero or more errors.
-#[derive(Default, Serialize)]
+#[derive(Default, Debug)]
 pub struct ErrorReport {
-    #[serde(flatten)]
-    map: BTreeMap<Cow<'static, str>, ErrorReportEntry>,
+    // The interior mutability / borrow_mut will never panic: it is never borrowed for longer than
+    // a method call, and the methods do not call each other.
+    map: RefCell<BTreeMap<Cow<'static, str>, ErrorReportEntry>>,
 }
 
 impl ErrorReport {
@@ -140,21 +145,29 @@ impl ErrorReport {
 }
 
 impl ErrorReporting for ErrorReport {
-    fn insert(&mut self, error: &arc_anyhow::Error) {
+    fn insert(&self, error: &arc_anyhow::Error) {
         if let Some(error) = error.downcast_ref::<AttributedError>() {
             let sample_message = if error.message != error.fmt { &*error.message } else { "" };
-            self.map.entry(error.fmt.clone()).or_default().add(Cow::Borrowed(sample_message));
+            self.map
+                .borrow_mut()
+                .entry(error.fmt.clone())
+                .or_default()
+                .add(Cow::Borrowed(sample_message));
         } else {
-            self.map.entry(Cow::Borrowed("{}")).or_default().add(Cow::Owned(format!("{error}")));
+            self.map
+                .borrow_mut()
+                .entry(Cow::Borrowed("{}"))
+                .or_default()
+                .add(Cow::Owned(format!("{error}")));
         }
     }
 
     fn serialize_to_vec(&self) -> anyhow::Result<Vec<u8>> {
-        Ok(serde_json::to_vec(self)?)
+        Ok(serde_json::to_vec(&*self.map.borrow())?)
     }
 }
 
-#[derive(Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 struct ErrorReportEntry {
     count: u64,
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -326,7 +339,7 @@ mod tests {
 
     #[test]
     fn error_report() {
-        let mut report = ErrorReport::new();
+        let report = ErrorReport::new();
         report.insert(&anyhow!("abc{}", "def"));
         report.insert(&anyhow!("abc{}", "123"));
         report.insert(&anyhow!("error code: {}", 65535));
@@ -336,7 +349,7 @@ mod tests {
         report.insert(&anyhow::Error::msg("not attributed").into());
 
         assert_eq!(
-            serde_json::to_string_pretty(&report).unwrap(),
+            serde_json::to_string_pretty(&*report.map.borrow()).unwrap(),
             r#"{
   "abc{}": {
     "count": 2,

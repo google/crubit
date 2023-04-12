@@ -76,22 +76,15 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
         std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
     catch_unwind(|| {
         // It is ok to abort here.
-        let mut error_report;
-        let mut ignore_errors;
-        let errors: &mut dyn ErrorReporting = if generate_error_report {
-            error_report = ErrorReport::new();
-            &mut error_report
-        } else {
-            ignore_errors = IgnoreErrors;
-            &mut ignore_errors
-        };
+        let errors: Rc<dyn ErrorReporting> =
+            if generate_error_report { Rc::new(ErrorReport::new()) } else { Rc::new(IgnoreErrors) };
         let Bindings { rs_api, rs_api_impl } = generate_bindings(
             json,
             crubit_support_path,
             &clang_format_exe_path,
             &rustfmt_exe_path,
             &rustfmt_config_path,
-            errors,
+            errors.clone(),
             generate_source_loc_doc_comment,
         )
         .unwrap();
@@ -114,6 +107,8 @@ trait BindingsGenerator {
     fn ir(&self) -> Rc<IR>;
     #[salsa::input]
     fn generate_source_loc_doc_comment(&self) -> SourceLocationDocComment;
+    #[salsa::input]
+    fn errors(&self) -> Rc<dyn ErrorReporting>;
 
     fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
 
@@ -160,7 +155,7 @@ fn generate_bindings(
     clang_format_exe_path: &OsStr,
     rustfmt_exe_path: &OsStr,
     rustfmt_config_path: &OsStr,
-    errors: &mut dyn ErrorReporting,
+    errors: Rc<dyn ErrorReporting>,
     generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<Bindings> {
     let ir = Rc::new(deserialize_ir(json)?);
@@ -2060,11 +2055,7 @@ fn bit_padding(padding_size_in_bits: usize) -> TokenStream {
 
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
-fn generate_record(
-    db: &Database,
-    record: &Rc<Record>,
-    errors: &mut dyn ErrorReporting,
-) -> Result<GeneratedItem> {
+fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> {
     let ir = db.ir();
     let crate_root_path = crate_root_path_tokens(&ir);
     let ident = make_rs_ident(record.rs_name.as_ref());
@@ -2362,7 +2353,7 @@ fn generate_record(
             let item = ir.find_decl(*id).with_context(|| {
                 format!("Failed to look up `record.child_item_ids` for {:?}", record)
             })?;
-            generate_item(db, item, errors)
+            generate_item(db, item)
         })
         .collect::<Result<Vec<_>>>()?;
 
@@ -2560,16 +2551,12 @@ fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<Generate
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.
-fn generate_unsupported(
-    item: &UnsupportedItem,
-    errors: &mut dyn ErrorReporting,
-    generate_source_loc_doc_comment: SourceLocationDocComment,
-) -> Result<GeneratedItem> {
-    errors.insert(item.cause());
+fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<GeneratedItem> {
+    db.errors().insert(item.cause());
 
     let source_loc = item.source_loc();
     let source_loc = match &source_loc {
-        Some(loc) if generate_source_loc_doc_comment == SourceLocationDocComment::Enabled => {
+        Some(loc) if db.generate_source_loc_doc_comment() == SourceLocationDocComment::Enabled => {
             loc.as_ref()
         }
         _ => "",
@@ -2594,11 +2581,7 @@ fn generate_comment(comment: &Comment) -> Result<GeneratedItem> {
     Ok(quote! { __COMMENT__ #text }.into())
 }
 
-fn generate_namespace(
-    db: &Database,
-    namespace: &Namespace,
-    errors: &mut dyn ErrorReporting,
-) -> Result<GeneratedItem> {
+fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedItem> {
     let ir = db.ir();
     let mut items = vec![];
     let mut thunks = vec![];
@@ -2610,7 +2593,7 @@ fn generate_namespace(
         let item = ir.find_decl(*item_id).with_context(|| {
             format!("Failed to look up namespace.child_item_ids for {:?}", namespace)
         })?;
-        let generated = generate_item(db, item, errors)?;
+        let generated = generate_item(db, item)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
@@ -2743,11 +2726,7 @@ impl PartialEq for GeneratedItem {
     }
 }
 
-fn generate_item(
-    db: &Database,
-    item: &Item,
-    errors: &mut dyn ErrorReporting,
-) -> Result<GeneratedItem> {
+fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
     let ir = db.ir();
     if let Some(owning_target) = item.owning_target() {
         if !ir.is_current_target(owning_target) {
@@ -2758,21 +2737,19 @@ fn generate_item(
     let generated_item = match item {
         Item::Func(func) => match db.generate_func(func.clone()) {
             Err(e) => generate_unsupported(
+                db,
                 &UnsupportedItem::new_with_message(&ir, func, format!("{e}")),
-                errors,
-                db.generate_source_loc_doc_comment(),
             )?,
             Ok(None) => GeneratedItem::default(),
             Ok(Some((item, function_id))) => {
                 if overloaded_funcs.contains(&function_id) {
                     generate_unsupported(
+                        db,
                         &UnsupportedItem::new_with_message(
                             &ir,
                             func,
                             "Cannot generate bindings for overloaded function",
                         ),
-                        errors,
-                        db.generate_source_loc_doc_comment(),
                     )?
                 } else {
                     (*item).clone()
@@ -2780,29 +2757,26 @@ fn generate_item(
             }
         },
         Item::IncompleteRecord(incomplete_record) => generate_incomplete_record(incomplete_record)?,
-        Item::Record(record) => generate_record(db, record, errors)?,
+        Item::Record(record) => generate_record(db, record)?,
         Item::Enum(enum_) => generate_enum(db, enum_)?,
         Item::TypeAlias(type_alias) => {
             if type_alias.enclosing_record_id.is_some() {
                 // TODO(b/200067824): support nested type aliases.
                 generate_unsupported(
+                    db,
                     &UnsupportedItem::new_with_message(
                         &ir,
                         type_alias,
                         "Typedefs nested in classes are not supported yet",
                     ),
-                    errors,
-                    db.generate_source_loc_doc_comment(),
                 )?
             } else {
                 generate_type_alias(db, type_alias)?
             }
         }
-        Item::UnsupportedItem(unsupported) => {
-            generate_unsupported(unsupported, errors, db.generate_source_loc_doc_comment())?
-        }
+        Item::UnsupportedItem(unsupported) => generate_unsupported(db, unsupported)?,
         Item::Comment(comment) => generate_comment(comment)?,
-        Item::Namespace(namespace) => generate_namespace(db, namespace, errors)?,
+        Item::Namespace(namespace) => generate_namespace(db, namespace)?,
         Item::UseMod(use_mod) => {
             let UseMod { path, mod_name, .. } = &**use_mod;
             let mod_name = make_rs_ident(&mod_name.identifier);
@@ -2822,6 +2796,7 @@ fn generate_item(
             let feature_strings: Vec<&str> =
                 missing_features.into_iter().map(|feature| feature.aspect_hint()).collect();
             return generate_unsupported(
+                db,
                 &UnsupportedItem::new_with_message(
                     &ir,
                     item,
@@ -2830,8 +2805,6 @@ fn generate_item(
                         feature_strings.join(", ")
                     ),
                 ),
-                errors,
-                db.generate_source_loc_doc_comment(),
             );
         }
     }
@@ -2861,12 +2834,13 @@ fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>>> {
 fn generate_bindings_tokens(
     ir: Rc<IR>,
     crubit_support_path: &str,
-    errors: &mut dyn ErrorReporting,
+    errors: Rc<dyn ErrorReporting>,
     generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<BindingsTokens> {
     let mut db = Database::default();
     db.set_ir(ir.clone());
     db.set_generate_source_loc_doc_comment(generate_source_loc_doc_comment);
+    db.set_errors(errors);
     let mut items = vec![];
     let mut thunks = vec![];
     let mut thunk_impls = vec![
@@ -2897,7 +2871,7 @@ fn generate_bindings_tokens(
     for top_level_item_id in ir.top_level_item_ids() {
         let item =
             ir.find_decl(*top_level_item_id).context("Failed to look up ir.top_level_item_ids")?;
-        let generated = generate_item(&db, item, errors)?;
+        let generated = generate_item(&db, item)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
@@ -4162,7 +4136,7 @@ mod tests {
         super::generate_bindings_tokens(
             Rc::new(ir),
             "crubit/rs_bindings_support",
-            &mut IgnoreErrors,
+            Rc::new(IgnoreErrors),
             SourceLocationDocComment::Enabled,
         )
     }
@@ -8879,14 +8853,16 @@ mod tests {
 
     #[test]
     fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
+        let mut db = Database::default();
+        db.set_errors(Rc::new(ErrorReport::new()));
+        db.set_generate_source_loc_doc_comment(SourceLocationDocComment::Enabled);
         let actual = generate_unsupported(
+            &db,
             &UnsupportedItem::new_with_message(
                 &make_ir_from_items([])?,
                 &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
                 "unsupported_message",
             ),
-            &mut ErrorReport::new(),
-            SourceLocationDocComment::Enabled,
         )?;
         let expected = "Generated from: google3/some/header;l=1\nError while generating bindings for item 'test_item':\nunsupported_message";
         assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
@@ -8898,14 +8874,16 @@ mod tests {
     /// For these, we omit the mention of the location.
     #[test]
     fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
+        let mut db = Database::default();
+        db.set_errors(Rc::new(ErrorReport::new()));
+        db.set_generate_source_loc_doc_comment(SourceLocationDocComment::Enabled);
         let actual = generate_unsupported(
+            &db,
             &UnsupportedItem::new_with_message(
                 &make_ir_from_items([])?,
                 &TestItem { source_loc: None },
                 "unsupported_message",
             ),
-            &mut ErrorReport::new(),
-            SourceLocationDocComment::Enabled,
         )?;
         let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
         assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
@@ -8914,14 +8892,16 @@ mod tests {
 
     #[test]
     fn test_generate_unsupported_item_with_source_loc_disabled() -> Result<()> {
+        let mut db = Database::default();
+        db.set_errors(Rc::new(ErrorReport::new()));
+        db.set_generate_source_loc_doc_comment(SourceLocationDocComment::Disabled);
         let actual = generate_unsupported(
+            &db,
             &UnsupportedItem::new_with_message(
                 &make_ir_from_items([])?,
                 &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
                 "unsupported_message",
             ),
-            &mut ErrorReport::new(),
-            SourceLocationDocComment::Disabled,
         )?;
         let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
         assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
