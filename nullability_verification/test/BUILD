@@ -69,6 +69,16 @@ cc_test(
 )
 
 cc_test(
+    name = "constructors",
+    srcs = ["constructors.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "fields",
     srcs = ["fields.cc"],
     deps = [
