@@ -109,6 +109,16 @@ cc_test(
 )
 
 cc_test(
+    name = "templates",
+    srcs = ["templates.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "this_pointer",
     srcs = ["this_pointer.cc"],
     deps = [
