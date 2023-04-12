@@ -86,6 +86,35 @@ fn main() -> anyhow::Result<()> {
     // Unicode.  This seems okay.
     let args = std::env::args().collect_vec();
 
+    // Replace `"${pwd}"` in the `OUT_DIR` environment variable.
+    //
+    // Concurrent access to the environment variables may not be 100% safe
+    // (see https://doc.rust-lang.org/std/env/fn.set_var.html) but it should be okay
+    // from `main`, when there are no other threads yet.
+    //
+    // TODO(b/277376088): Substitution of `"${pwd}"` should not be done here
+    // (because of the requirement to keep Bazel-specific / GN-specific / etc
+    // things outside of `cc_bindings_from_rs`;  the requirement isn't met here
+    // because `"${pwd}"` handling is needed because of Bazel integration).
+    //
+    // TODO(https://rust-lang.github.io/rfcs/2295-os-str-pattern.html): Once find-and-replace is
+    // possible for `OsStr`, stop panicking when working with non-Unicode paths.
+    {
+        use std::env::{self, VarError};
+        const OUT_DIR: &str = "OUT_DIR";
+        match env::var(OUT_DIR) {
+            Err(VarError::NotPresent) => (), // nothing to do
+            Err(VarError::NotUnicode { .. }) => panic!("{OUT_DIR} is not unicode"),
+            Ok(value) => {
+                let value = value.replace(
+                    "${pwd}",
+                    env::current_dir()?.to_str().expect("Current directory is not unicode"),
+                );
+                env::set_var(OUT_DIR, value);
+            }
+        }
+    }
+
     run_with_cmdline_args(&args)
         .map_err(|anyhow_err| match anyhow_err.downcast::<clap::Error>() {
             // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output and

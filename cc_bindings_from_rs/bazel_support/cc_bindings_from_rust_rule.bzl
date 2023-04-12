@@ -18,6 +18,7 @@ load(
 # buildifier: disable=bzl-visibility
 load(
     "@rules_rust//rust/private:rustc.bzl",
+    "collect_deps",
     "collect_inputs",
     "construct_arguments",
 )
@@ -154,24 +155,29 @@ def _cc_bindings_from_rust_rule_impl(ctx):
 
     toolchain = find_toolchain(ctx)
     crate_info = ctx.attr.crate[CrateInfo]
-    dep_info = ctx.attr.crate[DepInfo]
     cc_toolchain = find_cpp_toolchain(ctx)
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
         cc_toolchain = cc_toolchain,
     )
 
+    dep_info, build_info, linkstamps = collect_deps(
+        deps = crate_info.deps,
+        proc_macro_deps = crate_info.proc_macro_deps,
+        aliases = crate_info.aliases,
+    )
+
     compile_inputs, out_dir, build_env_files, build_flags_files, linkstamp_outs, ambiguous_libs = collect_inputs(
         ctx = ctx,
         file = ctx.file,
         files = ctx.files,
-        linkstamps = depset([]),
+        linkstamps = linkstamps,
         toolchain = toolchain,
         cc_toolchain = cc_toolchain,
         feature_configuration = feature_configuration,
         crate_info = crate_info,
         dep_info = dep_info,
-        build_info = None,
+        build_info = build_info,
         stamp = False,
         experimental_use_cc_common_link = False,
     )
