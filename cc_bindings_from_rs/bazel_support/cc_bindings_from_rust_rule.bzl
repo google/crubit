@@ -38,6 +38,18 @@ load(
 )
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain", "use_cpp_toolchain")
 
+# Targets which do not receive C++ bindings at all.
+targets_to_remove = [
+]
+
+CcBindingsFromRustInfo = provider(
+    doc = ("A provider that contains compile and linking information for the generated" +
+           " `.rs` and `.h` files."),
+    fields = {
+        "cc_info": "A CcInfo provider for the API projection.",
+    },
+)
+
 def _generate_bindings(ctx, basename, inputs, rustc_args, rustc_env):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
@@ -127,13 +139,13 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, linking_contexts):
         linking_context = linking_context,
     )
 
-def _compile_rs_out_file(ctx, rs_out_file, target_crate):
+def _compile_rs_out_file(ctx, rs_out_file, target):
     """Compiles the generated "..._cc_api_impl.rs" file.
 
     Args:
       ctx: The rule context.
       rs_out_file: The generated "..._cc_api_impl.rs" file
-      target_crate: The value of `ctx.attr.crate`
+      target: The target crate, e.g. as provided to `ctx.attr.crate`.
 
     Returns:
       LinkingContext for linking in the generated "..._cc_api_impl.rs".
@@ -145,16 +157,27 @@ def _compile_rs_out_file(ctx, rs_out_file, target_crate):
             cc_info = dep[CcInfo],
             build_info = None,
         )
-        for dep in ctx.attr._rs_deps_for_bindings + [target_crate]
+        for dep in ctx.attr._rs_deps_for_bindings + [target]
     ]
-    dep_variant_info = compile_rust(ctx, ctx.attr, rs_out_file, [], deps)
+    dep_variant_info = compile_rust(
+        ctx,
+        attr = ctx.rule.attr,
+        src = rs_out_file,
+        extra_srcs = [],
+        deps = deps,
+    )
     return dep_variant_info.cc_info.linking_context
 
-def _cc_bindings_from_rust_rule_impl(ctx):
-    basename = ctx.attr.crate.label.name
+def _cc_bindings_from_rust_aspect_impl(target, ctx):
+    basename = target.label.name
+
+    if CrateInfo not in target:
+        return []
+    if str(target.label) in targets_to_remove:
+        return []
 
     toolchain = find_toolchain(ctx)
-    crate_info = ctx.attr.crate[CrateInfo]
+    crate_info = target[CrateInfo]
     cc_toolchain = find_cpp_toolchain(ctx)
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
@@ -184,7 +207,7 @@ def _cc_bindings_from_rust_rule_impl(ctx):
 
     args, env = construct_arguments(
         ctx = ctx,
-        attr = ctx.attr,
+        attr = ctx.rule.attr,
         file = ctx.file,
         toolchain = toolchain,
         tool_path = toolchain.rustc.path,
@@ -216,29 +239,25 @@ def _cc_bindings_from_rust_rule_impl(ctx):
         env,
     )
 
-    impl_linking_context = _compile_rs_out_file(ctx, rs_out_file, ctx.attr.crate)
+    impl_linking_context = _compile_rs_out_file(ctx, rs_out_file, target)
 
-    target_cc_info = ctx.attr.crate[CcInfo]
+    target_cc_info = target[CcInfo]
     target_crate_linking_context = target_cc_info.linking_context
     cc_info = _make_cc_info_for_h_out_file(
         ctx,
         h_out_file,
         [target_crate_linking_context, impl_linking_context],
     )
-    return [cc_info]
+    return [
+        CcBindingsFromRustInfo(cc_info = cc_info),
+        OutputGroupInfo(out = depset([h_out_file])),
+    ]
 
-# TODO(b/257283134): Register actions via an `aspect`, rather than directly
-# from the `rule` implementation?
-cc_bindings_from_rust = rule(
-    implementation = _cc_bindings_from_rust_rule_impl,
-    doc = "Rule for generating C++ bindings for a Rust library.",
+cc_bindings_from_rust_aspect = aspect(
+    implementation = _cc_bindings_from_rust_aspect_impl,
+    doc = "Aspect for generating C++ bindings for a Rust library.",
+    attr_aspects = ["deps"],
     attrs = {
-        "crate": attr.label(
-            doc = "Rust library to generate C++ bindings for",
-            allow_files = False,
-            mandatory = True,
-            providers = [CrateInfo],
-        ),
         "_cc_bindings_from_rs_tool": attr.label(
             default = Label("//cc_bindings_from_rs:cc_bindings_from_rs_tool"),
             executable = True,
@@ -274,7 +293,7 @@ cc_bindings_from_rust = rule(
             ],
         ),
         "_rustfmt": attr.label(
-            default = "//nowhere/llvm/rust:main_sysroot/bin/rustfmt",
+            default = "//nowhere/llvm/rust:genrustfmt_for_crubit_aspects",
             executable = True,
             allow_single_file = True,
             cfg = "exec",
@@ -288,4 +307,21 @@ cc_bindings_from_rust = rule(
         "@rules_rust//rust:toolchain",
     ] + use_cpp_toolchain(),
     fragments = ["cpp"],
+)
+
+def _cc_bindings_from_rust_rule_impl(ctx):
+    return ctx.attr.crate[CcBindingsFromRustInfo].cc_info
+
+cc_bindings_from_rust = rule(
+    implementation = _cc_bindings_from_rust_rule_impl,
+    doc = "Rule for generating C++ bindings for a Rust library.",
+    attrs = {
+        "crate": attr.label(
+            doc = "Rust library to generate C++ bindings for",
+            allow_files = False,
+            mandatory = True,
+            providers = [CcBindingsFromRustInfo],
+            aspects = [cc_bindings_from_rust_aspect],
+        ),
+    },
 )

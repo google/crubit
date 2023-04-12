@@ -11,8 +11,42 @@ load(
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
+    "CcBindingsFromRustInfo",
+    "cc_bindings_from_rust_aspect",
 )
+
+ActionsInfo = provider(
+    doc = ("A provider that contains compile and linking information for the generated" +
+           " `.cc` and `.rs` files."),
+    fields = {"actions": "List[Action]: actions registered by the underlying target."},
+)
+
+def _attach_aspect_impl(ctx):
+    return [ctx.attr.dep[CcBindingsFromRustInfo], ActionsInfo(actions = ctx.attr.dep.actions)]
+
+attach_aspect = rule(
+    implementation = _attach_aspect_impl,
+    attrs = {
+        "dep": attr.label(aspects = [cc_bindings_from_rust_aspect]),
+    },
+)
+
+def _find_actions_by_mnemonic(env, expected_mnemonic):
+    """Searches `target_actions` for all actions with `expected_mnemonic`.
+
+    Args:
+      env: A test environment struct received from `analysistest.begin(ctx)`
+      expected_mnemonic: string to be compared against `Action.mnemonic`
+                         (see https://bazel.build/rules/lib/Action#mnemonic)
+
+    Returns:
+      Actions  - The actions with the given mnemonic.
+    """
+    return [
+        a
+        for a in analysistest.target_under_test(env)[ActionsInfo].actions
+        if a.mnemonic == expected_mnemonic
+    ]
 
 def _find_action_by_mnemonic(env, expected_mnemonic):
     """Searches `target_actions` for a single one with `expected_mnemonic`.
@@ -28,12 +62,9 @@ def _find_action_by_mnemonic(env, expected_mnemonic):
     Returns:
       Action  - The action with the given mnemonic.
     """
-    matching_actions = [
-        a
-        for a in analysistest.target_actions(env)
-        if a.mnemonic == expected_mnemonic
-    ]
-    asserts.equals(env, 1, len(matching_actions))
+    matching_actions = _find_actions_by_mnemonic(env, expected_mnemonic)
+    if len(matching_actions) != 1:
+        fail("Expected exactly one action matching %s, got %d: %r" % (expected_mnemonic, len(matching_actions), matching_actions))
     return matching_actions[0]
 
 def _remove_ext(f):
@@ -99,8 +130,8 @@ def _header_generation_test_impl(ctx):
     generate_action_inputs = generate_action.inputs.to_list()
     asserts.true(
         env,
-        "rusty_lib_crate_root.rs" in [i.basename for i in generate_action_inputs],
-        "Expected to find `rusty_lib_crate_root.rs` in the action inputs, got {}.".format(
+        "rusty_lib.rs" in [i.basename for i in generate_action_inputs],
+        "Expected to find `rusty_lib.rs` in the action inputs, got {}.".format(
             generate_action_inputs,
         ),
     )
@@ -125,10 +156,7 @@ def _header_generation_test_impl(ctx):
     generated_impl = generated_outputs[1]
     asserts.equals(env, "rusty_lib_cc_api_impl.rs", generated_impl.basename)
 
-    # Verify that `generated_impl` is an input for `rustc_action`.
-    rustc_action = _find_action_by_mnemonic(env, "Rustc")
-    rustc_input_paths = [i.path for i in rustc_action.inputs.to_list()]
-    asserts.true(env, generated_impl.path in rustc_input_paths)
+    [rustc_action] = [action for action in _find_actions_by_mnemonic(env, "Rustc") if generated_impl.path in [input.path for input in action.inputs.to_list()]]
 
     # Extract `rustc_rlib` output (and verify it has `rlib` extension).
     rustc_outputs = rustc_action.outputs.to_list()
@@ -138,8 +166,8 @@ def _header_generation_test_impl(ctx):
 
     # Verify that `cc_info.compilation_context.direct_headers` contains `generated_header`.
     target_under_test = analysistest.target_under_test(env)
-    asserts.true(env, CcInfo in target_under_test)
-    cc_info = target_under_test[CcInfo]
+    asserts.true(env, CcBindingsFromRustInfo in target_under_test)
+    cc_info = target_under_test[CcBindingsFromRustInfo].cc_info
     asserts.true(env, len(cc_info.compilation_context.direct_headers) == 1)
     cc_info_header = cc_info.compilation_context.direct_headers[0]
     asserts.equals(env, generated_header, cc_info_header)
@@ -167,8 +195,8 @@ def _cmdline_flags_test_impl(ctx):
 
     asserts.true(
         env,
-        _has_arg_with_suffix(cmdline, "rusty_lib_crate_root.rs"),
-        "Expected to find `rusty_lib_crate_root.rs` on the command line, got {}.".format(cmdline),
+        _has_arg_with_suffix(cmdline, "rusty_lib.rs"),
+        "Expected to find `rusty_lib.rs` on the command line, got {}.".format(cmdline),
     )
     asserts.true(
         env,
@@ -197,7 +225,7 @@ cmdline_flags_test = analysistest.make(_cmdline_flags_test_impl)
 def _tests():
     rust_library(
         name = "rusty_lib",
-        srcs = ["rusty_lib_crate_root.rs"],
+        srcs = ["rusty_lib.rs", "other_file.rs"],
         deps = [":emptylib"],
         tags = ["manual"],
     )
@@ -206,12 +234,7 @@ def _tests():
         name = "emptylib",
         srcs = ["empty.rs"],
     )
-
-    cc_bindings_from_rust(
-        name = "rusty_lib_bindings",
-        crate = ":rusty_lib",
-        tags = ["manual"],
-    )
+    attach_aspect(name = "rusty_lib_bindings", dep = ":rusty_lib")
 
     header_generation_test(
         name = "header_generation_test",

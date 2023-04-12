@@ -20,7 +20,7 @@ alias(
         ":is_legacy_rust_toolchain": "cc_bindings_from_rs_legacy_toolchain_runner.sar",
         "//conditions:default": ":cc_bindings_from_rs",
     }),
-    visibility = ["//:__subpackages__"],
+    visibility = ["//visibility:public"],
 )
 
 # The current Rust toolchain uses shared libraries for rustc_driver and friends, and we don't have

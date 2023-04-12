@@ -5,7 +5,7 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "rs_char",
     hdrs = ["rs_char.h"],
-    visibility = ["//:__subpackages__"],
+    visibility = ["//visibility:public"],
 
     # It is important to be thoughtful when adding new dependencies for `char`
     # (and possibly other targets in this BUILD file).  Using mature Abseil APIs
