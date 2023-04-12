@@ -29,6 +29,16 @@ cc_library(
 )
 
 cc_test(
+    name = "assert_nullability_test",
+    srcs = ["assert_nullability_test.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "basic",
     srcs = ["basic.cc"],
     deps = [
