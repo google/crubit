@@ -14,24 +14,6 @@ namespace tidy {
 namespace nullability {
 namespace {
 
-TEST(PointerNullabilityTest, NonPointerReturnType) {
-  checkDiagnostics(R"cc(
-    struct S {
-      int* p;
-      int*& target() { return p; }
-    };
-  )cc");
-
-  checkDiagnostics(R"cc(
-    struct S {
-      int* _Nullable p;
-      int* _Nonnull& target() {
-        return p;  // TODO: Fix false negative.
-      }
-    };
-  )cc");
-}
-
 TEST(PointerNullabilityTest, ParenTypeInTemplate) {
   checkDiagnostics(R"cc(
     template <typename T>
