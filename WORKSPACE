@@ -60,6 +60,24 @@ crates_repository(
         "anyhow": crate.spec(
             version = ">0.0.0",
         ),
+        "clap": crate.spec(
+            features = [
+                "atty",
+                "clap_derive",
+                "color",
+                "derive",
+                "env",
+                "once_cell",
+                "std",
+                "strsim",
+                "suggestions",
+                "termcolor",
+            ],
+            version = ">3.0.0",
+        ),
+        "either": crate.spec(
+            version = ">1.0.0",
+        ),
         "flagset": crate.spec(
             version = ">0.0.0",
         ),

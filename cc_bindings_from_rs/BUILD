@@ -40,7 +40,6 @@ rust_binary(
     ],
     crate_root = "cc_bindings_from_rs.rs",
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
-    experimental_use_cc_common_link = 0,
     # TODO(b/262583967): Remove once we roll out the bazel-built toolchain.
     tags = [
         "manual",
@@ -68,7 +67,6 @@ rust_binary(
 sh_binary(
     name = "cc_bindings_from_rs_legacy_toolchain_runner",
     srcs = ["cc_bindings_from_rs_legacy_toolchain_runner.sh"],
-    bash_version = "system",
     data = [
         ":cc_bindings_from_rs",
         "//third_party/unsupported_toolchains/rust/toolchains/nightly:rustc_driver_libs",
@@ -88,7 +86,6 @@ rust_test(
     }),
 
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
-    experimental_use_cc_common_link = 0,
     rustc_flags = select({
         ":is_legacy_rust_toolchain": ["--cfg=legacy_rust_toolchain"],
         "llvm_unstable_but_not_legacy_rust_toolchain": ["--cfg=llvm_unstable"],
