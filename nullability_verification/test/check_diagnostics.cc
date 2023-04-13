@@ -24,9 +24,6 @@ constexpr char kPreamble[] = R"cc(
 
   template <NullabilityKind... NK, typename T>
   void __assert_nullability(const T&);
-
-  template <typename T>
-  T value();
 )cc";
 
 bool checkDiagnostics(llvm::StringRef SourceCode) {
