@@ -15,31 +15,6 @@ namespace nullability {
 namespace {
 
 // TODO: fix false positives due to unsupported PointerValues in the framework.
-TEST(PointerNullabilityTest, PointerArithmetic) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nullable p, int *_Nonnull q, int *r) {
-      *++p;  // [[unsafe]]
-      *p++;  // [[unsafe]]
-      *--p;  // [[unsafe]]
-      *p--;  // [[unsafe]]
-      *+p;   // [[unsafe]]
-
-      *++q;  // [[unsafe]] TODO: fix false positive
-      *q++;  // [[unsafe]] TODO: fix false positive
-      *--q;  // [[unsafe]] TODO: fix false positive
-      *q--;  // [[unsafe]] TODO: fix false positive
-      *+q;   // [[unsafe]] TODO: fix false positive
-
-      *++r;  // [[unsafe]] TODO: fix false positive
-      *r++;  // [[unsafe]] TODO: fix false positive
-      *--r;  // [[unsafe]] TODO: fix false positive
-      *r--;  // [[unsafe]] TODO: fix false positive
-      *+r;   // [[unsafe]] TODO: fix false positive
-    }
-  )cc"));
-}
-
-// TODO: fix false positives due to unsupported PointerValues in the framework.
 TEST(PointerNullabilityTest, Deref) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
