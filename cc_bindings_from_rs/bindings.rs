@@ -262,15 +262,6 @@ impl FullyQualifiedName {
     }
 }
 
-fn format_ret_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet> {
-    let void = Ok(CcSnippet::new(quote! { void }));
-    match ty.kind() {
-        ty::TyKind::Never => void,                            // `!`
-        ty::TyKind::Tuple(types) if types.len() == 0 => void, // `()`
-        _ => format_ty_for_cc(input, ty),
-    }
-}
-
 /// Whether functions using `extern "C"` ABI can safely handle values of type
 /// `ty` (e.g. when passing by value arguments or return values of such type).
 fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
@@ -329,11 +320,29 @@ fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
     }
 }
 
+/// Location where a type is used.
+enum TypeLocation {
+    /// The top-level return type.
+    ///
+    /// The "top-level" part can be explained by looking at an example of `fn
+    /// foo() -> *const T`:
+    /// - The top-level return type `*const T` is in the `FnReturn` location
+    /// - The nested pointee type `T` is in the `Other` location
+    FnReturn,
+
+    /// Other location (e.g. pointee type, field type, parameter type, etc.).
+    Other,
+}
+
 /// Formats `ty` into a `CcSnippet` that represents how the type should be
 /// spelled in a C++ declaration of a function parameter or field.
 //
 // TODO(b/259724276): This function's results should be memoized.
-fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet> {
+fn format_ty_for_cc<'tcx>(
+    input: &Input<'tcx>,
+    ty: Ty<'tcx>,
+    location: TypeLocation,
+) -> Result<CcSnippet> {
     fn cstdint(tokens: TokenStream) -> CcSnippet {
         CcSnippet::with_include(tokens, CcInclude::cstdint())
     }
@@ -341,14 +350,22 @@ fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet
         CcSnippet::new(tokens)
     }
     Ok(match ty.kind() {
-        ty::TyKind::Never => {
-            // TODO(b/254507801): Maybe translate into `crubit::Never`?
-            bail!("The never type `!` is only supported as a return type (b/254507801)");
+        ty::TyKind::Never => match location {
+            TypeLocation::FnReturn => keyword(quote! { void }),
+            TypeLocation::Other =>  {
+                // TODO(b/254507801): Maybe translate into `crubit::Never`?
+                bail!("The never type `!` is only supported as a return type (b/254507801)");
+            },
         }
         ty::TyKind::Tuple(types) => {
             if types.len() == 0 {
-                // TODO(b/254507801): Maybe translate into `crubit::Unit`?
-                bail!("`()` / `void` is only supported as a return type (b/254507801)");
+                match location {
+                    TypeLocation::FnReturn => keyword(quote! { void }),
+                    TypeLocation::Other =>  {
+                        // TODO(b/254507801): Maybe translate into `crubit::Unit`?
+                        bail!("`()` / `void` is only supported as a return type (b/254507801)");
+                    },
+                }
             } else {
                 // TODO(b/254099023): Add support for tuples.
                 bail!("Tuples are not supported yet: {} (b/254099023)", ty);
@@ -467,7 +484,7 @@ fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet
                 Mutability::Not => quote! { const },
             };
             let CcSnippet { tokens, mut prereqs } =
-                format_ty_for_cc(input, *ty).with_context(|| {
+                format_ty_for_cc(input, *ty, TypeLocation::Other).with_context(|| {
                     format!("Failed to format the pointee of the pointer type `{ty}`")
                 })?;
             prereqs.move_defs_to_fwd_decls();
@@ -481,6 +498,11 @@ fn format_ty_for_cc<'tcx>(input: &Input<'tcx>, ty: Ty<'tcx>) -> Result<CcSnippet
         // `CcPrerequisites::move_defs_to_fwd_decls`.
         _ => bail!("The following Rust type is not supported yet: {ty}"),
     })
+}
+
+fn format_ret_ty_for_cc<'tcx>(input: &Input<'tcx>, sig: &ty::FnSig<'tcx>) -> Result<CcSnippet> {
+    format_ty_for_cc(input, sig.output(), TypeLocation::FnReturn)
+        .context("Error formatting function return type")
 }
 
 /// Formats `ty` for Rust - to be used in `..._cc_api_impl.rs` (e.g. as a type
@@ -576,15 +598,13 @@ fn format_thunk_decl(
 
     let mut prereqs = CcPrerequisites::default();
     let sig = get_fn_sig(tcx, fn_def_id)?;
-    let main_api_ret_type = format_ret_ty_for_cc(input, sig.output())
-        .context("Error formatting function return type")?
-        .into_tokens(&mut prereqs);
+    let main_api_ret_type = format_ret_ty_for_cc(input, &sig)?.into_tokens(&mut prereqs);
 
     let mut thunk_params = sig
         .inputs()
         .iter()
         .map(|&ty| -> Result<TokenStream> {
-            let cc_type = format_ty_for_cc(input, ty)?.into_tokens(&mut prereqs);
+            let cc_type = format_ty_for_cc(input, ty, TypeLocation::Other)?.into_tokens(&mut prereqs);
             if is_c_abi_compatible_by_value(ty) {
                 Ok(quote! { #cc_type })
             } else {
@@ -774,9 +794,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         format_cc_ident(fn_name.as_str()).context("Error formatting function name")?;
 
     let mut main_api_prereqs = CcPrerequisites::default();
-    let main_api_ret_type = format_ret_ty_for_cc(input, sig.output())
-        .context("Error formatting function return type")?
-        .into_tokens(&mut main_api_prereqs);
+    let main_api_ret_type = format_ret_ty_for_cc(input, &sig)?.into_tokens(&mut main_api_prereqs);
     let is_static_method = match tcx.hir().get_by_def_id(local_def_id) {
         Node::ImplItem(impl_item) => match &impl_item.kind {
             ImplItemKind::Fn(fn_sig, _) => match fn_sig.decl.implicit_self {
@@ -803,7 +821,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
             .map(|(i, (name, &ty))| -> Result<Param> {
                 let cc_name = format_cc_ident(name.as_str())
                     .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{i}")).unwrap());
-                let cc_type = format_ty_for_cc(input, ty)?.into_tokens(&mut main_api_prereqs);
+                let cc_type = format_ty_for_cc(input, ty, TypeLocation::Other)?.into_tokens(&mut main_api_prereqs);
                 Ok(Param { cc_name, cc_type, ty })
             })
             .enumerate()
@@ -1180,7 +1198,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                 let field_ty = field_def.ty(tcx, substs_ref);
                 let size = get_layout(tcx, field_ty).map(|layout| layout.size().bytes());
                 let type_info = size.and_then(|size| {
-                    Ok(FieldTypeInfo { size, cc_type: format_ty_for_cc(input, field_ty)? })
+                    Ok(FieldTypeInfo { size, cc_type: format_ty_for_cc(input, field_ty, TypeLocation::Other)? })
                 });
                 let name = field_def.ident(tcx);
                 let cc_name = format_cc_ident(name.as_str())
@@ -4654,9 +4672,9 @@ pub mod tests {
     }
 
     /// `test_format_ret_ty_for_cc_successes` provides test coverage for cases
-    /// where `format_ret_ty_for_cc` returns an `Ok(...)`.  Additional
-    /// testcases are covered by `test_format_ty_for_cc_successes` (because
-    /// `format_ret_ty_for_cc` delegates most cases to `format_ty_for_cc`).
+    /// where `format_ty_for_cc` takes `TypeLocation::FnReturn` and returns
+    /// an `Ok(...)`.  Additional testcases are covered by
+    /// `test_format_ty_for_cc_successes`.
     #[test]
     fn test_format_ret_ty_for_cc_successes() {
         let testcases = [
@@ -4670,7 +4688,7 @@ pub mod tests {
         test_ty(&testcases, quote! {}, |desc, tcx, ty, expected| {
             let actual = {
                 let input = bindings_input_for_tests(tcx);
-                let cc_snippet = format_ret_ty_for_cc(&input, ty).unwrap();
+                let cc_snippet = format_ty_for_cc(&input, ty, TypeLocation::FnReturn).unwrap();
                 assert!(cc_snippet.prereqs.is_empty());
                 cc_snippet.tokens.to_string()
             };
@@ -4745,7 +4763,7 @@ pub mod tests {
              (expected_tokens, expected_include, expected_prereq_def, expected_prereq_fwd_decl)| {
                 let (actual_tokens, actual_prereqs) = {
                     let input = bindings_input_for_tests(tcx);
-                    let s = format_ty_for_cc(&input, ty).unwrap();
+                    let s = format_ty_for_cc(&input, ty, TypeLocation::Other).unwrap();
                     (s.tokens.to_string(), s.prereqs)
                 };
                 let (actual_includes, actual_prereq_defs, actual_prereq_fwd_decls) =
@@ -4921,7 +4939,7 @@ pub mod tests {
         };
         test_ty(&testcases, preamble, |desc, tcx, ty, expected_msg| {
             let input = bindings_input_for_tests(tcx);
-            let anyhow_err = format_ty_for_cc(&input, ty).unwrap_err();
+            let anyhow_err = format_ty_for_cc(&input, ty, TypeLocation::Other).unwrap_err();
             let actual_msg = format!("{anyhow_err:#}");
             assert_eq!(&actual_msg, *expected_msg, "{desc}");
         });
