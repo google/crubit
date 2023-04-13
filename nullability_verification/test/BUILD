@@ -2,16 +2,6 @@
 
 package(default_applicable_licenses = ["//:license"])
 
-cc_test(
-    name = "pointer_nullability_verification_test",
-    srcs = ["pointer_nullability_verification_test.cc"],
-    deps = [
-        ":check_diagnostics",
-        "@llvm-project//third-party/unittest:gtest",
-        "@llvm-project//third-party/unittest:gtest_main",
-    ],
-)
-
 cc_library(
     name = "check_diagnostics",
     testonly = 1,
