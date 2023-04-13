@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![allow(clippy::collapsible_else_if)]
 
-use arc_anyhow::{Context, Result};
+use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude, NamespaceQualifier};
 use error_report::{anyhow, bail, ensure, ErrorReport, ErrorReporting, IgnoreErrors};
 use ffi_types::*;
@@ -2568,11 +2568,7 @@ fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<Generat
         item.name.as_ref(),
         item.message()
     );
-    Ok(GeneratedItem {
-        item: quote! { __COMMENT__ #message },
-        crubit_features: Default::default(),
-        ..Default::default()
-    })
+    Ok(GeneratedItem { item: quote! { __COMMENT__ #message }, ..Default::default() })
 }
 
 /// Generates Rust source code for a given `Comment`.
@@ -2656,7 +2652,7 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
     })
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 struct GeneratedItem {
     item: TokenStream,
     thunks: TokenStream,
@@ -2664,29 +2660,11 @@ struct GeneratedItem {
     thunk_impls: TokenStream,
     assertions: TokenStream,
     features: BTreeSet<Ident>,
-
-    /// The Crubit features used by this snippet.
-    crubit_features: flagset::FlagSet<ir::CrubitFeature>,
 }
 
 impl From<TokenStream> for GeneratedItem {
     fn from(item: TokenStream) -> Self {
         GeneratedItem { item, ..Default::default() }
-    }
-}
-
-/// We manually define a `Default` impl so that the default features are
-/// experimental.
-impl Default for GeneratedItem {
-    fn default() -> Self {
-        Self {
-            item: Default::default(),
-            thunks: Default::default(),
-            thunk_impls: Default::default(),
-            assertions: Default::default(),
-            features: Default::default(),
-            crubit_features: ir::CrubitFeature::Experimental.into(),
-        }
     }
 }
 
@@ -2696,8 +2674,7 @@ impl PartialEq for GeneratedItem {
     fn eq(&self, other: &Self) -> bool {
         fn to_comparable_tuple(
             _x: &GeneratedItem,
-        ) -> (&BTreeSet<Ident>, String, String, String, String, flagset::FlagSet<ir::CrubitFeature>)
-        {
+        ) -> (&BTreeSet<Ident>, String, String, String, String) {
             // TokenStream doesn't implement `PartialEq`, so we convert to an equivalent
             // `String`. This is a bit expensive, but should be okay (especially
             // given that this code doesn't execute at this point).  Having a
@@ -2719,14 +2696,33 @@ impl PartialEq for GeneratedItem {
                 _x.thunks.to_string(),
                 _x.thunk_impls.to_string(),
                 _x.assertions.to_string(),
-                _x.crubit_features,
             )
         }
         to_comparable_tuple(self) == to_comparable_tuple(other)
     }
 }
 
+/// Returns generated bindings for an item, or `Err` if bindings generation
+/// failed in such a way as to make the generated bindings as a whole invalid.
 fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
+    match generate_item_impl(db, item) {
+        Ok(generated) => Ok(generated),
+        Err(err) => {
+            let ir = db.ir();
+            if has_bindings(db, item) != HasBindings::Yes {
+                // We didn't guarantee that bindings would exist, so it is not invalid to
+                // write down the error but continue.
+                return generate_unsupported(db, &UnsupportedItem::new_with_cause(&ir, item, err));
+            }
+            Err(err)
+        }
+    }
+}
+
+/// The implementation of generate_item, without the error recovery logic.
+///
+/// Returns Err if bindings could not be generated for this item.
+fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
     let ir = db.ir();
     if let Some(owning_target) = item.owning_target() {
         if !ir.is_current_target(owning_target) {
@@ -2735,22 +2731,11 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
     }
     let overloaded_funcs = db.overloaded_funcs();
     let generated_item = match item {
-        Item::Func(func) => match db.generate_func(func.clone()) {
-            Err(e) => generate_unsupported(
-                db,
-                &UnsupportedItem::new_with_message(&ir, func, format!("{e}")),
-            )?,
-            Ok(None) => GeneratedItem::default(),
-            Ok(Some((item, function_id))) => {
+        Item::Func(func) => match db.generate_func(func.clone())? {
+            None => GeneratedItem::default(),
+            Some((item, function_id)) => {
                 if overloaded_funcs.contains(&function_id) {
-                    generate_unsupported(
-                        db,
-                        &UnsupportedItem::new_with_message(
-                            &ir,
-                            func,
-                            "Cannot generate bindings for overloaded function",
-                        ),
-                    )?
+                    bail!("Cannot generate bindings for overloaded function")
                 } else {
                     (*item).clone()
                 }
@@ -2789,27 +2774,84 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
         }
     };
 
-    if let Some(defining_target) = item.defining_target() {
-        let missing_features =
-            generated_item.crubit_features - ir.target_crubit_features(defining_target);
-        if !missing_features.is_empty() {
-            let feature_strings: Vec<&str> =
-                missing_features.into_iter().map(|feature| feature.aspect_hint()).collect();
-            return generate_unsupported(
-                db,
-                &UnsupportedItem::new_with_message(
-                    &ir,
-                    item,
-                    format!(
-                        "Missing required features on {defining_target}: [{}]",
-                        feature_strings.join(", ")
-                    ),
-                ),
-            );
-        }
+    // Suppress bindings at the last minute, to collect other errors first.
+    if let HasBindings::No(reason) = has_bindings(db, item) {
+        return Err(reason.into());
     }
 
     Ok(generated_item)
+}
+
+#[derive(Clone, PartialEq, Eq)]
+enum HasBindings {
+    /// This item is guaranteed to have bindings. If the translation unit
+    /// defining the item fails to generate bindings for it, it will not
+    /// compile.
+    Yes,
+
+    /// This item is not guaranteed to have bindings. There is no way to tell if
+    /// bindings were generated unless the item is defined in the current
+    /// translation unit.
+    Maybe,
+
+    /// These bindings are guaranteed not to exist.
+    No(NoBindingsReason),
+}
+
+#[derive(Clone, PartialEq, Eq)]
+enum NoBindingsReason {
+    MissingRequiredFeatures {
+        missing_features: flagset::FlagSet<ir::CrubitFeature>,
+        target: BazelLabel,
+    },
+}
+
+#[must_use]
+fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
+    let ir = db.ir();
+    if let Some(defining_target) = item.defining_target() {
+        let missing_features =
+            crubit_features_for_item(item) - ir.target_crubit_features(defining_target);
+        if !missing_features.is_empty() {
+            return HasBindings::No(NoBindingsReason::MissingRequiredFeatures {
+                missing_features,
+                target: defining_target.clone(),
+            });
+        }
+    }
+
+    match item {
+        // Function bindings aren't guaranteed, because they don't _need_ to be guaranteed. We
+        // choose not to generate code which relies on functions existing in other TUs.
+        Item::Func(..) => HasBindings::Maybe,
+        _ => HasBindings::Yes,
+    }
+}
+
+impl From<NoBindingsReason> for Error {
+    fn from(reason: NoBindingsReason) -> Error {
+        match reason {
+            NoBindingsReason::MissingRequiredFeatures { missing_features, target } => {
+                let feature_strings: Vec<&str> =
+                    missing_features.into_iter().map(|feature| feature.aspect_hint()).collect();
+                anyhow!("Missing required features on {target}: [{}]", feature_strings.join(", "))
+            }
+        }
+    }
+}
+
+/// Returns the crubit features required to support bindings for an item.
+///
+/// If the item doesn't have a defining target, the return value is meaningless,
+/// and bindings will always be generated.
+///
+/// If the item does have a defining target, and it doesn't enable the specified
+/// features, then bindings are suppressed for this item.
+fn crubit_features_for_item(item: &Item) -> flagset::FlagSet<ir::CrubitFeature> {
+    match item {
+        Item::UnsupportedItem(..) => Default::default(),
+        _ => ir::CrubitFeature::Experimental.into(),
+    }
 }
 
 /// Identifies all functions having overloads that we can't import (yet).
