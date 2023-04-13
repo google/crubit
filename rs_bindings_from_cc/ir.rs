@@ -614,7 +614,7 @@ impl GenericItem for Enum {
         self.id
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.identifier.to_string().into()
+        self.identifier.identifier.clone()
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
@@ -646,7 +646,7 @@ impl GenericItem for TypeAlias {
         self.id
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.identifier.to_string().into()
+        self.identifier.identifier.clone()
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
