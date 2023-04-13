@@ -29,6 +29,12 @@ crubit_test_cc_library(
     deps = [":definition_enabled"],
 )
 
+crubit_test_cc_library(
+    name = "func_enabled",
+    hdrs = ["func_enabled.h"],
+    deps = [":definition_disabled"],
+)
+
 rust_test(
     name = "test",
     srcs = ["test.rs"],
@@ -37,16 +43,17 @@ rust_test(
         ":alias_enabled",
         ":definition_disabled",
         ":definition_enabled",
+        ":func_enabled",
     ],
     proc_macro_deps = [
-        ":type_exists",
+        ":item_exists",
     ],
 )
 
 rust_proc_macro(
-    name = "type_exists",
+    name = "item_exists",
     testonly = 1,
-    srcs = ["type_exists.rs"],
+    srcs = ["item_exists.rs"],
     deps = [
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
@@ -55,9 +62,9 @@ rust_proc_macro(
 )
 
 rust_test(
-    name = "type_exists_test",
-    srcs = ["type_exists_test.rs"],
+    name = "item_exists_test",
+    srcs = ["item_exists_test.rs"],
     proc_macro_deps = [
-        ":type_exists",
+        ":item_exists",
     ],
 )

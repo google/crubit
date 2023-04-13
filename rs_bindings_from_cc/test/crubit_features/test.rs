@@ -1,7 +1,7 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-use type_exists::type_exists;
+use item_exists::{type_exists, value_exists};
 
 mod definitions {
     use super::*;
@@ -68,5 +68,19 @@ mod aliases {
             !type_exists!(alias_disabled::AliasedEnabledTemplate),
             "AliasedEnabledTemplate was exported by `alias_disabled`, even though that build target disabled bindings."
         );
+    }
+}
+
+mod functions {
+    use super::*;
+    #[test]
+    fn test_functions_disabled_when_parameter_types_are() {
+        assert!(!value_exists!(func_enabled::FuncTakesDisabledStruct));
+        assert!(!value_exists!(func_enabled::FuncTakesDisabledTemplate));
+    }
+    #[test]
+    fn test_functions_disabled_when_return_type_is() {
+        assert!(!value_exists!(func_enabled::FuncReturnsDisabledStruct));
+        assert!(!value_exists!(func_enabled::FuncReturnsDisabledTemplate));
     }
 }
