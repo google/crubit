@@ -505,6 +505,20 @@ fn format_ret_ty_for_cc<'tcx>(input: &Input<'tcx>, sig: &ty::FnSig<'tcx>) -> Res
         .context("Error formatting function return type")
 }
 
+fn format_param_types_for_cc<'tcx>(
+    input: &Input<'tcx>,
+    sig: &ty::FnSig<'tcx>,
+) -> Result<Vec<CcSnippet>> {
+    sig.inputs()
+        .iter()
+        .enumerate()
+        .map(|(i, &ty)| {
+            Ok(format_ty_for_cc(input, ty, TypeLocation::Other)
+                .with_context(|| format!("Error handling parameter #{i}"))?)
+        })
+        .collect()
+}
+
 /// Formats `ty` for Rust - to be used in `..._cc_api_impl.rs` (e.g. as a type
 /// of a parameter in a Rust thunk).  Because `..._cc_api_impl.rs` is a
 /// distinct, separate crate, the returned `TokenStream` uses crate-qualified
@@ -600,26 +614,29 @@ fn format_thunk_decl(
     let sig = get_fn_sig(tcx, fn_def_id)?;
     let main_api_ret_type = format_ret_ty_for_cc(input, &sig)?.into_tokens(&mut prereqs);
 
-    let mut thunk_params = sig
-        .inputs()
-        .iter()
-        .map(|&ty| -> Result<TokenStream> {
-            let cc_type = format_ty_for_cc(input, ty, TypeLocation::Other)?.into_tokens(&mut prereqs);
-            if is_c_abi_compatible_by_value(ty) {
-                Ok(quote! { #cc_type })
-            } else {
-                // Rust thunk will move a value via memcpy - we need to `ensure` that
-                // invoking the C++ destructor (on the moved-away value) is safe.
-                // TODO(b/259749095): Support generic structs (with non-empty ParamEnv).
-                ensure!(
-                    !ty.needs_drop(tcx, ty::ParamEnv::empty()),
-                    "Only trivially-movable and trivially-destructible types \
-                          may be passed by value over the FFI boundary"
-                );
-                Ok(quote! { #cc_type* })
-            }
-        })
-        .collect::<Result<Vec<_>>>()?;
+    let mut thunk_params = {
+        let cc_types = format_param_types_for_cc(input, &sig)?;
+        sig.inputs()
+            .iter()
+            .zip(cc_types.into_iter())
+            .map(|(&ty, cc_type)| -> Result<TokenStream> {
+                let cc_type = cc_type.into_tokens(&mut prereqs);
+                if is_c_abi_compatible_by_value(ty) {
+                    Ok(quote! { #cc_type })
+                } else {
+                    // Rust thunk will move a value via memcpy - we need to `ensure` that
+                    // invoking the C++ destructor (on the moved-away value) is safe.
+                    // TODO(b/259749095): Support generic structs (with non-empty ParamEnv).
+                    ensure!(
+                        !ty.needs_drop(tcx, ty::ParamEnv::empty()),
+                        "Only trivially-movable and trivially-destructible types \
+                              may be passed by value over the FFI boundary"
+                    );
+                    Ok(quote! { #cc_type* })
+                }
+            })
+            .collect::<Result<Vec<_>>>()?
+    };
 
     let thunk_ret_type: TokenStream;
     if is_c_abi_compatible_by_value(sig.output()) {
@@ -814,19 +831,18 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     }
     let params = {
         let names = tcx.fn_arg_names(def_id).iter();
-        let types = sig.inputs().iter();
+        let cc_types = format_param_types_for_cc(input, &sig)?;
         names
-            .zip(types)
             .enumerate()
-            .map(|(i, (name, &ty))| -> Result<Param> {
+            .zip(sig.inputs().iter())
+            .zip(cc_types.into_iter())
+            .map(|(((i, name), &ty), cc_type)| {
                 let cc_name = format_cc_ident(name.as_str())
                     .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{i}")).unwrap());
-                let cc_type = format_ty_for_cc(input, ty, TypeLocation::Other)?.into_tokens(&mut main_api_prereqs);
-                Ok(Param { cc_name, cc_type, ty })
+                let cc_type = cc_type.into_tokens(&mut main_api_prereqs);
+                Param { cc_name, cc_type, ty }
             })
-            .enumerate()
-            .map(|(i, result)| result.with_context(|| format!("Error handling parameter #{i}")))
-            .collect::<Result<Vec<_>>>()?
+            .collect_vec()
     };
     let main_api_params = params
         .iter()
