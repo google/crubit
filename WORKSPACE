@@ -43,7 +43,9 @@ rules_rust_dependencies()
 rust_register_toolchains(
     edition = "2021",
     iso_date = "2022-07-07",
-    version = "nightly",)
+    version = "nightly",
+    dev_components = True,
+)
 
 load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")
 
