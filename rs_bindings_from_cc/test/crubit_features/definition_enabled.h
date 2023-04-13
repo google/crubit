@@ -9,4 +9,9 @@ struct EnabledStruct {
   unsigned char x;
 };
 
+template <typename T>
+struct EnabledTemplate {
+  T x;
+};
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CRUBIT_FEATURES_DEFINITION_ENABLED_H_

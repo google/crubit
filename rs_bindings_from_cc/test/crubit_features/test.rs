@@ -20,3 +20,54 @@ mod definitions {
         );
     }
 }
+
+mod aliases {
+    use super::*;
+    /// This test will fail if aliases expose a struct whose bindings were
+    /// disabled.
+    #[test]
+    fn aliases_dont_expose_disabled_structs() {
+        assert!(
+            !type_exists!(alias_enabled::AliasedDisabledStruct),
+            "AliasedDisabledStruct was exported by `alias_enabled`, even though `DisabledStruct` disabled bindings."
+        );
+    }
+
+    /// This test will fail if aliases expose a template whose bindings were
+    /// disabled.
+    ///
+    /// This is subtly different from the non-template case, because template
+    /// _instantiation_ actually occurs in this crate. Template _instantiation_
+    /// in other headers should respect the template _definition_ and its
+    /// API promises.
+    #[test]
+    #[ignore] // TODO(b/266727458): implement this
+    fn aliases_dont_expose_disabled_templates() {
+        assert!(
+            !type_exists!(alias_enabled::AliasedDisabledTemplate),
+            "AliasedDisabledTemplate was exported by `alias_enabled`, even though `DisabledTemplate` disabled bindings."
+        );
+    }
+
+    /// This test will fail if aliases produce bindings on targets whose
+    /// bindings were disabled, where the alias was to an enabled target.
+    ///
+    /// While Crubit _was_ enabled for the definition, the usage site also needs
+    /// to consent to people depending on the type _via_ the using library,
+    /// since that implies a maintenance burden.
+    #[test]
+    fn disabled_struct_aliases_arent_exposed() {
+        assert!(
+            !type_exists!(alias_disabled::AliasedEnabledStruct),
+            "AliasedEnabledStruct was exported by `alias_disabled`, even though that build target disabled bindings."
+        );
+    }
+
+    #[test]
+    fn disabled_template_aliases_arent_exposed() {
+        assert!(
+            !type_exists!(alias_disabled::AliasedEnabledTemplate),
+            "AliasedEnabledTemplate was exported by `alias_disabled`, even though that build target disabled bindings."
+        );
+    }
+}

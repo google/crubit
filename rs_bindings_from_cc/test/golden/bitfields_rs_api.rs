@@ -33,6 +33,8 @@ pub struct WithBitfields {
     pub f5: i32,
     // f6 : 23 bits
     __bitfields4: [::core::mem::MaybeUninit<u8>; 3],
+    /// Reason for representing this field as a blob of bytes:
+    /// `[[no_unique_address]]` attribute was present.
     pub(crate) f7: [::core::mem::MaybeUninit<u8>; 1],
     // f8 : 2 bits
     __bitfields6: [::core::mem::MaybeUninit<u8>; 1],

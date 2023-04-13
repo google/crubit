@@ -30,7 +30,12 @@
 pub struct Struct {
     /// Nobody would ever use a no_unique_address int/char field, this is just
     /// enough to test that the transmute is correct.
+    ///
+    /// Reason for representing this field as a blob of bytes:
+    /// `[[no_unique_address]]` attribute was present.
     pub(crate) field1: [::core::mem::MaybeUninit<u8>; 4],
+    /// Reason for representing this field as a blob of bytes:
+    /// `[[no_unique_address]]` attribute was present.
     pub(crate) field2: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Struct"), crate::Struct);
@@ -106,6 +111,9 @@ pub struct PaddingBetweenFields {
     pub field1: u8,
     __padding1: [::core::mem::MaybeUninit<u8>; 3],
     /// size: 4, alignment: 4 => offset: 4
+    ///
+    /// Reason for representing this field as a blob of bytes:
+    /// `[[no_unique_address]]` attribute was present.
     pub(crate) field2: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
@@ -262,6 +270,8 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 #[repr(C, align(4))]
 pub struct FieldInTailPadding {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// `[[no_unique_address]]` attribute was present.
     pub(crate) inner_struct: [::core::mem::MaybeUninit<u8>; 5],
     /// offset: 5 (dsize of `s`).
     pub char_in_tail_padding_of_prev_field: u8,

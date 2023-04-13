@@ -42,6 +42,7 @@ static TESTING_FEATURES: Lazy<flagset::FlagSet<ir::CrubitFeature>> =
 /// `make_ir_from_items` and `ir_from_cc_dependency`.
 fn update_test_ir(ir: &mut IR) {
     *ir.target_crubit_features_mut(&ir.current_target().clone()) = *TESTING_FEATURES;
+    *ir.target_crubit_features_mut(&ir::BazelLabel(DEPENDENCY_TARGET.into())) = *TESTING_FEATURES;
 }
 
 /// Create a testing `IR` instance from given items, using mock values for other
@@ -148,7 +149,9 @@ mod tests {
             ir_from_cc("")?,
             quote! {
                 crubit_features: hash_map!{
+                    ...
                     BazelLabel("//test:testing_target"): CrubitFeaturesIR(FlagSet(Supported|Experimental))
+                    ...
                 }
             }
         );
@@ -160,7 +163,9 @@ mod tests {
             make_ir_from_items([])?,
             quote! {
                 crubit_features: hash_map!{
+                    ...
                     BazelLabel("//test:testing_target"): CrubitFeaturesIR(FlagSet(Supported|Experimental))
+                    ...
                 }
             }
         );

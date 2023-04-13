@@ -12,14 +12,29 @@ crubit_test_cc_library(
 )
 
 crubit_test_cc_library(
+    name = "alias_enabled",
+    hdrs = ["alias_enabled.h"],
+    deps = [":definition_disabled"],
+)
+
+crubit_test_cc_library(
     name = "definition_enabled",
     hdrs = ["definition_enabled.h"],
+)
+
+crubit_test_cc_library(
+    name = "alias_disabled",
+    hdrs = ["alias_disabled.h"],
+    aspect_hints = [],  # deliberately disable Crubit.
+    deps = [":definition_enabled"],
 )
 
 rust_test(
     name = "test",
     srcs = ["test.rs"],
     cc_deps = [
+        ":alias_disabled",
+        ":alias_enabled",
         ":definition_disabled",
         ":definition_enabled",
     ],

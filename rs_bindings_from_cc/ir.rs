@@ -714,7 +714,7 @@ impl UnsupportedItem {
         Self::new(ir, item, message.into(), None)
     }
     pub fn new_with_cause(ir: &IR, item: &impl GenericItem, cause: Error) -> Self {
-        Self::new(ir, item, cause.to_string().into(), Some(cause))
+        Self::new(ir, item, format!("{cause:#}").into(), Some(cause))
     }
 
     pub fn message(&self) -> &str {

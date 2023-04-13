@@ -1221,10 +1221,10 @@ fn generate_func(
     let mut param_types = func
         .params
         .iter()
-        .map(|p| {
-            db.rs_type_kind(p.type_.rs_type.clone()).with_context(|| {
-                format!("Failed to process type of parameter {:?} on {:?}", p, func)
-            })
+        .enumerate()
+        .map(|(i, p)| {
+            db.rs_type_kind(p.type_.rs_type.clone())
+                .with_context(|| format!("Failed to format type of parameter {i}"))
         })
         .collect::<Result<Vec<_>>>()?;
 
@@ -1238,7 +1238,7 @@ fn generate_func(
 
     let mut return_type = db
         .rs_type_kind(func.return_type.rs_type.clone())
-        .with_context(|| format!("Failed to format return type for {:?}", &func))?;
+        .with_context(|| "Failed to format return type")?;
     return_type.check_by_value()?;
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
@@ -1988,9 +1988,8 @@ fn should_implement_drop(record: &Record) -> bool {
 ///
 /// For non-Copy union fields, failing to use `ManuallyDrop<T>` would
 /// additionally cause a compile-time error until https://github.com/rust-lang/rust/issues/55149 is stabilized.
-fn needs_manually_drop(db: &Database, ty: ir::RsType) -> Result<bool> {
-    let ty_implements_copy = db.rs_type_kind(ty)?.implements_copy();
-    Ok(!ty_implements_copy)
+fn needs_manually_drop(ty: &RsTypeKind) -> bool {
+    !ty.implements_copy()
 }
 
 fn namespace_qualifier_of_item(item_id: ItemId, ir: &IR) -> Result<NamespaceQualifier> {
@@ -2033,17 +2032,19 @@ fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
 
 /// Gets the type of `field` for layout purposes.
 ///
-/// Note that `get_field_rs_type_for_layout` may return Err (for
-/// `is_no_unique_address` fields) even if `field.type_` is Ok.
-fn get_field_rs_type_for_layout(field: &Field) -> Result<&RsType, &str> {
+/// Note that `get_field_rs_type_kind_for_layout` may return Err (for
+/// `is_no_unique_address` fields) even if `rs_type_kind` returns Ok.
+fn get_field_rs_type_kind_for_layout(db: &Database, field: &Field) -> Result<RsTypeKind> {
     // [[no_unique_address]] fields are replaced by a type-less, unaligned block of
     // memory which fills space up to the next field.
     // See: docs/struct_layout
     if field.is_no_unique_address {
-        return Err("`[[no_unique_address]]` attribute was present.");
+        bail!("`[[no_unique_address]]` attribute was present.");
     }
-
-    field.type_.as_ref().map(|t| &t.rs_type).map_err(String::as_str)
+    match &field.type_ {
+        Ok(t) => db.rs_type_kind(t.rs_type.clone()),
+        Err(e) => Err(anyhow!("{e}")),
+    }
 }
 
 /// Returns the type of a type-less, unaligned block of memory that can hold a
@@ -2081,7 +2082,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
                 // We retain the end offset of fields only if we have a matching Rust type
                 // to represent them. Otherwise we'll fill up all the space to the next field.
                 // See: docs/struct_layout
-                match get_field_rs_type_for_layout(field) {
+                match get_field_rs_type_kind_for_layout(db, field) {
                     // Regular field
                     Ok(_rs_type) => Some(field.offset + field.size),
                     // Opaque field
@@ -2149,7 +2150,8 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             //
             // We also don't need padding if we're in a union.
             let padding_size_in_bits = if record.is_union()
-                || (field.is_some() && get_field_rs_type_for_layout(field.unwrap()).is_ok())
+                || (field.is_some()
+                    && get_field_rs_type_kind_for_layout(db, field.unwrap()).is_ok())
             {
                 0
             } else {
@@ -2178,15 +2180,18 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             let field = field.unwrap();
 
             let ident = make_rs_field_ident(field, field_index);
-            let doc_comment = match field.type_.as_ref() {
+            let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, field);
+            let doc_comment = match &field_rs_type_kind {
                 Ok(_) => generate_doc_comment(
                     field.doc_comment.as_deref(),
                     None,
                     db.generate_source_loc_doc_comment(),
                 ),
                 Err(msg) => {
-                    let supplemental_text =
-                        format!("Reason for representing this field as a blob of bytes:\n{}", msg);
+                    let supplemental_text = format!(
+                        "Reason for representing this field as a blob of bytes:\n{:#}",
+                        msg
+                    );
                     let new_text = match &field.doc_comment {
                         None => supplemental_text,
                         Some(old_text) => format!("{}\n\n{}", old_text.as_ref(), supplemental_text),
@@ -2198,26 +2203,18 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
                     )
                 }
             };
-            let access = if field.access == AccessSpecifier::Public
-                && get_field_rs_type_for_layout(field).is_ok()
-            {
+            let access = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
                 quote! { pub }
             } else {
                 quote! { pub(crate) }
             };
 
-            let field_type = match get_field_rs_type_for_layout(field) {
+            let field_type = match field_rs_type_kind {
                 Err(_) => bit_padding(end - field.offset),
-                Ok(rs_type) => {
-                    let type_kind = db.rs_type_kind(rs_type.clone()).with_context(|| {
-                        format!(
-                            "Failed to format type for field {:?} on record {:?}",
-                            field, record
-                        )
-                    })?;
+                Ok(type_kind) => {
                     let mut formatted = quote! {#type_kind};
                     if should_implement_drop(record) || record.is_union() {
-                        if needs_manually_drop(db, rs_type.clone())? {
+                        if needs_manually_drop(&type_kind) {
                             // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
                             // if we can ask Rust to preserve field destruction order if the
                             // destructor is the SpecialMemberFunc::NontrivialMembers
@@ -2804,6 +2801,10 @@ enum NoBindingsReason {
         missing_features: flagset::FlagSet<ir::CrubitFeature>,
         target: BazelLabel,
     },
+    DependencyFailed {
+        context: Rc<str>,
+        error: Error,
+    },
 }
 
 #[must_use]
@@ -2824,6 +2825,13 @@ fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
         // Function bindings aren't guaranteed, because they don't _need_ to be guaranteed. We
         // choose not to generate code which relies on functions existing in other TUs.
         Item::Func(..) => HasBindings::Maybe,
+        Item::TypeAlias(alias) => match db.rs_type_kind(alias.underlying_type.rs_type.clone()) {
+            Ok(_) => HasBindings::Yes,
+            Err(error) => HasBindings::No(NoBindingsReason::DependencyFailed {
+                context: alias.debug_name(&ir),
+                error,
+            }),
+        },
         _ => HasBindings::Yes,
     }
 }
@@ -2836,6 +2844,9 @@ impl From<NoBindingsReason> for Error {
                     missing_features.into_iter().map(|feature| feature.aspect_hint()).collect();
                 anyhow!("Missing required features on {target}: [{}]", feature_strings.join(", "))
             }
+            NoBindingsReason::DependencyFailed { context, error } => error.context(format!(
+                "Can't generate bindings for {context} due to missing bindings for its dependency"
+            )),
         }
     }
 }
@@ -3593,7 +3604,20 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                 "Type arguments on records nor type aliases are not yet supported: {:?}",
                 ty
             );
-            match ir.item_for_type(&ty)? {
+            let item = ir.item_for_type(&ty)?;
+            match has_bindings(db, item) {
+                HasBindings::Yes => {}
+                HasBindings::Maybe => {
+                    bail!(
+                        "Type {} may or may not exist, and cannot be used.",
+                        item.debug_name(&ir)
+                    );
+                }
+                HasBindings::No(reason) => {
+                    return Err(reason.into());
+                }
+            }
+            match item {
                 Item::IncompleteRecord(incomplete_record) => RsTypeKind::IncompleteRecord {
                     incomplete_record: incomplete_record.clone(),
                     crate_path: Rc::new(CratePath::new(
@@ -3865,8 +3889,9 @@ fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<To
         if field.access != AccessSpecifier::Public || !field.is_no_unique_address {
             continue;
         }
-        // Can't use `get_field_rs_type_for_layout` here, because we want to dig into
-        // no_unique_address fields, despite laying them out as opaque blobs of bytes.
+        // Can't use `get_field_rs_type_kind_for_layout` here, because we want to dig
+        // into no_unique_address fields, despite laying them out as opaque
+        // blobs of bytes.
         if let Ok(rs_type) = field.type_.as_ref().map(|t| t.rs_type.clone()) {
             fields.push(make_rs_ident(
                 &field
@@ -5545,6 +5570,7 @@ mod tests {
             quote! {
                 #[repr(C)]
                 pub struct Derived {
+                    ...
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
                 }
             }
@@ -5621,7 +5647,9 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Struct {
+                    ...
                     pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
+                    ...
                     pub(crate) field2: [::core::mem::MaybeUninit<u8>; 2],
                     pub z: i16,
                 }
@@ -5663,7 +5691,9 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Struct {
+                    ...
                     pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
+                    ...
                     pub(crate) field2: [::core::mem::MaybeUninit<u8>; 8],
                 }
             }
@@ -5688,6 +5718,7 @@ mod tests {
             quote! {
                 #[repr(C, align(4))]
                 pub struct Struct {
+                    ...
                     pub(crate) field: [::core::mem::MaybeUninit<u8>; 0],
                     pub x: i32,
                 }
@@ -5712,6 +5743,7 @@ mod tests {
             quote! {
                 #[repr(C)]
                 pub struct Struct {
+                    ...
                     pub(crate) field: [::core::mem::MaybeUninit<u8>; 1],
                 }
             }
@@ -6200,6 +6232,7 @@ mod tests {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
                 pub struct EmptyStruct {
+                    ...
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
                 }
             }
@@ -6231,6 +6264,7 @@ mod tests {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
                 pub union EmptyUnion {
+                    ...
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
                 }
             }
@@ -8967,6 +9001,62 @@ mod tests {
                 Missing required features on //test:testing_target: [//:experimental]\
             ";
             assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_default_crubit_features_disabled_dependency_function_parameter() -> Result<()> {
+        for dependency in ["struct NotPresent {};", "using NotPresent = int;"] {
+            let mut ir = ir_from_cc_dependency("void Func(NotPresent);", dependency)?;
+            ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            assert_rs_not_matches!(rs_api, quote! {Func});
+            assert_cc_not_matches!(rs_api_impl, quote! {Func});
+            let expected = "\
+                Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+                Error while generating bindings for item 'Func':\n\
+                Failed to format type of parameter 0: Missing required features on //test:dependency: [//:experimental]\
+            ";
+            assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_default_crubit_features_disabled_dependency_function_return_type() -> Result<()> {
+        for dependency in ["struct NotPresent {};", "using NotPresent = int;"] {
+            let mut ir = ir_from_cc_dependency("NotPresent Func();", dependency)?;
+            ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            assert_rs_not_matches!(rs_api, quote! {Func});
+            assert_cc_not_matches!(rs_api_impl, quote! {Func});
+            let expected = "\
+                Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+                Error while generating bindings for item 'Func':\n\
+                Failed to format return type: Missing required features on //test:dependency: [//:experimental]\
+            ";
+            assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_default_crubit_features_disabled_dependency_struct() -> Result<()> {
+        for dependency in ["struct NotPresent {signed char x;};", "using NotPresent = signed char;"]
+        {
+            let mut ir = ir_from_cc_dependency("struct Present {NotPresent field;};", dependency)?;
+            ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+            let BindingsTokens { rs_api, rs_api_impl: _ } = generate_bindings_tokens(ir)?;
+            assert_rs_matches!(
+                rs_api,
+                quote! {
+                    pub struct Present {
+                        ...
+                        pub(crate) field: [::core::mem::MaybeUninit<u8>; 1],
+                    }
+                }
+            );
         }
         Ok(())
     }
