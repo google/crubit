@@ -135,6 +135,17 @@ http_archive(
   sha256 = "7fda611bceb5a793824a3c63ecbf68d2389e70c38f5763e9b1d415ca24912f44"
 )
 
+# zstd is a dependency of llvm.  See https://reviews.llvm.org/D143344#4232172
+http_archive(
+    name = "llvm_zstd",
+    build_file = "@llvm-raw//utils/bazel/third_party_build:zstd.BUILD",
+    sha256 = "7c42d56fac126929a6a85dbc73ff1db2411d04f104fae9bdea51305663a83fd0",
+    strip_prefix = "zstd-1.5.2",
+    urls = [
+        "https://github.com/facebook/zstd/releases/download/v1.5.2/zstd-1.5.2.tar.gz"
+    ],
+)
+
 # Create the "loader" repository, then use it to configure the desired LLVM
 # repository. For more details, see the comment in bazel/llvm.bzl.
 
