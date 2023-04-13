@@ -41,7 +41,6 @@ mod aliases {
     /// in other headers should respect the template _definition_ and its
     /// API promises.
     #[test]
-    #[ignore] // TODO(b/266727458): implement this
     fn aliases_dont_expose_disabled_templates() {
         assert!(
             !type_exists!(alias_enabled::AliasedDisabledTemplate),

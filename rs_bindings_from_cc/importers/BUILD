@@ -25,6 +25,7 @@ cc_library(
         "@absl//absl/log:check",
         "@absl//absl/log:die_if_null",
         "//rs_bindings_from_cc:ast_convert",
+        "//rs_bindings_from_cc:bazel_types",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",

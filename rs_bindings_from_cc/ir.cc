@@ -423,6 +423,7 @@ llvm::json::Value Record::ToJson() const {
       {"mangled_cc_name", mangled_cc_name},
       {"id", id},
       {"owning_target", owning_target},
+      {"defining_target", defining_target},
       {"doc_comment", doc_comment},
       {"source_loc", source_loc},
       {"unambiguous_public_bases", unambiguous_public_bases},

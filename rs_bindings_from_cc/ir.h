@@ -557,6 +557,7 @@ struct Record {
 
   ItemId id;
   BazelLabel owning_target;
+  std::optional<BazelLabel> defining_target;
   std::optional<std::string> doc_comment;
   std::string source_loc;
   std::vector<BaseClass> unambiguous_public_bases;

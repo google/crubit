@@ -289,7 +289,7 @@ fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
         return false;
     }
 
-    // ## Returning structs be value.
+    // ## Returning structs by value.
     //
     // Returning a struct by value requires an explicit thunk, because
     // `rs_bindings_from_cc` may not preserve the ABI of structs (e.g. when
@@ -2810,13 +2810,15 @@ enum NoBindingsReason {
 #[must_use]
 fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
     let ir = db.ir();
-    if let Some(defining_target) = item.defining_target() {
-        let missing_features =
-            crubit_features_for_item(item) - ir.target_crubit_features(defining_target);
+    // We refuse to generate bindings if either the definition of an item, or
+    // instantiation (if it is a template) an item are in a translation unit which
+    // doesn't have the required Crubit features.
+    for target in item.defining_target().into_iter().chain(item.owning_target()) {
+        let missing_features = crubit_features_for_item(item) - ir.target_crubit_features(target);
         if !missing_features.is_empty() {
             return HasBindings::No(NoBindingsReason::MissingRequiredFeatures {
                 missing_features,
-                target: defining_target.clone(),
+                target: target.clone(),
             });
         }
     }

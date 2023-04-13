@@ -12,6 +12,7 @@
 #include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
 #include "rs_bindings_from_cc/ast_convert.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Decl.h"
@@ -209,6 +210,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   clang::SourceLocation source_loc;
   std::optional<std::string> doc_comment;
   bool is_explicit_class_template_instantiation_definition = false;
+  std::optional<BazelLabel> defining_target;
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {
@@ -229,6 +231,20 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
           ictx_.GetComment(specialization_decl->getSpecializedTemplate());
     }
     source_loc = specialization_decl->getBeginLoc();
+    /// Note: only specify defining_target if it's a template instantiation!
+    /// Explicit specializations are their own defining_target.
+    if (auto instantiation_source =
+            specialization_decl->getInstantiatedFrom()) {
+      clang::NamedDecl* decl;
+      if (auto* template_decl =
+              instantiation_source.dyn_cast<clang::ClassTemplateDecl*>()) {
+        decl = template_decl;
+      } else {
+        decl = instantiation_source
+                   .get<clang::ClassTemplatePartialSpecializationDecl*>();
+      }
+      defining_target = ictx_.GetOwningTarget(decl);
+    }
   } else {
     const clang::NamedDecl* named_decl = record_decl;
     if (record_decl->getName().empty()) {
@@ -301,6 +317,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .mangled_cc_name = ictx_.GetMangledName(record_decl),
       .id = GenerateItemId(record_decl),
       .owning_target = ictx_.GetOwningTarget(record_decl),
+      .defining_target = std::move(defining_target),
       .doc_comment = std::move(doc_comment),
       .source_loc = ictx_.ConvertSourceLocation(source_loc),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),

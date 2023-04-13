@@ -133,6 +133,9 @@ cc_library(
     name = "bazel_types",
     srcs = ["bazel_types.cc"],
     hdrs = ["bazel_types.h"],
+    visibility = [
+        ":__subpackages__",
+    ],
     deps = [
         "//common:string_type",
         "@absl//absl/log:check",

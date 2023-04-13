@@ -523,6 +523,9 @@ pub struct Record {
     pub mangled_cc_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
+    /// The target containing the template definition, if this is a templated
+    /// record type.
+    pub defining_target: Option<BazelLabel>,
     pub doc_comment: Option<Rc<str>>,
     pub source_loc: Rc<str>,
     pub unambiguous_public_bases: Vec<BaseClass>,
@@ -858,10 +861,13 @@ impl Item {
         }
     }
 
-    /// Returns the target that this was defined in.
+    /// Returns the target that this was defined in, if it was defined somewhere
+    /// other than `owning_target()`.
     pub fn defining_target(&self) -> Option<&BazelLabel> {
-        // TODO(b/266727458): return the template target where applicable.
-        self.owning_target()
+        match self {
+            Item::Record(record) => record.defining_target.as_ref(),
+            _ => None,
+        }
     }
 
     /// Returns the target that this should generate source code in.

@@ -2358,27 +2358,28 @@ fn test_record_with_unsupported_base() -> Result<()> {
     assert_ir_matches!(
         ir,
         quote! {
-           Record {
-               rs_name: "DerivedClass",
-               cc_name: "DerivedClass",
-               mangled_cc_name: "12DerivedClass",
-               id: ItemId(...),
-               owning_target: BazelLabel("//test:testing_target"),
-               doc_comment: Some(...),
-               source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=15",
-               unambiguous_public_bases: [],
-               fields: [Field {
-                   identifier: Some("derived_field"), ...
-                   offset: 32, ...
-               }], ...
-               size: 8,
-               original_cc_size: 8,
-               alignment: 4,
-               is_derived_class: true,
-               override_alignment: true,
-               ...
-           }
-        }
+               Record {
+                   rs_name: "DerivedClass",
+                   cc_name: "DerivedClass",
+                   mangled_cc_name: "12DerivedClass",
+                   id: ItemId(...),
+                   owning_target: BazelLabel("//test:testing_target"),
+                   defining_target: None,
+                   doc_comment: Some(...),
+                   source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=15",
+                   unambiguous_public_bases: [],
+                   fields: [Field {
+                       identifier: Some("derived_field"), ...
+                       offset: 32, ...
+                   }], ...
+                   size: 8,
+                   original_cc_size: 8,
+                   alignment: 4,
+                   is_derived_class: true,
+                   override_alignment: true,
+                   ...
+               }
+            }
     );
     // Verify that the NestedStruct is unsupported (this is mostly verification
     // that the test input correctly sets up the test scenario;  the real
