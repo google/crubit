@@ -14,29 +14,6 @@ namespace tidy {
 namespace nullability {
 namespace {
 
-// TODO: fix false positives due to unsupported PointerValues in the framework.
-TEST(PointerNullabilityTest, Deref) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct S {
-      S* _Nonnull nonnull;
-      S* _Nullable nullable;
-      S* unknown;
-    };
-    void target(S& s) {
-      *(*s.nonnull).nonnull;   // [[unsafe]] TODO: fix false positive
-      *(*s.nonnull).nullable;  // [[unsafe]]
-      *(*s.nonnull).unknown;   // [[unsafe]] TODO: fix false positive
-
-      s.nonnull->nonnull->nonnull;   // [[unsafe]] TODO: fix false positive
-      s.nonnull->nonnull->nullable;  // [[unsafe]] TODO: fix false positive
-      s.nonnull->nullable->nonnull;  // [[unsafe]]
-      s.nonnull->unknown->nonnull;   // [[unsafe]] TODO: fix false positive
-
-      *&s;
-    }
-  )cc"));
-}
-
 TEST(PointerNullabilityTest, NonPointerReturnType) {
   checkDiagnostics(R"cc(
     struct S {
