@@ -330,7 +330,18 @@ enum TypeLocation {
     /// - The nested pointee type `T` is in the `Other` location
     FnReturn,
 
-    /// Other location (e.g. pointee type, field type, parameter type, etc.).
+    /// The top-level parameter type.
+    ///
+    /// The "top-level" part can be explained by looking at an example of:
+    /// `fn foo(param: *const T)`:
+    /// - The top-level parameter type `*const T` is in the `FnParam` location
+    /// - The nested pointee type `T` is in the `Other` location
+    // TODO(b/278141494, b/278141418): Once `const` and `static` items are supported,
+    // we may want to apply parameter-like formatting to their types (e.g. have
+    // `format_ty_for_cc` emit `T&` rather than `T*`).
+    FnParam,
+
+    /// Other location (e.g. pointee type, field type, etc.).
     Other,
 }
 
@@ -352,7 +363,7 @@ fn format_ty_for_cc<'tcx>(
     Ok(match ty.kind() {
         ty::TyKind::Never => match location {
             TypeLocation::FnReturn => keyword(quote! { void }),
-            TypeLocation::Other =>  {
+            _ =>  {
                 // TODO(b/254507801): Maybe translate into `crubit::Never`?
                 bail!("The never type `!` is only supported as a return type (b/254507801)");
             },
@@ -361,7 +372,7 @@ fn format_ty_for_cc<'tcx>(
             if types.len() == 0 {
                 match location {
                     TypeLocation::FnReturn => keyword(quote! { void }),
-                    TypeLocation::Other =>  {
+                    _ =>  {
                         // TODO(b/254507801): Maybe translate into `crubit::Unit`?
                         bail!("`()` / `void` is only supported as a return type (b/254507801)");
                     },
@@ -491,6 +502,43 @@ fn format_ty_for_cc<'tcx>(
             CcSnippet { prereqs, tokens: quote! { #const_qualifier #tokens * } }
         }
 
+        ty::TyKind::FnPtr(sig) => {
+            let sig = match sig.no_bound_vars() {
+                None => bail!("Generic functions are not supported yet (b/259749023)"),
+                Some(sig) => sig,
+            };
+            check_fn_sig(&sig)?;
+            is_thunk_required(&sig).context("Function pointers can't have a thunk")?;
+
+            // `is_thunk_required` check above implies `extern "C"` (or `"C-unwind"`).
+            // This assertion reinforces that the generated C++ code doesn't need
+            // to use calling convention attributes like `_stdcall`, etc.
+            assert!(matches!(sig.abi, rustc_target::spec::abi::Abi::C { .. }));
+
+            // C++ references are not rebindable and therefore can't be used to replicate semantics
+            // of Rust field types (or, say, element types of Rust arrays).  Because of this, C++
+            // references are only used for top-level return types and parameter types (and
+            // pointers are used in other locations).
+            let ptr_or_ref_sigil = match location {
+                TypeLocation::FnReturn | TypeLocation::FnParam => quote!{ & },
+                TypeLocation::Other => quote!{ * },
+            };
+
+            let mut prereqs = CcPrerequisites::default();
+            prereqs.includes.insert(input.support_header("internal/cxx20_backports.h"));
+            let ret_type = format_ret_ty_for_cc(input, &sig)?.into_tokens(&mut prereqs);
+            let param_types = format_param_types_for_cc(input, &sig)?
+                .into_iter()
+                .map(|snippet| snippet.into_tokens(&mut prereqs));
+            let tokens = quote! {
+                crubit::type_identity_t<
+                    #ret_type( #( #param_types ),* )
+                > #ptr_or_ref_sigil
+            };
+
+            CcSnippet { tokens, prereqs }
+        },
+
         // TODO(b/260268230, b/260729464): When recursively processing nested types (e.g. an
         // element type of an Array, a referent of a Ref, a parameter type of an FnPtr, etc), one
         // should also 1) propagate `CcPrerequisites::defs`, 2) cover `CcPrerequisites::defs` in
@@ -513,7 +561,7 @@ fn format_param_types_for_cc<'tcx>(
         .iter()
         .enumerate()
         .map(|(i, &ty)| {
-            Ok(format_ty_for_cc(input, ty, TypeLocation::Other)
+            Ok(format_ty_for_cc(input, ty, TypeLocation::FnParam)
                 .with_context(|| format!("Error handling parameter #{i}"))?)
         })
         .collect()
@@ -533,6 +581,7 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
         | ty::TyKind::Char
         | ty::TyKind::Int(_)
         | ty::TyKind::Uint(_)
+        | ty::TyKind::FnPtr(_)
         | ty::TyKind::Never => ty
             .to_string()
             .parse()
@@ -745,6 +794,56 @@ fn get_thunk_name(symbol_name: &str) -> String {
     format!("__crubit_thunk_{}", &escape_non_identifier_chars(symbol_name))
 }
 
+fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
+    if sig.c_variadic {
+        // TODO(b/254097223): Add support for variadic functions.
+        bail!("C variadic functions are not supported (b/254097223)");
+    }
+
+    match sig.unsafety {
+        Unsafety::Normal => (),
+        Unsafety::Unsafe => {
+            // TODO(b/254095482): Figure out how to handle `unsafe` functions.
+            bail!("Bindings for `unsafe` functions are not fully designed yet (b/254095482)");
+        }
+    }
+
+    Ok(())
+}
+
+/// Returns `Ok(())` if no thunk is required.
+/// Otherwise returns an error the describes why the thunk is needed.
+fn is_thunk_required(sig: &ty::FnSig) -> Result<()> {
+    match sig.abi {
+        // "C" ABI is okay: Before https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a
+        // Rust panic that "escapes" a "C" ABI function leads to Undefined Behavior.  This is
+        // unfortunate, but Crubit's `panics_and_exceptions.md` documents that `-Cpanic=abort`
+        // is the only supported configuration.
+        //
+        // After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a Rust panic that
+        // tries to "escape" a "C" ABI function will terminate the program.  This is okay.
+        rustc_target::spec::abi::Abi::C { unwind: false } => (),
+
+        // "C-unwind" ABI is okay: After
+        // https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a new "C-unwind" ABI may be
+        // used by Rust functions that want to safely propagate Rust panics through frames that
+        // may belong to another language.
+        rustc_target::spec::abi::Abi::C { unwind: true } => (),
+
+        // All other ABIs trigger thunk generation.  This covers Rust ABI functions, but also
+        // ABIs that theoretically are understood both by C++ and Rust (e.g. see
+        // `format_cc_call_conv_as_clang_attribute` in `rs_bindings_from_cc/src_code_gen.rs`).
+        _ => bail!("Calling convention other than `extern \"C\"` requires a thunk"),
+    };
+
+    ensure!(is_c_abi_compatible_by_value(sig.output()), "Return type requires a thunk");
+    for (i, param_ty) in sig.inputs().iter().enumerate() {
+        ensure!(is_c_abi_compatible_by_value(*param_ty), "Type of parameter #{i} requires a thunk",);
+    }
+
+    Ok(())
+}
+
 /// Formats a function with the given `local_def_id`.
 ///
 /// Will panic if `local_def_id`
@@ -760,46 +859,8 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     );
 
     let sig = get_fn_sig(tcx, local_def_id)?;
-    if sig.c_variadic {
-        // TODO(b/254097223): Add support for variadic functions.
-        bail!("C variadic functions are not supported (b/254097223)");
-    }
-
-    match sig.unsafety {
-        Unsafety::Normal => (),
-        Unsafety::Unsafe => {
-            // TODO(b/254095482): Figure out how to handle `unsafe` functions.
-            bail!("Bindings for `unsafe` functions are not fully designed yet (b/254095482)");
-        }
-    }
-
-    let needs_thunk = {
-        let needs_thunk = match sig.abi {
-            // "C" ABI is okay: Before https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a
-            // Rust panic that "escapes" a "C" ABI function leads to Undefined Behavior.  This is
-            // unfortunate, but Crubit's `panics_and_exceptions.md` documents that `-Cpanic=abort`
-            // is the only supported configuration.
-            //
-            // After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a Rust panic that
-            // tries to "escape" a "C" ABI function will terminate the program.  This is okay.
-            rustc_target::spec::abi::Abi::C { unwind: false } => false,
-
-            // "C-unwind" ABI is okay: After
-            // https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a new "C-unwind" ABI may be
-            // used by Rust functions that want to safely propagate Rust panics through frames that
-            // may belong to another language.
-            rustc_target::spec::abi::Abi::C { unwind: true } => false,
-
-            // All other ABIs trigger thunk generation.  This covers Rust ABI functions, but also
-            // ABIs that theoretically are understood both by C++ and Rust (e.g. see
-            // `format_cc_call_conv_as_clang_attribute` in `rs_bindings_from_cc/src_code_gen.rs`).
-            _ => true,
-        };
-        let needs_thunk = needs_thunk || !is_c_abi_compatible_by_value(sig.output());
-        let needs_thunk =
-            needs_thunk || sig.inputs().iter().any(|&ty| !is_c_abi_compatible_by_value(ty));
-        needs_thunk
-    };
+    check_fn_sig(&sig)?;
+    let needs_thunk = is_thunk_required(&sig).is_err();
     let thunk_name = {
         let symbol_name = get_symbol_name(tcx, local_def_id)?;
         if needs_thunk { get_thunk_name(symbol_name) } else { symbol_name.to_string() }
@@ -1771,8 +1832,7 @@ fn format_crate(input: &Input) -> Result<Output> {
         let fwd_decls = fwd_decls
             .into_iter()
             .sorted_by_key(|def_id| tcx.def_span(*def_id))
-            .map(|local_def_id| (local_def_id, format_fwd_decl(tcx, local_def_id)))
-            .collect_vec();
+            .map(|local_def_id| (local_def_id, format_fwd_decl(tcx, local_def_id)));
 
         let ordered_cc: Vec<(NamespaceQualifier, TokenStream)> = fwd_decls
             .into_iter()
@@ -4700,12 +4760,15 @@ pub mod tests {
             // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
             // details).
             ("!", "void"),
+            (
+                "extern \"C\" fn (f32, f32) -> f32",
+                "crubit :: type_identity_t < float (float , float) > &",
+            ),
         ];
         test_ty(&testcases, quote! {}, |desc, tcx, ty, expected| {
             let actual = {
                 let input = bindings_input_for_tests(tcx);
                 let cc_snippet = format_ty_for_cc(&input, ty, TypeLocation::FnReturn).unwrap();
-                assert!(cc_snippet.prereqs.is_empty());
                 cc_snippet.tokens.to_string()
             };
             let expected = expected.parse::<TokenStream>().unwrap().to_string();
@@ -4753,6 +4816,15 @@ pub mod tests {
             ("*mut SomeStruct", ("::rust_out::SomeStruct*", "", "", "SomeStruct")),
             // Testing propagation of deeper/nested `fwd_decls`:
             ("*mut *mut SomeStruct", (":: rust_out :: SomeStruct * *", "", "", "SomeStruct")),
+            (
+                "extern \"C\" fn (f32, f32) -> f32",
+                (
+                    "crubit :: type_identity_t < float (float , float) > *",
+                    "\"crubit/support/for/tests/internal/cxx20_backports.h\"",
+                    "",
+                    "",
+                ),
+            ),
             // Extra parens/sugar are expected to be ignored:
             ("(bool)", ("bool", "", "", "")),
         ];
@@ -4877,8 +4949,21 @@ pub mod tests {
                 "The following Rust type is not supported yet: impl std::cmp::Eq",
             ),
             (
-                "fn(i32) -> i32", // TyKind::FnPtr
-                "The following Rust type is not supported yet: fn(i32) -> i32",
+                "fn(i32) -> i32", // TyKind::FnPtr (default ABI = "Rust")
+                "Function pointers can't have a thunk: \
+                 Calling convention other than `extern \"C\"` requires a thunk",
+            ),
+            (
+                "extern \"C\" fn (SomeStruct, f32) -> f32",
+                "Function pointers can't have a thunk: Type of parameter #0 requires a thunk",
+            ),
+            (
+                "extern \"C\" fn (f32, f32) -> SomeStruct",
+                "Function pointers can't have a thunk: Return type requires a thunk",
+            ),
+            (
+                "unsafe fn(i32) -> i32",
+                "Bindings for `unsafe` functions are not fully designed yet (b/254095482)",
             ),
             // TODO(b/254094650): Consider mapping this to Clang's (and GCC's) `__int128`
             // or to `absl::in128`.
@@ -4925,6 +5010,11 @@ pub mod tests {
         ];
         let preamble = quote! {
             #![feature(never_type)]
+
+            pub struct SomeStruct {
+                pub x: i32,
+                pub y: i32,
+            }
 
             pub struct StructWithCustomDrop {
                 pub x: i32,
@@ -4995,6 +5085,7 @@ pub mod tests {
             ("*mut i32", "*mut i32"),
             // Pointer to an ADT:
             ("*mut SomeStruct", "* mut :: rust_out :: SomeStruct"),
+            ("extern \"C\" fn(i32) -> i32", "extern \"C\" fn(i32) -> i32"),
         ];
         let preamble = quote! {
             #![feature(never_type)]
@@ -5048,10 +5139,6 @@ pub mod tests {
             (
                 "impl Eq", // TyKind::Alias
                 "The following Rust type is not supported yet: impl std::cmp::Eq",
-            ),
-            (
-                "fn(i32) -> i32", // TyKind::FnPtr
-                "The following Rust type is not supported yet: fn(i32) -> i32",
             ),
             (
                 "Option<i8>", // TyKind::Adt - generic + different crate

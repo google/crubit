@@ -67,6 +67,19 @@ TEST(FnParamTyTests, Int32Ptr) {
   EXPECT_EQ(12 + 34, sum);
 }
 
+std::int32_t AddInt32(std::int32_t x, std::int32_t y) { return x + y; }
+
+std::int32_t MultiplyInt32(std::int32_t x, std::int32_t y) { return x * y; }
+
+TEST(FnParamTyTests, FnPtr) {
+  std::int32_t sum = fn_param_ty_tests::apply_binary_i32_op(12, 34, AddInt32);
+  EXPECT_EQ(sum, 12 + 34);
+
+  std::int32_t product =
+      fn_param_ty_tests::apply_binary_i32_op(56, 78, MultiplyInt32);
+  EXPECT_EQ(product, 56 * 78);
+}
+
 TEST(OtherFnTests, VoidReturningFunction) {
   namespace tests = functions::unit_ret_ty_tests;
   tests::set_global_i32_via_extern_c_with_export_name(123);

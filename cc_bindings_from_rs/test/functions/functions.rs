@@ -76,6 +76,10 @@ pub mod fn_param_ty_tests {
         // compatibility between Rust `char` and C++ `rs_std::rs_char`.
         c.to_ascii_lowercase()
     }
+
+    pub fn apply_binary_i32_op(x: i32, y: i32, f: extern "C" fn(i32, i32) -> i32) -> i32 {
+        f(x, y)
+    }
 }
 
 /// APIs for testing functions that return the unit / `()` / `void` type.
