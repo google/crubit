@@ -5,12 +5,12 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CRUBIT_FEATURES_DEFINITION_DISABLED_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CRUBIT_FEATURES_DEFINITION_DISABLED_H_
 
-struct DisabledStruct {
+struct DisabledStruct final {
   unsigned char x;
 };
 
 template <typename T>
-struct DisabledTemplate {
+struct DisabledTemplate final {
   T x;
 };
 

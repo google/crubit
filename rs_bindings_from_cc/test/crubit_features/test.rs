@@ -84,3 +84,12 @@ mod functions {
         assert!(!value_exists!(func_enabled::FuncReturnsDisabledTemplate));
     }
 }
+
+mod structs {
+    use super::*;
+    #[test]
+    fn test_struct_enabled() {
+        // The generated field assertions will handle the rest.
+        assert!(type_exists!(wrapper_struct_enabled::EnabledStructWithDisabledField));
+    }
+}

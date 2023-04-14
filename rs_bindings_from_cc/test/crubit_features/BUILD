@@ -35,6 +35,12 @@ crubit_test_cc_library(
     deps = [":definition_disabled"],
 )
 
+crubit_test_cc_library(
+    name = "wrapper_struct_enabled",
+    hdrs = ["wrapper_struct_enabled.h"],
+    deps = [":definition_disabled"],
+)
+
 rust_test(
     name = "test",
     srcs = ["test.rs"],
@@ -44,6 +50,7 @@ rust_test(
         ":definition_disabled",
         ":definition_enabled",
         ":func_enabled",
+        ":wrapper_struct_enabled",
     ],
     proc_macro_deps = [
         ":item_exists",
