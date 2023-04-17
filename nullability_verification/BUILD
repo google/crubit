@@ -70,3 +70,16 @@ cc_library(
         "@llvm-project//llvm:Support",
     ],
 )
+
+cc_test(
+    name = "pointer_nullability_test",
+    srcs = ["pointer_nullability_test.cc"],
+    deps = [
+        ":pointer_nullability",
+        "@llvm-project//clang:testing",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)

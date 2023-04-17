@@ -94,16 +94,24 @@ namespace {
 //  - the NullabilityKind may be different, as it derives from type sugar
 template <class Impl>
 class NullabilityWalker : public TypeVisitor<Impl> {
+  using Base = TypeVisitor<Impl>;
   Impl& derived() { return *static_cast<Impl*>(this); }
 
  public:
-  void Visit(QualType T) { TypeVisitor<Impl>::Visit(T.getTypePtr()); }
+  void Visit(QualType T) { Base::Visit(T.getTypePtr()); }
   void Visit(const TemplateArgument& TA) {
     if (TA.getKind() == TemplateArgument::Type) Visit(TA.getAsType());
   }
 
-  void VisitElaboratedType(const ElaboratedType* ET) {
-    Visit(ET->getNamedType());
+  void VisitType(const Type* T) {
+    // For sugar not explicitly handled below, desugar and continue.
+    // (We need to walk the full structure of the canonical type.)
+    if (auto* Desugar =
+            T->getLocallyUnqualifiedSingleStepDesugaredType().getTypePtr();
+        Desugar != T)
+      return Base::Visit(Desugar);
+
+    Base::VisitType(T);
   }
 
   void VisitFunctionProtoType(const FunctionProtoType* FPT) {
@@ -143,8 +151,6 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     derived().report(PT, NullabilityKind::Unspecified);
     Visit(PT->getPointeeType());
   }
-
-  void VisitParenType(const ParenType* PT) { Visit(PT->getInnerType()); }
 };
 }  // namespace
 
