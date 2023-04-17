@@ -4190,7 +4190,6 @@ fn generate_rs_api_impl_includes(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ir_matchers::assert_ir_matches;
     use ir_testing::{
         ir_from_cc, ir_from_cc_dependency, ir_record, make_ir_from_items, retrieve_func,
         with_lifetime_macros,
@@ -5295,65 +5294,185 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn test_func_ptr_with_custom_abi() -> Result<()> {
-        let ir = ir_from_cc(r#" int (*get_ptr_to_func())(float, double) [[clang::vectorcall]]; "#)?;
+    #[cfg(target_arch = "x86_64")] // vectorcall only exists on x86_64, not e.g. aarch64
+    mod custom_abi_tests {
+        use super::*;
+        use ir_matchers::assert_ir_matches;
+        #[test]
+        fn test_func_ptr_with_custom_abi() -> Result<()> {
+            let ir =
+                ir_from_cc(r#" int (*get_ptr_to_func())(float, double) [[clang::vectorcall]]; "#)?;
 
-        // Verify that the test input correctly represents what we intend to
-        // test - we want [[clang::vectorcall]] to apply to the returned
-        // function pointer, but *not* apply to the `get_ptr_to_func` function.
-        assert_ir_matches!(
-            ir,
-            quote! {
-                Func(Func {
-                    name: "get_ptr_to_func", ...
-                    return_type: MappedType {
-                        rs_type: RsType {
-                            name: Some("Option"), ...
-                            type_args: [RsType { name: Some("#funcPtr vectorcall"), ... }], ...
-                        },
-                        cc_type: CcType {
-                            name: Some("*"), ...
-                            type_args: [CcType { name: Some("#funcValue vectorcall"), ... }], ...
-                        },
-                    }, ...
-                    has_c_calling_convention: true, ...
-                }),
-            }
-        );
-
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
-        // Check that the custom "vectorcall" ABI gets propagated into the
-        // return type (i.e. into `extern "vectorcall" fn`).
-        assert_rs_matches!(
-            rs_api,
-            quote! {
-                #[inline(always)]
-                pub fn get_ptr_to_func() -> Option<extern "vectorcall" fn (f32, f64) -> i32> {
-                    unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
+            // Verify that the test input correctly represents what we intend to
+            // test - we want [[clang::vectorcall]] to apply to the returned
+            // function pointer, but *not* apply to the `get_ptr_to_func` function.
+            assert_ir_matches!(
+                ir,
+                quote! {
+                    Func(Func {
+                        name: "get_ptr_to_func", ...
+                        return_type: MappedType {
+                            rs_type: RsType {
+                                name: Some("Option"), ...
+                                type_args: [RsType { name: Some("#funcPtr vectorcall"), ... }], ...
+                            },
+                            cc_type: CcType {
+                                name: Some("*"), ...
+                                type_args: [CcType { name: Some("#funcValue vectorcall"), ... }], ...
+                            },
+                        }, ...
+                        has_c_calling_convention: true, ...
+                    }),
                 }
-            }
-        );
+            );
 
-        // The usual `extern "C"` ABI should be used for "get_ptr_to_func".
-        assert_rs_matches!(
-            rs_api,
-            quote! {
-                mod detail {
-                    #[allow(unused_imports)]
-                    use super::*;
-                    extern "C" {
-                        #[link_name = "_Z15get_ptr_to_funcv"]
-                        pub(crate) fn __rust_thunk___Z15get_ptr_to_funcv()
-                        -> Option<extern "vectorcall" fn(f32, f64) -> i32>;
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            // Check that the custom "vectorcall" ABI gets propagated into the
+            // return type (i.e. into `extern "vectorcall" fn`).
+            assert_rs_matches!(
+                rs_api,
+                quote! {
+                    #[inline(always)]
+                    pub fn get_ptr_to_func() -> Option<extern "vectorcall" fn (f32, f64) -> i32> {
+                        unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
                     }
                 }
-            }
-        );
+            );
 
-        // Verify that no C++ thunk got generated.
-        assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___Z15get_ptr_to_funcv });
-        Ok(())
+            // The usual `extern "C"` ABI should be used for "get_ptr_to_func".
+            assert_rs_matches!(
+                rs_api,
+                quote! {
+                    mod detail {
+                        #[allow(unused_imports)]
+                        use super::*;
+                        extern "C" {
+                            #[link_name = "_Z15get_ptr_to_funcv"]
+                            pub(crate) fn __rust_thunk___Z15get_ptr_to_funcv()
+                            -> Option<extern "vectorcall" fn(f32, f64) -> i32>;
+                        }
+                    }
+                }
+            );
+
+            // Verify that no C++ thunk got generated.
+            assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___Z15get_ptr_to_funcv });
+            Ok(())
+        }
+
+        #[test]
+        fn test_func_ptr_with_custom_abi_thunk() -> Result<()> {
+            // Using an `inline` keyword forces generation of a C++ thunk in
+            // `rs_api_impl` (i.e. exercises `format_cc_type`,
+            // `format_cc_call_conv_as_clang_attribute` and similar code).
+            let ir = ir_from_cc(
+                r#"
+                inline int (*inline_get_ptr_to_func())(float, double) [[clang::vectorcall]];
+            "#,
+            )?;
+
+            // Verify that the test input correctly represents what we intend to
+            // test - we want [[clang::vectorcall]] to apply to the returned
+            // function pointer, but *not* apply to the `get_ptr_to_func` function.
+            assert_ir_matches!(
+                ir,
+                quote! {
+                    Func(Func {
+                        name: "inline_get_ptr_to_func", ...
+                        return_type: MappedType {
+                            rs_type: RsType {
+                                name: Some("Option"), ...
+                                type_args: [RsType { name: Some("#funcPtr vectorcall"), ... }], ...
+                            },
+                            cc_type: CcType {
+                                name: Some("*"), ...
+                                type_args: [CcType { name: Some("#funcValue vectorcall"), ... }], ...
+                            },
+                        }, ...
+                        has_c_calling_convention: true, ...
+                    }),
+                }
+            );
+
+            // This test is quite similar to `test_func_ptr_thunk` - the main
+            // difference is verification of the `__attribute__((vectorcall))` in
+            // the expected signature of the generated thunk below.
+            let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
+            assert_cc_matches!(
+                rs_api_impl,
+                quote! {
+                    extern "C" crubit::type_identity_t<
+                            int(float , double) __attribute__((vectorcall))
+                        >* __rust_thunk___Z22inline_get_ptr_to_funcv() {
+                        return inline_get_ptr_to_func();
+                    }
+                }
+            );
+            Ok(())
+        }
+
+        #[test]
+        fn test_custom_abi_thunk() -> Result<()> {
+            let ir = ir_from_cc(
+                r#"
+                float f_vectorcall_calling_convention(float p1, float p2) [[clang::vectorcall]];
+                double f_c_calling_convention(double p1, double p2);
+            "#,
+            )?;
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            assert_rs_matches!(
+                rs_api,
+                quote! {
+                    #[inline(always)]
+                    pub fn f_vectorcall_calling_convention(p1: f32, p2: f32) -> f32 {
+                        unsafe {
+                            crate::detail::__rust_thunk___Z31f_vectorcall_calling_conventionff(p1, p2)
+                        }
+                    }
+                }
+            );
+            assert_rs_matches!(
+                rs_api,
+                quote! {
+                    #[inline(always)]
+                    pub fn f_c_calling_convention(p1: f64, p2: f64) -> f64 {
+                        unsafe { crate::detail::__rust_thunk___Z22f_c_calling_conventiondd(p1, p2) }
+                    }
+                }
+            );
+            // `link_name` (i.e. no thunk) for `f_c_calling_convention`. No
+            // `link_name` (i.e. indicates presence of a thunk) for
+            // `f_vectorcall_calling_convention`.
+            assert_rs_matches!(
+                rs_api,
+                quote! {
+                    mod detail {
+                        #[allow(unused_imports)]
+                        use super::*;
+                        extern "C" {
+                            pub(crate) fn __rust_thunk___Z31f_vectorcall_calling_conventionff(
+                                p1: f32, p2: f32) -> f32;
+                            #[link_name = "_Z22f_c_calling_conventiondd"]
+                            pub(crate) fn __rust_thunk___Z22f_c_calling_conventiondd(
+                                p1: f64, p2: f64) -> f64;
+                        }
+                    }
+                }
+            );
+            // C++ thunk needed for `f_vectorcall_calling_convention`.
+            assert_cc_matches!(
+                rs_api_impl,
+                quote! {
+                    extern "C" float __rust_thunk___Z31f_vectorcall_calling_conventionff(
+                        float p1, float p2) {
+                            return f_vectorcall_calling_convention(p1, p2);
+                    }
+                }
+            );
+            // No C++ thunk expected for `f_c_calling_convention`.
+            assert_cc_not_matches!(rs_api_impl, quote! { f_c_calling_convention });
+            Ok(())
+        }
     }
 
     #[test]
@@ -5375,57 +5494,6 @@ mod tests {
                 extern "C" crubit::type_identity_t<int(int , int)>*
                 __rust_thunk___Z30inline_get_pointer_to_functionv() {
                     return inline_get_pointer_to_function();
-                }
-            }
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn test_func_ptr_with_custom_abi_thunk() -> Result<()> {
-        // Using an `inline` keyword forces generation of a C++ thunk in
-        // `rs_api_impl` (i.e. exercises `format_cc_type`,
-        // `format_cc_call_conv_as_clang_attribute` and similar code).
-        let ir = ir_from_cc(
-            r#"
-            inline int (*inline_get_ptr_to_func())(float, double) [[clang::vectorcall]];
-        "#,
-        )?;
-
-        // Verify that the test input correctly represents what we intend to
-        // test - we want [[clang::vectorcall]] to apply to the returned
-        // function pointer, but *not* apply to the `get_ptr_to_func` function.
-        assert_ir_matches!(
-            ir,
-            quote! {
-                Func(Func {
-                    name: "inline_get_ptr_to_func", ...
-                    return_type: MappedType {
-                        rs_type: RsType {
-                            name: Some("Option"), ...
-                            type_args: [RsType { name: Some("#funcPtr vectorcall"), ... }], ...
-                        },
-                        cc_type: CcType {
-                            name: Some("*"), ...
-                            type_args: [CcType { name: Some("#funcValue vectorcall"), ... }], ...
-                        },
-                    }, ...
-                    has_c_calling_convention: true, ...
-                }),
-            }
-        );
-
-        // This test is quite similar to `test_func_ptr_thunk` - the main
-        // difference is verification of the `__attribute__((vectorcall))` in
-        // the expected signature of the generated thunk below.
-        let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
-        assert_cc_matches!(
-            rs_api_impl,
-            quote! {
-                extern "C" crubit::type_identity_t<
-                        int(float , double) __attribute__((vectorcall))
-                    >* __rust_thunk___Z22inline_get_ptr_to_funcv() {
-                    return inline_get_ptr_to_func();
                 }
             }
         );
@@ -6463,69 +6531,6 @@ mod tests {
                 extern "C" void __rust_thunk___ZN11Polymorphic3FooEv(struct Polymorphic * __this)
             }
         );
-        Ok(())
-    }
-
-    #[test]
-    fn test_custom_abi_thunk() -> Result<()> {
-        let ir = ir_from_cc(
-            r#"
-            float f_vectorcall_calling_convention(float p1, float p2) [[clang::vectorcall]];
-            double f_c_calling_convention(double p1, double p2);
-        "#,
-        )?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
-        assert_rs_matches!(
-            rs_api,
-            quote! {
-                #[inline(always)]
-                pub fn f_vectorcall_calling_convention(p1: f32, p2: f32) -> f32 {
-                    unsafe {
-                        crate::detail::__rust_thunk___Z31f_vectorcall_calling_conventionff(p1, p2)
-                    }
-                }
-            }
-        );
-        assert_rs_matches!(
-            rs_api,
-            quote! {
-                #[inline(always)]
-                pub fn f_c_calling_convention(p1: f64, p2: f64) -> f64 {
-                    unsafe { crate::detail::__rust_thunk___Z22f_c_calling_conventiondd(p1, p2) }
-                }
-            }
-        );
-        // `link_name` (i.e. no thunk) for `f_c_calling_convention`. No
-        // `link_name` (i.e. indicates presence of a thunk) for
-        // `f_vectorcall_calling_convention`.
-        assert_rs_matches!(
-            rs_api,
-            quote! {
-                mod detail {
-                    #[allow(unused_imports)]
-                    use super::*;
-                    extern "C" {
-                        pub(crate) fn __rust_thunk___Z31f_vectorcall_calling_conventionff(
-                            p1: f32, p2: f32) -> f32;
-                        #[link_name = "_Z22f_c_calling_conventiondd"]
-                        pub(crate) fn __rust_thunk___Z22f_c_calling_conventiondd(
-                            p1: f64, p2: f64) -> f64;
-                    }
-                }
-            }
-        );
-        // C++ thunk needed for `f_vectorcall_calling_convention`.
-        assert_cc_matches!(
-            rs_api_impl,
-            quote! {
-                extern "C" float __rust_thunk___Z31f_vectorcall_calling_conventionff(
-                    float p1, float p2) {
-                        return f_vectorcall_calling_convention(p1, p2);
-                }
-            }
-        );
-        // No C++ thunk expected for `f_c_calling_convention`.
-        assert_cc_not_matches!(rs_api_impl, quote! { f_c_calling_convention });
         Ok(())
     }
 

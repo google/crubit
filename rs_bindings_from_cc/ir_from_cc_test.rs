@@ -243,6 +243,7 @@ fn test_unescapable_rust_keywords_in_type_alias_name() {
     );
 }
 
+#[cfg(target_arch = "x86_64")] // vectorcall only exists on x86_64, not e.g. aarch64
 #[test]
 fn test_function_with_custom_calling_convention() {
     let ir = ir_from_cc("int f_vectorcall(int, int) [[clang::vectorcall]];").unwrap();
