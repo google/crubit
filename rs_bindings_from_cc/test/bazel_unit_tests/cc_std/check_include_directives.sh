@@ -19,7 +19,7 @@ stl_isystem="third_party/stl/cxx17"
 cc_std_lib_isystem="nowhere/llvm/toolchain/include/c++/v1"
 cc_std_lib_unstable_isystem="nowhere/llvm/toolchain/include/c++/v1"
 clang_builtin_isystem="third_party/llvm/llvm-project/clang/lib/Headers"
-grte_isystem="//nowhere/libcinclude"
+grte_isystem="third_party/grte/v5_.*/release/usr/grte/v5/include"
 
 function fail () {
     cat > "${path_to_test_executable}" <<EOF
@@ -45,7 +45,7 @@ while [[ $# -gt 0 ]]; do
                 fail "Clang builtin headers appear before C++ standard library headers."
             fi
             has_clang_builtin_isystem=1
-        elif [[ "$1" = "${grte_isystem}" ]]; then
+        elif [[ "$1" =~ ${grte_isystem} ]]; then
             if [[  "$has_clang_builtin_isystem" = 0 ]]; then
                 fail "GRTE headers appear before Clang builtin headers."
             fi

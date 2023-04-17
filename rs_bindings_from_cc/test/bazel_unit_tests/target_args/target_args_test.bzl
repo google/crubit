@@ -189,8 +189,20 @@ def _toolchain_headers_in_header_analysis_action_test_impl(ctx):
     inttypes = [i.path for i in inputs if "inttypes.h" in i.path]
     asserts.equals(
         env,
-        ["nowhere/llvm/toolchain/include/c++/v1/inttypes.h", "//nowhere/libcinclude/inttypes.h", "third_party/llvm/llvm-project/clang/lib/Headers/inttypes.h"],
-        inttypes,
+        "nowhere/llvm/toolchain/include/c++/v1/inttypes.h",
+        inttypes[0],
+    )
+    asserts.true(
+        env,
+        inttypes[1] in [
+            "//nowhere/libc_x86include/inttypes.h",
+            "//nowhere/libc_arminclude/inttypes.h",
+        ],
+    )
+    asserts.equals(
+        env,
+        "third_party/llvm/llvm-project/clang/lib/Headers/inttypes.h",
+        inttypes[2],
     )
 
     return analysistest.end(env)
