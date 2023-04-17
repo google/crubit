@@ -5142,7 +5142,7 @@ mod tests {
         // ('"const char" is not a valid Ident').
         // It's therefore important that f() is inline so that we need to
         // generate a thunk for it (where we then process the CcType).
-        let ir = ir_from_cc(r#" inline void f(const char *str); "#)?;
+        let ir = ir_from_cc(r#" inline void f(const signed char *str); "#)?;
 
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
@@ -5150,7 +5150,7 @@ mod tests {
             quote! {
                 #[inline(always)]
                 pub unsafe fn f(str: *const i8) {
-                    crate::detail::__rust_thunk___Z1fPKc(str)
+                    crate::detail::__rust_thunk___Z1fPKa(str)
                 }
             }
         );
@@ -5158,7 +5158,7 @@ mod tests {
             rs_api,
             quote! {
                 extern "C" {
-                    pub(crate) fn __rust_thunk___Z1fPKc(str: *const i8);
+                    pub(crate) fn __rust_thunk___Z1fPKa(str: *const i8);
                 }
             }
         );
@@ -5166,7 +5166,7 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___Z1fPKc(char const * str){ f(str); }
+                extern "C" void __rust_thunk___Z1fPKa(signed char const * str){ f(str); }
             }
         );
         Ok(())
