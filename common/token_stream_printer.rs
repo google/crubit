@@ -213,7 +213,7 @@ fn pipe_string_through_process<'a>(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .unwrap_or_else(|_| panic!("Failed to spawn {exe_name} at {exe_path:?}"));
+        .unwrap_or_else(|e| panic!("Failed to spawn {exe_name} at {exe_path:?}: {e}"));
 
     let mut stdin = child.stdin.take().expect("Failed to open {exe_name} stdin");
     std::thread::spawn(move || {
