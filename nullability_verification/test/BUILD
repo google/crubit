@@ -129,6 +129,16 @@ cc_test(
 )
 
 cc_test(
+    name = "operator_new",
+    srcs = ["operator_new.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "parens",
     srcs = ["parens.cc"],
     deps = [

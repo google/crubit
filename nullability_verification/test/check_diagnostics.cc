@@ -29,6 +29,17 @@ constexpr char kPreamble[] = R"cc(
   T value();
 )cc";
 
+constexpr char kNewHeader[] = R"cc(
+  namespace std {
+  struct nothrow_t {
+    explicit nothrow_t() = default;
+  };
+  extern const nothrow_t nothrow;
+  using size_t = decltype(sizeof(int));
+  }  // namespace std
+  void* operator new(std::size_t size, const std::nothrow_t&) noexcept;
+)cc";
+
 bool checkDiagnostics(llvm::StringRef SourceCode) {
   std::vector<CFGElement> Diagnostics;
   PointerNullabilityDiagnoser Diagnoser;
@@ -49,10 +60,11 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
                   Diagnostics.push_back(EltDiagnostics.value());
                 }
               })
-              .withASTBuildVirtualMappedFiles({{"preamble.h", kPreamble}})
+              .withASTBuildVirtualMappedFiles(
+                  {{"preamble.h", kPreamble}, {"new", kNewHeader}})
               .withASTBuildArgs({"-fsyntax-only", "-std=c++17",
                                  "-Wno-unused-value", "-Wno-nonnull",
-                                 "-include", "preamble.h"}),
+                                 "-include", "preamble.h", "-I."}),
           [&Diagnostics, &Failed](
               const llvm::DenseMap<unsigned, std::string> &Annotations,
               const dataflow::test::AnalysisOutputs &AnalysisData) {

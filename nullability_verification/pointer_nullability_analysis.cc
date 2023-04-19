@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "absl/log/check.h"
 #include "nullability_verification/pointer_nullability.h"
@@ -537,6 +538,18 @@ void transferNonFlowSensitiveUnaryOperator(
   });
 }
 
+void transferNonFlowSensitiveNewExpr(
+    const CXXNewExpr* NE, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
+  computeNullability(NE, State, [&]() {
+    std::vector<NullabilityKind> result =
+        getNullabilityAnnotationsFromType(NE->getType());
+    result.front() = NE->shouldNullCheckAllocation() ? NullabilityKind::Nullable
+                                                     : NullabilityKind::NonNull;
+    return result;
+  });
+}
+
 auto buildNonFlowSensitiveTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       .CaseOfCFGStmt<DeclRefExpr>(ast_matchers::declRefExpr(),
@@ -554,6 +567,8 @@ auto buildNonFlowSensitiveTransferer() {
                                transferNonFlowSensitiveCallExpr)
       .CaseOfCFGStmt<UnaryOperator>(ast_matchers::unaryOperator(),
                                     transferNonFlowSensitiveUnaryOperator)
+      .CaseOfCFGStmt<CXXNewExpr>(ast_matchers::cxxNewExpr(),
+                                 transferNonFlowSensitiveNewExpr)
       .Build();
 }
 
