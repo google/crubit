@@ -190,12 +190,19 @@ std::optional<CFGElement> diagnoseCallExpr(
     }
   }
 
-  auto ParamTypes = CalleeType->getAs<FunctionProtoType>()->getParamTypes();
+  auto* CalleeFPT = CalleeType->getAs<FunctionProtoType>();
+  if (!CalleeFPT) return std::nullopt;
+
+  auto ParamTypes = CalleeFPT->getParamTypes();
   ArrayRef<const Expr*> Args(CE->getArgs(), CE->getNumArgs());
   if (isa<CXXOperatorCallExpr>(CE)) {
     // The first argument of an operator call expression is the operand which
     // does not appear in the list of parameter types.
     Args = Args.drop_front();
+  }
+  if (CalleeFPT->isVariadic()) {
+    CHECK_GE(Args.size(), ParamTypes.size());
+    Args = Args.take_front(ParamTypes.size());
   }
 
   return isIncompatibleArgumentList(ParamTypes, Args, State.Env,

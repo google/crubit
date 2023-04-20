@@ -350,6 +350,17 @@ TEST(PointerNullabilityTest, CanOverwritePtrWithPtrReturnedByFunction) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CallVariadicFunction) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void variadic(int* _Nonnull, ...);
+    void target() {
+      int i = 0;
+      variadic(&i, nullptr, &i);
+      variadic(nullptr, nullptr, &i);  // [[unsafe]]
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy
