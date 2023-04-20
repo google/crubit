@@ -324,6 +324,32 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CanOverwritePtrWithPtrCreatedFromRefReturnType) {
+  // Test that if we create a pointer from a function returning a reference, we
+  // can use that pointer to overwrite an existing nullable pointer and make it
+  // nonnull.
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int& get_int();
+
+    void target(int* _Nullable i) {
+      i = &get_int();
+      *i;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CanOverwritePtrWithPtrReturnedByFunction) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int* _Nonnull get_int();
+
+    void target(int* _Nullable i) {
+      i = get_int();
+      *i;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

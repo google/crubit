@@ -303,17 +303,34 @@ void transferFlowSensitiveNullCheckImplicitCastPtrToBool(
 void transferFlowSensitiveCallExpr(
     const CallExpr* CallExpr, const MatchFinder::MatchResult& Result,
     TransferState<PointerNullabilityLattice>& State) {
-  auto ReturnType = CallExpr->getType();
-  if (!ReturnType->isAnyPointerType()) return;
+  // The dataflow framework itself does not create values for `CallExpr`s.
+  // However, we need these in some cases, so we produce them ourselves.
 
-  auto* PointerVal = getPointerValueFromExpr(CallExpr, State.Env);
-  if (!PointerVal) {
-    PointerVal = cast<PointerValue>(State.Env.createValue(ReturnType));
-    auto& CallExprLoc = State.Env.createStorageLocation(*CallExpr);
-    State.Env.setValue(CallExprLoc, *PointerVal);
-    State.Env.setStorageLocation(*CallExpr, CallExprLoc);
+  if (CallExpr->getType()->isAnyPointerType()) {
+    // Create a pointer so that we can attach nullability to it and have the
+    // nullability propagate with the pointer.
+    auto* PointerVal = getPointerValueFromExpr(CallExpr, State.Env);
+    if (!PointerVal) {
+      PointerVal =
+          cast<PointerValue>(State.Env.createValue(CallExpr->getType()));
+      auto& CallExprLoc = State.Env.createStorageLocation(*CallExpr);
+      State.Env.setValue(CallExprLoc, *PointerVal);
+      State.Env.setStorageLocation(*CallExpr, CallExprLoc);
+    }
+    initPointerFromAnnotations(*PointerVal, CallExpr, State);
+  } else if (CallExpr->isGLValue()) {
+    // The function returned a reference. Create a storage location for the
+    // expression so that if code creates a pointer from the reference, we will
+    // produce a `PointerValue`.
+    auto* Loc = State.Env.getStorageLocation(*CallExpr, SkipPast::None);
+    if (!Loc) {
+      // This is subtle: We call `createStorageLocation(QualType)`, not
+      // `createStorageLocation(const Expr &)`, so that we create a new
+      // storage location every time.
+      auto& NewLoc = State.Env.createStorageLocation(CallExpr->getType());
+      State.Env.setStorageLocation(*CallExpr, NewLoc);
+    }
   }
-  initPointerFromAnnotations(*PointerVal, CallExpr, State);
 }
 
 void transferNonFlowSensitiveDeclRefExpr(
