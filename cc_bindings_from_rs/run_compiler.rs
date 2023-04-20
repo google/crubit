@@ -241,9 +241,6 @@ pub mod tests {
         Ok(())
     }
 
-    // TODO(b/262583967): Remove when the legacy toolchain no longer exists.
-    #[cfg(legacy_rust_toolchain)]
-    const CROSSTOOL_VERSION: &str = "legacy";
     #[cfg(llvm_unstable)]
     const CROSSTOOL_VERSION: &str = "llvm_unstable";
     #[cfg(stable)]

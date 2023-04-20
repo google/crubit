@@ -259,7 +259,7 @@ cc_bindings_from_rust_aspect = aspect(
     attr_aspects = ["deps"],
     attrs = {
         "_cc_bindings_from_rs_tool": attr.label(
-            default = Label("//cc_bindings_from_rs:cc_bindings_from_rs_tool"),
+            default = Label("//cc_bindings_from_rs:cc_bindings_from_rs"),
             executable = True,
             cfg = "exec",
             allow_single_file = True,
