@@ -47,8 +47,35 @@ CcBindingsFromRustInfo = provider(
            " `.rs` and `.h` files."),
     fields = {
         "cc_info": "A CcInfo provider for the API projection.",
+        # TODO(b/271857814): A `CRATE_NAME` might not be globally unique - the
+        # key needs to also cover a "hash" of the crate version and compilation
+        # flags.
+        "crate_key": "String with a crate key to use in --other-crate-bindings",
+        "h_out_file": "File object representing the generated ..._cc_api.h.",
     },
 )
+
+def _get_dep_bindings_infos(ctx):
+    """Returns `CcBindingsFromRustInfo`s of direct, non-transitive dependencies.
+
+    Only information about direct, non-transitive dependencies is needed,
+    because bindings for the public APIs may need to refer to types from
+    such dependencies (e.g. `fn foo(param: TypeFromDirectDependency)`),
+    but they cannot refer to types from transitive dependencies.
+
+    Args:
+      ctx: The rule context.
+
+    Returns:
+      A list of `CcBindingsFromRustInfo`s of all the direct, non-transitive Rust
+      dependencies (dependencies of the Rust crate being used as input for
+      `cc_bindings_from_rs`).
+    """
+    return [
+        dep[CcBindingsFromRustInfo]
+        for dep in ctx.rule.attr.deps
+        if CcBindingsFromRustInfo in dep
+    ]
 
 def _generate_bindings(ctx, basename, inputs, rustc_args, rustc_env):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
@@ -56,8 +83,9 @@ def _generate_bindings(ctx, basename, inputs, rustc_args, rustc_env):
     Args:
       ctx: The rule context.
       basename: The basename for the generated files
-      rustc_args: `rustc` flags to pass to `cc_bindings_from_rs`
       inputs: `cc_bindings_from_rs` inputs specific to the target `crate`
+      rustc_args: `rustc` flags to pass to `cc_bindings_from_rs`
+      rustc_env: `rustc` environment to use when running `cc_bindings_from_rs`
 
     Returns:
       A pair of files:
@@ -74,6 +102,10 @@ def _generate_bindings(ctx, basename, inputs, rustc_args, rustc_env):
     crubit_args.add("--clang-format-exe-path", ctx.file._clang_format)
     crubit_args.add("--rustfmt-exe-path", ctx.file._rustfmt)
     crubit_args.add("--rustfmt-config-path", ctx.file._rustfmt_cfg)
+
+    for dep_bindings_info in _get_dep_bindings_infos(ctx):
+        arg = dep_bindings_info.crate_key + "=" + dep_bindings_info.h_out_file.short_path
+        crubit_args.add("--bindings-from-dependency", arg)
 
     ctx.actions.run(
         outputs = [h_out_file, rs_out_file],
@@ -104,14 +136,20 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, linking_contexts):
     Returns:
       A CcInfo provider.
     """
-    cc_deps = ctx.attr._cc_deps_for_bindings
+    dep_cc_infos = [
+        dep[CcInfo]
+        for dep in ctx.attr._cc_deps_for_bindings
+    ] + [
+        dep_bindings_info.cc_info
+        for dep_bindings_info in _get_dep_bindings_infos(ctx)
+    ]
     cc_deps_compilation_contexts = [
-        cc_dep[CcInfo].compilation_context
-        for cc_dep in cc_deps
+        dep_cc_info.compilation_context
+        for dep_cc_info in dep_cc_infos
     ]
     cc_deps_linking_contexts = [
-        cc_dep[CcInfo].linking_context
-        for cc_dep in cc_deps
+        dep_cc_info.linking_context
+        for dep_cc_info in dep_cc_infos
     ]
     cc_toolchain = find_cpp_toolchain(ctx)
     feature_configuration = cc_common.configure_features(
@@ -249,7 +287,11 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         [target_crate_linking_context, impl_linking_context],
     )
     return [
-        CcBindingsFromRustInfo(cc_info = cc_info),
+        CcBindingsFromRustInfo(
+            cc_info = cc_info,
+            crate_key = crate_info.name,
+            h_out_file = h_out_file,
+        ),
         OutputGroupInfo(out = depset([h_out_file])),
     ]
 

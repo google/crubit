@@ -35,11 +35,15 @@ pub struct Input<'tcx> {
     /// Example: "crubit/support".
     pub crubit_support_path: Rc<str>,
 
+    /// A map from a crate name to the include path with the corresponding C++
+    /// bindings. This is used when formatting a type exported from another
+    /// crate.
+    // TODO(b/271857814): A crate name might not be globally unique - the key needs to also cover
+    // a "hash" of the crate version and compilation flags.
+    pub crate_name_to_include_path: HashMap<Rc<str>, CcInclude>,
+
     // TODO(b/262878759): Provide a set of enabled/disabled Crubit features.
     pub _features: (),
-
-    // TODO(b/258261328): Provide a map from crate name into C++ header path with crate bindings.
-    pub _crate_to_include_map: (),
 }
 
 impl<'tcx> Input<'tcx> {
@@ -474,9 +478,15 @@ fn format_ty_for_cc<'tcx>(
             if def_id.krate == LOCAL_CRATE {
                 prereqs.defs.insert(def_id.expect_local());
             } else {
-                // TODO(b/258261328): Add `#include` of other crate's `..._cc_api.h`.
-                bail!("Cross-crate dependencies are not supported yet (b/258261328)");
-            };
+                let other_crate_name = input.tcx.crate_name(def_id.krate);
+                let include = input
+                    .crate_name_to_include_path
+                    .get(other_crate_name.as_str())
+                    .ok_or_else(|| anyhow!(
+                            "Type `{ty}` comes from the `{other_crate_name}` crate, \
+                             but no `--other-crate-bindings` were specified for this crate"))?;
+                prereqs.includes.insert(include.clone());
+            }
 
             // Verify if definition of `ty` can be succesfully imported and bail otherwise.
             format_adt_core(input.tcx, def_id).with_context(|| {
@@ -4983,9 +4993,19 @@ pub mod tests {
                 "TypeGenericStruct",
                 "Generic types are not supported yet (b/259749095)",
             ),
-            ("LifetimeGenericStruct<'static>", "Generic types are not supported yet (b/259749095)"),
-            ("std::cmp::Ordering", "Cross-crate dependencies are not supported yet (b/258261328)"),
-            ("Option<i8>", "Generic types are not supported yet (b/259749095)"),
+            (
+                "LifetimeGenericStruct<'static>",
+                "Generic types are not supported yet (b/259749095)",
+            ),
+            (
+                "std::cmp::Ordering",
+                "Type `std::cmp::Ordering` comes from the `core` crate, \
+                 but no `--other-crate-bindings` were specified for this crate",
+            ),
+            (
+                "Option<i8>",
+                "Generic types are not supported yet (b/259749095)",
+            ),
             (
                 "PublicReexportOfStruct",
                 "Not directly public type (re-exports are not supported yet - b/262052635)",
@@ -5237,8 +5257,8 @@ pub mod tests {
         Input {
             tcx,
             crubit_support_path: "crubit/support/for/tests".into(),
+            crate_name_to_include_path: Default::default(),
             _features: (),
-            _crate_to_include_map: (),
         }
     }
 

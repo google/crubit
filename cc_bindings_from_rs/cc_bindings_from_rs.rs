@@ -30,7 +30,9 @@ use itertools::Itertools;
 use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
 use std::path::Path;
 
+use bindings::Input;
 use cmdline::Cmdline;
+use code_gen_utils::CcInclude;
 use run_compiler::run_compiler;
 use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
@@ -41,11 +43,24 @@ fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
         .with_context(|| format!("Error when writing to {}", path.display()))
 }
 
+fn new_input<'tcx>(cmdline: &Cmdline, tcx: TyCtxt<'tcx>) -> Input<'tcx> {
+    let crubit_support_path = cmdline.crubit_support_path.as_str().into();
+
+    let crate_name_to_include_path = cmdline
+        .bindings_from_dependencies
+        .iter()
+        .map(|(crate_name, include_path)| {
+            (crate_name.as_str().into(), CcInclude::user_header(include_path.as_str().into()))
+        })
+        .collect();
+
+    Input { tcx, crubit_support_path, crate_name_to_include_path, _features: () }
+}
+
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
-    use bindings::*;
+    use bindings::{generate_bindings, Output};
     let Output { h_body, rs_body } = {
-        let crubit_support_path = cmdline.crubit_support_path.as_str().into();
-        let input = Input { tcx, crubit_support_path, _features: (), _crate_to_include_map: () };
+        let input = new_input(cmdline, tcx);
         generate_bindings(&input)?
     };
 
