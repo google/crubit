@@ -47,7 +47,7 @@ bool isNullableOrUntracked(const Expr* E, const Environment& Env) {
 // construct with a non-null `DeclaredType`.
 bool isIncompatibleAssignment(QualType DeclaredType, const Expr* E,
                               const Environment& Env, ASTContext& Ctx) {
-  assert(DeclaredType->isAnyPointerType());
+  CHECK(DeclaredType->isAnyPointerType());
   return getNullabilityKind(DeclaredType, Ctx) == NullabilityKind::NonNull &&
          isNullableOrUntracked(E, Env);
 }
@@ -73,7 +73,7 @@ std::optional<CFGElement> diagnoseArrow(
 bool isIncompatibleArgumentList(ArrayRef<QualType> ParamTypes,
                                 ArrayRef<const Expr*> Args,
                                 const Environment& Env, ASTContext& Ctx) {
-  assert(ParamTypes.size() == Args.size());
+  CHECK_EQ(ParamTypes.size(), Args.size());
   for (unsigned int I = 0; I < Args.size(); ++I) {
     auto ParamType = ParamTypes[I].getNonReferenceType();
     if (!ParamType->isAnyPointerType()) {
@@ -229,7 +229,7 @@ std::optional<CFGElement> diagnoseReturn(
   }
 
   auto* ReturnExpr = RS->getRetValue();
-  assert(ReturnExpr->getType()->isPointerType());
+  CHECK(ReturnExpr->getType()->isPointerType());
 
   return isIncompatibleAssignment(ReturnType, ReturnExpr, State.Env,
                                   *Result.Context)
@@ -240,7 +240,7 @@ std::optional<CFGElement> diagnoseReturn(
 std::optional<CFGElement> diagnoseMemberInitializer(
     const CXXCtorInitializer* CI, const MatchFinder::MatchResult& Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
-  assert(CI->isAnyMemberInitializer());
+  CHECK(CI->isAnyMemberInitializer());
   auto MemberType = CI->getAnyMember()->getType();
   if (!MemberType->isAnyPointerType()) {
     return std::nullopt;

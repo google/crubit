@@ -23,7 +23,7 @@ class GetNullabilityAnnotationsFromTypeTest : public ::testing::Test {
     clang::TestAST AST((Preamble + "\nusing Target = " + Type + ";").str());
     auto Target = AST.context().getTranslationUnitDecl()->lookup(
         &AST.context().Idents.get("Target"));
-    assert(Target.isSingleResult());
+    CHECK(Target.isSingleResult());
     QualType TargetType =
         AST.context().getTypedefType(Target.find_first<TypeAliasDecl>());
     return getNullabilityAnnotationsFromType(TargetType);
