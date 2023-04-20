@@ -89,17 +89,6 @@ config_setting(
     },
 )
 
-config_setting(
-    name = "arm",
-    values = {"cpu": "arm"},
-)
-
-config_setting(
-    name = "x86",
-    # The docs claim "x86" should work. The docs lie.
-    values = {"cpu": "k8"},
-)
-
 filegroup(
     name = "toolchain_headers",
     srcs = select({
@@ -107,8 +96,8 @@ filegroup(
                "//conditions:default": ["//nowhere/llvm:cc-std-headers"],
            }) +
            select({
-               ":arm": ["//third_party/grte/v5_arm/release/usr/grte/v5:compile"],
-               ":x86": ["//third_party/grte/v5_x86/release/usr/grte/v5:compile"],
+               "@bazel_tools//tools/target_cpu:aarch64-all": ["//third_party/grte/v5_arm/release/usr/grte/v5:compile"],
+               "@bazel_tools//tools/target_cpu:x86_64-all": ["//third_party/grte/v5_x86/release/usr/grte/v5:compile"],
            }),
     visibility = ["//visibility:private"],
 )
