@@ -22,6 +22,7 @@ rust_binary(
     ],
     crate_root = "cc_bindings_from_rs.rs",
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
+    tags = ["not_build:arm"],
     visibility = ["//visibility:public"],
     deps = [
         ":toposort",
@@ -52,6 +53,7 @@ rust_test(
         "//third_party/crosstool:unstable_config": ["--cfg=llvm_unstable"],
         "//conditions:default": ["--cfg=stable"],
     }),
+    tags = ["not_build:arm"],
     deps = [
         "//common:token_stream_matchers",
         "@crate_index//:regex",
