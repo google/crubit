@@ -104,6 +104,10 @@ cc_test(
     srcs = ["generate_bindings_and_metadata_test.cc"],
     data = [
     ],
+    tags = [
+        # TODO(b/269144587): parameterize the tests to test arm behavior in cross-compilation.
+        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+    ],
     deps = [
         ":cc_ir",
         ":cmdline",
@@ -342,6 +346,9 @@ rust_library(
 rust_test(
     name = "ir_testing_test",
     crate = ":ir_testing",
+    tags = [
+        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+    ],
     deps = [
         ":ir_matchers",
         ":ir_testing",
@@ -387,6 +394,10 @@ cc_library(
 rust_test(
     name = "ir_from_cc_test",
     srcs = ["ir_from_cc_test.rs"],
+    tags = [
+        # TODO(b/269144587): parameterize the tests to test arm behavior in cross-compilation.
+        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+    ],
     deps = [
         ":ir",
         ":ir_matchers",
@@ -439,6 +450,10 @@ rust_library(
 rust_test(
     name = "src_code_gen_impl_test",
     crate = ":src_code_gen_impl",
+    tags = [
+        # TODO(b/269144587): parameterize the tests to test arm behavior in cross-compilation.
+        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+    ],
     deps = [
         ":ir_matchers",
         ":ir_testing",
@@ -501,6 +516,9 @@ rust_library(
 rust_test(
     name = "ir_matchers_test",
     crate = ":ir_matchers",
+    tags = [
+        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+    ],
     deps = [
         "//common:rust_allocator_shims",
     ],

@@ -43,6 +43,9 @@ rust_library(
 rust_test(
     name = "code_gen_utils_test",
     crate = ":code_gen_utils",
+    tags = [
+        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+    ],
     deps = [
         ":token_stream_matchers",
         ":token_stream_printer",
@@ -126,6 +129,9 @@ rust_library(
 rust_test(
     name = "token_stream_matchers_test",
     crate = ":token_stream_matchers",
+    tags = [
+        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+    ],
     deps = [
         "//common:rust_allocator_shims",
         "@crate_index//:quote",
@@ -147,6 +153,9 @@ rust_library(
 rust_test(
     name = "token_stream_printer_test",
     crate = ":token_stream_printer",
+    tags = [
+        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+    ],
     deps = [
         "@crate_index//:quote",
         "@crate_index//:tempfile",
