@@ -13,7 +13,7 @@ default_linux_targets: &default_linux_targets
   - "//rs_bindings_from_cc:bazel_types_test"
   - "//rs_bindings_from_cc:cmdline_test"
   - "//rs_bindings_from_cc:rs_ir_test"
-  - "//cc_template/..."
+  - "//support/cc_template/..."
   - "//lifetime_analysis/..."
 default_linux_task: &default_linux_task
   platform: ubuntu2004
