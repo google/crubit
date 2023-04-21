@@ -367,19 +367,19 @@ fn format_ty_for_cc<'tcx>(
     Ok(match ty.kind() {
         ty::TyKind::Never => match location {
             TypeLocation::FnReturn => keyword(quote! { void }),
-            _ =>  {
+            _ => {
                 // TODO(b/254507801): Maybe translate into `crubit::Never`?
                 bail!("The never type `!` is only supported as a return type (b/254507801)");
-            },
-        }
+            }
+        },
         ty::TyKind::Tuple(types) => {
             if types.len() == 0 {
                 match location {
                     TypeLocation::FnReturn => keyword(quote! { void }),
-                    _ =>  {
+                    _ => {
                         // TODO(b/254507801): Maybe translate into `crubit::Unit`?
                         bail!("`()` / `void` is only supported as a return type (b/254507801)");
-                    },
+                    }
                 }
             } else {
                 // TODO(b/254099023): Add support for tuples.
@@ -482,9 +482,12 @@ fn format_ty_for_cc<'tcx>(
                 let include = input
                     .crate_name_to_include_path
                     .get(other_crate_name.as_str())
-                    .ok_or_else(|| anyhow!(
+                    .ok_or_else(|| {
+                        anyhow!(
                             "Type `{ty}` comes from the `{other_crate_name}` crate, \
-                             but no `--other-crate-bindings` were specified for this crate"))?;
+                             but no `--other-crate-bindings` were specified for this crate"
+                        )
+                    })?;
                 prereqs.includes.insert(include.clone());
             }
 
@@ -525,13 +528,14 @@ fn format_ty_for_cc<'tcx>(
             // to use calling convention attributes like `_stdcall`, etc.
             assert!(matches!(sig.abi, rustc_target::spec::abi::Abi::C { .. }));
 
-            // C++ references are not rebindable and therefore can't be used to replicate semantics
-            // of Rust field types (or, say, element types of Rust arrays).  Because of this, C++
-            // references are only used for top-level return types and parameter types (and
-            // pointers are used in other locations).
+            // C++ references are not rebindable and therefore can't be used to replicate
+            // semantics of Rust field types (or, say, element types of Rust
+            // arrays).  Because of this, C++ references are only used for
+            // top-level return types and parameter types (and pointers are used
+            // in other locations).
             let ptr_or_ref_sigil = match location {
-                TypeLocation::FnReturn | TypeLocation::FnParam => quote!{ & },
-                TypeLocation::Other => quote!{ * },
+                TypeLocation::FnReturn | TypeLocation::FnParam => quote! { & },
+                TypeLocation::Other => quote! { * },
             };
 
             let mut prereqs = CcPrerequisites::default();
@@ -547,7 +551,7 @@ fn format_ty_for_cc<'tcx>(
             };
 
             CcSnippet { tokens, prereqs }
-        },
+        }
 
         // TODO(b/260268230, b/260729464): When recursively processing nested types (e.g. an
         // element type of an Array, a referent of a Ref, a parameter type of an FnPtr, etc), one
@@ -1285,7 +1289,10 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                 let field_ty = field_def.ty(tcx, substs_ref);
                 let size = get_layout(tcx, field_ty).map(|layout| layout.size().bytes());
                 let type_info = size.and_then(|size| {
-                    Ok(FieldTypeInfo { size, cc_type: format_ty_for_cc(input, field_ty, TypeLocation::Other)? })
+                    Ok(FieldTypeInfo {
+                        size,
+                        cc_type: format_ty_for_cc(input, field_ty, TypeLocation::Other)?,
+                    })
                 });
                 let name = field_def.ident(tcx);
                 let cc_name = format_cc_ident(name.as_str())
@@ -4993,19 +5000,13 @@ pub mod tests {
                 "TypeGenericStruct",
                 "Generic types are not supported yet (b/259749095)",
             ),
-            (
-                "LifetimeGenericStruct<'static>",
-                "Generic types are not supported yet (b/259749095)",
-            ),
+            ("LifetimeGenericStruct<'static>", "Generic types are not supported yet (b/259749095)"),
             (
                 "std::cmp::Ordering",
                 "Type `std::cmp::Ordering` comes from the `core` crate, \
                  but no `--other-crate-bindings` were specified for this crate",
             ),
-            (
-                "Option<i8>",
-                "Generic types are not supported yet (b/259749095)",
-            ),
+            ("Option<i8>", "Generic types are not supported yet (b/259749095)"),
             (
                 "PublicReexportOfStruct",
                 "Not directly public type (re-exports are not supported yet - b/262052635)",
