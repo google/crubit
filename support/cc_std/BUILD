@@ -96,8 +96,8 @@ filegroup(
                "//conditions:default": ["//nowhere/llvm:cc-std-headers"],
            }) +
            select({
-               "@bazel_tools//tools/target_cpu:aarch64-all": ["//third_party/grte/v5_arm/release/usr/grte/v5:compile"],
-               "@bazel_tools//tools/target_cpu:x86_64-all": ["//third_party/grte/v5_x86/release/usr/grte/v5:compile"],
+               "//third_party/bazel_platforms/cpu:aarch64": ["//third_party/grte/v5_arm/release/usr/grte/v5:compile"],
+               "//third_party/bazel_platforms/cpu:x86_64": ["//third_party/grte/v5_x86/release/usr/grte/v5:compile"],
            }),
     visibility = ["//visibility:private"],
 )
