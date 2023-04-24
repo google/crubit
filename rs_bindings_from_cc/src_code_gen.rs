@@ -1672,6 +1672,7 @@ fn function_signature(
             } else {
                 quote! {#type_}
             };
+            features.insert(make_rs_ident("impl_trait_in_assoc_type"));
             api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#quoted_type_or_self>});
             thunk_args
                 .push(quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
@@ -1763,6 +1764,7 @@ fn function_signature(
             features.insert(make_rs_ident("type_alias_impl_trait"));
             // The returned lazy FnCtor depends on all inputs.
             let extra_lifetimes = lifetimes.iter().map(|a| quote! {+ ::ctor::Captures<#a>});
+            features.insert(make_rs_ident("impl_trait_in_assoc_type"));
             quote! {impl ::ctor::Ctor<Output=#ty> #(#extra_lifetimes)* }
         }
     };
