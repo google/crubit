@@ -925,7 +925,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         .collect_vec();
 
     let struct_name = match tcx.impl_of_method(def_id) {
-        Some(impl_id) => match tcx.impl_subject(impl_id) {
+        Some(impl_id) => match tcx.impl_subject(impl_id).subst_identity() {
             ty::ImplSubject::Inherent(ty) => match ty.kind() {
                 ty::TyKind::Adt(adt, substs) => {
                     assert_eq!(0, substs.len(), "Callers should filter out generics");
