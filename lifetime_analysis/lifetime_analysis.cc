@@ -768,44 +768,6 @@ std::optional<std::string> TransferStmtVisitor::VisitCXXThisExpr(
   return std::nullopt;
 }
 
-void SetExprObjectSetRespectingType(const clang::Expr* expr,
-                                    const ObjectSet& points_to,
-                                    PointsToMap& points_to_map,
-                                    clang::ASTContext& ast_context) {
-  ObjectSet points_to_filtered;
-
-  for (auto object : points_to) {
-    if (expr->isGLValue()) {
-      if (PointeesCompatible(expr->getType(), object->Type(), ast_context)) {
-        points_to_filtered.Add(object);
-      }
-    } else {
-      clang::QualType expr_type = expr->getType();
-      // CXXConstructExpr is a special case -- it is a non-glvalue with the type
-      // of the constructed object itself. Non-pointer, non-glvalue expressions
-      // like this are not usually allowed to be associated with a points-to
-      // set, but CXXConstructExpr is an exception. We need to associate it with
-      // an `Object` representing the newly constructed object so that
-      // TransferInitializer() can then retrieve this object. So we pretend that
-      // the type is actually "pointer to object" to give MayPointTo() what it
-      // expects.
-      //
-      // Note that we will not see clang::InitListExpr here, which is the other
-      // form of initializer along with CXXConstructExpr. That is because we
-      // come here through a "call" and we don't consider an initializer list to
-      // be a "call" or treat it as such.
-      assert(!clang::isa<clang::InitListExpr>(expr));
-      if (clang::isa<clang::CXXConstructExpr>(expr)) {
-        expr_type = ast_context.getPointerType(expr_type);
-      }
-
-      if (MayPointTo(expr_type, object->Type(), ast_context)) {
-        points_to_filtered.Add(object);
-      }
-    }
-  }
-}
-
 namespace {
 void ConstrainFunctionLifetimesForCall(
     const FunctionLifetimes& callee_lifetimes,
