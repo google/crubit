@@ -195,9 +195,11 @@ std::optional<CFGElement> diagnoseCallExpr(
 
   auto ParamTypes = CalleeFPT->getParamTypes();
   ArrayRef<const Expr*> Args(CE->getArgs(), CE->getNumArgs());
-  if (isa<CXXOperatorCallExpr>(CE)) {
-    // The first argument of an operator call expression is the operand which
-    // does not appear in the list of parameter types.
+  // The first argument of an member operator call expression is the implicit
+  // object argument, which does not appear in the list of parameter types.
+  // Note that operator calls always have a direct callee.
+  if (isa<CXXOperatorCallExpr>(CE) &&
+      isa<CXXMethodDecl>(CE->getDirectCallee())) {
     Args = Args.drop_front();
   }
   if (CalleeFPT->isVariadic()) {

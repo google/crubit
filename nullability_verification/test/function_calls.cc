@@ -365,6 +365,19 @@ TEST(PointerNullabilityTest, CallMemberOperatorMultipleParams) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CallFreeOperator) {
+  // No nullability involved. This is just a regression test to make sure we can
+  // process a call to a free overloaded operator.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct A {};
+    A operator+(A, A);
+    void target() {
+      A a;
+      a = a + a;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy
