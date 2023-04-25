@@ -168,19 +168,21 @@ bool diagnoseAssertNullabilityCall(
   return false;
 }
 
-// TODO(b/233582219): Handle call expressions whose callee is not a decl (e.g.
-// a function returned from another function), or when the callee cannot be
-// interpreted as a function type (e.g. a pointer to a function pointer).
 std::optional<CFGElement> diagnoseCallExpr(
     const CallExpr* CE, const MatchFinder::MatchResult& Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
-  auto* Callee = CE->getCalleeDecl();
-  if (!Callee) return std::nullopt;
+  // Emit a warning for a nullable callee. We don't do this for member functions
+  // because in this case the callee can't be null. If we're calling a
+  // pointer-to-member-function, the callee is a `.*` or `->*` `BinaryOperator`,
+  // which itself can never be null. A nullable pointer-to-member-function will
+  // manifest as a nullable RHS of this `BinaryOperator` and should be diagnosed
+  // there.
+  if (!isa<CXXMemberCallExpr>(CE) &&
+      isNullableOrUntracked(CE->getCallee(), State.Env)) {
+    return std::optional<CFGElement>(CFGStmt(CE->getCallee()));
+  }
 
-  auto* CalleeType = Callee->getFunctionType();
-  if (!CalleeType) return std::nullopt;
-
-  if (auto* FD = Callee->getAsFunction()) {
+  if (auto* FD = CE->getDirectCallee()) {
     if (FD->getDeclName().isIdentifier() &&
         FD->getName() == "__assert_nullability" &&
         !diagnoseAssertNullabilityCall(CE, State, *Result.Context)) {
@@ -190,6 +192,31 @@ std::optional<CFGElement> diagnoseCallExpr(
     }
   }
 
+  auto* Callee = CE->getCalleeDecl();
+  // TODO(mboehme): Retrieve the nullability directly from the callee instead
+  // of from the callee decl (since the latter obviously doesn't work for
+  // callees that don't have a decl).
+  //
+  // I've tried looking at CE->getCallee()->getType() instead of
+  // CE->getCalleeDecl()->getType(), but the former appears to lose sugar.
+  if (!Callee) return std::nullopt;
+
+  auto* CalleeType = Callee->getFunctionType();
+  if (!CalleeType) return std::nullopt;
+
+  // TODO(mboehme): We're only looking at the nullability spelled on the
+  // `FunctionProtoType`, but there could be extra information in the callee.
+  // An example (due to sammccall@):
+  //
+  // template <typename T> struct Sink {
+  //   static void eat(T) { ... }
+  // }
+  // void target(Sink<Nonnull<int*>> &S) {
+  //   S<Nonnull<int*>>::eat(nullptr); // no warning
+  //   // callee is instantiated Sink<int*>::eat(int*)
+  //   // however nullability vector of DRE S::eat should be [Nonnull]
+  //   // (not sure if it is today)
+  // }
   auto* CalleeFPT = CalleeType->getAs<FunctionProtoType>();
   if (!CalleeFPT) return std::nullopt;
 

@@ -19,6 +19,7 @@
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
@@ -171,7 +172,7 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInFunctionTemplate(
         // TODO: Handle nested templates (...->getDepth() > 0).
         if (auto* DRE =
                 dyn_cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
-            ST->getReplacedParameter()->getDepth() == 0 &&
+            DRE != nullptr && ST->getReplacedParameter()->getDepth() == 0 &&
             DRE->hasExplicitTemplateArgs()) {
           return getNullabilityAnnotationsFromType(
               DRE->template_arguments()[ST->getIndex()]
@@ -366,7 +367,9 @@ void transferNonFlowSensitiveMemberCallExpr(
     const CXXMemberCallExpr* MCE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
   computeNullability(MCE, State, [&]() {
-    return getNullabilityForChild(MCE->getCallee(), State).vec();
+    return getNullabilityForChild(MCE->getCallee(), State)
+        .take_front(countPointersInType(MCE))
+        .vec();
   });
 }
 
@@ -517,6 +520,9 @@ void transferNonFlowSensitiveCallExpr(
   // TODO: Check CallExpr arguments in the diagnoser against the nullability of
   // parameters.
   computeNullability(CE, State, [&]() {
+    // TODO(mboehme): Instead of relying on Clang to propagate nullability sugar
+    // to the `CallExpr`'s type, we should extract nullability directly from the
+    // callee `Expr .
     return substituteNullabilityAnnotationsInFunctionTemplate(CE->getType(),
                                                               CE);
   });

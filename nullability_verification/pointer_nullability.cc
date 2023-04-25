@@ -116,7 +116,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
 
   void VisitFunctionProtoType(const FunctionProtoType* FPT) {
     Visit(FPT->getReturnType());
-    // TODO: visit arguments.
+    for (auto ParamType : FPT->getParamTypes()) Visit(ParamType);
   }
 
   void VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {

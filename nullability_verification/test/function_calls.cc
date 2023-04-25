@@ -378,6 +378,47 @@ TEST(PointerNullabilityTest, CallFreeOperator) {
   )cc"));
 }
 
+// Check that we distinguish between the nullability of the return type and
+// parameters.
+TEST(PointerNullabilityTest, DistinguishFunctionReturnTypeAndParams) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int *_Nullable callee(int *_Nonnull);
+
+    void target() {
+      int i = 0;
+      __assert_nullability<NK_nullable>(callee(&i));
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, DistinguishMethodReturnTypeAndParams) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      int *_Nullable callee(int *_Nonnull);
+    };
+
+    void target(S s) {
+      int i = 0;
+      __assert_nullability<NK_nullable>(s.callee(&i));
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest,
+     ClassTemplate_DistinguishMethodReturnTypeAndParams) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T0, typename T1>
+    struct S {
+      T0 callee(T1);
+    };
+
+    void target(S<int *_Nullable, int *_Nonnull> s) {
+      int i = 0;
+      __assert_nullability<NK_nullable>(s.callee(&i));
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy
