@@ -193,12 +193,9 @@ std::optional<CFGElement> diagnoseCallExpr(
   }
 
   auto* Callee = CE->getCalleeDecl();
-  // TODO(mboehme): Retrieve the nullability directly from the callee instead
-  // of from the callee decl (since the latter obviously doesn't work for
-  // callees that don't have a decl).
-  //
-  // I've tried looking at CE->getCallee()->getType() instead of
-  // CE->getCalleeDecl()->getType(), but the former appears to lose sugar.
+  // TODO(mboehme): Retrieve the nullability directly from the callee using
+  // `getNullabilityForChild(CE->getCallee())`, as what we have here now
+  // doesn't work for callees that don't have a decl.
   if (!Callee) return std::nullopt;
 
   auto* CalleeType = Callee->getFunctionType();
