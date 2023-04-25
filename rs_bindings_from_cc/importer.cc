@@ -448,7 +448,7 @@ void Importer::ImportDeclsFromDeclContext(
 }
 
 std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
-  // TODO: Move `decl->getCanonicalDecl()` from callers into here.
+  // TODO -` from callers into here.
   if (auto it = import_cache_.find(decl); it != import_cache_.end()) {
     return it->second;
   }

@@ -127,7 +127,7 @@ bzl_library(
 alias(
     name = "rust_bindings_from_cc_target",
     actual = select({
-        ":use_prebuilt_rs_bindings_from_cc_setting": "prebuilt_rs_bindings_from_cc",
+        ":use_prebuilt_rs_bindings_from_cc_setting_for_debugging": "prebuilt_rs_bindings_from_cc",
         ":use_fake_bindings_generator_setting": ":fake_rust_bindings_from_cc",
         "//conditions:default": "//rs_bindings_from_cc:rs_bindings_from_cc",
     }),
@@ -142,9 +142,9 @@ config_setting(
 )
 
 config_setting(
-    name = "use_prebuilt_rs_bindings_from_cc_setting",
+    name = "use_prebuilt_rs_bindings_from_cc_setting_for_debugging",
     flag_values = {
-        ":use_prebuilt_rs_bindings_from_cc": "True",
+        ":use_prebuilt_rs_bindings_from_cc_for_debugging": "True",
     },
 )
 
@@ -155,7 +155,7 @@ bool_flag(
 )
 
 bool_flag(
-    name = "use_prebuilt_rs_bindings_from_cc",
+    name = "use_prebuilt_rs_bindings_from_cc_for_debugging",
     build_setting_default = False,
     visibility = ["//visibility:public"],
 )

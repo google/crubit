@@ -31,6 +31,6 @@ cp \
 echo
 
 echo "##################### Running the build of ${LABEL} with the tool"
-bazel run "${LABEL}" --//rs_bindings_from_cc/bazel_support:use_prebuilt_rs_bindings_from_cc=True
+bazel run "${LABEL}" --//rs_bindings_from_cc/bazel_support:use_prebuilt_rs_bindings_from_cc_for_debugging=True
 
 trap 'rm -rf -- rs_bindings_from_cc/bazel_support/prebuilt_rs_bindings_from_cc' EXIT

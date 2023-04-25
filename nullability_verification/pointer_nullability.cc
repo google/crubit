@@ -136,7 +136,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
         derived().report(PT, *NK);
         Visit(PT->getPointeeType());
       } else {
-        // TODO: Handle this unusual yet possible (e.g. through typedefs)
+        // TODO -
         // case.
         llvm::dbgs() << "\nThe type " << AT
                      << "contains a nullability annotation that is not "
@@ -222,7 +222,7 @@ ArrayRef<NullabilityKind> getNullabilityForChild(
     // Since we process child nodes before parents, we should already have
     // computed the child nullability. However, this is not true in all test
     // cases. So, we return unspecified nullability annotations.
-    // TODO: fix this issue, and CHECK() instead.
+    // TODO - instead.
     llvm::dbgs() << "=== Missing child nullability: ===\n";
     dump(E, llvm::dbgs());
     llvm::dbgs() << "==================================\n";

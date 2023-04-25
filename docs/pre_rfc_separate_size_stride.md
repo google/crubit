@@ -479,6 +479,6 @@ do not allow their tail padding to be reused.
 -   "Language lawyering": how does this interact with existing features? For
     example, is a `repr(transparent)` type also `repr(compact)`? (I *believe*
     the answer should be yes.)
--   TODO: better names for everything. For example, `repr(compact)`, "data size"
+-   TODO:  `repr(compact -`, "data size"
     and `data_size_of`. `AlignSized` especially.
 -   How much of the standard library should be updated to `?AlignSized`?
