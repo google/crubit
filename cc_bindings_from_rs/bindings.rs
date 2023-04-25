@@ -1245,7 +1245,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     let tcx = input.tcx;
 
     // TODO(b/259749095): Support non-empty set of generic parameters.
-    let substs_ref = ty::List::empty().as_substs();
+    let substs_ref = ty::List::empty();
 
     struct FieldTypeInfo {
         size: u64,
