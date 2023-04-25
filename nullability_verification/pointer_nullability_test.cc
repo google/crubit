@@ -50,5 +50,27 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, Sugar) {
                                            NullabilityKind::NonNull));
 }
 
+TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
+  Preamble = "template <typename T> using Nullable = T _Nullable;";
+  EXPECT_THAT(nullVec("Nullable<int*>"),
+              ElementsAre(NullabilityKind::Nullable));
+
+  Preamble = R"cpp(
+    template <typename T, typename U>
+    struct Pair;
+    template <typename T>
+    using Two = Pair<T, T>;
+  )cpp";
+  // TODO: this should be [Nullable, Nullable].
+  // TemplateSpecializationType for Two<int* _Nullable> carries:
+  // A) the template arg list: int * _Nullable
+  // B) the desugared type: a TemplateSpecializationType for Pair<int*, int*>
+  //    these int* template args are wrapped in SubstTemplateTypeParmType, so
+  //    we do have enough information to recover the sugar we need from A.
+  EXPECT_THAT(
+      nullVec("Two<int* _Nullable>"),
+      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::Unspecified));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

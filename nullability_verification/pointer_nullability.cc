@@ -120,6 +120,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   }
 
   void VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
+    if (TST->isTypeAlias()) return VisitType(TST);  // Aliases are just sugar.
     for (auto TA : TST->template_arguments()) Visit(TA);
   }
 
