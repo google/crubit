@@ -1165,6 +1165,7 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
 
     let layout = get_layout(tcx, ty)
         .with_context(|| format!("Error computing the layout of #{item_name}"))?;
+    ensure!(layout.abi().is_sized(), "Bindings for dynamically sized types are not supported.");
     let alignment_in_bytes = {
         // Only the ABI-mandated alignment is considered (i.e. `AbiAndPrefAlign::pref`
         // is ignored), because 1) Rust's `std::mem::align_of` returns the
@@ -4324,6 +4325,22 @@ pub mod tests {
                                                                  successful_field) == 0);
                 }
             );
+        });
+    }
+
+    #[test]
+    fn test_format_item_struct_with_dynamically_sized_field() {
+        let test_src = r#"
+                pub struct DynamicallySizedStruct {
+                    /// Having a non-ZST field avoids hitting the following error:
+                    /// "Zero-sized types (ZSTs) are not supported (b/258259459)"
+                    _non_zst_field: f32,
+                    _dynamically_sized_field: [i32],
+                }
+            "#;
+        test_format_item(test_src, "DynamicallySizedStruct", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(err, "Bindings for dynamically sized types are not supported.");
         });
     }
 

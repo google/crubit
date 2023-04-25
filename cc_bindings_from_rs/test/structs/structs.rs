@@ -228,3 +228,19 @@ pub mod struct_by_float_passing_with_no_thunk {
         s.1
     }
 }
+
+/// Dynamically sized types 1) don't get bindings today, and 2) shouldn't
+/// generate assertions about the size of the type (the latter is a regression
+/// test for b/279587535).
+///
+/// This test doesn't have a corresponding `TEST_F` part in `structs_test.rs` -
+/// the main verification (and regression test) is that the generated bindings
+/// build fine.
+pub mod dynamically_sized_type {
+    pub struct DynamicallySizedStruct {
+        /// Having a non-ZST field avoids hitting the following error:
+        /// "Zero-sized types (ZSTs) are not supported (b/258259459)"
+        _non_zst_field: f32,
+        _dynamically_sized_field: [i32],
+    }
+}
