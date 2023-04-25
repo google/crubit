@@ -39,29 +39,6 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
     }
   )cc"));
 
-  // overloaded operator call
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct MakeNonnull {
-      int *_Nonnull operator()();
-    };
-    struct MakeNullable {
-      int *_Nullable operator()();
-    };
-    struct MakeUnannotated {
-      int *operator()();
-    };
-    void target() {
-      MakeNonnull makeNonnull;
-      *makeNonnull();
-
-      MakeNullable makeNullable;
-      *makeNullable();  // [[unsafe]]
-
-      MakeUnannotated makeUnannotated;
-      *makeUnannotated();
-    }
-  )cc"));
-
   // function pointer
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull (*makeNonnull)(),
@@ -148,57 +125,10 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
     }
   )cc"));
 
-  // overloaded operator with single param
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    // map<int * _Nonnull, int>
-    struct MapWithNonnullKeys {
-      int &operator[](int *_Nonnull key);
-    };
-    // map<int * _Nullable, int>
-    struct MapWithNullableKeys {
-      int &operator[](int *_Nullable key);
-    };
-    // map<int *, int>
-    struct MapWithUnannotatedKeys {
-      int &operator[](int *key);
-    };
-    void target(int *_Nonnull ptr_nonnull, int *_Nullable ptr_nullable,
-                int *ptr_unannotated) {
-      MapWithNonnullKeys nonnull_keys;
-      nonnull_keys[nullptr] = 42;  // [[unsafe]]
-      nonnull_keys[ptr_nonnull] = 42;
-      nonnull_keys[ptr_nullable] = 42;  // [[unsafe]]
-      nonnull_keys[ptr_unannotated] = 42;
-
-      MapWithNullableKeys nullable_keys;
-      nullable_keys[nullptr] = 42;
-      nullable_keys[ptr_nonnull] = 42;
-      nullable_keys[ptr_nullable] = 42;
-      nullable_keys[ptr_unannotated] = 42;
-
-      MapWithUnannotatedKeys unannotated_keys;
-      unannotated_keys[nullptr] = 42;
-      unannotated_keys[ptr_nonnull] = 42;
-      unannotated_keys[ptr_nullable] = 42;
-      unannotated_keys[ptr_unannotated] = 42;
-    }
-  )cc"));
-
   // free function with multiple params of mixed nullability
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void takeMixed(int *, int *_Nullable, int *_Nonnull);
     void target() {
-      takeMixed(nullptr, nullptr, nullptr);  // [[unsafe]]
-    }
-  )cc"));
-
-  // overloaded operator with multiple params of mixed nullability
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct TakeMixed {
-      void operator()(int *, int *_Nullable, int *_Nonnull);
-    };
-    void target() {
-      TakeMixed takeMixed;
       takeMixed(nullptr, nullptr, nullptr);  // [[unsafe]]
     }
   )cc"));
@@ -357,6 +287,80 @@ TEST(PointerNullabilityTest, CallVariadicFunction) {
       int i = 0;
       variadic(&i, nullptr, &i);
       variadic(nullptr, nullptr, &i);  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CallMemberOperatorNoParams) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct MakeNonnull {
+      int *_Nonnull operator()();
+    };
+    struct MakeNullable {
+      int *_Nullable operator()();
+    };
+    struct MakeUnannotated {
+      int *operator()();
+    };
+    void target() {
+      MakeNonnull makeNonnull;
+      *makeNonnull();
+
+      MakeNullable makeNullable;
+      *makeNullable();  // [[unsafe]]
+
+      MakeUnannotated makeUnannotated;
+      *makeUnannotated();
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CallMemberOperatorOneParam) {
+  // overloaded operator with single param
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    // map<int * _Nonnull, int>
+    struct MapWithNonnullKeys {
+      int &operator[](int *_Nonnull key);
+    };
+    // map<int * _Nullable, int>
+    struct MapWithNullableKeys {
+      int &operator[](int *_Nullable key);
+    };
+    // map<int *, int>
+    struct MapWithUnannotatedKeys {
+      int &operator[](int *key);
+    };
+    void target(int *_Nonnull ptr_nonnull, int *_Nullable ptr_nullable,
+                int *ptr_unannotated) {
+      MapWithNonnullKeys nonnull_keys;
+      nonnull_keys[nullptr] = 42;  // [[unsafe]]
+      nonnull_keys[ptr_nonnull] = 42;
+      nonnull_keys[ptr_nullable] = 42;  // [[unsafe]]
+      nonnull_keys[ptr_unannotated] = 42;
+
+      MapWithNullableKeys nullable_keys;
+      nullable_keys[nullptr] = 42;
+      nullable_keys[ptr_nonnull] = 42;
+      nullable_keys[ptr_nullable] = 42;
+      nullable_keys[ptr_unannotated] = 42;
+
+      MapWithUnannotatedKeys unannotated_keys;
+      unannotated_keys[nullptr] = 42;
+      unannotated_keys[ptr_nonnull] = 42;
+      unannotated_keys[ptr_nullable] = 42;
+      unannotated_keys[ptr_unannotated] = 42;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CallMemberOperatorMultipleParams) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct TakeMixed {
+      void operator()(int *, int *_Nullable, int *_Nonnull);
+    };
+    void target() {
+      TakeMixed takeMixed;
+      takeMixed(nullptr, nullptr, nullptr);  // [[unsafe]]
     }
   )cc"));
 }
