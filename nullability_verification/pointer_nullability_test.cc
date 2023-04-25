@@ -55,6 +55,11 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
   EXPECT_THAT(nullVec("Nullable<int*>"),
               ElementsAre(NullabilityKind::Nullable));
 
+  // TODO: this should be [Nullable, Nullable].
+  EXPECT_THAT(
+      nullVec("Nullable<Nullable<int*>*>"),
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
+
   Preamble = R"cpp(
     template <typename T, typename U>
     struct Pair;
