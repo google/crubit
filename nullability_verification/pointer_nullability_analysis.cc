@@ -169,7 +169,7 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInFunctionTemplate(
       [&](const SubstTemplateTypeParmType* ST)
           -> std::optional<std::vector<NullabilityKind>> {
         // TODO: Handle calls that use template argument deduction.
-        // TODO - > 0).
+        // TODO: Handle nested templates (...->getDepth() > 0).
         if (auto* DRE =
                 dyn_cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
             DRE != nullptr && ST->getReplacedParameter()->getDepth() == 0 &&

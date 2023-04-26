@@ -230,7 +230,7 @@ ArrayRef<NullabilityKind> getNullabilityForChild(
     // Since we process child nodes before parents, we should already have
     // computed the child nullability. However, this is not true in all test
     // cases. So, we return unspecified nullability annotations.
-    // TODO - instead.
+    // TODO: fix this issue, and CHECK() instead.
     llvm::dbgs() << "=== Missing child nullability: ===\n";
     dump(E, llvm::dbgs());
     llvm::dbgs() << "==================================\n";
