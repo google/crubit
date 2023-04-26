@@ -2,13 +2,14 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Like `token_stream_matchers::assert_cc_matches!`, but expects `IR` instance as input. The macro
-/// converts the instance to its corresponding struct expression and matches the pattern against
-/// that.  See the documentation of `token_stream_matchers` for more information.
+/// Like `token_stream_matchers::assert_cc_matches!`, but expects `IR` instance
+/// as input. The macro converts the instance to its corresponding struct
+/// expression and matches the pattern against that.  See the documentation of
+/// `token_stream_matchers` for more information.
 ///
 /// Example:
 /// ```rust
-///    let ir = ir_from_cc("struct SomeStruct {};').unwrap();
+///    let ir = ir_from_cc(..., "struct SomeStruct {};').unwrap();
 ///    assert_ir_matches!(
 ///        ir,
 ///        quote! {
@@ -45,12 +46,12 @@ macro_rules! assert_ir_not_matches {
 macro_rules! assert_items_match {
     ($items:expr, $patterns:expr $(,)*) => {
         assert_eq!($items.len(), $patterns.len());
-                for (idx, (item, pattern)) in $items.into_iter().zip($patterns).enumerate() {
-                    $crate::internal::match_item(&item, &pattern).expect(&format!(
-                        "input at position {} unexpectedly didn't match the pattern",
-                        &idx
-                    ));
-                }
+        for (idx, (item, pattern)) in $items.into_iter().zip($patterns).enumerate() {
+            $crate::internal::match_item(&item, &pattern).expect(&format!(
+                "input at position {} unexpectedly didn't match the pattern",
+                &idx
+            ));
+        }
     };
 }
 
@@ -129,8 +130,12 @@ pub mod internal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ir_testing::ir_from_cc;
     use quote::quote;
+
+    /// We aren't testing platform-specific details, just the matchers.
+    fn ir_from_cc(header: &str) -> arc_anyhow::Result<ir::IR> {
+        ir_testing::ir_from_cc(multiplatform_testing::Platform::X86Linux, header)
+    }
 
     #[test]
     fn test_optional_trailing_comma() {
@@ -143,10 +148,7 @@ mod tests {
 
     #[test]
     fn test_assert_ir_matches_assumes_trailing_commas_in_groups() {
-        assert_ir_matches!(
-            ir_from_cc("").unwrap(),
-            quote! {{... , }}
-        );
+        assert_ir_matches!(ir_from_cc("").unwrap(), quote! {{... , }});
     }
 
     #[test]

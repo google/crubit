@@ -17,6 +17,10 @@ load(
     "rust_library",
     "rust_test",
 )
+load(
+    "//common:multiplatform_testing.bzl",
+    "multiplatform_rust_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -105,8 +109,9 @@ cc_test(
     data = [
     ],
     tags = [
-        # TODO(b/269144587): parameterize the tests to test arm behavior in cross-compilation.
-        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+        # This test uses e.g. rustfmt and is difficult to run on ARM. We could run it using
+        # cross-compilation, but it's mostly uninteresting from a multi-platform POV.
+        "not_run:arm",
     ],
     deps = [
         ":cc_ir",
@@ -337,6 +342,7 @@ rust_library(
         ":json_from_cc",
         "//common:arc_anyhow",
         "//common:ffi_types",
+        "//common:multiplatform_testing",
         "@crate_index//:flagset",
         "@crate_index//:itertools",
         "@crate_index//:once_cell",
@@ -391,18 +397,16 @@ cc_library(
     ],
 )
 
-rust_test(
+multiplatform_rust_test(
     name = "ir_from_cc_test",
     srcs = ["ir_from_cc_test.rs"],
-    tags = [
-        # TODO(b/269144587): parameterize the tests to test arm behavior in cross-compilation.
-        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
-    ],
+    tags = ["not_run:arm"],
     deps = [
         ":ir",
         ":ir_matchers",
         ":ir_testing",
         "//common:arc_anyhow",
+        "//common:multiplatform_testing",
         "//common:rust_allocator_shims",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
@@ -447,16 +451,14 @@ rust_library(
     ],
 )
 
-rust_test(
+multiplatform_rust_test(
     name = "src_code_gen_impl_test",
     crate = ":src_code_gen_impl",
-    tags = [
-        # TODO(b/269144587): parameterize the tests to test arm behavior in cross-compilation.
-        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
-    ],
+    tags = ["not_run:arm"],
     deps = [
         ":ir_matchers",
         ":ir_testing",
+        "//common:multiplatform_testing",
         "//common:rust_allocator_shims",
         "//common:token_stream_matchers",
         "@crate_index//:static_assertions",
@@ -520,6 +522,8 @@ rust_test(
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
     ],
     deps = [
+        "//common:arc_anyhow",
+        "//common:multiplatform_testing",
         "//common:rust_allocator_shims",
     ],
 )

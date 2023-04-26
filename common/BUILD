@@ -1,5 +1,5 @@
 # Common libraries used in multiple Crubit tools.
-
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
@@ -70,6 +70,26 @@ cc_library(
     deps = [
         ":ffi_types",  # buildcleaner: keep
         "@absl//absl/strings",
+    ],
+)
+
+bzl_library(
+    name = "multiplatform_bzl",
+    srcs = ["multiplatform.bzl"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+)
+
+rust_library(
+    name = "multiplatform_testing",
+    testonly = 1,
+    srcs = ["multiplatform_testing.rs"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+    deps = [
+        "@crate_index//:once_cell",
     ],
 )
 

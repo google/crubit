@@ -4192,15 +4192,26 @@ fn generate_rs_api_impl_includes(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ir_testing::{
-        ir_from_cc, ir_from_cc_dependency, ir_record, make_ir_from_items, retrieve_func,
-        with_lifetime_macros,
-    };
+    use ir_testing::{make_ir_from_items, retrieve_func, with_lifetime_macros};
     use static_assertions::{assert_impl_all, assert_not_impl_any};
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
     use token_stream_printer::rs_tokens_to_formatted_string_for_tests;
+
+    fn ir_from_cc(header: &str) -> Result<IR> {
+        ir_testing::ir_from_cc(multiplatform_testing::test_platform(), header)
+    }
+    fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
+        ir_testing::ir_from_cc_dependency(
+            multiplatform_testing::test_platform(),
+            header,
+            dep_header,
+        )
+    }
+    fn ir_record(name: &str) -> Record {
+        ir_testing::ir_record(multiplatform_testing::test_platform(), name)
+    }
 
     fn generate_bindings_tokens(ir: IR) -> Result<BindingsTokens> {
         super::generate_bindings_tokens(
@@ -5296,12 +5307,14 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(target_arch = "x86_64")] // vectorcall only exists on x86_64, not e.g. aarch64
     mod custom_abi_tests {
         use super::*;
         use ir_matchers::assert_ir_matches;
         #[test]
         fn test_func_ptr_with_custom_abi() -> Result<()> {
+            if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
+                return Ok(());
+            }
             let ir =
                 ir_from_cc(r#" int (*get_ptr_to_func())(float, double) [[clang::vectorcall]]; "#)?;
 
@@ -5364,6 +5377,9 @@ mod tests {
 
         #[test]
         fn test_func_ptr_with_custom_abi_thunk() -> Result<()> {
+            if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
+                return Ok(());
+            }
             // Using an `inline` keyword forces generation of a C++ thunk in
             // `rs_api_impl` (i.e. exercises `format_cc_type`,
             // `format_cc_call_conv_as_clang_attribute` and similar code).
@@ -5415,6 +5431,9 @@ mod tests {
 
         #[test]
         fn test_custom_abi_thunk() -> Result<()> {
+            if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
+                return Ok(());
+            }
             let ir = ir_from_cc(
                 r#"
                 float f_vectorcall_calling_convention(float p1, float p2) [[clang::vectorcall]];

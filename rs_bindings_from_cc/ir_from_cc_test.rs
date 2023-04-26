@@ -6,11 +6,19 @@
 use arc_anyhow::Result;
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
-use ir_testing::*;
+use ir_testing::{ir_id, retrieve_func, retrieve_record};
 use itertools::Itertools;
 use quote::quote;
 use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
+
+fn ir_from_cc(header: &str) -> Result<IR> {
+    ir_testing::ir_from_cc(multiplatform_testing::test_platform(), header)
+}
+
+fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
+    ir_testing::ir_from_cc_dependency(multiplatform_testing::test_platform(), header, dep_header)
+}
 
 #[test]
 fn test_function() {
@@ -243,9 +251,11 @@ fn test_unescapable_rust_keywords_in_type_alias_name() {
     );
 }
 
-#[cfg(target_arch = "x86_64")] // vectorcall only exists on x86_64, not e.g. aarch64
 #[test]
 fn test_function_with_custom_calling_convention() {
+    if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
+        return; // vectorcall only exists on x86_64, not e.g. aarch64
+    }
     let ir = ir_from_cc("int f_vectorcall(int, int) [[clang::vectorcall]];").unwrap();
     assert_ir_matches!(
         ir,
@@ -898,10 +908,11 @@ fn test_type_conversion() -> Result<()> {
     assert_eq!(type_mapping["bool"], "bool");
 
     // TODO(b/276790180, b/276931370): use c_char instead.
-    #[cfg(target_arch = "aarch64")]
-    assert_eq!(type_mapping["char"], "u8");
-    #[cfg(not(target_arch = "aarch64"))]
-    assert_eq!(type_mapping["char"], "i8");
+    if multiplatform_testing::test_platform() == multiplatform_testing::Platform::X86Linux {
+        assert_eq!(type_mapping["char"], "i8");
+    } else {
+        assert_eq!(type_mapping["char"], "u8");
+    }
 
     assert_eq!(type_mapping["unsigned char"], "u8");
     assert_eq!(type_mapping["signed char"], "i8");

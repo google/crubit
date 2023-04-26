@@ -12,8 +12,8 @@ use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{self, make_ir_from_parts, Func, Identifier, Item, Record, IR};
 
 /// Generates `IR` from a header containing `header_source`.
-pub fn ir_from_cc(header_source: &str) -> Result<IR> {
-    ir_from_cc_dependency(header_source, "// empty header")
+pub fn ir_from_cc(platform: multiplatform_testing::Platform, header_source: &str) -> Result<IR> {
+    ir_from_cc_dependency(platform, header_source, "// empty header")
 }
 
 /// Prepends definitions for lifetime annotation macros to the code.
@@ -70,11 +70,16 @@ pub const DEPENDENCY_TARGET: &str = "//test:dependency";
 /// `header_source` of the header will be updated to contain the `#include` line
 /// for the header with `dependency_header_source`. The name of the dependency
 /// target is exposed as `DEPENDENCY_TARGET`.
-pub fn ir_from_cc_dependency(header_source: &str, dependency_header_source: &str) -> Result<IR> {
+pub fn ir_from_cc_dependency(
+    platform: multiplatform_testing::Platform,
+    header_source: &str,
+    dependency_header_source: &str,
+) -> Result<IR> {
     const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
 
     extern "C" {
         fn json_from_cc_dependency(
+            target_triple: FfiU8Slice,
             header_source: FfiU8Slice,
             dependency_header_source: FfiU8Slice,
         ) -> FfiU8SliceBox;
@@ -86,6 +91,7 @@ pub fn ir_from_cc_dependency(header_source: &str, dependency_header_source: &str
     let dependency_header_source_u8 = dependency_header_source.as_bytes();
     let json_utf8 = unsafe {
         json_from_cc_dependency(
+            FfiU8Slice::from_slice(platform.target_triple().as_ref()),
             FfiU8Slice::from_slice(header_source_with_include_u8),
             FfiU8Slice::from_slice(dependency_header_source_u8),
         )
@@ -102,8 +108,8 @@ pub fn ir_id(name: &str) -> Identifier {
 }
 
 /// Creates a simple `Item::Record` with a given name.
-pub fn ir_record(name: &str) -> Record {
-    let ir = ir_from_cc("struct REPLACEME final {};").unwrap();
+pub fn ir_record(platform: multiplatform_testing::Platform, name: &str) -> Record {
+    let ir = ir_from_cc(platform, "struct REPLACEME final {};").unwrap();
     for item in ir.items() {
         if let Item::Record(record) = item {
             let mut record = (**record).clone();
@@ -146,7 +152,7 @@ mod tests {
     #[test]
     fn test_features_ir_from_cc() -> Result<()> {
         assert_ir_matches!(
-            ir_from_cc("")?,
+            ir_from_cc(multiplatform_testing::Platform::X86Linux, "")?,
             quote! {
                 crubit_features: hash_map!{
                     ...

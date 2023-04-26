@@ -24,19 +24,25 @@ static constexpr absl::string_view kDependencyHeaderName =
 
 // This is intended to be called from Rust tests.
 extern "C" FfiU8SliceBox json_from_cc_dependency(
-    FfiU8Slice header_source, FfiU8Slice dependency_header_source) {
+    FfiU8Slice target_triple, FfiU8Slice header_source,
+    FfiU8Slice dependency_header_source) {
   absl::StatusOr<IR> ir = IrFromCc(
       StringViewFromFfiU8Slice(header_source),
       BazelLabel{"//test:testing_target"},
       /* public_headers= */ {},
+      /* virtual_headers_contents_for_testing=*/
       {{HeaderName(std::string(kDependencyHeaderName)),
         std::string(StringViewFromFfiU8Slice(dependency_header_source))}},
+      /*headers_to_targets=*/
       {{HeaderName(std::string(kDependencyHeaderName)),
-        BazelLabel{std::string(kDependencyTarget)}}});
-  // TODO(forster): For now it is good enough to just exit: We are just using
-  // this from tests, which are ok to just fail. Clang has already printed error
-  // messages. If we start using this for production, then we should bridge the
-  // error code into Rust.
+        BazelLabel{std::string(kDependencyTarget)}}},
+      /*extra_rs_srcs=*/{},
+      /*clang_args=*/{"-target", StringViewFromFfiU8Slice(target_triple)});
+
+  // TODO(forster): For now it is good enough to just exit: We are just
+  // using this from tests, which are ok to just fail. Clang has already
+  // printed error messages. If we start using this for production, then we
+  // should bridge the error code into Rust.
   if (!ir.ok()) {
     llvm::report_fatal_error(llvm::formatv("IrFromCc reported an error: {0}",
                                            ir.status().message()));
