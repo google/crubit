@@ -97,6 +97,13 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   using Base = TypeVisitor<Impl>;
   Impl& derived() { return *static_cast<Impl*>(this); }
 
+  // A nullability attribute we've seen, waiting to attach to a pointer type.
+  // There may be sugar in between: Attributed -> Typedef -> Typedef -> Pointer.
+  // All non-sugar types must consume nullability, most will ignore it.
+  std::optional<NullabilityKind> PendingNullability;
+
+  void ignoreUnexpectedNullability() { PendingNullability.reset(); }
+
  public:
   void Visit(QualType T) { Base::Visit(T.getTypePtr()); }
   void Visit(const TemplateArgument& TA) {
@@ -111,20 +118,26 @@ class NullabilityWalker : public TypeVisitor<Impl> {
         Desugar != T)
       return Base::Visit(Desugar);
 
+    // We don't expect to see any nullable non-sugar types except PointerType.
+    ignoreUnexpectedNullability();
     Base::VisitType(T);
   }
 
   void VisitFunctionProtoType(const FunctionProtoType* FPT) {
+    ignoreUnexpectedNullability();
     Visit(FPT->getReturnType());
     for (auto ParamType : FPT->getParamTypes()) Visit(ParamType);
   }
 
   void VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
     if (TST->isTypeAlias()) return VisitType(TST);  // Aliases are just sugar.
+
+    ignoreUnexpectedNullability();
     for (auto TA : TST->template_arguments()) Visit(TA);
   }
 
   void VisitRecordType(const RecordType* RT) {
+    ignoreUnexpectedNullability();
     if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
       for (auto& TA : CTSD->getTemplateArgs().asArray()) Visit(TA);
     }
@@ -132,24 +145,19 @@ class NullabilityWalker : public TypeVisitor<Impl> {
 
   void VisitAttributedType(const AttributedType* AT) {
     if (auto NK = AT->getImmediateNullability()) {
-      if (auto PT = AT->getModifiedType()->getAs<PointerType>()) {
-        derived().report(PT, *NK);
-        Visit(PT->getPointeeType());
-      } else {
-        // TODO -
-        // case.
-        llvm::dbgs() << "\nThe type " << AT
-                     << "contains a nullability annotation that is not "
-                     << "succeeded by a pointer type. "
-                     << "This occurence is not currently handled.\n";
-      }
-    } else {
-      Visit(AT->getModifiedType());
+      // If we see nullability applied twice, the outer one wins.
+      if (!PendingNullability.has_value()) PendingNullability = *NK;
     }
+    Visit(AT->getModifiedType());
+    CHECK(!PendingNullability.has_value())
+        << "Should have been consumed by modified type! "
+        << AT->getModifiedType().getAsString();
   }
 
   void VisitPointerType(const PointerType* PT) {
-    derived().report(PT, NullabilityKind::Unspecified);
+    derived().report(PT,
+                     PendingNullability.value_or(NullabilityKind::Unspecified));
+    PendingNullability.reset();
     Visit(PT->getPointeeType());
   }
 };
