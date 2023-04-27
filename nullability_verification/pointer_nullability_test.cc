@@ -88,18 +88,132 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
               ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
 }
 
-TEST_F(GetNullabilityAnnotationsFromTypeTest, TypesInClassTemplates) {
+TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentAlias) {
+  // Simple dependent type-aliases.
   Preamble = R"cpp(
     template <class T>
     struct Nullable {
       using type = T _Nullable;
     };
   )cpp";
-  // TODO: should be [Nullable, Nonnull].
-  // We're not making use of the template arg list from the ElaboratedType.
+  // TODO: should be [Nullable, Nonnull]
   EXPECT_THAT(
       nullVec("Nullable<int* _Nonnull *>::type"),
       ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassTemplate) {
+  // Simple struct inside template.
+  Preamble = R"cpp(
+    template <class T>
+    struct Outer {
+      struct Inner;
+    };
+  )cpp";
+  // TODO: should be [NonNull]
+  // We don't include parent template params in class nullability yet.
+  EXPECT_THAT(nullVec("Outer<int* _Nonnull>::Inner"), ElementsAre());
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, ReferenceOuterTemplateParam) {
+  // Referencing type-params from indirectly-enclosing template.
+  Preamble = R"cpp(
+    template <class A, class B>
+    struct Pair;
+
+    template <class T>
+    struct Outer {
+      template <class U>
+      struct Inner {
+        using type = Pair<U, T>;
+      };
+    };
+  )cpp";
+  // TODO: should be [Nonnull, Nullable]
+  EXPECT_THAT(
+      nullVec("Outer<int *_Nullable>::Inner<int *_Nonnull>::type"),
+      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::Unspecified));
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentlyNamedTemplate) {
+  // Instantiation of dependent-named template
+  Preamble = R"cpp(
+    struct Wrapper {
+      template <class T>
+      using Nullable = T _Nullable;
+    };
+
+    template <class U, class WrapT>
+    struct S {
+      using type = typename WrapT::template Nullable<U>* _Nonnull;
+    };
+  )cpp";
+  EXPECT_THAT(nullVec("S<int *, Wrapper>::type"),
+              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateTemplateParams) {
+  // Template template params
+  Preamble = R"cpp(
+    template <class X>
+    struct Nullable {
+      using type = X _Nullable;
+    };
+    template <class X>
+    struct Nonnull {
+      using type = X _Nonnull;
+    };
+
+    template <template <class> class Nullability, class T>
+    struct Pointer {
+      using type = typename Nullability<T*>::type;
+    };
+  )cpp";
+  EXPECT_THAT(nullVec("Pointer<Nullable, int>::type"),
+              ElementsAre(NullabilityKind::Nullable));
+  // TODO: should be [Nullable, Nonnull]
+  EXPECT_THAT(
+      nullVec("Pointer<Nullable, Pointer<Nonnull, int>::type>::type"),
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
+  // Same thing, but with alias templates.
+  Preamble = R"cpp(
+    template <class X>
+    using Nullable = X _Nullable;
+    template <class X>
+    using Nonnull = X _Nonnull;
+
+    template <template <class> class Nullability, class T>
+    struct Pointer {
+      using type = Nullability<T*>;
+    };
+  )cpp";
+  EXPECT_THAT(nullVec("Pointer<Nullable, int>::type"),
+              ElementsAre(NullabilityKind::Nullable));
+  // TODO: should be [Nullable, Nonnull]
+  EXPECT_THAT(
+      nullVec("Pointer<Nullable, Pointer<Nonnull, int>::type>::type"),
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateParamPack) {
+  // Parameter packs
+  Preamble = R"cpp(
+    template <class... X>
+    struct TupleWrapper {
+      class Tuple;
+    };
+
+    template <class... X>
+    struct NullableTuple {
+      using type = TupleWrapper<X _Nullable...>::Tuple;
+    };
+  )cpp";
+  // TODO: should be [Unspecified, Nonnull]
+  EXPECT_THAT(nullVec("TupleWrapper<int*, int* _Nonnull>::Tuple"),
+              ElementsAre());
+  // TODO: should be [Nullable, Nullable]
+  EXPECT_THAT(nullVec("NullableTuple<int*, int* _Nonnull>::type"),
+              ElementsAre());
 }
 
 }  // namespace
