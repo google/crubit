@@ -12,6 +12,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/SaveAndRestore.h"
 
 namespace clang {
 namespace tidy {
@@ -104,6 +105,22 @@ class NullabilityWalker : public TypeVisitor<Impl> {
 
   void ignoreUnexpectedNullability() { PendingNullability.reset(); }
 
+  // While walking the underlying type of alias TemplateSpecializationTypes,
+  // we see SubstTemplateTypeParmTypes where type parameters were referenced.
+  // The directly-available underlying types lack sugar, but we can retrieve the
+  // sugar from the arguments of the original TemplateSpecializationType.
+  //
+  // It is only possible to reference params of the immediately enclosing alias,
+  // so we keep details of the alias specialization we're currently processing.
+  struct AliasArgs {
+    const Decl* AssociatedDecl;
+    ArrayRef<TemplateArgument> Args;
+    // The alias context in which the alias specialization itself appeared.
+    // (The alias's args may reference params from this context.)
+    const AliasArgs* Parent;
+  };
+  const AliasArgs* CurrentAliasTemplate = nullptr;
+
  public:
   void Visit(QualType T) { Base::Visit(T.getTypePtr()); }
   void Visit(const TemplateArgument& TA) {
@@ -130,10 +147,39 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   }
 
   void VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
-    if (TST->isTypeAlias()) return VisitType(TST);  // Aliases are just sugar.
+    if (TST->isTypeAlias()) {
+      // Aliases are sugar, visit the underlying type.
+      // Record template args so we can resugar substituted params.
+      const AliasArgs Args{TST->getTemplateName().getAsTemplateDecl(),
+                           TST->template_arguments(), CurrentAliasTemplate};
+      llvm::SaveAndRestore UseAlias(CurrentAliasTemplate, &Args);
+      VisitType(TST);
+      return;
+    }
 
     ignoreUnexpectedNullability();
     for (auto TA : TST->template_arguments()) Visit(TA);
+  }
+
+  void VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* T) {
+    if (isa<TypeAliasTemplateDecl>(T->getAssociatedDecl())) {
+      if (CurrentAliasTemplate != nullptr) {
+        CHECK(T->getAssociatedDecl() == CurrentAliasTemplate->AssociatedDecl);
+        unsigned Index = T->getIndex();
+        // Valid because pack must be the last param in alias templates.
+        if (auto PackIndex = T->getPackIndex()) Index += *PackIndex;
+        const TemplateArgument& Arg = CurrentAliasTemplate->Args[Index];
+
+        llvm::SaveAndRestore OriginalContext(CurrentAliasTemplate,
+                                             CurrentAliasTemplate->Parent);
+        return Visit(Arg);
+      } else {
+        // Our top-level type references an unbound type alias param.
+        // Presumably our original input was the underlying type of an alias
+        // instantiation, we now lack the context needed to resugar it.
+      }
+    }
+    VisitType(T);
   }
 
   void VisitRecordType(const RecordType* RT) {
@@ -211,7 +257,7 @@ std::vector<NullabilityKind> getNullabilityAnnotationsFromType(
           return;
         }
       }
-      Visit(ST->desugar());
+      NullabilityWalker::VisitSubstTemplateTypeParmType(ST);
     }
   } AnnotationVisitor;
   AnnotationVisitor.SubstituteTypeParam = SubstituteTypeParam;

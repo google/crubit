@@ -51,14 +51,22 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, Sugar) {
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
-  Preamble = "template <typename T> using Nullable = T _Nullable;";
+  Preamble = R"cpp(
+    template <typename T>
+    using Nullable = T _Nullable;
+    template <typename T>
+    using Nonnull = T _Nonnull;
+  )cpp";
   EXPECT_THAT(nullVec("Nullable<int*>"),
               ElementsAre(NullabilityKind::Nullable));
 
-  // TODO: this should be [Nullable, Nullable].
   EXPECT_THAT(
       nullVec("Nullable<Nullable<int*>*>"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable));
+
+  EXPECT_THAT(nullVec("Nullable<Nullable<Nonnull<int*>*>*>"),
+              ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable,
+                          NullabilityKind::NonNull));
 
   Preamble = R"cpp(
     template <typename T, typename U>
@@ -66,15 +74,32 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
     template <typename T>
     using Two = Pair<T, T>;
   )cpp";
-  // TODO: this should be [Nullable, Nullable].
-  // TemplateSpecializationType for Two<int* _Nullable> carries:
-  // A) the template arg list: int * _Nullable
-  // B) the desugared type: a TemplateSpecializationType for Pair<int*, int*>
-  //    these int* template args are wrapped in SubstTemplateTypeParmType, so
-  //    we do have enough information to recover the sugar we need from A.
   EXPECT_THAT(
       nullVec("Two<int* _Nullable>"),
-      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::Unspecified));
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable));
+
+  Preamble = R"cpp(
+    template <typename T1>
+    using A = T1* _Nullable;
+    template <typename T2>
+    using B = A<T2>* _Nonnull;
+  )cpp";
+  EXPECT_THAT(nullVec("B<int>"),
+              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, TypesInClassTemplates) {
+  Preamble = R"cpp(
+    template <class T>
+    struct Nullable {
+      using type = T _Nullable;
+    };
+  )cpp";
+  // TODO: should be [Nullable, Nonnull].
+  // We're not making use of the template arg list from the ElaboratedType.
+  EXPECT_THAT(
+      nullVec("Nullable<int* _Nonnull *>::type"),
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
 }
 
 }  // namespace
