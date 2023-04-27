@@ -103,7 +103,12 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   // All non-sugar types must consume nullability, most will ignore it.
   std::optional<NullabilityKind> PendingNullability;
 
-  void ignoreUnexpectedNullability() { PendingNullability.reset(); }
+  void ignoreUnexpectedNullability() {
+    // TODO: Can we upgrade this to an assert?
+    // clang is pretty thorough about ensuring we can't put _Nullable on
+    // non-pointers, even failing template instantiation on this basis.
+    PendingNullability.reset();
+  }
 
   // While walking the underlying type of alias TemplateSpecializationTypes,
   // we see SubstTemplateTypeParmTypes where type parameters were referenced.
@@ -167,7 +172,8 @@ class NullabilityWalker : public TypeVisitor<Impl> {
         CHECK(T->getAssociatedDecl() == CurrentAliasTemplate->AssociatedDecl);
         unsigned Index = T->getIndex();
         // Valid because pack must be the last param in alias templates.
-        if (auto PackIndex = T->getPackIndex()) Index += *PackIndex;
+        if (auto PackIndex = T->getPackIndex())
+          Index = CurrentAliasTemplate->Args.size() - 1 - *PackIndex;
         const TemplateArgument& Arg = CurrentAliasTemplate->Args[Index];
 
         llvm::SaveAndRestore OriginalContext(CurrentAliasTemplate,
@@ -177,6 +183,9 @@ class NullabilityWalker : public TypeVisitor<Impl> {
         // Our top-level type references an unbound type alias param.
         // Presumably our original input was the underlying type of an alias
         // instantiation, we now lack the context needed to resugar it.
+        // TODO: maybe this could be an assert? We would need to trust all
+        // callers are obtaining types appropriately, and that clang never
+        // partially-desugars in a problematic way.
       }
     }
     VisitType(T);
