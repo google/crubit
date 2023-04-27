@@ -27,8 +27,10 @@ pub mod macro_internal {
     impl AttributedError {
         pub fn new_static(fmt: &'static str, args: Arguments) -> arc_anyhow::Error {
             arc_anyhow::Error::from(anyhow::Error::from(match args.as_str() {
-                // This format string has no parameters.
-                Some(s) => Self { fmt: Cow::Borrowed(s), message: Cow::Borrowed(s) },
+                // This format string has no parameters to format at runtime.
+                // Note: The compiler can perform optimizations to return `Some`, when even when
+                // `fmt` contains placeholders, so we store `fmt` instead of `s` for `fmt` field.
+                Some(s) => Self { fmt: Cow::Borrowed(fmt), message: Cow::Borrowed(s) },
                 // This format string has parameters and must be formatted.
                 None => Self { fmt: Cow::Borrowed(fmt), message: Cow::Owned(fmt::format(args)) },
             }))
@@ -225,7 +227,7 @@ mod tests {
         let err: &AttributedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{}");
-        assert!(matches!(err.message, Cow::Owned(_)));
+        assert!(matches!(err.message, Cow::Borrowed(_)));
         assert_eq!(err.message, "abcdef");
     }
 
@@ -267,7 +269,7 @@ mod tests {
         let err: &AttributedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{}");
-        assert!(matches!(err.message, Cow::Owned(_)));
+        assert!(matches!(err.message, Cow::Borrowed(_)));
         assert_eq!(err.message, "abcdef");
     }
 
@@ -333,7 +335,7 @@ mod tests {
         let err: &AttributedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{}");
-        assert!(matches!(err.message, Cow::Owned(_)));
+        assert!(matches!(err.message, Cow::Borrowed(_)));
         assert_eq!(err.message, "abcdef");
     }
 
