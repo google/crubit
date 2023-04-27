@@ -174,10 +174,10 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInFunctionTemplate(
                 dyn_cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
             DRE != nullptr && ST->getReplacedParameter()->getDepth() == 0 &&
             DRE->hasExplicitTemplateArgs()) {
-          return getNullabilityAnnotationsFromType(
-              DRE->template_arguments()[ST->getIndex()]
-                  .getTypeSourceInfo()
-                  ->getType());
+          TypeSourceInfo* TSI =
+              DRE->template_arguments()[ST->getIndex()].getTypeSourceInfo();
+          if (TSI == nullptr) return std::nullopt;
+          return getNullabilityAnnotationsFromType(TSI->getType());
         }
         return std::nullopt;
       });

@@ -419,6 +419,22 @@ TEST(PointerNullabilityTest,
   )cc"));
 }
 
+TEST(PointerNullabilityTest,
+     CallFunctionTemplate_ReturnTypeHasNullTypeSourceInfo) {
+  // This test sets up a function call where we don't have a `TypeSourceInfo`
+  // for the template parameter. This is a regression test for a crash that we
+  // observed on real-world code.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <class T>
+    struct A {
+      using Type = T;
+    };
+    template <int, class T>
+    typename A<T>::Type f(T);
+    void target() { f<0>(1); }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy
