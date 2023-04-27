@@ -420,10 +420,10 @@ TEST(PointerNullabilityTest,
 }
 
 TEST(PointerNullabilityTest,
-     CallFunctionTemplate_ReturnTypeHasNullTypeSourceInfo) {
+     CallFunctionTemplate_TemplateArgInReturnTypeHasNullTypeSourceInfo) {
   // This test sets up a function call where we don't have a `TypeSourceInfo`
-  // for the template parameter. This is a regression test for a crash that we
-  // observed on real-world code.
+  // for the argument to a template parameter used in the return type.
+  // This is a regression test for a crash that we observed on real-world code.
   EXPECT_TRUE(checkDiagnostics(R"cc(
     template <class T>
     struct A {
