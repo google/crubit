@@ -6,6 +6,7 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_
 
 #include <string>
+#include <type_traits>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -21,6 +22,31 @@ namespace crubit {
 // instantiations.
 static constexpr absl::string_view kInstantiationsNamespaceName =
     "__cc_template_instantiations";
+
+struct NonCopyable final {
+  NonCopyable() = default;
+  NonCopyable(const NonCopyable&) = delete;
+};
+
+struct IrFromCcOptions final {
+  absl::string_view extra_source_code_for_testing = "";
+  BazelLabel current_target = BazelLabel{"//test:testing_target"};
+  absl::Span<const HeaderName> public_headers = {};
+  absl::flat_hash_map<const HeaderName, const std::string>
+      virtual_headers_contents_for_testing = {};
+  absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets = {};
+  absl::Span<const std::string> extra_rs_srcs = {};
+  absl::Span<const absl::string_view> clang_args = {};
+  absl::Span<const std::string> extra_instantiations = {};
+  absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
+      crubit_features = {};
+
+  // Not an argument, just here to prevent the options struct from being
+  // copied/moved with nontrivial lifetime implications.
+  NonCopyable do_not_copy = {};
+};
+
+static_assert(std::is_aggregate_v<IrFromCcOptions>);
 
 // Parses C++ source code into IR.
 //
@@ -47,18 +73,7 @@ static constexpr absl::string_view kInstantiationsNamespaceName =
 //   to instantiate and generate bindings from.
 // * `crubit_features`: The set of Crubit features to enable for each target.
 //
-absl::StatusOr<IR> IrFromCc(
-    absl::string_view extra_source_code_for_testing,
-    BazelLabel current_target = BazelLabel{"//test:testing_target"},
-    absl::Span<const HeaderName> public_headers = {},
-    absl::flat_hash_map<const HeaderName, const std::string>
-        virtual_headers_contents_for_testing = {},
-    absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets = {},
-    absl::Span<const std::string> extra_rs_srcs = {},
-    absl::Span<const absl::string_view> clang_args = {},
-    absl::Span<const std::string> extra_instantiations = {},
-    const absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>&
-        crubit_features = {});
+absl::StatusOr<IR> IrFromCc(IrFromCcOptions options);
 
 }  // namespace crubit
 

@@ -67,13 +67,15 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
       CollectInstantiations(cmdline.srcs_to_scan_for_instantiations()));
 
   CRUBIT_ASSIGN_OR_RETURN(
-      IR ir,
-      IrFromCc(
-          /* extra_source_code_for_testing= */ "", cmdline.current_target(),
-          cmdline.public_headers(), virtual_headers_contents_for_testing,
-          cmdline.headers_to_targets(), cmdline.extra_rs_srcs(),
-          clang_args_view, requested_instantiations,
-          cmdline.target_to_features()));
+      IR ir, IrFromCc({.current_target = cmdline.current_target(),
+                       .public_headers = cmdline.public_headers(),
+                       .virtual_headers_contents_for_testing =
+                           std::move(virtual_headers_contents_for_testing),
+                       .headers_to_targets = cmdline.headers_to_targets(),
+                       .extra_rs_srcs = cmdline.extra_rs_srcs(),
+                       .clang_args = clang_args_view,
+                       .extra_instantiations = requested_instantiations,
+                       .crubit_features = cmdline.target_to_features()}));
 
   if (!cmdline.instantiations_out().empty()) {
     ir.crate_root_path = "__cc_template_instantiations_rs_api";

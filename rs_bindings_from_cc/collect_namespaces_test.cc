@@ -28,7 +28,7 @@ TEST(CollectNamespacesTest, Namespaces) {
     }
     namespace top_level_two {}
   )";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   auto namespace_hierarchy = CollectNamespaces(ir);
   auto top_level_namespaces = namespace_hierarchy.namespaces;
@@ -53,7 +53,7 @@ TEST(CollectNamespacesTest, ReopenedNamespaces) {
       namespace inner {}
     }
   )";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   auto top_level_namespaces = CollectNamespaces(ir).namespaces;
 
@@ -68,7 +68,7 @@ TEST(CollectNamespacesTest, InlineNamespaces) {
       inline namespace inner {}
     }
   )";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   auto top_level_namespaces = CollectNamespaces(ir).namespaces;
 
@@ -81,7 +81,7 @@ TEST(CollectNamespacesTest, AnonymousNamespaces) {
   absl::string_view file = R"(
     namespace {}
   )";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   auto top_level_namespaces = CollectNamespaces(ir).namespaces;
 
@@ -101,7 +101,7 @@ TEST(CollectNamespacesTest, SameNameDifferentParent) {
       }
     }
   )";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   auto top_level_namespaces = CollectNamespaces(ir).namespaces;
 

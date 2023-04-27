@@ -303,18 +303,18 @@ decltype(IR::items) ItemsWithoutBuiltins(const IR& ir) {
 TEST(ImporterTest, Noop) {
   // Nothing interesting there, but also not empty, so that the header gets
   // generated.
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(" "));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({" "}));
 
   EXPECT_THAT(ItemsWithoutBuiltins(ir), IsEmpty());
 }
 
 TEST(ImporterTest, ErrorOnInvalidInput) {
-  ASSERT_THAT(IrFromCc("int foo(); But this is not C++"),
+  ASSERT_THAT(IrFromCc({"int foo(); But this is not C++"}),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(ImporterTest, FuncWithVoidReturnType) {
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo();"));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo();"}));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
               UnorderedElementsAre(VariantWith<Func>(
                   AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
@@ -322,7 +322,7 @@ TEST(ImporterTest, FuncWithVoidReturnType) {
 }
 
 TEST(ImporterTest, TwoFuncs) {
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo(); void Bar();"));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo(); void Bar();"}));
   EXPECT_THAT(
       ItemsWithoutBuiltins(ir),
       UnorderedElementsAre(
@@ -334,45 +334,47 @@ TEST(ImporterTest, TwoFuncs) {
 
 TEST(ImporterTest, TwoFuncsFromTwoHeaders) {
   ASSERT_OK_AND_ASSIGN(
-      IR ir, IrFromCc("", BazelLabel{"//two_funcs:one_target"},
-                      {HeaderName("test/testing_header_0.h"),
-                       HeaderName("test/testing_header_1.h")},
-                      {{HeaderName("test/testing_header_0.h"), "void Foo();"},
-                       {HeaderName("test/testing_header_1.h"), "void Bar();"}},
-                      {
-                          {HeaderName("test/testing_header_0.h"),
-                           BazelLabel{"//two_funcs:one_target"}},
-                          {HeaderName("test/testing_header_1.h"),
-                           BazelLabel{"//two_funcs:one_target"}},
-                      }));
+      IR ir,
+      IrFromCc({.current_target = BazelLabel{"//two_funcs:one_target"},
+                .public_headers = {HeaderName("test/testing_header_0.h"),
+                                   HeaderName("test/testing_header_1.h")},
+                .virtual_headers_contents_for_testing =
+                    {{HeaderName("test/testing_header_0.h"), "void Foo();"},
+                     {HeaderName("test/testing_header_1.h"), "void Bar();"}},
+                .headers_to_targets = {
+                    {HeaderName("test/testing_header_0.h"),
+                     BazelLabel{"//two_funcs:one_target"}},
+                    {HeaderName("test/testing_header_1.h"),
+                     BazelLabel{"//two_funcs:one_target"}},
+                }}));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
               UnorderedElementsAre(VariantWith<Func>(IdentifierIs("Foo")),
                                    VariantWith<Func>(IdentifierIs("Bar"))));
 }
 
 TEST(ImporterTest, NonInlineFunc) {
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo() {}"));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo() {}"}));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
               UnorderedElementsAre(VariantWith<Func>(
                   AllOf(IdentifierIs("Foo"), Not(IsInline())))));
 }
 
 TEST(ImporterTest, InlineFunc) {
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("inline void Foo() {}"));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"inline void Foo() {}"}));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
               UnorderedElementsAre(
                   VariantWith<Func>(AllOf(IdentifierIs("Foo"), IsInline()))));
 }
 
 TEST(ImporterTest, FuncJustOnce) {
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo(); void Foo();"));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo(); void Foo();"}));
   EXPECT_THAT(
       ItemsWithoutBuiltins(ir),
       UnorderedElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo")))));
 }
 
 TEST(ImporterTest, TestImportPointerFunc) {
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("int* Foo(int* a);"));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"int* Foo(int* a);"}));
 
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
               UnorderedElementsAre(VariantWith<Func>(AllOf(
@@ -381,7 +383,7 @@ TEST(ImporterTest, TestImportPointerFunc) {
 
 TEST(ImporterTest, TestImportConstStructPointerFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir,
-                       IrFromCc("struct S{}; const S* Foo(const S* s);"));
+                       IrFromCc({"struct S{}; const S* Foo(const S* s);"}));
 
   std::optional<ItemId> decl_id = DeclIdForRecord(ir, "S");
   ASSERT_TRUE(decl_id.has_value());
@@ -396,7 +398,7 @@ TEST(ImporterTest, TestImportConstStructPointerFunc) {
 }
 
 TEST(ImporterTest, TestImportReferenceFunc) {
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("int& Foo(int& a);"));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"int& Foo(int& a);"}));
 
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
               UnorderedElementsAre(VariantWith<Func>(AllOf(
@@ -410,7 +412,7 @@ TEST(ImporterTest, TrivialCopyConstructor) {
       Defaulted(const Defaulted&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -433,7 +435,7 @@ TEST(ImporterTest, NontrivialUserDefinedCopyConstructor) {
     inline NontrivialUserDefinedDefaulted::NontrivialUserDefinedDefaulted(
         const NontrivialUserDefinedDefaulted&) = default;
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
@@ -455,7 +457,7 @@ TEST(ImporterTest, NontrivialMembersCopyConstructor) {
     };
     struct Subclass : public MemberImplicit {};
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
@@ -478,7 +480,7 @@ TEST(ImporterTest, DeletedCopyConstructor) {
       DeletedByCtorDef(DeletedByCtorDef&&) {}
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records,
@@ -496,7 +498,7 @@ TEST(ImporterTest, PublicCopyConstructor) {
       Section(const Section&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
@@ -514,7 +516,7 @@ TEST(ImporterTest, PrivateCopyConstructor) {
       Section(const Section&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -529,7 +531,7 @@ TEST(ImporterTest, TrivialMoveConstructor) {
       Defaulted(Defaulted&&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -552,7 +554,7 @@ TEST(ImporterTest, NontrivialUserDefinedMoveConstructor) {
     inline NontrivialUserDefinedDefaulted::NontrivialUserDefinedDefaulted(
         NontrivialUserDefinedDefaulted&&) = default;
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(
@@ -573,7 +575,7 @@ TEST(ImporterTest, NontrivialMembersMoveConstructor) {
     };
     struct Subclass : public MemberImplicit {};
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
@@ -596,7 +598,7 @@ TEST(ImporterTest, DeletedMoveConstructor) {
       SuppressedByCtorDef(const SuppressedByCtorDef&) {}
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records,
@@ -614,7 +616,7 @@ TEST(ImporterTest, PublicMoveConstructor) {
       Section(Section&&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
@@ -632,7 +634,7 @@ TEST(ImporterTest, PrivateMoveConstructor) {
       Section(Section&&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -647,7 +649,7 @@ TEST(ImporterTest, TrivialDestructor) {
       ~Defaulted() = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -675,7 +677,7 @@ TEST(ImporterTest, NontrivialUserDefinedDestructor) {
     inline NontrivialUserDefinedDefaulted::~NontrivialUserDefinedDefaulted() =
         default;
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
@@ -697,7 +699,7 @@ TEST(ImporterTest, NontrivialMembersDestructor) {
     };
     struct Subclass : public MemberImplicit {};
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
@@ -717,7 +719,7 @@ TEST(ImporterTest, DeletedDestructor) {
       Deleted x;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -736,7 +738,7 @@ TEST(ImporterTest, PublicDestructor) {
       ~Section() = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
@@ -753,7 +755,7 @@ TEST(ImporterTest, PrivateDestructor) {
       ~Section() = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -771,7 +773,7 @@ TEST(ImporterTest, TrivialAbi) {
       Nontrivial(const Nontrivial&) {}
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
@@ -784,7 +786,7 @@ TEST(ImporterTest, NotTrivialAbi) {
       Nontrivial(const Nontrivial&) {}
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(1));
@@ -806,7 +808,7 @@ TEST(ImporterTest, TopLevelItemIds) {
     void nested_func();
     }  // namespace top_level_namespace
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<IR::Item> items;
   for (const auto& id : ir.top_level_item_ids) {
@@ -839,7 +841,7 @@ TEST(ImporterTest, RecordItemIds) {
       int baz();
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(1));
