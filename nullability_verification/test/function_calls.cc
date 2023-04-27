@@ -435,6 +435,14 @@ TEST(PointerNullabilityTest,
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CallFunctionTemplate_PartiallyDeduced) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <int, class T>
+    T f(T);
+    void target() { f<0>(1); }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy
