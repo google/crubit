@@ -176,14 +176,14 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInFunctionTemplate(
             // Some or all of the template arguments may be deduced, and we
             // won't see those on the `DeclRefExpr`. If the template argument
             // was deduced, we don't have any sugar for it.
-            // TODO: Can we somehow obtain it from the function param it was
-            // deduced from?
-            // TODO: This check, as well as the index into `template_arguments`
-            // below, may be incorrect in the presence of parameters packs.
-            // In function templates, parameter packs may appear anywhere in the
-            // parameter list. The index may therefore refer to one of the
-            // pack arguments, but we might incorrectly interpret it as
-            // referring to an argument that follows the pack.
+            // TODO(b/268348533): Can we somehow obtain it from the function
+            // param it was deduced from?
+            // TODO(b/268345783): This check, as well as the index into
+            // `template_arguments` below, may be incorrect in the presence of
+            // parameters packs.  In function templates, parameter packs may
+            // appear anywhere in the parameter list. The index may therefore
+            // refer to one of the pack arguments, but we might incorrectly
+            // interpret it as referring to an argument that follows the pack.
             ST->getIndex() < DRE->template_arguments().size()) {
           TypeSourceInfo* TSI =
               DRE->template_arguments()[ST->getIndex()].getTypeSourceInfo();
