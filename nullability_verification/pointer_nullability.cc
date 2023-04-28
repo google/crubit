@@ -130,6 +130,15 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   void Visit(QualType T) { Base::Visit(T.getTypePtr()); }
   void Visit(const TemplateArgument& TA) {
     if (TA.getKind() == TemplateArgument::Type) Visit(TA.getAsType());
+    if (TA.getKind() == TemplateArgument::Pack)
+      for (const auto& PackElt : TA.getPackAsArray()) Visit(PackElt);
+  }
+  void Visit(const DeclContext* DC) {
+    // For now, only consider enclosing classes.
+    // TODO: The nullability of template functions can affect local classes too,
+    // this can be relevant e.g. when instantiating templates with such types.
+    if (auto* CRD = llvm::dyn_cast<CXXRecordDecl>(DC))
+      Visit(DC->getParentASTContext().getRecordType(CRD));
   }
 
   void VisitType(const Type* T) {
@@ -162,7 +171,10 @@ class NullabilityWalker : public TypeVisitor<Impl> {
       return;
     }
 
+    auto* CRD = TST->getAsCXXRecordDecl();
+    CHECK(CRD) << "Expected an alias or class specialization in concrete code";
     ignoreUnexpectedNullability();
+    Visit(CRD->getDeclContext());
     for (auto TA : TST->template_arguments()) Visit(TA);
   }
 
@@ -193,7 +205,10 @@ class NullabilityWalker : public TypeVisitor<Impl> {
 
   void VisitRecordType(const RecordType* RT) {
     ignoreUnexpectedNullability();
+    Visit(RT->getDecl()->getDeclContext());
     if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+      // TODO: if this is an instantiation, these args lack sugar.
+      // We can try to retrieve it from the current template context.
       for (auto& TA : CTSD->getTemplateArgs().asArray()) Visit(TA);
     }
   }
@@ -216,23 +231,25 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     Visit(PT->getPointeeType());
   }
 };
-}  // namespace
 
-unsigned countPointersInType(QualType T) {
+template <typename T>
+unsigned countPointers(const T& Object) {
   struct Walker : public NullabilityWalker<Walker> {
     unsigned Count = 0;
     void report(const PointerType*, NullabilityKind) { ++Count; }
-  } PointerCountVisitor;
-  PointerCountVisitor.Visit(T.getCanonicalType());
-  return PointerCountVisitor.Count;
+  } PointerCountWalker;
+  PointerCountWalker.Visit(Object);
+  return PointerCountWalker.Count;
 }
 
-unsigned countPointersInType(TemplateArgument TA) {
-  if (TA.getKind() == TemplateArgument::Type) {
-    return countPointersInType(TA.getAsType().getCanonicalType());
-  }
-  return 0;
+}  // namespace
+
+unsigned countPointersInType(QualType T) { return countPointers(T); }
+
+unsigned countPointersInType(const DeclContext* DC) {
+  return countPointers(DC);
 }
+unsigned countPointersInType(TemplateArgument TA) { return countPointers(TA); }
 
 QualType exprType(const Expr* E) {
   if (E->hasPlaceholderType(BuiltinType::BoundMember))

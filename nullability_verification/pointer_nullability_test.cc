@@ -119,10 +119,11 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassTemplate) {
     struct Outer {
       struct Inner;
     };
+    using OuterNullableInner = Outer<int* _Nonnull>::Inner;
   )cpp";
   // TODO: should be [NonNull]
-  // We don't include parent template params in class nullability yet.
-  EXPECT_THAT(nullVec("Outer<int* _Nonnull>::Inner"), ElementsAre());
+  EXPECT_THAT(nullVec("Outer<int* _Nonnull>::Inner"),
+              ElementsAre(NullabilityKind::Unspecified));
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, ReferenceOuterTemplateParam) {
@@ -219,11 +220,13 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateParamPack) {
     };
   )cpp";
   // TODO: should be [Unspecified, Nonnull]
-  EXPECT_THAT(nullVec("TupleWrapper<int*, int* _Nonnull>::Tuple"),
-              ElementsAre());
+  EXPECT_THAT(
+      nullVec("TupleWrapper<int*, int* _Nonnull>::Tuple"),
+      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::Unspecified));
   // TODO: should be [Nullable, Nullable]
-  EXPECT_THAT(nullVec("NullableTuple<int*, int* _Nonnull>::type"),
-              ElementsAre());
+  EXPECT_THAT(
+      nullVec("NullableTuple<int*, int* _Nonnull>::type"),
+      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::Unspecified));
 }
 
 class PrintWithNullabilityTest : public ::testing::Test {

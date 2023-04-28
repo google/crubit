@@ -127,7 +127,8 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
         unsigned ArgIndex = ST->getIndex();
         auto TemplateArgs = Specialization->getTemplateArgs().asArray();
 
-        unsigned PointerCount = 0;
+        unsigned PointerCount =
+            countPointersInType(Specialization->getDeclContext());
         for (auto TA : TemplateArgs.take_front(ArgIndex)) {
           PointerCount += countPointersInType(TA);
         }

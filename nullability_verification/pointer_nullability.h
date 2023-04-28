@@ -127,6 +127,7 @@ QualType rebuildWithNullability(QualType, ArrayRef<NullabilityKind>,
 unsigned countPointersInType(QualType T);
 unsigned countPointersInType(const Expr* E);
 unsigned countPointersInType(TemplateArgument TA);
+unsigned countPointersInType(const DeclContext* DC);
 
 QualType exprType(const Expr* E);
 
