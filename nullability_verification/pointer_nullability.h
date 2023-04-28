@@ -111,6 +111,16 @@ std::vector<NullabilityKind> getNullabilityAnnotationsFromType(
     QualType T,
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam = nullptr);
 
+/// Prints QualType's underlying canonical type, annotated with nullability.
+/// See rebuildWithNullability().
+std::string printWithNullability(QualType, ArrayRef<NullabilityKind>,
+                                 ASTContext&);
+/// Returns an equivalent type annotated with the provided nullability.
+/// Any existing sugar (including nullability) is discarded.
+/// rebuildWithNullability(int *, {Nullable}) ==> int * _Nullable.
+QualType rebuildWithNullability(QualType, ArrayRef<NullabilityKind>,
+                                ASTContext&);
+
 /// Computes the number of pointer slots within a type.
 /// Each of these could conceptually be nullable, so this is the length of
 /// the nullability vector computed by getNullabilityAnnotationsFromType().

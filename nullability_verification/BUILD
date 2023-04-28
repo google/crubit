@@ -59,7 +59,10 @@ cc_library(
 
 cc_library(
     name = "pointer_nullability",
-    srcs = ["pointer_nullability.cc"],
+    srcs = [
+        "pointer_nullability.cc",
+        "type_nullability.cc",
+    ],
     hdrs = ["pointer_nullability.h"],
     deps = [
         ":pointer_nullability_lattice",

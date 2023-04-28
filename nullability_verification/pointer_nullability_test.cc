@@ -226,5 +226,60 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateParamPack) {
               ElementsAre());
 }
 
+class PrintWithNullabilityTest : public ::testing::Test {
+ protected:
+  // C++ declarations prepended before parsing type in nullVec().
+  std::string Preamble;
+
+  // Parses `Type`, augments it with Nulls, and prints the result.
+  std::string print(llvm::StringRef Type, ArrayRef<NullabilityKind> Nulls) {
+    clang::TestAST AST((Preamble + "\n using Target = " + Type + ";").str());
+    auto Target = AST.context().getTranslationUnitDecl()->lookup(
+        &AST.context().Idents.get("Target"));
+    CHECK(Target.isSingleResult());
+    QualType TargetType =
+        AST.context().getTypedefType(Target.find_first<TypeAliasDecl>());
+    return printWithNullability(TargetType, Nulls, AST.context());
+  }
+};
+
+TEST_F(PrintWithNullabilityTest, Pointers) {
+  EXPECT_EQ(print("int*", {NullabilityKind::Nullable}), "int * _Nullable");
+  EXPECT_EQ(
+      print("int***", {NullabilityKind::Nullable, NullabilityKind::NonNull,
+                       NullabilityKind::Unspecified}),
+      "int ** _Nonnull * _Nullable");
+}
+
+TEST_F(PrintWithNullabilityTest, Sugar) {
+  Preamble = R"cpp(
+    template <class T>
+    using Ptr = T*;
+    using Int = int;
+    using IntPtr = Ptr<Int>;
+  )cpp";
+  EXPECT_EQ(print("IntPtr", {NullabilityKind::Nullable}), "int * _Nullable");
+}
+
+TEST_F(PrintWithNullabilityTest, Templates) {
+  Preamble = R"cpp(
+    template <class>
+    struct vector;
+    template <class, class>
+    struct pair;
+  )cpp";
+  EXPECT_EQ(print("vector<pair<int*, int*>*>",
+                  {NullabilityKind::Nullable, NullabilityKind::NonNull,
+                   NullabilityKind::Unspecified}),
+            "vector<pair<int * _Nonnull, int *> * _Nullable>");
+}
+
+TEST_F(PrintWithNullabilityTest, Functions) {
+  EXPECT_EQ(print("float*(*)(double*, double*)",
+                  {NullabilityKind::Nullable, NullabilityKind::NonNull,
+                   NullabilityKind::NonNull, NullabilityKind::Unspecified}),
+            "float * _Nonnull (* _Nullable)(double * _Nonnull, double *)");
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
