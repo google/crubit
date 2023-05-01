@@ -2112,6 +2112,8 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             pair => Err(pair),
         });
 
+    let mut override_alignment = record.override_alignment;
+
     // Pair up fields with the preceeding and following fields (if any):
     // - the end offset of the previous field determines if we need to insert
     //   padding.
@@ -2190,6 +2192,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
                     db.generate_source_loc_doc_comment(),
                 ),
                 Err(msg) => {
+                    override_alignment = true;
                     let supplemental_text = format!(
                         "Reason for representing this field as a blob of bytes:\n{:#}",
                         msg
@@ -2301,7 +2304,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
     };
 
     let mut repr_attributes = vec![quote! {C}];
-    if record.override_alignment && record.alignment > 1 {
+    if override_alignment && record.alignment > 1 {
         let alignment = Literal::usize_unsuffixed(record.alignment);
         repr_attributes.push(quote! {align(#alignment)});
     }

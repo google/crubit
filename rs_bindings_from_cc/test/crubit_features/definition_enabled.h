@@ -6,7 +6,7 @@
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CRUBIT_FEATURES_DEFINITION_ENABLED_H_
 
 struct EnabledStruct {
-  unsigned char x;
+  int x;
 };
 
 template <typename T>

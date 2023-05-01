@@ -297,14 +297,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   bool override_alignment = record_decl->hasAttr<clang::AlignedAttr>() ||
                             is_derived_class || layout.hasOwnVFPtr();
 
-  std::vector<Field> fields = ImportFields(record_decl);
-  for (const Field& field : fields) {
-    if (field.is_no_unique_address || !field.type.ok()) {
-      override_alignment = true;
-      break;
-    }
-  }
-
   bool is_effectively_final = record_decl->isEffectivelyFinal() ||
                               record_decl->isUnion() ||
                               FinalOverrides().contains(preferred_cc_name);
@@ -321,7 +313,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .doc_comment = std::move(doc_comment),
       .source_loc = ictx_.ConvertSourceLocation(source_loc),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
-      .fields = std::move(fields),
+      .fields = ImportFields(record_decl),
       .size = layout.getSize().getQuantity(),
       .original_cc_size = layout.getSize().getQuantity(),
       .alignment = layout.getAlignment().getQuantity(),

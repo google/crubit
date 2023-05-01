@@ -8,7 +8,7 @@
 
 struct EnabledStructWithDisabledField final {
   DisabledStruct x;
-  int y;
+  char y;
 };
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CRUBIT_FEATURES_WRAPPER_STRUCT_ENABLED_H_
