@@ -609,7 +609,7 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunction(
   llvm::Expected<ObjectRepository> object_repository =
       ObjectRepository::Create(func, callee_lifetimes);
   if (auto err = object_repository.takeError()) {
-    return err;
+    return std::move(err);
   }
   FunctionAnalysis analysis{.object_repository = std::move(*object_repository)};
 
