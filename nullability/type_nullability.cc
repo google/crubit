@@ -176,6 +176,11 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     PendingNullability.reset();
     Visit(PT->getPointeeType());
   }
+
+  void VisitReferenceType(const ReferenceType* RT) {
+    ignoreUnexpectedNullability();
+    Visit(RT->getPointeeTypeAsWritten());
+  }
 };
 
 template <typename T>
@@ -307,6 +312,13 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
     std::vector<QualType> Params;
     for (const auto& Param : T->getParamTypes()) Params.push_back(Visit(Param));
     return Ctx.getFunctionType(Ret, Params, T->getExtProtoInfo());
+  }
+
+  QualType VisitLValueReferenceType(const LValueReferenceType* T) {
+    return Ctx.getLValueReferenceType(Visit(T->getPointeeType()));
+  }
+  QualType VisitRValueReferenceType(const RValueReferenceType* T) {
+    return Ctx.getRValueReferenceType(Visit(T->getPointeeType()));
   }
 
  private:

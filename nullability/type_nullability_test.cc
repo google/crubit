@@ -51,6 +51,20 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, Sugar) {
                                            NullabilityKind::NonNull));
 }
 
+TEST_F(GetNullabilityAnnotationsFromTypeTest, References) {
+  // Top-level references can't be expression types, but we support them anyway
+  EXPECT_THAT(nullVec("int * _Nonnull &"),
+              ElementsAre(NullabilityKind::NonNull));
+  EXPECT_THAT(nullVec("int * _Nonnull &&"),
+              ElementsAre(NullabilityKind::NonNull));
+
+  // ... and other types involving references can appear in expressions
+  EXPECT_THAT(nullVec("int * _Nullable& (* _Nonnull)()"),
+              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("int * _Nullable&& (* _Nonnull)()"),
+              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
+}
+
 TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
   Preamble = R"cpp(
     template <typename T>
@@ -283,6 +297,14 @@ TEST_F(PrintWithNullabilityTest, Functions) {
                   {NullabilityKind::Nullable, NullabilityKind::NonNull,
                    NullabilityKind::NonNull, NullabilityKind::Unspecified}),
             "float * _Nonnull (* _Nullable)(double * _Nonnull, double *)");
+}
+
+TEST_F(PrintWithNullabilityTest, References) {
+  EXPECT_EQ(print("int * &", {NullabilityKind::Nullable}), "int * _Nullable &");
+  EXPECT_EQ(print("int * &&", {NullabilityKind::Nullable}),
+            "int * _Nullable &&");
+  EXPECT_EQ(print("int *& (&&)()", {NullabilityKind::Nullable}),
+            "int * _Nullable &(&&)()");
 }
 
 }  // namespace
