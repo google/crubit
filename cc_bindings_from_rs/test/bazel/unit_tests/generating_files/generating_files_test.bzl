@@ -10,25 +10,13 @@ load(
 )
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
+    "//cc_bindings_from_rs/test/bazel/unit_tests/unit_test_helpers:attach_aspect.bzl",
+    "ActionsInfo",
+    "attach_aspect",
+)
+load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "CcBindingsFromRustInfo",
-    "cc_bindings_from_rust_aspect",
-)
-
-ActionsInfo = provider(
-    doc = ("A provider that contains compile and linking information for the generated" +
-           " `.cc` and `.rs` files."),
-    fields = {"actions": "List[Action]: actions registered by the underlying target."},
-)
-
-def _attach_aspect_impl(ctx):
-    return [ctx.attr.dep[CcBindingsFromRustInfo], ActionsInfo(actions = ctx.attr.dep.actions)]
-
-attach_aspect = rule(
-    implementation = _attach_aspect_impl,
-    attrs = {
-        "dep": attr.label(aspects = [cc_bindings_from_rust_aspect]),
-    },
 )
 
 def _find_actions_by_mnemonic(env, expected_mnemonic):
