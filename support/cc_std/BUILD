@@ -108,5 +108,7 @@ bindings_for_toolchain_headers(
     extra_rs_srcs = [":extra_rs_srcs_for_cc_std"],
     public_libc_hdrs = LIBC_HEADERS,
     public_libcxx_hdrs = LIBCXX_HEADERS,
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//visibility:public",
+    ],
 )

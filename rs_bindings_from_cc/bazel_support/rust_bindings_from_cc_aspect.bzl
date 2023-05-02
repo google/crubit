@@ -221,7 +221,7 @@ rust_bindings_from_cc_aspect = aspect(
     required_aspect_providers = [CcInfo],
     attrs = dict(bindings_attrs.items() + {
         "_std": attr.label(
-            default = "//support/cc_std:cc_std",
+            default = "//support/cc_std",
         ),
     }.items()),
     toolchains = [

@@ -7,7 +7,9 @@ cc_library(
         "offsetof.h",
         "return_value_slot.h",
     ],
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//visibility:public",
+    ],
     # It is important to be thoughtful when adding new dependencies for
     # `bindings_support` (and possibly other targets in this BUILD file).
     # Using mature Abseil APIs seems okay - we should be able to assume that
