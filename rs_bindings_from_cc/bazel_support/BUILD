@@ -6,7 +6,10 @@ load(
     "deps_for_bindings",
 )
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load(
+    "@bazel_skylib//rules:common_settings.bzl",
+    "bool_flag",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -124,16 +127,6 @@ bzl_library(
     deps = ["@bazel_skylib//lib:collections"],
 )
 
-alias(
-    name = "rust_bindings_from_cc_target",
-    actual = select({
-        ":use_prebuilt_rs_bindings_from_cc_setting_for_debugging": "prebuilt_rs_bindings_from_cc",
-        ":use_fake_bindings_generator_setting": ":fake_rust_bindings_from_cc",
-        "//conditions:default": "//rs_bindings_from_cc:rs_bindings_from_cc",
-    }),
-    visibility = ["//visibility:public"],
-)
-
 config_setting(
     name = "use_fake_bindings_generator_setting",
     flag_values = {
@@ -141,22 +134,9 @@ config_setting(
     },
 )
 
-config_setting(
-    name = "use_prebuilt_rs_bindings_from_cc_setting_for_debugging",
-    flag_values = {
-        ":use_prebuilt_rs_bindings_from_cc_for_debugging": "True",
-    },
-)
-
 bool_flag(
     name = "use_actual_bindings_generator",
     build_setting_default = True,
-    visibility = ["//visibility:public"],
-)
-
-bool_flag(
-    name = "use_prebuilt_rs_bindings_from_cc_for_debugging",
-    build_setting_default = False,
     visibility = ["//visibility:public"],
 )
 
@@ -194,5 +174,28 @@ deps_for_bindings(
 bool_flag(
     name = "generate_error_report",
     build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+bool_flag(
+    name = "use_prebuilt_rs_bindings_from_cc_for_debugging",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "use_prebuilt_rs_bindings_from_cc_setting_for_debugging",
+    flag_values = {
+        ":use_prebuilt_rs_bindings_from_cc_for_debugging": "True",
+    },
+)
+
+alias(
+    name = "rust_bindings_from_cc_target",
+    actual = select({
+        ":use_prebuilt_rs_bindings_from_cc_setting": "prebuilt_rs_bindings_from_cc",
+        ":use_fake_bindings_generator_setting": ":fake_rust_bindings_from_cc",
+        "//conditions:default": "//rs_bindings_from_cc:rs_bindings_from_cc",
+    }),
     visibility = ["//visibility:public"],
 )

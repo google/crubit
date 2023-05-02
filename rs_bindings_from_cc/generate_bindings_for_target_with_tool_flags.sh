@@ -31,6 +31,11 @@ cp \
 echo
 
 echo "##################### Running the build of ${LABEL} with the tool"
+
+# copybara:strip_begin(Google's Crubit's release process)
+bazel run "${LABEL}" --//rs_bindings_from_cc/bazel_support:generator_build_flavor=prebuilt_for_debugging
+# copybara:strip_end_and_replace_begin
 bazel run "${LABEL}" --//rs_bindings_from_cc/bazel_support:use_prebuilt_rs_bindings_from_cc_for_debugging=True
+# copybara:replace_end
 
 trap 'rm -rf -- rs_bindings_from_cc/bazel_support/prebuilt_rs_bindings_from_cc' EXIT
