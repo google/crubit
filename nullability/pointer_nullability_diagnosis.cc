@@ -9,6 +9,7 @@
 
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_matchers.h"
+#include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"

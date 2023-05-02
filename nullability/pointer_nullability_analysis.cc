@@ -12,6 +12,7 @@
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/pointer_nullability_matchers.h"
+#include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTDumper.h"
 #include "clang/AST/Expr.h"
@@ -73,6 +74,23 @@ void computeNullability(const Expr* E,
       Nullability.assign(ExpectedSize, NullabilityKind::Unspecified);
     }
     return Nullability;
+  });
+}
+
+// Returns the computed nullability for a subexpr of the current expression.
+// This is always available as we compute bottom-up.
+ArrayRef<NullabilityKind> getNullabilityForChild(
+    const Expr* E, TransferState<PointerNullabilityLattice>& State) {
+  return State.Lattice.insertExprNullabilityIfAbsent(E, [&] {
+    // Since we process child nodes before parents, we should already have
+    // computed the child nullability. However, this is not true in all test
+    // cases. So, we return unspecified nullability annotations.
+    // TODO: fix this issue, and CHECK() instead.
+    llvm::dbgs() << "=== Missing child nullability: ===\n";
+    dump(E, llvm::dbgs());
+    llvm::dbgs() << "==================================\n";
+
+    return unspecifiedNullability(E);
   });
 }
 
@@ -692,6 +710,7 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value& Val1,
 
   return true;
 }
+
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang

@@ -22,10 +22,6 @@ namespace nullability {
 
 using dataflow::TransferState;
 
-/// Returns the `NullabilityKind` corresponding to the nullability annotation on
-/// `Type` if present. Otherwise, returns `NullabilityKind::Unspecified`.
-NullabilityKind getNullabilityKind(QualType Type, ASTContext& Ctx);
-
 /// Returns the `PointerValue` allocated to `PointerExpr` if available.
 /// Otherwise, returns nullptr.
 dataflow::PointerValue* getPointerValueFromExpr(
@@ -95,54 +91,12 @@ inline void initUnknownPointer(dataflow::PointerValue& PointerVal,
 bool isNullable(const dataflow::PointerValue& PointerVal,
                 const dataflow::Environment& Env);
 
-/// Returns a human-readable debug representation of a nullability vector.
-std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability);
-
-/// A function that may provide enhanced nullability information for a
-/// substituted template parameter (which has no sugar of its own).
-using GetTypeParamNullability = std::optional<std::vector<NullabilityKind>>(
-    const SubstTemplateTypeParmType* ST);
-/// Traverse over a type to get its nullability. For example, if T is the type
-/// Struct3Arg<int * _Nonnull, int, pair<int * _Nullable, int *>> * _Nonnull,
-/// the resulting nullability annotations will be {_Nonnull, _Nonnull,
-/// _Nullable, _Unknown}. Note that non-pointer elements (e.g., the second
-/// argument of Struct3Arg) do not get a nullability annotation.
-std::vector<NullabilityKind> getNullabilityAnnotationsFromType(
-    QualType T,
-    llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam = nullptr);
-
-/// Prints QualType's underlying canonical type, annotated with nullability.
-/// See rebuildWithNullability().
-std::string printWithNullability(QualType, ArrayRef<NullabilityKind>,
-                                 ASTContext&);
-/// Returns an equivalent type annotated with the provided nullability.
-/// Any existing sugar (including nullability) is discarded.
-/// rebuildWithNullability(int *, {Nullable}) ==> int * _Nullable.
-QualType rebuildWithNullability(QualType, ArrayRef<NullabilityKind>,
-                                ASTContext&);
-
-/// Computes the number of pointer slots within a type.
-/// Each of these could conceptually be nullable, so this is the length of
-/// the nullability vector computed by getNullabilityAnnotationsFromType().
-unsigned countPointersInType(QualType T);
-unsigned countPointersInType(const Expr* E);
-unsigned countPointersInType(TemplateArgument TA);
-unsigned countPointersInType(const DeclContext* DC);
-
-QualType exprType(const Expr* E);
-
-std::vector<NullabilityKind> unspecifiedNullability(const Expr* E);
 
 // Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
 template <typename T>
 void dump(const T& Node, llvm::raw_ostream& OS) {
   clang::ASTDumper(OS, /*ShowColors=*/false).Visit(Node);
 }
-
-// Returns the computed nullability for a subexpr of the current expression.
-// This is always available as we compute bottom-up.
-ArrayRef<NullabilityKind> getNullabilityForChild(
-    const Expr* E, TransferState<PointerNullabilityLattice>& State);
 
 }  // namespace nullability
 }  // namespace tidy
