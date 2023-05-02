@@ -65,6 +65,11 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, References) {
               ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
 }
 
+TEST_F(GetNullabilityAnnotationsFromTypeTest, Arrays) {
+  EXPECT_THAT(nullVec("int * _Nonnull[][2]"),
+              ElementsAre(NullabilityKind::NonNull));
+}
+
 TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
   Preamble = R"cpp(
     template <typename T>
@@ -305,6 +310,21 @@ TEST_F(PrintWithNullabilityTest, References) {
             "int * _Nullable &&");
   EXPECT_EQ(print("int *& (&&)()", {NullabilityKind::Nullable}),
             "int * _Nullable &(&&)()");
+}
+
+TEST_F(PrintWithNullabilityTest, Arrays) {
+  EXPECT_EQ(print("int*[][2]", {NullabilityKind::Nullable}),
+            "int * _Nullable[][2]");
+  // variable length array not allowed at file scope, wrap in a function...
+  Preamble = R"cpp(
+    int n;
+    auto& makeArray() {
+      float* array[n];
+      return array;
+    }
+  )cpp";
+  EXPECT_EQ(print("decltype(makeArray())", {NullabilityKind::Nullable}),
+            "float * _Nullable (&)[n]");
 }
 
 }  // namespace

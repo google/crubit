@@ -603,6 +603,16 @@ void transferNonFlowSensitiveNewExpr(
   });
 }
 
+void transferNonFlowSensitiveArraySubscriptExpr(
+    const ArraySubscriptExpr* ASE, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
+  computeNullability(ASE, State, [&]() {
+    auto BaseNullability = getNullabilityForChild(ASE->getBase(), State);
+    CHECK(ASE->getBase()->getType()->isAnyPointerType());
+    return BaseNullability.slice(1).vec();
+  });
+}
+
 auto buildNonFlowSensitiveTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       .CaseOfCFGStmt<DeclRefExpr>(ast_matchers::declRefExpr(),
@@ -622,6 +632,9 @@ auto buildNonFlowSensitiveTransferer() {
                                     transferNonFlowSensitiveUnaryOperator)
       .CaseOfCFGStmt<CXXNewExpr>(ast_matchers::cxxNewExpr(),
                                  transferNonFlowSensitiveNewExpr)
+      .CaseOfCFGStmt<ArraySubscriptExpr>(
+          ast_matchers::arraySubscriptExpr(),
+          transferNonFlowSensitiveArraySubscriptExpr)
       .Build();
 }
 

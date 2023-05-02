@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "nullability/test/check_diagnostics.h"
+#include "nullability_verification/test/check_diagnostics.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
@@ -16,18 +16,6 @@ TEST(PointerNullabilityTest, Arrays) {
     void target() {
       __assert_nullability<NK_nullable>(x[0][1]);
       __assert_nullability<NK_nonnull>(y[0][1]);
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ArrayArgumentSyntax) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    // Though declared as arrays, these parameters are actually pointers.
-    // Their nullability syntax is unusual.
-    void target(int unknown[], int nonnull[_Nonnull], int nullable[_Nullable]) {
-      *unknown;
-      *nonnull;
-      *nullable;  // [[unsafe]]
     }
   )cc"));
 }

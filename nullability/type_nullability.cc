@@ -181,6 +181,11 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     ignoreUnexpectedNullability();
     Visit(RT->getPointeeTypeAsWritten());
   }
+
+  void VisitArrayType(const ArrayType* AT) {
+    ignoreUnexpectedNullability();
+    Visit(AT->getElementType());
+  }
 };
 
 template <typename T>
@@ -319,6 +324,22 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
   }
   QualType VisitRValueReferenceType(const RValueReferenceType* T) {
     return Ctx.getRValueReferenceType(Visit(T->getPointeeType()));
+  }
+
+  QualType VisitConstantArrayType(const ConstantArrayType* AT) {
+    return Ctx.getConstantArrayType(Visit(AT->getElementType()), AT->getSize(),
+                                    AT->getSizeExpr(), AT->getSizeModifier(),
+                                    AT->getIndexTypeCVRQualifiers());
+  }
+  QualType VisitIncompleteArrayType(const IncompleteArrayType* AT) {
+    return Ctx.getIncompleteArrayType(Visit(AT->getElementType()),
+                                      AT->getSizeModifier(),
+                                      AT->getIndexTypeCVRQualifiers());
+  }
+  QualType VisitVariableArrayType(const VariableArrayType* AT) {
+    return Ctx.getVariableArrayType(
+        Visit(AT->getElementType()), AT->getSizeExpr(), AT->getSizeModifier(),
+        AT->getIndexTypeCVRQualifiers(), AT->getBracketsRange());
   }
 
  private:
