@@ -4,8 +4,6 @@
 
 #include "nullability/pointer_nullability.h"
 
-#include "nullability/pointer_nullability_lattice.h"
-#include "clang/AST/ASTDumper.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/StringRef.h"
@@ -19,7 +17,6 @@ using dataflow::BoolValue;
 using dataflow::Environment;
 using dataflow::PointerValue;
 using dataflow::SkipPast;
-using dataflow::TransferState;
 
 /// The nullness information of a pointer is represented by two properties
 /// which indicate if a pointer's nullability (i.e., if the pointer can hold

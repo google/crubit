@@ -5,22 +5,24 @@
 #ifndef CRUBIT_NULLABILITY_POINTER_NULLABILITY_H_
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_H_
 
+// This file extends the dataflow framework's Value model to track nullability.
+// We attach two boolean properties to each modeled pointer value:
+//  - is_null: whether the pointer may actually be null
+//    If this is false, dereferencing is safe.
+//  - is_known: whether the source had defined nullability (Nullable or Nonnull)
+//    If this is false, dereferencing may be safe: we don't know the contract.
+
 #include <utility>
 
-#include "nullability/pointer_nullability_lattice.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTDumper.h"
 #include "clang/AST/Expr.h"
-#include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
-#include "clang/Basic/Specifiers.h"
 
 namespace clang {
 namespace tidy {
 namespace nullability {
-
-using dataflow::TransferState;
 
 /// Returns the `PointerValue` allocated to `PointerExpr` if available.
 /// Otherwise, returns nullptr.
