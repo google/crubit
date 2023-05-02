@@ -10,7 +10,9 @@ package(default_applicable_licenses = ["//:license"])
 rust_proc_macro(
     name = "cc_template",
     srcs = ["cc_template.rs"],
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//visibility:public",
+    ],
     deps = [
         ":cc_template_impl",
         "@crate_index//:syn",

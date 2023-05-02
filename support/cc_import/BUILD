@@ -12,7 +12,9 @@ rust_proc_macro(
     srcs = [
         "cc_import.rs",
     ],
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//visibility:public",
+    ],
     deps = [
         ":cc_import_internal",
         "@crate_index//:proc-macro2",
