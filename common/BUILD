@@ -74,8 +74,8 @@ cc_library(
 )
 
 bzl_library(
-    name = "multiplatform_bzl",
-    srcs = ["multiplatform.bzl"],
+    name = "multiplatform_testing_bzl",
+    srcs = ["multiplatform_testing.bzl"],
     visibility = [
         "//:__subpackages__",
     ],
