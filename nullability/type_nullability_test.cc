@@ -20,7 +20,7 @@ class GetNullabilityAnnotationsFromTypeTest : public ::testing::Test {
   std::string Preamble;
 
   // Parses `Type` and returns getNullabilityAnnotationsFromType().
-  std::vector<NullabilityKind> nullVec(llvm::StringRef Type) {
+  TypeNullability nullVec(llvm::StringRef Type) {
     clang::TestAST AST((Preamble + "\nusing Target = " + Type + ";").str());
     auto Target = AST.context().getTranslationUnitDecl()->lookup(
         &AST.context().Idents.get("Target"));
@@ -255,7 +255,7 @@ class PrintWithNullabilityTest : public ::testing::Test {
   std::string Preamble;
 
   // Parses `Type`, augments it with Nulls, and prints the result.
-  std::string print(llvm::StringRef Type, ArrayRef<NullabilityKind> Nulls) {
+  std::string print(llvm::StringRef Type, const TypeNullability& Nulls) {
     clang::TestAST AST((Preamble + "\n using Target = " + Type + ";").str());
     auto Target = AST.context().getTranslationUnitDecl()->lookup(
         &AST.context().Idents.get("Target"));
@@ -302,14 +302,6 @@ TEST_F(PrintWithNullabilityTest, Functions) {
                   {NullabilityKind::Nullable, NullabilityKind::NonNull,
                    NullabilityKind::NonNull, NullabilityKind::Unspecified}),
             "float * _Nonnull (* _Nullable)(double * _Nonnull, double *)");
-}
-
-TEST_F(PrintWithNullabilityTest, References) {
-  EXPECT_EQ(print("int * &", {NullabilityKind::Nullable}), "int * _Nullable &");
-  EXPECT_EQ(print("int * &&", {NullabilityKind::Nullable}),
-            "int * _Nullable &&");
-  EXPECT_EQ(print("int *& (&&)()", {NullabilityKind::Nullable}),
-            "int * _Nullable &(&&)()");
 }
 
 TEST_F(PrintWithNullabilityTest, Arrays) {

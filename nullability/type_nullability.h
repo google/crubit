@@ -35,35 +35,50 @@
 
 namespace clang::tidy::nullability {
 
+/// Externalized nullability of a clang::Type.
+///
+/// Each pointer type nested inside is mapped to a nullability.
+/// This describes the nullability for pointer values used with the type.
+///
+/// For example, in: pair<int*, double*>
+/// We can map:      int* => Unspecified, double* => Nonnull
+/// And given such a pair p, p.second is considered Nonnull.
+///
+/// We could represent this as the Type pair<int *, double *_Nonnull>.
+/// However clang frequently drops type sugar such as _Nonnull, and Types are
+/// inconvenient to manipulate. We pass nullability explicitly instead.
+///
+/// The concrete representation is currently the nullability of each nested
+/// PointerType encountered in a preorder traversal of the canonical type.
+using TypeNullability = std::vector<NullabilityKind>;
+
 /// Returns the `NullabilityKind` corresponding to the nullability annotation on
 /// `Type` if present. Otherwise, returns `NullabilityKind::Unspecified`.
 NullabilityKind getNullabilityKind(QualType Type, ASTContext& Ctx);
 
 /// Returns a human-readable debug representation of a nullability vector.
-std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability);
+std::string nullabilityToString(const TypeNullability& Nullability);
 
 /// A function that may provide enhanced nullability information for a
 /// substituted template parameter (which has no sugar of its own).
-using GetTypeParamNullability = std::optional<std::vector<NullabilityKind>>(
-    const SubstTemplateTypeParmType* ST);
+using GetTypeParamNullability =
+    std::optional<TypeNullability>(const SubstTemplateTypeParmType* ST);
 /// Traverse over a type to get its nullability. For example, if T is the type
 /// Struct3Arg<int * _Nonnull, int, pair<int * _Nullable, int *>> * _Nonnull,
 /// the resulting nullability annotations will be {_Nonnull, _Nonnull,
 /// _Nullable, _Unknown}. Note that non-pointer elements (e.g., the second
 /// argument of Struct3Arg) do not get a nullability annotation.
-std::vector<NullabilityKind> getNullabilityAnnotationsFromType(
+TypeNullability getNullabilityAnnotationsFromType(
     QualType T,
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam = nullptr);
 
 /// Prints QualType's underlying canonical type, annotated with nullability.
 /// See rebuildWithNullability().
-std::string printWithNullability(QualType, ArrayRef<NullabilityKind>,
-                                 ASTContext&);
+std::string printWithNullability(QualType, const TypeNullability&, ASTContext&);
 /// Returns an equivalent type annotated with the provided nullability.
 /// Any existing sugar (including nullability) is discarded.
 /// rebuildWithNullability(int *, {Nullable}) ==> int * _Nullable.
-QualType rebuildWithNullability(QualType, ArrayRef<NullabilityKind>,
-                                ASTContext&);
+QualType rebuildWithNullability(QualType, const TypeNullability&, ASTContext&);
 
 /// Computes the number of pointer slots within a type.
 /// Each of these could conceptually be nullable, so this is the length of
@@ -77,7 +92,7 @@ unsigned countPointersInType(const DeclContext* DC);
 /// This handles wrinkles in the type system like BoundMember.
 QualType exprType(const Expr* E);
 
-std::vector<NullabilityKind> unspecifiedNullability(const Expr* E);
+TypeNullability unspecifiedNullability(const Expr* E);
 
 }  // namespace clang::tidy::nullability
 

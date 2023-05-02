@@ -134,7 +134,7 @@ bool diagnoseAssertNullabilityCall(
   auto* DRE = cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
 
   // Extract the expected nullability from the template parameter pack.
-  std::vector<NullabilityKind> Expected;
+  TypeNullability Expected;
   for (auto P : DRE->template_arguments()) {
     if (P.getArgument().getKind() == TemplateArgument::Expression) {
       if (auto* EnumDRE = dyn_cast<DeclRefExpr>(P.getSourceExpression())) {
@@ -146,16 +146,16 @@ bool diagnoseAssertNullabilityCall(
   // Compare the nullability computed by nullability analysis with the
   // expected one.
   const Expr* GivenExpr = CE->getArg(0);
-  std::optional<ArrayRef<NullabilityKind>> MaybeComputed =
+  const TypeNullability* MaybeComputed =
       State.Lattice.getExprNullability(GivenExpr);
-  if (!MaybeComputed.has_value()) {
+  if (MaybeComputed == nullptr) {
     llvm::dbgs()
         << "Could not evaluate __assert_nullability. Could not find the "
            "nullability of the argument expression: ";
     CE->dump();
     return false;
   }
-  if (MaybeComputed->vec() == Expected) return true;
+  if (*MaybeComputed == Expected) return true;
   // The computed and expected nullabilities differ. Print both to aid
   // debugging.
   llvm::dbgs() << "__assert_nullability failed at location: ";

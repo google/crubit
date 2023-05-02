@@ -42,16 +42,15 @@ using dataflow::Value;
 
 namespace {
 
-std::vector<NullabilityKind> prepend(NullabilityKind Head,
-                                     ArrayRef<NullabilityKind> Tail) {
-  std::vector<NullabilityKind> Result = {Head};
+TypeNullability prepend(NullabilityKind Head, const TypeNullability& Tail) {
+  TypeNullability Result = {Head};
   Result.insert(Result.end(), Tail.begin(), Tail.end());
   return Result;
 }
 
 void computeNullability(const Expr* E,
                         TransferState<PointerNullabilityLattice>& State,
-                        std::function<std::vector<NullabilityKind>()> Compute) {
+                        std::function<TypeNullability()> Compute) {
   (void)State.Lattice.insertExprNullabilityIfAbsent(E, [&] {
     auto Nullability = Compute();
     if (unsigned ExpectedSize = countPointersInType(E);
@@ -79,7 +78,7 @@ void computeNullability(const Expr* E,
 
 // Returns the computed nullability for a subexpr of the current expression.
 // This is always available as we compute bottom-up.
-ArrayRef<NullabilityKind> getNullabilityForChild(
+const TypeNullability& getNullabilityForChild(
     const Expr* E, TransferState<PointerNullabilityLattice>& State) {
   return State.Lattice.insertExprNullabilityIfAbsent(E, [&] {
     // Since we process child nodes before parents, we should already have
@@ -125,13 +124,13 @@ ArrayRef<NullabilityKind> getNullabilityForChild(
 /// `S * _Nullable` and the `base` node of the member call (in this case, a
 /// `DeclRefExpr`), it returns the nullability of the given type after applying
 /// substitutions, which in this case is [_Nullable, _Nonnull].
-std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
-    QualType T, ArrayRef<NullabilityKind> BaseNullabilityAnnotations,
+TypeNullability substituteNullabilityAnnotationsInClassTemplate(
+    QualType T, const TypeNullability& BaseNullabilityAnnotations,
     QualType BaseType) {
   return getNullabilityAnnotationsFromType(
       T,
       [&](const SubstTemplateTypeParmType* ST)
-          -> std::optional<std::vector<NullabilityKind>> {
+          -> std::optional<TypeNullability> {
         // The class specialization that is BaseType and owns ST.
         const ClassTemplateSpecializationDecl* Specialization = nullptr;
         if (auto RT = BaseType->getAs<RecordType>())
@@ -151,7 +150,9 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
           PointerCount += countPointersInType(TA);
         }
         unsigned SliceSize = countPointersInType(TemplateArgs[ArgIndex]);
-        return BaseNullabilityAnnotations.slice(PointerCount, SliceSize).vec();
+        return ArrayRef(BaseNullabilityAnnotations)
+            .slice(PointerCount, SliceSize)
+            .vec();
       });
 }
 
@@ -181,12 +182,12 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
 /// type `std::pair<S, F>` and the above CallExpr, it returns the nullability
 /// the given type after applying substitutions, which in this case is
 /// [_Nullable, _Nonnull].
-std::vector<NullabilityKind> substituteNullabilityAnnotationsInFunctionTemplate(
+TypeNullability substituteNullabilityAnnotationsInFunctionTemplate(
     QualType T, const CallExpr* CE) {
   return getNullabilityAnnotationsFromType(
       T,
       [&](const SubstTemplateTypeParmType* ST)
-          -> std::optional<std::vector<NullabilityKind>> {
+          -> std::optional<TypeNullability> {
         // TODO: Handle calls that use template argument deduction.
         // TODO: Handle nested templates (...->getDepth() > 0).
         if (auto* DRE =
@@ -397,7 +398,7 @@ void transferNonFlowSensitiveMemberCallExpr(
     const CXXMemberCallExpr* MCE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
   computeNullability(MCE, State, [&]() {
-    return getNullabilityForChild(MCE->getCallee(), State)
+    return ArrayRef(getNullabilityForChild(MCE->getCallee(), State))
         .take_front(countPointersInType(MCE))
         .vec();
   });
@@ -406,11 +407,11 @@ void transferNonFlowSensitiveMemberCallExpr(
 void transferNonFlowSensitiveCastExpr(
     const CastExpr* CE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
-  computeNullability(CE, State, [&]() -> std::vector<NullabilityKind> {
+  computeNullability(CE, State, [&]() -> TypeNullability {
     // Most casts that can convert ~unrelated types drop nullability in general.
     // As a special case, preserve nullability of outer pointer types.
     // For example, int* p; (void*)p; is a BitCast, but preserves nullability.
-    auto PreserveTopLevelPointers = [&](std::vector<NullabilityKind> V) {
+    auto PreserveTopLevelPointers = [&](TypeNullability V) {
       auto ArgNullability = getNullabilityForChild(CE->getSubExpr(), State);
       const PointerType* ArgType = dyn_cast<PointerType>(
           CE->getSubExpr()->getType().getCanonicalType().getTypePtr());
@@ -438,7 +439,7 @@ void transferNonFlowSensitiveCastExpr(
       case CK_AtomicToNonAtomic:
       case CK_NonAtomicToAtomic:
       case CK_AddressSpaceConversion:
-        return getNullabilityForChild(CE->getSubExpr(), State).vec();
+        return getNullabilityForChild(CE->getSubExpr(), State);
 
       // Controlled conversions between types
       // TODO: these should be doable somehow
@@ -540,7 +541,7 @@ void transferNonFlowSensitiveMaterializeTemporaryExpr(
     const MaterializeTemporaryExpr* MTE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
   computeNullability(MTE, State, [&]() {
-    return getNullabilityForChild(MTE->getSubExpr(), State).vec();
+    return getNullabilityForChild(MTE->getSubExpr(), State);
   });
 }
 
@@ -561,13 +562,13 @@ void transferNonFlowSensitiveCallExpr(
 void transferNonFlowSensitiveUnaryOperator(
     const UnaryOperator* UO, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
-  computeNullability(UO, State, [&]() -> std::vector<NullabilityKind> {
+  computeNullability(UO, State, [&]() -> TypeNullability {
     switch (UO->getOpcode()) {
       case UO_AddrOf:
         return prepend(NullabilityKind::NonNull,
                        getNullabilityForChild(UO->getSubExpr(), State));
       case UO_Deref:
-        return getNullabilityForChild(UO->getSubExpr(), State)
+        return ArrayRef(getNullabilityForChild(UO->getSubExpr(), State))
             .drop_front()
             .vec();
 
@@ -595,8 +596,7 @@ void transferNonFlowSensitiveNewExpr(
     const CXXNewExpr* NE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
   computeNullability(NE, State, [&]() {
-    std::vector<NullabilityKind> result =
-        getNullabilityAnnotationsFromType(NE->getType());
+    TypeNullability result = getNullabilityAnnotationsFromType(NE->getType());
     result.front() = NE->shouldNullCheckAllocation() ? NullabilityKind::Nullable
                                                      : NullabilityKind::NonNull;
     return result;
@@ -607,9 +607,9 @@ void transferNonFlowSensitiveArraySubscriptExpr(
     const ArraySubscriptExpr* ASE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
   computeNullability(ASE, State, [&]() {
-    auto BaseNullability = getNullabilityForChild(ASE->getBase(), State);
+    auto& BaseNullability = getNullabilityForChild(ASE->getBase(), State);
     CHECK(ASE->getBase()->getType()->isAnyPointerType());
-    return BaseNullability.slice(1).vec();
+    return ArrayRef(BaseNullability).slice(1).vec();
   });
 }
 

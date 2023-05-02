@@ -10,6 +10,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
+#include "nullability/type_nullability.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
@@ -22,30 +23,24 @@ class PointerNullabilityLattice {
  private:
   // Owned by the PointerNullabilityAnalysis object, shared by all lattice
   // elements within one analysis run.
-  absl::flat_hash_map<const Expr *, std::vector<NullabilityKind>>
-      &ExprToNullability;
+  absl::flat_hash_map<const Expr *, TypeNullability> &ExprToNullability;
 
  public:
   PointerNullabilityLattice(
-      absl::flat_hash_map<const Expr *, std::vector<NullabilityKind>>
-          &ExprToNullability)
+      absl::flat_hash_map<const Expr *, TypeNullability> &ExprToNullability)
       : ExprToNullability(ExprToNullability) {}
 
-  std::optional<ArrayRef<NullabilityKind>> getExprNullability(
-      const Expr *E) const {
+  const TypeNullability *getExprNullability(const Expr *E) const {
     auto I = ExprToNullability.find(&dataflow::ignoreCFGOmittedNodes(*E));
-    return I == ExprToNullability.end()
-               ? std::nullopt
-               : std::optional<ArrayRef<NullabilityKind>>(I->second);
+    return I == ExprToNullability.end() ? nullptr : &I->second;
   }
 
   // If the `ExprToNullability` map already contains an entry for `E`, does
   // nothing. Otherwise, inserts a new entry with key `E` and value computed by
   // the provided GetNullability.
   // Returns the (cached or computed) nullability.
-  ArrayRef<NullabilityKind> insertExprNullabilityIfAbsent(
-      const Expr *E,
-      const std::function<std::vector<NullabilityKind>()> &GetNullability) {
+  const TypeNullability &insertExprNullabilityIfAbsent(
+      const Expr *E, const std::function<TypeNullability()> &GetNullability) {
     E = &dataflow::ignoreCFGOmittedNodes(*E);
     if (auto It = ExprToNullability.find(E); It != ExprToNullability.end())
       return It->second;

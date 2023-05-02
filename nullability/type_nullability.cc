@@ -15,7 +15,7 @@
 
 namespace clang::tidy::nullability {
 
-std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability) {
+std::string nullabilityToString(const TypeNullability& Nullability) {
   std::string Result = "[";
   llvm::interleave(
       Nullability,
@@ -28,7 +28,6 @@ std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability) {
 }
 
 namespace {
-
 // Traverses a Type to find the points where it might be nullable.
 // This will visit the contained PointerType in the correct order to produce
 // the TypeNullability vector.
@@ -217,7 +216,7 @@ unsigned countPointersInType(const Expr* E) {
   return countPointersInType(exprType(E));
 }
 
-std::vector<NullabilityKind> getNullabilityAnnotationsFromType(
+TypeNullability getNullabilityAnnotationsFromType(
     QualType T,
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam) {
   struct Walker : NullabilityWalker<Walker> {
@@ -247,9 +246,8 @@ std::vector<NullabilityKind> getNullabilityAnnotationsFromType(
   return std::move(AnnotationVisitor.Annotations);
 }
 
-std::vector<NullabilityKind> unspecifiedNullability(const Expr* E) {
-  return std::vector<NullabilityKind>(countPointersInType(E),
-                                      NullabilityKind::Unspecified);
+TypeNullability unspecifiedNullability(const Expr* E) {
+  return TypeNullability(countPointersInType(E), NullabilityKind::Unspecified);
 }
 
 namespace {
@@ -267,7 +265,7 @@ namespace {
 // nullability data structures for particular types: the non-flow-sensitive
 // transfer and NullabilityWalker.
 struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
-  Rebuilder(ArrayRef<NullabilityKind> Nullability, ASTContext& Ctx)
+  Rebuilder(const TypeNullability& Nullability, ASTContext& Ctx)
       : Nullability(Nullability), Ctx(Ctx) {}
 
   bool done() const { return Nullability.empty(); }
@@ -349,8 +347,7 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
 
 }  // namespace
 
-QualType rebuildWithNullability(QualType T,
-                                ArrayRef<NullabilityKind> Nullability,
+QualType rebuildWithNullability(QualType T, const TypeNullability& Nullability,
                                 ASTContext& Ctx) {
   Rebuilder V(Nullability, Ctx);
   QualType Result = V.Visit(T.getCanonicalType());
@@ -359,8 +356,7 @@ QualType rebuildWithNullability(QualType T,
   return Result;
 }
 
-std::string printWithNullability(QualType T,
-                                 ArrayRef<NullabilityKind> Nullability,
+std::string printWithNullability(QualType T, const TypeNullability& Nullability,
                                  ASTContext& Ctx) {
   return rebuildWithNullability(T, Nullability, Ctx)
       .getAsString(Ctx.getPrintingPolicy());
