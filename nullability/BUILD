@@ -76,6 +76,7 @@ cc_test(
     srcs = ["pointer_nullability_test.cc"],
     deps = [
         ":pointer_nullability",
+        "@llvm-project//clang:analysis",
         "@llvm-project//clang:testing",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",

@@ -46,10 +46,14 @@ std::pair<AtomicBoolValue&, AtomicBoolValue&> getPointerNullState(
 
 void initPointerBoolProperty(PointerValue& PointerVal, llvm::StringRef Name,
                              BoolValue* BoolVal, Environment& Env) {
-  if (PointerVal.getProperty(Name) == nullptr) {
-    PointerVal.setProperty(Name,
-                           BoolVal ? *BoolVal : Env.makeAtomicBoolValue());
+  if (PointerVal.getProperty(Name) != nullptr) return;
+  // The property must always be a non-null boolean atom.
+  if (!isa_and_nonnull<AtomicBoolValue>(BoolVal)) {
+    auto& Atom = Env.makeAtomicBoolValue();
+    if (BoolVal) Env.addToFlowCondition(Env.makeIff(Atom, *BoolVal));
+    BoolVal = &Atom;
   }
+  PointerVal.setProperty(Name, BoolVal ? *BoolVal : Env.makeAtomicBoolValue());
 }
 
 void initPointerNullState(PointerValue& PointerVal, Environment& Env,
