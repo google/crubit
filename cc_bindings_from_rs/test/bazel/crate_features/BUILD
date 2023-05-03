@@ -9,8 +9,6 @@ load(
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 rust_library(
     name = "needs_feature",
     testonly = 1,

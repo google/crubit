@@ -4,8 +4,6 @@ load("@rules_rust//rust:defs.bzl", "rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 rust_test(
     name = "main",
     srcs = ["test.rs"],

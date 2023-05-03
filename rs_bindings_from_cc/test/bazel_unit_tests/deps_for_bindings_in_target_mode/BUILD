@@ -6,8 +6,6 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 deps_for_bindings_are_in_target_cfg_test(name = "deps_for_bindings_are_in_target_cfg_test")
 
 bzl_library(

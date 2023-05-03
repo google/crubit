@@ -5,8 +5,6 @@ load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 crubit_test_cc_library(
     name = "out_of_line_definition",
     hdrs = ["out_of_line_definition.h"],

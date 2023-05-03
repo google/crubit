@@ -2,8 +2,6 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 sh_test(
     name = "rs_bindings_from_cc_test",
     srcs = ["rs_bindings_from_cc_test.sh"],

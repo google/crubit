@@ -3,8 +3,6 @@ load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro", "rust_test
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 rust_library(
     name = "ctor",
     srcs = ["ctor.rs"],

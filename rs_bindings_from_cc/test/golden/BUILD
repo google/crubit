@@ -11,8 +11,6 @@ load("@rules_rust//rust:defs.bzl", "rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 TESTS = [name[:-2] for name in glob(
     ["*.h"],
     exclude = [

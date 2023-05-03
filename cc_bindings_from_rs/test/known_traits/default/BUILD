@@ -11,8 +11,6 @@ load(
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 rust_library(
     # `default` is a reserved C++ keyword, so using `rs_` prefix.
     name = "rs_default",

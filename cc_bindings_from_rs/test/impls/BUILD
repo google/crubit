@@ -10,8 +10,6 @@ load(
     "cc_bindings_from_rust",
 )
 
-licenses(["notice"])
-
 rust_library(
     name = "impls",
     testonly = 1,

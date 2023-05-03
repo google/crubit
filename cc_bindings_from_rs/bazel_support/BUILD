@@ -5,8 +5,6 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 bzl_library(
     name = "cc_bindings_from_rust_rule_bzl",
     srcs = ["cc_bindings_from_rust_rule.bzl"],

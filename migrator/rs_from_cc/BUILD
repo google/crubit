@@ -2,8 +2,6 @@
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 cc_binary(
     name = "rs_from_cc",
     srcs = ["rs_from_cc.cc"],

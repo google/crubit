@@ -10,8 +10,6 @@ load(
     "cc_bindings_from_rust",
 )
 
-licenses(["notice"])
-
 rust_library(
     name = "other_crate",
     testonly = 1,

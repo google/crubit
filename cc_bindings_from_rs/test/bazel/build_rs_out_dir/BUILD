@@ -21,8 +21,6 @@ load(
     "cc_bindings_from_rust",
 )
 
-licenses(["notice"])
-
 cargo_build_script(
     name = "build_rs_out_dir_build_script",
     srcs = ["build.rs"],

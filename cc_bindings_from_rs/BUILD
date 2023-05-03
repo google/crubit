@@ -9,8 +9,6 @@ load(
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 rust_binary(
     name = "cc_bindings_from_rs",
     srcs = [

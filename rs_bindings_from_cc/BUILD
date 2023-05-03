@@ -24,8 +24,6 @@ load(
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 with_cc_toolchain_flags(
     name = "test_wrapper",
     binary = ":rs_bindings_from_cc",

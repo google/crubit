@@ -6,8 +6,6 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 cc_library(
     name = "foo",
     hdrs = ["foo.h"],

@@ -6,8 +6,6 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 target_args_test(name = "target_args_test")
 
 bzl_library(

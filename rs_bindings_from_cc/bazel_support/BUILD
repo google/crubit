@@ -13,8 +13,6 @@ load(
 
 package(default_applicable_licenses = ["//:license"])
 
-licenses(["notice"])
-
 bzl_library(
     name = "rust_bindings_from_cc_aspect",
     srcs = ["rust_bindings_from_cc_aspect.bzl"],
