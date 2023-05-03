@@ -104,7 +104,6 @@ pub fn cc_tokens_to_formatted_string_for_tests(tokens: TokenStream) -> Result<St
     clang_format(tokens_to_string(tokens)?, Path::new(CLANG_FORMAT_EXE_PATH_FOR_TESTING))
 }
 
-
 /// Produces source code out of the token stream.
 ///
 /// Notable features:
@@ -216,10 +215,12 @@ fn pipe_string_through_process<'a>(
         .unwrap_or_else(|e| panic!("Failed to spawn {exe_name} at {exe_path:?}: {e}"));
 
     let mut stdin = child.stdin.take().expect("Failed to open {exe_name} stdin");
-    std::thread::spawn(move || {
+    let handle = std::thread::spawn(move || {
         stdin.write_all(input.as_bytes()).expect("Failed to write to {exe_name} stdin");
     });
     let output = child.wait_with_output().expect("Failed to read {exe_name} stdout");
+
+    handle.join().unwrap();
 
     if !output.status.success() {
         bail!("{exe_name} reported an error: {}", String::from_utf8_lossy(&output.stderr));
