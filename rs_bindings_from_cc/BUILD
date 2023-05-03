@@ -64,7 +64,6 @@ cc_binary(
     srcs = ["rs_bindings_from_cc.cc"],
     visibility = ["//visibility:public"],
     deps = [
-        ":bazel_types",
         ":cc_ir",
         ":cmdline",
         ":collect_namespaces",
@@ -72,12 +71,10 @@ cc_binary(
         "//common:file_io",
         "//common:rust_allocator_shims",
         "//common:status_macros",
-        "@absl//absl/container:flat_hash_map",
         "@absl//absl/flags:parse",
         "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
-        "@llvm-project//clang:format",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -549,7 +546,7 @@ cc_library(
     srcs = ["collect_instantiations.cc"],
     hdrs = ["collect_instantiations.h"],
     deps = [
-        ":collect_instantiations",
+        ":collect_instantiations",  # build_cleaner: keep
         "//common:cc_ffi_types",
         "@absl//absl/status:statusor",
         "@absl//absl/types:span",
