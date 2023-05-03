@@ -116,6 +116,7 @@ type_is!(
     TypeMapOverrideStruct => i8,
     TypeMapOverrideClass => i8,
     TypeMapOverrideEnum => i8,
+    TypeMapOverrideAlias => i8,
 );
 
 // TODO(b/228569417): These should all generate bindings and be & (mut) 'static.

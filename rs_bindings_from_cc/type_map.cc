@@ -14,6 +14,7 @@
 #include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
+#include "clang/AST/Type.h"
 
 namespace crubit {
 
@@ -102,10 +103,17 @@ absl::StatusOr<absl::string_view> EvaluateAsStringLiteral(
 absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
     const clang::Type& cc_type) {
   std::optional<absl::string_view> rust_type;
-  if (const clang::TagDecl* tag_decl = cc_type.getAsTagDecl();
-      tag_decl != nullptr) {
+  const clang::Decl* decl = nullptr;
+  if (const auto* alias_type = cc_type.getAs<clang::TypedefType>();
+      alias_type != nullptr) {
+    decl = alias_type->getDecl();
+  } else if (const clang::TagDecl* tag_decl = cc_type.getAsTagDecl();
+             tag_decl != nullptr) {
+    decl = tag_decl;
+  }
+  if (decl != nullptr) {
     for (clang::AnnotateAttr* attr :
-         tag_decl->specific_attrs<clang::AnnotateAttr>()) {
+         decl->specific_attrs<clang::AnnotateAttr>()) {
       if (attr->getAnnotation() != "crubit_internal_rust_type") continue;
 
       if (rust_type.has_value())
@@ -119,7 +127,7 @@ absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
             "argument, the Rust type.");
       const clang::Expr& arg = **attr->args_begin();
       CRUBIT_ASSIGN_OR_RETURN(
-          rust_type, EvaluateAsStringLiteral(arg, tag_decl->getASTContext()));
+          rust_type, EvaluateAsStringLiteral(arg, decl->getASTContext()));
     }
   }
   return rust_type;

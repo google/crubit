@@ -87,10 +87,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE("i8") MyI8Class final {
   signed char x;
 };
 
+// The enum should become i8, even though it has underlying type of u8.
 enum CRUBIT_INTERNAL_RUST_TYPE("i8") MyI8Enum : unsigned char { kX };
+
+// The alias should become i8, even though it's an alias for u8.
+using MyI8Alias CRUBIT_INTERNAL_RUST_TYPE("i8") = unsigned char;
 
 TEST(TypeMapOverrideStruct, MyI8Struct);
 TEST(TypeMapOverrideClass, MyI8Class);
 TEST(TypeMapOverrideEnum, MyI8Enum);
+TEST(TypeMapOverrideAlias, MyI8Alias);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_
