@@ -7,7 +7,7 @@
 #include <optional>
 
 #include "absl/log/check.h"
-#include "rs_bindings_from_cc/known_types_map.h"
+#include "rs_bindings_from_cc/type_map.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 
@@ -37,7 +37,8 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
     // into their item, instead of having a separate TypeAlias item in addition.
     return std::nullopt;
   }
-  if (MapKnownCcTypeToRsType(type.getAsString()).has_value()) {
+  auto override_type = TypeMapOverride(*type.getTypePtr());
+  if (override_type.ok() && override_type->has_value()) {
     return std::nullopt;
   }
 

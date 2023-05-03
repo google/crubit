@@ -160,13 +160,18 @@ cc_test(
 )
 
 cc_library(
-    name = "known_types_map",
-    srcs = ["known_types_map.cc"],
-    hdrs = ["known_types_map.h"],
+    name = "type_map",
+    srcs = ["type_map.cc"],
+    hdrs = ["type_map.h"],
     visibility = ["//:__subpackages__"],
     deps = [
+        ":cc_ir",
+        "//common:status_macros",
         "@absl//absl/container:flat_hash_map",
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
         "@absl//absl/strings",
+        "@llvm-project//clang:ast",
     ],
 )
 
@@ -250,7 +255,7 @@ cc_library(
         ":bazel_types",
         ":cc_ir",
         ":decl_importer",
-        ":known_types_map",
+        ":type_map",
         "//common:status_macros",
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc/importers:class_template",
@@ -418,7 +423,6 @@ cc_library(
     hdrs = ["src_code_gen.h"],
     deps = [
         ":cc_ir",
-        ":cmdline",
         ":src_code_gen_impl",  # buildcleaner: keep
         "//common:cc_ffi_types",
         "//common:status_macros",

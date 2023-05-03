@@ -9,13 +9,14 @@
 #include <optional>
 
 #include "absl/base/optimization.h"
+#include "support/internal/attribute_macros.h"
 
 namespace rs_std {
 
 // `rs_std::rs_char` is a C++ representation of the `char` type from Rust.
-// `rust_builtin_type_abi_assumptions.md` documents the ABI compatiblity of
+// `rust_builtin_type_abi_assumptions.md` documents the ABI compatibility of
 // these types.
-class rs_char final {
+class CRUBIT_INTERNAL_RUST_TYPE("char") rs_char final {
  public:
   // Creates a default `rs_char` - one that represents ASCII NUL character.
   //

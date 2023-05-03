@@ -6,6 +6,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "types_nonptr",
     hdrs = ["types_nonptr.h"],
+    deps = ["//support/internal:bindings_support"],
 )
 
 crubit_test_cc_library(

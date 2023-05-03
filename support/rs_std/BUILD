@@ -14,7 +14,10 @@ cc_library(
     # seems okay - we should be able to assume that Crubit users have a version
     # of Abseil that is relatively recent (although we can't rely on an
     # exact version and/or exact absl/base/options.h).
-    deps = ["@absl//absl/base:core_headers"],
+    deps = [
+        "@absl//absl/base:core_headers",
+        "//support/internal:bindings_support",
+    ],
 )
 
 cc_test(

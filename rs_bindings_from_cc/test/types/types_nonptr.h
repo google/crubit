@@ -11,6 +11,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "support/internal/attribute_macros.h"
+
 // Not a template, so that it isn't visible to the bindings generator.
 // We're just here to save typing.
 #define TEST(Name, T)                            \
@@ -76,5 +78,19 @@ TEST(Double, double);
 
 struct ExampleStruct final {};
 TEST(Struct, ExampleStruct);
+
+struct CRUBIT_INTERNAL_RUST_TYPE("i8") MyI8Struct final {
+  signed char x;
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE("i8") MyI8Class final {
+  signed char x;
+};
+
+enum CRUBIT_INTERNAL_RUST_TYPE("i8") MyI8Enum : unsigned char { kX };
+
+TEST(TypeMapOverrideStruct, MyI8Struct);
+TEST(TypeMapOverrideClass, MyI8Class);
+TEST(TypeMapOverrideEnum, MyI8Enum);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_

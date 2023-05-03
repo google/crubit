@@ -33,7 +33,7 @@
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "rs_bindings_from_cc/known_types_map.h"
+#include "rs_bindings_from_cc/type_map.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -759,9 +759,9 @@ absl::StatusOr<MappedType> Importer::ConvertType(
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
 
-  if (auto maybe_mapped_type = MapKnownCcTypeToRsType(type_string);
-      maybe_mapped_type.has_value()) {
-    return MappedType::Simple(std::string(*maybe_mapped_type), type_string);
+  CRUBIT_ASSIGN_OR_RETURN(auto override_type, TypeMapOverride(*type));
+  if (override_type.has_value()) {
+    return *std::move(override_type);
   } else if (type->isPointerType() || type->isLValueReferenceType() ||
              type->isRValueReferenceType()) {
     clang::QualType pointee_type = type->getPointeeType();

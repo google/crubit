@@ -98,7 +98,7 @@ cc_library(
     deps = [
         "@absl//absl/log:check",
         "//rs_bindings_from_cc:decl_importer",
-        "//rs_bindings_from_cc:known_types_map",
+        "//rs_bindings_from_cc:type_map",
         "@llvm-project//clang:ast",
     ],
 )

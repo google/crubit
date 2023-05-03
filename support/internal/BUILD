@@ -3,6 +3,7 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "bindings_support",
     hdrs = [
+        "attribute_macros.h",
         "cxx20_backports.h",
         "offsetof.h",
         "return_value_slot.h",
