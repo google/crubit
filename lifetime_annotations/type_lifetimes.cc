@@ -792,7 +792,7 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
       return llvm::DenseMapInfo<ObjectLifetimes>::getEmptyKey();
     }
     return ObjectLifetimes(ret_lifetime, *arg_lifetimes);
-  } else if (type->isStructureOrClassType()) {
+  } else if (type->isRecordType()) {
     // Second case: struct.
     // Resolve lifetime parameters for the struct, if it has any.
     LifetimeSymbolTable lifetime_params;
@@ -805,7 +805,7 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
                           value_lifetimes_.GetLifetimeParameter(lftm_arg));
     }
 
-    // We need to construct potentally reshuffled
+    // We need to construct potentially reshuffled
     // template arguments, if the struct is a template.
 
     // TODO(veluca): mixing lifetimes and template parameters is not supported

@@ -1173,6 +1173,22 @@ TEST_F(LifetimeAnalysisTest, ReturnUnionTemporaryInitializerList) {
               LifetimesAre({{"target", "a -> a"}}));
 }
 
+TEST_F(LifetimeAnalysisTest, StructWithUnionMember) {
+  EXPECT_THAT(GetLifetimes(R"(
+    struct [[clang::annotate("lifetime_params", "a")]] T {
+      [[clang::annotate("member_lifetimes", "a")]]
+      union [[clang::annotate("lifetime_params", "a")]] U {
+        [[clang::annotate("member_lifetimes", "a")]]
+        int* i;
+      } u;
+    };
+    int* target(T* t) {
+      return t->u.i;
+    }
+  )"),
+              LifetimesAre({{"target", "(a, b) -> a"}}));
+}
+
 }  // namespace
 }  // namespace lifetimes
 }  // namespace tidy
