@@ -109,6 +109,11 @@ ObjectSet PointsToMap::GetExprObjectSet(const clang::Expr* expr) const {
   return iter->second;
 }
 
+bool PointsToMap::ExprHasObjectSet(const clang::Expr* expr) const {
+  auto iter = expr_objects_.find(expr->IgnoreParens());
+  return (iter != expr_objects_.end());
+}
+
 void PointsToMap::SetExprObjectSet(const clang::Expr* expr, ObjectSet objects) {
   assert(expr->isGLValue() || expr->getType()->isPointerType() ||
          expr->getType()->isArrayType() || expr->getType()->isBuiltinType());

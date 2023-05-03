@@ -51,33 +51,33 @@ TEST_F(LifetimeAnalysisTest,
 
 TEST_F(LifetimeAnalysisTest,
        ReturnStructFromMultipleInitializersConstructSyntax) {
-  EXPECT_THAT(
-      GetLifetimes(R"(
+  EXPECT_THAT(GetLifetimes(R"(
     template <typename T>
     struct S {
       S(T i) : i(i) {}
       T i;
     };
-    S<int*> target(int* a, int* b) {
-      return true ? S<int*>{a} : S<int*>{b};
+    S<int*> target(int* a, int* b, bool cond) {
+      return cond ? S<int*>{a} : S<int*>{b};
     }
   )"),
-      LifetimesAre({{"S<int *>::S", "(a, b): a"}, {"target", "a, a -> a"}}));
+              LifetimesAre(
+                  {{"S<int *>::S", "(a, b): a"}, {"target", "a, a, () -> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, ReturnStructFromMultipleInitializersCastSyntax) {
-  EXPECT_THAT(
-      GetLifetimes(R"(
+  EXPECT_THAT(GetLifetimes(R"(
     template <typename T>
     struct S {
       S(T i) : i(i) {}
       T i;
     };
-    S<int*> target(int* a, int* b) {
-      return true ? S<int*>(a) : S<int*>(b);
+    S<int*> target(int* a, int* b, bool cond) {
+      return cond ? S<int*>(a) : S<int*>(b);
     }
   )"),
-      LifetimesAre({{"S<int *>::S", "(a, b): a"}, {"target", "a, a -> a"}}));
+              LifetimesAre(
+                  {{"S<int *>::S", "(a, b): a"}, {"target", "a, a, () -> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest,
@@ -87,43 +87,43 @@ TEST_F(LifetimeAnalysisTest,
     struct S {
       T i;
     };
-    S<int*> target(int* a, int* b) {
-      return true ? S<int*>{a} : S<int*>{b};
+    S<int*> target(int* a, int* b, bool cond) {
+      return cond ? S<int*>{a} : S<int*>{b};
     }
   )"),
-              LifetimesAre({{"target", "a, a -> a"}}));
+              LifetimesAre({{"target", "a, a, () -> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, StructWithMultipleInitializersConstructorSyntax) {
-  EXPECT_THAT(
-      GetLifetimes(R"(
+  EXPECT_THAT(GetLifetimes(R"(
     template <typename T>
     struct S {
       S(T i) : i(i) {}
       T i;
     };
-    int* target(int* a, int* b) {
-      S<int*> s = true ? S{a} : S{b};
+    int* target(int* a, int* b, bool cond) {
+      S<int*> s = cond ? S{a} : S{b};
       return s.i;
     }
   )"),
-      LifetimesAre({{"S<int *>::S", "(a, b): a"}, {"target", "a, a -> a"}}));
+              LifetimesAre(
+                  {{"S<int *>::S", "(a, b): a"}, {"target", "a, a, () -> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, StructWithMultipleInitializersCastSyntax) {
-  EXPECT_THAT(
-      GetLifetimes(R"(
+  EXPECT_THAT(GetLifetimes(R"(
     template <typename T>
     struct S {
       S(T i) : i(i) {}
       T i;
     };
-    int* target(int* a, int* b) {
-      S<int*> s = true ? S(a) : S(b);
+    int* target(int* a, int* b, bool cond) {
+      S<int*> s = cond ? S(a) : S(b);
       return s.i;
     }
   )"),
-      LifetimesAre({{"S<int *>::S", "(a, b): a"}, {"target", "a, a -> a"}}));
+              LifetimesAre(
+                  {{"S<int *>::S", "(a, b): a"}, {"target", "a, a, () -> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, StructWithMultipleInitializersInitListSyntax) {
@@ -132,12 +132,12 @@ TEST_F(LifetimeAnalysisTest, StructWithMultipleInitializersInitListSyntax) {
     struct S {
       T i;
     };
-    int* target(int* a, int* b) {
-      S<int*> s = true ? S<int*>{a} : S<int*>{b};
+    int* target(int* a, int* b, bool cond) {
+      S<int*> s = cond ? S<int*>{a} : S<int*>{b};
       return s.i;
     }
   )"),
-              LifetimesAre({{"target", "a, a -> a"}}));
+              LifetimesAre({{"target", "a, a, () -> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest,
@@ -148,9 +148,10 @@ TEST_F(LifetimeAnalysisTest,
       R(T i) : i(i) {}
       T i;
     };
+    bool cond();
     template <typename T>
     struct S {
-      S(T a, T b) : r(true ? R{a} : R{b}) {}
+      S(T a, T b) : r(cond() ? R{a} : R{b}) {}
       R<T> r;
     };
     int* target(int* a, int* b) {
@@ -159,6 +160,7 @@ TEST_F(LifetimeAnalysisTest,
     }
   )"),
               LifetimesAre({{"R<int *>::R", "(a, b): a"},
+                            {"cond", ""},
                             {"S<int *>::S", "(a, b): a, a"},
                             {"target", "a, a -> a"}}));
 }
@@ -171,9 +173,10 @@ TEST_F(LifetimeAnalysisTest,
       R(T i) : i(i) {}
       T i;
     };
+    bool cond();
     template <typename T>
     struct S {
-      S(T a, T b) : r(true ? R(a) : R(b)) {}
+      S(T a, T b) : r(cond() ? R(a) : R(b)) {}
       R<T> r;
     };
     int* target(int* a, int* b) {
@@ -182,21 +185,22 @@ TEST_F(LifetimeAnalysisTest,
     }
   )"),
               LifetimesAre({{"R<int *>::R", "(a, b): a"},
+                            {"cond", ""},
                             {"S<int *>::S", "(a, b): a, a"},
                             {"target", "a, a -> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest,
        ConstructorInitWithMultipleInitializersInitListSyntax) {
-  EXPECT_THAT(
-      GetLifetimes(R"(
+  EXPECT_THAT(GetLifetimes(R"(
     template <typename T>
     struct R {
       T i;
     };
+    bool cond();
     template <typename T>
     struct S {
-      S(T a, T b) : r(true ? R<T>{a} : R<T>{b}) {}
+      S(T a, T b) : r(cond() ? R<T>{a} : R<T>{b}) {}
       R<T> r;
     };
     int* target(int* a, int* b) {
@@ -204,7 +208,9 @@ TEST_F(LifetimeAnalysisTest,
       return s.r.i;
     }
   )"),
-      LifetimesAre({{"S<int *>::S", "(a, b): a, a"}, {"target", "a, a -> a"}}));
+              LifetimesAre({{"S<int *>::S", "(a, b): a, a"},
+                            {"cond", ""},
+                            {"target", "a, a -> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest,
@@ -264,9 +270,10 @@ TEST_F(LifetimeAnalysisTest, ConstructorInitWithMultiplePointers) {
       R(T i) : i(i) {}
       T i;
     };
+    bool cond();
     template <typename T, typename U, typename V>
     struct S {
-      S(T a, U b) : r(true ? a : b) {}
+      S(T a, U b) : r(cond() ? a : b) {}
       R<V> r;
     };
     int* target(int* a, int* b) {
@@ -275,6 +282,7 @@ TEST_F(LifetimeAnalysisTest, ConstructorInitWithMultiplePointers) {
     }
   )"),
       LifetimesAre({{"R<int *>::R", "(a, b): a"},
+                    {"cond", ""},
                     {"S<int *, int *, int *>::S", "(<b, c, a>, d): a, a"},
                     {"target", "a, a -> a"}}));
 }
@@ -288,9 +296,10 @@ TEST_F(LifetimeAnalysisTest,
       R(T i) : i(i) {}
       T i;
     };
+    bool cond();
     template <typename T, typename U, typename V>
     struct S {
-      S(T a, U b) : a_(a), b_(b), r(true ? a : b) {}
+      S(T a, U b) : a_(a), b_(b), r(cond() ? a : b) {}
       T a_;
       U b_;
       R<V> r;
@@ -301,6 +310,7 @@ TEST_F(LifetimeAnalysisTest,
     }
   )"),
       LifetimesAre({{"R<int *>::R", "(a, b): a"},
+                    {"cond", ""},
                     {"S<int *, int *, int *>::S", "(<a, a, a>, b): a, a"},
                     {"target", "a, a -> a"}}));
 }
@@ -313,21 +323,23 @@ TEST_F(LifetimeAnalysisTest, MemberInitWithMultiplePointers) {
       R(T i) : i(i) {}
       T i;
     };
+    bool cond();
     template <typename T, typename U, typename V>
     struct S {
-      S(T a, U b) : a(a), b(b) {}
+      S(T a, U b, bool cond) : a(a), b(b), cond(cond) {}
       T a;
       U b;
-      R<V> r{true ? a : b};
+      bool cond;
+      R<V> r{cond ? a : b};
     };
-    int* target(int* a, int* b) {
-      S<int*, int*, int*> s(a, b);
+    int* target(int* a, int* b, bool cond) {
+      S<int*, int*, int*> s(a, b, cond);
       return s.r.i;
     }
   )"),
       LifetimesAre({{"R<int *>::R", "(a, b): a"},
-                    {"S<int *, int *, int *>::S", "(<a, a, a>, b): a, a"},
-                    {"target", "a, a -> a"}}));
+                    {"S<int *, int *, int *>::S", "(<a, a, a>, b): a, a, ()"},
+                    {"target", "a, a, () -> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, MemberInitWithMultipleInitializersInitListSyntax) {

@@ -90,6 +90,9 @@ class PointsToMap {
   // Associates `expr` with the given object set.
   void SetExprObjectSet(const clang::Expr* expr, ObjectSet objects);
 
+  // Returns if `expr` has an object set.
+  bool ExprHasObjectSet(const clang::Expr* expr) const;
+
   // Returns all the pointers (not objects) with the given `lifetime`.
   std::vector<const Object*> GetAllPointersWithLifetime(
       Lifetime lifetime) const;

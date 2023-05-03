@@ -347,7 +347,9 @@ std::string CreateCfgDot(
   }
 
   for (const clang::CFGBlock* block : cfg) {
-    for (const clang::CFGBlock* succ : block->succs()) {
+    if (!block) continue;
+    for (const auto& succ : block->succs()) {
+      if (!succ.isReachable()) continue;
       absl::StrAppendFormat(
           &result,
           "B%1$usink -> B%2$usource [ltail=cluster%1$u,lhead=cluster%2$u];\n",

@@ -670,10 +670,18 @@ std::optional<std::string> TransferStmtVisitor::VisitConditionalOperator(
   clang::QualType type = op->getType().getCanonicalType();
 
   if (op->isGLValue() || type->isPointerType()) {
+    // It is possible that either of the expressions may not have an ObjectSet
+    // if the node is pruned as it is considered unreachable.
+    assert(points_to_map_.ExprHasObjectSet(op->getTrueExpr()) ||
+           points_to_map_.ExprHasObjectSet(op->getFalseExpr()));
     ObjectSet points_to_true =
-        points_to_map_.GetExprObjectSet(op->getTrueExpr());
+        points_to_map_.ExprHasObjectSet(op->getTrueExpr())
+            ? points_to_map_.GetExprObjectSet(op->getTrueExpr())
+            : ObjectSet();
     ObjectSet points_to_false =
-        points_to_map_.GetExprObjectSet(op->getFalseExpr());
+        points_to_map_.ExprHasObjectSet(op->getFalseExpr())
+            ? points_to_map_.GetExprObjectSet(op->getFalseExpr())
+            : ObjectSet();
     points_to_map_.SetExprObjectSet(op, points_to_true.Union(points_to_false));
   }
   return std::nullopt;
@@ -814,6 +822,9 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
         GetFunctionLifetimes(decl, callee_lifetimes_);
 
     if (!std::holds_alternative<FunctionLifetimes>(callee_lifetimes_or_error)) {
+      // Note: It is possible that this does not have an entry if the function
+      // is not analyzed (because its body is not defined in this TU). If this
+      // happens, we currently bail without analyzing further.
       return "No lifetimes for callee '" + decl->getNameAsString() + "': " +
              std::get<FunctionAnalysisError>(callee_lifetimes_or_error).message;
     }
