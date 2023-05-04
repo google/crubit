@@ -478,10 +478,6 @@ rust_library(
 rust_test(
     name = "error_report_test",
     crate = ":error_report",
-    rustc_flags = [
-        # TODO(b/279876520): Remove this flag once we build with rustc that has this on by default. #copybara: strip
-        "-Zflatten-format-args=true",
-    ],
     deps = [
         "@crate_index//:serde_json",
     ],
