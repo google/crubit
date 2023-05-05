@@ -174,10 +174,10 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::WithBitfields>() == 32);
 const _: () = assert!(::core::mem::align_of::<crate::WithBitfields>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::WithBitfields: Copy);
+    static_assertions::assert_not_impl_any!(crate::WithBitfields:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::WithBitfields: Drop);
+    static_assertions::assert_not_impl_any!(crate::WithBitfields:Drop);
 };
 const _: () = assert!(memoffset::offset_of!(crate::WithBitfields, f2) == 4);
 const _: () = assert!(memoffset::offset_of!(crate::WithBitfields, f5) == 20);

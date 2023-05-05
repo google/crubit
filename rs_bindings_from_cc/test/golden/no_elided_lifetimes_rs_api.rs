@@ -151,13 +151,13 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::S>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::S>() == 1);
 const _: () = {
-    static_assertions::assert_impl_all!(crate::S: Clone);
+    static_assertions::assert_impl_all!(crate::S:Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::S: Copy);
+    static_assertions::assert_impl_all!(crate::S:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::S: Drop);
+    static_assertions::assert_not_impl_any!(crate::S:Drop);
 };
 
 const _: () =
@@ -165,20 +165,18 @@ const _: () =
 const _: () =
     assert!(::core::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(
-        crate::TriviallyCopyableButNontriviallyDestructible: Copy
-    );
+    static_assertions::assert_not_impl_any!(crate::TriviallyCopyableButNontriviallyDestructible:Copy);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::TriviallyCopyableButNontriviallyDestructible: Drop);
+    static_assertions::assert_impl_all!(crate::TriviallyCopyableButNontriviallyDestructible:Drop);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::WrappedValue>() == 4);
 const _: () = assert!(::core::mem::align_of::<crate::WrappedValue>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::WrappedValue: Copy);
+    static_assertions::assert_not_impl_any!(crate::WrappedValue:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::WrappedValue: Drop);
+    static_assertions::assert_not_impl_any!(crate::WrappedValue:Drop);
 };
 const _: () = assert!(memoffset::offset_of!(crate::WrappedValue, value_) == 0);

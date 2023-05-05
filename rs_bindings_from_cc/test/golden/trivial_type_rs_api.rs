@@ -440,21 +440,21 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::ns::Trivial>() == 4);
 const _: () = assert!(::core::mem::align_of::<crate::ns::Trivial>() == 4);
 const _: () = {
-    static_assertions::assert_impl_all!(crate::ns::Trivial: Clone);
+    static_assertions::assert_impl_all!(crate::ns::Trivial:Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::ns::Trivial: Copy);
+    static_assertions::assert_impl_all!(crate::ns::Trivial:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::ns::Trivial: Drop);
+    static_assertions::assert_not_impl_any!(crate::ns::Trivial:Drop);
 };
 const _: () = assert!(memoffset::offset_of!(crate::ns::Trivial, trivial_field) == 0);
 const _: () = assert!(::core::mem::size_of::<crate::ns::TrivialNonfinal>() == 4);
 const _: () = assert!(::core::mem::align_of::<crate::ns::TrivialNonfinal>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::ns::TrivialNonfinal: Copy);
+    static_assertions::assert_not_impl_any!(crate::ns::TrivialNonfinal:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::ns::TrivialNonfinal: Drop);
+    static_assertions::assert_not_impl_any!(crate::ns::TrivialNonfinal:Drop);
 };
 const _: () = assert!(memoffset::offset_of!(crate::ns::TrivialNonfinal, trivial_field) == 0);

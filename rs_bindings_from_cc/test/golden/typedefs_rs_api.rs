@@ -414,41 +414,41 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::SomeStruct>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::SomeStruct>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy);
+    static_assertions::assert_not_impl_any!(crate::SomeStruct:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
+    static_assertions::assert_not_impl_any!(crate::SomeStruct:Drop);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::SomeOtherStruct>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::SomeOtherStruct>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::SomeOtherStruct: Copy);
+    static_assertions::assert_not_impl_any!(crate::SomeOtherStruct:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::SomeOtherStruct: Drop);
+    static_assertions::assert_not_impl_any!(crate::SomeOtherStruct:Drop);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::SomeUnion>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::SomeUnion>() == 1);
 const _: () = {
-    static_assertions::assert_impl_all!(crate::SomeUnion: Clone);
+    static_assertions::assert_impl_all!(crate::SomeUnion:Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::SomeUnion: Copy);
+    static_assertions::assert_impl_all!(crate::SomeUnion:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::SomeUnion: Drop);
+    static_assertions::assert_not_impl_any!(crate::SomeUnion:Drop);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::SomeOtherUnion>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::SomeOtherUnion>() == 1);
 const _: () = {
-    static_assertions::assert_impl_all!(crate::SomeOtherUnion: Clone);
+    static_assertions::assert_impl_all!(crate::SomeOtherUnion:Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::SomeOtherUnion: Copy);
+    static_assertions::assert_impl_all!(crate::SomeOtherUnion:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::SomeOtherUnion: Drop);
+    static_assertions::assert_not_impl_any!(crate::SomeOtherUnion:Drop);
 };

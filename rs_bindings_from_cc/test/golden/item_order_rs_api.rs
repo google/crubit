@@ -170,25 +170,25 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::FirstStruct>() == 4);
 const _: () = assert!(::core::mem::align_of::<crate::FirstStruct>() == 4);
 const _: () = {
-    static_assertions::assert_impl_all!(crate::FirstStruct: Clone);
+    static_assertions::assert_impl_all!(crate::FirstStruct:Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::FirstStruct: Copy);
+    static_assertions::assert_impl_all!(crate::FirstStruct:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::FirstStruct: Drop);
+    static_assertions::assert_not_impl_any!(crate::FirstStruct:Drop);
 };
 const _: () = assert!(memoffset::offset_of!(crate::FirstStruct, field) == 0);
 
 const _: () = assert!(::core::mem::size_of::<crate::SecondStruct>() == 4);
 const _: () = assert!(::core::mem::align_of::<crate::SecondStruct>() == 4);
 const _: () = {
-    static_assertions::assert_impl_all!(crate::SecondStruct: Clone);
+    static_assertions::assert_impl_all!(crate::SecondStruct:Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::SecondStruct: Copy);
+    static_assertions::assert_impl_all!(crate::SecondStruct:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::SecondStruct: Drop);
+    static_assertions::assert_not_impl_any!(crate::SecondStruct:Drop);
 };
 const _: () = assert!(memoffset::offset_of!(crate::SecondStruct, field) == 0);

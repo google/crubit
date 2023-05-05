@@ -169,17 +169,17 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::Noninline>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::Noninline>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Noninline: Copy);
+    static_assertions::assert_not_impl_any!(crate::Noninline:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Noninline: Drop);
+    static_assertions::assert_not_impl_any!(crate::Noninline:Drop);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::Inline>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::Inline>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Inline: Copy);
+    static_assertions::assert_not_impl_any!(crate::Inline:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Inline: Drop);
+    static_assertions::assert_not_impl_any!(crate::Inline:Drop);
 };

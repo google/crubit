@@ -198,25 +198,25 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::SomeStruct>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::SomeStruct>() == 1);
 const _: () = {
-    static_assertions::assert_impl_all!(crate::SomeStruct: Clone);
+    static_assertions::assert_impl_all!(crate::SomeStruct:Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::SomeStruct: Copy);
+    static_assertions::assert_impl_all!(crate::SomeStruct:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
+    static_assertions::assert_not_impl_any!(crate::SomeStruct:Drop);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::FieldTypeTestStruct>() == 200);
 const _: () = assert!(::core::mem::align_of::<crate::FieldTypeTestStruct>() == 8);
 const _: () = {
-    static_assertions::assert_impl_all!(crate::FieldTypeTestStruct: Clone);
+    static_assertions::assert_impl_all!(crate::FieldTypeTestStruct:Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::FieldTypeTestStruct: Copy);
+    static_assertions::assert_impl_all!(crate::FieldTypeTestStruct:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::FieldTypeTestStruct: Drop);
+    static_assertions::assert_not_impl_any!(crate::FieldTypeTestStruct:Drop);
 };
 const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, bool_field) == 0);
 const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, char_field) == 1);

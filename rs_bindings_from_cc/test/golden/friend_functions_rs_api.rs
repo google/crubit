@@ -142,11 +142,11 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::SomeClass>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::SomeClass>() == 1);
 const _: () = {
-    static_assertions::assert_impl_all!(crate::SomeClass: Clone);
+    static_assertions::assert_impl_all!(crate::SomeClass:Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::SomeClass: Copy);
+    static_assertions::assert_impl_all!(crate::SomeClass:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::SomeClass: Drop);
+    static_assertions::assert_not_impl_any!(crate::SomeClass:Drop);
 };

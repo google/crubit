@@ -722,38 +722,38 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::HasCustomAlignment>() == 64);
 const _: () = assert!(::core::mem::align_of::<crate::HasCustomAlignment>() == 64);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::HasCustomAlignment: Copy);
+    static_assertions::assert_not_impl_any!(crate::HasCustomAlignment:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::HasCustomAlignment: Drop);
+    static_assertions::assert_not_impl_any!(crate::HasCustomAlignment:Drop);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::HasFieldWithCustomAlignment>() == 64);
 const _: () = assert!(::core::mem::align_of::<crate::HasFieldWithCustomAlignment>() == 64);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::HasFieldWithCustomAlignment: Copy);
+    static_assertions::assert_not_impl_any!(crate::HasFieldWithCustomAlignment:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::HasFieldWithCustomAlignment: Drop);
+    static_assertions::assert_not_impl_any!(crate::HasFieldWithCustomAlignment:Drop);
 };
 const _: () = assert!(memoffset::offset_of!(crate::HasFieldWithCustomAlignment, field) == 0);
 
 const _: () = assert!(::core::mem::size_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
 const _: () = assert!(::core::mem::align_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::InheritsFromBaseWithCustomAlignment: Copy);
+    static_assertions::assert_not_impl_any!(crate::InheritsFromBaseWithCustomAlignment:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::InheritsFromBaseWithCustomAlignment: Drop);
+    static_assertions::assert_not_impl_any!(crate::InheritsFromBaseWithCustomAlignment:Drop);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
 const _: () = assert!(::core::mem::align_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::HasCustomAlignmentWithGnuAttr: Copy);
+    static_assertions::assert_not_impl_any!(crate::HasCustomAlignmentWithGnuAttr:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::HasCustomAlignmentWithGnuAttr: Drop);
+    static_assertions::assert_not_impl_any!(crate::HasCustomAlignmentWithGnuAttr:Drop);
 };
 
 const _: () = assert!(
@@ -765,12 +765,8 @@ const _: () = assert!(
     ) == 1
 );
 const _: () = {
-    static_assertions::assert_not_impl_any!(
-        crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE: Copy
-    );
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(
-        crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE: Drop
-    );
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE:Drop);
 };

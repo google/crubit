@@ -52,8 +52,8 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::Outer>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::Outer>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Outer: Copy);
+    static_assertions::assert_not_impl_any!(crate::Outer:Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Outer: Drop);
+    static_assertions::assert_not_impl_any!(crate::Outer:Drop);
 };
