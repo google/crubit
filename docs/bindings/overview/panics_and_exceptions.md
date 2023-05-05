@@ -3,9 +3,7 @@
 This document explains what Crubit's `rs_bindings_from_cc` and
 `cc_bindings_from_rs` tools do to handle Rust panics and C++ exceptions.
 
-[TOC]
-
-## Aborting on panic {#aborting-on-panic}
+## Aborting on panic
 
 > "Alright so I'm panicking, what else is there to do?" \
 > -- "The Hitchhiker’s Guide to the Galaxy" by Douglas Adams
@@ -30,7 +28,7 @@ Currently Crubit-generated bindings only support `-Cpanic=abort`,
 [the "Exceptions" section in the Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html#Exceptions)
 for discussion of some of the pros and cons of an `-fno-exceptions` environment.
 
-## Cross-language unwinding {#cross-language-unwinding}
+## Cross-language unwinding
 
 TODO(b/254049425): Add support for cross-FFI unwinding of Rust panics and C++
 exceptions.

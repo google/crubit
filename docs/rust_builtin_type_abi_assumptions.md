@@ -8,7 +8,7 @@ assumptions, the generated `..._cc_api_impl.rs` code disables the warning via
 `#![allow(improper_ctypes_definitions)]`. These ABI assumptions are documented
 below.
 
-# Rust built-in `char` type
+## Rust built-in `char` type
 
 `extern “C”` thunks generated in `..._cc_api_impl.rs` can take `char` arguments
 (and can return `char` values). (Note that this section talks about the Rust
@@ -36,7 +36,7 @@ target achitecture when `cc_bindings_from_rs` runs. These assertions seem
 unlikely to fail, but if they do, then hopefully `rs_char` can just be tweaked
 to wrap another of the C++ integer types.
 
-# Rust built-in `&[T]` slice reference type
+## Rust built-in `&[T]` slice reference type
 
 In the *future* `extern “C”` thunks generated in `..._cc_api_impl.rs` may take
 `&[i32]` and similar arguments (or return them).
@@ -60,7 +60,7 @@ In particular, empty slices have a different representation in C++ and in Rust -
 conversions implemented by `rs_std::slice<T>` will take care of using a null or
 non-null pointer as appropriate.
 
-# Rust built-in `&str` string reference
+## Rust built-in `&str` string reference
 
 In the *future* `extern “C”` thunks generated in `..._cc_api_impl.rs` may take
 `&str` and similar arguments (or return them).
