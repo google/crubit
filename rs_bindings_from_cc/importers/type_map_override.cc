@@ -15,13 +15,13 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
   const clang::Type* type =
       type_decl->getASTContext().getTypeDeclType(type_decl).getTypePtr();
   if (type == nullptr) return std::nullopt;
-  if (auto override_type = TypeMapOverride(*type);
+  if (auto override_type = GetTypeMapOverride(*type);
       override_type.ok() && override_type->has_value()) {
-    // TODO(b/274834739): emit size/align assertions for these mapped types.
-    return ictx_.ImportUnsupportedItem(
-        type_decl, absl::StrCat("Type bindings suppressed due to being "
-                                "mapped to an existing Rust type (",
-                                (**override_type).rs_type.name, ")"));
+    return TypeMapOverride{
+        .type = **std::move(override_type),
+        .owning_target = ictx_.GetOwningTarget(type_decl),
+        .id = GenerateItemId(type_decl),
+    };
   }
   return std::nullopt;
 }

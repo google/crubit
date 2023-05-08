@@ -763,7 +763,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
 
-  CRUBIT_ASSIGN_OR_RETURN(auto override_type, TypeMapOverride(*type));
+  CRUBIT_ASSIGN_OR_RETURN(auto override_type, GetTypeMapOverride(*type));
   if (override_type.has_value()) {
     return *std::move(override_type);
   } else if (type->isPointerType() || type->isLValueReferenceType() ||

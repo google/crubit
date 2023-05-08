@@ -135,7 +135,7 @@ absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
 
 }  // namespace
 
-absl::StatusOr<std::optional<MappedType>> TypeMapOverride(
+absl::StatusOr<std::optional<MappedType>> GetTypeMapOverride(
     const clang::Type& cc_type) {
   std::string type_string = clang::QualType(&cc_type, 0).getAsString();
   std::optional<absl::string_view> rust_type;

@@ -23,7 +23,7 @@ namespace crubit {
 //
 // To create a new type mapping, either add the type to the hardcoded list
 // of types, or else add the `crubit_rust_type` attribute.
-absl::StatusOr<std::optional<MappedType>> TypeMapOverride(
+absl::StatusOr<std::optional<MappedType>> GetTypeMapOverride(
     const clang::Type& cc_type);
 
 }  // namespace crubit

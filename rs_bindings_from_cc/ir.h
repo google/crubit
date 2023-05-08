@@ -748,6 +748,21 @@ inline std::ostream& operator<<(std::ostream& o, const UseMod& use_mod) {
   return o << std::string(llvm::formatv("{0:2}", use_mod.ToJson()));
 }
 
+// A type which has no bindings generated, and instead uses an already-existing
+// rust type.
+struct TypeMapOverride {
+  llvm::json::Value ToJson() const;
+
+  MappedType type;
+  BazelLabel owning_target;
+  ItemId id;
+};
+
+inline std::ostream& operator<<(std::ostream& o,
+                                const TypeMapOverride& type_mapped) {
+  return o << std::string(llvm::formatv("{0:2}", type_mapped.ToJson()));
+}
+
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
 struct IR {
@@ -774,7 +789,8 @@ struct IR {
   BazelLabel current_target;
 
   using Item = std::variant<Func, Record, IncompleteRecord, Enum, TypeAlias,
-                            UnsupportedItem, Comment, Namespace, UseMod>;
+                            UnsupportedItem, Comment, Namespace, UseMod,
+                            TypeMapOverride>;
   std::vector<Item> items;
   std::vector<ItemId> top_level_item_ids;
   // Empty string signals that the bindings should be generated in the crate

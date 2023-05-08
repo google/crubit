@@ -2774,6 +2774,25 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
             }
             .into()
         }
+        Item::TypeMapOverride(type_override) => {
+            // TODO(b/274834739): emit size/align assertions for these mapped types.
+            let disable_comment = format!(
+                "Type bindings for {cc_type} suppressed due to being mapped to \
+                    an existing Rust type ({rs_type})",
+                cc_type = type_override.debug_name(&ir),
+                rs_type = type_override
+                    .type_
+                    .rs_type
+                    .name
+                    .as_deref()
+                    // (This shouldn't happen, since we replace with known Rust types via a string.)
+                    .unwrap_or("<ERROR: unknown rust type>")
+            );
+            quote! {
+                __COMMENT__ #disable_comment
+            }
+            .into()
+        }
     };
 
     // Suppress bindings at the last minute, to collect other errors first.

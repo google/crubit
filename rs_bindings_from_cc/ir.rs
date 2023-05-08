@@ -794,6 +794,27 @@ impl GenericItem for UseMod {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TypeMapOverride {
+    #[serde(rename(deserialize = "type"))]
+    pub type_: MappedType,
+    pub owning_target: BazelLabel,
+    pub id: ItemId,
+}
+
+impl GenericItem for TypeMapOverride {
+    fn id(&self) -> ItemId {
+        self.id
+    }
+    fn debug_name(&self, _: &IR) -> Rc<str> {
+        self.type_.cc_type.name.clone().unwrap_or_else(|| Rc::from("<anonymous C++ type>"))
+    }
+    fn source_loc(&self) -> Option<Rc<str>> {
+        None
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum Item {
     Func(Rc<Func>),
     IncompleteRecord(Rc<IncompleteRecord>),
@@ -804,21 +825,23 @@ pub enum Item {
     Comment(Rc<Comment>),
     Namespace(Rc<Namespace>),
     UseMod(Rc<UseMod>),
+    TypeMapOverride(Rc<TypeMapOverride>),
 }
 
 macro_rules! forward_item {
     (match $item:ident { _($item_name:ident) => $expr:expr $(,)? }) => {
         match $item {
-                                                    Item::Func($item_name) => $expr,
-                                                    Item::IncompleteRecord($item_name) => $expr,
-                                                    Item::Record($item_name) => $expr,
-                                                    Item::Enum($item_name) => $expr,
-                                                    Item::TypeAlias($item_name) => $expr,
-                                                    Item::UnsupportedItem($item_name) => $expr,
-                                                    Item::Comment($item_name) => $expr,
-                                                    Item::Namespace($item_name) => $expr,
-                                                    Item::UseMod($item_name) => $expr,
-                                                }
+            Item::Func($item_name) => $expr,
+            Item::IncompleteRecord($item_name) => $expr,
+            Item::Record($item_name) => $expr,
+            Item::Enum($item_name) => $expr,
+            Item::TypeAlias($item_name) => $expr,
+            Item::UnsupportedItem($item_name) => $expr,
+            Item::Comment($item_name) => $expr,
+            Item::Namespace($item_name) => $expr,
+            Item::UseMod($item_name) => $expr,
+            Item::TypeMapOverride($item_name) => $expr,
+        }
     };
 }
 
@@ -858,6 +881,7 @@ impl Item {
             Item::Comment(..) => None,
             Item::UnsupportedItem(..) => None,
             Item::UseMod(..) => None,
+            Item::TypeMapOverride(..) => None,
         }
     }
 
@@ -882,6 +906,7 @@ impl Item {
             Item::Comment(..) => None,
             Item::Namespace(..) => None,
             Item::UseMod(..) => None,
+            Item::TypeMapOverride(type_override) => Some(&type_override.owning_target),
         }
     }
 }

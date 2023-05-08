@@ -294,6 +294,18 @@ llvm::json::Value MemberFuncMetadata::ToJson() const {
   };
 }
 
+llvm::json::Value TypeMapOverride::ToJson() const {
+  llvm::json::Object override{
+      {"type", type},
+      {"owning_target", owning_target},
+      {"id", id},
+  };
+
+  return llvm::json::Object{
+      {"TypeMapOverride", std::move(override)},
+  };
+}
+
 llvm::json::Value UseMod::ToJson() const {
   llvm::json::Object use_mod{
       {"path", path},
