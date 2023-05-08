@@ -240,20 +240,20 @@ Importer::SourceOrderKey Importer::GetSourceOrderKey(
 
 class Importer::SourceLocationComparator {
  public:
-  const bool operator()(const clang::SourceLocation& a,
-                        const clang::SourceLocation& b) const {
+  bool operator()(const clang::SourceLocation& a,
+                  const clang::SourceLocation& b) const {
     return b.isValid() && a.isValid() && sm.isBeforeInTranslationUnit(a, b);
   }
-  const bool operator()(const clang::RawComment* a,
-                        const clang::SourceLocation& b) const {
+  bool operator()(const clang::RawComment* a,
+                  const clang::SourceLocation& b) const {
     return this->operator()(a->getBeginLoc(), b);
   }
-  const bool operator()(const clang::SourceLocation& a,
-                        const clang::RawComment* b) const {
+  bool operator()(const clang::SourceLocation& a,
+                  const clang::RawComment* b) const {
     return this->operator()(a, b->getBeginLoc());
   }
-  const bool operator()(const clang::RawComment* a,
-                        const clang::RawComment* b) const {
+  bool operator()(const clang::RawComment* a,
+                  const clang::RawComment* b) const {
     return this->operator()(a->getBeginLoc(), b->getBeginLoc());
   }
 
@@ -407,6 +407,7 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   clang::SourceManager& sm = ctx_.getSourceManager();
   std::vector<SourceLocationComparator::OrderedItem> ordered_items;
 
+  ordered_items.reserve(comments_.size());
   for (auto& comment : comments_) {
     ordered_items.push_back(
         {GetSourceOrderKey(comment),

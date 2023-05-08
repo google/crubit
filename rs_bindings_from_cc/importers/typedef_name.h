@@ -16,7 +16,7 @@ class TypedefNameDeclImporter
     : public DeclImporterBase<clang::TypedefNameDecl> {
  public:
   TypedefNameDeclImporter(ImportContext& context) : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::TypedefNameDecl*);
+  std::optional<IR::Item> Import(clang::TypedefNameDecl*) override;
 };
 
 }  // namespace crubit

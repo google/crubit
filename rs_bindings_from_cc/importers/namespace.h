@@ -14,7 +14,7 @@ namespace crubit {
 class NamespaceDeclImporter : public DeclImporterBase<clang::NamespaceDecl> {
  public:
   NamespaceDeclImporter(ImportContext& context) : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::NamespaceDecl*);
+  std::optional<IR::Item> Import(clang::NamespaceDecl*) override;
 };
 
 }  // namespace crubit

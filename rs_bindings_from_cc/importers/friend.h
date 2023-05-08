@@ -14,7 +14,7 @@ namespace crubit {
 class FriendDeclImporter : public DeclImporterBase<clang::FriendDecl> {
  public:
   FriendDeclImporter(ImportContext& context) : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::FriendDecl*);
+  std::optional<IR::Item> Import(clang::FriendDecl*) override;
 };
 
 }  // namespace crubit

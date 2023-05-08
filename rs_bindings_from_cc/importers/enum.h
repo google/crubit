@@ -16,7 +16,7 @@ namespace crubit {
 class EnumDeclImporter : public DeclImporterBase<clang::EnumDecl> {
  public:
   EnumDeclImporter(ImportContext& context) : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::EnumDecl*);
+  std::optional<IR::Item> Import(clang::EnumDecl*) override;
 };
 
 }  // namespace crubit

@@ -16,7 +16,7 @@ class ClassTemplateDeclImporter
  public:
   ClassTemplateDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::ClassTemplateDecl*);
+  std::optional<IR::Item> Import(clang::ClassTemplateDecl*) override;
 };
 
 }  // namespace crubit

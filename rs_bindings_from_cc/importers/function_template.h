@@ -16,7 +16,7 @@ class FunctionTemplateDeclImporter
  public:
   FunctionTemplateDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::FunctionTemplateDecl*);
+  std::optional<IR::Item> Import(clang::FunctionTemplateDecl*) override;
 };
 
 }  // namespace crubit

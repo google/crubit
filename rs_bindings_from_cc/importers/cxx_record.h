@@ -12,7 +12,7 @@ namespace crubit {
 class CXXRecordDeclImporter : public DeclImporterBase<clang::CXXRecordDecl> {
  public:
   CXXRecordDeclImporter(ImportContext& context) : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::CXXRecordDecl*);
+  std::optional<IR::Item> Import(clang::CXXRecordDecl*) override;
 
  private:
   std::vector<Field> ImportFields(clang::CXXRecordDecl*);
