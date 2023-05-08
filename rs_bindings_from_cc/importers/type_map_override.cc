@@ -12,7 +12,8 @@ namespace crubit {
 
 std::optional<IR::Item> TypeMapOverrideImporter::Import(
     clang::TypeDecl* type_decl) {
-  const clang::Type* type = type_decl->getTypeForDecl();
+  const clang::Type* type =
+      type_decl->getASTContext().getTypeDeclType(type_decl).getTypePtr();
   if (type == nullptr) return std::nullopt;
   if (auto override_type = TypeMapOverride(*type);
       override_type.ok() && override_type->has_value()) {

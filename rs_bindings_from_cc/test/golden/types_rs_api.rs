@@ -167,7 +167,8 @@ pub unsafe fn FunctionWithVoidPointers(
 // Error while generating bindings for item 'MyI8Enum':
 // Type bindings suppressed due to being mapped to an existing Rust type (i8)
 
-pub type MyI8Alias = u8;
+// Error while generating bindings for item 'MyI8Alias':
+// Type bindings suppressed due to being mapped to an existing Rust type (i8)
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
 
