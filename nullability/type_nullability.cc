@@ -109,6 +109,10 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     if (TST->isTypeAlias()) {
       // Aliases are sugar, visit the underlying type.
       // Record template args so we can resugar substituted params.
+      //
+      // TODO(b/281474380): `TemplateSpecializationType::template_arguments()`
+      // doesn't contain defaulted arguments. Can we fetch or compute these in
+      // sugared form?
       const AliasArgs Args{TST->getTemplateName().getAsTemplateDecl(),
                            TST->template_arguments(), CurrentAliasTemplate};
       llvm::SaveAndRestore UseAlias(CurrentAliasTemplate, &Args);
@@ -131,11 +135,17 @@ class NullabilityWalker : public TypeVisitor<Impl> {
         // Valid because pack must be the last param in alias templates.
         if (auto PackIndex = T->getPackIndex())
           Index = CurrentAliasTemplate->Args.size() - 1 - *PackIndex;
-        const TemplateArgument& Arg = CurrentAliasTemplate->Args[Index];
+        // TODO(b/281474380): `Args` may be too short if `Index` refers to an
+        // arg that was defaulted.  We eventually want to populate
+        // `CurrentAliasTemplate->Args` with the default arguments in this case,
+        // but for now, we just walk the underlying type without sugar.
+        if (Index < CurrentAliasTemplate->Args.size()) {
+          const TemplateArgument& Arg = CurrentAliasTemplate->Args[Index];
 
-        llvm::SaveAndRestore OriginalContext(CurrentAliasTemplate,
-                                             CurrentAliasTemplate->Parent);
-        return Visit(Arg);
+          llvm::SaveAndRestore OriginalContext(CurrentAliasTemplate,
+                                               CurrentAliasTemplate->Parent);
+          return Visit(Arg);
+        }
       } else {
         // Our top-level type references an unbound type alias param.
         // Presumably our original input was the underlying type of an alias

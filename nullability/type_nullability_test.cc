@@ -249,6 +249,16 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateParamPack) {
       ElementsAre(NullabilityKind::Unspecified, NullabilityKind::Unspecified));
 }
 
+TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplateWithDefaultArg) {
+  Preamble =
+      "template <typename T1, typename T2 = T1> using AliasTemplate = T2;";
+
+  // TODO(b/281474380): This should be [Nullable], but we don't yet handle
+  // default arguments correctly.
+  EXPECT_THAT(nullVec("AliasTemplate<int * _Nullable>"),
+              ElementsAre(NullabilityKind::Unspecified));
+}
+
 class PrintWithNullabilityTest : public ::testing::Test {
  protected:
   // C++ declarations prepended before parsing type in nullVec().
