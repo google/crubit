@@ -1,26 +1,34 @@
 # Bindings for primitive scalar types
 
-This chapter describes how Crubit maps primitive scalar types like integers,
+Here we describe how Crubit maps primitive scalar types like integers,
 floating-point numbers, etc.
 
-## Integer types
+## Bidirectional mapping of types
 
 The following types are mapped bidirectionally:
 
-C++         | Rust
------------ | -------
-`int8_t`    | `i8`
-`int16_t`   | `i16`
-`int32_t`   | `i32`
-`int64_t`   | `i64`
-`intptr_t`  | `isize`
-`uint8_t`   | `u8`
-`uint16_t`  | `u16`
-`uint32_t`  | `u32`
-`uint64_t`  | `u64`
-`uintptr_t` | `usize`
+C++               | Rust    | Notes
+----------------- | ------- | -------------------------------------
+`int8_t`          | `i8`    |
+`int16_t`         | `i16`   |
+`int32_t`         | `i32`   |
+`int64_t`         | `i64`   |
+`intptr_t`        | `isize` |
+`uint8_t`         | `u8`    |
+`uint16_t`        | `u16`   |
+`uint32_t`        | `u32`   |
+`uint64_t`        | `u64`   |
+`uintptr_t`       | `usize` |
+`bool`            | `bool`  |
+`double`          | `f64`   |
+`float`           | `f32`   |
+`rs_std::rs_char` | `char`  | See `crubit/support/rs_std/rs_char.h`
 
-The following C++ types are mapped one-way into the corresponding Rust types:
+## One-way mapping of C++ into Rust types
+
+The C++ types below are mapped one-way into the corresponding Rust types.
+("one-way" means that the mapping doesn't round-trip - for example `size_t` maps
+to `usize`, but `usize` maps to `uintptr_t`.)
 
 C++         | Rust
 ----------- | -------
@@ -49,16 +57,6 @@ C++                  | Rust
 `long long`          | `i64`
 `unsigned long long` | `u64`
 
+## Unsupported types
+
 Bindings for 128-bit-wide integers are not supported at this point.
-
-## Other scalar types
-
-`rs_bindings_from_cc` and `cc_bindings_from_rs` also support the following
-bi-directional type mapping:
-
-C++               | Rust   | Notes
------------------ | ------ | -------------------------------------
-`bool`            | `bool` |
-`double`          | `f64`  |
-`float`           | `f32`  |
-`rs_std::rs_char` | `char` | See `crubit/support/rs_std/rs_char.h`
