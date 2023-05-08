@@ -5,6 +5,12 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ENUMS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ENUMS_H_
 
+enum Color {
+  kRed,
+  kBlue,
+  kGreen,
+};
+
 enum Empty {};
 enum EmptyBool : bool {};
 enum EmptyInt : unsigned int {};

@@ -22,6 +22,25 @@
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+pub struct Color(u32);
+impl Color {
+    pub const kRed: Color = Color(0);
+    pub const kBlue: Color = Color(1);
+    pub const kGreen: Color = Color(2);
+}
+impl From<u32> for Color {
+    fn from(value: u32) -> Color {
+        Color(value)
+    }
+}
+impl From<Color> for u32 {
+    fn from(value: Color) -> u32 {
+        value.0
+    }
+}
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct Empty(u32);
 impl Empty {}
 impl From<u32> for Empty {
