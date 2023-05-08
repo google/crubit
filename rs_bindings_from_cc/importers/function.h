@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_FUNCTION_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_FUNCTION_H_
 
+#include <optional>
+
 #include "rs_bindings_from_cc/decl_importer.h"
 
 namespace crubit {
@@ -12,7 +14,8 @@ namespace crubit {
 // A `DeclImporter` for `FunctionDecl`s.
 class FunctionDeclImporter : public DeclImporterBase<clang::FunctionDecl> {
  public:
-  FunctionDeclImporter(ImportContext& context) : DeclImporterBase(context) {}
+  explicit FunctionDeclImporter(ImportContext& context)
+      : DeclImporterBase(context) {}
   std::optional<IR::Item> Import(clang::FunctionDecl*) override;
 
  private:

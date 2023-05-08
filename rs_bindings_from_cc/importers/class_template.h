@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_CLASS_TEMPLATE_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_CLASS_TEMPLATE_H_
 
+#include <optional>
+
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "clang/AST/DeclTemplate.h"
 
@@ -14,7 +16,7 @@ namespace crubit {
 class ClassTemplateDeclImporter
     : public DeclImporterBase<clang::ClassTemplateDecl> {
  public:
-  ClassTemplateDeclImporter(ImportContext& context)
+  explicit ClassTemplateDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
   std::optional<IR::Item> Import(clang::ClassTemplateDecl*) override;
 };

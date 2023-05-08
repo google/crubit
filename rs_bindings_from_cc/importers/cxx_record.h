@@ -5,13 +5,17 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_CXX_RECORD_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_CXX_RECORD_H_
 
+#include <optional>
+#include <vector>
+
 #include "rs_bindings_from_cc/decl_importer.h"
 namespace crubit {
 
 // A `DeclImporter` for `CXXRecordDecl`s.
 class CXXRecordDeclImporter : public DeclImporterBase<clang::CXXRecordDecl> {
  public:
-  CXXRecordDeclImporter(ImportContext& context) : DeclImporterBase(context) {}
+  explicit CXXRecordDeclImporter(ImportContext& context)
+      : DeclImporterBase(context) {}
   std::optional<IR::Item> Import(clang::CXXRecordDecl*) override;
 
  private:

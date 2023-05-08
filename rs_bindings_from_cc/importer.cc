@@ -8,8 +8,11 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <iterator>
+#include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -190,8 +193,8 @@ static int GetDeclOrder(const clang::Decl* decl) {
 
 class Importer::SourceOrderKey {
  public:
-  SourceOrderKey(clang::SourceRange source_range, int decl_order = 0,
-                 std::string name = "")
+  explicit SourceOrderKey(clang::SourceRange source_range, int decl_order = 0,
+                          std::string name = "")
       : source_range_(source_range), decl_order_(decl_order), name_(name) {}
 
   SourceOrderKey(const SourceOrderKey&) = default;
@@ -266,7 +269,7 @@ class Importer::SourceLocationComparator {
     auto b_source_order = b.first;
     return a_source_order.isBefore(b_source_order, sm);
   }
-  SourceLocationComparator(const clang::SourceManager& sm) : sm(sm) {}
+  explicit SourceLocationComparator(const clang::SourceManager& sm) : sm(sm) {}
 
  private:
   const clang::SourceManager& sm;
@@ -449,7 +452,7 @@ void Importer::ImportDeclsFromDeclContext(
 }
 
 std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
-  // TODO: Move `decl->getCanonicalDecl()` from callers into here.
+  // TODO(jeanpierreda): Move `decl->getCanonicalDecl()` from callers into here.
   if (auto it = import_cache_.find(decl); it != import_cache_.end()) {
     return it->second;
   }

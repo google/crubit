@@ -5,7 +5,11 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_DECL_IMPORTER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_DECL_IMPORTER_H_
 
+#include <memory>
 #include <optional>
+#include <set>
+#include <string>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
@@ -67,7 +71,7 @@ class ImportContext {
   ImportContext(Invocation& invocation, clang::ASTContext& ctx,
                 clang::Sema& sema)
       : invocation_(invocation), ctx_(ctx), sema_(sema) {}
-  virtual ~ImportContext() {}
+  virtual ~ImportContext() = default;
 
   // Imports all decls contained in a `DeclContext`.
   virtual void ImportDeclsFromDeclContext(
@@ -175,8 +179,8 @@ class ImportContext {
 // Interface for components that can import decls of a certain category.
 class DeclImporter {
  public:
-  DeclImporter(ImportContext& ictx) : ictx_(ictx) {}
-  virtual ~DeclImporter() {}
+  explicit DeclImporter(ImportContext& ictx) : ictx_(ictx) {}
+  virtual ~DeclImporter() = default;
 
   // Returns an IR item for a decl, or `std::nullopt` if it could not be
   // imported.
@@ -194,10 +198,10 @@ class DeclImporter {
 template <typename D>
 class DeclImporterBase : public DeclImporter {
  public:
-  DeclImporterBase(ImportContext& context) : DeclImporter(context) {}
+  explicit DeclImporterBase(ImportContext& context) : DeclImporter(context) {}
 
  protected:
-  std::optional<IR::Item> ImportDecl(clang::Decl* decl) {
+  std::optional<IR::Item> ImportDecl(clang::Decl* decl) override {
     auto* typed_decl = clang::dyn_cast<D>(decl);
     if (typed_decl == nullptr) return std::nullopt;
     return Import(typed_decl);
