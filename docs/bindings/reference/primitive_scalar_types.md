@@ -3,7 +3,7 @@
 Here we describe how Crubit maps primitive scalar types like integers,
 floating-point numbers, etc.
 
-## Bidirectional mapping of types
+## Bidirectional map of types
 
 The following types are mapped bidirectionally:
 
@@ -24,11 +24,11 @@ C++               | Rust    | Notes
 `float`           | `f32`   |
 `rs_std::rs_char` | `char`  | See `crubit/support/rs_std/rs_char.h`
 
-## One-way mapping of C++ into Rust types
+## One-way map of C++ into Rust types
 
 The C++ types below are mapped one-way into the corresponding Rust types.
-("one-way" means that the mapping doesn't round-trip - for example `size_t` maps
-to `usize`, but `usize` maps to `uintptr_t`.)
+("one-way" means that the type doesn't round-trip - for example `size_t` maps to
+`usize`, but `usize` maps to `uintptr_t`.)
 
 C++         | Rust
 ----------- | -------
@@ -38,7 +38,10 @@ C++         | Rust
 `char32_t`  | `u32`
 `wchar_t`   | `i32`
 
-<!-- TODO(b/276790180): if we use `ffi::c_char` etc., document it here -->
+### Platform-specific map
+
+TODO(b/276790180): These will eventually become `ffi::c_char`, `ffi::c_int`,
+etc.
 
 The following C++ types are mapped in a platform-dependent way to the
 corresponding Rust type of the same width and signedness:
