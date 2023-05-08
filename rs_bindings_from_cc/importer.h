@@ -135,6 +135,8 @@ class Importer final : public ImportContext {
   absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType* type);
 
+  // The different decl importers. Note that order matters: the first importer
+  // to successfully match a decl "wins", and no other importers are tried.
   std::vector<std::unique_ptr<DeclImporter>> decl_importers_;
   std::unique_ptr<clang::MangleContext> mangler_;
   absl::flat_hash_map<const clang::Decl*, std::optional<IR::Item>>

@@ -178,12 +178,11 @@ class DeclImporter {
   DeclImporter(ImportContext& ictx) : ictx_(ictx) {}
   virtual ~DeclImporter() {}
 
-  // Determines whether this importer is autoritative for a decl. This does not
-  // imply that the import will be succesful.
-  virtual bool CanImport(clang::Decl*) = 0;
-
-  // Returns an IR item for a decl, or `std::nullopt` if importing failed.
-  // This member function may only be called after `CanImport` returned `true`.
+  // Returns an IR item for a decl, or `std::nullopt` if it could not be
+  // imported.
+  // If it can't be imported, other DeclImporters may be attempted.
+  // To indicate that an item can't be imported, and no other importers should
+  // be attempted, return UnsupportedItem.
   virtual std::optional<IR::Item> ImportDecl(clang::Decl*) = 0;
 
  protected:
@@ -198,9 +197,10 @@ class DeclImporterBase : public DeclImporter {
   DeclImporterBase(ImportContext& context) : DeclImporter(context) {}
 
  protected:
-  bool CanImport(clang::Decl* decl) { return clang::isa<D>(decl); }
   std::optional<IR::Item> ImportDecl(clang::Decl* decl) {
-    return Import(clang::cast<D>(decl));
+    auto* typed_decl = clang::dyn_cast<D>(decl);
+    if (typed_decl == nullptr) return std::nullopt;
+    return Import(typed_decl);
   }
   virtual std::optional<IR::Item> Import(D*) = 0;
 };

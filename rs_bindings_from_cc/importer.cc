@@ -549,13 +549,13 @@ bool IsTransitivelyInPrivate(clang::Decl* decl_to_check) {
 
 std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
   if (IsTransitivelyInPrivate(decl)) return std::nullopt;
-  std::optional<IR::Item> result;
   for (auto& importer : decl_importers_) {
-    if (importer->CanImport(decl)) {
-      result = importer->ImportDecl(decl);
+    std::optional<IR::Item> result = importer->ImportDecl(decl);
+    if (result.has_value()) {
+      return result;
     }
   }
-  return result;
+  return std::nullopt;
 }
 
 std::optional<IR::Item> Importer::GetImportedItem(const clang::Decl* decl) {
