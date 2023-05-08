@@ -245,7 +245,7 @@ class Importer::SourceLocationComparator {
  public:
   bool operator()(const clang::SourceLocation& a,
                   const clang::SourceLocation& b) const {
-    return b.isValid() && a.isValid() && sm.isBeforeInTranslationUnit(a, b);
+    return b.isValid() && a.isValid() && sm_.isBeforeInTranslationUnit(a, b);
   }
   bool operator()(const clang::RawComment* a,
                   const clang::SourceLocation& b) const {
@@ -267,12 +267,12 @@ class Importer::SourceLocationComparator {
   bool operator()(const OrderedItemOrId& a, const OrderedItemOrId& b) const {
     auto a_source_order = a.first;
     auto b_source_order = b.first;
-    return a_source_order.isBefore(b_source_order, sm);
+    return a_source_order.isBefore(b_source_order, sm_);
   }
-  explicit SourceLocationComparator(const clang::SourceManager& sm) : sm(sm) {}
+  explicit SourceLocationComparator(const clang::SourceManager& sm) : sm_(sm) {}
 
  private:
-  const clang::SourceManager& sm;
+  const clang::SourceManager& sm_;
 };
 
 static std::vector<clang::Decl*> GetCanonicalChildren(
