@@ -103,6 +103,16 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "type_map_override",
+    srcs = ["type_map_override.cc"],
+    hdrs = ["type_map_override.h"],
+    deps = [
+        "//rs_bindings_from_cc:decl_importer",
+        "//rs_bindings_from_cc:type_map",
+    ],
+)
+
 cc_test(
     name = "override_final_test",
     srcs = ["override_final_test.cc"],

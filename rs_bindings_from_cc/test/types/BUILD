@@ -33,4 +33,5 @@ rust_test(
         ":types_nolifetimes",
         ":types_nonptr",
     ],
+    proc_macro_deps = ["//common:item_exists"],
 )

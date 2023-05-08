@@ -201,3 +201,11 @@ function_parameter_type_is!(types_inferred_lifetimes,
     StructRef => &mut types_inferred_lifetimes::ExampleStruct,
     ConstStructRef => &types_inferred_lifetimes::ExampleStruct,
 );
+
+#[test]
+fn test_typemap_suppresses_bindings() {
+    assert!(!item_exists::type_exists!(types_nonptr::MyI8Class));
+    assert!(!item_exists::type_exists!(types_nonptr::MyI8Struct));
+    assert!(!item_exists::type_exists!(types_nonptr::MyI8Enum));
+    assert!(!item_exists::type_exists!(types_nonptr::MyI8Alias));
+}

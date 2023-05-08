@@ -22,6 +22,7 @@
 #include "rs_bindings_from_cc/importers/function.h"
 #include "rs_bindings_from_cc/importers/function_template.h"
 #include "rs_bindings_from_cc/importers/namespace.h"
+#include "rs_bindings_from_cc/importers/type_map_override.h"
 #include "rs_bindings_from_cc/importers/typedef_name.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Mangle.h"
@@ -38,6 +39,7 @@ class Importer final : public ImportContext {
                     clang::Sema& sema)
       : ImportContext(invocation, ctx, sema),
         mangler_(ABSL_DIE_IF_NULL(ctx_.createMangleContext())) {
+    decl_importers_.push_back(std::make_unique<TypeMapOverrideImporter>(*this));
     decl_importers_.push_back(
         std::make_unique<ClassTemplateDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<CXXRecordDeclImporter>(*this));

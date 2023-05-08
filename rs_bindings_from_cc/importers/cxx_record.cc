@@ -181,20 +181,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     }
   }
 
-  // TODO(b/274834739): Automatically suppress this based on crubit_rust_type,
-  // similar to the logic for type aliases.
-  // TODO(b/274834739): emit size/align assertions for these mapped types.
-  //
-  // The less expensive `getName` comparison is done
-  // first, because the documentation of `NamedDecl::getQualifiedNameAsString`
-  // says that "it should be called only when performance doesn't matter".
-  if (record_decl->getName() == "rs_char" &&
-      record_decl->getQualifiedNameAsString() == "rs_std::rs_char") {
-    return ictx_.ImportUnsupportedItem(
-        record_decl,
-        "Round-tripping of `rs_char` is not supported yet (b/274834739)");
-  }
-
   absl::StatusOr<RecordType> record_type = TranslateRecordType(*record_decl);
   if (!record_type.ok()) {
     return ictx_.ImportUnsupportedItem(

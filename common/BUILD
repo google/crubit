@@ -3,6 +3,7 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
+    "rust_proc_macro",
     "rust_test",
 )
 
@@ -100,6 +101,28 @@ rust_library(
 rust_test(
     name = "ffi_types_test",
     crate = ":ffi_types",
+)
+
+rust_proc_macro(
+    name = "item_exists",
+    testonly = 1,
+    srcs = ["item_exists.rs"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+    deps = [
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+        "@crate_index//:syn",
+    ],
+)
+
+rust_test(
+    name = "item_exists_test",
+    srcs = ["item_exists_test.rs"],
+    proc_macro_deps = [
+        ":item_exists",
+    ],
 )
 
 cc_library(

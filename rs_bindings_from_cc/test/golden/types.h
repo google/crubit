@@ -76,4 +76,20 @@ inline int& (*FunctionPointerReturningFunction())(const int&, int*) {
 
 inline void* FunctionWithVoidPointers(void*, const void*) { return nullptr; }
 
+// These types should be suppressed due to the rust type override
+
+struct [[clang::annotate("crubit_internal_rust_type", "i8")]] MyI8Struct final {
+  signed char x;
+};
+
+struct [[clang::annotate("crubit_internal_rust_type", "i8")]] MyI8Class final {
+  signed char x;
+};
+
+enum [[clang::annotate("crubit_internal_rust_type",
+                       "i8")]] MyI8Enum : unsigned char{kX};
+
+using MyI8Alias [[clang::annotate("crubit_internal_rust_type", "i8")]] =
+    unsigned char;
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_

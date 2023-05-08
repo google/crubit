@@ -37,10 +37,6 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
     // into their item, instead of having a separate TypeAlias item in addition.
     return std::nullopt;
   }
-  auto override_type = TypeMapOverride(*type.getTypePtr());
-  if (override_type.ok() && override_type->has_value()) {
-    return std::nullopt;
-  }
 
   absl::StatusOr<Identifier> identifier =
       ictx_.GetTranslatedIdentifier(typedef_name_decl);

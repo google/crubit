@@ -158,6 +158,17 @@ pub unsafe fn FunctionWithVoidPointers(
     crate::detail::__rust_thunk___Z24FunctionWithVoidPointersPvPKv(__param_0, __param_1)
 }
 
+// Error while generating bindings for item 'MyI8Struct':
+// Type bindings suppressed due to being mapped to an existing Rust type (i8)
+
+// Error while generating bindings for item 'MyI8Class':
+// Type bindings suppressed due to being mapped to an existing Rust type (i8)
+
+// Error while generating bindings for item 'MyI8Enum':
+// Type bindings suppressed due to being mapped to an existing Rust type (i8)
+
+pub type MyI8Alias = u8;
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
 
 mod detail {

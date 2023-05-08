@@ -262,6 +262,7 @@ cc_library(
         "//rs_bindings_from_cc/importers:function",
         "//rs_bindings_from_cc/importers:function_template",
         "//rs_bindings_from_cc/importers:namespace",
+        "//rs_bindings_from_cc/importers:type_map_override",
         "//rs_bindings_from_cc/importers:typedef_name",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
