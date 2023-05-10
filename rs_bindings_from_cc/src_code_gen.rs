@@ -1157,7 +1157,6 @@ fn is_record_clonable(db: &dyn BindingsGenerator, record: Rc<Record>) -> bool {
                     .iter()
                     .map(|param| db.rs_type_kind(param.type_.rs_type.clone()))
                     .collect::<Result<Vec<_>>>()
-                    .ok()
                     .unwrap_or_default();
                 if function.params.len() != 2 || !function_param_types[1].is_shared_ref_to(&record)
                 {
