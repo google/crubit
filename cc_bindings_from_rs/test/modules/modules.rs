@@ -10,3 +10,32 @@ pub mod basic_module {
         x + y
     }
 }
+
+/// This is a regression test that verifies that thunk impls use the right
+/// fully-qualified name when referring to methods:
+///
+/// * Incorrect:
+///   `::modules::impl_in_separate_private_module::impl_mod::Foo::into_i32`
+/// * Correct: `::modules::impl_in_separate_private_module::Foo::into_i32`
+///
+/// To some extent this test tries to mimic that arrangement in
+/// `concrete_fft/v0_2/src/fft128` (where the sub-module is in a
+/// separate `f128_impl.rs` file).
+pub mod impl_in_separate_private_module {
+    pub struct Foo(pub i32);
+
+    /// Okay if `impl` is in a *private* module.  (Whether the module is
+    /// public or private has no impact on the problem that this test
+    /// verifies doesn't regress.)
+    mod impl_mod {
+        impl super::Foo {
+            pub fn create(i: i32) -> Self {
+                Self(i)
+            }
+
+            pub fn into_i32(s: Self) -> i32 {
+                s.0
+            }
+        }
+    }
+}

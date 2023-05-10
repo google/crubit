@@ -880,10 +880,11 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         if needs_thunk { get_thunk_name(symbol_name) } else { symbol_name.to_string() }
     };
 
-    let FullyQualifiedName { krate, mod_path, name } = FullyQualifiedName::new(tcx, def_id);
-    let fn_name = name.expect("Functions are assumed to always have a name");
+    let fully_qualified_fn_name = FullyQualifiedName::new(tcx, def_id);
+    let short_fn_name =
+        fully_qualified_fn_name.name.expect("Functions are assumed to always have a name");
     let main_api_fn_name =
-        format_cc_ident(fn_name.as_str()).context("Error formatting function name")?;
+        format_cc_ident(short_fn_name.as_str()).context("Error formatting function name")?;
 
     let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_ret_type = format_ret_ty_for_cc(input, &sig)?.into_tokens(&mut main_api_prereqs);
@@ -929,7 +930,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
             ty::ImplSubject::Inherent(ty) => match ty.kind() {
                 ty::TyKind::Adt(adt, substs) => {
                     assert_eq!(0, substs.len(), "Callers should filter out generics");
-                    Some(tcx.item_name(adt.did()))
+                    Some(FullyQualifiedName::new(tcx, adt.did()))
                 }
                 _ => panic!("Non-ADT `impl`s should be filtered by caller"),
             },
@@ -937,7 +938,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         },
         None => None,
     };
-    let needs_definition = fn_name.as_str() != thunk_name;
+    let needs_definition = short_fn_name.as_str() != thunk_name;
     let main_api = {
         let doc_comment = {
             let doc_comment = format_doc_comment(tcx, local_def_id);
@@ -974,8 +975,9 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         let thunk_name = format_cc_ident(&thunk_name).context("Error formatting thunk name")?;
         let struct_name = match struct_name.as_ref() {
             None => quote! {},
-            Some(symbol) => {
-                let name = format_cc_ident(symbol.as_str())
+            Some(fully_qualified_name) => {
+                let name = fully_qualified_name.name.expect("Structs always have a name");
+                let name = format_cc_ident(name.as_str())
                     .expect("Caller of format_fn should verify struct via format_adt_core");
                 quote! { #name :: }
             }
@@ -1027,17 +1029,14 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     let rs_details = if !needs_thunk {
         quote! {}
     } else {
-        let crate_name = make_rs_ident(krate.as_str());
-        let mod_path = mod_path.format_for_rs();
-        let fn_name = make_rs_ident(fn_name.as_str());
-        let struct_name = match struct_name.as_ref() {
-            None => quote! {},
-            Some(symbol) => {
-                let name = make_rs_ident(symbol.as_str());
-                quote! { #name :: }
+        let fully_qualified_fn_name = match struct_name.as_ref() {
+            None => fully_qualified_fn_name.format_for_rs(),
+            Some(struct_name) => {
+                let fn_name = make_rs_ident(short_fn_name.as_str());
+                let struct_name = struct_name.format_for_rs();
+                quote! { #struct_name :: #fn_name }
             }
         };
-        let fully_qualified_fn_name = quote! { :: #crate_name :: #mod_path #struct_name #fn_name };
         format_thunk_impl(tcx, local_def_id, &thunk_name, fully_qualified_fn_name)?
     };
     Ok(ApiSnippets { main_api, cc_details, rs_details })
