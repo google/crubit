@@ -5238,9 +5238,9 @@ mod tests {
         // TODO(b/217419782): Add another test for more exotic calling conventions /
         // abis.
 
-        // TODO(b/217419782): Add another test for pointer to a function that
-        // takes/returns non-trivially-movable types by value. See also
-        // <internal link>
+        // TODO(b/276461979): Add another test for pointer to a function that requires
+        // thunks - e.g. because it takes/returns structs value. See also
+        // b/276461979 and <internal link>
 
         Ok(())
     }
