@@ -5,6 +5,7 @@
 #include "nullability/type_nullability.h"
 
 #include "absl/log/check.h"
+#include "clang/Basic/Specifiers.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
@@ -126,10 +127,8 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentAlias) {
       using type = T _Nullable;
     };
   )cpp";
-  // TODO: should be [Nullable, Nonnull]
-  EXPECT_THAT(
-      nullVec("Nullable<int* _Nonnull *>::type"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("Nullable<int* _Nonnull *>::type"),
+              ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassTemplate) {
@@ -146,6 +145,32 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassTemplate) {
               ElementsAre(NullabilityKind::Unspecified));
 }
 
+TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassInstantiation) {
+  Preamble = R"cpp(
+    template <class T, class U>
+    struct Pair;
+    template <class T, class U>
+    struct PairWrapper {
+      using type = Pair<T _Nullable, U>;
+    };
+  )cpp";
+
+  EXPECT_THAT(nullVec("PairWrapper<int*, int* _Nonnull>::type"),
+              ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
+  EXPECT_THAT(
+      nullVec("PairWrapper<int* _Nonnull, int*>::type"),
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
+
+  EXPECT_THAT(
+      nullVec("PairWrapper<PairWrapper<int*, int* _Nonnull>::type*, "
+              "            PairWrapper<int* _Nonnull, int*>::type*>::type"),
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable,
+                  NullabilityKind::NonNull,
+
+                  NullabilityKind::Unspecified, NullabilityKind::Nullable,
+                  NullabilityKind::Unspecified));
+}
+
 TEST_F(GetNullabilityAnnotationsFromTypeTest, ReferenceOuterTemplateParam) {
   // Referencing type-params from indirectly-enclosing template.
   Preamble = R"cpp(
@@ -160,11 +185,69 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, ReferenceOuterTemplateParam) {
       };
     };
   )cpp";
-  // TODO: should be [Nonnull, Nullable]
-  EXPECT_THAT(
-      nullVec("Outer<int *_Nullable>::Inner<int *_Nonnull>::type"),
-      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("Outer<int *_Nullable>::Inner<int *_Nonnull>::type"),
+              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
+  // Same where Inner is an alias template.
+  Preamble = R"cpp(
+    template <class A, class B>
+    struct Pair;
+
+    template <class T>
+    struct Outer {
+      template <class U>
+      using Inner = Pair<U, T>;
+    };
+  )cpp";
+  EXPECT_THAT(nullVec("Outer<int *_Nullable>::Inner<int *_Nonnull>"),
+              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
 }
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, MixedQualiferChain) {
+  Preamble = R"cpp(
+    template <class A, class B>
+    class Pair;
+
+    struct Outer1 {
+      template <class T>
+      struct Middle {
+        template <class U>
+        struct Inner {
+          using type = Pair<T, U>;
+        };
+      };
+    };
+
+    template <class T>
+    struct Outer2 {
+      struct Middle {
+        template <class U>
+        struct Inner {
+          using type = Pair<T, U>;
+        };
+      };
+    };
+
+    template <class T>
+    struct Outer3 {
+      template <class U>
+      struct Middle {
+        struct Inner {
+          using type = Pair<T, U>;
+        };
+      };
+    };
+  )cpp";
+
+  EXPECT_THAT(
+      nullVec("Outer1::Middle<int * _Nullable>::Inner<int * _Nonnull>::type"),
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
+  EXPECT_THAT(
+      nullVec("Outer2<int * _Nullable>::Middle::Inner<int * _Nonnull>::type"),
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
+  EXPECT_THAT(
+      nullVec("Outer3<int * _Nullable>::Middle<int * _Nonnull>::Inner::type"),
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
+};
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentlyNamedTemplate) {
   // Instantiation of dependent-named template
@@ -202,10 +285,8 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateTemplateParams) {
   )cpp";
   EXPECT_THAT(nullVec("Pointer<Nullable, int>::type"),
               ElementsAre(NullabilityKind::Nullable));
-  // TODO: should be [Nullable, Nonnull]
-  EXPECT_THAT(
-      nullVec("Pointer<Nullable, Pointer<Nonnull, int>::type>::type"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("Pointer<Nullable, Pointer<Nonnull, int>::type>::type"),
+              ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
   // Same thing, but with alias templates.
   Preamble = R"cpp(
     template <class X>
@@ -220,10 +301,8 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateTemplateParams) {
   )cpp";
   EXPECT_THAT(nullVec("Pointer<Nullable, int>::type"),
               ElementsAre(NullabilityKind::Nullable));
-  // TODO: should be [Nullable, Nonnull]
-  EXPECT_THAT(
-      nullVec("Pointer<Nullable, Pointer<Nonnull, int>::type>::type"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("Pointer<Nullable, Pointer<Nonnull, int>::type>::type"),
+              ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateParamPack) {
@@ -256,6 +335,19 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplateWithDefaultArg) {
   // TODO(b/281474380): This should be [Nullable], but we don't yet handle
   // default arguments correctly.
   EXPECT_THAT(nullVec("AliasTemplate<int * _Nullable>"),
+              ElementsAre(NullabilityKind::Unspecified));
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateArgsBehindAlias) {
+  Preamble = R"cpp(
+    template <class X>
+    struct Outer {
+      using Inner = X;
+    };
+    using OuterNullable = Outer<int* _Nullable>;
+  )cpp";
+  // TODO: should be [Nullable]
+  EXPECT_THAT(nullVec("OuterNullable::Inner"),
               ElementsAre(NullabilityKind::Unspecified));
 }
 

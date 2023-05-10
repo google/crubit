@@ -55,21 +55,92 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     PendingNullability.reset();
   }
 
-  // While walking the underlying type of alias TemplateSpecializationTypes,
+  // While walking types instantiated from templates, e.g.:
+  //  - the underlying type of alias TemplateSpecializationTypes
+  //  - type aliases inside class template instantiations
   // we see SubstTemplateTypeParmTypes where type parameters were referenced.
   // The directly-available underlying types lack sugar, but we can retrieve the
-  // sugar from the arguments of the original TemplateSpecializationType.
+  // sugar from the arguments of the original e.g. TemplateSpecializationType.
   //
-  // It is only possible to reference params of the immediately enclosing alias,
-  // so we keep details of the alias specialization we're currently processing.
-  struct AliasArgs {
-    const Decl* AssociatedDecl;
+  // The "template context" associates template params with the
+  // corresponding args, to allow this retrieval.
+  // In general, not just the directly enclosing template params but also those
+  // of outer classes are accessible.
+  // So conceptually this maps (depth, index, pack_index) => TemplateArgument.
+  // To avoid copying these maps, inner contexts *extend* from outer ones.
+  //
+  // When we start to walk a TemplateArgument (in place of a SubstTTPType), we
+  // must do so in the template instantiation context where the argument was
+  // written. Then when we're done, we must restore the old context.
+  struct TemplateContext {
+    // A decl that owns an arg list, per SubstTTPType::getAssociatedDecl.
+    // For aliases: TypeAliasTemplateDecl.
+    // For classes: ClassTemplateSpecializationDecl.
+    const Decl* AssociatedDecl = nullptr;
+    // The sugared template arguments to AssociatedDecl, as written in the code.
     ArrayRef<TemplateArgument> Args;
-    // The alias context in which the alias specialization itself appeared.
-    // (The alias's args may reference params from this context.)
-    const AliasArgs* Parent;
+    // In general, multiple template params are in scope (nested templates).
+    // These are a linked list: *this describes one, *Extends describes the
+    // next. In practice, this is the enclosing class template.
+    const TemplateContext* Extends = nullptr;
+    // The template context in which the args were written.
+    // The args may reference params visible in this context.
+    const TemplateContext* ArgContext = nullptr;
+
+    // Example showing a TemplateContext graph:
+    //
+    //   // (some sugar and nested templates for the example)
+    //   using INT = int; using FLOAT = float;
+    //   template <class T> struct Outer {
+    //     template <class U> struct Inner {
+    //       using Pair = std::pair<T, U>;
+    //     }
+    //   }
+    //
+    //   template <class X>
+    //   struct S {
+    //     using Type = typename Outer<INT>::Inner<X>::Pair;
+    //   }
+    //
+    //   using Target = S<FLOAT>::Type;
+    //
+    // Per clang's AST, instantiated Type is std::pair<int, float> with only
+    // SubstTemplateTypeParmTypes for sugar, we're trying to recover INT, FLOAT.
+    //
+    // When walking the ElaboratedType for the S<FLOAT>:: qualifier we set up:
+    //
+    // Current -> {Associated=S<float>, Args=<FLOAT>, Extends=null, ArgCtx=null}
+    //
+    // This means that when resolving ::Type:
+    //   - we can resugar occurrences of X (float -> FLOAT)
+    //   - ArgContext=null: the arg FLOAT may not refer to template params
+    //                      (or at least we can't resugar them)
+    //   - Extends=null: there are no other template params we can resugar
+    //
+    // Skipping up to ::Pair inside S<FLOAT>'s instantiation, we have the graph:
+    //
+    // Current -> {Associated=Outer<int>::Inner<float>, Args=<X>}
+    //            | Extends                                  |
+    // A{Associated=Outer<int>, Args=<INT>, Extends=null}    | ArgContext
+    //                          | ArgContext                 |
+    //       B{Associated=S<float>, Args=<FLOAT>, Extends=null, ArgContext=null}
+    //
+    // (Note that B here is the original TemplateContext we set up above).
+    //
+    // This means that when resolving ::Pair:
+    //   - we can resugar instances of U (float -> X)
+    //   - ArgContext=B: when resugaring U, we can resugar X (float -> FLOAT)
+    //   - Extends=A: we can also resugar T (int -> INT)
+    //   - A.ArgContext=B: when resugaring T, we can resugar X.
+    //                     (we never do, because INT doesn't mention X)
+    //   - A.Extends=null: there are no other template params te resugar
+    //   - B.ArgContext=null: FLOAT may not refer to any template params
+    //   - B.Extends=null: there are no other template params to resugar
+    //                     (e.g. Type's definition cannot refer to T)
   };
-  const AliasArgs* CurrentAliasTemplate = nullptr;
+  // The context that provides sugared args for the template params that are
+  // accessible to the type we're currently walking.
+  const TemplateContext* CurrentTemplateContext = nullptr;
 
  public:
   void Visit(QualType T) { Base::Visit(T.getTypePtr()); }
@@ -113,9 +184,13 @@ class NullabilityWalker : public TypeVisitor<Impl> {
       // TODO(b/281474380): `TemplateSpecializationType::template_arguments()`
       // doesn't contain defaulted arguments. Can we fetch or compute these in
       // sugared form?
-      const AliasArgs Args{TST->getTemplateName().getAsTemplateDecl(),
-                           TST->template_arguments(), CurrentAliasTemplate};
-      llvm::SaveAndRestore UseAlias(CurrentAliasTemplate, &Args);
+      const TemplateContext Ctx{
+          /*AssociatedDecl=*/TST->getTemplateName().getAsTemplateDecl(),
+          /*Args=*/TST->template_arguments(),
+          /*Extends=*/CurrentTemplateContext,
+          /*ArgContext=*/CurrentTemplateContext,
+      };
+      llvm::SaveAndRestore UseAlias(CurrentTemplateContext, &Ctx);
       VisitType(TST);
       return;
     }
@@ -128,34 +203,73 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   }
 
   void VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* T) {
-    if (isa<TypeAliasTemplateDecl>(T->getAssociatedDecl())) {
-      if (CurrentAliasTemplate != nullptr) {
-        CHECK(T->getAssociatedDecl() == CurrentAliasTemplate->AssociatedDecl);
-        unsigned Index = T->getIndex();
-        // Valid because pack must be the last param in alias templates.
-        if (auto PackIndex = T->getPackIndex())
-          Index = CurrentAliasTemplate->Args.size() - 1 - *PackIndex;
-        // TODO(b/281474380): `Args` may be too short if `Index` refers to an
-        // arg that was defaulted.  We eventually want to populate
-        // `CurrentAliasTemplate->Args` with the default arguments in this case,
-        // but for now, we just walk the underlying type without sugar.
-        if (Index < CurrentAliasTemplate->Args.size()) {
-          const TemplateArgument& Arg = CurrentAliasTemplate->Args[Index];
+    // The underlying type of T in the AST has no sugar, as the template has
+    // only one body instantiated per canonical args.
+    // Instead, try to find the (sugared) template argument that T is bound to.
+    for (const auto* Ctx = CurrentTemplateContext; Ctx; Ctx = Ctx->Extends) {
+      if (T->getAssociatedDecl() != Ctx->AssociatedDecl) continue;
+      unsigned Index = T->getIndex();
+      // Valid because pack must be the last param in non-function templates.
+      // TODO: if we support function templates, we need to be smarter here.
+      if (auto PackIndex = T->getPackIndex())
+        Index = Ctx->Args.size() - 1 - *PackIndex;
 
-          llvm::SaveAndRestore OriginalContext(CurrentAliasTemplate,
-                                               CurrentAliasTemplate->Parent);
-          return Visit(Arg);
-        }
-      } else {
-        // Our top-level type references an unbound type alias param.
-        // Presumably our original input was the underlying type of an alias
-        // instantiation, we now lack the context needed to resugar it.
-        // TODO: maybe this could be an assert? We would need to trust all
-        // callers are obtaining types appropriately, and that clang never
-        // partially-desugars in a problematic way.
+      // TODO(b/281474380): `Args` may be too short if `Index` refers to an
+      // arg that was defaulted.  We eventually want to populate
+      // `CurrentAliasTemplate->Args` with the default arguments in this case,
+      // but for now, we just walk the underlying type without sugar.
+      if (Index < Ctx->Args.size()) {
+        const TemplateArgument& Arg = Ctx->Args[Index];
+        // When we start to walk a sugared TemplateArgument (in place of T),
+        // we must do so in the template instantiation context where the
+        // argument was written.
+        llvm::SaveAndRestore OriginalContext(
+            CurrentTemplateContext, CurrentTemplateContext->ArgContext);
+        return Visit(Arg);
       }
     }
+    // Our top-level type references an unbound type param.
+    // Our original input was the underlying type of an  instantiation, we
+    // lack the context needed to resugar it.
+    // TODO: maybe this could be an assert in some cases (alias params)?
+    // We would need to trust all callers are obtaining types appropriately,
+    // and that clang never partially-desugars in a problematic way.
     VisitType(T);
+  }
+
+  // If we see foo<args>::ty then we may need sugar from args to resugar ty.
+  void VisitElaboratedType(const ElaboratedType* ET) {
+    std::vector<TemplateContext> BoundTemplateArgs;
+    // Iterate over qualifiers right-to-left, looking for template args.
+    for (auto* NNS = ET->getQualifier(); NNS; NNS = NNS->getPrefix()) {
+      // TODO: there are other ways a NNS could bind template args:
+      //   template <typename T> foo { struct bar { using baz = T; }; };
+      //   using T = foo<int * _Nullable>::bar;
+      //   using U = T::baz;
+      // Here T:: is not a TemplateSpecializationType (directly or indirectly).
+      // Nevertheless it provides sugar that is referenced from baz.
+      // Probably we need another type visitor to collect bindings in general.
+      if (const auto* TST = llvm::dyn_cast_or_null<TemplateSpecializationType>(
+              NNS->getAsType())) {
+        TemplateContext Ctx;
+        Ctx.Args = TST->template_arguments();
+        Ctx.ArgContext = CurrentTemplateContext;
+        // `Extends` is initialized below: we chain BoundTemplateArgs together.
+        Ctx.AssociatedDecl =
+            TST->isTypeAlias() ? TST->getTemplateName().getAsTemplateDecl()
+                               : static_cast<Decl*>(TST->getAsCXXRecordDecl());
+        BoundTemplateArgs.push_back(Ctx);
+      }
+    }
+    std::optional<llvm::SaveAndRestore<const TemplateContext*>> Restore;
+    if (!BoundTemplateArgs.empty()) {
+      // Wire up the inheritance chain so all the contexts are visible.
+      BoundTemplateArgs.back().Extends = CurrentTemplateContext;
+      for (int I = 0; I < BoundTemplateArgs.size() - 1; ++I)
+        BoundTemplateArgs[I].Extends = &BoundTemplateArgs[I + 1];
+      Restore.emplace(CurrentTemplateContext, &BoundTemplateArgs.front());
+    }
+    Visit(ET->getNamedType());
   }
 
   void VisitRecordType(const RecordType* RT) {
