@@ -1143,8 +1143,7 @@ impl IR {
         T: TypeWithDeclId + Debug,
     {
         if let Some(decl_id) = ty.decl_id() {
-            self.find_untyped_decl(decl_id)
-                .with_context(|| format!("Failed to retrieve item for type {:?}", ty))
+            Ok(self.find_untyped_decl(decl_id))
         } else {
             bail!("Type {:?} does not have an associated item.", ty)
         }
@@ -1154,19 +1153,20 @@ impl IR {
     where
         &'a T: TryFrom<&'a Item>,
     {
-        self.find_untyped_decl(decl_id).and_then(|decl| {
-            decl.try_into().map_err(|_| {
-                anyhow!("DeclId {:?} doesn't refer to a {}", decl_id, std::any::type_name::<T>())
-            })
+        self.find_untyped_decl(decl_id).try_into().map_err(|_| {
+            anyhow!("DeclId {:?} doesn't refer to a {}", decl_id, std::any::type_name::<T>())
         })
     }
 
-    fn find_untyped_decl(&self, decl_id: ItemId) -> Result<&Item> {
+    fn find_untyped_decl(&self, decl_id: ItemId) -> &Item {
         let idx = *self
             .item_id_to_item_idx
             .get(&decl_id)
-            .with_context(|| format!("Couldn't find decl_id {:?} in the IR.", decl_id))?;
-        self.flat_ir.items.get(idx).with_context(|| format!("Couldn't find an item at idx {}", idx))
+            .unwrap_or_else(|| panic!("Couldn't find decl_id {:?} in the IR.", decl_id));
+        self.flat_ir
+            .items
+            .get(idx)
+            .unwrap_or_else(|| panic!("Couldn't find an item at idx {}", idx))
     }
 
     /// Returns whether `target` is the current target.
