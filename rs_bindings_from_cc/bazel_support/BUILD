@@ -143,6 +143,19 @@ sh_binary(
     srcs = ["fake_rust_bindings_from_cc.sh"],
 )
 
+bool_flag(
+    name = "use_prebuilt_rs_bindings_from_cc_for_debugging",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "use_prebuilt_rs_bindings_from_cc_setting_for_debugging",
+    flag_values = {
+        ":use_prebuilt_rs_bindings_from_cc_for_debugging": "True",
+    },
+)
+
 alias(
     name = "deps_for_bindings",
     actual = select({
@@ -173,19 +186,6 @@ bool_flag(
     name = "generate_error_report",
     build_setting_default = False,
     visibility = ["//visibility:public"],
-)
-
-bool_flag(
-    name = "use_prebuilt_rs_bindings_from_cc_for_debugging",
-    build_setting_default = False,
-    visibility = ["//visibility:public"],
-)
-
-config_setting(
-    name = "use_prebuilt_rs_bindings_from_cc_setting_for_debugging",
-    flag_values = {
-        ":use_prebuilt_rs_bindings_from_cc_for_debugging": "True",
-    },
 )
 
 alias(
