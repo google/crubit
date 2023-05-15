@@ -110,6 +110,8 @@ cc_library(
     deps = [
         "//rs_bindings_from_cc:decl_importer",
         "//rs_bindings_from_cc:type_map",
+        "@llvm-project//clang:ast",
+        "@llvm-project//llvm:Support",
     ],
 )
 

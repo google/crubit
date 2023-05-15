@@ -2128,7 +2128,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             let (field, offset, end, desc) = cur.unwrap();
             let prev_end = prev.as_ref().and_then(|(_, _, e, _)| *e).unwrap_or(offset);
             let next_offset = next.map(|(_, o, _, _)| o);
-            let end = end.or(next_offset).unwrap_or(record.size * 8);
+            let end = end.or(next_offset).unwrap_or(record.size_align.size * 8);
 
             if let Some((Some(prev_field), _, Some(prev_end), _)) = prev {
                 assert!(
@@ -2241,8 +2241,6 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let size = Literal::usize_unsuffixed(record.size);
-    let alignment = Literal::usize_unsuffixed(record.alignment);
     let field_offset_assertions = if record.is_union() {
         // TODO(https://github.com/Gilnaa/memoffset/issues/66): generate assertions for unions once
         // offsetof supports them.
@@ -2304,8 +2302,8 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
     };
 
     let mut repr_attributes = vec![quote! {C}];
-    if override_alignment && record.alignment > 1 {
-        let alignment = Literal::usize_unsuffixed(record.alignment);
+    if override_alignment && record.size_align.alignment > 1 {
+        let alignment = Literal::usize_unsuffixed(record.size_align.alignment);
         repr_attributes.push(quote! {align(#alignment)});
     }
 
@@ -2313,7 +2311,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
     let head_padding = if let Some(first_field) = record.fields.first() {
         first_field.offset / 8
     } else {
-        record.size
+        record.size_align.size
     };
     // Prevent direct initialization for non-aggregate structs.
     //
@@ -2424,9 +2422,9 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         add_conditional_assertion(should_implement_drop(record), quote! { Drop });
         assertions
     };
+    let size_align_assertions = rs_size_align_assertions(qualified_ident, &record.size_align);
     let assertion_tokens = quote! {
-        const _: () = assert!(::core::mem::size_of::<#qualified_ident>() == #size);
-        const _: () = assert!(::core::mem::align_of::<#qualified_ident>() == #alignment);
+        #size_align_assertions
         #( #record_trait_assertions )*
         #( #field_offset_assertions )*
         #( #field_copy_trait_assertions )*
@@ -2445,6 +2443,16 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         thunk_impls: quote! {#(#thunk_impls_from_record_items __NEWLINE__ __NEWLINE__)*},
         ..Default::default()
     })
+}
+
+fn rs_size_align_assertions(type_name: impl ToTokens, size_align: &ir::SizeAlign) -> TokenStream {
+    let type_name = type_name.into_token_stream();
+    let size = Literal::usize_unsuffixed(size_align.size);
+    let alignment = Literal::usize_unsuffixed(size_align.alignment);
+    quote! {
+        const _: () = assert!(::core::mem::size_of::<#type_name>() == #size);
+        const _: () = assert!(::core::mem::align_of::<#type_name>() == #alignment);
+    }
 }
 
 fn check_by_value(record: &Record) -> Result<()> {
@@ -2775,21 +2783,21 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
             .into()
         }
         Item::TypeMapOverride(type_override) => {
-            // TODO(b/274834739): emit size/align assertions for these mapped types.
+            // (This shouldn't fail, since we replace with known Rust types via a string.)
+            let rs_type = db.rs_type_kind(type_override.type_.rs_type.clone())?;
             let disable_comment = format!(
                 "Type bindings for {cc_type} suppressed due to being mapped to \
                     an existing Rust type ({rs_type})",
                 cc_type = type_override.debug_name(&ir),
-                rs_type = type_override
-                    .type_
-                    .rs_type
-                    .name
-                    .as_deref()
-                    // (This shouldn't happen, since we replace with known Rust types via a string.)
-                    .unwrap_or("<ERROR: unknown rust type>")
             );
+            let layout_assertions = if let Some(size_align) = &type_override.size_align {
+                rs_size_align_assertions(rs_type, size_align)
+            } else {
+                quote! {}
+            };
             quote! {
                 __COMMENT__ #disable_comment
+                #layout_assertions
             }
             .into()
         }
@@ -3890,12 +3898,9 @@ fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result
         Ok(quote! {#const_fragment #type_name})
     }
 }
-
 fn cc_struct_layout_assertion(db: &Database, record: &Record) -> Result<TokenStream> {
     let record_ident = format_cc_ident(record.cc_name.as_ref());
     let namespace_qualifier = namespace_qualifier_of_item(record.id, &db.ir())?.format_for_cc()?;
-    let size = Literal::usize_unsuffixed(record.size);
-    let alignment = Literal::usize_unsuffixed(record.alignment);
     let tag_kind = cc_tag_kind(record);
     let field_assertions = record
         .fields
@@ -3922,7 +3927,9 @@ fn cc_struct_layout_assertion(db: &Database, record: &Record) -> Result<TokenStr
         });
     // only use CRUBIT_SIZEOF for alignment > 1, so as to simplify the generated
     // code.
-    let sizeof = if record.alignment == 1 {
+    let size = Literal::usize_unsuffixed(record.size_align.size);
+    let alignment = Literal::usize_unsuffixed(record.size_align.alignment);
+    let sizeof = if record.size_align.alignment == 1 {
         quote! {sizeof}
     } else {
         quote! {CRUBIT_SIZEOF}
@@ -9220,6 +9227,50 @@ mod tests {
         .format_as_self_param()?;
         assert_rs_matches!(result.tokens, quote! {self: ::ctor::ConstRvalueReference<'a, Self>});
         assert_eq!(result.features, [make_rs_ident("arbitrary_self_types")].into_iter().collect());
+        Ok(())
+    }
+
+    #[test]
+    fn test_type_map_override_assert() -> Result<()> {
+        let rs_api = generate_bindings_tokens(ir_from_cc(
+            r#" #pragma clang lifetime_elision
+                // Broken class: uses i32 but has size 1.
+                // (These asserts would fail if this were compiled.)
+                class [[clang::annotate("crubit_internal_rust_type", "i32")]] Class final {};"#,
+        )?)?
+        .rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                assert!(::core::mem::size_of::<i32>() == 1);
+            }
+        );
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                assert!(::core::mem::align_of::<i32>() == 1);
+            }
+        );
+        Ok(())
+    }
+
+    /// We cannot generate size/align assertions for incomplete types.
+    #[test]
+    fn test_type_map_override_assert_incomplete() -> Result<()> {
+        let rs_api = generate_bindings_tokens(ir_from_cc(
+            r#" #pragma clang lifetime_elision
+                // Broken class: uses i32 but has size 1.
+                // (These asserts would fail if this were compiled.)
+                class [[clang::annotate("crubit_internal_rust_type", "i32")]] Incomplete;
+            "#,
+        )?)?
+        .rs_api;
+
+        assert_rs_not_matches!(rs_api, quote! {::core::mem::size_of::<i32>()});
+
+        assert_rs_not_matches!(rs_api, quote! {::core::mem::align_of::<i32>()});
         Ok(())
     }
 }

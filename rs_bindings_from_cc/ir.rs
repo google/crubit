@@ -517,6 +517,13 @@ impl ToTokens for RecordType {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct SizeAlign {
+    pub size: usize,
+    pub alignment: usize,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Record {
     pub rs_name: Rc<str>,
     pub cc_name: Rc<str>,
@@ -531,8 +538,7 @@ pub struct Record {
     pub unambiguous_public_bases: Vec<BaseClass>,
     pub fields: Vec<Field>,
     pub lifetime_params: Vec<LifetimeName>,
-    pub size: usize,
-    pub alignment: usize,
+    pub size_align: SizeAlign,
     pub is_derived_class: bool,
     pub override_alignment: bool,
     pub copy_constructor: SpecialMemberFunc,
@@ -798,6 +804,7 @@ pub struct TypeMapOverride {
     #[serde(rename(deserialize = "type"))]
     pub type_: MappedType,
     pub owning_target: BazelLabel,
+    pub size_align: Option<SizeAlign>,
     pub id: ItemId,
 }
 

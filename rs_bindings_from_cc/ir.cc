@@ -300,6 +300,9 @@ llvm::json::Value TypeMapOverride::ToJson() const {
       {"owning_target", owning_target},
       {"id", id},
   };
+  if (size_align.has_value()) {
+    override.insert({"size_align", size_align->ToJson()});
+  }
 
   return llvm::json::Object{
       {"TypeMapOverride", std::move(override)},
@@ -422,6 +425,13 @@ llvm::json::Value IncompleteRecord::ToJson() const {
   };
 }
 
+llvm::json::Value SizeAlign::ToJson() const {
+  return llvm::json::Object{
+      {"size", size},
+      {"alignment", alignment},
+  };
+}
+
 llvm::json::Value Record::ToJson() const {
   std::vector<llvm::json::Value> json_item_ids;
   json_item_ids.reserve(child_item_ids.size());
@@ -441,8 +451,7 @@ llvm::json::Value Record::ToJson() const {
       {"unambiguous_public_bases", unambiguous_public_bases},
       {"fields", fields},
       {"lifetime_params", lifetime_params},
-      {"size", size},
-      {"alignment", alignment},
+      {"size_align", size_align.ToJson()},
       {"is_derived_class", is_derived_class},
       {"override_alignment", override_alignment},
       {"copy_constructor", copy_constructor},

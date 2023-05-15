@@ -304,8 +304,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .source_loc = ictx_.ConvertSourceLocation(source_loc),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = ImportFields(record_decl),
-      .size = layout.getSize().getQuantity(),
-      .alignment = layout.getAlignment().getQuantity(),
+      .size_align =
+          {
+              .size = layout.getSize().getQuantity(),
+              .alignment = layout.getAlignment().getQuantity(),
+          },
       .is_derived_class = is_derived_class,
       .override_alignment = override_alignment,
       .copy_constructor = GetCopyCtorSpecialMemberFunc(*record_decl),
@@ -333,7 +336,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (anon_typedef != nullptr) {
     auto* aligned = anon_typedef->getAttr<clang::AlignedAttr>();
     if (aligned) {
-      record.alignment =
+      int64& size = record.size_align.size;
+      int64& alignment = record.size_align.alignment;
+      alignment =
           ictx_.ctx_.toCharUnitsFromBits(aligned->getAlignment(ictx_.ctx_))
               .getQuantity();
       record.override_alignment = true;
@@ -343,15 +348,14 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       // canonical size in IR and in the binding code.
 
       // Make sure that `alignment` is a power of 2.
-      CHECK(!(record.alignment & (record.alignment - 1)));
+      CHECK(!(alignment & (alignment - 1)));
 
       // Given that `alignment` is a power of 2, we can round it up by
       // a bit arithmetic: `alignment - 1` clears the single bit of it
       // while turning all the zeros in the right to 1s. Adding
       // `alignment - 1` and doing &~ with it effectively rounds it up
       // to the next multiple of the alignment.
-      record.size =
-          (record.size + record.alignment - 1) & ~(record.alignment - 1);
+      size = (size + alignment - 1) & ~(alignment - 1);
     }
   }
   return record;

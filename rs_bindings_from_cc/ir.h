@@ -544,6 +544,13 @@ enum RecordType {
 
 std::ostream& operator<<(std::ostream& o, const RecordType& record_type);
 
+struct SizeAlign {
+  llvm::json::Value ToJson() const;
+
+  int64_t size;
+  int64_t alignment;
+};
+
 // A record (struct, class, union).
 struct Record {
   llvm::json::Value ToJson() const;
@@ -563,8 +570,7 @@ struct Record {
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;
   std::vector<LifetimeName> lifetime_params;
-  int64_t size;
-  int64_t alignment;
+  SizeAlign size_align;
 
   // True if any base classes exist.
   bool is_derived_class;
@@ -749,6 +755,9 @@ struct TypeMapOverride {
 
   MappedType type;
   BazelLabel owning_target;
+  // Size and alignment, if known.
+  // (These will not be known for a forward declaration, for example.)
+  std::optional<SizeAlign> size_align;
   ItemId id;
 };
 
