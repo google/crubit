@@ -82,17 +82,10 @@ LIBCXX_HEADERS = [
 
 LIBC_HEADERS = []
 
-config_setting(
-    name = "llvm_unstable",
-    values = {
-        "crosstool_top": "//nowhere/llvm:everything",
-    },
-)
-
 filegroup(
     name = "toolchain_headers",
     srcs = select({
-               ":llvm_unstable": ["//nowhere/llvm:cc-std-headers"],
+               "//third_party/crosstool:unstable_config": ["//nowhere/llvm:cc-std-headers"],
                "//conditions:default": ["//nowhere/llvm:cc-std-headers"],
            }) +
            select({
