@@ -3721,6 +3721,11 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                             !type_args.is_empty(),
                             "In well-formed IR function pointers include at least the return type",
                         );
+                        ensure!(
+                            type_args.iter().all(|t| t.is_c_abi_compatible_by_value()),
+                            "Either the return type or some of the parameter types require \
+                             an FFI thunk (and function pointers don't have a thunk)",
+                        );
                         RsTypeKind::FuncPtr {
                             abi: abi.into(),
                             return_type: Rc::new(type_args.remove(type_args.len() - 1)),
@@ -7735,6 +7740,56 @@ mod tests {
         let f = retrieve_func(&ir, "foo");
         let a = db.rs_type_kind(f.params[0].type_.rs_type.clone())?;
         assert_eq!(0, a.lifetimes().count()); // No lifetimes on `int*`.
+        Ok(())
+    }
+
+    #[test]
+    fn test_rs_type_kind_rejects_func_ptr_that_returns_struct_by_value() -> Result<()> {
+        let db = db_from_cc(
+            r#"
+            struct SomeStruct {
+              int field;
+            };
+            SomeStruct (*get_ptr_to_func())();
+        "#,
+        )?;
+        let ir = db.ir();
+        let f = retrieve_func(&ir, "get_ptr_to_func");
+
+        // Expecting an error, because passing a struct by value requires a thunk and
+        // function pointers don't have a thunk.
+        let err = db.rs_type_kind(f.return_type.rs_type.clone()).unwrap_err();
+        let msg = err.to_string();
+        assert_eq!(
+            msg,
+            "Either the return type or some of the parameter types require \
+                    an FFI thunk (and function pointers don't have a thunk)",
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_rs_type_kind_rejects_func_ptr_that_takes_struct_by_value() -> Result<()> {
+        let db = db_from_cc(
+            r#"
+            struct SomeStruct {
+              int field;
+            };
+            void (*get_ptr_to_func())(SomeStruct);
+        "#,
+        )?;
+        let ir = db.ir();
+        let f = retrieve_func(&ir, "get_ptr_to_func");
+
+        // Expecting an error, because passing a struct by value requires a thunk and
+        // function pointers don't have a thunk.
+        let err = db.rs_type_kind(f.return_type.rs_type.clone()).unwrap_err();
+        let msg = err.to_string();
+        assert_eq!(
+            msg,
+            "Either the return type or some of the parameter types require \
+                    an FFI thunk (and function pointers don't have a thunk)",
+        );
         Ok(())
     }
 
