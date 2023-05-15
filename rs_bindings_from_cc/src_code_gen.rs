@@ -22,7 +22,8 @@ use std::process;
 use std::ptr;
 use std::rc::Rc;
 use token_stream_printer::{
-    cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
+    cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, write_unformatted_tokens,
+    RustfmtConfig,
 };
 
 /// FFI equivalent of `Bindings`.
@@ -3487,6 +3488,21 @@ impl RsTypeKind {
                 quote! {#ident #generic_params}
             }
             _ => self.to_token_stream(),
+        }
+    }
+}
+
+impl std::fmt::Display for RsTypeKind {
+    // Formats the token stream of the RsTypeKind to a string. Note that this can
+    // include extra whitespace, where we'd ideally remove it, but it is hard to
+    // remove whitespace without invoking rustfmt.
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        match write_unformatted_tokens(f, self.to_token_stream()) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                // Honestly this should never happen, but we should spit out something.
+                write!(f, "<error: {e}>")
+            }
         }
     }
 }

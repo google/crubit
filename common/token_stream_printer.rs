@@ -5,7 +5,6 @@
 use anyhow::{bail, Result};
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
 use std::ffi::{OsStr, OsString};
-use std::fmt::Write as _;
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -120,13 +119,10 @@ pub fn cc_tokens_to_formatted_string_for_tests(tokens: TokenStream) -> Result<St
 ///   placeholder `__SPACE__`.
 /// * `TokenStream` cannot encode comments, so we use the placeholder
 ///   `__COMMENT__`, followed by a string literal.
-fn tokens_to_string(tokens: TokenStream) -> Result<String> {
-    let mut result = String::new();
-    tokens_to_string_impl(&mut result, tokens)?;
-    Ok(result)
-}
-
-fn tokens_to_string_impl(result: &mut String, tokens: TokenStream) -> Result<()> {
+pub fn write_unformatted_tokens(
+    result: &mut impl std::fmt::Write,
+    tokens: TokenStream,
+) -> Result<()> {
     let mut it = tokens.into_iter().peekable();
     while let Some(tt) = it.next() {
         match tt {
@@ -153,7 +149,7 @@ fn tokens_to_string_impl(result: &mut String, tokens: TokenStream) -> Result<()>
                     Delimiter::None => ("", ""),
                 };
                 write!(result, "{}", open_delimiter)?;
-                tokens_to_string_impl(result, tt.stream())?;
+                write_unformatted_tokens(result, tt.stream())?;
                 write!(result, "{}", closed_delimiter)?;
             }
             _ => {
@@ -171,6 +167,12 @@ fn tokens_to_string_impl(result: &mut String, tokens: TokenStream) -> Result<()>
         }
     }
     Ok(())
+}
+
+fn tokens_to_string(tokens: TokenStream) -> Result<String> {
+    let mut result = String::new();
+    write_unformatted_tokens(&mut result, tokens)?;
+    Ok(result)
 }
 
 /// Returns true if token1 and token2 should have whitespace between them, and
