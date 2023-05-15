@@ -613,6 +613,16 @@ void transferNonFlowSensitiveArraySubscriptExpr(
   });
 }
 
+void transferNonFlowSensitiveThisExpr(
+    const CXXThisExpr* TE, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
+  computeNullability(TE, State, [&]() {
+    TypeNullability result = getNullabilityAnnotationsFromType(TE->getType());
+    result.front() = NullabilityKind::NonNull;
+    return result;
+  });
+}
+
 auto buildNonFlowSensitiveTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       .CaseOfCFGStmt<DeclRefExpr>(ast_matchers::declRefExpr(),
@@ -635,14 +645,17 @@ auto buildNonFlowSensitiveTransferer() {
       .CaseOfCFGStmt<ArraySubscriptExpr>(
           ast_matchers::arraySubscriptExpr(),
           transferNonFlowSensitiveArraySubscriptExpr)
+      .CaseOfCFGStmt<CXXThisExpr>(ast_matchers::cxxThisExpr(),
+                                  transferNonFlowSensitiveThisExpr)
       .Build();
 }
 
 auto buildFlowSensitiveTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       // Handles initialization of the null states of pointers.
-      .CaseOfCFGStmt<Expr>(isCXXThisExpr(), transferFlowSensitiveNotNullPointer)
       .CaseOfCFGStmt<Expr>(isAddrOf(), transferFlowSensitiveNotNullPointer)
+      // TODO(mboehme): I believe we should be able to move handling of null
+      // pointers to the non-flow-sensitive part of the analysis.
       .CaseOfCFGStmt<Expr>(isNullPointerLiteral(),
                            transferFlowSensitiveNullPointer)
       .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferFlowSensitiveCallExpr)

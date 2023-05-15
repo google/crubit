@@ -15,20 +15,40 @@ namespace tidy {
 namespace nullability {
 namespace {
 
-TEST(PointerNullabilityTest, ThisPointer) {
-  // (->) implicit `this`
+TEST(PointerNullabilityTest, ImplicitThis) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       void foo();
-      void target() { foo(); }
+      void target() {
+        __assert_nullability<NK_nonnull>(this);
+        foo();
+      }
     };
   )cc"));
+}
 
+TEST(PointerNullabilityTest, ExplicitThis) {
   // (->) explicit `this`
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       void foo();
       void target() { this->foo(); }
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, ClassWithPointerTemplateArg) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <class T>
+    struct S;
+    template <>
+    struct S<int* _Nullable> {
+      void target() {
+        // `_Nullable` in the specialization is bogus: we can't specialize on
+        // nullability as it's just sugar. Therefore the correct inner
+        // nullability here is "unspecified".
+        __assert_nullability<NK_nonnull, NK_unspecified>(this);
+      }
     };
   )cc"));
 }
