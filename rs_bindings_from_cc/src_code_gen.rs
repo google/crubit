@@ -4274,19 +4274,6 @@ mod tests {
     }
 
     #[test]
-    // TODO(hlopko): Move this test to a more principled place where it can access
-    // `ir_testing`.
-    fn test_duplicate_decl_ids_err() {
-        let mut r1 = ir_record("R1");
-        r1.id = ItemId::new_for_testing(42);
-        let mut r2 = ir_record("R2");
-        r2.id = ItemId::new_for_testing(42);
-        let result = make_ir_from_items([r1.into(), r2.into()]);
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Duplicate decl_id found in"));
-    }
-
-    #[test]
     fn test_simple_function() -> Result<()> {
         let ir = ir_from_cc("int Add(int a, int b);")?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -9039,7 +9026,7 @@ mod tests {
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_message(
-                &make_ir_from_items([])?,
+                &make_ir_from_items([]),
                 &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
                 "unsupported_message",
             ),
@@ -9060,7 +9047,7 @@ mod tests {
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_message(
-                &make_ir_from_items([])?,
+                &make_ir_from_items([]),
                 &TestItem { source_loc: None },
                 "unsupported_message",
             ),
@@ -9078,7 +9065,7 @@ mod tests {
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_message(
-                &make_ir_from_items([])?,
+                &make_ir_from_items([]),
                 &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
                 "unsupported_message",
             ),

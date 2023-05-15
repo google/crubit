@@ -47,7 +47,7 @@ fn update_test_ir(ir: &mut IR) {
 
 /// Create a testing `IR` instance from given items, using mock values for other
 /// fields.
-pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
+pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR {
     let mut ir = make_ir_from_parts(
         items.into_iter().collect_vec(),
         /* public_headers= */ vec![],
@@ -56,9 +56,9 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
         /* crate_root_path= */ None,
         /* crubit_features= */
         <HashMap<ir::BazelLabel, flagset::FlagSet<ir::CrubitFeature>>>::new(),
-    )?;
+    );
     update_test_ir(&mut ir);
-    Ok(ir)
+    ir
 }
 
 /// Target of the dependency used by `ir_from_cc_dependency`.
@@ -146,7 +146,9 @@ pub fn retrieve_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ir::ItemId;
     use ir_matchers::assert_ir_matches;
+    use multiplatform_testing::Platform;
     use quote::quote;
 
     #[test]
@@ -166,7 +168,7 @@ mod tests {
     #[test]
     fn test_features_ir_from_items() -> Result<()> {
         assert_ir_matches!(
-            make_ir_from_items([])?,
+            make_ir_from_items([]),
             quote! {
                 crubit_features: hash_map!{
                     ...
@@ -176,5 +178,15 @@ mod tests {
             }
         );
         Ok(())
+    }
+
+    #[test]
+    #[should_panic(expected = "Duplicate decl_id found in")]
+    fn test_duplicate_decl_ids_err() {
+        let mut r1 = ir_record(Platform::X86Linux, "R1");
+        r1.id = ItemId::new_for_testing(42);
+        let mut r2 = ir_record(Platform::X86Linux, "R2");
+        r2.id = ItemId::new_for_testing(42);
+        let _ = make_ir_from_items([r1.into(), r2.into()]);
     }
 }

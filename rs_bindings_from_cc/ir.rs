@@ -48,7 +48,7 @@ where
 /// Deserialize `IR` from JSON given as a reader.
 pub fn deserialize_ir<R: Read>(reader: R) -> Result<IR> {
     let flat_ir = serde_json::from_reader(reader)?;
-    make_ir(flat_ir)
+    Ok(make_ir(flat_ir))
 }
 
 /// Create a testing `IR` instance from given parts. This function does not use
@@ -60,7 +60,7 @@ pub fn make_ir_from_parts<CrubitFeatures>(
     top_level_item_ids: Vec<ItemId>,
     crate_root_path: Option<Rc<str>>,
     crubit_features: HashMap<BazelLabel, CrubitFeatures>,
-) -> Result<IR>
+) -> IR
 where
     CrubitFeatures: Into<flagset::FlagSet<CrubitFeature>>,
 {
@@ -77,11 +77,11 @@ where
     })
 }
 
-fn make_ir(flat_ir: FlatIR) -> Result<IR> {
+fn make_ir(flat_ir: FlatIR) -> IR {
     let mut used_decl_ids = HashMap::new();
     for item in &flat_ir.items {
         if let Some(existing_decl) = used_decl_ids.insert(item.id(), item) {
-            bail!("Duplicate decl_id found in {:?} and {:?}", existing_decl, item);
+            panic!("Duplicate decl_id found in {:?} and {:?}", existing_decl, item);
         }
     }
     let item_id_to_item_idx = flat_ir
@@ -101,7 +101,7 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
         for lifetime in lifetime_params {
             match lifetimes.entry(lifetime.id) {
                 Entry::Occupied(occupied) => {
-                    bail!(
+                    panic!(
                         "Duplicate use of lifetime ID {:?} in item {item:?} for names: '{}, '{}",
                         lifetime.id,
                         &occupied.get().name,
@@ -145,14 +145,14 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
             function_name_to_functions.entry(f.name.clone()).or_default().push(f.clone());
         });
 
-    Ok(IR {
+    IR {
         flat_ir,
         item_id_to_item_idx,
         lifetimes,
         namespace_id_to_number_of_reopened_namespaces,
         reopened_namespace_id_to_idx,
         function_name_to_functions,
-    })
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
