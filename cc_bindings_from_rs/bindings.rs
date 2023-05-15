@@ -1367,11 +1367,14 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                 quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
             })
             .collect();
-        CcSnippet::new(quote! {
-            inline void #adt_cc_name::__crubit_field_offset_assertions() {
-                #cc_assertions
-            }
-        })
+        CcSnippet::with_include(
+            quote! {
+                inline void #adt_cc_name::__crubit_field_offset_assertions() {
+                    #cc_assertions
+                }
+            },
+            CcInclude::cstddef(),
+        )
     };
     let rs_details: TokenStream = {
         let adt_rs_name = &core.rs_fully_qualified_name;
