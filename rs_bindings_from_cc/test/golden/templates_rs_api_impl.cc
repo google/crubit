@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/templates.h"
@@ -205,7 +206,8 @@ __rust_thunk___ZNK23test_namespace_bindings10MyTemplateINS_13TemplateParamEE5val
   return &__this->value();
 }
 
-static_assert(sizeof(class test_namespace_bindings::MyTemplate<int>) == 4);
+static_assert(CRUBIT_SIZEOF(class test_namespace_bindings::MyTemplate<int>) ==
+              4);
 static_assert(alignof(class test_namespace_bindings::MyTemplate<int>) == 4);
 
 extern "C" void
@@ -248,8 +250,9 @@ __rust_thunk___ZNK23test_namespace_bindings10MyTemplateIiE5valueEv__2f_2fthird_5
 }
 
 static_assert(
-    sizeof(struct test_namespace_bindings::TemplateWithTwoParams<
-           test_namespace_bindings::TemplateWithTwoParams<int, int>, int>) ==
+    CRUBIT_SIZEOF(
+        struct test_namespace_bindings::TemplateWithTwoParams<
+            test_namespace_bindings::TemplateWithTwoParams<int, int>, int>) ==
     12);
 static_assert(
     alignof(struct test_namespace_bindings::TemplateWithTwoParams<
@@ -309,7 +312,8 @@ __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEaSE
 }
 
 static_assert(
-    sizeof(struct test_namespace_bindings::TemplateWithTwoParams<int, float>) ==
+    CRUBIT_SIZEOF(
+        struct test_namespace_bindings::TemplateWithTwoParams<int, float>) ==
     8);
 static_assert(
     alignof(
@@ -357,8 +361,8 @@ __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEaSEOS1___2f
 }
 
 static_assert(
-    sizeof(struct test_namespace_bindings::TemplateWithTwoParams<int, int>) ==
-    8);
+    CRUBIT_SIZEOF(
+        struct test_namespace_bindings::TemplateWithTwoParams<int, int>) == 8);
 static_assert(
     alignof(struct test_namespace_bindings::TemplateWithTwoParams<int, int>) ==
     4);

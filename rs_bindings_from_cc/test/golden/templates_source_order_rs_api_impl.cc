@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/templates_source_order.h"
@@ -83,7 +84,7 @@ __rust_thunk___ZN10MyTemplateIcE8processTEc__2f_2fthird_5fparty_2fcrubit_2frs_5f
   __this->processT(t);
 }
 
-static_assert(sizeof(class MyTemplate<double>) == 8);
+static_assert(CRUBIT_SIZEOF(class MyTemplate<double>) == 8);
 static_assert(alignof(class MyTemplate<double>) == 8);
 
 extern "C" void
@@ -92,7 +93,7 @@ __rust_thunk___ZN10MyTemplateIdE8processTEd__2f_2fthird_5fparty_2fcrubit_2frs_5f
   __this->processT(t);
 }
 
-static_assert(sizeof(class MyTemplate<float>) == 4);
+static_assert(CRUBIT_SIZEOF(class MyTemplate<float>) == 4);
 static_assert(alignof(class MyTemplate<float>) == 4);
 
 extern "C" void
@@ -101,7 +102,7 @@ __rust_thunk___ZN10MyTemplateIfE8processTEf__2f_2fthird_5fparty_2fcrubit_2frs_5f
   __this->processT(t);
 }
 
-static_assert(sizeof(class MyTemplate<int>) == 4);
+static_assert(CRUBIT_SIZEOF(class MyTemplate<int>) == 4);
 static_assert(alignof(class MyTemplate<int>) == 4);
 
 extern "C" void

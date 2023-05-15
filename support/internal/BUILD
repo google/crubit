@@ -7,6 +7,7 @@ cc_library(
         "cxx20_backports.h",
         "offsetof.h",
         "return_value_slot.h",
+        "sizeof.h",
     ],
     visibility = [
         "//visibility:public",
@@ -34,6 +35,15 @@ cc_test(
     deps = [
         ":bindings_support",
         "@absl//absl/log:check",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "sizeof_test",
+    srcs = ["sizeof_test.cc"],
+    deps = [
+        ":bindings_support",
         "@com_google_googletest//:gtest_main",
     ],
 )

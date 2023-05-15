@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/unions.h"
@@ -40,7 +41,7 @@ extern "C" union EmptyUnion* __rust_thunk___ZN10EmptyUnionaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(struct Nontrivial) == 4);
+static_assert(CRUBIT_SIZEOF(struct Nontrivial) == 4);
 static_assert(alignof(struct Nontrivial) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct Nontrivial) == 0);
 
@@ -68,7 +69,7 @@ __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(
   std::destroy_at(__this);
 }
 
-static_assert(sizeof(union NonEmptyUnion) == 8);
+static_assert(CRUBIT_SIZEOF(union NonEmptyUnion) == 8);
 static_assert(alignof(union NonEmptyUnion) == 8);
 static_assert(CRUBIT_OFFSET_OF(bool_field, union NonEmptyUnion) == 0);
 static_assert(CRUBIT_OFFSET_OF(char_field, union NonEmptyUnion) == 0);
@@ -95,7 +96,7 @@ extern "C" union NonEmptyUnion* __rust_thunk___ZN13NonEmptyUnionaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(union NonCopyUnion) == 4);
+static_assert(CRUBIT_SIZEOF(union NonCopyUnion) == 4);
 static_assert(alignof(union NonCopyUnion) == 4);
 static_assert(CRUBIT_OFFSET_OF(trivial_member, union NonCopyUnion) == 0);
 static_assert(CRUBIT_OFFSET_OF(nontrivial_member, union NonCopyUnion) == 0);
@@ -143,7 +144,7 @@ __rust_thunk___ZN20UnionWithOpaqueFieldaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(struct TrivialButInheritable) == 4);
+static_assert(CRUBIT_SIZEOF(struct TrivialButInheritable) == 4);
 static_assert(alignof(struct TrivialButInheritable) == 4);
 static_assert(CRUBIT_OFFSET_OF(x, struct TrivialButInheritable) == 0);
 
@@ -178,7 +179,7 @@ __rust_thunk___ZN21TrivialButInheritableaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(union UnionWithInheritable) == 4);
+static_assert(CRUBIT_SIZEOF(union UnionWithInheritable) == 4);
 static_assert(alignof(union UnionWithInheritable) == 4);
 static_assert(CRUBIT_OFFSET_OF(t, union UnionWithInheritable) == 0);
 
@@ -234,7 +235,7 @@ extern "C" TypedefUnion* __rust_thunk___ZN12TypedefUnionaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(TypedefUnionWithInheritable) == 4);
+static_assert(CRUBIT_SIZEOF(TypedefUnionWithInheritable) == 4);
 static_assert(alignof(TypedefUnionWithInheritable) == 4);
 static_assert(CRUBIT_OFFSET_OF(t, TypedefUnionWithInheritable) == 0);
 

@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/static_methods.h"
@@ -18,7 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(class SomeClass) == 4);
+static_assert(CRUBIT_SIZEOF(class SomeClass) == 4);
 static_assert(alignof(class SomeClass) == 4);
 
 extern "C" void __rust_thunk___ZN9SomeClassC1Ev(class SomeClass* __this) {

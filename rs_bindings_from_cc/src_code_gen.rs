@@ -3878,7 +3878,7 @@ fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result
 fn cc_struct_layout_assertion(db: &Database, record: &Record) -> Result<TokenStream> {
     let record_ident = format_cc_ident(record.cc_name.as_ref());
     let namespace_qualifier = namespace_qualifier_of_item(record.id, &db.ir())?.format_for_cc()?;
-    let cc_size = Literal::usize_unsuffixed(record.original_cc_size);
+    let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let tag_kind = cc_tag_kind(record);
     let field_assertions = record
@@ -3904,8 +3904,15 @@ fn cc_struct_layout_assertion(db: &Database, record: &Record) -> Result<TokenStr
 
             quote! { static_assert( #actual_offset == #expected_offset); }
         });
+    // only use CRUBIT_SIZEOF for alignment > 1, so as to simplify the generated
+    // code.
+    let sizeof = if record.alignment == 1 {
+        quote! {sizeof}
+    } else {
+        quote! {CRUBIT_SIZEOF}
+    };
     Ok(quote! {
-        static_assert(sizeof(#tag_kind #namespace_qualifier #record_ident) == #cc_size);
+        static_assert(#sizeof(#tag_kind #namespace_qualifier #record_ident) == #size);
         static_assert(alignof(#tag_kind #namespace_qualifier #record_ident) == #alignment);
         #( #field_assertions )*
     })
@@ -4191,6 +4198,9 @@ fn generate_rs_api_impl_includes(
     internal_includes.insert(CcInclude::memory()); // ubiquitous.
     if ir.records().next().is_some() {
         internal_includes.insert(CcInclude::cstddef());
+        internal_includes.insert(CcInclude::user_header(
+            format!("{crubit_support_path}/internal/sizeof.h").into(),
+        ));
     };
     for crubit_header in ["internal/cxx20_backports.h", "internal/offsetof.h"] {
         internal_includes.insert(CcInclude::user_header(
@@ -4576,7 +4586,7 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                static_assert(sizeof(struct SomeStruct) == 12);
+                static_assert(CRUBIT_SIZEOF(struct SomeStruct) == 12);
                 static_assert(alignof(struct SomeStruct) == 4);
                 static_assert(CRUBIT_OFFSET_OF(public_int, struct SomeStruct) == 0);
             }
@@ -4610,8 +4620,14 @@ mod tests {
         // SomeClass`. See also b/238212337.
         assert_cc_matches!(rs_api_impl, quote! { struct SomeStruct * __this });
         assert_cc_matches!(rs_api_impl, quote! { class SomeClass * __this });
-        assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(struct SomeStruct) == 4); });
-        assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(class SomeClass) == 4); });
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! { static_assert(CRUBIT_SIZEOF(struct SomeStruct) == 4); }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! { static_assert(CRUBIT_SIZEOF(class SomeClass) == 4); }
+        );
         Ok(())
     }
 
@@ -4644,8 +4660,14 @@ mod tests {
             quote! { static_assert(alignof(struct SomeStruct) == 16); }
         );
         assert_cc_matches!(rs_api_impl, quote! { static_assert(alignof(SomeAnonStruct) == 16); });
-        assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(struct SomeStruct) == 16); });
-        assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(SomeAnonStruct) == 4); });
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! { static_assert(CRUBIT_SIZEOF(struct SomeStruct) == 16); }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! { static_assert(CRUBIT_SIZEOF(SomeAnonStruct) == 16); }
+        );
 
         // In Rust, both have align == 16 and size == 16.
         assert_rs_matches!(
@@ -6181,7 +6203,10 @@ mod tests {
                 extern "C" void __rust_thunk___ZN9SomeUnionC1Ev(union SomeUnion*__this) {...}
             }
         );
-        assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(union SomeUnion)==8) });
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! { static_assert(CRUBIT_SIZEOF(union SomeUnion)==8) }
+        );
         assert_cc_matches!(rs_api_impl, quote! { static_assert(alignof(union SomeUnion)==8) });
         assert_cc_matches!(
             rs_api_impl,

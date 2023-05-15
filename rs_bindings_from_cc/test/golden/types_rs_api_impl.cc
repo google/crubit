@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/types.h"
@@ -40,7 +41,7 @@ extern "C" struct SomeStruct* __rust_thunk___ZN10SomeStructaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(struct FieldTypeTestStruct) == 200);
+static_assert(CRUBIT_SIZEOF(struct FieldTypeTestStruct) == 200);
 static_assert(alignof(struct FieldTypeTestStruct) == 8);
 static_assert(CRUBIT_OFFSET_OF(bool_field, struct FieldTypeTestStruct) == 0);
 static_assert(CRUBIT_OFFSET_OF(char_field, struct FieldTypeTestStruct) == 1);

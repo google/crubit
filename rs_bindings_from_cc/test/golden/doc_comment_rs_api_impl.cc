@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/doc_comment.h"
@@ -18,7 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct DocCommentSlashes) == 4);
+static_assert(CRUBIT_SIZEOF(struct DocCommentSlashes) == 4);
 static_assert(alignof(struct DocCommentSlashes) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct DocCommentSlashes) == 0);
 
@@ -39,7 +40,7 @@ extern "C" struct DocCommentSlashes* __rust_thunk___ZN17DocCommentSlashesaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(struct DocCommentBang) == 4);
+static_assert(CRUBIT_SIZEOF(struct DocCommentBang) == 4);
 static_assert(alignof(struct DocCommentBang) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct DocCommentBang) == 0);
 
@@ -63,7 +64,7 @@ extern "C" struct DocCommentBang* __rust_thunk___ZN14DocCommentBangaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(struct MultilineCommentTwoStars) == 4);
+static_assert(CRUBIT_SIZEOF(struct MultilineCommentTwoStars) == 4);
 static_assert(alignof(struct MultilineCommentTwoStars) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct MultilineCommentTwoStars) == 0);
 
@@ -92,7 +93,7 @@ __rust_thunk___ZN24MultilineCommentTwoStarsaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(struct LineComment) == 4);
+static_assert(CRUBIT_SIZEOF(struct LineComment) == 4);
 static_assert(alignof(struct LineComment) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct LineComment) == 0);
 
@@ -115,7 +116,7 @@ extern "C" struct LineComment* __rust_thunk___ZN11LineCommentaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(struct MultilineOneStar) == 4);
+static_assert(CRUBIT_SIZEOF(struct MultilineOneStar) == 4);
 static_assert(alignof(struct MultilineOneStar) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct MultilineOneStar) == 0);
 
@@ -141,7 +142,7 @@ extern "C" struct MultilineOneStar* __rust_thunk___ZN16MultilineOneStaraSEOS_(
 
 extern "C" int __rust_thunk___Z3foov() { return foo(); }
 
-static_assert(sizeof(struct MyTemplate<int>) == 4);
+static_assert(CRUBIT_SIZEOF(struct MyTemplate<int>) == 4);
 static_assert(alignof(struct MyTemplate<int>) == 4);
 static_assert(CRUBIT_OFFSET_OF(value, struct MyTemplate<int>) == 0);
 
@@ -175,7 +176,7 @@ __rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv__2f_2fthird_5fparty_2fcrubi
   return &__this->get_field_value();
 }
 
-static_assert(sizeof(struct MyTemplate<float>) == 4);
+static_assert(CRUBIT_SIZEOF(struct MyTemplate<float>) == 4);
 static_assert(alignof(struct MyTemplate<float>) == 4);
 static_assert(CRUBIT_OFFSET_OF(value, struct MyTemplate<float>) == 0);
 

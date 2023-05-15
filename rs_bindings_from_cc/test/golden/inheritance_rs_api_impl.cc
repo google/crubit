@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/inheritance.h"
@@ -45,7 +46,7 @@ extern "C" class Base0* __rust_thunk___ZN5Base0aSEOS_(class Base0* __this,
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(class Base1) == 16);
+static_assert(CRUBIT_SIZEOF(class Base1) == 16);
 static_assert(alignof(class Base1) == 8);
 
 extern "C" void __rust_thunk___ZN5Base1C1Ev(class Base1* __this) {
@@ -72,7 +73,7 @@ extern "C" class Base1* __rust_thunk___ZN5Base1aSEOS_(class Base1* __this,
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(class Base2) == 2);
+static_assert(CRUBIT_SIZEOF(class Base2) == 2);
 static_assert(alignof(class Base2) == 2);
 
 extern "C" void __rust_thunk___ZN5Base2C1Ev(class Base2* __this) {
@@ -99,7 +100,7 @@ extern "C" class Base2* __rust_thunk___ZN5Base2aSEOS_(class Base2* __this,
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(struct Derived) == 16);
+static_assert(CRUBIT_SIZEOF(struct Derived) == 16);
 static_assert(alignof(struct Derived) == 8);
 static_assert(CRUBIT_OFFSET_OF(derived_1, struct Derived) == 12);
 
@@ -122,7 +123,7 @@ extern "C" struct Derived* __rust_thunk___ZN7DerivedaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(class VirtualBase1) == 24);
+static_assert(CRUBIT_SIZEOF(class VirtualBase1) == 24);
 static_assert(alignof(class VirtualBase1) == 8);
 
 extern "C" void __rust_thunk___ZN12VirtualBase1C1Ev(
@@ -156,7 +157,7 @@ __crubit_dynamic_upcast__12VirtualBase1__to__5Base1(
   return from;
 }
 
-static_assert(sizeof(class VirtualBase2) == 24);
+static_assert(CRUBIT_SIZEOF(class VirtualBase2) == 24);
 static_assert(alignof(class VirtualBase2) == 8);
 
 extern "C" void __rust_thunk___ZN12VirtualBase2C1Ev(
@@ -190,7 +191,7 @@ __crubit_dynamic_upcast__12VirtualBase2__to__5Base1(
   return from;
 }
 
-static_assert(sizeof(class VirtualDerived) == 32);
+static_assert(CRUBIT_SIZEOF(class VirtualDerived) == 32);
 static_assert(alignof(class VirtualDerived) == 8);
 
 extern "C" void __rust_thunk___ZN14VirtualDerivedC1Ev(
@@ -234,7 +235,7 @@ __crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase2(
   return from;
 }
 
-static_assert(sizeof(class MyAbstractClass) == 8);
+static_assert(CRUBIT_SIZEOF(class MyAbstractClass) == 8);
 static_assert(alignof(class MyAbstractClass) == 8);
 
 extern "C" class MyAbstractClass* __rust_thunk___ZN15MyAbstractClassaSERKS_(

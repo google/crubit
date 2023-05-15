@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/no_unique_address.h"
@@ -18,7 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct Struct) == 8);
+static_assert(CRUBIT_SIZEOF(struct Struct) == 8);
 static_assert(alignof(struct Struct) == 4);
 static_assert(CRUBIT_OFFSET_OF(field1, struct Struct) == 0);
 static_assert(CRUBIT_OFFSET_OF(field2, struct Struct) == 4);
@@ -47,7 +48,7 @@ extern "C" void __rust_thunk___ZN6Struct4MakeEic(struct Struct* __return,
   new (__return) auto(Struct::Make(f1, f2));
 }
 
-static_assert(sizeof(struct PaddingBetweenFields) == 8);
+static_assert(CRUBIT_SIZEOF(struct PaddingBetweenFields) == 8);
 static_assert(alignof(struct PaddingBetweenFields) == 4);
 static_assert(CRUBIT_OFFSET_OF(field1, struct PaddingBetweenFields) == 0);
 static_assert(CRUBIT_OFFSET_OF(field2, struct PaddingBetweenFields) == 4);
@@ -82,7 +83,7 @@ extern "C" void __rust_thunk___ZN20PaddingBetweenFields4MakeEci(
   new (__return) auto(PaddingBetweenFields::Make(f1, f2));
 }
 
-static_assert(sizeof(struct FieldInTailPadding_InnerStruct) == 8);
+static_assert(CRUBIT_SIZEOF(struct FieldInTailPadding_InnerStruct) == 8);
 static_assert(alignof(struct FieldInTailPadding_InnerStruct) == 4);
 static_assert(CRUBIT_OFFSET_OF(inner_int_field,
                                struct FieldInTailPadding_InnerStruct) == 0);
@@ -112,7 +113,7 @@ extern "C" void __rust_thunk___ZN30FieldInTailPadding_InnerStructD1Ev(
   std::destroy_at(__this);
 }
 
-static_assert(sizeof(struct FieldInTailPadding) == 8);
+static_assert(CRUBIT_SIZEOF(struct FieldInTailPadding) == 8);
 static_assert(alignof(struct FieldInTailPadding) == 4);
 static_assert(CRUBIT_OFFSET_OF(inner_struct, struct FieldInTailPadding) == 0);
 static_assert(CRUBIT_OFFSET_OF(char_in_tail_padding_of_prev_field,

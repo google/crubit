@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/user_of_base_class.h"
@@ -18,7 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct Derived2) == 24);
+static_assert(CRUBIT_SIZEOF(struct Derived2) == 24);
 static_assert(alignof(struct Derived2) == 8);
 static_assert(CRUBIT_OFFSET_OF(derived_1, struct Derived2) == 20);
 
@@ -51,7 +52,7 @@ extern "C" const class Base0& __crubit_dynamic_upcast__8Derived2__to__5Base0(
   return from;
 }
 
-static_assert(sizeof(class VirtualDerived2) == 32);
+static_assert(CRUBIT_SIZEOF(class VirtualDerived2) == 32);
 static_assert(alignof(class VirtualDerived2) == 8);
 
 extern "C" void __rust_thunk___ZN15VirtualDerived2C1Ev(

@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/polymorphic.h"
@@ -18,7 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(class PolymorphicBase) == 8);
+static_assert(CRUBIT_SIZEOF(class PolymorphicBase) == 8);
 static_assert(alignof(class PolymorphicBase) == 8);
 
 extern "C" void __rust_thunk___ZN15PolymorphicBaseC1Ev(
@@ -41,7 +42,7 @@ extern "C" void __rust_thunk___ZN15PolymorphicBaseD1Ev(
   std::destroy_at(__this);
 }
 
-static_assert(sizeof(class PolymorphicBase2) == 8);
+static_assert(CRUBIT_SIZEOF(class PolymorphicBase2) == 8);
 static_assert(alignof(class PolymorphicBase2) == 8);
 
 extern "C" void __rust_thunk___ZN16PolymorphicBase2C1Ev(
@@ -69,7 +70,7 @@ extern "C" void __rust_thunk___ZN16PolymorphicBase2D1Ev(
   std::destroy_at(__this);
 }
 
-static_assert(sizeof(class PolymorphicDerived) == 16);
+static_assert(CRUBIT_SIZEOF(class PolymorphicDerived) == 16);
 static_assert(alignof(class PolymorphicDerived) == 8);
 
 extern "C" void __rust_thunk___ZN18PolymorphicDerivedC1Ev(

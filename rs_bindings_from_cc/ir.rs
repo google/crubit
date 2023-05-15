@@ -532,7 +532,6 @@ pub struct Record {
     pub fields: Vec<Field>,
     pub lifetime_params: Vec<LifetimeName>,
     pub size: usize,
-    pub original_cc_size: usize,
     pub alignment: usize,
     pub is_derived_class: bool,
     pub override_alignment: bool,

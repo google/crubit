@@ -442,7 +442,6 @@ llvm::json::Value Record::ToJson() const {
       {"fields", fields},
       {"lifetime_params", lifetime_params},
       {"size", size},
-      {"original_cc_size", original_cc_size},
       {"alignment", alignment},
       {"is_derived_class", is_derived_class},
       {"override_alignment", override_alignment},

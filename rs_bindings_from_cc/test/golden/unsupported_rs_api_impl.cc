@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/unsupported.h"
@@ -18,7 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct TrivialCustomType) == 4);
+static_assert(CRUBIT_SIZEOF(struct TrivialCustomType) == 4);
 static_assert(alignof(struct TrivialCustomType) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct TrivialCustomType) == 0);
 
@@ -44,7 +45,7 @@ extern "C" struct TrivialCustomType* __rust_thunk___ZN17TrivialCustomTypeaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(struct NontrivialCustomType) == 4);
+static_assert(CRUBIT_SIZEOF(struct NontrivialCustomType) == 4);
 static_assert(alignof(struct NontrivialCustomType) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct NontrivialCustomType) == 0);
 

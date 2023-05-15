@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/no_elided_lifetimes.h"
@@ -25,7 +26,7 @@ static_assert(sizeof(struct TriviallyCopyableButNontriviallyDestructible) == 1);
 static_assert(alignof(struct TriviallyCopyableButNontriviallyDestructible) ==
               1);
 
-static_assert(sizeof(class WrappedValue) == 4);
+static_assert(CRUBIT_SIZEOF(class WrappedValue) == 4);
 static_assert(alignof(class WrappedValue) == 4);
 
 #pragma clang diagnostic pop

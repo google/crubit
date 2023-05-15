@@ -305,7 +305,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = ImportFields(record_decl),
       .size = layout.getSize().getQuantity(),
-      .original_cc_size = layout.getSize().getQuantity(),
       .alignment = layout.getAlignment().getQuantity(),
       .is_derived_class = is_derived_class,
       .override_alignment = override_alignment,

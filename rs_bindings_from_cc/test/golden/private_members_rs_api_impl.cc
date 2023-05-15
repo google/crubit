@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/private_members.h"
@@ -18,7 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(class test_namespace_bindings::SomeClass) == 8);
+static_assert(CRUBIT_SIZEOF(class test_namespace_bindings::SomeClass) == 8);
 static_assert(alignof(class test_namespace_bindings::SomeClass) == 4);
 static_assert(CRUBIT_OFFSET_OF(public_member_variable_,
                                class test_namespace_bindings::SomeClass) == 0);

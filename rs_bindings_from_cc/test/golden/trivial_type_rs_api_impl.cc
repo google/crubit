@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/trivial_type.h"
@@ -18,7 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct ns::Trivial) == 4);
+static_assert(CRUBIT_SIZEOF(struct ns::Trivial) == 4);
 static_assert(alignof(struct ns::Trivial) == 4);
 static_assert(CRUBIT_OFFSET_OF(trivial_field, struct ns::Trivial) == 0);
 
@@ -41,7 +42,7 @@ extern "C" struct ns::Trivial* __rust_thunk___ZN2ns7TrivialaSEOS0_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(struct ns::TrivialNonfinal) == 4);
+static_assert(CRUBIT_SIZEOF(struct ns::TrivialNonfinal) == 4);
 static_assert(alignof(struct ns::TrivialNonfinal) == 4);
 static_assert(CRUBIT_OFFSET_OF(trivial_field, struct ns::TrivialNonfinal) == 0);
 

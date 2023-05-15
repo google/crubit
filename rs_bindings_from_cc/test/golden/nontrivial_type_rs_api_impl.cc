@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/nontrivial_type.h"
@@ -18,7 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct Nontrivial) == 4);
+static_assert(CRUBIT_SIZEOF(struct Nontrivial) == 4);
 static_assert(alignof(struct Nontrivial) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct Nontrivial) == 0);
 
@@ -28,7 +29,7 @@ extern "C" void __rust_thunk___ZN10NontrivialaSEf(struct Nontrivial* __return,
   new (__return) auto(__this->operator=(__param_0));
 }
 
-static_assert(sizeof(struct NontrivialInline) == 4);
+static_assert(CRUBIT_SIZEOF(struct NontrivialInline) == 4);
 static_assert(alignof(struct NontrivialInline) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct NontrivialInline) == 0);
 
@@ -82,7 +83,7 @@ extern "C" void __rust_thunk___ZN16NontrivialInline14MemberFunctionEv(
   __this->MemberFunction();
 }
 
-static_assert(sizeof(struct NontrivialMembers) == 4);
+static_assert(CRUBIT_SIZEOF(struct NontrivialMembers) == 4);
 static_assert(alignof(struct NontrivialMembers) == 4);
 static_assert(CRUBIT_OFFSET_OF(nontrivial_member, struct NontrivialMembers) ==
               0);
@@ -120,7 +121,7 @@ extern "C" struct NontrivialMembers* __rust_thunk___ZN17NontrivialMembersaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(struct NontrivialUnpin) == 4);
+static_assert(CRUBIT_SIZEOF(struct NontrivialUnpin) == 4);
 static_assert(alignof(struct NontrivialUnpin) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct NontrivialUnpin) == 0);
 

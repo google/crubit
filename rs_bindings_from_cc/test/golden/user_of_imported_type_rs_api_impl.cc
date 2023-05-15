@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/user_of_imported_type.h"
@@ -23,7 +24,7 @@ extern "C" void __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
   new (__return) auto(UsesImportedType(std::move(*t)));
 }
 
-static_assert(sizeof(struct UserOfImportedType) == 8);
+static_assert(CRUBIT_SIZEOF(struct UserOfImportedType) == 8);
 static_assert(alignof(struct UserOfImportedType) == 8);
 static_assert(CRUBIT_OFFSET_OF(trivial, struct UserOfImportedType) == 0);
 

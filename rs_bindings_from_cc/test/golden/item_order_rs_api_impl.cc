@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/item_order.h"
@@ -18,7 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct FirstStruct) == 4);
+static_assert(CRUBIT_SIZEOF(struct FirstStruct) == 4);
 static_assert(alignof(struct FirstStruct) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct FirstStruct) == 0);
 
@@ -43,7 +44,7 @@ extern "C" struct FirstStruct* __rust_thunk___ZN11FirstStructaSEOS_(
 
 extern "C" int __rust_thunk___Z10first_funcv() { return first_func(); }
 
-static_assert(sizeof(struct SecondStruct) == 4);
+static_assert(CRUBIT_SIZEOF(struct SecondStruct) == 4);
 static_assert(alignof(struct SecondStruct) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct SecondStruct) == 0);
 

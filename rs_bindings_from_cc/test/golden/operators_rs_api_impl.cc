@@ -11,6 +11,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/operators.h"
@@ -18,7 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(class AddableConstMember) == 4);
+static_assert(CRUBIT_SIZEOF(class AddableConstMember) == 4);
 static_assert(alignof(class AddableConstMember) == 4);
 
 extern "C" void __rust_thunk___ZN18AddableConstMemberC1Ev(
@@ -50,7 +51,7 @@ extern "C" void __rust_thunk___ZNK18AddableConstMemberplERKS_(
   new (__return) auto(__this->operator+(*rhs));
 }
 
-static_assert(sizeof(class AddableNonConstMember) == 4);
+static_assert(CRUBIT_SIZEOF(class AddableNonConstMember) == 4);
 static_assert(alignof(class AddableNonConstMember) == 4);
 
 extern "C" void __rust_thunk___ZN21AddableNonConstMemberC1Ev(
@@ -84,7 +85,7 @@ extern "C" void __rust_thunk___ZN21AddableNonConstMemberplERKS_(
   new (__return) auto(__this->operator+(*rhs));
 }
 
-static_assert(sizeof(class AddableFriend) == 4);
+static_assert(CRUBIT_SIZEOF(class AddableFriend) == 4);
 static_assert(alignof(class AddableFriend) == 4);
 
 extern "C" void __rust_thunk___ZN13AddableFriendC1Ev(
@@ -285,7 +286,7 @@ extern "C" class IncompatibleLHS* __rust_thunk___ZN15IncompatibleLHSaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(class AddableReturnsVoid) == 4);
+static_assert(CRUBIT_SIZEOF(class AddableReturnsVoid) == 4);
 static_assert(alignof(class AddableReturnsVoid) == 4);
 
 extern "C" void __rust_thunk___ZN18AddableReturnsVoidC1Ev(
@@ -311,7 +312,7 @@ __rust_thunk___ZN18AddableReturnsVoidaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(sizeof(class AddableConstMemberNonunpin) == 4);
+static_assert(CRUBIT_SIZEOF(class AddableConstMemberNonunpin) == 4);
 static_assert(alignof(class AddableConstMemberNonunpin) == 4);
 
 extern "C" void __rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
