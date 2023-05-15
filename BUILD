@@ -38,6 +38,7 @@ crubit_feature_hint(
     name = "experimental",
     crubit_features = _SUPPORTED_FEATURES + ["experimental"],
     visibility = [
+        "//security/ise_cloud/projects/safe_json_parsing:__subpackages__",
         "//:__subpackages__",
     ],
 )
