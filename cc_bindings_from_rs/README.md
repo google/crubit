@@ -26,7 +26,7 @@ fn private_function() {}
 "
 
 $ cd crubit/cc_bindings_from_rs
-$ bazel run :cc_bindings_from_rs_legacy_toolchain_runner -- \
+$ bazel run :cc_bindings_from_rs -- \
     --h-out=$HOME/scratch/test.h \
     --rs-out=$HOME/scratch/test_impl.rs \
     --clang-format-exe-path=<path_of_clang_format_executable> -- \
