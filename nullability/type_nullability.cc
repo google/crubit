@@ -4,9 +4,14 @@
 
 #include "nullability/type_nullability.h"
 
+#include <optional>
+
 #include "absl/log/check.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Attr.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/Expr.h"
+#include "clang/AST/TemplateName.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeVisitor.h"
 #include "clang/Basic/LLVM.h"
@@ -25,6 +30,24 @@ std::string nullabilityToString(const TypeNullability& Nullability) {
       [&] { Result += ", "; });
   Result += "]";
   return Result;
+}
+
+// Recognize aliases e.g. Nonnull<T> as equivalent to T _Nonnull, etc.
+// These aliases should be annotated with [[clang::annotate("Nullable")]] etc.
+//
+// TODO: Ideally such aliases could apply the _Nonnull attribute themselves.
+// This requires resolving compatibilty issues with clang, such as use with
+// user-defined pointer-like types.
+std::optional<NullabilityKind> getAliasNullability(const TemplateName& TN) {
+  if (const auto* TD = TN.getAsTemplateDecl()) {
+    if (const auto* A = TD->getTemplatedDecl()->getAttr<AnnotateAttr>()) {
+      if (A->getAnnotation() == "Nullable") return NullabilityKind::Nullable;
+      if (A->getAnnotation() == "Nonnull") return NullabilityKind::NonNull;
+      if (A->getAnnotation() == "Nullability_Unspecified")
+        return NullabilityKind::Unspecified;
+    }
+  }
+  return std::nullopt;
 }
 
 namespace {
@@ -47,6 +70,11 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   // There may be sugar in between: Attributed -> Typedef -> Typedef -> Pointer.
   // All non-sugar types must consume nullability, most will ignore it.
   std::optional<NullabilityKind> PendingNullability;
+
+  void sawNullability(NullabilityKind NK) {
+    // If we see nullability applied twice, the outer one wins.
+    if (!PendingNullability.has_value()) PendingNullability = NK;
+  }
 
   void ignoreUnexpectedNullability() {
     // TODO: Can we upgrade this to an assert?
@@ -178,6 +206,9 @@ class NullabilityWalker : public TypeVisitor<Impl> {
 
   void VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
     if (TST->isTypeAlias()) {
+      if (auto NK = getAliasNullability(TST->getTemplateName()))
+        sawNullability(*NK);
+
       // Aliases are sugar, visit the underlying type.
       // Record template args so we can resugar substituted params.
       //
@@ -283,10 +314,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   }
 
   void VisitAttributedType(const AttributedType* AT) {
-    if (auto NK = AT->getImmediateNullability()) {
-      // If we see nullability applied twice, the outer one wins.
-      if (!PendingNullability.has_value()) PendingNullability = *NK;
-    }
+    if (auto NK = AT->getImmediateNullability()) sawNullability(*NK);
     Visit(AT->getModifiedType());
     CHECK(!PendingNullability.has_value())
         << "Should have been consumed by modified type! "

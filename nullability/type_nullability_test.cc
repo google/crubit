@@ -351,6 +351,45 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateArgsBehindAlias) {
               ElementsAre(NullabilityKind::Unspecified));
 }
 
+TEST_F(GetNullabilityAnnotationsFromTypeTest, AnnotateNullable) {
+  Preamble = R"cpp(
+    namespace custom {
+    template <class T>
+    using Nullable [[clang::annotate("Nullable")]] = T;
+    template <class T>
+    using NonNull [[clang::annotate("Nonnull")]] = T;
+    }  // namespace custom
+
+    template <class T, class U>
+    class pair;
+
+    template <class X>
+    using twice = pair<X, X>;
+  )cpp";
+  EXPECT_THAT(nullVec("custom::Nullable<int*>"),
+              ElementsAre(NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("custom::NonNull<int*>"),
+              ElementsAre(NullabilityKind::NonNull));
+  EXPECT_THAT(nullVec("pair<custom::NonNull<int*>, custom::Nullable<int*>>"),
+              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("twice<custom::NonNull<int*>>"),
+              ElementsAre(NullabilityKind::NonNull, NullabilityKind::NonNull));
+
+  // Should still work if aliases *do* apply _Nullable.
+  Preamble = R"cpp(
+    namespace custom {
+    template <class T>
+    using Nullable [[clang::annotate("Nullable")]] = T _Nullable;
+    template <class T>
+    using NonNull [[clang::annotate("Nonnull")]] = T _Nonnull;
+    }  // namespace custom
+  )cpp";
+  EXPECT_THAT(nullVec("custom::Nullable<int*>"),
+              ElementsAre(NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("custom::NonNull<int*>"),
+              ElementsAre(NullabilityKind::NonNull));
+}
+
 class PrintWithNullabilityTest : public ::testing::Test {
  protected:
   // C++ declarations prepended before parsing type in nullVec().
