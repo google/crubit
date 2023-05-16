@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/importers/cxx_record.h"
 
 #include <optional>
+#include <string>
 
 #include "clang/Basic/SourceLocation.h"
 #include "absl/container/flat_hash_set.h"
@@ -336,8 +337,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (anon_typedef != nullptr) {
     auto* aligned = anon_typedef->getAttr<clang::AlignedAttr>();
     if (aligned) {
-      int64& size = record.size_align.size;
-      int64& alignment = record.size_align.alignment;
+      int64_t& size = record.size_align.size;
+      int64_t& alignment = record.size_align.alignment;
       alignment =
           ictx_.ctx_.toCharUnitsFromBits(aligned->getAlignment(ictx_.ctx_))
               .getQuantity();
