@@ -67,6 +67,9 @@ bzl_library(
 bzl_library(
     name = "deps_for_bindings_bzl",
     srcs = ["deps_for_bindings.bzl"],
+    visibility = [
+        "//visibility:private",  # Only private by automation, not intent. Owner may accept CLs adding visibility. See <internal link>.
+    ],
     deps = [
         ":providers_bzl",
         ":rust_bindings_from_cc_transition",
