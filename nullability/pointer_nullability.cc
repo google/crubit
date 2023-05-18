@@ -34,8 +34,13 @@ PointerValue* getPointerValueFromExpr(const Expr* PointerExpr,
       Env.getValue(*PointerExpr, SkipPast::Reference));
 }
 
+bool hasPointerNullState(const dataflow::PointerValue& PointerVal) {
+  return PointerVal.getProperty(kKnown) != nullptr &&
+         PointerVal.getProperty(kNull) != nullptr;
+}
+
 std::pair<AtomicBoolValue&, AtomicBoolValue&> getPointerNullState(
-    const PointerValue& PointerVal, const Environment& Env) {
+    const PointerValue& PointerVal) {
   auto& PointerKnown = *cast<AtomicBoolValue>(PointerVal.getProperty(kKnown));
   auto& PointerNull = *cast<AtomicBoolValue>(PointerVal.getProperty(kNull));
   return {PointerKnown, PointerNull};
@@ -61,7 +66,7 @@ void initPointerNullState(PointerValue& PointerVal, Environment& Env,
 }
 
 bool isNullable(const PointerValue& PointerVal, const Environment& Env) {
-  auto [PointerKnown, PointerNull] = getPointerNullState(PointerVal, Env);
+  auto [PointerKnown, PointerNull] = getPointerNullState(PointerVal);
   auto& PointerNotKnownNull =
       Env.makeNot(Env.makeAnd(PointerKnown, PointerNull));
   return !Env.flowConditionImplies(PointerNotKnownNull);

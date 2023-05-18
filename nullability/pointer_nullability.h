@@ -29,13 +29,22 @@ namespace nullability {
 dataflow::PointerValue* getPointerValueFromExpr(
     const Expr* PointerExpr, const dataflow::Environment& Env);
 
+// Returns true if the pointer has all properties necessary for representing
+// complete nullness information.
+// Otherwise, returns false.
+//
+// Pointers that are the value of some expression always have null state once
+// that expression has been analyzed. Other pointers, like the values of unused
+// parameters, may lack this state. This state is only set by
+// PointerNullabilityAnalysis, not by the dataflow framework.
+bool hasPointerNullState(const dataflow::PointerValue& PointerVal);
+
 /// Returns the properties representing the nullness information of a pointer.
 ///
 /// The first boolean indicates if the pointer's nullability is known.
 /// The second boolean indicates if the pointer's value is null.
 std::pair<dataflow::AtomicBoolValue&, dataflow::AtomicBoolValue&>
-getPointerNullState(const dataflow::PointerValue& PointerVal,
-                    const dataflow::Environment& Env);
+getPointerNullState(const dataflow::PointerValue& PointerVal);
 
 /// Sets the nullness properties on `PointerVal` if not already initialised.
 ///
