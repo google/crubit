@@ -3490,10 +3490,10 @@ impl RsTypeKind {
                 }
             }
             RsTypeKind::Other { name, type_args } => {
-                let ident = make_rs_ident(name);
+                let name: TokenStream = name.parse().expect("Invalid RsType::name in the IR");
                 let generic_params =
                     format_generic_params_replacing_by_self(type_args.iter(), self_record);
-                quote! {#ident #generic_params}
+                quote! {#name #generic_params}
             }
             _ => self.to_token_stream(),
         }
@@ -3568,10 +3568,10 @@ impl ToTokens for RsTypeKind {
             // omitted.
             RsTypeKind::Unit => quote! {::core::ffi::c_void},
             RsTypeKind::Other { name, type_args } => {
-                let ident = make_rs_ident(name);
+                let name: TokenStream = name.parse().expect("Invalid RsType::name in the IR");
                 let generic_params =
                     format_generic_params(/* lifetimes= */ &[], type_args.iter());
-                quote! {#ident #generic_params}
+                quote! {#name #generic_params}
             }
         }
     }
@@ -4314,7 +4314,7 @@ mod tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub fn Add(a: i32, b: i32) -> i32 {
+                pub fn Add(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int {
                     unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
                 }
             }
@@ -4327,7 +4327,7 @@ mod tests {
                     use super::*;
                     extern "C" {
                         #[link_name = "_Z3Addii"]
-                        pub(crate) fn __rust_thunk___Z3Addii(a: i32, b: i32) -> i32;
+                        pub(crate) fn __rust_thunk___Z3Addii(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int;
                     }
                 }
             }
@@ -4346,7 +4346,7 @@ mod tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub fn Add(a: i32, b: i32) -> i32 {
+                pub fn Add(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int {
                     unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
                 }
             }
@@ -4358,7 +4358,7 @@ mod tests {
                     #[allow(unused_imports)]
                     use super::*;
                     extern "C" {
-                        pub(crate) fn __rust_thunk___Z3Addii(a: i32, b: i32) -> i32;
+                        pub(crate) fn __rust_thunk___Z3Addii(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int;
                     }
                 }
             }
@@ -4447,7 +4447,7 @@ mod tests {
             quote! {
                 #[repr(C)]
                 pub struct __CcTemplateInst10MyTemplateIiE {
-                    pub field: i32,
+                    pub field: ::core::ffi::c_int,
                 }
             }
         );
@@ -4457,7 +4457,7 @@ mod tests {
                 impl __CcTemplateInst10MyTemplateIiE {
                     #[doc = " Generated from: google3/test/dependency_header.h;l=4"]
                     #[inline(always)]
-                    pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> i32 { unsafe {
+                    pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> ::core::ffi::c_int { unsafe {
                         crate::detail::__rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget(
                             self)
                     }}
@@ -4478,7 +4478,7 @@ mod tests {
                     pub(crate) fn
                     __rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget<'a>(
                         __this: ... Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>
-                    ) -> i32;
+                    ) -> ::core::ffi::c_int;
                     ...
                 } }
             }
@@ -4577,7 +4577,7 @@ mod tests {
                 #[repr(C, align(4))]
                 pub struct SomeStruct {
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-                    pub public_int: i32,
+                    pub public_int: ::core::ffi::c_int,
                     #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
                     pub(crate) protected_int: [::core::mem::MaybeUninit<u8>; 4],
                     #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
@@ -4588,7 +4588,6 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
                 const _: () = assert!(::core::mem::size_of::<crate::SomeStruct>() == 12);
                 const _: () = assert!(::core::mem::align_of::<crate::SomeStruct>() == 4);
                 const _: () = { static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy); };
@@ -4725,7 +4724,7 @@ mod tests {
         )?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         // TODO(b/200067824): This should use the alias's real name in Rust, as well.
-        assert_rs_matches!(rs_api, quote! { pub fn Function() -> i32 { ... } },);
+        assert_rs_matches!(rs_api, quote! { pub fn Function() -> ::core::ffi::c_int { ... } },);
 
         assert_cc_matches!(
             rs_api_impl,
@@ -4874,9 +4873,9 @@ mod tests {
             quote! {
                #[repr(C)]
                pub struct SomeStruct {
-                   pub first_field: i32, ...
+                   pub first_field: ::core::ffi::c_int, ...
                    __bitfields1: [::core::mem::MaybeUninit<u8>; 4],
-                   pub last_field: i32,
+                   pub last_field: ::core::ffi::c_int,
                }
                ...
                const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, first_field) == 0);
@@ -5078,12 +5077,12 @@ mod tests {
             quote! {
                #[repr(C, align(4))]
                pub struct StructWithUnnamedMembers {
-                   pub first_field: i32,
+                   pub first_field: ::core::ffi::c_int,
                    #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:7:15)': No generated bindings found for ''"]
                    pub(crate) __unnamed_field1: [::core::mem::MaybeUninit<u8>; 8],
                    #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'union StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:11:15)': No generated bindings found for ''"]
                    pub(crate) __unnamed_field2: [::core::mem::MaybeUninit<u8>; 4],
-                   pub last_field: i32,
+                   pub last_field: ::core::ffi::c_int,
                }
                ...
                const _: () = assert!(memoffset::offset_of!(
@@ -5176,7 +5175,7 @@ mod tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub unsafe fn Deref(p: *const *mut i32) -> *mut i32 {
+                pub unsafe fn Deref(p: *const *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int {
                     crate::detail::__rust_thunk___Z5DerefPKPi(p)
                 }
             }
@@ -5188,7 +5187,7 @@ mod tests {
                     #[allow(unused_imports)]
                     use super::*;
                     extern "C" {
-                        pub(crate) fn __rust_thunk___Z5DerefPKPi(p: *const *mut i32) -> *mut i32;
+                        pub(crate) fn __rust_thunk___Z5DerefPKPi(p: *const *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int;
                     }
                 }
             }
@@ -5219,7 +5218,7 @@ mod tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub unsafe fn f(str: *const i8) {
+                pub unsafe fn f(str: *const ::core::ffi::c_schar) {
                     crate::detail::__rust_thunk___Z1fPKa(str)
                 }
             }
@@ -5228,7 +5227,7 @@ mod tests {
             rs_api,
             quote! {
                 extern "C" {
-                    pub(crate) fn __rust_thunk___Z1fPKa(str: *const i8);
+                    pub(crate) fn __rust_thunk___Z1fPKa(str: *const ::core::ffi::c_schar);
                 }
             }
         );
@@ -5250,7 +5249,7 @@ mod tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub fn get_ptr_to_func() -> Option<extern "C" fn (f32, f64) -> i32> {
+                pub fn get_ptr_to_func() -> Option<extern "C" fn (f32, f64) -> ::core::ffi::c_int> {
                     unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
                 }
             }
@@ -5264,7 +5263,7 @@ mod tests {
                     extern "C" {
                         #[link_name = "_Z15get_ptr_to_funcv"]
                         pub(crate) fn __rust_thunk___Z15get_ptr_to_funcv()
-                        -> Option<extern "C" fn(f32, f64) -> i32>;
+                        -> Option<extern "C" fn(f32, f64) -> ::core::ffi::c_int>;
                     }
                 }
             }
@@ -5290,7 +5289,7 @@ mod tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub fn get_ref_to_func() -> extern "C" fn (f32, f64) -> i32 {
+                pub fn get_ref_to_func() -> extern "C" fn (f32, f64) -> ::core::ffi::c_int {
                     unsafe { crate::detail::__rust_thunk___Z15get_ref_to_funcv() }
                 }
             }
@@ -5322,7 +5321,7 @@ mod tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub fn get_ptr_to_func() -> Option<extern "C" fn (*const i32) -> *const i32> {
+                pub fn get_ptr_to_func() -> Option<extern "C" fn (*const ::core::ffi::c_int) -> *const ::core::ffi::c_int> {
                     unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
                 }
             }
@@ -5336,7 +5335,7 @@ mod tests {
                     extern "C" {
                         #[link_name = "_Z15get_ptr_to_funcv"]
                         pub(crate) fn __rust_thunk___Z15get_ptr_to_funcv()
-                        -> Option<extern "C" fn(*const i32) -> *const i32>;
+                        -> Option<extern "C" fn(*const ::core::ffi::c_int) -> *const ::core::ffi::c_int>;
                     }
                 }
             }
@@ -5406,7 +5405,7 @@ mod tests {
                 rs_api,
                 quote! {
                     #[inline(always)]
-                    pub fn get_ptr_to_func() -> Option<extern "vectorcall" fn (f32, f64) -> i32> {
+                    pub fn get_ptr_to_func() -> Option<extern "vectorcall" fn (f32, f64) -> ::core::ffi::c_int> {
                         unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
                     }
                 }
@@ -5422,7 +5421,7 @@ mod tests {
                         extern "C" {
                             #[link_name = "_Z15get_ptr_to_funcv"]
                             pub(crate) fn __rust_thunk___Z15get_ptr_to_funcv()
-                            -> Option<extern "vectorcall" fn(f32, f64) -> i32>;
+                            -> Option<extern "vectorcall" fn(f32, f64) -> ::core::ffi::c_int>;
                         }
                     }
                 }
@@ -5625,7 +5624,7 @@ mod tests {
                 #[repr(C, align(8))]
                 pub struct Derived {
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
-                    pub z: i16,
+                    pub z: ::core::ffi::c_short,
                 }
             }
         );
@@ -5650,7 +5649,7 @@ mod tests {
                 #[repr(C, align(8))]
                 pub struct Derived {
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
-                    pub z: i16,
+                    pub z: ::core::ffi::c_short,
                 }
             }
         );
@@ -5675,7 +5674,7 @@ mod tests {
                 #[repr(C, align(8))]
                 pub struct Derived {
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
-                    pub z: i16,
+                    pub z: ::core::ffi::c_short,
                 }
             }
         );
@@ -5742,7 +5741,7 @@ mod tests {
             rs_api,
             quote! {
                 pub struct Derived {
-                    pub x: i16,
+                    pub x: ::core::ffi::c_short,
                 }
             }
         );
@@ -5768,7 +5767,7 @@ mod tests {
             quote! {
                 pub struct NonAggregate {
                     __non_field_data:  [::core::mem::MaybeUninit<u8>; 0],
-                    pub x: i16,
+                    pub x: ::core::ffi::c_short,
                 }
             }
         );
@@ -5800,7 +5799,7 @@ mod tests {
                     pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
                     ...
                     pub(crate) field2: [::core::mem::MaybeUninit<u8>; 2],
-                    pub z: i16,
+                    pub z: ::core::ffi::c_short,
                 }
             }
         );
@@ -5869,7 +5868,7 @@ mod tests {
                 pub struct Struct {
                     ...
                     pub(crate) field: [::core::mem::MaybeUninit<u8>; 0],
-                    pub x: i32,
+                    pub x: ::core::ffi::c_int,
                 }
             }
         );
@@ -5909,18 +5908,18 @@ mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-                pub struct Color(u32);
+                pub struct Color(::core::ffi::c_uint);
                 impl Color {
                     pub const kRed: Color = Color(5);
                     pub const kBlue: Color = Color(6);
                 }
-                impl From<u32> for Color {
-                    fn from(value: u32) -> Color {
+                impl From<::core::ffi::c_uint> for Color {
+                    fn from(value: ::core::ffi::c_uint) -> Color {
                         Color(value)
                     }
                 }
-                impl From<Color> for u32 {
-                    fn from(value: Color) -> u32 {
+                impl From<Color> for ::core::ffi::c_uint {
+                    fn from(value: Color) -> ::core::ffi::c_uint {
                         value.0
                     }
                 }
@@ -5938,18 +5937,18 @@ mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-                pub struct Color(i32);
+                pub struct Color(::core::ffi::c_int);
                 impl Color {
                     pub const kRed: Color = Color(-5);
                     pub const kBlue: Color = Color(-4);
                 }
-                impl From<i32> for Color {
-                    fn from(value: i32) -> Color {
+                impl From<::core::ffi::c_int> for Color {
+                    fn from(value: ::core::ffi::c_int) -> Color {
                         Color(value)
                     }
                 }
-                impl From<Color> for i32 {
-                    fn from(value: Color) -> i32 {
+                impl From<Color> for ::core::ffi::c_int {
+                    fn from(value: Color) -> ::core::ffi::c_int {
                         value.0
                     }
                 }
@@ -5961,7 +5960,13 @@ mod tests {
     #[test]
     fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
         let ir = ir_from_cc(
-            "enum Color : long { kViolet = -9223372036854775807 - 1LL, kRed = -5, kBlue, kGreen = 3, kMagenta = 9223372036854775807 };",
+            r#"enum Color : long {
+                    kViolet = -9223372036854775807 - 1LL,
+                    kRed = -5,
+                    kBlue,
+                    kGreen = 3,
+                    kMagenta = 9223372036854775807
+                };"#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
@@ -5969,7 +5974,7 @@ mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-                pub struct Color(i64);
+                pub struct Color(::core::ffi::c_long);
                 impl Color {
                     pub const kViolet: Color = Color(-9223372036854775808);
                     pub const kRed: Color = Color(-5);
@@ -5977,13 +5982,13 @@ mod tests {
                     pub const kGreen: Color = Color(3);
                     pub const kMagenta: Color = Color(9223372036854775807);
                 }
-                impl From<i64> for Color {
-                    fn from(value: i64) -> Color {
+                impl From<::core::ffi::c_long> for Color {
+                    fn from(value: ::core::ffi::c_long) -> Color {
                         Color(value)
                     }
                 }
-                impl From<Color> for i64 {
-                    fn from(value: Color) -> i64 {
+                impl From<Color> for ::core::ffi::c_long {
+                    fn from(value: Color) -> ::core::ffi::c_long {
                         value.0
                     }
                 }
@@ -5995,7 +6000,11 @@ mod tests {
     #[test]
     fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
         let ir = ir_from_cc(
-            "enum Color: unsigned long { kRed, kBlue, kLimeGreen = 18446744073709551615 };",
+            r#" enum Color: unsigned long {
+                    kRed,
+                    kBlue,
+                    kLimeGreen = 18446744073709551615
+                }; "#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
@@ -6003,19 +6012,19 @@ mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-                pub struct Color(u64);
+                pub struct Color(::core::ffi::c_ulong);
                 impl Color {
                     pub const kRed: Color = Color(0);
                     pub const kBlue: Color = Color(1);
                     pub const kLimeGreen: Color = Color(18446744073709551615);
                 }
-                impl From<u64> for Color {
-                    fn from(value: u64) -> Color {
+                impl From<::core::ffi::c_ulong> for Color {
+                    fn from(value: ::core::ffi::c_ulong) -> Color {
                         Color(value)
                     }
                 }
-                impl From<Color> for u64 {
-                    fn from(value: Color) -> u64 {
+                impl From<Color> for ::core::ffi::c_ulong {
+                    fn from(value: Color) -> ::core::ffi::c_ulong {
                         value.0
                     }
                 }
@@ -6035,7 +6044,7 @@ mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-                pub struct Color(i32);
+                pub struct Color(::core::ffi::c_int);
                 impl Color {
                     pub const kViolet: Color = Color(-2147483648);
                     pub const kRed: Color = Color(-5);
@@ -6043,13 +6052,13 @@ mod tests {
                     pub const kGreen: Color = Color(3);
                     pub const kMagenta: Color = Color(2147483647);
                 }
-                impl From<i32> for Color {
-                    fn from(value: i32) -> Color {
+                impl From<::core::ffi::c_int> for Color {
+                    fn from(value: ::core::ffi::c_int) -> Color {
                         Color(value)
                     }
                 }
-                impl From<Color> for i32 {
-                    fn from(value: Color) -> i32 {
+                impl From<Color> for ::core::ffi::c_int {
+                    fn from(value: Color) -> ::core::ffi::c_int {
                         value.0
                     }
                 }
@@ -6067,19 +6076,19 @@ mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-                pub struct Color(u32);
+                pub struct Color(::core::ffi::c_uint);
                 impl Color {
                     pub const kRed: Color = Color(0);
                     pub const kBlue: Color = Color(1);
                     pub const kLimeGreen: Color = Color(4294967295);
                 }
-                impl From<u32> for Color {
-                    fn from(value: u32) -> Color {
+                impl From<::core::ffi::c_uint> for Color {
+                    fn from(value: ::core::ffi::c_uint) -> Color {
                         Color(value)
                     }
                 }
-                impl From<Color> for u32 {
-                    fn from(value: Color) -> u32 {
+                impl From<Color> for ::core::ffi::c_uint {
+                    fn from(value: Color) -> ::core::ffi::c_uint {
                         value.0
                     }
                 }
@@ -6189,7 +6198,7 @@ mod tests {
                 #[repr(C)]
                 pub struct SomeStruct {
                     # [doc = " Field doc"]
-                    pub field: i32,
+                    pub field: ::core::ffi::c_int,
                 }
             }
         );
@@ -6215,8 +6224,8 @@ mod tests {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
                 pub union SomeUnion {
-                    pub some_field: i32,
-                    pub some_bigger_field: i64,
+                    pub some_field: ::core::ffi::c_int,
+                    pub some_bigger_field: ::core::ffi::c_longlong,
                 }
             }
         );
@@ -6260,7 +6269,7 @@ mod tests {
                 #[repr(C, align(4))]
                 pub union MyUnion { ...
                     first_field: [::core::mem::MaybeUninit<u8>; 56],
-                    pub second_field: i32,
+                    pub second_field: ::core::ffi::c_int,
                 }
             }
         );
@@ -6314,7 +6323,7 @@ mod tests {
                 #[derive(Clone, Copy)]
                 #[repr(C, align(8))]
                 pub union SomeUnionWithPrivateFields {
-                    pub public_field: i32,
+                    pub public_field: ::core::ffi::c_int,
                     #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
                     pub(crate) private_field: [::core::mem::MaybeUninit<u8>; 8],
                 }
@@ -6451,7 +6460,7 @@ mod tests {
             quote! {
                 #[repr(C)]
                 pub union UnionWithNontrivialField {
-                    pub trivial_field: i32,
+                    pub trivial_field: ::core::ffi::c_int,
                     pub nontrivial_field: ::core::mem::ManuallyDrop<crate::NontrivialStruct>,
                 }
             }
@@ -6485,7 +6494,7 @@ mod tests {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
                 pub union UnionWithDefaultConstructors {
-                    pub a: i32,
+                    pub a: ::core::ffi::c_int,
                 }
             }
         );
@@ -6671,7 +6680,7 @@ mod tests {
                 }
             }
         );
-        assert_rs_matches!(rs_api, quote! {pub x: i32,});
+        assert_rs_matches!(rs_api, quote! {pub x: ::core::ffi::c_int,});
         assert_rs_matches!(
             rs_api,
             quote! {pub nts: ::core::mem::ManuallyDrop<crate::NontrivialStruct>,}
@@ -6709,7 +6718,7 @@ mod tests {
                 }
             }
         );
-        assert_rs_matches!(rs_api, quote! {pub x: i32,});
+        assert_rs_matches!(rs_api, quote! {pub x: ::core::ffi::c_int,});
         assert_rs_matches!(rs_api, quote! {pub ts: crate::TrivialStruct,});
         assert_rs_matches!(
             rs_api,
@@ -6731,7 +6740,7 @@ mod tests {
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_not_matches!(rs_api, quote! {impl Drop});
         assert_rs_not_matches!(rs_api, quote! {impl ::ctor::PinnedDrop});
-        assert_rs_matches!(rs_api, quote! {pub x: i32});
+        assert_rs_matches!(rs_api, quote! {pub x: ::core::ffi::c_int});
         assert_cc_not_matches!(rs_api_impl, quote! { std::destroy_at });
         Ok(())
     }
@@ -6854,9 +6863,9 @@ mod tests {
             assert_rs_matches!(
                 rs_api,
                 quote! {
-                    impl From<i32> for SomeStruct {
+                    impl From<::core::ffi::c_int> for SomeStruct {
                         #[inline(always)]
-                        fn from(i: i32) -> Self {
+                        fn from(i: ::core::ffi::c_int) -> Self {
                             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                             unsafe {
                                 crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&mut tmp, i);
@@ -7360,14 +7369,14 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub fn f<'a, 'b>(&'a mut self, i: &'b mut i32) -> &'a mut i32 { ... }
+                pub fn f<'a, 'b>(&'a mut self, i: &'b mut ::core::ffi::c_int) -> &'a mut ::core::ffi::c_int { ... }
             }
         );
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub(crate) fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'a mut crate::S, i: &'b mut i32)
-                    -> &'a mut i32;
+                pub(crate) fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'a mut crate::S, i: &'b mut ::core::ffi::c_int)
+                    -> &'a mut ::core::ffi::c_int;
             }
         );
         Ok(())
@@ -7384,14 +7393,14 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub fn f<'a>(i1: &'a mut i32, i2: &'a mut i32) -> &'a mut i32 { ... }
+                pub fn f<'a>(i1: &'a mut ::core::ffi::c_int, i2: &'a mut ::core::ffi::c_int) -> &'a mut ::core::ffi::c_int { ... }
             }
         );
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub(crate) fn __rust_thunk___Z1fRiS_<'a>(i1: &'a mut i32, i2: &'a mut i32)
-                    -> &'a mut i32;
+                pub(crate) fn __rust_thunk___Z1fRiS_<'a>(i1: &'a mut ::core::ffi::c_int, i2: &'a mut ::core::ffi::c_int)
+                    -> &'a mut ::core::ffi::c_int;
             }
         );
         Ok(())
@@ -7464,7 +7473,7 @@ mod tests {
             quote! { __COMMENT__ #txt }
         });
         assert_rs_not_matches!(rs_api, quote! {pub fn f()});
-        assert_rs_not_matches!(rs_api, quote! {pub fn f(i: i32)});
+        assert_rs_not_matches!(rs_api, quote! {pub fn f(i: ::core::ffi::c_int)});
 
         assert_cc_matches!(rs_api, {
             let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=7\n\
@@ -7482,7 +7491,7 @@ mod tests {
         assert_rs_matches!(rs_api, quote! {pub fn f<'a>(&'a mut self)});
 
         // We can also import overloaded single-parameter constructors.
-        assert_rs_matches!(rs_api, quote! {impl From<i32> for S3});
+        assert_rs_matches!(rs_api, quote! {impl From<::core::ffi::c_int> for S3});
         assert_rs_matches!(rs_api, quote! {impl From<f64> for S3});
 
         // And we can import functions that have the same name + signature, but that are
@@ -7513,10 +7522,10 @@ mod tests {
             rs_api,
             quote! {
                 #[doc = " MyTypedefDecl doc comment\n \n Generated from: google3/ir_from_cc_virtual_header.h;l=5"]
-                pub type MyTypedefDecl = i32;
+                pub type MyTypedefDecl = ::core::ffi::c_int;
             }
         );
-        assert_rs_matches!(rs_api, quote! { pub type MyTypeAliasDecl = i32; });
+        assert_rs_matches!(rs_api, quote! { pub type MyTypeAliasDecl = ::core::ffi::c_int; });
         assert_rs_matches!(
             rs_api,
             quote! { pub type MyTypeAliasDecl_Alias = crate::MyTypeAliasDecl; }
@@ -7563,13 +7572,43 @@ mod tests {
         let tests = vec![
             // Validity of the next few tests is verified via
             // `assert_[not_]impl_all!` static assertions above.
-            Test { cc: "int", lifetimes: true, rs: "i32", is_copy: true },
-            Test { cc: "const int&", lifetimes: true, rs: "& 'a i32", is_copy: true },
-            Test { cc: "int&", lifetimes: true, rs: "& 'a mut i32", is_copy: false },
-            Test { cc: "const int*", lifetimes: true, rs: "Option < & 'a i32 >", is_copy: true },
-            Test { cc: "int*", lifetimes: true, rs: "Option < & 'a mut i32 >", is_copy: false },
-            Test { cc: "const int*", lifetimes: false, rs: "* const i32", is_copy: true },
-            Test { cc: "int*", lifetimes: false, rs: "* mut i32", is_copy: true },
+            Test { cc: "int", lifetimes: true, rs: ":: core :: ffi :: c_int", is_copy: true },
+            Test {
+                cc: "const int&",
+                lifetimes: true,
+                rs: "& 'a :: core :: ffi :: c_int",
+                is_copy: true,
+            },
+            Test {
+                cc: "int&",
+                lifetimes: true,
+                rs: "& 'a mut :: core :: ffi :: c_int",
+                is_copy: false,
+            },
+            Test {
+                cc: "const int*",
+                lifetimes: true,
+                rs: "Option < & 'a :: core :: ffi :: c_int >",
+                is_copy: true,
+            },
+            Test {
+                cc: "int*",
+                lifetimes: true,
+                rs: "Option < & 'a mut :: core :: ffi :: c_int >",
+                is_copy: false,
+            },
+            Test {
+                cc: "const int*",
+                lifetimes: false,
+                rs: "* const :: core :: ffi :: c_int",
+                is_copy: true,
+            },
+            Test {
+                cc: "int*",
+                lifetimes: false,
+                rs: "* mut :: core :: ffi :: c_int",
+                is_copy: true,
+            },
             Test {
                 cc: "void*",
                 lifetimes: false,
@@ -7832,7 +7871,7 @@ mod tests {
     fn test_rust_keywords_are_escaped_in_rs_api_file() -> Result<()> {
         let ir = ir_from_cc("struct type { int dyn; };")?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        assert_rs_matches!(rs_api, quote! { struct r#type { ... r#dyn: i32 ... } });
+        assert_rs_matches!(rs_api, quote! { struct r#type { ... r#dyn: ::core::ffi::c_int ... } });
         Ok(())
     }
 
@@ -8014,11 +8053,11 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl ::ctor::CtorNew<u8> for HasConstructor {
+                impl ::ctor::CtorNew<::core::ffi::c_uchar> for HasConstructor {
                     type CtorType = impl ::ctor::Ctor<Output = Self>;
 
                     #[inline (always)]
-                    fn ctor_new(args: u8) -> Self::CtorType {
+                    fn ctor_new(args: ::core::ffi::c_uchar) -> Self::CtorType {
                         let input = args;
                         unsafe {
                             ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
@@ -8044,11 +8083,11 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl ::ctor::CtorNew<(u8, i8)> for HasConstructor {
+                impl ::ctor::CtorNew<(::core::ffi::c_uchar, ::core::ffi::c_schar)> for HasConstructor {
                     type CtorType = impl ::ctor::Ctor<Output = Self>;
 
                     #[inline (always)]
-                    fn ctor_new(args: (u8, i8)) -> Self::CtorType {
+                    fn ctor_new(args: (::core::ffi::c_uchar, ::core::ffi::c_schar)) -> Self::CtorType {
                         let (input1, input2) = args;
                         unsafe {
                             ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
@@ -8085,7 +8124,7 @@ mod tests {
             rs_api,
             quote! {
                 impl <'b, 'y, 'b_2> ::ctor::CtorNew<(
-                    &'b i32,
+                    &'b ::core::ffi::c_int,
                     ::ctor::RvalueReference<'y, Self>,
                     ::ctor::RvalueReference<'b_2, Self>)
                 > for HasConstructor {
@@ -8098,7 +8137,7 @@ mod tests {
 
                     #[inline (always)]
                     fn ctor_new(args: (
-                        &'b i32,
+                        &'b ::core::ffi::c_int,
                         ::ctor::RvalueReference<'y, Self>,
                         ::ctor::RvalueReference<'b_2, Self>)
                     ) -> Self::CtorType {
@@ -8129,7 +8168,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub fn ReturnsByValue<'a, 'b>(x: &'a i32, y: &'b i32)
+                pub fn ReturnsByValue<'a, 'b>(x: &'a ::core::ffi::c_int, y: &'b ::core::ffi::c_int)
                 -> impl ::ctor::Ctor<Output=crate::Nontrivial>
                  + ::ctor::Captures<'a>
                  + ::ctor::Captures<'b> {
@@ -8169,7 +8208,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub fn ReturnsByValue<'a, 'b>(x: &'a i32, y: &'b i32)
+                pub fn ReturnsByValue<'a, 'b>(x: &'a ::core::ffi::c_int, y: &'b ::core::ffi::c_int)
                 -> impl ::ctor::Ctor<Output=crate::Nontrivial>
                  + ::ctor::Captures<'a>
                  + ::ctor::Captures<'b> {
@@ -8587,13 +8626,13 @@ mod tests {
             quote! {
                 pub mod test_namespace_bindings {
                     ...
-                    pub fn func() -> i32 { ... }
+                    pub fn func() -> ::core::ffi::c_int { ... }
                     ...
                     pub struct S { ... }
                     ...
                     pub mod inner {
                         ...
-                        pub fn inner_func() -> i32 { ... }
+                        pub fn inner_func() -> ::core::ffi::c_int { ... }
                         ...
                         pub struct InnerS { ... }
                         ...
@@ -8627,7 +8666,7 @@ mod tests {
                     use super::*;
                     extern "C" {
                         #[link_name = "_ZN23test_namespace_bindings1fEv"]
-                        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fEv() -> i32;
+                        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fEv() -> ::core::ffi::c_int;
                     }
                 }
                 ...
@@ -8917,7 +8956,7 @@ mod tests {
                 }
                 ...
                 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-                    pub value_: i32,
+                    pub value_: ::core::ffi::c_int,
                 }
                 ...
             }

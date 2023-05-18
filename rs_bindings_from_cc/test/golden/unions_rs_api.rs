@@ -76,7 +76,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
 #[repr(C)]
 pub struct Nontrivial {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    pub field: i32,
+    pub field: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
@@ -179,8 +179,8 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
 pub union NonEmptyUnion {
     pub bool_field: bool,
     pub char_field: u8,
-    pub int_field: i32,
-    pub long_long_field: i64,
+    pub int_field: ::core::ffi::c_int,
+    pub long_long_field: ::core::ffi::c_longlong,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), crate::NonEmptyUnion);
 
@@ -323,7 +323,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UnionWithOpa
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct TrivialButInheritable {
-    pub x: i32,
+    pub x: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TrivialButInheritable"),
@@ -882,10 +882,10 @@ const _: () = {
     static_assertions::assert_impl_all!(u8:Copy);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(i32:Copy);
+    static_assertions::assert_impl_all!(::core::ffi::c_int:Copy);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(i64:Copy);
+    static_assertions::assert_impl_all!(::core::ffi::c_longlong:Copy);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::NonCopyUnion>() == 4);

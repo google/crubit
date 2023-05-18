@@ -33,7 +33,7 @@ fn test_function() {
                 doc_comment: None,
                 return_type: MappedType {
                     rs_type: RsType {
-                        name: Some("i32"),
+                        name: Some("::core::ffi::c_int"),
                         lifetime_args: [],
                         type_args: [],
                         decl_id: None,
@@ -49,7 +49,7 @@ fn test_function() {
                     FuncParam {
                         type_: MappedType {
                             rs_type: RsType {
-                                name: Some("i32"),
+                                name: Some("::core::ffi::c_int"),
                                 lifetime_args: [],
                                 type_args: [],
                                 decl_id: None,
@@ -66,7 +66,7 @@ fn test_function() {
                     FuncParam {
                         type_: MappedType {
                             rs_type: RsType {
-                                name: Some("i32"),
+                                name: Some("::core::ffi::c_int"),
                                 lifetime_args: [],
                                 type_args: [],
                                 decl_id: None,
@@ -399,7 +399,7 @@ fn test_bitfields() {
                        Field {
                            identifier: Some("b1"), ...
                            type_: Ok(MappedType {
-                               rs_type: RsType { name: Some("i32"), ... },
+                               rs_type: RsType { name: Some("::core::ffi::c_int"), ... },
                                cc_type: CcType { name: Some("int"), ... },
                            }), ...
                            offset: 0,
@@ -409,7 +409,7 @@ fn test_bitfields() {
                        Field {
                            identifier: Some("b2"), ...
                            type_: Ok(MappedType {
-                               rs_type: RsType { name: Some("i32"), ... },
+                               rs_type: RsType { name: Some("::core::ffi::c_int"), ... },
                                cc_type: CcType { name: Some("int"), ... },
                            }), ...
                            offset: 1,
@@ -419,7 +419,7 @@ fn test_bitfields() {
                        Field {
                            identifier: Some("b3"), ...
                            type_: Ok(MappedType {
-                               rs_type: RsType { name: Some("i32"), ... },
+                               rs_type: RsType { name: Some("::core::ffi::c_int"), ... },
                                cc_type: CcType { name: Some("int"), ... },
                            }), ...
                            offset: 3,
@@ -429,7 +429,7 @@ fn test_bitfields() {
                        Field {
                            identifier: Some("b4"), ...
                            type_: Ok(MappedType {
-                               rs_type: RsType { name: Some("i32"), ... },
+                               rs_type: RsType { name: Some("::core::ffi::c_int"), ... },
                                cc_type: CcType { name: Some("int"), ... },
                            }), ...
                            offset: 16,
@@ -909,37 +909,36 @@ fn test_type_conversion() -> Result<()> {
 
     assert_eq!(type_mapping["bool"], "bool");
 
-    // TODO(b/276790180, b/276931370): use c_char instead.
+    // TODO(b/276790180, b/276931370): use `::core::ffi::c_char` instead.
     if multiplatform_testing::test_platform() == multiplatform_testing::Platform::X86Linux {
         assert_eq!(type_mapping["char"], "i8");
     } else {
         assert_eq!(type_mapping["char"], "u8");
     }
+    assert_eq!(type_mapping["unsigned char"], "::core::ffi::c_uchar");
+    assert_eq!(type_mapping["signed char"], "::core::ffi::c_schar");
 
-    assert_eq!(type_mapping["unsigned char"], "u8");
-    assert_eq!(type_mapping["signed char"], "i8");
     assert_eq!(type_mapping["char16_t"], "u16");
+
     // We cannot map C++ char32_t or wchar_t to Rust char,
     // because Rust requires that chars are valid UTF scalar values.
     assert_eq!(type_mapping["char32_t"], "u32");
+
+    // TODO(b/283268558): Per https://en.cppreference.com/w/cpp/language/types#Character_types
+    // maybe `wchar_t` should translate to`i16` on Windows?
     assert_eq!(type_mapping["wchar_t"], "i32");
 
-    assert_eq!(type_mapping["short"], "i16");
-    assert_eq!(type_mapping["int"], "i32");
-    assert_eq!(type_mapping["long"], "i64");
-    assert_eq!(type_mapping["long long"], "i64");
+    assert_eq!(type_mapping["short"], "::core::ffi::c_short");
+    assert_eq!(type_mapping["int"], "::core::ffi::c_int");
+    assert_eq!(type_mapping["long"], "::core::ffi::c_long");
+    assert_eq!(type_mapping["long long"], "::core::ffi::c_longlong");
 
-    assert_eq!(type_mapping["unsigned short"], "u16");
-    assert_eq!(type_mapping["unsigned int"], "u32");
-    assert_eq!(type_mapping["unsigned long"], "u64");
-    assert_eq!(type_mapping["unsigned long long"], "u64");
+    assert_eq!(type_mapping["unsigned short"], "::core::ffi::c_ushort");
+    assert_eq!(type_mapping["unsigned int"], "::core::ffi::c_uint");
+    assert_eq!(type_mapping["unsigned long"], "::core::ffi::c_ulong");
+    assert_eq!(type_mapping["unsigned long long"], "::core::ffi::c_ulonglong");
 
-    assert_eq!(type_mapping["short"], "i16");
-    assert_eq!(type_mapping["int"], "i32");
-    assert_eq!(type_mapping["long"], "i64");
-    assert_eq!(type_mapping["long long"], "i64");
-
-    /* TOOD(b/275876867): Reenable assertions below after fix the `#include` problem.
+    /* TOOD(b/275876867): Reenable assertions below after fixing the `#include` problem.
     assert_eq!(type_mapping["int8_t"], "i8");
     assert_eq!(type_mapping["int16_t"], "i16");
     assert_eq!(type_mapping["int32_t"], "i32");
@@ -989,7 +988,7 @@ fn test_typedef() -> Result<()> {
     let int = quote! {
       MappedType {
         rs_type: RsType {
-          name: Some("i32"),
+          name: Some("::core::ffi::c_int"),
           lifetime_args: [],
           type_args: [],
           decl_id: None,
@@ -1117,7 +1116,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
                 identifier: Some("value"), ...
                 doc_comment: Some("Doc comment of `value` field."), ...
                 type_: Ok(MappedType {
-                    rs_type: RsType { name: Some("i32"), ... },
+                    rs_type: RsType { name: Some("::core::ffi::c_int"), ... },
                     cc_type: CcType { name: Some("int"), ... },
                 }),
                 access: Public,
@@ -1226,7 +1225,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
                 identifier: Some("value"), ...
                 doc_comment: Some("Doc comment of the `value` field specialization for T=int."), ...
                 type_: Ok(MappedType {
-                    rs_type: RsType { name: Some("i32"), ... },
+                    rs_type: RsType { name: Some("::core::ffi::c_int"), ... },
                     cc_type: CcType { name: Some("int"), ... },
                 }),
                 access: Public,
@@ -1503,14 +1502,14 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
                 params: [
                     FuncParam {
                         type_: MappedType {
-                            rs_type: RsType { name: Some("i32"), ...  },
+                            rs_type: RsType { name: Some("::core::ffi::c_int"), ...  },
                             cc_type: CcType { name: Some("int"), ...  },
                         },
                         identifier: "__my_args_0",
                     },
                     FuncParam {
                         type_: MappedType {
-                            rs_type: RsType { name: Some("i32"), ...  },
+                            rs_type: RsType { name: Some("::core::ffi::c_int"), ...  },
                             cc_type: CcType { name: Some("int"), ...  },
                         },
                         identifier: "__my_args_1",
@@ -1759,7 +1758,7 @@ fn test_template_with_decltype_and_with_auto() -> Result<()> {
             Func {
                name: "TemplatedAdd", ...
                return_type: MappedType {
-                   rs_type: RsType { name: Some("i64"), ... },
+                   rs_type: RsType { name: Some("::core::ffi::c_longlong"), ... },
                    cc_type: CcType { name: Some("long long"), ... },
                }, ...
             }
@@ -1798,7 +1797,7 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
                return_type: MappedType {
                    rs_type: RsType {
                        name: Some("&"), ...
-                       type_args: [RsType { name: Some("i32"), ...  }], ...
+                       type_args: [RsType { name: Some("::core::ffi::c_int"), ...  }], ...
                    },
                    cc_type: CcType {
                        name: Some("&"),
@@ -1820,7 +1819,7 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
                return_type: MappedType {
                    rs_type: RsType {
                        name: Some("&mut"), ...
-                       type_args: [RsType { name: Some("i32"), ...  }], ...
+                       type_args: [RsType { name: Some("::core::ffi::c_int"), ...  }], ...
                    },
                    cc_type: CcType {
                        name: Some("&"),
@@ -1867,7 +1866,7 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
                return_type: MappedType {
                    rs_type: RsType {
                        name: Some("&"), ...
-                       type_args: [RsType { name: Some("i32"), ...  }], ...
+                       type_args: [RsType { name: Some("::core::ffi::c_int"), ...  }], ...
                    },
                    cc_type: CcType {
                        name: Some("&"),
@@ -1889,7 +1888,7 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
                return_type: MappedType {
                    rs_type: RsType {
                        name: Some("&"), ...
-                       type_args: [RsType { name: Some("i32"), ...  }], ...
+                       type_args: [RsType { name: Some("::core::ffi::c_int"), ...  }], ...
                    },
                    cc_type: CcType {
                        name: Some("&"),
@@ -2528,7 +2527,7 @@ fn test_struct() {
                     Field {
                         identifier: Some("first_field"), ...
                         type_: Ok(MappedType {
-                            rs_type : RsType { name : Some ("i32"), ...},
+                            rs_type : RsType { name : Some("::core::ffi::c_int"), ...},
                             cc_type : CcType { name : Some ("int"), ...},
                          }), ...
                         offset: 0, ...
@@ -2538,7 +2537,7 @@ fn test_struct() {
                     Field {
                         identifier: Some("second_field"), ...
                         type_: Ok(MappedType {
-                            rs_type : RsType { name : Some ("i32"), ...},
+                            rs_type : RsType { name : Some("::core::ffi::c_int"), ...},
                             cc_type : CcType { name : Some ("int"), ...},
                          }), ...
                         offset: 32, ...
@@ -2631,7 +2630,7 @@ fn test_union() {
                     Field {
                         identifier: Some("first_field"), ...
                         type_: Ok(MappedType {
-                            rs_type : RsType { name : Some ("i32"), ...},
+                            rs_type : RsType { name : Some("::core::ffi::c_int"), ...},
                             cc_type : CcType { name : Some ("int"), ...},
                          }), ...
                         offset: 0, ...
@@ -2641,7 +2640,7 @@ fn test_union() {
                     Field {
                         identifier: Some("second_field"), ...
                         type_: Ok(MappedType {
-                            rs_type : RsType { name : Some ("i32"), ...},
+                            rs_type : RsType { name : Some("::core::ffi::c_int"), ...},
                             cc_type : CcType { name : Some ("int"), ...},
                          }), ...
                         offset: 0, ...

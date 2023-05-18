@@ -410,7 +410,7 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
-    pub unsafe fn processT(__this: *mut Self, t: i32) {
+    pub unsafe fn processT(__this: *mut Self, t: ::core::ffi::c_int) {
         crate::detail::__rust_thunk___ZN10MyTemplateIiE8processTEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
@@ -453,7 +453,7 @@ mod detail {
         );
         pub(crate) fn __rust_thunk___ZN10MyTemplateIiE8processTEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIiE,
-            t: i32,
+            t: ::core::ffi::c_int,
         );
     }
 }

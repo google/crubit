@@ -31,9 +31,9 @@
 #[repr(C)]
 pub struct Foo {
     /// A field
-    pub i: i32,
+    pub i: ::core::ffi::c_int,
     /// Another field
-    pub j: i32,
+    pub j: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 
@@ -102,7 +102,7 @@ pub fn foo() {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Bar {
-    pub i: i32,
+    pub i: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Bar"), crate::Bar);
 
@@ -150,7 +150,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Bar {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct HasNoComments {
-    pub i: i32,
+    pub i: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("HasNoComments"), crate::HasNoComments);
 

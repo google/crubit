@@ -23,7 +23,7 @@
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct r#type {
-    pub r#dyn: i32,
+    pub r#dyn: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("type"), crate::r#type);
 
@@ -68,7 +68,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for r#type {
 }
 
 #[inline(always)]
-pub fn r#impl(r#match: i32) {
+pub fn r#impl(r#match: ::core::ffi::c_int) {
     unsafe { crate::detail::__rust_thunk___Z4impli(r#match) }
 }
 
@@ -100,7 +100,7 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::r#type>,
         ) -> &'a mut crate::r#type;
         #[link_name = "_Z4impli"]
-        pub(crate) fn __rust_thunk___Z4impli(r#match: i32);
+        pub(crate) fn __rust_thunk___Z4impli(r#match: ::core::ffi::c_int);
     }
 }
 

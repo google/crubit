@@ -199,7 +199,7 @@ function test::rustfmt_config_path() {
   local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
 
   local hdr="${TEST_TMPDIR}/hello_world.h"
-  echo "int MyFunction(int arg1, int arg2);" > "${hdr}"
+  echo "float MyFunction(float arg1, float arg2);" > "${hdr}"
 
   local json
   json="$(cat <<-EOT
@@ -223,13 +223,13 @@ EOT
   EXPECT_FILE_NOT_EMPTY "${rs_out}"
 
   # Expecting:
-  #     pub fn MyFunction(arg1: i32, arg2: i32) -> i32
+  #     pub fn MyFunction(arg1: f32, arg2: f32) -> f32
   EXPECT_SUCCEED \
-    "grep \"MyFunction.*arg1:.*i32,.*arg2:.*i32.*)\" \"${rs_out}\"" \
+    "grep \"MyFunction.*arg1:.*f32,.*arg2:.*f32.*)\" \"${rs_out}\"" \
     "Verify function args are on single line when using default rustfmt config (1)"
   EXPECT_FAIL \
-    "grep \"^[^a-z]*arg1:[^a-z]*i32,[^a-z]*\\\$\" \"${rs_out}\"" \
-    "Verify function args are *not on single line when using default rustfmt config (2)"
+    "grep \"^[^a-z]*arg1:[^a-z]*f32,[^a-z]*\\\$\" \"${rs_out}\"" \
+    "Verify function args are on single line when using default rustfmt config (2)"
 
   #########################################################
   # Testing a custom `rustfmt` config.
@@ -255,15 +255,15 @@ EOF
 
   # Expecting:
   #     pub fn MyFunction(
-  #         arg1: i32,
-  #         arg2: i32,
-  #     ) -> i32
+  #         arg1: f32,
+  #         arg2: f32,
+  #     ) -> f32
   EXPECT_FAIL \
-    "grep \"MyFunction.*arg1:.*i32,.*arg2:.*i32.*)\" \"${rs_out}\"" \
-    "Verify function args are *not* on single line when using default rustfmt config (1)"
+    "grep \"MyFunction.*arg1:.*f32,.*arg2:.*f32.*)\" \"${rs_out}\"" \
+    "Verify function args are *not* on single line when using custom rustfmt config (1)"
   EXPECT_SUCCEED \
-    "grep \"^[^a-z]*arg1:[^a-z]*i32,[^a-z]*\\\$\" \"${rs_out}\"" \
-    "Verify function args are *not on single line when using default rustfmt config (2)"
+    "grep \"^[^a-z]*arg1:[^a-z]*f32,[^a-z]*\\\$\" \"${rs_out}\"" \
+    "Verify function args are *not* on single line when using custom rustfmt config (2)"
 }
 
 function test::crubit_support_path() {

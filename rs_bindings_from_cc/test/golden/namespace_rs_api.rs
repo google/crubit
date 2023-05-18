@@ -24,7 +24,7 @@ pub mod test_namespace_bindings {
     #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct S {
-        pub i: i32,
+        pub i: ::core::ffi::c_int,
     }
     forward_declare::unsafe_define!(
         forward_declare::symbol!("S"),
@@ -77,7 +77,7 @@ pub mod test_namespace_bindings {
 
     /// Free comment inside namespace
     #[inline(always)]
-    pub fn f(mut s: crate::test_namespace_bindings::S) -> i32 {
+    pub fn f(mut s: crate::test_namespace_bindings::S) -> ::core::ffi::c_int {
         unsafe { crate::detail::__rust_thunk___ZN23test_namespace_bindings1fENS_1SE(&mut s) }
     }
 
@@ -312,7 +312,7 @@ mod detail {
         ) -> &'a mut crate::test_namespace_bindings::S;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
             s: &mut crate::test_namespace_bindings::S,
-        ) -> i32;
+        ) -> ::core::ffi::c_int;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings15inline_functionEv();
         #[link_name = "_ZN23test_namespace_bindings5inner1iEv"]
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings5inner1iEv();

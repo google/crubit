@@ -28,7 +28,7 @@
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct TrivialCustomType {
-    pub i: i32,
+    pub i: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TrivialCustomType"),
@@ -85,7 +85,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialCusto
 #[repr(C)]
 pub struct NontrivialCustomType {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    pub i: i32,
+    pub i: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialCustomType"),

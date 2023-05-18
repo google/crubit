@@ -80,23 +80,23 @@ forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::s
 pub struct FieldTypeTestStruct {
     pub bool_field: bool,
     pub char_field: u8,
-    pub unsigned_char_field: u8,
-    pub signed_char_field: i8,
+    pub unsigned_char_field: ::core::ffi::c_uchar,
+    pub signed_char_field: ::core::ffi::c_schar,
     pub char16_t_field: u16,
     pub char32_t_field: u32,
     pub wchar_t_field: i32,
-    pub short_field: i16,
-    pub int_field: i32,
-    pub long_field: i64,
-    pub long_long_field: i64,
-    pub unsigned_short_field: u16,
-    pub unsigned_int_field: u32,
-    pub unsigned_long_field: u64,
-    pub unsigned_long_long_field: u64,
-    pub signed_short_field: i16,
-    pub signed_int_field: i32,
-    pub signed_long_field: i64,
-    pub signed_long_long_field: i64,
+    pub short_field: ::core::ffi::c_short,
+    pub int_field: ::core::ffi::c_int,
+    pub long_field: ::core::ffi::c_long,
+    pub long_long_field: ::core::ffi::c_longlong,
+    pub unsigned_short_field: ::core::ffi::c_ushort,
+    pub unsigned_int_field: ::core::ffi::c_uint,
+    pub unsigned_long_field: ::core::ffi::c_ulong,
+    pub unsigned_long_long_field: ::core::ffi::c_ulonglong,
+    pub signed_short_field: ::core::ffi::c_short,
+    pub signed_int_field: ::core::ffi::c_int,
+    pub signed_long_field: ::core::ffi::c_long,
+    pub signed_long_long_field: ::core::ffi::c_longlong,
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'PtrDiff': No generated bindings found for 'PtrDiff'
     pub(crate) ptrdiff_t_field: [::core::mem::MaybeUninit<u8>; 8],
@@ -105,7 +105,7 @@ pub struct FieldTypeTestStruct {
     pub(crate) size_t_field: [::core::mem::MaybeUninit<u8>; 8],
     pub float_field: f32,
     pub double_field: f64,
-    pub ptr_field: *mut i32,
+    pub ptr_field: *mut ::core::ffi::c_int,
     pub void_ptr_field: *mut ::core::ffi::c_void,
     pub const_void_ptr_field: *const ::core::ffi::c_void,
     pub void_double_ptr_field: *mut *mut ::core::ffi::c_void,
@@ -145,8 +145,9 @@ pub fn VoidReturningFunction() {
 /// returning a function. In ML-like syntax:
 /// FunctionPointerReturningFunction : () -> (const int&, int*) -> int&
 #[inline(always)]
-pub fn FunctionPointerReturningFunction() -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>
-{
+pub fn FunctionPointerReturningFunction() -> Option<
+    extern "C" fn(*const ::core::ffi::c_int, *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int,
+> {
     unsafe { crate::detail::__rust_thunk___Z32FunctionPointerReturningFunctionv() }
 }
 
@@ -200,8 +201,12 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
-        pub(crate) fn __rust_thunk___Z32FunctionPointerReturningFunctionv()
-        -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>;
+        pub(crate) fn __rust_thunk___Z32FunctionPointerReturningFunctionv() -> Option<
+            extern "C" fn(
+                *const ::core::ffi::c_int,
+                *mut ::core::ffi::c_int,
+            ) -> *mut ::core::ffi::c_int,
+        >;
         pub(crate) fn __rust_thunk___Z24FunctionWithVoidPointersPvPKv(
             __param_0: *mut ::core::ffi::c_void,
             __param_1: *const ::core::ffi::c_void,

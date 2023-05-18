@@ -45,7 +45,7 @@ pub fn AddAnotherHookWithTypedef(hook: extern "C" fn()) {
 }
 
 #[inline(always)]
-pub unsafe fn ConsumeArray(pair: *mut i32) {
+pub unsafe fn ConsumeArray(pair: *mut ::core::ffi::c_int) {
     crate::detail::__rust_thunk___Z12ConsumeArrayPi(pair)
 }
 
@@ -53,7 +53,7 @@ pub unsafe fn ConsumeArray(pair: *mut i32) {
 // Unsupported type 'int[2]': Unsupported clang::Type class 'ConstantArray'
 
 #[inline(always)]
-pub unsafe fn ConsumeArrayWithTypedef(__param_0: *mut i32) {
+pub unsafe fn ConsumeArrayWithTypedef(__param_0: *mut ::core::ffi::c_int) {
     crate::detail::__rust_thunk___Z23ConsumeArrayWithTypedefPi(__param_0)
 }
 
@@ -72,9 +72,11 @@ mod detail {
         #[link_name = "_Z25AddAnotherHookWithTypedefRFvvE"]
         pub(crate) fn __rust_thunk___Z25AddAnotherHookWithTypedefRFvvE(hook: extern "C" fn());
         #[link_name = "_Z12ConsumeArrayPi"]
-        pub(crate) fn __rust_thunk___Z12ConsumeArrayPi(pair: *mut i32);
+        pub(crate) fn __rust_thunk___Z12ConsumeArrayPi(pair: *mut ::core::ffi::c_int);
         #[link_name = "_Z23ConsumeArrayWithTypedefPi"]
-        pub(crate) fn __rust_thunk___Z23ConsumeArrayWithTypedefPi(__param_0: *mut i32);
+        pub(crate) fn __rust_thunk___Z23ConsumeArrayWithTypedefPi(
+            __param_0: *mut ::core::ffi::c_int,
+        );
     }
 }
 

@@ -35,7 +35,7 @@
 #[repr(C)]
 pub struct Nontrivial {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    pub field: i32,
+    pub field: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
@@ -56,10 +56,10 @@ impl ::ctor::CtorNew<()> for Nontrivial {
     }
 }
 
-impl ::ctor::CtorNew<i32> for Nontrivial {
+impl ::ctor::CtorNew<::core::ffi::c_int> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: i32) -> Self::CtorType {
+    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
         let field = args;
         unsafe {
             ::ctor::FnCtor::new(
@@ -73,19 +73,19 @@ impl ::ctor::CtorNew<i32> for Nontrivial {
         }
     }
 }
-impl ::ctor::CtorNew<(i32,)> for Nontrivial {
+impl ::ctor::CtorNew<(::core::ffi::c_int,)> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (i32,)) -> Self::CtorType {
+    fn ctor_new(args: (::core::ffi::c_int,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<i32>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::core::ffi::c_int>>::ctor_new(arg)
     }
 }
 
-impl ::ctor::CtorNew<(i32, i32)> for Nontrivial {
+impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (i32, i32)) -> Self::CtorType {
+    fn ctor_new(args: (::core::ffi::c_int, ::core::ffi::c_int)) -> Self::CtorType {
         let (field, unused) = args;
         unsafe {
             ::ctor::FnCtor::new(
@@ -174,9 +174,9 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Nontrivial {
     }
 }
 
-impl ::ctor::Assign<i32> for Nontrivial {
+impl ::ctor::Assign<::core::ffi::c_int> for Nontrivial {
     #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: i32) {
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: ::core::ffi::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN10NontrivialaSEi(self, __param_0);
         }
@@ -257,7 +257,7 @@ impl Nontrivial {
 #[repr(C)]
 pub struct NontrivialInline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    pub field: i32,
+    pub field: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialInline"),
@@ -281,10 +281,10 @@ impl ::ctor::CtorNew<()> for NontrivialInline {
     }
 }
 
-impl ::ctor::CtorNew<i32> for NontrivialInline {
+impl ::ctor::CtorNew<::core::ffi::c_int> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: i32) -> Self::CtorType {
+    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
         let field = args;
         unsafe {
             ::ctor::FnCtor::new(
@@ -298,19 +298,19 @@ impl ::ctor::CtorNew<i32> for NontrivialInline {
         }
     }
 }
-impl ::ctor::CtorNew<(i32,)> for NontrivialInline {
+impl ::ctor::CtorNew<(::core::ffi::c_int,)> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (i32,)) -> Self::CtorType {
+    fn ctor_new(args: (::core::ffi::c_int,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<i32>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::core::ffi::c_int>>::ctor_new(arg)
     }
 }
 
-impl ::ctor::CtorNew<(i32, i32)> for NontrivialInline {
+impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (i32, i32)) -> Self::CtorType {
+    fn ctor_new(args: (::core::ffi::c_int, ::core::ffi::c_int)) -> Self::CtorType {
         let (field, unused) = args;
         unsafe {
             ::ctor::FnCtor::new(
@@ -399,9 +399,9 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialInline 
     }
 }
 
-impl ::ctor::Assign<i32> for NontrivialInline {
+impl ::ctor::Assign<::core::ffi::c_int> for NontrivialInline {
     #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: i32) {
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: ::core::ffi::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN16NontrivialInlineaSEi(self, __param_0);
         }
@@ -538,7 +538,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialMembers
 #[repr(C)]
 pub struct NontrivialUnpin {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    pub field: i32,
+    pub field: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialUnpin"),
@@ -556,9 +556,9 @@ impl Default for NontrivialUnpin {
     }
 }
 
-impl From<i32> for NontrivialUnpin {
+impl From<::core::ffi::c_int> for NontrivialUnpin {
     #[inline(always)]
-    fn from(field: i32) -> Self {
+    fn from(field: ::core::ffi::c_int) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15NontrivialUnpinC1Ei(&mut tmp, field);
@@ -621,9 +621,9 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for NontrivialUn
     }
 }
 
-impl ::ctor::UnpinAssign<i32> for NontrivialUnpin {
+impl ::ctor::UnpinAssign<::core::ffi::c_int> for NontrivialUnpin {
     #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: i32) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::core::ffi::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN15NontrivialUnpinaSEi(self, __param_0);
         }
@@ -927,13 +927,13 @@ mod detail {
         #[link_name = "_ZN10NontrivialC1Ei"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1Ei<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Nontrivial>,
-            field: i32,
+            field: ::core::ffi::c_int,
         );
         #[link_name = "_ZN10NontrivialC1Eii"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1Eii<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Nontrivial>,
-            field: i32,
-            unused: i32,
+            field: ::core::ffi::c_int,
+            unused: ::core::ffi::c_int,
         );
         #[link_name = "_ZN10NontrivialC1ERKS_"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1ERKS_<'a, 'b>(
@@ -958,7 +958,7 @@ mod detail {
         #[link_name = "_ZN10NontrivialaSEi"]
         pub(crate) fn __rust_thunk___ZN10NontrivialaSEi<'a>(
             __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
-            __param_0: i32,
+            __param_0: ::core::ffi::c_int,
         ) -> ::core::pin::Pin<&'a mut crate::Nontrivial>;
         pub(crate) fn __rust_thunk___ZN10NontrivialaSEf<'a>(
             __return: &mut ::core::mem::MaybeUninit<crate::Nontrivial>,
@@ -998,12 +998,12 @@ mod detail {
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Ei<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::NontrivialInline>,
-            field: i32,
+            field: ::core::ffi::c_int,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Eii<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::NontrivialInline>,
-            field: i32,
-            unused: i32,
+            field: ::core::ffi::c_int,
+            unused: ::core::ffi::c_int,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1ERKS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::NontrivialInline>,
@@ -1023,7 +1023,7 @@ mod detail {
         ) -> ::core::pin::Pin<&'a mut crate::NontrivialInline>;
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineaSEi<'a>(
             __this: ::core::pin::Pin<&'a mut crate::NontrivialInline>,
-            __param_0: i32,
+            __param_0: ::core::ffi::c_int,
         ) -> ::core::pin::Pin<&'a mut crate::NontrivialInline>;
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::NontrivialInline>,
@@ -1060,7 +1060,7 @@ mod detail {
         #[link_name = "_ZN15NontrivialUnpinC1Ei"]
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpinC1Ei<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::NontrivialUnpin>,
-            field: i32,
+            field: ::core::ffi::c_int,
         );
         #[link_name = "_ZN15NontrivialUnpinC1ERKS_"]
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpinC1ERKS_<'a, 'b>(
@@ -1090,7 +1090,7 @@ mod detail {
         #[link_name = "_ZN15NontrivialUnpinaSEi"]
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpinaSEi<'a>(
             __this: &'a mut crate::NontrivialUnpin,
-            __param_0: i32,
+            __param_0: ::core::ffi::c_int,
         ) -> &'a mut crate::NontrivialUnpin;
         #[link_name = "_ZN15NontrivialUnpinD1Ev"]
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpinD1Ev<'a>(
@@ -1195,7 +1195,7 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::Nontrivial, field) == 0);
 const _: () = {
-    static_assertions::assert_impl_all!(i32:Copy);
+    static_assertions::assert_impl_all!(::core::ffi::c_int:Copy);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::NontrivialInline>() == 4);
@@ -1208,7 +1208,7 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::NontrivialInline, field) == 0);
 const _: () = {
-    static_assertions::assert_impl_all!(i32:Copy);
+    static_assertions::assert_impl_all!(::core::ffi::c_int:Copy);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::NontrivialMembers>() == 4);
@@ -1231,7 +1231,7 @@ const _: () = {
 };
 const _: () = assert!(memoffset::offset_of!(crate::NontrivialUnpin, field) == 0);
 const _: () = {
-    static_assertions::assert_impl_all!(i32:Copy);
+    static_assertions::assert_impl_all!(::core::ffi::c_int:Copy);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::NontrivialByValue>() == 1);

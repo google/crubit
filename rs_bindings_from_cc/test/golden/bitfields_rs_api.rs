@@ -30,12 +30,12 @@
 pub struct WithBitfields {
     // f1 : 2 bits
     __bitfields0: [::core::mem::MaybeUninit<u8>; 1],
-    pub f2: i32,
+    pub f2: ::core::ffi::c_int,
     // f3 : 4 bits
     // f4 : 8 bits
     //  : 45 bits
     __bitfields2: [::core::mem::MaybeUninit<u8>; 10],
-    pub f5: i32,
+    pub f5: ::core::ffi::c_int,
     // f6 : 23 bits
     __bitfields4: [::core::mem::MaybeUninit<u8>; 3],
     /// Reason for representing this field as a blob of bytes:

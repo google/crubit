@@ -837,30 +837,52 @@ absl::StatusOr<MappedType> Importer::ConvertType(
     switch (builtin_type->getKind()) {
       case clang::BuiltinType::Bool:
         return MappedType::Simple("bool", "bool");
-        break;
-      case clang::BuiltinType::Float:
-        // TODO(b/255768062): Generated bindings should explicitly check if
-        // `math.h` defines the `__STDC_IEC_559__` macro.
-        return MappedType::Simple("f32", "float");
-        break;
-      case clang::BuiltinType::Double:
-        // TODO(b/255768062): Generated bindings should explicitly check if
-        // `math.h` defines the `__STDC_IEC_559__` macro.
-        return MappedType::Simple("f64", "double");
-        break;
       case clang::BuiltinType::Void:
         return MappedType::Void();
-        break;
+
+      // Floating-point numbers
+      //
+      // TODO(b/255768062): Generated bindings should explicitly check if
+      // `math.h` defines the `__STDC_IEC_559__` macro.
+      case clang::BuiltinType::Float:
+        return MappedType::Simple("f32", "float");
+      case clang::BuiltinType::Double:
+        return MappedType::Simple("f64", "double");
+
+      // `char`
+      case clang::BuiltinType::Char_S:  // 'char' in targets where it's signed
+        // TODO(b/276790180, b/276931370): use `::core::ffi::c_char` instead.
+        return MappedType::Simple("i8", "char");
+      case clang::BuiltinType::Char_U:  // 'char' in targets where it's unsigned
+        // TODO(b/276790180, b/276931370): use `::core::ffi::c_char` instead.
+        return MappedType::Simple("u8", "char");
+      case clang::BuiltinType::SChar:  // 'signed char', explicitly qualified
+        return MappedType::Simple("::core::ffi::c_schar", "signed char");
+      case clang::BuiltinType::UChar:  // 'unsigned char', explicitly qualified
+        return MappedType::Simple("::core::ffi::c_uchar", "unsigned char");
+
+      // Signed integers
+      case clang::BuiltinType::Short:
+        return MappedType::Simple("::core::ffi::c_short", "short");
+      case clang::BuiltinType::Int:
+        return MappedType::Simple("::core::ffi::c_int", "int");
+      case clang::BuiltinType::Long:
+        return MappedType::Simple("::core::ffi::c_long", "long");
+      case clang::BuiltinType::LongLong:
+        return MappedType::Simple("::core::ffi::c_longlong", "long long");
+
+      // Unsigned integers
+      case clang::BuiltinType::UShort:
+        return MappedType::Simple("::core::ffi::c_ushort", "unsigned short");
+      case clang::BuiltinType::UInt:
+        return MappedType::Simple("::core::ffi::c_uint", "unsigned int");
+      case clang::BuiltinType::ULong:
+        return MappedType::Simple("::core::ffi::c_ulong", "unsigned long");
+      case clang::BuiltinType::ULongLong:
+        return MappedType::Simple("::core::ffi::c_ulonglong",
+                                  "unsigned long long");
       default:
-        if (builtin_type->isIntegerType()) {
-          auto size = ctx_.getTypeSize(builtin_type);
-          if (size == 8 || size == 16 || size == 32 || size == 64) {
-            return MappedType::Simple(
-                absl::Substitute(
-                    "$0$1", builtin_type->isSignedInteger() ? 'i' : 'u', size),
-                type_string);
-          }
-        }
+        break;
     }
   } else if (const auto* tag_type = type->getAsAdjusted<clang::TagType>()) {
     return ConvertTypeDecl(tag_type->getDecl());

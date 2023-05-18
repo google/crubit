@@ -185,7 +185,7 @@ struct RsType {
   llvm::json::Value ToJson() const;
 
   // The name of the type. Examples:
-  // - "i32" or "bool"
+  // - "i32" or "bool" or "::core::ffi::c_int"
   // - "()" (the unit type, equivalent of "void" in CcType)
   // - "&", "&mut", "*const", "*mut" (pointee stored in `type_args[0]`)
   // - "Option" (e.g. representing nullable, lifetime-annotated C++ pointer as

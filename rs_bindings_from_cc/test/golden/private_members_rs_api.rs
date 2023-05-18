@@ -25,7 +25,7 @@ pub mod test_namespace_bindings {
     #[repr(C, align(4))]
     pub struct SomeClass {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-        pub public_member_variable_: i32,
+        pub public_member_variable_: ::core::ffi::c_int,
         /// Reason for representing this field as a blob of bytes:
         /// Types of non-public C++ fields can be elided away
         pub(crate) private_member_variable_: [::core::mem::MaybeUninit<u8>; 4],

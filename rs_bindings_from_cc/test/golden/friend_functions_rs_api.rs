@@ -93,7 +93,7 @@ pub fn visible_rref<'a>(__param_0: ::ctor::RvalueReference<'a, crate::SomeClass>
 /// Uint128Low64 declarations from absl/numeric/int128.h.  This is a
 /// regression test for b/244311755.
 #[inline(always)]
-pub fn multiple_declarations<'a>(__param_0: &'a crate::SomeClass) -> i32 {
+pub fn multiple_declarations<'a>(__param_0: &'a crate::SomeClass) -> ::core::ffi::c_int {
     unsafe { crate::detail::__rust_thunk___Z21multiple_declarationsRK9SomeClass(__param_0) }
 }
 
@@ -133,7 +133,7 @@ mod detail {
         );
         pub(crate) fn __rust_thunk___Z21multiple_declarationsRK9SomeClass<'a>(
             __param_0: &'a crate::SomeClass,
-        ) -> i32;
+        ) -> ::core::ffi::c_int;
     }
 }
 

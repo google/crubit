@@ -185,7 +185,9 @@ auto CcTypeParamsAre(const Args&... matchers) {
 
 auto IsCcInt() { return AllOf(NameIs("int"), CcTypeParamsAre()); }
 
-auto IsRsInt() { return AllOf(NameIs("i32"), RsTypeParamsAre()); }
+auto IsRsInt() {
+  return AllOf(NameIs("::core::ffi::c_int"), RsTypeParamsAre());
+}
 
 // Matches a CcType that is a pointer to a type matching `matcher`.
 template <typename Matcher>

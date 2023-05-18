@@ -28,7 +28,7 @@
 pub struct DocCommentSlashes {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// A field.
-    pub i: i32,
+    pub i: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("DocCommentSlashes"),
@@ -79,9 +79,9 @@ impl Default for DocCommentSlashes {
 
 /// An implicit conversion constructor which will get translated into `impl
 /// From<int> for DocCommentSlashes`.
-impl From<i32> for DocCommentSlashes {
+impl From<::core::ffi::c_int> for DocCommentSlashes {
     #[inline(always)]
-    fn from(__param_0: i32) -> Self {
+    fn from(__param_0: ::core::ffi::c_int) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ei(&mut tmp, __param_0);
@@ -93,7 +93,7 @@ impl From<i32> for DocCommentSlashes {
 impl DocCommentSlashes {
     /// A non-static member function (`const` flavor).
     #[inline(always)]
-    pub fn get_field_value<'a>(&'a self) -> i32 {
+    pub fn get_field_value<'a>(&'a self) -> ::core::ffi::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(self) }
     }
 }
@@ -101,7 +101,7 @@ impl DocCommentSlashes {
 impl DocCommentSlashes {
     /// A non-static member function (non-`const` flavor).
     #[inline(always)]
-    pub fn set_field_value<'a>(&'a mut self, new_value: i32) {
+    pub fn set_field_value<'a>(&'a mut self, new_value: ::core::ffi::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashes15set_field_valueEi(self, new_value)
         }
@@ -111,7 +111,7 @@ impl DocCommentSlashes {
 impl DocCommentSlashes {
     /// A static method.
     #[inline(always)]
-    pub fn static_method() -> i32 {
+    pub fn static_method() -> ::core::ffi::c_int {
         unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
     }
 }
@@ -123,7 +123,7 @@ impl DocCommentSlashes {
 #[repr(C)]
 pub struct DocCommentBang {
     /// A field
-    pub i: i32,
+    pub i: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("DocCommentBang"), crate::DocCommentBang);
 
@@ -174,7 +174,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for DocCommentBa
 #[repr(C)]
 pub struct MultilineCommentTwoStars {
     /// A field
-    pub i: i32,
+    pub i: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MultilineCommentTwoStars"),
@@ -228,7 +228,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for MultilineCom
 #[repr(C)]
 pub struct LineComment {
     /// A field
-    pub i: i32,
+    pub i: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("LineComment"), crate::LineComment);
 
@@ -279,7 +279,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for LineComment 
 #[repr(C)]
 pub struct MultilineOneStar {
     /// A field
-    pub i: i32,
+    pub i: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MultilineOneStar"),
@@ -328,7 +328,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for MultilineOne
 
 /// A function
 #[inline(always)]
-pub fn foo() -> i32 {
+pub fn foo() -> ::core::ffi::c_int {
     unsafe { crate::detail::__rust_thunk___Z3foov() }
 }
 
@@ -363,7 +363,7 @@ pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIiE {
     /// Data member.
-    pub value: i32,
+    pub value: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<int>"),
@@ -417,7 +417,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 impl __CcTemplateInst10MyTemplateIiE {
     /// A non-static member function.
     #[inline(always)]
-    pub fn get_field_value<'a>(&'a self) -> &'a i32 {
+    pub fn get_field_value<'a>(&'a self) -> &'a ::core::ffi::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(self)
         }
@@ -511,19 +511,19 @@ mod detail {
         #[link_name = "_ZN17DocCommentSlashesC1Ei"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ei<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::DocCommentSlashes>,
-            __param_0: i32,
+            __param_0: ::core::ffi::c_int,
         );
         #[link_name = "_ZNK17DocCommentSlashes15get_field_valueEv"]
         pub(crate) fn __rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv<'a>(
             __this: &'a crate::DocCommentSlashes,
-        ) -> i32;
+        ) -> ::core::ffi::c_int;
         #[link_name = "_ZN17DocCommentSlashes15set_field_valueEi"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashes15set_field_valueEi<'a>(
             __this: &'a mut crate::DocCommentSlashes,
-            new_value: i32,
+            new_value: ::core::ffi::c_int,
         );
         #[link_name = "_ZN17DocCommentSlashes13static_methodEv"]
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv() -> i32;
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv() -> ::core::ffi::c_int;
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::DocCommentBang>,
         );
@@ -584,7 +584,7 @@ mod detail {
             __this: &'a mut crate::MultilineOneStar,
             __param_0: ::ctor::RvalueReference<'b, crate::MultilineOneStar>,
         ) -> &'a mut crate::MultilineOneStar;
-        pub(crate) fn __rust_thunk___Z3foov() -> i32;
+        pub(crate) fn __rust_thunk___Z3foov() -> ::core::ffi::c_int;
         pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(
@@ -615,7 +615,7 @@ mod detail {
             'a,
         >(
             __this: &'a crate::__CcTemplateInst10MyTemplateIiE,
-        ) -> &'a i32;
+        ) -> &'a ::core::ffi::c_int;
         pub(crate) fn __rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(

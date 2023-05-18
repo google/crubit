@@ -21,7 +21,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #[inline(always)]
-pub unsafe fn free_function(p1: *mut i32) -> *mut i32 {
+pub unsafe fn free_function(p1: *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int {
     crate::detail::__rust_thunk___Z13free_functionRi(p1)
 }
 
@@ -49,14 +49,22 @@ forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
 impl S {
     #[inline(always)]
-    pub unsafe fn const_method(__this: *const Self, p1: *mut i32, p2: *mut i32) -> *mut i32 {
+    pub unsafe fn const_method(
+        __this: *const Self,
+        p1: *mut ::core::ffi::c_int,
+        p2: *mut ::core::ffi::c_int,
+    ) -> *mut ::core::ffi::c_int {
         crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
     }
 }
 
 impl S {
     #[inline(always)]
-    pub unsafe fn method(__this: *mut Self, p1: *mut i32, p2: *mut i32) -> *mut i32 {
+    pub unsafe fn method(
+        __this: *mut Self,
+        p1: *mut ::core::ffi::c_int,
+        p2: *mut ::core::ffi::c_int,
+    ) -> *mut ::core::ffi::c_int {
         crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
     }
 }
@@ -85,7 +93,7 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
 }
 
 #[inline(always)]
-pub unsafe fn take_pointer(p: *mut i32) {
+pub unsafe fn take_pointer(p: *mut ::core::ffi::c_int) {
     crate::detail::__rust_thunk___Z12take_pointerPi(p)
 }
 
@@ -124,25 +132,27 @@ mod detail {
     use super::*;
     extern "C" {
         #[link_name = "_Z13free_functionRi"]
-        pub(crate) fn __rust_thunk___Z13free_functionRi(p1: *mut i32) -> *mut i32;
+        pub(crate) fn __rust_thunk___Z13free_functionRi(
+            p1: *mut ::core::ffi::c_int,
+        ) -> *mut ::core::ffi::c_int;
         #[link_name = "_ZNK1S12const_methodERiS0_"]
         pub(crate) fn __rust_thunk___ZNK1S12const_methodERiS0_(
             __this: *const crate::S,
-            p1: *mut i32,
-            p2: *mut i32,
-        ) -> *mut i32;
+            p1: *mut ::core::ffi::c_int,
+            p2: *mut ::core::ffi::c_int,
+        ) -> *mut ::core::ffi::c_int;
         #[link_name = "_ZN1S6methodERiS0_"]
         pub(crate) fn __rust_thunk___ZN1S6methodERiS0_(
             __this: *mut crate::S,
-            p1: *mut i32,
-            p2: *mut i32,
-        ) -> *mut i32;
+            p1: *mut ::core::ffi::c_int,
+            p2: *mut ::core::ffi::c_int,
+        ) -> *mut ::core::ffi::c_int;
         #[link_name = "_ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev"]
         pub(crate) fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
         );
         #[link_name = "_Z12take_pointerPi"]
-        pub(crate) fn __rust_thunk___Z12take_pointerPi(p: *mut i32);
+        pub(crate) fn __rust_thunk___Z12take_pointerPi(p: *mut ::core::ffi::c_int);
     }
 }
 

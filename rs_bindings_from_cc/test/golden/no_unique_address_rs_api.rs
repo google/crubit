@@ -45,8 +45,8 @@ pub struct Struct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Struct"), crate::Struct);
 impl Struct {
-    pub fn field1(&self) -> &i32 {
-        unsafe { &*(&self.field1 as *const _ as *const i32) }
+    pub fn field1(&self) -> &::core::ffi::c_int {
+        unsafe { &*(&self.field1 as *const _ as *const ::core::ffi::c_int) }
     }
     pub fn field2(&self) -> &u8 {
         unsafe { &*(&self.field2 as *const _ as *const u8) }
@@ -95,7 +95,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Struct {
 
 impl Struct {
     #[inline(always)]
-    pub fn Make(f1: i32, f2: u8) -> crate::Struct {
+    pub fn Make(f1: ::core::ffi::c_int, f2: u8) -> crate::Struct {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN6Struct4MakeEic(&mut __return, f1, f2);
@@ -126,8 +126,8 @@ forward_declare::unsafe_define!(
     crate::PaddingBetweenFields
 );
 impl PaddingBetweenFields {
-    pub fn field2(&self) -> &i32 {
-        unsafe { &*(&self.field2 as *const _ as *const i32) }
+    pub fn field2(&self) -> &::core::ffi::c_int {
+        unsafe { &*(&self.field2 as *const _ as *const ::core::ffi::c_int) }
     }
 }
 
@@ -173,7 +173,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for PaddingBetwe
 
 impl PaddingBetweenFields {
     #[inline(always)]
-    pub fn Make(f1: u8, f2: i32) -> crate::PaddingBetweenFields {
+    pub fn Make(f1: u8, f2: ::core::ffi::c_int) -> crate::PaddingBetweenFields {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(&mut __return, f1, f2);
@@ -191,7 +191,7 @@ impl PaddingBetweenFields {
 #[repr(C)]
 pub struct FieldInTailPadding_InnerStruct {
     /// size: 4, alignment: 4 => offset: 0
-    pub inner_int_field: i32,
+    pub inner_int_field: ::core::ffi::c_int,
     /// size: 1, alignment: 1 => offset: 4
     pub inner_char_field: u8,
 }
@@ -373,10 +373,10 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for FieldInTailPaddin
     }
 }
 
-impl ::ctor::CtorNew<(i32, u8, u8)> for FieldInTailPadding {
+impl ::ctor::CtorNew<(::core::ffi::c_int, u8, u8)> for FieldInTailPadding {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (i32, u8, u8)) -> Self::CtorType {
+    fn ctor_new(args: (::core::ffi::c_int, u8, u8)) -> Self::CtorType {
         let (inner_int, inner_char, outer_char) = args;
         unsafe {
             ::ctor::FnCtor::new(
@@ -416,7 +416,7 @@ mod detail {
         ) -> &'a mut crate::Struct;
         pub(crate) fn __rust_thunk___ZN6Struct4MakeEic(
             __return: &mut ::core::mem::MaybeUninit<crate::Struct>,
-            f1: i32,
+            f1: ::core::ffi::c_int,
             f2: u8,
         );
         pub(crate) fn __rust_thunk___ZN20PaddingBetweenFieldsC1Ev<'a>(
@@ -437,7 +437,7 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN20PaddingBetweenFields4MakeEci(
             __return: &mut ::core::mem::MaybeUninit<crate::PaddingBetweenFields>,
             f1: u8,
-            f2: i32,
+            f2: ::core::ffi::c_int,
         );
         pub(crate) fn __rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::FieldInTailPadding_InnerStruct>,
@@ -474,7 +474,7 @@ mod detail {
         ) -> ::core::pin::Pin<&'a mut crate::FieldInTailPadding>;
         pub(crate) fn __rust_thunk___ZN18FieldInTailPaddingC1Eicc<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::FieldInTailPadding>,
-            inner_int: i32,
+            inner_int: ::core::ffi::c_int,
             inner_char: u8,
             outer_char: u8,
         );
@@ -524,7 +524,7 @@ const _: () =
 const _: () =
     assert!(memoffset::offset_of!(crate::FieldInTailPadding_InnerStruct, inner_char_field) == 4);
 const _: () = {
-    static_assertions::assert_impl_all!(i32:Copy);
+    static_assertions::assert_impl_all!(::core::ffi::c_int:Copy);
 };
 const _: () = {
     static_assertions::assert_impl_all!(u8:Copy);

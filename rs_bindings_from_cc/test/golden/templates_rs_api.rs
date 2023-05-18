@@ -534,7 +534,9 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     #[inline(always)]
-    pub fn Create(value: i32) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
+    pub fn Create(
+        value: ::core::ffi::c_int,
+    ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut __return,value);
@@ -545,7 +547,7 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
 
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     #[inline(always)]
-    pub fn value<'a>(&'a self) -> &'a i32 {
+    pub fn value<'a>(&'a self) -> &'a ::core::ffi::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZNK23test_namespace_bindings10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self)
         }
@@ -556,7 +558,7 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {
     pub value1: crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-    pub value2: i32,
+    pub value2: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(
@@ -614,7 +616,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {
-    pub value1: i32,
+    pub value1: ::core::ffi::c_int,
     pub value2: f32,
 }
 forward_declare::unsafe_define!(
@@ -671,8 +673,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
-    pub value1: i32,
-    pub value2: i32,
+    pub value1: ::core::ffi::c_int,
+    pub value2: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("test_namespace_bindings::TemplateWithTwoParams<int, int>"),
@@ -991,7 +993,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
 
 impl __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
     #[inline(always)]
-    pub fn GetPolicy() -> i32 {
+    pub fn GetPolicy() -> ::core::ffi::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEE9GetPolicyEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc()
         }
@@ -1175,13 +1177,13 @@ mod detail {
             __return: &mut ::core::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             >,
-            value: i32,
+            value: ::core::ffi::c_int,
         );
         pub(crate) fn __rust_thunk___ZNK23test_namespace_bindings10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
             __this: &'a crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
-        ) -> &'a i32;
+        ) -> &'a ::core::ffi::c_int;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -1381,7 +1383,7 @@ mod detail {
             &'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
         >;
         pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEE9GetPolicyEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc()
-        -> i32;
+        -> ::core::ffi::c_int;
     }
 }
 

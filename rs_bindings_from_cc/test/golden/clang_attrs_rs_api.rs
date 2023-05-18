@@ -567,7 +567,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
 
 impl __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
     #[inline(always)]
-    pub fn foo<'a>(self: ::core::pin::Pin<&'a mut Self>) -> i32 {
+    pub fn foo<'a>(self: ::core::pin::Pin<&'a mut Self>) -> ::core::ffi::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiE3fooEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(self)
         }
@@ -713,7 +713,7 @@ mod detail {
             __this: ::core::pin::Pin<
                 &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             >,
-        ) -> i32;
+        ) -> ::core::ffi::c_int;
     }
 }
 

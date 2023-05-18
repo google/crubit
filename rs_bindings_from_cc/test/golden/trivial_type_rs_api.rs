@@ -32,7 +32,7 @@ pub mod ns {
     #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct Trivial {
-        pub trivial_field: i32,
+        pub trivial_field: ::core::ffi::c_int,
     }
     forward_declare::unsafe_define!(forward_declare::symbol!("Trivial"), crate::ns::Trivial);
 
@@ -127,7 +127,7 @@ pub mod ns {
     #[::ctor::recursively_pinned]
     #[repr(C)]
     pub struct TrivialNonfinal {
-        pub trivial_field: i32,
+        pub trivial_field: ::core::ffi::c_int,
     }
     forward_declare::unsafe_define!(
         forward_declare::symbol!("TrivialNonfinal"),

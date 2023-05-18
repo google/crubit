@@ -326,7 +326,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeOtherUni
 }
 
 #[inline(always)]
-pub fn FunctionUsingNestedType() -> i32 {
+pub fn FunctionUsingNestedType() -> ::core::ffi::c_int {
     unsafe { crate::detail::__rust_thunk___Z23FunctionUsingNestedTypev() }
 }
 
@@ -405,7 +405,7 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
         ) -> &'a mut crate::SomeOtherUnion;
         #[link_name = "_Z23FunctionUsingNestedTypev"]
-        pub(crate) fn __rust_thunk___Z23FunctionUsingNestedTypev() -> i32;
+        pub(crate) fn __rust_thunk___Z23FunctionUsingNestedTypev() -> ::core::ffi::c_int;
     }
 }
 

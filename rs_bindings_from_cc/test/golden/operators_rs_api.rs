@@ -517,18 +517,18 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Overloaded {
     }
 }
 
-impl<'a> ::core::ops::Add<i32> for &'a crate::Overloaded {
-    type Output = i32;
+impl<'a> ::core::ops::Add<::core::ffi::c_int> for &'a crate::Overloaded {
+    type Output = ::core::ffi::c_int;
     #[inline(always)]
-    fn add(self, rhs: i32) -> Self::Output {
+    fn add(self, rhs: ::core::ffi::c_int) -> Self::Output {
         unsafe { crate::detail::__rust_thunk___ZplRK10Overloadedi(self, rhs) }
     }
 }
 
-impl<'a> ::core::ops::Add<u32> for &'a crate::Overloaded {
-    type Output = i32;
+impl<'a> ::core::ops::Add<::core::ffi::c_uint> for &'a crate::Overloaded {
+    type Output = ::core::ffi::c_int;
     #[inline(always)]
-    fn add(self, rhs: u32) -> Self::Output {
+    fn add(self, rhs: ::core::ffi::c_uint) -> Self::Output {
         unsafe { crate::detail::__rust_thunk___ZplRK10Overloadedj(self, rhs) }
     }
 }
@@ -796,9 +796,9 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignMem
     }
 }
 
-impl ::core::ops::AddAssign<i32> for AddAssignMemberInt {
+impl ::core::ops::AddAssign<::core::ffi::c_int> for AddAssignMemberInt {
     #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: i32) {
+    fn add_assign<'a>(&'a mut self, rhs: ::core::ffi::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN18AddAssignMemberIntpLEi(self, rhs);
         }
@@ -1649,13 +1649,13 @@ mod detail {
         #[link_name = "_ZplRK10Overloadedi"]
         pub(crate) fn __rust_thunk___ZplRK10Overloadedi<'a>(
             lhs: &'a crate::Overloaded,
-            rhs: i32,
-        ) -> i32;
+            rhs: ::core::ffi::c_int,
+        ) -> ::core::ffi::c_int;
         #[link_name = "_ZplRK10Overloadedj"]
         pub(crate) fn __rust_thunk___ZplRK10Overloadedj<'a>(
             lhs: &'a crate::Overloaded,
-            rhs: u32,
-        ) -> i32;
+            rhs: ::core::ffi::c_uint,
+        ) -> ::core::ffi::c_int;
         pub(crate) fn __rust_thunk___ZN15IncompatibleLHSC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::IncompatibleLHS>,
         );
@@ -1728,8 +1728,8 @@ mod detail {
         #[link_name = "_ZN18AddAssignMemberIntpLEi"]
         pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntpLEi<'a>(
             __this: &'a mut crate::AddAssignMemberInt,
-            rhs: i32,
-        ) -> i32;
+            rhs: ::core::ffi::c_int,
+        ) -> ::core::ffi::c_int;
         pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignMemberByConstRef>,
         );

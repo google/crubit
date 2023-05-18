@@ -30,35 +30,32 @@ The C++ types below are mapped one-way into the corresponding Rust types.
 ("one-way" means that the type doesn't round-trip - for example `size_t` maps to
 `usize`, but `usize` maps to `uintptr_t`.)
 
-C++         | Rust
------------ | -------
-`ptrdiff_t` | `isize`
-`size_t`    | `usize`
-`char16_t`  | `u16`
-`char32_t`  | `u32`
-`wchar_t`   | `i32`
+TODO(b/283258442): `::core::ffi::*` should eventually be a bidirectional mapping
 
-### Platform-specific map
-
-TODO(b/276790180): These will eventually become `ffi::c_char`, `ffi::c_int`,
-etc.
-
-The following C++ types are mapped in a platform-dependent way to the
-corresponding Rust type of the same width and signedness:
-
-C++                  | Rust
--------------------- | -----------------------
-`char`               | `i8` or `u8`, or higher
-`signed char`        | `i8` or higher
-`unsigned char`      | `u8` or higher
-`short`              | `i16` or higher
-`unsigned short`     | `u16` or higher
-`int`                | `i16` or higher
-`unsigned int`       | `u16` or higher
-`long`               | `i32` or higher
-`unsigned long`      | `u32` or higher
-`long long`          | `i64`
-`unsigned long long` | `u64`
+| C++                  | Rust                       | Notes                    |
+| -------------------- | -------------------------- | ------------------------ |
+| `ptrdiff_t`          | `isize`                    |                          |
+| `size_t`             | `usize`                    |                          |
+| `char16_t`           | `u16`                      |                          |
+| `char32_t`           | `u32`                      | Unlike `rs_std::rs_char` |
+:                      :                            : above, `char32_t` may    :
+:                      :                            : contain invalid Unicode  :
+:                      :                            : characters               :
+| `wchar_t`            | `i32`                      | TODO(b/283268558): This  |
+:                      :                            : is wrong on Windows.     :
+| `char`               | `u8` or `i8` depending on  | TODO(b/276790180): This  |
+:                      : whether `char` is signed   : may eventually become    :
+:                      : on the target platform     : `c_char`                 :
+| `signed char`        | `::core::ffi::c_schar`     |                          |
+| `unsigned char`      | `::core::ffi::c_uchar`     |                          |
+| `short`              | `::core::ffi::c_short`     |                          |
+| `unsigned short`     | `::core::ffi::c_ushort`    |                          |
+| `int`                | `::core::ffi::c_int`       |                          |
+| `unsigned int`       | `::core::ffi::c_uint`      |                          |
+| `long`               | `::core::ffi::c_long`      |                          |
+| `unsigned long`      | `::core::ffi::c_ulong`     |                          |
+| `long long`          | `::core::ffi::c_longlong`  |                          |
+| `unsigned long long` | `::core::ffi::c_ulonglong` |                          |
 
 ## Unsupported types
 

@@ -23,7 +23,7 @@
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct FirstStruct {
-    pub field: i32,
+    pub field: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("FirstStruct"), crate::FirstStruct);
 
@@ -68,14 +68,14 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for FirstStruct 
 }
 
 #[inline(always)]
-pub fn first_func() -> i32 {
+pub fn first_func() -> ::core::ffi::c_int {
     unsafe { crate::detail::__rust_thunk___Z10first_funcv() }
 }
 
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SecondStruct {
-    pub field: i32,
+    pub field: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SecondStruct"), crate::SecondStruct);
 
@@ -120,7 +120,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SecondStruct
 }
 
 #[inline(always)]
-pub fn second_func() -> i32 {
+pub fn second_func() -> ::core::ffi::c_int {
     unsafe { crate::detail::__rust_thunk___Z11second_funcv() }
 }
 
@@ -145,7 +145,7 @@ mod detail {
             __this: &'a mut crate::FirstStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::FirstStruct>,
         ) -> &'a mut crate::FirstStruct;
-        pub(crate) fn __rust_thunk___Z10first_funcv() -> i32;
+        pub(crate) fn __rust_thunk___Z10first_funcv() -> ::core::ffi::c_int;
         pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SecondStruct>,
         );
@@ -161,7 +161,7 @@ mod detail {
             __this: &'a mut crate::SecondStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::SecondStruct>,
         ) -> &'a mut crate::SecondStruct;
-        pub(crate) fn __rust_thunk___Z11second_funcv() -> i32;
+        pub(crate) fn __rust_thunk___Z11second_funcv() -> ::core::ffi::c_int;
     }
 }
 

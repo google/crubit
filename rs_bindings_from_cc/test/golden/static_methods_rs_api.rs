@@ -73,7 +73,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeClass {
 impl SomeClass {
     /// Example of a factory method.
     #[inline(always)]
-    pub fn static_factory_method(initial_value_of_field: i32) -> crate::SomeClass {
+    pub fn static_factory_method(initial_value_of_field: ::core::ffi::c_int) -> crate::SomeClass {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
@@ -88,7 +88,10 @@ impl SomeClass {
 impl SomeClass {
     /// Static method working on primitive types (and unrelated to the struct).
     #[inline(always)]
-    pub fn static_method_that_multiplies_its_args(x: i32, y: i32) -> i32 {
+    pub fn static_method_that_multiplies_its_args(
+        x: ::core::ffi::c_int,
+        y: ::core::ffi::c_int,
+    ) -> ::core::ffi::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
                 x, y,
@@ -120,13 +123,13 @@ mod detail {
         ) -> &'a mut crate::SomeClass;
         pub(crate) fn __rust_thunk___ZN9SomeClass21static_factory_methodEi(
             __return: &mut ::core::mem::MaybeUninit<crate::SomeClass>,
-            initial_value_of_field: i32,
+            initial_value_of_field: ::core::ffi::c_int,
         );
         #[link_name = "_ZN9SomeClass38static_method_that_multiplies_its_argsEii"]
         pub(crate) fn __rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
-            x: i32,
-            y: i32,
-        ) -> i32;
+            x: ::core::ffi::c_int,
+            y: ::core::ffi::c_int,
+        ) -> ::core::ffi::c_int;
     }
 }
 
