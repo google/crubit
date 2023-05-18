@@ -245,6 +245,11 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         experimental_use_cc_common_link = False,
     )
 
+    # TODO(b/282958841): The `collect_inputs` call above should take the `data`
+    # dependency into account.
+    data_files = [target.files for target in ctx.rule.attr.data]
+    compile_inputs = depset(transitive = [compile_inputs] + data_files)
+
     args, env = construct_arguments(
         ctx = ctx,
         attr = ctx.rule.attr,
