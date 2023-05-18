@@ -899,11 +899,9 @@ fn test_type_conversion() -> Result<()> {
     )?;
     let fields = ir.records().next().unwrap().fields.iter();
     let type_mapping: HashMap<_, _> = fields
-        .map(|f| {
-            (
-                f.type_.as_ref().unwrap().cc_type.name.as_ref().unwrap().as_ref(),
-                f.type_.as_ref().unwrap().rs_type.name.as_ref().unwrap().as_ref(),
-            )
+        .filter_map(|f| f.type_.as_ref().ok())
+        .map(|t| {
+            (t.cc_type.name.as_ref().unwrap().as_ref(), t.rs_type.name.as_ref().unwrap().as_ref())
         })
         .collect();
 
@@ -924,9 +922,10 @@ fn test_type_conversion() -> Result<()> {
     // because Rust requires that chars are valid UTF scalar values.
     assert_eq!(type_mapping["char32_t"], "u32");
 
-    // TODO(b/283268558): Per https://en.cppreference.com/w/cpp/language/types#Character_types
-    // maybe `wchar_t` should translate to`i16` on Windows?
-    assert_eq!(type_mapping["wchar_t"], "i32");
+    // TODO(b/283268558): Eventually we may need to add `wchar_t` support, after
+    // figuring out how to represent it accurately on Windows (16-bit) and
+    // elsewhere (32-bit).
+    assert!(!type_mapping.contains_key("wchar_t"));
 
     assert_eq!(type_mapping["short"], "::core::ffi::c_short");
     assert_eq!(type_mapping["int"], "::core::ffi::c_int");

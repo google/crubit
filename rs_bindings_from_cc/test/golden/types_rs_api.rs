@@ -84,7 +84,9 @@ pub struct FieldTypeTestStruct {
     pub signed_char_field: ::core::ffi::c_schar,
     pub char16_t_field: u16,
     pub char32_t_field: u32,
-    pub wchar_t_field: i32,
+    /// Reason for representing this field as a blob of bytes:
+    /// Unsupported type 'wchar_t': Unsupported builtin type
+    pub(crate) wchar_t_field: [::core::mem::MaybeUninit<u8>; 4],
     pub short_field: ::core::ffi::c_short,
     pub int_field: ::core::ffi::c_int,
     pub long_field: ::core::ffi::c_long,

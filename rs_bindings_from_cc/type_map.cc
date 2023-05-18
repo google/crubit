@@ -61,7 +61,6 @@ std::optional<absl::string_view> MapKnownCcTypeToRsType(
 
           {"char16_t", "u16"},
           {"char32_t", "u32"},
-          {"wchar_t", "i32"},
       });
   auto it = kWellKnownTypes->find(cc_type);
   if (it == kWellKnownTypes->end()) return std::nullopt;

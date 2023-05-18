@@ -41,8 +41,6 @@ TODO(b/283258442): `::core::ffi::*` should eventually be a bidirectional mapping
 :                      :                            : above, `char32_t` may    :
 :                      :                            : contain invalid Unicode  :
 :                      :                            : characters               :
-| `wchar_t`            | `i32`                      | TODO(b/283268558): This  |
-:                      :                            : is wrong on Windows.     :
 | `char`               | `u8` or `i8` depending on  | TODO(b/276790180): This  |
 :                      : whether `char` is signed   : may eventually become    :
 :                      : on the target platform     : `c_char`                 :
@@ -59,4 +57,7 @@ TODO(b/283258442): `::core::ffi::*` should eventually be a bidirectional mapping
 
 ## Unsupported types
 
-Bindings for 128-bit-wide integers are not supported at this point.
+Bindings for the following types are not supported at this point:
+
+-   `u128` and `i128` (b/254094650)
+-   `wchar_t` (b/283268558)

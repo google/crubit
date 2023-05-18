@@ -64,7 +64,6 @@ type_is!(
     SignedChar => i8,
     Char16 => u16,
     Char32 => u32,
-    WChar => i32,
 
     Short => i16,
     Int => i32,

@@ -882,7 +882,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
         return MappedType::Simple("::core::ffi::c_ulonglong",
                                   "unsigned long long");
       default:
-        break;
+        return absl::UnimplementedError("Unsupported builtin type");
     }
   } else if (const auto* tag_type = type->getAsAdjusted<clang::TagType>()) {
     return ConvertTypeDecl(tag_type->getDecl());

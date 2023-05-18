@@ -28,7 +28,6 @@ TEST(UnsignedChar, unsigned char);
 TEST(SignedChar, signed char);
 TEST(Char16, char16_t);
 TEST(Char32, char32_t);
-TEST(WChar, wchar_t);
 
 TEST(Short, short);
 TEST(Int, int);
