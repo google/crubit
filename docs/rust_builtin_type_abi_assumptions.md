@@ -32,9 +32,12 @@ and ABI as `uint32_t` (and therefore the same ABI as `rs_std::rs_char` from
 `crubit/support/rs_std/rs_char.h`).
 
 The assumptions are verified by assertions that verify the properties of the
-target achitecture when `cc_bindings_from_rs` runs. These assertions seem
-unlikely to fail, but if they do, then hopefully `rs_char` can just be tweaked
-to wrap another of the C++ integer types.
+target achitecture when `cc_bindings_from_rs` runs (`layout.align()`,
+`layout.size()`, and `layout.abi()` assertions in `format_ty_for_cc` in
+`cc_bindings_from_rs/bindings.rs`). Similar assertions are verified on C++ side
+in `support/rs_std/rs_char_test.cc`. These assertions seem unlikely to fail, but
+if they do, then hopefully `rs_char` can just be tweaked to wrap another of the
+C++ integer types.
 
 ## Rust built-in `&[T]` slice reference type
 

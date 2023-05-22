@@ -24,7 +24,7 @@ static_assert(std::is_trivially_copy_assignable_v<rs_std::rs_char>);
 static_assert(std::is_trivially_move_constructible_v<rs_std::rs_char>);
 static_assert(std::is_trivially_move_assignable_v<rs_std::rs_char>);
 
-// Layout tests.
+// ABI^H^H^HLayout assertions.
 //
 // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#char
 // documents that "Rust char is 32-bit wide and represents an unicode scalar
@@ -35,6 +35,17 @@ static_assert(std::is_trivially_move_assignable_v<rs_std::rs_char>);
 // builtin `char32_t` type "has the same size, signedness, and alignment as
 // std::uint_least32_t" (and therefore it is not guaranteed to be exactly
 // 32-bits wide as required for ABI-compatibility with Rust).
+//
+// Equivalent layout and ABI assertion are also checked on Rust side in
+// `format_ty_for_cc` in `cc_bindings_from_rs/bindings.rs` via `layout.align()`
+// and `layout.size()`.  It seems that there is no way to check `layout.abi()`
+// on C++ side, but we can at least say that under the System V ABI a struct
+// with a single field (i.e. the `rs_char` struct) has the same ABI
+// classification as the field (as long as the field is smaller than "eight
+// eightbytes" and the struct is trivial as verified via `static_assert`s
+// above).  In other words, under System V ABI we expect `rs_char` to be of
+// INTEGER class - the same as verified by the `layout.abi()` assertion in
+// `bindings.rs`.
 static_assert(sizeof(rs_std::rs_char) == 4);
 static_assert(alignof(rs_std::rs_char) == 4);
 static_assert(std::is_standard_layout_v<rs_std::rs_char>);
