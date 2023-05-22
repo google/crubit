@@ -149,12 +149,11 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     ]
 
     # At execution time we convert this depset to a json array that gets passed to our tool through
-    # the --targets_and_headers flag.
+    # the --target_args flag.
     # We can improve upon this solution if:
     # 1. we use a library for parsing command line flags that allows repeated flags.
     # 2. instead of json string, we use a struct that will be expanded to flags at execution time.
     #    This requires changes to Bazel.
-    # TODO(b/266727458): rename targets_and_headers to target_args
     direct_target_args = {}
     features = find_crubit_features(target, ctx)
     if all_standalone_hdrs:

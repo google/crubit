@@ -99,7 +99,7 @@ EOT
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
-      --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
+      --target_args=\"$(echo "${json}" | quote_escape)\""
 
   EXPECT_FILE_NOT_EMPTY "${rs_out}"
   EXPECT_FILE_NOT_EMPTY "${cc_out}"
@@ -124,7 +124,7 @@ EOT
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
-      --targets_and_headers=\"$(echo "${json}" | quote_escape)\" \
+      --target_args=\"$(echo "${json}" | quote_escape)\" \
       --do_nothing"
 
   EXPECT_FILE_NOT_EMPTY "${rs_out}"
@@ -157,7 +157,7 @@ EOT
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
-      --targets_and_headers=\"$(echo "${json}" | quote_escape)\" 2>&1"
+      --target_args=\"$(echo "${json}" | quote_escape)\" 2>&1"
 
   # No output files should be created if the C++ input was invalid.
   CHECK_FILE_NOT_EXISTS "${rs_out}"
@@ -188,7 +188,7 @@ EOT
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${header_1},${header_2}\" \
-      --targets_and_headers=\"$(echo "${json}" | quote_escape)\" 2>&1"
+      --target_args=\"$(echo "${json}" | quote_escape)\" 2>&1"
 
   EXPECT_SUCCEED "grep function_1 \"${rs_out}\"" "function_1 was not imported"
   EXPECT_SUCCEED "grep function_2 \"${rs_out}\"" "function_2 was not imported"
@@ -218,7 +218,7 @@ EOT
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
-      --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
+      --target_args=\"$(echo "${json}" | quote_escape)\""
 
   EXPECT_FILE_NOT_EMPTY "${rs_out}"
 
@@ -249,7 +249,7 @@ EOF
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --rustfmt_config_path=\"${rustfmt_config_path}\" \
       --public_headers=\"${hdr}\" \
-      --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
+      --target_args=\"$(echo "${json}" | quote_escape)\""
 
   EXPECT_FILE_NOT_EMPTY "${rs_out}"
 
@@ -288,7 +288,7 @@ EOT
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
-      --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
+      --target_args=\"$(echo "${json}" | quote_escape)\""
 
   EXPECT_FILE_NOT_EMPTY "${cc_out}"
   EXPECT_SUCCEED \
