@@ -16,7 +16,8 @@ using dataflow::AtomicBoolValue;
 using dataflow::BoolValue;
 using dataflow::Environment;
 using dataflow::PointerValue;
-using dataflow::SkipPast;
+using dataflow::StorageLocation;
+using dataflow::Value;
 
 /// The nullness information of a pointer is represented by two properties
 /// which indicate if a pointer's nullability (i.e., if the pointer can hold
@@ -30,8 +31,15 @@ NullabilityKind getNullabilityKind(QualType Type, ASTContext& Ctx) {
 
 PointerValue* getPointerValueFromExpr(const Expr* PointerExpr,
                                       const Environment& Env) {
-  return cast_or_null<PointerValue>(
-      Env.getValue(*PointerExpr, SkipPast::Reference));
+  Value* Val = nullptr;
+  if (PointerExpr->isGLValue()) {
+    StorageLocation* Loc = Env.getStorageLocationStrict(*PointerExpr);
+    if (Loc == nullptr) return nullptr;
+    Val = Env.getValue(*Loc);
+  } else {
+    Val = Env.getValueStrict(*PointerExpr);
+  }
+  return cast_or_null<PointerValue>(Val);
 }
 
 bool hasPointerNullState(const dataflow::PointerValue& PointerVal) {
