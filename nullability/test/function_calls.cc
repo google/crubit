@@ -81,6 +81,12 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       *makeNonnull();
       *makeNullable();  // [[unsafe]]
       *makeUnannotated();
+
+      // Check that we can take the address of the returned reference and still
+      // see the correct nullability "behind" the resulting pointer.
+      __assert_nullability<NK_nonnull, NK_nonnull>(&makeNonnull());
+      __assert_nullability<NK_nonnull, NK_nullable>(&makeNullable());
+      __assert_nullability<NK_nonnull, NK_unspecified>(&makeUnannotated());
     }
   )cc"));
 

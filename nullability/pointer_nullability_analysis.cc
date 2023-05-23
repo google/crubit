@@ -36,7 +36,6 @@ using dataflow::BoolValue;
 using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
 using dataflow::PointerValue;
-using dataflow::SkipPast;
 using dataflow::TransferState;
 using dataflow::Value;
 
@@ -283,7 +282,7 @@ void transferFlowSensitiveNullCheckComparison(
   // Boolean representing the comparison between the two pointer values,
   // automatically created by the dataflow framework.
   auto& PointerComparison =
-      *cast<BoolValue>(State.Env.getValue(*BinaryOp, SkipPast::None));
+      *cast<BoolValue>(State.Env.getValueStrict(*BinaryOp));
 
   CHECK(BinaryOp->getOpcode() == BO_EQ || BinaryOp->getOpcode() == BO_NE);
   auto& PointerEQ = BinaryOp->getOpcode() == BO_EQ
@@ -326,9 +325,7 @@ void transferFlowSensitiveNullCheckImplicitCastPtrToBool(
   if (!PointerVal) return;
 
   auto [PointerKnown, PointerNull] = getPointerNullState(*PointerVal);
-  auto& CastExprLoc = State.Env.createStorageLocation(*CastExpr);
-  State.Env.setValue(CastExprLoc, State.Env.makeNot(PointerNull));
-  State.Env.setStorageLocation(*CastExpr, CastExprLoc);
+  State.Env.setValueStrict(*CastExpr, State.Env.makeNot(PointerNull));
 }
 
 void transferFlowSensitiveCallExpr(
@@ -337,6 +334,21 @@ void transferFlowSensitiveCallExpr(
   // The dataflow framework itself does not create values for `CallExpr`s.
   // However, we need these in some cases, so we produce them ourselves.
 
+  dataflow::StorageLocation* Loc = nullptr;
+  if (CallExpr->isGLValue()) {
+    // The function returned a reference. Create a storage location for the
+    // expression so that if code creates a pointer from the reference, we will
+    // produce a `PointerValue`.
+    Loc = State.Env.getStorageLocationStrict(*CallExpr);
+    if (!Loc) {
+      // This is subtle: We call `createStorageLocation(QualType)`, not
+      // `createStorageLocation(const Expr &)`, so that we create a new
+      // storage location every time.
+      Loc = &State.Env.createStorageLocation(CallExpr->getType());
+      State.Env.setStorageLocationStrict(*CallExpr, *Loc);
+    }
+  }
+
   if (CallExpr->getType()->isAnyPointerType()) {
     // Create a pointer so that we can attach nullability to it and have the
     // nullability propagate with the pointer.
@@ -344,23 +356,15 @@ void transferFlowSensitiveCallExpr(
     if (!PointerVal) {
       PointerVal =
           cast<PointerValue>(State.Env.createValue(CallExpr->getType()));
-      auto& CallExprLoc = State.Env.createStorageLocation(*CallExpr);
-      State.Env.setValue(CallExprLoc, *PointerVal);
-      State.Env.setStorageLocation(*CallExpr, CallExprLoc);
     }
     initPointerFromAnnotations(*PointerVal, CallExpr, State);
-  } else if (CallExpr->isGLValue()) {
-    // The function returned a reference. Create a storage location for the
-    // expression so that if code creates a pointer from the reference, we will
-    // produce a `PointerValue`.
-    auto* Loc = State.Env.getStorageLocation(*CallExpr, SkipPast::None);
-    if (!Loc) {
-      // This is subtle: We call `createStorageLocation(QualType)`, not
-      // `createStorageLocation(const Expr &)`, so that we create a new
-      // storage location every time.
-      auto& NewLoc = State.Env.createStorageLocation(CallExpr->getType());
-      State.Env.setStorageLocation(*CallExpr, NewLoc);
-    }
+
+    if (Loc != nullptr)
+      State.Env.setValue(*Loc, *PointerVal);
+    else
+      // `Loc` is set iff `CallExpr` is a glvalue, so we know here that it must
+      // be a prvalue.
+      State.Env.setValueStrict(*CallExpr, *PointerVal);
   }
 }
 
