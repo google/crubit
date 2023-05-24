@@ -8,11 +8,6 @@ Disclaimer: This project is experimental, under heavy development, and should
 not be used yet.
 """
 
-load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_transition.bzl",
-    "rust_bindings_from_cc_deps_transition",
-)
-
 # buildifier: disable=bzl-visibility
 load(
     "@rules_rust//rust/private:providers.bzl",
@@ -53,10 +48,6 @@ deps_for_bindings = rule(
             doc = "C++ dependencies that are needed to compile the generated .cc file.",
             default = [],
         ),
-        "_allowlist_function_transition": attr.label(
-            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
-        ),
     },
-    cfg = rust_bindings_from_cc_deps_transition,
     implementation = _deps_for_bindings_impl,
 )
