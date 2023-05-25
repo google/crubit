@@ -1,7 +1,7 @@
 """Disclaimer: This project is experimental, under heavy development, and should not
 be used yet."""
 
-load("@rules_rust//rust:defs.bzl", "rust_test")
+load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -17,7 +17,7 @@ crubit_test_cc_library(
     deps = [":propagates_define"],
 )
 
-rust_test(
+crubit_rust_test(
     name = "calls_generator_on_consumes_define",
     srcs = ["empty.rs"],
     cc_deps = [":consumes_define"],
@@ -29,7 +29,7 @@ cc_library(
     defines = ["DEFINE_FROM_BUILD_FILE"],
 )
 
-rust_test(
+crubit_rust_test(
     name = "calls_generator_on_sets_define",
     srcs = ["empty.rs"],
     cc_deps = [":sets_define"],
@@ -41,7 +41,7 @@ cc_library(
     copts = ["-DDEFINE_FROM_COPTS"],
 )
 
-rust_test(
+crubit_rust_test(
     name = "calls_generator_on_uses_copts",
     srcs = ["empty.rs"],
     cc_deps = [":uses_copts"],
@@ -53,7 +53,7 @@ cc_library(
     deps = ["//nowhere/experimentstargets_for_testing:uses_includes"],
 )
 
-rust_test(
+crubit_rust_test(
     name = "calls_generator_on_consumes_header_from_includes",
     srcs = ["empty.rs"],
     cc_deps = [":consumes_header_from_includes"],
@@ -65,7 +65,7 @@ cc_library(
     deps = ["//nowhere/experimentstargets_for_testing:uses_include_prefix"],
 )
 
-rust_test(
+crubit_rust_test(
     name = "calls_generator_on_consumes_header_with_include_prefix",
     srcs = ["empty.rs"],
     cc_deps = [":consumes_header_with_include_prefix"],

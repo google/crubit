@@ -2,7 +2,7 @@
 templates in a different target (where the target with the header doesn't
 have this particular instantiation)."""
 
-load("@rules_rust//rust:defs.bzl", "rust_test")
+load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -18,7 +18,7 @@ crubit_test_cc_library(
     deps = [":template_without_instantiation"],
 )
 
-rust_test(
+crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
     cc_deps = [

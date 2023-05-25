@@ -7,7 +7,7 @@ load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_cli_flag_aspect_hint.bzl",
     "rust_bindings_from_cc_cli_flag",
 )
-load("@rules_rust//rust:defs.bzl", "rust_test")
+load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -97,7 +97,7 @@ rust_bindings_from_cc_cli_flag(
     tags = [tag for tag in (TAGS[name] if name in TAGS else [])],
 ) for name in TESTS]
 
-[rust_test(
+[crubit_rust_test(
     name = name + "_rs_test",
     srcs = ["empty_rs_test.rs"],
     cc_deps = ["%s_cc" % name],
