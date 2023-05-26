@@ -2,12 +2,20 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include "absl/base/attributes.h"
+
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_
 
-// TODO(jeanpierreda): Get a waiver for these, or else a waiver for each caller.
+// Style waiver granted in <internal link>
+#if ABSL_HAVE_CPP_ATTRIBUTE(clang::annotate) && \
+    ABSL_HAVE_CPP_ATTRIBUTE(clang::annotate_type)
 #define CRUBIT_INTERNAL_ANNOTATE(...) [[clang::annotate(__VA_ARGS__)]]
 #define CRUBIT_INTERNAL_ANNOTATE_TYPE(...) [[clang::annotate_type(__VA_ARGS__)]]
+#else
+#define CRUBIT_INTERNAL_ANNOTATE(...)
+#define CRUBIT_INTERNAL_ANNOTATE_TYPE(...)
+#endif
 
 // Unsafe: disables bindings, and reinterprets all uses of this type as `t`.
 //

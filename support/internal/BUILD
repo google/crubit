@@ -17,7 +17,9 @@ cc_library(
     # Using mature Abseil APIs seems okay - we should be able to assume that
     # Crubit users have a version of Abseil that is relatively recent (although
     # we can't rely on an exact version and/or exact absl/base/options.h).
-    deps = [],
+    deps = [
+        "@absl//absl/base:core_headers",
+    ],
 )
 
 cc_test(
