@@ -51,35 +51,27 @@ absl::StatusOr<absl::string_view> EvaluateAsStringLiteral(
   return {string_literal->getString()};
 }
 
+// Gets the crubit_internal_rust_type attribute for `decl`.
+// `decl` must not be null.
 absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
-    const clang::Type& cc_type) {
+    const clang::Decl* decl) {
   std::optional<absl::string_view> rust_type;
-  const clang::Decl* decl = nullptr;
-  if (const auto* alias_type = cc_type.getAs<clang::TypedefType>();
-      alias_type != nullptr) {
-    decl = alias_type->getDecl();
-  } else if (const clang::TagDecl* tag_decl = cc_type.getAsTagDecl();
-             tag_decl != nullptr) {
-    decl = tag_decl;
-  }
-  if (decl != nullptr) {
-    for (clang::AnnotateAttr* attr :
-         decl->specific_attrs<clang::AnnotateAttr>()) {
-      if (attr->getAnnotation() != "crubit_internal_rust_type") continue;
+  for (clang::AnnotateAttr* attr :
+       decl->specific_attrs<clang::AnnotateAttr>()) {
+    if (attr->getAnnotation() != "crubit_internal_rust_type") continue;
 
-      if (rust_type.has_value())
-        return absl::InvalidArgumentError(
-            "Only one `crubit_internal_rust_type` attribute may be placed on a "
-            "type.");
-      if (attr->args_size() != 1)
-        return absl::InvalidArgumentError(
-            "The `crubit_internal_rust_type` attribute requires a single "
-            "string literal "
-            "argument, the Rust type.");
-      const clang::Expr& arg = **attr->args_begin();
-      CRUBIT_ASSIGN_OR_RETURN(
-          rust_type, EvaluateAsStringLiteral(arg, decl->getASTContext()));
-    }
+    if (rust_type.has_value())
+      return absl::InvalidArgumentError(
+          "Only one `crubit_internal_rust_type` attribute may be placed on a "
+          "type.");
+    if (attr->args_size() != 1)
+      return absl::InvalidArgumentError(
+          "The `crubit_internal_rust_type` attribute requires a single "
+          "string literal "
+          "argument, the Rust type.");
+    const clang::Expr& arg = **attr->args_begin();
+    CRUBIT_ASSIGN_OR_RETURN(
+        rust_type, EvaluateAsStringLiteral(arg, decl->getASTContext()));
   }
   return rust_type;
 }
@@ -87,13 +79,8 @@ absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
 
 std::optional<IR::Item> TypeMapOverrideImporter::Import(
     clang::TypeDecl* type_decl) {
-  clang::ASTContext& context = type_decl->getASTContext();
-  clang::QualType cc_qualtype = context.getTypeDeclType(type_decl);
-  const clang::Type* cc_type = cc_qualtype.getTypePtr();
-  if (cc_type == nullptr) return std::nullopt;
-
   absl::StatusOr<std::optional<absl::string_view>> rust_type =
-      GetRustTypeAttribute(*cc_type);
+      GetRustTypeAttribute(type_decl);
   if (!rust_type.ok()) {
     return ictx_.ImportUnsupportedItem(
         type_decl, absl::StrCat("Invalid crubit_internal_rust_type attribute: ",
@@ -103,6 +90,11 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
     return std::nullopt;
   }
   auto rs_name = std::string(**rust_type);
+
+  clang::ASTContext& context = type_decl->getASTContext();
+  clang::QualType cc_qualtype = context.getTypeDeclType(type_decl);
+  const clang::Type* cc_type = cc_qualtype.getTypePtr();
+  if (cc_type == nullptr) return std::nullopt;
   std::string cc_name = cc_qualtype.getAsString();
 
   ictx_.MarkAsSuccessfullyImported(type_decl);
