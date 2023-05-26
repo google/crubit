@@ -161,22 +161,6 @@ pub unsafe fn FunctionWithVoidPointers(
     crate::detail::__rust_thunk___Z24FunctionWithVoidPointersPvPKv(__param_0, __param_1)
 }
 
-// Type bindings for struct MyI8Struct suppressed due to being mapped to an existing Rust type (i8)
-const _: () = assert!(::core::mem::size_of::<i8>() == 1);
-const _: () = assert!(::core::mem::align_of::<i8>() == 1);
-
-// Type bindings for struct MyI8Class suppressed due to being mapped to an existing Rust type (i8)
-const _: () = assert!(::core::mem::size_of::<i8>() == 1);
-const _: () = assert!(::core::mem::align_of::<i8>() == 1);
-
-// Type bindings for enum MyI8Enum suppressed due to being mapped to an existing Rust type (i8)
-const _: () = assert!(::core::mem::size_of::<i8>() == 1);
-const _: () = assert!(::core::mem::align_of::<i8>() == 1);
-
-// Type bindings for MyI8Alias suppressed due to being mapped to an existing Rust type (i8)
-const _: () = assert!(::core::mem::size_of::<i8>() == 1);
-const _: () = assert!(::core::mem::align_of::<i8>() == 1);
-
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
 
 mod detail {

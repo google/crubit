@@ -11,6 +11,7 @@ use itertools::Itertools;
 use quote::quote;
 use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
+use std::rc::Rc;
 
 fn ir_from_cc(header: &str) -> Result<IR> {
     ir_testing::ir_from_cc(multiplatform_testing::test_platform(), header)
@@ -3050,9 +3051,11 @@ fn test_operator_names() {
         .functions()
         .filter(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
-            ir.record_for_member_func(f)
-                .map(|r| r.rs_name.as_ref() == "SomeStruct")
-                .unwrap_or_default()
+            if let Some(Ok(r)) = ir.record_for_member_func(f).map(<&Rc<Record>>::try_from) {
+                r.rs_name.as_ref() == "SomeStruct"
+            } else {
+                false
+            }
         })
         .flat_map(|f| match &f.name {
             UnqualifiedIdentifier::Operator(op) => Some(op.name.as_ref()),

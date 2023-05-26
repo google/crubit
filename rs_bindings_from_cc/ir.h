@@ -753,7 +753,9 @@ inline std::ostream& operator<<(std::ostream& o, const UseMod& use_mod) {
 struct TypeMapOverride {
   llvm::json::Value ToJson() const;
 
-  MappedType type;
+  std::string rs_name;
+  std::string cc_name;
+
   BazelLabel owning_target;
   // Size and alignment, if known.
   // (These will not be known for a forward declaration, for example.)

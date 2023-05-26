@@ -5,6 +5,8 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "rs_char",
     hdrs = ["rs_char.h"],
+    # Enable bidirectional bindings (via crubit_internal_rust_type).
+    aspect_hints = ["//:experimental"],
     visibility = [
         "//visibility:public",
     ],

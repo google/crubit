@@ -21,10 +21,9 @@ namespace crubit {
 //
 // For example, C++ `int64_t` becomes Rust `i64`.
 //
-// To create a new type mapping, either add the type to the hardcoded list
-// of types, or else add the `crubit_rust_type` attribute.
-absl::StatusOr<std::optional<MappedType>> GetTypeMapOverride(
-    const clang::Type& cc_type);
+// To create a new type mapping, add the type to the hardcoded list
+// of types.
+std::optional<MappedType> GetTypeMapOverride(const clang::Type& cc_type);
 
 }  // namespace crubit
 

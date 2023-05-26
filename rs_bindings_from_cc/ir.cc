@@ -296,7 +296,8 @@ llvm::json::Value MemberFuncMetadata::ToJson() const {
 
 llvm::json::Value TypeMapOverride::ToJson() const {
   llvm::json::Object override{
-      {"type", type},
+      {"rs_name", rs_name},
+      {"cc_name", cc_name},
       {"owning_target", owning_target},
       {"id", id},
   };

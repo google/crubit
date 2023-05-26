@@ -696,7 +696,16 @@ fn api_func_shape(
     let ir = db.ir();
     let op_meta = &*OPERATOR_METADATA;
 
-    let maybe_record: Option<&Rc<Record>> = ir.record_for_member_func(func);
+    let maybe_record = match ir.record_for_member_func(func).map(<&Rc<Record>>::try_from) {
+        None => None,
+        Some(Ok(record)) => Some(record),
+        // Functions whose record was replaced with some other IR Item type are ignored.
+        // This occurs for instance if you use crubit_internal_rust_type: member functions defined
+        // out-of-line, such as implicitly generated constructors, will still be present in the IR,
+        // but should be ignored.
+        Some(Err(_)) => return Ok(None),
+    };
+
     let has_pointer_params = param_types.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
     let impl_kind: ImplKind;
     let func_name: syn::Ident;
@@ -2785,7 +2794,7 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
         }
         Item::TypeMapOverride(type_override) => {
             // (This shouldn't fail, since we replace with known Rust types via a string.)
-            let rs_type = db.rs_type_kind(type_override.type_.rs_type.clone())?;
+            let rs_type = RsTypeKind::new_type_map_override(type_override);
             let disable_comment = format!(
                 "Type bindings for {cc_type} suppressed due to being mapped to \
                     an existing Rust type ({rs_type})",
@@ -3214,6 +3223,10 @@ impl RsTypeKind {
             rs_imported_crate_name(&record.owning_target, ir),
         ));
         Ok(RsTypeKind::Record { record, crate_path })
+    }
+
+    pub fn new_type_map_override(type_map_override: &TypeMapOverride) -> Self {
+        RsTypeKind::Other { name: type_map_override.rs_name.clone(), type_args: Rc::from([]) }
     }
 
     /// Returns true if the type is known to be `Unpin`, false otherwise.
@@ -3696,6 +3709,9 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                         }
                     }
                 }
+                Item::TypeMapOverride(type_map_override) => {
+                    RsTypeKind::new_type_map_override(type_map_override)
+                }
                 other_item => bail!("Item does not define a type: {:?}", other_item),
             }
         }
@@ -3798,6 +3814,10 @@ fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
                 Ok(quote! { #namespace_qualifier #ident })
             }
         }
+        Item::TypeMapOverride(type_map_override) => type_map_override
+            .cc_name
+            .parse::<TokenStream>()
+            .map_err(|_| anyhow!("malformed type name: {:?}", type_map_override.cc_name)),
         _ => bail!("Item does not define a type: {:?}", item),
     }
 }

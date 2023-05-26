@@ -165,7 +165,6 @@ cc_library(
         ":cc_ir",
         "//common:status_macros",
         "@absl//absl/container:flat_hash_map",
-        "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@llvm-project//clang:ast",
@@ -302,6 +301,7 @@ cc_library(
     name = "cc_ir",
     srcs = ["ir.cc"],
     hdrs = ["ir.h"],
+    visibility = ["//rs_bindings_from_cc:__subpackages__"],
     deps = [
         ":bazel_types",
         "//common:strong_int",

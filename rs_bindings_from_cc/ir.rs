@@ -801,8 +801,8 @@ impl GenericItem for UseMod {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TypeMapOverride {
-    #[serde(rename(deserialize = "type"))]
-    pub type_: MappedType,
+    pub rs_name: Rc<str>,
+    pub cc_name: Rc<str>,
     pub owning_target: BazelLabel,
     pub size_align: Option<SizeAlign>,
     pub id: ItemId,
@@ -813,7 +813,7 @@ impl GenericItem for TypeMapOverride {
         self.id
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.type_.cc_type.name.clone().unwrap_or_else(|| Rc::from("<anonymous C++ type>"))
+        self.cc_name.clone()
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
@@ -1243,20 +1243,15 @@ impl IR {
         Ok(idx == last_item_idx)
     }
 
-    /// Returns the `Record` defining `func`, or `None` if `func` is not a
+    /// Returns the `Item` defining `func`, or `None` if `func` is not a
     /// member function.
     ///
-    /// Panics if `Func` is a member function, but its `Record` is somehow not
-    /// in `self`.
-    pub fn record_for_member_func(&self, func: &Func) -> Option<&Rc<Record>> {
+    /// Note that even if `func` is a member function, the associated record
+    /// might not be a Record IR Item (e.g. it has its type changed via
+    /// crubit_internal_rust_type).
+    pub fn record_for_member_func(&self, func: &Func) -> Option<&Item> {
         if let Some(meta) = func.member_func_metadata.as_ref() {
-            Some(
-                self.find_decl(meta.record_id)
-                    .with_context(|| {
-                        format!("Failed to retrieve Record for MemberFuncMetadata of {:?}", func)
-                    })
-                    .unwrap(),
-            )
+            Some(self.find_untyped_decl(meta.record_id))
         } else {
             None
         }
