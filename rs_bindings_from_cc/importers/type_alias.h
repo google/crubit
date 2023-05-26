@@ -12,14 +12,13 @@
 
 namespace crubit {
 
-// A `DeclImporter` for `TypedefNameDecl`s (including `TypeAliasDecl` and
-// `TypedefDecl`).
-class TypedefNameDeclImporter
-    : public DeclImporterBase<clang::TypedefNameDecl> {
+// A `DeclImporter` for `TypedefNameDecl`s (e.g. `using x = y`, or
+// `typedef y x`) and `UsingShadowDecl`s (`using x::y`).
+class TypeAliasImporter : public DeclImporterBase<clang::NamedDecl> {
  public:
-  explicit TypedefNameDeclImporter(ImportContext& context)
+  explicit TypeAliasImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::TypedefNameDecl*) override;
+  std::optional<IR::Item> Import(clang::NamedDecl* decl) override;
 };
 
 }  // namespace crubit

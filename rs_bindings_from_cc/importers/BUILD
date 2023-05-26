@@ -92,9 +92,9 @@ cc_library(
 )
 
 cc_library(
-    name = "typedef_name",
-    srcs = ["typedef_name.cc"],
-    hdrs = ["typedef_name.h"],
+    name = "type_alias",
+    srcs = ["type_alias.cc"],
+    hdrs = ["type_alias.h"],
     deps = [
         "@absl//absl/log:check",
         "//rs_bindings_from_cc:decl_importer",

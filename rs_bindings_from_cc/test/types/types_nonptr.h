@@ -75,8 +75,16 @@ TEST(StdUintPtr, std::uintptr_t);
 TEST(Float, float);
 TEST(Double, double);
 
+namespace ns {
 struct ExampleStruct final {};
-TEST(Struct, ExampleStruct);
+}  // namespace ns
+TEST(Struct, ns::ExampleStruct);
+
+using Alias = ns::ExampleStruct;
+TEST(TypeAlias, Alias);
+// NOLINTNEXTLINE(google-global-names-in-headers)
+using ns::ExampleStruct;
+TEST(Using, ExampleStruct);
 
 struct CRUBIT_INTERNAL_RUST_TYPE("i8") MyI8Struct final {
   signed char x;

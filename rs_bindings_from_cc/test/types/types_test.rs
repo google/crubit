@@ -111,7 +111,9 @@ type_is!(
     Float => f32,
     Double => f64,
 
-    Struct => types_nonptr::ExampleStruct,
+    Struct => types_nonptr::ns::ExampleStruct,
+    TypeAlias => types_nonptr::Alias,
+    Using => types_nonptr::ns::ExampleStruct,
     TypeMapOverrideStruct => i8,
     TypeMapOverrideClass => i8,
     TypeMapOverrideEnum => i8,

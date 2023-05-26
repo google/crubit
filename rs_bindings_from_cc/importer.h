@@ -22,8 +22,8 @@
 #include "rs_bindings_from_cc/importers/function.h"
 #include "rs_bindings_from_cc/importers/function_template.h"
 #include "rs_bindings_from_cc/importers/namespace.h"
+#include "rs_bindings_from_cc/importers/type_alias.h"
 #include "rs_bindings_from_cc/importers/type_map_override.h"
-#include "rs_bindings_from_cc/importers/typedef_name.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
@@ -49,7 +49,7 @@ class Importer final : public ImportContext {
     decl_importers_.push_back(
         std::make_unique<FunctionTemplateDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<NamespaceDeclImporter>(*this));
-    decl_importers_.push_back(std::make_unique<TypedefNameDeclImporter>(*this));
+    decl_importers_.push_back(std::make_unique<TypeAliasImporter>(*this));
   }
 
   // Import all visible declarations from a translation unit.
@@ -87,10 +87,10 @@ class Importer final : public ImportContext {
       std::optional<clang::RefQualifierKind> ref_qualifier_kind,
       bool nullable = true) override;
 
-  void MarkAsSuccessfullyImported(const clang::TypeDecl* decl) override;
+  void MarkAsSuccessfullyImported(const clang::NamedDecl* decl) override;
   bool HasBeenAlreadySuccessfullyImported(
-      const clang::TypeDecl* decl) const override;
-  bool EnsureSuccessfullyImported(clang::TypeDecl* decl) override {
+      const clang::NamedDecl* decl) const override;
+  bool EnsureSuccessfullyImported(clang::NamedDecl* decl) override {
     // First, return early so that we avoid re-entrant imports.
     if (HasBeenAlreadySuccessfullyImported(decl)) return true;
     (void)GetDeclItem(decl->getCanonicalDecl());
@@ -130,7 +130,7 @@ class Importer final : public ImportContext {
       const clang::Type* type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
       std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable);
-  absl::StatusOr<MappedType> ConvertTypeDecl(clang::TypeDecl* decl);
+  absl::StatusOr<MappedType> ConvertTypeDecl(clang::NamedDecl* decl);
 
   // Converts `type` into a MappedType, after first importing the Record behind
   // the template instantiation.
@@ -150,7 +150,9 @@ class Importer final : public ImportContext {
   // Set of decls that have been successfully imported (i.e. that will be
   // present in the IR output / that will not produce dangling ItemIds in the IR
   // output).
-  absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
+  //
+  // Note that this includes non-TypeDecls in the form of using decls.
+  absl::flat_hash_set<const clang::NamedDecl*> known_type_decls_;
 };  // class Importer
 
 }  // namespace crubit

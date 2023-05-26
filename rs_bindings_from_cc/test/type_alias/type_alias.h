@@ -7,7 +7,10 @@
 
 #pragma clang lifetime_elision
 
+namespace ns {
 using Int = int;
+}
+using ns::Int;
 
 // Use `inline` to force a thunk to be generated so we can test that it
 // compiles.

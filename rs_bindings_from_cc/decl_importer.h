@@ -157,19 +157,19 @@ class ImportContext {
   // Marks `decl` as successfully imported.  Other pieces of code can check
   // HasBeenAlreadySuccessfullyImported to avoid introducing dangling ItemIds
   // that refer to an unimportable `decl`.
-  virtual void MarkAsSuccessfullyImported(const clang::TypeDecl* decl) = 0;
+  virtual void MarkAsSuccessfullyImported(const clang::NamedDecl* decl) = 0;
 
   // Returns whether the `decl` has been already successfully imported (maybe
   // partially - e.g. CXXRecordDeclImporter::Import marks the import as success
   // before importing the fields, because the latter cannot fail).  See also
   // MarkAsSuccessfullyImported.
   virtual bool HasBeenAlreadySuccessfullyImported(
-      const clang::TypeDecl* decl) const = 0;
+      const clang::NamedDecl* decl) const = 0;
 
   // Returns whether the `decl` will be successfully imported. If it hasn't been
   // imported yet, attempts to import it now, calling
   // MarkAsSuccessfullyImported.
-  virtual bool EnsureSuccessfullyImported(clang::TypeDecl* decl) = 0;
+  virtual bool EnsureSuccessfullyImported(clang::NamedDecl* decl) = 0;
 
   Invocation& invocation_;
   clang::ASTContext& ctx_;

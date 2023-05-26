@@ -746,7 +746,7 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
   return ConvertTypeDecl(specialization_decl);
 }
 
-absl::StatusOr<MappedType> Importer::ConvertTypeDecl(clang::TypeDecl* decl) {
+absl::StatusOr<MappedType> Importer::ConvertTypeDecl(clang::NamedDecl* decl) {
   if (!EnsureSuccessfullyImported(decl)) {
     return absl::NotFoundError(absl::Substitute(
         "No generated bindings found for '$0'", decl->getNameAsString()));
@@ -889,6 +889,8 @@ absl::StatusOr<MappedType> Importer::ConvertType(
   } else if (const auto* typedef_type =
                  type->getAsAdjusted<clang::TypedefType>()) {
     return ConvertTypeDecl(typedef_type->getDecl());
+  } else if (const auto* using_type = type->getAs<clang::UsingType>()) {
+    return ConvertTypeDecl(using_type->getFoundDecl());
   } else if (const auto* tst_type =
                  type->getAs<clang::TemplateSpecializationType>()) {
     return ConvertTemplateSpecializationType(tst_type);
@@ -1093,13 +1095,13 @@ absl::StatusOr<UnqualifiedIdentifier> Importer::GetTranslatedName(
   }
 }
 
-void Importer::MarkAsSuccessfullyImported(const clang::TypeDecl* decl) {
+void Importer::MarkAsSuccessfullyImported(const clang::NamedDecl* decl) {
   known_type_decls_.insert(
       clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
 }
 
 bool Importer::HasBeenAlreadySuccessfullyImported(
-    const clang::TypeDecl* decl) const {
+    const clang::NamedDecl* decl) const {
   return known_type_decls_.contains(
       clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
 }
