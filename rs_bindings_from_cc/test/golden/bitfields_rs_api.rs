@@ -141,6 +141,113 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for WithBitfields {
     }
 }
 
+/// This is a regression test for b/283835873 where the alignment of the
+/// generated struct was wrong/missing.
+#[::ctor::recursively_pinned]
+#[repr(C, align(4))]
+pub struct AlignmentRegressionTest {
+    // code_point : 31 bits
+    // status : 1 bits
+    __bitfields0: [::core::mem::MaybeUninit<u8>; 4],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AlignmentRegressionTest"),
+    crate::AlignmentRegressionTest
+);
+
+impl ::ctor::CtorNew<()> for AlignmentRegressionTest {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN23AlignmentRegressionTestC1Ev(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
+    }
+}
+
+impl<'b> ::ctor::CtorNew<&'b Self> for AlignmentRegressionTest {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN23AlignmentRegressionTestC1ERKS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for AlignmentRegressionTest {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
+    }
+}
+
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AlignmentRegressionTest {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                    crate::detail::__rust_thunk___ZN23AlignmentRegressionTestC1EOS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for AlignmentRegressionTest {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
+    }
+}
+
+impl<'b> ::ctor::Assign<&'b Self> for AlignmentRegressionTest {
+    #[inline(always)]
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23AlignmentRegressionTestaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for AlignmentRegressionTest {
+    #[inline(always)]
+    fn assign<'a>(
+        self: ::core::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23AlignmentRegressionTestaSEOS_(self, __param_0);
+        }
+    }
+}
+
+// Error while generating bindings for item 'AlignmentRegressionTest::(unnamed enum at ./rs_bindings_from_cc/test/golden/bitfields.h:26:3)':
+// Unnamed enums are not supported yet
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_BITFIELDS_H_
 
 mod detail {
@@ -166,6 +273,25 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::WithBitfields>,
             __param_0: ::ctor::RvalueReference<'b, crate::WithBitfields>,
         ) -> ::core::pin::Pin<&'a mut crate::WithBitfields>;
+        pub(crate) fn __rust_thunk___ZN23AlignmentRegressionTestC1Ev<'a>(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AlignmentRegressionTest>,
+        );
+        pub(crate) fn __rust_thunk___ZN23AlignmentRegressionTestC1ERKS_<'a, 'b>(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AlignmentRegressionTest>,
+            __param_0: &'b crate::AlignmentRegressionTest,
+        );
+        pub(crate) fn __rust_thunk___ZN23AlignmentRegressionTestC1EOS_<'a, 'b>(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::AlignmentRegressionTest>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AlignmentRegressionTest>,
+        );
+        pub(crate) fn __rust_thunk___ZN23AlignmentRegressionTestaSERKS_<'a, 'b>(
+            __this: ::core::pin::Pin<&'a mut crate::AlignmentRegressionTest>,
+            __param_0: &'b crate::AlignmentRegressionTest,
+        ) -> ::core::pin::Pin<&'a mut crate::AlignmentRegressionTest>;
+        pub(crate) fn __rust_thunk___ZN23AlignmentRegressionTestaSEOS_<'a, 'b>(
+            __this: ::core::pin::Pin<&'a mut crate::AlignmentRegressionTest>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AlignmentRegressionTest>,
+        ) -> ::core::pin::Pin<&'a mut crate::AlignmentRegressionTest>;
     }
 }
 
@@ -182,3 +308,12 @@ const _: () = {
 const _: () = assert!(memoffset::offset_of!(crate::WithBitfields, f2) == 4);
 const _: () = assert!(memoffset::offset_of!(crate::WithBitfields, f5) == 20);
 const _: () = assert!(memoffset::offset_of!(crate::WithBitfields, f7) == 27);
+
+const _: () = assert!(::core::mem::size_of::<crate::AlignmentRegressionTest>() == 4);
+const _: () = assert!(::core::mem::align_of::<crate::AlignmentRegressionTest>() == 4);
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AlignmentRegressionTest:Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AlignmentRegressionTest:Drop);
+};

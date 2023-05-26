@@ -2176,6 +2176,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             if field.is_none() {
                 let name = make_rs_ident(&format!("__bitfields{}", field_index));
                 let bitfield_padding = bit_padding(end - offset);
+                override_alignment = true;
                 return Ok(quote! {
                     __NEWLINE__ #(  __COMMENT__ #desc )*
                     #padding #name: #bitfield_padding
@@ -4854,6 +4855,42 @@ mod tests {
         Ok(())
     }
 
+    /// This is a regression test for b/283835873 where the alignment of the
+    /// generated struct was wrong/missing.
+    #[test]
+    fn test_struct_with_only_bitfields() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+                struct SomeStruct {
+                  char32_t code_point : 31;
+                  enum : char32_t {
+                    ok = 0,
+                    error = 1
+                  } status : 1;
+                };
+                static_assert(sizeof(SomeStruct) == 4);
+                static_assert(alignof(SomeStruct) == 4);
+            "#,
+        )?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+               #[repr(C, align(4))]
+               pub struct SomeStruct { ...  }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! { const _: () = assert!(::core::mem::size_of::<crate::SomeStruct>() == 4); }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {  const _: () = assert!(::core::mem::align_of::<crate::SomeStruct>() == 4); }
+        );
+        Ok(())
+    }
+
     #[test]
     fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
         // This test input causes `field_decl->getName()` to return an empty string.
@@ -4871,7 +4908,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-               #[repr(C)]
+               #[repr(C, align(4))]
                pub struct SomeStruct {
                    pub first_field: ::core::ffi::c_int, ...
                    __bitfields1: [::core::mem::MaybeUninit<u8>; 4],

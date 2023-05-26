@@ -19,4 +19,15 @@ struct WithBitfields {
   int f8 : 2;
 };
 
+// This is a regression test for b/283835873 where the alignment of the
+// generated struct was wrong/missing.
+struct AlignmentRegressionTest {
+  char32_t code_point : 31;
+  enum : char32_t { ok = 0, error = 1 } status : 1;
+};
+static_assert(sizeof(AlignmentRegressionTest) == sizeof(char32_t));
+static_assert(sizeof(AlignmentRegressionTest) == 4);
+static_assert(alignof(AlignmentRegressionTest) == alignof(char32_t));
+static_assert(alignof(AlignmentRegressionTest) == 4);
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_BITFIELDS_H_
