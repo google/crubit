@@ -1,6 +1,6 @@
 """End-to-end test for operators."""
 
-load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
+
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -11,7 +11,7 @@ crubit_test_cc_library(
     hdrs = ["add.h"],
 )
 
-crubit_rust_test(
+rust_test(
     name = "add_test",
     srcs = ["add_test.rs"],
     cc_deps = [":add"],
@@ -26,7 +26,7 @@ crubit_test_cc_library(
     hdrs = ["add_assign.h"],
 )
 
-crubit_rust_test(
+rust_test(
     name = "add_assign_test",
     srcs = ["add_assign_test.rs"],
     cc_deps = [":add_assign"],
@@ -42,7 +42,7 @@ crubit_test_cc_library(
     hdrs = ["operators.h"],
 )
 
-crubit_rust_test(
+rust_test(
     name = "operators_test",
     srcs = ["operators_test.rs"],
     cc_deps = [":operators"],

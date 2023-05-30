@@ -1,7 +1,7 @@
 """Disclaimer: This project is experimental, under heavy development, and should not
 be used yet."""
 
-load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
+
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(":additional_rust_srcs_for_crubit_bindings_aspect_hint_test.bzl", "additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite")
 load(
@@ -24,7 +24,7 @@ crubit_test_cc_library(
     ],
 )
 
-crubit_rust_test(
+rust_test(
     name = "additional_rust_srcs_test",
     srcs = ["test.rs"],
     cc_deps = [

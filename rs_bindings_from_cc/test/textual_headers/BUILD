@@ -1,4 +1,4 @@
-load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
+
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -8,7 +8,7 @@ crubit_test_cc_library(
     textual_hdrs = ["textual.h"],
 )
 
-crubit_rust_test(
+rust_test(
     name = "consumes_has_textual_hdrs",
     srcs = ["empty.rs"],
     cc_deps = [":has_textual_hdrs"],
@@ -19,7 +19,7 @@ crubit_test_cc_library(
     hdrs = ["textual.inc"],
 )
 
-crubit_rust_test(
+rust_test(
     name = "consumes_has_inc_header",
     srcs = ["empty.rs"],
     cc_deps = [":has_inc_header"],
@@ -43,13 +43,13 @@ crubit_test_cc_library(
     deps = ["defines_struct_in_textual_hdr"],
 )
 
-crubit_rust_test(
+rust_test(
     name = "struct_from_textual_hdr_test",
     srcs = ["uses_struct_from_textual_header.rs"],
     cc_deps = [":uses_struct_from_textual_hdr"],
 )
 
-crubit_rust_test(
+rust_test(
     name = "struct_travels_through_textual_hdrs_test",
     srcs = ["uses_struct_from_layers_of_textual_headers.rs"],
     cc_deps = [":uses_struct_from_textual_hdr_in_textual_hdr"],

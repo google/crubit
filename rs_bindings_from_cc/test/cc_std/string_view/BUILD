@@ -2,7 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
+
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -12,7 +12,7 @@ crubit_test_cc_library(
     hdrs = ["string_view_apis.h"],
 )
 
-crubit_rust_test(
+rust_test(
     name = "string_view",
     srcs = ["test.rs"],
     cc_deps = [

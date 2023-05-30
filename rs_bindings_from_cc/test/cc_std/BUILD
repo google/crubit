@@ -1,9 +1,9 @@
-load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
+
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
 
-crubit_rust_test(
+rust_test(
     name = "main",
     srcs = ["test.rs"],
     cc_deps = [
@@ -12,7 +12,7 @@ crubit_rust_test(
     deps = ["//support:ctor"],
 )
 
-crubit_rust_test(
+rust_test(
     name = "check_cc_std_in_deps",
     srcs = ["test.rs"],
     cc_deps = [
@@ -27,7 +27,7 @@ crubit_test_cc_library(
     deps = ["//third_party/stl"],
 )
 
-crubit_rust_test(
+rust_test(
     name = "check_stl_in_deps",
     srcs = ["empty.rs"],
     cc_deps = [
