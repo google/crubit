@@ -526,8 +526,7 @@ llvm::Error AnalyzeFunctionBody(
     const DiagnosticReporter& diag_reporter,
     ObjectRepository& object_repository, PointsToMap& points_to_map,
     LifetimeConstraints& constraints, std::string* cfg_dot) {
-  auto cfctx = clang::dataflow::ControlFlowContext::build(
-      func, *func->getBody(), func->getASTContext());
+  auto cfctx = clang::dataflow::ControlFlowContext::build(*func);
   if (!cfctx) return cfctx.takeError();
 
   clang::dataflow::DataflowAnalysisContext analysis_context(
