@@ -11,6 +11,7 @@ load(
     "cc_bindings_from_rust",
 )
 
+
 rust_library(
     name = "custom_crate_name",  # <- This is an important part of this test.
     testonly = 1,

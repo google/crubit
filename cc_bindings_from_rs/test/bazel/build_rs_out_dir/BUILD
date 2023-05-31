@@ -21,6 +21,7 @@ load(
     "cc_bindings_from_rust",
 )
 
+
 cargo_build_script(
     name = "build_rs_out_dir_build_script",
     srcs = ["build.rs"],

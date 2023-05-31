@@ -11,6 +11,7 @@ load(
     "cc_bindings_from_rust",
 )
 
+
 rust_library(
     name = "include_str",
     testonly = 1,
