@@ -1590,23 +1590,23 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
     let main_api = {
-        let cc_packed_attribute = {
-            let has_packed_attribute = tcx
-                .get_attrs(core.def_id, rustc_span::symbol::sym::repr)
-                .flat_map(|attr| rustc_attr::parse_repr_attr(tcx.sess(), attr))
-                .any(|repr| matches!(repr, rustc_attr::ReprPacked { .. }));
-            if has_packed_attribute {
-                quote! { __attribute__((packed)) }
-            } else {
-                quote! {}
-            }
-        };
+        let rs_type = core.rs_fully_qualified_name.to_string();
+        let mut attributes =
+            vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}, quote! {alignas(#alignment)}];
+        if tcx
+            .get_attrs(core.def_id, rustc_span::symbol::sym::repr)
+            .flat_map(|attr| rustc_attr::parse_repr_attr(tcx.sess(), attr))
+            .any(|repr| matches!(repr, rustc_attr::ReprPacked { .. }))
+        {
+            attributes.push(quote! { __attribute__((packed)) })
+        }
 
         let doc_comment = format_doc_comment(tcx, core.def_id.expect_local());
         let keyword = &core.keyword;
         let core = &core.core;
 
         let mut prereqs = CcPrerequisites::default();
+        prereqs.includes.insert(input.support_header("internal/attribute_macros.h"));
         let default_ctor_main_api = default_ctor_main_api.into_tokens(&mut prereqs);
         let impl_items_main_api = if impl_items_main_api.tokens.is_empty() {
             quote! {}
@@ -1621,7 +1621,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
             prereqs,
             tokens: quote! {
                 __NEWLINE__ #doc_comment
-                #keyword alignas(#alignment) #cc_packed_attribute #adt_cc_name final {
+                #keyword #(#attributes)* #adt_cc_name final {
                     public:
                         #default_ctor_main_api
                         #core
@@ -2023,7 +2023,7 @@ pub mod tests {
                 quote! {
                     namespace rust_out {
                         ...
-                        struct alignas(4) Point final {
+                        struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Point") alignas(4) Point final {
                             // No point replicating test coverage of
                             // `test_format_item_struct_with_fields`.
                             ...
@@ -2145,11 +2145,11 @@ pub mod tests {
                 quote! {
                     namespace rust_out {
                     ...
-                        struct alignas(1) Inner final {
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) Inner final {
                           ...  bool __field0; ...
                         };
                     ...
-                        struct alignas(1) Outer final {
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) Outer final {
                           ...  ::rust_out::Inner __field0; ...
                         };
                     ...
@@ -2183,7 +2183,7 @@ pub mod tests {
                         ...
                         inline void f(const ::rust_out::S* __param_0);
                         ...
-                        struct alignas(...) S final { ... }
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S final { ... }
                         ...
                         inline void f(const ::rust_out::S* __param_0) { ... }
                         ...
@@ -2225,7 +2225,7 @@ pub mod tests {
                         // include `S` as a `fwd_decls` edge, rather than as a `defs` edge.
                         inline bool f(::rust_out::S s);
                         ...
-                        struct alignas(...) S final { ... }
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S final { ... }
                         ...
                     }  // namespace rust_out
                 }
@@ -2307,11 +2307,11 @@ pub mod tests {
                         inline void f3 ...
 
                         namespace a { ...
-                        struct alignas(...) S1 final { ... } ...
-                        struct alignas(...) S2 final { ... } ...
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S1 final { ... } ...
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S2 final { ... } ...
                         } ...
                         namespace b { ...
-                        struct alignas(...) S3 final { ... } ...
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S3 final { ... } ...
                         } ...
                     }  // namespace rust_out
                 }
@@ -3560,7 +3560,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct alignas(4) SomeStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) SomeStruct final {
                         public:
                             __COMMENT__ "`SomeStruct` doesn't implement the `Default` trait"
                             SomeStruct() = delete;
@@ -3625,7 +3625,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct alignas(4) TupleStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) TupleStruct final {
                         public:
                             __COMMENT__ "`TupleStruct` doesn't implement the `Default` trait"
                             TupleStruct() = delete;
@@ -3695,7 +3695,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct alignas(4) SomeStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) SomeStruct final {
                         ...
                         private:
                             // The particular order below is not guaranteed,
@@ -3755,7 +3755,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct alignas(1) __attribute__((packed)) SomeStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) __attribute__((packed)) SomeStruct final {
                         ...
                         std::uint16_t field1;
                         std::uint32_t field2;
@@ -3806,7 +3806,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct alignas(4) SomeStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) SomeStruct final {
                         ...
                         std::uint32_t f2;
                         std::uint8_t f1;
@@ -3854,7 +3854,6 @@ pub mod tests {
         test_format_item(test_src, "Math", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
-            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -3910,7 +3909,6 @@ pub mod tests {
         test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
-            assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::generic_method` \
                                    defined at <crubit_unittests.rs>;l=10: \
                                    Generic functions are not supported yet (b/259749023)";
@@ -3945,7 +3943,6 @@ pub mod tests {
         test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
-            assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::fn_taking_reference` \
                                    defined at <crubit_unittests.rs>;l=7: \
                                    Generic functions are not supported yet (b/259749023)";
@@ -3983,7 +3980,6 @@ pub mod tests {
         test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
-            assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::into_f32` \
                                    defined at <crubit_unittests.rs>;l=5: \
                                    `self` parameter is not supported yet";
@@ -4018,7 +4014,6 @@ pub mod tests {
         test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
-            assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::get_f32` \
                                    defined at <crubit_unittests.rs>;l=5: \
                                    Generic functions are not supported yet (b/259749023)";
@@ -4053,7 +4048,6 @@ pub mod tests {
         test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
-            assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::set_f32` \
                                    defined at <crubit_unittests.rs>;l=5: \
                                    Generic functions are not supported yet (b/259749023)";
@@ -4367,12 +4361,11 @@ pub mod tests {
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
                                  `union` (b/272801632) or `enum`";
-            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
                     ...
-                    struct alignas(1) SomeEnum final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) SomeEnum final {
                         public:
                             __COMMENT__ "`SomeEnum` doesn't implement the `Default` trait"
                             SomeEnum() = delete;
@@ -4433,12 +4426,11 @@ pub mod tests {
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
                                  `union` (b/272801632) or `enum`";
-            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
                     ...
-                    struct alignas(4) Point final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) Point final {
                         public:
                             __COMMENT__ "`Point` doesn't implement the `Default` trait"
                             Point() = delete;
@@ -4512,12 +4504,11 @@ pub mod tests {
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
                                  `union` (b/272801632) or `enum`";
-            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
                     ...
-                    union alignas(8) SomeUnion final {
+                    union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(8) SomeUnion final {
                         public:
                             __COMMENT__ "`SomeUnion` doesn't implement the `Default` trait"
                             SomeUnion() = delete;
@@ -4772,7 +4763,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct alignas(4) SomeStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) SomeStruct final {
                         ...
                         __COMMENT__ #unsupported_msg
                         ...

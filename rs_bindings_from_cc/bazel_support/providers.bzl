@@ -8,14 +8,15 @@ RustBindingsFromCcInfo = provider(
     doc = ("A provider that contains compile and linking information for the generated" +
            " `.cc` and `.rs` files."),
     fields = {
-        "cc_info": "A CcInfo provider for the implementation of the API projection.",
+        "cc_info": ("A CcInfo provider for the implementation of the API projection, " +
+                    "or None if this is a real Rust target."),
         "dep_variant_info": ("A DepVariantInfo provider that carries information from the " +
                              "compiled `.rs` file."),
         "target_args": ("A depset of strings, each one representing a mapping of target " +
                         "to its per-target arguments (headers, features) in json format:\n\n" +
                         "{'t': <target>, 'h': [<header>], 'f': [<feature>]}"),
         "namespaces": ("A json file containing the namespace hierarchy for the target we " +
-                       "are generating bindings for."),
+                       "are generating bindings for, or None."),
     },
 )
 

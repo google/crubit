@@ -30,6 +30,7 @@ load(
 )
 load(
     "@rules_rust//rust:rust_common.bzl",
+    "BuildInfo",
     "CrateInfo",
 )
 load(
@@ -37,6 +38,10 @@ load(
     "compile_rust",
 )
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain", "use_cpp_toolchain")
+load(
+    "//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "RustBindingsFromCcInfo",
+)
 
 # Targets which do not receive C++ bindings at all.
 targets_to_remove = [
@@ -359,7 +364,23 @@ cc_bindings_from_rust_aspect = aspect(
 )
 
 def _cc_bindings_from_rust_rule_impl(ctx):
-    return ctx.attr.crate[CcBindingsFromRustInfo].cc_info
+    crate = ctx.attr.crate
+    return [
+        crate[CcBindingsFromRustInfo].cc_info,
+        # If we try to generate rust bindings of c++ bindings of this rust crate, we get back
+        # the original rust crate again.
+        RustBindingsFromCcInfo(
+            cc_info = None,
+            dep_variant_info = DepVariantInfo(
+                crate_info = crate[CrateInfo] if CrateInfo in crate else None,
+                dep_info = crate[DepInfo] if DepInfo in crate else None,
+                build_info = crate[BuildInfo] if BuildInfo in crate else None,
+                cc_info = crate[CcInfo] if CcInfo in crate else None,
+            ),
+            target_args = depset([]),
+            namespaces = None,
+        ),
+    ]
 
 cc_bindings_from_rust = rule(
     implementation = _cc_bindings_from_rust_rule_impl,

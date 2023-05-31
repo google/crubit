@@ -198,7 +198,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         deps_for_cc_file = [target[CcInfo]] + [
             dep[RustBindingsFromCcInfo].cc_info
             for dep in all_deps
-            if RustBindingsFromCcInfo in dep
+            if RustBindingsFromCcInfo in dep and
+               dep[RustBindingsFromCcInfo].cc_info
         ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
         deps_for_rs_file = [
             dep[RustBindingsFromCcInfo].dep_variant_info
