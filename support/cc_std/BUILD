@@ -6,6 +6,7 @@ load(
     "//rs_bindings_from_cc/bazel_support:toolchain_headers.bzl",
     "bindings_for_toolchain_headers",
 )
+load("@bazel_skylib//lib:selects.bzl", "selects")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -82,16 +83,54 @@ LIBCXX_HEADERS = [
 
 LIBC_HEADERS = []
 
+_CPU = {
+    "arm": "//third_party/bazel_platforms/cpu:aarch64",
+    "x86": "//third_party/bazel_platforms/cpu:x86_64",
+}
+
+_GRTE = {
+    "v4": "//third_party/grte:grte_v4",
+    "v5": "//third_party/grte:grte_v5",
+}
+
+[
+    selects.config_setting_group(
+        name = "grte_{grte_name}_cpu_{cpu_name}".format(
+            cpu_name = cpu_name,
+            grte_name = grte_name,
+        ),
+        match_all = [
+            grte_config_setting,
+            cpu_config_setting,
+        ],
+    )
+    for (cpu_name, cpu_config_setting) in _CPU.items()
+    for (grte_name, grte_config_setting) in _GRTE.items()
+]
+
+alias(
+    name = "grte",
+    actual = select({
+        "grte_{grte}_cpu_{cpu}".format(
+            cpu = cpu,
+            grte = grte,
+        ): "//third_party/grte/{grte}_{cpu}/release/usr/grte/{grte}:compile".format(
+            cpu = cpu,
+            grte = grte,
+        )
+        for cpu in _CPU.keys()
+        for grte in _GRTE.keys()
+    }),
+)
+
 filegroup(
     name = "toolchain_headers",
     srcs = select({
-               "//third_party/crosstool:unstable_config": ["//nowhere/llvm:cc-std-headers"],
-               "//conditions:default": ["//nowhere/llvm:cc-std-headers"],
-           }) +
-           select({
-               "//third_party/bazel_platforms/cpu:aarch64": ["//third_party/grte/v5_arm/release/usr/grte/v5:compile"],
-               "//third_party/bazel_platforms/cpu:x86_64": ["//third_party/grte/v5_x86/release/usr/grte/v5:compile"],
-           }),
+        "//third_party/crosstool:unstable_config": ["//nowhere/llvm:cc-std-headers"],
+        "//conditions:default": ["//nowhere/llvm:cc-std-headers"],
+    }) + [
+        ":grte",
+    ],
     visibility = ["//visibility:private"],
 )
 
