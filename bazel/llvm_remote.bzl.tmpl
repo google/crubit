@@ -8,7 +8,7 @@
 #   https://github.com/llvm/llvm-project/blob/main/utils/bazel/examples/http_archive/WORKSPACE
 #   https://github.com/llvm/llvm-project/releases/tag/llvmorg-14.0.0
 
-load("@llvm-raw//utils/bazel:configure.bzl", "llvm_configure", "llvm_disable_optional_support_deps")
+load("@llvm-raw//utils/bazel:configure.bzl", "llvm_configure")
 
 # Pass through to LLVM's Bazel configuration to create the repository.
 def llvm_repository(name):
@@ -18,4 +18,3 @@ def llvm_repository(name):
         fail("""name must be llvm-project""")
 
     llvm_configure(name = "llvm-project")
-    llvm_disable_optional_support_deps()
