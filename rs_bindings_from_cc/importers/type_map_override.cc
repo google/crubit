@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
@@ -16,6 +17,7 @@
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace crubit {
 namespace {
@@ -51,29 +53,52 @@ absl::StatusOr<absl::string_view> EvaluateAsStringLiteral(
   return {string_literal->getString()};
 }
 
+// Gets the requested attribute for `decl`.
+// `decl` must not be null.
+absl::StatusOr<const clang::AnnotateAttr*> GetAnnotateAttr(
+    const clang::Decl* decl, absl::string_view attribute) {
+  const clang::AnnotateAttr* found_attr = nullptr;
+  for (clang::AnnotateAttr* attr :
+       decl->specific_attrs<clang::AnnotateAttr>()) {
+    if (attr->getAnnotation() != llvm::StringRef(attribute)) continue;
+
+    if (found_attr != nullptr)
+      return absl::InvalidArgumentError(
+          absl::StrCat("Only one `", attribute,
+                       "` attribute may be placed on a declaration."));
+    found_attr = attr;
+  }
+  return found_attr;
+}
+
 // Gets the crubit_internal_rust_type attribute for `decl`.
 // `decl` must not be null.
 absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
     const clang::Decl* decl) {
-  std::optional<absl::string_view> rust_type;
-  for (clang::AnnotateAttr* attr :
-       decl->specific_attrs<clang::AnnotateAttr>()) {
-    if (attr->getAnnotation() != "crubit_internal_rust_type") continue;
+  CRUBIT_ASSIGN_OR_RETURN(const clang::AnnotateAttr* attr,
+                          GetAnnotateAttr(decl, "crubit_internal_rust_type"));
+  if (attr == nullptr) return std::nullopt;
+  if (attr->args_size() != 1)
+    return absl::InvalidArgumentError(
+        "The `crubit_internal_rust_type` attribute requires a single "
+        "string literal "
+        "argument, the Rust type.");
+  const clang::Expr& arg = **attr->args_begin();
+  return EvaluateAsStringLiteral(arg, decl->getASTContext());
+}
 
-    if (rust_type.has_value())
-      return absl::InvalidArgumentError(
-          "Only one `crubit_internal_rust_type` attribute may be placed on a "
-          "type.");
-    if (attr->args_size() != 1)
-      return absl::InvalidArgumentError(
-          "The `crubit_internal_rust_type` attribute requires a single "
-          "string literal "
-          "argument, the Rust type.");
-    const clang::Expr& arg = **attr->args_begin();
-    CRUBIT_ASSIGN_OR_RETURN(
-        rust_type, EvaluateAsStringLiteral(arg, decl->getASTContext()));
-  }
-  return rust_type;
+// Gets the crubit_internal_same_abi attribute for `decl`.
+// If the attribute is specified, returns true. If it's unspecified, returns
+// false. If the attribute is malformed, returns a bad status.
+//
+// `decl` must not be null.
+absl::StatusOr<bool> GetIsSameAbiAttribute(const clang::Decl* decl) {
+  CRUBIT_ASSIGN_OR_RETURN(const clang::AnnotateAttr* attr,
+                          GetAnnotateAttr(decl, "crubit_internal_same_abi"));
+  if (attr != nullptr && attr->args_size() != 0)
+    return absl::InvalidArgumentError(
+        "The `crubit_internal_same_abi` attribute takes no arguments.");
+  return attr != nullptr;
 }
 }  // namespace
 
@@ -89,6 +114,14 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
   if (!rust_type->has_value()) {
     return std::nullopt;
   }
+  absl::StatusOr<bool> is_same_abi = GetIsSameAbiAttribute(type_decl);
+  if (!is_same_abi.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        type_decl,
+        absl::StrCat("Invalid crubit_internal_is_same_abi attribute: ",
+                     is_same_abi.status().message()));
+  }
+
   auto rs_name = std::string(**rust_type);
 
   clang::ASTContext& context = type_decl->getASTContext();
@@ -111,6 +144,7 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
       .cc_name = std::move(cc_name),
       .owning_target = ictx_.GetOwningTarget(type_decl),
       .size_align = std::move(size_align),
+      .is_same_abi = *is_same_abi,
       .id = GenerateItemId(type_decl),
   };
 }

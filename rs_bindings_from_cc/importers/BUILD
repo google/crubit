@@ -109,11 +109,12 @@ cc_library(
     hdrs = ["type_map_override.h"],
     deps = [
         "@absl//absl/status",
+        "@absl//absl/strings",
         "//common:status_macros",
         "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
-        "//rs_bindings_from_cc:type_map",
         "@llvm-project//clang:ast",
+        "@llvm-project//llvm:Support",
     ],
 )
 

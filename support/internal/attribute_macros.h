@@ -26,12 +26,21 @@
 //
 // This can be applied to a struct, class, or enum.
 //
+// If CRUBIT_INTERNAL_SAME_ABI is also specified, then the Rust
+// type will be assumed to be exactly C ABI compatible (not just of identical
+// layout) with `t`.
+//
 // TODO(b/274834739): also support type aliases.
 //
 // For example, this C++ header:
 //
 // ```c++
-// struct CRUBIT_INTERNAL_RUST_TYPE("char") CharT {std::uint32_t c; };
+// struct
+//   CRUBIT_INTERNAL_RUST_TYPE("char")
+//   CRUBIT_INTERNAL_SAME_ABI
+//   CharT {
+//     std::uint32_t c;
+// };
 // CharT foo() { return {0};}
 // ```
 //
@@ -42,8 +51,24 @@
 // ```
 //
 // SAFETY:
-//   If the type is not ABI-compatible with `t`, the behavior is undefined.
+//   If the type is not layout-compatible with `t`, the behavior is undefined.
 #define CRUBIT_INTERNAL_RUST_TYPE(t) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_rust_type", t)
+
+// Unsafe: forces a type to be treated as C abi compatible with its rust
+// equivalent.
+//
+// This only has any effect when used in combination with
+// CRUBIT_INTERNAL_RUST_TYPE. For all other types, C ABI compatibility can be
+// inferred automatically, and overriding the decision is always a bug.
+//
+// TODO(b/284512049): This also currently assumes copyability. It should only
+// assume movability.
+//
+// SAFETY:
+//   If the type is not ABI-compatible with its Rust equivalent, the behavior is
+//   undefined.
+#define CRUBIT_INTERNAL_SAME_ABI \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_internal_same_abi")
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_

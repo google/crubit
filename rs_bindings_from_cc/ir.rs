@@ -805,6 +805,7 @@ pub struct TypeMapOverride {
     pub cc_name: Rc<str>,
     pub owning_target: BazelLabel,
     pub size_align: Option<SizeAlign>,
+    pub is_same_abi: bool,
     pub id: ItemId,
 }
 

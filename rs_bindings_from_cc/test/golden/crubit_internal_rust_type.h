@@ -40,6 +40,9 @@ using TooManyArgs [[clang::annotate("crubit_internal_rust_type", "i8", "i8")]] =
     unsigned char;
 using NonStringArg [[clang::annotate("crubit_internal_rust_type", 8)]] =
     unsigned char;
+using BadSameAbiAttr
+    [[clang::annotate("crubit_internal_rust_type", "i8")]] [[clang::annotate(
+        "crubit_internal_same_abi", true)]] = unsigned char;
 
 struct TypeMapOverrideFieldTypes final {
   MyI8Struct my_i8_struct;

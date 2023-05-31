@@ -760,6 +760,8 @@ struct TypeMapOverride {
   // Size and alignment, if known.
   // (These will not be known for a forward declaration, for example.)
   std::optional<SizeAlign> size_align;
+
+  bool is_same_abi;
   ItemId id;
 };
 

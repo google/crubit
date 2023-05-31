@@ -3212,6 +3212,7 @@ enum RsTypeKind {
     Other {
         name: Rc<str>,
         type_args: Rc<[RsTypeKind]>,
+        is_same_abi: bool,
     },
 }
 
@@ -3226,7 +3227,11 @@ impl RsTypeKind {
     }
 
     pub fn new_type_map_override(type_map_override: &TypeMapOverride) -> Self {
-        RsTypeKind::Other { name: type_map_override.rs_name.clone(), type_args: Rc::from([]) }
+        RsTypeKind::Other {
+            name: type_map_override.rs_name.clone(),
+            type_args: Rc::from([]),
+            is_same_abi: type_map_override.is_same_abi,
+        }
     }
 
     /// Returns true if the type is known to be `Unpin`, false otherwise.
@@ -3257,6 +3262,7 @@ impl RsTypeKind {
             // TODO(b/274177296): Return `true` for structs where bindings replicate the type of
             // all the fields.
             RsTypeKind::Record { .. } => false,
+            RsTypeKind::Other { is_same_abi, .. } => *is_same_abi,
             _ => true,
         }
     }
@@ -3503,7 +3509,7 @@ impl RsTypeKind {
                     quote! { #crate_path #ident }
                 }
             }
-            RsTypeKind::Other { name, type_args } => {
+            RsTypeKind::Other { name, type_args, .. } => {
                 let name: TokenStream = name.parse().expect("Invalid RsType::name in the IR");
                 let generic_params =
                     format_generic_params_replacing_by_self(type_args.iter(), self_record);
@@ -3581,7 +3587,7 @@ impl ToTokens for RsTypeKind {
             // This doesn't affect void in function return values, as those are special-cased to be
             // omitted.
             RsTypeKind::Unit => quote! {::core::ffi::c_void},
-            RsTypeKind::Other { name, type_args } => {
+            RsTypeKind::Other { name, type_args, .. } => {
                 let name: TokenStream = name.parse().expect("Invalid RsType::name in the IR");
                 let generic_params =
                     format_generic_params(/* lifetimes= */ &[], type_args.iter());
@@ -3749,7 +3755,11 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
             name => {
                 let mut type_args = get_type_args()?;
                 match name.strip_prefix("#funcPtr ") {
-                    None => RsTypeKind::Other { name: name.into(), type_args: Rc::from(type_args) },
+                    None => RsTypeKind::Other {
+                        name: name.into(),
+                        type_args: Rc::from(type_args),
+                        is_same_abi: true,
+                    },
                     Some(abi) => {
                         // Assert that function pointers in the IR either have static lifetime or
                         // no lifetime.
@@ -7790,14 +7800,22 @@ mod tests {
         // Set up a test input representing: A<B<C>, D<E>>.
         let a = {
             let b = {
-                let c = RsTypeKind::Other { name: "C".into(), type_args: Rc::from([]) };
-                RsTypeKind::Other { name: "B".into(), type_args: Rc::from([c]) }
+                let c = RsTypeKind::Other {
+                    name: "C".into(),
+                    type_args: Rc::from([]),
+                    is_same_abi: true,
+                };
+                RsTypeKind::Other { name: "B".into(), type_args: Rc::from([c]), is_same_abi: true }
             };
             let d = {
-                let e = RsTypeKind::Other { name: "E".into(), type_args: Rc::from([]) };
-                RsTypeKind::Other { name: "D".into(), type_args: Rc::from([e]) }
+                let e = RsTypeKind::Other {
+                    name: "E".into(),
+                    type_args: Rc::from([]),
+                    is_same_abi: true,
+                };
+                RsTypeKind::Other { name: "D".into(), type_args: Rc::from([e]), is_same_abi: true }
             };
-            RsTypeKind::Other { name: "A".into(), type_args: Rc::from([b, d]) }
+            RsTypeKind::Other { name: "A".into(), type_args: Rc::from([b, d]), is_same_abi: true }
         };
         let dfs_names = a
             .dfs_iter()
@@ -7813,9 +7831,21 @@ mod tests {
     fn test_rs_type_kind_dfs_iter_ordering_for_func_ptr() {
         // Set up a test input representing: fn(A, B) -> C
         let f = {
-            let a = RsTypeKind::Other { name: "A".into(), type_args: Rc::from(&[][..]) };
-            let b = RsTypeKind::Other { name: "B".into(), type_args: Rc::from(&[][..]) };
-            let c = RsTypeKind::Other { name: "C".into(), type_args: Rc::from(&[][..]) };
+            let a = RsTypeKind::Other {
+                name: "A".into(),
+                type_args: Rc::from(&[][..]),
+                is_same_abi: true,
+            };
+            let b = RsTypeKind::Other {
+                name: "B".into(),
+                type_args: Rc::from(&[][..]),
+                is_same_abi: true,
+            };
+            let c = RsTypeKind::Other {
+                name: "C".into(),
+                type_args: Rc::from(&[][..]),
+                is_same_abi: true,
+            };
             RsTypeKind::FuncPtr {
                 abi: "blah".into(),
                 param_types: Rc::from([a, b]),
@@ -9054,7 +9084,11 @@ mod tests {
     #[test]
     fn test_lifetime_elision_for_references() {
         let type_args: &[RsTypeKind] = &[];
-        let referent = Rc::new(RsTypeKind::Other { name: "T".into(), type_args: type_args.into() });
+        let referent = Rc::new(RsTypeKind::Other {
+            name: "T".into(),
+            type_args: type_args.into(),
+            is_same_abi: true,
+        });
         let reference = RsTypeKind::Reference {
             referent,
             mutability: Mutability::Const,
@@ -9066,7 +9100,11 @@ mod tests {
     #[test]
     fn test_lifetime_elision_for_rvalue_references() {
         let type_args: &[RsTypeKind] = &[];
-        let referent = Rc::new(RsTypeKind::Other { name: "T".into(), type_args: type_args.into() });
+        let referent = Rc::new(RsTypeKind::Other {
+            name: "T".into(),
+            type_args: type_args.into(),
+            is_same_abi: true,
+        });
         let reference = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -9299,7 +9337,11 @@ mod tests {
     #[test]
     fn test_rstypekind_format_as_self_param_rvalue_reference() -> Result<()> {
         let type_args: &[RsTypeKind] = &[];
-        let referent = Rc::new(RsTypeKind::Other { name: "T".into(), type_args: type_args.into() });
+        let referent = Rc::new(RsTypeKind::Other {
+            name: "T".into(),
+            type_args: type_args.into(),
+            is_same_abi: true,
+        });
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -9314,7 +9356,11 @@ mod tests {
     #[test]
     fn test_rstypekind_format_as_self_param_const_rvalue_reference() -> Result<()> {
         let type_args: &[RsTypeKind] = &[];
-        let referent = Rc::new(RsTypeKind::Other { name: "T".into(), type_args: type_args.into() });
+        let referent = Rc::new(RsTypeKind::Other {
+            name: "T".into(),
+            type_args: type_args.into(),
+            is_same_abi: true,
+        });
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Const,
@@ -9347,6 +9393,61 @@ mod tests {
             rs_api,
             quote! {
                 assert!(::core::mem::align_of::<i32>() == 1);
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_type_map_override_c_abi_incompatible() -> Result<()> {
+        let rs_api = generate_bindings_tokens(ir_from_cc(
+            r#" #pragma clang lifetime_elision
+                // Broken class: uses i32 but has size 1.
+                // (These asserts would fail if this were compiled.)
+                class [[clang::annotate("crubit_internal_rust_type", "i8")]] MyI8 {unsigned char field;};
+                MyI8 Make();"#,
+        )?)?
+        .rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub fn Make() -> i8 {...}
+            }
+        );
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub(crate) fn __rust_thunk___Z4Makev(__return: &mut ::core::mem::MaybeUninit<i8>);
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_type_map_override_c_abi_compatible() -> Result<()> {
+        let rs_api = generate_bindings_tokens(ir_from_cc(
+            r#" #pragma clang lifetime_elision
+                class
+                    [[clang::annotate("crubit_internal_rust_type", "i8")]]
+                    [[clang::annotate("crubit_internal_same_abi")]]
+                    MyI8 {unsigned char field;};
+                MyI8 Make();"#,
+        )?)?
+        .rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub fn Make() -> i8 {...}
+            }
+        );
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub(crate) fn __rust_thunk___Z4Makev() -> i8;
             }
         );
         Ok(())

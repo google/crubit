@@ -299,6 +299,7 @@ llvm::json::Value TypeMapOverride::ToJson() const {
       {"rs_name", rs_name},
       {"cc_name", cc_name},
       {"owning_target", owning_target},
+      {"is_same_abi", is_same_abi},
       {"id", id},
   };
   if (size_align.has_value()) {

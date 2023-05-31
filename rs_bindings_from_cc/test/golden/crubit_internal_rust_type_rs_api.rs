@@ -48,6 +48,9 @@ const _: () = assert!(::core::mem::align_of::<i8>() == 1);
 // Error while generating bindings for item 'NonStringArg':
 // Invalid crubit_internal_rust_type attribute: cannot evaluate argument as a string literal
 
+// Error while generating bindings for item 'BadSameAbiAttr':
+// Invalid crubit_internal_is_same_abi attribute: The `crubit_internal_same_abi` attribute takes no arguments.
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct TypeMapOverrideFieldTypes {
