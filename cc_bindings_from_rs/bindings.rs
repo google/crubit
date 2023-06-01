@@ -1176,13 +1176,6 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
     ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
 
     let core = quote! {
-        // TODO(b/258249993): Provide `default` copy constructor and assignment operator if
-        // the wrapped type is `Copy` on Rust side.
-        // TODO(b/259741191): If the wrapped type implements the `Clone` trait, then we should
-        // *consider* calling `clone` from the copy constructor and `clone_from` from the copy
-        // assignment operator.
-        #cc_short_name(const #cc_short_name&) = delete;
-
         // The generated bindings have to follow Rust move semantics:
         // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
         //   that "Every type must be ready for it to be blindly memcopied to somewhere else
@@ -1224,7 +1217,6 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
         //
         // (Move assignment operator has another set of concerns and constraints - see the
         // comment for the move constructor above).
-        #cc_short_name& operator=(const #cc_short_name&) = delete;
         #cc_short_name& operator=(#cc_short_name&&) = delete;
 
         // TODO(b/258251148): Support custom `Drop` impls and drop glue.
@@ -1526,6 +1518,44 @@ fn format_default_ctor(input: &Input, core: &AdtCoreBindings) -> Result<ApiSnipp
     Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
 
+/// Formats the copy constructor and the copy-assignment operator for an ADT if
+/// possible (i.e. if the `Clone` trait is implemented for the ADT).  Returns an
+/// error otherwise (e.g. if there is no `Clone` impl).
+fn format_copy_ctor_and_assignment_operator(
+    input: &Input,
+    core: &AdtCoreBindings,
+) -> Result<ApiSnippets> {
+    let tcx = input.tcx;
+    let ty = tcx.type_of(core.def_id).subst_identity();
+
+    let is_copy = {
+        // TODO(b/259749095): Support non-empty set of generic parameters.
+        let param_env = ty::ParamEnv::empty();
+
+        // TODO(b/259749095): Once generic ADTs are supported, `is_copy_modulo_regions`
+        // might need to be replaced with a more thorough check - see
+        // b/258249993#comment4.
+        ty.is_copy_modulo_regions(tcx, param_env)
+    };
+
+    if is_copy {
+        let cc_struct_name = &core.cc_short_name;
+        let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
+                   and assignment operator.";
+        let main_api = CcSnippet::new(quote! {
+            __NEWLINE__ __COMMENT__ #msg
+            #cc_struct_name(const #cc_struct_name&) = default;  __NEWLINE__
+            #cc_struct_name& operator=(const #cc_struct_name&) = default;
+        });
+        return Ok(ApiSnippets { main_api, ..Default::default() });
+    }
+
+    // TODO(b/259741191): Implement bindings for `Clone::clone` and
+    // `Clone::clone_from`.
+    let _trait_impl = find_core_trait_impl(tcx, ty, sym::Clone)?;
+    bail!("Bindings for the `Clone` trait are not supported yet (b/259741191)");
+}
+
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
 /// represented by `core`.  This function is infallible - after
 /// `format_adt_core` returns success we have committed to emitting C++ bindings
@@ -1547,6 +1577,22 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
             main_api: CcSnippet::new(quote! {
                 __NEWLINE__ __COMMENT__ #msg
                 #adt_cc_name() = delete; __NEWLINE__
+            }),
+            ..Default::default()
+        }
+    });
+
+    let ApiSnippets {
+        main_api: copy_ctor_and_assignment_main_api,
+        cc_details: copy_ctor_and_assignment_cc_details,
+        rs_details: copy_ctor_and_assignment_rs_details,
+    } = format_copy_ctor_and_assignment_operator(input, core).unwrap_or_else(|err| {
+        let msg = format!("{err:#}");
+        ApiSnippets {
+            main_api: CcSnippet::new(quote! {
+                __NEWLINE__ __COMMENT__ #msg
+                #adt_cc_name(const #adt_cc_name&) = delete;  __NEWLINE__
+                #adt_cc_name& operator=(const #adt_cc_name&) = delete;
             }),
             ..Default::default()
         }
@@ -1608,6 +1654,8 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(input.support_header("internal/attribute_macros.h"));
         let default_ctor_main_api = default_ctor_main_api.into_tokens(&mut prereqs);
+        let copy_ctor_and_assignment_main_api =
+            copy_ctor_and_assignment_main_api.into_tokens(&mut prereqs);
         let impl_items_main_api = if impl_items_main_api.tokens.is_empty() {
             quote! {}
         } else {
@@ -1624,6 +1672,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                 #keyword #(#attributes)* #adt_cc_name final {
                     public:
                         #default_ctor_main_api
+                        #copy_ctor_and_assignment_main_api
                         #core
                     #impl_items_main_api
                     #fields_main_api
@@ -1635,6 +1684,8 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     let cc_details = {
         let mut prereqs = CcPrerequisites::default();
         let default_ctor_cc_details = default_ctor_cc_details.into_tokens(&mut prereqs);
+        let copy_ctor_and_assignment_cc_details =
+            copy_ctor_and_assignment_cc_details.into_tokens(&mut prereqs);
         let impl_items_cc_details = impl_items_cc_details.into_tokens(&mut prereqs);
         let fields_cc_details = fields_cc_details.into_tokens(&mut prereqs);
         prereqs.defs.insert(local_def_id);
@@ -1650,6 +1701,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                     "Verify that struct layout didn't change since this header got generated");
                 __NEWLINE__
                 #default_ctor_cc_details
+                #copy_ctor_and_assignment_cc_details
                 #impl_items_cc_details
                 #fields_cc_details
             },
@@ -1661,6 +1713,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
             const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
             const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
             #default_ctor_rs_details
+            #copy_ctor_and_assignment_rs_details
             #impl_items_rs_details
             #fields_rs_details
         }
@@ -3565,14 +3618,14 @@ pub mod tests {
                             __COMMENT__ "`SomeStruct` doesn't implement the `Default` trait"
                             SomeStruct() = delete;
 
-                            // In this test there is no `Copy` implementation / derive.
+                            __COMMENT__ "`SomeStruct` doesn't implement the `Clone` trait"
                             SomeStruct(const SomeStruct&) = delete;
+                            SomeStruct& operator=(const SomeStruct&) = delete;
 
                             // All Rust types are trivially-movable.
                             SomeStruct(SomeStruct&&) = default;
 
                             // Assignment operators are disabled for now.
-                            SomeStruct& operator=(const SomeStruct&) = delete;
                             SomeStruct& operator=(SomeStruct&&) = delete;
 
                             // In this test there is no custom `Drop`, so C++ can also
@@ -3630,14 +3683,14 @@ pub mod tests {
                             __COMMENT__ "`TupleStruct` doesn't implement the `Default` trait"
                             TupleStruct() = delete;
 
-                            // In this test there is no `Copy` implementation / derive.
+                            __COMMENT__ "`TupleStruct` doesn't implement the `Clone` trait"
                             TupleStruct(const TupleStruct&) = delete;
+                            TupleStruct& operator=(const TupleStruct&) = delete;
 
                             // All Rust types are trivially-movable.
                             TupleStruct(TupleStruct&&) = default;
 
                             // Assignment operators are disabled for now.
-                            TupleStruct& operator=(const TupleStruct&) = delete;
                             TupleStruct& operator=(TupleStruct&&) = delete;
 
                             // In this test there is no custom `Drop`, so C++ can also
@@ -4116,6 +4169,80 @@ pub mod tests {
     }
 
     #[test]
+    fn test_format_item_struct_with_copy_trait() {
+        let test_src = r#"
+                #[derive(Clone, Copy)]
+                pub struct Point(i32, i32);
+            "#;
+        let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
+                   and assignment operator.";
+        test_format_item(test_src, "Point", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... Point final {
+                        ...
+                        public:
+                          ...
+                          __COMMENT__ #msg
+                          Point(const Point&) = default;
+                          Point& operator=(const Point&) = default;
+                          ...
+                    };
+                }
+            );
+
+            // Trivial copy doesn't require any C++/Rust details.
+            assert_cc_not_matches!(result.cc_details.tokens, quote! { Point::Point(const Point&) },);
+            assert_cc_not_matches!(
+                result.cc_details.tokens,
+                quote! { Point::operator=(const Point&) },
+            );
+            assert_rs_not_matches!(result.rs_details, quote! { Copy });
+            assert_rs_not_matches!(result.rs_details, quote! { copy });
+        });
+    }
+
+    #[test]
+    fn test_format_item_struct_with_clone_trait() {
+        let test_src = r#"
+                // `Copy` trait is covered in `test_format_item_struct_with_copy_trait`.
+                #[derive(Clone)]
+                pub struct Point(i32, i32);
+            "#;
+        let msg = "Bindings for the `Clone` trait are not supported yet (b/259741191)";
+        test_format_item(test_src, "Point", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... Point final {
+                        ...
+                        public:
+                          ...
+                          // TODO(b/259741191): Fix test expectations below after implementing
+                          // support for `Clone` trait.
+
+                          __COMMENT__ #msg
+                          Point(const Point&) = delete;
+                          Point& operator=(const Point&) = delete;
+                        ...
+                    };
+                }
+            );
+            // TODO(b/259741191): Add
+            // `assert_cc_matches(result.cc_details.tokens, ...)`.
+            // TODO(b/259741191): Add
+            // `assert_rs_matches(result.rs_details.tokens, ...)`.
+        });
+    }
+
+    #[test]
     fn test_format_item_unsupported_struct_with_name_that_is_reserved_keyword() {
         let test_src = r#"
                 #[allow(non_camel_case_types)]
@@ -4370,14 +4497,14 @@ pub mod tests {
                             __COMMENT__ "`SomeEnum` doesn't implement the `Default` trait"
                             SomeEnum() = delete;
 
-                            // In this test there is no `Copy` implementation / derive.
+                            __COMMENT__ "`SomeEnum` doesn't implement the `Clone` trait"
                             SomeEnum(const SomeEnum&) = delete;
+                            SomeEnum& operator=(const SomeEnum&) = delete;
 
                             // All Rust types are trivially-movable.
                             SomeEnum(SomeEnum&&) = default;
 
                             // Assignment operators are disabled for now.
-                            SomeEnum& operator=(const SomeEnum&) = delete;
                             SomeEnum& operator=(SomeEnum&&) = delete;
 
                             // In this test there is no custom `Drop`, so C++ can also
@@ -4435,14 +4562,14 @@ pub mod tests {
                             __COMMENT__ "`Point` doesn't implement the `Default` trait"
                             Point() = delete;
 
-                            // In this test there is no `Copy` implementation / derive.
+                            __COMMENT__ "`Point` doesn't implement the `Clone` trait"
                             Point(const Point&) = delete;
+                            Point& operator=(const Point&) = delete;
 
                             // All Rust types are trivially-movable.
                             Point(Point&&) = default;
 
                             // Assignment operators are disabled for now.
-                            Point& operator=(const Point&) = delete;
                             Point& operator=(Point&&) = delete;
 
                             // In this test there is no custom `Drop`, so C++ can also
@@ -4513,14 +4640,14 @@ pub mod tests {
                             __COMMENT__ "`SomeUnion` doesn't implement the `Default` trait"
                             SomeUnion() = delete;
 
-                            // In this test there is no `Copy` implementation / derive.
+                            __COMMENT__ "`SomeUnion` doesn't implement the `Clone` trait"
                             SomeUnion(const SomeUnion&) = delete;
+                            SomeUnion& operator=(const SomeUnion&) = delete;
 
                             // All Rust types are trivially-movable.
                             SomeUnion(SomeUnion&&) = default;
 
                             // Assignment operators are disabled for now.
-                            SomeUnion& operator=(const SomeUnion&) = delete;
                             SomeUnion& operator=(SomeUnion&&) = delete;
 
                             // In this test there is no custom `Drop`, so C++ can also

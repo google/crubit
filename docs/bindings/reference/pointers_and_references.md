@@ -94,6 +94,10 @@ Mutating a value in C++ may lead to UB if the mutation happens while Rust holds
 a references to that value. This applies to Rust shared references (e.g. `&T`)
 and to exclusive references (e.g. `&mut T`).
 
+Examples of C++ features that may mutate a value that Rust holds a reference to:
+
+*   Using copy assignment operator of C++ value that Rust has a reference to.
+
 TODO(b/258249993): After `cc_bindings_from_rs` generates assignment operators,
 explicitly document them here as an example.
 
