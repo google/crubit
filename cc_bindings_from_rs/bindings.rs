@@ -1251,6 +1251,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         index: usize,
         offset: u64,
         offset_of_next_field: u64,
+        doc_comment: TokenStream,
     }
     let ty = tcx.type_of(core.def_id).subst_identity();
     let layout =
@@ -1269,6 +1270,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
             index: 0,
             offset: 0,
             offset_of_next_field: core.size_in_bytes,
+            doc_comment: quote! {},
         }]
     } else {
         let mut fields = ty
@@ -1304,7 +1306,6 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                         quote! { #name }
                     }
                 };
-                let is_public = field_def.vis == ty::Visibility::Public;
 
                 // `offset` and `offset_of_next_field` will be fixed by FieldsShape::Arbitrary
                 // branch below.
@@ -1315,10 +1316,11 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                     type_info,
                     cc_name,
                     rs_name,
-                    is_public,
+                    is_public: field_def.vis == ty::Visibility::Public,
                     index,
                     offset,
                     offset_of_next_field,
+                    doc_comment: format_doc_comment(tcx, field_def.did.expect_local()),
                 }
             })
             .collect_vec();
@@ -1435,9 +1437,11 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                             quote! { private: }
                         };
                         let cc_type = cc_type.into_tokens(&mut prereqs);
+                        let doc_comment = field.doc_comment;
                         // TODO(b/271002281): Preserve doc comments.
                         quote! {
                             #visibility
+                                #doc_comment
                                 #cc_type #cc_name;
                             #padding
                         }
@@ -4483,6 +4487,45 @@ pub mod tests {
         test_format_item(test_src, "DynamicallySizedStruct", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Bindings for dynamically sized types are not supported.");
+        });
+    }
+
+    #[test]
+    fn test_format_item_struct_fields_with_doc_comments() {
+        let test_src = r#"
+                pub struct SomeStruct {
+                    /// Documentation of `successful_field`.
+                    pub successful_field: i32,
+
+                    /// Documentation of `unsupported_field`.
+                    pub unsupported_field: Option<[i32; 3]>,
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            let comment_for_successful_field = " Documentation of `successful_field`.\n\n\
+                  Generated from: <crubit_unittests.rs>;l=4";
+            let comment_for_unsupported_field = "Field type has been replaced with a blob of bytes: \
+                 Generic types are not supported yet (b/259749095)";
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        private:
+                            __COMMENT__ #comment_for_unsupported_field
+                            unsigned char unsupported_field[16];
+                        public:
+                            __COMMENT__ #comment_for_successful_field
+                            std::int32_t successful_field;
+                        private:
+                            inline static void __crubit_field_offset_assertions();
+                    };
+                    ...
+                }
+            );
         });
     }
 
