@@ -1386,7 +1386,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         } else {
             // We put the assertions in a method so that they can read private member
             // variables.
-            quote! { inline static void __crubit_field_offset_assertions(); }
+            quote! { private: inline static void __crubit_field_offset_assertions(); }
         };
 
         let mut prereqs = CcPrerequisites::default();
@@ -1404,8 +1404,9 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                         if size > 0 {
                             let size = Literal::u64_unsuffixed(size);
                             quote! {
-                                __COMMENT__ #msg
-                                unsigned char #cc_name[#size];
+                                private:
+                                    __COMMENT__ #msg
+                                    unsigned char #cc_name[#size];
                             }
                         } else {
                             // TODO(b/258259459): finalize the approach here.
@@ -1413,8 +1414,9 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                             // field entirely. This also requires removing the field's assertions,
                             // added above.
                             quote! {
-                                __COMMENT__ #msg
-                                [[no_unique_address]] struct{} #cc_name;
+                                private:
+                                    __COMMENT__ #msg
+                                    [[no_unique_address]] struct{} #cc_name;
                             }
                         }
                     }
@@ -1425,10 +1427,20 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                         } else {
                             let padding = Literal::u64_unsuffixed(padding);
                             let ident = format_ident!("__padding{}", field.index);
-                            quote! { unsigned char #ident[#padding]; }
+                            quote! { private: unsigned char #ident[#padding]; }
+                        };
+                        let visibility = if field.is_public {
+                            quote! { public: }
+                        } else {
+                            quote! { private: }
                         };
                         let cc_type = cc_type.into_tokens(&mut prereqs);
-                        quote! { #cc_type #cc_name; #padding }
+                        // TODO(b/271002281): Preserve doc comments.
+                        quote! {
+                            #visibility
+                                #cc_type #cc_name;
+                            #padding
+                        }
                     }
                 }
             })
@@ -1437,10 +1449,8 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         CcSnippet {
             prereqs,
             tokens: quote! {
-                // TODO(b/271002281): Preserve actual field visibility.
-                private: __NEWLINE__
-                    #fields
-                    #assertions_method_decl
+                #fields
+                #assertions_method_decl
             },
         }
     };
@@ -3631,9 +3641,9 @@ pub mod tests {
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
                             ~SomeStruct() = default;
+                        public: ... std::int32_t x;
+                        public: ... std::int32_t y;
                         private:
-                            ...  std::int32_t x;
-                            ...  std::int32_t y;
                             inline static void __crubit_field_offset_assertions();
                     };
                 }
@@ -3696,9 +3706,9 @@ pub mod tests {
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
                             ~TupleStruct() = default;
+                        public: ... std::int32_t __field0;
+                        public: ... std::int32_t __field1;
                         private:
-                            ...  std::int32_t __field0;
-                            ...  std::int32_t __field1;
                             inline static void __crubit_field_offset_assertions();
                     };
                 }
@@ -3750,13 +3760,13 @@ pub mod tests {
                     ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) SomeStruct final {
                         ...
+                        // The particular order below is not guaranteed,
+                        // so we may need to adjust this test assertion
+                        // (if Rust changes how it lays out the fields).
+                        public: ... std::int32_t field2;
+                        public: ... std::int16_t field1;
+                        public: ... std::int16_t field3;
                         private:
-                            // The particular order below is not guaranteed,
-                            // so we may need to adjust this test assertion
-                            // (if Rust changes how it lays out the fields).
-                            ...  std::int32_t field2;
-                            ...  std::int16_t field1;
-                            ...  std::int16_t field3;
                             inline static void __crubit_field_offset_assertions();
                     };
                 }
@@ -3810,9 +3820,10 @@ pub mod tests {
                     ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) __attribute__((packed)) SomeStruct final {
                         ...
-                        std::uint16_t field1;
-                        std::uint32_t field2;
-                        inline static void __crubit_field_offset_assertions();
+                        public: ... std::uint16_t field1;
+                        public: ... std::uint32_t field2;
+                        private:
+                            inline static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -3861,10 +3872,11 @@ pub mod tests {
                     ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) SomeStruct final {
                         ...
-                        std::uint32_t f2;
-                        std::uint8_t f1;
-                        unsigned char __padding0[3];
-                        inline static void __crubit_field_offset_assertions();
+                        public: ... std::uint32_t f2;
+                        public: ... std::uint8_t f1;
+                        private: unsigned char __padding0[3];
+                        private:
+                            inline static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -4284,7 +4296,10 @@ pub mod tests {
                         private:
                             __COMMENT__ #broken_field_msg
                             unsigned char unsupported_field[16];
+                        public:
+                            ...
                             std::int32_t successful_field;
+                        private:
                             inline static void __crubit_field_offset_assertions();
                     };
                     ...
@@ -4415,9 +4430,13 @@ pub mod tests {
                         private:
                             __COMMENT__ #broken_field_msg
                             [[no_unique_address]] struct{} zst1;
+                        private:
                             __COMMENT__ #broken_field_msg
                             [[no_unique_address]] struct{} zst2;
+                        public:
+                            ...
                             std::int32_t successful_field;
+                        private:
                             inline static void __crubit_field_offset_assertions();
                     };
                     ...
@@ -4513,6 +4532,7 @@ pub mod tests {
                         private:
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[1];
+                        private:
                             inline static void __crubit_field_offset_assertions();
                     };
                 }
@@ -4578,6 +4598,7 @@ pub mod tests {
                         private:
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[12];
+                        private:
                             inline static void __crubit_field_offset_assertions();
                     };
                 }
@@ -4656,6 +4677,7 @@ pub mod tests {
                         private:
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[8];
+                        private:
                             inline static void __crubit_field_offset_assertions();
                     };
                 }

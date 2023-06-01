@@ -96,13 +96,9 @@ and to exclusive references (e.g. `&mut T`).
 
 Examples of C++ features that may mutate a value that Rust holds a reference to:
 
-*   Using copy assignment operator of C++ value that Rust has a reference to.
-
-TODO(b/258249993): After `cc_bindings_from_rs` generates assignment operators,
-explicitly document them here as an example.
-
-TODO(b/271002281): After `cc_bindings_from_rs` exposes public fields, explicitly
-document them here as an example.
+*   Using copy assignment operator of C++ value that Rust has a
+    reference to.
+*   Mutating public fields of a C++ struct that Rust has a reference to.
 
 TODO: Try to succintly mention the idea that short-lived / non-retained
 references are safe from the mutation risk.
