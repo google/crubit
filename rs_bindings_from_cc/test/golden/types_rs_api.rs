@@ -138,6 +138,23 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
 }
 
 #[inline(always)]
+pub fn FunctionTakingPointersAndReferences<'a, 'b, 'c, 'd>(
+    const_ref_param: &'a ::core::ffi::c_int,
+    mut_ref_param: &'b mut ::core::ffi::c_int,
+    const_ptr_param: Option<&'c ::core::ffi::c_int>,
+    mut_ptr_param: Option<&'d mut ::core::ffi::c_int>,
+) {
+    unsafe {
+        crate::detail::__rust_thunk___Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi(
+            const_ref_param,
+            mut_ref_param,
+            const_ptr_param,
+            mut_ptr_param,
+        )
+    }
+}
+
+#[inline(always)]
 pub fn VoidReturningFunction() {
     unsafe { crate::detail::__rust_thunk___Z21VoidReturningFunctionv() }
 }
@@ -185,6 +202,18 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::FieldTypeTestStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
+        );
+        #[link_name = "_Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi"]
+        pub(crate) fn __rust_thunk___Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi<
+            'a,
+            'b,
+            'c,
+            'd,
+        >(
+            const_ref_param: &'a ::core::ffi::c_int,
+            mut_ref_param: &'b mut ::core::ffi::c_int,
+            const_ptr_param: Option<&'c ::core::ffi::c_int>,
+            mut_ptr_param: Option<&'d mut ::core::ffi::c_int>,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
         pub(crate) fn __rust_thunk___Z32FunctionPointerReturningFunctionv() -> Option<

@@ -64,6 +64,11 @@ struct FieldTypeTestStruct final {
   ForwardDeclaredStruct* forward_declared_ptr_field;
 };
 
+void FunctionTakingPointersAndReferences(const int& const_ref_param,
+                                         int& mut_ref_param,
+                                         const int* const_ptr_param,
+                                         int* mut_ptr_param);
+
 inline void VoidReturningFunction() {}
 
 // Note especially the use of references. If we convert those to pointers,
