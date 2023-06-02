@@ -46,10 +46,13 @@ def _llvm_loader_repository(repository_ctx):
         )
     else:
         # Use downloaded LLVM built with Bazel
+        llvm_repo = "llvm-raw-head" if "LLVM_AT_HEAD" in repository_ctx.os.environ and repository_ctx.os.environ["LLVM_AT_HEAD"] else "llvm-raw"
         repository_ctx.template(
             "llvm.bzl",
             Label("//bazel:llvm_remote.bzl.tmpl"),
-            substitutions = {},
+            substitutions = {
+                "%{LLVM_REPO}": llvm_repo,
+            },
             executable = False,
         )
 
@@ -64,6 +67,12 @@ def llvm_loader_repository_dependencies():
         shallow_since = "1685492206 -0700",
         remote = "https://github.com/llvm/llvm-project.git",
     )
+    new_git_repository(
+        name = "llvm-raw-head",
+        build_file_content = "# empty",
+        branch = "main",
+        remote = "https://github.com/llvm/llvm-project.git",
+    )
 
 llvm_loader_repository = repository_rule(
     implementation = _llvm_loader_repository,
@@ -73,5 +82,6 @@ llvm_loader_repository = repository_rule(
     },
     environ = [
         "LLVM_INSTALL_PATH",
+        "LLVM_AT_HEAD",
     ],
 )

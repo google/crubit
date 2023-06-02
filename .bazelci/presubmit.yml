@@ -31,3 +31,8 @@ tasks:
     name: Rolling Bazel Version With Clang and LLD
     bazel: "rolling"
     <<: *default_linux_task
+  ubuntu2004_llvm_at_head:
+    name: Stable Bazel Version with LLVM at HEAD
+    build_flags:
+      - "--repo_env=LLVM_AT_HEAD=1"
+    <<: *default_linux_task
