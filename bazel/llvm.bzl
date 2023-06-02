@@ -71,7 +71,7 @@ def llvm_loader_repository_dependencies():
         name = "llvm-raw-head",
         build_file_content = "# empty",
         branch = "main",
-        remote = "https://github.com/llvm/llvm-project.git",
+        remote = "sso://github/llvm/llvm-project",
     )
 
 llvm_loader_repository = repository_rule(
