@@ -35,6 +35,9 @@ struct Nontrivial final {
   int field;
 
   Nontrivial operator+(const Nontrivial& rhs) const;
+
+  // Bindings for `operator+=` are *not* supported for non-trivial types.
+  Nontrivial& operator+=(const Nontrivial& rhs);
 };
 
 // Nontrivial due to (inline) user-specified constructor and destructor.

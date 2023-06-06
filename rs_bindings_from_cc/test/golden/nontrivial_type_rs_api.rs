@@ -268,6 +268,9 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::Nontrivial> for &'a crate::Nontrivial {
     }
 }
 
+// Error while generating bindings for item 'Nontrivial::operator+=':
+// Compound assignment operators are not supported for non-Unpin types);
+
 /// Nontrivial due to (inline) user-specified constructor and destructor.
 ///
 /// This makes it nontrivial for calls (so not trivially relocatable), as well

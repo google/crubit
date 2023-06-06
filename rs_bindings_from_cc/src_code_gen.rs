@@ -949,6 +949,10 @@ fn api_func_shape(
                     }
                     _ => bail!("Expected first parameter to be a record or reference"),
                 };
+                ensure!(
+                    record.is_unpin(),
+                    "Compound assignment operators are not supported for non-Unpin types);",
+                );
 
                 impl_kind = ImplKind::Trait {
                     record: record.clone(),
