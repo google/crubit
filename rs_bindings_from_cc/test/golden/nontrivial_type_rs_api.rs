@@ -249,6 +249,36 @@ impl Nontrivial {
     }
 }
 
+impl PartialEq for Nontrivial {
+    #[inline(always)]
+    fn eq<'a, 'b>(&'a self, rhs: &'b Self) -> bool {
+        unsafe { crate::detail::__rust_thunk___ZNK10NontrivialeqERKS_(self, rhs) }
+    }
+}
+
+// Error while generating bindings for item 'Nontrivial::operator!=':
+// Bindings for this kind of operator (operator != with 2 parameter(s)) are not supported
+
+impl PartialOrd for Nontrivial {
+    #[inline(always)]
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        if self == other {
+            return Some(core::cmp::Ordering::Equal);
+        }
+        if self < other {
+            return Some(core::cmp::Ordering::Less);
+        }
+        if other < self {
+            return Some(core::cmp::Ordering::Greater);
+        }
+        None
+    }
+    #[inline(always)]
+    fn lt<'a, 'b>(&'a self, rhs: &'b Self) -> bool {
+        unsafe { crate::detail::__rust_thunk___ZNK10NontrivialltERKS_(self, rhs) }
+    }
+}
+
 impl<'a, 'b> ::core::ops::Add<&'b crate::Nontrivial> for &'a crate::Nontrivial {
     type Output =
         impl ::ctor::Ctor<Output = crate::Nontrivial> + ::ctor::Captures<'a> + ::ctor::Captures<'b>;
@@ -1015,6 +1045,16 @@ mod detail {
         pub(crate) fn __rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv<'a>(
             __this: ::ctor::ConstRvalueReference<'a, crate::Nontrivial>,
         );
+        #[link_name = "_ZNK10NontrivialeqERKS_"]
+        pub(crate) fn __rust_thunk___ZNK10NontrivialeqERKS_<'a, 'b>(
+            __this: &'a crate::Nontrivial,
+            rhs: &'b crate::Nontrivial,
+        ) -> bool;
+        #[link_name = "_ZNK10NontrivialltERKS_"]
+        pub(crate) fn __rust_thunk___ZNK10NontrivialltERKS_<'a, 'b>(
+            __this: &'a crate::Nontrivial,
+            rhs: &'b crate::Nontrivial,
+        ) -> bool;
         pub(crate) fn __rust_thunk___ZNK10NontrivialplERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::Nontrivial>,
             __this: &'a crate::Nontrivial,

@@ -34,6 +34,9 @@ struct Nontrivial final {
 
   int field;
 
+  bool operator==(const Nontrivial& rhs) const;
+  bool operator!=(const Nontrivial& rhs) const;
+  bool operator<(const Nontrivial& rhs) const;
   Nontrivial operator+(const Nontrivial& rhs) const;
 
   // Bindings for `operator+=` are *not* supported for non-trivial types.
