@@ -1703,6 +1703,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         let impl_items_cc_details = impl_items_cc_details.into_tokens(&mut prereqs);
         let fields_cc_details = fields_cc_details.into_tokens(&mut prereqs);
         prereqs.defs.insert(local_def_id);
+        prereqs.includes.insert(CcInclude::type_traits());
         CcSnippet {
             prereqs,
             tokens: quote! {
@@ -1713,6 +1714,8 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                 static_assert(
                     alignof(#adt_cc_name) == #alignment,
                     "Verify that struct layout didn't change since this header got generated");
+                static_assert(std::is_trivially_move_constructible_v<#adt_cc_name>);
+                static_assert(std::is_trivially_move_assignable_v<#adt_cc_name>);
                 __NEWLINE__
                 #default_ctor_cc_details
                 #copy_ctor_and_assignment_cc_details
@@ -3655,6 +3658,8 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
+                    static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, x));
                       static_assert(4 == offsetof(SomeStruct, y));
@@ -3718,6 +3723,8 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(TupleStruct) == 8, ...);
                     static_assert(alignof(TupleStruct) == 4, ...);
+                    static_assert(std::is_trivially_move_constructible_v<TupleStruct>);
+                    static_assert(std::is_trivially_move_assignable_v<TupleStruct>);
                     inline void TupleStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(TupleStruct, __field0));
                       static_assert(4 == offsetof(TupleStruct, __field1));
@@ -3776,6 +3783,8 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
+                    static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, field2));
                       static_assert(4 == offsetof(SomeStruct, field1));
@@ -3832,6 +3841,8 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 6, ...);
                     static_assert(alignof(SomeStruct) == 1, ...);
+                    static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
+                    static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, field1));
                       static_assert(2 == offsetof(SomeStruct, field2));
@@ -3885,6 +3896,8 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
+                    static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, f2));
                       static_assert(4 == offsetof(SomeStruct, f1));
@@ -4319,6 +4332,8 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 20, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
+                    static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, unsupported_field));
                       static_assert(16 == offsetof(SomeStruct, successful_field));
@@ -4456,6 +4471,8 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 4, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
+                    static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, zst1));
                       static_assert(0 == offsetof(SomeStruct, zst2));
