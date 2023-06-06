@@ -96,7 +96,7 @@ and to exclusive references (e.g. `&mut T`).
 
 Examples of C++ features that may mutate a value that Rust holds a reference to:
 
-*   Using copy assignment operator of C++ value that Rust has a
+*   Using copy or move assignment operator of C++ value that Rust has a
     reference to.
 *   Mutating public fields of a C++ struct that Rust has a reference to.
 

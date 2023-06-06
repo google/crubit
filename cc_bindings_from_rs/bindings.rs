@@ -1209,15 +1209,7 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
         // generated C++ move constructor might need to assign `Default::default()` to the
         // moved-from object.
         #cc_short_name(#cc_short_name&&) = default;
-
-        // TODO(b/258235219): Providing assignment operators enables mutation which
-        // may negatively interact with support for references.  Therefore until we
-        // have more confidence in our reference-handling-plans, we are deleting the
-        // assignment operators.
-        //
-        // (Move assignment operator has another set of concerns and constraints - see the
-        // comment for the move constructor above).
-        #cc_short_name& operator=(#cc_short_name&&) = delete;
+        #cc_short_name& operator=(#cc_short_name&&) = default;
 
         // TODO(b/258251148): Support custom `Drop` impls and drop glue.
         ~#cc_short_name() = default;
@@ -3646,9 +3638,7 @@ pub mod tests {
 
                             // All Rust types are trivially-movable.
                             SomeStruct(SomeStruct&&) = default;
-
-                            // Assignment operators are disabled for now.
-                            SomeStruct& operator=(SomeStruct&&) = delete;
+                            SomeStruct& operator=(SomeStruct&&) = default;
 
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
@@ -3711,9 +3701,7 @@ pub mod tests {
 
                             // All Rust types are trivially-movable.
                             TupleStruct(TupleStruct&&) = default;
-
-                            // Assignment operators are disabled for now.
-                            TupleStruct& operator=(TupleStruct&&) = delete;
+                            TupleStruct& operator=(TupleStruct&&) = default;
 
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
@@ -4582,9 +4570,7 @@ pub mod tests {
 
                             // All Rust types are trivially-movable.
                             SomeEnum(SomeEnum&&) = default;
-
-                            // Assignment operators are disabled for now.
-                            SomeEnum& operator=(SomeEnum&&) = delete;
+                            SomeEnum& operator=(SomeEnum&&) = default;
 
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
@@ -4648,9 +4634,7 @@ pub mod tests {
 
                             // All Rust types are trivially-movable.
                             Point(Point&&) = default;
-
-                            // Assignment operators are disabled for now.
-                            Point& operator=(Point&&) = delete;
+                            Point& operator=(Point&&) = default;
 
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
@@ -4727,9 +4711,7 @@ pub mod tests {
 
                             // All Rust types are trivially-movable.
                             SomeUnion(SomeUnion&&) = default;
-
-                            // Assignment operators are disabled for now.
-                            SomeUnion& operator=(SomeUnion&&) = delete;
+                            SomeUnion& operator=(SomeUnion&&) = default;
 
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
