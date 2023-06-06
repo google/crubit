@@ -4,499 +4,367 @@
 
 // Tests for comparisons of types containing nullability annotations.
 
-#include "nullability/test/check_diagnostics.h"
-#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "nullability_test.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
-namespace {
-
-TEST(PointerNullabilityTest, CompareNonNullPtrAndNonNullPtr) {
-  // nonnull == nonnull
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull x, int* _Nonnull y) {
-      *x;
-      *y;
-      if (x == y) {
-        *x;
-        *y;
-      } else {
-        *x;
-        *y;
-      }
-      *x;
-      *y;
-    }
-  )cc"));
-
-  // nonnull != nonnull
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull x, int* _Nonnull y) {
-      *x;
-      *y;
-      if (x != y) {
-        *x;
-        *y;
-      } else {
-        *x;
-        *y;
-      }
-      *x;
-      *y;
-    }
-  )cc"));
+// nonnull vs nonnull
+TEST void nonnullEqualsNonnull(Nonnull<int*> x, Nonnull<int*> y) {
+  nonnull(x);
+  nonnull(y);
+  if (x == y) {
+    nonnull(x);
+    nonnull(y);
+  } else {
+    nonnull(x);
+    nonnull(y);
+  }
+  nonnull(x);
+  nonnull(y);
+}
+TEST void nonnullNotEqualsNonnull(Nonnull<int*> x, Nonnull<int*> y) {
+  nonnull(x);
+  nonnull(y);
+  if (x != y) {
+    nonnull(x);
+    nonnull(y);
+  } else {
+    nonnull(x);
+    nonnull(y);
+  }
+  nonnull(x);
+  nonnull(y);
 }
 
-TEST(PointerNullabilityTest, CompareNullablePtrAndNullablePtr) {
-  // nullable == nullable
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x, int* _Nullable y) {
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-      if (x == y) {
-        *x;  // [[unsafe]]
-        *y;  // [[unsafe]]
-      } else {
-        *x;  // [[unsafe]]
-        *y;  // [[unsafe]]
-      }
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-    }
-  )cc"));
-
-  // nullable != nullable
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x, int* _Nullable y) {
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-      if (x != y) {
-        *x;  // [[unsafe]]
-        *y;  // [[unsafe]]
-      } else {
-        *x;  // [[unsafe]]
-        *y;  // [[unsafe]]
-      }
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-    }
-  )cc"));
+// nullable vs nullable
+TEST void nullableEqualsNullable(Nullable<int*> x, Nullable<int*> y) {
+  nullable(x);
+  nullable(y);
+  if (x == y) {
+    nullable(x);
+    nullable(y);
+  } else {
+    nullable(x);
+    nullable(y);
+  }
+  nullable(x);
+  nullable(y);
+}
+TEST void nullableNotEqualsNullable(Nullable<int*> x, Nullable<int*> y) {
+  nullable(x);
+  nullable(y);
+  if (x != y) {
+    nullable(x);
+    nullable(y);
+  } else {
+    nullable(x);
+    nullable(y);
+  }
+  nullable(x);
+  nullable(y);
 }
 
-TEST(PointerNullabilityTest, CompareUnknownPtrAndUnknownPtr) {
-  // unknown == unknown
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x, int *y) {
-      *x;
-      *y;
-      if (x == y) {
-        *x;
-        *y;
-      } else {
-        *x;
-        *y;
-      }
-      *x;
-      *y;
-    }
-  )cc"));
-
-  // unknown != unknown
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x, int *y) {
-      *x;
-      *y;
-      if (x != y) {
-        *x;
-        *y;
-      } else {
-        *x;
-        *y;
-      }
-      *x;
-      *y;
-    }
-  )cc"));
+// unknown vs unknown
+TEST void unknownEqualsUnknown(int* x, int* y) {
+  unknown(x);
+  unknown(y);
+  if (x == y) {
+    unknown(x);
+    unknown(y);
+  } else {
+    unknown(x);
+    unknown(y);
+  }
+  unknown(x);
+  unknown(y);
+}
+TEST void unknownNotEqualsUnknown(int* x, int* y) {
+  unknown(x);
+  unknown(y);
+  if (x != y) {
+    unknown(x);
+    unknown(y);
+  } else {
+    unknown(x);
+    unknown(y);
+  }
+  unknown(x);
+  unknown(y);
 }
 
+// nonnull vs nullptr
 // TODO(b/233582219): Implement diagnosis of unreachable program points
-TEST(PointerNullabilityTest, CompareNonNullPtrAndNullPtr) {
-  // nonnull == nullptr
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull x) {
-      *x;
-      if (x == nullptr) {
-        *x;  // unreachable
-      } else {
-        *x;
-      }
-      *x;
-    }
-  )cc"));
-
-  // nullptr == nonnull
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull x) {
-      *x;
-      if (nullptr == x) {
-        *x;  // unreachable
-      } else {
-        *x;
-      }
-      *x;
-    }
-  )cc"));
-
-  // nonnull != nullptr
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull x) {
-      *x;
-      if (x != nullptr) {
-        *x;
-      } else {
-        *x;  // unreachable
-      }
-      *x;
-    }
-  )cc"));
-
-  // nullptr != nonnull
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull x) {
-      *x;
-      if (nullptr != x) {
-        *x;
-      } else {
-        *x;  // unreachable
-      }
-      *x;
-    }
-  )cc"));
+TEST void nonnullEqualsNullptr(Nonnull<int*> x) {
+  nonnull(x);
+  if (x == nullptr) {
+    nonnull(x);  // unreachable
+  } else {
+    nonnull(x);
+  }
+  nonnull(x);
+}
+TEST void nullptrEqualsNonnull(Nonnull<int*> x) {
+  nonnull(x);
+  if (nullptr == x) {
+    nonnull(x);  // unreachable
+  } else {
+    nonnull(x);
+  }
+  nonnull(x);
+}
+TEST void nonnullNotEqualsNullptr(Nonnull<int*> x) {
+  nonnull(x);
+  if (x != nullptr) {
+    nonnull(x);
+  } else {
+    nonnull(x);  // unreachable
+  }
+  nonnull(x);
+}
+TEST void nullptrNotEqualsNonnull(Nonnull<int*> x) {
+  nonnull(x);
+  if (nullptr != x) {
+    nonnull(x);
+  } else {
+    nonnull(x);  // unreachable
+  }
+  nonnull(x);
 }
 
-TEST(PointerNullabilityTest, CompareNullablePtrAndNullPtr) {
-  // nullable == nullptr
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x) {
-      *x;  // [[unsafe]]
-      if (x == nullptr) {
-        *x;  // [[unsafe]]
-      } else {
-        *x;
-      }
-      *x;  // [[unsafe]]
-    }
-  )cc"));
-
-  // nullptr == nullable
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x) {
-      *x;  // [[unsafe]]
-      if (nullptr == x) {
-        *x;  // [[unsafe]]
-      } else {
-        *x;
-      }
-      *x;  // [[unsafe]]
-    }
-  )cc"));
-
-  // nullable != nullptr
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x) {
-      *x;  // [[unsafe]]
-      if (x != nullptr) {
-        *x;
-      } else {
-        *x;  // [[unsafe]]
-      }
-      *x;  // [[unsafe]]
-    }
-  )cc"));
-
-  // nullptr != nullable
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x) {
-      *x;  // [[unsafe]]
-      if (nullptr != x) {
-        *x;
-      } else {
-        *x;  // [[unsafe]]
-      }
-      *x;  // [[unsafe]]
-    }
-  )cc"));
+// nullable vs nullptr
+TEST void nullableEqualsNullptr(Nullable<int*> x) {
+  nullable(x);
+  if (x == nullptr) {
+    nullable(x);
+  } else {
+    nonnull(x);
+  }
+  nullable(x);
+}
+TEST void nullptrEqualsNullable(Nullable<int*> x) {
+  nullable(x);
+  if (nullptr == x) {
+    nullable(x);
+  } else {
+    nonnull(x);
+  }
+  nullable(x);
+}
+TEST void nullableNotEqualsNullptr(Nullable<int*> x) {
+  nullable(x);
+  if (x != nullptr) {
+    nonnull(x);
+  } else {
+    nullable(x);
+  }
+  nullable(x);
+}
+TEST void nullptrNotEqualsNullable(Nullable<int*> x) {
+  nullable(x);
+  if (nullptr != x) {
+    nonnull(x);
+  } else {
+    nullable(x);
+  }
+  nullable(x);
 }
 
-TEST(PointerNullabilityTest, CompareNullablePtrAndNonNullPtr) {
-  // nullable == nonnull
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x, int* _Nonnull y) {
-      *x;  // [[unsafe]]
-      *y;
-      if (x == y) {
-        *x;
-        *y;
-      } else {
-        *x;  // [[unsafe]]
-        *y;
-      }
-      *x;  // [[unsafe]]
-      *y;
-    }
-  )cc"));
-
-  // nonnull == nullable
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x, int* _Nonnull y) {
-      *x;  // [[unsafe]]
-      *y;
-      if (y == x) {
-        *x;
-        *y;
-      } else {
-        *x;  // [[unsafe]]
-        *y;
-      }
-      *x;  // [[unsafe]]
-      *y;
-    }
-  )cc"));
-
-  // nullable != nonnull
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x, int* _Nonnull y) {
-      *x;  // [[unsafe]]
-      *y;
-      if (x != y) {
-        *x;  // [[unsafe]]
-        *y;
-      } else {
-        *x;
-        *y;
-      }
-      *x;  // [[unsafe]]
-      *y;
-    }
-  )cc"));
-
-  // nonnull != nullable
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x, int* _Nonnull y) {
-      *x;  // [[unsafe]]
-      *y;
-      if (y != x) {
-        *x;  // [[unsafe]]
-        *y;
-      } else {
-        *x;
-        *y;
-      }
-      *x;  // [[unsafe]]
-      *y;
-    }
-  )cc"));
+// nullable vs nonnull
+TEST void nullableEqualsNonnull(Nullable<int*> x, Nonnull<int*> y) {
+  nullable(x);
+  nonnull(y);
+  if (x == y) {
+    nonnull(x);
+    nonnull(y);
+  } else {
+    nullable(x);
+    nonnull(y);
+  }
+  nullable(x);
+  nonnull(y);
+}
+TEST void nonnullEqualsNullable(Nullable<int*> x, Nonnull<int*> y) {
+  nullable(x);
+  nonnull(y);
+  if (y == x) {
+    nonnull(x);
+    nonnull(y);
+  } else {
+    nullable(x);
+    nonnull(y);
+  }
+  nullable(x);
+  nonnull(y);
+}
+TEST void nullableNotEqualsNonnull(Nullable<int*> x, Nonnull<int*> y) {
+  nullable(x);
+  nonnull(y);
+  if (x != y) {
+    nullable(x);
+    nonnull(y);
+  } else {
+    nonnull(x);
+    nonnull(y);
+  }
+  nullable(x);
+  nonnull(y);
+}
+TEST void nonnullNotEqualsNullable(Nullable<int*> x, Nonnull<int*> y) {
+  nullable(x);
+  nonnull(y);
+  if (y != x) {
+    nullable(x);
+    nonnull(y);
+  } else {
+    nonnull(x);
+    nonnull(y);
+  }
+  nullable(x);
+  nonnull(y);
 }
 
-TEST(PointerNullabilityTest, CompareNullablePtrAndUnknownPtr) {
-  // nullable == unknown
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nullable x, int *y) {
-      *x;  // [[unsafe]]
-      *y;
-      if (x == y) {
-        *x;  // [[unsafe]]
-        *y;
-      } else {
-        *x;  // [[unsafe]]
-        *y;
-      }
-      *x;  // [[unsafe]]
-      *y;
-    }
-  )cc"));
-
-  // unknown == nullable
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nullable x, int *y) {
-      *x;  // [[unsafe]]
-      *y;
-      if (y == x) {
-        *x;  // [[unsafe]]
-        *y;
-      } else {
-        *x;  // [[unsafe]]
-        *y;
-      }
-      *x;  // [[unsafe]]
-      *y;
-    }
-  )cc"));
-
-  // nullable != unknown
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nullable x, int *y) {
-      *x;  // [[unsafe]]
-      *y;
-      if (x != y) {
-        *x;  // [[unsafe]]
-        *y;
-      } else {
-        *x;  // [[unsafe]]
-        *y;
-      }
-      *x;  // [[unsafe]]
-      *y;
-    }
-  )cc"));
-
-  // unknown != nullable
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nullable x, int *y) {
-      *x;  // [[unsafe]]
-      *y;
-      if (y != x) {
-        *x;  // [[unsafe]]
-        *y;
-      } else {
-        *x;  // [[unsafe]]
-        *y;
-      }
-      *x;  // [[unsafe]]
-      *y;
-    }
-  )cc"));
+// nullable vs unknown
+TEST void nullableEqualsUnknown(Nullable<int*> x, int* y) {
+  nullable(x);
+  unknown(y);
+  if (x == y) {
+    nullable(x);
+    unknown(y);
+  } else {
+    nullable(x);
+    unknown(y);
+  }
+  nullable(x);
+  unknown(y);
+}
+TEST void unknownEqualsNullable(Nullable<int*> x, int* y) {
+  nullable(x);
+  unknown(y);
+  if (y == x) {
+    nullable(x);
+    unknown(y);
+  } else {
+    nullable(x);
+    unknown(y);
+  }
+  nullable(x);
+  unknown(y);
+}
+TEST void nullableNotEqualsUnknown(Nullable<int*> x, int* y) {
+  nullable(x);
+  unknown(y);
+  if (x != y) {
+    nullable(x);
+    unknown(y);
+  } else {
+    nullable(x);
+    unknown(y);
+  }
+  nullable(x);
+  unknown(y);
+}
+TEST void unknownNotEqualsNullable(Nullable<int*> x, int* y) {
+  nullable(x);
+  unknown(y);
+  if (y != x) {
+    nullable(x);
+    unknown(y);
+  } else {
+    nullable(x);
+    unknown(y);
+  }
+  nullable(x);
+  unknown(y);
 }
 
-// TODO(b/233582219): Fix false negatives. The pointer is compared to nullptr,
-// hence the unnannotated pointer should be considered nullable and emit
-// warnings where it fails or is not null checked.
-TEST(PointerNullabilityTest, CompareUnknownPtrAndNullPtr) {
-  // unknown == nullptr
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x) {
-      *x;  // false-negative
-      if (x == nullptr) {
-        *x;  // false-negative
-      } else {
-        *x;
-      }
-      *x;  // false-negative
-    }
-  )cc"));
-
-  // nullptr == unknown
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x) {
-      *x;  // false-negative
-      if (nullptr == x) {
-        *x;  // false-negative
-      } else {
-        *x;
-      }
-      *x;  // false-negative
-    }
-  )cc"));
-
-  // unknown != nullptr
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x) {
-      *x;  // false-negative
-      if (x != nullptr) {
-        *x;
-      } else {
-        *x;  // false-negative
-      }
-      *x;  // false-negative
-    }
-  )cc"));
-
-  // nullptr != unknown
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x) {
-      *x;  // false-negative
-      if (nullptr != x) {
-        *x;
-      } else {
-        *x;  // false-negative
-      }
-      *x;  // false-negative
-    }
-  )cc"));
+// unknown vs nullptr
+// TODO(b/233582219): The pointer is compared to nullptr,
+// hence the unnannotated pointer should be considered nullable.
+TEST void unknownEqualsNullptr(int* x) {
+  unknown(x);  // TODO: nullable
+  if (x == nullptr) {
+    unknown(x);  // TODO: nullable
+  } else {
+    unknown(x);  // TODO: nonnull
+  }
+  unknown(x);  // TODO: nullable
+}
+TEST void nullptrEqualsUnknown(int* x) {
+  unknown(x);  // TODO: nullable
+  if (nullptr == x) {
+    unknown(x);  // TODO: nullable
+  } else {
+    unknown(x);  // TODO: nonnull
+  }
+  unknown(x);  // TODO: nullable
+}
+TEST void unknownNotEqualsNullptr(int* x) {
+  unknown(x);  // TODO: nullable
+  if (x != nullptr) {
+    unknown(x);  // TODO: nonnull
+  } else {
+    unknown(x);  // TODO: nullable
+  }
+  unknown(x);  // TODO: nullable
+}
+TEST void nullptrNotEqualsUnknown(int* x) {
+  unknown(x);  // TODO: nullable
+  if (nullptr != x) {
+    unknown(x);  // TODO: nonnull
+  } else {
+    unknown(x);  // TODO: nullable
+  }
+  unknown(x);  // TODO: nullable
 }
 
-TEST(PointerNullabilityTest, CompareUnknownPtrAndNonNullPtr) {
-  // unknown == nonnull
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x, int *_Nonnull y) {
-      *x;
-      *y;
-      if (x == y) {
-        *x;
-        *y;
-      } else {
-        *x;
-        *y;
-      }
-      *x;
-      *y;
-    }
-  )cc"));
-
-  // nonnull == unknown
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x, int *_Nonnull y) {
-      *x;
-      *y;
-      if (y == x) {
-        *x;
-        *y;
-      } else {
-        *x;
-        *y;
-      }
-      *x;
-      *y;
-    }
-  )cc"));
-
-  // unknown != nonnull
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x, int *_Nonnull y) {
-      *x;
-      *y;
-      if (x != y) {
-        *x;
-        *y;
-      } else {
-        *x;
-        *y;
-      }
-      *x;
-      *y;
-    }
-  )cc"));
-
-  // nonnull != unknown
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x, int *_Nonnull y) {
-      *x;
-      *y;
-      if (y != x) {
-        *x;
-        *y;
-      } else {
-        *x;
-        *y;
-      }
-      *x;
-      *y;
-    }
-  )cc"));
+// unknown vs nonnull
+TEST void unknownEqualsNonnull(int* x, Nonnull<int*> y) {
+  unknown(x);
+  nonnull(y);
+  if (x == y) {
+    unknown(x);  // TODO: nonnull
+    nonnull(y);
+  } else {
+    unknown(x);
+    nonnull(y);
+  }
+  unknown(x);
+  nonnull(y);
 }
-
-}  // namespace
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+TEST void nonnullEqualsUnknown(int* x, Nonnull<int*> y) {
+  unknown(x);
+  nonnull(y);
+  if (y == x) {
+    unknown(x);  // TODO: nonnull
+    nonnull(y);
+  } else {
+    unknown(x);
+    nonnull(y);
+  }
+  unknown(x);
+  nonnull(y);
+}
+TEST void unknownNotEqualsNonnull(int* x, Nonnull<int*> y) {
+  unknown(x);
+  nonnull(y);
+  if (x != y) {
+    unknown(x);
+    nonnull(y);
+  } else {
+    unknown(x);  // TODO: nonnull
+    nonnull(y);
+  }
+  unknown(x);
+  nonnull(y);
+}
+TEST void nonnullNotEqualsUnknown(int* x, Nonnull<int*> y) {
+  unknown(x);
+  nonnull(y);
+  if (y != x) {
+    unknown(x);
+    nonnull(y);
+  } else {
+    unknown(x);  // TODO: nonnull
+    nonnull(y);
+  }
+  unknown(x);
+  nonnull(y);
+}

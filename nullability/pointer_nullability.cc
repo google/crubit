@@ -6,6 +6,7 @@
 
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
+#include "clang/Basic/Specifiers.h"
 #include "llvm/ADT/StringRef.h"
 
 namespace clang {
@@ -78,6 +79,15 @@ bool isNullable(const PointerValue& PointerVal, const Environment& Env) {
   auto& PointerNotKnownNull =
       Env.makeNot(Env.makeAnd(PointerKnown, PointerNull));
   return !Env.flowConditionImplies(PointerNotKnownNull);
+}
+
+NullabilityKind getNullability(const dataflow::PointerValue& PointerVal,
+                               const dataflow::Environment& Env) {
+  auto [PointerKnown, PointerNull] = getPointerNullState(PointerVal);
+  if (Env.flowConditionImplies(Env.makeNot(PointerNull)))
+    return NullabilityKind::NonNull;
+  return isNullable(PointerVal, Env) ? NullabilityKind::Nullable
+                                     : NullabilityKind::Unspecified;
 }
 
 }  // namespace nullability

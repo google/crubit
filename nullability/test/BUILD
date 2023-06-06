@@ -1,5 +1,7 @@
 # Integration tests for nullability verification.
 
+load("//nullability/test:nullability_test.bzl", "nullability_test")
+
 package(default_applicable_licenses = ["//:license"])
 
 cc_library(
@@ -26,6 +28,32 @@ cc_test(
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
+)
+
+cc_binary(
+    name = "nullability_test",
+    testonly = 1,
+    srcs = ["nullability_test.cc"],
+    deps = [
+        "@absl//absl/log:check",
+        "//nullability:pointer_nullability",
+        "//nullability:pointer_nullability_analysis",
+        "//nullability:pointer_nullability_lattice",
+        "//nullability:type_nullability",
+        "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:tooling",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+sh_test(
+    name = "nullability_test_test",
+    srcs = ["nullability_test_test.sh"],
+    args = ["$(location :nullability_test)"],
+    data = [":nullability_test"],
 )
 
 cc_test(
@@ -58,14 +86,9 @@ cc_test(
     ],
 )
 
-cc_test(
+nullability_test(
     name = "binary_ops",
     srcs = ["binary_ops.cc"],
-    deps = [
-        ":check_diagnostics",
-        "@llvm-project//third-party/unittest:gtest",
-        "@llvm-project//third-party/unittest:gtest_main",
-    ],
 )
 
 cc_test(
@@ -78,14 +101,9 @@ cc_test(
     ],
 )
 
-cc_test(
+nullability_test(
     name = "comparisons",
     srcs = ["comparisons.cc"],
-    deps = [
-        ":check_diagnostics",
-        "@llvm-project//third-party/unittest:gtest",
-        "@llvm-project//third-party/unittest:gtest_main",
-    ],
 )
 
 cc_test(

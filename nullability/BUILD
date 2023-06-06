@@ -5,6 +5,7 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "pointer_nullability_lattice",
     hdrs = ["pointer_nullability_lattice.h"],
+    visibility = ["//nullability/test:__pkg__"],
     deps = [
         ":type_nullability",
         "@absl//absl/container:flat_hash_map",
@@ -62,6 +63,7 @@ cc_library(
     name = "pointer_nullability",
     srcs = ["pointer_nullability.cc"],
     hdrs = ["pointer_nullability.h"],
+    visibility = ["//nullability/test:__pkg__"],
     deps = [
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
@@ -89,6 +91,7 @@ cc_library(
     name = "type_nullability",
     srcs = ["type_nullability.cc"],
     hdrs = ["type_nullability.h"],
+    visibility = ["//nullability/test:__pkg__"],
     deps = [
         "@absl//absl/log:check",
         "@llvm-project//clang:ast",

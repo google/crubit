@@ -2,87 +2,57 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Tests for binary operators.
+// Tests for control flow involving binary operators.
 
-#include "nullability/test/check_diagnostics.h"
-#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "nullability_test.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
-namespace {
-
-TEST(PointerNullabilityTest, BinaryExpressions) {
-  // x && y
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x, int* _Nullable y) {
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-      if (x && y) {
-        *x;
-        *y;
-      } else {
-        *x;  // [[unsafe]]
-        *y;  // [[unsafe]]
-      }
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-    }
-  )cc"));
-
-  // x || y
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x, int* _Nullable y) {
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-      if (x || y) {
-        *x;  // [[unsafe]]
-        *y;  // [[unsafe]]
-      } else {
-        *x;  // [[unsafe]]
-        *y;  // [[unsafe]]
-      }
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-    }
-  )cc"));
-
-  // !x && !y
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x, int* _Nullable y) {
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-      if (!x && !y) {
-        *x;  // [[unsafe]]
-        *y;  // [[unsafe]]
-      } else {
-        *x;  // [[unsafe]]
-        *y;  // [[unsafe]]
-      }
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-    }
-  )cc"));
-
-  // !x || !y
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x, int* _Nullable y) {
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-      if (!x || !y) {
-        *x;  // [[unsafe]]
-        *y;  // [[unsafe]]
-      } else {
-        *x;
-        *y;
-      }
-      *x;  // [[unsafe]]
-      *y;  // [[unsafe]]
-    }
-  )cc"));
+TEST void testAnd(Nullable<int*> x, Nullable<int*> y) {
+  if (x && y) {
+    nonnull(x);
+    nonnull(y);
+    // Type hasn't changed, even though we know x and y are nonnull.
+    type<Nullable<int*>>(x);
+    type<Nullable<int*>>(y);
+  } else {
+    nullable(x);
+    nullable(y);
+  }
+  nullable(x);
+  nullable(y);
 }
 
-}  // namespace
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+TEST void testOr(Nullable<int*> x, Nullable<int*> y) {
+  if (x || y) {
+    nullable(x);
+    nullable(y);
+  } else {
+    nullable(x);
+    nullable(y);
+  }
+  nullable(x);
+  nullable(y);
+}
+
+TEST void testNeither(Nullable<int*> x, Nullable<int*> y) {
+  if (!x && !y) {
+    nullable(x);
+    nullable(y);
+  } else {
+    nullable(x);
+    nullable(y);
+  }
+  nullable(x);
+  nullable(y);
+}
+
+TEST void testNotBoth(Nullable<int*> x, Nullable<int*> y) {
+  if (!x || !y) {
+    nullable(x);
+    nullable(y);
+  } else {
+    nonnull(x);
+    nonnull(y);
+  }
+  nullable(x);
+  nullable(y);
+}

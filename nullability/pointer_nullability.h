@@ -19,6 +19,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
+#include "clang/Basic/Specifiers.h"
 
 namespace clang {
 namespace tidy {
@@ -102,6 +103,20 @@ inline void initUnknownPointer(dataflow::PointerValue& PointerVal,
 bool isNullable(const dataflow::PointerValue& PointerVal,
                 const dataflow::Environment& Env);
 
+/// Returns the strongest provable assertion we can make about `PointerVal`.
+/// If PointerVal may not be null, returns Nonnull.
+/// If PointerVal may be both null and known-nullability, returns Nullable.
+/// Otherwise, returns Unspecified.
+clang::NullabilityKind getNullability(const dataflow::PointerValue& PointerVal,
+                                      const dataflow::Environment& Env);
+
+/// Returns the strongest provable assertion we can make about the value of
+/// `E` in `Env`.
+inline clang::NullabilityKind getNullability(const Expr* E,
+                                             const dataflow::Environment& Env) {
+  if (auto* P = getPointerValueFromExpr(E, Env)) return getNullability(*P, Env);
+  return clang::NullabilityKind::Unspecified;
+}
 
 // Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
 template <typename T>
