@@ -219,30 +219,37 @@ pub enum CcInclude {
 
 impl CcInclude {
     /// Creates a `CcInclude` that represents `#include <cstddef>` and provides
-    /// C++ types like `std::size_t` or `std::ptrdiff_t`.  See also
+    /// C++ types like `std::size_t` or `std::ptrdiff_t`.  See
     /// https://en.cppreference.com/w/cpp/header/cstddef
     pub fn cstddef() -> Self {
         Self::SystemHeader("cstddef")
     }
 
     /// Creates a `CcInclude` that represents `#include <cstdint>` and provides
-    /// C++ types like `std::int16_t` or `std::uint32_t`.  See also
+    /// C++ types like `std::int16_t` or `std::uint32_t`.  See
     /// https://en.cppreference.com/w/cpp/header/cstdint
     pub fn cstdint() -> Self {
         Self::SystemHeader("cstdint")
     }
 
     /// Creates a `CcInclude` that represents `#include <memory>`.
-    /// See also https://en.cppreference.com/w/cpp/header/memory
+    /// See https://en.cppreference.com/w/cpp/header/memory
     pub fn memory() -> Self {
         Self::SystemHeader("memory")
     }
 
     /// Creates a `CcInclude` that represents `#include <utility>` and provides
     /// C++ functions like `std::move` and C++ types like `std::tuple`.
-    /// See also https://en.cppreference.com/w/cpp/header/utility
+    /// See https://en.cppreference.com/w/cpp/header/utility
     pub fn utility() -> Self {
         Self::SystemHeader("utility")
+    }
+
+    /// Creates a `CcInclude` that represents `#include <type_traits>` and
+    /// provides C++ APIs like `std::is_trivially_copy_constructible_v`.
+    /// See https://en.cppreference.com/w/cpp/header/type_traits
+    pub fn type_traits() -> Self {
+        Self::SystemHeader("type_traits")
     }
 
     /// Creates a user include: `#include "some/path/to/header.h"`.
@@ -398,10 +405,7 @@ pub mod tests {
 
     #[test]
     fn test_format_cc_ident_basic() {
-        assert_cc_matches!(
-            format_cc_ident("foo").unwrap(),
-            quote! { foo }
-        );
+        assert_cc_matches!(format_cc_ident("foo").unwrap(), quote! { foo });
     }
 
     #[test]
@@ -416,10 +420,7 @@ pub mod tests {
 
     #[test]
     fn test_format_cc_ident_reserved_rust_keyword() {
-        assert_cc_matches!(
-            format_cc_ident("impl").unwrap(),
-            quote! { impl }
-        );
+        assert_cc_matches!(format_cc_ident("impl").unwrap(), quote! { impl });
     }
 
     #[test]
@@ -443,21 +444,12 @@ pub mod tests {
         // https://en.cppreference.com/w/cpp/language/identifiers#Unqualified_identifiers
 
         // These may appear in `IR::Func::name`.
-        assert_cc_matches!(
-            format_cc_ident("operator==").unwrap(),
-            quote! { operator== }
-        );
-        assert_cc_matches!(
-            format_cc_ident("operator new").unwrap(),
-            quote! { operator new }
-        );
+        assert_cc_matches!(format_cc_ident("operator==").unwrap(), quote! { operator== });
+        assert_cc_matches!(format_cc_ident("operator new").unwrap(), quote! { operator new });
 
         // This may appear in `IR::Record::cc_name` (although in practice these will
         // be namespace-qualified most of the time).
-        assert_cc_matches!(
-            format_cc_ident("MyTemplate<int>").unwrap(),
-            quote! { MyTemplate<int> }
-        );
+        assert_cc_matches!(format_cc_ident("MyTemplate<int>").unwrap(), quote! { MyTemplate<int> });
     }
 
     #[test]

@@ -1561,7 +1561,15 @@ fn format_copy_ctor_and_assignment_operator(
             #cc_struct_name(const #cc_struct_name&) = default;  __NEWLINE__
             #cc_struct_name& operator=(const #cc_struct_name&) = default;
         });
-        return Ok(ApiSnippets { main_api, ..Default::default() });
+        let cc_details = CcSnippet::with_include(
+            quote! {
+                static_assert(std::is_trivially_copy_constructible_v<#cc_struct_name>);
+                static_assert(std::is_trivially_copy_assignable_v<#cc_struct_name>);
+            },
+            CcInclude::type_traits(),
+        );
+
+        return Ok(ApiSnippets { main_api, cc_details, rs_details: quote! {} });
     }
 
     // TODO(b/259741191): Implement bindings for `Clone::clone` and
@@ -4211,12 +4219,21 @@ pub mod tests {
                 }
             );
 
-            // Trivial copy doesn't require any C++/Rust details.
+            // Trivial copy doesn't require any C++ details except `static_assert`s.
             assert_cc_not_matches!(result.cc_details.tokens, quote! { Point::Point(const Point&) },);
             assert_cc_not_matches!(
                 result.cc_details.tokens,
                 quote! { Point::operator=(const Point&) },
             );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    static_assert(std::is_trivially_copy_constructible_v<Point>);
+                    static_assert(std::is_trivially_copy_assignable_v<Point>);
+                },
+            );
+
+            // Trivial copy doesn't require any Rust details.
             assert_rs_not_matches!(result.rs_details, quote! { Copy });
             assert_rs_not_matches!(result.rs_details, quote! { copy });
         });
