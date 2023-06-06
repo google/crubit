@@ -29,6 +29,12 @@ extern "C" void __rust_thunk___ZN10NontrivialaSEf(struct Nontrivial* __return,
   new (__return) auto(__this->operator=(__param_0));
 }
 
+extern "C" void __rust_thunk___ZNK10NontrivialplERKS_(
+    struct Nontrivial* __return, const struct Nontrivial* __this,
+    const struct Nontrivial* rhs) {
+  new (__return) auto(__this->operator+(*rhs));
+}
+
 static_assert(CRUBIT_SIZEOF(struct NontrivialInline) == 4);
 static_assert(alignof(struct NontrivialInline) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct NontrivialInline) == 0);

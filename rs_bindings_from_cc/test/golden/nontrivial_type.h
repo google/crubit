@@ -33,6 +33,8 @@ struct Nontrivial final {
   void ConstRvalueRefQualified() const&&;
 
   int field;
+
+  Nontrivial operator+(const Nontrivial& rhs) const;
 };
 
 // Nontrivial due to (inline) user-specified constructor and destructor.

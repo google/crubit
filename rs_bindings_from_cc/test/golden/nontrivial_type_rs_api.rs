@@ -249,6 +249,25 @@ impl Nontrivial {
     }
 }
 
+impl<'a, 'b> ::core::ops::Add<&'b crate::Nontrivial> for &'a crate::Nontrivial {
+    type Output =
+        impl ::ctor::Ctor<Output = crate::Nontrivial> + ::ctor::Captures<'a> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn add(self, rhs: &'b crate::Nontrivial) -> Self::Output {
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<crate::Nontrivial>>| {
+                    crate::detail::__rust_thunk___ZNK10NontrivialplERKS_(
+                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        self,
+                        rhs,
+                    );
+                },
+            )
+        }
+    }
+}
+
 /// Nontrivial due to (inline) user-specified constructor and destructor.
 ///
 /// This makes it nontrivial for calls (so not trivially relocatable), as well
@@ -992,6 +1011,11 @@ mod detail {
         #[link_name = "_ZNKO10Nontrivial23ConstRvalueRefQualifiedEv"]
         pub(crate) fn __rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv<'a>(
             __this: ::ctor::ConstRvalueReference<'a, crate::Nontrivial>,
+        );
+        pub(crate) fn __rust_thunk___ZNK10NontrivialplERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::Nontrivial>,
+            __this: &'a crate::Nontrivial,
+            rhs: &'b crate::Nontrivial,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::NontrivialInline>,

@@ -52,14 +52,12 @@ mod tests {
     fn test_add_nontrivial_by_value() {
         ctor::emplace! {
             let s1 = ctor::ctor!(AddableNontrivialByValue {i: 11});
+            let s2 = ctor::ctor!(AddableNontrivialByValue {i: 22});
         }
-        assert_eq!(
-            ctor::emplace!(
-                &*s1 + ctor::mov!(ctor::emplace!(ctor::ctor!(AddableNontrivialByValue { i: 22 })))
-            )
-            .i,
-            33
-        );
+        ctor::emplace! {
+            let sum = &*s1 + ctor::mov!(s2);
+        }
+        assert_eq!(sum.i, 33);
     }
 
     #[test]
@@ -117,6 +115,9 @@ mod tests {
             let s1 = ctor::ctor!(AddableReturnsNontrivial {i: 11});
             let s2 = ctor::ctor!(AddableReturnsNontrivial {i: 22});
         }
-        assert_eq!(ctor::emplace!(&*s1 + &*s2).i, 33);
+        ctor::emplace! {
+            let sum = &*s1 + &*s2;
+        }
+        assert_eq!(sum.i, 33);
     }
 }
