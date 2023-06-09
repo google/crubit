@@ -84,18 +84,16 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
 /// `init_env_logger`) and therefore can be used from the tests module below.
 fn run_with_cmdline_args(args: &[String]) -> anyhow::Result<()> {
     let cmdline = Cmdline::new(args)?;
-    run_compiler(&cmdline.rustc_args, |tcx| {
-        run_with_tcx(&cmdline, tcx)
-    })
+    run_compiler(&cmdline.rustc_args, |tcx| run_with_tcx(&cmdline, tcx))
 }
 
 fn main() -> anyhow::Result<()> {
     // TODO: Investigate if we should install a signal handler here.  See also how
     // compiler/rustc_driver/src/lib.rs calls `signal_handler::install()`.
 
-    // TODO(b/254689400): Provide Crubit-specific panic hook message (we shouldn't use
-    // `rustc_driver::install_ice_hook` because it's message asks to file bugs at
-    // https://github.com/rust-lang/rust/issues/new.
+    // TODO(b/254689400): Provide Crubit-specific panic hook message (we shouldn't
+    // use `rustc_driver::install_ice_hook` because it's message asks to file
+    // bugs at https://github.com/rust-lang/rust/issues/new.
 
     // `std::env::args()` will panic if any of the cmdline arguments are not valid
     // Unicode.  This seems okay.
@@ -130,18 +128,17 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    run_with_cmdline_args(&args)
-        .map_err(|anyhow_err| match anyhow_err.downcast::<clap::Error>() {
-            // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output and
-            // 2) it uses a zero exit code for specific "errors" (e.g. for `--help` output).
-            Ok(clap_err) => {
-                let _ : ! = clap_err.exit();
-            },
+    run_with_cmdline_args(&args).map_err(|anyhow_err| match anyhow_err.downcast::<clap::Error>() {
+        // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output and
+        // 2) it uses a zero exit code for specific "errors" (e.g. for `--help` output).
+        Ok(clap_err) => {
+            let _: ! = clap_err.exit();
+        }
 
-            // Return `other_err` from `main`.  This will print the error message (no color codes
-            // though) and terminate the process with a non-zero exit code.
-            Err(other_err) => other_err,
-        })
+        // Return `other_err` from `main`.  This will print the error message (no color codes
+        // though) and terminate the process with a non-zero exit code.
+        Err(other_err) => other_err,
+    })
 }
 
 #[cfg(test)]
@@ -373,9 +370,9 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         Ok(())
     }
 
-    /// `test_cmdline_error_propagation` tests that errors from `Cmdline::new` get
-    /// propagated. More detailed test coverage of various specific error types
-    /// can be found in tests in `cmdline.rs`.
+    /// `test_cmdline_error_propagation` tests that errors from `Cmdline::new`
+    /// get propagated. More detailed test coverage of various specific
+    /// error types can be found in tests in `cmdline.rs`.
     #[test]
     fn test_cmdline_error_propagation() -> anyhow::Result<()> {
         let err = TestArgs::default_args()?
@@ -408,12 +405,13 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         Ok(())
     }
 
-    /// `test_rustc_unsupported_panic_mechanism` tests that `panic=unwind` results
-    /// in an error.
+    /// `test_rustc_unsupported_panic_mechanism` tests that `panic=unwind`
+    /// results in an error.
     ///
-    /// This is tested at the `cc_bindings_from_rs.rs` level instead of at the `bindings.rs` level,
-    /// because `run_compiler::tests::run_compiler_for_testing` doesn't support specifying a custom
-    /// panic mechanism.
+    /// This is tested at the `cc_bindings_from_rs.rs` level instead of at the
+    /// `bindings.rs` level,
+    /// because `run_compiler::tests::run_compiler_for_testing` doesn't support
+    /// specifying a custom panic mechanism.
     #[test]
     fn test_rustc_unsupported_panic_mechanism() -> anyhow::Result<()> {
         let err = TestArgs::default_args()?
@@ -426,9 +424,9 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         Ok(())
     }
 
-    /// `test_invalid_h_out_path` tests not only the specific problem of an invalid
-    /// `--h-out` argument, but also tests that errors from `run_with_tcx` are
-    /// propagated.
+    /// `test_invalid_h_out_path` tests not only the specific problem of an
+    /// invalid `--h-out` argument, but also tests that errors from
+    /// `run_with_tcx` are propagated.
     #[test]
     fn test_invalid_h_out_path() -> anyhow::Result<()> {
         let err = TestArgs::default_args()?
