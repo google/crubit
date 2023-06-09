@@ -297,24 +297,20 @@ void transferFlowSensitiveNullCheckComparison(
 
   if (!LHS || !RHS) return;
 
-  auto [LHSKnown, LHSNull] = getPointerNullState(*LHS);
-  auto [RHSKnown, RHSNull] = getPointerNullState(*RHS);
-  auto& LHSKnownNotNull =
-      State.Env.makeAnd(LHSKnown, State.Env.makeNot(LHSNull));
-  auto& RHSKnownNotNull =
-      State.Env.makeAnd(RHSKnown, State.Env.makeNot(RHSNull));
-  auto& LHSKnownNull = State.Env.makeAnd(LHSKnown, LHSNull);
-  auto& RHSKnownNull = State.Env.makeAnd(RHSKnown, RHSNull);
+  auto& LHSNull = getPointerNullState(*LHS).second;
+  auto& RHSNull = getPointerNullState(*RHS).second;
+  auto& LHSNotNull = State.Env.makeNot(LHSNull);
+  auto& RHSNotNull = State.Env.makeNot(RHSNull);
 
   // nullptr == nullptr
   State.Env.addToFlowCondition(State.Env.makeImplication(
-      State.Env.makeAnd(LHSKnownNull, RHSKnownNull), PointerEQ));
+      State.Env.makeAnd(LHSNull, RHSNull), PointerEQ));
   // nullptr != notnull
   State.Env.addToFlowCondition(State.Env.makeImplication(
-      State.Env.makeAnd(LHSKnownNull, RHSKnownNotNull), PointerNE));
+      State.Env.makeAnd(LHSNull, RHSNotNull), PointerNE));
   // notnull != nullptr
   State.Env.addToFlowCondition(State.Env.makeImplication(
-      State.Env.makeAnd(LHSKnownNotNull, RHSKnownNull), PointerNE));
+      State.Env.makeAnd(LHSNotNull, RHSNull), PointerNE));
 }
 
 void transferFlowSensitiveNullCheckImplicitCastPtrToBool(

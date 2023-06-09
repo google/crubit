@@ -283,7 +283,7 @@ TEST void unknownEqualsNullptr(int* x) {
   if (x == nullptr) {
     unknown(x);  // TODO: nullable
   } else {
-    unknown(x);  // TODO: nonnull
+    nonnull(x);
   }
   unknown(x);  // TODO: nullable
 }
@@ -292,14 +292,14 @@ TEST void nullptrEqualsUnknown(int* x) {
   if (nullptr == x) {
     unknown(x);  // TODO: nullable
   } else {
-    unknown(x);  // TODO: nonnull
+    nonnull(x);
   }
   unknown(x);  // TODO: nullable
 }
 TEST void unknownNotEqualsNullptr(int* x) {
   unknown(x);  // TODO: nullable
   if (x != nullptr) {
-    unknown(x);  // TODO: nonnull
+    nonnull(x);
   } else {
     unknown(x);  // TODO: nullable
   }
@@ -308,7 +308,7 @@ TEST void unknownNotEqualsNullptr(int* x) {
 TEST void nullptrNotEqualsUnknown(int* x) {
   unknown(x);  // TODO: nullable
   if (nullptr != x) {
-    unknown(x);  // TODO: nonnull
+    nonnull(x);
   } else {
     unknown(x);  // TODO: nullable
   }
@@ -320,7 +320,7 @@ TEST void unknownEqualsNonnull(int* x, Nonnull<int*> y) {
   unknown(x);
   nonnull(y);
   if (x == y) {
-    unknown(x);  // TODO: nonnull
+    nonnull(x);
     nonnull(y);
   } else {
     unknown(x);
@@ -333,7 +333,7 @@ TEST void nonnullEqualsUnknown(int* x, Nonnull<int*> y) {
   unknown(x);
   nonnull(y);
   if (y == x) {
-    unknown(x);  // TODO: nonnull
+    nonnull(x);
     nonnull(y);
   } else {
     unknown(x);
@@ -349,7 +349,7 @@ TEST void unknownNotEqualsNonnull(int* x, Nonnull<int*> y) {
     unknown(x);
     nonnull(y);
   } else {
-    unknown(x);  // TODO: nonnull
+    nonnull(x);
     nonnull(y);
   }
   unknown(x);
@@ -362,7 +362,7 @@ TEST void nonnullNotEqualsUnknown(int* x, Nonnull<int*> y) {
     unknown(x);
     nonnull(y);
   } else {
-    unknown(x);  // TODO: nonnull
+    nonnull(x);
     nonnull(y);
   }
   unknown(x);

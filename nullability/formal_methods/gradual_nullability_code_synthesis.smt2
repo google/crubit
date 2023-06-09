@@ -63,6 +63,8 @@
 (declare-fun fc-conj--ptr-is-unknown (PointerValue) Bool)
 (declare-fun fc-conj--ptr-is-nonnull (PointerValue) Bool)
 (declare-fun fc-conj--ptr-is-nullable (PointerValue) Bool)
+(declare-fun fc-conj--ptr-is-maybe-unknown-but-nonnull (PointerValue) Bool)
+(declare-fun fc-conj--ptr-is-maybe-unknown-but-null (PointerValue) Bool)
 
 ;; Flow condition conjunct that constrains the result of comparing two
 ;; pointers for equality.
@@ -116,19 +118,33 @@
           (= p (make-PointerValue true true)))))))
 
 (assert (=> enable-solution-s1
+  (forall ((p PointerValue))
+    (= (fc-conj--ptr-is-maybe-unknown-but-nonnull p)
+        (or
+          (= p (make-PointerValue true true))
+          (= p (make-PointerValue false true)))))))
+
+(assert (=> enable-solution-s1
+  (forall ((p PointerValue))
+    (= (fc-conj--ptr-is-maybe-unknown-but-null p)
+        (or
+          (= p (make-PointerValue true false))
+          (= p (make-PointerValue false false)))))))
+
+(assert (=> enable-solution-s1
   (forall ((lhs PointerValue) (rhs PointerValue) (eq Bool))
     (= (fc-conj--ptrs-were-compared lhs rhs eq)
        (and
          ;; nullptr == nullptr
-         (=> (and (fc-conj--ptr-is-null lhs) (fc-conj--ptr-is-null rhs))
+         (=> (and (fc-conj--ptr-is-maybe-unknown-but-null lhs) (fc-conj--ptr-is-maybe-unknown-but-null rhs))
              eq)
 
          ;; nullptr != nonnull
-         (=> (and (fc-conj--ptr-is-null lhs) (fc-conj--ptr-is-nonnull rhs))
+         (=> (and (fc-conj--ptr-is-maybe-unknown-but-null lhs) (fc-conj--ptr-is-maybe-unknown-but-nonnull rhs))
              (not eq))
 
          ;; nonnull != nullptr
-         (=> (and (fc-conj--ptr-is-nonnull lhs) (fc-conj--ptr-is-null rhs))
+         (=> (and (fc-conj--ptr-is-maybe-unknown-but-nonnull lhs) (fc-conj--ptr-is-maybe-unknown-but-null rhs))
              (not eq)))))))
 
 (assert (=> enable-solution-s1
@@ -219,26 +235,13 @@
 
 ;; Transitivity for fc-conj--ptrs-were-compared.
 (assert
-  (=>
-    ;; Transitivity does not hold in S1.
-    ;; Consider (nonnull == unknown), (unknown == null).
-    ;; However (nonnull == null) never holds.
-    ;; ```
-    ;; void target(int * _NonNull x, int *y) {
-    ;;   if (x == y && y == nullptr) {
-    ;;     // dead code that we can't detect
-    ;;   }
-    ;; }
-    ;; ```
-    ;; TODO: How big of a problem is it?
-    (not enable-solution-s1)
-    (forall ((p1 PointerValue) (p2 PointerValue) (p3 PointerValue))
-      (=> (and (is-valid-pointer p1)
-               (is-valid-pointer p2)
-               (is-valid-pointer p3)
-               (fc-conj--ptrs-were-compared p1 p2 true)
-               (fc-conj--ptrs-were-compared p2 p3 true))
-          (fc-conj--ptrs-were-compared p1 p3 true)))))
+  (forall ((p1 PointerValue) (p2 PointerValue) (p3 PointerValue))
+    (=> (and (is-valid-pointer p1)
+             (is-valid-pointer p2)
+             (is-valid-pointer p3)
+             (fc-conj--ptrs-were-compared p1 p2 true)
+             (fc-conj--ptrs-were-compared p2 p3 true))
+        (fc-conj--ptrs-were-compared p1 p3 true))))
 
 ;; Symmetry for fc-conj--join-ptr with regards to pointers.
 (assert
