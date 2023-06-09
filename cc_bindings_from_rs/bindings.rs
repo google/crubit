@@ -1398,7 +1398,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                         if size > 0 {
                             let size = Literal::u64_unsuffixed(size);
                             quote! {
-                                private:
+                                private: __NEWLINE__
                                     __COMMENT__ #msg
                                     unsigned char #cc_name[#size];
                             }
@@ -1408,7 +1408,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                             // field entirely. This also requires removing the field's assertions,
                             // added above.
                             quote! {
-                                private:
+                                private: __NEWLINE__
                                     __COMMENT__ #msg
                                     [[no_unique_address]] struct{} #cc_name;
                             }
@@ -1432,7 +1432,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                         let doc_comment = field.doc_comment;
                         // TODO(b/271002281): Preserve doc comments.
                         quote! {
-                            #visibility
+                            #visibility __NEWLINE__
                                 #doc_comment
                                 #cc_type #cc_name;
                             #padding
@@ -1673,8 +1673,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         let impl_items_main_api = if impl_items_main_api.tokens.is_empty() {
             quote! {}
         } else {
-            let tokens = impl_items_main_api.into_tokens(&mut prereqs);
-            quote! { public: #tokens }
+            impl_items_main_api.into_tokens(&mut prereqs)
         };
         let fields_main_api = fields_main_api.into_tokens(&mut prereqs);
         prereqs.fwd_decls.remove(&local_def_id);
@@ -1684,11 +1683,11 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
             tokens: quote! {
                 __NEWLINE__ #doc_comment
                 #keyword #(#attributes)* #adt_cc_name final {
-                    public:
+                    public: __NEWLINE__
                         #default_ctor_main_api
                         #copy_ctor_and_assignment_main_api
                         #core
-                    #impl_items_main_api
+                        #impl_items_main_api
                     #fields_main_api
                 };
                 __NEWLINE__
