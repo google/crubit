@@ -3136,7 +3136,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_item_unsupported_fn_with_late_bound_lifetimes() {
+    fn test_format_item_unsupported_lifetime_generic_fn() {
         // TODO(b/258235219): Expect success after adding support for references.
         let test_src = r#"
                 pub fn foo(arg: &i32) -> &i32 { arg }
@@ -3154,7 +3154,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_item_unsupported_generic_fn() {
+    fn test_format_item_unsupported_type_generic_fn() {
         let test_src = r#"
                 use std::default::Default;
                 use std::fmt::Display;
@@ -3169,11 +3169,31 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_item_unsupported_generic_struct() {
+    fn test_format_item_unsupported_type_generic_struct() {
         let test_src = r#"
                 pub struct Point<T> {
                     pub x: T,
                     pub y: T,
+                }
+            "#;
+        test_format_item(test_src, "Point", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(err, "Generic types are not supported yet (b/259749095)");
+        });
+    }
+
+    #[test]
+    fn test_format_item_unsupported_lifetime_generic_struct() {
+        let test_src = r#"
+                pub struct Point<'a> {
+                    pub x: &'a i32,
+                    pub y: &'a i32,
+                }
+
+                impl<'a> Point<'a> {
+                    // Some lifetimes are bound at the `impl` / `struct` level (the lifetime is
+                    // hidden underneath the `Self` type), and some at the `fn` level.
+                    pub fn new<'b, 'c>(_x: &'b i32, _y: &'c i32) -> Self { unimplemented!() }
                 }
             "#;
         test_format_item(test_src, "Point", |result| {
@@ -4007,7 +4027,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_item_static_method_with_generic_lifetime_parameters() {
+    fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level() {
         let test_src = r#"
                 /// No-op `f32` placeholder is used, because ZSTs are not supported
                 /// (b/258259459).
@@ -4015,6 +4035,43 @@ pub mod tests {
 
                 impl SomeStruct {
                     pub fn fn_taking_reference<'a>(x: &'a i32) -> i32 { *x }
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            let unsupported_msg = "Error generating bindings for `SomeStruct::fn_taking_reference` \
+                                   defined at <crubit_unittests.rs>;l=7: \
+                                   Generic functions are not supported yet (b/259749023)";
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        __COMMENT__ #unsupported_msg
+                        ...
+                    };
+                    ...
+                }
+            );
+            assert_cc_not_matches!(
+                result.cc_details.tokens,
+                quote! { SomeStruct::fn_taking_reference },
+            );
+            assert_rs_not_matches!(result.rs_details, quote! { fn_taking_reference },);
+        });
+    }
+
+    #[test]
+    fn test_format_item_static_method_with_generic_lifetime_parameters_at_impl_level() {
+        let test_src = r#"
+                /// No-op `f32` placeholder is used, because ZSTs are not supported
+                /// (b/258259459).
+                pub struct SomeStruct(f32);
+
+                impl<'a> SomeStruct {
+                    pub fn fn_taking_reference(x: &'a i32) -> i32 { *x }
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
@@ -4348,6 +4405,43 @@ pub mod tests {
                                                                  unsupported_field) == 0);
                     const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct,
                                                                  successful_field) == 16);
+                }
+            );
+        });
+    }
+
+    /// This test verifies how reference type fields are represented in the
+    /// generated bindings.  See b/286256327.
+    ///
+    /// In some of the past discussions we tentatively decided that the
+    /// generated bindings shouldn't use C++ references in fields - instead
+    /// a C++ pointer should be used.  One reason is that C++ references
+    /// cannot be assigned to (i.e. rebound), and therefore C++ pointers
+    /// more accurately represent the semantics of Rust fields.  The pointer
+    /// type should probably use some form of C++ annotations to mark it as
+    /// non-nullable.
+    #[test]
+    fn test_format_item_struct_with_unsupported_field_of_reference_type() {
+        let test_src = r#"
+                // `'static` lifetime can be used in a non-generic struct - this let's us
+                // test reference fieles without requiring support for generic structs.
+                pub struct NonGenericSomeStruct {
+                    pub reference_field: &'static i32,
+                }
+            "#;
+        test_format_item(test_src, "NonGenericSomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            let broken_field_msg = "Field type has been replaced with a blob of bytes: \
+                                    The following Rust type is not supported yet: &'static i32";
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    private:
+                        __COMMENT__ #broken_field_msg
+                        unsigned char reference_field[8];
+                    ...
                 }
             );
         });
@@ -5184,8 +5278,20 @@ pub mod tests {
                 "Tuples are not supported yet: (i32, i32) (b/254099023)",
             ),
             (
-                "&'static i32", // TyKind::Ref
+                "&'static i32", // TyKind::Ref (const/shared reference)
                 "The following Rust type is not supported yet: &'static i32",
+            ),
+            (
+                "&'static mut i32", // TyKind::Ref (mutable/exclusive reference)
+                "The following Rust type is not supported yet: &'static mut i32",
+            ),
+            (
+                "&'static &'static i32", // TyKind::Ref (nested reference - referent of reference)
+                "The following Rust type is not supported yet: &'static &'static i32",
+            ),
+            (
+                "extern \"C\" fn (&i32)", // TyKind::Ref (nested reference - underneath fn ptr)
+                "Generic functions are not supported yet (b/259749023)",
             ),
             (
                 "[i32; 42]", // TyKind::Array
