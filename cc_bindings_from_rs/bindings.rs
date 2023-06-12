@@ -4999,7 +4999,7 @@ pub mod tests {
                 "crubit :: type_identity_t < float (float , float) > &",
             ),
         ];
-        test_ty(&testcases, quote! {}, |desc, tcx, ty, expected| {
+        test_ty(TypeLocation::FnReturn, &testcases, quote! {}, |desc, tcx, ty, expected| {
             let actual = {
                 let input = bindings_input_for_tests(tcx);
                 let cc_snippet = format_ty_for_cc(&input, ty, TypeLocation::FnReturn).unwrap();
@@ -5051,9 +5051,24 @@ pub mod tests {
             // Testing propagation of deeper/nested `fwd_decls`:
             ("*mut *mut SomeStruct", (":: rust_out :: SomeStruct * *", "", "", "SomeStruct")),
             (
+                // Rust function pointers are non-nullable, so when function pointers are used as a
+                // parameter type (i.e. in `TypeLocation::FnParam`) then we can translate to
+                // generate a C++ function *reference*, rather than a C++ function *pointer*.
                 "extern \"C\" fn (f32, f32) -> f32",
                 (
-                    "crubit :: type_identity_t < float (float , float) > *",
+                    "crubit :: type_identity_t < float (float , float) > &",
+                    "\"crubit/support/for/tests/internal/cxx20_backports.h\"",
+                    "",
+                    "",
+                ),
+            ),
+            (
+                // Nested function pointer (i.e. `TypeLocation::Other`) means that
+                // we need to generate a C++ function *pointer*, rather than a C++
+                // function *reference*.
+                "*const extern \"C\" fn (f32, f32) -> f32",
+                (
+                    "const crubit :: type_identity_t < float (float , float) > * *",
                     "\"crubit/support/for/tests/internal/cxx20_backports.h\"",
                     "",
                     "",
@@ -5079,13 +5094,14 @@ pub mod tests {
             }
         };
         test_ty(
+            TypeLocation::FnParam,
             &testcases,
             preamble,
             |desc, tcx, ty,
              (expected_tokens, expected_include, expected_prereq_def, expected_prereq_fwd_decl)| {
                 let (actual_tokens, actual_prereqs) = {
                     let input = bindings_input_for_tests(tcx);
-                    let s = format_ty_for_cc(&input, ty, TypeLocation::Other).unwrap();
+                    let s = format_ty_for_cc(&input, ty, TypeLocation::FnParam).unwrap();
                     (s.tokens.to_string(), s.prereqs)
                 };
                 let (actual_includes, actual_prereq_defs, actual_prereq_fwd_decls) =
@@ -5180,7 +5196,7 @@ pub mod tests {
             ),
             (
                 "impl Eq", // TyKind::Alias
-                "The following Rust type is not supported yet: impl std::cmp::Eq",
+                "The following Rust type is not supported yet: impl Eq",
             ),
             (
                 "fn(i32) -> i32", // TyKind::FnPtr (default ABI = "Rust")
@@ -5281,9 +5297,10 @@ pub mod tests {
             pub use private_submodule::PublicStructInPrivateModule
                 as PublicReexportOfStruct;
         };
-        test_ty(&testcases, preamble, |desc, tcx, ty, expected_msg| {
+        test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_msg| {
             let input = bindings_input_for_tests(tcx);
-            let anyhow_err = format_ty_for_cc(&input, ty, TypeLocation::Other).unwrap_err();
+            let anyhow_err = format_ty_for_cc(&input, ty, TypeLocation::FnParam)
+                .expect_err(&format!("Expecting error for: {desc}"));
             let actual_msg = format!("{anyhow_err:#}");
             assert_eq!(&actual_msg, *expected_msg, "{desc}");
         });
@@ -5341,7 +5358,7 @@ pub mod tests {
                 pub y: i32,
             }
         };
-        test_ty(&testcases, preamble, |desc, tcx, ty, expected_tokens| {
+        test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_tokens| {
             let actual_tokens = format_ty_for_rs(tcx, ty).unwrap().to_string();
             let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(actual_tokens, expected_tokens, "{desc}");
@@ -5376,7 +5393,7 @@ pub mod tests {
             ),
             (
                 "impl Eq", // TyKind::Alias
-                "The following Rust type is not supported yet: impl std::cmp::Eq",
+                "The following Rust type is not supported yet: impl Eq",
             ),
             (
                 "Option<i8>", // TyKind::Adt - generic + different crate
@@ -5384,14 +5401,16 @@ pub mod tests {
             ),
         ];
         let preamble = quote! {};
-        test_ty(&testcases, preamble, |desc, tcx, ty, expected_err| {
-            let anyhow_err = format_ty_for_rs(tcx, ty).unwrap_err();
+        test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_err| {
+            let anyhow_err =
+                format_ty_for_rs(tcx, ty).expect_err(&format!("Expecting error for: {desc}"));
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         });
     }
 
     fn test_ty<TestFn, Expectation>(
+        type_location: TypeLocation,
         testcases: &[(&str, Expectation)],
         preamble: TokenStream,
         test_fn: TestFn,
@@ -5408,20 +5427,31 @@ pub mod tests {
             let desc = format!("test #{index}: test input: `{input}`");
             let input = {
                 let ty_tokens: TokenStream = input.parse().unwrap();
-                let input = quote! {
-                    #preamble
-                    pub fn test_function() -> #ty_tokens { panic!("") }
+                let input = match type_location {
+                    TypeLocation::FnReturn => quote! {
+                        #preamble
+                        pub fn test_function() -> #ty_tokens { unimplemented!() }
+                    },
+                    TypeLocation::FnParam => quote! {
+                        #preamble
+                        pub fn test_function(_arg: #ty_tokens) { unimplemented!() }
+                    },
+                    TypeLocation::Other => unimplemented!(),
                 };
                 input.to_string()
             };
             run_compiler_for_testing(input, |tcx| {
                 let def_id = find_def_id_by_name(tcx, "test_function");
-                let ty = tcx
+                let sig = tcx
                     .fn_sig(def_id.to_def_id())
                     .subst_identity()
                     .no_bound_vars()
-                    .unwrap()
-                    .output();
+                    .expect(&format!("Test infrastructure error for: {desc}"));
+                let ty = match type_location {
+                    TypeLocation::FnReturn => sig.output(),
+                    TypeLocation::FnParam => sig.inputs()[0],
+                    TypeLocation::Other => unimplemented!(),
+                };
                 test_fn(&desc, tcx, ty, expected);
             });
         }
