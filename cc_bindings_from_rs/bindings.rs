@@ -5050,6 +5050,11 @@ pub mod tests {
             ("*mut SomeStruct", ("::rust_out::SomeStruct*", "", "", "SomeStruct")),
             // Testing propagation of deeper/nested `fwd_decls`:
             ("*mut *mut SomeStruct", (":: rust_out :: SomeStruct * *", "", "", "SomeStruct")),
+            // Testing propagation of `const` / `mut` qualifiers:
+            // TODO(b/286876315): The 2 distinct inputs below should *not* result in the same
+            // output.
+            ("*mut *const f32", ("const float * *", "", "", "")),
+            ("*const *mut f32", ("const float * *", "", "", "")),
             (
                 // Rust function pointers are non-nullable, so when function pointers are used as a
                 // parameter type (i.e. in `TypeLocation::FnParam`) then we can translate to
