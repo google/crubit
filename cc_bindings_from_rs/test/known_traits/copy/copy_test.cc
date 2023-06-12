@@ -22,6 +22,13 @@ TEST(CopyTest, ExplicitImpl) {
 
   // Minimal verification that the copy constructor worked as expected.
   EXPECT_EQ(123, tests::extract_int(std::move(copy)));
+
+  // The next line invokes the copy assignment operator.
+  copy = s;
+  static_assert(std::is_trivially_copy_assignable_v<tests::SomeStruct>);
+
+  // Minimal verification that the copy assignment operator worked as expected.
+  EXPECT_EQ(123, tests::extract_int(std::move(copy)));
 }
 
 TEST(CopyTest, DerivedImpl) {
@@ -33,6 +40,13 @@ TEST(CopyTest, DerivedImpl) {
   static_assert(std::is_trivially_copy_constructible_v<tests::SomeStruct>);
 
   // Minimal verification that the copy constructor worked as expected.
+  EXPECT_EQ(123, tests::extract_int(std::move(copy)));
+
+  // The next line invokes the copy assignment operator.
+  copy = s;
+  static_assert(std::is_trivially_copy_assignable_v<tests::SomeStruct>);
+
+  // Minimal verification that the copy assignment operator worked as expected.
   EXPECT_EQ(123, tests::extract_int(std::move(copy)));
 }
 
