@@ -105,6 +105,27 @@ TEST(PointerNullabilityTest, ChainedFieldDeref) {
   )cc"));
 }
 
+// This is a crash repro. It sets up a situation where we're merging pointers
+// that don't have a null state to check that we don't crash in this case.
+TEST(PointerNullabilityTest, MergePointersWithoutNullState) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      void *p;
+    };
+    void target(bool cond) {
+      S src, dst;
+      if (cond) dst = src;
+
+      // `dst` has different values in the two branches that merge here, so we
+      // will attempt to merge the values of `dst.p` from the two branches.
+
+      // These lines are only here to ensure that `p` is modeled.
+      S unrelated;
+      unrelated.p;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

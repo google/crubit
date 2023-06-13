@@ -725,6 +725,11 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value& Val1,
     return false;
   }
 
+  if (!hasPointerNullState(cast<PointerValue>(Val1)) ||
+      !hasPointerNullState(cast<PointerValue>(Val2))) {
+    return false;
+  }
+
   auto [Known1, Null1] = getPointerNullState(cast<PointerValue>(Val1));
   auto [Known2, Null2] = getPointerNullState(cast<PointerValue>(Val2));
 
