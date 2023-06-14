@@ -65,7 +65,6 @@ cc_library(
     hdrs = ["pointer_nullability.h"],
     visibility = ["//nullability/test:__pkg__"],
     deps = [
-        "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
