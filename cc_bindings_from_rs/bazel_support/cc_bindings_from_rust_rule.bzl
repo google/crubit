@@ -304,7 +304,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
             crate_key = crate_info.name,
             h_out_file = h_out_file,
         ),
-        OutputGroupInfo(out = depset([h_out_file])),
+        OutputGroupInfo(out = depset([h_out_file, rs_out_file])),
     ]
 
 cc_bindings_from_rust_aspect = aspect(
