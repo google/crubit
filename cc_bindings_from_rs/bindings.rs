@@ -738,15 +738,15 @@ fn get_fn_sig(tcx: TyCtxt, fn_def_id: LocalDefId) -> ty::FnSig {
 /// Formats a C++ function declaration of a thunk that wraps a Rust function
 /// identified by `fn_def_id`.  `format_thunk_impl` may panic if `fn_def_id`
 /// doesn't identify a function.
-fn format_thunk_decl(
-    input: &Input,
-    fn_def_id: LocalDefId,
+fn format_thunk_decl<'tcx>(
+    input: &Input<'tcx>,
+    fn_def_id: DefId,
+    sig: &ty::FnSig<'tcx>,
     thunk_name: &TokenStream,
 ) -> Result<CcSnippet> {
     let tcx = input.tcx;
 
     let mut prereqs = CcPrerequisites::default();
-    let sig = get_fn_sig(tcx, fn_def_id);
     let main_api_ret_type = format_ret_ty_for_cc(input, &sig)?.into_tokens(&mut prereqs);
 
     let mut thunk_params = {
@@ -762,7 +762,7 @@ fn format_thunk_decl(
                     // Rust thunk will move a value via memcpy - we need to `ensure` that
                     // invoking the C++ destructor (on the moved-away value) is safe.
                     ensure!(
-                        !ty.needs_drop(tcx, tcx.param_env(fn_def_id.to_def_id())),
+                        !ty.needs_drop(tcx, tcx.param_env(fn_def_id)),
                         "Only trivially-movable and trivially-destructible types \
                               may be passed by value over the FFI boundary"
                     );
@@ -801,13 +801,13 @@ fn format_thunk_decl(
 /// - `::crate_name::some_module::SomeStruct::method`
 /// - `<::create_name::some_module::SomeStruct as
 ///   ::core::default::Default>::default`
-fn format_thunk_impl(
-    tcx: TyCtxt,
-    fn_def_id: LocalDefId,
+fn format_thunk_impl<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    fn_def_id: DefId,
+    sig: &ty::FnSig<'tcx>,
     thunk_name: &str,
     fully_qualified_fn_name: TokenStream,
 ) -> Result<TokenStream> {
-    let sig = get_fn_sig(tcx, fn_def_id);
     let param_names_and_types: Vec<(Ident, Ty)> = {
         let param_names = tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, name)| {
             if name.as_str().is_empty() {
@@ -1086,7 +1086,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
 
         let mut prereqs = main_api_prereqs;
         let thunk_decl =
-            format_thunk_decl(input, local_def_id, &thunk_name)?.into_tokens(&mut prereqs);
+            format_thunk_decl(input, def_id, &sig, &thunk_name)?.into_tokens(&mut prereqs);
 
         let mut thunk_args = params
             .iter()
@@ -1138,7 +1138,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
                 quote! { #struct_name :: #fn_name }
             }
         };
-        format_thunk_impl(tcx, local_def_id, &thunk_name, fully_qualified_fn_name)?
+        format_thunk_impl(tcx, def_id, &sig, &thunk_name, fully_qualified_fn_name)?
     };
     Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
@@ -1602,11 +1602,12 @@ fn format_default_ctor(input: &Input, core: &AdtCoreBindings) -> Result<ApiSnipp
         inline #cc_struct_name(); __NEWLINE__ __NEWLINE__
     });
     let fn_def_id = trait_impl.items[0].id.owner_id.def_id;
+    let sig = get_fn_sig(tcx, fn_def_id);
     let thunk_name = get_thunk_name(get_symbol_name(tcx, fn_def_id)?);
     let cc_details = {
         let thunk_name = format_cc_ident(&thunk_name)?;
         let CcSnippet { tokens: thunk_decl, prereqs } =
-            format_thunk_decl(input, fn_def_id, &thunk_name)?;
+            format_thunk_decl(input, fn_def_id.to_def_id(), &sig, &thunk_name)?;
         let tokens = quote! {
             #thunk_decl
             #cc_struct_name::#cc_struct_name() {
@@ -1619,7 +1620,7 @@ fn format_default_ctor(input: &Input, core: &AdtCoreBindings) -> Result<ApiSnipp
         let struct_name = &core.rs_fully_qualified_name;
         let fully_qualified_fn_name =
             quote! { <#struct_name as ::core::default::Default>::default };
-        format_thunk_impl(tcx, fn_def_id, &thunk_name, fully_qualified_fn_name)?
+        format_thunk_impl(tcx, fn_def_id.to_def_id(), &sig, &thunk_name, fully_qualified_fn_name)?
     };
     Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
