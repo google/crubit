@@ -425,10 +425,9 @@ fn format_ty_for_cc<'tcx>(
             // Asserting that the target architecture meets the assumption from Crubit's
             // `rust_builtin_type_abi_assumptions.md` - we assume that Rust's `char` has the
             // same ABI as `u32`.
-            let param_env = ty::ParamEnv::empty();
             let layout = input
                 .tcx
-                .layout_of(param_env.and(ty))
+                .layout_of(ty::ParamEnv::empty().and(ty))
                 .expect("`layout_of` is expected to succeed for the builtin `char` type")
                 .layout;
             assert_eq!(4, layout.align().abi.bytes());
@@ -762,9 +761,8 @@ fn format_thunk_decl(
                 } else {
                     // Rust thunk will move a value via memcpy - we need to `ensure` that
                     // invoking the C++ destructor (on the moved-away value) is safe.
-                    // TODO(b/259749095): Support generic structs (with non-empty ParamEnv).
                     ensure!(
-                        !ty.needs_drop(tcx, ty::ParamEnv::empty()),
+                        !ty.needs_drop(tcx, tcx.param_env(fn_def_id.to_def_id())),
                         "Only trivially-movable and trivially-destructible types \
                               may be passed by value over the FFI boundary"
                     );
@@ -1210,8 +1208,10 @@ fn is_directly_public(tcx: TyCtxt, def_id: DefId) -> bool {
 }
 
 fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
-    // TODO(b/259749095): Support non-empty set of generic parameters.
-    let param_env = ty::ParamEnv::empty();
+    let param_env = match ty.ty_adt_def() {
+        None => ty::ParamEnv::empty(),
+        Some(adt_def) => tcx.param_env(adt_def.did()),
+    };
 
     tcx.layout_of(param_env.and(ty)).map(|ty_and_layout| ty_and_layout.layout).map_err(
         |layout_err| {
@@ -1246,10 +1246,7 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
     assert!(ty.is_adt());
     assert!(is_directly_public(tcx, def_id), "Caller should verify");
 
-    // TODO(b/259749095): Support non-empty set of generic parameters.
-    let param_env = ty::ParamEnv::empty();
-
-    if ty.needs_drop(tcx, param_env) {
+    if ty.needs_drop(tcx, tcx.param_env(def_id)) {
         // TODO(b/258251148): Support custom `Drop` impls.
         bail!("`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
     }
@@ -1638,13 +1635,10 @@ fn format_copy_ctor_and_assignment_operator(
     let ty = tcx.type_of(core.def_id).subst_identity();
 
     let is_copy = {
-        // TODO(b/259749095): Support non-empty set of generic parameters.
-        let param_env = ty::ParamEnv::empty();
-
         // TODO(b/259749095): Once generic ADTs are supported, `is_copy_modulo_regions`
         // might need to be replaced with a more thorough check - see
         // b/258249993#comment4.
-        ty.is_copy_modulo_regions(tcx, param_env)
+        ty.is_copy_modulo_regions(tcx, tcx.param_env(core.def_id))
     };
 
     if is_copy {
