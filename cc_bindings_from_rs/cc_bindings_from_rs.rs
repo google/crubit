@@ -18,6 +18,7 @@ extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_target;
+extern crate rustc_type_ir;
 
 // TODO(b/254679226): `bindings`, `cmdline`, and `run_compiler` should be
 // separate crates.

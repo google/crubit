@@ -80,6 +80,18 @@ pub mod fn_param_ty_tests {
     pub fn apply_binary_i32_op(x: i32, y: i32, f: extern "C" fn(i32, i32) -> i32) -> i32 {
         f(x, y)
     }
+
+    pub fn get_ref_to_smaller_int<'a>(x: &'a i32, y: &'a i32) -> &'a i32 {
+        if *x < *y { x } else { y }
+    }
+
+    pub fn get_identical_ref_with_inferred_lifetime(x: &'_ i32) -> &'_ i32 {
+        x
+    }
+
+    pub fn set_mut_ref_to_sum_of_ints(sum: &mut i32, x: i32, y: i32) {
+        *sum = x + y;
+    }
 }
 
 /// APIs for testing functions that return the unit / `()` / `void` type.

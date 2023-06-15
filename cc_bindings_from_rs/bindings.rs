@@ -20,6 +20,7 @@ use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use rustc_target::abi::{Abi, FieldsShape, Integer, Layout, Primitive, Scalar};
 use rustc_target::spec::PanicStrategy;
+use rustc_type_ir::sty::RegionKind;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::ops::AddAssign;
@@ -277,6 +278,7 @@ fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
         ty::TyKind::Uint{..} |
         ty::TyKind::Never |
         ty::TyKind::RawPtr{..} |
+        ty::TyKind::Ref{..} |
         ty::TyKind::FnPtr{..} => true,
         ty::TyKind::Tuple(types) if types.len() == 0 => true,
 
@@ -311,7 +313,6 @@ fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
         // - In general `TyKind::Ref` should have the same ABI as `TyKind::RawPtr`
         // - References to slices (`&[T]`) or strings (`&str`) rely on assumptions
         //   spelled out in `rust_builtin_type_abi_assumptions.md`..
-        ty::TyKind::Ref{..} |
         ty::TyKind::Str |
         ty::TyKind::Array{..} |
         ty::TyKind::Slice{..} =>
@@ -347,6 +348,21 @@ enum TypeLocation {
 
     /// Other location (e.g. pointee type, field type, etc.).
     Other,
+}
+
+fn format_pointer_or_reference_ty_for_cc<'tcx>(
+    input: &Input<'tcx>,
+    pointee: Ty<'tcx>,
+    mutability: rustc_middle::mir::Mutability,
+    pointer_sigil: TokenStream,
+) -> Result<CcSnippet> {
+    let const_qualifier = match mutability {
+        Mutability::Mut => quote! {},
+        Mutability::Not => quote! { const },
+    };
+    let CcSnippet { tokens, mut prereqs } = format_ty_for_cc(input, pointee, TypeLocation::Other)?;
+    prereqs.move_defs_to_fwd_decls();
+    Ok(CcSnippet { prereqs, tokens: quote! { #tokens #const_qualifier #pointer_sigil } })
 }
 
 /// Formats `ty` into a `CcSnippet` that represents how the type should be
@@ -502,17 +518,31 @@ fn format_ty_for_cc<'tcx>(
             }
         }
 
-        ty::TyKind::RawPtr(ty::TypeAndMut { ty, mutbl }) => {
-            let const_qualifier = match mutbl {
-                Mutability::Mut => quote! {},
-                Mutability::Not => quote! { const },
-            };
-            let CcSnippet { tokens, mut prereqs } =
-                format_ty_for_cc(input, *ty, TypeLocation::Other).with_context(|| {
+        ty::TyKind::RawPtr(ty::TypeAndMut { ty: pointee_ty, mutbl }) => {
+            format_pointer_or_reference_ty_for_cc(input, *pointee_ty, *mutbl, quote! { * })
+                .with_context(|| {
                     format!("Failed to format the pointee of the pointer type `{ty}`")
-                })?;
-            prereqs.move_defs_to_fwd_decls();
-            CcSnippet { prereqs, tokens: quote! { #tokens #const_qualifier * } }
+                })?
+        }
+
+        ty::TyKind::Ref(region, referent_ty, mutability) => {
+            match location {
+                TypeLocation::FnReturn | TypeLocation::FnParam => (),
+                TypeLocation::Other => bail!(
+                    "Can't format `{ty}`, because references are only supported in \
+                     function parameter types and return types (b/286256327)",
+                ),
+            };
+            let lifetime = format_region_as_cc_lifetime(region);
+            format_pointer_or_reference_ty_for_cc(
+                input,
+                *referent_ty,
+                *mutability,
+                quote! { & #lifetime },
+            )
+            .with_context(|| {
+                format!("Failed to format the referent of the reference type `{ty}`")
+            })?
         }
 
         ty::TyKind::FnPtr(sig) => {
@@ -612,18 +642,46 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
             ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
             FullyQualifiedName::new(tcx, adt.did()).format_for_rs()
         }
-        ty::TyKind::RawPtr(ty::TypeAndMut { ty, mutbl }) => {
+        ty::TyKind::RawPtr(ty::TypeAndMut { ty: pointee_ty, mutbl }) => {
             let qualifier = match mutbl {
                 Mutability::Mut => quote! { mut },
                 Mutability::Not => quote! { const },
             };
-            let ty = format_ty_for_rs(tcx, *ty).with_context(|| {
+            let ty = format_ty_for_rs(tcx, *pointee_ty).with_context(|| {
                 format!("Failed to format the pointee of the pointer type `{ty}`")
             })?;
             quote! { * #qualifier #ty }
         }
+        ty::TyKind::Ref(region, referent_ty, mutability) => {
+            let mutability = match mutability {
+                Mutability::Mut => quote! { mut },
+                Mutability::Not => quote! {},
+            };
+            let ty = format_ty_for_rs(tcx, *referent_ty).with_context(|| {
+                format!("Failed to format the referent of the reference type `{ty}`")
+            })?;
+            let lifetime = format_region_as_rs_lifetime(region);
+            quote! { & #lifetime #mutability #ty }
+        }
         _ => bail!("The following Rust type is not supported yet: {ty}"),
     })
+}
+
+fn format_region_as_cc_lifetime(region: &ty::Region) -> TokenStream {
+    let name = region.get_name().expect("Anonymous regions should be removed by `get_fn_sig`");
+    let name = name
+        .as_str()
+        .strip_prefix('\'')
+        .expect("All Rust lifetimes are expected to begin with the \"'\" character");
+
+    // TODO(b/286299326): Use `$a` or `$(foo)` or `$static` syntax below.
+    quote! { [[clang::annotate_type("lifetime", #name)]] }
+}
+
+fn format_region_as_rs_lifetime(region: &ty::Region) -> TokenStream {
+    let name = region.get_name().expect("Anonymous regions should be removed by `get_fn_sig`");
+    let lifetime = syn::Lifetime::new(name.as_str(), proc_macro2::Span::call_site());
+    quote! { #lifetime }
 }
 
 #[derive(Debug, Default)]
@@ -656,11 +714,26 @@ impl FromIterator<ApiSnippets> for ApiSnippets {
     }
 }
 
-fn get_fn_sig<'tcx>(tcx: TyCtxt<'tcx>, fn_def_id: LocalDefId) -> Result<ty::FnSig<'tcx>> {
-    match tcx.fn_sig(fn_def_id).subst_identity().no_bound_vars() {
-        None => bail!("Generic functions are not supported yet (b/259749023)"),
-        Some(sig) => Ok(sig),
-    }
+fn get_fn_sig(tcx: TyCtxt, fn_def_id: LocalDefId) -> ty::FnSig {
+    let sig = tcx.fn_sig(fn_def_id).subst_identity();
+    let fn_def_id = fn_def_id.to_def_id(); // LocalDefId => DefId
+
+    // The `replace_late_bound_regions_uncached` call below is similar to
+    // `TyCtxt::liberate_and_name_late_bound_regions` but also replaces anonymous
+    // regions with new names.
+    let mut anon_count: u32 = 0;
+    let mut translated_kinds: HashMap<ty::BoundVar, ty::BoundRegionKind> = HashMap::new();
+    tcx.replace_late_bound_regions_uncached(sig, |br: ty::BoundRegion| {
+        let new_kind: &ty::BoundRegionKind = translated_kinds.entry(br.var).or_insert_with(|| {
+            let name = br.kind.get_name().unwrap_or_else(|| {
+                anon_count += 1;
+                Symbol::intern(&format!("'__anon{anon_count}"))
+            });
+            let id = br.kind.get_id().unwrap_or(fn_def_id);
+            ty::BoundRegionKind::BrNamed(id, name)
+        });
+        ty::Region::new_free(tcx, fn_def_id, *new_kind)
+    })
 }
 
 /// Formats a C++ function declaration of a thunk that wraps a Rust function
@@ -674,7 +747,7 @@ fn format_thunk_decl(
     let tcx = input.tcx;
 
     let mut prereqs = CcPrerequisites::default();
-    let sig = get_fn_sig(tcx, fn_def_id)?;
+    let sig = get_fn_sig(tcx, fn_def_id);
     let main_api_ret_type = format_ret_ty_for_cc(input, &sig)?.into_tokens(&mut prereqs);
 
     let mut thunk_params = {
@@ -736,7 +809,7 @@ fn format_thunk_impl(
     thunk_name: &str,
     fully_qualified_fn_name: TokenStream,
 ) -> Result<TokenStream> {
-    let sig = get_fn_sig(tcx, fn_def_id)?;
+    let sig = get_fn_sig(tcx, fn_def_id);
     let param_names_and_types: Vec<(Ident, Ty)> = {
         let param_names = tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, name)| {
             if name.as_str().is_empty() {
@@ -783,10 +856,40 @@ fn format_thunk_impl(
         thunk_body = quote! { __ret_slot.write(#thunk_body); };
     };
 
+    let generic_params = {
+        let regions = sig
+            .inputs()
+            .iter()
+            .copied()
+            .chain(std::iter::once(sig.output()))
+            .flat_map(|ty| {
+                ty.walk().filter_map(|generic_arg| match generic_arg.unpack() {
+                    ty::GenericArgKind::Const(_) | ty::GenericArgKind::Type(_) => None,
+                    ty::GenericArgKind::Lifetime(region) => Some(region),
+                })
+            })
+            .filter(|region| match region.kind() {
+                RegionKind::ReStatic => false,
+                RegionKind::ReFree(_) => true,
+                _ => panic!("Unexpected region kind: {region}"),
+            })
+            .sorted_by_key(|region| {
+                region.get_name().expect("`get_fn_sig` should remove anonymous lifetimes")
+            })
+            .dedup()
+            .collect_vec();
+        if regions.is_empty() {
+            quote! {}
+        } else {
+            let lifetimes = regions.into_iter().map(|region| format_region_as_rs_lifetime(&region));
+            quote! { < #( #lifetimes ),* > }
+        }
+    };
+
     let thunk_name = make_rs_ident(thunk_name);
     Ok(quote! {
         #[no_mangle]
-        extern "C" fn #thunk_name( #( #thunk_params ),* ) -> #thunk_ret_type {
+        extern "C" fn #thunk_name #generic_params ( #( #thunk_params ),* ) -> #thunk_ret_type {
             #thunk_body
         }
     })
@@ -872,7 +975,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         "Generic functions are not supported yet (b/259749023)"
     );
 
-    let sig = get_fn_sig(tcx, local_def_id)?;
+    let sig = get_fn_sig(tcx, local_def_id);
     check_fn_sig(&sig)?;
     let needs_thunk = is_thunk_required(&sig).is_err();
     let thunk_name = {
@@ -3135,17 +3238,159 @@ pub mod tests {
         });
     }
 
+    /// This test verifies handling of inferred, anonymous lifetimes.
+    ///
+    /// Note that `Region::get_name_or_anon()` may return the same name (e.g.
+    /// `"anon"` for both lifetimes, but bindings should use 2 distinct
+    /// lifetime names in the generated bindings and in the thunk impl.
     #[test]
-    fn test_format_item_unsupported_lifetime_generic_fn() {
-        // TODO(b/258235219): Expect success after adding support for references.
+    fn test_format_item_lifetime_generic_fn_with_inferred_lifetimes() {
         let test_src = r#"
-                pub fn foo(arg: &i32) -> &i32 { arg }
+                pub fn foo(arg: &i32) -> &i32 {
+                    unimplemented!("arg = {arg}")
+                }
+            "#;
+        test_format_item(test_src, "foo", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    inline
+                    std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]]
+                    foo(std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] arg);
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C"
+                    std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] ...(
+                        std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]]);
+                    }
+                    inline
+                    std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]]
+                    foo(std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] arg) {
+                      return __crubit_internal::...(arg);
+                    }
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn ...<'__anon1>(arg: &'__anon1 i32) -> &'__anon1 i32 {
+                        ::rust_out::foo(arg)
+                    }
+                }
+            );
+        });
+    }
 
-                // Lifetime inference translates the above into:
-                //     pub fn foo<'a>(arg: &'a i32) -> &'a i32 { ... }
-                // leaving 'a lifetime late-bound (it is bound with a lifetime
-                // taken from each of the callsites).  In other words, we can't
-                // just call `no_bound_vars` on this `FnSig`'s `Binder`.
+    /// This test verifies handling of various explicit (i.e. non-inferred)
+    /// lifetimes.
+    ///
+    /// * Note that the two `'_` specify two distinct lifetimes (i.e. two
+    ///   distinct names need to be used in the generated bindings and thunk
+    ///   impl).
+    /// * Note that `'static` doesn't need to be listed in the generic
+    ///   parameters of the thunk impl
+    /// * Note that even though `'foo` is used in 2 parameter types, it should
+    ///   only appear once in the list of generic parameters of the thunk impl
+    /// * Note that in the future the following translation may be preferable:
+    ///     * `'a` => `$a` (no parens)
+    ///     * `'foo` => `$(foo)` (note the extra parens)
+    #[test]
+    fn test_format_item_lifetime_generic_fn_with_various_lifetimes() {
+        let test_src = r#"
+                pub fn foo<'a, 'foo>(
+                    arg1: &'a i32,  // Single letter lifetime = `$a` is possible
+                    arg2: &'foo i32,  // Multi-character lifetime
+                    arg3: &'foo i32,  // Same lifetime used for 2 places
+                    arg4: &'static i32,
+                    arg5: &'_ i32,
+                    arg6: &'_ i32,
+                ) -> &'foo i32 {
+                    unimplemented!("args: {arg1}, {arg2}, {arg3}, {arg4}, {arg5}, {arg6}")
+                }
+            "#;
+        test_format_item(test_src, "foo", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                  inline
+                  std::int32_t const& [[clang::annotate_type("lifetime", "foo")]]
+                  foo(
+                    std::int32_t const& [[clang::annotate_type("lifetime", "a")]] arg1,
+                    std::int32_t const& [[clang::annotate_type("lifetime", "foo")]] arg2,
+                    std::int32_t const& [[clang::annotate_type("lifetime", "foo")]] arg3,
+                    std::int32_t const& [[clang::annotate_type("lifetime", "static")]] arg4,
+                    std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] arg5,
+                    std::int32_t const& [[clang::annotate_type("lifetime", "__anon2")]] arg6);
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C"
+                    std::int32_t const& [[clang::annotate_type("lifetime", "foo")]]
+                    ...(
+                        std::int32_t const& [[clang::annotate_type("lifetime", "a")]],
+                        std::int32_t const& [[clang::annotate_type("lifetime", "foo")]],
+                        std::int32_t const& [[clang::annotate_type("lifetime", "foo")]],
+                        std::int32_t const& [[clang::annotate_type("lifetime", "static")]],
+                        std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]],
+                        std::int32_t const& [[clang::annotate_type("lifetime", "__anon2")]]);
+                    }
+                    inline
+                    std::int32_t const& [[clang::annotate_type("lifetime", "foo")]]
+                    foo(
+                        std::int32_t const& [[clang::annotate_type("lifetime", "a")]] arg1,
+                        std::int32_t const& [[clang::annotate_type("lifetime", "foo")]] arg2,
+                        std::int32_t const& [[clang::annotate_type("lifetime", "foo")]] arg3,
+                        std::int32_t const& [[clang::annotate_type("lifetime", "static")]] arg4,
+                        std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] arg5,
+                        std::int32_t const& [[clang::annotate_type("lifetime", "__anon2")]] arg6) {
+                      return __crubit_internal::...(arg1, arg2, arg3, arg4, arg5, arg6);
+                    }
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn ...<'a, 'foo, '__anon1, '__anon2>(
+                        arg1: &'a i32,
+                        arg2: &'foo i32,
+                        arg3: &'foo i32,
+                        arg4: &'static i32,
+                        arg5: &'__anon1 i32,
+                        arg6: &'__anon2 i32
+                    ) -> &'foo i32 {
+                        ::rust_out::foo(arg1, arg2, arg3, arg4, arg5, arg6)
+                    }
+                }
+            );
+        });
+    }
+
+    /// Test of lifetime-generic function with a `where` clause.
+    ///
+    /// The `where` constraint below is a bit silly (why not just use `'static`
+    /// directly), but it seems prudent to test and confirm that we disable
+    /// generation of bindings for generic functions with `where` clauses
+    /// (because it is unclear if such constraints can be replicated
+    /// in C++).
+    #[test]
+    fn test_format_item_lifetime_generic_fn_with_where_clause() {
+        let test_src = r#"
+                pub fn foo<'a>(arg: &'a i32) where 'a : 'static {
+                    unimplemented!("{arg}")
+                }
             "#;
         test_format_item(test_src, "foo", |result| {
             let err = result.unwrap_err();
@@ -4040,26 +4285,41 @@ pub mod tests {
         test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
-            let unsupported_msg = "Error generating bindings for `SomeStruct::fn_taking_reference` \
-                                   defined at <crubit_unittests.rs>;l=7: \
-                                   Generic functions are not supported yet (b/259749023)";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
                     ...
                     struct ... SomeStruct final {
                         ...
-                        __COMMENT__ #unsupported_msg
+                        static inline std::int32_t fn_taking_reference(
+                            std::int32_t const& [[clang::annotate_type("lifetime", "a")]] x);
                         ...
                     };
                     ...
                 }
             );
-            assert_cc_not_matches!(
+            assert_cc_matches!(
                 result.cc_details.tokens,
-                quote! { SomeStruct::fn_taking_reference },
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C" std::int32_t ...(
+                        std::int32_t const& [[clang::annotate_type("lifetime", "a")]]);
+                    }
+                    inline std::int32_t SomeStruct::fn_taking_reference(
+                        std::int32_t const& [[clang::annotate_type("lifetime", "a")]] x) {
+                      return __crubit_internal::...(x);
+                    }
+                },
             );
-            assert_rs_not_matches!(result.rs_details, quote! { fn_taking_reference },);
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn ...<'a>(x: &'a i32) -> i32 {
+                        ::rust_out::SomeStruct::fn_taking_reference(x)
+                    }
+                },
+            );
         });
     }
 
@@ -4150,7 +4410,7 @@ pub mod tests {
             let main_api = &result.main_api;
             let unsupported_msg = "Error generating bindings for `SomeStruct::get_f32` \
                                    defined at <crubit_unittests.rs>;l=5: \
-                                   Generic functions are not supported yet (b/259749023)";
+                                   `self` parameter is not supported yet";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -4184,7 +4444,7 @@ pub mod tests {
             let main_api = &result.main_api;
             let unsupported_msg = "Error generating bindings for `SomeStruct::set_f32` \
                                    defined at <crubit_unittests.rs>;l=5: \
-                                   Generic functions are not supported yet (b/259749023)";
+                                   `self` parameter is not supported yet";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -4433,7 +4693,9 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             let broken_field_msg = "Field type has been replaced with a blob of bytes: \
-                                    The following Rust type is not supported yet: &'static i32";
+                                    Can't format `&'static i32`, because references \
+                                    are only supported in function parameter types and \
+                                    return types (b/286256327)";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -5140,6 +5402,24 @@ pub mod tests {
             ("SomeUnion", ("::rust_out::SomeUnion", "", "SomeUnion", "")),
             ("*const i32", ("std :: int32_t const *", "<cstdint>", "", "")),
             ("*mut i32", ("std::int32_t*", "<cstdint>", "", "")),
+            (
+                "&'static i32",
+                (
+                    "std :: int32_t const & [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
+                    "<cstdint>",
+                    "",
+                    "",
+                ),
+            ),
+            (
+                "&'static mut i32",
+                (
+                    "std :: int32_t & [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
+                    "<cstdint>",
+                    "",
+                    "",
+                ),
+            ),
             // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
             ("*mut SomeStruct", ("::rust_out::SomeStruct*", "", "", "SomeStruct")),
             // Testing propagation of deeper/nested `fwd_decls`:
@@ -5208,7 +5488,10 @@ pub mod tests {
                 assert_eq!(actual_tokens, expected_tokens, "{desc}");
 
                 if expected_include.is_empty() {
-                    assert!(actual_includes.is_empty());
+                    assert!(
+                        actual_includes.is_empty(),
+                        "{desc}: `actual_includes` is unexpectedly non-empty: {actual_includes:?}",
+                    );
                 } else {
                     let expected_include: TokenStream = expected_include.parse().unwrap();
                     assert_cc_matches!(
@@ -5218,7 +5501,10 @@ pub mod tests {
                 }
 
                 if expected_prereq_def.is_empty() {
-                    assert!(actual_prereq_defs.is_empty());
+                    assert!(
+                        actual_prereq_defs.is_empty(),
+                        "{desc}: `actual_prereq_defs` is unexpectedly non-empty",
+                    );
                 } else {
                     let expected_def_id = find_def_id_by_name(tcx, expected_prereq_def);
                     assert_eq!(1, actual_prereq_defs.len());
@@ -5226,7 +5512,10 @@ pub mod tests {
                 }
 
                 if expected_prereq_fwd_decl.is_empty() {
-                    assert!(actual_prereq_fwd_decls.is_empty());
+                    assert!(
+                        actual_prereq_fwd_decls.is_empty(),
+                        "{desc}: `actual_prereq_fwd_decls` is unexpectedly non-empty",
+                    );
                 } else {
                     let expected_def_id = find_def_id_by_name(tcx, expected_prereq_fwd_decl);
                     assert_eq!(1, actual_prereq_fwd_decls.len());
@@ -5276,16 +5565,10 @@ pub mod tests {
                 "Tuples are not supported yet: (i32, i32) (b/254099023)",
             ),
             (
-                "&'static i32", // TyKind::Ref (const/shared reference)
-                "The following Rust type is not supported yet: &'static i32",
-            ),
-            (
-                "&'static mut i32", // TyKind::Ref (mutable/exclusive reference)
-                "The following Rust type is not supported yet: &'static mut i32",
-            ),
-            (
                 "&'static &'static i32", // TyKind::Ref (nested reference - referent of reference)
-                "The following Rust type is not supported yet: &'static &'static i32",
+                "Failed to format the referent of the reference type `&'static &'static i32`: \
+                 Can't format `&'static i32`, because references are only supported \
+                 in function parameter types and return types (b/286256327)",
             ),
             (
                 "extern \"C\" fn (&i32)", // TyKind::Ref (nested reference - underneath fn ptr)
@@ -5297,11 +5580,13 @@ pub mod tests {
             ),
             (
                 "&'static [i32]", // TyKind::Slice (nested underneath TyKind::Ref)
-                "The following Rust type is not supported yet: &'static [i32]",
+                "Failed to format the referent of the reference type `&'static [i32]`: \
+                 The following Rust type is not supported yet: [i32]",
             ),
             (
                 "&'static str", // TyKind::Str (nested underneath TyKind::Ref)
-                "The following Rust type is not supported yet: &'static str",
+                "Failed to format the referent of the reference type `&'static str`: \
+                 The following Rust type is not supported yet: str",
             ),
             (
                 "impl Eq", // TyKind::Alias
@@ -5367,7 +5652,8 @@ pub mod tests {
             ),
             (
                 "*const Option<i8>",
-                "Failed to format the pointee of the pointer type `std::option::Option<i8>`: \
+                "Failed to format the pointee \
+                 of the pointer type `*const std::option::Option<i8>`: \
                  Generic types are not supported yet (b/259749095)",
             ),
         ];
@@ -5447,6 +5733,11 @@ pub mod tests {
             // `const` and `mut` pointers:
             ("*const i32", "*const i32"),
             ("*mut i32", "*mut i32"),
+            // References:
+            ("&i32", "& '__anon1 i32"),
+            ("&mut i32", "& '__anon1 mut i32"),
+            ("&'_ i32", "& '__anon1 i32"),
+            ("&'static i32", "& 'static i32"),
             // Pointer to an ADT:
             ("*mut SomeStruct", "* mut :: rust_out :: SomeStruct"),
             ("extern \"C\" fn(i32) -> i32", "extern \"C\" fn(i32) -> i32"),
@@ -5485,20 +5776,18 @@ pub mod tests {
                 "Tuples are not supported yet: (i32, i32) (b/254099023)",
             ),
             (
-                "&'static i32", // TyKind::Ref
-                "The following Rust type is not supported yet: &'static i32",
-            ),
-            (
                 "[i32; 42]", // TyKind::Array
                 "The following Rust type is not supported yet: [i32; 42]",
             ),
             (
                 "&'static [i32]", // TyKind::Slice (nested underneath TyKind::Ref)
-                "The following Rust type is not supported yet: &'static [i32]",
+                "Failed to format the referent of the reference type `&'static [i32]`: \
+                 The following Rust type is not supported yet: [i32]",
             ),
             (
                 "&'static str", // TyKind::Str (nested underneath TyKind::Ref)
-                "The following Rust type is not supported yet: &'static str",
+                "Failed to format the referent of the reference type `&'static str`: \
+                 The following Rust type is not supported yet: str",
             ),
             (
                 "impl Eq", // TyKind::Alias
@@ -5551,11 +5840,7 @@ pub mod tests {
             };
             run_compiler_for_testing(input, |tcx| {
                 let def_id = find_def_id_by_name(tcx, "test_function");
-                let sig = tcx
-                    .fn_sig(def_id.to_def_id())
-                    .subst_identity()
-                    .no_bound_vars()
-                    .expect(&format!("Test infrastructure error for: {desc}"));
+                let sig = get_fn_sig(tcx, def_id);
                 let ty = match type_location {
                     TypeLocation::FnReturn => sig.output(),
                     TypeLocation::FnParam => sig.inputs()[0],

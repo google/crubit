@@ -67,6 +67,26 @@ TEST(FnParamTyTests, Int32Ptr) {
   EXPECT_EQ(12 + 34, sum);
 }
 
+TEST(FnParamTyTests, Int32Ref) {
+  std::int32_t x = 123;
+  std::int32_t y = 456;
+  const std::int32_t& result = fn_param_ty_tests::get_ref_to_smaller_int(x, y);
+  EXPECT_EQ(&result, &x);
+}
+
+TEST(FnParamTyTests, Int32RefWithInferredLifetime) {
+  std::int32_t x = 123;
+  const std::int32_t& result =
+      fn_param_ty_tests::get_identical_ref_with_inferred_lifetime(x);
+  EXPECT_EQ(&result, &x);
+}
+
+TEST(FnParamTyTests, Int32MutRef) {
+  std::int32_t sum = -123;
+  fn_param_ty_tests::set_mut_ref_to_sum_of_ints(sum, 456, 789);
+  EXPECT_EQ(sum, 456 + 789);
+}
+
 std::int32_t AddInt32(std::int32_t x, std::int32_t y) { return x + y; }
 
 std::int32_t MultiplyInt32(std::int32_t x, std::int32_t y) { return x * y; }
