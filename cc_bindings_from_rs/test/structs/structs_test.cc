@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <type_traits>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -74,6 +75,19 @@ TEST(StructsTest, ThunklessStructFloat) {
   test::StructFloat product =
       test::thunkless_multiply(std::move(x), std::move(y));
   EXPECT_EQ(111.0 * 222.0, test::thunkless_inspect(std::move(product)));
+}
+
+// This is a regression test for b/286876315 - it verifies that the mutability
+// qualifiers of nested pointers / pointees are correctly propagated.
+TEST(StructsTest, NestedPtrTypeMutabilityQualifiers) {
+  namespace test = structs::nested_ptr_type_mutability_qualifiers;
+  test::SomeStruct s;
+  ASSERT_EQ(nullptr, s.mut_const_ptr);
+  ASSERT_EQ(nullptr, s.const_mut_ptr);
+
+  // Verify that the `const` qualifiers got propagated correctly.
+  static_assert(std::is_same_v<decltype(s.mut_const_ptr), float const**>);
+  static_assert(std::is_same_v<decltype(s.const_mut_ptr), float* const*>);
 }
 
 }  // namespace

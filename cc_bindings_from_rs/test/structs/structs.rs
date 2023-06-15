@@ -244,3 +244,18 @@ pub mod dynamically_sized_type {
         _dynamically_sized_field: [i32],
     }
 }
+
+/// This is a regression test for b/286876315 - it verifies that the mutability
+/// qualifiers of nested pointers are correctly propagated.
+pub mod nested_ptr_type_mutability_qualifiers {
+    pub struct SomeStruct {
+        pub mut_const_ptr: *mut *const f32,
+        pub const_mut_ptr: *const *mut f32,
+    }
+
+    impl Default for SomeStruct {
+        fn default() -> Self {
+            Self { mut_const_ptr: std::ptr::null_mut(), const_mut_ptr: std::ptr::null() }
+        }
+    }
+}

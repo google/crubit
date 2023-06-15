@@ -512,7 +512,7 @@ fn format_ty_for_cc<'tcx>(
                     format!("Failed to format the pointee of the pointer type `{ty}`")
                 })?;
             prereqs.move_defs_to_fwd_decls();
-            CcSnippet { prereqs, tokens: quote! { #const_qualifier #tokens * } }
+            CcSnippet { prereqs, tokens: quote! { #tokens #const_qualifier * } }
         }
 
         ty::TyKind::FnPtr(sig) => {
@@ -2250,11 +2250,11 @@ pub mod tests {
                         // below also matters.
                         struct S;
                         ...
-                        inline void f(const ::rust_out::S* __param_0);
+                        inline void f(::rust_out::S const* __param_0);
                         ...
                         struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S final { ... }
                         ...
-                        inline void f(const ::rust_out::S* __param_0) { ... }
+                        inline void f(::rust_out::S const* __param_0) { ... }
                         ...
                     }  // namespace rust_out
                 }
@@ -2404,7 +2404,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_not_matches!(bindings.h_body, quote! { struct S; });
-            assert_cc_matches!(bindings.h_body, quote! { void f(const ::rust_out::S* _s); });
+            assert_cc_matches!(bindings.h_body, quote! { void f(::rust_out::S const* _s); });
         });
     }
 
@@ -2432,7 +2432,7 @@ pub mod tests {
                 bindings.h_body,
                 quote! {
                     static inline ::rust_out::S create(); ...
-                    const ::rust_out::S* field; ...
+                    ::rust_out::S const* field; ...
                 }
             );
         });
@@ -5138,17 +5138,15 @@ pub mod tests {
             ("SomeStruct", ("::rust_out::SomeStruct", "", "SomeStruct", "")),
             ("SomeEnum", ("::rust_out::SomeEnum", "", "SomeEnum", "")),
             ("SomeUnion", ("::rust_out::SomeUnion", "", "SomeUnion", "")),
-            ("*const i32", ("const std::int32_t*", "<cstdint>", "", "")),
+            ("*const i32", ("std :: int32_t const *", "<cstdint>", "", "")),
             ("*mut i32", ("std::int32_t*", "<cstdint>", "", "")),
             // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
             ("*mut SomeStruct", ("::rust_out::SomeStruct*", "", "", "SomeStruct")),
             // Testing propagation of deeper/nested `fwd_decls`:
             ("*mut *mut SomeStruct", (":: rust_out :: SomeStruct * *", "", "", "SomeStruct")),
             // Testing propagation of `const` / `mut` qualifiers:
-            // TODO(b/286876315): The 2 distinct inputs below should *not* result in the same
-            // output.
-            ("*mut *const f32", ("const float * *", "", "", "")),
-            ("*const *mut f32", ("const float * *", "", "", "")),
+            ("*mut *const f32", ("float const * *", "", "", "")),
+            ("*const *mut f32", ("float * const *", "", "", "")),
             (
                 // Rust function pointers are non-nullable, so when function pointers are used as a
                 // parameter type (i.e. in `TypeLocation::FnParam`) then we can translate to
@@ -5167,7 +5165,7 @@ pub mod tests {
                 // function *reference*.
                 "*const extern \"C\" fn (f32, f32) -> f32",
                 (
-                    "const crubit :: type_identity_t < float (float , float) > * *",
+                    "crubit :: type_identity_t < float (float , float) > * const *",
                     "\"crubit/support/for/tests/internal/cxx20_backports.h\"",
                     "",
                     "",
