@@ -3,19 +3,11 @@
 Disclaimer: This project is experimental, under heavy development, and should
 not be used yet.
 
-
-## Invoking the tool
+## Invoking the tool on the command line
 
 Most `rustc` cmdline parameters should be supported (e.g. `--crate-type`).
 
 The following example should work in the current dev environment:
-
-<!-- BEGIN GOOGLE-INTERNAL -->
-If you're a Googler, set `<path_of_rustfmt_executable>` to
- `"$(pwd)/../../unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt"`
- and the `<path_of_clang_format_executable>` to
- `"$(pwd)/../../crosstool/v18/stable/installs/llvm/bin/clang-format"`
-<!-- END GOOGLE-INTERNAL -->
 
 ```
 $ echo > $HOME/scratch/test.rs "
@@ -44,6 +36,14 @@ $ cat $HOME/scratch/test.h
 namespace test {
 extern "C" void public_function();
 }
+```
+
+## Invoking the tool through bazel aspect
+
+You can inspect the generated bindings files by building the aspect:
+
+```sh
+bazel build --aspects  //cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl%cc_bindings_from_rust_aspect --output_group=out //some/rust:library
 ```
 
 ## Contributing
