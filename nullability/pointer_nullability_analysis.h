@@ -6,8 +6,11 @@
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_ANALYSIS_H_
 
 #include "nullability/pointer_nullability_lattice.h"
+#include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
+#include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
@@ -23,15 +26,41 @@ class PointerNullabilityAnalysis
     : public dataflow::DataflowAnalysis<PointerNullabilityAnalysis,
                                         PointerNullabilityLattice> {
  private:
-  absl::flat_hash_map<const Expr*, std::vector<NullabilityKind>>
-      ExprToNullability;
+  PointerNullabilityLattice::NonFlowSensitiveState NFS;
 
  public:
   explicit PointerNullabilityAnalysis(ASTContext& context);
 
   PointerNullabilityLattice initialElement() {
-    return PointerNullabilityLattice(ExprToNullability);
+    return PointerNullabilityLattice(NFS);
   }
+
+  // Instead of fixing D's nullability invariants from its annotations,
+  // bind them to symbolic variables, and return those variables.
+  // This is useful to infer the annotations that should be present on D.
+  //
+  // For example, given the following program:
+  //   void target(int* p) {
+  //     int* q = p;
+  //     *q;
+  //   }
+  //
+  // By default, p is treated as having unspecified nullability.
+  // When we reach the dereference, our flow condition will say:
+  //   is_known = false
+  //
+  // However, if we bind p's nullability to a variable:
+  //   [p_nonnull, p_nullable] = assignNullabilityVariable(p)
+  // Then the flow condition at dereference includes:
+  //   is_known = (p_nonnull | p_nullable)
+  //   p_nonnull => !is_null
+  // Logically connecting dereferenced values and possible invariants on p
+  // allows us to infer p's proper annotations (here: Nonnull).
+  //
+  // For now, only the top-level nullability is assigned, and the returned
+  // variables are only associated with direct reads of pointer values from D.
+  PointerTypeNullability assignNullabilityVariable(const ValueDecl* D,
+                                                   dataflow::Arena&);
 
   void transfer(const CFGElement& Elt, PointerNullabilityLattice& Lattice,
                 dataflow::Environment& Env);

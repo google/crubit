@@ -11,7 +11,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "nullability/type_nullability.h"
-#include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
+#include "clang/AST/Expr.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 
@@ -21,18 +21,20 @@ namespace nullability {
 
 class PointerNullabilityLattice {
  private:
-  // Owned by the PointerNullabilityAnalysis object, shared by all lattice
-  // elements within one analysis run.
-  absl::flat_hash_map<const Expr *, TypeNullability> &ExprToNullability;
 
  public:
-  PointerNullabilityLattice(
-      absl::flat_hash_map<const Expr *, TypeNullability> &ExprToNullability)
-      : ExprToNullability(ExprToNullability) {}
+  struct NonFlowSensitiveState {
+    absl::flat_hash_map<const Expr *, TypeNullability> ExprToNullability;
+    // Overridden symbolic nullability for pointer-typed decls.
+    absl::flat_hash_map<const ValueDecl *, PointerTypeNullability>
+        DeclTopLevelNullability;
+  };
+
+  PointerNullabilityLattice(NonFlowSensitiveState &NFS) : NFS(NFS) {}
 
   const TypeNullability *getExprNullability(const Expr *E) const {
-    auto I = ExprToNullability.find(&dataflow::ignoreCFGOmittedNodes(*E));
-    return I == ExprToNullability.end() ? nullptr : &I->second;
+    auto I = NFS.ExprToNullability.find(&dataflow::ignoreCFGOmittedNodes(*E));
+    return I == NFS.ExprToNullability.end() ? nullptr : &I->second;
   }
 
   // If the `ExprToNullability` map already contains an entry for `E`, does
@@ -42,13 +44,23 @@ class PointerNullabilityLattice {
   const TypeNullability &insertExprNullabilityIfAbsent(
       const Expr *E, const std::function<TypeNullability()> &GetNullability) {
     E = &dataflow::ignoreCFGOmittedNodes(*E);
-    if (auto It = ExprToNullability.find(E); It != ExprToNullability.end())
+    if (auto It = NFS.ExprToNullability.find(E);
+        It != NFS.ExprToNullability.end())
       return It->second;
     // Deliberately perform a separate lookup after calling GetNullability.
     // It may invalidate iterators, e.g. inserting missing vectors for children.
-    auto [Iterator, Inserted] = ExprToNullability.insert({E, GetNullability()});
+    auto [Iterator, Inserted] =
+        NFS.ExprToNullability.insert({E, GetNullability()});
     CHECK(Inserted) << "GetNullability inserted same " << E->getStmtClassName();
     return Iterator->second;
+  }
+
+  // Returns overridden nullability information associated with a declaration.
+  // For now we only track top-level decl nullability symbolically.
+  const PointerTypeNullability *getDeclNullability(const ValueDecl *D) const {
+    auto It = NFS.DeclTopLevelNullability.find(D);
+    if (It == NFS.DeclTopLevelNullability.end()) return nullptr;
+    return &It->second;
   }
 
   bool operator==(const PointerNullabilityLattice &Other) const { return true; }
@@ -56,6 +68,11 @@ class PointerNullabilityLattice {
   dataflow::LatticeJoinEffect join(const PointerNullabilityLattice &Other) {
     return dataflow::LatticeJoinEffect::Unchanged;
   }
+
+ private:
+  // Owned by the PointerNullabilityAnalysis object, shared by all lattice
+  // elements within one analysis run.
+  NonFlowSensitiveState &NFS;
 };
 
 inline std::ostream &operator<<(std::ostream &OS,

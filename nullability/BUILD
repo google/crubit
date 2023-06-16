@@ -11,6 +11,7 @@ cc_library(
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
     ],
 )
 
@@ -39,6 +40,24 @@ cc_library(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
+    ],
+)
+
+cc_test(
+    name = "pointer_nullability_analysis_test",
+    srcs = ["pointer_nullability_analysis_test.cc"],
+    deps = [
+        ":pointer_nullability",
+        ":pointer_nullability_analysis",
+        ":pointer_nullability_lattice",
+        "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:testing",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
     ],
 )
 

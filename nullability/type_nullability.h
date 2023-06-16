@@ -33,6 +33,9 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
 
+namespace clang::dataflow {
+class BoolValue;
+}
 namespace clang::tidy::nullability {
 
 /// Externalized nullability of a clang::Type.
@@ -51,6 +54,17 @@ namespace clang::tidy::nullability {
 /// The concrete representation is currently the nullability of each nested
 /// PointerType encountered in a preorder traversal of the canonical type.
 using TypeNullability = std::vector<NullabilityKind>;
+
+/// Describes the nullability of a pointer "slot" within a type.
+///
+/// This may represent a concrete NullabilityKind,
+///   e.g. NullabilityKind::NonNull = {Nonnull=true, Nullable=false}
+/// Or it may be symbolic: e.g. Nonnull may be an AtomicBoolValue which we want
+/// to infer, and which may be connected to SAT constraints.
+struct PointerTypeNullability {
+  dataflow::BoolValue* Nonnull;   // True if this slot is marked non-null.
+  dataflow::BoolValue* Nullable;  // True if this slot is marked nullable.
+};
 
 /// Returns the `NullabilityKind` corresponding to the nullability annotation on
 /// `Type` if present. Otherwise, returns `NullabilityKind::Unspecified`.

@@ -265,11 +265,32 @@ void transferFlowSensitiveNotNullPointer(
   }
 }
 
+const PointerTypeNullability* getOverriddenNullability(
+    const Expr* E, PointerNullabilityLattice& Lattice) {
+  if (const auto* DRE = dyn_cast<DeclRefExpr>(E))
+    return Lattice.getDeclNullability(DRE->getDecl());
+  if (const auto* ME = dyn_cast<MemberExpr>(E))
+    return Lattice.getDeclNullability(ME->getMemberDecl());
+  return nullptr;
+}
+
 void transferFlowSensitivePointer(
     const Expr* PointerExpr, const MatchFinder::MatchResult& Result,
     TransferState<PointerNullabilityLattice>& State) {
-  if (auto* PointerVal = getPointerValueFromExpr(PointerExpr, State.Env)) {
-    initPointerFromAnnotations(*PointerVal, PointerExpr, State);
+  auto& Env = State.Env;
+  if (auto* PointerVal = getPointerValueFromExpr(PointerExpr, Env)) {
+    if (auto* Override = getOverriddenNullability(PointerExpr, State.Lattice)) {
+      // is_known = (nonnull | nullable)
+      initPointerNullState(
+          *PointerVal, Env,
+          &Env.makeOr(*Override->Nonnull, *Override->Nullable));
+      // nonnull => !is_null
+      auto [IsKnown, IsNull] = getPointerNullState(*PointerVal);
+      Env.addToFlowCondition(
+          Env.makeImplication(*Override->Nonnull, Env.makeNot(IsNull)));
+    } else {
+      initPointerFromAnnotations(*PointerVal, PointerExpr, State);
+    }
   }
 }
 
@@ -674,6 +695,16 @@ PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext& Context)
           Context),
       NonFlowSensitiveTransferer(buildNonFlowSensitiveTransferer()),
       FlowSensitiveTransferer(buildFlowSensitiveTransferer()) {}
+
+PointerTypeNullability PointerNullabilityAnalysis::assignNullabilityVariable(
+    const ValueDecl* D, dataflow::Arena& A) {
+  auto [It, Inserted] = NFS.DeclTopLevelNullability.try_emplace(D);
+  if (Inserted) {
+    It->second.Nonnull = &A.create<dataflow::AtomicBoolValue>();
+    It->second.Nullable = &A.create<dataflow::AtomicBoolValue>();
+  }
+  return It->second;
+}
 
 void PointerNullabilityAnalysis::transfer(const CFGElement& Elt,
                                           PointerNullabilityLattice& Lattice,
