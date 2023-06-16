@@ -15,8 +15,10 @@ pub mod explicit_impl {
         }
     }
 
-    pub fn extract_int(s: SomeStruct) -> i32 {
-        s.0
+    impl SomeStruct {
+        pub fn extract_int(s: Self) -> i32 {
+            s.0
+        }
     }
 }
 
@@ -25,8 +27,10 @@ pub mod derived_impl {
     #[derive(Default)]
     pub struct SomeStruct(i32);
 
-    pub fn extract_int(s: SomeStruct) -> i32 {
-        s.0
+    impl SomeStruct {
+        pub fn extract_int(s: Self) -> i32 {
+            s.0
+        }
     }
 }
 

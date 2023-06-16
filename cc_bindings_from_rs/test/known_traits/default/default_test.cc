@@ -12,28 +12,23 @@
 namespace crubit {
 namespace {
 
-TEST(DefaultTest, ExplicitImpl) {
-  namespace tests = rs_default::explicit_impl;
-  static_assert(std::is_default_constructible_v<tests::SomeStruct>);
-  static_assert(!std::is_trivially_default_constructible_v<tests::SomeStruct>);
+template <typename TypeUnderTest>
+void MainTestBody(std::int32_t expected_default_value) {
+  static_assert(std::is_default_constructible_v<TypeUnderTest>);
+  static_assert(!std::is_trivially_default_constructible_v<TypeUnderTest>);
 
-  // The next linke invokes the default C++ constructor, which calls into the
-  // `Default` impl on Rust side (which happens to initialize the struct with
-  // 42).
-  tests::SomeStruct s{};
-  EXPECT_EQ(42, tests::extract_int(std::move(s)));
+  // The next line invokes the default C++ constructor, which calls into the
+  // `Default::default()` static method on Rust side.
+  TypeUnderTest s{};
+  EXPECT_EQ(expected_default_value, TypeUnderTest::extract_int(std::move(s)));
+}
+
+TEST(DefaultTest, ExplicitImpl) {
+  MainTestBody<rs_default::explicit_impl::SomeStruct>(42);
 }
 
 TEST(DefaultTest, DerivedImpl) {
-  namespace tests = rs_default::derived_impl;
-  static_assert(std::is_default_constructible_v<tests::SomeStruct>);
-  static_assert(!std::is_trivially_default_constructible_v<tests::SomeStruct>);
-
-  // The next linke invokes the default C++ constructor, which calls into the
-  // `Default` impl on Rust side (the derived impl happens to initialize the
-  // struct with 0).
-  tests::SomeStruct s{};
-  EXPECT_EQ(0, tests::extract_int(std::move(s)));
+  MainTestBody<rs_default::derived_impl::SomeStruct>(0);
 }
 
 TEST(DefaultTest, NoImpl) {

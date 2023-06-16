@@ -17,12 +17,14 @@ pub mod explicit_impl {
 
     impl Copy for SomeStruct {}
 
-    pub fn create_struct(i: i32) -> SomeStruct {
-        SomeStruct(i)
-    }
+    impl SomeStruct {
+        pub fn create_struct(i: i32) -> Self {
+            SomeStruct(i)
+        }
 
-    pub fn extract_int(s: SomeStruct) -> i32 {
-        s.0
+        pub fn extract_int(s: Self) -> i32 {
+            s.0
+        }
     }
 }
 
@@ -31,12 +33,14 @@ pub mod derived_impl {
     #[derive(Clone, Copy)]
     pub struct SomeStruct(i32);
 
-    pub fn create_struct(i: i32) -> SomeStruct {
-        SomeStruct(i)
-    }
+    impl SomeStruct {
+        pub fn create_struct(i: i32) -> Self {
+            SomeStruct(i)
+        }
 
-    pub fn extract_int(s: SomeStruct) -> i32 {
-        s.0
+        pub fn extract_int(s: Self) -> i32 {
+            s.0
+        }
     }
 }
 
