@@ -129,12 +129,12 @@ dangling. (The behavior of a program which violates these rules is undefined.)
 
 C++ doesn't share these rules, and care must be taken when converting Rust
 references to and from C++ pointers. For example, spans/slices are particularly
-error-prone: a Rust empty slice uses a dangling pointer (which is UB in C++),
-and a C++ empty span (often) uses nullptr (which is UB in Rust). To effectively
-use spans in FFI, one must either use non-native types, or perform a conversion
-operation which rewrites the pointer values. For that, we recommend using the
-conversion routines provided by Crubit support library (e.g. `impl
-From<string_view> for &[u8]`).
+error-prone: a Rust empty slice uses a dangling pointer (which produces UB in
+C++ when used in pointer arithmetic), and a C++ empty span (often) uses nullptr
+(which is UB in Rust). To effectively use spans in FFI, one must either use
+non-native types, or perform a conversion operation which rewrites the pointer
+values. For that, we recommend using the conversion routines provided by Crubit
+support library (e.g. `impl From<string_view> for &[u8]`).
 
 TODO(b/271016831, b/262580415): Cover `rs_std::Slice<T>` and/or `rs_std::str`
 above once these types are provided by Crubit.
