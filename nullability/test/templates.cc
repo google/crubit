@@ -1114,9 +1114,8 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate) {
       **s.b;  // [[unsafe]]
       *s.f;
       *s.g;
-      // TODO: Handle function pointers. The analysis currently crashes.
-      // *s.f();
-      // *s.g();
+      *s.f();
+      *s.g();
     }
 
     void targetNonnull(S<int* _Nonnull> s) {
@@ -1124,9 +1123,8 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate) {
       **s.b;
       *s.f;
       *s.g;
-      // TODO: Handle function pointers. The analysis currently crashes.
-      // *s.f();
-      // *s.g();
+      *s.f();
+      *s.g();
     }
   )cc");
 
@@ -1145,8 +1143,7 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate) {
       ***d.arg;  // [[unsafe]]
       *e.arg;    // [[unsafe]]
 
-      // TODO: Handle function pointers. The analysis currently crashes.
-      // *e.arg();
+      *e.arg();
     }
 
     void targetNonnull(S<int* _Nonnull>(a), S<int* _Nonnull>(*(b)),
@@ -1158,8 +1155,7 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate) {
       ***d.arg;
       *e.arg;
 
-      // TODO: Handle function pointers. The analysis currently crashes.
-      // *e.arg();
+      *e.arg();
     }
   )cc");
 }
