@@ -117,6 +117,13 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
   EXPECT_THAT(nullVec("TripleAlias<int *, int *_Nullable, int*>"),
               ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable,
                           NullabilityKind::Unspecified));
+
+  Preamble = R"cpp(
+    template <class... Ts>
+    using First = __type_pack_element<0, Ts...>;
+  )cpp";
+  EXPECT_THAT(nullVec("First<int * _Nonnull>"),
+              ElementsAre(NullabilityKind::NonNull));
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentAlias) {

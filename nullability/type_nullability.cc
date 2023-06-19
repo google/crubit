@@ -40,6 +40,7 @@ std::string nullabilityToString(const TypeNullability& Nullability) {
 // user-defined pointer-like types.
 std::optional<NullabilityKind> getAliasNullability(const TemplateName& TN) {
   if (const auto* TD = TN.getAsTemplateDecl()) {
+    if (!TD->getTemplatedDecl()) return std::nullopt;  // BuiltinTemplateDecl
     if (const auto* A = TD->getTemplatedDecl()->getAttr<AnnotateAttr>()) {
       if (A->getAnnotation() == "Nullable") return NullabilityKind::Nullable;
       if (A->getAnnotation() == "Nonnull") return NullabilityKind::NonNull;
