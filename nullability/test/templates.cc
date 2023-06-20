@@ -1114,8 +1114,8 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate) {
       **s.b;  // [[unsafe]]
       *s.f;
       *s.g;
-      *s.f();
-      *s.g();
+      *s.f();  // TODO: fix false negative.
+      *s.g();  // TODO: fix false negative.
     }
 
     void targetNonnull(S<int* _Nonnull> s) {
@@ -1143,7 +1143,7 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate) {
       ***d.arg;  // [[unsafe]]
       *e.arg;    // [[unsafe]]
 
-      *e.arg();
+      *e.arg();  // TODO: fix false negative.
     }
 
     void targetNonnull(S<int* _Nonnull>(a), S<int* _Nonnull>(*(b)),
