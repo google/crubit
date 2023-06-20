@@ -2,23 +2,24 @@
 
 Here we describe how Crubit bindings work with C++ special member functions and
 operator overloading (e.g. the copy constructor, or `operator==`) and with
-traits from the Rust standard library (e.g. the `Clone` or `PartialEq` traits).
+traits from the Rust standard library (e.g., the `Clone` or `PartialEq` traits).
 
-Rust traits which return `Self` by value (or use mutable references) are only
-implemented in the bindings for a given C++ type if that type is
-[is `Unpin`](../../unpin.md).
+Rust traits which return `Self` by value (e.g., `Default` or `Clone`) or use
+mutable references (e.g., `AddAssign`) are only implemented in Rust bindings for
+a given C++ type if that type is [is `Unpin`](../../unpin.md).
 
 ## Bidirectional map
 
 The following special member functions and traits are mapped bidirectionally:
 
-| C++                      | Rust      | Notes                                |
-| ------------------------ | --------- | ------------------------------------ |
-| Default constructor      | `Default` |                                      |
-| Trivial copy constructor | `Copy`    | Rust bindings for C++ require that   |
-:                          :           : the C++ type is non-abstract and has :
-:                          :           : a public, trivial copy constructor   :
-:                          :           : and destructor.                      :
+| C++                          | Rust      | Notes                             |
+| ---------------------------- | --------- | --------------------------------- |
+| Default constructor          | `Default` |                                   |
+| Trivial copy constructor     | `Copy`    | Rust bindings for C++ require     |
+:                              :           : that the C++ type is non-abstract :
+:                              :           : and has a public, trivial copy    :
+:                              :           : constructor and destructor.       :
+| Non-trivial copy constructor | `Clone`   |                                   |
 
 ## One-way map of C++ special member functions into Rust traits
 
@@ -28,8 +29,6 @@ follows:
 
 | C++ API                   | Rust bindings | Notes                            |
 | ------------------------- | ------------- | -------------------------------- |
-| Custom copy constructor   | `Clone`       | TODO(b/259741191): Provide       |
-:                           :               : bidirectional map.               :
 | Destructor                | `Drop`        | TODO(b/258251148): Provide       |
 :                           :               : bidirectional map.               :
 | Constructor taking single | `From<T>`     | Regardless if the constructor is |

@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 //! This crate is used as a test input for `cc_bindings_from_rs` and the
-//! generated C++ bindings are then tested via `default_test.cc`.
+//! generated C++ bindings are then tested via `copy_test.cc`.
 
-/// Test of an explicit impl of a trait: `impl Default for SomeStruct`.
+/// Test of an explicit impl of a trait: `impl Clone for SomeStruct`.
 pub mod explicit_impl {
     pub struct SomeStruct(i32);
 
@@ -28,7 +28,7 @@ pub mod explicit_impl {
     }
 }
 
-/// Test of a derived impl of a trait: `#[derive(Default)]`.
+/// Test of a derived impl of a trait: `#[derive(..., Copy)]`.
 pub mod derived_impl {
     #[derive(Clone, Copy)]
     pub struct SomeStruct(i32);

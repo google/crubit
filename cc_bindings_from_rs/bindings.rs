@@ -16,7 +16,7 @@ use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
-use rustc_span::symbol::{sym, Symbol};
+use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_target::abi::{Abi, FieldsShape, Integer, Layout, Primitive, Scalar};
 use rustc_target::spec::PanicStrategy;
 use rustc_trait_selection::infer::InferCtxtExt;
@@ -817,11 +817,13 @@ fn format_thunk_impl<'tcx>(
     fully_qualified_fn_name: TokenStream,
 ) -> Result<TokenStream> {
     let param_names_and_types: Vec<(Ident, Ty)> = {
-        let param_names = tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, name)| {
-            if name.as_str().is_empty() {
+        let param_names = tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, ident)| {
+            if ident.as_str().is_empty() {
                 format_ident!("__param_{i}")
+            } else if ident.name == kw::SelfLower {
+                format_ident!("__self")
             } else {
-                make_rs_ident(name.as_str())
+                make_rs_ident(ident.as_str())
             }
         });
         let param_types = sig.inputs().iter().copied();
@@ -1688,6 +1690,7 @@ fn format_copy_ctor_and_assignment_operator(
 ) -> Result<ApiSnippets> {
     let tcx = input.tcx;
     let ty = tcx.type_of(core.def_id).subst_identity();
+    let cc_struct_name = &core.cc_short_name;
 
     let is_copy = {
         // TODO(b/259749095): Once generic ADTs are supported, `is_copy_modulo_regions`
@@ -1695,9 +1698,7 @@ fn format_copy_ctor_and_assignment_operator(
         // b/258249993#comment4.
         ty.is_copy_modulo_regions(tcx, tcx.param_env(core.def_id))
     };
-
     if is_copy {
-        let cc_struct_name = &core.cc_short_name;
         let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
                    and assignment operator.";
         let main_api = CcSnippet::new(quote! {
@@ -1716,15 +1717,41 @@ fn format_copy_ctor_and_assignment_operator(
         return Ok(ApiSnippets { main_api, cc_details, rs_details: quote! {} });
     }
 
-    // TODO(b/259741191): Implement bindings for `Clone::clone` and
-    // `Clone::clone_from`.
     let trait_id =
         tcx.lang_items().clone_trait().ok_or_else(|| anyhow!("Can't find the `Clone` trait"))?;
-    let self_ty = tcx.type_of(core.def_id).subst_identity();
-    tcx.non_blanket_impls_for_ty(trait_id, self_ty)
-        .next()
-        .ok_or_else(|| anyhow!("`{self_ty}` doesn't implement the `Clone` trait"))?;
-    bail!("Bindings for the `Clone` trait are not supported yet (b/259741191)");
+    let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls: rs_details } =
+        format_trait_thunks(input, trait_id, core)?;
+    let main_api = CcSnippet::new(quote! {
+        __NEWLINE__ __COMMENT__ "Clone::clone"
+        inline #cc_struct_name(const #cc_struct_name&); __NEWLINE__
+        __NEWLINE__ __COMMENT__ "Clone::clone_from"
+        inline #cc_struct_name& operator=(const #cc_struct_name&); __NEWLINE__ __NEWLINE__
+    });
+    let cc_details = {
+        // `unwrap` calls are okay because `Clone` trait always has these methods.
+        let clone_thunk_name = method_name_to_cc_thunk_name.get(&sym::clone).unwrap();
+        let clone_from_thunk_name = method_name_to_cc_thunk_name.get(&sym::clone_from).unwrap();
+
+        let mut prereqs = CcPrerequisites::default();
+        let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
+
+        let tokens = quote! {
+            #cc_thunk_decls
+            #cc_struct_name::#cc_struct_name(const #cc_struct_name& other) {
+                __crubit_internal::#clone_thunk_name(other, this);
+            }
+            #cc_struct_name& #cc_struct_name::operator=(const #cc_struct_name& other) {
+                if (this != &other) {
+                    __crubit_internal::#clone_from_thunk_name(*this, other);
+                }
+                return *this;
+            }
+            static_assert(std::is_copy_constructible_v<#cc_struct_name>);
+            static_assert(std::is_copy_assignable_v<#cc_struct_name>);
+        };
+        CcSnippet { tokens, prereqs }
+    };
+    Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
 
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
@@ -4610,14 +4637,22 @@ pub mod tests {
         });
     }
 
+    /// Test of `format_copy_ctor_and_assignment_operator` when the ADT
+    /// implements a `Clone` trait.
+    ///
+    /// Notes:
+    /// * `Copy` trait is covered in `test_format_item_struct_with_copy_trait`.
+    /// * The test below implements `clone` and uses the default `clone_from`.
     #[test]
     fn test_format_item_struct_with_clone_trait() {
         let test_src = r#"
-                // `Copy` trait is covered in `test_format_item_struct_with_copy_trait`.
-                #[derive(Clone)]
                 pub struct Point(i32, i32);
+                impl Clone for Point {
+                    fn clone(&self) -> Self {
+                        unimplemented!()
+                    }
+                }
             "#;
-        let msg = "Bindings for the `Clone` trait are not supported yet (b/259741191)";
         test_format_item(test_src, "Point", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
@@ -4629,20 +4664,64 @@ pub mod tests {
                         ...
                         public:
                           ...
-                          // TODO(b/259741191): Fix test expectations below after implementing
-                          // support for `Clone` trait.
+                          __COMMENT__ "Clone::clone"
+                          inline Point(const Point&);
 
-                          __COMMENT__ #msg
-                          Point(const Point&) = delete;
-                          Point& operator=(const Point&) = delete;
+                          __COMMENT__ "Clone::clone_from"
+                          inline Point& operator=(const Point&);
                         ...
                     };
                 }
             );
-            // TODO(b/259741191): Add
-            // `assert_cc_matches(result.cc_details.tokens, ...)`.
-            // TODO(b/259741191): Add
-            // `assert_rs_matches(result.rs_details.tokens, ...)`.
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C" void ...(
+                        ::rust_out::Point const& [[clang::annotate_type("lifetime",
+                                                                        "__anon1")]],
+                        ::rust_out::Point* __ret_ptr);
+                    }
+                    namespace __crubit_internal {
+                    extern "C" void ...(
+                        ::rust_out::Point& [[clang::annotate_type("lifetime", "__anon1")]],
+                        ::rust_out::Point const& [[clang::annotate_type("lifetime",
+                                                                        "__anon2")]]);
+                    }
+                    Point::Point(const Point& other) {
+                      __crubit_internal::...(other, this);
+                    }
+                    Point& Point::operator=(const Point& other) {
+                      if (this != &other) {
+                        __crubit_internal::...(*this, other);
+                      }
+                      return *this;
+                    }
+                    static_assert(std::is_copy_constructible_v<Point>);
+                    static_assert(std::is_copy_assignable_v<Point>);
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn ...<'__anon1>(
+                        __self: &'__anon1 ::rust_out::Point,
+                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::Point>
+                    ) -> () {
+                        __ret_slot.write(
+                            <::rust_out::Point as ::core::clone::Clone>::clone(__self)
+                        );
+                    }
+                    #[no_mangle]
+                    extern "C" fn ...<'__anon1, '__anon2>(
+                        __self: &'__anon1 mut ::rust_out::Point,
+                        source: &'__anon2 ::rust_out::Point
+                    ) -> () {
+                        <::rust_out::Point as ::core::clone::Clone>::clone_from(__self, source)
+                    }
+                }
+            );
         });
     }
 
