@@ -1160,6 +1160,22 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate) {
   )cc");
 }
 
+TEST(PointerNullabilityTest, PartialSpecialization) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <int, class>
+    struct S;
+    template <class T>
+    struct S<0, T> {
+      using Alias = T;
+    };
+
+    template <int i, class T>
+    typename S<i, T>::Alias f(T);
+
+    void target(int *p) { (void *)f<0>(p); }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

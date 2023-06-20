@@ -273,6 +273,18 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentlyNamedTemplate) {
               ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
 }
 
+TEST_F(GetNullabilityAnnotationsFromTypeTest, PartialSpecialization) {
+  Preamble = R"cpp(
+    template <class>
+    struct S;
+    template <class T>
+    struct S<T*> {
+      using Alias = T;
+    };
+  )cpp";
+  EXPECT_THAT(nullVec("S<int*>::Alias"), testing::IsEmpty());
+}
+
 TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateTemplateParams) {
   // Template template params
   Preamble = R"cpp(

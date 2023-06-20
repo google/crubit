@@ -8,6 +8,7 @@
 
 #include "absl/log/check.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/ASTFwd.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
@@ -107,7 +108,8 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     // For classes: ClassTemplateSpecializationDecl.
     const Decl* AssociatedDecl = nullptr;
     // The sugared template arguments to AssociatedDecl, as written in the code.
-    ArrayRef<TemplateArgument> Args;
+    // If absent, the arguments could not be reconstructed.
+    std::optional<ArrayRef<TemplateArgument>> Args;
     // In general, multiple template params are in scope (nested templates).
     // These are a linked list: *this describes one, *Extends describes the
     // next. In practice, this is the enclosing class template.
@@ -170,6 +172,46 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   // The context that provides sugared args for the template params that are
   // accessible to the type we're currently walking.
   const TemplateContext* CurrentTemplateContext = nullptr;
+
+  // Adjusts args list from those of primary template => template pattern.
+  //
+  // A template arg list corresponds 1:1 to primary template params.
+  // In partial specializations, the correspondence may differ:
+  //   template <int, class> struct S;
+  //   template <class T> struct S<0, T> {
+  //       using Alias = T;  // T refers to param #0
+  //   };
+  //   S<0, int*>::Alias X;  // T is bound to arg #1
+  // or
+  //   template <class> struct S;
+  //   template <class T> struct S<T*> { using Alias = T; }
+  //   S<int*>::Alias X;  // arg #0 is int*, param #0 is bound to int
+  void translateTemplateArgsForSpecialization(TemplateContext& Ctx) {
+    // Only relevant where partial specialization is used.
+    // - Full specializations may not refer to template params at all.
+    // - For primary templates, the input is already correct.
+    const TemplateArgumentList* PartialArgs = nullptr;
+    if (const ClassTemplateSpecializationDecl* CTSD =
+            llvm::dyn_cast<ClassTemplateSpecializationDecl>(
+                Ctx.AssociatedDecl)) {
+      if (llvm::isa_and_nonnull<ClassTemplatePartialSpecializationDecl>(
+              CTSD->getTemplateInstantiationPattern()))
+        PartialArgs = &CTSD->getTemplateInstantiationArgs();
+    } else if (const VarTemplateSpecializationDecl* VTSD =
+                   llvm::dyn_cast<VarTemplateSpecializationDecl>(
+                       Ctx.AssociatedDecl)) {
+      if (llvm::isa_and_nonnull<VarTemplatePartialSpecializationDecl>(
+              VTSD->getTemplateInstantiationPattern()))
+        PartialArgs = &VTSD->getTemplateInstantiationArgs();
+    }
+    if (!PartialArgs) return;
+
+    // To get from the template arg list to the partial-specialization arg list
+    // means running much of the template argument deduction algorithm.
+    // This is complex in general. [temp.deduct] For now, bail out.
+    // In future, hopefully we can handle at least simple cases.
+    Ctx.Args.reset();
+  }
 
  public:
   void Visit(QualType T) { Base::Visit(T.getTypePtr()); }
@@ -240,18 +282,20 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     // Instead, try to find the (sugared) template argument that T is bound to.
     for (const auto* Ctx = CurrentTemplateContext; Ctx; Ctx = Ctx->Extends) {
       if (T->getAssociatedDecl() != Ctx->AssociatedDecl) continue;
+      // If args are not available, fall back to un-sugared arg.
+      if (!Ctx->Args.has_value()) break;
       unsigned Index = T->getIndex();
       // Valid because pack must be the last param in non-function templates.
       // TODO: if we support function templates, we need to be smarter here.
       if (auto PackIndex = T->getPackIndex())
-        Index = Ctx->Args.size() - 1 - *PackIndex;
+        Index = Ctx->Args->size() - 1 - *PackIndex;
 
       // TODO(b/281474380): `Args` may be too short if `Index` refers to an
       // arg that was defaulted.  We eventually want to populate
       // `CurrentAliasTemplate->Args` with the default arguments in this case,
       // but for now, we just walk the underlying type without sugar.
-      if (Index < Ctx->Args.size()) {
-        const TemplateArgument& Arg = Ctx->Args[Index];
+      if (Index < Ctx->Args->size()) {
+        const TemplateArgument& Arg = (*Ctx->Args)[Index];
         // When we start to walk a sugared TemplateArgument (in place of T),
         // we must do so in the template instantiation context where the
         // argument was written.
@@ -290,6 +334,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
         Ctx.AssociatedDecl =
             TST->isTypeAlias() ? TST->getTemplateName().getAsTemplateDecl()
                                : static_cast<Decl*>(TST->getAsCXXRecordDecl());
+        translateTemplateArgsForSpecialization(Ctx);
         BoundTemplateArgs.push_back(Ctx);
       }
     }
