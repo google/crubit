@@ -512,7 +512,10 @@ void transferNonFlowSensitiveCastExpr(
       // This can definitely be null!
       case CK_NullToPointer: {
         auto Nullability = getNullabilityAnnotationsFromType(CE->getType());
-        Nullability.front() = NullabilityKind::Nullable;
+        // Despite the name `NullToPointer`, the destination type of the cast
+        // may be `nullptr_t` (which is, itself, not a pointer type).
+        if (!CE->getType()->isNullPtrType())
+          Nullability.front() = NullabilityKind::Nullable;
         return Nullability;
       }
 

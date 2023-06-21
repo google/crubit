@@ -302,6 +302,15 @@ TEST(PointerNullabilityTest, CastExpression) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CastToNullptrT) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    namespace std {
+    using nullptr_t = decltype(nullptr);
+    }
+    void target(const std::nullptr_t null) { std::nullptr_t p = null; }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy
