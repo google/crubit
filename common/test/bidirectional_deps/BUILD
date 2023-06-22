@@ -33,3 +33,29 @@ rust_test(
         ":leaf_rs_lib",
     ],
 )
+
+crubit_test_cc_library(
+    name = "leaf_cc_lib",
+    hdrs = ["leaf_cc_lib.h"],
+)
+
+rust_library(
+    name = "middle_rs_lib",
+    srcs = ["middle_rs_lib.rs"],
+    cc_deps = [":leaf_cc_lib"],
+)
+
+cc_bindings_from_rust(
+    name = "middle_rs_lib_cc_api",
+    crate = ":middle_rs_lib",
+)
+
+cc_test(
+    name = "cc_test",
+    srcs = ["cc_test.cc"],
+    deps = [
+        ":leaf_cc_lib",
+        "@com_google_googletest//:gtest_main",
+        "//common:rust_allocator_shims",
+    ],
+)
