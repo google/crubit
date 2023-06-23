@@ -103,7 +103,7 @@ def generate_bindings(
         variables_extension = {
             "rs_bindings_from_cc_tool": ctx.executable._generator.path,
             "rs_bindings_from_cc_flags": rs_bindings_from_cc_flags + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs),
-            "targets_and_headers": target_args,
+            "target_args": target_args,
         },
     )
 
