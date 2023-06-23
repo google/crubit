@@ -34,6 +34,31 @@ pub mod derived_impl {
     }
 }
 
+/// Test of a struct with 1) `impl Default` and 2) field that does *not* have
+/// `impl Default`.  This is a regression test for b/288138612.
+pub mod field_with_no_default {
+    pub struct StructWithFieldWithNoDefault {
+        field: StructWithoutDefault,
+    }
+
+    impl Default for StructWithFieldWithNoDefault {
+        fn default() -> Self {
+            Self { field: StructWithoutDefault(123) }
+        }
+    }
+
+    /// It is important that `StructWithoutDefault` is `pub` so that `field`
+    /// above is typed correctly in the C++ bindings and not replaced with a
+    /// blob of bytes.
+    pub struct StructWithoutDefault(i32);
+
+    impl StructWithFieldWithNoDefault {
+        pub fn extract_int(s: Self) -> i32 {
+            s.field.0
+        }
+    }
+}
+
 /// Test of a missing impl of a trait.
 pub mod no_impl {
     pub struct SomeStruct(i32);

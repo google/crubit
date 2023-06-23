@@ -31,6 +31,11 @@ TEST(DefaultTest, DerivedImpl) {
   MainTestBody<rs_default::derived_impl::SomeStruct>(0);
 }
 
+TEST(DefaultTest, StructWithFieldWithNoDefault) {
+  MainTestBody<rs_default::field_with_no_default::StructWithFieldWithNoDefault>(
+      123);
+}
+
 TEST(DefaultTest, NoImpl) {
   namespace tests = rs_default::no_impl;
   static_assert(!std::is_default_constructible_v<tests::SomeStruct>);

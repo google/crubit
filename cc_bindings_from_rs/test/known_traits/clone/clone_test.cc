@@ -62,8 +62,16 @@ TEST(CloneTest, ExplicitImplOfAllMethods) {
 
 TEST(CloneTest, DerivedImpl) {
   MainTestBody(rs_clone::derived_impl::SomeStruct::create_struct(42),
-               42,   // Derived `Clone::clone` copied the value
-               42);  // Derived `Clone::clone_from` copied the value
+               42,   // Derived `Clone::clone` copies the value
+               42);  // Derived `Clone::clone_from` copies the value
+}
+
+TEST(CloneTest, DerivedImplWithNonDefaultField) {
+  MainTestBody(
+      rs_clone::derived_impl_with_non_default_field::SomeStruct::create_struct(
+          42),
+      42,   // Derived `Clone::clone` copies the value
+      42);  // Derived `Clone::clone_from` copies the value
 }
 
 TEST(CloneTest, NoImpl) {

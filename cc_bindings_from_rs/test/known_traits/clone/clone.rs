@@ -74,6 +74,30 @@ pub mod derived_impl {
     }
 }
 
+/// Test of a derived impl, where one of the fields is a struct that
+/// implements `Clone` but doesn't implement `Default`.  This is a regression
+/// test for b/288138612.
+pub mod derived_impl_with_non_default_field {
+    /// It is important that `InnerStruct` is `pub` so that `SomeStruct.0` field
+    /// is typed correctly in the C++ bindings and not replaced with a blob
+    /// of bytes.
+    #[derive(Clone)]
+    pub struct InnerStruct(i32);
+
+    #[derive(Clone)]
+    pub struct SomeStruct(InnerStruct);
+
+    impl SomeStruct {
+        pub fn create_struct(i: i32) -> Self {
+            Self(InnerStruct(i))
+        }
+
+        pub fn extract_int(s: Self) -> i32 {
+            s.0.0
+        }
+    }
+}
+
 /// Test of a missing impl of a trait.
 pub mod no_impl {
     pub struct SomeStruct(i32);

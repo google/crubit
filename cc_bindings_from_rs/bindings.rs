@@ -1534,11 +1534,15 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                         };
                         let cc_type = cc_type.into_tokens(&mut prereqs);
                         let doc_comment = field.doc_comment;
-                        // TODO(b/271002281): Preserve doc comments.
                         quote! {
                             #visibility __NEWLINE__
-                                #doc_comment
-                                #cc_type #cc_name;
+                                // The anonymous union gives more control over when exactly
+                                // the field constructors and destructors run.  See also
+                                // b/288138612.
+                                union {  __NEWLINE__
+                                    #doc_comment
+                                    #cc_type #cc_name;
+                                };
                             #padding
                         }
                     }
@@ -2399,11 +2403,11 @@ pub mod tests {
                     namespace rust_out {
                     ...
                         struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) Inner final {
-                          ...  bool __field0; ...
+                          ... union { ... bool __field0; }; ...
                         };
                     ...
                         struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) Outer final {
-                          ...  ::rust_out::Inner __field0; ...
+                          ... union { ... ::rust_out::Inner __field0; }; ...
                         };
                     ...
                     }  // namespace rust_out
@@ -2616,7 +2620,7 @@ pub mod tests {
                 bindings.h_body,
                 quote! {
                     static inline ::rust_out::S create(); ...
-                    ::rust_out::S const* field; ...
+                    union { ... ::rust_out::S const* field; }; ...
                 }
             );
         });
@@ -3991,8 +3995,8 @@ pub mod tests {
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
                             ~SomeStruct() = default;
-                        public: ... std::int32_t x;
-                        public: ... std::int32_t y;
+                        public: union { ... std::int32_t x; };
+                        public: union { ... std::int32_t y; };
                         private:
                             inline static void __crubit_field_offset_assertions();
                     };
@@ -4056,8 +4060,8 @@ pub mod tests {
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
                             ~TupleStruct() = default;
-                        public: ... std::int32_t __field0;
-                        public: ... std::int32_t __field1;
+                        public: union { ... std::int32_t __field0; };
+                        public: union { ... std::int32_t __field1; };
                         private:
                             inline static void __crubit_field_offset_assertions();
                     };
@@ -4115,9 +4119,9 @@ pub mod tests {
                         // The particular order below is not guaranteed,
                         // so we may need to adjust this test assertion
                         // (if Rust changes how it lays out the fields).
-                        public: ... std::int32_t field2;
-                        public: ... std::int16_t field1;
-                        public: ... std::int16_t field3;
+                        public: union { ... std::int32_t field2; };
+                        public: union { ... std::int16_t field1; };
+                        public: union { ... std::int16_t field3; };
                         private:
                             inline static void __crubit_field_offset_assertions();
                     };
@@ -4174,8 +4178,8 @@ pub mod tests {
                     ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) __attribute__((packed)) SomeStruct final {
                         ...
-                        public: ... std::uint16_t field1;
-                        public: ... std::uint32_t field2;
+                        public: union { ... std::uint16_t field1; };
+                        public: union { ... std::uint32_t field2; };
                         private:
                             inline static void __crubit_field_offset_assertions();
                     };
@@ -4228,8 +4232,8 @@ pub mod tests {
                     ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) SomeStruct final {
                         ...
-                        public: ... std::uint32_t f2;
-                        public: ... std::uint8_t f1;
+                        public: union { ... std::uint32_t f2; };
+                        public: union { ... std::uint8_t f1; };
                         private: unsigned char __padding0[3];
                         private:
                             inline static void __crubit_field_offset_assertions();
@@ -4768,8 +4772,7 @@ pub mod tests {
                             __COMMENT__ #broken_field_msg
                             unsigned char unsupported_field[16];
                         public:
-                            ...
-                            std::int32_t successful_field;
+                            union { ... std::int32_t successful_field; };
                         private:
                             inline static void __crubit_field_offset_assertions();
                     };
@@ -4946,8 +4949,7 @@ pub mod tests {
                             __COMMENT__ #broken_field_msg
                             [[no_unique_address]] struct{} zst2;
                         public:
-                            ...
-                            std::int32_t successful_field;
+                            union { ... std::int32_t successful_field; };
                         private:
                             inline static void __crubit_field_offset_assertions();
                     };
@@ -5028,8 +5030,10 @@ pub mod tests {
                             __COMMENT__ #comment_for_unsupported_field
                             unsigned char unsupported_field[16];
                         public:
-                            __COMMENT__ #comment_for_successful_field
-                            std::int32_t successful_field;
+                            union {
+                                __COMMENT__ #comment_for_successful_field
+                                std::int32_t successful_field;
+                            };
                         private:
                             inline static void __crubit_field_offset_assertions();
                     };
