@@ -58,12 +58,6 @@ ABSL_FLAG(std::string, target_args, "",
           "  },\n"
           "...\n"
           "]");
-// Deprecated alias just for migration purposes.
-ABSL_FLAG(std::string, targets_and_headers, "", "DEPRECATED, use target_args")
-    .OnUpdate([] {
-      absl::SetFlag(&FLAGS_target_args,
-                    absl::GetFlag(FLAGS_targets_and_headers));
-    });
 ABSL_FLAG(std::vector<std::string>, extra_rs_srcs, std::vector<std::string>(),
           "Additional Rust source files to include into the crate.");
 ABSL_FLAG(std::vector<std::string>, srcs_to_scan_for_instantiations,
