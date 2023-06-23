@@ -1,0 +1,28 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Data structures for whole-codebase nullability inference.
+//
+// To accurately determine nullability of public APIs, we join information from
+// many translation units (e.g. a function's implementation, and all callsites).
+//
+// In large codebases, we may distribute this process as a mapreduce:
+// - process the many translation units in parallel, obtaining evidence
+//   about all functions defined/called
+// - group the evidence by the function it describes, and combine it to form
+//   conclusions for each one
+//
+// Key data structures are the evidence from one TU (map output/reduce input),
+// and the conclusions (reduce output).
+syntax = "proto2";
+
+package clang.tidy.nullability;
+
+// Describes a restriction on the nullability of a pointer type.
+// This constrains a single nullability slot, e.g. the top-level of an int**.
+message NullabilityConstraint {
+  // We have evidence that requires this type to be non-null.
+  // For example, a pointer parameter that is dereferenced in the function body.
+  optional bool must_be_nonnull = 1;
+}

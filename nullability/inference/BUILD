@@ -1,5 +1,7 @@
 # Inference of nullability annotations
 
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
 package(default_applicable_licenses = ["//:license"])
 
 cc_library(
@@ -10,4 +12,14 @@ cc_library(
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:basic",
     ],
+)
+
+proto_library(
+    name = "inference_proto",
+    srcs = ["inference.proto"],
+)
+
+cc_proto_library(
+    name = "inference_cc_proto",
+    deps = [":inference_proto"],
 )
