@@ -357,6 +357,16 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplateWithDefaultArg) {
               ElementsAre(NullabilityKind::Unspecified));
 }
 
+TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateWithDefaultArg) {
+  Preamble = "template <typename T1, typename T2 = T1> class ClassTemplate {};";
+
+  // TODO(b/281474380): This should be [Nullable, Nullable], but we don't yet
+  // handle default arguments correctly.
+  EXPECT_THAT(
+      nullVec("ClassTemplate<int * _Nullable>"),
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
+}
+
 TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateArgsBehindAlias) {
   Preamble = R"cpp(
     template <class X>

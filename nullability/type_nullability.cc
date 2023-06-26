@@ -274,6 +274,16 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     ignoreUnexpectedNullability();
     Visit(CRD->getDeclContext());
     for (auto TA : TST->template_arguments()) Visit(TA);
+    // `TST->template_arguments()` doesn't contain any default arguments.
+    // Retrieve these (though in unsugared form) from the
+    // `ClassTemplateSpecializationDecl`.
+    // TODO(b/281474380): Can we fetch or compute default arguments in sugared
+    // form?
+    if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(CRD)) {
+      for (unsigned i = TST->template_arguments().size();
+           i < CTSD->getTemplateArgs().size(); ++i)
+        Visit(CTSD->getTemplateArgs()[i]);
+    }
   }
 
   void VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* T) {

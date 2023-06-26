@@ -1176,6 +1176,21 @@ TEST(PointerNullabilityTest, PartialSpecialization) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ClassTemplateWithDefaultArgument) {
+  // Crash repro.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <class T1, class T2 = T1>
+    struct S {
+     public:
+      void f(S<T2>);
+    };
+    void target() {
+      S<int* _Nullable> s;
+      s.f(s);
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy
