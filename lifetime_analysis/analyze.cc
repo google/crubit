@@ -330,7 +330,7 @@ std::string CreateCfgDot(
         id);
     absl::StrAppend(&result, "}\n");
 
-    const auto block_state = block_to_output_state.at(id);
+    const auto& block_state = block_to_output_state[id];
     if (block_state) {
       auto lattice = block_state->Lattice;
       if (!lattice.IsError()) {
@@ -545,8 +545,8 @@ llvm::Error AnalyzeFunctionBody(
   }
   auto& block_to_output_state = *maybe_block_to_output_state;
 
-  const auto exit_block_state =
-      block_to_output_state.at(cfctx->getCFG().getExit().getBlockID());
+  const auto& exit_block_state =
+      block_to_output_state[cfctx->getCFG().getExit().getBlockID()];
   if (!exit_block_state.has_value()) {
     assert(false);
     return llvm::createStringError(
