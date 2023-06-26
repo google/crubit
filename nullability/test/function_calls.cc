@@ -449,6 +449,13 @@ TEST(PointerNullabilityTest, CallFunctionTemplate_PartiallyDeduced) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CallBuiltinFunction) {
+  // Crash repro.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target() { __builtin_operator_new(0); }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

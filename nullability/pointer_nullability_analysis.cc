@@ -526,9 +526,13 @@ void transferNonFlowSensitiveCastExpr(
       // Decayed objects are never null.
       case CK_ArrayToPointerDecay:
       case CK_FunctionToPointerDecay:
-      case CK_BuiltinFnToFnPtr:
         return prepend(NullabilityKind::NonNull,
                        getNullabilityForChild(CE->getSubExpr(), State));
+
+      // Despite its name, the result type of `BuiltinFnToFnPtr` is a function,
+      // not a function pointer, so nullability doesn't change.
+      case CK_BuiltinFnToFnPtr:
+        return getNullabilityForChild(CE->getSubExpr(), State);
 
       // TODO: what is our model of member pointers?
       case CK_BaseToDerivedMemberPointer:

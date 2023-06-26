@@ -172,13 +172,13 @@ bool diagnoseAssertNullabilityCall(
 std::optional<CFGElement> diagnoseCallExpr(
     const CallExpr* CE, const MatchFinder::MatchResult& Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
-  // Emit a warning for a nullable callee. We don't do this for member functions
-  // because in this case the callee can't be null. If we're calling a
-  // pointer-to-member-function, the callee is a `.*` or `->*` `BinaryOperator`,
-  // which itself can never be null. A nullable pointer-to-member-function will
-  // manifest as a nullable RHS of this `BinaryOperator` and should be diagnosed
-  // there.
-  if (!isa<CXXMemberCallExpr>(CE) &&
+  // Check whether the callee is null.
+  // - Skip direct callees to avoid handling builtin functions, which don't
+  //   decay to pointer.
+  // - Skip member callees, as they are not pointers at all (rather "bound
+  //   member function type").
+  //   Note that in `(obj.*nullable_pmf)()` the deref is *before* the call.
+  if (!CE->getDirectCallee() && !isa<CXXMemberCallExpr>(CE) &&
       isNullableOrUntracked(CE->getCallee(), State.Env)) {
     return std::optional<CFGElement>(CFGStmt(CE->getCallee()));
   }
