@@ -236,6 +236,11 @@ cc_test(
     ],
 )
 
+nullability_test(
+    name = "types",
+    srcs = ["types.cc"],
+)
+
 cc_test(
     name = "variance",
     srcs = ["variance.cc"],
