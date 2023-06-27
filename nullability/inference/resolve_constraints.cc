@@ -16,14 +16,18 @@ namespace {
 bool isSatisfiable(
     const llvm::DenseSet<clang::dataflow::BoolValue*>& ConstraintSet) {
   clang::dataflow::WatchedLiteralsSolver Solver;
-  return Solver.solve(ConstraintSet).getStatus() ==
+  std::vector<clang::dataflow::BoolValue*> Vec(ConstraintSet.begin(),
+                                               ConstraintSet.end());
+  return Solver.solve(Vec).getStatus() ==
          clang::dataflow::Solver::Result::Status::Satisfiable;
 }
 
 bool isUnsatisfiable(
     const llvm::DenseSet<clang::dataflow::BoolValue*>& ConstraintSet) {
   clang::dataflow::WatchedLiteralsSolver Solver;
-  return Solver.solve(ConstraintSet).getStatus() ==
+  std::vector<clang::dataflow::BoolValue*> Vec(ConstraintSet.begin(),
+                                               ConstraintSet.end());
+  return Solver.solve(Vec).getStatus() ==
          clang::dataflow::Solver::Result::Status::Unsatisfiable;
 }
 }  // namespace
