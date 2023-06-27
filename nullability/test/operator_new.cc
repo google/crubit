@@ -25,7 +25,7 @@ TEST(PointerNullabilityTest, ThrowingNew) {
 TEST(PointerNullabilityTest, AssignFromNewMakesNullableNonnull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target() {
-      int* _Nullable p = nullptr;
+      int *_Nullable p = nullptr;
       p = new int;
       *p;
     }
@@ -36,7 +36,7 @@ TEST(PointerNullabilityTest, NoThrowNew) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <new>
     void target() {
-      int* p = new (std::nothrow) int;
+      int *p = new (std::nothrow) int;
       *p;  // [[unsafe]]
     }
   )cc"));
@@ -47,7 +47,7 @@ TEST(PointerNullabilityTest, AssignFromNoThrowNewMakesNonnullNullable) {
 #include <new>
     void target() {
       int i = 0;
-      int* _Nonnull p = &i;
+      int *_Nonnull p = &i;
       p = new (std::nothrow) int;
       *p;  // [[unsafe]]
     }
@@ -58,12 +58,12 @@ TEST(PointerNullabilityTest, NewPreservesNullabilityOnAllocatedType) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <new>
     void target() {
-      __assert_nullability<NK_nonnull, NK_nonnull>(new (int* _Nonnull));
-      __assert_nullability<NK_nonnull, NK_nullable>(new (int* _Nullable));
+      __assert_nullability<NK_nonnull, NK_nonnull>(new (int *_Nonnull));
+      __assert_nullability<NK_nonnull, NK_nullable>(new (int *_Nullable));
       __assert_nullability<NK_nullable, NK_nonnull>(
-          new (std::nothrow)(int* _Nonnull));
+          new (std::nothrow)(int *_Nonnull));
       __assert_nullability<NK_nullable, NK_nullable>(
-          new (std::nothrow)(int* _Nullable));
+          new (std::nothrow)(int *_Nullable));
     }
   )cc"));
 }

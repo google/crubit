@@ -27,33 +27,33 @@ using ::clang::ast_matchers::MatchFinder;
 class CallbackAdapter : public clang::ast_matchers::MatchFinder::MatchCallback {
  public:
   explicit CallbackAdapter(
-      std::function<void(const clang::ast_matchers::MatchFinder::MatchResult&)>
+      std::function<void(const clang::ast_matchers::MatchFinder::MatchResult &)>
           Callback)
       : StoredCallback(std::move(Callback)) {
     CHECK(StoredCallback);
   }
 
   void run(
-      const clang::ast_matchers::MatchFinder::MatchResult& result) override {
+      const clang::ast_matchers::MatchFinder::MatchResult &result) override {
     StoredCallback(result);
   };
 
  private:
-  std::function<void(const clang::ast_matchers::MatchFinder::MatchResult&)>
+  std::function<void(const clang::ast_matchers::MatchFinder::MatchResult &)>
       StoredCallback;
 };
 }  // namespace
 
 void analyzeTargetForTest(
     llvm::StringRef Source,
-    llvm::function_ref<void(const clang::FunctionDecl&,
-                            const MatchFinder::MatchResult&)>
+    llvm::function_ref<void(const clang::FunctionDecl &,
+                            const MatchFinder::MatchResult &)>
         AnalysisCallback) {
   int MatchesForFunctionDeclarationsNamedTarget = 0;
   CallbackAdapter adapter([&, AnalysisCallback](
-                              const MatchFinder::MatchResult& result) mutable {
+                              const MatchFinder::MatchResult &result) mutable {
     ++MatchesForFunctionDeclarationsNamedTarget;
-    const auto* MaybeFunc = result.Nodes.getNodeAs<clang::FunctionDecl>("func");
+    const auto *MaybeFunc = result.Nodes.getNodeAs<clang::FunctionDecl>("func");
     CHECK(MaybeFunc);
     AnalysisCallback(*MaybeFunc, result);
   });

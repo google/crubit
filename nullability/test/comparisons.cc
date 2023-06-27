@@ -7,7 +7,7 @@
 #include "nullability_test.h"
 
 // nonnull vs nonnull
-TEST void nonnullEqualsNonnull(Nonnull<int*> x, Nonnull<int*> y) {
+TEST void nonnullEqualsNonnull(Nonnull<int *> x, Nonnull<int *> y) {
   nonnull(x);
   nonnull(y);
   if (x == y) {
@@ -20,7 +20,7 @@ TEST void nonnullEqualsNonnull(Nonnull<int*> x, Nonnull<int*> y) {
   nonnull(x);
   nonnull(y);
 }
-TEST void nonnullNotEqualsNonnull(Nonnull<int*> x, Nonnull<int*> y) {
+TEST void nonnullNotEqualsNonnull(Nonnull<int *> x, Nonnull<int *> y) {
   nonnull(x);
   nonnull(y);
   if (x != y) {
@@ -35,7 +35,7 @@ TEST void nonnullNotEqualsNonnull(Nonnull<int*> x, Nonnull<int*> y) {
 }
 
 // nullable vs nullable
-TEST void nullableEqualsNullable(Nullable<int*> x, Nullable<int*> y) {
+TEST void nullableEqualsNullable(Nullable<int *> x, Nullable<int *> y) {
   nullable(x);
   nullable(y);
   if (x == y) {
@@ -48,7 +48,7 @@ TEST void nullableEqualsNullable(Nullable<int*> x, Nullable<int*> y) {
   nullable(x);
   nullable(y);
 }
-TEST void nullableNotEqualsNullable(Nullable<int*> x, Nullable<int*> y) {
+TEST void nullableNotEqualsNullable(Nullable<int *> x, Nullable<int *> y) {
   nullable(x);
   nullable(y);
   if (x != y) {
@@ -63,7 +63,7 @@ TEST void nullableNotEqualsNullable(Nullable<int*> x, Nullable<int*> y) {
 }
 
 // unknown vs unknown
-TEST void unknownEqualsUnknown(int* x, int* y) {
+TEST void unknownEqualsUnknown(int *x, int *y) {
   unknown(x);
   unknown(y);
   if (x == y) {
@@ -76,7 +76,7 @@ TEST void unknownEqualsUnknown(int* x, int* y) {
   unknown(x);
   unknown(y);
 }
-TEST void unknownNotEqualsUnknown(int* x, int* y) {
+TEST void unknownNotEqualsUnknown(int *x, int *y) {
   unknown(x);
   unknown(y);
   if (x != y) {
@@ -92,7 +92,7 @@ TEST void unknownNotEqualsUnknown(int* x, int* y) {
 
 // nonnull vs nullptr
 // TODO(b/233582219): Implement diagnosis of unreachable program points
-TEST void nonnullEqualsNullptr(Nonnull<int*> x) {
+TEST void nonnullEqualsNullptr(Nonnull<int *> x) {
   nonnull(x);
   if (x == nullptr) {
     nonnull(x);  // unreachable
@@ -101,7 +101,7 @@ TEST void nonnullEqualsNullptr(Nonnull<int*> x) {
   }
   nonnull(x);
 }
-TEST void nullptrEqualsNonnull(Nonnull<int*> x) {
+TEST void nullptrEqualsNonnull(Nonnull<int *> x) {
   nonnull(x);
   if (nullptr == x) {
     nonnull(x);  // unreachable
@@ -110,7 +110,7 @@ TEST void nullptrEqualsNonnull(Nonnull<int*> x) {
   }
   nonnull(x);
 }
-TEST void nonnullNotEqualsNullptr(Nonnull<int*> x) {
+TEST void nonnullNotEqualsNullptr(Nonnull<int *> x) {
   nonnull(x);
   if (x != nullptr) {
     nonnull(x);
@@ -119,7 +119,7 @@ TEST void nonnullNotEqualsNullptr(Nonnull<int*> x) {
   }
   nonnull(x);
 }
-TEST void nullptrNotEqualsNonnull(Nonnull<int*> x) {
+TEST void nullptrNotEqualsNonnull(Nonnull<int *> x) {
   nonnull(x);
   if (nullptr != x) {
     nonnull(x);
@@ -130,7 +130,7 @@ TEST void nullptrNotEqualsNonnull(Nonnull<int*> x) {
 }
 
 // nullable vs nullptr
-TEST void nullableEqualsNullptr(Nullable<int*> x) {
+TEST void nullableEqualsNullptr(Nullable<int *> x) {
   nullable(x);
   if (x == nullptr) {
     nullable(x);
@@ -139,7 +139,7 @@ TEST void nullableEqualsNullptr(Nullable<int*> x) {
   }
   nullable(x);
 }
-TEST void nullptrEqualsNullable(Nullable<int*> x) {
+TEST void nullptrEqualsNullable(Nullable<int *> x) {
   nullable(x);
   if (nullptr == x) {
     nullable(x);
@@ -148,7 +148,7 @@ TEST void nullptrEqualsNullable(Nullable<int*> x) {
   }
   nullable(x);
 }
-TEST void nullableNotEqualsNullptr(Nullable<int*> x) {
+TEST void nullableNotEqualsNullptr(Nullable<int *> x) {
   nullable(x);
   if (x != nullptr) {
     nonnull(x);
@@ -157,7 +157,7 @@ TEST void nullableNotEqualsNullptr(Nullable<int*> x) {
   }
   nullable(x);
 }
-TEST void nullptrNotEqualsNullable(Nullable<int*> x) {
+TEST void nullptrNotEqualsNullable(Nullable<int *> x) {
   nullable(x);
   if (nullptr != x) {
     nonnull(x);
@@ -168,7 +168,7 @@ TEST void nullptrNotEqualsNullable(Nullable<int*> x) {
 }
 
 // nullable vs nonnull
-TEST void nullableEqualsNonnull(Nullable<int*> x, Nonnull<int*> y) {
+TEST void nullableEqualsNonnull(Nullable<int *> x, Nonnull<int *> y) {
   nullable(x);
   nonnull(y);
   if (x == y) {
@@ -181,7 +181,7 @@ TEST void nullableEqualsNonnull(Nullable<int*> x, Nonnull<int*> y) {
   nullable(x);
   nonnull(y);
 }
-TEST void nonnullEqualsNullable(Nullable<int*> x, Nonnull<int*> y) {
+TEST void nonnullEqualsNullable(Nullable<int *> x, Nonnull<int *> y) {
   nullable(x);
   nonnull(y);
   if (y == x) {
@@ -194,7 +194,7 @@ TEST void nonnullEqualsNullable(Nullable<int*> x, Nonnull<int*> y) {
   nullable(x);
   nonnull(y);
 }
-TEST void nullableNotEqualsNonnull(Nullable<int*> x, Nonnull<int*> y) {
+TEST void nullableNotEqualsNonnull(Nullable<int *> x, Nonnull<int *> y) {
   nullable(x);
   nonnull(y);
   if (x != y) {
@@ -207,7 +207,7 @@ TEST void nullableNotEqualsNonnull(Nullable<int*> x, Nonnull<int*> y) {
   nullable(x);
   nonnull(y);
 }
-TEST void nonnullNotEqualsNullable(Nullable<int*> x, Nonnull<int*> y) {
+TEST void nonnullNotEqualsNullable(Nullable<int *> x, Nonnull<int *> y) {
   nullable(x);
   nonnull(y);
   if (y != x) {
@@ -222,7 +222,7 @@ TEST void nonnullNotEqualsNullable(Nullable<int*> x, Nonnull<int*> y) {
 }
 
 // nullable vs unknown
-TEST void nullableEqualsUnknown(Nullable<int*> x, int* y) {
+TEST void nullableEqualsUnknown(Nullable<int *> x, int *y) {
   nullable(x);
   unknown(y);
   if (x == y) {
@@ -235,7 +235,7 @@ TEST void nullableEqualsUnknown(Nullable<int*> x, int* y) {
   nullable(x);
   unknown(y);
 }
-TEST void unknownEqualsNullable(Nullable<int*> x, int* y) {
+TEST void unknownEqualsNullable(Nullable<int *> x, int *y) {
   nullable(x);
   unknown(y);
   if (y == x) {
@@ -248,7 +248,7 @@ TEST void unknownEqualsNullable(Nullable<int*> x, int* y) {
   nullable(x);
   unknown(y);
 }
-TEST void nullableNotEqualsUnknown(Nullable<int*> x, int* y) {
+TEST void nullableNotEqualsUnknown(Nullable<int *> x, int *y) {
   nullable(x);
   unknown(y);
   if (x != y) {
@@ -261,7 +261,7 @@ TEST void nullableNotEqualsUnknown(Nullable<int*> x, int* y) {
   nullable(x);
   unknown(y);
 }
-TEST void unknownNotEqualsNullable(Nullable<int*> x, int* y) {
+TEST void unknownNotEqualsNullable(Nullable<int *> x, int *y) {
   nullable(x);
   unknown(y);
   if (y != x) {
@@ -278,7 +278,7 @@ TEST void unknownNotEqualsNullable(Nullable<int*> x, int* y) {
 // unknown vs nullptr
 // TODO(b/233582219): The pointer is compared to nullptr,
 // hence the unnannotated pointer should be considered nullable.
-TEST void unknownEqualsNullptr(int* x) {
+TEST void unknownEqualsNullptr(int *x) {
   unknown(x);  // TODO: nullable
   if (x == nullptr) {
     unknown(x);  // TODO: nullable
@@ -287,7 +287,7 @@ TEST void unknownEqualsNullptr(int* x) {
   }
   unknown(x);  // TODO: nullable
 }
-TEST void nullptrEqualsUnknown(int* x) {
+TEST void nullptrEqualsUnknown(int *x) {
   unknown(x);  // TODO: nullable
   if (nullptr == x) {
     unknown(x);  // TODO: nullable
@@ -296,7 +296,7 @@ TEST void nullptrEqualsUnknown(int* x) {
   }
   unknown(x);  // TODO: nullable
 }
-TEST void unknownNotEqualsNullptr(int* x) {
+TEST void unknownNotEqualsNullptr(int *x) {
   unknown(x);  // TODO: nullable
   if (x != nullptr) {
     nonnull(x);
@@ -305,7 +305,7 @@ TEST void unknownNotEqualsNullptr(int* x) {
   }
   unknown(x);  // TODO: nullable
 }
-TEST void nullptrNotEqualsUnknown(int* x) {
+TEST void nullptrNotEqualsUnknown(int *x) {
   unknown(x);  // TODO: nullable
   if (nullptr != x) {
     nonnull(x);
@@ -316,7 +316,7 @@ TEST void nullptrNotEqualsUnknown(int* x) {
 }
 
 // unknown vs nonnull
-TEST void unknownEqualsNonnull(int* x, Nonnull<int*> y) {
+TEST void unknownEqualsNonnull(int *x, Nonnull<int *> y) {
   unknown(x);
   nonnull(y);
   if (x == y) {
@@ -329,7 +329,7 @@ TEST void unknownEqualsNonnull(int* x, Nonnull<int*> y) {
   unknown(x);
   nonnull(y);
 }
-TEST void nonnullEqualsUnknown(int* x, Nonnull<int*> y) {
+TEST void nonnullEqualsUnknown(int *x, Nonnull<int *> y) {
   unknown(x);
   nonnull(y);
   if (y == x) {
@@ -342,7 +342,7 @@ TEST void nonnullEqualsUnknown(int* x, Nonnull<int*> y) {
   unknown(x);
   nonnull(y);
 }
-TEST void unknownNotEqualsNonnull(int* x, Nonnull<int*> y) {
+TEST void unknownNotEqualsNonnull(int *x, Nonnull<int *> y) {
   unknown(x);
   nonnull(y);
   if (x != y) {
@@ -355,7 +355,7 @@ TEST void unknownNotEqualsNonnull(int* x, Nonnull<int*> y) {
   unknown(x);
   nonnull(y);
 }
-TEST void nonnullNotEqualsUnknown(int* x, Nonnull<int*> y) {
+TEST void nonnullNotEqualsUnknown(int *x, Nonnull<int *> y) {
   unknown(x);
   nonnull(y);
   if (y != x) {

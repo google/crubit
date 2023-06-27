@@ -185,8 +185,8 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       T3 getT3();
       T4 getT4();
     };
-    void target(Struct5Arg<int* _Nullable, double* _Nonnull, float*,
-                           double* _Nullable, int* _Nonnull>
+    void target(Struct5Arg<int *_Nullable, double *_Nonnull, float *,
+                           double *_Nullable, int *_Nonnull>
                     p) {
       *p.arg0;  // [[unsafe]]
       *p.arg1;
@@ -219,9 +219,10 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       T3 getT3();
       T4 getT4();
     };
-    void target(Struct5Arg<int* const _Nullable, double const* const _Nonnull,
-                           float*, double const* const _Nullable, int* _Nonnull>
-                    p) {
+    void target(
+        Struct5Arg<int *const _Nullable, double const *const _Nonnull, float *,
+                   double const *const _Nullable, int *_Nonnull>
+            p) {
       *p.arg0;  // [[unsafe]]
       *p.arg1;
       *p.arg2;
@@ -267,13 +268,13 @@ TEST(PointerNullabilityTest,
      ClassTemplateInstantiationWithStructsAsParameters) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct3IntPtrs {
-      int* unknown;
-      int* _Nullable nullable;
-      int* _Nonnull nonnull;
+      int *unknown;
+      int *_Nullable nullable;
+      int *_Nonnull nonnull;
 
-      int* getUnknown();
-      int* _Nullable getNullable();
-      int* _Nonnull getNonnull();
+      int *getUnknown();
+      int *_Nullable getNullable();
+      int *_Nonnull getNonnull();
     };
 
     template <typename T0>
@@ -303,38 +304,38 @@ TEST(PointerNullabilityTest,
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct1UnknownArg {
-      char* unknownChar;
+      char *unknownChar;
 
-      char* getUnknownChar();
+      char *getUnknownChar();
     };
 
     struct Struct1NullableArg {
-      char* _Nullable nullableChar;
+      char *_Nullable nullableChar;
 
-      char* _Nullable getNullableChar();
+      char *_Nullable getNullableChar();
     };
 
     struct Struct1NonnullArg {
-      char* _Nonnull nonnullChar;
+      char *_Nonnull nonnullChar;
 
-      char* _Nonnull getNonnullChar();
+      char *_Nonnull getNonnullChar();
     };
 
     struct StructLotsOfArgs {
       int num;
-      long long* unknownLongLong;
-      double* _Nullable nullableDouble;
-      float* _Nonnull nonnullFloat;
-      short* unknownShort;
-      unsigned int* _Nullable nullableUInt;
-      bool* _Nullable nullableBool;
+      long long *unknownLongLong;
+      double *_Nullable nullableDouble;
+      float *_Nonnull nonnullFloat;
+      short *unknownShort;
+      unsigned int *_Nullable nullableUInt;
+      bool *_Nullable nullableBool;
 
-      long long* getUnknownLongLong();
-      double* _Nullable getNullableDouble();
-      float* _Nonnull getNonnullFloat();
-      short* getUnknownShort();
-      unsigned int* _Nullable getNullableUInt();
-      bool* _Nullable getNullableBool();
+      long long *getUnknownLongLong();
+      double *_Nullable getNullableDouble();
+      float *_Nonnull getNonnullFloat();
+      short *getUnknownShort();
+      unsigned int *_Nullable getNullableUInt();
+      bool *_Nullable getNullableBool();
     };
 
     template <typename T0, typename T1, typename T2, typename T3>
@@ -398,33 +399,33 @@ TEST(PointerNullabilityTest,
   // With const arguments and int template parameter.
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct1UnknownArg {
-      char* const constUnknownChar;
-      char const* unknownConstChar;
-      char const* const constUnknownConstChar;
+      char *const constUnknownChar;
+      char const *unknownConstChar;
+      char const *const constUnknownConstChar;
 
-      char* const getConstUnknownChar();
-      char const* getUnknownConstChar();
-      char const* const getConstUnknownConstChar();
+      char *const getConstUnknownChar();
+      char const *getUnknownConstChar();
+      char const *const getConstUnknownConstChar();
     };
 
     struct Struct1NullableArg {
-      char* const _Nullable constNullableChar;
-      char const* _Nullable nullableConstChar;
-      char const* const _Nullable constNullableConstChar;
+      char *const _Nullable constNullableChar;
+      char const *_Nullable nullableConstChar;
+      char const *const _Nullable constNullableConstChar;
 
-      char* const _Nullable getConstNullableChar();
-      char const* _Nullable getNullableConstChar();
-      char* const* _Nullable getConstNullableConstChar();
+      char *const _Nullable getConstNullableChar();
+      char const *_Nullable getNullableConstChar();
+      char *const *_Nullable getConstNullableConstChar();
     };
 
     struct Struct1NonnullArg {
-      char* const _Nonnull constNonnullChar;
-      char const* _Nonnull nonnullConstChar;
-      char const* const _Nonnull constNonnullConstChar;
+      char *const _Nonnull constNonnullChar;
+      char const *_Nonnull nonnullConstChar;
+      char const *const _Nonnull constNonnullConstChar;
 
-      char* const _Nonnull getConstNonnullChar();
-      char const* _Nonnull getNonnullConstChar();
-      char const* const _Nonnull getConstNonnullConstChar();
+      char *const _Nonnull getConstNonnullChar();
+      char const *_Nonnull getNonnullConstChar();
+      char const *const _Nonnull getConstNonnullConstChar();
     };
 
     template <int I0, typename T1, typename T2, typename T3>
@@ -576,11 +577,11 @@ TEST(PointerNullabilityTest,
 
     template <typename TN0, typename TN1>
     struct Struct2ArgNested {
-      Struct2Arg<TN1, Struct2Arg<TN0, TN1>>* arg0;
-      Struct2Arg<TN1, Struct2Arg<TN0, TN1>>* _Nullable arg1;
+      Struct2Arg<TN1, Struct2Arg<TN0, TN1>> *arg0;
+      Struct2Arg<TN1, Struct2Arg<TN0, TN1>> *_Nullable arg1;
     };
 
-    void target(Struct2ArgNested<int* _Nonnull, double* _Nullable> p) {
+    void target(Struct2ArgNested<int *_Nonnull, double *_Nullable> p) {
       *p.arg0;
       *p.arg1;  // [[unsafe]]
 
@@ -598,7 +599,7 @@ TEST(PointerNullabilityTest,
       T1 arg1;
     };
 
-    void target(Struct2Arg<Struct2Arg<int*, int* _Nullable>, int* _Nonnull> p) {
+    void target(Struct2Arg<Struct2Arg<int *, int *_Nullable>, int *_Nonnull> p) {
       *p.arg0.arg0;
       *p.arg0.arg1;  // [[unsafe]]
       *p.arg1;
@@ -615,15 +616,14 @@ TEST(PointerNullabilityTest,
       T4 arg4;
     };
 
-    void
-    target(Struct5Arg<
-           Struct5Arg<
-               Struct5Arg<Struct5Arg<int* _Nullable, int* _Nonnull,
-                                     float* _Nullable, int*, double* _Nullable>,
-                          int, int, int, int* _Nullable>,
-               int, int* _Nullable, int, int>,
-           int, int* _Nullable, int* _Nonnull, int>
-               p) {
+    void target(Struct5Arg<
+                Struct5Arg<Struct5Arg<Struct5Arg<int *_Nullable, int *_Nonnull,
+                                                 float *_Nullable, int *,
+                                                 double *_Nullable>,
+                                      int, int, int, int *_Nullable>,
+                           int, int *_Nullable, int, int>,
+                int, int *_Nullable, int *_Nonnull, int>
+                    p) {
       *p.arg0.arg0.arg0.arg0;  // [[unsafe]]
       *p.arg0.arg0.arg0.arg1;  // [[unsafe]] TODO: fix false positive.
       *p.arg0.arg0.arg0.arg2;  // [[unsafe]]
@@ -653,12 +653,12 @@ TEST(PointerNullabilityTest,
                     2147483647,
                     Struct7ArgWithInt<
                         0,
-                        Struct7ArgWithInt<-2147483647, int* _Nullable,
-                                          int* _Nonnull, float* _Nullable, 0,
-                                          int*, double* _Nullable>,
-                        int, int, 1, int, int* _Nullable>,
-                    int, int* _Nullable, 2147483647, int, int>,
-                int, int* _Nullable, 2, int* _Nonnull, int>
+                        Struct7ArgWithInt<-2147483647, int *_Nullable,
+                                          int *_Nonnull, float *_Nullable, 0,
+                                          int *, double *_Nullable>,
+                        int, int, 1, int, int *_Nullable>,
+                    int, int *_Nullable, 2147483647, int, int>,
+                int, int *_Nullable, 2, int *_Nonnull, int>
                     p) {
       *p.arg1.arg1.arg1.arg1;  // [[unsafe]]
       *p.arg1.arg1.arg1.arg2;  // [[unsafe]] TODO: fix false positive.
@@ -677,13 +677,13 @@ TEST(PointerNullabilityTest,
      ClassTemplateInstantiationWithPointersToStructsAsParameters) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct3IntPtrs {
-      int* unknown;
-      int* _Nullable nullable;
-      int* _Nonnull nonnull;
+      int *unknown;
+      int *_Nullable nullable;
+      int *_Nonnull nonnull;
 
-      int* getUnknown();
-      int* _Nullable getNullable();
-      int* _Nonnull getNonnull();
+      int *getUnknown();
+      int *_Nullable getNullable();
+      int *_Nonnull getNonnull();
     };
 
     template <typename T0>
@@ -693,7 +693,7 @@ TEST(PointerNullabilityTest,
       T0 getT0();
     };
 
-    void target(Struct1Arg<Struct3IntPtrs*> p) {
+    void target(Struct1Arg<Struct3IntPtrs *> p) {
       *p.arg0->unknown;
       *p.arg0->nullable;  // [[unsafe]]
       *p.arg0->nonnull;
@@ -714,13 +714,13 @@ TEST(PointerNullabilityTest,
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct3IntPtrs {
-      int* unknown;
-      int* _Nullable nullable;
-      int* _Nonnull nonnull;
+      int *unknown;
+      int *_Nullable nullable;
+      int *_Nonnull nonnull;
 
-      int* getUnknown();
-      int* _Nullable getNullable();
-      int* _Nonnull getNonnull();
+      int *getUnknown();
+      int *_Nullable getNullable();
+      int *_Nonnull getNonnull();
     };
 
     template <typename T0>
@@ -730,7 +730,7 @@ TEST(PointerNullabilityTest,
       T0 getT0();
     };
 
-    void target(Struct1Arg<Struct3IntPtrs* _Nullable> p) {
+    void target(Struct1Arg<Struct3IntPtrs *_Nullable> p) {
       *p.arg0->unknown;   // [[unsafe]]
       *p.arg0->nullable;  // [[unsafe]]
       *p.arg0->nonnull;   // [[unsafe]]
@@ -751,13 +751,13 @@ TEST(PointerNullabilityTest,
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct3IntPtrs {
-      int* unknown;
-      int* _Nullable nullable;
-      int* _Nonnull nonnull;
+      int *unknown;
+      int *_Nullable nullable;
+      int *_Nonnull nonnull;
 
-      int* getUnknown();
-      int* _Nullable getNullable();
-      int* _Nonnull getNonnull();
+      int *getUnknown();
+      int *_Nullable getNullable();
+      int *_Nonnull getNonnull();
     };
 
     template <typename T0>
@@ -767,7 +767,7 @@ TEST(PointerNullabilityTest,
       T0 getT0();
     };
 
-    void target(Struct1Arg<Struct3IntPtrs* _Nonnull> p) {
+    void target(Struct1Arg<Struct3IntPtrs *_Nonnull> p) {
       *p.arg0->unknown;
       *p.arg0->nullable;  // [[unsafe]]
       *p.arg0->nonnull;
@@ -788,13 +788,13 @@ TEST(PointerNullabilityTest,
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct3IntPtrs {
-      int* unknown;
-      int* _Nullable nullable;
-      int* _Nonnull nonnull;
+      int *unknown;
+      int *_Nullable nullable;
+      int *_Nonnull nonnull;
 
-      int* getUnknown();
-      int* _Nullable getNullable();
-      int* _Nonnull getNonnull();
+      int *getUnknown();
+      int *_Nullable getNullable();
+      int *_Nonnull getNonnull();
     };
 
     template <int I0, typename T1>
@@ -804,7 +804,7 @@ TEST(PointerNullabilityTest,
       T1 getT1();
     };
 
-    void target(Struct2Arg<0, Struct3IntPtrs*> p) {
+    void target(Struct2Arg<0, Struct3IntPtrs *> p) {
       *p.arg1->unknown;
       *p.arg1->nullable;  // [[unsafe]]
       *p.arg1->nonnull;
@@ -918,13 +918,13 @@ TEST(PointerNullabilityTest,
     void
     target(StructNonnullUnknown<
            StructNonnullNullable<
-               StructNullableNullable<int* _Nullable, int* _Nullable>* _Nonnull,
-               StructUnknownNullable<int*,
-                                     int* _Nullable>* _Nullable>* _Nonnull,
+               StructNullableNullable<int *_Nullable, int *_Nullable> *_Nonnull,
+               StructUnknownNullable<int *, int *_Nullable> *_Nullable>
+               *_Nonnull,
            StructUnknownNullable<
-               StructUnknownNullable<int*, int* _Nullable>*,
-               StructNullableNonnull<int* _Nullable,
-                                     int* _Nonnull>* _Nullable>*>
+               StructUnknownNullable<int *, int *_Nullable> *,
+               StructNullableNonnull<int *_Nullable, int *_Nonnull> *_Nullable>
+               *>
                p) {
       *p.nonnull;
       *p.nonnull->nonnull;
@@ -1109,7 +1109,7 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate) {
       T(((*g)))();
     };
 
-    void targetNullable(S<int* _Nullable> s) {
+    void targetNullable(S<int *_Nullable> s) {
       *s.a;   // [[unsafe]]
       **s.b;  // [[unsafe]]
       *s.f;
@@ -1118,7 +1118,7 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate) {
       *s.g();  // TODO: fix false negative.
     }
 
-    void targetNonnull(S<int* _Nonnull> s) {
+    void targetNonnull(S<int *_Nonnull> s) {
       *s.a;
       **s.b;
       *s.f;
@@ -1134,9 +1134,9 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate) {
       T arg;
     };
 
-    void targetNullable(S<int* _Nullable>(a), S<int* _Nullable>(*(b)),
-                        S<int(*_Nullable)> c, S<int*(*(*_Nullable))> d,
-                        S<int* _Nullable (*)()> e) {
+    void targetNullable(S<int *_Nullable>(a), S<int *_Nullable>(*(b)),
+                        S<int(*_Nullable)> c, S<int *(*(*_Nullable))> d,
+                        S<int *_Nullable (*)()> e) {
       *a.arg;    // [[unsafe]]
       *b->arg;   // [[unsafe]]
       *c.arg;    // [[unsafe]]
@@ -1146,9 +1146,9 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate) {
       *e.arg();  // TODO: fix false negative.
     }
 
-    void targetNonnull(S<int* _Nonnull>(a), S<int* _Nonnull>(*(b)),
-                       S<int(*_Nonnull)> c, S<int*(*(*_Nonnull))> d,
-                       S<int* _Nonnull (*)()> e) {
+    void targetNonnull(S<int *_Nonnull>(a), S<int *_Nonnull>(*(b)),
+                       S<int(*_Nonnull)> c, S<int *(*(*_Nonnull))> d,
+                       S<int *_Nonnull (*)()> e) {
       *a.arg;
       *b->arg;
       *c.arg;
@@ -1185,7 +1185,7 @@ TEST(PointerNullabilityTest, ClassTemplateWithDefaultArgument) {
       void f(S<T2>);
     };
     void target() {
-      S<int* _Nullable> s;
+      S<int *_Nullable> s;
       s.f(s);
     }
   )cc"));

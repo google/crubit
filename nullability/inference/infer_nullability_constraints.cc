@@ -42,9 +42,9 @@ using ::clang::dataflow::PointerValue;
 using ::clang::dataflow::Value;
 
 std::optional<NullabilityConstraint> inferNullabilityConstraint(
-    const clang::ParmVarDecl& P, const Environment& Environment,
-    const SafetyConstraintGenerator& SafetyConstraintGenerator) {
-  auto* Val = clang::dyn_cast_or_null<PointerValue>(Environment.getValue(P));
+    const clang::ParmVarDecl &P, const Environment &Environment,
+    const SafetyConstraintGenerator &SafetyConstraintGenerator) {
+  auto *Val = clang::dyn_cast_or_null<PointerValue>(Environment.getValue(P));
   // If there's no PointerValue or its null state wasn't evaluated by the
   // analysis, produce no facts.
   if (!Val || !hasPointerNullState(*Val)) {
@@ -74,20 +74,20 @@ bool isNonNullAnnotated(clang::QualType Type) {
   return false;
 }
 
-llvm::Expected<llvm::DenseMap<const clang::Decl*, NullabilityConstraint>>
-inferNullabilityConstraints(const clang::FunctionDecl& Func,
-                            clang::ASTContext& Context) {
+llvm::Expected<llvm::DenseMap<const clang::Decl *, NullabilityConstraint>>
+inferNullabilityConstraints(const clang::FunctionDecl &Func,
+                            clang::ASTContext &Context) {
   // We want to make sure we use the declaration that the body comes from,
   // otherwise we will see references to `ParmVarDecl`s from a different
   // declaration.
-  const clang::FunctionDecl* DeclWithBody = nullptr;
+  const clang::FunctionDecl *DeclWithBody = nullptr;
   if (!Func.getBody(DeclWithBody)) {
     return llvm::make_error<llvm::StringError>(llvm::errc::invalid_argument,
                                                "Function has no body.");
   }
   CHECK(DeclWithBody);
 
-  llvm::DenseMap<const clang::Decl*, NullabilityConstraint> Results;
+  llvm::DenseMap<const clang::Decl *, NullabilityConstraint> Results;
   llvm::Expected<clang::dataflow::ControlFlowContext> ControlFlowContext =
       clang::dataflow::ControlFlowContext::build(*DeclWithBody);
   if (!ControlFlowContext) return Results;
@@ -103,9 +103,9 @@ inferNullabilityConstraints(const clang::FunctionDecl& Func,
       BlockToOutputStateOrError = clang::dataflow::runDataflowAnalysis(
           *ControlFlowContext, Analysis, Environment,
           [&SafetyConstraintGenerator, &Context](
-              const clang::CFGElement& Element,
+              const clang::CFGElement &Element,
               const clang::dataflow::DataflowAnalysisState<
-                  PointerNullabilityLattice>& State) {
+                  PointerNullabilityLattice> &State) {
             SafetyConstraintGenerator.collectConstraints(Element, State,
                                                          Context);
           });
@@ -113,7 +113,7 @@ inferNullabilityConstraints(const clang::FunctionDecl& Func,
     return Results;
   }
 
-  for (const auto* P : DeclWithBody->parameters()) {
+  for (const auto *P : DeclWithBody->parameters()) {
     CHECK(P != nullptr);
     if (std::optional<NullabilityConstraint> Constraint =
             inferNullabilityConstraint(*P, Environment,

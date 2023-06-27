@@ -58,7 +58,7 @@ TEST(PointerNullabilityTest, DerefAddrOf) {
 
 TEST(PointerNullabilityTest, DerefPtrAnnotatedNonNullWithoutACheck) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull x) { *x; }
+    void target(int *_Nonnull x) { *x; }
   )cc"));
 
   // transitive
@@ -72,7 +72,7 @@ TEST(PointerNullabilityTest, DerefPtrAnnotatedNonNullWithoutACheck) {
 
 TEST(PointerNullabilityTest, DerefPtrAnnotatedNullableWithoutACheck) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable x) {
+    void target(int *_Nullable x) {
       *x;  // [[unsafe]]
     }
   )cc"));
@@ -102,63 +102,63 @@ TEST(PointerNullabilityTest, DerefUnknownPtrWithoutACheck) {
 
 TEST(PointerNullabilityTest, DoubleDereference) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int** p) {
+    void target(int **p) {
       *p;
       **p;
     }
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int** _Nonnull p) {
+    void target(int **_Nonnull p) {
       *p;
       **p;
     }
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull* p) {
+    void target(int *_Nonnull *p) {
       *p;
       **p;
     }
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull* _Nonnull p) {
+    void target(int *_Nonnull *_Nonnull p) {
       *p;
       **p;
     }
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int** _Nullable p) {
+    void target(int **_Nullable p) {
       *p;   // [[unsafe]]
       **p;  // [[unsafe]]
     }
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable* p) {
+    void target(int *_Nullable *p) {
       *p;
       **p;  // [[unsafe]]
     }
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable* _Nullable p) {
+    void target(int *_Nullable *_Nullable p) {
       *p;   // [[unsafe]]
       **p;  // [[unsafe]]
     }
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable* _Nonnull p) {
+    void target(int *_Nullable *_Nonnull p) {
       *p;
       **p;  // [[unsafe]]
     }
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull* _Nullable p) {
+    void target(int *_Nonnull *_Nullable p) {
       *p;   // [[unsafe]]
       **p;  // [[unsafe]]
     }

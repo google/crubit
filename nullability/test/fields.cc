@@ -16,7 +16,7 @@ TEST(PointerNullabilityTest, NonNullFieldsOfPointerType) {
   // dereference field of pointer type
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
-      Foo* _Nonnull ptr;
+      Foo *_Nonnull ptr;
     };
     void target(Foo foo) { *foo.ptr; }
   )cc"));
@@ -24,7 +24,7 @@ TEST(PointerNullabilityTest, NonNullFieldsOfPointerType) {
   // dereference field of pointer type in member function
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
-      Foo* _Nonnull ptr;
+      Foo *_Nonnull ptr;
       void target() { *ptr; }
     };
   )cc"));
@@ -34,7 +34,7 @@ TEST(PointerNullabilityTest, NullableFieldsOfPointerType) {
   // dereference field of pointer type
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
-      Foo* _Nullable ptr;
+      Foo *_Nullable ptr;
     };
     void target(Foo foo) {
       *foo.ptr;  // [[unsafe]]
@@ -50,7 +50,7 @@ TEST(PointerNullabilityTest, NullableFieldsOfPointerType) {
   // dereference field of pointer type in member function
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
-      Foo* _Nullable ptr;
+      Foo *_Nullable ptr;
       void target() {
         *ptr;  // [[unsafe]]
         if (ptr) {
@@ -86,11 +86,11 @@ TEST(PointerNullabilityTest, UnknownFieldsOfPointerType) {
 TEST(PointerNullabilityTest, ChainedFieldDeref) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
-      S* _Nonnull nonnull;
-      S* _Nullable nullable;
-      S* unknown;
+      S *_Nonnull nonnull;
+      S *_Nullable nullable;
+      S *unknown;
     };
-    void target(S& s) {
+    void target(S &s) {
       *(*s.nonnull).nonnull;   // [[unsafe]] TODO: fix false positive
       *(*s.nonnull).nullable;  // [[unsafe]]
       *(*s.nonnull).unknown;   // [[unsafe]] TODO: fix false positive

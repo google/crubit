@@ -15,17 +15,17 @@ namespace {
 TEST(PointerNullabilityTest, ReturnStatements) {
   // nonnull return type
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nonnull target() {
+    int *_Nonnull target() {
       return nullptr;  // [[unsafe]]
     }
   )cc"));
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nonnull target(int* _Nonnull ptr_nonnull) {
+    int *_Nonnull target(int *_Nonnull ptr_nonnull) {
       return ptr_nonnull;
     }
   )cc"));
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nonnull target(int* _Nullable ptr_nullable) {
+    int *_Nonnull target(int *_Nullable ptr_nullable) {
       return ptr_nullable;  // [[unsafe]]
     }
   )cc"));
@@ -37,15 +37,15 @@ TEST(PointerNullabilityTest, ReturnStatements) {
 
   // nullable return type
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nullable target() { return nullptr; }
+    int *_Nullable target() { return nullptr; }
   )cc"));
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nullable target(int* _Nonnull ptr_nonnull) {
+    int *_Nullable target(int *_Nonnull ptr_nonnull) {
       return ptr_nonnull;
     }
   )cc"));
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nullable target(int* _Nullable ptr_nullable) {
+    int *_Nullable target(int *_Nullable ptr_nullable) {
       return ptr_nullable;
     }
   )cc"));
@@ -57,15 +57,15 @@ TEST(PointerNullabilityTest, ReturnStatements) {
 
   // unannotated return type
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* target() { return nullptr; }
+    int *target() { return nullptr; }
   )cc"));
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* target(int* _Nonnull ptr_nonnull) {
+    int *target(int *_Nonnull ptr_nonnull) {
       return ptr_nonnull;
     }
   )cc"));
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* target(int* _Nullable ptr_nullable) {
+    int *target(int *_Nullable ptr_nullable) {
       return ptr_nullable;
     }
   )cc"));
@@ -77,7 +77,7 @@ TEST(PointerNullabilityTest, ReturnStatements) {
 
   // multiple return statements
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nonnull target(bool b, int* _Nonnull ptr_nonnull) {
+    int *_Nonnull target(bool b, int *_Nonnull ptr_nonnull) {
       if (b) {
         return nullptr;  // [[unsafe]]
       }
@@ -85,8 +85,8 @@ TEST(PointerNullabilityTest, ReturnStatements) {
     }
   )cc"));
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nonnull target(int* _Nullable ptr_nullable,
-                         int* _Nonnull ptr_nonnull) {
+    int *_Nonnull target(int *_Nullable ptr_nullable,
+                         int *_Nonnull ptr_nonnull) {
       if (ptr_nullable) {
         return ptr_nullable;
       }
@@ -94,8 +94,8 @@ TEST(PointerNullabilityTest, ReturnStatements) {
     }
   )cc"));
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nonnull target(int* _Nullable ptr_nullable_1,
-                         int* _Nullable ptr_nullable_2) {
+    int *_Nonnull target(int *_Nullable ptr_nullable_1,
+                         int *_Nullable ptr_nullable_2) {
       if (ptr_nullable_1) {
         return ptr_nullable_2;  // [[unsafe]]
       }
@@ -120,15 +120,15 @@ TEST(PointerNullabilityTest, ReturnStatements) {
 TEST(PointerNullabilityTest, NonPointerReturnType) {
   checkDiagnostics(R"cc(
     struct S {
-      int* p;
-      int*& target() { return p; }
+      int *p;
+      int *&target() { return p; }
     };
   )cc");
 
   checkDiagnostics(R"cc(
     struct S {
-      int* _Nullable p;
-      int* _Nonnull& target() {
+      int *_Nullable p;
+      int *_Nonnull &target() {
         return p;  // TODO: Fix false negative.
       }
     };

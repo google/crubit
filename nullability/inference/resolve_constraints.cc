@@ -14,27 +14,27 @@
 namespace clang::tidy::nullability {
 namespace {
 bool isSatisfiable(
-    const llvm::DenseSet<clang::dataflow::BoolValue*>& ConstraintSet) {
+    const llvm::DenseSet<clang::dataflow::BoolValue *> &ConstraintSet) {
   clang::dataflow::WatchedLiteralsSolver Solver;
-  std::vector<clang::dataflow::BoolValue*> Vec(ConstraintSet.begin(),
-                                               ConstraintSet.end());
+  std::vector<clang::dataflow::BoolValue *> Vec(ConstraintSet.begin(),
+                                                ConstraintSet.end());
   return Solver.solve(Vec).getStatus() ==
          clang::dataflow::Solver::Result::Status::Satisfiable;
 }
 
 bool isUnsatisfiable(
-    const llvm::DenseSet<clang::dataflow::BoolValue*>& ConstraintSet) {
+    const llvm::DenseSet<clang::dataflow::BoolValue *> &ConstraintSet) {
   clang::dataflow::WatchedLiteralsSolver Solver;
-  std::vector<clang::dataflow::BoolValue*> Vec(ConstraintSet.begin(),
-                                               ConstraintSet.end());
+  std::vector<clang::dataflow::BoolValue *> Vec(ConstraintSet.begin(),
+                                                ConstraintSet.end());
   return Solver.solve(Vec).getStatus() ==
          clang::dataflow::Solver::Result::Status::Unsatisfiable;
 }
 }  // namespace
 
 NullabilityConstraint resolveConstraints(
-    const llvm::DenseSet<clang::dataflow::BoolValue*>& SafetyConstraints,
-    const clang::dataflow::PointerValue& Pointer) {
+    const llvm::DenseSet<clang::dataflow::BoolValue *> &SafetyConstraints,
+    const clang::dataflow::PointerValue &Pointer) {
   // If the safety constraints are satisfiable, then we can potentially
   // add annotations that are necessary for them to be satisfied. If they
   // are not all satisfiable together, we need to prune conditions in a
@@ -42,7 +42,7 @@ NullabilityConstraint resolveConstraints(
   // TODO(b/268440048) Handle unsatisfiable safety constraints
   if (!isSatisfiable(SafetyConstraints)) return {};
 
-  clang::dataflow::AtomicBoolValue& IsNull =
+  clang::dataflow::AtomicBoolValue &IsNull =
       getPointerNullState(Pointer).second;
   auto SafetyConstraintsAndIsNull = SafetyConstraints;
   SafetyConstraintsAndIsNull.insert(&IsNull);

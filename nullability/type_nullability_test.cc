@@ -101,9 +101,9 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
 
   Preamble = R"cpp(
     template <typename T1>
-    using A = T1* _Nullable;
+    using A = T1 *_Nullable;
     template <typename T2>
-    using B = A<T2>* _Nonnull;
+    using B = A<T2> *_Nonnull;
   )cpp";
   EXPECT_THAT(nullVec("B<int>"),
               ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
@@ -145,7 +145,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassTemplate) {
     struct Outer {
       struct Inner;
     };
-    using OuterNullableInner = Outer<int* _Nonnull>::Inner;
+    using OuterNullableInner = Outer<int *_Nonnull>::Inner;
   )cpp";
   // TODO: should be [NonNull]
   EXPECT_THAT(nullVec("Outer<int* _Nonnull>::Inner"),
@@ -266,7 +266,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentlyNamedTemplate) {
 
     template <class U, class WrapT>
     struct S {
-      using type = typename WrapT::template Nullable<U>* _Nonnull;
+      using type = typename WrapT::template Nullable<U> *_Nonnull;
     };
   )cpp";
   EXPECT_THAT(nullVec("S<int *, Wrapper>::type"),
@@ -278,7 +278,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, PartialSpecialization) {
     template <class>
     struct S;
     template <class T>
-    struct S<T*> {
+    struct S<T *> {
       using Alias = T;
     };
   )cpp";
@@ -299,7 +299,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateTemplateParams) {
 
     template <template <class> class Nullability, class T>
     struct Pointer {
-      using type = typename Nullability<T*>::type;
+      using type = typename Nullability<T *>::type;
     };
   )cpp";
   EXPECT_THAT(nullVec("Pointer<Nullable, int>::type"),
@@ -315,7 +315,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateTemplateParams) {
 
     template <template <class> class Nullability, class T>
     struct Pointer {
-      using type = Nullability<T*>;
+      using type = Nullability<T *>;
     };
   )cpp";
   EXPECT_THAT(nullVec("Pointer<Nullable, int>::type"),
@@ -373,7 +373,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateArgsBehindAlias) {
     struct Outer {
       using Inner = X;
     };
-    using OuterNullable = Outer<int* _Nullable>;
+    using OuterNullable = Outer<int *_Nullable>;
   )cpp";
   // TODO: should be [Nullable]
   EXPECT_THAT(nullVec("OuterNullable::Inner"),
@@ -425,7 +425,7 @@ class PrintWithNullabilityTest : public ::testing::Test {
   std::string Preamble;
 
   // Parses `Type`, augments it with Nulls, and prints the result.
-  std::string print(llvm::StringRef Type, const TypeNullability& Nulls) {
+  std::string print(llvm::StringRef Type, const TypeNullability &Nulls) {
     clang::TestAST AST((Preamble + "\n using Target = " + Type + ";").str());
     auto Target = AST.context().getTranslationUnitDecl()->lookup(
         &AST.context().Idents.get("Target"));
@@ -447,7 +447,7 @@ TEST_F(PrintWithNullabilityTest, Pointers) {
 TEST_F(PrintWithNullabilityTest, Sugar) {
   Preamble = R"cpp(
     template <class T>
-    using Ptr = T*;
+    using Ptr = T *;
     using Int = int;
     using IntPtr = Ptr<Int>;
   )cpp";
@@ -480,8 +480,8 @@ TEST_F(PrintWithNullabilityTest, Arrays) {
   // variable length array not allowed at file scope, wrap in a function...
   Preamble = R"cpp(
     int n;
-    auto& makeArray() {
-      float* array[n];
+    auto &makeArray() {
+      float *array[n];
       return array;
     }
   )cpp";

@@ -30,10 +30,10 @@ TEST(PointerNullabilityTest, CallExplicitlyDereferencedDirectCallee) {
 
 TEST(PointerNullabilityTest, AnnotationsInReturnType) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nullable target() {
+    int *_Nullable target() {
       // Use `static_cast` to force function-to-pointer decay.
       __assert_nullability<NK_nonnull, NK_nullable>(
-          static_cast<int* (*)()>(target));
+          static_cast<int *(*)()>(target));
       return nullptr;
     }
   )cc"));

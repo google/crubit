@@ -107,7 +107,7 @@ TEST(SafetyConstraintGenerator, GeneratesNoConstraintsForEmptyFunctionDefn) {
 
 TEST(SafetyConstraintGenerator, GeneratesNoConstraintsForUnusedParam) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p) {}
+    void Target(int *p) {}
   )cc";
   EXPECT_THAT(Src, ProducesSafetyConstraints(
                        [](const dataflow::Environment& Environment,
@@ -116,7 +116,7 @@ TEST(SafetyConstraintGenerator, GeneratesNoConstraintsForUnusedParam) {
 
 TEST(SafetyConstraintGenerator, GeneratesNotIsNullConstraintForDeref) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p) { *p; }
+    void Target(int *p) { *p; }
   )cc";
   EXPECT_THAT(
       Src,
@@ -130,7 +130,7 @@ TEST(SafetyConstraintGenerator, GeneratesNotIsNullConstraintForDeref) {
 TEST(SafetyConstraintGenerator,
      GeneratesNotIsNullConstraintForImproperlyGuardedDeref) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p) {
+    void Target(int *p) {
       if (p == nullptr) *p;
     }
   )cc";
@@ -145,7 +145,7 @@ TEST(SafetyConstraintGenerator,
 
 TEST(SafetyConstraintGenerator, GeneratesConstraintsForAllParams) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p, int* q, int* r) {
+    void Target(int *p, int *q, int *r) {
       *p;
       *q;
       *r;
@@ -166,7 +166,7 @@ TEST(SafetyConstraintGenerator, GeneratesConstraintsForAllParams) {
 
 TEST(SafetyConstraintGenerator, DoesntGenerateConstraintForNullCheckedPtr) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p) {
+    void Target(int *p) {
       if (p) *p;
       if (p != nullptr) *p;
     }
@@ -179,9 +179,9 @@ TEST(SafetyConstraintGenerator, DoesntGenerateConstraintForNullCheckedPtr) {
 TEST(SafetyConstraintGenerator,
      ConstrainsParameterIfDereferencedBeforeAssignment) {
   static constexpr llvm::StringRef Src = R"cc(
-    int* getPtr();
+    int *getPtr();
 
-    void Target(int* p) {
+    void Target(int *p) {
       *p;
       p = getPtr();
     }
@@ -198,9 +198,9 @@ TEST(SafetyConstraintGenerator,
 TEST(SafetyConstraintGenerator,
      DoesNotConstrainParameterIfDereferencedAfterAssignment) {
   static constexpr llvm::StringRef Src = R"cc(
-    int* getPtr();
+    int *getPtr();
 
-    void Target(int* p) {
+    void Target(int *p) {
       p = getPtr();
       *p;
     }

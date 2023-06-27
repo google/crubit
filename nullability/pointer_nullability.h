@@ -27,8 +27,8 @@ namespace nullability {
 
 /// Returns the `PointerValue` allocated to `PointerExpr` if available.
 /// Otherwise, returns nullptr.
-dataflow::PointerValue* getPointerValueFromExpr(
-    const Expr* PointerExpr, const dataflow::Environment& Env);
+dataflow::PointerValue *getPointerValueFromExpr(
+    const Expr *PointerExpr, const dataflow::Environment &Env);
 
 // Returns true if the pointer has all properties necessary for representing
 // complete nullness information.
@@ -38,31 +38,31 @@ dataflow::PointerValue* getPointerValueFromExpr(
 // that expression has been analyzed. Other pointers, like the values of unused
 // parameters, may lack this state. This state is only set by
 // PointerNullabilityAnalysis, not by the dataflow framework.
-bool hasPointerNullState(const dataflow::PointerValue& PointerVal);
+bool hasPointerNullState(const dataflow::PointerValue &PointerVal);
 
 /// Returns the properties representing the nullness information of a pointer.
 ///
 /// The first boolean indicates if the pointer's nullability is known.
 /// The second boolean indicates if the pointer's value is null.
-std::pair<dataflow::AtomicBoolValue&, dataflow::AtomicBoolValue&>
-getPointerNullState(const dataflow::PointerValue& PointerVal);
+std::pair<dataflow::AtomicBoolValue &, dataflow::AtomicBoolValue &>
+getPointerNullState(const dataflow::PointerValue &PointerVal);
 
 /// Sets the nullness properties on `PointerVal` if not already initialised.
 ///
 /// The boolean properties may be constrained by specifying `KnownConstraint`
 /// and `NullConstraint`. Otherwise, the properties are set to freshly
 /// created atomic booleans.
-void initPointerNullState(dataflow::PointerValue& PointerVal,
-                          dataflow::Environment& Env,
-                          dataflow::BoolValue* KnownConstraint = nullptr,
-                          dataflow::BoolValue* NullConstraint = nullptr);
+void initPointerNullState(dataflow::PointerValue &PointerVal,
+                          dataflow::Environment &Env,
+                          dataflow::BoolValue *KnownConstraint = nullptr,
+                          dataflow::BoolValue *NullConstraint = nullptr);
 
 /// Sets the nullness properties on `PointerVal` representing a nullptr if not
 /// already initialised.
 ///
 /// `Known` is constrained to true, `Null` is constrained to true.
-inline void initNullPointer(dataflow::PointerValue& PointerVal,
-                            dataflow::Environment& Env) {
+inline void initNullPointer(dataflow::PointerValue &PointerVal,
+                            dataflow::Environment &Env) {
   initPointerNullState(PointerVal, Env,
                        /*KnownConstraint=*/&Env.getBoolLiteralValue(true),
                        /*NullConstraint=*/&Env.getBoolLiteralValue(true));
@@ -72,8 +72,8 @@ inline void initNullPointer(dataflow::PointerValue& PointerVal,
 /// not null if not already initialised.
 ///
 /// `Known` is constrained to true, `Null` is constrained to false.
-inline void initNotNullPointer(dataflow::PointerValue& PointerVal,
-                               dataflow::Environment& Env) {
+inline void initNotNullPointer(dataflow::PointerValue &PointerVal,
+                               dataflow::Environment &Env) {
   initPointerNullState(PointerVal, Env,
                        /*KnownConstraint=*/&Env.getBoolLiteralValue(true),
                        /*NullConstraint=*/&Env.getBoolLiteralValue(false));
@@ -83,8 +83,8 @@ inline void initNotNullPointer(dataflow::PointerValue& PointerVal,
 /// nullable if not already initialised.
 ///
 /// `Known` is constrained to true, `Null` is unconstrained.
-inline void initNullablePointer(dataflow::PointerValue& PointerVal,
-                                dataflow::Environment& Env) {
+inline void initNullablePointer(dataflow::PointerValue &PointerVal,
+                                dataflow::Environment &Env) {
   initPointerNullState(PointerVal, Env,
                        /*KnownConstraint=*/&Env.getBoolLiteralValue(true));
 }
@@ -93,34 +93,34 @@ inline void initNullablePointer(dataflow::PointerValue& PointerVal,
 /// unknown nullability if not already initialised.
 ///
 /// `Known` is constrained to false, `Null` is unconstrained.
-inline void initUnknownPointer(dataflow::PointerValue& PointerVal,
-                               dataflow::Environment& Env) {
+inline void initUnknownPointer(dataflow::PointerValue &PointerVal,
+                               dataflow::Environment &Env) {
   initPointerNullState(PointerVal, Env,
                        /*KnownConstraint=*/&Env.getBoolLiteralValue(false));
 }
 
 /// Returns true if there is evidence that `PointerVal` may hold a nullptr.
-bool isNullable(const dataflow::PointerValue& PointerVal,
-                const dataflow::Environment& Env);
+bool isNullable(const dataflow::PointerValue &PointerVal,
+                const dataflow::Environment &Env);
 
 /// Returns the strongest provable assertion we can make about `PointerVal`.
 /// If PointerVal may not be null, returns Nonnull.
 /// If PointerVal may be both null and known-nullability, returns Nullable.
 /// Otherwise, returns Unspecified.
-clang::NullabilityKind getNullability(const dataflow::PointerValue& PointerVal,
-                                      const dataflow::Environment& Env);
+clang::NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
+                                      const dataflow::Environment &Env);
 
 /// Returns the strongest provable assertion we can make about the value of
 /// `E` in `Env`.
-inline clang::NullabilityKind getNullability(const Expr* E,
-                                             const dataflow::Environment& Env) {
-  if (auto* P = getPointerValueFromExpr(E, Env)) return getNullability(*P, Env);
+inline clang::NullabilityKind getNullability(const Expr *E,
+                                             const dataflow::Environment &Env) {
+  if (auto *P = getPointerValueFromExpr(E, Env)) return getNullability(*P, Env);
   return clang::NullabilityKind::Unspecified;
 }
 
 // Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
 template <typename T>
-void dump(const T& Node, llvm::raw_ostream& OS) {
+void dump(const T &Node, llvm::raw_ostream &OS) {
   clang::ASTDumper(OS, /*ShowColors=*/false).Visit(Node);
 }
 

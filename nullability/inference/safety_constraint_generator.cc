@@ -18,14 +18,14 @@
 
 namespace clang::tidy::nullability {
 namespace {
-clang::dataflow::BoolValue* collectFromDereference(
-    const clang::UnaryOperator* Op,
-    const clang::ast_matchers::MatchFinder::MatchResult&,
+clang::dataflow::BoolValue *collectFromDereference(
+    const clang::UnaryOperator *Op,
+    const clang::ast_matchers::MatchFinder::MatchResult &,
     const clang::dataflow::TransferStateForDiagnostics<
-        SafetyConstraintGenerator::LatticeType>& State) {
-  if (clang::dataflow::PointerValue* DereferencedValue =
+        SafetyConstraintGenerator::LatticeType> &State) {
+  if (clang::dataflow::PointerValue *DereferencedValue =
           getPointerValueFromExpr(Op->getSubExpr(), State.Env)) {
-    auto& NotIsNull =
+    auto &NotIsNull =
         State.Env.makeNot(getPointerNullState(*DereferencedValue).second);
     // If the flow condition at this point in the code implies that the
     // dereferenced value is not null, we can avoid collecting complex flow
@@ -54,7 +54,7 @@ auto buildConstraintCollector() {
   return clang::dataflow::CFGMatchSwitchBuilder<
              const clang::dataflow::TransferStateForDiagnostics<
                  SafetyConstraintGenerator::LatticeType>,
-             clang::dataflow::BoolValue*>()
+             clang::dataflow::BoolValue *>()
       .CaseOfCFGStmt<clang::UnaryOperator>(isPointerDereference(),
                                            collectFromDereference)
       .Build();
@@ -65,10 +65,10 @@ SafetyConstraintGenerator::SafetyConstraintGenerator()
     : ConstraintCollector(buildConstraintCollector()) {}
 
 void SafetyConstraintGenerator::collectConstraints(
-    const clang::CFGElement& Element,
-    const clang::dataflow::DataflowAnalysisState<LatticeType>& State,
-    clang::ASTContext& Context) {
-  if (auto* Constraint =
+    const clang::CFGElement &Element,
+    const clang::dataflow::DataflowAnalysisState<LatticeType> &State,
+    clang::ASTContext &Context) {
+  if (auto *Constraint =
           ConstraintCollector(Element, Context, {State.Lattice, State.Env})) {
     Constraints.insert(Constraint);
   }

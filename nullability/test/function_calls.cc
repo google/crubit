@@ -41,8 +41,8 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
 
   // function pointer
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull (*makeNonnull)(),
-                int* _Nullable (*makeNullable)(), int* (*makeUnannotated)()) {
+    void target(int *_Nonnull (*makeNonnull)(),
+                int *_Nullable (*makeNullable)(), int *(*makeUnannotated)()) {
       *makeNonnull();
       *makeNullable();  // [[unsafe]]
       *makeUnannotated();
@@ -51,8 +51,8 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
 
   // pointer to function pointer
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull (**makeNonnull)(),
-                int* _Nullable (**makeNullable)(), int* (**makeUnannotated)()) {
+    void target(int *_Nonnull (**makeNonnull)(),
+                int *_Nullable (**makeNullable)(), int *(**makeUnannotated)()) {
       *(*makeNonnull)();
       *(*makeNullable)();  // [[unsafe]]
       *(*makeUnannotated)();
@@ -61,9 +61,9 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
 
   // function returning a function pointer which returns a pointer
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    typedef int* _Nonnull (*MakeNonnullT)();
-    typedef int* _Nullable (*MakeNullableT)();
-    typedef int* (*MakeUnannotatedT)();
+    typedef int *_Nonnull (*MakeNonnullT)();
+    typedef int *_Nullable (*MakeNullableT)();
+    typedef int *(*MakeUnannotatedT)();
     void target(MakeNonnullT (*makeNonnull)(), MakeNullableT (*makeNullable)(),
                 MakeUnannotatedT (*makeUnannotated)()) {
       *(*makeNonnull)()();
@@ -266,9 +266,9 @@ TEST(PointerNullabilityTest, CanOverwritePtrWithPtrCreatedFromRefReturnType) {
   // nonnull.
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int& get_int();
+    int &get_int();
 
-    void target(int* _Nullable i) {
+    void target(int *_Nullable i) {
       i = &get_int();
       *i;
     }
@@ -277,9 +277,9 @@ TEST(PointerNullabilityTest, CanOverwritePtrWithPtrCreatedFromRefReturnType) {
 
 TEST(PointerNullabilityTest, CanOverwritePtrWithPtrReturnedByFunction) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nonnull get_int();
+    int *_Nonnull get_int();
 
-    void target(int* _Nullable i) {
+    void target(int *_Nullable i) {
       i = get_int();
       *i;
     }
@@ -288,7 +288,7 @@ TEST(PointerNullabilityTest, CanOverwritePtrWithPtrReturnedByFunction) {
 
 TEST(PointerNullabilityTest, CallVariadicFunction) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void variadic(int* _Nonnull, ...);
+    void variadic(int *_Nonnull, ...);
     void target() {
       int i = 0;
       variadic(&i, nullptr, &i);

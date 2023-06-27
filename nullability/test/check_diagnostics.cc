@@ -23,7 +23,7 @@ constexpr char kPreamble[] = R"cc(
   };
 
   template <NullabilityKind... NK, typename T>
-  void __assert_nullability(const T&);
+  void __assert_nullability(const T &);
 
   template <typename T>
   T value();
@@ -37,7 +37,7 @@ constexpr char kNewHeader[] = R"cc(
   extern const nothrow_t nothrow;
   using size_t = decltype(sizeof(int));
   }  // namespace std
-  void* operator new(std::size_t size, const std::nothrow_t&) noexcept;
+  void *operator new(std::size_t size, const std::nothrow_t &) noexcept;
 )cc";
 
 bool checkDiagnostics(llvm::StringRef SourceCode) {

@@ -16,8 +16,8 @@ TEST(PointerNullabilityTest, Aliases) {
     struct Factory {
       T get();
     };
-    using NeverNull = int* _Nonnull;
-    using MaybeNull = int* _Nullable;
+    using NeverNull = int *_Nonnull;
+    using MaybeNull = int *_Nullable;
 
     void target(Factory<NeverNull> never, Factory<MaybeNull> maybe) {
       *never.get();

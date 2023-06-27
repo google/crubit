@@ -30,14 +30,14 @@ using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
 
 using InferredNullabilityConstraints =
-    llvm::DenseMap<const clang::Decl*, NullabilityConstraint>;
+    llvm::DenseMap<const clang::Decl *, NullabilityConstraint>;
 
 InferredNullabilityConstraints inferAnnotationsForTargetFunction(
     llvm::StringRef Source) {
   InferredNullabilityConstraints Constraints;
   analyzeTargetForTest(
-      Source, [&Constraints](const clang::FunctionDecl& Func,
-                             const MatchFinder::MatchResult& Result) mutable {
+      Source, [&Constraints](const clang::FunctionDecl &Func,
+                             const MatchFinder::MatchResult &Result) mutable {
         auto Results = inferNullabilityConstraints(Func, *Result.Context);
         CHECK(Results);
         Constraints = std::move(*Results);
@@ -46,12 +46,12 @@ InferredNullabilityConstraints inferAnnotationsForTargetFunction(
 }
 
 MATCHER_P(Parameter, Name, std::string("is a parameter named ") + Name) {
-  const auto* Param = clang::dyn_cast_or_null<clang::ParmVarDecl>(arg);
+  const auto *Param = clang::dyn_cast_or_null<clang::ParmVarDecl>(arg);
   if (!Param) {
     return false;
   }
 
-  const auto* Identifier = Param->getIdentifier();
+  const auto *Identifier = Param->getIdentifier();
   if (!Identifier) {
     return false;
   }
@@ -69,16 +69,16 @@ TEST(InferAnnotationsTest, NoParams) {
 
 TEST(InferAnnotationsTest, OneParamUnused) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p0) {}
+    void Target(int *p0) {}
   )cc";
   EXPECT_THAT(inferAnnotationsForTargetFunction(Src), IsEmpty());
 }
 
 TEST(InferAnnotationsTest, OneParamUsedWithoutRestriction) {
   static constexpr llvm::StringRef Src = R"cc(
-    void TakesUnknown(int* unknown) {}
+    void TakesUnknown(int *unknown) {}
 
-    void Target(int* p0) { TakesUnknown(p0); }
+    void Target(int *p0) { TakesUnknown(p0); }
   )cc";
   EXPECT_THAT(
       inferAnnotationsForTargetFunction(Src),
@@ -88,7 +88,7 @@ TEST(InferAnnotationsTest, OneParamUsedWithoutRestriction) {
 
 TEST(InferAnnotationsTest, Deref) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p0, int* p1) {
+    void Target(int *p0, int *p1) {
       int a = *p0;
       if (p1 != nullptr) {
         int b = *p1;
@@ -104,7 +104,7 @@ TEST(InferAnnotationsTest, Deref) {
 
 TEST(InferAnnotationsTest, DereferenceBeforeAssignment) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p) {
+    void Target(int *p) {
       *p;
       int i = 1;
       p = &i;
@@ -118,7 +118,7 @@ TEST(InferAnnotationsTest, DereferenceBeforeAssignment) {
 
 TEST(InferAnnotationsTest, DereferenceAfterAssignment) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p) {
+    void Target(int *p) {
       int i = 1;
       p = &i;
       *p;
@@ -132,7 +132,7 @@ TEST(InferAnnotationsTest, DereferenceAfterAssignment) {
 
 TEST(InferAnnotationsTest, DerefOfPtrRef) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int*& p0, int*& p1) {
+    void Target(int *&p0, int *&p1) {
       int a = *p0;
       if (p1 != nullptr) {
         int b = *p1;
@@ -148,7 +148,7 @@ TEST(InferAnnotationsTest, DerefOfPtrRef) {
 
 TEST(InferAnnotationsTest, UnrelatedCondition) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p0, int* p1, int* p2, bool b) {
+    void Target(int *p0, int *p1, int *p2, bool b) {
       if (b) {
         int a = *p0;
         int b = *p1;
@@ -168,7 +168,7 @@ TEST(InferAnnotationsTest, UnrelatedCondition) {
 
 TEST(InferAnnotationsTest, LaterDeref) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p0) {
+    void Target(int *p0) {
       if (p0 == nullptr) {
         (void)0;
       } else {
@@ -185,7 +185,7 @@ TEST(InferAnnotationsTest, LaterDeref) {
 
 TEST(InferAnnotationsTest, DerefBeforeGuardedDeref) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p0) {
+    void Target(int *p0) {
       int a = *p0;
       if (p0 != nullptr) {
         int b = *p0;
@@ -200,7 +200,7 @@ TEST(InferAnnotationsTest, DerefBeforeGuardedDeref) {
 
 TEST(InferAnnotationsTest, EarlyReturn) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p0) {
+    void Target(int *p0) {
       if (!p0) {
         return;
       }
@@ -215,7 +215,7 @@ TEST(InferAnnotationsTest, EarlyReturn) {
 
 TEST(InferAnnotationsTest, UnreachableCode) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* p0, int* p1, int* p2, int* p3) {
+    void Target(int *p0, int *p1, int *p2, int *p3) {
       if (true) {
         int a = *p0;
       } else {
@@ -239,8 +239,8 @@ TEST(InferAnnotationsTest, UnreachableCode) {
 TEST(InferAnnotationsTest,
      RequiresNonNullWhenAnnotatedWithClangNullabilityAttributeAtDefinition) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int* unannotated, int* _Nonnull non_null,
-                int* _Nonnull* only_inner_layer_nonnull) {
+    void Target(int *unannotated, int *_Nonnull non_null,
+                int *_Nonnull *only_inner_layer_nonnull) {
       unannotated;
       non_null;
       only_inner_layer_nonnull;
@@ -264,8 +264,8 @@ TEST(InferAnnotationsTest,
     using NonNull [[clang::annotate("Nonnull")]] = T;
     }  // namespace custom
 
-    void Target(int* unannotated, custom::NonNull<int*> non_null,
-                custom::NonNull<int*>* only_inner_layer_nonnull) {
+    void Target(int *unannotated, custom::NonNull<int *> non_null,
+                custom::NonNull<int *> *only_inner_layer_nonnull) {
       unannotated;
       non_null;
       only_inner_layer_nonnull;

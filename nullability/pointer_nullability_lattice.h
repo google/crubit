@@ -21,7 +21,6 @@ namespace nullability {
 
 class PointerNullabilityLattice {
  private:
-
  public:
   struct NonFlowSensitiveState {
     absl::flat_hash_map<const Expr *, TypeNullability> ExprToNullability;

@@ -6,13 +6,13 @@
 
 #include "nullability_test.h"
 
-TEST void testAnd(Nullable<int*> x, Nullable<int*> y) {
+TEST void testAnd(Nullable<int *> x, Nullable<int *> y) {
   if (x && y) {
     nonnull(x);
     nonnull(y);
     // Type hasn't changed, even though we know x and y are nonnull.
-    type<Nullable<int*>>(x);
-    type<Nullable<int*>>(y);
+    type<Nullable<int *>>(x);
+    type<Nullable<int *>>(y);
   } else {
     nullable(x);
     nullable(y);
@@ -21,7 +21,7 @@ TEST void testAnd(Nullable<int*> x, Nullable<int*> y) {
   nullable(y);
 }
 
-TEST void testOr(Nullable<int*> x, Nullable<int*> y) {
+TEST void testOr(Nullable<int *> x, Nullable<int *> y) {
   if (x || y) {
     nullable(x);
     nullable(y);
@@ -33,7 +33,7 @@ TEST void testOr(Nullable<int*> x, Nullable<int*> y) {
   nullable(y);
 }
 
-TEST void testNeither(Nullable<int*> x, Nullable<int*> y) {
+TEST void testNeither(Nullable<int *> x, Nullable<int *> y) {
   if (!x && !y) {
     nullable(x);
     nullable(y);
@@ -45,7 +45,7 @@ TEST void testNeither(Nullable<int*> x, Nullable<int*> y) {
   nullable(y);
 }
 
-TEST void testNotBoth(Nullable<int*> x, Nullable<int*> y) {
+TEST void testNotBoth(Nullable<int *> x, Nullable<int *> y) {
   if (!x || !y) {
     nullable(x);
     nullable(y);

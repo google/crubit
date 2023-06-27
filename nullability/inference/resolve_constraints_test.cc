@@ -41,31 +41,31 @@ class ResolveConstraintsTest : public testing::Test {
 };
 
 TEST_F(ResolveConstraintsTest, EmptyConstraintsDoNotImplyNonNull) {
-  const llvm::DenseSet<clang::dataflow::BoolValue*> Constraints;
+  const llvm::DenseSet<clang::dataflow::BoolValue *> Constraints;
   EXPECT_FALSE(resolveConstraints(Constraints, Pointer).must_be_nonnull());
 }
 
 TEST_F(ResolveConstraintsTest, ArbitraryBooleanConstraintsDoNotImplyNonNull) {
   clang::dataflow::AtomicBoolValue Atom1;
   clang::dataflow::AtomicBoolValue Atom2;
-  const llvm::DenseSet<clang::dataflow::BoolValue*> Constraints = {&Atom1,
-                                                                   &Atom2};
+  const llvm::DenseSet<clang::dataflow::BoolValue *> Constraints = {&Atom1,
+                                                                    &Atom2};
   EXPECT_FALSE(resolveConstraints(Constraints, Pointer).must_be_nonnull());
 }
 
 TEST_F(ResolveConstraintsTest, UnsatisfiableConstraintsProducesDefaultValues) {
   clang::dataflow::AtomicBoolValue Atom1;
-  clang::dataflow::BoolValue& NotAtom1 = Environment.makeNot(Atom1);
-  const llvm::DenseSet<clang::dataflow::BoolValue*> Constraints = {&Atom1,
-                                                                   &NotAtom1};
+  clang::dataflow::BoolValue &NotAtom1 = Environment.makeNot(Atom1);
+  const llvm::DenseSet<clang::dataflow::BoolValue *> Constraints = {&Atom1,
+                                                                    &NotAtom1};
   EXPECT_THAT(resolveConstraints(Constraints, Pointer),
               EqualsProto(NullabilityConstraint::default_instance()));
 }
 
 TEST_F(ResolveConstraintsTest, NotIsNullConstraintImpliesNonNull) {
-  auto& is_null = getPointerNullState(Pointer).second;
-  auto& not_is_null = Environment.makeNot(is_null);
-  const llvm::DenseSet<clang::dataflow::BoolValue*> Constraints = {
+  auto &is_null = getPointerNullState(Pointer).second;
+  auto &not_is_null = Environment.makeNot(is_null);
+  const llvm::DenseSet<clang::dataflow::BoolValue *> Constraints = {
       &not_is_null};
   EXPECT_TRUE(resolveConstraints(Constraints, Pointer).must_be_nonnull());
 }

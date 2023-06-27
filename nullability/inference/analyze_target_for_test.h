@@ -15,8 +15,8 @@ namespace clang::tidy::nullability {
 void analyzeTargetForTest(
     llvm::StringRef Source,
     llvm::function_ref<
-        void(const clang::FunctionDecl&,
-             const clang::ast_matchers::MatchFinder::MatchResult&)>
+        void(const clang::FunctionDecl &,
+             const clang::ast_matchers::MatchFinder::MatchResult &)>
         AnalysisCallback);
 
 }  // namespace clang::tidy::nullability

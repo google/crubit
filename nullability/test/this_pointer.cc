@@ -42,7 +42,7 @@ TEST(PointerNullabilityTest, ClassWithPointerTemplateArg) {
     template <class T>
     struct S;
     template <>
-    struct S<int* _Nullable> {
+    struct S<int *_Nullable> {
       void target() {
         // `_Nullable` in the specialization is bogus: we can't specialize on
         // nullability as it's just sugar. Therefore the correct inner

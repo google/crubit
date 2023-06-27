@@ -18,8 +18,8 @@ TEST(PointerNullabilityTest, NonConstPointerIsInvariant) {
   // invariant over their pointee type and we should therefore not allow `int *
   // _Nonnull * _Nonnull` to be converted to `int * _Nullable * _Nonnull`.
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void callee(int* _Nullable* _Nonnull pp);
-    void target(int* _Nonnull* _Nonnull pp) { target(pp); }
+    void callee(int *_Nullable *_Nonnull pp);
+    void target(int *_Nonnull *_Nonnull pp) { target(pp); }
   )cc"));
 }
 

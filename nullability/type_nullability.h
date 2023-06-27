@@ -62,21 +62,21 @@ using TypeNullability = std::vector<NullabilityKind>;
 /// Or it may be symbolic: e.g. Nonnull may be an AtomicBoolValue which we want
 /// to infer, and which may be connected to SAT constraints.
 struct PointerTypeNullability {
-  dataflow::BoolValue* Nonnull;   // True if this slot is marked non-null.
-  dataflow::BoolValue* Nullable;  // True if this slot is marked nullable.
+  dataflow::BoolValue *Nonnull;   // True if this slot is marked non-null.
+  dataflow::BoolValue *Nullable;  // True if this slot is marked nullable.
 };
 
 /// Returns the `NullabilityKind` corresponding to the nullability annotation on
 /// `Type` if present. Otherwise, returns `NullabilityKind::Unspecified`.
-NullabilityKind getNullabilityKind(QualType Type, ASTContext& Ctx);
+NullabilityKind getNullabilityKind(QualType Type, ASTContext &Ctx);
 
 /// Returns a human-readable debug representation of a nullability vector.
-std::string nullabilityToString(const TypeNullability& Nullability);
+std::string nullabilityToString(const TypeNullability &Nullability);
 
 /// A function that may provide enhanced nullability information for a
 /// substituted template parameter (which has no sugar of its own).
 using GetTypeParamNullability =
-    std::optional<TypeNullability>(const SubstTemplateTypeParmType* ST);
+    std::optional<TypeNullability>(const SubstTemplateTypeParmType *ST);
 /// Traverse over a type to get its nullability. For example, if T is the type
 /// Struct3Arg<int * _Nonnull, int, pair<int * _Nullable, int *>> * _Nonnull,
 /// the resulting nullability annotations will be {_Nonnull, _Nonnull,
@@ -88,25 +88,27 @@ TypeNullability getNullabilityAnnotationsFromType(
 
 /// Prints QualType's underlying canonical type, annotated with nullability.
 /// See rebuildWithNullability().
-std::string printWithNullability(QualType, const TypeNullability&, ASTContext&);
+std::string printWithNullability(QualType, const TypeNullability &,
+                                 ASTContext &);
 /// Returns an equivalent type annotated with the provided nullability.
 /// Any existing sugar (including nullability) is discarded.
 /// rebuildWithNullability(int *, {Nullable}) ==> int * _Nullable.
-QualType rebuildWithNullability(QualType, const TypeNullability&, ASTContext&);
+QualType rebuildWithNullability(QualType, const TypeNullability &,
+                                ASTContext &);
 
 /// Computes the number of pointer slots within a type.
 /// Each of these could conceptually be nullable, so this is the length of
 /// the nullability vector computed by getNullabilityAnnotationsFromType().
 unsigned countPointersInType(QualType T);
-unsigned countPointersInType(const Expr* E);
+unsigned countPointersInType(const Expr *E);
 unsigned countPointersInType(TemplateArgument TA);
-unsigned countPointersInType(const DeclContext* DC);
+unsigned countPointersInType(const DeclContext *DC);
 
 /// Returns the type of an expression for the purposes of nullability.
 /// This handles wrinkles in the type system like BoundMember.
-QualType exprType(const Expr* E);
+QualType exprType(const Expr *E);
 
-TypeNullability unspecifiedNullability(const Expr* E);
+TypeNullability unspecifiedNullability(const Expr *E);
 
 }  // namespace clang::tidy::nullability
 

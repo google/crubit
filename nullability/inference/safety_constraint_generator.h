@@ -39,9 +39,9 @@ class SafetyConstraintGenerator {
   // PointerNullabilityAnalysis. Assumes that `State` includes pointer
   // nullability state as set by PointerNullabilityAnalysis.
   void collectConstraints(
-      const clang::CFGElement& Element,
-      const clang::dataflow::DataflowAnalysisState<LatticeType>& State,
-      clang::ASTContext& Context);
+      const clang::CFGElement &Element,
+      const clang::dataflow::DataflowAnalysisState<LatticeType> &State,
+      clang::ASTContext &Context);
 
   // Retrieves constraints gathered thus far. Until all analyzed CFGElements
   // have been processed by `collectConstraints`, the return value will not
@@ -52,15 +52,15 @@ class SafetyConstraintGenerator {
   //
   // Constraints take the form of boolean expressions that must be satisfiable
   // in order for the processed code to be null-safe.
-  const llvm::DenseSet<clang::dataflow::BoolValue*>& constraints() const {
+  const llvm::DenseSet<clang::dataflow::BoolValue *> &constraints() const {
     return Constraints;
   }
 
  private:
-  llvm::DenseSet<clang::dataflow::BoolValue*> Constraints;
+  llvm::DenseSet<clang::dataflow::BoolValue *> Constraints;
   clang::dataflow::CFGMatchSwitch<
       const clang::dataflow::TransferStateForDiagnostics<LatticeType>,
-      clang::dataflow::BoolValue*>
+      clang::dataflow::BoolValue *>
       ConstraintCollector;
 };
 }  // namespace clang::tidy::nullability

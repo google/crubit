@@ -10,8 +10,8 @@ namespace {
 
 TEST(PointerNullabilityTest, Arrays) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nullable x[2][2];
-    int* _Nonnull y[2][2];
+    int *_Nullable x[2][2];
+    int *_Nonnull y[2][2];
 
     void target() {
       __assert_nullability<NK_nullable>(x[0][1]);

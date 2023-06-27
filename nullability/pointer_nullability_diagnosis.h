@@ -33,9 +33,9 @@ class PointerNullabilityDiagnoser {
   /// TODO(b/233582219): Extend diagnosis to return more information, e.g. the
   /// type of violation.
   std::optional<CFGElement> diagnose(
-      const CFGElement* Elt, ASTContext& Ctx,
-      const dataflow::TransferStateForDiagnostics<PointerNullabilityLattice>&
-          State) {
+      const CFGElement *Elt, ASTContext &Ctx,
+      const dataflow::TransferStateForDiagnostics<PointerNullabilityLattice>
+          &State) {
     return Diagnoser(*Elt, Ctx, State);
   }
 

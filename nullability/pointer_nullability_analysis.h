@@ -29,7 +29,7 @@ class PointerNullabilityAnalysis
   PointerNullabilityLattice::NonFlowSensitiveState NFS;
 
  public:
-  explicit PointerNullabilityAnalysis(ASTContext& context);
+  explicit PointerNullabilityAnalysis(ASTContext &context);
 
   PointerNullabilityLattice initialElement() {
     return PointerNullabilityLattice(NFS);
@@ -59,16 +59,16 @@ class PointerNullabilityAnalysis
   //
   // For now, only the top-level nullability is assigned, and the returned
   // variables are only associated with direct reads of pointer values from D.
-  PointerTypeNullability assignNullabilityVariable(const ValueDecl* D,
-                                                   dataflow::Arena&);
+  PointerTypeNullability assignNullabilityVariable(const ValueDecl *D,
+                                                   dataflow::Arena &);
 
-  void transfer(const CFGElement& Elt, PointerNullabilityLattice& Lattice,
-                dataflow::Environment& Env);
+  void transfer(const CFGElement &Elt, PointerNullabilityLattice &Lattice,
+                dataflow::Environment &Env);
 
-  bool merge(QualType Type, const dataflow::Value& Val1,
-             const dataflow::Environment& Env1, const dataflow::Value& Val2,
-             const dataflow::Environment& Env2, dataflow::Value& MergedVal,
-             dataflow::Environment& MergedEnv) override;
+  bool merge(QualType Type, const dataflow::Value &Val1,
+             const dataflow::Environment &Env1, const dataflow::Value &Val2,
+             const dataflow::Environment &Env2, dataflow::Value &MergedVal,
+             dataflow::Environment &MergedEnv) override;
 
  private:
   // Applies non-flow-sensitive transfer functions on statements

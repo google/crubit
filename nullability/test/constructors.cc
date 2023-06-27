@@ -45,10 +45,10 @@ TEST(PointerNullabilityTest, ConstructExpr) {
   // Constructor call in a base initializer.
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct TakeNonnull {
-      explicit TakeNonnull(int* _Nonnull);
+      explicit TakeNonnull(int *_Nonnull);
     };
     struct target : TakeNonnull {
-      target(int* _Nullable ptr_nullable)  // Forced line break.
+      target(int *_Nullable ptr_nullable)  // Forced line break.
           : TakeNonnull(ptr_nullable)      // [[unsafe]]
       {}
     };
@@ -56,9 +56,9 @@ TEST(PointerNullabilityTest, ConstructExpr) {
 
   // Call to a delegating constructor.
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nullable makeNullable();
+    int *_Nullable makeNullable();
     struct target {
-      target(int* _Nonnull);
+      target(int *_Nonnull);
       target()                      // Forced line break.
           : target(makeNullable())  // [[unsafe]]
       {}
@@ -68,11 +68,11 @@ TEST(PointerNullabilityTest, ConstructExpr) {
 
 TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nullable makeNullable();
+    int *_Nullable makeNullable();
     struct target {
-      int* _Nonnull ptr_nonnull;
-      int* _Nullable ptr_nullable;
-      int* ptr_unannotated;
+      int *_Nonnull ptr_nonnull;
+      int *_Nullable ptr_nullable;
+      int *ptr_unannotated;
       target()
           : ptr_nonnull(makeNullable()),  // [[unsafe]]
             ptr_nullable(makeNullable()),
@@ -81,11 +81,11 @@ TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    int* _Nonnull makeNonnull();
+    int *_Nonnull makeNonnull();
     struct target {
-      int* _Nonnull ptr_nonnull;
-      int* _Nullable ptr_nullable;
-      int* ptr_unannotated;
+      int *_Nonnull ptr_nonnull;
+      int *_Nullable ptr_nullable;
+      int *ptr_unannotated;
       target()
           : ptr_nonnull(makeNonnull()),
             ptr_nullable(makeNonnull()),

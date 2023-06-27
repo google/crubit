@@ -25,8 +25,8 @@ TEST(PointerNullabilityTest, AssertNullability) {
   // Concrete struct.
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct StructNonnullNullable {
-      int* _Nonnull nonnull;
-      int* _Nullable nullable;
+      int *_Nonnull nonnull;
+      int *_Nullable nullable;
     };
 
     void target(StructNonnullNullable p) {
@@ -68,7 +68,7 @@ TEST(PointerNullabilityTest, AssertNullability) {
     template <int I0, typename T1, typename T2>
     struct Struct3ArgWithInt {};
 
-    void target(Struct3ArgWithInt<2147483647, int* _Nullable, int* _Nonnull> p) {
+    void target(Struct3ArgWithInt<2147483647, int *_Nullable, int *_Nonnull> p) {
       __assert_nullability<>(p);             // [[unsafe]]
       __assert_nullability<NK_nonnull>(p);   // [[unsafe]]
       __assert_nullability<NK_nullable>(p);  // [[unsafe]]
@@ -111,13 +111,13 @@ TEST(PointerNullabilityTest, AssertNullability) {
   // Struct with two template parameters substituted with concrete structs.
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct StructUnknownNullable {
-      int* unknown;
-      int* _Nullable nullable;
+      int *unknown;
+      int *_Nullable nullable;
     };
 
     struct StructNullableNonnull {
-      int* _Nullable nullable;
-      int* _Nonnull nonnull;
+      int *_Nullable nullable;
+      int *_Nonnull nonnull;
     };
 
     template <typename T1, typename T2>
@@ -195,7 +195,7 @@ TEST(PointerNullabilityTest, AssertNullability) {
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable p, int* _Nonnull q, int* r) {
+    void target(int *_Nullable p, int *_Nonnull q, int *r) {
       __assert_nullability<NK_nonnull, NK_nullable>(&p);
       __assert_nullability<NK_nonnull, NK_nonnull>(&q);
       __assert_nullability<NK_nonnull>(&*p);  // [[unsafe]]
