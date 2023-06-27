@@ -20,9 +20,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Basic/Specifiers.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
+namespace clang::tidy::nullability {
 
 using ast_matchers::MatchFinder;
 using dataflow::CFGMatchSwitchBuilder;
@@ -308,6 +306,4 @@ auto buildDiagnoser() {
 PointerNullabilityDiagnoser::PointerNullabilityDiagnoser()
     : Diagnoser(buildDiagnoser()) {}
 
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+}  // namespace clang::tidy::nullability

@@ -7,9 +7,7 @@
 #include "nullability/test/check_diagnostics.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
+namespace clang::tidy::nullability {
 namespace {
 
 TEST(PointerNullabilityTest, NonNullFieldsOfPointerType) {
@@ -127,6 +125,4 @@ TEST(PointerNullabilityTest, MergePointersWithoutNullState) {
 }
 
 }  // namespace
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+}  // namespace clang::tidy::nullability

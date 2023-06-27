@@ -7,9 +7,7 @@
 #include "clang/AST/OperationKinds.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
+namespace clang::tidy::nullability {
 
 using ast_matchers::anyOf;
 using ast_matchers::binaryOperator;
@@ -65,6 +63,4 @@ Matcher<CXXCtorInitializer> isCtorMemberInitializer() {
   return cxxCtorInitializer(isMemberInitializer());
 }
 
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+}  // namespace clang::tidy::nullability

@@ -27,9 +27,7 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
+namespace clang::tidy::nullability {
 
 using ast_matchers::MatchFinder;
 using dataflow::BoolValue;
@@ -779,6 +777,4 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
   return true;
 }
 
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+}  // namespace clang::tidy::nullability

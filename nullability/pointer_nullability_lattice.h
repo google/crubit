@@ -15,9 +15,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
+namespace clang::tidy::nullability {
 
 class PointerNullabilityLattice {
  private:
@@ -79,8 +77,6 @@ inline std::ostream &operator<<(std::ostream &OS,
   return OS << "noop";
 }
 
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+}  // namespace clang::tidy::nullability
 
 #endif  // CRUBIT_NULLABILITY_POINTER_NULLABILITY_LATTICE_H_

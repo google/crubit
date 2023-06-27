@@ -21,9 +21,7 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/Specifiers.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
+namespace clang::tidy::nullability {
 
 /// Returns the `PointerValue` allocated to `PointerExpr` if available.
 /// Otherwise, returns nullptr.
@@ -124,8 +122,6 @@ void dump(const T &Node, llvm::raw_ostream &OS) {
   clang::ASTDumper(OS, /*ShowColors=*/false).Visit(Node);
 }
 
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+}  // namespace clang::tidy::nullability
 
 #endif  // CRUBIT_NULLABILITY_POINTER_NULLABILITY_H_

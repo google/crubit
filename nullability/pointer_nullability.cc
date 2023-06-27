@@ -9,9 +9,7 @@
 #include "clang/Basic/Specifiers.h"
 #include "llvm/ADT/StringRef.h"
 
-namespace clang {
-namespace tidy {
-namespace nullability {
+namespace clang::tidy::nullability {
 
 using dataflow::AtomicBoolValue;
 using dataflow::BoolValue;
@@ -90,6 +88,4 @@ NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
                                      : NullabilityKind::Unspecified;
 }
 
-}  // namespace nullability
-}  // namespace tidy
-}  // namespace clang
+}  // namespace clang::tidy::nullability
