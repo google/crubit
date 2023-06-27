@@ -101,9 +101,8 @@ TEST(SafetyConstraintGenerator, GeneratesNoConstraintsForEmptyFunctionDefn) {
     void Target() {}
   )cc";
   EXPECT_THAT(Src, ProducesSafetyConstraints(
-                       [](auto Environment, auto ParamPointerValues) {
-                         return IsEmpty();
-                       }));
+                       [](const dataflow::Environment& Environment,
+                          auto ParamPointerValues) { return IsEmpty(); }));
 }
 
 TEST(SafetyConstraintGenerator, GeneratesNoConstraintsForUnusedParam) {
@@ -111,20 +110,21 @@ TEST(SafetyConstraintGenerator, GeneratesNoConstraintsForUnusedParam) {
     void Target(int* p) {}
   )cc";
   EXPECT_THAT(Src, ProducesSafetyConstraints(
-                       [](auto Environment, auto ParamPointerValues) {
-                         return IsEmpty();
-                       }));
+                       [](const dataflow::Environment& Environment,
+                          auto ParamPointerValues) { return IsEmpty(); }));
 }
 
 TEST(SafetyConstraintGenerator, GeneratesNotIsNullConstraintForDeref) {
   static constexpr llvm::StringRef Src = R"cc(
     void Target(int* p) { *p; }
   )cc";
-  EXPECT_THAT(Src, ProducesSafetyConstraints([](auto Environment,
-                                                auto ParamPointerValues) {
-                return UnorderedElementsAre(&Environment.makeNot(
-                    getPointerNullState(*ParamPointerValues[0]).second));
-              }));
+  EXPECT_THAT(
+      Src,
+      ProducesSafetyConstraints([](const dataflow::Environment& Environment,
+                                   auto ParamPointerValues) {
+        return UnorderedElementsAre(&Environment.makeNot(
+            getPointerNullState(*ParamPointerValues[0]).second));
+      }));
 }
 
 TEST(SafetyConstraintGenerator,
@@ -134,11 +134,13 @@ TEST(SafetyConstraintGenerator,
       if (p == nullptr) *p;
     }
   )cc";
-  EXPECT_THAT(Src, ProducesSafetyConstraints([](auto Environment,
-                                                auto ParamPointerValues) {
-                return UnorderedElementsAre(&Environment.makeNot(
-                    getPointerNullState(*ParamPointerValues[0]).second));
-              }));
+  EXPECT_THAT(
+      Src,
+      ProducesSafetyConstraints([](const dataflow::Environment& Environment,
+                                   auto ParamPointerValues) {
+        return UnorderedElementsAre(&Environment.makeNot(
+            getPointerNullState(*ParamPointerValues[0]).second));
+      }));
 }
 
 TEST(SafetyConstraintGenerator, GeneratesConstraintsForAllParams) {
@@ -149,7 +151,8 @@ TEST(SafetyConstraintGenerator, GeneratesConstraintsForAllParams) {
       *r;
     }
   )cc";
-  EXPECT_THAT(Src, ProducesSafetyConstraints([](auto Environment,
+  EXPECT_THAT(Src, ProducesSafetyConstraints([](const dataflow::Environment&
+                                                    Environment,
                                                 auto ParamPointerValues) {
                 return UnorderedElementsAre(
                     &Environment.makeNot(
@@ -169,9 +172,8 @@ TEST(SafetyConstraintGenerator, DoesntGenerateConstraintForNullCheckedPtr) {
     }
   )cc";
   EXPECT_THAT(Src, ProducesSafetyConstraints(
-                       [](auto Environment, auto ParamPointerValues) {
-                         return IsEmpty();
-                       }));
+                       [](const dataflow::Environment& Environment,
+                          auto ParamPointerValues) { return IsEmpty(); }));
 }
 
 TEST(SafetyConstraintGenerator,
@@ -184,11 +186,13 @@ TEST(SafetyConstraintGenerator,
       p = getPtr();
     }
   )cc";
-  EXPECT_THAT(Src, ProducesSafetyConstraints([](auto Environment,
-                                                auto ParamPointerValues) {
-                return UnorderedElementsAre(&Environment.makeNot(
-                    getPointerNullState(*ParamPointerValues[0]).second));
-              }));
+  EXPECT_THAT(
+      Src,
+      ProducesSafetyConstraints([](const dataflow::Environment& Environment,
+                                   auto ParamPointerValues) {
+        return UnorderedElementsAre(&Environment.makeNot(
+            getPointerNullState(*ParamPointerValues[0]).second));
+      }));
 }
 
 TEST(SafetyConstraintGenerator,
@@ -203,7 +207,8 @@ TEST(SafetyConstraintGenerator,
   )cc";
   EXPECT_THAT(
       Src,
-      ProducesSafetyConstraints([](auto Environment, auto ParamPointerValues) {
+      ProducesSafetyConstraints([](const dataflow::Environment& Environment,
+                                   auto ParamPointerValues) {
         return AllOf(SizeIs(1),
                      // TODO(b/268440048) Figure out how to access and assert
                      // equality for the constraint that this is.

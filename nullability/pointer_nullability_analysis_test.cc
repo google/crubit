@@ -6,9 +6,9 @@
 
 #include <memory>
 #include <optional>
+#include <utility>
 
 #include "nullability/pointer_nullability.h"
-#include "nullability/pointer_nullability_lattice.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/Analysis/CFG.h"
@@ -16,7 +16,6 @@
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
-#include "clang/Analysis/FlowSensitive/TypeErasedDataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
@@ -64,10 +63,10 @@ TEST(PointerNullabilityAnalysis, AssignNullabilityVariable) {
   auto CFCtx = dataflow::ControlFlowContext::build(*Target);
   PointerNullabilityAnalysis Analysis(AST.context());
   auto [PNonnull, PNullable] = Analysis.assignNullabilityVariable(P, A);
-  auto ExitState =
+  auto ExitState = std::move(
       *cantFail(dataflow::runDataflowAnalysis(
                     *CFCtx, Analysis, dataflow::Environment(DACtx, *Target)))
-           .front();
+           .front());
   // Get the nullability model of the return value.
   auto *Ret =
       dyn_cast_or_null<dataflow::PointerValue>(ExitState.Env.getReturnValue());
