@@ -6,10 +6,9 @@
 
 #include <memory>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/pointer_nullability.h"
+#include "nullability/proto_matchers.h"
 #include "clang/AST/Type.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
@@ -17,10 +16,11 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "llvm/ADT/DenseSet.h"
+#include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
+#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
-using ::testing::EqualsProto;
 
 class ResolveConstraintsTest : public testing::Test {
  public:
@@ -58,8 +58,7 @@ TEST_F(ResolveConstraintsTest, UnsatisfiableConstraintsProducesDefaultValues) {
   clang::dataflow::BoolValue &NotAtom1 = Environment.makeNot(Atom1);
   const llvm::DenseSet<clang::dataflow::BoolValue *> Constraints = {&Atom1,
                                                                     &NotAtom1};
-  EXPECT_THAT(resolveConstraints(Constraints, Pointer),
-              EqualsProto(NullabilityConstraint::default_instance()));
+  EXPECT_THAT(resolveConstraints(Constraints, Pointer), EqualsProto(""));
 }
 
 TEST_F(ResolveConstraintsTest, NotIsNullConstraintImpliesNonNull) {

@@ -31,12 +31,15 @@ cc_test(
         ":analyze_target_for_test",
         ":infer_nullability_constraints",
         ":inference_cc_proto",
+        "//nullability:proto_matchers",
         "@absl//absl/log:check",
-        "@com_google_googletest//:gtest_main",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
     ],
 )
 
@@ -88,10 +91,13 @@ cc_test(
         ":inference_cc_proto",
         ":resolve_constraints",
         "//nullability:pointer_nullability",
-        "@com_google_googletest//:gtest_main",
+        "//nullability:proto_matchers",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
     ],
 )
 
@@ -105,12 +111,14 @@ cc_test(
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
         "@absl//absl/log:check",
-        "@com_google_googletest//:gtest_main",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
     ],
 )
 

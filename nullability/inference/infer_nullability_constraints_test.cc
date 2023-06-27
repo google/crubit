@@ -7,11 +7,10 @@
 #include <string>
 #include <utility>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/log/check.h"
 #include "nullability/inference/analyze_target_for_test.h"
 #include "nullability/inference/inference.proto.h"
+#include "nullability/proto_matchers.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -19,12 +18,13 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
+#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
 
 using ::clang::ast_matchers::MatchFinder;
-using ::testing::EqualsProto;
 using ::testing::IsEmpty;
 using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
@@ -56,8 +56,8 @@ MATCHER_P(Parameter, Name, std::string("is a parameter named ") + Name) {
     return false;
   }
 
-  return testing::ExplainMatchResult(testing::StrEq(Name),
-                                     Identifier->getName(), result_listener);
+  return testing::ExplainMatchResult(Name, Identifier->getName(),
+                                     result_listener);
 }
 
 TEST(InferAnnotationsTest, NoParams) {

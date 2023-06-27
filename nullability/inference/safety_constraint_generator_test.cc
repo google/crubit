@@ -8,8 +8,6 @@
 #include <optional>
 #include <vector>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/log/check.h"
 #include "nullability/inference/analyze_target_for_test.h"
 #include "nullability/pointer_nullability.h"
@@ -27,6 +25,8 @@
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
+#include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
+#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {

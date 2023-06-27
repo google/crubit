@@ -147,3 +147,16 @@ cc_test(
         "@llvm-project//third-party/unittest:gtest_main",
     ],
 )
+
+cc_library(
+    name = "proto_matchers",
+    testonly = 1,
+    srcs = ["proto_matchers.cc"],
+    hdrs = ["proto_matchers.h"],
+    visibility = [":__subpackages__"],
+    deps = [
+        "//third_party/protobuf",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
+    ],
+)
