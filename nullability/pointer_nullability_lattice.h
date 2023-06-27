@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_NULLABILITY_POINTER_NULLABILITY_LATTICE_H_
-#define THIRD_PARTY_CRUBIT_NULLABILITY_POINTER_NULLABILITY_LATTICE_H_
+#ifndef CRUBIT_NULLABILITY_POINTER_NULLABILITY_LATTICE_H_
+#define CRUBIT_NULLABILITY_POINTER_NULLABILITY_LATTICE_H_
 
 #include <optional>
 #include <ostream>
@@ -83,4 +83,4 @@ inline std::ostream &operator<<(std::ostream &OS,
 }  // namespace tidy
 }  // namespace clang
 
-#endif  // THIRD_PARTY_CRUBIT_NULLABILITY_POINTER_NULLABILITY_LATTICE_H_
+#endif  // CRUBIT_NULLABILITY_POINTER_NULLABILITY_LATTICE_H_

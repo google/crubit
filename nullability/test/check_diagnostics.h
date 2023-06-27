@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_
-#define THIRD_PARTY_CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_
+#ifndef CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_
+#define CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_
 
 #include "llvm/ADT/StringRef.h"
 
@@ -22,4 +22,4 @@ bool checkDiagnostics(llvm::StringRef SourceCode);
 }  // namespace tidy
 }  // namespace clang
 
-#endif  // THIRD_PARTY_CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_
+#endif  // CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_
