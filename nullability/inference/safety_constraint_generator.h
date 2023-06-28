@@ -38,10 +38,10 @@ class SafetyConstraintGenerator {
   // Intended for use as a PostVisitCFG after running
   // PointerNullabilityAnalysis. Assumes that `State` includes pointer
   // nullability state as set by PointerNullabilityAnalysis.
-  void collectConstraints(
-      const clang::CFGElement &Element,
-      const clang::dataflow::DataflowAnalysisState<LatticeType> &State,
-      clang::ASTContext &Context);
+  void collectConstraints(const clang::CFGElement &Element,
+                          const LatticeType &Lattice,
+                          const dataflow::Environment &Env,
+                          clang::ASTContext &Context);
 
   // Retrieves constraints gathered thus far. Until all analyzed CFGElements
   // have been processed by `collectConstraints`, the return value will not

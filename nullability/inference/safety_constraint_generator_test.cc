@@ -6,23 +6,24 @@
 
 #include <memory>
 #include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/log/check.h"
-#include "nullability/inference/analyze_target_for_test.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
-#include "nullability/pointer_nullability_lattice.h"
 #include "clang/AST/Decl.h"
-#include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
-#include "clang/Analysis/FlowSensitive/ControlFlowContext.h"
-#include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/DebugSupport.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
-#include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
+#include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
@@ -31,149 +32,115 @@
 namespace clang::tidy::nullability {
 namespace {
 
-using ::testing::AllOf;
+using ::std::replace;
+using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 using ::testing::Not;
-using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 
-// Analyzes the to-be-matched code snippet with PointerNullabilityAnalysis, and
-// then matches against the constraints produced by SafetyConstraintGenerator
-// for the snippet.
-//
-// `ConstraintsMatcherProducer` should be a function taking the Environment
-// and a vector of PointerValue* representing the Target function's parameters
-// and returning a matcher for the generated constraints. This allows for
-// matching of the constraints against individual parameter null state
-// properties.
-MATCHER_P(ProducesSafetyConstraints, ConstraintsMatcherProducer, "") {
-  bool Success = false;
-  auto MatcherProducer = ConstraintsMatcherProducer;
-  analyzeTargetForTest(
-      arg, [&Success, &MatcherProducer, &result_listener](
-               const clang::FunctionDecl& Func,
-               const clang::ast_matchers::MatchFinder::MatchResult& Result) {
-        QCHECK(Func.hasBody()) << "Matched function has no body.";
-        QCHECK(Result.Context) << "Missing ASTContext from match result.";
-        llvm::Expected<clang::dataflow::ControlFlowContext> ControlFlowContext =
-            clang::dataflow::ControlFlowContext::build(Func);
-        clang::dataflow::DataflowAnalysisContext AnalysisContext(
-            std::make_unique<clang::dataflow::WatchedLiteralsSolver>());
-        clang::dataflow::Environment Environment(AnalysisContext, Func);
-        PointerNullabilityAnalysis Analysis(*Result.Context);
-        SafetyConstraintGenerator Generator;
-        llvm::Expected<std::vector<std::optional<
-            clang::dataflow::DataflowAnalysisState<PointerNullabilityLattice>>>>
-            BlockToOutputStateOrError = clang::dataflow::runDataflowAnalysis(
-                *ControlFlowContext, Analysis, Environment,
-                [&Generator, &Result](
-                    const clang::CFGElement& Element,
-                    const clang::dataflow::DataflowAnalysisState<
-                        PointerNullabilityLattice>& State) {
-                  Generator.collectConstraints(Element, State, *Result.Context);
-                });
+// Returns names for nullability atoms of a function's params.
+// Given a function `void foo(int *x)`, returns: {
+//   Env.getPointerNullState(x).first => "x.is_known",
+//   Env.getPointerNullState(x).second => "x.is_null",
+// }
+llvm::DenseMap<const dataflow::AtomicBoolValue *, std::string>
+getNullabilityVariableNames(const FunctionDecl &Func,
+                            const dataflow::Environment &Env) {
+  llvm::DenseMap<const dataflow::AtomicBoolValue *, std::string> Result;
+  for (unsigned I = 0; I < Func.param_size(); ++I) {
+    auto &Param = *Func.getParamDecl(I);
+    if (auto *Val = dyn_cast_or_null<clang::dataflow::PointerValue>(
+            Env.getValue(Param));
+        Val && hasPointerNullState(*Val)) {
+      std::string Name = Param.getName().str();
 
-        QCHECK(BlockToOutputStateOrError)
-            << "No output state from dataflow analysis.";
+      auto [Known, Null] = getPointerNullState(*Val);
+      Result[&Known] = Name + ".is_known";
+      Result[&Null] = Name + ".is_null";
+    }
+  }
+  return Result;
+}
 
-        // TODO(b/268440048) When we can retrieve the improved atoms
-        // representing annotations, stop using the Environment to retrieve the
-        // initial Environment PointerValues, which won't work for local
-        // variables down the road.
-        std::vector<clang::dataflow::PointerValue*> ParamDeclPointerValues;
-        for (const auto* P : Func.parameters()) {
-          CHECK(P != nullptr);
-          auto* Val = clang::dyn_cast_or_null<clang::dataflow::PointerValue>(
-              Environment.getValue(*P));
-          if (Val) {
-            ParamDeclPointerValues.push_back(Val);
-          }
+// Analyzes the "target" function in the code, and returns safety constraints.
+// These are expressed as strings (AtomicBoolValue* won't live long enough).
+std::vector<std::string> getSafetyConstraints(llvm::StringRef Code) {
+  using namespace ast_matchers;
+  std::vector<std::string> Result;
+  SafetyConstraintGenerator Generator;
+  auto Inputs =
+      dataflow::test::AnalysisInputs<PointerNullabilityAnalysis>(
+          Code,
+          functionDecl(hasName("target"), hasBody(compoundStmt()))
+              .bind("target"),
+          [&](ASTContext &Ctx, const dataflow::Environment &E) {
+            return PointerNullabilityAnalysis(Ctx);
+          })
+          .withPostVisitCFG([&](ASTContext &AST, const CFGElement &Elt,
+                                auto &&State) {
+            Generator.collectConstraints(Elt, State.Lattice, State.Env, AST);
+          });
+  auto Err = dataflow::test::checkDataflow(
+      std::move(Inputs), [&](const dataflow::test::AnalysisOutputs &Out) {
+        auto Names = getNullabilityVariableNames(*Out.Target, Out.InitEnv);
+        for (const auto *Constraint : Generator.constraints()) {
+          Result.push_back(dataflow::debugString(*Constraint, Names));
+          // Debug representation is ugly, drop newlines and excess spaces.
+          replace(Result.back().begin(), Result.back().end(), '\n', ' ');
+          llvm::erase_if(Result.back(),
+                         [](char &C) { return C == ' ' && *(&C + 1) == ' '; });
         }
-        Success = ExplainMatchResult(
-            MatcherProducer(Environment, ParamDeclPointerValues),
-            Generator.constraints(), result_listener);
       });
-  return Success;
+  CHECK(!Err) << toString(std::move(Err));
+  return Result;
 }
 
 TEST(SafetyConstraintGenerator, GeneratesNoConstraintsForEmptyFunctionDefn) {
-  static constexpr llvm::StringRef Src = R"cc(
-    void Target() {}
-  )cc";
-  EXPECT_THAT(Src, ProducesSafetyConstraints(
-                       [](const dataflow::Environment& Environment,
-                          auto ParamPointerValues) { return IsEmpty(); }));
+  EXPECT_THAT(getSafetyConstraints("void target() {}"), IsEmpty());
 }
 
 TEST(SafetyConstraintGenerator, GeneratesNoConstraintsForUnusedParam) {
-  static constexpr llvm::StringRef Src = R"cc(
-    void Target(int *p) {}
-  )cc";
-  EXPECT_THAT(Src, ProducesSafetyConstraints(
-                       [](const dataflow::Environment& Environment,
-                          auto ParamPointerValues) { return IsEmpty(); }));
+  EXPECT_THAT(getSafetyConstraints("void target(int *p) {}"), IsEmpty());
 }
 
 TEST(SafetyConstraintGenerator, GeneratesNotIsNullConstraintForDeref) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int *p) { *p; }
+    void target(int *p) { *p; }
   )cc";
-  EXPECT_THAT(
-      Src,
-      ProducesSafetyConstraints([](const dataflow::Environment& Environment,
-                                   auto ParamPointerValues) {
-        return UnorderedElementsAre(&Environment.makeNot(
-            getPointerNullState(*ParamPointerValues[0]).second));
-      }));
+  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre("(not p.is_null)"));
 }
 
 TEST(SafetyConstraintGenerator,
      GeneratesNotIsNullConstraintForImproperlyGuardedDeref) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int *p) {
+    void target(int *p) {
       if (p == nullptr) *p;
     }
   )cc";
-  EXPECT_THAT(
-      Src,
-      ProducesSafetyConstraints([](const dataflow::Environment& Environment,
-                                   auto ParamPointerValues) {
-        return UnorderedElementsAre(&Environment.makeNot(
-            getPointerNullState(*ParamPointerValues[0]).second));
-      }));
+  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre("(not p.is_null)"));
 }
 
 TEST(SafetyConstraintGenerator, GeneratesConstraintsForAllParams) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int *p, int *q, int *r) {
+    void target(int *p, int *q, int *r) {
       *p;
       *q;
       *r;
     }
   )cc";
-  EXPECT_THAT(Src, ProducesSafetyConstraints([](const dataflow::Environment&
-                                                    Environment,
-                                                auto ParamPointerValues) {
-                return UnorderedElementsAre(
-                    &Environment.makeNot(
-                        getPointerNullState(*ParamPointerValues[0]).second),
-                    &Environment.makeNot(
-                        getPointerNullState(*ParamPointerValues[1]).second),
-                    &Environment.makeNot(
-                        getPointerNullState(*ParamPointerValues[2]).second));
-              }));
+  EXPECT_THAT(getSafetyConstraints(Src),
+              UnorderedElementsAre("(not p.is_null)", "(not q.is_null)",
+                                   "(not r.is_null)"));
 }
 
 TEST(SafetyConstraintGenerator, DoesntGenerateConstraintForNullCheckedPtr) {
   static constexpr llvm::StringRef Src = R"cc(
-    void Target(int *p) {
+    void target(int *p) {
       if (p) *p;
       if (p != nullptr) *p;
     }
   )cc";
-  EXPECT_THAT(Src, ProducesSafetyConstraints(
-                       [](const dataflow::Environment& Environment,
-                          auto ParamPointerValues) { return IsEmpty(); }));
+  EXPECT_THAT(getSafetyConstraints(Src), IsEmpty());
 }
 
 TEST(SafetyConstraintGenerator,
@@ -181,18 +148,12 @@ TEST(SafetyConstraintGenerator,
   static constexpr llvm::StringRef Src = R"cc(
     int *getPtr();
 
-    void Target(int *p) {
+    void target(int *p) {
       *p;
       p = getPtr();
     }
   )cc";
-  EXPECT_THAT(
-      Src,
-      ProducesSafetyConstraints([](const dataflow::Environment& Environment,
-                                   auto ParamPointerValues) {
-        return UnorderedElementsAre(&Environment.makeNot(
-            getPointerNullState(*ParamPointerValues[0]).second));
-      }));
+  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre("(not p.is_null)"));
 }
 
 TEST(SafetyConstraintGenerator,
@@ -200,21 +161,15 @@ TEST(SafetyConstraintGenerator,
   static constexpr llvm::StringRef Src = R"cc(
     int *getPtr();
 
-    void Target(int *p) {
+    void target(int *p) {
       p = getPtr();
       *p;
     }
   )cc";
-  EXPECT_THAT(
-      Src,
-      ProducesSafetyConstraints([](const dataflow::Environment& Environment,
-                                   auto ParamPointerValues) {
-        return AllOf(SizeIs(1),
-                     // TODO(b/268440048) Figure out how to access and assert
-                     // equality for the constraint that this is.
-                     Not(UnorderedElementsAre(&Environment.makeNot(
-                         getPointerNullState(*ParamPointerValues[0]).second))));
-      }));
+  // TODO(b/268440048) Figure out how to access and assert
+  // equality for the constraint that this is.
+  // (We require the value that models the getPtr() result to be non-null)
+  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre(Not("(not p.is_null)")));
 }
 }  // namespace
 }  // namespace clang::tidy::nullability

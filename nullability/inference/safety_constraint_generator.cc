@@ -11,7 +11,7 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
-#include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
+#include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/MatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/DenseSet.h"
@@ -65,11 +65,10 @@ SafetyConstraintGenerator::SafetyConstraintGenerator()
     : ConstraintCollector(buildConstraintCollector()) {}
 
 void SafetyConstraintGenerator::collectConstraints(
-    const clang::CFGElement &Element,
-    const clang::dataflow::DataflowAnalysisState<LatticeType> &State,
-    clang::ASTContext &Context) {
+    const clang::CFGElement &Element, const LatticeType &Lattice,
+    const clang::dataflow::Environment &Env, clang::ASTContext &Context) {
   if (auto *Constraint =
-          ConstraintCollector(Element, Context, {State.Lattice, State.Env})) {
+          ConstraintCollector(Element, Context, {Lattice, Env})) {
     Constraints.insert(Constraint);
   }
 }

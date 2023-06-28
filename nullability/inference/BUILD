@@ -28,14 +28,15 @@ cc_test(
     name = "infer_nullability_constraints_test",
     srcs = ["infer_nullability_constraints_test.cc"],
     deps = [
-        ":analyze_target_for_test",
         ":infer_nullability_constraints",
         ":inference_cc_proto",
         "//nullability:proto_matchers",
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
-        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:testing",
+        "@llvm-project//clang/unittests:dataflow_testing_support",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
@@ -70,20 +71,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "analyze_target_for_test",
-    testonly = True,
-    srcs = ["analyze_target_for_test.cc"],
-    hdrs = ["analyze_target_for_test.h"],
-    deps = [
-        "@absl//absl/log:check",
-        "@llvm-project//clang:ast",
-        "@llvm-project//clang:ast_matchers",
-        "@llvm-project//clang:testing",
-        "@llvm-project//llvm:Support",
-    ],
-)
-
 cc_test(
     name = "resolve_constraints_test",
     srcs = ["resolve_constraints_test.cc"],
@@ -105,7 +92,6 @@ cc_test(
     name = "safety_constraint_generator_test",
     srcs = ["safety_constraint_generator_test.cc"],
     deps = [
-        ":analyze_target_for_test",
         ":safety_constraint_generator",
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
@@ -115,6 +101,8 @@ cc_test(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
+        "@llvm-project//clang:testing",
+        "@llvm-project//clang/unittests:dataflow_testing_support",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",

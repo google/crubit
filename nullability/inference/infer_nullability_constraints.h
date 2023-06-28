@@ -17,7 +17,7 @@ namespace clang::tidy::nullability {
 // Collects constraints on nullability annotations that could be added to the
 // types of Func's parameters based on the function's behavior and our
 // definition of null-safety.
-llvm::Expected<llvm::DenseMap<const clang::Decl *, NullabilityConstraint>>
+llvm::Expected<llvm::DenseMap<const clang::NamedDecl *, NullabilityConstraint>>
 inferNullabilityConstraints(const clang::FunctionDecl &Func,
                             clang::ASTContext &Context);
 

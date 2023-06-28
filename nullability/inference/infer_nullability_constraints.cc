@@ -74,7 +74,7 @@ bool isNonNullAnnotated(clang::QualType Type) {
   return false;
 }
 
-llvm::Expected<llvm::DenseMap<const clang::Decl *, NullabilityConstraint>>
+llvm::Expected<llvm::DenseMap<const clang::NamedDecl *, NullabilityConstraint>>
 inferNullabilityConstraints(const clang::FunctionDecl &Func,
                             clang::ASTContext &Context) {
   // We want to make sure we use the declaration that the body comes from,
@@ -87,7 +87,7 @@ inferNullabilityConstraints(const clang::FunctionDecl &Func,
   }
   CHECK(DeclWithBody);
 
-  llvm::DenseMap<const clang::Decl *, NullabilityConstraint> Results;
+  llvm::DenseMap<const clang::NamedDecl *, NullabilityConstraint> Results;
   llvm::Expected<clang::dataflow::ControlFlowContext> ControlFlowContext =
       clang::dataflow::ControlFlowContext::build(*DeclWithBody);
   if (!ControlFlowContext) return Results;
@@ -106,8 +106,8 @@ inferNullabilityConstraints(const clang::FunctionDecl &Func,
               const clang::CFGElement &Element,
               const clang::dataflow::DataflowAnalysisState<
                   PointerNullabilityLattice> &State) {
-            SafetyConstraintGenerator.collectConstraints(Element, State,
-                                                         Context);
+            SafetyConstraintGenerator.collectConstraints(Element, State.Lattice,
+                                                         State.Env, Context);
           });
   if (!BlockToOutputStateOrError) {
     return Results;
