@@ -69,9 +69,15 @@ std::optional<CFGElement> diagnoseArrow(
   return std::nullopt;
 }
 
-bool isIncompatibleArgumentList(ArrayRef<QualType> ParamTypes,
+bool isIncompatibleArgumentList(const FunctionProtoType &CalleeFPT,
                                 ArrayRef<const Expr *> Args,
                                 const Environment &Env, ASTContext &Ctx) {
+  auto ParamTypes = CalleeFPT.getParamTypes();
+  // C-style varargs cannot be annotated and therefore are unchecked.
+  if (CalleeFPT.isVariadic()) {
+    CHECK_GE(Args.size(), ParamTypes.size());
+    Args = Args.take_front(ParamTypes.size());
+  }
   CHECK_EQ(ParamTypes.size(), Args.size());
   for (unsigned int I = 0; I < Args.size(); ++I) {
     auto ParamType = ParamTypes[I].getNonReferenceType();
@@ -216,7 +222,6 @@ std::optional<CFGElement> diagnoseCallExpr(
   auto *CalleeFPT = CalleeType->getAs<FunctionProtoType>();
   if (!CalleeFPT) return std::nullopt;
 
-  auto ParamTypes = CalleeFPT->getParamTypes();
   ArrayRef<const Expr *> Args(CE->getArgs(), CE->getNumArgs());
   // The first argument of an member operator call expression is the implicit
   // object argument, which does not appear in the list of parameter types.
@@ -225,12 +230,7 @@ std::optional<CFGElement> diagnoseCallExpr(
       isa<CXXMethodDecl>(CE->getDirectCallee())) {
     Args = Args.drop_front();
   }
-  if (CalleeFPT->isVariadic()) {
-    CHECK_GE(Args.size(), ParamTypes.size());
-    Args = Args.take_front(ParamTypes.size());
-  }
-
-  return isIncompatibleArgumentList(ParamTypes, Args, State.Env,
+  return isIncompatibleArgumentList(*CalleeFPT, Args, State.Env,
                                     *Result.Context)
              ? std::optional<CFGElement>(CFGStmt(CE))
              : std::nullopt;
@@ -239,13 +239,11 @@ std::optional<CFGElement> diagnoseCallExpr(
 std::optional<CFGElement> diagnoseConstructExpr(
     const CXXConstructExpr *CE, const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
-  auto ConstructorParamTypes = CE->getConstructor()
-                                   ->getType()
-                                   ->getAs<FunctionProtoType>()
-                                   ->getParamTypes();
+  auto *CalleeFPT = CE->getConstructor()->getType()->getAs<FunctionProtoType>();
+  if (!CalleeFPT) return std::nullopt;
   ArrayRef<const Expr *> ConstructorArgs(CE->getArgs(), CE->getNumArgs());
-  return isIncompatibleArgumentList(ConstructorParamTypes, ConstructorArgs,
-                                    State.Env, *Result.Context)
+  return isIncompatibleArgumentList(*CalleeFPT, ConstructorArgs, State.Env,
+                                    *Result.Context)
              ? std::optional<CFGElement>(CFGStmt(CE))
              : std::nullopt;
 }

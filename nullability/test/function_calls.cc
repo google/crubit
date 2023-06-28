@@ -295,6 +295,19 @@ TEST(PointerNullabilityTest, CallVariadicFunction) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CallVariadicConstructor) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      S(int* _Nonnull, ...);
+    };
+    void target() {
+      int i = 0;
+      S(&i, nullptr, &i);
+      S(nullptr, nullptr, &i);  // [[unsafe]]
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, CallMemberOperatorNoParams) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct MakeNonnull {
