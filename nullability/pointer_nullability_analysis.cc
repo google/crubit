@@ -15,6 +15,7 @@
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTDumper.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/Stmt.h"
@@ -136,6 +137,12 @@ TypeNullability substituteNullabilityAnnotationsInClassTemplate(
         // TODO: handle nested templates, where associated decl != base type
         // (e.g. PointerNullabilityTest.MemberFunctionTemplateOfTemplateStruct)
         if (!Specialization || Specialization != ST->getAssociatedDecl())
+          return std::nullopt;
+        // TODO: The code below does not deal correctly with partial
+        // specializations. We should eventually handle these, but for now, just
+        // bail out.
+        if (isa<ClassTemplatePartialSpecializationDecl>(
+                ST->getReplacedParameter()->getDeclContext()))
           return std::nullopt;
 
         unsigned ArgIndex = ST->getIndex();

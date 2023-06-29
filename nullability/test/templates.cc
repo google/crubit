@@ -1189,5 +1189,24 @@ TEST(PointerNullabilityTest, ClassTemplateWithDefaultArgument) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, MethodOnPartialSpecialization) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <class T>
+    struct S {};
+    template <class T1, class T2>
+    struct pair {};
+    template <class T1, class T2>
+    struct S<pair<T1, T2>> {
+      T1 Foo(T1, T2);
+    };
+    void target(int* _Nonnull p1, char* _Nullable p2) {
+      S<pair<int* _Nonnull, char* _Nullable>> s;
+      // TODO: Should be NK_nonnull, but we don't treat partial specializations
+      // correctly yet.
+      __assert_nullability<NK_unspecified>(s.Foo(p1, p2));
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
