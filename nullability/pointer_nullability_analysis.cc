@@ -148,11 +148,17 @@ TypeNullability substituteNullabilityAnnotationsInClassTemplate(
         unsigned ArgIndex = ST->getIndex();
         auto TemplateArgs = Specialization->getTemplateArgs().asArray();
 
+        // TODO: If the type was substituted from a pack template argument,
+        // we must find the slice that pertains to this particular type.
+        // For now, just give up on resugaring this type.
+        if (ST->getPackIndex().has_value()) return std::nullopt;
+
         unsigned PointerCount =
             countPointersInType(Specialization->getDeclContext());
         for (auto TA : TemplateArgs.take_front(ArgIndex)) {
           PointerCount += countPointersInType(TA);
         }
+
         unsigned SliceSize = countPointersInType(TemplateArgs[ArgIndex]);
         return ArrayRef(BaseNullabilityAnnotations)
             .slice(PointerCount, SliceSize)

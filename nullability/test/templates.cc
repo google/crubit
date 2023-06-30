@@ -1208,5 +1208,20 @@ TEST(PointerNullabilityTest, MethodOnPartialSpecialization) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CallMethodTakingParameterPack) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <class... Ts>
+    struct S {
+      S<Ts...> Foo(Ts...);
+    };
+    void target(int* _Nonnull p1, char* _Nullable p2) {
+      S<int* _Nonnull, char* _Nullable> s;
+      // TODO: Should be [NK_nonnull, NK_nullable], but we don't treat parameter
+      // packs correctly yet.
+      __assert_nullability<NK_unspecified, NK_unspecified>(s.Foo(p1, p2));
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
