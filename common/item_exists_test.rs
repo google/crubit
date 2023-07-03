@@ -140,8 +140,8 @@ mod type_exists {
         mod m {
             pub struct A;
         }
-        item_exists::type_exists!(m::A);
-        item_exists::type_exists!(m::A);
+        _ = item_exists::type_exists!(m::A);
+        _ = item_exists::type_exists!(m::A);
     }
 }
 
