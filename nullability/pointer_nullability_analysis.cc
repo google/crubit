@@ -198,37 +198,29 @@ TypeNullability substituteNullabilityAnnotationsInFunctionTemplate(
       T,
       [&](const SubstTemplateTypeParmType *ST)
           -> std::optional<TypeNullability> {
-        auto *DRE = dyn_cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
-        if (DRE == nullptr) return std::nullopt;
-
         // TODO: Handle calls that use template argument deduction.
-
-        // Does this refer to a parameter of the function template?
-        // If not (e.g. nested templates, template specialization types in the
-        // return value), we handle the desugaring elsewhere.
-        auto *ReferencedFunction = dyn_cast<FunctionDecl>(DRE->getDecl());
-        if (!ReferencedFunction) return std::nullopt;
-        if (ReferencedFunction->getPrimaryTemplate() != ST->getAssociatedDecl())
-          return std::nullopt;
-
-        // Some or all of the template arguments may be deduced, and we won't
-        // see those on the `DeclRefExpr`. If the template argument was deduced,
-        // we don't have any sugar for it.
-        // TODO(b/268348533): Can we somehow obtain it from the function param
-        // it was deduced from?
-        // TODO(b/268345783): This check, as well as the index into
-        // `template_arguments` below, may be incorrect in the presence of
-        // parameters packs.  In function templates, parameter packs may appear
-        // anywhere in the parameter list. The index may therefore refer to one
-        // of the pack arguments, but we might incorrectly interpret it as
-        // referring to an argument that follows the pack.
-        if (ST->getIndex() >= DRE->template_arguments().size())
-          return std::nullopt;
-
-        TypeSourceInfo *TSI =
-            DRE->template_arguments()[ST->getIndex()].getTypeSourceInfo();
-        if (TSI == nullptr) return std::nullopt;
-        return getNullabilityAnnotationsFromType(TSI->getType());
+        // TODO: Handle nested templates (...->getDepth() > 0).
+        if (auto *DRE =
+                dyn_cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
+            DRE != nullptr && ST->getReplacedParameter()->getDepth() == 0 &&
+            // Some or all of the template arguments may be deduced, and we
+            // won't see those on the `DeclRefExpr`. If the template argument
+            // was deduced, we don't have any sugar for it.
+            // TODO(b/268348533): Can we somehow obtain it from the function
+            // param it was deduced from?
+            // TODO(b/268345783): This check, as well as the index into
+            // `template_arguments` below, may be incorrect in the presence of
+            // parameters packs.  In function templates, parameter packs may
+            // appear anywhere in the parameter list. The index may therefore
+            // refer to one of the pack arguments, but we might incorrectly
+            // interpret it as referring to an argument that follows the pack.
+            ST->getIndex() < DRE->template_arguments().size()) {
+          TypeSourceInfo *TSI =
+              DRE->template_arguments()[ST->getIndex()].getTypeSourceInfo();
+          if (TSI == nullptr) return std::nullopt;
+          return getNullabilityAnnotationsFromType(TSI->getType());
+        }
+        return std::nullopt;
       });
 }
 
