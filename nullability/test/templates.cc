@@ -1223,5 +1223,17 @@ TEST(PointerNullabilityTest, CallMethodTakingParameterPack) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CallFunctionReturningTemplateSpecializationType) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <class T>
+    struct AliasWrapper {
+      using Type = T;
+    };
+    template <typename>
+    AliasWrapper<int* _Nonnull>::Type f();
+    void target() { __assert_nullability<NK_nonnull>(f<int>()); }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
