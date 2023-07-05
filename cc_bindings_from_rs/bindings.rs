@@ -1114,17 +1114,17 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         } else {
             quote! {}
         };
-        let extern_c_or_inline = if !needs_definition {
+        let extern_c = if !needs_definition {
             quote! { extern "C" }
         } else {
-            quote! { inline }
+            quote! {}
         };
         CcSnippet {
             prereqs,
             tokens: quote! {
                 __NEWLINE__
                 #doc_comment
-                #static_ #extern_c_or_inline
+                #static_ #extern_c
                     #main_api_ret_type #main_api_fn_name (
                         #( #main_api_params ),*
                     ) #method_qualifiers;
@@ -1549,7 +1549,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         } else {
             // We put the assertions in a method so that they can read private member
             // variables.
-            quote! { private: inline static void __crubit_field_offset_assertions(); }
+            quote! { private: static void __crubit_field_offset_assertions(); }
         };
 
         let mut prereqs = CcPrerequisites::default();
@@ -1728,7 +1728,7 @@ fn format_default_ctor(input: &Input, core: &AdtCoreBindings) -> Result<ApiSnipp
     let cc_struct_name = &core.cc_short_name;
     let main_api = CcSnippet::new(quote! {
         __NEWLINE__ __COMMENT__ "Default::default"
-        inline #cc_struct_name(); __NEWLINE__ __NEWLINE__
+        #cc_struct_name(); __NEWLINE__ __NEWLINE__
     });
     let cc_details = {
         let thunk_name = method_name_to_cc_thunk_name
@@ -1741,7 +1741,7 @@ fn format_default_ctor(input: &Input, core: &AdtCoreBindings) -> Result<ApiSnipp
 
         let tokens = quote! {
             #cc_thunk_decls
-            #cc_struct_name::#cc_struct_name() {
+            inline #cc_struct_name::#cc_struct_name() {
                 __crubit_internal::#thunk_name(this);
             }
         };
@@ -1792,9 +1792,9 @@ fn format_copy_ctor_and_assignment_operator(
         format_trait_thunks(input, trait_id, core)?;
     let main_api = CcSnippet::new(quote! {
         __NEWLINE__ __COMMENT__ "Clone::clone"
-        inline #cc_struct_name(const #cc_struct_name&); __NEWLINE__
+        #cc_struct_name(const #cc_struct_name&); __NEWLINE__
         __NEWLINE__ __COMMENT__ "Clone::clone_from"
-        inline #cc_struct_name& operator=(const #cc_struct_name&); __NEWLINE__ __NEWLINE__
+        #cc_struct_name& operator=(const #cc_struct_name&); __NEWLINE__ __NEWLINE__
     });
     let cc_details = {
         // `unwrap` calls are okay because `Clone` trait always has these methods.
@@ -1806,10 +1806,10 @@ fn format_copy_ctor_and_assignment_operator(
 
         let tokens = quote! {
             #cc_thunk_decls
-            #cc_struct_name::#cc_struct_name(const #cc_struct_name& other) {
+            inline #cc_struct_name::#cc_struct_name(const #cc_struct_name& other) {
                 __crubit_internal::#clone_thunk_name(other, this);
             }
-            #cc_struct_name& #cc_struct_name::operator=(const #cc_struct_name& other) {
+            inline #cc_struct_name& #cc_struct_name::operator=(const #cc_struct_name& other) {
                 if (this != &other) {
                     __crubit_internal::#clone_from_thunk_name(*this, other);
                 }
@@ -2305,7 +2305,7 @@ pub mod tests {
                 quote! {
                     namespace rust_out {
                         ...
-                        inline double public_function(double x, double y);
+                        double public_function(double x, double y);
                         namespace __crubit_internal {
                             extern "C" double export_name(double, double);
                         }
@@ -2503,7 +2503,7 @@ pub mod tests {
                         // below also matters.
                         struct S;
                         ...
-                        inline void f(::rust_out::S const* __param_0);
+                        void f(::rust_out::S const* __param_0);
                         ...
                         struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S final { ... }
                         ...
@@ -2545,7 +2545,7 @@ pub mod tests {
                         ...
                         // `CcPrerequisites` of `f` declaration below (the main api of `f`) should
                         // include `S` as a `fwd_decls` edge, rather than as a `defs` edge.
-                        inline bool f(::rust_out::S s);
+                        bool f(::rust_out::S s);
                         ...
                         struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S final { ... }
                         ...
@@ -2624,9 +2624,9 @@ pub mod tests {
                         struct S3;
                         }
                         ...
-                        inline void f1 ...
-                        inline void f2 ...
-                        inline void f3 ...
+                        void f1 ...
+                        void f2 ...
+                        void f3 ...
 
                         namespace a { ...
                         struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S1 final { ... } ...
@@ -2684,7 +2684,7 @@ pub mod tests {
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
-                    static inline ::rust_out::S create(); ...
+                    static ::rust_out::S create(); ...
                     union { ... ::rust_out::S const* field; }; ...
                 }
             );
@@ -2756,9 +2756,9 @@ pub mod tests {
                     namespace rust_out {
                         namespace working_module {
                             ...
-                            inline void working_module_f1();
+                            void working_module_f1();
                             ...
-                            inline void working_module_f2();
+                            void working_module_f2();
                             ...
                         }  // namespace some_module
 
@@ -3023,7 +3023,7 @@ pub mod tests {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    inline double public_function(double x, double y);
+                    double public_function(double x, double y);
                 }
             );
             assert!(result.rs_details.is_empty());
@@ -3056,7 +3056,7 @@ pub mod tests {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    inline double public_function(double x, double y);
+                    double public_function(double x, double y);
                 }
             );
 
@@ -3117,7 +3117,7 @@ pub mod tests {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    inline std::int32_t foo(std::int32_t i);
+                    std::int32_t foo(std::int32_t i);
                 }
             );
             assert!(!result.cc_details.prereqs.is_empty());
@@ -3232,7 +3232,7 @@ pub mod tests {
             // Note that this is only a function *declaration* (not a function definition -
             // there is no function body), and therefore `S` just needs to be
             // forward-declared earlier.
-            assert_cc_matches!(main_api.tokens, quote! { inline bool foo(::rust_out::S s); });
+            assert_cc_matches!(main_api.tokens, quote! { bool foo(::rust_out::S s); });
 
             // Main checks: `CcPrerequisites::defs` and `CcPrerequisites::fwd_decls`.
             //
@@ -3350,7 +3350,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     __COMMENT__ #comment
-                    inline void fn_with_doc_comment_with_mangled_name();
+                    void fn_with_doc_comment_with_mangled_name();
                 }
             );
         });
@@ -3406,7 +3406,6 @@ pub mod tests {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    inline
                     std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]]
                     foo(std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] arg);
                 }
@@ -3471,7 +3470,6 @@ pub mod tests {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                  inline
                   std::int32_t const& [[clang::annotate_type("lifetime", "foo")]]
                   foo(
                     std::int32_t const& [[clang::annotate_type("lifetime", "a")]] arg1,
@@ -3656,7 +3654,7 @@ pub mod tests {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    inline double add(double x, double y);
+                    double add(double x, double y);
                 }
             );
             assert!(result.cc_details.prereqs.is_empty());
@@ -3697,7 +3695,7 @@ pub mod tests {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    inline std::int32_t into_i32(::rust_out::S s);
+                    std::int32_t into_i32(::rust_out::S s);
                 }
             );
             assert_cc_matches!(
@@ -3737,7 +3735,7 @@ pub mod tests {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    inline ::rust_out::S create(std::int32_t i);
+                    ::rust_out::S create(std::int32_t i);
                 }
             );
             assert_cc_matches!(
@@ -3798,7 +3796,7 @@ pub mod tests {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    inline double add(double x, double y);
+                    double add(double x, double y);
                 }
             );
             assert!(result.cc_details.prereqs.is_empty());
@@ -3896,7 +3894,7 @@ pub mod tests {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    inline void foo(double __param_0, double __param_1);
+                    void foo(double __param_0, double __param_1);
                 }
             );
             assert!(result.cc_details.prereqs.is_empty());
@@ -3944,7 +3942,7 @@ pub mod tests {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    inline std::int32_t func(::rust_out::S __param_0);
+                    std::int32_t func(::rust_out::S __param_0);
                 }
             );
             assert_cc_matches!(
@@ -4063,7 +4061,7 @@ pub mod tests {
                         public: union { ... std::int32_t x; };
                         public: union { ... std::int32_t y; };
                         private:
-                            inline static void __crubit_field_offset_assertions();
+                            static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -4128,7 +4126,7 @@ pub mod tests {
                         public: union { ... std::int32_t __field0; };
                         public: union { ... std::int32_t __field1; };
                         private:
-                            inline static void __crubit_field_offset_assertions();
+                            static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -4188,7 +4186,7 @@ pub mod tests {
                         public: union { ... std::int16_t field1; };
                         public: union { ... std::int16_t field3; };
                         private:
-                            inline static void __crubit_field_offset_assertions();
+                            static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -4246,7 +4244,7 @@ pub mod tests {
                         public: union { ... std::uint16_t field1; };
                         public: union { ... std::uint32_t field2; };
                         private:
-                            inline static void __crubit_field_offset_assertions();
+                            static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -4301,7 +4299,7 @@ pub mod tests {
                         public: union { ... std::uint8_t f1; };
                         private: unsigned char __padding0[3];
                         private:
-                            inline static void __crubit_field_offset_assertions();
+                            static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -4354,7 +4352,7 @@ pub mod tests {
                         ...
                         public:
                           ...
-                          static inline float add_i32(float x, float y);
+                          static float add_i32(float x, float y);
                         ...
                     };
                 }
@@ -4441,7 +4439,7 @@ pub mod tests {
                     ...
                     struct ... SomeStruct final {
                         ...
-                        static inline std::int32_t fn_taking_reference(
+                        static std::int32_t fn_taking_reference(
                             std::int32_t const& [[clang::annotate_type("lifetime", "a")]] x);
                         ...
                     };
@@ -4520,7 +4518,7 @@ pub mod tests {
                     ...
                     struct ... SomeStruct final {
                         ...
-                        inline float into_f32() &&;
+                        float into_f32() &&;
                         ...
                     };
                     ...
@@ -4591,7 +4589,6 @@ pub mod tests {
                     ...
                     struct ... SomeStruct final {
                         ...
-                        inline
                         float get_f32() const [[clang::annotate_type("lifetime", "__anon1")]];
                         ...
                     };
@@ -4662,7 +4659,7 @@ pub mod tests {
                     ...
                     struct ... SomeStruct final {
                         ...
-                        inline void set_f32(float new_value)
+                        void set_f32(float new_value)
                             [[clang::annotate_type("lifetime", "__anon1")]];
                         ...
                     };
@@ -4817,7 +4814,7 @@ pub mod tests {
                         ...
                         public:
                           __COMMENT__ "Default::default"
-                          inline Point();
+                          Point();
                         ...
                     };
                 }
@@ -4828,7 +4825,7 @@ pub mod tests {
                     namespace __crubit_internal {
                         extern "C" void ...(::rust_out::Point* __ret_ptr);
                     }
-                    Point::Point() {
+                    inline Point::Point() {
                         ...(this);
                     }
                 }
@@ -4922,10 +4919,10 @@ pub mod tests {
                         public:
                           ...
                           __COMMENT__ "Clone::clone"
-                          inline Point(const Point&);
+                          Point(const Point&);
 
                           __COMMENT__ "Clone::clone_from"
-                          inline Point& operator=(const Point&);
+                          Point& operator=(const Point&);
                         ...
                     };
                 }
@@ -4945,10 +4942,10 @@ pub mod tests {
                         ::rust_out::Point const& [[clang::annotate_type("lifetime",
                                                                         "__anon2")]]);
                     }
-                    Point::Point(const Point& other) {
+                    inline Point::Point(const Point& other) {
                       __crubit_internal::...(other, this);
                     }
-                    Point& Point::operator=(const Point& other) {
+                    inline Point& Point::operator=(const Point& other) {
                       if (this != &other) {
                         __crubit_internal::...(*this, other);
                       }
@@ -5027,7 +5024,7 @@ pub mod tests {
                         public:
                             union { ... std::int32_t successful_field; };
                         private:
-                            inline static void __crubit_field_offset_assertions();
+                            static void __crubit_field_offset_assertions();
                     };
                     ...
                 }
@@ -5204,7 +5201,7 @@ pub mod tests {
                         public:
                             union { ... std::int32_t successful_field; };
                         private:
-                            inline static void __crubit_field_offset_assertions();
+                            static void __crubit_field_offset_assertions();
                     };
                     ...
                 }
@@ -5288,7 +5285,7 @@ pub mod tests {
                                 std::int32_t successful_field;
                             };
                         private:
-                            inline static void __crubit_field_offset_assertions();
+                            static void __crubit_field_offset_assertions();
                     };
                     ...
                 }
@@ -5341,7 +5338,7 @@ pub mod tests {
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[1];
                         private:
-                            inline static void __crubit_field_offset_assertions();
+                            static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -5405,7 +5402,7 @@ pub mod tests {
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[12];
                         private:
-                            inline static void __crubit_field_offset_assertions();
+                            static void __crubit_field_offset_assertions();
                     };
                 }
             );
@@ -5482,7 +5479,7 @@ pub mod tests {
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[8];
                         private:
-                            inline static void __crubit_field_offset_assertions();
+                            static void __crubit_field_offset_assertions();
                     };
                 }
             );
