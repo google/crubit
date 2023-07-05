@@ -18,6 +18,20 @@ pub mod basic_static_method {
     }
 }
 
+/// Test coverage of methods taking `self`.
+pub mod instance_methods {
+    pub struct Number(i32);
+
+    impl Number {
+        pub fn create(i: i32) -> Self {
+            Self(i)
+        }
+        pub fn into_i32(self) -> i32 {
+            self.0
+        }
+    }
+}
+
 pub mod static_method_taking_same_struct_by_value {
     pub struct Number(i32);
 

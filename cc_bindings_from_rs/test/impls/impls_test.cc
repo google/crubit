@@ -16,6 +16,12 @@ TEST(ImplsTest, BasicStaticMethod) {
   EXPECT_EQ(sum, 123 + 456);
 }
 
+TEST(ImplsTest, InstanceMethods) {
+  namespace test = impls::instance_methods;
+  test::Number x = test::Number::create(123);
+  EXPECT_EQ(123, std::move(x).into_i32());
+}
+
 TEST(ImplsTest, StaticMethodTakingSameStructByValue) {
   namespace test = impls::static_method_taking_same_struct_by_value;
   test::Number x = test::Number::create(123);

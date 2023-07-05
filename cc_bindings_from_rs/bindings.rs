@@ -10,7 +10,7 @@ use code_gen_utils::{
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
-use rustc_hir::{AssocItemKind, ImplItemKind, ImplicitSelfKind, Item, ItemKind, Node, Unsafety};
+use rustc_hir::{AssocItemKind, Item, ItemKind, Node, Unsafety};
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
@@ -955,6 +955,27 @@ fn is_thunk_required(sig: &ty::FnSig) -> Result<()> {
     Ok(())
 }
 
+#[derive(Debug, Eq, PartialEq)]
+enum FunctionKind {
+    /// Free function (i.e. not a method).
+    Free,
+
+    /// Static method (i.e. the first parameter is not named `self`).
+    StaticMethod,
+
+    /// Instance method taking `self` by value (i.e. `self: Self`).
+    MethodTakingSelfByValue,
+}
+
+impl FunctionKind {
+    fn has_self_param(&self) -> bool {
+        match self {
+            FunctionKind::MethodTakingSelfByValue => true,
+            FunctionKind::Free | FunctionKind::StaticMethod => false,
+        }
+    }
+}
+
 /// Formats a function with the given `local_def_id`.
 ///
 /// Will panic if `local_def_id`
@@ -993,17 +1014,6 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
 
     let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_ret_type = format_ret_ty_for_cc(input, &sig)?.into_tokens(&mut main_api_prereqs);
-    let is_static_method = match tcx.hir().get_by_def_id(local_def_id) {
-        Node::ImplItem(impl_item) => match &impl_item.kind {
-            ImplItemKind::Fn(fn_sig, _) => match fn_sig.decl.implicit_self {
-                ImplicitSelfKind::None => true,
-                _ => bail!("`self` parameter is not supported yet"),
-            },
-            _ => panic!("`format_fn` can only work with functions"),
-        },
-        Node::Item(_) => false, // Free function
-        other => panic!("Unexpected HIR node kind: {other:?}"),
-    };
 
     struct Param<'tcx> {
         cc_name: TokenStream,
@@ -1025,25 +1035,52 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
             })
             .collect_vec()
     };
-    let main_api_params = params
-        .iter()
-        .map(|Param { cc_name, cc_type, .. }| quote! { #cc_type #cc_name })
-        .collect_vec();
 
-    let struct_name = match tcx.impl_of_method(def_id) {
+    let self_ty: Option<Ty> = match tcx.impl_of_method(def_id) {
         Some(impl_id) => match tcx.impl_subject(impl_id).subst_identity() {
-            ty::ImplSubject::Inherent(ty) => match ty.kind() {
-                ty::TyKind::Adt(adt, substs) => {
-                    assert_eq!(0, substs.len(), "Callers should filter out generics");
-                    Some(FullyQualifiedName::new(tcx, adt.did()))
-                }
-                _ => panic!("Non-ADT `impl`s should be filtered by caller"),
-            },
+            ty::ImplSubject::Inherent(ty) => Some(ty),
             ty::ImplSubject::Trait(_) => panic!("Trait methods should be filtered by caller"),
         },
         None => None,
     };
+
+    let method_kind = match tcx.hir().get_by_def_id(local_def_id) {
+        Node::Item(_) => FunctionKind::Free,
+        Node::ImplItem(_) => match tcx.fn_arg_names(def_id).get(0) {
+            Some(arg_name) if arg_name.name == kw::SelfLower => {
+                let self_ty = self_ty.expect("ImplItem => non-None `self_ty`");
+                if params[0].ty == self_ty {
+                    FunctionKind::MethodTakingSelfByValue
+                } else {
+                    bail!("Unsupported `self` type");
+                }
+            }
+            _ => FunctionKind::StaticMethod,
+        },
+        other => panic!("Unexpected HIR node kind: {other:?}"),
+    };
+    let method_qualifiers = if method_kind == FunctionKind::MethodTakingSelfByValue {
+        quote! { && }
+    } else {
+        quote! {}
+    };
+
+    let struct_name = match self_ty {
+        Some(ty) => match ty.kind() {
+            ty::TyKind::Adt(adt, substs) => {
+                assert_eq!(0, substs.len(), "Callers should filter out generics");
+                Some(FullyQualifiedName::new(tcx, adt.did()))
+            }
+            _ => panic!("Non-ADT `impl`s should be filtered by caller"),
+        },
+        None => None,
+    };
     let needs_definition = short_fn_name.as_str() != thunk_name;
+    let main_api_params = params
+        .iter()
+        .skip(if method_kind.has_self_param() { 1 } else { 0 })
+        .map(|Param { cc_name, cc_type, .. }| quote! { #cc_type #cc_name })
+        .collect_vec();
     let main_api = {
         let doc_comment = {
             let doc_comment = format_doc_comment(tcx, local_def_id);
@@ -1053,7 +1090,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         let mut prereqs = main_api_prereqs.clone();
         prereqs.move_defs_to_fwd_decls();
 
-        let static_ = if is_static_method {
+        let static_ = if method_kind == FunctionKind::StaticMethod {
             quote! { static }
         } else {
             quote! {}
@@ -1069,7 +1106,9 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
                 __NEWLINE__
                 #doc_comment
                 #static_ #extern_c_or_inline
-                    #main_api_ret_type #main_api_fn_name ( #( #main_api_params ),* );
+                    #main_api_ret_type #main_api_fn_name (
+                        #( #main_api_params ),*
+                    ) #method_qualifiers;
                 __NEWLINE__
             },
         }
@@ -1094,8 +1133,11 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
 
         let mut thunk_args = params
             .iter()
-            .map(|Param { cc_name, ty, .. }| {
-                if is_c_abi_compatible_by_value(*ty) {
+            .enumerate()
+            .map(|(i, Param { cc_name, ty, .. })| {
+                if i == 0 && method_kind.has_self_param() {
+                    quote! { this }
+                } else if is_c_abi_compatible_by_value(*ty) {
                     quote! { #cc_name }
                 } else {
                     quote! { & #cc_name }
@@ -1123,7 +1165,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
                 __NEWLINE__
                 #thunk_decl
                 inline #main_api_ret_type #struct_name #main_api_fn_name (
-                        #( #main_api_params ),* ) {
+                        #( #main_api_params ),* ) #method_qualifiers {
                     #impl_body
                 }
                 __NEWLINE__
@@ -4445,8 +4487,47 @@ pub mod tests {
         });
     }
 
+    fn test_format_item_method_taking_self_by_value(test_src: &str) {
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        inline float into_f32() &&;
+                        ...
+                    };
+                    ...
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C" float ...(::rust_out::SomeStruct*);
+                    }
+                    inline float SomeStruct::into_f32() && {
+                      return __crubit_internal::...(this);
+                    }
+                },
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn ...(__self: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>) -> f32 {
+                        ::rust_out::SomeStruct::into_f32(unsafe { __self.assume_init_read() })
+                    }
+                },
+            );
+        });
+    }
+
     #[test]
-    fn test_format_item_method_taking_self_by_value() {
+    fn test_format_item_method_taking_self_by_value_implicit_type() {
         let test_src = r#"
                 pub struct SomeStruct(f32);
 
@@ -4456,27 +4537,25 @@ pub mod tests {
                     }
                 }
             "#;
-        test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap().unwrap();
-            let main_api = &result.main_api;
-            let unsupported_msg = "Error generating bindings for `SomeStruct::into_f32` \
-                                   defined at <crubit_unittests.rs>;l=5: \
-                                   `self` parameter is not supported yet";
-            assert_cc_matches!(
-                main_api.tokens,
-                quote! {
-                    ...
-                    struct ... SomeStruct final {
-                        ...
-                        __COMMENT__ #unsupported_msg
-                        ...
-                    };
-                    ...
+        test_format_item_method_taking_self_by_value(test_src);
+    }
+
+    /// One difference from
+    /// `test_format_item_method_taking_self_by_value_implicit_type` is that
+    /// `fn_sig.decl.implicit_self` is `ImplicitSelfKind::None` here (vs
+    /// `ImplicitSelfKind::Imm` in the other test).
+    #[test]
+    fn test_format_item_method_taking_self_by_value_explicit_type() {
+        let test_src = r#"
+                pub struct SomeStruct(f32);
+
+                impl SomeStruct {
+                    pub fn into_f32(self: SomeStruct) -> f32 {
+                        self.0
+                    }
                 }
-            );
-            assert_cc_not_matches!(result.cc_details.tokens, quote! { SomeStruct::into_f32 },);
-            assert_rs_not_matches!(result.rs_details, quote! { into_f32 },);
-        });
+            "#;
+        test_format_item_method_taking_self_by_value(test_src);
     }
 
     #[test]
@@ -4495,7 +4574,7 @@ pub mod tests {
             let main_api = &result.main_api;
             let unsupported_msg = "Error generating bindings for `SomeStruct::get_f32` \
                                    defined at <crubit_unittests.rs>;l=5: \
-                                   `self` parameter is not supported yet";
+                                   Unsupported `self` type";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -4529,7 +4608,44 @@ pub mod tests {
             let main_api = &result.main_api;
             let unsupported_msg = "Error generating bindings for `SomeStruct::set_f32` \
                                    defined at <crubit_unittests.rs>;l=5: \
-                                   `self` parameter is not supported yet";
+                                   Unsupported `self` type";
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        __COMMENT__ #unsupported_msg
+                        ...
+                    };
+                    ...
+                }
+            );
+            assert_cc_not_matches!(result.cc_details.tokens, quote! { SomeStruct::set_f32 },);
+            assert_rs_not_matches!(result.rs_details, quote! { set_f32 },);
+        });
+    }
+
+    #[test]
+    fn test_format_item_method_taking_self_by_pinned_mut_ref() {
+        let test_src = r#"
+                use core::pin::Pin;
+
+                pub struct SomeStruct(f32);
+
+                impl SomeStruct {
+                    pub fn set_f32(mut self: Pin<&mut Self>, f: f32) {
+                        self.0 = f;
+                    }
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            let unsupported_msg = "Error generating bindings for `SomeStruct::set_f32` \
+                                   defined at <crubit_unittests.rs>;l=7: \
+                                   Error handling parameter #0: \
+                                   Generic types are not supported yet (b/259749095)";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
