@@ -604,8 +604,8 @@ fn format_param_types_for_cc<'tcx>(
         .iter()
         .enumerate()
         .map(|(i, &ty)| {
-            Ok(format_ty_for_cc(input, ty, TypeLocation::FnParam)
-                .with_context(|| format!("Error handling parameter #{i}"))?)
+            format_ty_for_cc(input, ty, TypeLocation::FnParam)
+                .with_context(|| format!("Error handling parameter #{i}"))
         })
         .collect()
 }
@@ -755,10 +755,10 @@ fn format_thunk_decl<'tcx>(
     let tcx = input.tcx;
 
     let mut prereqs = CcPrerequisites::default();
-    let main_api_ret_type = format_ret_ty_for_cc(input, &sig)?.into_tokens(&mut prereqs);
+    let main_api_ret_type = format_ret_ty_for_cc(input, sig)?.into_tokens(&mut prereqs);
 
     let mut thunk_params = {
-        let cc_types = format_param_types_for_cc(input, &sig)?;
+        let cc_types = format_param_types_for_cc(input, sig)?;
         sig.inputs()
             .iter()
             .zip(cc_types.into_iter())
@@ -782,7 +782,7 @@ fn format_thunk_decl<'tcx>(
 
     let thunk_ret_type: TokenStream;
     if is_c_abi_compatible_by_value(sig.output()) {
-        thunk_ret_type = main_api_ret_type.clone();
+        thunk_ret_type = main_api_ret_type;
     } else {
         thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
@@ -2129,7 +2129,7 @@ fn format_crate(input: &Input) -> Result<Output> {
         let toposort::TopoSortResult { ordered: ordered_ids, failed: failed_ids } = {
             let nodes = main_apis.keys().copied();
             let deps = main_apis.iter().flat_map(|(&successor, main_api)| {
-                let predecessors = main_api.prereqs.defs.iter().map(|&def_id| def_id);
+                let predecessors = main_api.prereqs.defs.iter().copied();
                 predecessors.map(move |predecessor| toposort::Dependency { predecessor, successor })
             });
             toposort::toposort(nodes, deps, move |lhs_id, rhs_id| {
