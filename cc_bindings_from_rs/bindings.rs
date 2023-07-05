@@ -965,12 +965,16 @@ enum FunctionKind {
 
     /// Instance method taking `self` by value (i.e. `self: Self`).
     MethodTakingSelfByValue,
+
+    /// Instance method taking `self` by reference (i.e. `&self` or `&mut
+    /// self`).
+    MethodTakingSelfByRef,
 }
 
 impl FunctionKind {
     fn has_self_param(&self) -> bool {
         match self {
-            FunctionKind::MethodTakingSelfByValue => true,
+            FunctionKind::MethodTakingSelfByValue | FunctionKind::MethodTakingSelfByRef => true,
             FunctionKind::Free | FunctionKind::StaticMethod => false,
         }
     }
@@ -1052,17 +1056,32 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
                 if params[0].ty == self_ty {
                     FunctionKind::MethodTakingSelfByValue
                 } else {
-                    bail!("Unsupported `self` type");
+                    match params[0].ty.kind() {
+                        ty::TyKind::Ref(_, referent_ty, _) if *referent_ty == self_ty => {
+                            FunctionKind::MethodTakingSelfByRef
+                        }
+                        _ => bail!("Unsupported `self` type"),
+                    }
                 }
             }
             _ => FunctionKind::StaticMethod,
         },
         other => panic!("Unexpected HIR node kind: {other:?}"),
     };
-    let method_qualifiers = if method_kind == FunctionKind::MethodTakingSelfByValue {
-        quote! { && }
-    } else {
-        quote! {}
+    let method_qualifiers = match method_kind {
+        FunctionKind::Free | FunctionKind::StaticMethod => quote! {},
+        FunctionKind::MethodTakingSelfByValue => quote! { && },
+        FunctionKind::MethodTakingSelfByRef => match params[0].ty.kind() {
+            ty::TyKind::Ref(region, _, mutability) => {
+                let lifetime_annotation = format_region_as_cc_lifetime(region);
+                let mutability = match mutability {
+                    Mutability::Mut => quote! {},
+                    Mutability::Not => quote! { const },
+                };
+                quote! { #mutability #lifetime_annotation }
+            }
+            _ => panic!("Expecting TyKind::Ref for MethodKind...Self...Ref"),
+        },
     };
 
     let struct_name = match self_ty {
@@ -1136,7 +1155,11 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
             .enumerate()
             .map(|(i, Param { cc_name, ty, .. })| {
                 if i == 0 && method_kind.has_self_param() {
-                    quote! { this }
+                    if method_kind == FunctionKind::MethodTakingSelfByValue {
+                        quote! { this }
+                    } else {
+                        quote! { *this }
+                    }
                 } else if is_c_abi_compatible_by_value(*ty) {
                     quote! { #cc_name }
                 } else {
@@ -4558,8 +4581,51 @@ pub mod tests {
         test_format_item_method_taking_self_by_value(test_src);
     }
 
+    fn test_format_item_method_taking_self_by_const_ref(test_src: &str) {
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        inline
+                        float get_f32() const [[clang::annotate_type("lifetime", "__anon1")]];
+                        ...
+                    };
+                    ...
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C" float ...(
+                        ::rust_out::SomeStruct const& [[clang::annotate_type("lifetime",
+                                                                             "__anon1")]]);
+                    }
+                    inline float SomeStruct::get_f32()
+                        const [[clang::annotate_type("lifetime", "__anon1")]] {
+                      return __crubit_internal::...(*this);
+                    }
+                },
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn ...<'__anon1>(__self: &'__anon1 ::rust_out::SomeStruct) -> f32 {
+                        ::rust_out::SomeStruct::get_f32(__self)
+                    }
+                },
+            );
+        });
+    }
+
     #[test]
-    fn test_format_item_method_taking_self_by_const_ref() {
+    fn test_format_item_method_taking_self_by_const_ref_implicit_type() {
         let test_src = r#"
                 pub struct SomeStruct(f32);
 
@@ -4569,12 +4635,117 @@ pub mod tests {
                     }
                 }
             "#;
+        test_format_item_method_taking_self_by_const_ref(test_src);
+    }
+
+    #[test]
+    fn test_format_item_method_taking_self_by_const_ref_explicit_type() {
+        let test_src = r#"
+                pub struct SomeStruct(f32);
+
+                impl SomeStruct {
+                    pub fn get_f32(self: &SomeStruct) -> f32 {
+                        self.0
+                    }
+                }
+            "#;
+        test_format_item_method_taking_self_by_const_ref(test_src);
+    }
+
+    fn test_format_item_method_taking_self_by_mutable_ref(test_src: &str) {
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        inline void set_f32(float new_value)
+                            [[clang::annotate_type("lifetime", "__anon1")]];
+                        ...
+                    };
+                    ...
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C" void ...(
+                        ::rust_out::SomeStruct& [[clang::annotate_type("lifetime", "__anon1")]],
+                        float);
+                    }
+                    inline void SomeStruct::set_f32(float new_value)
+                            [[clang::annotate_type("lifetime", "__anon1")]] {
+                      return __crubit_internal::...(*this, new_value);
+                    }
+                },
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn ...<'__anon1>(
+                        __self: &'__anon1 mut ::rust_out::SomeStruct,
+                        new_value: f32
+                    ) -> () {
+                        ::rust_out::SomeStruct::set_f32(__self, new_value)
+                    }
+                },
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_method_taking_self_by_mutable_ref_implicit_type() {
+        let test_src = r#"
+                pub struct SomeStruct(f32);
+
+                impl SomeStruct {
+                    pub fn set_f32(&mut self, new_value: f32) {
+                        self.0 = new_value;
+                    }
+                }
+            "#;
+        test_format_item_method_taking_self_by_mutable_ref(test_src);
+    }
+
+    #[test]
+    fn test_format_item_method_taking_self_by_mutable_ref_explicit_type() {
+        let test_src = r#"
+                pub struct SomeStruct(f32);
+
+                impl SomeStruct {
+                    pub fn set_f32(self: &mut SomeStruct, new_value: f32) {
+                        self.0 = new_value;
+                    }
+                }
+            "#;
+        test_format_item_method_taking_self_by_mutable_ref(test_src);
+    }
+
+    #[test]
+    fn test_format_item_method_taking_self_by_arc() {
+        let test_src = r#"
+                use std::sync::Arc;
+
+                pub struct SomeStruct(f32);
+
+                impl SomeStruct {
+                    pub fn get_f32(self: Arc<Self>) -> f32 {
+                        self.0
+                    }
+                }
+            "#;
         test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             let unsupported_msg = "Error generating bindings for `SomeStruct::get_f32` \
-                                   defined at <crubit_unittests.rs>;l=5: \
-                                   Unsupported `self` type";
+                                   defined at <crubit_unittests.rs>;l=7: \
+                                   Error handling parameter #0: \
+                                   Generic types are not supported yet (b/259749095)";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -4589,40 +4760,6 @@ pub mod tests {
             );
             assert_cc_not_matches!(result.cc_details.tokens, quote! { SomeStruct::get_f32 },);
             assert_rs_not_matches!(result.rs_details, quote! { get_f32 },);
-        });
-    }
-
-    #[test]
-    fn test_format_item_method_taking_self_by_mutable_ref() {
-        let test_src = r#"
-                pub struct SomeStruct(f32);
-
-                impl SomeStruct {
-                    pub fn set_f32(&mut self, new_value: f32) {
-                        self.0 = new_value;
-                    }
-                }
-            "#;
-        test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap().unwrap();
-            let main_api = &result.main_api;
-            let unsupported_msg = "Error generating bindings for `SomeStruct::set_f32` \
-                                   defined at <crubit_unittests.rs>;l=5: \
-                                   Unsupported `self` type";
-            assert_cc_matches!(
-                main_api.tokens,
-                quote! {
-                    ...
-                    struct ... SomeStruct final {
-                        ...
-                        __COMMENT__ #unsupported_msg
-                        ...
-                    };
-                    ...
-                }
-            );
-            assert_cc_not_matches!(result.cc_details.tokens, quote! { SomeStruct::set_f32 },);
-            assert_rs_not_matches!(result.rs_details, quote! { set_f32 },);
         });
     }
 

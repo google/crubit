@@ -687,8 +687,17 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Method) {
           int* f1();
           int* $a f2() $a;
         };
-  )")),
+      )")),
       IsOkAndHolds(LifetimesAre({{"S::f1", "a: -> a"}, {"S::f2", "a: -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_ConstMethod) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        struct S {
+          int* $a f2() const $a;
+        };
+      )")),
+              IsOkAndHolds(LifetimesAre({{"S::f2", "a: -> a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MethodWithParam) {

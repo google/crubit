@@ -18,13 +18,19 @@ pub mod basic_static_method {
     }
 }
 
-/// Test coverage of methods taking `self`.
+/// Test coverage of methods taking `&self`, `&mut self`, and `self`.
 pub mod instance_methods {
     pub struct Number(i32);
 
     impl Number {
         pub fn create(i: i32) -> Self {
             Self(i)
+        }
+        pub fn get_i32(&self) -> i32 {
+            self.0
+        }
+        pub fn set_i32(&mut self, new_value: i32) {
+            self.0 = new_value;
         }
         pub fn into_i32(self) -> i32 {
             self.0

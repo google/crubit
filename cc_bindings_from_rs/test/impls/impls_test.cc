@@ -19,7 +19,10 @@ TEST(ImplsTest, BasicStaticMethod) {
 TEST(ImplsTest, InstanceMethods) {
   namespace test = impls::instance_methods;
   test::Number x = test::Number::create(123);
-  EXPECT_EQ(123, std::move(x).into_i32());
+  EXPECT_EQ(123, x.get_i32());
+  x.set_i32(456);
+  EXPECT_EQ(456, x.get_i32());
+  EXPECT_EQ(456, std::move(x).into_i32());
 }
 
 TEST(ImplsTest, StaticMethodTakingSameStructByValue) {
