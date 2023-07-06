@@ -1721,13 +1721,17 @@ fn format_trait_thunks(
     Ok(TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls })
 }
 
+/// Gets the `DefId` for the `Default` trait.
+fn get_def_id_of_default_trait(tcx: TyCtxt) -> DefId {
+    tcx.get_diagnostic_item(sym::Default).expect("`Default` trait should always be present")
+}
+
 /// Formats a default constructor for an ADT if possible (i.e. if the `Default`
 /// trait is implemented for the ADT).  Returns an error otherwise (e.g. if
 /// there is no `Default` impl).
 fn format_default_ctor(input: &Input, core: &AdtCoreBindings) -> Result<ApiSnippets> {
     let tcx = input.tcx;
-    let trait_id =
-        tcx.get_diagnostic_item(sym::Default).expect("`Default` trait should always be present");
+    let trait_id = get_def_id_of_default_trait(tcx);
     let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls: rs_details } =
         format_trait_thunks(input, trait_id, core)?;
 
