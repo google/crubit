@@ -1627,6 +1627,26 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     ApiSnippets { main_api, cc_details, rs_details }
 }
 
+fn does_adt_implement_trait(tcx: TyCtxt, adt_def_id: DefId, trait_id: DefId) -> bool {
+    assert!(tcx.is_trait(trait_id));
+
+    let generics = tcx.generics_of(trait_id);
+    assert!(generics.has_self);
+    assert_eq!(
+        generics.count(),
+        1, // Only `Self`
+        "Generic traits are not supported yet (b/286941486)",
+    );
+
+    let self_ty = tcx.type_of(adt_def_id).subst_identity();
+    let substs = [self_ty];
+
+    tcx.infer_ctxt()
+        .build()
+        .type_implements_trait(trait_id, substs, tcx.param_env(trait_id))
+        .must_apply_modulo_regions()
+}
+
 struct TraitThunks {
     method_name_to_cc_thunk_name: HashMap<Symbol, TokenStream>,
     cc_thunk_decls: CcSnippet,
@@ -1639,24 +1659,10 @@ fn format_trait_thunks(
     adt: &AdtCoreBindings,
 ) -> Result<TraitThunks> {
     let tcx = input.tcx;
+    assert!(tcx.is_trait(trait_id));
+
     let self_ty = tcx.type_of(adt.def_id).subst_identity();
-
-    let does_adt_implement_trait = {
-        let generics = tcx.generics_of(trait_id);
-        assert!(generics.has_self);
-        assert_eq!(
-            generics.count(),
-            1, // Only `Self`
-            "Generic traits are not supported yet (b/286941486)",
-        );
-        let substs = [self_ty];
-
-        tcx.infer_ctxt()
-            .build()
-            .type_implements_trait(trait_id, substs, tcx.param_env(trait_id))
-            .must_apply_modulo_regions()
-    };
-    if !does_adt_implement_trait {
+    if !does_adt_implement_trait(tcx, adt.def_id, trait_id) {
         let trait_name = tcx.item_name(trait_id);
         bail!("`{self_ty}` doesn't implement the `{trait_name}` trait");
     }
