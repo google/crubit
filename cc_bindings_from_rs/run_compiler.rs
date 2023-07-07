@@ -10,6 +10,8 @@ use either::Either;
 use rustc_interface::interface::Compiler;
 use rustc_interface::Queries;
 use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
+use rustc_session::config::ErrorOutputType;
+use rustc_session::EarlyErrorHandler;
 
 /// Wrapper around `rustc_driver::RunCompiler::run` that exposes a
 /// simplified API:
@@ -35,7 +37,8 @@ where
     // `tracing::subscriber::set_global_default` always succeeds.
     use once_cell::sync::Lazy;
     static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| {
-        rustc_driver::init_env_logger("CRUBIT_LOG");
+        let early_error_handler = EarlyErrorHandler::new(ErrorOutputType::default());
+        rustc_driver::init_env_logger(&early_error_handler, "CRUBIT_LOG");
     });
     Lazy::force(&ENV_LOGGER_INIT);
 
@@ -118,6 +121,7 @@ where
 
     fn after_analysis<'tcx>(
         &mut self,
+        _handler: &EarlyErrorHandler,
         _compiler: &Compiler,
         queries: &'tcx Queries<'tcx>,
     ) -> rustc_driver::Compilation {

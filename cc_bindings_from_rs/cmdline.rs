@@ -4,6 +4,8 @@
 
 use anyhow::{anyhow, ensure, Result};
 use clap::Parser;
+use rustc_session::config::ErrorOutputType;
+use rustc_session::EarlyErrorHandler;
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -65,11 +67,13 @@ impl Cmdline {
         );
         let exe_name = args[0].clone();
 
+        let early_error_handler = EarlyErrorHandler::new(ErrorOutputType::default());
+
         // Ensure that `@file` expansion also covers *our* args.
         //
         // TODO(b/254688847): Decide whether to replace this with a `clap`-declared,
         // `--help`-exposed `--flagfile <path>`.
-        let args = rustc_driver::args::arg_expand_all(args);
+        let args = rustc_driver::args::arg_expand_all(&early_error_handler, args);
 
         // Parse `args` using the parser `derive`d by the `clap` crate.
         let mut cmdline = Self::try_parse_from(args)?;
@@ -266,7 +270,8 @@ OPTIONS:
         assert!(
             itertools::equal(
                 ["cc_bindings_from_rs_unittest_executable", "test.rs", "--crate-type=lib"],
-                rustc_args),
+                rustc_args
+            ),
             "rustc_args = {:?}",
             rustc_args,
         );
