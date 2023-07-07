@@ -1248,15 +1248,6 @@ struct AdtCoreBindings {
     /// `::some_crate::some_module::SomeStruct`.
     rs_fully_qualified_name: TokenStream,
 
-    /// `core` contains declarations of
-    /// - the default constructor
-    /// - the copy constructor
-    /// - the move constructor
-    /// - the copy assignment operator
-    /// - the move assignment operator
-    /// - the destructor
-    core: TokenStream,
-
     alignment_in_bytes: u64,
     size_in_bytes: u64,
 }
@@ -1344,51 +1335,11 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
     let size_in_bytes = layout.size().bytes();
     ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
 
-    let core = quote! {
-        // The generated bindings have to follow Rust move semantics:
-        // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
-        //   that "Every type must be ready for it to be blindly memcopied to somewhere else
-        //   in memory")
-        // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
-        //   it.
-        //
-        // The generated C++ bindings match the required semantics because they:
-        // * Generate trivial` C++ move constructor and move assignment operator. Per
-        //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial move
-        //   constructor is a constructor that performs the same action as the trivial copy
-        //   constructor, that is, makes a copy of the object representation as if by
-        //   std::memmove."
-        // * Generate trivial C++ destructor. (Types that implement `Drop` trait or require
-        //   "drop glue" are not *yet* supported - this might eventually change as part of the
-        //   work tracked under b/258251148). Per
-        //   <internal link>/cpp/language/destructor#Trivial_destructor: "A trivial destructor is a
-        //   destructor that performs no action."
-        //
-        // In particular, note that the following C++ code and Rust code are exactly equivalent
-        // (except that in Rust, reuse of `y` is forbidden at compile time, whereas in C++,
-        // it's only prohibited by convention):
-        // * C++, assumming trivial move constructor and trivial destructor:
-        //   `auto x = std::move(y);`
-        // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
-        //   `let x = y;`
-        //
-        // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop glue,
-        // then extra care should be taken to ensure the C++ destructor can handle the
-        // moved-from object in a way that meets Rust move semantics.  For example, the
-        // generated C++ move constructor might need to assign `Default::default()` to the
-        // moved-from object.
-        #cc_short_name(#cc_short_name&&) = default;
-        #cc_short_name& operator=(#cc_short_name&&) = default;
-
-        // TODO(b/258251148): Support custom `Drop` impls and drop glue.
-        ~#cc_short_name() = default;
-    };
     Ok(AdtCoreBindings {
         def_id,
         keyword,
         cc_short_name,
         rs_fully_qualified_name,
-        core,
         alignment_in_bytes,
         size_in_bytes,
     })
@@ -1840,6 +1791,7 @@ fn format_copy_ctor_and_assignment_operator(
 fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     let tcx = input.tcx;
     let adt_cc_name = &core.cc_short_name;
+    let self_ty = tcx.type_of(core.def_id).subst_identity();
 
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
@@ -1858,6 +1810,52 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
             ..Default::default()
         }
     });
+
+    let ApiSnippets {
+        main_api: destructor_and_move_main_api,
+        cc_details: destructor_and_move_cc_details,
+        rs_details: destructor_and_move_rs_details,
+    } = {
+        assert!(!self_ty.needs_drop(tcx, tcx.param_env(core.def_id)));
+        ApiSnippets {
+            main_api: CcSnippet::new(quote! {
+                __NEWLINE__ __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+                ~#adt_cc_name() = default; __NEWLINE__
+                // The generated bindings have to follow Rust move semantics:
+                // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
+                //   that "Every type must be ready for it to be blindly memcopied to somewhere
+                //   else in memory")
+                // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
+                //   it.
+                //
+                // The generated C++ bindings below match the required semantics because they:
+                // * Generate trivial` C++ move constructor and move assignment operator. Per
+                //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial
+                //   move constructor is a constructor that performs the same action as the trivial
+                //   copy constructor, that is, makes a copy of the object representation as if by
+                //   std::memmove."
+                // * Generate trivial C++ destructor.
+                //
+                // In particular, note that the following C++ code and Rust code are exactly
+                // equivalent (except that in Rust, reuse of `y` is forbidden at compile time,
+                // whereas in C++, it's only prohibited by convention):
+                // * C++, assumming trivial move constructor and trivial destructor:
+                //   `auto x = std::move(y);`
+                // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
+                //   `let x = y;`
+                //
+                // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop
+                // glue, then extra care should be taken to ensure the C++ destructor can handle
+                // the moved-from object in a way that meets Rust move semantics.  For example, the
+                // generated C++ move constructor might need to assign `Default::default()` to the
+                // moved-from object.
+                #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
+                #adt_cc_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
+                __NEWLINE__
+            }),
+            ..Default::default()
+        }
+    };
 
     let ApiSnippets {
         main_api: copy_ctor_and_assignment_main_api,
@@ -1926,11 +1924,11 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
 
         let doc_comment = format_doc_comment(tcx, core.def_id.expect_local());
         let keyword = &core.keyword;
-        let core = &core.core;
 
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(input.support_header("internal/attribute_macros.h"));
         let default_ctor_main_api = default_ctor_main_api.into_tokens(&mut prereqs);
+        let destructor_and_move_main_api = destructor_and_move_main_api.into_tokens(&mut prereqs);
         let copy_ctor_and_assignment_main_api =
             copy_ctor_and_assignment_main_api.into_tokens(&mut prereqs);
         let impl_items_main_api = if impl_items_main_api.tokens.is_empty() {
@@ -1948,8 +1946,8 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                 #keyword #(#attributes)* #adt_cc_name final {
                     public: __NEWLINE__
                         #default_ctor_main_api
+                        #destructor_and_move_main_api
                         #copy_ctor_and_assignment_main_api
-                        #core
                         #impl_items_main_api
                     #fields_main_api
                 };
@@ -1960,6 +1958,8 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     let cc_details = {
         let mut prereqs = CcPrerequisites::default();
         let default_ctor_cc_details = default_ctor_cc_details.into_tokens(&mut prereqs);
+        let destructor_and_move_cc_details =
+            destructor_and_move_cc_details.into_tokens(&mut prereqs);
         let copy_ctor_and_assignment_cc_details =
             copy_ctor_and_assignment_cc_details.into_tokens(&mut prereqs);
         let impl_items_cc_details = impl_items_cc_details.into_tokens(&mut prereqs);
@@ -1980,6 +1980,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                 static_assert(std::is_trivially_move_assignable_v<#adt_cc_name>);
                 __NEWLINE__
                 #default_ctor_cc_details
+                #destructor_and_move_cc_details
                 #copy_ctor_and_assignment_cc_details
                 #impl_items_cc_details
                 #fields_cc_details
@@ -1992,6 +1993,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
             const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
             const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
             #default_ctor_rs_details
+            #destructor_and_move_rs_details
             #copy_ctor_and_assignment_rs_details
             #impl_items_rs_details
             #fields_rs_details
@@ -4057,17 +4059,14 @@ pub mod tests {
                             __COMMENT__ "`SomeStruct` doesn't implement the `Default` trait"
                             SomeStruct() = delete;
 
-                            __COMMENT__ "`SomeStruct` doesn't implement the `Clone` trait"
-                            SomeStruct(const SomeStruct&) = delete;
-                            SomeStruct& operator=(const SomeStruct&) = delete;
-
-                            // All Rust types are trivially-movable.
+                            __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+                            ~SomeStruct() = default;
                             SomeStruct(SomeStruct&&) = default;
                             SomeStruct& operator=(SomeStruct&&) = default;
 
-                            // In this test there is no custom `Drop`, so C++ can also
-                            // just use the `default` destructor.
-                            ~SomeStruct() = default;
+                            __COMMENT__ "`SomeStruct` doesn't implement the `Clone` trait"
+                            SomeStruct(const SomeStruct&) = delete;
+                            SomeStruct& operator=(const SomeStruct&) = delete;
                         public: union { ... std::int32_t x; };
                         public: union { ... std::int32_t y; };
                         private:
@@ -4122,17 +4121,14 @@ pub mod tests {
                             __COMMENT__ "`TupleStruct` doesn't implement the `Default` trait"
                             TupleStruct() = delete;
 
-                            __COMMENT__ "`TupleStruct` doesn't implement the `Clone` trait"
-                            TupleStruct(const TupleStruct&) = delete;
-                            TupleStruct& operator=(const TupleStruct&) = delete;
-
-                            // All Rust types are trivially-movable.
+                            __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+                            ~TupleStruct() = default;
                             TupleStruct(TupleStruct&&) = default;
                             TupleStruct& operator=(TupleStruct&&) = default;
 
-                            // In this test there is no custom `Drop`, so C++ can also
-                            // just use the `default` destructor.
-                            ~TupleStruct() = default;
+                            __COMMENT__ "`TupleStruct` doesn't implement the `Clone` trait"
+                            TupleStruct(const TupleStruct&) = delete;
+                            TupleStruct& operator=(const TupleStruct&) = delete;
                         public: union { ... std::int32_t __field0; };
                         public: union { ... std::int32_t __field1; };
                         private:
@@ -5333,17 +5329,14 @@ pub mod tests {
                             __COMMENT__ "`SomeEnum` doesn't implement the `Default` trait"
                             SomeEnum() = delete;
 
-                            __COMMENT__ "`SomeEnum` doesn't implement the `Clone` trait"
-                            SomeEnum(const SomeEnum&) = delete;
-                            SomeEnum& operator=(const SomeEnum&) = delete;
-
-                            // All Rust types are trivially-movable.
+                            __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+                            ~SomeEnum() = default;
                             SomeEnum(SomeEnum&&) = default;
                             SomeEnum& operator=(SomeEnum&&) = default;
 
-                            // In this test there is no custom `Drop`, so C++ can also
-                            // just use the `default` destructor.
-                            ~SomeEnum() = default;
+                            __COMMENT__ "`SomeEnum` doesn't implement the `Clone` trait"
+                            SomeEnum(const SomeEnum&) = delete;
+                            SomeEnum& operator=(const SomeEnum&) = delete;
                         private:
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[1];
@@ -5397,17 +5390,14 @@ pub mod tests {
                             __COMMENT__ "`Point` doesn't implement the `Default` trait"
                             Point() = delete;
 
-                            __COMMENT__ "`Point` doesn't implement the `Clone` trait"
-                            Point(const Point&) = delete;
-                            Point& operator=(const Point&) = delete;
-
-                            // All Rust types are trivially-movable.
+                            __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+                            ~Point() = default;
                             Point(Point&&) = default;
                             Point& operator=(Point&&) = default;
 
-                            // In this test there is no custom `Drop`, so C++ can also
-                            // just use the `default` destructor.
-                            ~Point() = default;
+                            __COMMENT__ "`Point` doesn't implement the `Clone` trait"
+                            Point(const Point&) = delete;
+                            Point& operator=(const Point&) = delete;
                         private:
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[12];
@@ -5474,17 +5464,14 @@ pub mod tests {
                             __COMMENT__ "`SomeUnion` doesn't implement the `Default` trait"
                             SomeUnion() = delete;
 
-                            __COMMENT__ "`SomeUnion` doesn't implement the `Clone` trait"
-                            SomeUnion(const SomeUnion&) = delete;
-                            SomeUnion& operator=(const SomeUnion&) = delete;
-
-                            // All Rust types are trivially-movable.
+                            __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+                            ~SomeUnion() = default;
                             SomeUnion(SomeUnion&&) = default;
                             SomeUnion& operator=(SomeUnion&&) = default;
 
-                            // In this test there is no custom `Drop`, so C++ can also
-                            // just use the `default` destructor.
-                            ~SomeUnion() = default;
+                            __COMMENT__ "`SomeUnion` doesn't implement the `Clone` trait"
+                            SomeUnion(const SomeUnion&) = delete;
+                            SomeUnion& operator=(const SomeUnion&) = delete;
                         private:
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[8];
