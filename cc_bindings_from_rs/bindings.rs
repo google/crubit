@@ -5079,7 +5079,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_item_unsupported_struct_with_custom_drop_impl() {
+    fn test_format_item_unsupported_struct_with_custom_drop_impl_and_no_default_impl() {
         let test_src = r#"
                 pub struct StructWithCustomDropImpl {
                     pub x: i32,
@@ -5097,7 +5097,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_item_unsupported_struct_with_custom_drop_glue() {
+    fn test_format_item_unsupported_struct_with_custom_drop_glue_and_no_default_impl() {
         let test_src = r#"
                 #![allow(dead_code)]
 
@@ -5110,6 +5110,51 @@ pub mod tests {
                     }
                 }
 
+                pub struct StructRequiringCustomDropGlue {
+                    field: StructWithCustomDropImpl,
+                }
+            "#;
+        test_format_item(test_src, "StructRequiringCustomDropGlue", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
+        });
+    }
+
+    #[test]
+    fn test_format_item_struct_with_custom_drop_impl_and_with_default_impl() {
+        let test_src = r#"
+                #[derive(Default)]
+                pub struct StructWithCustomDropImpl {
+                    pub x: i32,
+                    pub y: i32,
+                }
+
+                impl Drop for StructWithCustomDropImpl {
+                    fn drop(&mut self) {}
+                }
+            "#;
+        test_format_item(test_src, "StructWithCustomDropImpl", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
+        });
+    }
+
+    #[test]
+    fn test_format_item_struct_with_custom_drop_glue_and_with_default_impl() {
+        let test_src = r#"
+                #![allow(dead_code)]
+
+                // `i32` is present to avoid hitting the ZST checks related to (b/258259459)
+                #[derive(Default)]
+                struct StructWithCustomDropImpl(i32);
+
+                impl Drop for StructWithCustomDropImpl {
+                    fn drop(&mut self) {
+                        println!("dropping!");
+                    }
+                }
+
+                #[derive(Default)]
                 pub struct StructRequiringCustomDropGlue {
                     field: StructWithCustomDropImpl,
                 }
