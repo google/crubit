@@ -259,3 +259,33 @@ pub mod nested_ptr_type_mutability_qualifiers {
         }
     }
 }
+
+/// This is a regression test for b/290271595 - it verifies that Rust-side
+/// `offset_of` assertions compile okay for bindings of types that use interior
+/// mutability.  Before the bug was fixed, the test below would result in:
+///
+/// ```
+/// error[E0658]: cannot borrow here, since the borrowed element may contain interior mutability
+///   --> .../cc_bindings_from_rs/test/structs/structs_cc_api_impl.rs:254:23
+///     |
+/// 254 | const _: () = assert!(memoffset::offset_of!(::structs::...::SomeStruct, field) == 0);
+///     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+///     |
+///     = note: see issue #80384 <https://github.com/rust-lang/rust/issues/80384> for more
+///       information
+///     = help: add `#![feature(const_refs_to_cell)]` to the crate attributes to enable
+///     = note: this error originates in the macro `_memoffset__let_base_ptr` which comes from the
+///       expansion of the macro `memoffset::offset_of` (in Nightly builds, run with -Z
+///       macro-backtrace for more info)
+/// ```
+pub mod interior_mutability {
+    use std::cell::UnsafeCell;
+
+    #[derive(Debug, Default)]
+    pub struct SomeStruct {
+        /// `pub` to make sure that `assert!(memoffset::offset_of!(...) == ...)`
+        /// is generated. (Such assertions are skipped for private
+        /// fields.)
+        pub field: UnsafeCell<i32>,
+    }
+}

@@ -362,6 +362,7 @@ inline void public_function() {
 // test_crate
 
 #![allow(improper_ctypes_definitions)]
+#![feature(const_refs_to_cell)]
 
 #[no_mangle]
 extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()

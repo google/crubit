@@ -101,6 +101,12 @@ pub fn generate_bindings(input: &Input) -> Result<Output> {
         // bindings need to relax the `improper_ctypes_definitions` warning
         // for `char` (and possibly for other built-in types in the future).
         #![allow(improper_ctypes_definitions)] __NEWLINE__
+
+        // Workaround for b/290271595
+        //
+        // TODO(https://github.com/rust-lang/rust/issues/80384): Remove once the feature is
+        // stabilized.
+        #![feature(const_refs_to_cell)] __NEWLINE__
         __NEWLINE__
 
         #rs_body
