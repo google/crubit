@@ -1227,7 +1227,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
 ///
 /// `keyword`, `name` are stored separately, to support formatting them as a
 /// forward declaration - e.g. `struct SomeStruct`.
-struct AdtCoreBindings {
+struct AdtCoreBindings<'tcx> {
     /// DefId of the ADT.
     def_id: DefId,
 
@@ -1248,6 +1248,7 @@ struct AdtCoreBindings {
     /// `::some_crate::some_module::SomeStruct`.
     rs_fully_qualified_name: TokenStream,
 
+    self_ty: Ty<'tcx>,
     alignment_in_bytes: u64,
     size_in_bytes: u64,
 }
@@ -1301,28 +1302,28 @@ fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
 /// is why the `def_id` parameter is a DefId rather than LocalDefId.
 //
 // TODO(b/259724276): This function's results should be memoized.
-fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
-    let ty = tcx.type_of(def_id).subst_identity();
-    assert!(ty.is_adt());
+fn format_adt_core(tcx: TyCtxt<'_>, def_id: DefId) -> Result<AdtCoreBindings<'_>> {
+    let self_ty = tcx.type_of(def_id).subst_identity();
+    assert!(self_ty.is_adt());
     assert!(is_directly_public(tcx, def_id), "Caller should verify");
 
-    if ty.needs_drop(tcx, tcx.param_env(def_id)) {
+    if self_ty.needs_drop(tcx, tcx.param_env(def_id)) {
         // TODO(b/258251148): Support custom `Drop` impls.
         bail!("`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
     }
 
-    let adt_def = ty.ty_adt_def().expect("`def_id` needs to identify an ADT");
+    let adt_def = self_ty.ty_adt_def().expect("`def_id` needs to identify an ADT");
     let keyword = match adt_def.adt_kind() {
         ty::AdtKind::Struct | ty::AdtKind::Enum => quote! { struct },
         ty::AdtKind::Union => quote! { union },
     };
 
     let item_name = tcx.item_name(def_id);
-    let rs_fully_qualified_name = format_ty_for_rs(tcx, ty)?;
+    let rs_fully_qualified_name = format_ty_for_rs(tcx, self_ty)?;
     let cc_short_name =
         format_cc_ident(item_name.as_str()).context("Error formatting item name")?;
 
-    let layout = get_layout(tcx, ty)
+    let layout = get_layout(tcx, self_ty)
         .with_context(|| format!("Error computing the layout of #{item_name}"))?;
     ensure!(layout.abi().is_sized(), "Bindings for dynamically sized types are not supported.");
     let alignment_in_bytes = {
@@ -1340,12 +1341,13 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
         keyword,
         cc_short_name,
         rs_fully_qualified_name,
+        self_ty,
         alignment_in_bytes,
         size_in_bytes,
     })
 }
 
-fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
+fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSnippets {
     let tcx = input.tcx;
 
     // TODO(b/259749095): Support non-empty set of generic parameters.
@@ -1365,10 +1367,9 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         offset_of_next_field: u64,
         doc_comment: TokenStream,
     }
-    let ty = tcx.type_of(core.def_id).subst_identity();
-    let layout =
-        get_layout(tcx, ty).expect("Layout should be already verified by `format_adt_core`");
-    let fields: Vec<Field> = if ty.is_enum() || ty.is_union() {
+    let layout = get_layout(tcx, core.self_ty)
+        .expect("Layout should be already verified by `format_adt_core`");
+    let fields: Vec<Field> = if core.self_ty.is_enum() || core.self_ty.is_union() {
         // Note that `#[repr(Rust)]` unions don't guarantee that all their fields
         // have offset 0.
         vec![Field {
@@ -1385,7 +1386,8 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
             doc_comment: quote! {},
         }]
     } else {
-        let mut fields = ty
+        let mut fields = core
+            .self_ty
             .ty_adt_def()
             .expect("`core.def_id` needs to identify an ADT")
             .all_fields()
@@ -1578,7 +1580,7 @@ fn format_fields(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     ApiSnippets { main_api, cc_details, rs_details }
 }
 
-fn does_adt_implement_trait(tcx: TyCtxt, adt_def_id: DefId, trait_id: DefId) -> bool {
+fn does_type_implement_trait<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>, trait_id: DefId) -> bool {
     assert!(tcx.is_trait(trait_id));
 
     let generics = tcx.generics_of(trait_id);
@@ -1588,8 +1590,6 @@ fn does_adt_implement_trait(tcx: TyCtxt, adt_def_id: DefId, trait_id: DefId) -> 
         1, // Only `Self`
         "Generic traits are not supported yet (b/286941486)",
     );
-
-    let self_ty = tcx.type_of(adt_def_id).subst_identity();
     let substs = [self_ty];
 
     tcx.infer_ctxt()
@@ -1604,16 +1604,16 @@ struct TraitThunks {
     rs_thunk_impls: TokenStream,
 }
 
-fn format_trait_thunks(
-    input: &Input,
+fn format_trait_thunks<'tcx>(
+    input: &Input<'tcx>,
     trait_id: DefId,
-    adt: &AdtCoreBindings,
+    adt: &AdtCoreBindings<'tcx>,
 ) -> Result<TraitThunks> {
     let tcx = input.tcx;
     assert!(tcx.is_trait(trait_id));
 
-    let self_ty = tcx.type_of(adt.def_id).subst_identity();
-    if !does_adt_implement_trait(tcx, adt.def_id, trait_id) {
+    let self_ty = adt.self_ty;
+    if !does_type_implement_trait(tcx, self_ty, trait_id) {
         let trait_name = tcx.item_name(trait_id);
         bail!("`{self_ty}` doesn't implement the `{trait_name}` trait");
     }
@@ -1680,7 +1680,10 @@ fn get_def_id_of_default_trait(tcx: TyCtxt) -> DefId {
 /// Formats a default constructor for an ADT if possible (i.e. if the `Default`
 /// trait is implemented for the ADT).  Returns an error otherwise (e.g. if
 /// there is no `Default` impl).
-fn format_default_ctor(input: &Input, core: &AdtCoreBindings) -> Result<ApiSnippets> {
+fn format_default_ctor<'tcx>(
+    input: &Input<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+) -> Result<ApiSnippets> {
     let tcx = input.tcx;
     let trait_id = get_def_id_of_default_trait(tcx);
     let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls: rs_details } =
@@ -1714,19 +1717,18 @@ fn format_default_ctor(input: &Input, core: &AdtCoreBindings) -> Result<ApiSnipp
 /// Formats the copy constructor and the copy-assignment operator for an ADT if
 /// possible (i.e. if the `Clone` trait is implemented for the ADT).  Returns an
 /// error otherwise (e.g. if there is no `Clone` impl).
-fn format_copy_ctor_and_assignment_operator(
-    input: &Input,
-    core: &AdtCoreBindings,
+fn format_copy_ctor_and_assignment_operator<'tcx>(
+    input: &Input<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
 ) -> Result<ApiSnippets> {
     let tcx = input.tcx;
-    let ty = tcx.type_of(core.def_id).subst_identity();
     let cc_struct_name = &core.cc_short_name;
 
     let is_copy = {
         // TODO(b/259749095): Once generic ADTs are supported, `is_copy_modulo_regions`
         // might need to be replaced with a more thorough check - see
         // b/258249993#comment4.
-        ty.is_copy_modulo_regions(tcx, tcx.param_env(core.def_id))
+        core.self_ty.is_copy_modulo_regions(tcx, tcx.param_env(core.def_id))
     };
     if is_copy {
         let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
@@ -1788,10 +1790,9 @@ fn format_copy_ctor_and_assignment_operator(
 /// represented by `core`.  This function is infallible - after
 /// `format_adt_core` returns success we have committed to emitting C++ bindings
 /// for the ADT.
-fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
+fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSnippets {
     let tcx = input.tcx;
     let adt_cc_name = &core.cc_short_name;
-    let self_ty = tcx.type_of(core.def_id).subst_identity();
 
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
@@ -1808,7 +1809,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     });
 
     let destructor_and_move_snippets = {
-        assert!(!self_ty.needs_drop(tcx, tcx.param_env(core.def_id)));
+        assert!(!core.self_ty.needs_drop(tcx, tcx.param_env(core.def_id)));
         ApiSnippets {
             main_api: CcSnippet::new(quote! {
                 __NEWLINE__ __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
