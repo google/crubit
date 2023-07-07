@@ -1796,11 +1796,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
 
-    let ApiSnippets {
-        main_api: default_ctor_main_api,
-        cc_details: default_ctor_cc_details,
-        rs_details: default_ctor_rs_details,
-    } = format_default_ctor(input, core).unwrap_or_else(|err| {
+    let default_ctor_snippets = format_default_ctor(input, core).unwrap_or_else(|err| {
         let msg = format!("{err:#}");
         ApiSnippets {
             main_api: CcSnippet::new(quote! {
@@ -1811,11 +1807,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         }
     });
 
-    let ApiSnippets {
-        main_api: destructor_and_move_main_api,
-        cc_details: destructor_and_move_cc_details,
-        rs_details: destructor_and_move_rs_details,
-    } = {
+    let destructor_and_move_snippets = {
         assert!(!self_ty.needs_drop(tcx, tcx.param_env(core.def_id)));
         ApiSnippets {
             main_api: CcSnippet::new(quote! {
@@ -1857,33 +1849,20 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         }
     };
 
-    let ApiSnippets {
-        main_api: copy_ctor_and_assignment_main_api,
-        cc_details: copy_ctor_and_assignment_cc_details,
-        rs_details: copy_ctor_and_assignment_rs_details,
-    } = format_copy_ctor_and_assignment_operator(input, core).unwrap_or_else(|err| {
-        let msg = format!("{err:#}");
-        ApiSnippets {
-            main_api: CcSnippet::new(quote! {
-                __NEWLINE__ __COMMENT__ #msg
-                #adt_cc_name(const #adt_cc_name&) = delete;  __NEWLINE__
-                #adt_cc_name& operator=(const #adt_cc_name&) = delete;
-            }),
-            ..Default::default()
-        }
-    });
+    let copy_ctor_and_assignment_snippets = format_copy_ctor_and_assignment_operator(input, core)
+        .unwrap_or_else(|err| {
+            let msg = format!("{err:#}");
+            ApiSnippets {
+                main_api: CcSnippet::new(quote! {
+                    __NEWLINE__ __COMMENT__ #msg
+                    #adt_cc_name(const #adt_cc_name&) = delete;  __NEWLINE__
+                    #adt_cc_name& operator=(const #adt_cc_name&) = delete;
+                }),
+                ..Default::default()
+            }
+        });
 
-    let ApiSnippets {
-        main_api: fields_main_api,
-        cc_details: fields_cc_details,
-        rs_details: fields_rs_details,
-    } = format_fields(input, core);
-
-    let ApiSnippets {
-        main_api: impl_items_main_api,
-        cc_details: impl_items_cc_details,
-        rs_details: impl_items_rs_details,
-    } = tcx
+    let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
         .iter()
         .map(|impl_id| tcx.hir().expect_item(impl_id.expect_local()))
@@ -1908,6 +1887,25 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         })
         .collect();
 
+    let ApiSnippets {
+        main_api: public_functions_main_api,
+        cc_details: public_functions_cc_details,
+        rs_details: public_functions_rs_details,
+    } = [
+        default_ctor_snippets,
+        destructor_and_move_snippets,
+        copy_ctor_and_assignment_snippets,
+        impl_items_snippets,
+    ]
+    .into_iter()
+    .collect();
+
+    let ApiSnippets {
+        main_api: fields_main_api,
+        cc_details: fields_cc_details,
+        rs_details: fields_rs_details,
+    } = format_fields(input, core);
+
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
     let main_api = {
@@ -1927,15 +1925,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
 
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(input.support_header("internal/attribute_macros.h"));
-        let default_ctor_main_api = default_ctor_main_api.into_tokens(&mut prereqs);
-        let destructor_and_move_main_api = destructor_and_move_main_api.into_tokens(&mut prereqs);
-        let copy_ctor_and_assignment_main_api =
-            copy_ctor_and_assignment_main_api.into_tokens(&mut prereqs);
-        let impl_items_main_api = if impl_items_main_api.tokens.is_empty() {
-            quote! {}
-        } else {
-            impl_items_main_api.into_tokens(&mut prereqs)
-        };
+        let public_functions_main_api = public_functions_main_api.into_tokens(&mut prereqs);
         let fields_main_api = fields_main_api.into_tokens(&mut prereqs);
         prereqs.fwd_decls.remove(&local_def_id);
 
@@ -1945,10 +1935,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                 __NEWLINE__ #doc_comment
                 #keyword #(#attributes)* #adt_cc_name final {
                     public: __NEWLINE__
-                        #default_ctor_main_api
-                        #destructor_and_move_main_api
-                        #copy_ctor_and_assignment_main_api
-                        #impl_items_main_api
+                        #public_functions_main_api
                     #fields_main_api
                 };
                 __NEWLINE__
@@ -1957,12 +1944,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
     };
     let cc_details = {
         let mut prereqs = CcPrerequisites::default();
-        let default_ctor_cc_details = default_ctor_cc_details.into_tokens(&mut prereqs);
-        let destructor_and_move_cc_details =
-            destructor_and_move_cc_details.into_tokens(&mut prereqs);
-        let copy_ctor_and_assignment_cc_details =
-            copy_ctor_and_assignment_cc_details.into_tokens(&mut prereqs);
-        let impl_items_cc_details = impl_items_cc_details.into_tokens(&mut prereqs);
+        let public_functions_cc_details = public_functions_cc_details.into_tokens(&mut prereqs);
         let fields_cc_details = fields_cc_details.into_tokens(&mut prereqs);
         prereqs.defs.insert(local_def_id);
         prereqs.includes.insert(CcInclude::type_traits());
@@ -1979,10 +1961,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
                 static_assert(std::is_trivially_move_constructible_v<#adt_cc_name>);
                 static_assert(std::is_trivially_move_assignable_v<#adt_cc_name>);
                 __NEWLINE__
-                #default_ctor_cc_details
-                #destructor_and_move_cc_details
-                #copy_ctor_and_assignment_cc_details
-                #impl_items_cc_details
+                #public_functions_cc_details
                 #fields_cc_details
             },
         }
@@ -1992,10 +1971,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> ApiSnippets {
         quote! {
             const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
             const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
-            #default_ctor_rs_details
-            #destructor_and_move_rs_details
-            #copy_ctor_and_assignment_rs_details
-            #impl_items_rs_details
+            #public_functions_rs_details
             #fields_rs_details
         }
     };
