@@ -32,10 +32,10 @@ NamedDecl *lookup(StringRef Name, const DeclContext &DC) {
   return Result.front();
 }
 
-std::optional<bool> evaluate(dataflow::BoolValue &B,
+std::optional<bool> evaluate(const dataflow::Formula &B,
                              dataflow::Environment &Env) {
   if (Env.flowConditionImplies(B)) return true;
-  if (Env.flowConditionImplies(Env.makeNot(B))) return false;
+  if (Env.flowConditionImplies(Env.arena().makeNot(B))) return false;
   return std::nullopt;
 }
 
@@ -74,17 +74,20 @@ TEST(PointerNullabilityAnalysis, AssignNullabilityVariable) {
   auto [RetKnown, RetNull] = getPointerNullState(*Ret);
 
   // The param nullability hasn't been fixed.
-  EXPECT_EQ(std::nullopt, evaluate(*PNonnull, ExitState.Env));
-  EXPECT_EQ(std::nullopt, evaluate(*PNullable, ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(PNonnull->formula(), ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(PNullable->formula(), ExitState.Env));
   // Nor has the the nullability of the returned pointer.
-  EXPECT_EQ(std::nullopt, evaluate(RetKnown, ExitState.Env));
-  EXPECT_EQ(std::nullopt, evaluate(RetNull, ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(RetKnown.formula(), ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(RetNull.formula(), ExitState.Env));
   // However, the two are linked as expected.
-  EXPECT_EQ(true, evaluate(A.makeImplies(*PNonnull, A.makeNot(RetNull)),
+  EXPECT_EQ(true, evaluate(A.makeImplies(PNonnull->formula(),
+                                         A.makeNot(RetNull.formula())),
                            ExitState.Env));
-  EXPECT_EQ(true,
-            evaluate(A.makeEquals(A.makeOr(*PNonnull, *PNullable), RetKnown),
-                     ExitState.Env));
+  EXPECT_EQ(
+      true,
+      evaluate(A.makeEquals(A.makeOr(PNonnull->formula(), PNullable->formula()),
+                            RetKnown.formula()),
+               ExitState.Env));
 }
 
 }  // namespace

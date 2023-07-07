@@ -46,24 +46,27 @@ TEST_F(ResolveConstraintsTest, EmptyConstraintsDoNotImplyNonNull) {
 }
 
 TEST_F(ResolveConstraintsTest, ArbitraryBooleanConstraintsDoNotImplyNonNull) {
-  clang::dataflow::AtomicBoolValue Atom1;
-  clang::dataflow::AtomicBoolValue Atom2;
+  auto &A = Environment.arena();
+  auto &Atom1 = A.makeAtomValue();
+  auto &Atom2 = A.makeAtomValue();
   const llvm::DenseSet<clang::dataflow::BoolValue *> Constraints = {&Atom1,
                                                                     &Atom2};
   EXPECT_FALSE(resolveConstraints(Constraints, Pointer).must_be_nonnull());
 }
 
 TEST_F(ResolveConstraintsTest, UnsatisfiableConstraintsProducesDefaultValues) {
-  clang::dataflow::AtomicBoolValue Atom1;
-  clang::dataflow::BoolValue &NotAtom1 = Environment.makeNot(Atom1);
+  auto &A = Environment.arena();
+  auto &Atom1 = A.makeAtomValue();
+  auto &NotAtom1 = A.makeBoolValue(A.makeNot(Atom1.formula()));
   const llvm::DenseSet<clang::dataflow::BoolValue *> Constraints = {&Atom1,
                                                                     &NotAtom1};
   EXPECT_THAT(resolveConstraints(Constraints, Pointer), EqualsProto(""));
 }
 
 TEST_F(ResolveConstraintsTest, NotIsNullConstraintImpliesNonNull) {
+  auto &A = Environment.arena();
   auto &is_null = getPointerNullState(Pointer).second;
-  auto &not_is_null = Environment.makeNot(is_null);
+  auto &not_is_null = A.makeBoolValue(A.makeNot(is_null.formula()));
   const llvm::DenseSet<clang::dataflow::BoolValue *> Constraints = {
       &not_is_null};
   EXPECT_TRUE(resolveConstraints(Constraints, Pointer).must_be_nonnull());

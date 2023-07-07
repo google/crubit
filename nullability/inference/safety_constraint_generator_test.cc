@@ -18,11 +18,9 @@
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
-#include "clang/Analysis/FlowSensitive/DebugSupport.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
-#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
@@ -43,10 +41,9 @@ using ::testing::UnorderedElementsAre;
 //   Env.getPointerNullState(x).first => "x.is_known",
 //   Env.getPointerNullState(x).second => "x.is_null",
 // }
-llvm::DenseMap<const dataflow::AtomicBoolValue *, std::string>
-getNullabilityVariableNames(const FunctionDecl &Func,
-                            const dataflow::Environment &Env) {
-  llvm::DenseMap<const dataflow::AtomicBoolValue *, std::string> Result;
+dataflow::Formula::AtomNames getNullabilityVariableNames(
+    const FunctionDecl &Func, const dataflow::Environment &Env) {
+  dataflow::Formula::AtomNames Result;
   for (unsigned I = 0; I < Func.param_size(); ++I) {
     auto &Param = *Func.getParamDecl(I);
     if (auto *Val = dyn_cast_or_null<clang::dataflow::PointerValue>(
@@ -55,8 +52,8 @@ getNullabilityVariableNames(const FunctionDecl &Func,
       std::string Name = Param.getName().str();
 
       auto [Known, Null] = getPointerNullState(*Val);
-      Result[&Known] = Name + ".is_known";
-      Result[&Null] = Name + ".is_null";
+      Result[Known.getAtom()] = Name + ".is_known";
+      Result[Null.getAtom()] = Name + ".is_null";
     }
   }
   return Result;
@@ -84,11 +81,10 @@ std::vector<std::string> getSafetyConstraints(llvm::StringRef Code) {
       std::move(Inputs), [&](const dataflow::test::AnalysisOutputs &Out) {
         auto Names = getNullabilityVariableNames(*Out.Target, Out.InitEnv);
         for (const auto *Constraint : Generator.constraints()) {
-          Result.push_back(dataflow::debugString(*Constraint, Names));
-          // Debug representation is ugly, drop newlines and excess spaces.
-          replace(Result.back().begin(), Result.back().end(), '\n', ' ');
-          llvm::erase_if(Result.back(),
-                         [](char &C) { return C == ' ' && *(&C + 1) == ' '; });
+          std::string Textual;
+          llvm::raw_string_ostream OS(Textual);
+          Constraint->formula().print(OS, &Names);
+          Result.push_back(std::move(Textual));
         }
       });
   CHECK(!Err) << toString(std::move(Err));
@@ -107,7 +103,7 @@ TEST(SafetyConstraintGenerator, GeneratesNotIsNullConstraintForDeref) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *p) { *p; }
   )cc";
-  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre("(not p.is_null)"));
+  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre("!p.is_null"));
 }
 
 TEST(SafetyConstraintGenerator,
@@ -117,7 +113,7 @@ TEST(SafetyConstraintGenerator,
       if (p == nullptr) *p;
     }
   )cc";
-  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre("(not p.is_null)"));
+  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre("!p.is_null"));
 }
 
 TEST(SafetyConstraintGenerator, GeneratesConstraintsForAllParams) {
@@ -129,8 +125,7 @@ TEST(SafetyConstraintGenerator, GeneratesConstraintsForAllParams) {
     }
   )cc";
   EXPECT_THAT(getSafetyConstraints(Src),
-              UnorderedElementsAre("(not p.is_null)", "(not q.is_null)",
-                                   "(not r.is_null)"));
+              UnorderedElementsAre("!p.is_null", "!q.is_null", "!r.is_null"));
 }
 
 TEST(SafetyConstraintGenerator, DoesntGenerateConstraintForNullCheckedPtr) {
@@ -153,7 +148,7 @@ TEST(SafetyConstraintGenerator,
       p = getPtr();
     }
   )cc";
-  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre("(not p.is_null)"));
+  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre("!p.is_null"));
 }
 
 TEST(SafetyConstraintGenerator,
@@ -169,7 +164,7 @@ TEST(SafetyConstraintGenerator,
   // TODO(b/268440048) Figure out how to access and assert
   // equality for the constraint that this is.
   // (We require the value that models the getPtr() result to be non-null)
-  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre(Not("(not p.is_null)")));
+  EXPECT_THAT(getSafetyConstraints(Src), ElementsAre(Not("!p.is_null")));
 }
 }  // namespace
 }  // namespace clang::tidy::nullability

@@ -726,8 +726,8 @@ PointerTypeNullability PointerNullabilityAnalysis::assignNullabilityVariable(
     const ValueDecl *D, dataflow::Arena &A) {
   auto [It, Inserted] = NFS.DeclTopLevelNullability.try_emplace(D);
   if (Inserted) {
-    It->second.Nonnull = &A.create<dataflow::AtomicBoolValue>();
-    It->second.Nullable = &A.create<dataflow::AtomicBoolValue>();
+    It->second.Nonnull = &A.makeAtomValue();
+    It->second.Nullable = &A.makeAtomValue();
   }
   return It->second;
 }
@@ -747,7 +747,8 @@ BoolValue &mergeBoolValues(BoolValue &Bool1, const Environment &Env1,
     return Bool1;
   }
 
-  auto &MergedBool = MergedEnv.makeAtomicBoolValue();
+  auto &A = MergedEnv.arena();
+  auto &MergedBool = A.makeAtomRef(A.makeAtom());
 
   // If `Bool1` and `Bool2` is constrained to the same true / false value,
   // `MergedBool` can be constrained similarly without needing to consider the
@@ -758,18 +759,20 @@ BoolValue &mergeBoolValues(BoolValue &Bool1, const Environment &Env1,
     MergedEnv.addToFlowCondition(MergedBool);
   } else if (Env1.flowConditionImplies(Env1.makeNot(Bool1)) &&
              Env2.flowConditionImplies(Env2.makeNot(Bool2))) {
-    MergedEnv.addToFlowCondition(MergedEnv.makeNot(MergedBool));
+    MergedEnv.addToFlowCondition(A.makeNot(MergedBool));
   } else {
     // TODO(b/233582219): Flow conditions are not necessarily mutually
     // exclusive, a fix is in order: https://reviews.llvm.org/D130270. Update
     // this section when the patch is commited.
-    auto &FC1 = Env1.getFlowConditionToken();
-    auto &FC2 = Env2.getFlowConditionToken();
-    MergedEnv.addToFlowCondition(MergedEnv.makeOr(
-        MergedEnv.makeAnd(FC1, MergedEnv.makeIff(MergedBool, Bool1)),
-        MergedEnv.makeAnd(FC2, MergedEnv.makeIff(MergedBool, Bool2))));
+    auto FC1 = Env1.getFlowConditionToken();
+    auto FC2 = Env2.getFlowConditionToken();
+    MergedEnv.addToFlowCondition(
+        A.makeOr(A.makeAnd(A.makeAtomRef(FC1),
+                           A.makeEquals(MergedBool, Bool1.formula())),
+                 A.makeAnd(A.makeAtomRef(FC2),
+                           A.makeEquals(MergedBool, Bool2.formula()))));
   }
-  return MergedBool;
+  return A.makeBoolValue(MergedBool);
 }
 
 bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,

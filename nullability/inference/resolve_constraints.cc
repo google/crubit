@@ -16,8 +16,9 @@ namespace {
 bool isSatisfiable(
     const llvm::DenseSet<clang::dataflow::BoolValue *> &ConstraintSet) {
   clang::dataflow::WatchedLiteralsSolver Solver;
-  std::vector<clang::dataflow::BoolValue *> Vec(ConstraintSet.begin(),
-                                                ConstraintSet.end());
+  std::vector<const clang::dataflow::Formula *> Vec;
+  for (const auto *Constraint : ConstraintSet)
+    Vec.push_back(&Constraint->formula());
   return Solver.solve(Vec).getStatus() ==
          clang::dataflow::Solver::Result::Status::Satisfiable;
 }
@@ -25,8 +26,9 @@ bool isSatisfiable(
 bool isUnsatisfiable(
     const llvm::DenseSet<clang::dataflow::BoolValue *> &ConstraintSet) {
   clang::dataflow::WatchedLiteralsSolver Solver;
-  std::vector<clang::dataflow::BoolValue *> Vec(ConstraintSet.begin(),
-                                                ConstraintSet.end());
+  std::vector<const clang::dataflow::Formula *> Vec;
+  for (const auto *Constraint : ConstraintSet)
+    Vec.push_back(&Constraint->formula());
   return Solver.solve(Vec).getStatus() ==
          clang::dataflow::Solver::Result::Status::Unsatisfiable;
 }

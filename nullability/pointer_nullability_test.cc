@@ -24,11 +24,12 @@ TEST(NullabilityPropertiesTest, Test) {
   auto &False2 = DACtx.arena().makeNot(True);
 
   auto MakePointer =
-      [&](dataflow::BoolValue &Known,
-          dataflow::BoolValue &Null) -> dataflow::PointerValue & {
+      [&](const dataflow::Formula &Known,
+          const dataflow::Formula &Null) -> dataflow::PointerValue & {
     auto &P = Env.create<dataflow::PointerValue>(
         DACtx.createStorageLocation(QualType()));
-    initPointerNullState(P, Env, &Known, &Null);
+    initPointerNullState(P, Env, &Env.arena().makeBoolValue(Known),
+                         &Env.arena().makeBoolValue(Null));
     return P;
   };
 
