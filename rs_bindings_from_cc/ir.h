@@ -16,12 +16,14 @@
 #include <cstddef>
 #include <iomanip>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -31,6 +33,8 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/RawCommentList.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/LLVM.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"

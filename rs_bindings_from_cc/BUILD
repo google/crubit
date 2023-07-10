@@ -306,10 +306,12 @@ cc_library(
         ":bazel_types",
         "//common:strong_int",
         "@absl//absl/container:flat_hash_map",
+        "@absl//absl/container:flat_hash_set",
         "@absl//absl/log:check",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
 )
