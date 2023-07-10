@@ -49,7 +49,7 @@ namespace crubit {
 // there is an extra call to a move constructor in C++, but there are no move
 // constructors in Rust.
 template <typename T>
-union ReturnValueSlot {
+class ReturnValueSlot {
  public:
   // Creates `ReturnValueSlot` in an uninitialized state.
   ReturnValueSlot() {
@@ -97,7 +97,11 @@ union ReturnValueSlot {
   ReturnValueSlot& operator=(ReturnValueSlot&&) = delete;
 
  private:
-  T value_;
+  // Use a union to allow us full manual control of the initialization and
+  // destruction of the value.
+  union {
+    T value_;
+  };
 };
 
 }  // namespace crubit
