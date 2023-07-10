@@ -67,15 +67,11 @@ union ReturnValueSlot {
   //   without calling its destructor).
   T* Get() { return &value_; }
 
-  // Takes and returns the value.  This leaves the `ReturnValueSlot` in a
-  // moved-away state - afterwards the only valid operation is to destroy the
-  // `ReturnValueSlot` object (or assign to it, but the assignment operators
-  // have been `delete`d below).
+  // Destructively takes and returns the contained value.
   //
-  // SAFETY REQUIREMENTS:
-  // Caller should ensure the return value has been initialized before calling
-  // `AssumeInitAndTakeValue()`. (e.g. by ensuring that the value has been
-  // earlier written to the location pointed to by `GetPtr()`).
+  // Leaves the value contained in `ReturnValueSlot` uninitialized.
+  //
+  // SAFETY REQUIREMENTS: The contained value is initialized.
   T AssumeInitAndTakeValue() && {
     T return_value(std::move(value_));
     std::destroy_at(&value_);
