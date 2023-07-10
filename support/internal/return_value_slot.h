@@ -82,9 +82,8 @@ union ReturnValueSlot {
     return return_value;
   }
 
-  // SAFETY REQUIREMENTS: The return value in `other` must have been
-  // initialized.  (It is also okay if the other value is in a moved-away state
-  // after calling `AssumeInitAndTakeValue` on it).
+  // SAFETY REQUIREMENTS: The value contained in `other` must be initialized
+  // (but may be moved-from).
   ReturnValueSlot(ReturnValueSlot&& other) { value_ = std::move(other.value_); }
 
   // Does not destroy the contained value.
