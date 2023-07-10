@@ -9,8 +9,8 @@ struct LeafCcType {
   unsigned char field;
 };
 
-LeafCcType Wrap(unsigned char x) { return LeafCcType{x}; }
+inline LeafCcType Wrap(unsigned char x) { return LeafCcType{x}; }
 
-unsigned char Unwrap(LeafCcType x) { return x.field; }
+inline unsigned char Unwrap(LeafCcType x) { return x.field; }
 
 #endif  // CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_CC_LIB_H_
