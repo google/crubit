@@ -210,6 +210,7 @@ cc_library(
         "cc_ir",
         ":bazel_types",
         "//lifetime_annotations",
+        "//lifetime_annotations:type_lifetimes",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/log:check",
         "@absl//absl/status:statusor",

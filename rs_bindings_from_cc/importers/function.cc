@@ -8,6 +8,7 @@
 
 #include "absl/strings/substitute.h"
 #include "lifetime_annotations/lifetime_error.h"
+#include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "clang/AST/Type.h"
 #include "clang/Sema/Sema.h"
@@ -142,9 +143,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
     // non-static member functions receive an implicit `this` parameter.
     if (method_decl->isInstance()) {
-      std::optional<clang::tidy::lifetimes::ValueLifetimes> this_lifetimes;
+      const clang::tidy::lifetimes::ValueLifetimes* this_lifetimes = nullptr;
       if (lifetimes) {
-        this_lifetimes = lifetimes->GetThisLifetimes();
+        this_lifetimes = &lifetimes->GetThisLifetimes();
       }
       auto param_type =
           ictx_.ConvertQualType(method_decl->getThisType(), this_lifetimes,
@@ -166,9 +167,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
   for (unsigned i = 0; i < function_decl->getNumParams(); ++i) {
     const clang::ParmVarDecl* param = function_decl->getParamDecl(i);
-    std::optional<clang::tidy::lifetimes::ValueLifetimes> param_lifetimes;
+    const clang::tidy::lifetimes::ValueLifetimes* param_lifetimes = nullptr;
     if (lifetimes) {
-      param_lifetimes = lifetimes->GetParamLifetimes(i);
+      param_lifetimes = &lifetimes->GetParamLifetimes(i);
     }
     auto param_type =
         ictx_.ConvertQualType(param->getType(), param_lifetimes, std::nullopt);
@@ -191,9 +192,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
   }
 
-  std::optional<clang::tidy::lifetimes::ValueLifetimes> return_lifetimes;
+  const clang::tidy::lifetimes::ValueLifetimes* return_lifetimes = nullptr;
   if (lifetimes) {
-    return_lifetimes = lifetimes->GetReturnLifetimes();
+    return_lifetimes = &lifetimes->GetReturnLifetimes();
   }
 
   auto return_type = ictx_.ConvertQualType(function_decl->getReturnType(),

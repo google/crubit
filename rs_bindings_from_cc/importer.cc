@@ -774,14 +774,13 @@ static bool IsSameCanonicalUnqualifiedType(clang::QualType type1,
 
 absl::StatusOr<MappedType> Importer::ConvertType(
     const clang::Type* type,
-    std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+    const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
     std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
 
-  assert(!lifetimes.has_value() ||
-         IsSameCanonicalUnqualifiedType(lifetimes->Type(),
-                                        clang::QualType(type, 0)));
+  assert(!lifetimes || IsSameCanonicalUnqualifiedType(
+                           lifetimes->Type(), clang::QualType(type, 0)));
 
   if (auto override_type = GetTypeMapOverride(*type);
       override_type.has_value()) {
@@ -790,10 +789,11 @@ absl::StatusOr<MappedType> Importer::ConvertType(
              type->isRValueReferenceType()) {
     clang::QualType pointee_type = type->getPointeeType();
     std::optional<LifetimeId> lifetime;
-    if (lifetimes.has_value()) {
+    const clang::tidy::lifetimes::ValueLifetimes* pointee_lifetimes = nullptr;
+    if (lifetimes) {
       lifetime =
           LifetimeId(lifetimes->GetPointeeLifetimes().GetLifetime().Id());
-      lifetimes = lifetimes->GetPointeeLifetimes().GetValueLifetimes();
+      pointee_lifetimes = &lifetimes->GetPointeeLifetimes().GetValueLifetimes();
     }
     if (const auto* func_type =
             pointee_type->getAs<clang::FunctionProtoType>()) {
@@ -808,9 +808,11 @@ absl::StatusOr<MappedType> Importer::ConvertType(
       CRUBIT_ASSIGN_OR_RETURN(
           absl::string_view rs_abi,
           ConvertCcCallConvIntoRsAbi(func_type->getCallConv()));
-      std::optional<clang::tidy::lifetimes::ValueLifetimes> return_lifetimes;
-      if (lifetimes.has_value())
-        return_lifetimes = lifetimes->GetFuncLifetimes().GetReturnLifetimes();
+      const clang::tidy::lifetimes::ValueLifetimes* return_lifetimes = nullptr;
+      if (pointee_lifetimes) {
+        return_lifetimes =
+            &pointee_lifetimes->GetFuncLifetimes().GetReturnLifetimes();
+      }
       CRUBIT_ASSIGN_OR_RETURN(
           MappedType mapped_return_type,
           ConvertQualType(func_type->getReturnType(), return_lifetimes,
@@ -818,9 +820,11 @@ absl::StatusOr<MappedType> Importer::ConvertType(
 
       std::vector<MappedType> mapped_param_types;
       for (unsigned i = 0; i < func_type->getNumParams(); ++i) {
-        std::optional<clang::tidy::lifetimes::ValueLifetimes> param_lifetimes;
-        if (lifetimes.has_value())
-          param_lifetimes = lifetimes->GetFuncLifetimes().GetParamLifetimes(i);
+        const clang::tidy::lifetimes::ValueLifetimes* param_lifetimes = nullptr;
+        if (pointee_lifetimes) {
+          param_lifetimes =
+              &pointee_lifetimes->GetFuncLifetimes().GetParamLifetimes(i);
+        }
         CRUBIT_ASSIGN_OR_RETURN(
             MappedType mapped_param_type,
             ConvertQualType(func_type->getParamType(i), param_lifetimes,
@@ -842,7 +846,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
 
     CRUBIT_ASSIGN_OR_RETURN(
         MappedType mapped_pointee_type,
-        ConvertQualType(pointee_type, lifetimes, ref_qualifier_kind));
+        ConvertQualType(pointee_type, pointee_lifetimes, ref_qualifier_kind));
     if (type->isPointerType()) {
       return MappedType::PointerTo(std::move(mapped_pointee_type), lifetime,
                                    ref_qualifier_kind, nullable);
@@ -958,7 +962,7 @@ static clang::QualType GetUnelaboratedType(clang::QualType qual_type,
 
 absl::StatusOr<MappedType> Importer::ConvertQualType(
     clang::QualType qual_type,
-    std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+    const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
     std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
   qual_type = GetUnelaboratedType(std::move(qual_type), ctx_);
   std::string type_string = qual_type.getAsString();

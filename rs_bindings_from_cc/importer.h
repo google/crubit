@@ -83,7 +83,7 @@ class Importer final : public ImportContext {
   std::string ConvertSourceLocation(clang::SourceLocation loc) const override;
   absl::StatusOr<MappedType> ConvertQualType(
       clang::QualType qual_type,
-      std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+      const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
       std::optional<clang::RefQualifierKind> ref_qualifier_kind,
       bool nullable = true) override;
 
@@ -128,7 +128,7 @@ class Importer final : public ImportContext {
   // the `this` pointer.
   absl::StatusOr<MappedType> ConvertType(
       const clang::Type* type,
-      std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+      const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
       std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable);
   absl::StatusOr<MappedType> ConvertTypeDecl(clang::NamedDecl* decl);
 

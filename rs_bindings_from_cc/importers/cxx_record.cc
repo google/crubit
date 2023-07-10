@@ -12,6 +12,7 @@
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
+#include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "clang/AST/ASTContext.h"
@@ -375,7 +376,7 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
       access = default_access;
     }
 
-    std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
+    const clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
     absl::StatusOr<MappedType> type;
     switch (access) {
       case clang::AS_public:

@@ -8,6 +8,7 @@
 #include <string>
 
 #include "absl/log/check.h"
+#include "lifetime_annotations/type_lifetimes.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 
@@ -68,7 +69,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
                            identifier.status().message()));
   }
 
-  std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
+  clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
   // TODO(mboehme): Once lifetime_annotations supports retrieving lifetimes in
   // type aliases, pass these to ConvertQualType().
   absl::StatusOr<MappedType> underlying_type =

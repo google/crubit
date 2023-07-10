@@ -4,6 +4,8 @@
 
 #include "rs_bindings_from_cc/importers/enum.h"
 
+#include "lifetime_annotations/type_lifetimes.h"
+
 namespace crubit {
 
 std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
@@ -34,7 +36,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
         enum_decl,
         "Forward declared enums without type specifiers are not supported");
   }
-  std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
+  const clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
   absl::StatusOr<MappedType> type =
       ictx_.ConvertQualType(cc_type, no_lifetimes, std::nullopt);
   if (!type.ok()) {

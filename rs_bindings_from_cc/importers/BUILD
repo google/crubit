@@ -24,6 +24,7 @@ cc_library(
         "@absl//absl/log",
         "@absl//absl/log:check",
         "@absl//absl/log:die_if_null",
+        "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc:ast_convert",
         "//rs_bindings_from_cc:bazel_types",
         "//rs_bindings_from_cc:decl_importer",
@@ -39,6 +40,7 @@ cc_library(
     srcs = ["enum.cc"],
     hdrs = ["enum.h"],
     deps = [
+        "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
     ],
@@ -61,6 +63,7 @@ cc_library(
     deps = [
         "@absl//absl/strings",
         "//lifetime_annotations:lifetime_error",
+        "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
@@ -97,8 +100,8 @@ cc_library(
     hdrs = ["type_alias.h"],
     deps = [
         "@absl//absl/log:check",
+        "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc:decl_importer",
-        "//rs_bindings_from_cc:type_map",
         "@llvm-project//clang:ast",
     ],
 )

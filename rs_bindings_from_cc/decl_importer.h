@@ -15,6 +15,7 @@
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "lifetime_annotations/lifetime_annotations.h"
+#include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Type.h"
@@ -139,7 +140,8 @@ class ImportContext {
       clang::SourceLocation loc) const = 0;
 
   // Converts the Clang type `qual_type` into an equivalent `MappedType`.
-  // Lifetimes for the type can optionally be specified using `lifetimes`.
+  // Lifetimes for the type can optionally be specified using `lifetimes` (pass
+  // null otherwise).
   // If `qual_type` is a pointer type, `nullable` specifies whether the
   // pointer can be null.
   // TODO(b/209390498): Currently, we're able to specify nullability only for
@@ -150,7 +152,7 @@ class ImportContext {
   // nullability annotations.
   virtual absl::StatusOr<MappedType> ConvertQualType(
       clang::QualType qual_type,
-      std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+      const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
       std::optional<clang::RefQualifierKind> ref_qualifier_kind,
       bool nullable = true) = 0;
 
