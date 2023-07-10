@@ -4,7 +4,10 @@
 
 #include "lifetime_annotations/lifetime_symbol_table.h"
 
+#include <optional>
+
 #include "gtest/gtest.h"
+#include "lifetime_annotations/lifetime.h"
 
 namespace clang {
 namespace tidy {

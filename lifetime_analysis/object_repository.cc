@@ -4,15 +4,19 @@
 
 #include "lifetime_analysis/object_repository.h"
 
-#include <functional>
+#include <cassert>
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "absl/strings/str_cat.h"
 #include "lifetime_analysis/builtin_lifetimes.h"
 #include "lifetime_analysis/object.h"
+#include "lifetime_analysis/object_set.h"
+#include "lifetime_analysis/points_to_map.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/pointee_type.h"
@@ -21,12 +25,18 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#include "clang/AST/ExprObjC.h"
 #include "clang/AST/RecursiveASTVisitor.h"
+#include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang {
 namespace tidy {

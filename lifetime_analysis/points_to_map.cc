@@ -4,13 +4,20 @@
 
 #include "lifetime_analysis/points_to_map.h"
 
+#include <cassert>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
+#include "lifetime_analysis/object.h"
+#include "lifetime_analysis/object_set.h"
+#include "lifetime_annotations/lifetime.h"
 #include "clang/AST/Expr.h"
+#include "clang/Basic/LLVM.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang {
 namespace tidy {

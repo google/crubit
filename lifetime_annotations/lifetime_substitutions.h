@@ -6,7 +6,6 @@
 
 #include "lifetime_annotations/lifetime.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/Hashing.h"
 
 namespace clang {
 namespace tidy {

@@ -4,10 +4,12 @@
 
 #include "lifetime_annotations/lifetime_symbol_table.h"
 
-#include <iostream>
+#include <cassert>
+#include <cstddef>
 #include <optional>
 #include <string>
 
+#include "lifetime_annotations/lifetime.h"
 #include "llvm/Support/ErrorHandling.h"
 
 namespace clang {

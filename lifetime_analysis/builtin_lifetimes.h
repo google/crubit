@@ -5,11 +5,8 @@
 #ifndef DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_BUILTIN_LIFETIMES_H_
 #define DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_BUILTIN_LIFETIMES_H_
 
-#include <functional>
-#include <string>
-#include <variant>
-
 #include "lifetime_annotations/function_lifetimes.h"
+#include "clang/AST/Decl.h"
 
 namespace clang {
 namespace tidy {

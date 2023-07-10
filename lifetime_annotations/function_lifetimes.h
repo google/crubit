@@ -5,19 +5,28 @@
 #ifndef CRUBIT_LIFETIME_ANNOTATIONS_FUNCTION_LIFETIMES_H_
 #define CRUBIT_LIFETIME_ANNOTATIONS_FUNCTION_LIFETIMES_H_
 
+#include <cassert>
+#include <cstddef>
+#include <functional>
 #include <iosfwd>
+#include <optional>
 #include <string>
+#include <utility>
 #include <variant>
 
+#include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_substitutions.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang {
 namespace tidy {
@@ -28,7 +37,7 @@ namespace lifetimes {
 // created through calls to CreateParamLifetimes.
 class FunctionLifetimeFactory {
  public:
-  virtual ~FunctionLifetimeFactory() {}
+  virtual ~FunctionLifetimeFactory() = default;
 
   virtual llvm::Expected<ValueLifetimes> CreateThisLifetimes(
       clang::QualType type, const clang::Expr* lifetime_name) const = 0;
@@ -47,7 +56,7 @@ class FunctionLifetimeFactory {
 // Implementation of FunctionLifetimeFactory that defers to a LifetimeFactory.
 class FunctionLifetimeFactorySingleCallback : public FunctionLifetimeFactory {
  public:
-  FunctionLifetimeFactorySingleCallback(LifetimeFactory factory)
+  explicit FunctionLifetimeFactorySingleCallback(LifetimeFactory factory)
       : factory_(std::move(factory)) {}
   llvm::Expected<ValueLifetimes> CreateThisLifetimes(
       clang::QualType type,
@@ -82,7 +91,7 @@ class FunctionLifetimes {
   }
 
   // Returns the number of function parameters (excluding the implicit `this).
-  const size_t GetNumParams() const { return param_lifetimes_.size(); }
+  size_t GetNumParams() const { return param_lifetimes_.size(); }
 
   // Lifetimes for the return type.
   const ValueLifetimes& GetReturnLifetimes() const { return return_lifetimes_; }
@@ -169,7 +178,7 @@ class FunctionLifetimes {
 
   static llvm::Expected<FunctionLifetimes> Create(
       const clang::FunctionProtoType* type, clang::TypeLoc type_loc,
-      const clang::QualType this_type,
+      clang::QualType this_type,
       const FunctionLifetimeFactory& lifetime_factory);
 };
 

@@ -6,8 +6,11 @@
 #define DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_POINTS_TO_MAP_H_
 
 #include <string>
+#include <vector>
 
+#include "lifetime_analysis/object.h"
 #include "lifetime_analysis/object_set.h"
+#include "lifetime_annotations/lifetime.h"
 #include "clang/AST/Expr.h"
 #include "llvm/ADT/DenseMap.h"
 

@@ -1,12 +1,17 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #include "lifetime_annotations/lifetime_substitutions.h"
 
 #include <algorithm>
+#include <cassert>
 #include <string>
+#include <vector>
 
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
+#include "lifetime_annotations/lifetime.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang {

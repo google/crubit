@@ -5,20 +5,24 @@
 #ifndef DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_OBJECT_REPOSITORY_H_
 #define DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_OBJECT_REPOSITORY_H_
 
-#include <functional>
+#include <cstddef>
 #include <optional>
 #include <string>
-#include <variant>
+#include <utility>
 
 #include "lifetime_analysis/object.h"
 #include "lifetime_analysis/object_set.h"
 #include "lifetime_analysis/points_to_map.h"
+#include "lifetime_annotations/function_lifetimes.h"
+#include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#include "clang/AST/Type.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/Support/Allocator.h"
+#include "llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {

@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 
-#include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
+#include "lifetime_analysis/object.h"
 
 namespace clang {
 namespace tidy {

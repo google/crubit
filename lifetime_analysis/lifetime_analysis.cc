@@ -4,22 +4,21 @@
 
 #include "lifetime_analysis/lifetime_analysis.h"
 
-#include <iostream>
-#include <memory>
+#include <cassert>
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
 
-#include "lifetime_analysis/builtin_lifetimes.h"
+#include "lifetime_analysis/lifetime_constraints.h"
+#include "lifetime_analysis/lifetime_lattice.h"
 #include "lifetime_analysis/object.h"
 #include "lifetime_analysis/object_repository.h"
 #include "lifetime_analysis/object_set.h"
-#include "lifetime_analysis/pointer_compatibility.h"
 #include "lifetime_analysis/points_to_map.h"
 #include "lifetime_annotations/function_lifetimes.h"
-#include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/pointee_type.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "clang/AST/Decl.h"
@@ -32,11 +31,13 @@
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/Type.h"
 #include "clang/Analysis/CFG.h"
-#include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
-#include "llvm/ADT/ArrayRef.h"
+#include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Basic/DiagnosticIDs.h"
+#include "clang/Basic/LLVM.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/Support/Error.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang {
 namespace tidy {

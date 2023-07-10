@@ -46,7 +46,6 @@ cc_library(
         ":lifetime_symbol_table",
         ":pointee_type",
         "@absl//absl/strings",
-        "@absl//absl/strings:str_format",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
@@ -58,6 +57,7 @@ cc_library(
     srcs = ["lifetime_annotations.cc"],
     hdrs = ["lifetime_annotations.h"],
     deps = [
+        ":lifetime",
         ":lifetime_error",
         ":lifetime_symbol_table",
         ":pointee_type",
@@ -77,12 +77,17 @@ cc_test(
     deps = [
         ":lifetime_annotations",
         ":lifetime_error",
+        ":lifetime_symbol_table",
         ":type_lifetimes",
         "@com_google_googletest//:gtest_main",
         "@absl//absl/status",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
+        "@absl//absl/strings:str_format",
         "//common:status_test_matchers",
         "//lifetime_annotations/test:named_func_lifetimes",
         "//lifetime_annotations/test:run_on_code",
+        "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:tooling",
         "@llvm-project//llvm:Support",
@@ -94,8 +99,8 @@ cc_library(
     srcs = ["lifetime_substitutions.cc"],
     hdrs = ["lifetime_substitutions.h"],
     deps = [
+        ":lifetime",
         "@absl//absl/strings",
-        "//lifetime_annotations:lifetime",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -104,6 +109,7 @@ cc_test(
     name = "lifetime_substitutions_test",
     srcs = ["lifetime_substitutions_test.cc"],
     deps = [
+        ":lifetime",
         ":lifetime_substitutions",
         "@com_google_googletest//:gtest_main",
     ],
@@ -123,6 +129,7 @@ cc_test(
     name = "lifetime_symbol_table_test",
     srcs = ["lifetime_symbol_table_test.cc"],
     deps = [
+        ":lifetime",
         ":lifetime_symbol_table",
         "@com_google_googletest//:gtest_main",
     ],

@@ -4,16 +4,26 @@
 
 #include "lifetime_annotations/function_lifetimes.h"
 
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <functional>
+#include <ostream>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_error.h"
+#include "lifetime_annotations/lifetime_substitutions.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
 #include "clang/Basic/LLVM.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Error.h"
 

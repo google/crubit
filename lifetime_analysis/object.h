@@ -5,15 +5,13 @@
 #ifndef DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_OBJECT_H_
 #define DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_OBJECT_H_
 
-#include <atomic>
-#include <functional>
+#include <optional>
+#include <ostream>
 #include <string>
 
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
-#include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
-#include "llvm/ADT/Hashing.h"
 
 namespace clang {
 namespace tidy {

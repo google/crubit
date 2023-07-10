@@ -10,7 +10,6 @@
 #include <functional>
 #include <ostream>
 #include <string>
-#include <utility>
 
 #include "llvm/ADT/Hashing.h"
 

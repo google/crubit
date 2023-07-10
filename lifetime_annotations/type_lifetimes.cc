@@ -5,29 +5,35 @@
 #include "lifetime_annotations/type_lifetimes.h"
 
 #include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_error.h"
+#include "lifetime_annotations/lifetime_substitutions.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "lifetime_annotations/pointee_type.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/Expr.h"
+#include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
+#include "clang/AST/TypeOrdering.h"
 #include "clang/Basic/LLVM.h"
-#include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/DenseMapInfo.h"
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -635,8 +641,8 @@ void ValueLifetimes::Traverse(
 
 ValueLifetimes::ValueLifetimes(clang::QualType type) : type_(type) {}
 
-const llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>>
-GetTemplateArgs(clang::QualType type) {
+llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> GetTemplateArgs(
+    clang::QualType type) {
   llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> result;
 
   // Desugar any typedefs on `type`. We need to do this so that the "depth" of

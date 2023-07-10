@@ -5,10 +5,13 @@
 #ifndef CRUBIT_LIFETIME_ANALYSIS_LIFETIME_CONSTRAINTS_H_
 #define CRUBIT_LIFETIME_ANALYSIS_LIFETIME_CONSTRAINTS_H_
 
+#include <utility>
+
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {
@@ -17,7 +20,7 @@ namespace lifetimes {
 class LifetimeConstraints {
  public:
   // Creates empty constraints.
-  LifetimeConstraints() {}
+  LifetimeConstraints() = default;
 
   // Returns the constraints on `callable` that allow `replacement_callable` to
   // be used where `callable` is requested.

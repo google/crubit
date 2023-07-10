@@ -6,13 +6,14 @@
 
 #include <functional>
 
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/test/run_on_code.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {

@@ -4,12 +4,17 @@
 
 #include "lifetime_analysis/object.h"
 
+#include <cassert>
+#include <optional>
+#include <ostream>
 #include <string>
+#include <utility>
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
-#include "clang/AST/Decl.h"
+#include "clang/AST/Type.h"
 
 namespace clang {
 namespace tidy {

@@ -4,10 +4,10 @@
 
 #include "lifetime_analysis/builtin_lifetimes.h"
 
+#include <cassert>
 #include <optional>
 #include <string>
 
-#include "absl/strings/str_cat.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_annotations.h"
@@ -15,8 +15,11 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
 #include "clang/Basic/Builtins.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {

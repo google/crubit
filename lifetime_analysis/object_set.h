@@ -5,11 +5,12 @@
 #ifndef DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_OBJECT_SET_H_
 #define DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_OBJECT_SET_H_
 
+#include <cstddef>
 #include <initializer_list>
+#include <ostream>
 #include <string>
 
 #include "lifetime_analysis/object.h"
-#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallSet.h"
 
 namespace clang {

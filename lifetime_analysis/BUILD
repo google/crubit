@@ -8,19 +8,23 @@ cc_library(
     hdrs = ["analyze.h"],
     deps = [
         ":lifetime_analysis",
+        ":lifetime_constraints",
         ":lifetime_lattice",
+        ":object",
         ":object_repository",
+        ":object_set",
+        ":points_to_map",
         ":template_placeholder_support",
         "@absl//absl/strings",
         "@absl//absl/strings:str_format",
         "//lifetime_annotations",
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations:lifetime_substitutions",
-        "//lifetime_annotations:pointee_type",
         "//lifetime_annotations:type_lifetimes",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:basic",
         "@llvm-project//clang:index",
         "@llvm-project//clang:lex",
         "@llvm-project//llvm:Support",
@@ -33,12 +37,13 @@ cc_library(
     hdrs = ["template_placeholder_support.h"],
     deps = [
         "@absl//absl/strings",
-        "@absl//absl/strings:str_format",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:basic",
         "@llvm-project//clang:lex",
         "@llvm-project//clang:tooling",
+        "@llvm-project//clang:tooling_refactoring",
         "@llvm-project//clang:transformer",
         "@llvm-project//llvm:Support",
     ],
@@ -49,7 +54,6 @@ cc_library(
     srcs = ["builtin_lifetimes.cc"],
     hdrs = ["builtin_lifetimes.h"],
     deps = [
-        "@absl//absl/strings",
         "//lifetime_annotations",
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations:type_lifetimes",
@@ -64,18 +68,17 @@ cc_library(
     srcs = ["lifetime_analysis.cc"],
     hdrs = ["lifetime_analysis.h"],
     deps = [
-        ":builtin_lifetimes",
+        ":lifetime_constraints",
         ":lifetime_lattice",
         ":object",
         ":object_repository",
         ":object_set",
-        ":pointer_compatibility",
         ":points_to_map",
-        "//lifetime_annotations:lifetime",
         "//lifetime_annotations:pointee_type",
         "//lifetime_annotations:type_lifetimes",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -90,6 +93,8 @@ cc_library(
         "//lifetime_annotations:pointee_type",
         "//lifetime_annotations:type_lifetimes",
         "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -117,7 +122,6 @@ cc_library(
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations:type_lifetimes",
         "@llvm-project//clang:ast",
-        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -128,7 +132,6 @@ cc_library(
     deps = [
         ":object",
         "@absl//absl/strings",
-        "@absl//absl/strings:str_format",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -143,7 +146,7 @@ cc_test(
         "//lifetime_annotations",
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations/test:run_on_code",
-        "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
     ],
 )
 
@@ -152,10 +155,13 @@ cc_library(
     srcs = ["points_to_map.cc"],
     hdrs = ["points_to_map.h"],
     deps = [
+        ":object",
         ":object_set",
         "@absl//absl/strings",
         "@absl//absl/strings:str_format",
+        "//lifetime_annotations:lifetime",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -164,8 +170,11 @@ cc_test(
     name = "points_to_map_test",
     srcs = ["points_to_map_test.cc"],
     deps = [
+        ":object",
+        ":object_set",
         ":points_to_map",
         "@com_google_googletest//:gtest_main",
+        "//lifetime_annotations",
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations/test:run_on_code",
         "@llvm-project//clang:ast",
@@ -199,6 +208,7 @@ cc_library(
     deps = [
         "//lifetime_annotations:pointee_type",
         "@llvm-project//clang:ast",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -210,8 +220,8 @@ cc_test(
         "@com_google_googletest//:gtest_main",
         "//lifetime_annotations",
         "//lifetime_annotations/test:run_on_code",
-        "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
+        "@llvm-project//llvm:Support",
     ],
 )

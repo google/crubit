@@ -4,13 +4,22 @@
 
 #include "lifetime_analysis/lifetime_constraints.h"
 
-#include <llvm/ADT/DenseSet.h>
-
 #include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <optional>
+#include <vector>
 
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_substitutions.h"
 #include "lifetime_annotations/pointee_type.h"
+#include "lifetime_annotations/type_lifetimes.h"
+#include "clang/AST/Type.h"
+#include "clang/Analysis/FlowSensitive/DataflowLattice.h"
+#include "clang/Basic/LLVM.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {

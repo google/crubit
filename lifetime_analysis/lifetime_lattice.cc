@@ -4,16 +4,14 @@
 
 #include "lifetime_analysis/lifetime_lattice.h"
 
-#include <assert.h>
-
 #include <string>
-#include <tuple>
 #include <utility>
 
 #include "lifetime_analysis/lifetime_constraints.h"
 #include "lifetime_analysis/object_set.h"
 #include "lifetime_analysis/points_to_map.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {

@@ -5,27 +5,35 @@
 #include "lifetime_analysis/template_placeholder_support.h"
 
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <utility>
 #include <vector>
 
 #include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
-#include "absl/strings/str_replace.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Lex/Lexer.h"
+#include "clang/Tooling/Refactoring/AtomicChange.h"
 #include "clang/Tooling/Tooling.h"
+#include "clang/Tooling/Transformer/RangeSelector.h"
+#include "clang/Tooling/Transformer/RewriteRule.h"
 #include "clang/Tooling/Transformer/Stencil.h"
 #include "clang/Tooling/Transformer/Transformer.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/IntrusiveRefCntPtr.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/VirtualFileSystem.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang {
 namespace tidy {

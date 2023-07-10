@@ -49,8 +49,7 @@ llvm::Expected<GeneratedCode> GenerateTemplateInstantiationCode(
 // of the original filesystem that's being used by `original_context`.
 void RunToolOnCodeWithOverlay(
     clang::ASTContext& original_context, const std::string& filename,
-    const std::string& code,
-    const std::function<void(clang::ASTContext&)> operation);
+    const std::string& code, std::function<void(clang::ASTContext&)> operation);
 
 }  // namespace lifetimes
 }  // namespace tidy

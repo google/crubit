@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "lifetime_annotations/lifetime_substitutions.h"
 
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "lifetime_annotations/lifetime.h"
 
 namespace clang {
 namespace tidy {

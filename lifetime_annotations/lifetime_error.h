@@ -5,7 +5,12 @@
 #ifndef CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ERROR_H_
 #define CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ERROR_H_
 
+#include <string>
+#include <system_error>
+#include <utility>
+
 #include "llvm/Support/Error.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang {
 namespace tidy {

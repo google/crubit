@@ -4,6 +4,7 @@
 
 #include "lifetime_annotations/pointee_type.h"
 
+#include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
 
 namespace clang {

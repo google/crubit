@@ -4,6 +4,7 @@
 
 #include "lifetime_annotations/lifetime_annotations.h"
 
+#include <cassert>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -11,7 +12,9 @@
 #include <utility>
 
 #include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "lifetime_annotations/function_lifetimes.h"
+#include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_error.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "lifetime_annotations/pointee_type.h"
@@ -22,10 +25,14 @@
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclarationName.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/Basic/LangOptions.h"
 #include "clang/Basic/SourceLocation.h"
+#include "clang/Lex/Lexer.h"
 #include "clang/Lex/Pragma.h"
 #include "clang/Lex/Preprocessor.h"
 #include "llvm/ADT/DenseSet.h"

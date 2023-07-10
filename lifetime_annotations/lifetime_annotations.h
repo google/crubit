@@ -6,11 +6,14 @@
 #define CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ANNOTATIONS_H_
 
 #include <memory>
+#include <string>
 
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "clang/AST/Decl.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/Support/Error.h"
 
 namespace clang {

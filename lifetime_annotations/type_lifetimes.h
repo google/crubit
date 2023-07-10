@@ -5,6 +5,8 @@
 #ifndef CRUBIT_LIFETIME_ANNOTATIONS_TYPE_LIFETIMES_H_
 #define CRUBIT_LIFETIME_ANNOTATIONS_TYPE_LIFETIMES_H_
 
+#include <cassert>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -19,6 +21,7 @@
 #include "clang/AST/TypeOrdering.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMapInfo.h"
+#include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
@@ -236,7 +239,7 @@ class ObjectLifetimes {
  public:
   // Creates an invalid ObjectLifetimes, which should not be used. This is
   // provided only for usage with functions with output parameters.
-  ObjectLifetimes() {}
+  ObjectLifetimes() = default;
 
   ObjectLifetimes(Lifetime lifetime, ValueLifetimes value_lifetimes)
       : lifetime_(lifetime), value_lifetimes_(value_lifetimes) {}
@@ -306,8 +309,8 @@ class ObjectLifetimes {
 // template arguments at a given depth.
 // For example, for a type `Outer<int*, double*>::Inner<long*>`, this returns
 // (in pseudo-code) { { int*, double* }, { long* } };
-const llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>>
-GetTemplateArgs(clang::QualType type);
+llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> GetTemplateArgs(
+    clang::QualType type);
 
 // Returns any template arguments present on `type_loc`.
 // - If `type_loc` does not have template arguments, returns an empty vector.

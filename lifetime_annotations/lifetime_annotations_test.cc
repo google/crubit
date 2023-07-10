@@ -4,21 +4,31 @@
 
 #include "lifetime_annotations/lifetime_annotations.h"
 
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "common/status_test_matchers.h"
 #include "lifetime_annotations/lifetime_error.h"
+#include "lifetime_annotations/lifetime_symbol_table.h"
 #include "lifetime_annotations/test/named_func_lifetimes.h"
 #include "lifetime_annotations/test/run_on_code.h"
 #include "lifetime_annotations/type_lifetimes.h"
+#include "clang/AST/Decl.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Tooling/Tooling.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/raw_ostream.h"
 
 // This file contains tests both for the "legacy" lifetime annotations
 // (`[[clang::annotate("lifetimes", ...)]]` placed on a function declaration)

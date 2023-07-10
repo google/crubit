@@ -6,13 +6,13 @@
 #define DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_LIFETIME_LATTICE_H_
 
 #include <string>
+#include <tuple>
 #include <utility>
 #include <variant>
 
 #include "lifetime_analysis/lifetime_constraints.h"
 #include "lifetime_analysis/object_set.h"
 #include "lifetime_analysis/points_to_map.h"
-#include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "llvm/ADT/StringRef.h"
 

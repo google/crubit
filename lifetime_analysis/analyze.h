@@ -7,14 +7,12 @@
 
 #include <functional>
 #include <string>
-#include <variant>
 
 #include "lifetime_analysis/lifetime_analysis.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "clang/AST/Decl.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/SmallVector.h"
 
 namespace clang {
 namespace tidy {

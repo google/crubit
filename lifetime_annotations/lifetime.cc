@@ -4,6 +4,11 @@
 
 #include "lifetime_annotations/lifetime.h"
 
+#include <atomic>
+#include <cassert>
+#include <ostream>
+#include <string>
+
 #include "absl/strings/str_cat.h"
 
 namespace clang {

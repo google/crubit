@@ -5,6 +5,9 @@
 #include "lifetime_analysis/analyze.h"
 
 #include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
@@ -16,15 +19,19 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
-#include "absl/strings/str_replace.h"
+#include "absl/strings/string_view.h"
 #include "lifetime_analysis/lifetime_analysis.h"
+#include "lifetime_analysis/lifetime_constraints.h"
 #include "lifetime_analysis/lifetime_lattice.h"
+#include "lifetime_analysis/object.h"
 #include "lifetime_analysis/object_repository.h"
+#include "lifetime_analysis/object_set.h"
+#include "lifetime_analysis/points_to_map.h"
 #include "lifetime_analysis/template_placeholder_support.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
+#include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/lifetime_substitutions.h"
-#include "lifetime_annotations/pointee_type.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
@@ -37,14 +44,22 @@
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/ControlFlowContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
+#include "clang/Basic/DiagnosticIDs.h"
+#include "clang/Basic/LLVM.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Index/USRGeneration.h"
 #include "clang/Lex/Lexer.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang {
 namespace tidy {

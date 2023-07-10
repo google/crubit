@@ -4,13 +4,15 @@
 
 #include "lifetime_analysis/object_set.h"
 
+#include <optional>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "lifetime_analysis/object.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/test/run_on_code.h"
-#include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
+#include "clang/AST/ASTContext.h"
 
 namespace clang {
 namespace tidy {
