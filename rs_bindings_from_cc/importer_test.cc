@@ -863,5 +863,14 @@ TEST(ImporterTest, RecordItemIds) {
                     Contains(VariantWith<Func>(IdentifierIs("baz")))));
 }
 
+// This test currently results in a crash, see b/290329656.
+TEST(ImporterTest, DISABLED_CrashDueToAssertionInGetPointeeLifetimes) {
+  absl::string_view file = R"cc(
+    using Callback = void(const int&);
+    void SetHook(Callback* cb);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+}
+
 }  // namespace
 }  // namespace crubit
