@@ -35,10 +35,14 @@ struct MonitoringHelper {
   }
 
   MonitoringHelper& operator=(MonitoringHelper&& other) {
-    // Destruct old field values.  It is okay for `operator=` to assume that
-    // `this` has been initialized.
+    // `operator=` runs on an initialized object, and receives an initialized
+    // object (but either may be moved-from).
     CHECK_NE(state, kUninitializedState);
     CHECK_NE(state, kDestroyedState);
+    CHECK_NE(other.state, kUninitializedState);
+    CHECK_NE(other.state, kDestroyedState);
+
+    // Pretend to destroy old field values.
     destroyed_states->push_back(state);
 
     state = other.state;
@@ -48,8 +52,7 @@ struct MonitoringHelper {
   }
 
   ~MonitoringHelper() {
-    // It is okay for the destructor to assume that `this` has been initialized
-    // + that there is no double-free.
+    // The destructor runs on an initialized object (but it may be moved-from).
     CHECK_NE(state, kUninitializedState);
     CHECK_NE(state, kDestroyedState);
     destroyed_states->push_back(state);
@@ -77,8 +80,7 @@ TEST(ReturnValueSlot, Test) {
     // No destructors should run up to this point.
     EXPECT_THAT(destroyed_states, testing::IsEmpty());
 
-    // The placement `new` below simulates a Rust thunk that populates
-    // `slot_ptr` (typically by calling `MaybeUninit<T>::write`).
+    // Initialize the memory.
     new (slot_ptr) MonitoringHelper(kReturnedValue, &destroyed_states);
     EXPECT_THAT(destroyed_states, testing::IsEmpty());
 
@@ -91,13 +93,13 @@ TEST(ReturnValueSlot, Test) {
     // kMovedAwayState.
     //
     // Additionally, a temporary `MonitoringHelper` value in a moved-away state
-    // will be destroyed..
+    // will be destroyed.
     EXPECT_THAT(
         destroyed_states,
         testing::ElementsAre(kMovedAwayState, kInitialValue, kMovedAwayState));
     // The value inside `ReturnValueSlot` (pointed to by `slot_ptr`) should be
-    // in a `kMovedAwayState` at this point (certainly not in
-    // `kDestroyedState`).
+    // in a `kDestroyedState` state at this point due to
+    // `AssumeInitAndTakeValue()`.
     EXPECT_EQ(kDestroyedState, slot_ptr->state);
     EXPECT_EQ(kReturnedValue, return_value.state);
   }
