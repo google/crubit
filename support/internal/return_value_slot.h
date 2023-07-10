@@ -44,10 +44,10 @@ namespace crubit {
 //   out of `ReturnValueSlot::value_`, and then destructing the moved-away
 //   `ReturnValueSlot::value_`).
 //
-// Behavior of `ReturnValueSlot<T>` in steps 1 and 2 is somewhat similar to
+// Behavior of `ReturnValueSlot<T>` in steps 1 and 2 is identical to
 // `MaybeUninit<T>` in Rust, but the behavior on line 3 is a bit different:
-// - There are no move constructors in Rust
-// - Dropping `MaybeUninit<T>` doesn't drop `T`
+// there is an extra call to a move constructor in C++, but there are no move
+// constructors in Rust.
 template <typename T>
 union ReturnValueSlot {
  public:
@@ -87,9 +87,14 @@ union ReturnValueSlot {
   // after calling `AssumeInitAndTakeValue` on it).
   ReturnValueSlot(ReturnValueSlot&& other) { value_ = std::move(other.value_); }
 
+  // Does not destroy the contained value.
+  //
+  // Before `~ReturnValueSlot()` is invoked, the contained value should be
+  // destroyed by the user (typically, by calling `AssumeInitAndTakeValue`).  If
+  // the contained value is left initialized by the time `~ReturnValueSlot()`
+  // runs, the value is leaked.
   ~ReturnValueSlot() {
-    // Not destroying or otherwise using `value_`, because it may still be in
-    // an uninitialized state - e.g. in case of a panic.
+    // Not destroying or otherwise using `value_`.
   }
 
   ReturnValueSlot(const ReturnValueSlot&) = delete;
