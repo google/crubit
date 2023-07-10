@@ -2,10 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "absl/base/attributes.h"
-
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_
+
+#include "absl/base/attributes.h"
 
 // Style waiver granted in <internal link>
 #if ABSL_HAVE_CPP_ATTRIBUTE(clang::annotate) && \
