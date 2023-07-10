@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_KNOWN_TYPES_MAP_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_KNOWN_TYPES_MAP_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_KNOWN_TYPES_MAP_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_KNOWN_TYPES_MAP_H_
 
 #include <optional>
 
@@ -27,4 +27,4 @@ std::optional<MappedType> GetTypeMapOverride(const clang::Type& cc_type);
 
 }  // namespace crubit
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_KNOWN_TYPES_MAP_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_KNOWN_TYPES_MAP_H_

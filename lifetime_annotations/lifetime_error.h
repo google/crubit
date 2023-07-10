@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ERROR_H_
-#define THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ERROR_H_
+#ifndef CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ERROR_H_
+#define CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ERROR_H_
 
 #include "llvm/Support/Error.h"
 
@@ -43,4 +43,4 @@ class LifetimeError : public llvm::ErrorInfo<LifetimeError> {
 }  // namespace tidy
 }  // namespace clang
 
-#endif  // THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ERROR_H_
+#endif  // CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ERROR_H_

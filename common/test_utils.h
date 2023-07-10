@@ -4,8 +4,8 @@
 
 // A collection of utility functions for Gunit tests.
 
-#ifndef THIRD_PARTY_CRUBIT_COMMON_TEST_UTILS_H_
-#define THIRD_PARTY_CRUBIT_COMMON_TEST_UTILS_H_
+#ifndef CRUBIT_COMMON_TEST_UTILS_H_
+#define CRUBIT_COMMON_TEST_UTILS_H_
 
 #include <string>
 #include <vector>
@@ -24,4 +24,4 @@ std::string WriteFileForCurrentTest(absl::string_view filename,
 std::vector<std::string> DefaultClangArgs();
 
 }  // namespace crubit
-#endif  // THIRD_PARTY_CRUBIT_COMMON_TEST_UTILS_H_
+#endif  // CRUBIT_COMMON_TEST_UTILS_H_

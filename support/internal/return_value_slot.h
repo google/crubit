@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_
-#define THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_
+#ifndef CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_
+#define CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_
 
 #include <memory>
 #include <utility>
@@ -102,4 +102,4 @@ union ReturnValueSlot {
 
 }  // namespace crubit
 
-#endif  // THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_
+#endif  // CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_

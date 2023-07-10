@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_COMMON_TEST_MIDDLE_CC_LIB_H_
-#define THIRD_PARTY_CRUBIT_COMMON_TEST_MIDDLE_CC_LIB_H_
+#ifndef CRUBIT_COMMON_TEST_MIDDLE_CC_LIB_H_
+#define CRUBIT_COMMON_TEST_MIDDLE_CC_LIB_H_
 
 #include "common/test/bidirectional_deps/leaf_rs_lib_cc_api.h"
 
@@ -20,4 +20,4 @@ inline unsigned char Unwrap(leaf_rs_lib::LeafRsType x) {
 
 }  // namespace crubit
 
-#endif  // THIRD_PARTY_CRUBIT_COMMON_TEST_MIDDLE_CC_LIB_H_
+#endif  // CRUBIT_COMMON_TEST_MIDDLE_CC_LIB_H_

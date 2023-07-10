@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_COMMON_STATUS_TEST_MATCHERS_H_
-#define THIRD_PARTY_CRUBIT_COMMON_STATUS_TEST_MATCHERS_H_
+#ifndef CRUBIT_COMMON_STATUS_TEST_MATCHERS_H_
+#define CRUBIT_COMMON_STATUS_TEST_MATCHERS_H_
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -194,4 +194,4 @@ testing::PolymorphicMatcher<detail::StatusIsMatcher> StatusIs(
   lhs = std::move(PASTE(_status, __LINE__)).value();
 }  // namespace crubit
 
-#endif  // THIRD_PARTY_CRUBIT_COMMON_STATUS_TEST_MATCHERS_H_
+#endif  // CRUBIT_COMMON_STATUS_TEST_MATCHERS_H_

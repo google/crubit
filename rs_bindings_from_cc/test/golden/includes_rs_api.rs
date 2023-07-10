@@ -20,6 +20,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INCLUDES_H_
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INCLUDES_H_
 
 const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());

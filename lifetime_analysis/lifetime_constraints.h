@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_LIFETIME_ANALYSIS_LIFETIME_CONSTRAINTS_H_
-#define THIRD_PARTY_CRUBIT_LIFETIME_ANALYSIS_LIFETIME_CONSTRAINTS_H_
+#ifndef CRUBIT_LIFETIME_ANALYSIS_LIFETIME_CONSTRAINTS_H_
+#define CRUBIT_LIFETIME_ANALYSIS_LIFETIME_CONSTRAINTS_H_
 
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
@@ -65,4 +65,4 @@ class LifetimeConstraints {
 }  // namespace tidy
 }  // namespace clang
 
-#endif  // THIRD_PARTY_CRUBIT_LIFETIME_ANALYSIS_LIFETIME_CONSTRAINTS_H_
+#endif  // CRUBIT_LIFETIME_ANALYSIS_LIFETIME_CONSTRAINTS_H_

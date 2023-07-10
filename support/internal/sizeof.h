@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_SIZEOF_H_
-#define THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_SIZEOF_H_
+#ifndef CRUBIT_SUPPORT_INTERNAL_SIZEOF_H_
+#define CRUBIT_SUPPORT_INTERNAL_SIZEOF_H_
 
 // like sizeof, but rounds up to alignment, in case the type has a strange
 // sizeof.
@@ -19,4 +19,4 @@
   ((sizeof(__VA_ARGS__) + alignof(__VA_ARGS__) - 1) / alignof(__VA_ARGS__) * \
    alignof(__VA_ARGS__))
 
-#endif  // THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_SIZEOF_H_
+#endif  // CRUBIT_SUPPORT_INTERNAL_SIZEOF_H_

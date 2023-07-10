@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPE_DECL_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPE_DECL_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPE_DECL_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPE_DECL_H_
 
 #include "rs_bindings_from_cc/decl_importer.h"
 namespace crubit {
@@ -17,4 +17,4 @@ class TypeMapOverrideImporter final : public DeclImporterBase<clang::TypeDecl> {
 
 }  // namespace crubit
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPE_DECL_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPE_DECL_H_

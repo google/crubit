@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_OFFSETOF_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_OFFSETOF_H_
+#ifndef CRUBIT_SUPPORT_OFFSETOF_H_
+#define CRUBIT_SUPPORT_OFFSETOF_H_
 
 #include <cstddef>
 

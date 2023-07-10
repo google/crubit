@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -105,4 +105,4 @@ TEST(TypeMapOverrideClass, MyI8Class);
 TEST(TypeMapOverrideEnum, MyI8Enum);
 TEST(TypeMapOverrideAlias, MyI8Alias);
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_

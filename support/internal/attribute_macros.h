@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_
-#define THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_
+#ifndef CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_
+#define CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_
 
 #include "absl/base/attributes.h"
 
@@ -71,4 +71,4 @@
 #define CRUBIT_INTERNAL_SAME_ABI \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_same_abi")
 
-#endif  // THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_
+#endif  // CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_

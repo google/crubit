@@ -667,7 +667,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for TypedefUnionWithI
     }
 }
 
-// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNIONS_H_
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNIONS_H_
 
 mod detail {
     #[allow(unused_imports)]

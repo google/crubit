@@ -307,7 +307,7 @@ pub mod private_classes {
 
 // namespace private_classes
 
-// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_
 
 #[derive(Clone, Copy)]
 #[repr(C)]

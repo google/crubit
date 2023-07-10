@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_INLINE_INLINE_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_INLINE_INLINE_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_INLINE_INLINE_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_INLINE_INLINE_H_
 
 #pragma clang lifetime_elision
 
@@ -31,4 +31,4 @@ inline int GetStructValue4(const foo::inline1::MyStruct& s) { return s.value; }
 #pragma clang diagnostic pop
 }  // namespace foo
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_INLINE_INLINE_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_INLINE_INLINE_H_

@@ -92,7 +92,7 @@ pub mod test_namespace_bindings {
 
 // namespace test_namespace_bindings
 
-// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_SOURCE_ORDER_H_
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_SOURCE_ORDER_H_
 
 #[derive(Clone, Copy)]
 #[repr(C)]
