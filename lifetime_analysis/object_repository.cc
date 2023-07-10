@@ -67,7 +67,7 @@ class ObjectRepository::VarDeclVisitor
   bool VisitReturnStmt(clang::ReturnStmt* stmt) {
     const clang::Expr* expr = stmt->getRetValue();
     if (IsInitExprInitializingARecordObject(expr)) {
-      PropagateInitializedObject(expr, object_repository_.return_object_);
+      PropagateResultObject(expr, object_repository_.return_object_);
     }
     return true;
   }
@@ -99,10 +99,10 @@ class ObjectRepository::VarDeclVisitor
 
   bool VisitObjCMessageExpr(clang::ObjCMessageExpr* msg_expr) {
     // ObjCMessageExpr is an initializer expression terminator, so we should
-    // have walked down from the object which requires initialization to find
-    // its terminating expressions, which should have found this expression and
-    // connected it to that object already.
-    if (!object_repository_.initialized_objects_.count(msg_expr)) {
+    // have walked down from the result object to find its terminating
+    // expressions, which should have found this expression and connected it to
+    // that object already.
+    if (!object_repository_.result_objects_.count(msg_expr)) {
       msg_expr->dump();
       llvm::report_fatal_error(
           "Missing initializer for ObjCMessageExpr, we did not record it "
@@ -114,7 +114,7 @@ class ObjectRepository::VarDeclVisitor
   // Create objects for function call arguments.
   bool VisitCallExpr(clang::CallExpr* call_expr) {
     if (IsInitExprInitializingARecordObject(call_expr)) {
-      assert(InitializedObjectWasPropagatedTo(call_expr));
+      assert(ResultObjectWasPropagatedTo(call_expr));
     }
 
     FunctionLifetimeFactorySingleCallback lifetime_factory(
@@ -154,7 +154,7 @@ class ObjectRepository::VarDeclVisitor
   }
 
   bool VisitCXXConstructExpr(clang::CXXConstructExpr* construct_expr) {
-    assert(InitializedObjectWasPropagatedTo(construct_expr));
+    assert(ResultObjectWasPropagatedTo(construct_expr));
 
     FunctionLifetimeFactorySingleCallback lifetime_factory(
         [](auto) { return Lifetime::CreateVariable(); });
@@ -170,7 +170,7 @@ class ObjectRepository::VarDeclVisitor
     // We only want to visit in Semantic form, we ignore Syntactic form.
     if (IsInitExprInitializingARecordObject(init_list_expr) &&
         init_list_expr->isSemanticForm() && !init_list_expr->isTransparent()) {
-      assert(InitializedObjectWasPropagatedTo(init_list_expr));
+      assert(ResultObjectWasPropagatedTo(init_list_expr));
     }
     return true;
   }
@@ -254,7 +254,7 @@ class ObjectRepository::VarDeclVisitor
     }
 
     if (var->hasInit() && var->getType()->isRecordType()) {
-      PropagateInitializedObject(var->getInit(), object);
+      PropagateResultObject(var->getInit(), object);
     }
   }
 
@@ -283,14 +283,14 @@ class ObjectRepository::VarDeclVisitor
         [](const clang::Expr*) { return Lifetime::CreateVariable(); });
 
     if (type->isRecordType()) {
-      PropagateInitializedObject(expr, object);
+      PropagateResultObject(expr, object);
     }
     return object;
   }
 
-  // Propagates an `object` of record type that is to be initialized to the
-  // expressions that actually perform the initialization (we call these
-  // "terminating expressions").
+  // Propagates a result object `object` of record type to the expressions that
+  // actually perform the initialization (we call these "terminating
+  // expressions").
   //
   // `expr` is the initializer for a variable; this will contain one or
   // several terminating expressions (such as a CXXConstructExpr, InitListExpr,
@@ -301,10 +301,9 @@ class ObjectRepository::VarDeclVisitor
   // initialize temporary objects. This function takes care to propagate
   // `object` only to the appropriate terminating expressions.
   //
-  // The mapping from a terminating expression to the object it initializes
-  // is stored in `object_repository_.initialized_objects_`.
-  void PropagateInitializedObject(const clang::Expr* expr,
-                                  const Object* object) {
+  // The mapping from a terminating expression to the result object it
+  // initializes is stored in `object_repository_.result_objects_`.
+  void PropagateResultObject(const clang::Expr* expr, const Object* object) {
     // TODO(danakj): Use StmtVisitor to implement this method.
 
     // Terminating expressions. Expressions that don't initialize a record
@@ -318,7 +317,7 @@ class ObjectRepository::VarDeclVisitor
           clang::isa<clang::CallExpr>(expr) ||
           clang::isa<clang::ObjCMessageExpr>(expr) ||
           clang::isa<clang::LambdaExpr>(expr)) {
-        object_repository_.initialized_objects_[expr] = object;
+        object_repository_.result_objects_[expr] = object;
         return;
       }
       if (auto* e = clang::dyn_cast<clang::InitListExpr>(expr)) {
@@ -327,10 +326,10 @@ class ObjectRepository::VarDeclVisitor
           // A field initializer like `S s{cond ? S{} : S{}}` is considered
           // transparent, and the actual initializer is within.
           for (const clang::Expr* init : e->inits()) {
-            PropagateInitializedObject(init, object);
+            PropagateResultObject(init, object);
           }
         } else {
-          object_repository_.initialized_objects_[e] = object;
+          object_repository_.result_objects_[e] = object;
         }
         return;
       }
@@ -342,31 +341,31 @@ class ObjectRepository::VarDeclVisitor
     // as we can stop at terminating expressions and ignore many expressions
     // that don't occur in the code we're analyzing.
     if (auto* e = clang::dyn_cast<clang::ParenExpr>(expr)) {
-      PropagateInitializedObject(e->getSubExpr(), object);
+      PropagateResultObject(e->getSubExpr(), object);
       return;
     }
     if (auto* e = clang::dyn_cast<clang::UnaryOperator>(expr)) {
-      PropagateInitializedObject(e->getSubExpr(), object);
+      PropagateResultObject(e->getSubExpr(), object);
       return;
     }
     if (auto* e = clang::dyn_cast<clang::SubstNonTypeTemplateParmExpr>(expr)) {
-      PropagateInitializedObject(e->getReplacement(), object);
+      PropagateResultObject(e->getReplacement(), object);
       return;
     }
     if (auto* e = clang::dyn_cast<clang::CastExpr>(expr)) {
-      PropagateInitializedObject(e->getSubExpr(), object);
+      PropagateResultObject(e->getSubExpr(), object);
       return;
     }
     if (auto* e = clang::dyn_cast<clang::CXXDefaultArgExpr>(expr)) {
-      PropagateInitializedObject(e->getExpr(), object);
+      PropagateResultObject(e->getExpr(), object);
       return;
     }
     if (auto* e = clang::dyn_cast<clang::CXXDefaultInitExpr>(expr)) {
-      PropagateInitializedObject(e->getExpr(), object);
+      PropagateResultObject(e->getExpr(), object);
       return;
     }
     if (auto* e = clang::dyn_cast<clang::ExprWithCleanups>(expr)) {
-      PropagateInitializedObject(e->getSubExpr(), object);
+      PropagateResultObject(e->getSubExpr(), object);
       return;
     }
 
@@ -374,7 +373,7 @@ class ObjectRepository::VarDeclVisitor
     if (auto* e = clang::dyn_cast<clang::BinaryOperator>(expr)) {
       if (e->isCommaOp()) {
         AddTemporaryObjectForExpression(e->getLHS());
-        PropagateInitializedObject(e->getRHS(), object);
+        PropagateResultObject(e->getRHS(), object);
         return;
       }
 
@@ -387,8 +386,8 @@ class ObjectRepository::VarDeclVisitor
     }
     if (auto* e = clang::dyn_cast<clang::AbstractConditionalOperator>(expr)) {
       AddTemporaryObjectForExpression(e->getCond());
-      PropagateInitializedObject(e->getTrueExpr(), object);
-      PropagateInitializedObject(e->getFalseExpr(), object);
+      PropagateResultObject(e->getTrueExpr(), object);
+      PropagateResultObject(e->getFalseExpr(), object);
       return;
     }
 
@@ -397,13 +396,12 @@ class ObjectRepository::VarDeclVisitor
         "Unexpected expression in initializer expression tree");
   }
 
-  bool InitializedObjectWasPropagatedTo(clang::Expr* terminating_expr) {
+  bool ResultObjectWasPropagatedTo(clang::Expr* terminating_expr) {
     // An expression that initializes an object should have already been
-    // connected to the object it initializes. We should have walked down from
-    // the object which requires initialization to find its terminating
-    // expressions.
-    if (!object_repository_.initialized_objects_.count(terminating_expr)) {
-      llvm::errs() << "Missing initialized object for terminating expression, "
+    // connected to the result object it initializes. We should have walked down
+    // from the result object to find its terminating expressions.
+    if (!object_repository_.result_objects_.count(terminating_expr)) {
+      llvm::errs() << "Missing result object for terminating expression, "
                       "we did not record it when we visited something earlier "
                       "in the tree yet?\n";
       terminating_expr->dump();
@@ -434,7 +432,7 @@ class ObjectRepository::VarDeclVisitor
 
         const Object* field_object =
             object_repository_.GetFieldObject(*this_object, init->getMember());
-        PropagateInitializedObject(init_expr, field_object);
+        PropagateResultObject(init_expr, field_object);
       } else if (init->getBaseClass()) {
         std::optional<const Object*> this_object =
             object_repository_.GetThisObject();
@@ -442,7 +440,7 @@ class ObjectRepository::VarDeclVisitor
 
         const Object* base_object = object_repository_.GetBaseClassObject(
             *this_object, init->getBaseClass());
-        PropagateInitializedObject(init_expr, base_object);
+        PropagateResultObject(init_expr, base_object);
       }
 
       // Traverse after finishing with the outer expression, including
@@ -675,18 +673,18 @@ const Object* ObjectRepository::GetCXXConstructExprThisPointer(
   return iter->second;
 }
 
-const Object* ObjectRepository::GetInitializedObject(
+const Object* ObjectRepository::GetResultObject(
     const clang::Expr* initializer_expr) const {
   assert(clang::isa<clang::CXXConstructExpr>(initializer_expr) ||
          clang::isa<clang::InitListExpr>(initializer_expr) ||
          clang::isa<clang::CallExpr>(initializer_expr));
 
-  auto iter = initialized_objects_.find(initializer_expr);
-  if (iter == initialized_objects_.end()) {
-    llvm::errs() << "Didn't find object for initializer:\n";
+  auto iter = result_objects_.find(initializer_expr);
+  if (iter == result_objects_.end()) {
+    llvm::errs() << "Didn't find result object for initializer:\n";
     initializer_expr->dump();
     llvm::errs() << "\n" << DebugString();
-    llvm::report_fatal_error("Didn't find object for initializer");
+    llvm::report_fatal_error("Didn't find result object for initializer");
   }
   return iter->second;
 }

@@ -702,8 +702,7 @@ std::optional<std::string> TransferStmtVisitor::VisitInitListExpr(
       return std::nullopt;
     }
     // The object set for each field should be pointing to the initializers.
-    const Object* init_object =
-        object_repository_.GetInitializedObject(init_list);
+    const Object* init_object = object_repository_.GetResultObject(init_list);
     TransferInitializer(init_object, init_list->getType(), object_repository_,
                         init_list, TargetPointeeBehavior::kKeep, points_to_map_,
                         constraints_);
@@ -897,7 +896,7 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
   }
 
   if (IsInitExprInitializingARecordObject(call)) {
-    const Object* init_object = object_repository_.GetInitializedObject(call);
+    const Object* init_object = object_repository_.GetResultObject(call);
     GenerateConstraintsForObjectLifetimeEquality(
         {init_object}, {object_repository_.GetCallExprRetObject(call)},
         init_object->Type(), points_to_map_, object_repository_, constraints_);
@@ -947,7 +946,7 @@ std::optional<std::string> TransferStmtVisitor::VisitCXXConstructExpr(
   // initialized.
   HandlePointsToSetExtension(
       {object_repository_.GetCXXConstructExprThisPointer(construct_expr)},
-      {object_repository_.GetInitializedObject(construct_expr)},
+      {object_repository_.GetResultObject(construct_expr)},
       constructor->getThisType(), object_repository_, points_to_map_,
       constraints_);
 

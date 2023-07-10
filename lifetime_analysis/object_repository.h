@@ -139,8 +139,8 @@ class ObjectRepository {
 
   // Returns the object associated with the `this` argument to a
   // CXXConstructExpr. Note that this object represents the `this` pointer, not
-  // the object that the method is being called on (which is represnted by the
-  // object from GetInitializedObject()).
+  // the object that the method is being called on (which is represented by the
+  // object from GetResultObject()).
   const Object* GetCXXConstructExprThisPointer(
       const clang::CXXConstructExpr* expr) const;
 
@@ -149,7 +149,7 @@ class ObjectRepository {
   // represents the actual class object being initialized, not the `this`
   // pointer to it that is passed to methods of the class, and which is
   // represented by the object from GetCXXConstructExprThisPointer().
-  const Object* GetInitializedObject(const clang::Expr* initializer_expr) const;
+  const Object* GetResultObject(const clang::Expr* initializer_expr) const;
 
   // Returns the object that represents `*this`, if in a member function.
   std::optional<const Object*> GetThisObject() const { return this_object_; }
@@ -258,13 +258,13 @@ class ObjectRepository {
   llvm::DenseMap<const clang::ParmVarDecl*, const Object*>
       initial_parameter_object_;
 
-  // Map from each initializer (constructors or initializer lists) to the object
-  // which it initializes.
+  // Map from each initializer (constructors or initializer lists) to the result
+  // object which it initializes.
   //
   // An object in this map may occur in other places too: `object_repository_`
   // if it is an lvalue, or `return_object_`. Or it may be a temporary in which
   // case it is only found in this map.
-  llvm::DenseMap<const clang::Expr*, const Object*> initialized_objects_;
+  llvm::DenseMap<const clang::Expr*, const Object*> result_objects_;
 
   std::optional<const Object*> this_object_;
   const Object* return_object_;
