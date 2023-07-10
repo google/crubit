@@ -1454,7 +1454,15 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                     fields[index].offset = offset.bytes();
                 }
                 // Sort by offset first; ZSTs in the same offset are sorted by source order.
-                fields.sort_by_key(|field| (field.offset, field.index));
+                fields.sort_by_key(|field| {
+                    // Get field size to ensure ZSTs at the same offsite as non-ZSTs sort first
+                    // so we don't have weird offset issues later on.
+                    let field_size = match field.type_info.as_ref() {
+                        Ok(ti) => ti.size,
+                        Err(_) => 0,
+                    };
+                    (field.offset, field_size, field.index)
+                });
                 let next_offsets = fields
                     .iter()
                     .map(|Field { offset, .. }| *offset)
@@ -1543,6 +1551,7 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                         }
                     }
                     Ok(FieldTypeInfo { cc_type, size }) => {
+                        assert!((field.offset + size) <= field.offset_of_next_field);
                         let padding = field.offset_of_next_field - field.offset - size;
                         let padding = if padding == 0 {
                             quote! {}
@@ -5210,8 +5219,8 @@ pub mod tests {
                 pub struct ZeroSizedType;
                 pub struct SomeStruct {
                     pub zst1: ZeroSizedType,
-                    pub zst2: ZeroSizedType,
                     pub successful_field: i32,
+                    pub zst2: ZeroSizedType,
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
