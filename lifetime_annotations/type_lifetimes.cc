@@ -548,6 +548,7 @@ const ObjectLifetimes& ValueLifetimes::GetPointeeLifetimes() const {
 
 const FunctionLifetimes& ValueLifetimes::GetFuncLifetimes() const {
   assert(clang::isa<clang::FunctionProtoType>(type_));
+  assert(function_lifetimes_);
   return *function_lifetimes_;
 }
 

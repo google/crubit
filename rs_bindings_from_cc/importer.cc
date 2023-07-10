@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <iterator>
 #include <map>
@@ -756,12 +757,31 @@ absl::StatusOr<MappedType> Importer::ConvertTypeDecl(clang::NamedDecl* decl) {
   return MappedType::WithDeclId(decl_id);
 }
 
+static bool IsSameCanonicalUnqualifiedType(clang::QualType type1,
+                                           clang::QualType type2) {
+  type1 = type1.getCanonicalType().getUnqualifiedType();
+  type2 = type2.getCanonicalType().getUnqualifiedType();
+
+  // `DeducedType::getDeducedType()` can return null, in which case we don't
+  // have a more canonical representation. If this happens, optimistically
+  // assume the types are equal.
+  if (clang::isa<clang::DeducedType>(type1) ||
+      clang::isa<clang::DeducedType>(type2))
+    return true;
+
+  return type1 == type2;
+}
+
 absl::StatusOr<MappedType> Importer::ConvertType(
     const clang::Type* type,
     std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
     std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
+
+  assert(!lifetimes.has_value() ||
+         IsSameCanonicalUnqualifiedType(lifetimes->Type(),
+                                        clang::QualType(type, 0)));
 
   if (auto override_type = GetTypeMapOverride(*type);
       override_type.has_value()) {
@@ -788,15 +808,23 @@ absl::StatusOr<MappedType> Importer::ConvertType(
       CRUBIT_ASSIGN_OR_RETURN(
           absl::string_view rs_abi,
           ConvertCcCallConvIntoRsAbi(func_type->getCallConv()));
-      CRUBIT_ASSIGN_OR_RETURN(MappedType mapped_return_type,
-                              ConvertQualType(func_type->getReturnType(),
-                                              lifetimes, ref_qualifier_kind));
+      std::optional<clang::tidy::lifetimes::ValueLifetimes> return_lifetimes;
+      if (lifetimes.has_value())
+        return_lifetimes = lifetimes->GetFuncLifetimes().GetReturnLifetimes();
+      CRUBIT_ASSIGN_OR_RETURN(
+          MappedType mapped_return_type,
+          ConvertQualType(func_type->getReturnType(), return_lifetimes,
+                          ref_qualifier_kind));
 
       std::vector<MappedType> mapped_param_types;
-      for (const clang::QualType& param_type : func_type->getParamTypes()) {
+      for (unsigned i = 0; i < func_type->getNumParams(); ++i) {
+        std::optional<clang::tidy::lifetimes::ValueLifetimes> param_lifetimes;
+        if (lifetimes.has_value())
+          param_lifetimes = lifetimes->GetFuncLifetimes().GetParamLifetimes(i);
         CRUBIT_ASSIGN_OR_RETURN(
             MappedType mapped_param_type,
-            ConvertQualType(param_type, lifetimes, ref_qualifier_kind));
+            ConvertQualType(func_type->getParamType(i), param_lifetimes,
+                            ref_qualifier_kind));
         mapped_param_types.push_back(std::move(mapped_param_type));
       }
 
