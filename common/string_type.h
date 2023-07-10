@@ -29,14 +29,11 @@
 #ifndef CRUBIT_COMMON_STRING_TYPE_H_
 #define CRUBIT_COMMON_STRING_TYPE_H_
 
-#include <memory>
 #include <ostream>  // NOLINT
 #include <string>
 #include <utility>
 
-#include "absl/container/flat_hash_set.h"
 #include "absl/flags/marshalling.h"
-#include "absl/meta/type_traits.h"
 #include "absl/strings/string_view.h"
 
 // Defines the StringType using StringTypeRepresentation and provides a type

@@ -128,19 +128,14 @@ rust_test(
 cc_library(
     name = "strong_int",
     hdrs = ["strong_int.h"],
-    deps = [
-        "@absl//absl/base:core_headers",
-        "@absl//absl/meta:type_traits",
-    ],
+    deps = ["@absl//absl/hash"],
 )
 
 cc_library(
     name = "string_type",
     hdrs = ["string_type.h"],
     deps = [
-        "@absl//absl/container:flat_hash_set",
         "@absl//absl/flags:marshalling",
-        "@absl//absl/meta:type_traits",
         "@absl//absl/strings",
     ],
 )

@@ -68,8 +68,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/base/macros.h"
-#include "absl/meta/type_traits.h"
+#include "absl/hash/hash.h"
 
 namespace crubit {
 
