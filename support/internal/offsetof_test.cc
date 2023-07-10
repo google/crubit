@@ -22,9 +22,7 @@ struct TemplateWithTwoArgs {
   T2 t2;
 };
 
-static_assert(CRUBIT_OFFSET_OF(t1, TemplateWithTwoArgs<int64_t, int32_t>) == 0,
-              "");
-static_assert(CRUBIT_OFFSET_OF(t2, TemplateWithTwoArgs<int64_t, int32_t>) == 8,
-              "");
+static_assert(CRUBIT_OFFSET_OF(t1, TemplateWithTwoArgs<int64_t, int32_t>) == 0);
+static_assert(CRUBIT_OFFSET_OF(t2, TemplateWithTwoArgs<int64_t, int32_t>) == 8);
 
 }  // namespace crubit
