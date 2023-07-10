@@ -370,6 +370,28 @@ TEST_F(LifetimeAnnotationsTest,
               IsOkAndHolds(LifetimesAre({{"f", "()"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_PointerAlias) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
+    #pragma clang lifetime_elision
+    using Alias = int *;
+    void f(Alias* alias);
+  )_"),
+              // TODO(b/290574080): Do we want elision to "see into" the type
+              // alias? See bug for details.
+              IsOkAndHolds(LifetimesAre({{"f", "(a, b)"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_FunctionAlias) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
+    #pragma clang lifetime_elision
+    using Alias = void(int*);
+    void f(Alias* alias);
+  )_"),
+              // TODO(b/290574080): Do we want elision to "see into" the type
+              // alias? See bug for details.
+              IsOkAndHolds(LifetimesAre({{"f", "(a)"}})));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooFewInputLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision

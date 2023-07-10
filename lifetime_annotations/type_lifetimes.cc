@@ -311,7 +311,7 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
 
   ValueLifetimes ret(type);
 
-  if (const auto* fn = clang::dyn_cast<clang::FunctionProtoType>(type)) {
+  if (const auto* fn = type->getAs<clang::FunctionProtoType>()) {
     // TODO(veluca): this will not correctly handle the distinction between
     // parameter and return lifetimes.
     FunctionLifetimeFactorySingleCallback factory(lifetime_factory);
@@ -474,7 +474,7 @@ std::string ValueLifetimes::DebugString(
     assert(pointee_lifetimes_);
     return pointee_lifetimes_->DebugString(formatter);
   }
-  if (clang::isa<clang::FunctionProtoType>(Type())) {
+  if (Type()->getAs<clang::FunctionProtoType>()) {
     assert(function_lifetimes_);
     std::string fn_lifetimes = function_lifetimes_->DebugString(formatter);
     if (fn_lifetimes.empty()) return "";
@@ -536,6 +536,7 @@ std::string ValueLifetimes::DebugString(
 
 const ObjectLifetimes& ValueLifetimes::GetPointeeLifetimes() const {
   assert(!PointeeType(type_).isNull());
+  assert(pointee_lifetimes_);
   return *pointee_lifetimes_;
 }
 

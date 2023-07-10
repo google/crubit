@@ -154,7 +154,7 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
   ret.param_lifetimes_.reserve(type->getNumParams());
   for (size_t i = 0; i < type->getNumParams(); i++) {
     clang::TypeLoc param_type_loc;
-    if (type_loc) {
+    if (func_type_loc) {
       const clang::ParmVarDecl* param = func_type_loc.getParam(i);
       if (param && param->getTypeSourceInfo()) {
         param_type_loc = param->getTypeSourceInfo()->getTypeLoc();
