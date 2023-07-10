@@ -4,6 +4,9 @@
 
 #include "support/internal/return_value_slot.h"
 
+#include <utility>
+#include <vector>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/check.h"
