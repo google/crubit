@@ -70,13 +70,13 @@
 // Example: Assigning to structured bindings (<internal link>/169). The same situation
 // with comma as in map, so wrap the statement in parentheses.
 //   CRUBIT_ASSIGN_OR_RETURN((auto [first, second]), GetPair());
-#define CRUBIT_ASSIGN_OR_RETURN(lhs, rexpr)                               \
-  CRUBIT_STATUS_MACROS_IMPL_ASSIGN_OR_RETURN_(                            \
-      CRUBIT_STATUS_MACROS_IMPL_CONCAT_(_status_or_value, __LINE__), lhs, \
-      rexpr,                                                              \
-      return absl::Status(std::move(CRUBIT_STATUS_MACROS_IMPL_CONCAT_(    \
-                                        _status_or_value, __LINE__))      \
-                              .status()))
+#define CRUBIT_ASSIGN_OR_RETURN(lhs, rexpr)                                \
+  CRUBIT_STATUS_MACROS_IMPL_ASSIGN_OR_RETURN_(                             \
+      CRUBIT_STATUS_MACROS_IMPL_CONCAT_(_status_or_value, __LINE__), lhs,  \
+      rexpr,                                                               \
+      return ::absl::Status(::std::move(CRUBIT_STATUS_MACROS_IMPL_CONCAT_( \
+                                            _status_or_value, __LINE__))   \
+                                .status()))
 
 // =================================================================
 // == Implementation details, do not rely on anything below here. ==
@@ -91,21 +91,21 @@ constexpr bool HasPotentialConditionalOperator(const char* lhs, int index) {
 }
 }  // namespace crubit
 
-#define CRUBIT_STATUS_MACROS_IMPL_ASSIGN_OR_RETURN_(statusor, lhs, rexpr,     \
-                                                    error_expression)         \
-  auto statusor = (rexpr);                                                    \
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) {                                   \
-    error_expression;                                                         \
-  }                                                                           \
-  {                                                                           \
-    static_assert(                                                            \
-        #lhs[0] != '(' || #lhs[sizeof(#lhs) - 2] != ')' ||                    \
-            !crubit::HasPotentialConditionalOperator(#lhs, sizeof(#lhs) - 2), \
-        "Identified potential conditional operator, consider not "            \
-        "using CRUBIT_ASSIGN_OR_RETURN");                                     \
-  }                                                                           \
-  CRUBIT_STATUS_MACROS_IMPL_UNPARENTHESIZE_IF_PARENTHESIZED(lhs) =            \
-      std::move(statusor).value()
+#define CRUBIT_STATUS_MACROS_IMPL_ASSIGN_OR_RETURN_(statusor, lhs, rexpr,    \
+                                                    error_expression)        \
+  auto statusor = (rexpr);                                                   \
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) {                                  \
+    error_expression;                                                        \
+  }                                                                          \
+  {                                                                          \
+    static_assert(#lhs[0] != '(' || #lhs[sizeof(#lhs) - 2] != ')' ||         \
+                      !::crubit::HasPotentialConditionalOperator(            \
+                          #lhs, sizeof(#lhs) - 2),                           \
+                  "Identified potential conditional operator, consider not " \
+                  "using CRUBIT_ASSIGN_OR_RETURN");                          \
+  }                                                                          \
+  CRUBIT_STATUS_MACROS_IMPL_UNPARENTHESIZE_IF_PARENTHESIZED(lhs) =           \
+      ::std::move(statusor).value()
 
 // Internal helpers for macro expansion.
 #define CRUBIT_STATUS_MACROS_IMPL_EAT(...)
