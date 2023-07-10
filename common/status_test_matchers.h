@@ -5,6 +5,10 @@
 #ifndef CRUBIT_COMMON_STATUS_TEST_MATCHERS_H_
 #define CRUBIT_COMMON_STATUS_TEST_MATCHERS_H_
 
+#include <ostream>
+#include <string>
+#include <type_traits>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"

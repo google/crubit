@@ -4,6 +4,14 @@
 
 #include "common/file_io.h"
 
+#include <memory>
+#include <string>
+#include <system_error>
+
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/raw_ostream.h"
 

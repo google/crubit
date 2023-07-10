@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+
 namespace crubit {
 
 // Writes a file for a current gunit test in a temporary directory specific to

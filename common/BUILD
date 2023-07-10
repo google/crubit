@@ -56,7 +56,9 @@ cc_library(
     srcs = ["file_io.cc"],
     hdrs = ["file_io.h"],
     deps = [
+        "@absl//absl/status",
         "@absl//absl/status:statusor",
+        "@absl//absl/strings",
         "@llvm-project//llvm:Support",
     ],
 )
