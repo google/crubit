@@ -6072,6 +6072,7 @@ pub mod tests {
         let preamble = quote! {
             #![feature(never_type)]
 
+            #[repr(C)]
             pub struct SomeStruct {
                 pub x: i32,
                 pub y: i32,
