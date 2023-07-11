@@ -43,7 +43,10 @@ extern "C" void public_function();
 You can inspect the generated bindings files by building the aspect:
 
 ```sh
-bazel build --aspects  //cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl%cc_bindings_from_rust_aspect --output_group=out //some/rust:library
+bazel build --aspects \
+  //cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl%cc_bindings_from_rust_aspect \
+  --output_groups=out \
+  //some/rust:library
 ```
 
 ## Contributing
