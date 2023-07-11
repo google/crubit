@@ -4,7 +4,19 @@
 
 // Tests for merging different nullability types.
 
+#include <memory>
+#include <string>
+
+#include "nullability/pointer_nullability_analysis.h"
 #include "nullability/test/check_diagnostics.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
+#include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Testing/Support/Error.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
@@ -307,6 +319,69 @@ TEST(PointerNullabilityTest, MergeUnknownAndUnknown) {
       }
     }
   )cc"));
+}
+
+TEST(PointerNullabilityTest, MergePointerLValues) {
+  llvm::StringRef SourceCode = R"cc(
+    struct Node {
+      Node* next;
+    };
+    bool b();
+    void target(Node* first) {
+      for (Node* cur = first; cur; cur = cur->next) {
+        // We used to crash here: `PointerAnalysis::merge()` assumed `Value`s
+        // of pointer type were always `PointerValue`.
+        //
+        // Here the `MemberExpr` is a glvalue and produces a `ReferenceValue`
+        // of type `Node *`.
+        // When we merge the first and second loop iteration,
+        // `Environment::join()` calls `PointerAnalysis::merge()` to combine
+        // the two `ReferenceValue`s.
+        cur->next;
+
+        // The rest of this function exists to actually trigger a situation
+        // where we perform a merge and the two `ReferenceValue`s to be merged
+        // are actually different. (Otherwise, we will never call through to
+        // `PointerNullabilityAnalysis::merge()` in the first place.)
+        // This code is unfortunately pretty arbitrary, because it relies on the
+        // specific order in which the framework processes blocks in the CFG.
+        // This is unsatisfactory, but will be moot when `ReferenceValue` is
+        // eliminated (see https://discourse.llvm.org/t/70086 for details).
+        // At that point, this test should be converted into a test that checks
+        // that the analysis converges (which is also not the case, see below).
+        if (b())
+          ;
+        else {
+          // The merge that used to trigger the crash happens at the top of this
+          // loop where the edge that comes from outside the loop joins the edge
+          // that comes from the bottom of the loop.
+          for (int i = 0; i < 10; ++i) {
+          }
+        }
+      }
+    }
+  )cc";
+  // TODO: We currently hit the maximum iteration count on this test. Figure out
+  // why this is and make the test converge. At that point, we can simply call
+  // `checkDiagnostics()` instead of the custom test setup we have here.
+  EXPECT_THAT_ERROR(
+      dataflow::test::checkDataflow<PointerNullabilityAnalysis>(
+          dataflow::test::AnalysisInputs<PointerNullabilityAnalysis>(
+              SourceCode, ast_matchers::hasName("target"),
+              [](ASTContext &ASTCtx, dataflow::Environment &) {
+                return PointerNullabilityAnalysis(ASTCtx);
+              })
+              // The SAT solver may (flakily) require excessive runtime on this
+              // test, so set a work limit. We're not primarily interested in
+              // the results of the SAT solver, but we should eventually fix
+              // this too.
+              .withSolverFactory([]() {
+                return std::make_unique<dataflow::WatchedLiteralsSolver>(
+                    1'000'000);
+              }),
+          [](const llvm::DenseMap<unsigned, std::string> &Annotations,
+             const dataflow::test::AnalysisOutputs &AnalysisData) {}),
+      llvm::FailedWithMessage("maximum number of iterations reached"));
 }
 
 }  // namespace

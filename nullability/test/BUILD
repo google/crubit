@@ -161,6 +161,13 @@ cc_test(
     srcs = ["merge.cc"],
     deps = [
         ":check_diagnostics",
+        "//nullability:pointer_nullability_analysis",
+        "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang/unittests:dataflow_testing_support",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//llvm:TestingSupport",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],

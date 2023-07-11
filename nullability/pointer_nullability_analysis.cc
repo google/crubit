@@ -35,6 +35,7 @@ using dataflow::BoolValue;
 using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
 using dataflow::PointerValue;
+using dataflow::ReferenceValue;
 using dataflow::TransferState;
 using dataflow::Value;
 
@@ -784,6 +785,15 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
   if (!Type->isAnyPointerType()) {
     return false;
   }
+
+  // `Val1` and `Val2` need not be `PointerValue`s; they can be
+  // `ReferenceValue`s if we're merging glvalues of pointer type. Just bail out
+  // in this case.
+  // TODO: This issue will go away when `ReferenceValue` is eliminated as part
+  // of the ongoing migration to strict handling of value
+  // categories (see https://discourse.llvm.org/t/70086 for details).
+  // Eliminate this check once that is the case.
+  if (isa<ReferenceValue>(Val1) || isa<ReferenceValue>(Val2)) return false;
 
   if (!hasPointerNullState(cast<PointerValue>(Val1)) ||
       !hasPointerNullState(cast<PointerValue>(Val2))) {
