@@ -19,10 +19,53 @@ syntax = "proto2";
 
 package clang.tidy.nullability;
 
+// A symbol whose nullability should potentially be inferred.
+message Symbol {
+  // Clang "Unified Symbol Resolution" identifier for the symbol.
+  optional string usr = 1;
+}
+
+// Identifies a position within a symbol's type that may have nullability.
+// For now, the symbols in question are assumed to be functions, and we only
+// support describing direct nullability of pointer params and return values.
+message Slot {
+  oneof slot_kind {
+    // Top-level nullability of a function's (pointer) return type.
+    bool return_type = 1;
+    // Top-level nullability of a function's (pointer) parameter.
+    // The value is the index into the function's parameter list.
+    uint32 parameter = 2;
+  }
+}
+
 // Describes a restriction on the nullability of a pointer type.
 // This constrains a single nullability slot, e.g. the top-level of an int**.
 message NullabilityConstraint {
   // We have evidence that requires this type to be non-null.
   // For example, a pointer parameter that is dereferenced in the function body.
   optional bool must_be_nonnull = 1;
+  // We have evidence that requires this type to be nullable.
+  // For example, a return type where the body contains 'return nullptr;'.
+  optional bool must_be_nullable = 2;
+}
+
+// An observation of nullability based on local analysis (e.g. a function body).
+// Evidence from across different functions/TUs is combined to form conclusions.
+message Evidence {
+  optional Symbol symbol = 1;
+  optional Slot slot = 2;
+  optional NullabilityConstraint constraint = 3;
+}
+
+// A conclusion about nullability based on global analysis (e.g. all TUs).
+message Inference {
+  optional Symbol symbol = 1;
+  optional Slot slot = 2;
+  optional Nullability nullability = 3;
+
+  enum Nullability {
+    UNKNOWN = 0;
+    NONNULL = 1;
+    NULLABLE = 2;
+  }
 }
