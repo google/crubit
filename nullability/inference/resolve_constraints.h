@@ -22,7 +22,7 @@ namespace clang::tidy::nullability {
 // Requires that `Pointer` has null state properties as set by
 // PointerNullabilityAnalysis.
 NullabilityConstraint resolveConstraints(
-    const llvm::DenseSet<clang::dataflow::BoolValue *> &SafetyConstraints,
+    const llvm::DenseSet<const clang::dataflow::Formula *> &SafetyConstraints,
     const clang::dataflow::PointerValue &Pointer);
 }  // namespace clang::tidy::nullability
 

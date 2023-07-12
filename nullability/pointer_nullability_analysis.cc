@@ -298,6 +298,7 @@ void transferFlowSensitivePointer(
     const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   auto &Env = State.Env;
+  auto &A = Env.arena();
   if (auto *PointerVal = getPointerValueFromExpr(PointerExpr, Env)) {
     if (auto *Override = getOverriddenNullability(PointerExpr, State.Lattice)) {
       // is_known = (nonnull | nullable)
@@ -306,8 +307,8 @@ void transferFlowSensitivePointer(
           &Env.makeOr(*Override->Nonnull, *Override->Nullable));
       // nonnull => !is_null
       auto [IsKnown, IsNull] = getPointerNullState(*PointerVal);
-      Env.addToFlowCondition(
-          Env.makeImplication(*Override->Nonnull, Env.makeNot(IsNull)));
+      Env.addToFlowCondition(A.makeImplies(Override->Nonnull->formula(),
+                                           A.makeNot(IsNull.formula())));
     } else {
       initPointerFromAnnotations(*PointerVal, PointerExpr, State);
     }
@@ -320,17 +321,18 @@ void transferFlowSensitivePointer(
 void transferFlowSensitiveNullCheckComparison(
     const BinaryOperator *BinaryOp, const MatchFinder::MatchResult &result,
     TransferState<PointerNullabilityLattice> &State) {
+  auto &A = State.Env.arena();
   // Boolean representing the comparison between the two pointer values,
   // automatically created by the dataflow framework.
   auto &PointerComparison =
-      *cast<BoolValue>(State.Env.getValueStrict(*BinaryOp));
+      cast<BoolValue>(State.Env.getValueStrict(*BinaryOp))->formula();
 
   CHECK(BinaryOp->getOpcode() == BO_EQ || BinaryOp->getOpcode() == BO_NE);
   auto &PointerEQ = BinaryOp->getOpcode() == BO_EQ
                         ? PointerComparison
-                        : State.Env.makeNot(PointerComparison);
+                        : A.makeNot(PointerComparison);
   auto &PointerNE = BinaryOp->getOpcode() == BO_EQ
-                        ? State.Env.makeNot(PointerComparison)
+                        ? A.makeNot(PointerComparison)
                         : PointerComparison;
 
   auto *LHS = getPointerValueFromExpr(BinaryOp->getLHS(), State.Env);
@@ -338,20 +340,20 @@ void transferFlowSensitiveNullCheckComparison(
 
   if (!LHS || !RHS) return;
 
-  auto &LHSNull = getPointerNullState(*LHS).second;
-  auto &RHSNull = getPointerNullState(*RHS).second;
-  auto &LHSNotNull = State.Env.makeNot(LHSNull);
-  auto &RHSNotNull = State.Env.makeNot(RHSNull);
+  auto &LHSNull = getPointerNullState(*LHS).second.formula();
+  auto &RHSNull = getPointerNullState(*RHS).second.formula();
+  auto &LHSNotNull = A.makeNot(LHSNull);
+  auto &RHSNotNull = A.makeNot(RHSNull);
 
   // nullptr == nullptr
-  State.Env.addToFlowCondition(State.Env.makeImplication(
-      State.Env.makeAnd(LHSNull, RHSNull), PointerEQ));
+  State.Env.addToFlowCondition(
+      A.makeImplies(A.makeAnd(LHSNull, RHSNull), PointerEQ));
   // nullptr != notnull
-  State.Env.addToFlowCondition(State.Env.makeImplication(
-      State.Env.makeAnd(LHSNull, RHSNotNull), PointerNE));
+  State.Env.addToFlowCondition(
+      A.makeImplies(A.makeAnd(LHSNull, RHSNotNull), PointerNE));
   // notnull != nullptr
-  State.Env.addToFlowCondition(State.Env.makeImplication(
-      State.Env.makeAnd(LHSNotNull, RHSNull), PointerNE));
+  State.Env.addToFlowCondition(
+      A.makeImplies(A.makeAnd(LHSNotNull, RHSNull), PointerNE));
 }
 
 void transferFlowSensitiveNullCheckImplicitCastPtrToBool(
@@ -756,10 +758,11 @@ BoolValue &mergeBoolValues(BoolValue &Bool1, const Environment &Env1,
   // path taken - this simplifies the flow condition tracked in `MergedEnv`.
   // Otherwise, information about which path was taken is used to associate
   // `MergedBool` with `Bool1` and `Bool2`.
-  if (Env1.flowConditionImplies(Bool1) && Env2.flowConditionImplies(Bool2)) {
+  if (Env1.flowConditionImplies(Bool1.formula()) &&
+      Env2.flowConditionImplies(Bool2.formula())) {
     MergedEnv.addToFlowCondition(MergedBool);
-  } else if (Env1.flowConditionImplies(Env1.makeNot(Bool1)) &&
-             Env2.flowConditionImplies(Env2.makeNot(Bool2))) {
+  } else if (Env1.flowConditionImplies(A.makeNot(Bool1.formula())) &&
+             Env2.flowConditionImplies(A.makeNot(Bool2.formula()))) {
     MergedEnv.addToFlowCondition(A.makeNot(MergedBool));
   } else {
     // TODO(b/233582219): Flow conditions are not necessarily mutually

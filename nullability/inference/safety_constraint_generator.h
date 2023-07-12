@@ -11,8 +11,8 @@
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/MatchSwitch.h"
-#include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/DenseSet.h"
 
 namespace clang::tidy::nullability {
@@ -52,15 +52,15 @@ class SafetyConstraintGenerator {
   //
   // Constraints take the form of boolean expressions that must be satisfiable
   // in order for the processed code to be null-safe.
-  const llvm::DenseSet<clang::dataflow::BoolValue *> &constraints() const {
+  const llvm::DenseSet<const clang::dataflow::Formula *> &constraints() const {
     return Constraints;
   }
 
  private:
-  llvm::DenseSet<clang::dataflow::BoolValue *> Constraints;
+  llvm::DenseSet<const clang::dataflow::Formula *> Constraints;
   clang::dataflow::CFGMatchSwitch<
       const clang::dataflow::TransferStateForDiagnostics<LatticeType>,
-      clang::dataflow::BoolValue *>
+      const clang::dataflow::Formula *>
       ConstraintCollector;
 };
 }  // namespace clang::tidy::nullability

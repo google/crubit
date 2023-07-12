@@ -59,7 +59,9 @@ void initPointerBoolProperty(PointerValue &PointerVal, llvm::StringRef Name,
   // The property must always be a non-null boolean atom.
   if (!isa_and_nonnull<AtomicBoolValue>(BoolVal)) {
     auto &Atom = Env.makeAtomicBoolValue();
-    if (BoolVal) Env.addToFlowCondition(Env.makeIff(Atom, *BoolVal));
+    if (BoolVal)
+      Env.addToFlowCondition(
+          Env.arena().makeEquals(Atom.formula(), BoolVal->formula()));
     BoolVal = &Atom;
   }
   PointerVal.setProperty(Name, BoolVal ? *BoolVal : Env.makeAtomicBoolValue());
@@ -73,16 +75,18 @@ void initPointerNullState(PointerValue &PointerVal, Environment &Env,
 }
 
 bool isNullable(const PointerValue &PointerVal, const Environment &Env) {
+  auto &A = Env.getDataflowAnalysisContext().arena();
   auto [PointerKnown, PointerNull] = getPointerNullState(PointerVal);
   auto &PointerNotKnownNull =
-      Env.makeNot(Env.makeAnd(PointerKnown, PointerNull));
+      A.makeNot(A.makeAnd(PointerKnown.formula(), PointerNull.formula()));
   return !Env.flowConditionImplies(PointerNotKnownNull);
 }
 
 NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
                                const dataflow::Environment &Env) {
+  auto &A = Env.getDataflowAnalysisContext().arena();
   auto [PointerKnown, PointerNull] = getPointerNullState(PointerVal);
-  if (Env.flowConditionImplies(Env.makeNot(PointerNull)))
+  if (Env.flowConditionImplies(A.makeNot(PointerNull.formula())))
     return NullabilityKind::NonNull;
   return isNullable(PointerVal, Env) ? NullabilityKind::Nullable
                                      : NullabilityKind::Unspecified;

@@ -83,7 +83,7 @@ std::vector<std::string> getSafetyConstraints(llvm::StringRef Code) {
         for (const auto *Constraint : Generator.constraints()) {
           std::string Textual;
           llvm::raw_string_ostream OS(Textual);
-          Constraint->formula().print(OS, &Names);
+          Constraint->print(OS, &Names);
           Result.push_back(std::move(Textual));
         }
       });

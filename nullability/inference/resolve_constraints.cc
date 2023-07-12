@@ -6,6 +6,7 @@
 
 #include "nullability/inference/inference.proto.h"
 #include "nullability/pointer_nullability.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
@@ -14,28 +15,26 @@
 namespace clang::tidy::nullability {
 namespace {
 bool isSatisfiable(
-    const llvm::DenseSet<clang::dataflow::BoolValue *> &ConstraintSet) {
+    const llvm::DenseSet<const clang::dataflow::Formula *> &ConstraintSet) {
   clang::dataflow::WatchedLiteralsSolver Solver;
   std::vector<const clang::dataflow::Formula *> Vec;
-  for (const auto *Constraint : ConstraintSet)
-    Vec.push_back(&Constraint->formula());
+  for (const auto *Constraint : ConstraintSet) Vec.push_back(Constraint);
   return Solver.solve(Vec).getStatus() ==
          clang::dataflow::Solver::Result::Status::Satisfiable;
 }
 
 bool isUnsatisfiable(
-    const llvm::DenseSet<clang::dataflow::BoolValue *> &ConstraintSet) {
+    const llvm::DenseSet<const clang::dataflow::Formula *> &ConstraintSet) {
   clang::dataflow::WatchedLiteralsSolver Solver;
   std::vector<const clang::dataflow::Formula *> Vec;
-  for (const auto *Constraint : ConstraintSet)
-    Vec.push_back(&Constraint->formula());
+  for (const auto *Constraint : ConstraintSet) Vec.push_back(Constraint);
   return Solver.solve(Vec).getStatus() ==
          clang::dataflow::Solver::Result::Status::Unsatisfiable;
 }
 }  // namespace
 
 NullabilityConstraint resolveConstraints(
-    const llvm::DenseSet<clang::dataflow::BoolValue *> &SafetyConstraints,
+    const llvm::DenseSet<const clang::dataflow::Formula *> &SafetyConstraints,
     const clang::dataflow::PointerValue &Pointer) {
   // If the safety constraints are satisfiable, then we can potentially
   // add annotations that are necessary for them to be satisfied. If they
@@ -44,8 +43,8 @@ NullabilityConstraint resolveConstraints(
   // TODO(b/268440048) Handle unsatisfiable safety constraints
   if (!isSatisfiable(SafetyConstraints)) return {};
 
-  clang::dataflow::AtomicBoolValue &IsNull =
-      getPointerNullState(Pointer).second;
+  const clang::dataflow::Formula &IsNull =
+      getPointerNullState(Pointer).second.formula();
   auto SafetyConstraintsAndIsNull = SafetyConstraints;
   SafetyConstraintsAndIsNull.insert(&IsNull);
 

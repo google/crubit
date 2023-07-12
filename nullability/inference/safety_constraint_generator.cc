@@ -12,21 +12,23 @@
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/MatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/DenseSet.h"
 
 namespace clang::tidy::nullability {
 namespace {
-clang::dataflow::BoolValue *collectFromDereference(
+const clang::dataflow::Formula *collectFromDereference(
     const clang::UnaryOperator *Op,
     const clang::ast_matchers::MatchFinder::MatchResult &,
     const clang::dataflow::TransferStateForDiagnostics<
         SafetyConstraintGenerator::LatticeType> &State) {
   if (clang::dataflow::PointerValue *DereferencedValue =
           getPointerValueFromExpr(Op->getSubExpr(), State.Env)) {
+    auto &A = State.Env.getDataflowAnalysisContext().arena();
     auto &NotIsNull =
-        State.Env.makeNot(getPointerNullState(*DereferencedValue).second);
+        A.makeNot(getPointerNullState(*DereferencedValue).second.formula());
     // If the flow condition at this point in the code implies that the
     // dereferenced value is not null, we can avoid collecting complex flow
     // condition tokens and recognize that regardless of any annotation we could
@@ -54,7 +56,7 @@ auto buildConstraintCollector() {
   return clang::dataflow::CFGMatchSwitchBuilder<
              const clang::dataflow::TransferStateForDiagnostics<
                  SafetyConstraintGenerator::LatticeType>,
-             clang::dataflow::BoolValue *>()
+             const clang::dataflow::Formula *>()
       .CaseOfCFGStmt<clang::UnaryOperator>(isPointerDereference(),
                                            collectFromDereference)
       .Build();
