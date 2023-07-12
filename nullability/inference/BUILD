@@ -5,101 +5,33 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 package(default_applicable_licenses = ["//:license"])
 
 cc_library(
-    name = "infer_nullability_constraints",
-    srcs = ["infer_nullability_constraints.cc"],
-    hdrs = ["infer_nullability_constraints.h"],
+    name = "collect_evidence",
+    srcs = ["collect_evidence.cc"],
+    hdrs = ["collect_evidence.h"],
     deps = [
         ":inference_cc_proto",
-        ":resolve_constraints",
-        ":safety_constraint_generator",
         "@absl//absl/log:check",
-        "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
         "//nullability:type_nullability",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
+        "@llvm-project//clang:index",
         "@llvm-project//llvm:Support",
     ],
 )
 
 cc_test(
-    name = "infer_nullability_constraints_test",
-    srcs = ["infer_nullability_constraints_test.cc"],
+    name = "collect_evidence_test",
+    srcs = ["collect_evidence_test.cc"],
     deps = [
-        ":infer_nullability_constraints",
+        ":collect_evidence",
         ":inference_cc_proto",
         "@absl//absl/log:check",
         "//nullability:proto_matchers",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
-        "@llvm-project//clang:basic",
-        "@llvm-project//clang:testing",
-        "@llvm-project//clang/unittests:dataflow_testing_support",
-        "@llvm-project//llvm:Support",
-        "@llvm-project//third-party/unittest:gmock",
-        "@llvm-project//third-party/unittest:gtest",
-        "@llvm-project//third-party/unittest:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "resolve_constraints",
-    srcs = ["resolve_constraints.cc"],
-    hdrs = ["resolve_constraints.h"],
-    deps = [
-        ":inference_cc_proto",
-        "//nullability:pointer_nullability",
-        "@llvm-project//clang:analysis",
-        "@llvm-project//llvm:Support",
-    ],
-)
-
-cc_library(
-    name = "safety_constraint_generator",
-    srcs = ["safety_constraint_generator.cc"],
-    hdrs = ["safety_constraint_generator.h"],
-    deps = [
-        "//nullability:pointer_nullability",
-        "//nullability:pointer_nullability_lattice",
-        "//nullability:pointer_nullability_matchers",
-        "@llvm-project//clang:analysis",
-        "@llvm-project//clang:ast",
-        "@llvm-project//clang:ast_matchers",
-        "@llvm-project//llvm:Support",
-    ],
-)
-
-cc_test(
-    name = "resolve_constraints_test",
-    srcs = ["resolve_constraints_test.cc"],
-    deps = [
-        ":inference_cc_proto",
-        ":resolve_constraints",
-        "//nullability:pointer_nullability",
-        "//nullability:proto_matchers",
-        "@llvm-project//clang:analysis",
-        "@llvm-project//clang:ast",
-        "@llvm-project//llvm:Support",
-        "@llvm-project//third-party/unittest:gmock",
-        "@llvm-project//third-party/unittest:gtest",
-        "@llvm-project//third-party/unittest:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "safety_constraint_generator_test",
-    srcs = ["safety_constraint_generator_test.cc"],
-    deps = [
-        ":safety_constraint_generator",
-        "@absl//absl/log:check",
-        "//nullability:pointer_nullability",
-        "//nullability:pointer_nullability_analysis",
-        "//nullability:pointer_nullability_lattice",
-        "@llvm-project//clang:analysis",
-        "@llvm-project//clang:ast",
-        "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:testing",
         "@llvm-project//clang/unittests:dataflow_testing_support",
