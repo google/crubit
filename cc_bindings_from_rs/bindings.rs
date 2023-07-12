@@ -1454,13 +1454,10 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                     fields[index].offset = offset.bytes();
                 }
                 // Sort by offset first; ZSTs in the same offset are sorted by source order.
+                // Use `field_size` to ensure ZSTs at the same offset as
+                // non-ZSTs sort first to avoid weird offset issues later on.
                 fields.sort_by_key(|field| {
-                    // Get field size to ensure ZSTs at the same offset as non-ZSTs sort first
-                    // so we don't have weird offset issues later on.
-                    let field_size = match field.type_info.as_ref() {
-                        Ok(ti) => ti.size,
-                        Err(_) => 0,
-                    };
+                    let field_size = field.type_info.as_ref().map(|info| info.size).unwrap_or(0);
                     (field.offset, field_size, field.index)
                 });
                 let next_offsets = fields
