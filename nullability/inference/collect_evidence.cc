@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/log/check.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
@@ -32,7 +31,9 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Index/USRGeneration.h"
-#include "llvm/Support/Errc.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/FunctionExtras.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -40,33 +41,63 @@ namespace clang::tidy::nullability {
 using ::clang::dataflow::DataflowAnalysisContext;
 using ::clang::dataflow::Environment;
 
+llvm::unique_function<EvidenceEmitter> evidenceEmitter(
+    llvm::unique_function<void(const Evidence &) const> Emit) {
+  class EvidenceEmitterImpl {
+   public:
+    EvidenceEmitterImpl(
+        llvm::unique_function<void(const Evidence &) const> Emit)
+        : Emit(std::move(Emit)) {}
+
+    void operator()(const Decl &Target, Slot S, NullabilityConstraint C) const {
+      Evidence E;
+      S.Swap(E.mutable_slot());
+      C.Swap(E.mutable_constraint());
+
+      auto [It, Inserted] = USRCache.try_emplace(&Target);
+      if (Inserted) {
+        llvm::SmallString<128> USR;
+        if (!index::generateUSRForDecl(&Target, USR)) It->second = USR.str();
+      }
+      if (It->second.empty()) return;  // Can't emit without a USR
+      E.mutable_symbol()->set_usr(It->second);
+
+      Emit(E);
+    }
+
+   private:
+    mutable llvm::DenseMap<const Decl *, std::string> USRCache;
+    llvm::unique_function<void(const Evidence &) const> Emit;
+  };
+  return EvidenceEmitterImpl(std::move(Emit));
+}
+
 namespace {
-std::optional<Evidence> collectEvidenceFromDereference(
-    const FunctionDecl &Func,
+void collectEvidenceFromDereference(
     std::vector<std::pair<PointerTypeNullability, Slot>> InferrableSlots,
-    const std::string &USR, const CFGElement &Element,
-    const PointerNullabilityLattice &Lattice,
-    const dataflow::Environment &Env) {
+    const CFGElement &Element, const PointerNullabilityLattice &Lattice,
+    const dataflow::Environment &Env,
+    llvm::function_ref<EvidenceEmitter> Emit) {
   // Is this CFGElement a dereference of a pointer?
   auto CFGStmt = Element.getAs<clang::CFGStmt>();
-  if (!CFGStmt) return std::nullopt;
+  if (!CFGStmt) return;
   auto *Op = dyn_cast_or_null<UnaryOperator>(CFGStmt->getStmt());
-  if (!Op || Op->getOpcode() != UO_Deref) return std::nullopt;
+  if (!Op || Op->getOpcode() != UO_Deref) return;
   auto *DereferencedExpr = Op->getSubExpr();
   if (!DereferencedExpr || !DereferencedExpr->getType()->isPointerType())
-    return std::nullopt;
+    return;
 
   // It is a dereference of a pointer. Now gather evidence from it.
   dataflow::PointerValue *DereferencedValue =
       getPointerValueFromExpr(DereferencedExpr, Env);
-  if (!DereferencedValue) return std::nullopt;
+  if (!DereferencedValue) return;
   auto &A = Env.getDataflowAnalysisContext().arena();
   auto &NotIsNull =
       A.makeNot(getPointerNullState(*DereferencedValue).second.formula());
 
   // If the flow conditions already imply the dereferenced value is not null,
   // then we don't have any new evidence of a necessary annotation.
-  if (Env.flowConditionImplies(NotIsNull)) return std::nullopt;
+  if (Env.flowConditionImplies(NotIsNull)) return;
 
   // Otherwise, if an inferrable slot being annotated Nonnull would imply that
   // the dereferenced value is not null, then we have evidence suggesting that
@@ -77,26 +108,18 @@ std::optional<Evidence> collectEvidenceFromDereference(
     auto &SlotNonnullImpliesDerefValueNonnull =
         A.makeImplies(Nullability.Nonnull->formula(), NotIsNull);
     if (Env.flowConditionImplies(SlotNonnullImpliesDerefValueNonnull)) {
-      Evidence Evidence;
-      Evidence.mutable_constraint()->set_must_be_nonnull(true);
-      *Evidence.mutable_slot() = Slot;
-      Evidence.mutable_symbol()->set_usr(USR);
-      return Evidence;
+      NullabilityConstraint Constraint;
+      Constraint.set_must_be_nonnull(true);
+      Emit(*Env.getCurrentFunc(), Slot, std::move(Constraint));
     }
   }
-
-  return std::nullopt;
 }
 
-void appendEvidence(
-    std::vector<Evidence> &AllEvidence, const FunctionDecl &Func,
+void collectEvidenceFromElement(
     std::vector<std::pair<PointerTypeNullability, Slot>> InferrableSlots,
-    const std::string &USR, const CFGElement &Element,
-    const PointerNullabilityLattice &Lattice, const Environment &Env) {
-  if (std::optional<Evidence> NewEvidence = collectEvidenceFromDereference(
-          Func, InferrableSlots, USR, Element, Lattice, Env)) {
-    AllEvidence.push_back(std::move(*NewEvidence));
-  }
+    const CFGElement &Element, const PointerNullabilityLattice &Lattice,
+    const Environment &Env, llvm::function_ref<EvidenceEmitter> Emit) {
+  collectEvidenceFromDereference(InferrableSlots, Element, Lattice, Env, Emit);
   // TODO: add more heuristic collections here
 }
 
@@ -120,28 +143,26 @@ std::optional<NullabilityConstraint> constraintFromDeclaredType(QualType T) {
 }
 }  // namespace
 
-llvm::Expected<std::vector<Evidence>> collectEvidence(const FunctionDecl &Func,
-                                                      ASTContext &Context) {
-  // We want to make sure we use the declaration that the body comes from,
-  // otherwise we will see references to `ParmVarDecl`s from a different
-  // declaration.
-  const FunctionDecl *DeclWithBody = nullptr;
-  if (!Func.getBody(DeclWithBody)) {
-    return llvm::make_error<llvm::StringError>(llvm::errc::invalid_argument,
-                                               "Function has no body.");
+llvm::Error collectEvidenceFromImplementation(
+    const Decl &Decl, llvm::function_ref<EvidenceEmitter> Emit) {
+  const FunctionDecl *Func = dyn_cast<FunctionDecl>(&Decl);
+  if (!Func || !Func->doesThisDeclarationHaveABody()) {
+    return llvm::createStringError(
+        llvm::inconvertibleErrorCode(),
+        "Implementation must be a function with a body.");
   }
-  CHECK(DeclWithBody);
 
   llvm::Expected<dataflow::ControlFlowContext> ControlFlowContext =
-      dataflow::ControlFlowContext::build(*DeclWithBody);
+      dataflow::ControlFlowContext::build(*Func);
   if (!ControlFlowContext) return ControlFlowContext.takeError();
 
   DataflowAnalysisContext AnalysisContext(
       std::make_unique<dataflow::WatchedLiteralsSolver>());
-  Environment Environment(AnalysisContext, *DeclWithBody);
-  PointerNullabilityAnalysis Analysis(Context);
+  Environment Environment(AnalysisContext, *Func);
+  PointerNullabilityAnalysis Analysis(
+      Decl.getDeclContext()->getParentASTContext());
   std::vector<std::pair<PointerTypeNullability, Slot>> InferrableSlots;
-  auto Parameters = Func.parameters();
+  auto Parameters = Func->parameters();
   for (auto i = 0; i < Parameters.size(); ++i) {
     if (Parameters[i]->getType().getNonReferenceType()->isPointerType()) {
       // TODO: Skip assigning variables for already-annotated parameters,
@@ -156,8 +177,6 @@ llvm::Expected<std::vector<Evidence>> collectEvidence(const FunctionDecl &Func,
   }
 
   std::vector<Evidence> AllEvidence;
-  llvm::SmallString<128> USR;
-  index::generateUSRForDecl(&Func, USR);
   llvm::Expected<std::vector<std::optional<
       dataflow::DataflowAnalysisState<PointerNullabilityLattice>>>>
       BlockToOutputStateOrError = dataflow::runDataflowAnalysis(
@@ -165,40 +184,31 @@ llvm::Expected<std::vector<Evidence>> collectEvidence(const FunctionDecl &Func,
           [&](const CFGElement &Element,
               const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
                   &State) {
-            appendEvidence(AllEvidence, *DeclWithBody, InferrableSlots,
-                           std::string(USR.data(), USR.size()), Element,
-                           State.Lattice, State.Env);
+            collectEvidenceFromElement(InferrableSlots, Element, State.Lattice,
+                                       State.Env, Emit);
           });
 
-  return AllEvidence;
+  return llvm::Error::success();
 }
 
-std::vector<Evidence> collectEvidenceFromTargetDeclaration(
-    const clang::Decl &D) {
-  std::vector<Evidence> Result;
+void collectEvidenceFromTargetDeclaration(
+    const clang::Decl &D, llvm::function_ref<EvidenceEmitter> Emit) {
   // For now, we can only describe the nullability of functions.
   const auto *Fn = dyn_cast<clang::FunctionDecl>(&D);
-  if (!Fn) return {};
+  if (!Fn) return;
 
-  llvm::SmallString<128> USR;
-  index::generateUSRForDecl(&D, USR);
   if (auto C = constraintFromDeclaredType(Fn->getReturnType())) {
-    Evidence E;
-    E.mutable_symbol()->set_usr(USR.str());
-    E.mutable_slot()->set_return_type(true);
-    *E.mutable_constraint() = std::move(*C);
-    Result.push_back(std::move(E));
+    Slot S;
+    S.set_return_type(true);
+    Emit(*Fn, std::move(S), std::move(*C));
   }
   for (unsigned I = 0; I < Fn->param_size(); ++I) {
     if (auto C = constraintFromDeclaredType(Fn->getParamDecl(I)->getType())) {
-      Evidence E;
-      E.mutable_symbol()->set_usr(USR.str());
-      E.mutable_slot()->set_parameter(I);
-      *E.mutable_constraint() = std::move(*C);
-      Result.push_back(std::move(E));
+      Slot S;
+      S.set_parameter(I);
+      Emit(*Fn, std::move(S), std::move(*C));
     }
   }
-  return Result;
 }
 
 }  // namespace clang::tidy::nullability

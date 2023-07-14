@@ -4,9 +4,9 @@
 
 #include "nullability/inference/collect_evidence.h"
 
+#include <utility>
 #include <vector>
 
-#include "absl/log/check.h"
 #include "nullability/inference/inference.proto.h"
 #include "clang/AST/Decl.h"
 #include "clang/Basic/LLVM.h"
@@ -48,16 +48,18 @@ MATCHER(mustBeNonnull, "") { return arg.must_be_nonnull(); }
 
 std::vector<Evidence> collectEvidenceFromTargetFunction(
     llvm::StringRef Source) {
+  std::vector<Evidence> Results;
   clang::TestAST AST(Source);
-  auto Results =
-      collectEvidence(cast<FunctionDecl>(*dataflow::test::findValueDecl(
-                          AST.context(), "target")),
-                      AST.context());
-  CHECK(Results) << toString(Results.takeError());
-  return *Results;
+  auto Err = collectEvidenceFromImplementation(
+      cast<FunctionDecl>(
+          *dataflow::test::findValueDecl(AST.context(), "target")),
+      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); }));
+  if (Err) ADD_FAILURE() << toString(std::move(Err));
+  return Results;
 }
 
 std::vector<Evidence> collectEvidenceFromTargetDecl(llvm::StringRef Source) {
+  std::vector<Evidence> Results;
   clang::TestInputs Inputs = Source;
   Inputs.ExtraFiles["nullability.h"] = R"cc(
     template <typename T>
@@ -68,8 +70,10 @@ std::vector<Evidence> collectEvidenceFromTargetDecl(llvm::StringRef Source) {
   Inputs.ExtraArgs.push_back("-include");
   Inputs.ExtraArgs.push_back("nullability.h");
   clang::TestAST AST(Inputs);
-  return collectEvidenceFromTargetDeclaration(
-      *dataflow::test::findValueDecl(AST.context(), "target"));
+  collectEvidenceFromTargetDeclaration(
+      *dataflow::test::findValueDecl(AST.context(), "target"),
+      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); }));
+  return Results;
 }
 
 TEST(InferAnnotationsTest, NoParams) {
