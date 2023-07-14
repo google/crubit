@@ -14,6 +14,7 @@
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_lattice.h"
+#include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -29,6 +30,7 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/Specifiers.h"
 #include "clang/Index/USRGeneration.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/Error.h"
@@ -97,6 +99,25 @@ void appendEvidence(
   }
   // TODO: add more heuristic collections here
 }
+
+std::optional<NullabilityConstraint> constraintFromDeclaredType(QualType T) {
+  if (!T.getNonReferenceType()->isPointerType()) return std::nullopt;
+  auto Nullability = getNullabilityAnnotationsFromType(T);
+  switch (Nullability.front()) {
+    default:
+      return std::nullopt;
+    case NullabilityKind::NonNull: {
+      NullabilityConstraint C;
+      C.set_must_be_nonnull(true);
+      return C;
+    }
+    case NullabilityKind::Nullable: {
+      NullabilityConstraint C;
+      C.set_must_be_nullable(true);
+      return C;
+    }
+  }
+}
 }  // namespace
 
 llvm::Expected<std::vector<Evidence>> collectEvidence(const FunctionDecl &Func,
@@ -151,4 +172,33 @@ llvm::Expected<std::vector<Evidence>> collectEvidence(const FunctionDecl &Func,
 
   return AllEvidence;
 }
+
+std::vector<Evidence> collectEvidenceFromTargetDeclaration(
+    const clang::Decl &D) {
+  std::vector<Evidence> Result;
+  // For now, we can only describe the nullability of functions.
+  const auto *Fn = dyn_cast<clang::FunctionDecl>(&D);
+  if (!Fn) return {};
+
+  llvm::SmallString<128> USR;
+  index::generateUSRForDecl(&D, USR);
+  if (auto C = constraintFromDeclaredType(Fn->getReturnType())) {
+    Evidence E;
+    E.mutable_symbol()->set_usr(USR.str());
+    E.mutable_slot()->set_return_type(true);
+    *E.mutable_constraint() = std::move(*C);
+    Result.push_back(std::move(E));
+  }
+  for (unsigned I = 0; I < Fn->param_size(); ++I) {
+    if (auto C = constraintFromDeclaredType(Fn->getParamDecl(I)->getType())) {
+      Evidence E;
+      E.mutable_symbol()->set_usr(USR.str());
+      E.mutable_slot()->set_parameter(I);
+      *E.mutable_constraint() = std::move(*C);
+      Result.push_back(std::move(E));
+    }
+  }
+  return Result;
+}
+
 }  // namespace clang::tidy::nullability

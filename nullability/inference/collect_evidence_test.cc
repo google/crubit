@@ -23,6 +23,29 @@ using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::UnorderedElementsAre;
 
+MATCHER_P3(isEvidenceMatcher, SlotMatcher, ConstraintMatcher, SymbolMatcher,
+           "") {
+  return SlotMatcher.Matches(arg.slot()) &&
+         ConstraintMatcher.Matches(arg.constraint()) &&
+         SymbolMatcher.Matches(arg.symbol());
+}
+
+testing::Matcher<const Evidence&> evidence(
+    testing::Matcher<const Slot&> SlotMatcher,
+    testing::Matcher<const NullabilityConstraint&> ConstraintMatcher,
+    testing::Matcher<const Symbol&> SymbolMatcher = testing::_) {
+  return isEvidenceMatcher(SlotMatcher, ConstraintMatcher, SymbolMatcher);
+}
+
+MATCHER_P(functionNamed, Name, "") {
+  return llvm::StringRef(arg.usr()).contains(
+      ("@" + llvm::StringRef(Name) + "#").str());
+}
+MATCHER(returnType, "") { return arg.return_type(); }
+MATCHER_P(param, I, "") { return arg.parameter() == I; }
+MATCHER(mustBeNullable, "") { return arg.must_be_nullable(); }
+MATCHER(mustBeNonnull, "") { return arg.must_be_nonnull(); }
+
 std::vector<Evidence> collectEvidenceFromTargetFunction(
     llvm::StringRef Source) {
   clang::TestAST AST(Source);
@@ -34,11 +57,19 @@ std::vector<Evidence> collectEvidenceFromTargetFunction(
   return *Results;
 }
 
-MATCHER_P(isNonnullEvidenceForTargetParamAtIndex, ParamIndex, "") {
-  return ExplainMatchResult(HasSubstr("target"), arg.symbol().usr(),
-                            result_listener) &&
-         arg.slot().parameter() == ParamIndex &&
-         arg.constraint().must_be_nonnull();
+std::vector<Evidence> collectEvidenceFromTargetDecl(llvm::StringRef Source) {
+  clang::TestInputs Inputs = Source;
+  Inputs.ExtraFiles["nullability.h"] = R"cc(
+    template <typename T>
+    using Nullable [[clang::annotate("Nullable")]] = T;
+    template <typename T>
+    using Nonnull [[clang::annotate("Nonnull")]] = T;
+  )cc";
+  Inputs.ExtraArgs.push_back("-include");
+  Inputs.ExtraArgs.push_back("nullability.h");
+  clang::TestAST AST(Inputs);
+  return collectEvidenceFromTargetDeclaration(
+      *dataflow::test::findValueDecl(AST.context(), "target"));
 }
 
 TEST(InferAnnotationsTest, NoParams) {
@@ -74,7 +105,7 @@ TEST(InferAnnotationsTest, Deref) {
     }
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              UnorderedElementsAre(isNonnullEvidenceForTargetParamAtIndex(0)));
+              UnorderedElementsAre(evidence(param(0), mustBeNonnull())));
 }
 
 TEST(InferAnnotationsTest, DereferenceBeforeAssignment) {
@@ -86,7 +117,7 @@ TEST(InferAnnotationsTest, DereferenceBeforeAssignment) {
     }
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              UnorderedElementsAre(isNonnullEvidenceForTargetParamAtIndex(0)));
+              UnorderedElementsAre(evidence(param(0), mustBeNonnull())));
 }
 
 TEST(InferAnnotationsTest, DereferenceAfterAssignment) {
@@ -110,7 +141,7 @@ TEST(InferAnnotationsTest, DerefOfPtrRef) {
     }
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              UnorderedElementsAre(isNonnullEvidenceForTargetParamAtIndex(0)));
+              UnorderedElementsAre(evidence(param(0), mustBeNonnull())));
 }
 
 TEST(InferAnnotationsTest, UnrelatedCondition) {
@@ -127,11 +158,11 @@ TEST(InferAnnotationsTest, UnrelatedCondition) {
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
               UnorderedElementsAre(
-                  isNonnullEvidenceForTargetParamAtIndex(0),
-                  isNonnullEvidenceForTargetParamAtIndex(1),
+                  evidence(param(0), mustBeNonnull()),
+                  evidence(param(1), mustBeNonnull()),
                   // We collect two Evidence values for two dereferences of p0
-                  isNonnullEvidenceForTargetParamAtIndex(0),
-                  isNonnullEvidenceForTargetParamAtIndex(2)));
+                  evidence(param(0), mustBeNonnull()),
+                  evidence(param(2), mustBeNonnull())));
 }
 
 TEST(InferAnnotationsTest, LaterDeref) {
@@ -146,7 +177,7 @@ TEST(InferAnnotationsTest, LaterDeref) {
     }
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              UnorderedElementsAre(isNonnullEvidenceForTargetParamAtIndex(0)));
+              UnorderedElementsAre(evidence(param(0), mustBeNonnull())));
 }
 
 TEST(InferAnnotationsTest, DerefBeforeGuardedDeref) {
@@ -159,7 +190,7 @@ TEST(InferAnnotationsTest, DerefBeforeGuardedDeref) {
     }
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              UnorderedElementsAre(isNonnullEvidenceForTargetParamAtIndex(0)));
+              UnorderedElementsAre(evidence(param(0), mustBeNonnull())));
 }
 
 TEST(InferAnnotationsTest, EarlyReturn) {
@@ -192,7 +223,31 @@ TEST(InferAnnotationsTest, UnreachableCode) {
     }
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              UnorderedElementsAre(isNonnullEvidenceForTargetParamAtIndex(0)));
+              UnorderedElementsAre(evidence(param(0), mustBeNonnull())));
+}
+
+TEST(InferAnnotationsTest, VariableDeclIgnored) {
+  llvm::StringLiteral Src = "Nullable<int *> target;";
+  EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
+}
+
+TEST(InferAnnotationsTest, FunctionDeclReturnType) {
+  llvm::StringLiteral Src = "Nonnull<int *> target();";
+  EXPECT_THAT(collectEvidenceFromTargetDecl(Src),
+              ElementsAre(evidence(returnType(), mustBeNonnull(),
+                                   functionNamed("target"))));
+}
+
+TEST(InferAnnotationsTest, FunctionDeclParams) {
+  llvm::StringLiteral Src = "void target(Nullable<int*>, int*, Nonnull<int*>);";
+  EXPECT_THAT(collectEvidenceFromTargetDecl(Src),
+              ElementsAre(evidence(param(0), mustBeNullable()),
+                          evidence(param(2), mustBeNonnull())));
+}
+
+TEST(InferAnnotationsTest, FunctionDeclNonTopLevel) {
+  llvm::StringLiteral Src = "Nonnull<int*>** target(Nullable<int*>*);";
+  EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
 }
 
 }  // namespace

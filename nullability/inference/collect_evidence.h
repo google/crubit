@@ -20,6 +20,15 @@ namespace clang::tidy::nullability {
 llvm::Expected<std::vector<Evidence>> collectEvidence(
     const clang::FunctionDecl &Func, clang::ASTContext &Context);
 
+// Gathers evidence of a symbol's nullability from a declaration of it.
+//
+// These are trivial "inferences" of what's already written in the code. e.g:
+//   void foo(Nullable<int*>);
+// The first parameter of foo must be nullable.
+//
+// It is the caller's responsibility to ensure that the symbol is inferrable.
+std::vector<Evidence> collectEvidenceFromTargetDeclaration(const clang::Decl &);
+
 }  // namespace clang::tidy::nullability
 
 #endif  // CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_H_

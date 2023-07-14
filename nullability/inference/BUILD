@@ -14,6 +14,7 @@ cc_library(
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
+        "//nullability:type_nullability",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
