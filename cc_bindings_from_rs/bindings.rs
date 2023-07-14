@@ -1878,7 +1878,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
     });
 
     let needs_drop = core.self_ty.needs_drop(tcx, tcx.param_env(core.def_id));
-    let destructor_and_move_snippets = if needs_drop {
+    let destructor_snippets = if needs_drop {
         let drop_trait_id =
             tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
         let TraitThunks {
@@ -1894,9 +1894,47 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         let main_api = CcSnippet::new(quote! {
             __NEWLINE__ __COMMENT__ "Drop::drop"
             ~#adt_cc_name(); __NEWLINE__
+            __NEWLINE__
+        });
+        let cc_details = {
+            let mut prereqs = CcPrerequisites::default();
+            let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
+            let tokens = quote! {
+                #cc_thunk_decls
+                inline #adt_cc_name::~#adt_cc_name() {
+                    __crubit_internal::#drop_thunk_name(*this);
+                }
+            };
+            CcSnippet { tokens, prereqs }
+        };
+        ApiSnippets { main_api, cc_details, rs_details }
+    } else {
+        ApiSnippets {
+            main_api: CcSnippet::new(quote! {
+                __NEWLINE__ __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+                ~#adt_cc_name() = default; __NEWLINE__
+            }),
+            ..Default::default()
+        }
+    };
+
+    let copy_ctor_and_assignment_snippets = format_copy_ctor_and_assignment_operator(input, core)
+        .unwrap_or_else(|err| {
+            let msg = format!("{err:#}");
+            ApiSnippets {
+                main_api: CcSnippet::new(quote! {
+                    __NEWLINE__ __COMMENT__ #msg
+                    #adt_cc_name(const #adt_cc_name&) = delete;  __NEWLINE__
+                    #adt_cc_name& operator=(const #adt_cc_name&) = delete;
+                }),
+                ..Default::default()
+            }
+        });
+
+    let move_ctor_and_assignment_snippets = if needs_drop {
+        let main_api = CcSnippet::new(quote! {
             #adt_cc_name(#adt_cc_name&&); __NEWLINE__
             #adt_cc_name& operator=(#adt_cc_name&&); __NEWLINE__
-            __NEWLINE__
         });
         let cc_details = {
             // Move constructor depends on presence of the default constructor.
@@ -1912,12 +1950,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
             let mut prereqs = CcPrerequisites::default();
             prereqs.includes.insert(input.support_header("internal/memswap.h"));
             prereqs.includes.insert(CcInclude::utility()); // for `std::move`
-            let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
             let tokens = quote! {
-                #cc_thunk_decls
-                inline #adt_cc_name::~#adt_cc_name() {
-                    __crubit_internal::#drop_thunk_name(*this);
-                }
                 inline #adt_cc_name::#adt_cc_name(#adt_cc_name&& other)
                         : #adt_cc_name() {
                     *this = std::move(other);
@@ -1929,12 +1962,10 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
             };
             CcSnippet { tokens, prereqs }
         };
-        ApiSnippets { main_api, cc_details, rs_details }
+        ApiSnippets { main_api, cc_details, ..Default::default() }
     } else {
         ApiSnippets {
             main_api: CcSnippet::new(quote! {
-                __NEWLINE__ __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
-                ~#adt_cc_name() = default; __NEWLINE__
                 // The generated bindings have to follow Rust move semantics:
                 // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
                 //   that "Every type must be ready for it to be blindly memcopied to somewhere
@@ -1971,19 +2002,6 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         }
     };
 
-    let copy_ctor_and_assignment_snippets = format_copy_ctor_and_assignment_operator(input, core)
-        .unwrap_or_else(|err| {
-            let msg = format!("{err:#}");
-            ApiSnippets {
-                main_api: CcSnippet::new(quote! {
-                    __NEWLINE__ __COMMENT__ #msg
-                    #adt_cc_name(const #adt_cc_name&) = delete;  __NEWLINE__
-                    #adt_cc_name& operator=(const #adt_cc_name&) = delete;
-                }),
-                ..Default::default()
-            }
-        });
-
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
         .iter()
@@ -2015,7 +2033,8 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         rs_details: public_functions_rs_details,
     } = [
         default_ctor_snippets,
-        destructor_and_move_snippets,
+        destructor_snippets,
+        move_ctor_and_assignment_snippets,
         copy_ctor_and_assignment_snippets,
         impl_items_snippets,
     ]
