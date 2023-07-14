@@ -4,11 +4,15 @@
 
 #include "rs_bindings_from_cc/importers/friend.h"
 
-#include <iostream>
 #include <optional>
+#include <variant>
 
+#include "absl/log/check.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/Basic/LLVM.h"
 
 namespace crubit {
 

@@ -5,7 +5,11 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPE_DECL_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPE_DECL_H_
 
+#include <optional>
+
 #include "rs_bindings_from_cc/decl_importer.h"
+#include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/Decl.h"
 namespace crubit {
 
 // Imports type decls which have an overridden type.

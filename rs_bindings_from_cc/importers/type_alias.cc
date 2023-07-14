@@ -8,9 +8,14 @@
 #include <string>
 
 #include "absl/log/check.h"
+#include "absl/strings/str_cat.h"
 #include "lifetime_annotations/type_lifetimes.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/LLVM.h"
 
 namespace crubit {
 
@@ -18,7 +23,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
     clang::NamedDecl* decl) {
   clang::DeclContext* decl_context = decl->getDeclContext();
   clang::QualType underlying_qualtype;
-  if (auto* typedef_name_decl = llvm::dyn_cast<clang::TypedefNameDecl>(decl)) {
+  if (auto* typedef_name_decl = clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
     if (typedef_name_decl->getAnonDeclWithTypedefName()) {
       // Anonymous declarations with typedefs just incorporate the typedef name
       // into their item, instead of having a separate TypeAlias item in
@@ -34,9 +39,9 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       return ictx_.ImportUnsupportedItem(
           decl, "Typedef only used to introduce a name in C. Not importing.");
     }
-  } else if (auto* using_decl = llvm::dyn_cast<clang::UsingShadowDecl>(decl)) {
+  } else if (auto* using_decl = clang::dyn_cast<clang::UsingShadowDecl>(decl)) {
     clang::NamedDecl* target = using_decl->getTargetDecl();
-    auto* target_type = llvm::dyn_cast<clang::TypeDecl>(target);
+    auto* target_type = clang::dyn_cast<clang::TypeDecl>(target);
     if (target_type == nullptr) {
       // Not a type.
       return std::nullopt;
@@ -54,7 +59,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
     if (decl_context->isFunctionOrMethod()) {
       return std::nullopt;
     }
-    if (auto* record_decl = llvm::dyn_cast<clang::RecordDecl>(decl_context)) {
+    if (auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl_context)) {
       if (!ictx_.EnsureSuccessfullyImported(record_decl)) {
         return ictx_.ImportUnsupportedItem(decl, "Couldn't import the parent");
       }

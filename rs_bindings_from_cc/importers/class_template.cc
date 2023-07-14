@@ -6,6 +6,7 @@
 
 #include <optional>
 
+#include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/DeclTemplate.h"
 
 namespace crubit {

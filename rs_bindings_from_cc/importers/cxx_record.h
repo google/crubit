@@ -9,6 +9,10 @@
 #include <vector>
 
 #include "rs_bindings_from_cc/decl_importer.h"
+#include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
+
 namespace crubit {
 
 // A `DeclImporter` for `CXXRecordDecl`s.

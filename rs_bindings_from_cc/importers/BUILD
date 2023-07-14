@@ -10,6 +10,7 @@ cc_library(
     srcs = ["class_template.cc"],
     hdrs = ["class_template.h"],
     deps = [
+        "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
     ],
@@ -24,9 +25,13 @@ cc_library(
         "@absl//absl/log",
         "@absl//absl/log:check",
         "@absl//absl/log:die_if_null",
+        "@absl//absl/status",
+        "@absl//absl/strings",
+        "@absl//absl/strings:string_view",
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc:ast_convert",
         "//rs_bindings_from_cc:bazel_types",
+        "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
@@ -40,7 +45,10 @@ cc_library(
     srcs = ["enum.cc"],
     hdrs = ["enum.h"],
     deps = [
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
         "//lifetime_annotations:type_lifetimes",
+        "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
     ],
@@ -51,8 +59,11 @@ cc_library(
     srcs = ["friend.cc"],
     hdrs = ["friend.h"],
     deps = [
+        "@absl//absl/log:check",
+        "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
     ],
 )
 
@@ -61,12 +72,20 @@ cc_library(
     srcs = ["function.cc"],
     hdrs = ["function.h"],
     deps = [
+        "@absl//absl/log:check",
+        "@absl//absl/status:statusor",
         "@absl//absl/strings",
+        "//lifetime_annotations",
+        "//lifetime_annotations:lifetime",
         "//lifetime_annotations:lifetime_error",
+        "//lifetime_annotations:lifetime_symbol_table",
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc:ast_util",
+        "//rs_bindings_from_cc:bazel_types",
+        "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
         "@llvm-project//clang:sema",
         "@llvm-project//llvm:Support",
     ],
@@ -77,6 +96,7 @@ cc_library(
     srcs = ["function_template.cc"],
     hdrs = ["function_template.h"],
     deps = [
+        "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
     ],
@@ -89,6 +109,7 @@ cc_library(
     deps = [
         "@absl//absl/log:check",
         "@absl//absl/strings",
+        "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
     ],
@@ -100,9 +121,12 @@ cc_library(
     hdrs = ["type_alias.h"],
     deps = [
         "@absl//absl/log:check",
+        "@absl//absl/strings",
         "//lifetime_annotations:type_lifetimes",
+        "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
     ],
 )
 
@@ -112,11 +136,13 @@ cc_library(
     hdrs = ["type_map_override.h"],
     deps = [
         "@absl//absl/status",
+        "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "//common:status_macros",
         "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
 )
