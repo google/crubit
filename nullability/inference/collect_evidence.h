@@ -44,6 +44,19 @@ llvm::Error collectEvidenceFromImplementation(
 void collectEvidenceFromTargetDeclaration(const clang::Decl &,
                                           llvm::function_ref<EvidenceEmitter>);
 
+// Describes locations within an AST that provide evidence for use in inference.
+struct EvidenceSites {
+  // Declarations of an inferrable symbols.
+  std::vector<const Decl *> Declarations;
+  // Implementations (e.g. function body) that can be analyzed.
+  // This will always be concrete code, not a template pattern.
+  // These may be passed to collectEvidence().
+  std::vector<const Decl *> Implementations;
+
+  // Find the evidence sites within the provided AST.
+  static EvidenceSites discover(ASTContext &);
+};
+
 }  // namespace clang::tidy::nullability
 
 #endif  // CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_H_

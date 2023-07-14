@@ -19,6 +19,7 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/OperationKinds.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/Analysis/CFG.h"
@@ -209,6 +210,40 @@ void collectEvidenceFromTargetDeclaration(
       Emit(*Fn, std::move(S), std::move(*C));
     }
   }
+}
+
+bool isInferenceTarget(const FunctionDecl &FD) {
+  // Inferring properties of template instantiations isn't useful in itself.
+  // We can't record them anywhere unless they apply to the template in general.
+  // TODO: work out in what circumstances that would be safe.
+  return !FD.getTemplateInstantiationPattern();
+}
+
+EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
+  struct Walker : public RecursiveASTVisitor<Walker> {
+    EvidenceSites Out;
+
+    // We do want to see concrete code, including function instantiations.
+    bool shouldVisitTemplateInstantiations() const { return true; }
+
+    bool VisitFunctionDecl(const FunctionDecl *FD) {
+      if (isInferenceTarget(*FD)) Out.Declarations.push_back(FD);
+
+      // Visiting template instantiations is fine, these are valid functions!
+      // But we'll be limited in what we can infer.
+      bool IsUsefulImplementation =
+          FD->doesThisDeclarationHaveABody() &&
+          // We will not get anywhere with dependent code.
+          !FD->isDependentContext();
+      if (IsUsefulImplementation) Out.Implementations.push_back(FD);
+
+      return true;
+    }
+  };
+
+  Walker W;
+  W.TraverseAST(Ctx);
+  return std::move(W.Out);
 }
 
 }  // namespace clang::tidy::nullability

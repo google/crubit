@@ -9,16 +9,19 @@
 
 #include "nullability/inference/inference.proto.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/raw_ostream.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"  // IWYU pragma: keep
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
+using ::testing::ElementsAre;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::UnorderedElementsAre;
@@ -252,6 +255,90 @@ TEST(InferAnnotationsTest, FunctionDeclParams) {
 TEST(InferAnnotationsTest, FunctionDeclNonTopLevel) {
   llvm::StringLiteral Src = "Nonnull<int*>** target(Nullable<int*>*);";
   EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
+}
+
+MATCHER_P(declNamed, Name, "") {
+  std::string Actual;
+  llvm::raw_string_ostream OS(Actual);
+  if (auto* ND = dyn_cast<NamedDecl>(arg))
+    ND->getNameForDiagnostic(
+        OS, arg->getDeclContext()->getParentASTContext().getPrintingPolicy(),
+        /*Qualified=*/true);
+  return ::testing::ExplainMatchResult(Name, Actual, result_listener);
+}
+
+TEST(EvidenceSitesTest, Functions) {
+  TestAST AST(R"cc(
+    void foo();
+    void bar();
+    void bar() {}
+    void baz() {}
+    auto Lambda = []() {};  // Not analyzed yet.
+
+    struct S {
+      void member();
+    };
+    void S::member() {}
+  )cc");
+  auto Sites = EvidenceSites::discover(AST.context());
+  EXPECT_THAT(Sites.Declarations,
+              ElementsAre(declNamed("foo"), declNamed("bar"), declNamed("bar"),
+                          declNamed("baz"), declNamed("S::member"),
+                          declNamed("S::member")));
+  EXPECT_THAT(
+      Sites.Implementations,
+      ElementsAre(declNamed("bar"), declNamed("baz"), declNamed("S::member")));
+}
+
+TEST(EvidenceSitesTest, Variables) {
+  TestAST AST(R"cc(
+    int* x = true ? nullptr : nullptr;
+    struct S {
+      int* s;
+    };
+  )cc");
+  auto Sites = EvidenceSites::discover(AST.context());
+  // For now, variables are not inferrable.
+  EXPECT_THAT(Sites.Declarations, IsEmpty());
+  // For now, we don't examine variable initializers.
+  EXPECT_THAT(Sites.Implementations, IsEmpty());
+}
+
+TEST(EvidenceSitesTest, Templates) {
+  TestAST AST(R"cc(
+    template <int I>
+    int f() {
+      return I;
+    }
+    template <>
+    int f<1>() {
+      return 1;
+    }
+
+    struct S {
+      template <int I>
+      int f() {
+        return I;
+      }
+    };
+
+    template <int I>
+    struct T {
+      int f() { return I; }
+    };
+
+    auto Unused = f<0>() + f<1>() + S{}.f<0>() + T<0>{}.f();
+  )cc");
+  auto Sites = EvidenceSites::discover(AST.context());
+
+  // Relevant declarations are the written ones.
+  EXPECT_THAT(Sites.Declarations,
+              ElementsAre(declNamed("f"), declNamed("f<1>"), declNamed("S::f"),
+                          declNamed("T::f")));
+  // Instantiations are relevant inference targets.
+  EXPECT_THAT(Sites.Implementations,
+              ElementsAre(declNamed("f<0>"), declNamed("f<1>"),
+                          declNamed("S::f<0>"), declNamed("T<0>::f")));
 }
 
 }  // namespace
