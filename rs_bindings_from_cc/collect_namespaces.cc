@@ -4,7 +4,8 @@
 
 #include "rs_bindings_from_cc/collect_namespaces.h"
 
-#include <string_view>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/container/btree_map.h"

@@ -4,8 +4,10 @@
 
 #include "rs_bindings_from_cc/bazel_types.h"
 
-#include "gmock/gmock.h"
+#include <string>
+
 #include "gtest/gtest.h"
+#include "absl/strings/string_view.h"
 
 namespace crubit {
 

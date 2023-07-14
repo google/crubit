@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/ir_from_cc.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -18,9 +19,10 @@
 #include "absl/strings/substitute.h"
 #include "absl/types/span.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/Frontend/FrontendAction.h"
+#include "clang/Serialization/PCHContainerOperations.h"
 #include "clang/Tooling/Tooling.h"
 
 namespace crubit {

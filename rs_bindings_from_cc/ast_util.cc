@@ -4,8 +4,9 @@
 
 #include "rs_bindings_from_cc/ast_util.h"
 
-#include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/Basic/LLVM.h"
 
 namespace crubit {
 

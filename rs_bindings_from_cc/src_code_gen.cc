@@ -6,11 +6,12 @@
 
 #include <string>
 
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "common/ffi_types.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "llvm/Support/FormatVariadic.h"
-#include "llvm/Support/JSON.h"
 
 namespace crubit {
 

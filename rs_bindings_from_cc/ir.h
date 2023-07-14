@@ -13,7 +13,6 @@
 
 #include <stdint.h>
 
-#include <cstddef>
 #include <iomanip>
 #include <optional>
 #include <ostream>

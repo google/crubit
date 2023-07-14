@@ -6,20 +6,23 @@
 // * a Rust source file with bindings for the C++ API
 // * a C++ source file with the implementation of the bindings
 
+#include <cstddef>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/flags/parse.h"
 #include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "common/file_io.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/collect_namespaces.h"
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/JSON.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {

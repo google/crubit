@@ -73,8 +73,8 @@ cc_binary(
         "//common:status_macros",
         "@absl//absl/flags:parse",
         "@absl//absl/status",
-        "@absl//absl/status:statusor",
         "@absl//absl/strings",
+        "@absl//absl/types:span",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -93,6 +93,7 @@ cc_library(
         "//common:status_macros",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
+        "@absl//absl/log:check",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
     ],
@@ -113,10 +114,11 @@ cc_test(
         ":cmdline",
         ":collect_namespaces",
         ":generate_bindings_and_metadata",
+        "//common:cc_ffi_types",
         "//common:rust_allocator_shims",
         "//common:status_macros",
         "//common:test_utils",
-        "@absl//absl/status",
+        "@absl//absl/container:flat_hash_map",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@com_google_googletest//:gtest_main",
@@ -130,6 +132,7 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
     ],
 )
 
@@ -152,6 +155,7 @@ cc_test(
     srcs = ["bazel_types_test.cc"],
     deps = [
         ":bazel_types",
+        "@absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -163,9 +167,7 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":cc_ir",
-        "//common:status_macros",
         "@absl//absl/container:flat_hash_map",
-        "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@llvm-project//clang:ast",
     ],
@@ -185,6 +187,7 @@ cc_library(
         "@absl//absl/container:flat_hash_set",
         "@absl//absl/flags:flag",
         "@absl//absl/log",
+        "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@llvm-project//llvm:Support",
@@ -196,8 +199,13 @@ cc_test(
     srcs = ["cmdline_test.cc"],
     deps = [
         ":bazel_types",
+        ":cc_ir",
         ":cmdline",
+        "//common:cc_ffi_types",
         "//common:status_test_matchers",
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -214,7 +222,10 @@ cc_library(
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/log:check",
         "@absl//absl/status:statusor",
+        "@absl//absl/types:span",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:sema",
     ],
 )
 
@@ -225,8 +236,10 @@ cc_library(
     deps = [
         ":ast_consumer",
         ":decl_importer",
+        "//lifetime_annotations",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:frontend",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -289,11 +302,8 @@ cc_test(
         ":cc_ir",
         ":ir_from_cc",
         "//common:status_test_matchers",
-        "//common:test_utils",
         "@absl//absl/status",
-        "@absl//absl/status:statusor",
         "@absl//absl/strings",
-        "@absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -305,6 +315,7 @@ cc_library(
     visibility = ["//rs_bindings_from_cc:__subpackages__"],
     deps = [
         ":bazel_types",
+        "//common:string_type",
         "//common:strong_int",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
@@ -374,6 +385,7 @@ cc_library(
     deps = [
         ":bazel_types",
         ":cc_ir",
+        ":decl_importer",
         ":frontend_action",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
@@ -382,7 +394,7 @@ cc_library(
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@absl//absl/types:span",
-        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:serialization",
         "@llvm-project//clang:tooling",
     ],
 )
@@ -397,6 +409,7 @@ cc_library(
         ":ir_from_cc",
         "//common:cc_ffi_types",
         "@absl//absl/status:statusor",
+        "@absl//absl/strings:string_view",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -548,6 +561,7 @@ cc_library(
     deps = [
         ":collect_instantiations",  # build_cleaner: keep
         "//common:cc_ffi_types",
+        "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/types:span",
         "@llvm-project//llvm:Support",

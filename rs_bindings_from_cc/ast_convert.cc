@@ -9,6 +9,7 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
 
 namespace crubit {

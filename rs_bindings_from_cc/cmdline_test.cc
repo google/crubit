@@ -5,12 +5,18 @@
 #include "rs_bindings_from_cc/cmdline.h"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "common/ffi_types.h"
 #include "common/status_test_matchers.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/ir.h"
 
 namespace crubit {
 namespace {

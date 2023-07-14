@@ -8,8 +8,7 @@
 #include <string>
 
 #include "absl/container/flat_hash_map.h"
-#include "absl/status/statusor.h"
-#include "common/status_macros.h"
+#include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Type.h"
 

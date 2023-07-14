@@ -6,16 +6,20 @@
 
 #include <algorithm>
 #include <iterator>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/flags/flag.h"
 #include "absl/log/log.h"
+#include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/substitute.h"
+#include "common/ffi_types.h"
 #include "common/status_macros.h"
+#include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/ir.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/JSON.h"
 
 ABSL_FLAG(bool, do_nothing, false,

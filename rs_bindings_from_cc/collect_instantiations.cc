@@ -4,9 +4,15 @@
 
 #include "rs_bindings_from_cc/collect_instantiations.h"
 
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "common/ffi_types.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
 

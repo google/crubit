@@ -4,7 +4,9 @@
 
 #include "rs_bindings_from_cc/bazel_types.h"
 
+#include <cstddef>
 #include <limits>
+#include <string>
 
 #include "absl/log/check.h"
 #include "absl/strings/ascii.h"

@@ -6,6 +6,7 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_COLLECT_INSTANTIATIONS_H_
 
 #include <string>
+#include <vector>
 
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"

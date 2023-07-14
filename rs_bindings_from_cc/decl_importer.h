@@ -14,11 +14,15 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Sema/Sema.h"
 
 namespace crubit {
 

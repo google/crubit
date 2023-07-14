@@ -5,12 +5,14 @@
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/status.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "common/ffi_types.h"
 #include "common/status_macros.h"
 #include "common/test_utils.h"
 #include "rs_bindings_from_cc/cmdline.h"

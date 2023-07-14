@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_AST_UTIL_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_AST_UTIL_H_
 
-#include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclBase.h"
 
 namespace crubit {
 

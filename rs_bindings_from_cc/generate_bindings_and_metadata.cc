@@ -7,11 +7,14 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/log/check.h"
 #include "absl/strings/string_view.h"
 #include "common/status_macros.h"
+#include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/collect_instantiations.h"
 #include "rs_bindings_from_cc/collect_namespaces.h"
 #include "rs_bindings_from_cc/ir.h"

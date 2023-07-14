@@ -4,8 +4,6 @@
 
 #include "rs_bindings_from_cc/ir.h"
 
-#include <stdint.h>
-
 #include <optional>
 #include <ostream>
 #include <string>
@@ -14,9 +12,10 @@
 #include <vector>
 
 #include "absl/log/check.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "common/string_type.h"
 #include "common/strong_int.h"
-#include "rs_bindings_from_cc/bazel_types.h"
 #include "clang/AST/Type.h"
 #include "llvm/Support/JSON.h"
 

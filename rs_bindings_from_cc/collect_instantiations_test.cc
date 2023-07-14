@@ -4,7 +4,8 @@
 
 #include "rs_bindings_from_cc/collect_instantiations.h"
 
-#include <climits>
+#include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"

@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/collect_namespaces.h"

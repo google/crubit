@@ -5,10 +5,13 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_COLLECT_NAMESPACES_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_COLLECT_NAMESPACES_H_
 
+#include <ostream>
 #include <string>
+#include <vector>
 
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
 
 namespace crubit {

@@ -7,7 +7,6 @@
 
 #include <optional>
 
-#include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Type.h"
 
