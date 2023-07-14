@@ -5,6 +5,7 @@ cc_library(
     hdrs = [
         "attribute_macros.h",
         "cxx20_backports.h",
+        "memswap.h",
         "offsetof.h",
         "return_value_slot.h",
         "sizeof.h",
@@ -19,6 +20,15 @@ cc_library(
     # we can't rely on an exact version and/or exact absl/base/options.h).
     deps = [
         "@absl//absl/base:core_headers",
+    ],
+)
+
+cc_test(
+    name = "memswap_test",
+    srcs = ["memswap_test.cc"],
+    deps = [
+        ":bindings_support",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

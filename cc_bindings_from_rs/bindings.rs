@@ -1313,9 +1313,37 @@ fn format_adt_core(tcx: TyCtxt<'_>, def_id: DefId) -> Result<AdtCoreBindings<'_>
     assert!(self_ty.is_adt());
     assert!(is_directly_public(tcx, def_id), "Caller should verify");
 
+    let item_name = tcx.item_name(def_id);
+    let rs_fully_qualified_name = format_ty_for_rs(tcx, self_ty)?;
+    let cc_short_name =
+        format_cc_ident(item_name.as_str()).context("Error formatting item name")?;
+
     if self_ty.needs_drop(tcx, tcx.param_env(def_id)) {
-        // TODO(b/258251148): Support custom `Drop` impls.
-        bail!("`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
+        // TODO(b/258251148): Relax the restructions below.  For non-`Default` and/or
+        // non-`Unpin` ADTs, we won't implement the move constructor and the
+        // move assignment operator.  This requires that
+        // `is_c_abi_compatible_by_value` verifies if a move constructor is present
+        // or not.
+        ensure!(
+            does_implement_default_trait(tcx, self_ty),
+            "Custom `Drop` implementation and/or \"drop glue\" are only supported \
+             if `Default` is also implemented",
+        );
+        ensure!(
+            self_ty.is_unpin(tcx, tcx.param_env(def_id)),
+            "Custom `Drop` implementation and/or \"drop glue\" are only supported \
+             for `Unpin` types",
+        );
+
+        // The check below ensures that `format_trait_thunks` will succeed for the
+        // `Drop` trait. Ideally we would directly check if
+        // `format_trait_thunks` or `format_ty_for_cc(..., self_ty, ...)`
+        // succeeds, but this would lead to infinite recursion, so we only replicate
+        // `format_ty_for_cc` / `TyKind::Adt` checks that are outside of
+        // `format_adt_core`.
+        FullyQualifiedName::new(tcx, def_id).format_for_cc().with_context(|| {
+            format!("Error formatting the fully-qualified C++ name of `{item_name}")
+        })?;
     }
 
     let adt_def = self_ty.ty_adt_def().expect("`def_id` needs to identify an ADT");
@@ -1323,11 +1351,6 @@ fn format_adt_core(tcx: TyCtxt<'_>, def_id: DefId) -> Result<AdtCoreBindings<'_>
         ty::AdtKind::Struct | ty::AdtKind::Enum => quote! { struct },
         ty::AdtKind::Union => quote! { union },
     };
-
-    let item_name = tcx.item_name(def_id);
-    let rs_fully_qualified_name = format_ty_for_rs(tcx, self_ty)?;
-    let cc_short_name =
-        format_cc_ident(item_name.as_str()).context("Error formatting item name")?;
 
     let layout = get_layout(tcx, self_ty)
         .with_context(|| format!("Error computing the layout of #{item_name}"))?;
@@ -1625,7 +1648,13 @@ fn format_trait_thunks<'tcx>(
     assert!(tcx.is_trait(trait_id));
 
     let self_ty = adt.self_ty;
-    if !does_type_implement_trait(tcx, self_ty, trait_id) {
+    let is_drop_trait = Some(trait_id) == tcx.lang_items().drop_trait();
+    if is_drop_trait {
+        // To support "drop glue" we don't require that `self_ty` directly implements
+        // the `Drop` trait.  Instead we require the caller to check
+        // `needs_drop`.
+        assert!(self_ty.needs_drop(tcx, tcx.param_env(adt.def_id)));
+    } else if !does_type_implement_trait(tcx, self_ty, trait_id) {
         let trait_name = tcx.item_name(trait_id);
         bail!("`{self_ty}` doesn't implement the `{trait_name}` trait");
     }
@@ -1670,14 +1699,28 @@ fn format_trait_thunks<'tcx>(
         });
 
         rs_thunk_impls.extend({
-            let fully_qualified_fn_name = {
-                let struct_name = &adt.rs_fully_qualified_name;
-                let fully_qualified_trait_name =
-                    FullyQualifiedName::new(tcx, trait_id).format_for_rs();
-                let method_name = make_rs_ident(method.name.as_str());
-                quote! { <#struct_name as #fully_qualified_trait_name>::#method_name }
-            };
-            format_thunk_impl(tcx, method.def_id, &sig, &thunk_name, fully_qualified_fn_name)?
+            let struct_name = &adt.rs_fully_qualified_name;
+            if is_drop_trait {
+                // Manually formatting (instead of depending on `format_thunk_impl`)
+                // to avoid https://doc.rust-lang.org/error_codes/E0040.html
+                let thunk_name = make_rs_ident(&thunk_name);
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn #thunk_name(
+                        __self: &mut ::core::mem::MaybeUninit<#struct_name>
+                    ) {
+                        unsafe { __self.assume_init_drop() };
+                    }
+                }
+            } else {
+                let fully_qualified_fn_name = {
+                    let fully_qualified_trait_name =
+                        FullyQualifiedName::new(tcx, trait_id).format_for_rs();
+                    let method_name = make_rs_ident(method.name.as_str());
+                    quote! { <#struct_name as #fully_qualified_trait_name>::#method_name }
+                };
+                format_thunk_impl(tcx, method.def_id, &sig, &thunk_name, fully_qualified_fn_name)?
+            }
         });
     }
 
@@ -1687,6 +1730,16 @@ fn format_trait_thunks<'tcx>(
 /// Gets the `DefId` for the `Default` trait.
 fn get_def_id_of_default_trait(tcx: TyCtxt) -> DefId {
     tcx.get_diagnostic_item(sym::Default).expect("`Default` trait should always be present")
+}
+
+/// Returns `true` if `self_ty` implements the `Default` trait.
+///
+/// Note that this doesn't necessarily mean that the generated bindings will
+/// include the default constructor - `format_trait_thunks` needs to succeed for
+/// that.  OTOH if `format_adt_core` succeeds, then `format_trait_thunks` _will_
+/// succeed for the `Default` trait.
+fn does_implement_default_trait<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>) -> bool {
+    does_type_implement_trait(tcx, self_ty, get_def_id_of_default_trait(tcx))
 }
 
 /// Formats a default constructor for an ADT if possible (i.e. if the `Default`
@@ -1809,7 +1862,9 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
 
+    let mut has_default_ctor = true;
     let default_ctor_snippets = format_default_ctor(input, core).unwrap_or_else(|err| {
+        has_default_ctor = false;
         let msg = format!("{err:#}");
         ApiSnippets {
             main_api: CcSnippet::new(quote! {
@@ -1820,8 +1875,60 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         }
     });
 
-    let destructor_and_move_snippets = {
-        assert!(!core.self_ty.needs_drop(tcx, tcx.param_env(core.def_id)));
+    let needs_drop = core.self_ty.needs_drop(tcx, tcx.param_env(core.def_id));
+    let destructor_and_move_snippets = if needs_drop {
+        let drop_trait_id =
+            tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
+        let TraitThunks {
+            method_name_to_cc_thunk_name,
+            cc_thunk_decls,
+            rs_thunk_impls: rs_details,
+        } = format_trait_thunks(input, drop_trait_id, core)
+            .expect("`format_adt_core` should have already validated `Drop` support");
+        let drop_thunk_name = method_name_to_cc_thunk_name
+            .into_values()
+            .exactly_one()
+            .expect("Expecting a single `drop` method");
+        let main_api = CcSnippet::new(quote! {
+            __NEWLINE__ __COMMENT__ "Drop::drop"
+            ~#adt_cc_name(); __NEWLINE__
+            #adt_cc_name(#adt_cc_name&&); __NEWLINE__
+            #adt_cc_name& operator=(#adt_cc_name&&); __NEWLINE__
+            __NEWLINE__
+        });
+        let cc_details = {
+            // Move constructor depends on presence of the default constructor.
+            // "`needs_drop` implies `has_default_ctor`" is currently validated
+            // by the caller because otherwise `format_adt` fails.
+            assert!(has_default_ctor);
+
+            // Move assignment operator depends on `crubit::MemSwap` which is only safe for
+            // trivially relocatable types.  "`needs_drop` implies `is_unpin`" is currently
+            // validated by the caller because otherwise `format_adt` fails.
+            assert!(core.self_ty.is_unpin(tcx, tcx.param_env(core.def_id)));
+
+            let mut prereqs = CcPrerequisites::default();
+            prereqs.includes.insert(input.support_header("internal/memswap.h"));
+            prereqs.includes.insert(CcInclude::utility()); // for `std::move`
+            let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
+            let tokens = quote! {
+                #cc_thunk_decls
+                inline #adt_cc_name::~#adt_cc_name() {
+                    __crubit_internal::#drop_thunk_name(*this);
+                }
+                inline #adt_cc_name::#adt_cc_name(#adt_cc_name&& other)
+                        : #adt_cc_name() {
+                    *this = std::move(other);
+                }
+                inline #adt_cc_name& #adt_cc_name::operator=(#adt_cc_name&& other) {
+                    crubit::MemSwap(*this, other);
+                    return *this;
+                }
+            };
+            CcSnippet { tokens, prereqs }
+        };
+        ApiSnippets { main_api, cc_details, rs_details }
+    } else {
         ApiSnippets {
             main_api: CcSnippet::new(quote! {
                 __NEWLINE__ __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
@@ -1959,6 +2066,19 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         let mut prereqs = CcPrerequisites::default();
         let public_functions_cc_details = public_functions_cc_details.into_tokens(&mut prereqs);
         let fields_cc_details = fields_cc_details.into_tokens(&mut prereqs);
+        let movability_static_asserts = if needs_drop {
+            quote! {
+                static_assert(std::is_move_constructible_v<#adt_cc_name>);
+                static_assert(std::is_move_assignable_v<#adt_cc_name>);
+                static_assert(std::is_destructible_v<#adt_cc_name>);
+            }
+        } else {
+            quote! {
+                static_assert(std::is_trivially_move_constructible_v<#adt_cc_name>);
+                static_assert(std::is_trivially_move_assignable_v<#adt_cc_name>);
+                static_assert(std::is_trivially_destructible_v<#adt_cc_name>);
+            }
+        };
         prereqs.defs.insert(local_def_id);
         prereqs.includes.insert(CcInclude::type_traits());
         CcSnippet {
@@ -1971,8 +2091,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
                 static_assert(
                     alignof(#adt_cc_name) == #alignment,
                     "Verify that struct layout didn't change since this header got generated");
-                static_assert(std::is_trivially_move_constructible_v<#adt_cc_name>);
-                static_assert(std::is_trivially_move_assignable_v<#adt_cc_name>);
+                #movability_static_asserts
                 __NEWLINE__
                 #public_functions_cc_details
                 #fields_cc_details
@@ -4070,6 +4189,7 @@ pub mod tests {
                     static_assert(alignof(SomeStruct) == 4, ...);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, x));
                       static_assert(4 == offsetof(SomeStruct, y));
@@ -4132,6 +4252,7 @@ pub mod tests {
                     static_assert(alignof(TupleStruct) == 4, ...);
                     static_assert(std::is_trivially_move_constructible_v<TupleStruct>);
                     static_assert(std::is_trivially_move_assignable_v<TupleStruct>);
+                    static_assert(std::is_trivially_destructible_v<TupleStruct>);
                     inline void TupleStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(TupleStruct, __field0));
                       static_assert(4 == offsetof(TupleStruct, __field1));
@@ -4192,6 +4313,7 @@ pub mod tests {
                     static_assert(alignof(SomeStruct) == 4, ...);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, field2));
                       static_assert(4 == offsetof(SomeStruct, field1));
@@ -4250,6 +4372,7 @@ pub mod tests {
                     static_assert(alignof(SomeStruct) == 1, ...);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, field1));
                       static_assert(2 == offsetof(SomeStruct, field2));
@@ -4305,6 +4428,7 @@ pub mod tests {
                     static_assert(alignof(SomeStruct) == 4, ...);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, f2));
                       static_assert(4 == offsetof(SomeStruct, f1));
@@ -5031,6 +5155,7 @@ pub mod tests {
                     static_assert(alignof(SomeStruct) == 4, ...);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, unsupported_field));
                       static_assert(16 == offsetof(SomeStruct, successful_field));
@@ -5090,6 +5215,37 @@ pub mod tests {
         });
     }
 
+    /// This test verifies that `format_trait_thunks(..., drop_trait_id,
+    /// ...).expect(...)` won't panic - the `format_adt_core` needs to
+    /// verify that formatting of the fully qualified C++ name of the struct
+    /// works fine.
+    #[test]
+    fn test_format_item_unsupported_struct_with_custom_drop_impl_in_reserved_name_module() {
+        let test_src = r#"
+                // This mimics the name of a public module used by
+                // `icu_locid` in `extensions/mod.rs`.
+                pub mod private {
+                    #[derive(Default)]
+                    pub struct SomeStruct {
+                        pub x: i32,
+                        pub y: i32,
+                    }
+
+                    impl Drop for SomeStruct {
+                        fn drop(&mut self) {}
+                    }
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Error formatting the fully-qualified C++ name of `SomeStruct: \
+                 `private` is a C++ reserved keyword and can't be used as a C++ identifier",
+            );
+        });
+    }
+
     #[test]
     fn test_format_item_unsupported_struct_with_custom_drop_impl_and_no_default_impl() {
         let test_src = r#"
@@ -5104,7 +5260,11 @@ pub mod tests {
             "#;
         test_format_item(test_src, "StructWithCustomDropImpl", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
+            assert_eq!(
+                err,
+                "Custom `Drop` implementation and/or \"drop glue\" are only supported \
+                 if `Default` is also implemented",
+            );
         });
     }
 
@@ -5128,7 +5288,79 @@ pub mod tests {
             "#;
         test_format_item(test_src, "StructRequiringCustomDropGlue", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
+            assert_eq!(
+                err,
+                "Custom `Drop` implementation and/or \"drop glue\" are only supported \
+                 if `Default` is also implemented",
+            );
+        });
+    }
+
+    fn test_format_item_struct_with_custom_drop_and_with_default_impl(test_src: &str) {
+        test_format_item(test_src, "TypeUnderTest", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... TypeUnderTest final {
+                        ...
+                        public:
+                          ...
+                          __COMMENT__ "Drop::drop"
+                          ~TypeUnderTest();
+                          TypeUnderTest(TypeUnderTest&&);
+                          TypeUnderTest& operator=(
+                              TypeUnderTest&&);
+                        ...
+                    };
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    static_assert(std::is_move_constructible_v<TypeUnderTest>);
+                    static_assert(std::is_move_assignable_v<TypeUnderTest>);
+                    static_assert(std::is_destructible_v<TypeUnderTest>);
+                },
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C" void ...(
+                        ::rust_out::TypeUnderTest& [[clang::annotate_type(
+                            "lifetime", "__anon1")]]);
+                    }
+                    inline TypeUnderTest::~TypeUnderTest() {
+                      __crubit_internal::...(*this);
+                    }
+                    inline TypeUnderTest::TypeUnderTest(
+                        TypeUnderTest&& other)
+                        : TypeUnderTest() {
+                      *this = std::move(other);
+                    }
+                    inline TypeUnderTest& TypeUnderTest::operator=(
+                        TypeUnderTest&& other) {
+                      crubit::MemSwap(*this, other);
+                      return *this;
+                    }
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    ...
+                    #[no_mangle]
+                    extern "C" fn ...(
+                        __self: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
+                    ) {
+                        unsafe { __self.assume_init_drop() };
+                    }
+                    ...
+                }
+            );
         });
     }
 
@@ -5136,19 +5368,16 @@ pub mod tests {
     fn test_format_item_struct_with_custom_drop_impl_and_with_default_impl() {
         let test_src = r#"
                 #[derive(Default)]
-                pub struct StructWithCustomDropImpl {
+                pub struct TypeUnderTest {
                     pub x: i32,
                     pub y: i32,
                 }
 
-                impl Drop for StructWithCustomDropImpl {
+                impl Drop for TypeUnderTest {
                     fn drop(&mut self) {}
                 }
             "#;
-        test_format_item(test_src, "StructWithCustomDropImpl", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
-        });
+        test_format_item_struct_with_custom_drop_and_with_default_impl(test_src);
     }
 
     #[test]
@@ -5167,13 +5396,37 @@ pub mod tests {
                 }
 
                 #[derive(Default)]
-                pub struct StructRequiringCustomDropGlue {
+                pub struct TypeUnderTest {
                     field: StructWithCustomDropImpl,
                 }
             "#;
-        test_format_item(test_src, "StructRequiringCustomDropGlue", |result| {
+        test_format_item_struct_with_custom_drop_and_with_default_impl(test_src);
+    }
+
+    #[test]
+    fn test_format_item_unsupported_struct_with_custom_drop_and_default_and_nonunpin() {
+        let test_src = r#"
+                #![feature(negative_impls)]
+
+                #[derive(Default)]
+                pub struct SomeStruct {
+                    pub x: i32,
+                    pub y: i32,
+                }
+
+                impl !Unpin for SomeStruct {}
+
+                impl Drop for SomeStruct {
+                    fn drop(&mut self) {}
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
+            assert_eq!(
+                err,
+                "Custom `Drop` implementation and/or \"drop glue\" are only supported \
+                 for `Unpin` types",
+            );
         });
     }
 
@@ -5253,6 +5506,7 @@ pub mod tests {
                     static_assert(alignof(SomeStruct) == 4, ...);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, zst1));
                       static_assert(0 == offsetof(SomeStruct, zst2));
@@ -6031,11 +6285,6 @@ pub mod tests {
             // or to `absl::in128`.
             ("i128", "C++ doesn't have a standard equivalent of `i128` (b/254094650)"),
             ("u128", "C++ doesn't have a standard equivalent of `u128` (b/254094650)"),
-            (
-                "StructWithCustomDrop",
-                "Failed to generate bindings for the definition of `StructWithCustomDrop`: \
-                 `Drop` trait and \"drop glue\" are not supported yet (b/258251148)",
-            ),
             ("ConstGenericStruct<42>", "Generic types are not supported yet (b/259749095)"),
             ("TypeGenericStruct<u8>", "Generic types are not supported yet (b/259749095)"),
             (
@@ -6082,15 +6331,6 @@ pub mod tests {
             pub struct SomeStruct {
                 pub x: i32,
                 pub y: i32,
-            }
-
-            pub struct StructWithCustomDrop {
-                pub x: i32,
-                pub y: i32,
-            }
-
-            impl Drop for StructWithCustomDrop {
-                fn drop(&mut self) {}
             }
 
             pub struct ConstGenericStruct<const N: usize> {
