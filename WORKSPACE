@@ -138,13 +138,13 @@ crate_repositories()
 # https://abseil.io/docs/cpp/quickstart#set-up-a-bazel-workspace-to-work-with-abseil
 #
 # From https://abseil.io/about/releases: Abseil encourages developers to “live
-# at head”.  92fdbfb301f8b301b28ab5c99e7361e775c2fb8a was the head/ToT on
-# 2022-08-25.
+# at head”.  c16a2f43206b0235d49d4f6155f285a4d4939c58 was the head/ToT on
+# 2023-07-14.
 http_archive(
     name = "absl",
-    sha256 = "feea6e761ab9df667f054531b4e4d5d143eaa78f2c40dbf5ba45289142cbcc1d",
-    strip_prefix = "abseil-cpp-92fdbfb301f8b301b28ab5c99e7361e775c2fb8a",
-    urls = ["https://github.com/abseil/abseil-cpp/archive/92fdbfb301f8b301b28ab5c99e7361e775c2fb8a.zip"],
+    sha256 = "725f25f09d68a7b61c861c2b5467e662a35f3fddc95b50501f3245c95285a688",
+    strip_prefix = "abseil-cpp-c16a2f43206b0235d49d4f6155f285a4d4939c58",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/c16a2f43206b0235d49d4f6155f285a4d4939c58.zip"],
 )
 
 # https://google.github.io/googletest/quickstart-bazel.html
