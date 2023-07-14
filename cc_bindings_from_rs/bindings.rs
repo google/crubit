@@ -1728,8 +1728,8 @@ fn format_trait_thunks<'tcx>(
 }
 
 /// Gets the `DefId` for the `Default` trait.
-fn get_def_id_of_default_trait(tcx: TyCtxt) -> DefId {
-    tcx.get_diagnostic_item(sym::Default).expect("`Default` trait should always be present")
+fn get_def_id_of_default_trait(tcx: TyCtxt) -> Result<DefId> {
+    tcx.get_diagnostic_item(sym::Default).ok_or(anyhow!("Couldn't find `core::default::Default`"))
 }
 
 /// Returns `true` if `self_ty` implements the `Default` trait.
@@ -1739,7 +1739,9 @@ fn get_def_id_of_default_trait(tcx: TyCtxt) -> DefId {
 /// that.  OTOH if `format_adt_core` succeeds, then `format_trait_thunks` _will_
 /// succeed for the `Default` trait.
 fn does_implement_default_trait<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>) -> bool {
-    does_type_implement_trait(tcx, self_ty, get_def_id_of_default_trait(tcx))
+    get_def_id_of_default_trait(tcx)
+        .map(|trait_id| does_type_implement_trait(tcx, self_ty, trait_id))
+        .unwrap_or(false)
 }
 
 /// Formats a default constructor for an ADT if possible (i.e. if the `Default`
@@ -1750,7 +1752,7 @@ fn format_default_ctor<'tcx>(
     core: &AdtCoreBindings<'tcx>,
 ) -> Result<ApiSnippets> {
     let tcx = input.tcx;
-    let trait_id = get_def_id_of_default_trait(tcx);
+    let trait_id = get_def_id_of_default_trait(tcx)?;
     let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls: rs_details } =
         format_trait_thunks(input, trait_id, core)?;
 
