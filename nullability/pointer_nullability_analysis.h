@@ -47,12 +47,12 @@ class PointerNullabilityAnalysis
   //
   // By default, p is treated as having unspecified nullability.
   // When we reach the dereference, our flow condition will say:
-  //   is_known = false
+  //   from_nullable = false
   //
   // However, if we bind p's nullability to a variable:
   //   [p_nonnull, p_nullable] = assignNullabilityVariable(p)
   // Then the flow condition at dereference includes:
-  //   is_known = (p_nonnull | p_nullable)
+  //   from_nullable = p_nullable
   //   p_nonnull => !is_null
   // Logically connecting dereferenced values and possible invariants on p
   // allows us to infer p's proper annotations (here: Nonnull).

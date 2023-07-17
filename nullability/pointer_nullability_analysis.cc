@@ -301,7 +301,7 @@ void transferFlowSensitivePointer(
   auto &A = Env.arena();
   if (auto *PointerVal = getPointerValueFromExpr(PointerExpr, Env)) {
     if (auto *Override = getOverriddenNullability(PointerExpr, State.Lattice)) {
-      // is_known = (nonnull | nullable)
+      // from_nullable = nullable
       initPointerNullState(*PointerVal, Env, Override->Nullable);
       // nonnull => !is_null
       auto [FromNullable, IsNull] = getPointerNullState(*PointerVal);

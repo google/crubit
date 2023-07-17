@@ -53,7 +53,8 @@ template <
 void type(Actual) {}
 
 // Assertions for the full (flow-sensitive) analysis results.
-// (These check whether is_known and is_null are implied by the flow condition).
+// (These check whether from_nullable and is_null are implied by the flow
+// condition).
 
 // Asserts that its argument is considered nullable.
 template <typename T>
