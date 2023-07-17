@@ -17,7 +17,7 @@ class TypeMapOverrideImporter final : public DeclImporterBase<clang::TypeDecl> {
  public:
   explicit TypeMapOverrideImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::TypeDecl*);
+  std::optional<IR::Item> Import(clang::TypeDecl*) override;
 };
 
 }  // namespace crubit
