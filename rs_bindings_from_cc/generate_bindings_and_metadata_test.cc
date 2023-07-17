@@ -54,7 +54,7 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
   ASSERT_OK_AND_ASSIGN(
       BindingsAndMetadata result,
       GenerateBindingsAndMetadata(cmdline, DefaultClangArgs(),
-                                  /* virtual_headers_contents= */
+                                  /*virtual_headers_contents_for_testing=*/
                                   {{HeaderName("a.h"), "namespace ns{}"}}));
 
   ASSERT_EQ(result.ir.public_headers.size(), 1);
@@ -86,7 +86,7 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
   ASSERT_OK_AND_ASSIGN(
       BindingsAndMetadata result,
       GenerateBindingsAndMetadata(cmdline, DefaultClangArgs(),
-                                  /* virtual_headers_contents= */
+                                  /*virtual_headers_contents_for_testing=*/
                                   {{HeaderName("a.h"), "// empty header"}}));
 
   ASSERT_THAT(result.instantiations, IsEmpty());
@@ -118,7 +118,7 @@ GetInstantiationsFor(absl::string_view header_content,
       BindingsAndMetadata result,
       GenerateBindingsAndMetadata(
           cmdline, DefaultClangArgs(),
-          /* virtual_headers_contents= */
+          /*virtual_headers_contents_for_testing=*/
           {{HeaderName("a.h"), std::string(header_content)}}));
 
   return std::move(result.instantiations);
@@ -284,7 +284,7 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
   ASSERT_OK_AND_ASSIGN(BindingsAndMetadata result,
                        GenerateBindingsAndMetadata(
                            cmdline, DefaultClangArgs(),
-                           /* virtual_headers_contents= */
+                           /*virtual_headers_contents_for_testing=*/
                            {{HeaderName("a.h"), std::string(kHeaderContent)}}));
 
   ASSERT_THAT(NamespacesAsJson(result.namespaces), StrEq(kExpected));
