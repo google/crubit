@@ -42,10 +42,23 @@ MATCHER_P(functionNamed, Name, "") {
       ("@" + llvm::StringRef(Name) + "#").str());
 }
 
+clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
+  clang::TestInputs Inputs = Source;
+  Inputs.ExtraFiles["nullability.h"] = R"cc(
+    template <typename T>
+    using Nullable [[clang::annotate("Nullable")]] = T;
+    template <typename T>
+    using Nonnull [[clang::annotate("Nonnull")]] = T;
+  )cc";
+  Inputs.ExtraArgs.push_back("-include");
+  Inputs.ExtraArgs.push_back("nullability.h");
+  return Inputs;
+}
+
 std::vector<Evidence> collectEvidenceFromTargetFunction(
     llvm::StringRef Source) {
   std::vector<Evidence> Results;
-  clang::TestAST AST(Source);
+  clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
   auto Err = collectEvidenceFromImplementation(
       cast<FunctionDecl>(
           *dataflow::test::findValueDecl(AST.context(), "target")),
@@ -56,16 +69,7 @@ std::vector<Evidence> collectEvidenceFromTargetFunction(
 
 std::vector<Evidence> collectEvidenceFromTargetDecl(llvm::StringRef Source) {
   std::vector<Evidence> Results;
-  clang::TestInputs Inputs = Source;
-  Inputs.ExtraFiles["nullability.h"] = R"cc(
-    template <typename T>
-    using Nullable [[clang::annotate("Nullable")]] = T;
-    template <typename T>
-    using Nonnull [[clang::annotate("Nonnull")]] = T;
-  )cc";
-  Inputs.ExtraArgs.push_back("-include");
-  Inputs.ExtraArgs.push_back("nullability.h");
-  clang::TestAST AST(Inputs);
+  clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
   collectEvidenceFromTargetDeclaration(
       *dataflow::test::findValueDecl(AST.context(), "target"),
       evidenceEmitter([&](const Evidence& E) { Results.push_back(E); }));
@@ -107,6 +111,14 @@ TEST(InferAnnotationsTest, Deref) {
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
+}
+TEST(InferAnnotationsTest, DerefOfNonnull) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(Nonnull<int *> p) {
+      *p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
 TEST(InferAnnotationsTest, DereferenceBeforeAssignment) {

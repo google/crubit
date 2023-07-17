@@ -157,9 +157,8 @@ llvm::Error collectEvidenceFromImplementation(
   std::vector<std::pair<PointerTypeNullability, Slot>> InferrableSlots;
   auto Parameters = Func->parameters();
   for (auto I = 0; I < Parameters.size(); ++I) {
-    if (Parameters[I]->getType().getNonReferenceType()->isPointerType()) {
-      // TODO: Skip assigning variables for already-annotated parameters,
-      // potentially configurably.
+    auto T = Parameters[I]->getType().getNonReferenceType();
+    if (T->isPointerType() && !evidenceKindFromDeclaredType(T)) {
       InferrableSlots.push_back(
           std::make_pair(Analysis.assignNullabilityVariable(
                              Parameters[I], AnalysisContext.arena()),
