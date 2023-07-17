@@ -301,7 +301,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
   // Silence ClangTidy, checked above: calling `add_error` if
   // `!return_type.ok()` and returning early if `!errors.empty()`.
-  CHECK(return_type.ok());
+  CHECK_OK(return_type);
 
   return Func{
       .name = *translated_name,

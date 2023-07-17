@@ -32,7 +32,7 @@ static std::string MakeTmpdirForCurrentTest() {
 std::string WriteFileForCurrentTest(absl::string_view filename,
                                     absl::string_view content) {
   std::string path = absl::StrCat(MakeTmpdirForCurrentTest(), "/", filename);
-  CHECK(SetFileContents(path, content).ok());
+  CHECK_OK(SetFileContents(path, content));
   return path;
 }
 
