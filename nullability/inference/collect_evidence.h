@@ -17,7 +17,7 @@
 namespace clang::tidy::nullability {
 
 // Callback used to report collected nullability evidence.
-using EvidenceEmitter = void(const Decl &Target, Slot, NullabilityConstraint);
+using EvidenceEmitter = void(const Decl &Target, Slot, Evidence::Kind);
 // Creates an EvidenceEmitter that serializes the evidence as Evidence protos.
 // This emitter caches USR generation, and should be reused for the whole AST.
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(
@@ -46,7 +46,7 @@ void collectEvidenceFromTargetDeclaration(const clang::Decl &,
 
 // Describes locations within an AST that provide evidence for use in inference.
 struct EvidenceSites {
-  // Declarations of an inferrable symbols.
+  // Declarations of inferrable symbols.
   std::vector<const Decl *> Declarations;
   // Implementations (e.g. function body) that can be analyzed.
   // This will always be concrete code, not a template pattern.
@@ -56,6 +56,9 @@ struct EvidenceSites {
   // Find the evidence sites within the provided AST.
   static EvidenceSites discover(ASTContext &);
 };
+
+// Returns the slot number for the I'th parameter (0-based).
+inline Slot paramSlot(unsigned I) { return static_cast<Slot>(SLOT_PARAM + I); }
 
 }  // namespace clang::tidy::nullability
 

@@ -50,10 +50,10 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
         llvm::unique_function<void(const Evidence &) const> Emit)
         : Emit(std::move(Emit)) {}
 
-    void operator()(const Decl &Target, Slot S, NullabilityConstraint C) const {
+    void operator()(const Decl &Target, Slot S, Evidence::Kind Kind) const {
       Evidence E;
-      S.Swap(E.mutable_slot());
-      C.Swap(E.mutable_constraint());
+      E.set_slot(S);
+      E.set_kind(Kind);
 
       auto [It, Inserted] = USRCache.try_emplace(&Target);
       if (Inserted) {
@@ -108,11 +108,8 @@ void collectEvidenceFromDereference(
   for (auto &[Nullability, Slot] : InferrableSlots) {
     auto &SlotNonnullImpliesDerefValueNonnull =
         A.makeImplies(Nullability.Nonnull->formula(), NotIsNull);
-    if (Env.flowConditionImplies(SlotNonnullImpliesDerefValueNonnull)) {
-      NullabilityConstraint Constraint;
-      Constraint.set_must_be_nonnull(true);
-      Emit(*Env.getCurrentFunc(), Slot, std::move(Constraint));
-    }
+    if (Env.flowConditionImplies(SlotNonnullImpliesDerefValueNonnull))
+      Emit(*Env.getCurrentFunc(), Slot, Evidence::UNCHECKED_DEREFERENCE);
   }
 }
 
@@ -121,25 +118,20 @@ void collectEvidenceFromElement(
     const CFGElement &Element, const PointerNullabilityLattice &Lattice,
     const Environment &Env, llvm::function_ref<EvidenceEmitter> Emit) {
   collectEvidenceFromDereference(InferrableSlots, Element, Lattice, Env, Emit);
+  // TODO: add location information.
   // TODO: add more heuristic collections here
 }
 
-std::optional<NullabilityConstraint> constraintFromDeclaredType(QualType T) {
+std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
   if (!T.getNonReferenceType()->isPointerType()) return std::nullopt;
   auto Nullability = getNullabilityAnnotationsFromType(T);
   switch (Nullability.front()) {
     default:
       return std::nullopt;
-    case NullabilityKind::NonNull: {
-      NullabilityConstraint C;
-      C.set_must_be_nonnull(true);
-      return C;
-    }
-    case NullabilityKind::Nullable: {
-      NullabilityConstraint C;
-      C.set_must_be_nullable(true);
-      return C;
-    }
+    case NullabilityKind::NonNull:
+      return Evidence::ANNOTATED_NONNULL;
+    case NullabilityKind::Nullable:
+      return Evidence::ANNOTATED_NULLABLE;
   }
 }
 }  // namespace
@@ -164,16 +156,14 @@ llvm::Error collectEvidenceFromImplementation(
       Decl.getDeclContext()->getParentASTContext());
   std::vector<std::pair<PointerTypeNullability, Slot>> InferrableSlots;
   auto Parameters = Func->parameters();
-  for (auto i = 0; i < Parameters.size(); ++i) {
-    if (Parameters[i]->getType().getNonReferenceType()->isPointerType()) {
+  for (auto I = 0; I < Parameters.size(); ++I) {
+    if (Parameters[I]->getType().getNonReferenceType()->isPointerType()) {
       // TODO: Skip assigning variables for already-annotated parameters,
       // potentially configurably.
-      Slot slot;
-      slot.set_parameter(i);
       InferrableSlots.push_back(
           std::make_pair(Analysis.assignNullabilityVariable(
-                             Parameters[i], AnalysisContext.arena()),
-                         std::move(slot)));
+                             Parameters[I], AnalysisContext.arena()),
+                         paramSlot(I)));
     }
   }
 
@@ -198,17 +188,11 @@ void collectEvidenceFromTargetDeclaration(
   const auto *Fn = dyn_cast<clang::FunctionDecl>(&D);
   if (!Fn) return;
 
-  if (auto C = constraintFromDeclaredType(Fn->getReturnType())) {
-    Slot S;
-    S.set_return_type(true);
-    Emit(*Fn, std::move(S), std::move(*C));
-  }
+  if (auto K = evidenceKindFromDeclaredType(Fn->getReturnType()))
+    Emit(*Fn, SLOT_RETURN_TYPE, *K);
   for (unsigned I = 0; I < Fn->param_size(); ++I) {
-    if (auto C = constraintFromDeclaredType(Fn->getParamDecl(I)->getType())) {
-      Slot S;
-      S.set_parameter(I);
-      Emit(*Fn, std::move(S), std::move(*C));
-    }
+    if (auto K = evidenceKindFromDeclaredType(Fn->getParamDecl(I)->getType()))
+      Emit(*Fn, paramSlot(I), *K);
   }
 }
 

@@ -25,43 +25,58 @@ message Symbol {
   optional string usr = 1;
 }
 
-// Identifies a position within a symbol's type that may have nullability.
+// A "slot" identifies a position in a symbol's type that may have nullability.
 // For now, the symbols in question are assumed to be functions, and we only
 // support describing direct nullability of pointer params and return values.
-message Slot {
-  oneof slot_kind {
-    // Top-level nullability of a function's (pointer) return type.
-    bool return_type = 1;
-    // Top-level nullability of a function's (pointer) parameter.
-    // The value is the index into the function's parameter list.
-    uint32 parameter = 2;
-  }
-}
-
-// Describes a restriction on the nullability of a pointer type.
-// This constrains a single nullability slot, e.g. the top-level of an int**.
-message NullabilityConstraint {
-  // We have evidence that requires this type to be non-null.
-  // For example, a pointer parameter that is dereferenced in the function body.
-  optional bool must_be_nonnull = 1;
-  // We have evidence that requires this type to be nullable.
-  // For example, a return type where the body contains 'return nullptr;'.
-  optional bool must_be_nullable = 2;
+//
+// We use uint32 rather than the Slot type to represent slot numbers in protos.
+// (A symbol may have any number of slots, and proto2 enums are closed).
+// The Slot enum just defines well-known slot values.
+enum Slot {
+  // The slot number for a function's return type.
+  SLOT_RETURN_TYPE = 0;
+  // The slot number for a function's first parameter.
+  // The second param is SLOT_PARAM + 1, etc.
+  SLOT_PARAM = 1;
 }
 
 // An observation of nullability based on local analysis (e.g. a function body).
 // Evidence from across different functions/TUs is combined to form conclusions.
 message Evidence {
   optional Symbol symbol = 1;
-  optional Slot slot = 2;
-  optional NullabilityConstraint constraint = 3;
+  optional uint32 slot = 2;
+  optional Kind kind = 3;
+  // Source location: file:line:col. Optional, for debugging only.
+  optional string location = 4;
+
+  // A pattern in the code that might help us determine nullability.
+  enum Kind {
+    // The declaration was annotated with _Null_unspecified or similar.
+    ANNOTATED_UNKNOWN = 0;
+    // The declaration was annotated with _Nullable or similar.
+    ANNOTATED_NULLABLE = 1;
+    // The declaration was annotated with _Nonnull or similar.
+    ANNOTATED_NONNULL = 2;
+
+    // A pointer was dereferenced without being checked for null first.
+    UNCHECKED_DEREFERENCE = 3;
+  }
 }
 
 // A conclusion about nullability based on global analysis (e.g. all TUs).
 message Inference {
   optional Symbol symbol = 1;
-  optional Slot slot = 2;
-  optional Nullability nullability = 3;
+
+  repeated SlotInference slot_inference = 2;
+  message SlotInference {
+    optional uint32 slot = 1;
+    optional Nullability nullability = 2;
+    // Indicates that not we could not reconcile all evidence into a conclusion.
+    // e.g. a Nullable<int*> parameter that was unconditionally dereferenced.
+    optional bool conflict = 3;
+    // Examples of evidence that contributed. Optional, for debugging only.
+    repeated Evidence sample_evidence = 4;
+  }
 
   enum Nullability {
     UNKNOWN = 0;
