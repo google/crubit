@@ -29,7 +29,6 @@ cc_test(
     deps = [
         ":collect_evidence",
         ":inference_cc_proto",
-        "@absl//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:testing",

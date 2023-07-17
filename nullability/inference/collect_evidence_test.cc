@@ -4,6 +4,7 @@
 
 #include "nullability/inference/collect_evidence.h"
 
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -22,7 +23,6 @@
 namespace clang::tidy::nullability {
 namespace {
 using ::testing::ElementsAre;
-using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::UnorderedElementsAre;
 

@@ -4,15 +4,17 @@
 
 #include "nullability/pointer_nullability.h"
 
+#include <memory>
+
+#include "clang/AST/Type.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
+#include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
-#include "clang/Testing/TestAST.h"
-#include "llvm/ADT/StringRef.h"
-#include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
-using testing::ElementsAre;
 
 TEST(NullabilityPropertiesTest, Test) {
   dataflow::DataflowAnalysisContext DACtx(

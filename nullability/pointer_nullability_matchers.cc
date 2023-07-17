@@ -4,7 +4,9 @@
 
 #include "nullability/pointer_nullability_matchers.h"
 
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/OperationKinds.h"
+#include "clang/AST/Stmt.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 
 namespace clang::tidy::nullability {
@@ -15,7 +17,6 @@ using ast_matchers::callExpr;
 using ast_matchers::cxxConstructExpr;
 using ast_matchers::cxxCtorInitializer;
 using ast_matchers::cxxThisExpr;
-using ast_matchers::declRefExpr;
 using ast_matchers::expr;
 using ast_matchers::hasAnyOperatorName;
 using ast_matchers::hasCastKind;

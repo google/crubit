@@ -109,9 +109,7 @@ cc_test(
     deps = [
         ":pointer_nullability",
         "@llvm-project//clang:analysis",
-        "@llvm-project//clang:testing",
-        "@llvm-project//llvm:Support",
-        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//clang:ast",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
