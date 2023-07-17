@@ -45,6 +45,7 @@ cc_library(
     srcs = ["enum.cc"],
     hdrs = ["enum.h"],
     deps = [
+        "@absl//absl/algorithm:container",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "//lifetime_annotations:type_lifetimes",

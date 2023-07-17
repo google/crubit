@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -53,8 +54,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   }
 
   std::vector<Enumerator> enumerators;
-  enumerators.reserve(std::distance(enum_decl->enumerators().begin(),
-                                    enum_decl->enumerators().end()));
+  enumerators.reserve(absl::c_distance(enum_decl->enumerators()));
   for (clang::EnumConstantDecl* enumerator : enum_decl->enumerators()) {
     absl::StatusOr<Identifier> enumerator_name =
         ictx_.GetTranslatedIdentifier(enumerator);
