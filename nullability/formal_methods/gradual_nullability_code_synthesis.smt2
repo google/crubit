@@ -162,37 +162,112 @@
        (and fc (fc-conj--ptr-is-null p))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Solution S2: ??? bits, with quantifiers.
-;; TODO: Implement.
+;; Solution S2: two bits, no quantifiers
+;; - Bit 1 represents if the pointer's value came from a nullable source
+;; - Bit 2 represents if the pointer is null
 
 (define-fun enable-solution-s2 () Bool false)
 
-;(assert (=> enable-solution-s2
+(assert (=> enable-solution-s2
+  (forall ((p PointerValue))
+    (= (fc-conj--ptr-is-null p)
+       (= p (make-PointerValue true true))))))
+
+(assert (=> enable-solution-s2
+  (forall ((p PointerValue))
+    (= (fc-conj--ptr-is-unknown p)
+        (or
+          (= p (make-PointerValue false false))
+          (= p (make-PointerValue false true)))))))
+
+(assert (=> enable-solution-s2
+  (forall ((p PointerValue))
+    (= (fc-conj--ptr-is-nonnull p)
+       (= p (make-PointerValue false false))))))
+
+(assert (=> enable-solution-s2
+  (forall ((p PointerValue))
+    (= (fc-conj--ptr-is-nullable p)
+        (or
+          (= p (make-PointerValue true false))
+          (= p (make-PointerValue true true)))))))
+
+(assert (=> enable-solution-s2
+  (forall ((p PointerValue))
+    (= (fc-conj--ptr-is-maybe-unknown-but-nonnull p)
+        (or
+          (= p (make-PointerValue true false))
+          (= p (make-PointerValue false false)))))))
+
+(assert (=> enable-solution-s2
+  (forall ((p PointerValue))
+    (= (fc-conj--ptr-is-maybe-unknown-but-null p)
+        (or
+          (= p (make-PointerValue true true))
+          (= p (make-PointerValue false true)))))))
+
+(assert (=> enable-solution-s2
+  (forall ((lhs PointerValue) (rhs PointerValue) (eq Bool))
+    (= (fc-conj--ptrs-were-compared lhs rhs eq)
+       (and
+         ;; nullptr == nullptr
+         (=> (and (fc-conj--ptr-is-maybe-unknown-but-null lhs) (fc-conj--ptr-is-maybe-unknown-but-null rhs))
+             eq)
+
+         ;; nullptr != nonnull
+         (=> (and (fc-conj--ptr-is-maybe-unknown-but-null lhs) (fc-conj--ptr-is-maybe-unknown-but-nonnull rhs))
+             (not eq))
+
+         ;; nonnull != nullptr
+         (=> (and (fc-conj--ptr-is-maybe-unknown-but-nonnull lhs) (fc-conj--ptr-is-maybe-unknown-but-null rhs))
+             (not eq)))))))
+
+(assert (=> enable-solution-s2
+  (forall ((c Bool)
+           (ptr-then PointerValue)
+           (ptr-else PointerValue)
+           (ptr-joined PointerValue))
+    (= (fc-conj--join-ptr c ptr-then ptr-else ptr-joined)
+       (or (and c (= ptr-joined ptr-then))
+           (and (not c) (= ptr-joined ptr-else)))))))
+
+(assert (=> enable-solution-s2
+  (forall ((fc Bool) (p PointerValue))
+    (= (is-unsafe-to-deref fc p)
+       (and fc (fc-conj--ptr-is-null p))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Solution S3: ??? bits, with quantifiers.
+;; TODO: Implement.
+
+(define-fun enable-solution-s3 () Bool false)
+
+;(assert (=> enable-solution-s3
 ;  (forall ((p PointerValue))
 ;    (= (fc-conj--ptr-is-null p)
 ;       TODO))))
 
-;(assert (=> enable-solution-s2
+;(assert (=> enable-solution-s3
 ;  (forall ((p PointerValue))
 ;    (= (fc-conj--ptr-is-unknown p)
 ;       TODO))))
 
-;(assert (=> enable-solution-s2
+;(assert (=> enable-solution-s3
 ;  (forall ((p PointerValue))
 ;    (= (fc-conj--ptr-is-nonnull p)
 ;       TODO))))
 
-;(assert (=> enable-solution-s2
+;(assert (=> enable-solution-s3
 ;  (forall ((p PointerValue))
 ;    (= (fc-conj--ptr-is-nullable p)
 ;        TODO))))
 
-;(assert (=> enable-solution-s2
+;(assert (=> enable-solution-s3
 ;  (forall ((lhs PointerValue) (rhs PointerValue) (eq Bool))
 ;    (= (fc-conj--ptrs-were-compared lhs rhs eq)
 ;       TODO))))
 
-;(assert (=> enable-solution-s2
+;(assert (=> enable-solution-s3
 ;  (forall ((c Bool)
 ;           (ptr-then PointerValue)
 ;           (ptr-else PointerValue)
@@ -200,7 +275,7 @@
 ;    (= (fc-conj--join-ptr c ptr-then ptr-else ptr-joined)
 ;       TODO))))
 
-;(assert (=> enable-solution-s2
+;(assert (=> enable-solution-s3
 ;  (forall ((fc Bool) (p PointerValue))
 ;    (= (is-unsafe-to-deref fc p)
 ;       TODO))))
@@ -1329,35 +1404,38 @@
     (let ((fcs (run-CompareUnknownAndNullSimple state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (=> enable-solution-s1
+(define-fun is-solvable-CompareUnknownAndNullSimple () Bool
+  (or enable-solution-s1 enable-solution-s2))
+
+(assert (=> is-solvable-CompareUnknownAndNullSimple
   (! (is-reachable-CompareUnknownAndNullSimple get-fc-1)
      :named CompareUnknownAndNullSimple-reachable-1)))
 
-(assert (=> enable-solution-s1
+(assert (=> is-solvable-CompareUnknownAndNullSimple
   (! (is-reachable-CompareUnknownAndNullSimple get-fc-2)
      :named CompareUnknownAndNullSimple-reachable-2)))
 
-(assert (=> enable-solution-s1
+(assert (=> is-solvable-CompareUnknownAndNullSimple
   (! (is-reachable-CompareUnknownAndNullSimple get-fc-3)
      :named CompareUnknownAndNullSimple-reachable-3)))
 
-(assert (=> enable-solution-s1
+(assert (=> is-solvable-CompareUnknownAndNullSimple
   (! (is-reachable-CompareUnknownAndNullSimple get-fc-4)
      :named CompareUnknownAndNullSimple-reachable-4)))
 
-(assert (=> enable-solution-s1
+(assert (=> is-solvable-CompareUnknownAndNullSimple
   (! (not (is-unsafe-deref-CompareUnknownAndNullSimple get-fc-1 get-x-CompareUnknownAndNullSimple))
      :named CompareUnknownAndNullSimple-deref-1)))
 
-(assert (=> enable-solution-s1
+(assert (=> is-solvable-CompareUnknownAndNullSimple
   (! (not (is-unsafe-deref-CompareUnknownAndNullSimple get-fc-2 get-x-CompareUnknownAndNullSimple))
      :named CompareUnknownAndNullSimple-deref-2)))
 
-(assert (=> enable-solution-s1
+(assert (=> is-solvable-CompareUnknownAndNullSimple
   (! (not (is-unsafe-deref-CompareUnknownAndNullSimple get-fc-3 get-x-CompareUnknownAndNullSimple))
      :named CompareUnknownAndNullSimple-deref-3)))
 
-(assert (=> enable-solution-s1
+(assert (=> is-solvable-CompareUnknownAndNullSimple
   (! (not (is-unsafe-deref-CompareUnknownAndNullSimple get-fc-4 get-x-CompareUnknownAndNullSimple))
      :named CompareUnknownAndNullSimple-deref-4)))
 
@@ -1531,39 +1609,42 @@
     (let ((fcs (run-CompareUnknownAndNullAdvanced state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (=> (not enable-solution-s1)
+(define-fun is-solvable-CompareUnknownAndNullAdvanced () Bool
+  (not (or enable-solution-s1 enable-solution-s2)))
+
+(assert (=> is-solvable-CompareUnknownAndNullAdvanced
   (! (is-reachable-CompareUnknownAndNullAdvanced get-fc-1)
      :named CompareUnknownAndNullAdvanced-reachable-1)))
 
-(assert (=> (not enable-solution-s1)
+(assert (=> is-solvable-CompareUnknownAndNullAdvanced
   (! (is-reachable-CompareUnknownAndNullAdvanced get-fc-2)
      :named CompareUnknownAndNullAdvanced-reachable-2)))
 
-(assert (=> (not enable-solution-s1)
+(assert (=> is-solvable-CompareUnknownAndNullAdvanced
   (! (is-reachable-CompareUnknownAndNullAdvanced get-fc-3)
      :named CompareUnknownAndNullAdvanced-reachable-3)))
 
-(assert (=> (not enable-solution-s1)
+(assert (=> is-solvable-CompareUnknownAndNullAdvanced
   (! (is-reachable-CompareUnknownAndNullAdvanced get-fc-4)
      :named CompareUnknownAndNullAdvanced-reachable-4)))
 
-(assert (=> (not enable-solution-s1)
+(assert (=> is-solvable-CompareUnknownAndNullAdvanced
   ;; The dereference at (1) is actually unsafe, but the structure of the
-  ;; dataflow analysis defined in this file, can't detect that. The issue is
+  ;; dataflow analysis defined in this file can't detect that. The issue is
   ;; that the flow condition at (1) does not have information about what happens
   ;; later.
   (! (not (is-unsafe-deref-CompareUnknownAndNullAdvanced get-fc-1 get-x-CompareUnknownAndNullAdvanced))
      :named CompareUnknownAndNullAdvanced-deref-1)))
 
-(assert (=> (not enable-solution-s1)
+(assert (=> is-solvable-CompareUnknownAndNullAdvanced
   (! (is-unsafe-deref-CompareUnknownAndNullAdvanced get-fc-2 get-x-CompareUnknownAndNullAdvanced)
      :named CompareUnknownAndNullAdvanced-deref-2)))
 
-(assert (=> (not enable-solution-s1)
+(assert (=> is-solvable-CompareUnknownAndNullAdvanced
   (! (is-unsafe-deref-CompareUnknownAndNullAdvanced get-fc-3 get-x-CompareUnknownAndNullAdvanced)
      :named CompareUnknownAndNullAdvanced-deref-3)))
 
-(assert (=> (not enable-solution-s1)
+(assert (=> is-solvable-CompareUnknownAndNullAdvanced
   (! (not (is-unsafe-deref-CompareUnknownAndNullAdvanced get-fc-4 get-x-CompareUnknownAndNullAdvanced))
      :named CompareUnknownAndNullAdvanced-deref-4)))
 
