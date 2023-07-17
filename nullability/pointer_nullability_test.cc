@@ -26,22 +26,28 @@ TEST(NullabilityPropertiesTest, Test) {
   auto &False2 = DACtx.arena().makeNot(True);
 
   auto MakePointer =
-      [&](const dataflow::Formula &Known,
+      [&](const dataflow::Formula &FromNullable,
           const dataflow::Formula &Null) -> dataflow::PointerValue & {
     auto &P = Env.create<dataflow::PointerValue>(
         DACtx.createStorageLocation(QualType()));
-    initPointerNullState(P, Env, &Env.arena().makeBoolValue(Known),
+    initPointerNullState(P, Env, &Env.arena().makeBoolValue(FromNullable),
                          &Env.arena().makeBoolValue(Null));
     return P;
   };
 
-  EXPECT_TRUE(isNullable(MakePointer(/*Known=*/True, /*Null=*/True), Env));
-  EXPECT_FALSE(isNullable(MakePointer(/*Known=*/True, /*Null=*/False), Env));
-  EXPECT_FALSE(isNullable(MakePointer(/*Known=*/False, /*Null=*/True), Env));
-  EXPECT_FALSE(isNullable(MakePointer(/*Known=*/False, /*Null=*/False), Env));
+  EXPECT_TRUE(
+      isNullable(MakePointer(/*FromNullable=*/True, /*Null=*/True), Env));
+  EXPECT_FALSE(
+      isNullable(MakePointer(/*FromNullable=*/True, /*Null=*/False), Env));
+  EXPECT_FALSE(
+      isNullable(MakePointer(/*FromNullable=*/False, /*Null=*/True), Env));
+  EXPECT_FALSE(
+      isNullable(MakePointer(/*FromNullable=*/False, /*Null=*/False), Env));
 
-  EXPECT_FALSE(isNullable(MakePointer(/*Known=*/True, /*Null=*/False2), Env));
-  EXPECT_FALSE(isNullable(MakePointer(/*Known=*/False2, /*Null=*/True), Env));
+  EXPECT_FALSE(
+      isNullable(MakePointer(/*FromNullable=*/True, /*Null=*/False2), Env));
+  EXPECT_FALSE(
+      isNullable(MakePointer(/*FromNullable=*/False2, /*Null=*/True), Env));
 }
 
 }  // namespace

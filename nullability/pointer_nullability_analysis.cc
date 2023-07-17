@@ -302,11 +302,9 @@ void transferFlowSensitivePointer(
   if (auto *PointerVal = getPointerValueFromExpr(PointerExpr, Env)) {
     if (auto *Override = getOverriddenNullability(PointerExpr, State.Lattice)) {
       // is_known = (nonnull | nullable)
-      initPointerNullState(
-          *PointerVal, Env,
-          &Env.makeOr(*Override->Nonnull, *Override->Nullable));
+      initPointerNullState(*PointerVal, Env, Override->Nullable);
       // nonnull => !is_null
-      auto [IsKnown, IsNull] = getPointerNullState(*PointerVal);
+      auto [FromNullable, IsNull] = getPointerNullState(*PointerVal);
       Env.addToFlowCondition(A.makeImplies(Override->Nonnull->formula(),
                                            A.makeNot(IsNull.formula())));
     } else {
@@ -363,7 +361,7 @@ void transferFlowSensitiveNullCheckImplicitCastPtrToBool(
       getPointerValueFromExpr(CastExpr->IgnoreImplicit(), State.Env);
   if (!PointerVal) return;
 
-  auto [PointerKnown, PointerNull] = getPointerNullState(*PointerVal);
+  auto [FromNullable, PointerNull] = getPointerNullState(*PointerVal);
   State.Env.setValueStrict(*CastExpr, State.Env.makeNot(PointerNull));
 }
 
@@ -803,13 +801,15 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
     return false;
   }
 
-  auto [Known1, Null1] = getPointerNullState(cast<PointerValue>(Val1));
-  auto [Known2, Null2] = getPointerNullState(cast<PointerValue>(Val2));
+  auto [FromNullable1, Null1] = getPointerNullState(cast<PointerValue>(Val1));
+  auto [FromNullable2, Null2] = getPointerNullState(cast<PointerValue>(Val2));
 
-  auto &Known = mergeBoolValues(Known1, Env1, Known2, Env2, MergedEnv);
+  auto &FromNullable =
+      mergeBoolValues(FromNullable1, Env1, FromNullable2, Env2, MergedEnv);
   auto &Null = mergeBoolValues(Null1, Env1, Null2, Env2, MergedEnv);
 
-  initPointerNullState(cast<PointerValue>(MergedVal), MergedEnv, &Known, &Null);
+  initPointerNullState(cast<PointerValue>(MergedVal), MergedEnv, &FromNullable,
+                       &Null);
 
   return true;
 }

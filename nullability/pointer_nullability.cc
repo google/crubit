@@ -19,9 +19,8 @@ using dataflow::StorageLocation;
 using dataflow::Value;
 
 /// The nullness information of a pointer is represented by two properties
-/// which indicate if a pointer's nullability (i.e., if the pointer can hold
-/// null) is `Known` and if the pointer's value is `Null`.
-constexpr llvm::StringLiteral kKnown = "is_known";
+/// which indicate if its source was nullable, and if its value is null.
+constexpr llvm::StringLiteral kFromNullable = "from_nullable";
 constexpr llvm::StringLiteral kNull = "is_null";
 
 NullabilityKind getNullabilityKind(QualType Type, ASTContext &Ctx) {
@@ -42,15 +41,16 @@ PointerValue *getPointerValueFromExpr(const Expr *PointerExpr,
 }
 
 bool hasPointerNullState(const dataflow::PointerValue &PointerVal) {
-  return PointerVal.getProperty(kKnown) != nullptr &&
+  return PointerVal.getProperty(kFromNullable) != nullptr &&
          PointerVal.getProperty(kNull) != nullptr;
 }
 
 std::pair<AtomicBoolValue &, AtomicBoolValue &> getPointerNullState(
     const PointerValue &PointerVal) {
-  auto &PointerKnown = *cast<AtomicBoolValue>(PointerVal.getProperty(kKnown));
-  auto &PointerNull = *cast<AtomicBoolValue>(PointerVal.getProperty(kNull));
-  return {PointerKnown, PointerNull};
+  auto &FromNullable =
+      *cast<AtomicBoolValue>(PointerVal.getProperty(kFromNullable));
+  auto &Null = *cast<AtomicBoolValue>(PointerVal.getProperty(kNull));
+  return {FromNullable, Null};
 }
 
 void initPointerBoolProperty(PointerValue &PointerVal, llvm::StringRef Name,
@@ -68,25 +68,25 @@ void initPointerBoolProperty(PointerValue &PointerVal, llvm::StringRef Name,
 }
 
 void initPointerNullState(PointerValue &PointerVal, Environment &Env,
-                          BoolValue *KnownConstraint,
+                          BoolValue *FromNullableConstraint,
                           BoolValue *NullConstraint) {
-  initPointerBoolProperty(PointerVal, kKnown, KnownConstraint, Env);
+  initPointerBoolProperty(PointerVal, kFromNullable, FromNullableConstraint,
+                          Env);
   initPointerBoolProperty(PointerVal, kNull, NullConstraint, Env);
 }
 
 bool isNullable(const PointerValue &PointerVal, const Environment &Env) {
   auto &A = Env.getDataflowAnalysisContext().arena();
-  auto [PointerKnown, PointerNull] = getPointerNullState(PointerVal);
-  auto &PointerNotKnownNull =
-      A.makeNot(A.makeAnd(PointerKnown.formula(), PointerNull.formula()));
-  return !Env.flowConditionImplies(PointerNotKnownNull);
+  auto [FromNullable, Null] = getPointerNullState(PointerVal);
+  auto &ForseeablyNull = A.makeAnd(FromNullable.formula(), Null.formula());
+  return !Env.flowConditionImplies(A.makeNot(ForseeablyNull));
 }
 
 NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
                                const dataflow::Environment &Env) {
   auto &A = Env.getDataflowAnalysisContext().arena();
-  auto [PointerKnown, PointerNull] = getPointerNullState(PointerVal);
-  if (Env.flowConditionImplies(A.makeNot(PointerNull.formula())))
+  auto [FromNullable, Null] = getPointerNullState(PointerVal);
+  if (Env.flowConditionImplies(A.makeNot(Null.formula())))
     return NullabilityKind::NonNull;
   return isNullable(PointerVal, Env) ? NullabilityKind::Nullable
                                      : NullabilityKind::Unspecified;

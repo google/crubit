@@ -71,23 +71,21 @@ TEST(PointerNullabilityAnalysis, AssignNullabilityVariable) {
   auto *Ret =
       dyn_cast_or_null<dataflow::PointerValue>(ExitState.Env.getReturnValue());
   ASSERT_NE(Ret, nullptr);
-  auto [RetKnown, RetNull] = getPointerNullState(*Ret);
+  auto [RetFromNullable, RetNull] = getPointerNullState(*Ret);
 
   // The param nullability hasn't been fixed.
   EXPECT_EQ(std::nullopt, evaluate(PNonnull->formula(), ExitState.Env));
   EXPECT_EQ(std::nullopt, evaluate(PNullable->formula(), ExitState.Env));
   // Nor has the the nullability of the returned pointer.
-  EXPECT_EQ(std::nullopt, evaluate(RetKnown.formula(), ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(RetFromNullable.formula(), ExitState.Env));
   EXPECT_EQ(std::nullopt, evaluate(RetNull.formula(), ExitState.Env));
   // However, the two are linked as expected.
   EXPECT_EQ(true, evaluate(A.makeImplies(PNonnull->formula(),
                                          A.makeNot(RetNull.formula())),
                            ExitState.Env));
-  EXPECT_EQ(
-      true,
-      evaluate(A.makeEquals(A.makeOr(PNonnull->formula(), PNullable->formula()),
-                            RetKnown.formula()),
-               ExitState.Env));
+  EXPECT_EQ(true, evaluate(A.makeEquals(PNullable->formula(),
+                                        RetFromNullable.formula()),
+                           ExitState.Env));
 }
 
 }  // namespace
