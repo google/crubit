@@ -147,7 +147,6 @@ filegroup(
 bzl_library(
     name = "generate_bindings_bzl",
     srcs = ["generate_bindings.bzl"],
-    parse_tests = False,
     visibility = ["//visibility:private"],
     deps = [
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect",

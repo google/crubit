@@ -11,11 +11,10 @@ deps_for_bindings_are_in_target_cfg_test(name = "deps_for_bindings_are_in_target
 bzl_library(
     name = "deps_for_bindings_are_in_target_cfg_test_bzl",
     srcs = ["deps_for_bindings_are_in_target_cfg_test.bzl"],
-    parse_tests = False,
     visibility = ["//visibility:private"],
     deps = [
-        "@bazel_skylib//lib:unittest",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils_bzl",
+        "@bazel_skylib//lib:unittest",
     ],
 )

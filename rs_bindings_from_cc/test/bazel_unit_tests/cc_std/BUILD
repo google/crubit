@@ -35,7 +35,6 @@ sh_binary(
 bzl_library(
     name = "cc_std_test_bzl",
     srcs = ["cc_std_test.bzl"],
-    parse_tests = False,
     visibility = ["//visibility:private"],
     deps = [
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect",
