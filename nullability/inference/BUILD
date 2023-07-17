@@ -40,6 +40,33 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "merge",
+    srcs = ["merge.cc"],
+    hdrs = ["merge.h"],
+    deps = [
+        ":inference_cc_proto",
+        "@absl//absl/log:check",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_test(
+    name = "merge_test",
+    srcs = ["merge_test.cc"],
+    deps = [
+        ":inference_cc_proto",
+        ":merge",
+        "@absl//absl/log:check",
+        "//nullability:proto_matchers",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+        "//third_party/protobuf",
+    ],
+)
+
 proto_library(
     name = "inference_proto",
     srcs = ["inference.proto"],

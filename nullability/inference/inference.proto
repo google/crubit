@@ -84,3 +84,21 @@ message Inference {
     NULLABLE = 2;
   }
 }
+
+// Summary of an incomplete set of Evidence for a symbol.
+// Once all evidence has been incorporated, can be finalized into Inference.
+// This type should be treated as opaque, and its serialization is not stable.
+message Partial {
+  optional Symbol symbol = 1;
+
+  // Return type is slot[0], first param is slot[1]...
+  repeated SlotPartial slot = 2;
+  message SlotPartial {
+    map</*Kind*/ uint32, uint32> kind_count = 1;
+    map</*Kind*/ uint32, SampleLocations> kind_samples = 2;
+  }
+  message SampleLocations {
+    // A bounded number of locations are stored.
+    repeated string location = 1;
+  }
+}
