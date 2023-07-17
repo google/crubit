@@ -4,6 +4,10 @@
 
 #include "rs_bindings_from_cc/test/struct/constructors/constructors.h"
 
+namespace {
+void IntentionallyNontrivial() {}
+}  // namespace
+
 StructWithUserProvidedConstructors::StructWithUserProvidedConstructors()
     : int_field(42) {}
 
@@ -27,4 +31,6 @@ NonTrivialStructWithConstructors::NonTrivialStructWithConstructors()
 NonTrivialStructWithConstructors::NonTrivialStructWithConstructors(int i)
     : int_field(i) {}
 
-NonTrivialStructWithConstructors::~NonTrivialStructWithConstructors() {}
+NonTrivialStructWithConstructors::~NonTrivialStructWithConstructors() {
+  IntentionallyNontrivial();
+}

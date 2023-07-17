@@ -9,6 +9,8 @@
 
 #pragma clang lifetime_elision
 
+inline void IntentionallyNontrivial() {}
+
 struct AddableConstMemberInt final {
   // impl Add<i32> for &AddableConstMemberInt { type Output = i32; .. }
   int operator+(int rhs) const { return i + rhs; }
@@ -71,7 +73,7 @@ struct AddableReturnsVoid final {
 };
 
 struct AddableNontrivialByValue final {
-  ~AddableNontrivialByValue() {}
+  ~AddableNontrivialByValue() { IntentionallyNontrivial(); }
   AddableNontrivialByValue operator+(AddableNontrivialByValue rhs) const {
     return AddableNontrivialByValue{i + rhs.i};
   }
@@ -147,7 +149,7 @@ struct AddableFriendByValue final {
 };
 
 struct AddableReturnsNontrivial final {
-  ~AddableReturnsNontrivial() {}
+  ~AddableReturnsNontrivial() { IntentionallyNontrivial(); }
   AddableReturnsNontrivial operator+(
       const AddableReturnsNontrivial& rhs) const {
     return AddableReturnsNontrivial{i + rhs.i};

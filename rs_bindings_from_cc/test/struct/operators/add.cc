@@ -4,6 +4,8 @@
 
 #include "rs_bindings_from_cc/test/struct/operators/add.h"
 
+#include <cstdint>
+
 UnpinStructByConstRef operator+(const UnpinStructByConstRef& lhs,
                                 const UnpinStructByConstRef& rhs) {
   return UnpinStructByConstRef{lhs.i + rhs.i};
