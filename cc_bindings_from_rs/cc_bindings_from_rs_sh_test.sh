@@ -107,7 +107,7 @@ function test::unrecognized_crubit_flag() {
   EXPECT_STR_EMPTY "$(cat $STDOUT_PATH)"
 
   EXPECT_SUCCEED \
-    "grep '\\--no-such-crubit-flag.*wasn.t expected' \"$STDERR_PATH\" >/dev/null" \
+    "grep 'unexpected argument .*--no-such-crubit-flag.*' \"$STDERR_PATH\" >/dev/null" \
     "The error message should complain about the unrecognized flag"
 }
 

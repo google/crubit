@@ -385,11 +385,7 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
             .expect_err("--unrecognized_crubit_flag should trigger an error");
 
         let msg = format!("{err:#}");
-        assert!(
-            msg.contains("Found argument '--unrecognized-crubit-flag' which wasn't expected"),
-            "msg = {}",
-            msg,
-        );
+        assert!(msg.contains("unexpected argument '--unrecognized-crubit-flag'"), "msg = {}", msg,);
         Ok(())
     }
 
