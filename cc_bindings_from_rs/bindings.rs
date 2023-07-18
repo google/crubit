@@ -1753,6 +1753,8 @@ fn does_implement_default_trait<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>) -> b
 /// Formats a default constructor for an ADT if possible (i.e. if the `Default`
 /// trait is implemented for the ADT).  Returns an error otherwise (e.g. if
 /// there is no `Default` impl).
+//
+// TODO(b/259724276): This function's results should be memoized.
 fn format_default_ctor<'tcx>(
     input: &Input<'tcx>,
     core: &AdtCoreBindings<'tcx>,
@@ -1857,6 +1859,90 @@ fn format_copy_ctor_and_assignment_operator<'tcx>(
     Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
 
+/// Formats the move constructor and the move-assignment operator for an ADT.
+fn format_move_ctor_and_assignment_operator<'tcx>(
+    input: &Input<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+) -> ApiSnippets {
+    let tcx = input.tcx;
+    let adt_cc_name = &core.cc_short_name;
+    if core.needs_drop(tcx) {
+        let main_api = CcSnippet::new(quote! {
+            #adt_cc_name(#adt_cc_name&&); __NEWLINE__
+            #adt_cc_name& operator=(#adt_cc_name&&); __NEWLINE__
+        });
+        let cc_details = {
+            // Move constructor depends on presence of the default constructor.
+            // We can assert here, because `does_implement_default_trait`
+            // is already validated by `format_adt`.
+            assert!(format_default_ctor(input, core).is_ok());
+
+            // Move assignment operator depends on `crubit::MemSwap` which is only safe for
+            // trivially relocatable types.  "`needs_drop` implies `is_unpin`" is currently
+            // validated by the caller because otherwise `format_adt` fails.
+            assert!(core.self_ty.is_unpin(tcx, tcx.param_env(core.def_id)));
+
+            let mut prereqs = CcPrerequisites::default();
+            prereqs.includes.insert(input.support_header("internal/memswap.h"));
+            prereqs.includes.insert(CcInclude::utility()); // for `std::move`
+            let tokens = quote! {
+                inline #adt_cc_name::#adt_cc_name(#adt_cc_name&& other)
+                        : #adt_cc_name() {
+                    *this = std::move(other);
+                }
+                inline #adt_cc_name& #adt_cc_name::operator=(#adt_cc_name&& other) {
+                    crubit::MemSwap(*this, other);
+                    return *this;
+                }
+            };
+            CcSnippet { tokens, prereqs }
+        };
+        ApiSnippets { main_api, cc_details, ..Default::default() }
+    } else {
+        let main_api = CcSnippet::new(quote! {
+            // The generated bindings have to follow Rust move semantics:
+            // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
+            //   that "Every type must be ready for it to be blindly memcopied to somewhere
+            //   else in memory")
+            // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
+            //   it.
+            //
+            // The generated C++ bindings below match the required semantics because they:
+            // * Generate trivial` C++ move constructor and move assignment operator. Per
+            //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial
+            //   move constructor is a constructor that performs the same action as the trivial
+            //   copy constructor, that is, makes a copy of the object representation as if by
+            //   std::memmove."
+            // * Generate trivial C++ destructor.
+            //
+            // In particular, note that the following C++ code and Rust code are exactly
+            // equivalent (except that in Rust, reuse of `y` is forbidden at compile time,
+            // whereas in C++, it's only prohibited by convention):
+            // * C++, assumming trivial move constructor and trivial destructor:
+            //   `auto x = std::move(y);`
+            // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
+            //   `let x = y;`
+            //
+            // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop
+            // glue, then extra care should be taken to ensure the C++ destructor can handle
+            // the moved-from object in a way that meets Rust move semantics.  For example, the
+            // generated C++ move constructor might need to assign `Default::default()` to the
+            // moved-from object.
+            #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
+            #adt_cc_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
+            __NEWLINE__
+        });
+        let cc_details = CcSnippet::with_include(
+            quote! {
+                static_assert(std::is_trivially_move_constructible_v<#adt_cc_name>);
+                static_assert(std::is_trivially_move_assignable_v<#adt_cc_name>);
+            },
+            CcInclude::type_traits(),
+        );
+        ApiSnippets { main_api, cc_details, ..Default::default() }
+    }
+}
+
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
 /// represented by `core`.  This function is infallible - after
 /// `format_adt_core` returns success we have committed to emitting C++ bindings
@@ -1868,9 +1954,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
 
-    let mut has_default_ctor = true;
     let default_ctor_snippets = format_default_ctor(input, core).unwrap_or_else(|err| {
-        has_default_ctor = false;
         let msg = format!("{err:#}");
         ApiSnippets {
             main_api: CcSnippet::new(quote! {
@@ -1936,81 +2020,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
             }
         });
 
-    let move_ctor_and_assignment_snippets = if core.needs_drop(tcx) {
-        let main_api = CcSnippet::new(quote! {
-            #adt_cc_name(#adt_cc_name&&); __NEWLINE__
-            #adt_cc_name& operator=(#adt_cc_name&&); __NEWLINE__
-        });
-        let cc_details = {
-            // Move constructor depends on presence of the default constructor.
-            // "`needs_drop` implies `has_default_ctor`" is currently validated
-            // by the caller because otherwise `format_adt` fails.
-            assert!(has_default_ctor);
-
-            // Move assignment operator depends on `crubit::MemSwap` which is only safe for
-            // trivially relocatable types.  "`needs_drop` implies `is_unpin`" is currently
-            // validated by the caller because otherwise `format_adt` fails.
-            assert!(core.self_ty.is_unpin(tcx, tcx.param_env(core.def_id)));
-
-            let mut prereqs = CcPrerequisites::default();
-            prereqs.includes.insert(input.support_header("internal/memswap.h"));
-            prereqs.includes.insert(CcInclude::utility()); // for `std::move`
-            let tokens = quote! {
-                inline #adt_cc_name::#adt_cc_name(#adt_cc_name&& other)
-                        : #adt_cc_name() {
-                    *this = std::move(other);
-                }
-                inline #adt_cc_name& #adt_cc_name::operator=(#adt_cc_name&& other) {
-                    crubit::MemSwap(*this, other);
-                    return *this;
-                }
-            };
-            CcSnippet { tokens, prereqs }
-        };
-        ApiSnippets { main_api, cc_details, ..Default::default() }
-    } else {
-        let main_api = CcSnippet::new(quote! {
-            // The generated bindings have to follow Rust move semantics:
-            // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
-            //   that "Every type must be ready for it to be blindly memcopied to somewhere
-            //   else in memory")
-            // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
-            //   it.
-            //
-            // The generated C++ bindings below match the required semantics because they:
-            // * Generate trivial` C++ move constructor and move assignment operator. Per
-            //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial
-            //   move constructor is a constructor that performs the same action as the trivial
-            //   copy constructor, that is, makes a copy of the object representation as if by
-            //   std::memmove."
-            // * Generate trivial C++ destructor.
-            //
-            // In particular, note that the following C++ code and Rust code are exactly
-            // equivalent (except that in Rust, reuse of `y` is forbidden at compile time,
-            // whereas in C++, it's only prohibited by convention):
-            // * C++, assumming trivial move constructor and trivial destructor:
-            //   `auto x = std::move(y);`
-            // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
-            //   `let x = y;`
-            //
-            // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop
-            // glue, then extra care should be taken to ensure the C++ destructor can handle
-            // the moved-from object in a way that meets Rust move semantics.  For example, the
-            // generated C++ move constructor might need to assign `Default::default()` to the
-            // moved-from object.
-            #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
-            #adt_cc_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
-            __NEWLINE__
-        });
-        let cc_details = CcSnippet::with_include(
-            quote! {
-                static_assert(std::is_trivially_move_constructible_v<#adt_cc_name>);
-                static_assert(std::is_trivially_move_assignable_v<#adt_cc_name>);
-            },
-            CcInclude::type_traits(),
-        );
-        ApiSnippets { main_api, cc_details, ..Default::default() }
-    };
+    let move_ctor_and_assignment_snippets = format_move_ctor_and_assignment_operator(input, core);
 
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
