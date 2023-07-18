@@ -1259,6 +1259,12 @@ struct AdtCoreBindings<'tcx> {
     size_in_bytes: u64,
 }
 
+impl<'tcx> AdtCoreBindings<'tcx> {
+    fn needs_drop(&self, tcx: TyCtxt<'tcx>) -> bool {
+        self.self_ty.needs_drop(tcx, tcx.param_env(self.def_id))
+    }
+}
+
 /// Like `TyCtxt::is_directly_public`, but works not only with `LocalDefId`, but
 /// also with `DefId`.
 fn is_directly_public(tcx: TyCtxt, def_id: DefId) -> bool {
@@ -1845,8 +1851,6 @@ fn format_copy_ctor_and_assignment_operator<'tcx>(
                 }
                 return *this;
             }
-            static_assert(std::is_copy_constructible_v<#cc_struct_name>);
-            static_assert(std::is_copy_assignable_v<#cc_struct_name>);
         };
         CcSnippet { tokens, prereqs }
     };
@@ -1877,8 +1881,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         }
     });
 
-    let needs_drop = core.self_ty.needs_drop(tcx, tcx.param_env(core.def_id));
-    let destructor_snippets = if needs_drop {
+    let destructor_snippets = if core.needs_drop(tcx) {
         let drop_trait_id =
             tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
         let TraitThunks {
@@ -1909,13 +1912,15 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         };
         ApiSnippets { main_api, cc_details, rs_details }
     } else {
-        ApiSnippets {
-            main_api: CcSnippet::new(quote! {
-                __NEWLINE__ __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
-                ~#adt_cc_name() = default; __NEWLINE__
-            }),
-            ..Default::default()
-        }
+        let main_api = CcSnippet::new(quote! {
+            __NEWLINE__ __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+            ~#adt_cc_name() = default; __NEWLINE__
+        });
+        let cc_details = CcSnippet::with_include(
+            quote! { static_assert(std::is_trivially_destructible_v<#adt_cc_name>); },
+            CcInclude::type_traits(),
+        );
+        ApiSnippets { main_api, cc_details, ..Default::default() }
     };
 
     let copy_ctor_and_assignment_snippets = format_copy_ctor_and_assignment_operator(input, core)
@@ -1931,7 +1936,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
             }
         });
 
-    let move_ctor_and_assignment_snippets = if needs_drop {
+    let move_ctor_and_assignment_snippets = if core.needs_drop(tcx) {
         let main_api = CcSnippet::new(quote! {
             #adt_cc_name(#adt_cc_name&&); __NEWLINE__
             #adt_cc_name& operator=(#adt_cc_name&&); __NEWLINE__
@@ -1964,42 +1969,47 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         };
         ApiSnippets { main_api, cc_details, ..Default::default() }
     } else {
-        ApiSnippets {
-            main_api: CcSnippet::new(quote! {
-                // The generated bindings have to follow Rust move semantics:
-                // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
-                //   that "Every type must be ready for it to be blindly memcopied to somewhere
-                //   else in memory")
-                // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
-                //   it.
-                //
-                // The generated C++ bindings below match the required semantics because they:
-                // * Generate trivial` C++ move constructor and move assignment operator. Per
-                //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial
-                //   move constructor is a constructor that performs the same action as the trivial
-                //   copy constructor, that is, makes a copy of the object representation as if by
-                //   std::memmove."
-                // * Generate trivial C++ destructor.
-                //
-                // In particular, note that the following C++ code and Rust code are exactly
-                // equivalent (except that in Rust, reuse of `y` is forbidden at compile time,
-                // whereas in C++, it's only prohibited by convention):
-                // * C++, assumming trivial move constructor and trivial destructor:
-                //   `auto x = std::move(y);`
-                // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
-                //   `let x = y;`
-                //
-                // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop
-                // glue, then extra care should be taken to ensure the C++ destructor can handle
-                // the moved-from object in a way that meets Rust move semantics.  For example, the
-                // generated C++ move constructor might need to assign `Default::default()` to the
-                // moved-from object.
-                #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
-                #adt_cc_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
-                __NEWLINE__
-            }),
-            ..Default::default()
-        }
+        let main_api = CcSnippet::new(quote! {
+            // The generated bindings have to follow Rust move semantics:
+            // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
+            //   that "Every type must be ready for it to be blindly memcopied to somewhere
+            //   else in memory")
+            // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
+            //   it.
+            //
+            // The generated C++ bindings below match the required semantics because they:
+            // * Generate trivial` C++ move constructor and move assignment operator. Per
+            //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial
+            //   move constructor is a constructor that performs the same action as the trivial
+            //   copy constructor, that is, makes a copy of the object representation as if by
+            //   std::memmove."
+            // * Generate trivial C++ destructor.
+            //
+            // In particular, note that the following C++ code and Rust code are exactly
+            // equivalent (except that in Rust, reuse of `y` is forbidden at compile time,
+            // whereas in C++, it's only prohibited by convention):
+            // * C++, assumming trivial move constructor and trivial destructor:
+            //   `auto x = std::move(y);`
+            // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
+            //   `let x = y;`
+            //
+            // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop
+            // glue, then extra care should be taken to ensure the C++ destructor can handle
+            // the moved-from object in a way that meets Rust move semantics.  For example, the
+            // generated C++ move constructor might need to assign `Default::default()` to the
+            // moved-from object.
+            #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
+            #adt_cc_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
+            __NEWLINE__
+        });
+        let cc_details = CcSnippet::with_include(
+            quote! {
+                static_assert(std::is_trivially_move_constructible_v<#adt_cc_name>);
+                static_assert(std::is_trivially_move_assignable_v<#adt_cc_name>);
+            },
+            CcInclude::type_traits(),
+        );
+        ApiSnippets { main_api, cc_details, ..Default::default() }
     };
 
     let impl_items_snippets = tcx
@@ -2087,21 +2097,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         let mut prereqs = CcPrerequisites::default();
         let public_functions_cc_details = public_functions_cc_details.into_tokens(&mut prereqs);
         let fields_cc_details = fields_cc_details.into_tokens(&mut prereqs);
-        let movability_static_asserts = if needs_drop {
-            quote! {
-                static_assert(std::is_move_constructible_v<#adt_cc_name>);
-                static_assert(std::is_move_assignable_v<#adt_cc_name>);
-                static_assert(std::is_destructible_v<#adt_cc_name>);
-            }
-        } else {
-            quote! {
-                static_assert(std::is_trivially_move_constructible_v<#adt_cc_name>);
-                static_assert(std::is_trivially_move_assignable_v<#adt_cc_name>);
-                static_assert(std::is_trivially_destructible_v<#adt_cc_name>);
-            }
-        };
         prereqs.defs.insert(local_def_id);
-        prereqs.includes.insert(CcInclude::type_traits());
         CcSnippet {
             prereqs,
             tokens: quote! {
@@ -2112,7 +2108,6 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
                 static_assert(
                     alignof(#adt_cc_name) == #alignment,
                     "Verify that struct layout didn't change since this header got generated");
-                #movability_static_asserts
                 __NEWLINE__
                 #public_functions_cc_details
                 #fields_cc_details
@@ -4208,9 +4203,9 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
-                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, x));
                       static_assert(4 == offsetof(SomeStruct, y));
@@ -4271,9 +4266,9 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(TupleStruct) == 8, ...);
                     static_assert(alignof(TupleStruct) == 4, ...);
+                    static_assert(std::is_trivially_destructible_v<TupleStruct>);
                     static_assert(std::is_trivially_move_constructible_v<TupleStruct>);
                     static_assert(std::is_trivially_move_assignable_v<TupleStruct>);
-                    static_assert(std::is_trivially_destructible_v<TupleStruct>);
                     inline void TupleStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(TupleStruct, __field0));
                       static_assert(4 == offsetof(TupleStruct, __field1));
@@ -4332,9 +4327,9 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
-                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, field2));
                       static_assert(4 == offsetof(SomeStruct, field1));
@@ -4391,9 +4386,9 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 6, ...);
                     static_assert(alignof(SomeStruct) == 1, ...);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
-                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, field1));
                       static_assert(2 == offsetof(SomeStruct, field2));
@@ -4447,9 +4442,9 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
-                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, f2));
                       static_assert(4 == offsetof(SomeStruct, f1));
@@ -5091,8 +5086,6 @@ pub mod tests {
                       }
                       return *this;
                     }
-                    static_assert(std::is_copy_constructible_v<Point>);
-                    static_assert(std::is_copy_assignable_v<Point>);
                 }
             );
             assert_rs_matches!(
@@ -5174,9 +5167,9 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 20, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
-                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, unsupported_field));
                       static_assert(16 == offsetof(SomeStruct, successful_field));
@@ -5337,14 +5330,6 @@ pub mod tests {
                         ...
                     };
                 }
-            );
-            assert_cc_matches!(
-                result.cc_details.tokens,
-                quote! {
-                    static_assert(std::is_move_constructible_v<TypeUnderTest>);
-                    static_assert(std::is_move_assignable_v<TypeUnderTest>);
-                    static_assert(std::is_destructible_v<TypeUnderTest>);
-                },
             );
             assert_cc_matches!(
                 result.cc_details.tokens,
@@ -5525,9 +5510,9 @@ pub mod tests {
                 quote! {
                     static_assert(sizeof(SomeStruct) == 4, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
+                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
-                    static_assert(std::is_trivially_destructible_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
                       static_assert(0 == offsetof(SomeStruct, zst1));
                       static_assert(0 == offsetof(SomeStruct, zst2));
