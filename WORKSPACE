@@ -30,20 +30,21 @@ http_archive(
 
 http_archive(
     name = "rules_rust",
-    sha256 = "edb87c0d2ba70823fe3df7862676d695599314a4634b9758bd55f0e8f19c2751",
-    urls = [
-        "https://github.com/bazelbuild/rules_rust/releases/download/0.4.0/rules_rust-v0.4.0.tar.gz",
-    ],
+    sha256 = "4a9cb4fda6ccd5b5ec393b2e944822a62e050c7c06f1ea41607f14c4fdec57a2",
+    urls = ["https://github.com/bazelbuild/rules_rust/releases/download/0.25.1/rules_rust-v0.25.1.tar.gz"],
 )
 
 load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_register_toolchains")
 
 rules_rust_dependencies()
 
+RUST_TOOLCHAIN_VERSION = "nightly/2022-07-07"
+
 rust_register_toolchains(
     edition = "2021",
-    iso_date = "2022-07-07",
-    version = "nightly",
+    versions = [
+      RUST_TOOLCHAIN_VERSION,
+    ],
     dev_components = True,
 )
 
@@ -53,29 +54,26 @@ crate_universe_dependencies()
 
 load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_repository", "render_config")
 
-# after changing:
+# after changing `packages`, re-generate Cargo.lock:
 #   CARGO_BAZEL_REPIN=1 bazelisk sync --only=crate_index
 crates_repository(
     name = "crate_index",
-    lockfile = "//:Cargo.Bazel.lock",
+    cargo_lockfile = "//:Cargo.lock",
     packages = {
         "anyhow": crate.spec(
             version = ">0.0.0",
         ),
         "clap": crate.spec(
             features = [
-                "atty",
-                "clap_derive",
+                "derive",
                 "color",
                 "derive",
                 "env",
-                "once_cell",
                 "std",
-                "strsim",
+                "string",
                 "suggestions",
-                "termcolor",
             ],
-            version = ">3.0.0",
+            version = ">=4.3.12",
         ),
         "either": crate.spec(
             version = ">1.0.0",
@@ -125,10 +123,10 @@ crates_repository(
             version = ">0.0.0",
         ),
     },
-
     render_config = render_config(
         default_package_name = "",
     ),
+    rust_version = RUST_TOOLCHAIN_VERSION,
 )
 
 load("@crate_index//:defs.bzl", "crate_repositories")
