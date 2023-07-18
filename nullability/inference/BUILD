@@ -10,7 +10,6 @@ cc_library(
     hdrs = ["collect_evidence.h"],
     deps = [
         ":inference_cc_proto",
-        "@absl//absl/log:check",
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",

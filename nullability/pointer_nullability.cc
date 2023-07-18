@@ -5,6 +5,7 @@
 #include "nullability/pointer_nullability.h"
 
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/Specifiers.h"
 #include "llvm/ADT/StringRef.h"
@@ -75,21 +76,27 @@ void initPointerNullState(PointerValue &PointerVal, Environment &Env,
   initPointerBoolProperty(PointerVal, kNull, NullConstraint, Env);
 }
 
-bool isNullable(const PointerValue &PointerVal, const Environment &Env) {
+bool isNullable(const PointerValue &PointerVal, const Environment &Env,
+                const dataflow::Formula *AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
   auto [FromNullable, Null] = getPointerNullState(PointerVal);
-  auto &ForseeablyNull = A.makeAnd(FromNullable.formula(), Null.formula());
-  return !Env.flowConditionImplies(A.makeNot(ForseeablyNull));
+  auto *ForseeablyNull = &A.makeAnd(FromNullable.formula(), Null.formula());
+  if (AdditionalConstraints)
+    ForseeablyNull = &A.makeAnd(*AdditionalConstraints, *ForseeablyNull);
+  return !Env.flowConditionImplies(A.makeNot(*ForseeablyNull));
 }
 
 NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
-                               const dataflow::Environment &Env) {
+                               const dataflow::Environment &Env,
+                               const dataflow::Formula *AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
-  auto [FromNullable, Null] = getPointerNullState(PointerVal);
-  if (Env.flowConditionImplies(A.makeNot(Null.formula())))
+  auto *Null = &getPointerNullState(PointerVal).second.formula();
+  if (AdditionalConstraints) Null = &A.makeAnd(*AdditionalConstraints, *Null);
+  if (Env.flowConditionImplies(A.makeNot(*Null)))
     return NullabilityKind::NonNull;
-  return isNullable(PointerVal, Env) ? NullabilityKind::Nullable
-                                     : NullabilityKind::Unspecified;
+  return isNullable(PointerVal, Env, AdditionalConstraints)
+             ? NullabilityKind::Nullable
+             : NullabilityKind::Unspecified;
 }
 
 }  // namespace clang::tidy::nullability

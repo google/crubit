@@ -110,6 +110,7 @@ cc_test(
         ":pointer_nullability",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],

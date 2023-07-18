@@ -60,6 +60,12 @@ message Evidence {
 
     // A pointer was dereferenced without being checked for null first.
     UNCHECKED_DEREFERENCE = 3;
+    // A Nullable value was passed as an argument.
+    NULLABLE_ARGUMENT = 4;
+    // A Nonnull value was passed as an argument.
+    NONNULL_ARGUMENT = 5;
+    // A value with Unknown nullability was passed as an argument.
+    UNKNOWN_ARGUMENT = 6;
   }
 }
 

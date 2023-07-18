@@ -106,14 +106,16 @@ inline void initUnknownPointer(dataflow::PointerValue &PointerVal,
 
 /// Returns true if there is evidence that `PointerVal` may hold a nullptr.
 bool isNullable(const dataflow::PointerValue &PointerVal,
-                const dataflow::Environment &Env);
+                const dataflow::Environment &Env,
+                const dataflow::Formula *AdditionalConstraints = nullptr);
 
 /// Returns the strongest provable assertion we can make about `PointerVal`.
 /// If PointerVal may not be null, returns Nonnull.
 /// If PointerVal may be both null and known-nullability, returns Nullable.
 /// Otherwise, returns Unspecified.
-clang::NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
-                                      const dataflow::Environment &Env);
+clang::NullabilityKind getNullability(
+    const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
+    const dataflow::Formula *AdditionalConstraints = nullptr);
 
 /// Returns the strongest provable assertion we can make about the value of
 /// `E` in `Env`.

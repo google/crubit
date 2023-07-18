@@ -23,10 +23,12 @@
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/ControlFlowContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
@@ -74,6 +76,13 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
 }
 
 namespace {
+bool isInferenceTarget(const FunctionDecl &FD) {
+  // Inferring properties of template instantiations isn't useful in itself.
+  // We can't record them anywhere unless they apply to the template in general.
+  // TODO: work out in what circumstances that would be safe.
+  return !FD.getTemplateInstantiationPattern();
+}
+
 void collectEvidenceFromDereference(
     std::vector<std::pair<PointerTypeNullability, Slot>> InferrableSlots,
     const CFGElement &Element, const PointerNullabilityLattice &Lattice,
@@ -113,11 +122,75 @@ void collectEvidenceFromDereference(
   }
 }
 
+void collectEvidenceFromCallExpr(
+    std::vector<std::pair<PointerTypeNullability, Slot>> InferrableCallerSlots,
+    const CFGElement &Element, const PointerNullabilityLattice &Lattice,
+    const dataflow::Environment &Env,
+    llvm::function_ref<EvidenceEmitter> Emit) {
+  // Is this CFGElement a call to a function?
+  auto CFGStmt = Element.getAs<clang::CFGStmt>();
+  if (!CFGStmt) return;
+  auto *CallExpr = dyn_cast_or_null<clang::CallExpr>(CFGStmt->getStmt());
+  if (!CallExpr || !CallExpr->getCalleeDecl()) return;
+  auto *CalleeDecl =
+      dyn_cast_or_null<clang::FunctionDecl>(CallExpr->getCalleeDecl());
+  if (!CalleeDecl || !isInferenceTarget(*CalleeDecl)) return;
+
+  // For each inferrable parameter of the callee, ...
+  for (unsigned I = 0; I < CalleeDecl->param_size(); ++I) {
+    if (!CalleeDecl->getParamDecl(I)
+             ->getType()
+             .getNonReferenceType()
+             ->isPointerType())
+      return;
+
+    // if we're passing a pointer, ...
+    dataflow::PointerValue *PV =
+        getPointerValueFromExpr(CallExpr->getArg(I), Env);
+    if (!PV) return;
+
+    // TODO: Check if the parameter is annotated. If annotated Nonnull, (instead
+    // of collecting evidence for it?) collect evidence similar to a
+    // dereference, i.e. if the argument is not already proven Nonnull, collect
+    // evidence for a parameter that could be annotated Nonnull as a way to
+    // force the argument to be Nonnull.
+
+    // emit evidence of the parameter's nullability. First, calculate that
+    // nullability based on InferrableSlots for the caller being assigned to
+    // Unknown, to reflect the current annotations and not all possible
+    // annotations for them.
+    dataflow::Arena &A = Env.getDataflowAnalysisContext().arena();
+    const dataflow::Formula *CallerSlotsUnknown = &A.makeLiteral(true);
+    for (auto &[Nullability, Slot] : InferrableCallerSlots) {
+      CallerSlotsUnknown =
+          &A.makeAnd(*CallerSlotsUnknown,
+                     A.makeAnd(A.makeNot(Nullability.Nullable->formula()),
+                               A.makeNot(Nullability.Nonnull->formula())));
+    }
+
+    NullabilityKind ArgNullability =
+        getNullability(*PV, Env, CallerSlotsUnknown);
+    Evidence::Kind ArgEvidenceKind;
+    switch (ArgNullability) {
+      case NullabilityKind::Nullable:
+        ArgEvidenceKind = Evidence::NULLABLE_ARGUMENT;
+        break;
+      case NullabilityKind::NonNull:
+        ArgEvidenceKind = Evidence::NONNULL_ARGUMENT;
+        break;
+      default:
+        ArgEvidenceKind = Evidence::UNKNOWN_ARGUMENT;
+    }
+    Emit(*CalleeDecl, paramSlot(I), ArgEvidenceKind);
+  }
+}
+
 void collectEvidenceFromElement(
     std::vector<std::pair<PointerTypeNullability, Slot>> InferrableSlots,
     const CFGElement &Element, const PointerNullabilityLattice &Lattice,
     const Environment &Env, llvm::function_ref<EvidenceEmitter> Emit) {
   collectEvidenceFromDereference(InferrableSlots, Element, Lattice, Env, Emit);
+  collectEvidenceFromCallExpr(InferrableSlots, Element, Lattice, Env, Emit);
   // TODO: add location information.
   // TODO: add more heuristic collections here
 }
@@ -193,13 +266,6 @@ void collectEvidenceFromTargetDeclaration(
     if (auto K = evidenceKindFromDeclaredType(Fn->getParamDecl(I)->getType()))
       Emit(*Fn, paramSlot(I), *K);
   }
-}
-
-bool isInferenceTarget(const FunctionDecl &FD) {
-  // Inferring properties of template instantiations isn't useful in itself.
-  // We can't record them anywhere unless they apply to the template in general.
-  // TODO: work out in what circumstances that would be safe.
-  return !FD.getTemplateInstantiationPattern();
 }
 
 EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
