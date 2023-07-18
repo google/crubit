@@ -10,7 +10,7 @@ load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
 )
-
+load("//cc_bindings_from_rs:test/crubit_cc_test.bzl", "crubit_cc_test")
 
 rust_library(
     name = "include_str",
@@ -28,7 +28,7 @@ cc_bindings_from_rust(
     crate = ":include_str",
 )
 
-cc_test(
+crubit_cc_test(
     name = "include_str_test",
     srcs = ["include_str_test.cc"],
     deps = [

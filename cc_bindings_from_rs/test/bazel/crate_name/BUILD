@@ -10,7 +10,7 @@ load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
 )
-
+load("//cc_bindings_from_rs:test/crubit_cc_test.bzl", "crubit_cc_test")
 
 rust_library(
     name = "custom_crate_name",  # <- This is an important part of this test.
@@ -27,7 +27,7 @@ cc_bindings_from_rust(
     crate = ":custom_crate_name",
 )
 
-cc_test(
+crubit_cc_test(
     name = "crate_name_test",
     srcs = ["crate_name_test.cc"],
     deps = [

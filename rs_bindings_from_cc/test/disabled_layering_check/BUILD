@@ -2,12 +2,12 @@
 # disabled. Rust equivalent of layering check is still enforced when compiling user Rust code,
 # but to be safe we work around it for generated bindings Rust code.
 
-
+load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
 
-rust_test(
+crubit_rust_test(
     name = "disabled_layering_check_test",
     srcs = ["disabled_layering_check_test.rs"],
     cc_deps = [

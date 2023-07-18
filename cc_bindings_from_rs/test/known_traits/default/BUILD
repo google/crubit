@@ -8,7 +8,7 @@ load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
 )
-
+load("//cc_bindings_from_rs:test/crubit_cc_test.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -28,7 +28,7 @@ cc_bindings_from_rust(
     crate = ":rs_default",
 )
 
-cc_test(
+crubit_cc_test(
     name = "default_test",
     srcs = ["default_test.cc"],
     deps = [

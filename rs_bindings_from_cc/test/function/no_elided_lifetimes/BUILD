@@ -1,6 +1,6 @@
 """End-to-end tests of C++ functions that don't have lifetime annotations."""
 
-
+load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -11,7 +11,7 @@ crubit_test_cc_library(
     hdrs = ["no_elided_lifetimes.h"],
 )
 
-rust_test(
+crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
     cc_deps = [":no_elided_lifetimes"],

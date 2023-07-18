@@ -7,7 +7,7 @@ load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_cli_flag_aspect_hint.bzl",
     "rust_bindings_from_cc_cli_flag",
 )
-
+load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 

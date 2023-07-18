@@ -1,6 +1,6 @@
 """End-to-end example of using generated headers."""
 
-
+load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -17,7 +17,7 @@ crubit_test_cc_library(
     hdrs = ["generated_header.h"],
 )
 
-rust_test(
+crubit_rust_test(
     name = "generated_header_test",
     srcs = ["generated_header_test.rs"],
     cc_deps = [":generated_header"],
