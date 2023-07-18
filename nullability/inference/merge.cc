@@ -24,7 +24,7 @@ static void mergeSampleLocations(Partial::SampleLocations &LHS,
     if (LHS.location_size() >= Limit) break;
     // Linear scan is fine because Limit is tiny.
     if (!llvm::is_contained(LHS.location(), Loc)) LHS.add_location(Loc);
-  };
+  }
 }
 
 static void mergeSlotPartials(Partial::SlotPartial &LHS,
@@ -103,9 +103,13 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
   // Mandatory inference rules, required by type-checking.
   // TODO: report conflicts between these.
   if (Counts[Evidence::UNCHECKED_DEREFERENCE]) return {Inference::NONNULL};
+  if (Counts[Evidence::NULLABLE_ARGUMENT]) return {Inference::NULLABLE};
 
-  // TODO: Optional "soft" inference heuristics.
+  // Optional "soft" inference heuristics.
   // These do not report conflicts.
+  if (!Counts[Evidence::NULLABLE_ARGUMENT] &&
+      !Counts[Evidence::UNKNOWN_ARGUMENT] && Counts[Evidence::NONNULL_ARGUMENT])
+    return {Inference::NONNULL};
 
   return {Inference::UNKNOWN};
 }

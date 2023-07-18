@@ -206,5 +206,27 @@ TEST_F(InferTest, Deref) {
   EXPECT_EQ(Inference::NONNULL, infer());
 }
 
+TEST_F(InferTest, NullableArgumentPassed) {
+  add(Evidence::NULLABLE_ARGUMENT);
+  EXPECT_EQ(Inference::NULLABLE, infer());
+  add(Evidence::NONNULL_ARGUMENT);
+  EXPECT_EQ(Inference::NULLABLE, infer());
+  add(Evidence::UNKNOWN_ARGUMENT);
+  EXPECT_EQ(Inference::NULLABLE, infer());
+  add(Evidence::UNCHECKED_DEREFERENCE);
+  EXPECT_EQ(Inference::NONNULL, infer());  // TODO: expect conflict
+}
+
+TEST_F(InferTest, OnlyNonnullArgumentsPassed) {
+  add(Evidence::NONNULL_ARGUMENT);
+  EXPECT_EQ(Inference::NONNULL, infer());
+}
+
+TEST_F(InferTest, NonnullAndUnknownArgumentsPassed) {
+  add(Evidence::NONNULL_ARGUMENT);
+  add(Evidence::UNKNOWN_ARGUMENT);
+  EXPECT_EQ(Inference::UNKNOWN, infer());
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
