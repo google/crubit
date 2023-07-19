@@ -66,6 +66,52 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "infer_tu",
+    srcs = ["infer_tu.cc"],
+    hdrs = ["infer_tu.h"],
+    deps = [
+        ":collect_evidence",
+        ":inference_cc_proto",
+        ":merge",
+        "@llvm-project//clang:ast",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_test(
+    name = "infer_tu_test",
+    srcs = ["infer_tu_test.cc"],
+    deps = [
+        ":infer_tu",
+        ":inference_cc_proto",
+        "//nullability:proto_matchers",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:index",
+        "@llvm-project//clang:testing",
+        "@llvm-project//clang/unittests:dataflow_testing_support",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "infer_tu_main",
+    srcs = ["infer_tu_main.cc"],
+    deps = [
+        ":infer_tu",
+        ":inference_cc_proto",
+        "@absl//absl/log:check",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:index",
+        "@llvm-project//clang:tooling",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
 proto_library(
     name = "inference_proto",
     srcs = ["inference.proto"],
