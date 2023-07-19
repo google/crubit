@@ -56,13 +56,13 @@ cc_test(
     deps = [
         ":inference_cc_proto",
         ":merge",
-        "@absl//absl/log:check",
         "//nullability:proto_matchers",
+        "//third_party/protobuf",
+        "@absl//absl/log:check",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
-        "//third_party/protobuf",
     ],
 )
 
