@@ -214,7 +214,7 @@ TEST_F(InferTest, NullableArgumentPassed) {
   add(Evidence::UNKNOWN_ARGUMENT);
   EXPECT_EQ(Inference::NULLABLE, infer());
   add(Evidence::UNCHECKED_DEREFERENCE);
-  EXPECT_EQ(Inference::NONNULL, infer());  // TODO: expect conflict
+  EXPECT_EQ(Inference::NONNULL, infer(/*ExpectConflict=*/true));
 }
 
 TEST_F(InferTest, OnlyNonnullArgumentsPassed) {

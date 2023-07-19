@@ -5,6 +5,7 @@
 #include "nullability/inference/merge.h"
 
 #include <array>
+#include <optional>
 #include <utility>
 
 #include "absl/log/check.h"
@@ -88,6 +89,19 @@ Inference finalize(const Partial &P) {
   return Result;
 }
 
+namespace {
+void update(std::optional<InferResult> &Result,
+            Inference::Nullability ImpliedNullability) {
+  if (!Result) {
+    Result = {ImpliedNullability};
+    return;
+  }
+  if (Result->Nullability != ImpliedNullability)
+    // Leave the existing Nullability.
+    Result->Conflict = true;
+}
+}  // namespace
+
 InferResult infer(llvm::ArrayRef<unsigned> Counts) {
   CHECK_EQ(Counts.size(), Evidence::Kind_MAX + 1);
   // Annotations take precedence over everything.
@@ -101,9 +115,12 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
   if (Counts[Evidence::ANNOTATED_NULLABLE]) return {Inference::NULLABLE};
 
   // Mandatory inference rules, required by type-checking.
-  // TODO: report conflicts between these.
-  if (Counts[Evidence::UNCHECKED_DEREFERENCE]) return {Inference::NONNULL};
-  if (Counts[Evidence::NULLABLE_ARGUMENT]) return {Inference::NULLABLE};
+  // Ordered from most confident to least.
+  std::optional<InferResult> Result;
+  if (Counts[Evidence::UNCHECKED_DEREFERENCE])
+    update(Result, Inference::NONNULL);
+  if (Counts[Evidence::NULLABLE_ARGUMENT]) update(Result, Inference::NULLABLE);
+  if (Result) return *Result;
 
   // Optional "soft" inference heuristics.
   // These do not report conflicts.
