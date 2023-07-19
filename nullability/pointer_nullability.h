@@ -119,9 +119,11 @@ clang::NullabilityKind getNullability(
 
 /// Returns the strongest provable assertion we can make about the value of
 /// `E` in `Env`.
-inline clang::NullabilityKind getNullability(const Expr *E,
-                                             const dataflow::Environment &Env) {
-  if (auto *P = getPointerValueFromExpr(E, Env)) return getNullability(*P, Env);
+inline clang::NullabilityKind getNullability(
+    const Expr *E, const dataflow::Environment &Env,
+    const dataflow::Formula *AdditionalConstraints = nullptr) {
+  if (auto *P = getPointerValueFromExpr(E, Env))
+    return getNullability(*P, Env, AdditionalConstraints);
   return clang::NullabilityKind::Unspecified;
 }
 

@@ -66,6 +66,12 @@ message Evidence {
     NONNULL_ARGUMENT = 5;
     // A value with Unknown nullability was passed as an argument.
     UNKNOWN_ARGUMENT = 6;
+    // A Nullable value was returned.
+    NULLABLE_RETURN = 7;
+    // A Nonnull value was returned.
+    NONNULL_RETURN = 8;
+    // A value with Unknown nullability was returned.
+    UNKNOWN_RETURN = 9;
   }
 }
 

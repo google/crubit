@@ -326,6 +326,53 @@ TEST(CollectEvidenceFromImplementationTest, NonPtrArgPassed) {
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
+TEST(CollectEvidenceFromImplementationTest, NullableReturn) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* target() { return nullptr; }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, NonnullReturn) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* target(Nonnull<int*> p) {
+      return p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
+                                functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, UnknownReturn) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* target(int* p) { return p; }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN,
+                                functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, MultipleReturns) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* target(Nonnull<int*> p, Nullable<int*> q, bool b, bool c) {
+      if (b) return q;
+      if (c) return nullptr;
+      return p;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                    functionNamed("target")),
+                           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                    functionNamed("target")),
+                           evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
+                                    functionNamed("target"))));
+}
+
 TEST(CollectEvidenceFromDeclarationTest, VariableDeclIgnored) {
   llvm::StringLiteral Src = "Nullable<int *> target;";
   EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
