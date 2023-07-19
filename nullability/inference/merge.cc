@@ -120,6 +120,10 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
   if (Counts[Evidence::UNCHECKED_DEREFERENCE])
     update(Result, Inference::NONNULL);
   if (Counts[Evidence::NULLABLE_ARGUMENT]) update(Result, Inference::NULLABLE);
+  if (Counts[Evidence::NULLABLE_RETURN]) update(Result, Inference::NULLABLE);
+  if (Counts[Evidence::NONNULL_RETURN] && !Counts[Evidence::NULLABLE_RETURN] &&
+      !Counts[Evidence::UNKNOWN_RETURN])
+    update(Result, Inference::NONNULL);
   if (Result) return *Result;
 
   // Optional "soft" inference heuristics.

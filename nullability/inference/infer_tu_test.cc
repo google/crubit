@@ -134,5 +134,65 @@ TEST_F(InferTUTest, AnnotationsConflict) {
                                     {inferredSlot(0, Inference::UNKNOWN)})));
 }
 
+TEST_F(InferTUTest, ParamsFromCallSite) {
+  build(R"cc(
+    void callee(int* p, int* q, int* r);
+    void target(int* a, Nonnull<int*> b, Nullable<int*> c) { callee(a, b, c); }
+  )cc");
+
+  ASSERT_THAT(infer(),
+              Contains(inference(hasName("callee"),
+                                 {
+                                     inferredSlot(1, Inference::UNKNOWN),
+                                     inferredSlot(2, Inference::NONNULL),
+                                     inferredSlot(3, Inference::NULLABLE),
+                                 })));
+}
+
+TEST_F(InferTUTest, ReturnTypeNullable) {
+  build(R"cc(
+    int* target() { return nullptr; }
+  )cc");
+  EXPECT_THAT(infer(),
+              ElementsAre(inference(hasName("target"),
+                                    {inferredSlot(0, Inference::NULLABLE)})));
+}
+
+TEST_F(InferTUTest, ReturnTypeNonnull) {
+  build(R"cc(
+    Nonnull<int*> providesNonnull();
+    int* target() { return providesNonnull(); }
+  )cc");
+  EXPECT_THAT(infer(),
+              Contains(inference(hasName("target"),
+                                 {inferredSlot(0, Inference::NONNULL)})));
+}
+
+TEST_F(InferTUTest, ReturnTypeNonnullAndUnknown) {
+  build(R"cc(
+    Nonnull<int*> providesNonnull();
+    int* target(bool b, int* q) {
+      if (b) return q;
+      return providesNonnull();
+    }
+  )cc");
+  EXPECT_THAT(infer(),
+              Contains(inference(hasName("target"),
+                                 {inferredSlot(0, Inference::UNKNOWN)})));
+}
+
+TEST_F(InferTUTest, ReturnTypeNonnullAndNullable) {
+  build(R"cc(
+    Nonnull<int*> providesNonnull();
+    int* target(bool b) {
+      if (b) return nullptr;
+      return providesNonnull();
+    }
+  )cc");
+  EXPECT_THAT(infer(),
+              Contains(inference(hasName("target"),
+                                 {inferredSlot(0, Inference::NULLABLE)})));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
