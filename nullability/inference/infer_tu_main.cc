@@ -29,6 +29,7 @@
 #include "clang/Tooling/Tooling.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
@@ -37,8 +38,26 @@
 #include "llvm/Support/raw_ostream.h"
 
 llvm::cl::OptionCategory Opts("infer_tu_main options");
-llvm::cl::opt<bool> PrintProtos("protos", llvm::cl::init(false));
-llvm::cl::opt<bool> Diagnostics("diagnostics", llvm::cl::init(true));
+llvm::cl::opt<bool> PrintProtos{
+    "protos",
+    llvm::cl::desc("Print the Inference protos"),
+    llvm::cl::init(false),
+};
+llvm::cl::opt<bool> Diagnostics{
+    "diagnostics",
+    llvm::cl::desc("Print inference results as diagnostics"),
+    llvm::cl::init(true),
+};
+llvm::cl::opt<bool> PrintEvidence{
+    "evidence",
+    llvm::cl::desc("Print sample evidence as notes (requires -diagnostics)"),
+    llvm::cl::init(true),
+};
+llvm::cl::opt<bool> IncludeTrivial{
+    "trivial",
+    llvm::cl::desc("Include trivial inferences (annotated, no conflicts)"),
+    llvm::cl::init(false),
+};
 
 namespace clang::tidy::nullability {
 namespace {
@@ -49,12 +68,19 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
   llvm::DenseMap<llvm::StringRef, const Inference *> InferenceByUSR;
   DiagnosticsEngine &Diags;
   unsigned DiagInferHere;
+  unsigned DiagSample;
 
   void render(const Inference &I, SourceLocation Loc) {
     for (const auto &Slot : I.slot_inference()) {
       Diags.Report(Loc, DiagInferHere)
           << slotName(Slot.slot())
           << Inference::Nullability_Name(Slot.nullability());
+      if (PrintEvidence) {
+        for (const auto &Sample : Slot.sample_evidence()) {
+          if (SourceLocation Loc = parseLoc(Sample.location()); Loc.isValid())
+            Diags.Report(Loc, DiagSample) << Evidence::Kind_Name(Sample.kind());
+        }
+      }
     }
   }
 
@@ -63,12 +89,26 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
     return ("parameter " + llvm::Twine(S - SLOT_PARAM)).str();
   }
 
+  // Terrible hack: parse "foo.cc:4:2" back into a SourceLocation.
+  SourceLocation parseLoc(llvm::StringRef LocStr) {
+    auto &SM = Diags.getSourceManager();
+    auto &FM = SM.getFileManager();
+    auto [Rest, ColStr] = llvm::StringRef(LocStr).rsplit(':');
+    auto [Name, LineStr] = Rest.rsplit(':');
+    auto File = FM.getOptionalFileRef(Name);
+    unsigned Line, Col;
+    if (!File || LineStr.getAsInteger(10, Line) || ColStr.getAsInteger(10, Col))
+      return SourceLocation();
+    return SM.translateFileLineCol(&File->getFileEntry(), Line, Col);
+  }
+
  public:
   DiagnosticPrinter(llvm::ArrayRef<Inference> All, DiagnosticsEngine &Diags)
       : Diags(Diags) {
     for (const auto &I : All) InferenceByUSR.try_emplace(I.symbol().usr(), &I);
     DiagInferHere = Diags.getCustomDiagID(DiagnosticsEngine::Remark,
                                           "would mark %0 as %1 here");
+    DiagSample = Diags.getCustomDiagID(DiagnosticsEngine::Note, "%0 here");
   }
 
   bool VisitDecl(const Decl *FD) {
@@ -79,6 +119,15 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
   }
 };
 
+bool isTrivial(const Inference::SlotInference &I) {
+  if (I.conflict()) return false;
+  for (const auto &E : I.sample_evidence())
+    if (E.kind() == Evidence::ANNOTATED_NONNULL ||
+        E.kind() == Evidence::ANNOTATED_NULLABLE)
+      return true;
+  return false;
+}
+
 class Action : public SyntaxOnlyAction {
   std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &,
                                                  llvm::StringRef) override {
@@ -86,6 +135,11 @@ class Action : public SyntaxOnlyAction {
       void HandleTranslationUnit(ASTContext &Ctx) override {
         llvm::errs() << "Running inference...";
         auto Results = inferTU(Ctx);
+        if (!IncludeTrivial)
+          llvm::erase_if(Results, [](Inference &I) {
+            llvm::erase_if(*I.mutable_slot_inference(), isTrivial);
+            return I.slot_inference_size() == 0;
+          });
         if (PrintProtos)
           for (const auto &I : Results) llvm::outs() << I.DebugString() << "\n";
         if (Diagnostics)

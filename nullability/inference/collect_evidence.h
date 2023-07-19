@@ -10,6 +10,7 @@
 
 #include "nullability/inference/inference.proto.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/Support/Error.h"
@@ -17,7 +18,8 @@
 namespace clang::tidy::nullability {
 
 // Callback used to report collected nullability evidence.
-using EvidenceEmitter = void(const Decl &Target, Slot, Evidence::Kind);
+using EvidenceEmitter = void(const Decl &Target, Slot, Evidence::Kind,
+                             SourceLocation);
 // Creates an EvidenceEmitter that serializes the evidence as Evidence protos.
 // This emitter caches USR generation, and should be reused for the whole AST.
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(

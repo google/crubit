@@ -125,6 +125,17 @@ TEST(InferAnnotationsTest, DerefOfNonnull) {
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
+TEST(InferAnnotationsTest, Location) {
+  llvm::StringRef Code = "void target(int *p) { *p; }";
+  //                      12345678901234567890123456
+  //                      0        1         2
+
+  auto Evidence = collectEvidenceFromTargetFunction(Code);
+  ASSERT_THAT(Evidence, ElementsAre(evidence(paramSlot(0),
+                                             Evidence::UNCHECKED_DEREFERENCE)));
+  EXPECT_EQ("input.mm:1:23", Evidence.front().location());
+}
+
 TEST(CollectEvidenceFromImplementationTest, DereferenceBeforeAssignment) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *p) {

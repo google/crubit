@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "nullability/inference/inference.proto.h"
+#include "nullability/proto_matchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Index/USRGeneration.h"
@@ -84,6 +85,28 @@ TEST_F(InferTUTest, UncheckedDeref) {
   EXPECT_THAT(infer(),
               ElementsAre(inference(hasName("target"),
                                     {inferredSlot(1, Inference::NONNULL)})));
+}
+
+TEST_F(InferTUTest, Samples) {
+  llvm::StringRef Code =
+      "void target(int * p) { *p + *p; }\n"
+      "void another(int x) { target(&x); }";
+  //   123456789012345678901234567890123456789
+  //   0        1         2         3
+
+  build(Code);
+  auto Results = infer();
+  ASSERT_THAT(Results,
+              ElementsAre(inference(hasName("target"),
+                                    {inferredSlot(1, Inference::NONNULL)})));
+  EXPECT_THAT(Results.front().slot_inference(0).sample_evidence(),
+              testing::UnorderedElementsAre(
+                  EqualsProto(R"pb(location: "input.mm:2:30"
+                                   kind: NONNULL_ARGUMENT)pb"),
+                  EqualsProto(R"pb(location: "input.mm:1:24"
+                                   kind: UNCHECKED_DEREFERENCE)pb"),
+                  EqualsProto(R"pb(location: "input.mm:1:29"
+                                   kind: UNCHECKED_DEREFERENCE)pb")));
 }
 
 TEST_F(InferTUTest, Annotations) {

@@ -52,7 +52,8 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
         llvm::unique_function<void(const Evidence &) const> Emit)
         : Emit(std::move(Emit)) {}
 
-    void operator()(const Decl &Target, Slot S, Evidence::Kind Kind) const {
+    void operator()(const Decl &Target, Slot S, Evidence::Kind Kind,
+                    SourceLocation Loc) const {
       Evidence E;
       E.set_slot(S);
       E.set_kind(Kind);
@@ -64,6 +65,14 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
       }
       if (It->second.empty()) return;  // Can't emit without a USR
       E.mutable_symbol()->set_usr(It->second);
+
+      // TODO: make collecting and propagating location information optional?
+      auto &SM =
+          Target.getDeclContext()->getParentASTContext().getSourceManager();
+      // TODO: are macro locations actually useful enough for debugging?
+      //       we could leave them out, and make room for non-macro samples.
+      if (Loc = SM.getFileLoc(Loc); Loc.isValid())
+        E.set_location(Loc.printToString(SM));
 
       Emit(E);
     }
@@ -118,7 +127,8 @@ void collectEvidenceFromDereference(
     auto &SlotNonnullImpliesDerefValueNonnull =
         A.makeImplies(Nullability.isNonnull(A), NotIsNull);
     if (Env.flowConditionImplies(SlotNonnullImpliesDerefValueNonnull))
-      Emit(*Env.getCurrentFunc(), Slot, Evidence::UNCHECKED_DEREFERENCE);
+      Emit(*Env.getCurrentFunc(), Slot, Evidence::UNCHECKED_DEREFERENCE,
+           Op->getOperatorLoc());
   }
 }
 
@@ -180,7 +190,8 @@ void collectEvidenceFromCallExpr(
       default:
         ArgEvidenceKind = Evidence::UNKNOWN_ARGUMENT;
     }
-    Emit(*CalleeDecl, paramSlot(I), ArgEvidenceKind);
+    Emit(*CalleeDecl, paramSlot(I), ArgEvidenceKind,
+         CallExpr->getArg(I)->getExprLoc());
   }
 }
 
@@ -260,10 +271,10 @@ void collectEvidenceFromTargetDeclaration(
   if (!Fn) return;
 
   if (auto K = evidenceKindFromDeclaredType(Fn->getReturnType()))
-    Emit(*Fn, SLOT_RETURN_TYPE, *K);
+    Emit(*Fn, SLOT_RETURN_TYPE, *K, Fn->getReturnTypeSourceRange().getBegin());
   for (unsigned I = 0; I < Fn->param_size(); ++I) {
     if (auto K = evidenceKindFromDeclaredType(Fn->getParamDecl(I)->getType()))
-      Emit(*Fn, paramSlot(I), *K);
+      Emit(*Fn, paramSlot(I), *K, Fn->getParamDecl(I)->getTypeSpecStartLoc());
   }
 }
 
