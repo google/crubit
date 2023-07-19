@@ -62,7 +62,7 @@ TEST(PointerNullabilityAnalysis, AssignNullabilityVariable) {
   auto &A = DACtx.arena();
   auto CFCtx = dataflow::ControlFlowContext::build(*Target);
   PointerNullabilityAnalysis Analysis(AST.context());
-  auto [PNonnull, PNullable] = Analysis.assignNullabilityVariable(P, A);
+  auto PN = Analysis.assignNullabilityVariable(P, A);
   auto ExitState = std::move(
       *cantFail(dataflow::runDataflowAnalysis(
                     *CFCtx, Analysis, dataflow::Environment(DACtx, *Target)))
@@ -74,18 +74,18 @@ TEST(PointerNullabilityAnalysis, AssignNullabilityVariable) {
   auto [RetFromNullable, RetNull] = getPointerNullState(*Ret);
 
   // The param nullability hasn't been fixed.
-  EXPECT_EQ(std::nullopt, evaluate(PNonnull->formula(), ExitState.Env));
-  EXPECT_EQ(std::nullopt, evaluate(PNullable->formula(), ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(PN.isNonnull(A), ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(PN.isNullable(A), ExitState.Env));
   // Nor has the the nullability of the returned pointer.
   EXPECT_EQ(std::nullopt, evaluate(RetFromNullable.formula(), ExitState.Env));
   EXPECT_EQ(std::nullopt, evaluate(RetNull.formula(), ExitState.Env));
   // However, the two are linked as expected.
-  EXPECT_EQ(true, evaluate(A.makeImplies(PNonnull->formula(),
+  EXPECT_EQ(true, evaluate(A.makeImplies(PN.isNonnull(A),
                                          A.makeNot(RetNull.formula())),
                            ExitState.Env));
-  EXPECT_EQ(true, evaluate(A.makeEquals(PNullable->formula(),
-                                        RetFromNullable.formula()),
-                           ExitState.Env));
+  EXPECT_EQ(true,
+            evaluate(A.makeEquals(PN.isNullable(A), RetFromNullable.formula()),
+                     ExitState.Env));
 }
 
 }  // namespace

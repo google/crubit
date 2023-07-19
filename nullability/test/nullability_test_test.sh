@@ -44,7 +44,29 @@ if $DRIVER $SOURCE -- > $LOG; then
   echo "Should have failed bad type() test!"
   exit 1
 fi
-command -v grep && grep "static nullability is \[_Nullable\], expected \[_Nonnull\]" $LOG
+cat $LOG
+command -v grep && grep "static nullability is \[Nullable\], expected \[NonNull\]" $LOG
+
+cat >$SOURCE <<EOF
+  template <class Expected, class Actual> void type(Actual) {}
+  namespace symbolic {
+  template <class T> using A [[clang::annotate("symbolic_nullability:A")]] = T;
+  }
+
+  [[clang::annotate("test")]] void badSymbolicType1(symbolic::A<int *> x) {
+    type<int *_Nonnull>(x);
+  }
+  [[clang::annotate("test")]] void badSymbolicType2(int ** _Nullable y) {
+    type<symbolic::A<int *>*>(y);
+  }
+EOF
+if $DRIVER $SOURCE -- > $LOG; then
+  echo "Should have failed bad symbolic type() test!"
+  exit 1
+fi
+cat $LOG
+command -v grep && grep "static nullability is \[Symbolic(.*)\], expected \[NonNull\]" $LOG
+command -v grep && grep "static nullability is \[Nullable, Unspecified\], expected \[Unspecified, Symbolic(.*)\]" $LOG
 
 cat >$SOURCE <<EOF
   [[clang::annotate("test")]] int x;

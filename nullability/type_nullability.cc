@@ -5,6 +5,7 @@
 #include "nullability/type_nullability.h"
 
 #include <optional>
+#include <vector>
 
 #include "absl/log/check.h"
 #include "clang/AST/ASTContext.h"
@@ -15,19 +16,37 @@
 #include "clang/AST/TemplateName.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeVisitor.h"
+#include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
 #include "llvm/Support/SaveAndRestore.h"
+#include "llvm/Support/ScopedPrinter.h"
 
 namespace clang::tidy::nullability {
+
+PointerTypeNullability PointerTypeNullability::createSymbolic(
+    dataflow::Arena &A) {
+  PointerTypeNullability Symbolic;
+  Symbolic.Symbolic = true;
+  Symbolic.Nonnull = A.makeAtom();
+  Symbolic.Nullable = A.makeAtom();
+  return Symbolic;
+}
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &OS,
+                              const PointerTypeNullability &PN) {
+  // TODO: should symbolic nullabilities have names?
+  if (PN.isSymbolic())
+    return OS << "Symbolic(Nonnull=" << PN.Nonnull << ", "
+              << "Nullable=" << PN.Nullable << ")";
+  return OS << PN.concrete();
+}
 
 std::string nullabilityToString(const TypeNullability &Nullability) {
   std::string Result = "[";
   llvm::interleave(
       Nullability,
-      [&](const NullabilityKind n) {
-        Result += getNullabilitySpelling(n).str();
-      },
+      [&](const PointerTypeNullability &PN) { Result += llvm::to_string(PN); },
       [&] { Result += ", "; });
   Result += "]";
   return Result;
@@ -428,7 +447,7 @@ TypeNullability getNullabilityAnnotationsFromType(
     QualType T,
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam) {
   struct Walker : NullabilityWalker<Walker> {
-    std::vector<NullabilityKind> Annotations;
+    std::vector<PointerTypeNullability> Annotations;
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam;
 
     void report(const PointerType *, NullabilityKind NK) {
@@ -496,7 +515,7 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
   QualType VisitPointerType(const PointerType *PT) {
     CHECK(!Nullability.empty())
         << "Nullability vector too short at " << QualType(PT, 0).getAsString();
-    NullabilityKind NK = Nullability.front();
+    NullabilityKind NK = Nullability.front().concrete();
     Nullability = Nullability.drop_front();
 
     QualType Rebuilt = Ctx.getPointerType(Visit(PT->getPointeeType()));
@@ -549,7 +568,7 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
   }
 
  private:
-  ArrayRef<NullabilityKind> Nullability;
+  ArrayRef<PointerTypeNullability> Nullability;
   ASTContext &Ctx;
 };
 

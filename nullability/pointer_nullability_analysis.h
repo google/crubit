@@ -5,6 +5,8 @@
 #ifndef CRUBIT_NULLABILITY_POINTER_NULLABILITY_ANALYSIS_H_
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_ANALYSIS_H_
 
+#include <utility>
+
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
@@ -14,6 +16,7 @@
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 
 namespace clang {
@@ -50,15 +53,17 @@ class PointerNullabilityAnalysis
   //   from_nullable = false
   //
   // However, if we bind p's nullability to a variable:
-  //   [p_nonnull, p_nullable] = assignNullabilityVariable(p)
+  //   pn = assignNullabilityVariable(p)
   // Then the flow condition at dereference includes:
-  //   from_nullable = p_nullable
-  //   p_nonnull => !is_null
+  //   from_nullable = pn.Nullable
+  //   pn.Nonnull => !is_null
   // Logically connecting dereferenced values and possible invariants on p
   // allows us to infer p's proper annotations (here: Nonnull).
   //
   // For now, only the top-level nullability is assigned, and the returned
   // variables are only associated with direct reads of pointer values from D.
+  //
+  // The returned nullability is guaranteed to be symbolic.
   PointerTypeNullability assignNullabilityVariable(const ValueDecl *D,
                                                    dataflow::Arena &);
 

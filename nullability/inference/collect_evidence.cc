@@ -116,7 +116,7 @@ void collectEvidenceFromDereference(
   // any one of which would be sufficient if annotated Nonnull.
   for (auto &[Nullability, Slot] : InferrableSlots) {
     auto &SlotNonnullImpliesDerefValueNonnull =
-        A.makeImplies(Nullability.Nonnull->formula(), NotIsNull);
+        A.makeImplies(Nullability.isNonnull(A), NotIsNull);
     if (Env.flowConditionImplies(SlotNonnullImpliesDerefValueNonnull))
       Emit(*Env.getCurrentFunc(), Slot, Evidence::UNCHECKED_DEREFERENCE);
   }
@@ -162,10 +162,9 @@ void collectEvidenceFromCallExpr(
     dataflow::Arena &A = Env.getDataflowAnalysisContext().arena();
     const dataflow::Formula *CallerSlotsUnknown = &A.makeLiteral(true);
     for (auto &[Nullability, Slot] : InferrableCallerSlots) {
-      CallerSlotsUnknown =
-          &A.makeAnd(*CallerSlotsUnknown,
-                     A.makeAnd(A.makeNot(Nullability.Nullable->formula()),
-                               A.makeNot(Nullability.Nonnull->formula())));
+      CallerSlotsUnknown = &A.makeAnd(
+          *CallerSlotsUnknown, A.makeAnd(A.makeNot(Nullability.isNullable(A)),
+                                         A.makeNot(Nullability.isNonnull(A))));
     }
 
     NullabilityKind ArgNullability =
@@ -198,7 +197,7 @@ void collectEvidenceFromElement(
 std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
   if (!T.getNonReferenceType()->isPointerType()) return std::nullopt;
   auto Nullability = getNullabilityAnnotationsFromType(T);
-  switch (Nullability.front()) {
+  switch (Nullability.front().concrete()) {
     default:
       return std::nullopt;
     case NullabilityKind::NonNull:

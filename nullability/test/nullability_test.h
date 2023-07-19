@@ -73,6 +73,28 @@ using Nullable [[clang::annotate("Nullable")]] = T;
 template <typename T>
 using Nonnull [[clang::annotate("Nonnull")]] = T;
 
+// Marker annotations for pointer types whose nullability is symbolic.
+// This means we track it as a variable: without assuming a specific value.
+//
+// Example:
+//   void target(symbolic::X<int *> p) {
+//     type<Nonnull<symbolic::X<int *> *>(&p);
+//   }
+//
+// When this appears:
+//   - in a declaration (e.g. a function param): the decl's nullability is bound
+//     to a variable
+//   - in a type<...>() assertion: asserts that the nullability of the
+//     expression matches that variable.
+//
+// (For now we only provide two symbolic variables, this can be extended).
+namespace symbolic {
+template <typename T>
+using X [[clang::annotate("symbolic_nullability:X")]] = T;
+template <typename T>
+using Y [[clang::annotate("symbolic_nullability:Y")]] = T;
+}  // namespace symbolic
+
 // Generic factory for generating values of arbitrary types and nullability.
 //
 // `make<Nullable<int*>>()` is a value whose type in the AST is `int*` (no

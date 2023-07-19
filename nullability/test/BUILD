@@ -213,6 +213,11 @@ cc_test(
     ],
 )
 
+nullability_test(
+    name = "symbolic_nullability",
+    srcs = ["symbolic_nullability.cc"],
+)
+
 cc_test(
     name = "templates",
     srcs = ["templates.cc"],

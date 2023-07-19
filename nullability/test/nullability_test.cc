@@ -40,14 +40,17 @@
 #include "clang/AST/ASTTypeTraits.h"
 #include "clang/AST/CanonicalType.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/ControlFlowContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
+#include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/LLVM.h"
@@ -59,7 +62,7 @@
 #include "clang/Tooling/CompilationDatabase.h"
 #include "clang/Tooling/StandaloneExecution.h"
 #include "clang/Tooling/Tooling.h"
-#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
@@ -113,9 +116,8 @@ class Diagnoser {
   }
 
   void diagnoseType(SourceLocation Call, SourceRange Arg, CanQualType WantCanon,
-                    CanQualType GotCanon,
-                    llvm::ArrayRef<NullabilityKind> WantNulls,
-                    llvm::ArrayRef<NullabilityKind> GotNulls) {
+                    CanQualType GotCanon, const TypeNullability &WantNulls,
+                    const TypeNullability &GotNulls) {
     if (WantCanon != GotCanon) {
       Diags.Report(Call, WrongTypeCanonical) << WantCanon << GotCanon;
     } else if (WantNulls != GotNulls) {
@@ -170,9 +172,54 @@ std::optional<QualType> getAssertedType(const CallExpr &Call) {
 
 using AnalysisState =
     const dataflow::DataflowAnalysisState<PointerNullabilityLattice>;
+// Maps the IDs of symbolic nullability variables (like "X" for symbolic::X)
+// onto the actual symbolic nullability variables used in the analysis.
+using SymbolicMap = llvm::DenseMap<StringRef, PointerTypeNullability>;
+
+// If T is a symbolic nullability alias, return its ID.
+// e.g. "X" if the alias is marked [[clang::annotate("symbolic_nullability:X")]]
+std::optional<StringRef> getSymbolicID(TemplateDecl *TD) {
+  if (!TD || !isa<TypeAliasTemplateDecl>(TD)) return std::nullopt;
+  if (const auto *Annotate = TD->getTemplatedDecl()->getAttr<AnnotateAttr>()) {
+    StringRef Annotation = Annotate->getAnnotation();
+    if (Annotation.consume_front("symbolic_nullability:")) return Annotation;
+  }
+  return std::nullopt;
+}
+
+// We've seen a type<T>(expr) assertion, extract the nullability vector for T.
+TypeNullability getAssertedTypeNullability(QualType T, SymbolicMap &Symbolic,
+                                           dataflow::Arena &A) {
+  return getNullabilityAnnotationsFromType(
+      T,
+      // Given type< Nonnull<symbolic::X<Nullable<int*>*>*> >(...)
+      // usual vector: [Nonnull, Unspecified, Nullable]
+      //      we want: [Nonnull, Symbolic, Nullable].
+      // We know symbolic::X<T>'s definition is T. When we see the substitution
+      // of Nullable<int*>* into T, we find its vector [Unspecified, Nullable]
+      // and replace the outer nullability for the symbolic one.
+      [&](const SubstTemplateTypeParmType *T)
+          -> std::optional<TypeNullability> {
+        if (auto ID =
+                getSymbolicID(dyn_cast<TemplateDecl>(T->getAssociatedDecl()))) {
+          auto Sym = Symbolic[*ID];
+          if (!Sym.isSymbolic())
+            // The test didn't bind anything to e.g. symbolic::X, but now wants
+            // to assert that some expression has this type!
+            // Create a variable now so we have something to assert against.
+            // That way the test will fail with a reasonable error message.
+            Sym = Symbolic[*ID] = PointerTypeNullability::createSymbolic(A);
+          auto Result = getAssertedTypeNullability(T->desugar(), Symbolic, A);
+          Result.front() = Sym;
+          return Result;
+        }
+        return std::nullopt;
+      });
+}
+
 // Match any special assertions, check the condition, diagnose on failure.
 void diagnoseCall(const CallExpr &CE, const ASTContext &Ctx, Diagnoser &Diags,
-                  const AnalysisState &State) {
+                  const AnalysisState &State, SymbolicMap &Symbolic) {
   if (auto Want = getAssertedNullability(CE); Want && CE.getNumArgs() == 1) {
     auto &Arg = *CE.getArgs()[0];
     auto Got = getNullability(&Arg, State.Env);
@@ -183,12 +230,28 @@ void diagnoseCall(const CallExpr &CE, const ASTContext &Ctx, Diagnoser &Diags,
     auto &Got = *CE.getArgs()[0];
     auto WantCanon = Ctx.getCanonicalType(*Want);
     auto GotCanon = Ctx.getCanonicalType(Got.getType());
-    auto WantNulls = getNullabilityAnnotationsFromType(*Want);
+    auto WantNulls = getAssertedTypeNullability(
+        *Want, Symbolic, State.Env.getDataflowAnalysisContext().arena());
     TypeNullability GotNulls = unspecifiedNullability(&Got);
     if (const auto *GN = State.Lattice.getExprNullability(&Got)) GotNulls = *GN;
     Diags.diagnoseType(CE.getBeginLoc(), Got.getSourceRange(), WantCanon,
                        GotCanon, WantNulls, GotNulls);
   }
+}
+
+// Bind nullability variables for params marked symbolic::X<> etc.
+// Returns the map from symbolic ID => nullability variables.
+SymbolicMap bindSymbolicNullability(const FunctionDecl &Func,
+                                    PointerNullabilityAnalysis &Analysis,
+                                    dataflow::Arena &A) {
+  SymbolicMap Result;
+  for (const auto *Param : Func.parameters()) {
+    // For now, only support symbolic on the top level of parameter types.
+    if (auto *TST = Param->getType()->getAs<TemplateSpecializationType>())
+      if (auto I = getSymbolicID(TST->getTemplateName().getAsTemplateDecl()))
+        Result.try_emplace(*I, Analysis.assignNullabilityVariable(Param, A));
+  }
+  return Result;
 }
 
 // To run a test, we simply run the nullability analysis, and then walk the
@@ -209,12 +272,13 @@ void runTest(const FunctionDecl &Func, Diagnoser &Diags,
   auto &Ctx = Func.getDeclContext()->getParentASTContext();
   auto CFCtx = require(dataflow::ControlFlowContext::build(Func));
   PointerNullabilityAnalysis Analysis(Ctx);
+  auto Symbolic = bindSymbolicNullability(Func, Analysis, DACtx.arena());
   require(
       runDataflowAnalysis(CFCtx, Analysis, dataflow::Environment(DACtx, Func),
                           [&](const CFGElement &Elt, AnalysisState &State) {
                             if (auto CS = Elt.getAs<CFGStmt>())
                               if (auto *CE = dyn_cast<CallExpr>(CS->getStmt()))
-                                diagnoseCall(*CE, Ctx, Diags, State);
+                                diagnoseCall(*CE, Ctx, Diags, State, Symbolic);
                           }));
 }
 

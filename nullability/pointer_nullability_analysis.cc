@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/log/check.h"
@@ -22,6 +23,7 @@
 #include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
@@ -233,39 +235,51 @@ TypeNullability substituteNullabilityAnnotationsInFunctionTemplate(
       });
 }
 
-NullabilityKind getPointerNullability(const Expr *E,
-                                      PointerNullabilityAnalysis::Lattice &L) {
-  QualType ExprType = E->getType();
-  std::optional<NullabilityKind> Nullability = ExprType->getNullability();
+PointerTypeNullability getPointerTypeNullability(
+    const Expr *E, PointerNullabilityAnalysis::Lattice &L) {
+  // TODO: handle this in non-flow-sensitive transfer instead
+  if (auto FromClang = E->getType()->getNullability();
+      FromClang && *FromClang != NullabilityKind::Unspecified)
+    return *FromClang;
 
-  // If the expression's type does not contain nullability information, it may
-  // be a template instantiation. Look up the nullability in the
-  // `ExprToNullability` map.
-  if (Nullability.value_or(NullabilityKind::Unspecified) ==
-      NullabilityKind::Unspecified) {
-    if (auto MaybeNullability = L.getExprNullability(E)) {
-      if (!MaybeNullability->empty()) {
-        // Return the nullability of the topmost pointer in the type.
-        Nullability = (*MaybeNullability)[0];
-      }
-    }
+  if (const auto *NonFlowSensitive = L.getExprNullability(E)) {
+    if (!NonFlowSensitive->empty())
+      // Return the nullability of the topmost pointer in the type.
+      return NonFlowSensitive->front();
   }
-  return Nullability.value_or(NullabilityKind::Unspecified);
+
+  return NullabilityKind::Unspecified;
 }
 
-void initPointerFromAnnotations(
+void initPointerFromTypeNullability(
     PointerValue &PointerVal, const Expr *E,
     TransferState<PointerNullabilityLattice> &State) {
-  NullabilityKind Nullability = getPointerNullability(E, State.Lattice);
-  switch (Nullability) {
-    case NullabilityKind::NonNull:
-      initNotNullPointer(PointerVal, State.Env);
-      break;
-    case NullabilityKind::Nullable:
-      initNullablePointer(PointerVal, State.Env);
-      break;
-    default:
-      initUnknownPointer(PointerVal, State.Env);
+  if (auto Nullability = getPointerTypeNullability(E, State.Lattice);
+      Nullability.isSymbolic()) {
+    auto &Arena = State.Env.getDataflowAnalysisContext().arena();
+    auto &Nonnull = Nullability.isNonnull(Arena);
+    auto &Nullable = Nullability.isNullable(Arena);
+    // from_nullable = nullable
+    initPointerNullState(PointerVal, State.Env, &Arena.makeBoolValue(Nullable));
+    // nonnull => !is_null
+    auto [FromNullable, IsNull] = getPointerNullState(PointerVal);
+    State.Env.addToFlowCondition(
+        Arena.makeImplies(Nonnull, Arena.makeNot(IsNull.formula())));
+  } else {
+    // TODO: The above code should also handle concrete nullability correctly.
+    //       But right now, the formulas it creates are overcomplicated.
+    //       Eliminate this case once we simplify true/false in formulas, and
+    //       make addToFlowCondition(true) a no-op.
+    switch (Nullability.concrete()) {
+      case NullabilityKind::NonNull:
+        initNotNullPointer(PointerVal, State.Env);
+        break;
+      case NullabilityKind::Nullable:
+        initNullablePointer(PointerVal, State.Env);
+        break;
+      default:
+        initUnknownPointer(PointerVal, State.Env);
+    }
   }
 }
 
@@ -285,35 +299,14 @@ void transferFlowSensitiveNotNullPointer(
   }
 }
 
-const PointerTypeNullability *getOverriddenNullability(
-    const Expr *E, PointerNullabilityLattice &Lattice) {
-  if (const auto *DRE = dyn_cast<DeclRefExpr>(E))
-    return Lattice.getDeclNullability(DRE->getDecl());
-  if (const auto *ME = dyn_cast<MemberExpr>(E))
-    return Lattice.getDeclNullability(ME->getMemberDecl());
-  return nullptr;
-}
-
 void transferFlowSensitivePointer(
     const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  auto &Env = State.Env;
-  auto &A = Env.arena();
-  if (auto *PointerVal = getPointerValueFromExpr(PointerExpr, Env)) {
-    if (auto *Override = getOverriddenNullability(PointerExpr, State.Lattice)) {
-      // from_nullable = nullable
-      initPointerNullState(*PointerVal, Env, Override->Nullable);
-      // nonnull => !is_null
-      auto [FromNullable, IsNull] = getPointerNullState(*PointerVal);
-      Env.addToFlowCondition(A.makeImplies(Override->Nonnull->formula(),
-                                           A.makeNot(IsNull.formula())));
-    } else {
-      initPointerFromAnnotations(*PointerVal, PointerExpr, State);
-    }
-  }
+  if (auto *PointerVal = getPointerValueFromExpr(PointerExpr, State.Env))
+    initPointerFromTypeNullability(*PointerVal, PointerExpr, State);
 }
 
-// TODO(b/233582219): Implement promotion of nullability knownness for initially
+// TODO(b/233582219): Implement promotion of nullability for initially
 // unknown pointers when there is evidence that it is nullable, for example
 // when the pointer is compared to nullptr, or casted to boolean.
 void transferFlowSensitiveNullCheckComparison(
@@ -394,7 +387,7 @@ void transferFlowSensitiveCallExpr(
       PointerVal =
           cast<PointerValue>(State.Env.createValue(CallExpr->getType()));
     }
-    initPointerFromAnnotations(*PointerVal, CallExpr, State);
+    initPointerFromTypeNullability(*PointerVal, CallExpr, State);
 
     if (Loc != nullptr)
       State.Env.setValue(*Loc, *PointerVal);
@@ -405,11 +398,26 @@ void transferFlowSensitiveCallExpr(
   }
 }
 
+// If nullability for the decl D has been overridden, patch N to reflect it.
+// (N is the nullability of an access to D).
+void overrideNullabilityFromDecl(const ValueDecl *D,
+                                 PointerNullabilityLattice &Lattice,
+                                 TypeNullability &N) {
+  // For now, overrides are always for pointer values only, and override only
+  // the top-level nullability.
+  if (auto *PN = Lattice.getDeclNullability(D)) {
+    CHECK(!N.empty());
+    N.front() = *PN;
+  }
+}
+
 void transferNonFlowSensitiveDeclRefExpr(
     const DeclRefExpr *DRE, const MatchFinder::MatchResult &MR,
     TransferState<PointerNullabilityLattice> &State) {
   computeNullability(DRE, State, [&] {
-    return getNullabilityAnnotationsFromType(DRE->getType());
+    auto Nullability = getNullabilityAnnotationsFromType(DRE->getType());
+    overrideNullabilityFromDecl(DRE->getDecl(), State.Lattice, Nullability);
+    return Nullability;
   });
 }
 
@@ -429,8 +437,11 @@ void transferNonFlowSensitiveMemberExpr(
     if (ME->hasPlaceholderType(BuiltinType::BoundMember)) {
       MemberType = ME->getMemberDecl()->getType();
     }
-    return substituteNullabilityAnnotationsInClassTemplate(
+    auto Nullability = substituteNullabilityAnnotationsInClassTemplate(
         MemberType, BaseNullability, ME->getBase()->getType());
+    overrideNullabilityFromDecl(ME->getMemberDecl(), State.Lattice,
+                                Nullability);
+    return Nullability;
   });
 }
 
@@ -726,10 +737,7 @@ PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext &Context)
 PointerTypeNullability PointerNullabilityAnalysis::assignNullabilityVariable(
     const ValueDecl *D, dataflow::Arena &A) {
   auto [It, Inserted] = NFS.DeclTopLevelNullability.try_emplace(D);
-  if (Inserted) {
-    It->second.Nonnull = &A.makeAtomValue();
-    It->second.Nullable = &A.makeAtomValue();
-  }
+  if (Inserted) It->second = PointerTypeNullability::createSymbolic(A);
   return It->second;
 }
 

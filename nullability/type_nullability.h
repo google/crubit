@@ -26,17 +26,77 @@
 #define CRUBIT_NULLABILITY_TYPE_NULLABILITY_H_
 
 #include <string>
+#include <tuple>
 #include <utility>
 
+#include "absl/log/check.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Expr.h"
+#include "clang/Analysis/FlowSensitive/Arena.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
 
-namespace clang::dataflow {
-class BoolValue;
-}
 namespace clang::tidy::nullability {
+
+/// Describes the nullability contract of a pointer "slot" within a type.
+///
+/// This may be concrete: nullable/non-null/unknown nullability.
+/// Or may be symbolic:   this nullability is being inferred, and the presence
+///                       of a "nullable" annotation is bound to a SAT variable
+class PointerTypeNullability {
+  // If concrete: NK is set, others are default.
+  // If symbolic: NK=Unspecified, Symbolic=true, Nonnull/Nullable are set.
+  NullabilityKind NK = NullabilityKind::Unspecified;
+  bool Symbolic = false;
+  dataflow::Atom Nonnull{0};
+  dataflow::Atom Nullable{0};
+
+ public:
+  PointerTypeNullability(NullabilityKind NK = NullabilityKind::Unspecified)
+      : NK(NK) {}
+  // Creates a symbolic nullability variable.
+  // A owns the underlying SAT variables nonnullAtom() and nullableAtom().
+  static PointerTypeNullability createSymbolic(dataflow::Arena &A);
+
+  // Returns the concrete nullability, or Unspecified if symbolic.
+  NullabilityKind concrete() const { return NK; }
+
+  // Returns symbolic nullability atoms.
+  // Requires: isSymbolic().
+  dataflow::Atom nonnullAtom() const {
+    CHECK(isSymbolic());
+    return Nonnull;
+  }
+
+  dataflow::Atom nullableAtom() const {
+    CHECK(isSymbolic());
+    return Nullable;
+  }
+
+  bool isSymbolic() const { return Symbolic; }
+
+  // Returns the condition under which this slot is non-null.
+  const dataflow::Formula &isNonnull(dataflow::Arena &A) const {
+    return Symbolic ? A.makeAtomRef(Nonnull)
+                    : A.makeLiteral(NK == NullabilityKind::NonNull);
+  }
+
+  // Returns the condition under which this slot is nullable.
+  const dataflow::Formula &isNullable(dataflow::Arena &A) const {
+    return Symbolic ? A.makeAtomRef(Nullable)
+                    : A.makeLiteral(NK == NullabilityKind::Nullable);
+  }
+
+  friend bool operator==(const PointerTypeNullability &L,
+                         const PointerTypeNullability &R) {
+    return std::tie(L.NK, L.Nonnull, L.Nullable) ==
+           std::tie(R.NK, R.Nonnull, R.Nullable);
+  }
+
+  friend llvm::raw_ostream &operator<<(llvm::raw_ostream &,
+                                       const PointerTypeNullability &);
+};
 
 /// Externalized nullability of a clang::Type.
 ///
@@ -53,18 +113,7 @@ namespace clang::tidy::nullability {
 ///
 /// The concrete representation is currently the nullability of each nested
 /// PointerType encountered in a preorder traversal of the canonical type.
-using TypeNullability = std::vector<NullabilityKind>;
-
-/// Describes the nullability of a pointer "slot" within a type.
-///
-/// This may represent a concrete NullabilityKind,
-///   e.g. NullabilityKind::NonNull = {Nonnull=true, Nullable=false}
-/// Or it may be symbolic: e.g. Nonnull may be an AtomicBoolValue which we want
-/// to infer, and which may be connected to SAT constraints.
-struct PointerTypeNullability {
-  dataflow::BoolValue *Nonnull;   // True if this slot is marked non-null.
-  dataflow::BoolValue *Nullable;  // True if this slot is marked nullable.
-};
+using TypeNullability = std::vector<PointerTypeNullability>;
 
 /// Returns the `NullabilityKind` corresponding to the nullability annotation on
 /// `Type` if present. Otherwise, returns `NullabilityKind::Unspecified`.
@@ -92,6 +141,7 @@ std::string printWithNullability(QualType, const TypeNullability &,
                                  ASTContext &);
 /// Returns an equivalent type annotated with the provided nullability.
 /// Any existing sugar (including nullability) is discarded.
+/// Symbolic nullability is not annotated.
 /// rebuildWithNullability(int *, {Nullable}) ==> int * _Nullable.
 QualType rebuildWithNullability(QualType, const TypeNullability &,
                                 ASTContext &);

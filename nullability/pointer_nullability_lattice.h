@@ -23,6 +23,8 @@ class PointerNullabilityLattice {
   struct NonFlowSensitiveState {
     absl::flat_hash_map<const Expr *, TypeNullability> ExprToNullability;
     // Overridden symbolic nullability for pointer-typed decls.
+    // These are set by PointerNullabilityAnalysis::assignNullabilityVariable,
+    // and take precedence over the declared type.
     absl::flat_hash_map<const ValueDecl *, PointerTypeNullability>
         DeclTopLevelNullability;
   };
