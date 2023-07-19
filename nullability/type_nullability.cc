@@ -446,6 +446,7 @@ unsigned countPointersInType(const Expr *E) {
 TypeNullability getNullabilityAnnotationsFromType(
     QualType T,
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam) {
+  CHECK(!T->isDependentType()) << T.getAsString();
   struct Walker : NullabilityWalker<Walker> {
     std::vector<PointerTypeNullability> Annotations;
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam;

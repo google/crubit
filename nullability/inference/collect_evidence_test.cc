@@ -398,6 +398,18 @@ TEST(CollectEvidenceFromDeclarationTest, FunctionDeclNonTopLevel) {
   EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
 }
 
+TEST(CollectEvidenceFromDeclarationTest, FunctionTemplateIgnored) {
+  // We used to inspect the type of `target` and crash.
+  llvm::StringLiteral Src = R"cc(
+    template <class A>
+    struct S {
+      template <class B>
+      static void target(const S<B>&) {}
+    };
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
+}
+
 MATCHER_P(declNamed, Name, "") {
   std::string Actual;
   llvm::raw_string_ostream OS(Actual);
@@ -472,10 +484,8 @@ TEST(EvidenceSitesTest, Templates) {
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
 
-  // Relevant declarations are the written ones.
-  EXPECT_THAT(Sites.Declarations,
-              ElementsAre(declNamed("f"), declNamed("f<1>"), declNamed("S::f"),
-                          declNamed("T::f")));
+  // Relevant declarations are the written ones that are not templates.
+  EXPECT_THAT(Sites.Declarations, ElementsAre(declNamed("f<1>")));
   // Instantiations are relevant inference targets.
   EXPECT_THAT(Sites.Implementations,
               ElementsAre(declNamed("f<0>"), declNamed("f<1>"),

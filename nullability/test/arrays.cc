@@ -32,5 +32,18 @@ TEST(PointerNullabilityTest, ArrayArgumentSyntax) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, VectorsArentPointers) {
+  // We used to crash here: generally in x[0], x is (decayed to) a pointer,
+  // and x[0] is a dereference and thus has a shorter nullability vector.
+  // However x may also be a vector type, then x[0] has the same vector.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    using char4 = __attribute__((ext_vector_type(4))) char;
+    void target(char __attribute__((vector_size(4))) x, char4 y) {
+      __assert_nullability<>(x);
+      __assert_nullability<>(x[0]);
+      __assert_nullability<>(y[0]);
+    }
+  )cc"));
+}
 }  // namespace
 }  // namespace clang::tidy::nullability

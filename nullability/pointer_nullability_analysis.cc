@@ -666,8 +666,11 @@ void transferNonFlowSensitiveArraySubscriptExpr(
     TransferState<PointerNullabilityLattice> &State) {
   computeNullability(ASE, State, [&]() {
     auto &BaseNullability = getNullabilityForChild(ASE->getBase(), State);
-    CHECK(ASE->getBase()->getType()->isAnyPointerType());
-    return ArrayRef(BaseNullability).slice(1).vec();
+    QualType BaseType = ASE->getBase()->getType();
+    CHECK(BaseType->isAnyPointerType() || BaseType->isVectorType());
+    return BaseType->isAnyPointerType()
+               ? ArrayRef(BaseNullability).slice(1).vec()
+               : BaseNullability;
   });
 }
 

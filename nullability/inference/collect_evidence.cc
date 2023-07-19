@@ -86,10 +86,19 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
 
 namespace {
 bool isInferenceTarget(const FunctionDecl &FD) {
-  // Inferring properties of template instantiations isn't useful in itself.
-  // We can't record them anywhere unless they apply to the template in general.
-  // TODO: work out in what circumstances that would be safe.
-  return !FD.getTemplateInstantiationPattern();
+  return
+      // Function templates are in principle inferrable.
+      // However since we don't analyze their bodies, and other implementations
+      // cannot interact with them directly, we can't perform any nontrivial
+      // inference, just propagate annotations across redecls.
+      // For now, we don't do this as some infra (NullabilityWalker) doesn't
+      // work on dependent code.
+      !FD.isDependentContext() &&
+      // Inferring properties of template instantiations isn't useful in
+      // itself. We can't record them anywhere unless they apply to the
+      // template in general.
+      // TODO: work out in what circumstances that would be safe.
+      !FD.getTemplateInstantiationPattern();
 }
 
 void collectEvidenceFromDereference(
