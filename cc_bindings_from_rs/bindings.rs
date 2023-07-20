@@ -792,8 +792,6 @@ fn format_thunk_decl<'tcx>(
     } else {
         thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
-        prereqs.includes.insert(CcInclude::utility());
-        prereqs.includes.insert(input.support_header("internal/return_value_slot.h"));
     };
     Ok(CcSnippet {
         prereqs,
@@ -1185,7 +1183,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
                 __crubit_internal :: #thunk_name( #( #thunk_args ),* );
                 return std::move(__ret_slot).AssumeInitAndTakeValue();
             };
-            prereqs.includes.insert(CcInclude::utility());
+            prereqs.includes.insert(CcInclude::utility()); // for `std::move`
             prereqs.includes.insert(input.support_header("internal/return_value_slot.h"));
         };
         CcSnippet {
