@@ -265,7 +265,7 @@ TEST(PointerNullabilityTest, CastExpression) {
 
     void target(Derived *_Nullable x, Derived *_Nonnull y) {
       *static_cast<Base *>(x);  // [[unsafe]]
-      *static_cast<Base *>(y);  // [[unsafe]] TODO: Fix false positive.
+      *static_cast<Base *>(y);
     }
   )cc"));
 
@@ -278,12 +278,11 @@ TEST(PointerNullabilityTest, CastExpression) {
 
     void target(Struct3Arg<1, int *_Nullable, int *> &p) {
       *((const Struct3Arg<1, int *, int *> &)p).arg1;  // [[unsafe]]
-      *((const Struct3Arg<1, int *, int *> &)p)        // [[unsafe]]
-           .arg2;        // TODO: Fix false positive.
-      *(int *)p.arg1;    // [[unsafe]]
-      *(int *)p.arg2;    // [[unsafe]] TODO: Fix false positive.
+      *((const Struct3Arg<1, int *, int *> &)p).arg2;
+      *(int *)p.arg1;  // [[unsafe]]
+      *(int *)p.arg2;
       *(float *)p.arg1;  // [[unsafe]]
-      *(char *)p.arg2;   // [[unsafe]] TODO: Fix false positive.
+      *(char *)p.arg2;
     }
   )cc"));
 
@@ -295,7 +294,7 @@ TEST(PointerNullabilityTest, CastExpression) {
     };
 
     void target(Struct2Arg<const int *, const int *_Nullable> &p) {
-      *const_cast<int *>(p.arg0);  // [[unsafe]] TODO: Fix false positive.
+      *const_cast<int *>(p.arg0);
       *const_cast<int *>(p.arg1);  // [[unsafe]]
     }
   )cc"));

@@ -23,6 +23,7 @@
 #include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
@@ -729,6 +730,21 @@ auto buildFlowSensitiveTransferer() {
                            transferFlowSensitiveNullCheckImplicitCastPtrToBool)
       .Build();
 }
+
+// Ensure all prvalue expressions of pointer type have a `PointerValue`
+// associated with them so we can track nullability through them.
+void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
+  auto S = Elt.getAs<CFGStmt>();
+  if (!S) return;
+
+  auto *E = dyn_cast<Expr>(S->getStmt());
+  if (E == nullptr || !E->isPRValue() || !E->getType()->isPointerType()) return;
+
+  if (Env.getValueStrict(*E) == nullptr)
+    // `createValue()` always produces a value for pointer types.
+    Env.setValueStrict(*E, *Env.createValue(E->getType()));
+}
+
 }  // namespace
 
 PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext &Context)
@@ -748,6 +764,8 @@ void PointerNullabilityAnalysis::transfer(const CFGElement &Elt,
                                           PointerNullabilityLattice &Lattice,
                                           Environment &Env) {
   TransferState<PointerNullabilityLattice> State(Lattice, Env);
+
+  ensurePointerHasValue(Elt, Env);
   NonFlowSensitiveTransferer(Elt, getASTContext(), State);
   FlowSensitiveTransferer(Elt, getASTContext(), State);
 }

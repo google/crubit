@@ -10,7 +10,6 @@
 namespace clang::tidy::nullability {
 namespace {
 
-// TODO: fix false positives due to unsupported PointerValues in the framework.
 TEST(PointerNullabilityTest, PointerArithmetic) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable p, int *_Nonnull q, int *r) {
@@ -20,17 +19,17 @@ TEST(PointerNullabilityTest, PointerArithmetic) {
       *p--;  // [[unsafe]]
       *+p;   // [[unsafe]]
 
-      *++q;  // [[unsafe]] TODO: fix false positive
-      *q++;  // [[unsafe]] TODO: fix false positive
-      *--q;  // [[unsafe]] TODO: fix false positive
-      *q--;  // [[unsafe]] TODO: fix false positive
-      *+q;   // [[unsafe]] TODO: fix false positive
+      *++q;
+      *q++;
+      *--q;
+      *q--;
+      *+q;
 
-      *++r;  // [[unsafe]] TODO: fix false positive
-      *r++;  // [[unsafe]] TODO: fix false positive
-      *--r;  // [[unsafe]] TODO: fix false positive
-      *r--;  // [[unsafe]] TODO: fix false positive
-      *+r;   // [[unsafe]] TODO: fix false positive
+      *++r;
+      *r++;
+      *--r;
+      *r--;
+      *+r;
     }
   )cc"));
 }

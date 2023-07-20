@@ -80,7 +80,6 @@ TEST(PointerNullabilityTest, UnknownFieldsOfPointerType) {
   )cc"));
 }
 
-// TODO: fix false positives due to unsupported PointerValues in the framework.
 TEST(PointerNullabilityTest, ChainedFieldDeref) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
@@ -89,14 +88,14 @@ TEST(PointerNullabilityTest, ChainedFieldDeref) {
       S *unknown;
     };
     void target(S &s) {
-      *(*s.nonnull).nonnull;   // [[unsafe]] TODO: fix false positive
+      *(*s.nonnull).nonnull;
       *(*s.nonnull).nullable;  // [[unsafe]]
-      *(*s.nonnull).unknown;   // [[unsafe]] TODO: fix false positive
+      *(*s.nonnull).unknown;
 
-      s.nonnull->nonnull->nonnull;   // [[unsafe]] TODO: fix false positive
-      s.nonnull->nonnull->nullable;  // [[unsafe]] TODO: fix false positive
+      s.nonnull->nonnull->nonnull;
+      s.nonnull->nonnull->nullable;
       s.nonnull->nullable->nonnull;  // [[unsafe]]
-      s.nonnull->unknown->nonnull;   // [[unsafe]] TODO: fix false positive
+      s.nonnull->unknown->nonnull;
 
       *&s;
     }

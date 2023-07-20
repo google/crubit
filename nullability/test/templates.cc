@@ -261,7 +261,7 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
   )cc"));
 }
 
-// TODO: Fix false positives and false negatives.
+// TODO: Fix false negatives.
 TEST(PointerNullabilityTest,
      ClassTemplateInstantiationWithStructsAsParameters) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
@@ -290,9 +290,9 @@ TEST(PointerNullabilityTest,
       *p.arg0.getNullable();  // [[unsafe]]
       *p.arg0.getNonnull();
 
-      *p.getT0().unknown;   // [[unsafe]] TODO: fix false positive.
+      *p.getT0().unknown;
       *p.getT0().nullable;  // [[unsafe]]
-      *p.getT0().nonnull;   // [[unsafe]] TODO: fix false positive.
+      *p.getT0().nonnull;
 
       *p.getT0().getUnknown();
       *p.getT0().getNullable();  // [[unsafe]]
@@ -372,15 +372,15 @@ TEST(PointerNullabilityTest,
       *p.arg3.getNullableUInt();  // [[unsafe]]
       *p.arg3.getNullableBool();  // [[unsafe]]
 
-      *p.getT0().unknownChar;      // [[unsafe]] TODO: fix false positive.
-      *p.getT1().nullableChar;     // [[unsafe]]
-      *p.getT2().nonnullChar;      // [[unsafe]] TODO: fix false positive.
-      *p.getT3().unknownLongLong;  // [[unsafe]] TODO: fix false positive.
-      *p.getT3().nullableDouble;   // [[unsafe]]
-      *p.getT3().nonnullFloat;     // [[unsafe]] TODO: fix false positive.
-      *p.getT3().unknownShort;     // [[unsafe]] TODO: fix false positive.
-      *p.getT3().nullableUInt;     // [[unsafe]]
-      *p.getT3().nullableBool;     // [[unsafe]]
+      *p.getT0().unknownChar;
+      *p.getT1().nullableChar;  // [[unsafe]]
+      *p.getT2().nonnullChar;
+      *p.getT3().unknownLongLong;
+      *p.getT3().nullableDouble;  // [[unsafe]]
+      *p.getT3().nonnullFloat;
+      *p.getT3().unknownShort;
+      *p.getT3().nullableUInt;  // [[unsafe]]
+      *p.getT3().nullableBool;  // [[unsafe]]
 
       *p.getT0().getUnknownChar();
       *p.getT1().getNullableChar();  // [[unsafe]]
@@ -460,15 +460,15 @@ TEST(PointerNullabilityTest,
       *p.arg3.getNonnullConstChar();
       *p.arg3.getConstNonnullConstChar();
 
-      *p.getT1().constUnknownChar;       // [[unsafe]] TODO: fix false positive.
-      *p.getT1().unknownConstChar;       // [[unsafe]] TODO: fix false positive.
-      *p.getT1().constUnknownConstChar;  // [[unsafe]] TODO: fix false positive.
-      *p.getT2().constNullableChar;      // [[unsafe]]
-      *p.getT2().nullableConstChar;      // [[unsafe]]
+      *p.getT1().constUnknownChar;
+      *p.getT1().unknownConstChar;
+      *p.getT1().constUnknownConstChar;
+      *p.getT2().constNullableChar;       // [[unsafe]]
+      *p.getT2().nullableConstChar;       // [[unsafe]]
       *p.getT2().constNullableConstChar;  // [[unsafe]]
-      *p.getT3().constNonnullChar;       // [[unsafe]] TODO: fix false positive.
-      *p.getT3().nonnullConstChar;       // [[unsafe]] TODO: fix false positive.
-      *p.getT3().constNonnullConstChar;  // [[unsafe]] TODO: fix false positive.
+      *p.getT3().constNonnullChar;
+      *p.getT3().nonnullConstChar;
+      *p.getT3().constNonnullConstChar;
 
       *p.getT1().getConstUnknownChar();
       *p.getT1().getUnknownConstChar();
@@ -562,7 +562,6 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfTemplateStruct) {
   )cc"));
 }
 
-// TODO: Fix false positives.
 TEST(PointerNullabilityTest,
      ClassTemplateInstantiationWithTemplateStructsAsParameters) {
   // Class template with another class template as parameter
@@ -623,9 +622,9 @@ TEST(PointerNullabilityTest,
                 int, int *_Nullable, int *_Nonnull, int>
                     p) {
       *p.arg0.arg0.arg0.arg0;  // [[unsafe]]
-      *p.arg0.arg0.arg0.arg1;  // [[unsafe]] TODO: fix false positive.
+      *p.arg0.arg0.arg0.arg1;
       *p.arg0.arg0.arg0.arg2;  // [[unsafe]]
-      *p.arg0.arg0.arg0.arg3;  // [[unsafe]] TODO: fix false positive.
+      *p.arg0.arg0.arg0.arg3;
       *p.arg0.arg0.arg0.arg4;  // [[unsafe]]
       *p.arg0.arg0.arg4;       // [[unsafe]]
       *p.arg0.arg2;            // [[unsafe]]
@@ -659,9 +658,9 @@ TEST(PointerNullabilityTest,
                 int, int *_Nullable, 2, int *_Nonnull, int>
                     p) {
       *p.arg1.arg1.arg1.arg1;  // [[unsafe]]
-      *p.arg1.arg1.arg1.arg2;  // [[unsafe]] TODO: fix false positive.
+      *p.arg1.arg1.arg1.arg2;
       *p.arg1.arg1.arg1.arg3;  // [[unsafe]]
-      *p.arg1.arg1.arg1.arg5;  // [[unsafe]] TODO: fix false positive.
+      *p.arg1.arg1.arg1.arg5;
       *p.arg1.arg1.arg1.arg6;  // [[unsafe]]
       *p.arg1.arg1.arg6;       // [[unsafe]]
       *p.arg1.arg3;            // [[unsafe]]
@@ -1079,13 +1078,7 @@ TEST(PointerNullabilityTest, FunctionTemplates) {
     void target() {
       *returnSecond<StructUnknownNullable, int *_Nullable>();  // [[unsafe]]
       *returnSecond<int *_Nonnull, StructUnknownNullable *>();
-      // TODO: The following line is a false positive. We correctly compute the
-      // nullability of the expression, as confirmed by the call to
-      // `assert_nullability`. However, the dataflow framework currently does
-      // not model pointer values for this expression, which results in a (in
-      // this case incorrect) nullptr value.
-      *returnSecond<int *_Nonnull, StructUnknownNullable>()  // [[unsafe]]
-           .var0;  // TODO: Fix false positive.
+      *returnSecond<int *_Nonnull, StructUnknownNullable>().var0;
       __assert_nullability<NK_unspecified>(
           returnSecond<int *_Nonnull, StructUnknownNullable>().var0);
       *returnSecond<int *_Nonnull, StructUnknownNullable>().var1;  // [[unsafe]]
