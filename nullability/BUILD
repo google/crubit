@@ -80,10 +80,12 @@ cc_library(
         ":pointer_nullability_lattice",
         ":pointer_nullability_matchers",
         ":type_nullability",
+        "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
+        "@llvm-project//llvm:Support",
     ],
 )
 

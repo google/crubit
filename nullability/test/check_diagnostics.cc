@@ -4,10 +4,14 @@
 
 #include "nullability/test/check_diagnostics.h"
 
+#include <iterator>
+#include <vector>
+
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_diagnosis.h"
 #include "clang/Analysis/CFG.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/Testing/Support/Error.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
@@ -39,8 +43,8 @@ constexpr char kNewHeader[] = R"cc(
 )cc";
 
 bool checkDiagnostics(llvm::StringRef SourceCode) {
-  std::vector<CFGElement> Diagnostics;
-  PointerNullabilityDiagnoser Diagnoser;
+  std::vector<PointerNullabilityDiagnostic> Diagnostics;
+  PointerNullabilityDiagnoser Diagnoser = pointerNullabilityDiagnoser();
   bool Failed = false;
   EXPECT_THAT_ERROR(
       dataflow::test::checkDataflow<PointerNullabilityAnalysis>(
@@ -53,10 +57,8 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
                                     ASTContext &Ctx, const CFGElement &Elt,
                                     const dataflow::TransferStateForDiagnostics<
                                         PointerNullabilityLattice> &State) {
-                auto EltDiagnostics = Diagnoser.diagnose(&Elt, Ctx, State);
-                if (EltDiagnostics.has_value()) {
-                  Diagnostics.push_back(EltDiagnostics.value());
-                }
+                auto EltDiagnostics = Diagnoser(Elt, Ctx, State);
+                llvm::move(EltDiagnostics, std::back_inserter(Diagnostics));
               })
               .withASTBuildVirtualMappedFiles(
                   {{"preamble.h", kPreamble}, {"new", kNewHeader}})
@@ -73,22 +75,11 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
               ExpectedLines.insert(Line);
             }
             auto &SrcMgr = AnalysisData.ASTCtx.getSourceManager();
-            for (auto Element : Diagnostics) {
-              if (std::optional<CFGStmt> stmt = Element.getAs<CFGStmt>()) {
-                ActualLines.insert(SrcMgr.getPresumedLineNumber(
-                    stmt->getStmt()->getBeginLoc()));
-              } else if (std::optional<CFGInitializer> init =
-                             Element.getAs<CFGInitializer>()) {
-                ActualLines.insert(SrcMgr.getPresumedLineNumber(
-                    init->getInitializer()->getSourceLocation()));
-              } else {
-                ADD_FAILURE() << "this code should not be reached";
-              }
-            }
+            for (auto Diag : Diagnostics)
+              ActualLines.insert(
+                  SrcMgr.getPresumedLineNumber(Diag.Range.getBegin()));
             EXPECT_THAT(ActualLines, testing::ContainerEq(ExpectedLines));
-            if (ActualLines != ExpectedLines) {
-              Failed = true;
-            }
+            if (ActualLines != ExpectedLines) Failed = true;
           }),
       llvm::Succeeded());
   return !Failed;

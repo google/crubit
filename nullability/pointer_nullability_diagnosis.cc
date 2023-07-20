@@ -4,9 +4,7 @@
 
 #include "nullability/pointer_nullability_diagnosis.h"
 
-#include <optional>
-#include <string>
-
+#include "absl/log/check.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_matchers.h"
 #include "nullability/type_nullability.h"
@@ -15,10 +13,18 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/Stmt.h"
+#include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Basic/LLVM.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/Support/Debug.h"
+
+#define DEBUG_TYPE "nullability-diagnostic"
 
 namespace clang::tidy::nullability {
 
@@ -26,52 +32,60 @@ using ast_matchers::MatchFinder;
 using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
 using dataflow::TransferStateForDiagnostics;
+using ::llvm::SmallVector;
 
 namespace {
 
-// Returns true if `Expr` is uninterpreted or known to be nullable.
-bool isNullableOrUntracked(const Expr *E, const Environment &Env) {
-  auto *ActualVal = getPointerValueFromExpr(E, Env);
-  if (ActualVal == nullptr) {
+// Diagnoses whether `E` violates the expectation that it is nonnull.
+SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
+    const Expr *E, const Environment &Env) {
+  if (auto *ActualVal = getPointerValueFromExpr(E, Env)) {
+    if (isNullable(*ActualVal, Env))
+      return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
+               CharSourceRange::getTokenRange(E->getSourceRange())}};
+    return {};
+  }
+
+  LLVM_DEBUG({
     llvm::dbgs()
-        << "The dataflow analysis framework does not model a PointerValue for "
+        << "The dataflow analysis framework does not model a PointerValue "
+           "for "
            "the following Expr, and thus its dereference is marked as "
            "unsafe:\n";
     E->dump();
-  }
-  return !ActualVal || isNullable(*ActualVal, Env);
+  });
+  return {{PointerNullabilityDiagnostic::ErrorCode::Untracked,
+           CharSourceRange::getTokenRange(E->getSourceRange())}};
 }
 
-// Returns true if an uninterpreted or nullable `Expr` was assigned to a
-// construct with a non-null `DeclaredType`.
-bool isIncompatibleAssignment(QualType DeclaredType, const Expr *E,
-                              const Environment &Env, ASTContext &Ctx) {
+// Diagnoses whether the nullability of `E` is incompatible with the expectation
+// set by `DeclaredType`.
+SmallVector<PointerNullabilityDiagnostic> diagnoseTypeExprCompatibility(
+    QualType DeclaredType, const Expr *E, const Environment &Env,
+    ASTContext &Ctx) {
   CHECK(DeclaredType->isAnyPointerType());
-  return getNullabilityKind(DeclaredType, Ctx) == NullabilityKind::NonNull &&
-         isNullableOrUntracked(E, Env);
+  return getNullabilityKind(DeclaredType, Ctx) == NullabilityKind::NonNull
+             ? diagnoseNonnullExpected(E, Env)
+             : SmallVector<PointerNullabilityDiagnostic>{};
 }
 
-std::optional<CFGElement> diagnoseDereference(
+SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(
     const UnaryOperator *UnaryOp, const MatchFinder::MatchResult &,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
-  if (isNullableOrUntracked(UnaryOp->getSubExpr(), State.Env)) {
-    return std::optional<CFGElement>(CFGStmt(UnaryOp));
-  }
-  return std::nullopt;
+  return diagnoseNonnullExpected(UnaryOp->getSubExpr(), State.Env);
 }
 
-std::optional<CFGElement> diagnoseArrow(
+SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
     const MemberExpr *MemberExpr, const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
-  if (isNullableOrUntracked(MemberExpr->getBase(), State.Env)) {
-    return std::optional<CFGElement>(CFGStmt(MemberExpr));
-  }
-  return std::nullopt;
+  return diagnoseNonnullExpected(MemberExpr->getBase(), State.Env);
 }
 
-bool isIncompatibleArgumentList(const FunctionProtoType &CalleeFPT,
-                                ArrayRef<const Expr *> Args,
-                                const Environment &Env, ASTContext &Ctx) {
+// Diagnoses whether any of the arguments are incompatible with the
+// corresponding type in the function prototype.
+SmallVector<PointerNullabilityDiagnostic> diagnoseArgumentCompatibility(
+    const FunctionProtoType &CalleeFPT, ArrayRef<const Expr *> Args,
+    const Environment &Env, ASTContext &Ctx) {
   auto ParamTypes = CalleeFPT.getParamTypes();
   // C-style varargs cannot be annotated and therefore are unchecked.
   if (CalleeFPT.isVariadic()) {
@@ -79,16 +93,14 @@ bool isIncompatibleArgumentList(const FunctionProtoType &CalleeFPT,
     Args = Args.take_front(ParamTypes.size());
   }
   CHECK_EQ(ParamTypes.size(), Args.size());
+  SmallVector<PointerNullabilityDiagnostic> Diagnostics;
   for (unsigned int I = 0; I < Args.size(); ++I) {
     auto ParamType = ParamTypes[I].getNonReferenceType();
-    if (!ParamType->isAnyPointerType()) {
-      continue;
-    }
-    if (isIncompatibleAssignment(ParamType, Args[I], Env, Ctx)) {
-      return true;
-    }
+    if (ParamType->isAnyPointerType())
+      Diagnostics.append(
+          diagnoseTypeExprCompatibility(ParamType, Args[I], Env, Ctx));
   }
-  return false;
+  return Diagnostics;
 }
 
 NullabilityKind parseNullabilityKind(StringRef EnumName) {
@@ -131,7 +143,7 @@ NullabilityKind parseNullabilityKind(StringRef EnumName) {
 ///      __assert_nullability<NK_unspecified, NK_nullable>(p);
 ///    }
 /// \endcode
-bool diagnoseAssertNullabilityCall(
+SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
     const CallExpr *CE,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State,
     ASTContext &Ctx) {
@@ -152,28 +164,30 @@ bool diagnoseAssertNullabilityCall(
   const Expr *GivenExpr = CE->getArg(0);
   const TypeNullability *MaybeComputed =
       State.Lattice.getExprNullability(GivenExpr);
-  if (MaybeComputed == nullptr) {
-    llvm::dbgs()
-        << "Could not evaluate __assert_nullability. Could not find the "
-           "nullability of the argument expression: ";
-    CE->dump();
-    return false;
-  }
-  if (*MaybeComputed == Expected) return true;
-  // The computed and expected nullabilities differ. Print both to aid
-  // debugging.
-  llvm::dbgs() << "__assert_nullability failed at location: ";
-  CE->getExprLoc().print(llvm::dbgs(), Ctx.getSourceManager());
-  llvm::dbgs() << "\nExpression:\n";
-  GivenExpr->dump();
-  llvm::dbgs() << "Expected nullability: ";
-  llvm::dbgs() << nullabilityToString(Expected) << "\n";
-  llvm::dbgs() << "Computed nullability: ";
-  llvm::dbgs() << nullabilityToString(*MaybeComputed) << "\n";
-  return false;
+  if (MaybeComputed == nullptr)
+    return {{PointerNullabilityDiagnostic::ErrorCode::Untracked,
+             CharSourceRange::getTokenRange(CE->getSourceRange())}};
+
+  if (*MaybeComputed == Expected) return {};
+
+  LLVM_DEBUG({
+    // The computed and expected nullabilities differ. Print both to aid
+    // debugging.
+    llvm::dbgs() << "__assert_nullability failed at location: ";
+    CE->getExprLoc().print(llvm::dbgs(), Ctx.getSourceManager());
+    llvm::dbgs() << "\nExpression:\n";
+    GivenExpr->dump();
+    llvm::dbgs() << "Expected nullability: ";
+    llvm::dbgs() << nullabilityToString(Expected) << "\n";
+    llvm::dbgs() << "Computed nullability: ";
+    llvm::dbgs() << nullabilityToString(*MaybeComputed) << "\n";
+  });
+
+  return {{PointerNullabilityDiagnostic::ErrorCode::AssertFailed,
+           CharSourceRange::getTokenRange(CE->getSourceRange())}};
 }
 
-std::optional<CFGElement> diagnoseCallExpr(
+SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
     const CallExpr *CE, const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   // Check whether the callee is null.
@@ -182,29 +196,25 @@ std::optional<CFGElement> diagnoseCallExpr(
   // - Skip member callees, as they are not pointers at all (rather "bound
   //   member function type").
   //   Note that in `(obj.*nullable_pmf)()` the deref is *before* the call.
-  if (!CE->getDirectCallee() && !isa<CXXMemberCallExpr>(CE) &&
-      isNullableOrUntracked(CE->getCallee(), State.Env)) {
-    return std::optional<CFGElement>(CFGStmt(CE->getCallee()));
+  if (!CE->getDirectCallee() && !isa<CXXMemberCallExpr>(CE)) {
+    auto D = diagnoseNonnullExpected(CE->getCallee(), State.Env);
+    if (!D.empty()) return D;
   }
 
-  if (auto *FD = CE->getDirectCallee()) {
+  if (auto *FD = CE->getDirectCallee())
     if (FD->getDeclName().isIdentifier() &&
-        FD->getName() == "__assert_nullability" &&
-        !diagnoseAssertNullabilityCall(CE, State, *Result.Context)) {
-      // TODO: Handle __assert_nullability failures differently from regular
-      // diagnostic ([[unsafe]]) failures.
-      return std::optional<CFGElement>(CFGStmt(CE));
+        FD->getName() == "__assert_nullability") {
+      return diagnoseAssertNullabilityCall(CE, State, *Result.Context);
     }
-  }
 
   auto *Callee = CE->getCalleeDecl();
   // TODO(mboehme): Retrieve the nullability directly from the callee using
   // `getNullabilityForChild(CE->getCallee())`, as what we have here now
   // doesn't work for callees that don't have a decl.
-  if (!Callee) return std::nullopt;
+  if (!Callee) return {};
 
   auto *CalleeType = Callee->getFunctionType();
-  if (!CalleeType) return std::nullopt;
+  if (!CalleeType) return {};
 
   // TODO(mboehme): We're only looking at the nullability spelled on the
   // `FunctionProtoType`, but there could be extra information in the callee.
@@ -220,7 +230,7 @@ std::optional<CFGElement> diagnoseCallExpr(
   //   // (not sure if it is today)
   // }
   auto *CalleeFPT = CalleeType->getAs<FunctionProtoType>();
-  if (!CalleeFPT) return std::nullopt;
+  if (!CalleeFPT) return {};
 
   ArrayRef<const Expr *> Args(CE->getArgs(), CE->getNumArgs());
   // The first argument of an member operator call expression is the implicit
@@ -230,62 +240,55 @@ std::optional<CFGElement> diagnoseCallExpr(
       isa<CXXMethodDecl>(CE->getDirectCallee())) {
     Args = Args.drop_front();
   }
-  return isIncompatibleArgumentList(*CalleeFPT, Args, State.Env,
-                                    *Result.Context)
-             ? std::optional<CFGElement>(CFGStmt(CE))
-             : std::nullopt;
+  return diagnoseArgumentCompatibility(*CalleeFPT, Args, State.Env,
+                                       *Result.Context);
 }
 
-std::optional<CFGElement> diagnoseConstructExpr(
+SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
     const CXXConstructExpr *CE, const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   auto *CalleeFPT = CE->getConstructor()->getType()->getAs<FunctionProtoType>();
-  if (!CalleeFPT) return std::nullopt;
+  if (!CalleeFPT) return {};
   ArrayRef<const Expr *> ConstructorArgs(CE->getArgs(), CE->getNumArgs());
-  return isIncompatibleArgumentList(*CalleeFPT, ConstructorArgs, State.Env,
-                                    *Result.Context)
-             ? std::optional<CFGElement>(CFGStmt(CE))
-             : std::nullopt;
+  return diagnoseArgumentCompatibility(*CalleeFPT, ConstructorArgs, State.Env,
+                                       *Result.Context);
 }
 
-std::optional<CFGElement> diagnoseReturn(
+SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
     const ReturnStmt *RS, const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   auto ReturnType = cast<FunctionDecl>(State.Env.getDeclCtx())->getReturnType();
 
   // TODO: Handle non-pointer return types.
   if (!ReturnType->isPointerType()) {
-    return std::nullopt;
+    return {};
   }
 
   auto *ReturnExpr = RS->getRetValue();
   CHECK(ReturnExpr->getType()->isPointerType());
 
-  return isIncompatibleAssignment(ReturnType, ReturnExpr, State.Env,
-                                  *Result.Context)
-             ? std::optional<CFGElement>(CFGStmt(RS))
-             : std::nullopt;
+  return diagnoseTypeExprCompatibility(ReturnType, ReturnExpr, State.Env,
+                                       *Result.Context);
 }
 
-std::optional<CFGElement> diagnoseMemberInitializer(
+SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
     const CXXCtorInitializer *CI, const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   CHECK(CI->isAnyMemberInitializer());
   auto MemberType = CI->getAnyMember()->getType();
-  if (!MemberType->isAnyPointerType()) {
-    return std::nullopt;
-  }
-  auto MemberInitExpr = CI->getInit();
-  return isIncompatibleAssignment(MemberType, MemberInitExpr, State.Env,
-                                  *Result.Context)
-             ? std::optional<CFGElement>(CFGInitializer(CI))
-             : std::nullopt;
+  if (!MemberType->isAnyPointerType()) return {};
+
+  auto *MemberInitExpr = CI->getInit();
+  return diagnoseTypeExprCompatibility(MemberType, MemberInitExpr, State.Env,
+                                       *Result.Context);
 }
 
-auto buildDiagnoser() {
+}  // namespace
+
+PointerNullabilityDiagnoser pointerNullabilityDiagnoser() {
   return CFGMatchSwitchBuilder<const dataflow::TransferStateForDiagnostics<
                                    PointerNullabilityLattice>,
-                               std::optional<CFGElement>>()
+                               SmallVector<PointerNullabilityDiagnostic>>()
       // (*)
       .CaseOfCFGStmt<UnaryOperator>(isPointerDereference(), diagnoseDereference)
       // (->)
@@ -298,10 +301,5 @@ auto buildDiagnoser() {
                                          diagnoseMemberInitializer)
       .Build();
 }
-
-}  // namespace
-
-PointerNullabilityDiagnoser::PointerNullabilityDiagnoser()
-    : Diagnoser(buildDiagnoser()) {}
 
 }  // namespace clang::tidy::nullability

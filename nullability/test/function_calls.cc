@@ -258,6 +258,17 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CallExprMultiNonnullParams) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void take(int *_Nonnull, int *_Nullable, int *_Nonnull);
+    void target() {
+      take(nullptr,  // [[unsafe]]
+           nullptr,
+           nullptr);  // [[unsafe]]
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, CanOverwritePtrWithPtrCreatedFromRefReturnType) {
   // Test that if we create a pointer from a function returning a reference, we
   // can use that pointer to overwrite an existing nullable pointer and make it

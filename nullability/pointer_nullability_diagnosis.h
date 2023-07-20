@@ -5,17 +5,32 @@
 #ifndef CRUBIT_NULLABILITY_POINTER_NULLABILITY_DIAGNOSIS_H_
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_DIAGNOSIS_H_
 
-#include <optional>
+#include <functional>
 
 #include "nullability/pointer_nullability_lattice.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Stmt.h"
-#include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
-#include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/MatchSwitch.h"
+#include "clang/Basic/SourceLocation.h"
+#include "llvm/ADT/SmallVector.h"
 
 namespace clang {
 namespace tidy {
 namespace nullability {
+
+/// Diagnoses a nullability-related issue in the associated CFG element.
+struct PointerNullabilityDiagnostic {
+  enum class ErrorCode {
+    /// A nullable pointer was used where a nonnull pointer was expected.
+    ExpectedNonnull,
+    /// A pointer-typed expression was encountered with no corresponding model.
+    Untracked,
+    /// A nullability assertion was violated.
+    AssertFailed,
+  };
+  ErrorCode Code;
+  CharSourceRange Range;
+};
 
 /// Checks that nullable pointers are used safely, using nullability information
 /// that is collected by `PointerNullabilityAnalysis`.
@@ -23,28 +38,15 @@ namespace nullability {
 /// Examples of null safety violations include dereferencing nullable pointers
 /// without null checks, and assignments between pointers of incompatible
 /// nullability.
-class PointerNullabilityDiagnoser {
- public:
-  PointerNullabilityDiagnoser();
+///
+/// The diagnoser returns an empty vector when no issues are found in the code.
+using PointerNullabilityDiagnoser =
+    std::function<llvm::SmallVector<PointerNullabilityDiagnostic>(
+        const CFGElement &, ASTContext &,
+        const dataflow::TransferStateForDiagnostics<PointerNullabilityLattice>
+            &)>;
 
-  /// Returns the pointer to the statement if null safety is violated, otherwise
-  /// the optional is empty.
-  ///
-  /// TODO(b/233582219): Extend diagnosis to return more information, e.g. the
-  /// type of violation.
-  std::optional<CFGElement> diagnose(
-      const CFGElement *Elt, ASTContext &Ctx,
-      const dataflow::TransferStateForDiagnostics<PointerNullabilityLattice>
-          &State) {
-    return Diagnoser(*Elt, Ctx, State);
-  }
-
- private:
-  dataflow::CFGMatchSwitch<
-      const dataflow::TransferStateForDiagnostics<PointerNullabilityLattice>,
-      std::optional<CFGElement>>
-      Diagnoser;
-};
+PointerNullabilityDiagnoser pointerNullabilityDiagnoser();
 
 }  // namespace nullability
 }  // namespace tidy
