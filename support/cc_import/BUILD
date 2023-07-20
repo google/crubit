@@ -29,11 +29,11 @@ rust_library(
     ],
     deps = [
         ":merged_namespaces",
-        "@rules_rust//util/import:import_internal",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
         "@crate_index//:serde_json",
         "@crate_index//:syn",
+        "@rules_rust//util/import:import_internal",
     ],
 )
 
@@ -41,12 +41,12 @@ rust_library(
     name = "merged_namespaces",
     srcs = ["merged_namespaces.rs"],
     deps = [
-        "@rules_rust//util/import:import_internal",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
         "@crate_index//:serde",
         "@crate_index//:serde_json",
         "@crate_index//:syn",
+        "@rules_rust//util/import:import_internal",
     ],
 )
 

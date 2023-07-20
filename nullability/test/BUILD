@@ -35,11 +35,11 @@ cc_binary(
     testonly = 1,
     srcs = ["nullability_test.cc"],
     deps = [
-        "@absl//absl/log:check",
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
         "//nullability:type_nullability",
+        "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",

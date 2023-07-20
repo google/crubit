@@ -13,7 +13,7 @@ cc_library(
         "//lifetime_annotations/test:run_on_code",
         "@absl//absl/container:flat_hash_map",
         "@com_google_googletest//:gtest",
-        ],
+    ],
 )
 
 cc_test(

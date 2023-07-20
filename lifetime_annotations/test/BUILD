@@ -11,9 +11,9 @@ cc_library(
     srcs = ["named_func_lifetimes.cc"],
     hdrs = ["named_func_lifetimes.h"],
     deps = [
-        "@com_google_googletest//:gtest",
         "//lifetime_annotations:lifetime_symbol_table",
         "//lifetime_annotations:type_lifetimes",
+        "@com_google_googletest//:gtest",
         "@llvm-project//llvm:Support",
     ],
 )

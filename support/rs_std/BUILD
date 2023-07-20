@@ -17,8 +17,8 @@ cc_library(
     # of Abseil that is relatively recent (although we can't rely on an
     # exact version and/or exact absl/base/options.h).
     deps = [
-        "@absl//absl/base:core_headers",
         "//support/internal:bindings_support",
+        "@absl//absl/base:core_headers",
     ],
 )
 

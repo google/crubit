@@ -8,15 +8,15 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":rs_from_cc_lib",
+        "//common:file_io",
+        "//common:rust_allocator_shims",
         "@absl//absl/flags:flag",
         "@absl//absl/flags:parse",
         "@absl//absl/log:check",
         "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
-        "//common:file_io",
         "@llvm-project//llvm:Support",
-        "//common:rust_allocator_shims",
     ],
 )
 
@@ -50,16 +50,16 @@ cc_library(
     srcs = ["converter.cc"],
     hdrs = ["converter.h"],
     deps = [
+        "//lifetime_annotations",
+        "//third_party/re2",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@absl//absl/types:span",
-        "//lifetime_annotations",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:sema",
-        "//third_party/re2",
     ],
 )
 
@@ -68,10 +68,10 @@ cc_test(
     srcs = ["rs_from_cc_lib_test.cc"],
     deps = [
         ":rs_from_cc_lib",
-        "@com_google_googletest//:gtest_main",
+        "//common:status_test_matchers",
         "@absl//absl/status",
         "@absl//absl/strings",
-        "//common:status_test_matchers",
+        "@com_google_googletest//:gtest_main",
         "@llvm-project//clang:ast",
     ],
 )
