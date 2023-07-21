@@ -17,5 +17,11 @@ TEST(CrossCrateTests, BasicEndToEndTest) {
   EXPECT_EQ(123, i);
 }
 
+// b/292231336
+// TEST(CrossCrateTests, RustToolchainCrate) {
+//   ::alloc::string::String s =
+//   test_api::return_a_type_from_a_rust_toolchain_crate();
+// }
+
 }  // namespace
 }  // namespace crubit
