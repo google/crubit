@@ -953,7 +953,7 @@ fn is_thunk_required(sig: &ty::FnSig) -> Result<()> {
 
     ensure!(is_c_abi_compatible_by_value(sig.output()), "Return type requires a thunk");
     for (i, param_ty) in sig.inputs().iter().enumerate() {
-        ensure!(is_c_abi_compatible_by_value(*param_ty), "Type of parameter #{i} requires a thunk",);
+        ensure!(is_c_abi_compatible_by_value(*param_ty), "Type of parameter #{i} requires a thunk");
     }
 
     Ok(())
@@ -1177,6 +1177,11 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
                 return __crubit_internal :: #thunk_name( #( #thunk_args ),* );
             };
         } else {
+            if let Some(adt_def) = sig.output().ty_adt_def() {
+                let core = format_adt_core(tcx, adt_def.did())?;
+                format_move_ctor_and_assignment_operator(input, &core)
+                    .context("Can't pass the return type by value without a move constructor")?;
+            }
             thunk_args.push(quote! { __ret_slot.Get() });
             impl_body = quote! {
                 crubit::ReturnValueSlot<#main_api_ret_type> __ret_slot;
@@ -1322,33 +1327,15 @@ fn format_adt_core(tcx: TyCtxt<'_>, def_id: DefId) -> Result<AdtCoreBindings<'_>
     let cc_short_name =
         format_cc_ident(item_name.as_str()).context("Error formatting item name")?;
 
-    if self_ty.needs_drop(tcx, tcx.param_env(def_id)) {
-        // TODO(b/258251148): Relax the restructions below.  For non-`Default` and/or
-        // non-`Unpin` ADTs, we won't implement the move constructor and the
-        // move assignment operator.  This requires that
-        // `is_c_abi_compatible_by_value` verifies if a move constructor is present
-        // or not.
-        ensure!(
-            does_implement_default_trait(tcx, self_ty),
-            "Custom `Drop` implementation and/or \"drop glue\" are only supported \
-             if `Default` is also implemented",
-        );
-        ensure!(
-            self_ty.is_unpin(tcx, tcx.param_env(def_id)),
-            "Custom `Drop` implementation and/or \"drop glue\" are only supported \
-             for `Unpin` types",
-        );
-
-        // The check below ensures that `format_trait_thunks` will succeed for the
-        // `Drop` trait. Ideally we would directly check if
-        // `format_trait_thunks` or `format_ty_for_cc(..., self_ty, ...)`
-        // succeeds, but this would lead to infinite recursion, so we only replicate
-        // `format_ty_for_cc` / `TyKind::Adt` checks that are outside of
-        // `format_adt_core`.
-        FullyQualifiedName::new(tcx, def_id).format_for_cc().with_context(|| {
-            format!("Error formatting the fully-qualified C++ name of `{item_name}")
-        })?;
-    }
+    // The check below ensures that `format_trait_thunks` will succeed for the
+    // `Drop`, `Default`, and/or `Clone` trait. Ideally we would directly check
+    // if `format_trait_thunks` or `format_ty_for_cc(..., self_ty, ...)`
+    // succeeds, but this would lead to infinite recursion, so we only replicate
+    // `format_ty_for_cc` / `TyKind::Adt` checks that are outside of
+    // `format_adt_core`.
+    FullyQualifiedName::new(tcx, def_id).format_for_cc().with_context(|| {
+        format!("Error formatting the fully-qualified C++ name of `{item_name}")
+    })?;
 
     let adt_def = self_ty.ty_adt_def().expect("`def_id` needs to identify an ADT");
     let keyword = match adt_def.adt_kind() {
@@ -1731,23 +1718,6 @@ fn format_trait_thunks<'tcx>(
     Ok(TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls })
 }
 
-/// Gets the `DefId` for the `Default` trait.
-fn get_def_id_of_default_trait(tcx: TyCtxt) -> Result<DefId> {
-    tcx.get_diagnostic_item(sym::Default).ok_or(anyhow!("Couldn't find `core::default::Default`"))
-}
-
-/// Returns `true` if `self_ty` implements the `Default` trait.
-///
-/// Note that this doesn't necessarily mean that the generated bindings will
-/// include the default constructor - `format_trait_thunks` needs to succeed for
-/// that.  OTOH if `format_adt_core` succeeds, then `format_trait_thunks` _will_
-/// succeed for the `Default` trait.
-fn does_implement_default_trait<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>) -> bool {
-    get_def_id_of_default_trait(tcx)
-        .map(|trait_id| does_type_implement_trait(tcx, self_ty, trait_id))
-        .unwrap_or(false)
-}
-
 /// Formats a default constructor for an ADT if possible (i.e. if the `Default`
 /// trait is implemented for the ADT).  Returns an error otherwise (e.g. if
 /// there is no `Default` impl).
@@ -1758,7 +1728,9 @@ fn format_default_ctor<'tcx>(
     core: &AdtCoreBindings<'tcx>,
 ) -> Result<ApiSnippets> {
     let tcx = input.tcx;
-    let trait_id = get_def_id_of_default_trait(tcx)?;
+    let trait_id = tcx
+        .get_diagnostic_item(sym::Default)
+        .ok_or(anyhow!("Couldn't find `core::default::Default`"))?;
     let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls: rs_details } =
         format_trait_thunks(input, trait_id, core)?;
 
@@ -1790,6 +1762,8 @@ fn format_default_ctor<'tcx>(
 /// Formats the copy constructor and the copy-assignment operator for an ADT if
 /// possible (i.e. if the `Clone` trait is implemented for the ADT).  Returns an
 /// error otherwise (e.g. if there is no `Clone` impl).
+//
+// TODO(b/259724276): This function's results should be memoized.
 fn format_copy_ctor_and_assignment_operator<'tcx>(
     input: &Input<'tcx>,
     core: &AdtCoreBindings<'tcx>,
@@ -1857,29 +1831,27 @@ fn format_copy_ctor_and_assignment_operator<'tcx>(
     Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
 
-/// Formats the move constructor and the move-assignment operator for an ADT.
+/// Formats the move constructor and the move-assignment operator for an ADT if
+/// possible (it depends on various factors like `needs_drop`, `is_unpin` and
+/// implementations of `Default` and/or `Clone` traits).  Returns an error
+/// otherwise (e.g. if move constructor and assignment operator need to be
+/// `=delete`d).
+//
+// TODO(b/259724276): This function's results should be memoized.
 fn format_move_ctor_and_assignment_operator<'tcx>(
     input: &Input<'tcx>,
     core: &AdtCoreBindings<'tcx>,
-) -> ApiSnippets {
+) -> Result<ApiSnippets> {
     let tcx = input.tcx;
     let adt_cc_name = &core.cc_short_name;
     if core.needs_drop(tcx) {
-        let main_api = CcSnippet::new(quote! {
-            #adt_cc_name(#adt_cc_name&&); __NEWLINE__
-            #adt_cc_name& operator=(#adt_cc_name&&); __NEWLINE__
-        });
-        let cc_details = {
-            // Move constructor depends on presence of the default constructor.
-            // We can assert here, because `does_implement_default_trait`
-            // is already validated by `format_adt`.
-            assert!(format_default_ctor(input, core).is_ok());
-
-            // Move assignment operator depends on `crubit::MemSwap` which is only safe for
-            // trivially relocatable types.  "`needs_drop` implies `is_unpin`" is currently
-            // validated by the caller because otherwise `format_adt` fails.
-            assert!(core.self_ty.is_unpin(tcx, tcx.param_env(core.def_id)));
-
+        let has_default_ctor = format_default_ctor(input, core).is_ok();
+        let is_unpin = core.self_ty.is_unpin(tcx, tcx.param_env(core.def_id));
+        if has_default_ctor && is_unpin {
+            let main_api = CcSnippet::new(quote! {
+                #adt_cc_name(#adt_cc_name&&); __NEWLINE__
+                #adt_cc_name& operator=(#adt_cc_name&&); __NEWLINE__
+            });
             let mut prereqs = CcPrerequisites::default();
             prereqs.includes.insert(input.support_header("internal/memswap.h"));
             prereqs.includes.insert(CcInclude::utility()); // for `std::move`
@@ -1893,9 +1865,26 @@ fn format_move_ctor_and_assignment_operator<'tcx>(
                     return *this;
                 }
             };
-            CcSnippet { tokens, prereqs }
-        };
-        ApiSnippets { main_api, cc_details, ..Default::default() }
+            let cc_details = CcSnippet { tokens, prereqs };
+            Ok(ApiSnippets { main_api, cc_details, ..Default::default() })
+        } else if format_copy_ctor_and_assignment_operator(input, core).is_ok() {
+            // The class will have a custom copy constructor and copy assignment operator
+            // and *no* move constructor nor move assignment operator. This way,
+            // when a move is requested, a copy is performed instead (this is
+            // okay, this is what happens if a copyable pre-C++11 class is
+            // compiled in C++11 mode and moved).
+            //
+            // We can't use the `=default` move constructor, because it is elementwise and
+            // semantically incorrect.  We can't `=delete` the move constructor because it
+            // would make `SomeStruct(MakeSomeStruct())` select the deleted move
+            // constructor and fail to compile.
+            Ok(ApiSnippets::default())
+        } else {
+            bail!(
+                "C++ moves are deleted \
+                   because there's no non-destructive implementation available."
+            );
+        }
     } else {
         let main_api = CcSnippet::new(quote! {
             // The generated bindings have to follow Rust move semantics:
@@ -1937,7 +1926,7 @@ fn format_move_ctor_and_assignment_operator<'tcx>(
             },
             CcInclude::type_traits(),
         );
-        ApiSnippets { main_api, cc_details, ..Default::default() }
+        Ok(ApiSnippets { main_api, cc_details, ..Default::default() })
     }
 }
 
@@ -2018,7 +2007,18 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
             }
         });
 
-    let move_ctor_and_assignment_snippets = format_move_ctor_and_assignment_operator(input, core);
+    let move_ctor_and_assignment_snippets = format_move_ctor_and_assignment_operator(input, core)
+        .unwrap_or_else(|err| {
+            let msg = format!("{err:#}");
+            ApiSnippets {
+                main_api: CcSnippet::new(quote! {
+                    __NEWLINE__ __COMMENT__ #msg
+                    #adt_cc_name(#adt_cc_name&&) = delete;  __NEWLINE__
+                    #adt_cc_name& operator=(#adt_cc_name&&) = delete;
+                }),
+                ..Default::default()
+            }
+        });
 
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
@@ -5268,30 +5268,97 @@ pub mod tests {
         });
     }
 
-    #[test]
-    fn test_format_item_unsupported_struct_with_custom_drop_impl_and_no_default_impl() {
-        let test_src = r#"
-                pub struct StructWithCustomDropImpl {
-                    pub x: i32,
-                    pub y: i32,
-                }
-
-                impl Drop for StructWithCustomDropImpl {
-                    fn drop(&mut self) {}
-                }
-            "#;
-        test_format_item(test_src, "StructWithCustomDropImpl", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "Custom `Drop` implementation and/or \"drop glue\" are only supported \
-                 if `Default` is also implemented",
+    fn test_format_item_struct_with_custom_drop_and_no_default_nor_clone_impl(
+        test_src: &str,
+        pass_by_value_line_number: i32,
+    ) {
+        test_format_item(test_src, "TypeUnderTest", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            let move_deleted_msg = "C++ moves are deleted \
+                                    because there's no non-destructive implementation available.";
+            let pass_by_value_msg = format!(
+                "Error generating bindings for `TypeUnderTest::pass_by_value` \
+                        defined at <crubit_unittests.rs>;l={pass_by_value_line_number}: \
+                 Can't pass the return type by value without a move constructor: \
+                 {move_deleted_msg}"
             );
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... TypeUnderTest final {
+                        ...
+                        public:
+                          ...
+                          __COMMENT__ "Drop::drop"
+                          ~TypeUnderTest();
+
+                          __COMMENT__ #move_deleted_msg
+                          TypeUnderTest(TypeUnderTest&&) = delete;
+                          TypeUnderTest& operator=(TypeUnderTest&&) = delete;
+                          ...
+                          __COMMENT__ #pass_by_value_msg
+                          ...
+                    };
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C" void ...(  // `drop` thunk decl
+                        ::rust_out::TypeUnderTest& [[clang::annotate_type(
+                            "lifetime", "__anon1")]]);
+                    }
+                    inline TypeUnderTest::~TypeUnderTest() {
+                      __crubit_internal::...(*this);
+                    }
+                }
+            );
+            assert_cc_not_matches!(result.cc_details.tokens, quote! { pass_by_value });
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    ...
+                    #[no_mangle]
+                    extern "C" fn ...(
+                        __self: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
+                    ) {
+                        unsafe { __self.assume_init_drop() };
+                    }
+                    ...
+                }
+            );
+            assert_rs_not_matches!(result.rs_details, quote! { pass_by_value });
         });
     }
 
     #[test]
-    fn test_format_item_unsupported_struct_with_custom_drop_glue_and_no_default_impl() {
+    fn test_format_item_struct_with_custom_drop_impl_and_no_default_nor_clone_impl() {
+        let test_src = r#"
+                pub struct TypeUnderTest {
+                    pub x: i32,
+                    pub y: i32,
+                }
+
+                impl Drop for TypeUnderTest {
+                    fn drop(&mut self) {}
+                }
+
+                impl TypeUnderTest {
+                    pub fn pass_by_value() -> Self { unimplemented!() }
+                }
+            "#;
+        let pass_by_value_line_number = 12;
+        test_format_item_struct_with_custom_drop_and_no_default_nor_clone_impl(
+            test_src,
+            pass_by_value_line_number,
+        );
+    }
+
+    #[test]
+    fn test_format_item_struct_with_custom_drop_glue_and_no_default_nor_clone_impl() {
         let test_src = r#"
                 #![allow(dead_code)]
 
@@ -5304,18 +5371,19 @@ pub mod tests {
                     }
                 }
 
-                pub struct StructRequiringCustomDropGlue {
+                pub struct TypeUnderTest {
                     field: StructWithCustomDropImpl,
                 }
+
+                impl TypeUnderTest {
+                    pub fn pass_by_value() -> Self { unimplemented!() }
+                }
             "#;
-        test_format_item(test_src, "StructRequiringCustomDropGlue", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "Custom `Drop` implementation and/or \"drop glue\" are only supported \
-                 if `Default` is also implemented",
-            );
-        });
+        let pass_by_value_line_number = 18;
+        test_format_item_struct_with_custom_drop_and_no_default_nor_clone_impl(
+            test_src,
+            pass_by_value_line_number,
+        );
     }
 
     fn test_format_item_struct_with_custom_drop_and_with_default_impl(test_src: &str) {
@@ -5335,7 +5403,9 @@ pub mod tests {
                           TypeUnderTest(TypeUnderTest&&);
                           TypeUnderTest& operator=(
                               TypeUnderTest&&);
-                        ...
+                          ...
+                          static ::rust_out::TypeUnderTest pass_by_value();
+                          ...
                     };
                 }
             );
@@ -5343,7 +5413,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! {
                     namespace __crubit_internal {
-                    extern "C" void ...(
+                    extern "C" void ...(  // `drop` thunk decl
                         ::rust_out::TypeUnderTest& [[clang::annotate_type(
                             "lifetime", "__anon1")]]);
                     }
@@ -5360,6 +5430,14 @@ pub mod tests {
                       crubit::MemSwap(*this, other);
                       return *this;
                     }
+                    namespace __crubit_internal {  // `pass_by_value` thunk decl
+                    extern "C" void ...(::rust_out::TypeUnderTest* __ret_ptr);
+                    }
+                    inline ::rust_out::TypeUnderTest TypeUnderTest::pass_by_value() {
+                      crubit::ReturnValueSlot<::rust_out::TypeUnderTest> __ret_slot;
+                      __crubit_internal::...(__ret_slot.Get());
+                      return std::move(__ret_slot).AssumeInitAndTakeValue();
+                    }
                 }
             );
             assert_rs_matches!(
@@ -5371,6 +5449,12 @@ pub mod tests {
                         __self: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                     ) {
                         unsafe { __self.assume_init_drop() };
+                    }
+                    #[no_mangle]
+                    extern "C" fn ...(
+                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
+                    ) -> () {
+                        __ret_slot.write(::rust_out::TypeUnderTest::pass_by_value());
                     }
                     ...
                 }
@@ -5389,6 +5473,10 @@ pub mod tests {
 
                 impl Drop for TypeUnderTest {
                     fn drop(&mut self) {}
+                }
+
+                impl TypeUnderTest {
+                    pub fn pass_by_value() -> Self { unimplemented!() }
                 }
             "#;
         test_format_item_struct_with_custom_drop_and_with_default_impl(test_src);
@@ -5413,8 +5501,133 @@ pub mod tests {
                 pub struct TypeUnderTest {
                     field: StructWithCustomDropImpl,
                 }
+
+                impl TypeUnderTest {
+                    pub fn pass_by_value() -> Self { unimplemented!() }
+                }
             "#;
         test_format_item_struct_with_custom_drop_and_with_default_impl(test_src);
+    }
+
+    fn test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src: &str) {
+        test_format_item(test_src, "TypeUnderTest", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... TypeUnderTest final {
+                        ...
+                        public:
+                          ...
+                          __COMMENT__ "Drop::drop"
+                          ~TypeUnderTest();
+                          ...
+                          static ::rust_out::TypeUnderTest pass_by_value();
+                          ...
+                    };
+                }
+            );
+
+            // Implicit, but not `=default`-ed move constructor and move assignment
+            // operator.
+            assert_cc_not_matches!(main_api.tokens, quote! { TypeUnderTest(TypeUnderTest&&) });
+            assert_cc_not_matches!(main_api.tokens, quote! { operator=(TypeUnderTest&&) });
+            // No definition of a custom move constructor nor move assignment operator.
+            assert_cc_not_matches!(
+                result.cc_details.tokens,
+                quote! { TypeUnderTest(TypeUnderTest&&) },
+            );
+            assert_cc_not_matches!(result.cc_details.tokens, quote! { operator=(TypeUnderTest&&) },);
+
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C" void ...(  // `drop` thunk decl
+                        ::rust_out::TypeUnderTest& [[clang::annotate_type(
+                            "lifetime", "__anon1")]]);
+                    }
+                    ...
+                    namespace __crubit_internal {  // `pass_by_value` thunk decl
+                    extern "C" void ...(::rust_out::TypeUnderTest* __ret_ptr);
+                    }
+                    inline ::rust_out::TypeUnderTest TypeUnderTest::pass_by_value() {
+                      crubit::ReturnValueSlot<::rust_out::TypeUnderTest> __ret_slot;
+                      __crubit_internal::...(__ret_slot.Get());
+                      return std::move(__ret_slot).AssumeInitAndTakeValue();
+                    }
+                    ...
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    ...
+                    #[no_mangle]
+                    extern "C" fn ...(
+                        __self: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
+                    ) {
+                        unsafe { __self.assume_init_drop() };
+                    }
+                    #[no_mangle]
+                    extern "C" fn ...(
+                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
+                    ) -> () {
+                        __ret_slot.write(::rust_out::TypeUnderTest::pass_by_value());
+                    }
+                    ...
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_struct_with_custom_drop_impl_and_no_default_and_clone() {
+        let test_src = r#"
+                #[derive(Clone)]
+                pub struct TypeUnderTest {
+                    pub x: i32,
+                    pub y: i32,
+                }
+
+                impl Drop for TypeUnderTest {
+                    fn drop(&mut self) {}
+                }
+
+                impl TypeUnderTest {
+                    pub fn pass_by_value() -> Self { unimplemented!() }
+                }
+            "#;
+        test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src);
+    }
+
+    #[test]
+    fn test_format_item_struct_with_custom_drop_glue_and_no_default_and_clone() {
+        let test_src = r#"
+                #![allow(dead_code)]
+
+                // `i32` is present to avoid hitting the ZST checks related to (b/258259459)
+                #[derive(Clone)]
+                struct StructWithCustomDropImpl(i32);
+
+                impl Drop for StructWithCustomDropImpl {
+                    fn drop(&mut self) {
+                        println!("dropping!");
+                    }
+                }
+
+                #[derive(Clone)]
+                pub struct TypeUnderTest {
+                    field: StructWithCustomDropImpl,
+                }
+
+                impl TypeUnderTest {
+                    pub fn pass_by_value() -> Self { unimplemented!() }
+                }
+            "#;
+        test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src);
     }
 
     #[test]
@@ -5433,14 +5646,88 @@ pub mod tests {
                 impl Drop for SomeStruct {
                     fn drop(&mut self) {}
                 }
+
+                impl SomeStruct {
+                    pub fn pass_by_value() -> Self { unimplemented!() }
+                }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "Custom `Drop` implementation and/or \"drop glue\" are only supported \
-                 for `Unpin` types",
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            let move_deleted_msg = "C++ moves are deleted \
+                                    because there's no non-destructive implementation available.";
+            let pass_by_value_msg = format!(
+                "Error generating bindings for `SomeStruct::pass_by_value` \
+                        defined at <crubit_unittests.rs>;l=17: \
+                 Can't pass the return type by value without a move constructor: \
+                 {move_deleted_msg}"
             );
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        public:
+                          ...
+                          __COMMENT__ "Default::default"
+                          SomeStruct();
+
+                          __COMMENT__ "Drop::drop"
+                          ~SomeStruct();
+
+                          __COMMENT__ #move_deleted_msg
+                          SomeStruct(SomeStruct&&) = delete;
+                          SomeStruct& operator=(SomeStruct&&) = delete;
+                          ...
+                          __COMMENT__ #pass_by_value_msg
+                          ...
+                    };
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    ...
+                    namespace __crubit_internal {
+                    extern "C" void ...(  // `default` thunk decl
+                        ::rust_out::SomeStruct* __ret_ptr);
+                    }
+                    inline SomeStruct::SomeStruct() {
+                      __crubit_internal::...(this);
+                    }
+                    namespace __crubit_internal {
+                    extern "C" void ...(  // `drop` thunk decl
+                        ::rust_out::SomeStruct& [[clang::annotate_type("lifetime", "__anon1")]]);
+                    }
+                    inline SomeStruct::~SomeStruct() {
+                      __crubit_internal::...(*this);
+                    }
+                    ...
+                }
+            );
+            assert_cc_not_matches!(result.cc_details.tokens, quote! { pass_by_value });
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    ...
+                    #[no_mangle]
+                    extern "C" fn ...(
+                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>
+                    ) -> () {
+                        __ret_slot.write(
+                            <::rust_out::SomeStruct as ::core::default::Default>::default());
+                    }
+                    #[no_mangle]
+                    extern "C" fn ...(
+                        __self: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>
+                    ) {
+                        unsafe { __self.assume_init_drop() };
+                    }
+                    ...
+                }
+            );
+            assert_rs_not_matches!(result.rs_details, quote! { pass_by_value });
         });
     }
 

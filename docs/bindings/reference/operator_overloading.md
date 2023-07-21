@@ -20,8 +20,7 @@ The following special member functions and traits are mapped bidirectionally:
 :                              :           : and has a public, trivial copy    :
 :                              :           : constructor and destructor.       :
 | Non-trivial copy constructor | `Clone`   |                                   |
-| Destructor                   | `Drop`    | TODO(b/258251148): Support types  |
-:                              :           : without `Default` `impl`.         :
+| Destructor                   | `Drop`    |                                   |
 
 ## One-way map of C++ special member functions into Rust traits
 
