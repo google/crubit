@@ -18,6 +18,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Stmt.h"
@@ -37,6 +38,7 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -166,18 +168,33 @@ void collectEvidenceFromCallExpr(
       dyn_cast_or_null<clang::FunctionDecl>(CallExpr->getCalleeDecl());
   if (!CalleeDecl || !isInferenceTarget(*CalleeDecl)) return;
 
-  // For each inferrable parameter of the callee, ...
-  for (unsigned I = 0; I < CalleeDecl->param_size(); ++I) {
-    if (!CalleeDecl->getParamDecl(I)
+  unsigned ParamI = 0;
+  unsigned ArgI = 0;
+  // Member operator calls hold the function object as the first argument,
+  // offsetting the indices of parameters and corresponding arguments by 1.
+  // For example: Given struct S { bool operator+(int*); }
+  // The CXXMethodDecl has one parameter, but a call S{}+p is a
+  // CXXOperatorCallExpr with two arguments: an S and an int*.
+  if (isa<clang::CXXOperatorCallExpr>(CallExpr) &&
+      isa<clang::CXXMethodDecl>(CalleeDecl))
+    ++ArgI;
+
+  // For each pointer parameter of the callee, ...
+  for (; ParamI < CalleeDecl->param_size(); ++ParamI, ++ArgI) {
+    if (!CalleeDecl->getParamDecl(ParamI)
              ->getType()
              .getNonReferenceType()
              ->isPointerType())
-      return;
+      continue;
+    // the corresponding argument should also be a pointer.
+    CHECK(CallExpr->getArg(ArgI)
+              ->getType()
+              .getNonReferenceType()
+              ->isPointerType());
 
-    // if we're passing a pointer, ...
     dataflow::PointerValue *PV =
-        getPointerValueFromExpr(CallExpr->getArg(I), Env);
-    if (!PV) return;
+        getPointerValueFromExpr(CallExpr->getArg(ArgI), Env);
+    if (!PV) continue;
 
     // TODO: Check if the parameter is annotated. If annotated Nonnull, (instead
     // of collecting evidence for it?) collect evidence similar to a
@@ -185,7 +202,7 @@ void collectEvidenceFromCallExpr(
     // evidence for a parameter that could be annotated Nonnull as a way to
     // force the argument to be Nonnull.
 
-    // emit evidence of the parameter's nullability. First, calculate that
+    // Emit evidence of the parameter's nullability. First, calculate that
     // nullability based on InferrableSlots for the caller being assigned to
     // Unknown, to reflect the current annotations and not all possible
     // annotations for them.
@@ -203,8 +220,8 @@ void collectEvidenceFromCallExpr(
       default:
         ArgEvidenceKind = Evidence::UNKNOWN_ARGUMENT;
     }
-    Emit(*CalleeDecl, paramSlot(I), ArgEvidenceKind,
-         CallExpr->getArg(I)->getExprLoc());
+    Emit(*CalleeDecl, paramSlot(ParamI), ArgEvidenceKind,
+         CallExpr->getArg(ArgI)->getExprLoc());
   }
 }
 

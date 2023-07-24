@@ -373,6 +373,51 @@ TEST(CollectEvidenceFromImplementationTest, MultipleReturns) {
                                     functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest, MemberOperatorCall) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      bool operator+(int*);
+    };
+    void target() { S{} + nullptr; }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                functionNamed("operator+"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, NonMemberOperatorCall) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {};
+    bool operator+(const S&, int*);
+    void target() { S{} + nullptr; }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
+                                functionNamed("operator+"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, VarArgs) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(int*...);
+    void target() { callee(nullptr, nullptr); }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                functionNamed("callee"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, MemberOperatorCallVarArgs) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      bool operator()(int*...);
+    };
+    void target() { S{}(nullptr, nullptr); }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                functionNamed("operator()"))));
+}
+
 TEST(CollectEvidenceFromDeclarationTest, VariableDeclIgnored) {
   llvm::StringLiteral Src = "Nullable<int *> target;";
   EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
