@@ -22,8 +22,11 @@ struct MonitoringHelper {
   MonitoringHelper(const MonitoringHelper&) = delete;
   MonitoringHelper& operator=(const MonitoringHelper&) = delete;
 
-  explicit MonitoringHelper(int new_state, std::vector<int>* destroyed_states)
-      : state(new_state), destroyed_states(destroyed_states) {
+  explicit MonitoringHelper(int new_state, std::vector<int>* destroyed_states,
+                            std::vector<MonitoringHelper*>* destroyed_locations)
+      : state(new_state),
+        destroyed_states(destroyed_states),
+        destroyed_locations(destroyed_locations) {
     CHECK_NE(state, kMovedAwayState);
     CHECK_NE(state, kDestroyedState);
   }
@@ -31,6 +34,7 @@ struct MonitoringHelper {
   MonitoringHelper(MonitoringHelper&& other) {
     state = other.state;
     destroyed_states = other.destroyed_states;
+    destroyed_locations = other.destroyed_locations;
     other.state = kMovedAwayState;
   }
 
@@ -44,9 +48,11 @@ struct MonitoringHelper {
 
     // Pretend to destroy old field values.
     destroyed_states->push_back(state);
+    destroyed_locations->push_back(this);
 
     state = other.state;
     destroyed_states = other.destroyed_states;
+    destroyed_locations = other.destroyed_locations;
     other.state = kMovedAwayState;
     return *this;
   }
@@ -56,20 +62,24 @@ struct MonitoringHelper {
     CHECK_NE(state, kUninitializedState);
     CHECK_NE(state, kDestroyedState);
     destroyed_states->push_back(state);
+    destroyed_locations->push_back(this);
     state = kDestroyedState;
   }
 
   int state;
   std::vector<int>* destroyed_states;
+  std::vector<MonitoringHelper*>* destroyed_locations;
 };
 
 TEST(ReturnValueSlot, Test) {
   std::vector<int> destroyed_states;
+  std::vector<MonitoringHelper*> destroyed_locations;
 
   constexpr int kInitialValue = 1;
   constexpr int kReturnedValue = 2;
 
-  MonitoringHelper return_value(kInitialValue, &destroyed_states);
+  MonitoringHelper return_value(kInitialValue, &destroyed_states,
+                                &destroyed_locations);
 
   {
     // At this point `slot` is in an uninitialized state.
@@ -77,12 +87,16 @@ TEST(ReturnValueSlot, Test) {
     MonitoringHelper* slot_ptr = slot.Get();
     slot_ptr->state = kUninitializedState;
     slot_ptr->destroyed_states = &destroyed_states;
+    slot_ptr->destroyed_locations = &destroyed_locations;
     // No destructors should run up to this point.
     EXPECT_THAT(destroyed_states, testing::IsEmpty());
+    EXPECT_THAT(destroyed_locations, testing::IsEmpty());
 
     // Initialize the memory.
-    new (slot_ptr) MonitoringHelper(kReturnedValue, &destroyed_states);
+    new (slot_ptr) MonitoringHelper(kReturnedValue, &destroyed_states,
+                                    &destroyed_locations);
     EXPECT_THAT(destroyed_states, testing::IsEmpty());
+    EXPECT_THAT(destroyed_locations, testing::IsEmpty());
 
     // Move the return value from `slot` to `return_value`.
     return_value = std::move(slot).AssumeInitAndTakeValue();
@@ -90,17 +104,16 @@ TEST(ReturnValueSlot, Test) {
     // overwritten by the assignment - this is where `kInitialValue` comes from.
     //
     // AssumeInitAndTakeValue will destroy `ReturnValueSlot::value_` in a
-    // kMovedAwayState.
+    // kMovedAwayState.  This is asserted by checking that `slot_ptr` is covered
+    // by `destroyed_locations`.
     //
     // Additionally, a temporary `MonitoringHelper` value in a moved-away state
     // will be destroyed.
     EXPECT_THAT(
         destroyed_states,
         testing::ElementsAre(kMovedAwayState, kInitialValue, kMovedAwayState));
-    // The value inside `ReturnValueSlot` (pointed to by `slot_ptr`) should be
-    // in a `kDestroyedState` state at this point due to
-    // `AssumeInitAndTakeValue()`.
-    EXPECT_EQ(kDestroyedState, slot_ptr->state);
+    EXPECT_THAT(destroyed_locations,
+                testing::ElementsAre(slot_ptr, testing::_, testing::_));
     EXPECT_EQ(kReturnedValue, return_value.state);
   }
 
