@@ -375,6 +375,10 @@ pub mod tests {
             make_codegen_backend: None,
             registry: rustc_errors::registry::Registry::new(rustc_error_codes::DIAGNOSTICS),
             locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES,
+            // TODO(b/293270437): remove the conditional compilation after the commit lands
+            // in crosstool stable rust.
+            #[cfg(google3_internal_rustc_contains_commit_8eb5843a592afbee8ae5352828f8f0b74034b9e0)]
+            ice_file: None,
         };
 
         rustc_interface::interface::run_compiler(config, |compiler| {
