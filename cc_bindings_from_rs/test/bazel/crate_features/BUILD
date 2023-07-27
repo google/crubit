@@ -17,9 +17,6 @@ rust_library(
     crate_features = [
         "required_feature",
     ],
-    deps = [
-        "//common:rust_allocator_shims",
-    ],
 )
 
 cc_bindings_from_rust(

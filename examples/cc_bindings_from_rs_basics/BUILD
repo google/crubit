@@ -18,9 +18,6 @@ licenses(["notice"])
 rust_library(
     name = "example_crate",
     srcs = ["example.rs"],
-    deps = [
-        "//common:rust_allocator_shims",
-    ],
 )
 
 cc_bindings_from_rust(

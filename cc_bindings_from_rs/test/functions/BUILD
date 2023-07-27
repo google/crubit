@@ -17,9 +17,6 @@ rust_library(
     name = "functions",
     testonly = 1,
     srcs = ["functions.rs"],
-    deps = [
-        "//common:rust_allocator_shims",
-    ],
 )
 
 cc_bindings_from_rust(

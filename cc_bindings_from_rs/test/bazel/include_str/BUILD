@@ -17,9 +17,6 @@ rust_library(
     testonly = 1,
     srcs = ["include_str.rs"],
     data = ["the_answer.md"],
-    deps = [
-        "//common:rust_allocator_shims",
-    ],
 )
 
 cc_bindings_from_rust(

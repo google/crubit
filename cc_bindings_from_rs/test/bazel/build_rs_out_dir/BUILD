@@ -31,10 +31,7 @@ rust_library(
     name = "build_rs_out_dir",
     testonly = 1,
     srcs = ["build_rs_out_dir.rs"],
-    deps = [
-        ":build_rs_out_dir_build_script",
-        "//common:rust_allocator_shims",
-    ],
+    deps = [":build_rs_out_dir_build_script"],
 )
 
 cc_bindings_from_rust(

@@ -28,7 +28,6 @@ rust_binary(
     deps = [
         ":toposort",
         "//common:code_gen_utils",
-        "//common:rust_allocator_shims",
         "//common:token_stream_printer",
         "@crate_index//:anyhow",
         "@crate_index//:clap",

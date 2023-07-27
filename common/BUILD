@@ -173,10 +173,7 @@ rust_test(
     tags = [
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
     ],
-    deps = [
-        "//common:rust_allocator_shims",
-        "@crate_index//:quote",
-    ],
+    deps = ["@crate_index//:quote"],
 )
 
 rust_library(
@@ -231,4 +228,5 @@ cc_library(
 cc_library(
     name = "rust_allocator_shims",
     srcs = ["rust_allocator_shims.c"],
+    visibility = ["@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:__subpackages__"],
 )

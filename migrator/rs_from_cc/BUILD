@@ -9,7 +9,6 @@ cc_binary(
     deps = [
         ":rs_from_cc_lib",
         "//common:file_io",
-        "//common:rust_allocator_shims",
         "@absl//absl/flags:flag",
         "@absl//absl/flags:parse",
         "@absl//absl/log:check",

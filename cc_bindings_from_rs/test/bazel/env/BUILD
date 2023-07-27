@@ -14,9 +14,6 @@ rust_library(
     name = "env",
     testonly = 1,
     srcs = ["env.rs"],
-    deps = [
-        "//common:rust_allocator_shims",
-    ],
 )
 
 cc_bindings_from_rust(

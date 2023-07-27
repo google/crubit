@@ -69,7 +69,6 @@ cc_binary(
         ":collect_namespaces",
         ":generate_bindings_and_metadata",
         "//common:file_io",
-        "//common:rust_allocator_shims",
         "//common:status_macros",
         "@absl//absl/flags:parse",
         "@absl//absl/status",
@@ -115,7 +114,6 @@ cc_test(
         ":collect_namespaces",
         ":generate_bindings_and_metadata",
         "//common:cc_ffi_types",
-        "//common:rust_allocator_shims",
         "//common:status_macros",
         "//common:test_utils",
         "@absl//absl/container:flat_hash_map",
@@ -181,7 +179,6 @@ cc_library(
         ":bazel_types",
         ":cc_ir",
         "//common:cc_ffi_types",
-        "//common:rust_allocator_shims",
         "//common:status_macros",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
@@ -373,7 +370,6 @@ rust_test(
     deps = [
         ":ir_matchers",
         ":ir_testing",
-        "//common:rust_allocator_shims",
         "@crate_index//:quote",
     ],
 )
@@ -424,7 +420,6 @@ multiplatform_rust_test(
         ":ir_testing",
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
-        "//common:rust_allocator_shims",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
@@ -475,7 +470,6 @@ multiplatform_rust_test(
         ":ir_matchers",
         ":ir_testing",
         "//common:multiplatform_testing",
-        "//common:rust_allocator_shims",
         "//common:token_stream_matchers",
         "@crate_index//:static_assertions",
     ],
@@ -540,7 +534,6 @@ rust_test(
     deps = [
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
-        "//common:rust_allocator_shims",
     ],
 )
 
@@ -573,7 +566,6 @@ cc_test(
     srcs = ["collect_instantiations_test.cc"],
     deps = [
         ":cc_collect_instantiations",
-        "//common:rust_allocator_shims",
         "//common:status_test_matchers",
         "//common:test_utils",
         "@com_google_googletest//:gtest_main",

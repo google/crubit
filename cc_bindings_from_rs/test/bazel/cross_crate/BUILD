@@ -15,19 +15,13 @@ rust_library(
     name = "other_crate",
     testonly = 1,
     srcs = ["other_crate.rs"],
-    deps = [
-        "//common:rust_allocator_shims",
-    ],
 )
 
 rust_library(
     name = "test_api",
     testonly = 1,
     srcs = ["test_api.rs"],
-    deps = [
-        ":other_crate",
-        "//common:rust_allocator_shims",
-    ],
+    deps = [":other_crate"],
 )
 
 cc_bindings_from_rust(

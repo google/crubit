@@ -46,3 +46,6 @@ void *__rust_alloc_error_handler(size_t size, size_t align) {
 
 // This symbol is normally emitted by rustc. 0 means OOMs should abort, 1 means OOMs should panic.
 unsigned char __attribute__((weak)) __rust_alloc_error_handler_should_panic = 1;
+
+// See https://github.com/rust-lang/rust/issues/73632#issuecomment-1563462239
+unsigned char __attribute__((weak)) __rust_no_alloc_shim_is_unstable = 0;

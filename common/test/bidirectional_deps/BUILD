@@ -55,7 +55,6 @@ cc_test(
     srcs = ["cc_test.cc"],
     deps = [
         ":leaf_cc_lib",
-        "//common:rust_allocator_shims",
         "@com_google_googletest//:gtest_main",
     ],
 )

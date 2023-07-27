@@ -17,9 +17,6 @@ rust_library(
     name = "rs_default",
     testonly = 1,
     srcs = ["default.rs"],
-    deps = [
-        "//common:rust_allocator_shims",
-    ],
 )
 
 cc_bindings_from_rust(

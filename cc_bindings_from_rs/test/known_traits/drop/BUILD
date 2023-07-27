@@ -18,9 +18,6 @@ rust_library(
     name = "drop",
     testonly = 1,
     srcs = ["drop.rs"],
-    deps = [
-        "//common:rust_allocator_shims",
-    ],
 )
 
 cc_bindings_from_rust(

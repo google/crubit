@@ -45,6 +45,7 @@ rust_register_toolchains(
     versions = [
       RUST_TOOLCHAIN_VERSION,
     ],
+    allocator_library = "@//common:rust_allocator_shims",
     dev_components = True,
 )
 

@@ -18,9 +18,6 @@ rust_library(
     name = "copy",
     testonly = 1,
     srcs = ["copy.rs"],
-    deps = [
-        "//common:rust_allocator_shims",
-    ],
 )
 
 cc_bindings_from_rust(

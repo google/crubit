@@ -15,9 +15,6 @@ rust_library(
     name = "impls",
     testonly = 1,
     srcs = ["impls.rs"],
-    deps = [
-        "//common:rust_allocator_shims",
-    ],
 )
 
 cc_bindings_from_rust(
