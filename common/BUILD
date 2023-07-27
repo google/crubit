@@ -158,7 +158,6 @@ rust_library(
     srcs = ["token_stream_matchers.rs"],
     visibility = [
         "//:__subpackages__",
-        "//google_internal/release:crubit_support_lib_visibility",
     ],
     deps = [
         ":token_stream_printer",

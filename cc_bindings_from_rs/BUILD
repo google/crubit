@@ -45,14 +45,15 @@ rust_test(
     name = "cc_bindings_from_rs_test",
     crate = ":cc_bindings_from_rs",
     data = select({
-        "//third_party/crosstool:unstable_config": ["//nowhere/llvm/rust:std_libs"],
-        "//conditions:default": ["//nowhere/llvm/rust:std_libs"],
+        "//conditions:default": [
+            "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
+        ],
     }),
-
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
     rustc_flags = select({
-        "//third_party/crosstool:unstable_config": ["--cfg=llvm_unstable"],
-        "//conditions:default": ["--cfg=stable"],
+        "//conditions:default": [
+            "--cfg=oss",
+        ],
     }),
     tags = [
         "not_build:arm",
