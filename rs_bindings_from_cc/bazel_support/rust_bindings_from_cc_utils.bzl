@@ -131,11 +131,6 @@ bindings_attrs = {
         doc = "Dependencies that are needed to compile the generated .cc and .rs file.",
         default = "//rs_bindings_from_cc/bazel_support:deps_for_bindings",
     ),
-    "_grep_includes": attr.label(
-        allow_single_file = True,
-        default = Label("@bazel_tools//tools/cpp:grep-includes"),
-        cfg = "exec",
-    ),
     "_clang_format": attr.label(
         default = "//third_party/crosstool/google3_users:stable_clang-format",
         executable = True,

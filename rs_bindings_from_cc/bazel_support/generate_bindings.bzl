@@ -116,7 +116,6 @@ def generate_bindings(
         cc_toolchain = cc_toolchain,
         source_file = public_hdrs[0],
         output_file = cc_output,
-        grep_includes = ctx.file._grep_includes,
         additional_inputs = depset(
             direct = [
                 ctx.executable._clang_format,
