@@ -103,6 +103,9 @@ crates_repository(
         "quote": crate.spec(
             version = ">0.0.0",
         ),
+        "regex": crate.spec(
+            version = ">=1.6.0",
+        ),
         "salsa": crate.spec(
             version = ">0.0.0",
         ),
@@ -120,6 +123,9 @@ crates_repository(
             features = ["extra-traits"],
             version = ">0.0.0",
         ),
+        "tempfile": crate.spec(
+            version = "=3.4.0",
+         ),
         "unicode-ident": crate.spec(
             version = ">0.0.0",
         ),
