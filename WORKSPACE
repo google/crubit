@@ -41,12 +41,12 @@ rules_rust_dependencies()
 RUST_TOOLCHAIN_VERSION = "nightly/2023-07-07"
 
 rust_register_toolchains(
-    edition = "2021",
-    versions = [
-      RUST_TOOLCHAIN_VERSION,
-    ],
     allocator_library = "@//common:rust_allocator_shims",
     dev_components = True,
+    edition = "2021",
+    versions = [
+        RUST_TOOLCHAIN_VERSION,
+    ],
 )
 
 load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")
@@ -110,7 +110,10 @@ crates_repository(
             version = ">0.0.0",
         ),
         "serde": crate.spec(
-            features = ["derive", "rc",],
+            features = [
+                "derive",
+                "rc",
+            ],
             version = ">0.0.0",
         ),
         "serde_json": crate.spec(
@@ -125,7 +128,7 @@ crates_repository(
         ),
         "tempfile": crate.spec(
             version = "=3.4.0",
-         ),
+        ),
         "unicode-ident": crate.spec(
             version = ">0.0.0",
         ),
@@ -154,10 +157,10 @@ http_archive(
 
 # https://google.github.io/googletest/quickstart-bazel.html
 http_archive(
-  name = "com_google_googletest",
-  urls = ["https://github.com/google/googletest/archive/1336c4b6d1a6f4bc6beebccb920e5ff858889292.zip"],
-  strip_prefix = "googletest-1336c4b6d1a6f4bc6beebccb920e5ff858889292",
-  sha256 = "7fda611bceb5a793824a3c63ecbf68d2389e70c38f5763e9b1d415ca24912f44"
+    name = "com_google_googletest",
+    sha256 = "7fda611bceb5a793824a3c63ecbf68d2389e70c38f5763e9b1d415ca24912f44",
+    strip_prefix = "googletest-1336c4b6d1a6f4bc6beebccb920e5ff858889292",
+    urls = ["https://github.com/google/googletest/archive/1336c4b6d1a6f4bc6beebccb920e5ff858889292.zip"],
 )
 
 # zstd is a dependency of llvm.  See https://reviews.llvm.org/D143344#4232172
@@ -167,7 +170,7 @@ http_archive(
     sha256 = "7c42d56fac126929a6a85dbc73ff1db2411d04f104fae9bdea51305663a83fd0",
     strip_prefix = "zstd-1.5.2",
     urls = [
-        "https://github.com/facebook/zstd/releases/download/v1.5.2/zstd-1.5.2.tar.gz"
+        "https://github.com/facebook/zstd/releases/download/v1.5.2/zstd-1.5.2.tar.gz",
     ],
 )
 
@@ -185,11 +188,14 @@ http_archive(
 # Create the "loader" repository, then use it to configure the desired LLVM
 # repository. For more details, see the comment in bazel/llvm.bzl.
 
-load("//bazel:llvm.bzl", "llvm_loader_repository_dependencies", "llvm_loader_repository")
+load("//bazel:llvm.bzl", "llvm_loader_repository", "llvm_loader_repository_dependencies")
+
 llvm_loader_repository_dependencies()
+
 llvm_loader_repository(name = "llvm-loader")
 
 load("@llvm-loader//:llvm.bzl", "llvm_repository")
+
 llvm_repository(name = "llvm-project")
 
 # protobuf (used in nullability/; crubit proper should not depend on it)
@@ -201,6 +207,9 @@ http_archive(
         "https://github.com/bazelbuild/rules_proto/archive/refs/tags/5.3.0-21.7.tar.gz",
     ],
 )
+
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+
 rules_proto_dependencies()
+
 rules_proto_toolchains()
