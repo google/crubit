@@ -30,6 +30,7 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/Support/Debug.h"
 
 namespace clang::tidy::nullability {
 
@@ -40,6 +41,8 @@ using dataflow::Environment;
 using dataflow::PointerValue;
 using dataflow::TransferState;
 using dataflow::Value;
+
+#define DEBUG_TYPE "pointer_nullability_analysis.cc"
 
 namespace {
 
@@ -58,16 +61,18 @@ void computeNullability(const Expr *E,
         ExpectedSize != Nullability.size()) {
       // A nullability vector must have one entry per pointer in the type.
       // If this is violated, we probably failed to handle some AST node.
-      llvm::dbgs()
-          << "=== Nullability vector has wrong number of entries: ===\n";
-      llvm::dbgs() << "Expression: \n";
-      dump(E, llvm::dbgs());
-      llvm::dbgs() << "\nNullability (" << Nullability.size()
-                   << " pointers): " << nullabilityToString(Nullability)
-                   << "\n";
-      llvm::dbgs() << "\nType (" << ExpectedSize << " pointers): \n";
-      dump(exprType(E), llvm::dbgs());
-      llvm::dbgs() << "=================================\n";
+      LLVM_DEBUG({
+        llvm::dbgs()
+            << "=== Nullability vector has wrong number of entries: ===\n";
+        llvm::dbgs() << "Expression: \n";
+        dump(E, llvm::dbgs());
+        llvm::dbgs() << "\nNullability (" << Nullability.size()
+                     << " pointers): " << nullabilityToString(Nullability)
+                     << "\n";
+        llvm::dbgs() << "\nType (" << ExpectedSize << " pointers): \n";
+        dump(exprType(E), llvm::dbgs());
+        llvm::dbgs() << "=================================\n";
+      });
 
       // We can't meaningfully interpret the vector, so discard it.
       // TODO: fix all broken cases and upgrade to CHECK or DCHECK or so.
@@ -86,9 +91,11 @@ const TypeNullability &getNullabilityForChild(
     // computed the child nullability. However, this is not true in all test
     // cases. So, we return unspecified nullability annotations.
     // TODO: fix this issue, and CHECK() instead.
-    llvm::dbgs() << "=== Missing child nullability: ===\n";
-    dump(E, llvm::dbgs());
-    llvm::dbgs() << "==================================\n";
+    LLVM_DEBUG({
+      llvm::dbgs() << "=== Missing child nullability: ===\n";
+      dump(E, llvm::dbgs());
+      llvm::dbgs() << "==================================\n";
+    });
 
     return unspecifiedNullability(E);
   });
