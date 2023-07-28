@@ -9,11 +9,17 @@
 #include <optional>
 #include <set>
 #include <string>
-#include <utility>
+#include <variant>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
+#include "absl/status/statusor.h"
 #include "common/status_macros.h"
+#include "lifetime_annotations/type_lifetimes.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/importers/class_template.h"
 #include "rs_bindings_from_cc/importers/cxx_record.h"
@@ -25,8 +31,12 @@
 #include "rs_bindings_from_cc/importers/type_alias.h"
 #include "rs_bindings_from_cc/importers/type_map_override.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Sema/Sema.h"
 
 namespace crubit {
 
