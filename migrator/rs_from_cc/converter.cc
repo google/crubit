@@ -4,12 +4,12 @@
 
 #include "migrator/rs_from_cc/converter.h"
 
+#include <string>
+
 #include "absl/strings/str_split.h"
-#include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Decl.h"
-#include "clang/AST/DeclFriend.h"
-#include "clang/AST/RecordLayout.h"
-#include "clang/Basic/FileManager.h"
+#include "clang/AST/DeclBase.h"
+#include "llvm/Support/raw_ostream.h"
 #include "third_party/re2/re2.h"
 
 namespace crubit_rs_from_cc {

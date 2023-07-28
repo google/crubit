@@ -59,6 +59,7 @@ cc_library(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:sema",
+        "@llvm-project//llvm:Support",
     ],
 )
 
