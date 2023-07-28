@@ -8,6 +8,7 @@
 #include <optional>
 #include <string>
 
+#include "lifetime_annotations/function_lifetimes.h"
 #include "llvm/ADT/DenseMap.h"
 
 namespace clang {
