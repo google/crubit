@@ -5,9 +5,16 @@
 #include "lifetime_annotations/test/run_on_code.h"
 
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "lifetime_annotations/lifetime_annotations.h"
+#include "clang/AST/ASTConsumer.h"
+#include "clang/Frontend/FrontendAction.h"
+#include "clang/Serialization/PCHContainerOperations.h"
+#include "clang/Tooling/Tooling.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {

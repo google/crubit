@@ -26,6 +26,8 @@ cc_library(
     deps = [
         "//lifetime_annotations",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:serialization",
         "@llvm-project//clang:tooling",
         "@llvm-project//llvm:Support",
     ],
