@@ -4,11 +4,28 @@
 
 #include "lifetime_analysis/test/lifetime_analysis_test.h"
 
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
+#include <iostream>
 #include <ostream>
 #include <string>
 #include <utility>
 #include <variant>
+
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
+#include "lifetime_analysis/analyze.h"
+#include "lifetime_annotations/function_lifetimes.h"
+#include "lifetime_annotations/lifetime_annotations.h"
+#include "lifetime_annotations/test/named_func_lifetimes.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/Basic/LLVM.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/raw_ostream.h"
 
 #include "lifetime_annotations/test/run_on_code.h"
 

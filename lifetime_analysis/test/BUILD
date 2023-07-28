@@ -9,10 +9,17 @@ cc_library(
     hdrs = ["lifetime_analysis_test.h"],
     deps = [
         "//lifetime_analysis:analyze",
+        "//lifetime_annotations",
+        "//lifetime_annotations:type_lifetimes",
         "//lifetime_annotations/test:named_func_lifetimes",
         "//lifetime_annotations/test:run_on_code",
         "@absl//absl/container:flat_hash_map",
+        "@absl//absl/strings",
+        "@absl//absl/strings:string_view",
         "@com_google_googletest//:gtest",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//llvm:Support",
     ],
 )
 
