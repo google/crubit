@@ -32,12 +32,20 @@
 #include "absl/log/check.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/Type.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
 
 namespace clang::tidy::nullability {
+
+/// Is this exactly a pointer type that we track outer nullability for?
+/// Does not unwrap sugar, consider isSupportedPointer(T.getCanonicalType()).
+///
+/// (For now, only regular PointerTypes, in future we should consider supporting
+/// pointer-to-member, ObjC pointers, etc).
+bool isSupportedPointer(QualType);
 
 /// Describes the nullability contract of a pointer "slot" within a type.
 ///

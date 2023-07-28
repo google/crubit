@@ -142,6 +142,7 @@ cc_test(
     deps = [
         ":type_nullability",
         "@absl//absl/log:check",
+        "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:testing",
         "@llvm-project//llvm:Support",

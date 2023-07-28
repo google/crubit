@@ -10,6 +10,7 @@ cc_library(
     hdrs = ["collect_evidence.h"],
     deps = [
         ":inference_cc_proto",
+        ":inferrable",
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
@@ -59,6 +60,34 @@ cc_test(
         "//nullability:proto_matchers",
         "//third_party/protobuf",
         "@absl//absl/log:check",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "inferrable",
+    srcs = ["inferrable.cc"],
+    hdrs = ["inferrable.h"],
+    deps = [
+        "//nullability:type_nullability",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+    ],
+)
+
+cc_test(
+    name = "inferrable_test",
+    srcs = ["inferrable_test.cc"],
+    deps = [
+        ":inference_cc_proto",
+        ":inferrable",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:testing",
+        "@llvm-project//clang/unittests:dataflow_testing_support",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",

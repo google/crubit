@@ -5,6 +5,7 @@
 #include "nullability/type_nullability.h"
 
 #include "absl/log/check.h"
+#include "clang/AST/Decl.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/StringRef.h"
@@ -14,6 +15,41 @@
 namespace clang::tidy::nullability {
 namespace {
 using testing::ElementsAre;
+
+TEST(TypeNullabilityTest, IsSupportedPointer) {
+  TestAST AST(R"cpp(
+    using NotPointer = int;
+    using Pointer = NotPointer*;
+    using FuncPointer = Pointer (*)(Pointer);
+    using SugaredPointer = Pointer;
+
+    struct S;
+    using PointerDataMember = Pointer S::*;
+    using PointerMemberFunction = Pointer (S::*)(Pointer);
+
+    @class X;
+    using ObjCPointer = X;
+
+    template <class>
+    struct Container;
+    using ContainsPointers = Container<int*>;
+  )cpp");
+
+  auto Underlying = [&](llvm::StringRef Name) {
+    auto Lookup = AST.context().getTranslationUnitDecl()->lookup(
+        &AST.context().Idents.get(Name));
+    EXPECT_TRUE(Lookup.isSingleResult());
+    return Lookup.find_first<TypeAliasDecl>()->getUnderlyingType();
+  };
+  EXPECT_FALSE(isSupportedPointer(Underlying("NotPointer")));
+  EXPECT_TRUE(isSupportedPointer(Underlying("Pointer")));
+  EXPECT_TRUE(isSupportedPointer(Underlying("FuncPointer")));
+  EXPECT_FALSE(isSupportedPointer(Underlying("SugaredPointer")));
+  EXPECT_FALSE(isSupportedPointer(Underlying("PointerDataMember")));
+  EXPECT_FALSE(isSupportedPointer(Underlying("PointerMemberFunction")));
+  EXPECT_FALSE(isSupportedPointer(Underlying("ObjCPointer")));
+  EXPECT_FALSE(isSupportedPointer(Underlying("ContainsPointers")));
+}
 
 class GetNullabilityAnnotationsFromTypeTest : public ::testing::Test {
  protected:

@@ -24,6 +24,8 @@
 
 namespace clang::tidy::nullability {
 
+bool isSupportedPointer(QualType T) { return llvm::isa<PointerType>(T); }
+
 PointerTypeNullability PointerTypeNullability::createSymbolic(
     dataflow::Arena &A) {
   PointerTypeNullability Symbolic;
