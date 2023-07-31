@@ -4,7 +4,13 @@
 
 #include "nullability/proto_matchers.h"
 
+#include <memory>
+#include <ostream>
+#include <string>
+
+#include "llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
+#include "third_party/protobuf/message.h"
 #include "third_party/protobuf/text_format.h"
 
 namespace clang::tidy::nullability {

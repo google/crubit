@@ -4,8 +4,8 @@
 
 #include "nullability/pointer_nullability_analysis.h"
 
+#include <functional>
 #include <optional>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -15,9 +15,9 @@
 #include "nullability/pointer_nullability_matchers.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
-#include "clang/AST/ASTDumper.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
@@ -26,7 +26,9 @@
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
@@ -39,6 +41,7 @@ using dataflow::BoolValue;
 using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
 using dataflow::PointerValue;
+using dataflow::StorageLocation;
 using dataflow::TransferState;
 using dataflow::Value;
 
@@ -141,7 +144,7 @@ TypeNullability substituteNullabilityAnnotationsInClassTemplate(
           -> std::optional<TypeNullability> {
         // The class specialization that is BaseType and owns ST.
         const ClassTemplateSpecializationDecl *Specialization = nullptr;
-        if (auto RT = BaseType->getAs<RecordType>())
+        if (const auto *RT = BaseType->getAs<RecordType>())
           Specialization =
               dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl());
         // TODO: handle nested templates, where associated decl != base type
@@ -371,7 +374,7 @@ void transferFlowSensitiveCallExpr(
   // The dataflow framework itself does not create values for `CallExpr`s.
   // However, we need these in some cases, so we produce them ourselves.
 
-  dataflow::StorageLocation *Loc = nullptr;
+  StorageLocation *Loc = nullptr;
   if (CallExpr->isGLValue()) {
     // The function returned a reference. Create a storage location for the
     // expression so that if code creates a pointer from the reference, we will

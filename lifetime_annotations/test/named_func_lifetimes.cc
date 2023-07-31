@@ -5,11 +5,18 @@
 #include "lifetime_annotations/test/named_func_lifetimes.h"
 
 #include <algorithm>
+#include <cassert>
+#include <cstddef>
 #include <optional>
+#include <ostream>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "lifetime_annotations/function_lifetimes.h"
-#include "llvm/ADT/DenseMap.h"
+#include "lifetime_annotations/lifetime.h"
+#include "lifetime_annotations/lifetime_symbol_table.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {

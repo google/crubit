@@ -4,8 +4,11 @@
 
 #include "nullability/type_nullability.h"
 
+#include <string>
+
 #include "absl/log/check.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/Type.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/StringRef.h"

@@ -5,6 +5,8 @@
 #include "nullability/type_nullability.h"
 
 #include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/log/check.h"
@@ -19,12 +21,14 @@
 #include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/Support/SaveAndRestore.h"
 #include "llvm/Support/ScopedPrinter.h"
 
 namespace clang::tidy::nullability {
 
-bool isSupportedPointer(QualType T) { return llvm::isa<PointerType>(T); }
+bool isSupportedPointer(QualType T) { return isa<PointerType>(T); }
 
 PointerTypeNullability PointerTypeNullability::createSymbolic(
     dataflow::Arena &A) {
@@ -215,13 +219,13 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     if (const ClassTemplateSpecializationDecl *CTSD =
             llvm::dyn_cast<ClassTemplateSpecializationDecl>(
                 Ctx.AssociatedDecl)) {
-      if (llvm::isa_and_nonnull<ClassTemplatePartialSpecializationDecl>(
+      if (isa_and_nonnull<ClassTemplatePartialSpecializationDecl>(
               CTSD->getTemplateInstantiationPattern()))
         PartialArgs = &CTSD->getTemplateInstantiationArgs();
     } else if (const VarTemplateSpecializationDecl *VTSD =
                    llvm::dyn_cast<VarTemplateSpecializationDecl>(
                        Ctx.AssociatedDecl)) {
-      if (llvm::isa_and_nonnull<VarTemplatePartialSpecializationDecl>(
+      if (isa_and_nonnull<VarTemplatePartialSpecializationDecl>(
               VTSD->getTemplateInstantiationPattern()))
         PartialArgs = &VTSD->getTemplateInstantiationArgs();
     }
@@ -245,7 +249,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     // For now, only consider enclosing classes.
     // TODO: The nullability of template functions can affect local classes too,
     // this can be relevant e.g. when instantiating templates with such types.
-    if (auto *CRD = llvm::dyn_cast<CXXRecordDecl>(DC))
+    if (auto *CRD = dyn_cast<CXXRecordDecl>(DC))
       Visit(DC->getParentASTContext().getRecordType(CRD));
   }
 
@@ -356,8 +360,8 @@ class NullabilityWalker : public TypeVisitor<Impl> {
       // Here T:: is not a TemplateSpecializationType (directly or indirectly).
       // Nevertheless it provides sugar that is referenced from baz.
       // Probably we need another type visitor to collect bindings in general.
-      if (const auto *TST = llvm::dyn_cast_or_null<TemplateSpecializationType>(
-              NNS->getAsType())) {
+      if (const auto *TST =
+              dyn_cast_or_null<TemplateSpecializationType>(NNS->getAsType())) {
         TemplateContext Ctx;
         Ctx.Args = TST->template_arguments();
         Ctx.ArgContext = CurrentTemplateContext;

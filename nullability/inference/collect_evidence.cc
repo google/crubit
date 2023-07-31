@@ -4,11 +4,13 @@
 
 #include "nullability/inference/collect_evidence.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/log/check.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/inferrable.h"
 #include "nullability/pointer_nullability.h"
@@ -39,7 +41,6 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
-#include "llvm/Support/Casting.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/raw_ostream.h"
 

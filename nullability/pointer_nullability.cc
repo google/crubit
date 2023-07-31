@@ -4,6 +4,9 @@
 
 #include "nullability/pointer_nullability.h"
 
+#include <utility>
+
+#include "clang/AST/Type.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
@@ -17,7 +20,6 @@ using dataflow::AtomicBoolValue;
 using dataflow::BoolValue;
 using dataflow::Environment;
 using dataflow::PointerValue;
-using dataflow::StorageLocation;
 using dataflow::Value;
 
 /// The nullness information of a pointer is represented by two properties

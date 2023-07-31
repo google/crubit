@@ -5,7 +5,7 @@
 #ifndef CRUBIT_NULLABILITY_POINTER_NULLABILITY_LATTICE_H_
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_LATTICE_H_
 
-#include <optional>
+#include <functional>
 #include <ostream>
 
 #include "absl/container/flat_hash_map.h"
@@ -18,7 +18,6 @@
 namespace clang::tidy::nullability {
 
 class PointerNullabilityLattice {
- private:
  public:
   struct NonFlowSensitiveState {
     absl::flat_hash_map<const Expr *, TypeNullability> ExprToNullability;
