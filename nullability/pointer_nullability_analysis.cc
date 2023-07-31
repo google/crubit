@@ -323,7 +323,7 @@ void transferFlowSensitiveNullCheckComparison(
   // Boolean representing the comparison between the two pointer values,
   // automatically created by the dataflow framework.
   auto &PointerComparison =
-      cast<BoolValue>(State.Env.getValueStrict(*BinaryOp))->formula();
+      cast<BoolValue>(State.Env.getValue(*BinaryOp))->formula();
 
   CHECK(BinaryOp->getOpcode() == BO_EQ || BinaryOp->getOpcode() == BO_NE);
   auto &PointerEQ = BinaryOp->getOpcode() == BO_EQ
@@ -746,7 +746,7 @@ void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
   auto *E = dyn_cast<Expr>(S->getStmt());
   if (E == nullptr || !E->isPRValue() || !E->getType()->isPointerType()) return;
 
-  if (Env.getValueStrict(*E) == nullptr)
+  if (Env.getValue(*E) == nullptr)
     // `createValue()` always produces a value for pointer types.
     Env.setValueStrict(*E, *Env.createValue(E->getType()));
 }

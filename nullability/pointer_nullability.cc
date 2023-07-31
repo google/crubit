@@ -7,6 +7,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
 #include "llvm/ADT/StringRef.h"
 
@@ -30,15 +31,7 @@ NullabilityKind getNullabilityKind(QualType Type, ASTContext &Ctx) {
 
 PointerValue *getPointerValueFromExpr(const Expr *PointerExpr,
                                       const Environment &Env) {
-  Value *Val = nullptr;
-  if (PointerExpr->isGLValue()) {
-    StorageLocation *Loc = Env.getStorageLocationStrict(*PointerExpr);
-    if (Loc == nullptr) return nullptr;
-    Val = Env.getValue(*Loc);
-  } else {
-    Val = Env.getValueStrict(*PointerExpr);
-  }
-  return cast_or_null<PointerValue>(Val);
+  return cast_or_null<PointerValue>(Env.getValue(*PointerExpr));
 }
 
 bool hasPointerNullState(const dataflow::PointerValue &PointerVal) {
