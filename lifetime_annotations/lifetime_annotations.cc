@@ -155,18 +155,19 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
    public:
     Factory(bool elision_enabled, const clang::FunctionDecl* func,
             LifetimeSymbolTable& symbol_table)
-        : elision_enabled(elision_enabled),
-          func(func),
-          symbol_table(symbol_table) {}
+        : elision_enabled_(elision_enabled),
+          func_(func),
+          symbol_table_(symbol_table) {}
 
    private:
     llvm::Expected<Lifetime> LifetimeFromName(const clang::Expr* name) const {
       llvm::StringRef name_str;
-      if (llvm::Error err = EvaluateAsStringLiteral(name, func->getASTContext())
-                                .moveInto(name_str)) {
+      if (llvm::Error err =
+              EvaluateAsStringLiteral(name, func_->getASTContext())
+                  .moveInto(name_str)) {
         return std::move(err);
       }
-      return symbol_table.LookupNameAndMaybeDeclare(name_str);
+      return symbol_table_.LookupNameAndMaybeDeclare(name_str);
     }
 
     LifetimeFactory ParamLifetimeFactory() const {
@@ -184,16 +185,17 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
         // correct in this case: the object must be valid for the duration
         // of the call, or else the behavior is undefined. So we can infer
         // safely even if elision is disabled.
-        if (!elision_enabled && func->getDeclName().getNameKind() !=
-                                    clang::DeclarationName::CXXDestructorName) {
+        if (!elision_enabled_ &&
+            func_->getDeclName().getNameKind() !=
+                clang::DeclarationName::CXXDestructorName) {
           return llvm::make_error<LifetimeError>(
               LifetimeError::Type::ElisionNotEnabled,
               absl::StrCat("Lifetime elision not enabled for '",
-                           func->getNameAsString(), "'"));
+                           func_->getNameAsString(), "'"));
         }
 
         Lifetime lifetime = Lifetime::CreateVariable();
-        symbol_table.LookupLifetimeAndMaybeDeclare(lifetime);
+        symbol_table_.LookupLifetimeAndMaybeDeclare(lifetime);
         return lifetime;
       };
     }
@@ -286,11 +288,11 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
               return lifetime;
             }
 
-            if (!elision_enabled) {
+            if (!elision_enabled_) {
               return llvm::make_error<LifetimeError>(
                   LifetimeError::Type::ElisionNotEnabled,
                   absl::StrCat("Lifetime elision not enabled for '",
-                               func->getNameAsString(), "'"));
+                               func_->getNameAsString(), "'"));
             }
 
             // If we have a single input lifetime, its lifetime is assigned to
@@ -302,7 +304,7 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
               return llvm::make_error<LifetimeError>(
                   LifetimeError::Type::CannotElideOutputLifetimes,
                   absl::StrCat("Cannot elide output lifetimes for '",
-                               func->getNameAsString(),
+                               func_->getNameAsString(),
                                "' because it is a non-member function that "
                                "does not have "
                                "exactly one input lifetime"));
@@ -310,9 +312,9 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
           });
     }
 
-    bool elision_enabled;
-    const clang::FunctionDecl* func;
-    LifetimeSymbolTable& symbol_table;
+    bool elision_enabled_;
+    const clang::FunctionDecl* func_;
+    LifetimeSymbolTable& symbol_table_;
   };
 
   Factory factory(elision_enabled, func, symbol_table);

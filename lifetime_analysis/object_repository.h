@@ -297,7 +297,7 @@ class ObjectRepository {
 
   llvm::DenseMap<const Object*, ObjectLifetimes> initial_object_lifetimes_;
 
-  struct ObjectCreator;
+  class ObjectCreator;
 };
 
 }  // namespace lifetimes

@@ -806,7 +806,8 @@ void ForEachFieldAndBase(clang::QualType record_type,
 
 }  // namespace
 
-struct ObjectRepository::ObjectCreator {
+class ObjectRepository::ObjectCreator {
+ public:
   ObjectCreator(ObjectRepository& object_repository, PointsToMap& points_to_map)
       : object_repository_(object_repository), points_to_map_(points_to_map) {}
 
