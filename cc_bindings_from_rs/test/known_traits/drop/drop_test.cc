@@ -60,7 +60,7 @@ TYPED_TEST(CustomDropWithDefaultTest, MoveConstructor) {
     // `Default` state (i.e., have a value of 0).
     TypeUnderTest s2(std::move(s));
     EXPECT_EQ(123, s2.get_int());
-    EXPECT_EQ(0, s.get_int());
+    EXPECT_EQ(0, s.get_int());  // NOLINT(bugprone-use-after-move)
     EXPECT_EQ(2, drop::counters::get_default_count());
     EXPECT_EQ(0, drop::counters::get_drop_count());
   }  // `TypeUnderTest`'s destructor runs when `s` goes out of scope.
@@ -81,7 +81,7 @@ TYPED_TEST(CustomDropWithDefaultTest, MoveAssignmentOperator) {
 
     // After move assignment we expect the values to be swapped.
     s2 = std::move(s1);
-    EXPECT_EQ(456, s1.get_int());
+    EXPECT_EQ(456, s1.get_int());  // NOLINT(bugprone-use-after-move)
     EXPECT_EQ(123, s2.get_int());
     EXPECT_EQ(2, drop::counters::get_default_count());
     EXPECT_EQ(0, drop::counters::get_drop_count());
@@ -134,7 +134,7 @@ TEST(DropTest, DropImplWithClone) {
     // a corresponding increase in clone counters.
     TypeUnderTest s2(std::move(s));
     EXPECT_EQ(123, s2.get_int());
-    EXPECT_EQ(123, s.get_int());
+    EXPECT_EQ(123, s.get_int());  // NOLINT(bugprone-use-after-move)
     EXPECT_EQ(2, drop::counters::get_clone_count());
     EXPECT_EQ(1, drop::counters::get_drop_count());
   }
@@ -153,7 +153,7 @@ TEST(DropTest, DropImplWithClone) {
     // We expect the move to be implemented in terms of copy, so we expect
     // a corresponding increase in clone counters.
     s2 = std::move(s1);
-    EXPECT_EQ(123, s1.get_int());
+    EXPECT_EQ(123, s1.get_int());  // NOLINT(bugprone-use-after-move)
     EXPECT_EQ(123, s2.get_int());
     EXPECT_EQ(2, drop::counters::get_clone_count());
     EXPECT_EQ(1, drop::counters::get_clone_from_count());
