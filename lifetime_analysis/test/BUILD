@@ -167,14 +167,9 @@ cc_test(
     ],
 )
 
-# TODO(b/253992761): fix and re-enable.
 cc_test(
     name = "class_templates",
     srcs = ["class_templates.cc"],
-    tags = [
-        "manual",
-        "notap",
-    ],
     deps = [
         ":lifetime_analysis_test",
         "@com_google_googletest//:gtest_main",

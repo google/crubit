@@ -77,7 +77,8 @@ TEST_F(LifetimeAnalysisTest, StructTwoTemplateArguments) {
                             {"return_u", "(<a, b>, c) -> b"}}));
 }
 
-TEST_F(LifetimeAnalysisTest, StructTwoTemplateArgumentsNestedClasses) {
+// Disabled due to b/253992761.
+TEST_F(LifetimeAnalysisTest, DISABLED_StructTwoTemplateArgumentsNestedClasses) {
   EXPECT_THAT(GetLifetimes(R"(
     template <typename T>
     struct Outer {
@@ -543,7 +544,8 @@ TEST_F(LifetimeAnalysisTest, VariadicTemplateConstruct) {
               LifetimesContain({{"target", "a, b"}}));
 }
 
-TEST_F(LifetimeAnalysisTest, NoexceptTemplate) {
+// Disabled due to b/253992761.
+TEST_F(LifetimeAnalysisTest, DISABLED_NoexceptTemplate) {
   EXPECT_THAT(GetLifetimes(R"(
     template <typename T>
     struct S {
