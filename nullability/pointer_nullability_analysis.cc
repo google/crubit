@@ -365,7 +365,7 @@ void transferFlowSensitiveNullCheckImplicitCastPtrToBool(
   if (!PointerVal) return;
 
   auto [FromNullable, PointerNull] = getPointerNullState(*PointerVal);
-  State.Env.setValueStrict(*CastExpr, State.Env.makeNot(PointerNull));
+  State.Env.setValue(*CastExpr, State.Env.makeNot(PointerNull));
 }
 
 void transferFlowSensitiveCallExpr(
@@ -379,13 +379,13 @@ void transferFlowSensitiveCallExpr(
     // The function returned a reference. Create a storage location for the
     // expression so that if code creates a pointer from the reference, we will
     // produce a `PointerValue`.
-    Loc = State.Env.getStorageLocationStrict(*CallExpr);
+    Loc = State.Env.getStorageLocation(*CallExpr);
     if (!Loc) {
       // This is subtle: We call `createStorageLocation(QualType)`, not
       // `createStorageLocation(const Expr &)`, so that we create a new
       // storage location every time.
       Loc = &State.Env.createStorageLocation(CallExpr->getType());
-      State.Env.setStorageLocationStrict(*CallExpr, *Loc);
+      State.Env.setStorageLocation(*CallExpr, *Loc);
     }
   }
 
@@ -404,7 +404,7 @@ void transferFlowSensitiveCallExpr(
     else
       // `Loc` is set iff `CallExpr` is a glvalue, so we know here that it must
       // be a prvalue.
-      State.Env.setValueStrict(*CallExpr, *PointerVal);
+      State.Env.setValue(*CallExpr, *PointerVal);
   }
 }
 
@@ -751,7 +751,7 @@ void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
 
   if (Env.getValue(*E) == nullptr)
     // `createValue()` always produces a value for pointer types.
-    Env.setValueStrict(*E, *Env.createValue(E->getType()));
+    Env.setValue(*E, *Env.createValue(E->getType()));
 }
 
 }  // namespace
