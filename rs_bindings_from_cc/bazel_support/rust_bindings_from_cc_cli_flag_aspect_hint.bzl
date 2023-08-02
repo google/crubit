@@ -6,9 +6,9 @@
 to `rs_bindings_from_cc` when its Rust bindings are generated."""
 
 visibility([
-    "//rs_bindings_from_cc/test/golden/...",
     "//rs_bindings_from_cc/bazel_support/...",
     "//rs_bindings_from_cc/test/bazel_unit_tests/cli_flag_aspect_hint_test/...",
+    "//rs_bindings_from_cc/test/golden/...",
 ])
 
 _RustBindingsFromCcCliFlagInfo = provider(
