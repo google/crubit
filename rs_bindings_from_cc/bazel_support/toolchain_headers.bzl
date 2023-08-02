@@ -9,12 +9,12 @@ not be used yet.
 """
 
 load(
-    "//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
     "DepsForBindingsInfo",
     "RustToolchainHeadersInfo",
 )
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
+    "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
     "bindings_attrs",
     "generate_and_compile_bindings",
 )

@@ -1,0 +1,86 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+diff --git a/rust/private/rust.bzl b/rust/private/rust.bzl
+index 1a3c4ebf..0a1c2f2c 100644
+--- a/rust/private/rust.bzl
++++ b/rust/private/rust.bzl
+@@ -14,7 +14,17 @@
+
+ """Rust rule implementations"""
+
+-load("@bazel_skylib//lib:paths.bzl", "paths")
++load(
++    "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
++    "rust_bindings_from_cc_aspect",
++)
++load(
++    "@@//bazel/rules_rust:collect_deps.bzl",
++    "collect_transformed_deps",
++    "get_cc_import_namespace_variable",
++    "get_namespace_json_files",
++)
++load("@bazel_skylib//lib:paths.bzl", "paths")
+ load("//rust/private:common.bzl", "rust_common")
+ load("//rust/private:providers.bzl", "BuildInfo")
+ load("//rust/private:rustc.bzl", "rustc_compile_action")
+@@ -305,7 +315,7 @@ def _rust_library_common(ctx, crate_type):
+             output = rust_lib,
+             metadata = rust_metadata,
+             edition = get_edition(ctx.attr, toolchain, ctx.label),
+-            rustc_env = ctx.attr.rustc_env,
++            rustc_env = ctx.attr.rustc_env | get_cc_import_namespace_variable(ctx),
+             rustc_env_files = ctx.files.rustc_env_files,
+             is_test = False,
+             compile_data = depset(ctx.files.compile_data),
+@@ -352,7 +362,7 @@ def _rust_binary_impl(ctx):
+             aliases = ctx.attr.aliases,
+             output = output,
+             edition = get_edition(ctx.attr, toolchain, ctx.label),
+-            rustc_env = ctx.attr.rustc_env,
++            rustc_env = ctx.attr.rustc_env | get_cc_import_namespace_variable(ctx),
+             rustc_env_files = ctx.files.rustc_env_files,
+             is_test = False,
+             compile_data = depset(ctx.files.compile_data),
+@@ -376,7 +386,7 @@ def _rust_test_impl(ctx):
+     toolchain = find_toolchain(ctx)
+
+     crate_type = "bin"
+-    deps = transform_deps(ctx.attr.deps)
++    deps = collect_transformed_deps(ctx)
+     proc_macro_deps = transform_deps(ctx.attr.proc_macro_deps + get_import_macro_deps(ctx))
+
+     if ctx.attr.crate:
+@@ -418,7 +428,7 @@ def _rust_test_impl(ctx):
+             aliases = ctx.attr.aliases,
+             output = output,
+             edition = crate.edition,
+-            rustc_env = rustc_env,
++            rustc_env = rustc_env  | get_cc_import_namespace_variable(ctx),
+             rustc_env_files = rustc_env_files,
+             is_test = True,
+             compile_data = compile_data,
+@@ -454,10 +464,10 @@ def _rust_test_impl(ctx):
+             aliases = ctx.attr.aliases,
+             output = output,
+             edition = get_edition(ctx.attr, toolchain, ctx.label),
+-            rustc_env = ctx.attr.rustc_env,
++            rustc_env = ctx.attr.rustc_env | get_cc_import_namespace_variable(ctx),
+             rustc_env_files = ctx.files.rustc_env_files,
+             is_test = True,
+-            compile_data = depset(ctx.files.compile_data),
++            compile_data = depset(ctx.files.compile_data + get_namespace_json_files(ctx)),
+             compile_data_targets = depset(ctx.attr.compile_data),
+             owner = ctx.label,
+         )
+@@ -614,6 +620,10 @@ _common_attrs = {
+         """),
+         allow_files = True,
+     ),
++    "cc_deps": attr.label_list(
++        aspects = [rust_bindings_from_cc_aspect],
++        default = []
++    ),
+     "deps": attr.label_list(
+         doc = dedent("""\
+             List of other libraries to be linked to this library target.

@@ -30,6 +30,16 @@ http_archive(
 
 http_archive(
     name = "rules_rust",
+    patch_args = [
+        "-p1",
+    ],
+    patches = [
+        # copybara:strip_begin(Google-internal)
+        # The patch is based on the copybara transformations here:
+        # http://google3/third_party/bazel_rules/rules_rust/copy.bara.sky;l=398;rcl=549936350
+        # copybara:strip_end
+        "@@//bazel/rules_rust:attach_rust_bindings_from_cc_aspect.patch",
+    ],
     sha256 = "4a9cb4fda6ccd5b5ec393b2e944822a62e050c7c06f1ea41607f14c4fdec57a2",
     urls = ["https://github.com/bazelbuild/rules_rust/releases/download/0.25.1/rules_rust-v0.25.1.tar.gz"],
 )

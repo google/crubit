@@ -8,12 +8,12 @@ Disclaimer: This project is experimental, under heavy development, and should
 not be used yet.
 """
 
-load("//rs_bindings_from_cc/bazel_support:compile_cc.bzl", "compile_cc")
-load("//rs_bindings_from_cc/bazel_support:compile_rust.bzl", "compile_rust")
-load("//rs_bindings_from_cc/bazel_support:generate_bindings.bzl", "generate_bindings")
+load("@@//rs_bindings_from_cc/bazel_support:compile_cc.bzl", "compile_cc")
+load("@@//rs_bindings_from_cc/bazel_support:compile_rust.bzl", "compile_rust")
+load("@@//rs_bindings_from_cc/bazel_support:generate_bindings.bzl", "generate_bindings")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 load(
-    "//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
     "GeneratedBindingsInfo",
     "RustBindingsFromCcInfo",
 )
@@ -122,14 +122,14 @@ bindings_attrs = {
         default = "@bazel_tools//tools/cpp:current_cc_toolchain",
     ),
     "_generator": attr.label(
-        default = "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_target",
+        default = "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_target",
         executable = True,
         allow_single_file = True,
         cfg = "exec",
     ),
     "_deps_for_bindings": attr.label(
         doc = "Dependencies that are needed to compile the generated .cc and .rs file.",
-        default = "//rs_bindings_from_cc/bazel_support:deps_for_bindings",
+        default = "@@//rs_bindings_from_cc/bazel_support:deps_for_bindings",
     ),
     "_clang_format": attr.label(
         default = "//third_party/crosstool/google3_users:stable_clang-format",
@@ -166,6 +166,6 @@ bindings_attrs = {
         default = "//rs_bindings_from_cc:builtin_headers",
     ),
     "_generate_error_report": attr.label(
-        default = "//rs_bindings_from_cc/bazel_support:generate_error_report",
+        default = "@@//rs_bindings_from_cc/bazel_support:generate_error_report",
     ),
 }

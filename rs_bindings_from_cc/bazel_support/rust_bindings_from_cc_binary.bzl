@@ -14,7 +14,7 @@ not be used yet.
 """
 
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_transition.bzl",
+    "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_transition.bzl",
     "rust_bindings_from_cc_transition",
 )
 
