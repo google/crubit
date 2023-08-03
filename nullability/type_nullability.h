@@ -25,9 +25,10 @@
 #ifndef CRUBIT_NULLABILITY_TYPE_NULLABILITY_H_
 #define CRUBIT_NULLABILITY_TYPE_NULLABILITY_H_
 
+#include <optional>
 #include <string>
 #include <tuple>
-#include <utility>
+#include <vector>
 
 #include "absl/log/check.h"
 #include "clang/AST/ASTContext.h"
@@ -37,6 +38,7 @@
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
 
 namespace clang::tidy::nullability {
 
