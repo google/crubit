@@ -16,10 +16,13 @@ load(
 )
 
 def _is_std(t):
-    return str(t) in [
-        "//support/cc_std:cc_std",
+    for std_pattern in [
+        "crubit/support/cc_std:cc_std",
         "//:_builtin_hdrs",
-    ]
+    ]:
+        if std_pattern in str(t):
+            return True
+    return False
 
 def _get_target_args(tut):
     return [
@@ -40,10 +43,9 @@ def _lib_has_toolchain_targets_and_headers_test_impl(ctx):
     ]
 
     asserts.equals(env, 3, len(target_args))
-    asserts.equals(
+    asserts.true(
         env,
-        "//support/cc_std:cc_std",
-        target_args[0]["t"],
+        "crubit/support/cc_std:cc_std" in target_args[0]["t"],
     )
     asserts.equals(
         env,
