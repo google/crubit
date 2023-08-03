@@ -42,18 +42,18 @@ def _lib_has_toolchain_targets_and_headers_test_impl(ctx):
     asserts.equals(env, 3, len(target_args))
     asserts.equals(
         env,
-        target_args[0]["t"],
         "//support/cc_std:cc_std",
+        target_args[0]["t"],
     )
     asserts.equals(
         env,
-        target_args[1]["t"],
         "//:_nothing_should_depend_on_private_builtin_hdrs",
+        target_args[1]["t"],
     )
     asserts.equals(
         env,
-        target_args[2]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:empty",
+        target_args[2]["t"],
     )
 
     return analysistest.end(env)
@@ -78,13 +78,13 @@ def _targets_and_headers_test_impl(ctx):
     asserts.equals(env, 2, len(target_args))
     asserts.equals(
         env,
-        target_args[1]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:mylib",
+        target_args[1]["t"],
     )
     asserts.equals(
         env,
-        target_args[1]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/target_args/lib.h"],
+        target_args[1]["h"],
     )
 
     return analysistest.end(env)
@@ -108,24 +108,24 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
     asserts.equals(env, 4, len(target_args))
     asserts.equals(
         env,
-        target_args[0]["t"],
         "//:_nothing_should_depend_on_private_builtin_hdrs",
+        target_args[0]["t"],
     )
     asserts.equals(
         env,
-        target_args[1]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:bottom",
+        target_args[1]["t"],
     )
     asserts.equals(
         env,
-        target_args[1]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/target_args/lib.h"],
+        target_args[1]["h"],
     )
 
     asserts.equals(
         env,
-        target_args[2]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:middle",
+        target_args[2]["t"],
     )
     asserts.true(
         env,
@@ -136,13 +136,13 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
 
     asserts.equals(
         env,
-        target_args[3]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:top",
+        target_args[3]["t"],
     )
     asserts.equals(
         env,
-        target_args[3]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/target_args/top.h"],
+        target_args[3]["h"],
     )
 
     return analysistest.end(env)
@@ -171,8 +171,8 @@ def _textual_hdrs_not_in_targets_and_hdrs_impl(ctx):
     asserts.equals(env, 2, len(target_args))
     asserts.equals(
         env,
-        target_args[1]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/target_args/nontextual.h"],
+        target_args[1]["h"],
     )
 
     return analysistest.end(env)
@@ -293,13 +293,13 @@ def _target_features_empty_test_impl(ctx):
     asserts.equals(env, 2, len(target_args))
     asserts.equals(
         env,
-        target_args[1]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:mylib_empty_features",
+        target_args[1]["t"],
     )
     asserts.equals(
         env,
-        target_args[1].get("f"),
         None,
+        target_args[1].get("f"),
     )
 
     return analysistest.end(env)
@@ -323,13 +323,13 @@ def _target_features_nonempty_test_impl(ctx):
     asserts.equals(env, 2, len(target_args))
     asserts.equals(
         env,
-        target_args[1]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:mylib_nonempty_features",
+        target_args[1]["t"],
     )
     asserts.equals(
         env,
-        target_args[1]["f"],
         ["experimental", "supported"],
+        target_args[1]["f"],
     )
 
     return analysistest.end(env)
