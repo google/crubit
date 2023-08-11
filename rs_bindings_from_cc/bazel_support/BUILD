@@ -93,6 +93,8 @@ bzl_library(
 bzl_library(
     name = "providers_bzl",
     srcs = ["providers.bzl"],
+    visibility = [
+    ],
 )
 
 bzl_library(
