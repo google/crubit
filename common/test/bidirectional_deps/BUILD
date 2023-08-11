@@ -55,6 +55,7 @@ cc_test(
     srcs = ["cc_test.cc"],
     deps = [
         ":leaf_cc_lib",
+        ":middle_rs_lib_cc_api",
         "@com_google_googletest//:gtest_main",
     ],
 )
