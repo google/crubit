@@ -745,12 +745,7 @@ fn liberate_and_deanonymize_late_bound_regions<'tcx>(
 
 fn get_fn_sig(tcx: TyCtxt, fn_def_id: LocalDefId) -> ty::FnSig {
     let fn_def_id = fn_def_id.to_def_id(); // LocalDefId => DefId
-    // TODO(b/293270437): remove the conditional compilation after the commit lands
-    // in crosstool stable rust.
-    #[cfg(google3_internal_rustc_contains_commit_e55583c4b831c601452117a8eb20af59779ef582)]
     let sig = tcx.fn_sig(fn_def_id).instantiate_identity();
-    #[cfg(not(google3_internal_rustc_contains_commit_e55583c4b831c601452117a8eb20af59779ef582))]
-    let sig = tcx.fn_sig(fn_def_id).subst_identity();
     liberate_and_deanonymize_late_bound_regions(tcx, sig, fn_def_id)
 }
 
@@ -1050,17 +1045,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     };
 
     let self_ty: Option<Ty> = match tcx.impl_of_method(def_id) {
-        // TODO(b/293270437): remove the conditional compilation after the commit lands in crosstool
-        // stable rust.
-        #[cfg(google3_internal_rustc_contains_commit_e55583c4b831c601452117a8eb20af59779ef582)]
         Some(impl_id) => match tcx.impl_subject(impl_id).instantiate_identity() {
-            ty::ImplSubject::Inherent(ty) => Some(ty),
-            ty::ImplSubject::Trait(_) => panic!("Trait methods should be filtered by caller"),
-        },
-        #[cfg(not(
-            google3_internal_rustc_contains_commit_e55583c4b831c601452117a8eb20af59779ef582
-        ))]
-        Some(impl_id) => match tcx.impl_subject(impl_id).subst_identity() {
             ty::ImplSubject::Inherent(ty) => Some(ty),
             ty::ImplSubject::Trait(_) => panic!("Trait methods should be filtered by caller"),
         },
@@ -1334,12 +1319,7 @@ fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
 //
 // TODO(b/259724276): This function's results should be memoized.
 fn format_adt_core(tcx: TyCtxt<'_>, def_id: DefId) -> Result<AdtCoreBindings<'_>> {
-    // TODO(b/293270437): remove the conditional compilation after the commit lands
-    // in crosstool stable rust.
-    #[cfg(google3_internal_rustc_contains_commit_e55583c4b831c601452117a8eb20af59779ef582)]
     let self_ty = tcx.type_of(def_id).instantiate_identity();
-    #[cfg(not(google3_internal_rustc_contains_commit_e55583c4b831c601452117a8eb20af59779ef582))]
-    let self_ty = tcx.type_of(def_id).subst_identity();
     assert!(self_ty.is_adt());
     assert!(is_directly_public(tcx, def_id), "Caller should verify");
 
@@ -1692,18 +1672,7 @@ fn format_trait_thunks<'tcx>(
                 );
             }
             assert!(generics.has_self);
-            // TODO(b/293270437): remove the conditional compilation after the commit lands
-            // in crosstool stable rust.
-            #[cfg(google3_internal_rustc_contains_commit_e55583c4b831c601452117a8eb20af59779ef582)]
-            {
-                tcx.mk_args_trait(self_ty, std::iter::empty())
-            }
-            #[cfg(not(
-                google3_internal_rustc_contains_commit_e55583c4b831c601452117a8eb20af59779ef582
-            ))]
-            {
-                tcx.mk_substs_trait(self_ty, std::iter::empty())
-            }
+            tcx.mk_args_trait(self_ty, std::iter::empty())
         };
 
         let thunk_name = {
@@ -1713,14 +1682,7 @@ fn format_trait_thunks<'tcx>(
         };
         method_name_to_cc_thunk_name.insert(method.name, format_cc_ident(&thunk_name)?);
 
-        // TODO(b/293270437): remove the conditional compilation after the commit lands
-        // in crosstool stable rust.
-        #[cfg(google3_internal_rustc_contains_commit_e55583c4b831c601452117a8eb20af59779ef582)]
         let sig = tcx.fn_sig(method.def_id).instantiate(tcx, substs);
-        #[cfg(not(
-            google3_internal_rustc_contains_commit_e55583c4b831c601452117a8eb20af59779ef582
-        ))]
-        let sig = tcx.fn_sig(method.def_id).subst(tcx, substs);
         let sig = liberate_and_deanonymize_late_bound_regions(tcx, sig, method.def_id);
 
         cc_thunk_decls.add_assign({
