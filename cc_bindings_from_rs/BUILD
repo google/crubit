@@ -24,7 +24,9 @@ rust_binary(
         "not_build:arm",
         "noubsan",  # rustc-as-a-library isn't supported for UBSan.
     ],
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//visibility:public",
+    ],
     deps = [
         ":toposort",
         "//common:code_gen_utils",
