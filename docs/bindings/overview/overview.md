@@ -202,8 +202,7 @@ bindings that Crubit generates:
     values. In particular, structs can be passed by reference or by value.
     Values from either language can be moved across stack and heap memory on
     either side of the FFI boundary. This includes C++ structs with non-trivial,
-    user-defined move constructors. (Disclaimer: reference support in
-    `cc_bindings_from_rs` is not implemented yet: b/258235219)
+    user-defined move constructors.
 *   Crubit supports generating bindings for specific instantiations of arbitrary
     C++ class templates. In particular, bindings for `std::string_view` from C++
     standard library can be generated even though `rs_bindings_from_cc` has

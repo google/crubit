@@ -92,9 +92,8 @@ references out of C++ references or C++ pointers:
     accept, store, or return Rust references. TODO: In the future Crubit should
     use `CppRef<T>` in the generated bindings (and this should mitigate some of
     the memory safety concerns).
--   In the future: Using Crubit-generated C++ bindings for Rust APIs if the
+-   Using Crubit-generated C++ bindings for Rust APIs if the
     bindings wrap Rust APIs that accept, store, or return Rust references.
-    TODO(b/258235219): Add support for C++ bindings for Rust APIs using `&T`.
 
 ### Incorrect C++ lifetime annotations
 
