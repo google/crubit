@@ -78,6 +78,7 @@ def generate_bindings(
             error_report_output.path,
         ]
 
+    clang_builtin_headers = "third_party/llvm/llvm-project/clang/lib/Headers"
     variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
@@ -85,11 +86,11 @@ def generate_bindings(
             direct = [
                 cc_toolchain.built_in_include_directories[0],
                 # Clang's builtin headers:
-                "third_party/llvm/llvm-project/clang/lib/Headers",
+                clang_builtin_headers,
                 # Fuzzer and sanitizer headers:
                 "third_party/llvm/llvm-project/compiler-rt/include",
                 cc_toolchain.built_in_include_directories[2],
-            ],
+                ],
             transitive = [compilation_context.system_includes],
         ),
         include_directories = compilation_context.includes,
