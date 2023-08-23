@@ -389,7 +389,7 @@ void transferFlowSensitiveCallExpr(
     }
   }
 
-  if (CallExpr->getType()->isAnyPointerType()) {
+  if (isSupportedPointerType(CallExpr->getType())) {
     // Create a pointer so that we can attach nullability to it and have the
     // nullability propagate with the pointer.
     auto *PointerVal = getPointerValueFromExpr(CallExpr, State.Env);
@@ -677,8 +677,8 @@ void transferNonFlowSensitiveArraySubscriptExpr(
   computeNullability(ASE, State, [&]() {
     auto &BaseNullability = getNullabilityForChild(ASE->getBase(), State);
     QualType BaseType = ASE->getBase()->getType();
-    CHECK(BaseType->isAnyPointerType() || BaseType->isVectorType());
-    return BaseType->isAnyPointerType()
+    CHECK(isSupportedPointerType(BaseType) || BaseType->isVectorType());
+    return isSupportedPointerType(BaseType)
                ? ArrayRef(BaseNullability).slice(1).vec()
                : BaseNullability;
   });
@@ -747,7 +747,8 @@ void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
   if (!S) return;
 
   auto *E = dyn_cast<Expr>(S->getStmt());
-  if (E == nullptr || !E->isPRValue() || !E->getType()->isPointerType()) return;
+  if (E == nullptr || !E->isPRValue() || !isSupportedPointerType(E->getType()))
+    return;
 
   if (Env.getValue(*E) == nullptr)
     // `createValue()` always produces a value for pointer types.
@@ -821,7 +822,7 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
                                        const Environment &Env2,
                                        Value &MergedVal,
                                        Environment &MergedEnv) {
-  if (!Type->isAnyPointerType()) {
+  if (!isSupportedPointerType(Type)) {
     return false;
   }
 

@@ -26,7 +26,6 @@ using ast_matchers::hasReturnValue;
 using ast_matchers::hasType;
 using ast_matchers::hasUnaryOperand;
 using ast_matchers::implicitCastExpr;
-using ast_matchers::isAnyPointer;
 using ast_matchers::isArrow;
 using ast_matchers::isMemberInitializer;
 using ast_matchers::memberExpr;
@@ -34,7 +33,7 @@ using ast_matchers::returnStmt;
 using ast_matchers::unaryOperator;
 using ast_matchers::internal::Matcher;
 
-Matcher<Stmt> isPointerExpr() { return expr(hasType(isAnyPointer())); }
+Matcher<Stmt> isPointerExpr() { return expr(hasType(isSupportedPointer())); }
 Matcher<Stmt> isNullPointerLiteral() {
   return implicitCastExpr(anyOf(hasCastKind(CK_NullToPointer),
                                 hasCastKind(CK_NullToMemberPointer)));
@@ -51,13 +50,13 @@ Matcher<Stmt> isImplicitCastPointerToBool() {
   return implicitCastExpr(hasCastKind(CK_PointerToBoolean));
 }
 Matcher<Stmt> isMemberOfPointerType() {
-  return memberExpr(hasType(isAnyPointer()));
+  return memberExpr(hasType(isSupportedPointer()));
 }
 Matcher<Stmt> isPointerArrow() { return memberExpr(isArrow()); }
 Matcher<Stmt> isCXXThisExpr() { return cxxThisExpr(); }
 Matcher<Stmt> isCallExpr() { return callExpr(); }
 Matcher<Stmt> isPointerReturn() {
-  return returnStmt(hasReturnValue(hasType(isAnyPointer())));
+  return returnStmt(hasReturnValue(hasType(isSupportedPointer())));
 }
 Matcher<Stmt> isConstructExpr() { return cxxConstructExpr(); }
 Matcher<CXXCtorInitializer> isCtorMemberInitializer() {

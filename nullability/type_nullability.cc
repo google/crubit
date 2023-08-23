@@ -28,7 +28,7 @@
 
 namespace clang::tidy::nullability {
 
-bool isSupportedPointer(QualType T) { return isa<PointerType>(T); }
+bool isSupportedPointerType(QualType T) { return T->isPointerType(); }
 
 PointerTypeNullability PointerTypeNullability::createSymbolic(
     dataflow::Arena &A) {

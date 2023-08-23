@@ -26,6 +26,7 @@ cc_library(
         "//nullability/inference:__pkg__",
     ],
     deps = [
+        ":type_nullability",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
     ],

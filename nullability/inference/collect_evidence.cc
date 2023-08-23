@@ -168,16 +168,12 @@ void collectEvidenceFromCallExpr(
 
   // For each pointer parameter of the callee, ...
   for (; ParamI < CalleeDecl->param_size(); ++ParamI, ++ArgI) {
-    if (!CalleeDecl->getParamDecl(ParamI)
-             ->getType()
-             .getNonReferenceType()
-             ->isPointerType())
+    if (!isSupportedPointerType(
+            CalleeDecl->getParamDecl(ParamI)->getType().getNonReferenceType()))
       continue;
     // the corresponding argument should also be a pointer.
-    CHECK(CallExpr->getArg(ArgI)
-              ->getType()
-              .getNonReferenceType()
-              ->isPointerType());
+    CHECK(isSupportedPointerType(
+        CallExpr->getArg(ArgI)->getType().getNonReferenceType()));
 
     dataflow::PointerValue *PV =
         getPointerValueFromExpr(CallExpr->getArg(ArgI), Env);
@@ -222,7 +218,7 @@ void collectEvidenceFromReturn(
   auto *ReturnStmt = dyn_cast_or_null<clang::ReturnStmt>(CFGStmt->getStmt());
   if (!ReturnStmt) return;
   auto *ReturnExpr = ReturnStmt->getRetValue();
-  if (!ReturnExpr || !ReturnExpr->getType()->isPointerType()) return;
+  if (!ReturnExpr || !isSupportedPointerType(ReturnExpr->getType())) return;
 
   NullabilityKind ReturnNullability =
       getNullability(ReturnExpr, Env,
@@ -254,7 +250,7 @@ void collectEvidenceFromElement(
 }
 
 std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
-  if (!T.getNonReferenceType()->isPointerType()) return std::nullopt;
+  if (!isSupportedPointerType(T.getNonReferenceType())) return std::nullopt;
   auto Nullability = getNullabilityAnnotationsFromType(T);
   switch (Nullability.front().concrete()) {
     default:
@@ -289,7 +285,7 @@ llvm::Error collectEvidenceFromImplementation(
   auto Parameters = Func->parameters();
   for (auto I = 0; I < Parameters.size(); ++I) {
     auto T = Parameters[I]->getType().getNonReferenceType();
-    if (T->isPointerType() && !evidenceKindFromDeclaredType(T)) {
+    if (isSupportedPointerType(T) && !evidenceKindFromDeclaredType(T)) {
       InferrableSlots.push_back(
           std::make_pair(Analysis.assignNullabilityVariable(
                              Parameters[I], AnalysisContext.arena()),

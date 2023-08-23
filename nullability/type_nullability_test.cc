@@ -19,7 +19,7 @@ namespace clang::tidy::nullability {
 namespace {
 using testing::ElementsAre;
 
-TEST(TypeNullabilityTest, IsSupportedPointer) {
+TEST(TypeNullabilityTest, IsSupportedPointerType) {
   TestAST AST(R"cpp(
     using NotPointer = int;
     using Pointer = NotPointer*;
@@ -44,14 +44,14 @@ TEST(TypeNullabilityTest, IsSupportedPointer) {
     EXPECT_TRUE(Lookup.isSingleResult());
     return Lookup.find_first<TypeAliasDecl>()->getUnderlyingType();
   };
-  EXPECT_FALSE(isSupportedPointer(Underlying("NotPointer")));
-  EXPECT_TRUE(isSupportedPointer(Underlying("Pointer")));
-  EXPECT_TRUE(isSupportedPointer(Underlying("FuncPointer")));
-  EXPECT_FALSE(isSupportedPointer(Underlying("SugaredPointer")));
-  EXPECT_FALSE(isSupportedPointer(Underlying("PointerDataMember")));
-  EXPECT_FALSE(isSupportedPointer(Underlying("PointerMemberFunction")));
-  EXPECT_FALSE(isSupportedPointer(Underlying("ObjCPointer")));
-  EXPECT_FALSE(isSupportedPointer(Underlying("ContainsPointers")));
+  EXPECT_FALSE(isSupportedPointerType(Underlying("NotPointer")));
+  EXPECT_TRUE(isSupportedPointerType(Underlying("Pointer")));
+  EXPECT_TRUE(isSupportedPointerType(Underlying("FuncPointer")));
+  EXPECT_TRUE(isSupportedPointerType(Underlying("SugaredPointer")));
+  EXPECT_FALSE(isSupportedPointerType(Underlying("PointerDataMember")));
+  EXPECT_FALSE(isSupportedPointerType(Underlying("PointerMemberFunction")));
+  EXPECT_FALSE(isSupportedPointerType(Underlying("ObjCPointer")));
+  EXPECT_FALSE(isSupportedPointerType(Underlying("ContainsPointers")));
 }
 
 class GetNullabilityAnnotationsFromTypeTest : public ::testing::Test {
