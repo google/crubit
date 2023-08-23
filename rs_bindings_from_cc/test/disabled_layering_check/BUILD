@@ -2,7 +2,7 @@
 # disabled. Rust equivalent of layering check is still enforced when compiling user Rust code,
 # but to be safe we work around it for generated bindings Rust code.
 
-load("//rs_bindings_from_cc/test:crubit_rust_test.bzl", "crubit_rust_test")
+load("//common:crubit_wrapper_macros_oss.bzl", crubit_cc_test = "crubit_on_demand_cc_test", crubit_rust_test = "crubit_on_demand_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -41,7 +41,7 @@ crubit_test_cc_library(
 
 # This test only exists to make sure :top_lib is disabling layering check correctly (layering
 # checks are only validated on binary rules, not on library rules)
-cc_test(
+crubit_cc_test(
     name = "layering_check_validation_test",
     srcs = ["layering_check_validation_test.cc"],
     deps = [":top_lib"],
