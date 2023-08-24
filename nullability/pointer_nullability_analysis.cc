@@ -323,6 +323,36 @@ void transferFlowSensitiveNullCheckComparison(
     const BinaryOperator *BinaryOp, const MatchFinder::MatchResult &result,
     TransferState<PointerNullabilityLattice> &State) {
   auto &A = State.Env.arena();
+
+  auto *LHS = getPointerValueFromExpr(BinaryOp->getLHS(), State.Env);
+  auto *RHS = getPointerValueFromExpr(BinaryOp->getRHS(), State.Env);
+
+  if (!LHS || !RHS) return;
+  if (!hasPointerNullState(*LHS) || !hasPointerNullState(*RHS)) return;
+
+  BoolValue &LHSNullVal = getPointerNullState(*LHS).second;
+  BoolValue &RHSNullVal = getPointerNullState(*RHS).second;
+  auto &LHSNull = LHSNullVal.formula();
+  auto &RHSNull = RHSNullVal.formula();
+
+  // Special case: Are we comparing against `nullptr`?
+  // We can avoid modifying the flow condition in this case and simply propagate
+  // the nullability of the other operand (potentially with a negation).
+  if (&LHSNull == &A.makeLiteral(true)) {
+    if (BinaryOp->getOpcode() == BO_EQ)
+      State.Env.setValue(*BinaryOp, RHSNullVal);
+    else
+      State.Env.setValue(*BinaryOp, State.Env.makeNot(RHSNullVal));
+    return;
+  }
+  if (&RHSNull == &A.makeLiteral(true)) {
+    if (BinaryOp->getOpcode() == BO_EQ)
+      State.Env.setValue(*BinaryOp, LHSNullVal);
+    else
+      State.Env.setValue(*BinaryOp, State.Env.makeNot(LHSNullVal));
+    return;
+  }
+
   // Boolean representing the comparison between the two pointer values,
   // automatically created by the dataflow framework.
   auto &PointerComparison =
@@ -336,25 +366,15 @@ void transferFlowSensitiveNullCheckComparison(
                         ? A.makeNot(PointerComparison)
                         : PointerComparison;
 
-  auto *LHS = getPointerValueFromExpr(BinaryOp->getLHS(), State.Env);
-  auto *RHS = getPointerValueFromExpr(BinaryOp->getRHS(), State.Env);
-
-  if (!LHS || !RHS) return;
-
-  auto &LHSNull = getPointerNullState(*LHS).second.formula();
-  auto &RHSNull = getPointerNullState(*RHS).second.formula();
-  auto &LHSNotNull = A.makeNot(LHSNull);
-  auto &RHSNotNull = A.makeNot(RHSNull);
-
   // nullptr == nullptr
   State.Env.addToFlowCondition(
       A.makeImplies(A.makeAnd(LHSNull, RHSNull), PointerEQ));
   // nullptr != notnull
   State.Env.addToFlowCondition(
-      A.makeImplies(A.makeAnd(LHSNull, RHSNotNull), PointerNE));
+      A.makeImplies(A.makeAnd(LHSNull, A.makeNot(RHSNull)), PointerNE));
   // notnull != nullptr
   State.Env.addToFlowCondition(
-      A.makeImplies(A.makeAnd(LHSNotNull, RHSNull), PointerNE));
+      A.makeImplies(A.makeAnd(A.makeNot(LHSNull), RHSNull), PointerNE));
 }
 
 void transferFlowSensitiveNullCheckImplicitCastPtrToBool(
