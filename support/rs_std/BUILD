@@ -1,4 +1,6 @@
-# C++ libraries that help work with Rust types.
+"""C++ libraries that help work with Rust types."""
+
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -22,7 +24,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "rs_char_test",
     srcs = ["rs_char_test.cc"],
     deps = [

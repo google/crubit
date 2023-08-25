@@ -1,3 +1,5 @@
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+
 package(default_applicable_licenses = ["//:license"])
 
 cc_library(
@@ -23,7 +25,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "memswap_test",
     srcs = ["memswap_test.cc"],
     deps = [
@@ -32,7 +34,7 @@ cc_test(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "offsetof_test",
     srcs = ["offsetof_test.cc"],
     deps = [
@@ -41,7 +43,7 @@ cc_test(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "return_value_slot_test",
     srcs = ["return_value_slot_test.cc"],
     deps = [
@@ -51,7 +53,7 @@ cc_test(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "sizeof_test",
     srcs = ["sizeof_test.cc"],
     deps = [

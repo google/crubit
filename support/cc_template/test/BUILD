@@ -1,11 +1,8 @@
-load(
-    "@rules_rust//rust:defs.bzl",
-    "rust_test",
-)
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 
-rust_test(
+crubit_rust_test(
     name = "cc_template_integration_test",
     srcs = [
         "__cc_template_instantiations_rs_api.rs",

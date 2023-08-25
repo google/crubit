@@ -1,8 +1,8 @@
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
     "rust_proc_macro",
-    "rust_test",
 )
 
 package(default_applicable_licenses = ["//:license"])
@@ -31,7 +31,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "cc_template_test",
     args = [
         # To prevent tests from polluting the environment variables for each other.

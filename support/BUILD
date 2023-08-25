@@ -1,5 +1,7 @@
-# Support libraries that the generated Rust/C++ bindings depend upon.
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro", "rust_test")
+"""Support libraries that the generated Rust/C++ bindings depend upon."""
+
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -20,7 +22,7 @@ rust_proc_macro(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "ctor_proc_macros_test",
     crate = ":ctor_proc_macros",
     deps = [
@@ -28,13 +30,13 @@ rust_test(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "ctor_test",
     srcs = ["ctor.rs"],
     proc_macro_deps = [":ctor_proc_macros"],
 )
 
-rust_test(
+crubit_rust_test(
     name = "ctor_proc_macros_e2e_test",
     srcs = ["ctor_proc_macros_test.rs"],
     deps = [
@@ -42,7 +44,7 @@ rust_test(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "ctor_macro_test",
     srcs = ["ctor_macro_test.rs"],
     deps = [
@@ -67,7 +69,7 @@ rust_proc_macro(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "forward_declare_macros_test",
     srcs = ["forward_declare_macros_test.rs"],
     deps = [":forward_declare"],
@@ -81,7 +83,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "oops_test",
     srcs = ["oops.rs"],
 )
