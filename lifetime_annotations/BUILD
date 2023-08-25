@@ -1,5 +1,7 @@
 """Parse lifetime annotations in C++ code."""
 
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
@@ -20,7 +22,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "lifetime_test",
     srcs = ["lifetime_test.cc"],
     deps = [
@@ -71,7 +73,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "lifetime_annotations_test",
     srcs = ["lifetime_annotations_test.cc"],
     deps = [
@@ -105,7 +107,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "lifetime_substitutions_test",
     srcs = ["lifetime_substitutions_test.cc"],
     deps = [
@@ -125,7 +127,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "lifetime_symbol_table_test",
     srcs = ["lifetime_symbol_table_test.cc"],
     deps = [
