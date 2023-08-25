@@ -10,3 +10,8 @@ crubit_rust_test = rust_test
 crubit_rust_binary = rust_binary
 crubit_cc_test = native.cc_test
 crubit_cc_binary = native.cc_binary
+crubit_flavor_transition = transition(
+    implementation = lambda _settings, _attr: {},
+    inputs = [],
+    outputs = [],
+)

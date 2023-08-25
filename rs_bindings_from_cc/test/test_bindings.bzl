@@ -12,6 +12,10 @@ load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
     "rust_bindings_from_cc_aspect",
 )
+load(
+    "//google_internal/build_flavors:crubit_build_flavors_dev.bzl",
+    "crubit_flavor_transition",
+)
 
 def crubit_test_cc_library(name, **kwargs):
     """A wrapper for cc_library in Crubit integration tests.
@@ -36,9 +40,10 @@ def crubit_test_cc_library(name, **kwargs):
     )
 
 def _write_crubit_outs_impl(ctx):
-    if not GeneratedBindingsInfo in ctx.attr.cc_library:
+    cc_library = ctx.attr.cc_library[0]
+    if not GeneratedBindingsInfo in cc_library:
         fail("Bindings were not generated for the given cc_library.")
-    bindings = ctx.attr.cc_library[GeneratedBindingsInfo]
+    bindings = cc_library[GeneratedBindingsInfo]
     symlinks = []
     for out in ctx.outputs.outs:
         if out.extension == "cc":
@@ -55,8 +60,15 @@ def _write_crubit_outs_impl(ctx):
 
 write_crubit_outs = rule(
     attrs = {
-        "cc_library": attr.label(providers = [CcInfo], aspects = [rust_bindings_from_cc_aspect]),
+        "cc_library": attr.label(
+            providers = [CcInfo],
+            aspects = [rust_bindings_from_cc_aspect],
+            cfg = crubit_flavor_transition,
+        ),
         "outs": attr.output_list(),
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
     },
     implementation = _write_crubit_outs_impl,
 )

@@ -12,6 +12,10 @@ load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "RustBindingsFromCcInfo",
 )
+load(
+    "//google_internal/build_flavors:crubit_build_flavors_dev.bzl",
+    "crubit_flavor_transition",
+)
 
 OutputsInfo = provider(
     doc = """A helper provider for determining the command line. """,
@@ -40,9 +44,10 @@ get_args_aspect = aspect(
 
 def _cc_std_test_impl(ctx):
     out = ctx.actions.declare_file(ctx.label.name + "_test.sh")
+    dep = ctx.attr.dep[0]
     ctx.actions.run(
-        inputs = [ctx.attr.dep[RustBindingsFromCcInfo].dep_variant_info.crate_info.output],
-        arguments = [out.path, ctx.attr.dep[OutputsInfo].args],
+        inputs = [dep[RustBindingsFromCcInfo].dep_variant_info.crate_info.output],
+        arguments = [out.path, dep[OutputsInfo].args],
         executable = ctx.executable._include_directives_checker,
         outputs = [out],
     )
@@ -53,11 +58,15 @@ cc_std_test = rule(
     attrs = {
         "dep": attr.label(
             aspects = [rust_bindings_from_cc_aspect, get_args_aspect],
+            cfg = crubit_flavor_transition,
         ),
         "_include_directives_checker": attr.label(
             default = "//rs_bindings_from_cc/test/bazel_unit_tests/cc_std:check_include_directives",
             executable = True,
             cfg = "exec",
+        ),
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
         ),
     },
     test = True,
