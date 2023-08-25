@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 """Supporting macro for multiplatform code."""
 
-load("//google_internal/build_flavors:crubit_build_flavors_dev.bzl", "crubit_rust_test")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 _PLATFORMS = [
     "x86_linux",

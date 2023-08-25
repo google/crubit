@@ -15,3 +15,5 @@ crubit_flavor_transition = transition(
     inputs = [],
     outputs = [],
 )
+crubit_on_demand_rust_test = rust_test
+crubit_on_demand_cc_test = native.cc_test

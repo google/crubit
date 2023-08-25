@@ -13,7 +13,7 @@ load(
     "rust_bindings_from_cc_aspect",
 )
 load(
-    "//google_internal/build_flavors:crubit_build_flavors_dev.bzl",
+    "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_flavor_transition",
 )
 
