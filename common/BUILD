@@ -1,10 +1,11 @@
-# Common libraries used in multiple Crubit tools.
+"""Common libraries used in multiple Crubit tools."""
+
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
     "rust_proc_macro",
-    "rust_test",
 )
 
 package(
@@ -20,7 +21,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "arc_anyhow_test",
     crate = ":arc_anyhow",
 )
@@ -39,7 +40,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "code_gen_utils_test",
     crate = ":code_gen_utils",
     tags = [
@@ -100,7 +101,7 @@ rust_library(
     visibility = ["//:__subpackages__"],
 )
 
-rust_test(
+crubit_rust_test(
     name = "ffi_types_test",
     crate = ":ffi_types",
 )
@@ -119,7 +120,7 @@ rust_proc_macro(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "item_exists_test",
     srcs = ["item_exists_test.rs"],
     proc_macro_deps = [
@@ -166,7 +167,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "token_stream_matchers_test",
     crate = ":token_stream_matchers",
     tags = [
@@ -187,7 +188,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "token_stream_printer_test",
     crate = ":token_stream_printer",
     tags = [

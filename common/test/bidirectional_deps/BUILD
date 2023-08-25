@@ -1,4 +1,5 @@
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
@@ -23,7 +24,7 @@ crubit_test_cc_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "rs_test",
     srcs = ["rs_test.rs"],
     cc_deps = [
@@ -50,7 +51,7 @@ cc_bindings_from_rust(
     crate = ":middle_rs_lib",
 )
 
-cc_test(
+crubit_cc_test(
     name = "cc_test",
     srcs = ["cc_test.cc"],
     deps = [
