@@ -1,5 +1,7 @@
 """Importers for various types of `Decl`s"""
 
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+
 package(
     default_applicable_licenses = ["//:license"],
     default_visibility = ["//rs_bindings_from_cc:__pkg__"],
@@ -148,7 +150,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "override_final_test",
     srcs = ["override_final_test.cc"],
     deps = ["@com_google_googletest//:gtest_main"],
