@@ -525,7 +525,7 @@ std::string ObjectRepository::DebugString() const {
   os << "InitialPointsToMap:\n" << initial_points_to_map_.DebugString() << "\n";
   for (const auto& [field, object] : field_object_map_) {
     os << "Field '";
-    field.second->printName(os);
+    field.second->printName(os, field.second->getASTContext().getPrintingPolicy());
     os << "' on " << field.first->DebugString()
        << " object: " << object->DebugString() << "\n";
   }
