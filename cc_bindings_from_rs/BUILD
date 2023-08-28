@@ -1,15 +1,18 @@
 """Generates C++ bindings from Rust APIs."""
 
 load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_rust_binary",
+    "crubit_rust_test",
+)
+load(
     "@rules_rust//rust:defs.bzl",
-    "rust_binary",
     "rust_library",
-    "rust_test",
 )
 
 package(default_applicable_licenses = ["//:license"])
 
-rust_binary(
+crubit_rust_binary(
     name = "cc_bindings_from_rs",
     srcs = [
         # TODO(b/254679226): These should be separate crates.
@@ -43,7 +46,7 @@ rust_binary(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "cc_bindings_from_rs_test",
     crate = ":cc_bindings_from_rs",
     data = select({
@@ -85,7 +88,7 @@ rust_library(
     srcs = ["toposort.rs"],
 )
 
-rust_test(
+crubit_rust_test(
     name = "toposort_test",
     crate = ":toposort",
 )

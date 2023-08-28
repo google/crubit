@@ -15,11 +15,16 @@ load(
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
-    "rust_test",
 )
 load(
     "//common:multiplatform_testing.bzl",
     "multiplatform_rust_test",
+)
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_cc_binary",
+    "crubit_cc_test",
+    "crubit_rust_test",
 )
 
 package(default_applicable_licenses = ["//:license"])
@@ -59,7 +64,7 @@ deps_for_bindings(
     visibility = ["//:__subpackages__"],
 )
 
-cc_binary(
+crubit_cc_binary(
     name = "rs_bindings_from_cc_impl",
     srcs = ["rs_bindings_from_cc.cc"],
     visibility = ["//visibility:public"],
@@ -98,7 +103,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "generate_bindings_and_metadata_test",
     srcs = ["generate_bindings_and_metadata_test.cc"],
     data = [
@@ -148,7 +153,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "bazel_types_test",
     srcs = ["bazel_types_test.cc"],
     deps = [
@@ -191,7 +196,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "cmdline_test",
     srcs = ["cmdline_test.cc"],
     deps = [
@@ -291,7 +296,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "importer_test",
     srcs = ["importer_test.cc"],
     deps = [
@@ -340,7 +345,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "rs_ir_test",
     crate = ":ir",
 )
@@ -361,7 +366,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "ir_testing_test",
     crate = ":ir_testing",
     tags = [
@@ -486,7 +491,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "error_report_test",
     crate = ":error_report",
     deps = [
@@ -525,7 +530,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "ir_matchers_test",
     crate = ":ir_matchers",
     tags = [
@@ -561,7 +566,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "cc_collect_instantiations_test",
     srcs = ["collect_instantiations_test.cc"],
     deps = [
@@ -584,7 +589,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "collect_instantiations_test",
     args = [
         # To prevent tests from polluting the environment variables for each other.
@@ -612,7 +617,7 @@ cc_library(
     ],
 )
 
-cc_test(
+crubit_cc_test(
     name = "collect_namespaces_test",
     srcs = ["collect_namespaces_test.cc"],
     deps = [
