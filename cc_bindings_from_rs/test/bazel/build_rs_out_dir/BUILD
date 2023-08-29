@@ -11,11 +11,11 @@ error: environment variable `OUT_DIR` not defined at compile time
    |                  ^^^^^^^^^^^^^^^
 """
 
+load("@rules_rust//cargo:cargo_build_script.bzl", "cargo_build_script")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
-load("@rules_rust//cargo:cargo_build_script.bzl", "cargo_build_script")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",

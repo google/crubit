@@ -1,8 +1,8 @@
 """Disclaimer: This project is experimental, under heavy development, and should not
 be used yet."""
 
-load(":target_args_test.bzl", "target_args_test")
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load(":target_args_test.bzl", "target_args_test")
 
 package(default_applicable_licenses = ["//:license"])
 

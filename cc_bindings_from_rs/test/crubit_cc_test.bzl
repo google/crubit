@@ -4,6 +4,8 @@
 
 """A macro for generating tests with various Crubit build flavors."""
 
+load("@bazel_skylib//lib:new_sets.bzl", "sets")
+
 def crubit_cc_test(
         name,
         **kwargs):

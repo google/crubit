@@ -4,12 +4,12 @@
 """Common utilities for Crubit unit tests."""
 
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
-    "rust_bindings_from_cc_aspect",
-)
-load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "RustBindingsFromCcInfo",
+)
+load(
+    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
+    "rust_bindings_from_cc_aspect",
 )
 
 ActionsInfo = provider(

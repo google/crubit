@@ -1,8 +1,8 @@
 """Disclaimer: This project is experimental, under heavy development, and should not
 be used yet."""
 
-load(":cc_std_test.bzl", "cc_std_test")
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load(":cc_std_test.bzl", "cc_std_test")
 
 package(default_applicable_licenses = ["//:license"])
 

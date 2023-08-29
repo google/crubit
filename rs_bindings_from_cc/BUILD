@@ -1,18 +1,6 @@
 """Generates Rust bindings from C++ headers."""
 
 load(
-    "//rs_bindings_from_cc/bazel_support:deps_for_bindings.bzl",
-    "deps_for_bindings",
-)
-load(
-    "//rs_bindings_from_cc/bazel_support:with_cc_toolchain_flags.bzl",
-    "with_cc_toolchain_flags",
-)
-load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_binary.bzl",
-    "rust_bindings_from_cc_binary",
-)
-load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
@@ -25,6 +13,18 @@ load(
     "crubit_cc_binary",
     "crubit_cc_test",
     "crubit_rust_test",
+)
+load(
+    "//rs_bindings_from_cc/bazel_support:deps_for_bindings.bzl",
+    "deps_for_bindings",
+)
+load(
+    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_binary.bzl",
+    "rust_bindings_from_cc_binary",
+)
+load(
+    "//rs_bindings_from_cc/bazel_support:with_cc_toolchain_flags.bzl",
+    "with_cc_toolchain_flags",
 )
 
 package(default_applicable_licenses = ["//:license"])

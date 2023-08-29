@@ -1,8 +1,8 @@
-load("@rules_license//rules:license.bzl", "license")
 load(
     "//rs_bindings_from_cc/bazel_support:crubit_feature_hint.bzl",
     "crubit_feature_hint",
 )
+load("@rules_license//rules:license.bzl", "license")
 
 package(
     default_applicable_licenses = ["//:license"],

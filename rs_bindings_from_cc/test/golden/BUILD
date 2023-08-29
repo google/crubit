@@ -1,13 +1,13 @@
-load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load(
-    "//rs_bindings_from_cc/test/golden:generate_bindings.bzl",
-    "generate_bindings",
-)
+load("//common:crubit_wrapper_macros_oss.bzl", crubit_rust_test = "crubit_on_demand_rust_test")
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_cli_flag_aspect_hint.bzl",
     "rust_bindings_from_cc_cli_flag",
 )
-load("//common:crubit_wrapper_macros_oss.bzl", crubit_rust_test = "crubit_on_demand_rust_test")
+load(
+    "//rs_bindings_from_cc/test/golden:generate_bindings.bzl",
+    "generate_bindings",
+)
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 package(default_applicable_licenses = ["//:license"])
 

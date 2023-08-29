@@ -1,14 +1,14 @@
 """Disclaimer: This project is experimental, under heavy development, and should not
 be used yet."""
 
-load(
-    "//rs_bindings_from_cc/bazel_support:deps_for_bindings.bzl",
-    "deps_for_bindings",
-)
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "@bazel_skylib//rules:common_settings.bzl",
     "bool_flag",
+)
+load(
+    "//rs_bindings_from_cc/bazel_support:deps_for_bindings.bzl",
+    "deps_for_bindings",
 )
 
 package(default_applicable_licenses = ["//:license"])

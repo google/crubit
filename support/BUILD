@@ -1,7 +1,7 @@
 """Support libraries that the generated Rust/C++ bindings depend upon."""
 
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 

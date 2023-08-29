@@ -8,8 +8,8 @@ Disclaimer: This project is experimental, under heavy development, and should
 not be used yet.
 """
 
-load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
+load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 
 def _get_hdrs_command_line(hdrs):
     return ["--public_headers=" + ",".join([x.path for x in hdrs])]

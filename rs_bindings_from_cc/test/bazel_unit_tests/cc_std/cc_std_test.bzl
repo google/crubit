@@ -5,16 +5,16 @@
 """This module contains unit tests for rust_bindings_from_cc_aspect."""
 
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
-    "rust_bindings_from_cc_aspect",
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_flavor_transition",
 )
 load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "RustBindingsFromCcInfo",
 )
 load(
-    "//common:crubit_wrapper_macros_oss.bzl",
-    "crubit_flavor_transition",
+    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
+    "rust_bindings_from_cc_aspect",
 )
 
 OutputsInfo = provider(

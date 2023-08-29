@@ -1,13 +1,13 @@
 """Generates C++ bindings from Rust APIs."""
 
 load(
+    "@rules_rust//rust:defs.bzl",
+    "rust_library",
+)
+load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_binary",
     "crubit_rust_test",
-)
-load(
-    "@rules_rust//rust:defs.bzl",
-    "rust_library",
 )
 
 package(default_applicable_licenses = ["//:license"])

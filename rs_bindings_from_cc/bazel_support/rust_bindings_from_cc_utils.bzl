@@ -11,12 +11,12 @@ not be used yet.
 load("@@//rs_bindings_from_cc/bazel_support:compile_cc.bzl", "compile_cc")
 load("@@//rs_bindings_from_cc/bazel_support:compile_rust.bzl", "compile_rust")
 load("@@//rs_bindings_from_cc/bazel_support:generate_bindings.bzl", "generate_bindings")
-load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 load(
     "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
     "GeneratedBindingsInfo",
     "RustBindingsFromCcInfo",
 )
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 def generate_and_compile_bindings(
         ctx,

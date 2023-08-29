@@ -4,11 +4,11 @@
 
 """This module contains unit tests for the _namespace.json output file."""
 
+load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "RustBindingsFromCcInfo",
 )
-load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
     "//rs_bindings_from_cc/test/bazel_unit_tests:defs.bzl",
     "attach_aspect",

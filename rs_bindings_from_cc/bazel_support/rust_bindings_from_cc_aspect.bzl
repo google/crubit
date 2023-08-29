@@ -12,27 +12,27 @@ not be used yet.
 """
 
 load(
-    "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
-    "DepsForBindingsInfo",
-    "RustBindingsFromCcInfo",
-    "RustToolchainHeadersInfo",
-)
-load(
-    "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
-    "bindings_attrs",
-    "generate_and_compile_bindings",
+    "@@//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
+    "get_additional_rust_srcs",
 )
 load(
     "@@//rs_bindings_from_cc/bazel_support:crubit_feature_hint.bzl",
     "find_crubit_features",
 )
 load(
+    "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "DepsForBindingsInfo",
+    "RustBindingsFromCcInfo",
+    "RustToolchainHeadersInfo",
+)
+load(
     "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_cli_flag_aspect_hint.bzl",
     "collect_rust_bindings_from_cc_cli_flags",
 )
 load(
-    "@@//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
-    "get_additional_rust_srcs",
+    "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
+    "bindings_attrs",
+    "generate_and_compile_bindings",
 )
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the

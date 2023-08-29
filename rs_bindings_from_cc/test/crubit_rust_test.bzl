@@ -5,6 +5,7 @@
 """A macro for generating tests with various Crubit build flavors."""
 
 load("@rules_rust//rust:defs.bzl", "rust_test")
+load("@bazel_skylib//lib:new_sets.bzl", "sets")
 
 def crubit_rust_test(
         name,

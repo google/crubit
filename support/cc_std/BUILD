@@ -2,11 +2,11 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+load("@bazel_skylib//lib:selects.bzl", "selects")
 load(
     "//rs_bindings_from_cc/bazel_support:toolchain_headers.bzl",
     "bindings_for_toolchain_headers",
 )
-load("@bazel_skylib//lib:selects.bzl", "selects")
 
 package(default_applicable_licenses = ["//:license"])
 

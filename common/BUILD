@@ -1,12 +1,12 @@
 """Common libraries used in multiple Crubit tools."""
 
-load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
     "rust_proc_macro",
 )
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(
     default_applicable_licenses = ["//:license"],

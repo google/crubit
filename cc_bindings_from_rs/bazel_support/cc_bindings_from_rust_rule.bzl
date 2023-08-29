@@ -8,6 +8,12 @@ Disclaimer: This project is experimental, under heavy development, and should
 not be used yet.
 """
 
+load(
+    "@rules_rust//rust:rust_common.bzl",
+    "BuildInfo",
+    "CrateInfo",
+)
+
 # buildifier: disable=bzl-visibility
 load(
     "@rules_rust//rust/private:providers.bzl",
@@ -30,19 +36,14 @@ load(
     "find_toolchain",
 )
 load(
-    "@rules_rust//rust:rust_common.bzl",
-    "BuildInfo",
-    "CrateInfo",
-)
-load(
     "//rs_bindings_from_cc/bazel_support:compile_rust.bzl",
     "compile_rust",
 )
-load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain", "use_cpp_toolchain")
 load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "RustBindingsFromCcInfo",
 )
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain", "use_cpp_toolchain")
 
 # Targets which do not receive C++ bindings at all.
 targets_to_remove = [
