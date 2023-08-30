@@ -6,6 +6,10 @@
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_make_analysis_test",
+)
+load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_cli_flag_aspect_hint.bzl",
     "rust_bindings_from_cc_cli_flag",
 )
@@ -58,7 +62,7 @@ def _test_rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli_impl(ctx):
         )
     return analysistest.end(env)
 
-rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli_test = analysistest.make(_test_rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli_impl)
+rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli_test = crubit_make_analysis_test(_test_rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli_impl)
 
 def rust_bindings_from_cc_cli_flag_aspect_hint_test_suite(name):
     _test_rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli()

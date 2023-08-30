@@ -18,6 +18,10 @@ load(
     "ActionsInfo",
     "attach_aspect",
 )
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_make_analysis_test",
+)
 
 def _find_actions_by_mnemonic(env, expected_mnemonic):
     """Searches `target_actions` for all actions with `expected_mnemonic`.
@@ -173,7 +177,7 @@ def _header_generation_test_impl(ctx):
 
     return analysistest.end(env)
 
-header_generation_test = analysistest.make(_header_generation_test_impl)
+header_generation_test = crubit_make_analysis_test(_header_generation_test_impl)
 
 def _cmdline_flags_test_impl(ctx):
     env = analysistest.begin(ctx)
@@ -208,7 +212,7 @@ def _cmdline_flags_test_impl(ctx):
 
     return analysistest.end(env)
 
-cmdline_flags_test = analysistest.make(_cmdline_flags_test_impl)
+cmdline_flags_test = crubit_make_analysis_test(_cmdline_flags_test_impl)
 
 def _tests():
     rust_library(

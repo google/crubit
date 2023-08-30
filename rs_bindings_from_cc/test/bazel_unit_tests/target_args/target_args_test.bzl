@@ -6,6 +6,10 @@
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_make_analysis_test",
+)
+load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "RustBindingsFromCcInfo",
 )
@@ -60,7 +64,7 @@ def _lib_has_toolchain_targets_and_headers_test_impl(ctx):
 
     return analysistest.end(env)
 
-lib_has_toolchain_targets_and_headers_test = analysistest.make(
+lib_has_toolchain_targets_and_headers_test = crubit_make_analysis_test(
     _lib_has_toolchain_targets_and_headers_test_impl,
 )
 
@@ -91,7 +95,7 @@ def _targets_and_headers_test_impl(ctx):
 
     return analysistest.end(env)
 
-targets_and_headers_test = analysistest.make(_targets_and_headers_test_impl)
+targets_and_headers_test = crubit_make_analysis_test(_targets_and_headers_test_impl)
 
 def _test_targets_and_headers():
     native.cc_library(name = "mylib", hdrs = ["lib.h"])
@@ -149,7 +153,7 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
 
     return analysistest.end(env)
 
-targets_and_headers_propagate_with_cc_info_test = analysistest.make(
+targets_and_headers_propagate_with_cc_info_test = crubit_make_analysis_test(
     _targets_and_headers_propagate_with_cc_info_test_impl,
 )
 
@@ -179,7 +183,7 @@ def _textual_hdrs_not_in_targets_and_hdrs_impl(ctx):
 
     return analysistest.end(env)
 
-textual_hdrs_not_in_targets_and_hdrs_test = analysistest.make(
+textual_hdrs_not_in_targets_and_hdrs_test = crubit_make_analysis_test(
     _textual_hdrs_not_in_targets_and_hdrs_impl,
 )
 
@@ -209,7 +213,7 @@ def _toolchain_headers_in_header_analysis_action_test_impl(ctx):
 
     return analysistest.end(env)
 
-toolchain_headers_in_header_analysis_action_test = analysistest.make(
+toolchain_headers_in_header_analysis_action_test = crubit_make_analysis_test(
     _toolchain_headers_in_header_analysis_action_test_impl,
     config_settings = {
         "//third_party/crosstool:unstable_flag": False,
@@ -264,7 +268,7 @@ def _generated_headers_specified_with_full_path_impl(ctx):
 
     return analysistest.end(env)
 
-generated_headers_specified_with_full_path_test = analysistest.make(
+generated_headers_specified_with_full_path_test = crubit_make_analysis_test(
     _generated_headers_specified_with_full_path_impl,
 )
 
@@ -306,7 +310,7 @@ def _target_features_empty_test_impl(ctx):
 
     return analysistest.end(env)
 
-target_features_empty_test = analysistest.make(_target_features_empty_test_impl)
+target_features_empty_test = crubit_make_analysis_test(_target_features_empty_test_impl)
 
 def _test_target_features_empty():
     native.cc_library(name = "mylib_empty_features", hdrs = ["lib.h"])
@@ -336,7 +340,7 @@ def _target_features_nonempty_test_impl(ctx):
 
     return analysistest.end(env)
 
-target_features_nonempty_test = analysistest.make(_target_features_nonempty_test_impl)
+target_features_nonempty_test = crubit_make_analysis_test(_target_features_nonempty_test_impl)
 
 def _test_target_features_nonempty():
     native.cc_library(name = "mylib_nonempty_features", hdrs = ["lib.h"], aspect_hints = [

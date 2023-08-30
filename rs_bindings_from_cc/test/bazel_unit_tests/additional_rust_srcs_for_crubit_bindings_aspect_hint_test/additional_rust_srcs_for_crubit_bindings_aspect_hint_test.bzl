@@ -6,6 +6,10 @@
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_make_analysis_test",
+)
+load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
 )
@@ -53,7 +57,7 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli_
     )
     return analysistest.end(env)
 
-additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli_test = analysistest.make(_test_additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli_impl)
+additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli_test = crubit_make_analysis_test(_test_additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli_impl)
 
 def additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite(name):
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli()

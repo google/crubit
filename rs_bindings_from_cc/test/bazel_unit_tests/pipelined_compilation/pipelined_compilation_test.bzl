@@ -6,6 +6,10 @@
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_make_analysis_test",
+)
+load(
     "//rs_bindings_from_cc/test/bazel_unit_tests:defs.bzl",
     "ActionsInfo",
     "attach_aspect",
@@ -50,7 +54,7 @@ def _action_inputs_with_pipelining_analysis_test_impl(ctx):
 
     return analysistest.end(env)
 
-action_inputs_with_pipelining_analysis_test = analysistest.make(
+action_inputs_with_pipelining_analysis_test = crubit_make_analysis_test(
     _action_inputs_with_pipelining_analysis_test_impl,
 )
 

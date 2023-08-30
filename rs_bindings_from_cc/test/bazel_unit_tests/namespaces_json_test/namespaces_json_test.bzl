@@ -6,6 +6,10 @@
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_make_analysis_test",
+)
+load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "RustBindingsFromCcInfo",
 )
@@ -22,7 +26,7 @@ def _action_outputs_analysis_test_impl(ctx):
 
     return analysistest.end(env)
 
-action_outputs_analysis_test = analysistest.make(
+action_outputs_analysis_test = crubit_make_analysis_test(
     _action_outputs_analysis_test_impl,
 )
 

@@ -5,6 +5,7 @@
 """Wrapper macros needed for Google-internal purposes."""
 
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("@bazel_skylib//lib:unittest.bzl", "analysistest")
 
 crubit_rust_test = rust_test
 crubit_rust_binary = rust_binary
@@ -15,5 +16,7 @@ crubit_flavor_transition = transition(
     inputs = [],
     outputs = [],
 )
+crubit_make_analysis_test = analysistest.make
+
 crubit_on_demand_rust_test = rust_test
 crubit_on_demand_cc_test = native.cc_test
