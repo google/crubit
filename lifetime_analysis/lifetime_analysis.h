@@ -71,7 +71,9 @@ class LifetimeAnalysis
                            FunctionLifetimesOrError>& callee_lifetimes,
       const DiagnosticReporter& diag_reporter)
       : clang::dataflow::DataflowAnalysis<LifetimeAnalysis, LifetimeLattice>(
-            func->getASTContext(), /*ApplyBuiltinTransfer=*/false),
+            func->getASTContext(),
+            // Don't use builtin transfer function
+            clang::dataflow::DataflowAnalysisOptions{std::nullopt}),
         func_(func),
         object_repository_(object_repository),
         callee_lifetimes_(callee_lifetimes),
