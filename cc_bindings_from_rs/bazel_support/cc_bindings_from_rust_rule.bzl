@@ -363,7 +363,7 @@ cc_bindings_from_rust_aspect = aspect(
         ),
     },
     toolchains = [
-        "@rules_rust//rust:toolchain",
+        "@rules_rust//rust:toolchain_type",
     ] + use_cpp_toolchain(),
     fragments = ["cpp"],
 )

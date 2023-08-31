@@ -95,7 +95,7 @@ bindings_for_toolchain_headers = rule(
         }.items(),
     ),
     toolchains = [
-        "@rules_rust//rust:toolchain",
+        "@rules_rust//rust:toolchain_type",
         "@bazel_tools//tools/cpp:toolchain_type",
     ],
     host_fragments = ["cpp"],

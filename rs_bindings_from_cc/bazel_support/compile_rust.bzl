@@ -48,7 +48,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps):
     Returns:
       A DepVariantInfo provider.
     """
-    toolchain = ctx.toolchains["@rules_rust//rust:toolchain"]
+    toolchain = ctx.toolchains["@rules_rust//rust:toolchain_type"]
 
     output_hash = repr(hash(src.path))
 
