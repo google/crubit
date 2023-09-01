@@ -5,6 +5,7 @@
 """A test that the dependencies needed for our generated bindings files are built in target cfg."""
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_make_analysis_test")
 load(
     "//rs_bindings_from_cc/test/bazel_unit_tests:defs.bzl",
     "ActionsInfo",
@@ -35,7 +36,7 @@ def _deps_for_bindings_in_target_cfg_impl(ctx):
 
     return analysistest.end(env)
 
-deps_for_bindings_in_target_cfg_test = analysistest.make(
+deps_for_bindings_in_target_cfg_test = crubit_make_analysis_test(
     _deps_for_bindings_in_target_cfg_impl,
 )
 
