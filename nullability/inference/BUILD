@@ -105,6 +105,7 @@ cc_library(
         ":inference_cc_proto",
         ":merge",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
 )

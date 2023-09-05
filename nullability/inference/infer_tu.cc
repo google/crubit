@@ -11,6 +11,7 @@
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/merge.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/Basic/SourceManager.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Error.h"
@@ -19,6 +20,16 @@
 namespace clang::tidy::nullability {
 
 std::vector<Inference> inferTU(ASTContext& Ctx) {
+  if (!Ctx.getLangOpts().CPlusPlus) {
+    llvm::errs() << "Skipping non-C++ input file: "
+                 << Ctx.getSourceManager()
+                        .getFileEntryForID(
+                            Ctx.getSourceManager().getMainFileID())
+                        ->getName()
+                 << "\n";
+    return std::vector<Inference>();
+  }
+
   std::vector<Evidence> AllEvidence;
 
   // Collect all evidence.

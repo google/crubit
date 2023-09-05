@@ -133,7 +133,7 @@ class Action : public SyntaxOnlyAction {
                                                  llvm::StringRef) override {
     class Consumer : public ASTConsumer {
       void HandleTranslationUnit(ASTContext &Ctx) override {
-        llvm::errs() << "Running inference...";
+        llvm::errs() << "Running inference...\n";
         auto Results = inferTU(Ctx);
         if (!IncludeTrivial)
           llvm::erase_if(Results, [](Inference &I) {
