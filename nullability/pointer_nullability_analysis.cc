@@ -800,9 +800,9 @@ void PointerNullabilityAnalysis::transfer(const CFGElement &Elt,
   FlowSensitiveTransferer(Elt, getASTContext(), State);
 }
 
-BoolValue &mergeBoolValues(BoolValue &Bool1, const Environment &Env1,
-                           BoolValue &Bool2, const Environment &Env2,
-                           Environment &MergedEnv) {
+static BoolValue &mergeBoolValues(BoolValue &Bool1, const Environment &Env1,
+                                  BoolValue &Bool2, const Environment &Env2,
+                                  Environment &MergedEnv) {
   if (&Bool1 == &Bool2) {
     return Bool1;
   }
