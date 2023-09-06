@@ -1388,6 +1388,15 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
         offset_of_next_field: u64,
         doc_comment: TokenStream,
     }
+    impl Field {
+        fn size(&self) -> u64 {
+            match self.type_info {
+                Err(_) => self.offset_of_next_field - self.offset,
+                Ok(FieldTypeInfo { size, .. }) => size,
+            }
+        }
+    }
+
     let layout = get_layout(tcx, core.self_ty)
         .expect("Layout should be already verified by `format_adt_core`");
     let fields: Vec<Field> = if core.self_ty.is_enum() || core.self_ty.is_union() {
@@ -1496,6 +1505,8 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
         let adt_cc_name = &core.cc_short_name;
         let cc_assertions: TokenStream = fields
             .iter()
+            // TODO(b/298660437): Add support for ZST fields.
+            .filter(|field| field.size() != 0)
             .map(|Field { cc_name, offset, .. }| {
                 let offset = Literal::u64_unsuffixed(*offset);
                 quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
@@ -1514,7 +1525,11 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
         let adt_rs_name = &core.rs_fully_qualified_name;
         fields
             .iter()
-            .filter(|Field { is_public, .. }| *is_public)
+            // TODO(b/298660437): Even though we don't generate bindings for ZST fields, we'd still
+            // like to make sure we computed the offset of ZST fields correctly on the Rust side,
+            // so we still emit offset assertions for ZST fields here.
+            // TODO(b/298660437): Remove the comment above when ZST fields are supported.
+            .filter(|field| field.is_public)
             .map(|Field { rs_name, offset, .. }| {
                 let expected_offset = Literal::u64_unsuffixed(*offset);
                 let actual_offset = quote! { memoffset::offset_of!(#adt_rs_name, #rs_name) };
@@ -1535,10 +1550,10 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
         let fields: TokenStream = fields
             .into_iter()
             .map(|field| {
-                let cc_name = field.cc_name;
+                let cc_name = &field.cc_name;
                 match field.type_info {
-                    Err(err) => {
-                        let size = field.offset_of_next_field - field.offset;
+                    Err(ref err) => {
+                        let size = field.size();
                         let msg =
                             format!("Field type has been replaced with a blob of bytes: {err:#}");
 
@@ -1551,15 +1566,12 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                                     unsigned char #cc_name[#size];
                             }
                         } else {
-                            // TODO(b/258259459): finalize the approach here.
-                            // Possibly we should, rather than using no_unique_address, drop the
-                            // field entirely. This also requires removing the field's assertions,
-                            // added above.
-                            quote! {
-                                private: __NEWLINE__
-                                    __COMMENT__ #msg
-                                    [[no_unique_address]] struct{} #cc_name;
-                            }
+                            // TODO(b/258259459): Generate bindings for ZST fields.
+                            let msg = format!(
+                                "Skipped bindings for field `{cc_name}`: \
+                               ZST fields are not supported (b/258259459)"
+                            );
+                            quote! {__NEWLINE__ __COMMENT__ #msg}
                         }
                     }
                     Ok(FieldTypeInfo { cc_type, size }) => {
@@ -5804,29 +5816,51 @@ pub mod tests {
         test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
-            let broken_field_msg = "Field type has been replaced with a blob of bytes: \
-                                    Failed to generate bindings for the definition of `ZeroSizedType`: \
-                                    Zero-sized types (ZSTs) are not supported (b/258259459)";
+            let broken_field_msg_zst1 =
+                "Skipped bindings for field `zst1`: ZST fields are not supported (b/258259459)";
+            let broken_field_msg_zst2 =
+                "Skipped bindings for field `zst2`: ZST fields are not supported (b/258259459)";
+
+            // TODO(b/298970777): Remove the conditional compliation once the commit lands
+            // in stable Crosstool.
+            #[cfg(google3_internal_rustc_contains_commit_bf91321e0fc9cb9cd921263ac473c5255dc8cc14)]
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
                     ...
                     struct ... SomeStruct final {
                         ...
-                        private:
-                            __COMMENT__ #broken_field_msg
-                            [[no_unique_address]] struct{} zst1;
-                        private:
-                            __COMMENT__ #broken_field_msg
-                            [[no_unique_address]] struct{} zst2;
                         public:
                             union { ... std::int32_t successful_field; };
+                        __COMMENT__ #broken_field_msg_zst1
+                        __COMMENT__ #broken_field_msg_zst2
                         private:
                             static void __crubit_field_offset_assertions();
                     };
                     ...
                 }
             );
+
+            #[cfg(not(
+                google3_internal_rustc_contains_commit_bf91321e0fc9cb9cd921263ac473c5255dc8cc14
+            ))]
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        __COMMENT__ #broken_field_msg_zst1
+                        __COMMENT__ #broken_field_msg_zst2
+                        public:
+                          union { ... std::int32_t successful_field; };
+                        private:
+                          static void __crubit_field_offset_assertions();
+                    };
+                    ...
+                }
+            );
+
             assert_cc_matches!(
                 result.cc_details.tokens,
                 quote! {
@@ -5836,23 +5870,34 @@ pub mod tests {
                     static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
                     static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
                     inline void SomeStruct::__crubit_field_offset_assertions() {
-                      static_assert(0 == offsetof(SomeStruct, zst1));
-                      static_assert(0 == offsetof(SomeStruct, zst2));
-                      static_assert(0 == offsetof(SomeStruct, successful_field));
+                    static_assert(0 == offsetof(SomeStruct, successful_field));
                     }
                 }
             );
+
+            #[cfg(google3_internal_rustc_contains_commit_bf91321e0fc9cb9cd921263ac473c5255dc8cc14)]
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 4);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct,
-                                                                 zst1) == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct,
-                                                                 zst2) == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct,
-                                                                 successful_field) == 0);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, successful_field) == 0);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, zst1) == 4);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, zst2) == 4);
+
+                }
+            );
+            #[cfg(not(
+                google3_internal_rustc_contains_commit_bf91321e0fc9cb9cd921263ac473c5255dc8cc14
+            ))]
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 4);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, zst1) == 0);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, zst2) == 0);
+                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, successful_field) == 0);
                 }
             );
         });
