@@ -388,6 +388,49 @@ void transferFlowSensitiveNullCheckImplicitCastPtrToBool(
   State.Env.setValue(*CastExpr, State.Env.makeNot(PointerNull));
 }
 
+void initializeOutputParameter(const Expr *Arg, dataflow::Environment &Env,
+                               QualType ParamTy) {
+  // When a function has an "output parameter" - a non-const pointer or
+  // reference to a pointer of unknown nullability - assume that the function
+  // may set the pointer to non-null.
+  //
+  // For example, in the following code sequence we assume that the function may
+  // modify the pointer in a way that makes a subsequent dereference safe:
+  //
+  //   void maybeModify(int ** _Nonnull);
+  //
+  //   int *p = nullptr;
+  //   initializePointer(&p);
+  //   *p; // safe
+
+  if (ParamTy.isNull()) return;
+  if (ParamTy->getPointeeType().isNull()) return;
+  if (!isSupportedPointerType(ParamTy->getPointeeType())) return;
+  if (ParamTy->getPointeeType().isConstQualified()) return;
+
+  // TODO(b/298200521): This should extend support to annotations that suggest
+  // different in/out state
+  TypeNullability InnerNullability =
+      getNullabilityAnnotationsFromType(ParamTy->getPointeeType());
+  if (InnerNullability.front().concrete() != NullabilityKind::Unspecified)
+    return;
+
+  StorageLocation *Loc = nullptr;
+  if (ParamTy->isPointerType()) {
+    if (PointerValue *OuterPointer = getPointerValueFromExpr(Arg, Env))
+      Loc = &OuterPointer->getPointeeLoc();
+  } else if (ParamTy->isReferenceType()) {
+    Loc = Env.getStorageLocation(*Arg);
+  }
+  if (Loc == nullptr) return;
+
+  auto *InnerPointer =
+      cast<PointerValue>(Env.createValue(ParamTy->getPointeeType()));
+  initUnknownPointer(*InnerPointer, Env);
+
+  Env.setValue(*Loc, *InnerPointer);
+}
+
 void transferFlowSensitiveCallExpr(
     const CallExpr *CallExpr, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -425,6 +468,20 @@ void transferFlowSensitiveCallExpr(
       // `Loc` is set iff `CallExpr` is a glvalue, so we know here that it must
       // be a prvalue.
       State.Env.setValue(*CallExpr, *PointerVal);
+  }
+
+  // Make output parameters (with unknown nullability) initialized to unknown.
+  const auto *FuncDecl = CallExpr->getDirectCallee();
+  if (!FuncDecl) return;
+  if (FuncDecl->getNumParams() != CallExpr->getNumArgs()) return;
+  if (auto *II = FuncDecl->getDeclName().getAsIdentifierInfo();
+      II && II->isStr("__assert_nullability")) {
+    return;
+  }
+  for (unsigned i = 0; i < CallExpr->getNumArgs(); ++i) {
+    const auto *Arg = CallExpr->getArg(i);
+    initializeOutputParameter(Arg, State.Env,
+                              FuncDecl->getParamDecl(i)->getType());
   }
 }
 

@@ -104,6 +104,150 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, OutputParameterBasic) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void maybeModifyPtr(int** p);
+    void target() {
+      int* p = nullptr;
+      maybeModifyPtr(&p);
+      *p;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OutputParameterReference) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void maybeModifyPtr(int*& r);
+    void target() {
+      int* p = nullptr;
+      maybeModifyPtr(p);
+      *p;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OutputParameterReferenceConst) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void pointerNotModified(int* const& r);
+    void target() {
+      int* p = nullptr;
+      pointerNotModified(p);
+      *p;  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OutputParameterReferencePointerToPointer) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void maybeModifyPtr(int**& r);
+    void target() {
+      int** pp = nullptr;
+      maybeModifyPtr(pp);
+      *pp;
+      **pp;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OutputParameterConst) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void pointerNotModified(int* const* p);
+    void target(int* _Nullable p) {
+      pointerNotModified(&p);
+      *p;  // [[unsafe]]
+    }
+  )cc"));
+
+  // The only const qualifier that should be considered is on the inner
+  // pointer, otherwise this pattern should be considered safe.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void maybeModifyPtr(const int** const p);
+    void target() {
+      const int* p = nullptr;
+      maybeModifyPtr(&p);
+      *p;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OutputParameterNonnull) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void pointerNotModified(int* _Nonnull* p);
+    void target(int* _Nonnull p) {
+      pointerNotModified(&p);
+      *p;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OutputParameterCheckedNullable) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void maybeModify(int* _Nullable* p);
+    void target(int* _Nullable p) {
+      if (!p) return;
+      maybeModify(&p);
+      *p;  // false negative: this dereference is actually unsafe!
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OutputParameterNullable) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void maybeModifyPtr(int* _Nullable* p);
+    void target() {
+      int* p = nullptr;
+      maybeModifyPtr(&p);
+      *p;  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OutputParameterConditional) {
+  // This tests that flow sensitivity is preserved, to catch for example if the
+  // underlying pointer was always set to Nonnull once it's passed as an
+  // output parameter.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void maybeModifyPtr(int** p);
+    void target(int* _Nullable j, bool b) {
+      if (b) {
+        maybeModifyPtr(&j);
+      }
+      if (b) {
+        *j;
+      }
+      if (!b) {
+        *j;  // [[unsafe]]
+      }
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OutputParameterWithoutAmpersandOperator) {
+  // This tests that the call to maybeModifyPtr works as expected if the param
+  // passed in doesn't directly use the & operator
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void maybeModifyPtr(int** p);
+    void target(int* _Nullable p) {
+      auto pp = &p;
+      maybeModifyPtr(pp);
+      *p;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OutputParameterTemplate) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    struct S {
+      void maybeModify(T& ref);
+    };
+    void target(S<int*> s, int* _Nullable p) {
+      s.maybeModify(p);
+      *p;
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, CallExprParamAssignment) {
   // free function with single param
   EXPECT_TRUE(checkDiagnostics(R"cc(
@@ -233,7 +377,7 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       *ptr_nullable;  // [[unsafe]]
 
       takeUnannotatedRef(ptr_nullable);
-      *ptr_nullable;  // [[unsafe]]
+      *ptr_nullable;
     }
   )cc"));
 
