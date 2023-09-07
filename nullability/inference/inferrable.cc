@@ -46,7 +46,14 @@ bool isInferenceTarget(const Decl& D) {
       // itself. We can't record them anywhere unless they apply to the
       // template in general.
       // TODO: work out in what circumstances that would be safe.
-      !FD->getTemplateInstantiationPattern();
+      !FD->getTemplateInstantiationPattern() &&
+      // builtins can't be annotated and are irregular in their type checking
+      // and in other ways, leading to violations of otherwise sound
+      // assumptions.
+      // If we find that their nullability is unexpectedly leaking into
+      // programs under analysis in significant ways, we can hardcode this small
+      // set of functions.
+      FD->getBuiltinID() == 0;
 }
 
 }  // namespace clang::tidy::nullability

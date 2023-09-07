@@ -172,8 +172,7 @@ void collectEvidenceFromCallExpr(
             CalleeDecl->getParamDecl(ParamI)->getType().getNonReferenceType()))
       continue;
     // the corresponding argument should also be a pointer.
-    CHECK(isSupportedPointerType(
-        CallExpr->getArg(ArgI)->getType().getNonReferenceType()));
+    CHECK(isSupportedPointerType(CallExpr->getArg(ArgI)->getType()));
 
     dataflow::PointerValue *PV =
         getPointerValueFromExpr(CallExpr->getArg(ArgI), Env);
