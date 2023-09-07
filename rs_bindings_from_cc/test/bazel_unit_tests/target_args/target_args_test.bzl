@@ -215,9 +215,6 @@ def _toolchain_headers_in_header_analysis_action_test_impl(ctx):
 
 toolchain_headers_in_header_analysis_action_test = crubit_make_analysis_test(
     _toolchain_headers_in_header_analysis_action_test_impl,
-    config_settings = {
-        "//third_party/crosstool:unstable_flag": False,
-    },
 )
 
 def _test_textual_hdrs_not_in_targets_and_hdrs():
