@@ -246,6 +246,28 @@ TEST(PointerNullabilityTest, OutputParameterTemplate) {
       *p;
     }
   )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    struct S {
+      void maybeModify(T& ref);
+    };
+    void target(S<int* _Nullable> s, int* _Nullable p) {
+      s.maybeModify(p);
+      *p;  // false negative
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    struct S {
+      void maybeModify(T& ref);
+    };
+    void target(S<int* _Nonnull> s, int* _Nonnull p) {
+      s.maybeModify(p);
+      *p;
+    }
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, CallExprParamAssignment) {
