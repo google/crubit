@@ -5821,9 +5821,6 @@ pub mod tests {
             let broken_field_msg_zst2 =
                 "Skipped bindings for field `zst2`: ZST fields are not supported (b/258259459)";
 
-            // TODO(b/298970777): Remove the conditional compliation once the commit lands
-            // in stable Crosstool.
-            #[cfg(google3_internal_rustc_contains_commit_bf91321e0fc9cb9cd921263ac473c5255dc8cc14)]
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -5836,26 +5833,6 @@ pub mod tests {
                         __COMMENT__ #broken_field_msg_zst2
                         private:
                             static void __crubit_field_offset_assertions();
-                    };
-                    ...
-                }
-            );
-
-            #[cfg(not(
-                google3_internal_rustc_contains_commit_bf91321e0fc9cb9cd921263ac473c5255dc8cc14
-            ))]
-            assert_cc_matches!(
-                main_api.tokens,
-                quote! {
-                    ...
-                    struct ... SomeStruct final {
-                        ...
-                        __COMMENT__ #broken_field_msg_zst1
-                        __COMMENT__ #broken_field_msg_zst2
-                        public:
-                          union { ... std::int32_t successful_field; };
-                        private:
-                          static void __crubit_field_offset_assertions();
                     };
                     ...
                 }
@@ -5875,7 +5852,6 @@ pub mod tests {
                 }
             );
 
-            #[cfg(google3_internal_rustc_contains_commit_bf91321e0fc9cb9cd921263ac473c5255dc8cc14)]
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
@@ -5885,19 +5861,6 @@ pub mod tests {
                     const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, zst1) == 4);
                     const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, zst2) == 4);
 
-                }
-            );
-            #[cfg(not(
-                google3_internal_rustc_contains_commit_bf91321e0fc9cb9cd921263ac473c5255dc8cc14
-            ))]
-            assert_rs_matches!(
-                result.rs_details,
-                quote! {
-                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 4);
-                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, zst1) == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, zst2) == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, successful_field) == 0);
                 }
             );
         });
