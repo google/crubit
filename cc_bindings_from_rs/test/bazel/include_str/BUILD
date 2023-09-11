@@ -10,7 +10,7 @@ load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
 )
-load("//common:crubit_wrapper_macros_oss.bzl", crubit_cc_test = "crubit_on_demand_cc_test")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 rust_library(
     name = "include_str",

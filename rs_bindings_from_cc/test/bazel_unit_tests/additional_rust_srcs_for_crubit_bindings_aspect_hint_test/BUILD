@@ -1,7 +1,7 @@
 """Disclaimer: This project is experimental, under heavy development, and should not
 be used yet."""
 
-load("//common:crubit_wrapper_macros_oss.bzl", crubit_rust_test = "crubit_on_demand_rust_test")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",

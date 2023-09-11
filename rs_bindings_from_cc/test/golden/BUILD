@@ -1,4 +1,4 @@
-load("//common:crubit_wrapper_macros_oss.bzl", crubit_rust_test = "crubit_on_demand_rust_test")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_cli_flag_aspect_hint.bzl",
     "rust_bindings_from_cc_cli_flag",
