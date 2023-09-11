@@ -58,6 +58,9 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
 
     void operator()(const Decl &Target, Slot S, Evidence::Kind Kind,
                     SourceLocation Loc) const {
+      CHECK(isInferenceTarget(Target))
+          << "Evidence emitted for a Target which is not an inference target.";
+
       Evidence E;
       E.set_slot(S);
       E.set_kind(Kind);
@@ -104,6 +107,11 @@ void collectEvidenceFromDereference(
     return;
 
   // It is a dereference of a pointer. Now gather evidence from it.
+
+  // Skip gathering evidence about the current function if the current function
+  // is not an inference target.
+  if (!isInferenceTarget(*Env.getCurrentFunc())) return;
+
   dataflow::PointerValue *DereferencedValue =
       getPointerValueFromExpr(DereferencedExpr, Env);
   if (!DereferencedValue) return;
@@ -219,6 +227,10 @@ void collectEvidenceFromReturn(
   auto *ReturnExpr = ReturnStmt->getRetValue();
   if (!ReturnExpr || !isSupportedPointerType(ReturnExpr->getType())) return;
 
+  // Skip gathering evidence about the current function if the current function
+  // is not an inference target.
+  if (!isInferenceTarget(*Env.getCurrentFunc())) return;
+
   NullabilityKind ReturnNullability =
       getNullability(ReturnExpr, Env,
                      getInferrableSlotsUnknownConstraint(InferrableSlots, Env));
@@ -244,7 +256,6 @@ void collectEvidenceFromElement(
   collectEvidenceFromDereference(InferrableSlots, Element, Env, Emit);
   collectEvidenceFromCallExpr(InferrableSlots, Element, Env, Emit);
   collectEvidenceFromReturn(InferrableSlots, Element, Env, Emit);
-  // TODO: add location information.
   // TODO: add more heuristic collections here
 }
 

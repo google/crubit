@@ -11,6 +11,8 @@
 #include "nullability/inference/inference.proto.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
@@ -22,11 +24,16 @@
 
 namespace clang::tidy::nullability {
 namespace {
+using ::clang::ast_matchers::functionDecl;
+using ::clang::ast_matchers::hasName;
+using ::clang::ast_matchers::isTemplateInstantiation;
+using ::clang::ast_matchers::match;
 using ::testing::_;
 using ::testing::Contains;
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 using ::testing::Not;
+using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 
 MATCHER_P3(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher, "") {
@@ -418,6 +425,34 @@ TEST(CollectEvidenceFromImplementationTest, MemberOperatorCallVarArgs) {
                                 functionNamed("operator()"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest, NotInferenceTarget) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T>
+    T* target(T* p) {
+      *p;
+      return nullptr;
+    }
+
+    void instantiate() { target<int>(nullptr); }
+  )cc";
+
+  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
+  auto TargetInstantiationNodes = match(
+      functionDecl(hasName("target"), isTemplateInstantiation()).bind("target"),
+      AST.context());
+  ASSERT_THAT(TargetInstantiationNodes, SizeIs(1));
+  auto* const InstantiationDecl = ast_matchers::selectFirst<FunctionDecl>(
+      "target", TargetInstantiationNodes);
+  ASSERT_NE(InstantiationDecl, nullptr);
+
+  std::vector<Evidence> Results;
+  auto Err = collectEvidenceFromImplementation(
+      *InstantiationDecl,
+      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); }));
+  if (Err) ADD_FAILURE() << toString(std::move(Err));
+  EXPECT_THAT(Results, IsEmpty());
+}
+
 TEST(CollectEvidenceFromDeclarationTest, VariableDeclIgnored) {
   llvm::StringLiteral Src = "Nullable<int *> target;";
   EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
@@ -535,6 +570,23 @@ TEST(EvidenceSitesTest, Templates) {
   EXPECT_THAT(Sites.Implementations,
               ElementsAre(declNamed("f<0>"), declNamed("f<1>"),
                           declNamed("S::f<0>"), declNamed("T<0>::f")));
+}
+
+TEST(EvidenceEmitterTest, NotInferenceTarget) {
+  TestAST AST(R"cc(
+    template <int I>
+    int target() {
+      return I;
+    })cc");
+
+  const auto* TargetDecl =
+      dataflow::test::findValueDecl(AST.context(), "target");
+  ASSERT_NE(TargetDecl, nullptr);
+
+  EXPECT_DEATH(evidenceEmitter([](const Evidence& e) {})(
+                   *TargetDecl, Slot{}, Evidence::ANNOTATED_UNKNOWN,
+                   TargetDecl->getLocation()),
+               "not an inference target");
 }
 
 }  // namespace

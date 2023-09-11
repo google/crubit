@@ -31,6 +31,7 @@ cc_test(
         ":collect_evidence",
         ":inference_cc_proto",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:testing",
         "@llvm-project//clang/unittests:dataflow_testing_support",
