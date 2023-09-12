@@ -15,7 +15,11 @@ load("@rules_rust//rust/private:common.bzl", "rust_common")
 load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
 
 # buildifier: disable=bzl-visibility
-load("@rules_rust//rust/private:rustc.bzl", "rustc_compile_action")
+load(
+    "@rules_rust//rust/private:rustc.bzl",
+    "ExtraRustcFlagsInfo",
+    "rustc_compile_action",
+)
 
 def _get_crate_info(providers):
     for provider in providers:
@@ -93,6 +97,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps):
             compile_data_targets = depset([]),
             owner = ctx.label,
         ),
+        rust_flags = ctx.attr._extra_rustc_flags[ExtraRustcFlagsInfo].extra_rustc_flags,
         output_hash = output_hash,
         force_all_deps_direct = True,
     )
