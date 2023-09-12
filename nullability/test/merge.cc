@@ -322,7 +322,7 @@ TEST(PointerNullabilityTest, MergeUnknownAndUnknown) {
 }
 
 TEST(PointerNullabilityTest, MergePointerLValues) {
-  llvm::StringRef SourceCode = R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Node {
       Node* next;
     };
@@ -360,28 +360,7 @@ TEST(PointerNullabilityTest, MergePointerLValues) {
         }
       }
     }
-  )cc";
-  // TODO: We currently hit the maximum iteration count on this test. Figure out
-  // why this is and make the test converge. At that point, we can simply call
-  // `checkDiagnostics()` instead of the custom test setup we have here.
-  EXPECT_THAT_ERROR(
-      dataflow::test::checkDataflow<PointerNullabilityAnalysis>(
-          dataflow::test::AnalysisInputs<PointerNullabilityAnalysis>(
-              SourceCode, ast_matchers::hasName("target"),
-              [](ASTContext &ASTCtx, dataflow::Environment &) {
-                return PointerNullabilityAnalysis(ASTCtx);
-              })
-              // The SAT solver may (flakily) require excessive runtime on this
-              // test, so set a work limit. We're not primarily interested in
-              // the results of the SAT solver, but we should eventually fix
-              // this too.
-              .withSolverFactory([]() {
-                return std::make_unique<dataflow::WatchedLiteralsSolver>(
-                    1'000'000);
-              }),
-          [](const llvm::DenseMap<unsigned, std::string> &Annotations,
-             const dataflow::test::AnalysisOutputs &AnalysisData) {}),
-      llvm::FailedWithMessage("maximum number of iterations reached"));
+  )cc"));
 }
 
 }  // namespace
