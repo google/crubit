@@ -1089,7 +1089,8 @@ TEST(PointerNullabilityTest, FunctionTemplates) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, ParenTypeInTemplate) {
+// TODO(mboehme): Broken by LLVM 967604a07b1d5da15fb561d4ceae04cbaef02df7
+TEST(PointerNullabilityTest, DISABLED_ParenTypeInTemplate) {
   checkDiagnostics(R"cc(
     template <typename T>
     struct S {
