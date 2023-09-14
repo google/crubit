@@ -123,6 +123,22 @@ TEST(CollectEvidenceFromImplementationTest, Deref) {
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
+TEST(CollectEvidenceFromImplementationTest, DerefArrow) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      int x;
+      int y();
+    };
+    void target(S *a, S *b) {
+      a->x;
+      b->y();
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
+                  evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
+}
 TEST(InferAnnotationsTest, DerefOfNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(Nonnull<int *> p) {

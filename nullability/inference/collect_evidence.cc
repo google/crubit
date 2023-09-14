@@ -93,27 +93,37 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
 
 namespace {
 
+// If Element is a dereference, returns its target and location.
+std::pair<Expr *, SourceLocation> describeDereference(
+    const CFGElement &Element) {
+  if (auto CFGStmt = Element.getAs<clang::CFGStmt>()) {
+    if (auto *Op = dyn_cast<UnaryOperator>(CFGStmt->getStmt());
+        Op && Op->getOpcode() == UO_Deref) {
+      return {Op->getSubExpr(), Op->getOperatorLoc()};
+    }
+    if (auto *ME = dyn_cast<MemberExpr>(CFGStmt->getStmt());
+        ME && ME->isArrow()) {
+      return {ME->getBase(), ME->getOperatorLoc()};
+    }
+  }
+  return {nullptr, SourceLocation()};
+}
+
 void collectEvidenceFromDereference(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferrableSlots,
     const CFGElement &Element, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  // Is this CFGElement a dereference of a pointer?
-  auto CFGStmt = Element.getAs<clang::CFGStmt>();
-  if (!CFGStmt) return;
-  auto *Op = dyn_cast_or_null<UnaryOperator>(CFGStmt->getStmt());
-  if (!Op || Op->getOpcode() != UO_Deref) return;
-  auto *DereferencedExpr = Op->getSubExpr();
-  if (!DereferencedExpr || !DereferencedExpr->getType()->isPointerType())
-    return;
+  auto [Target, Loc] = describeDereference(Element);
+  if (!Target || !Target->getType()->isPointerType()) return;
 
   // It is a dereference of a pointer. Now gather evidence from it.
 
-  // Skip gathering evidence about the current function if the current function
-  // is not an inference target.
+  // Skip gathering evidence about the current function if the current
+  // function is not an inference target.
   if (!isInferenceTarget(*Env.getCurrentFunc())) return;
 
   dataflow::PointerValue *DereferencedValue =
-      getPointerValueFromExpr(DereferencedExpr, Env);
+      getPointerValueFromExpr(Target, Env);
   if (!DereferencedValue) return;
   auto &A = Env.getDataflowAnalysisContext().arena();
   auto &NotIsNull =
@@ -132,8 +142,7 @@ void collectEvidenceFromDereference(
     auto &SlotNonnullImpliesDerefValueNonnull =
         A.makeImplies(Nullability.isNonnull(A), NotIsNull);
     if (Env.flowConditionImplies(SlotNonnullImpliesDerefValueNonnull))
-      Emit(*Env.getCurrentFunc(), Slot, Evidence::UNCHECKED_DEREFERENCE,
-           Op->getOperatorLoc());
+      Emit(*Env.getCurrentFunc(), Slot, Evidence::UNCHECKED_DEREFERENCE, Loc);
   }
 }
 
