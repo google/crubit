@@ -296,7 +296,7 @@ llvm::Error collectEvidenceFromImplementation(
   if (!ControlFlowContext) return ControlFlowContext.takeError();
 
   DataflowAnalysisContext AnalysisContext(
-      std::make_unique<dataflow::WatchedLiteralsSolver>());
+      std::make_unique<dataflow::WatchedLiteralsSolver>(100000));
   Environment Environment(AnalysisContext, *Func);
   PointerNullabilityAnalysis Analysis(
       Decl.getDeclContext()->getParentASTContext());
@@ -312,19 +312,15 @@ llvm::Error collectEvidenceFromImplementation(
     }
   }
 
-  std::vector<Evidence> AllEvidence;
-  llvm::Expected<std::vector<std::optional<
-      dataflow::DataflowAnalysisState<PointerNullabilityLattice>>>>
-      BlockToOutputStateOrError = dataflow::runDataflowAnalysis(
-          *ControlFlowContext, Analysis, Environment,
-          [&](const CFGElement &Element,
-              const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
-                  &State) {
-            collectEvidenceFromElement(InferrableSlots, Element, State.Env,
-                                       Emit);
-          });
-
-  return llvm::Error::success();
+  return dataflow::runDataflowAnalysis(
+             *ControlFlowContext, Analysis, Environment,
+             [&](const CFGElement &Element,
+                 const dataflow::DataflowAnalysisState<
+                     PointerNullabilityLattice> &State) {
+               collectEvidenceFromElement(InferrableSlots, Element, State.Env,
+                                          Emit);
+             })
+      .takeError();
 }
 
 void collectEvidenceFromTargetDeclaration(
