@@ -19,7 +19,8 @@
 
 namespace clang::tidy::nullability {
 
-std::vector<Inference> inferTU(ASTContext& Ctx) {
+std::vector<Inference> inferTU(ASTContext& Ctx,
+                               llvm::function_ref<bool(const Decl&)> Filter) {
   if (!Ctx.getLangOpts().CPlusPlus) {
     llvm::errs() << "Skipping non-C++ input file: "
                  << Ctx.getSourceManager()
@@ -35,9 +36,12 @@ std::vector<Inference> inferTU(ASTContext& Ctx) {
   // Collect all evidence.
   auto Sites = EvidenceSites::discover(Ctx);
   auto Emitter = evidenceEmitter([&](auto& E) { AllEvidence.push_back(E); });
-  for (const auto* Decl : Sites.Declarations)
+  for (const auto* Decl : Sites.Declarations) {
+    if (Filter && !Filter(*Decl)) continue;
     collectEvidenceFromTargetDeclaration(*Decl, Emitter);
+  }
   for (const auto* Impl : Sites.Implementations) {
+    if (Filter && !Filter(*Impl)) continue;
     if (auto Err = collectEvidenceFromImplementation(*Impl, Emitter)) {
       llvm::errs() << "Skipping function: " << toString(std::move(Err)) << "\n";
       Impl->print(llvm::errs());

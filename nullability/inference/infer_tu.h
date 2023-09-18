@@ -9,15 +9,20 @@
 
 #include "nullability/inference/inference.proto.h"
 #include "clang/AST/ASTContext.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
 
 namespace clang::tidy::nullability {
+struct EvidenceSites;
 
 // Performs nullability inference within the scope of a single translation unit.
 //
 // This is not as powerful as running inference over the whole codebase, but is
 // useful in observing the behavior of the inference system.
 // It also lets us write tests for the whole inference system.
-std::vector<Inference> inferTU(ASTContext &);
+//
+// If Filter is provided, only considers decls that return true.
+std::vector<Inference> inferTU(
+    ASTContext &, llvm::function_ref<bool(const Decl &)> Filter = nullptr);
 
 }  // namespace clang::tidy::nullability
 

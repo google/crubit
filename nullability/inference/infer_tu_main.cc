@@ -15,11 +15,14 @@
 #include <utility>
 
 #include "absl/log/check.h"
+#include "nullability/inference/collect_evidence.h"
 #include "nullability/inference/infer_tu.h"
 #include "nullability/inference/inference.proto.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclarationName.h"
 #include "clang/AST/RecursiveASTVisitor.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
 #include "clang/Frontend/FrontendActions.h"
@@ -33,8 +36,10 @@
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
 
 llvm::cl::OptionCategory Opts("infer_tu_main options");
@@ -57,6 +62,16 @@ llvm::cl::opt<bool> IncludeTrivial{
     "trivial",
     llvm::cl::desc("Include trivial inferences (annotated, no conflicts)"),
     llvm::cl::init(false),
+};
+llvm::cl::opt<std::string> FileFilter{
+    "file-filter",
+    llvm::cl::desc("Regular expression filenames must match to be analyzed. "
+                   "May be negated with - prefix."),
+};
+llvm::cl::opt<std::string> NameFilter{
+    "name-filter",
+    llvm::cl::desc("Regular expression decl names must match to be analyzed. "
+                   "May be negated with - prefix."),
 };
 
 namespace clang::tidy::nullability {
@@ -128,13 +143,60 @@ bool isTrivial(const Inference::SlotInference &I) {
   return false;
 }
 
+// Selects which declarations to analyze based on filter flags.
+struct DeclFilter {
+  bool operator()(const Decl &D) const {
+    auto &SM = D.getDeclContext()->getParentASTContext().getSourceManager();
+    if (!checkLocation(D.getLocation(), SM)) return false;
+    if (auto *ND = llvm::dyn_cast<NamedDecl>(&D))
+      if (!checkName(*ND)) return false;
+    return true;
+  }
+
+  bool checkLocation(SourceLocation Loc, const SourceManager &SM) const {
+    if (!FileFilter.getNumOccurrences()) return true;
+    auto ID = SM.getFileID(SM.getFileLoc(Loc));
+    auto [It, Inserted] = FileCache.try_emplace(ID);
+    if (Inserted) {
+      static auto &Pattern = *new RegexFlagFilter(FileFilter);
+      auto *FID = SM.getFileEntryForID(ID);
+      It->second = !FID || Pattern(FID->getName());
+    }
+    return It->second;
+  }
+
+  bool checkName(const NamedDecl &ND) const {
+    if (!NameFilter.getNumOccurrences()) return true;
+    static auto &Pattern = *new RegexFlagFilter(NameFilter);
+    return Pattern(ND.getQualifiedNameAsString());
+  }
+
+  mutable llvm::DenseMap<FileID, bool> FileCache;
+  struct RegexFlagFilter {
+    RegexFlagFilter(llvm::StringRef Regex)
+        : Negative(Regex.consume_front("-")), Pattern(Regex) {
+      std::string Err;
+      CHECK(Pattern.isValid(Err)) << Regex.str() << ": " << Err;
+    }
+
+    bool operator()(llvm::StringRef Text) {
+      bool Match = Pattern.match(Text);
+      return Negative ? !Match : Match;
+    }
+
+    bool Negative;
+    llvm::Regex Pattern;
+  };
+};
+
 class Action : public SyntaxOnlyAction {
   std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &,
                                                  llvm::StringRef) override {
     class Consumer : public ASTConsumer {
       void HandleTranslationUnit(ASTContext &Ctx) override {
         llvm::errs() << "Running inference...\n";
-        auto Results = inferTU(Ctx);
+
+        auto Results = inferTU(Ctx, DeclFilter());
         if (!IncludeTrivial)
           llvm::erase_if(Results, [](Inference &I) {
             llvm::erase_if(*I.mutable_slot_inference(), isTrivial);

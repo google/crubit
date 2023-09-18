@@ -7,12 +7,16 @@
 #include <optional>
 #include <vector>
 
+#include "nullability/inference/collect_evidence.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/proto_matchers.h"
+#include "clang/AST/Decl.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/Index/USRGeneration.h"
 #include "clang/Testing/TestAST.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
@@ -21,6 +25,7 @@
 namespace clang::tidy::nullability {
 namespace {
 using ast_matchers::hasName;
+using testing::_;
 
 MATCHER_P2(inferredSlot, I, Nullability, "") {
   return arg.slot() == I && arg.nullability() == Nullability;
@@ -34,9 +39,9 @@ MATCHER_P2(inferenceMatcher, USR, SlotsMatcher, "") {
 AST_MATCHER(Decl, isCanonical) { return Node.isCanonicalDecl(); }
 
 class InferTUTest : public ::testing::Test {
+ protected:
   std::optional<TestAST> AST;
 
- protected:
   void build(llvm::StringRef Code) {
     TestInputs Inputs = Code;
     Inputs.ExtraFiles["nullability.h"] = R"cc(
@@ -192,6 +197,19 @@ TEST_F(InferTUTest, ReturnTypeNonnullAndNullable) {
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
                                  {inferredSlot(0, Inference::NULLABLE)})));
+}
+
+TEST_F(InferTUTest, Filter) {
+  build(R"cc(
+    int* target1() { return nullptr; }
+    int* target2() { return nullptr; }
+  )cc");
+  EXPECT_THAT(inferTU(AST->context(),
+                      [&](const Decl &D) {
+                        return cast<NamedDecl>(D).getNameAsString() !=
+                               "target2";
+                      }),
+              ElementsAre(inference(hasName("target1"), {_})));
 }
 
 }  // namespace
