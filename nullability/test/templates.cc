@@ -1089,8 +1089,7 @@ TEST(PointerNullabilityTest, FunctionTemplates) {
   )cc"));
 }
 
-// TODO(mboehme): Broken by LLVM 967604a07b1d5da15fb561d4ceae04cbaef02df7
-TEST(PointerNullabilityTest, DISABLED_ParenTypeInTemplate) {
+TEST(PointerNullabilityTest, ParenTypeInTemplate1) {
   checkDiagnostics(R"cc(
     template <typename T>
     struct S {
@@ -1101,7 +1100,7 @@ TEST(PointerNullabilityTest, DISABLED_ParenTypeInTemplate) {
       T(((*g)))();
     };
 
-    void targetNullable(S<int *_Nullable> s) {
+    void target(S<int *_Nullable> s) {
       *s.a;   // [[unsafe]]
       **s.b;  // [[unsafe]]
       *s.f;
@@ -1109,8 +1108,21 @@ TEST(PointerNullabilityTest, DISABLED_ParenTypeInTemplate) {
       *s.f();  // TODO: fix false negative.
       *s.g();  // TODO: fix false negative.
     }
+  )cc");
+}
 
-    void targetNonnull(S<int *_Nonnull> s) {
+TEST(PointerNullabilityTest, ParenTypeInTemplate2) {
+  checkDiagnostics(R"cc(
+    template <typename T>
+    struct S {
+      T(a);
+      T(*(b));
+
+      T (*f)();
+      T(((*g)))();
+    };
+
+    void target(S<int *_Nonnull> s) {
       *s.a;
       **s.b;
       *s.f;
@@ -1119,28 +1131,39 @@ TEST(PointerNullabilityTest, DISABLED_ParenTypeInTemplate) {
       *s.g();
     }
   )cc");
+}
 
+TEST(PointerNullabilityTest, ParenTypeInTemplate3) {
   checkDiagnostics(R"cc(
     template <typename T>
     struct S {
       T arg;
     };
 
-    void targetNullable(S<int *_Nullable>(a), S<int *_Nullable>(*(b)),
-                        S<int(*_Nullable)> c, S<int *(*(*_Nullable))> d,
-                        S<int *_Nullable (*)()> e) {
+    void target(S<int *_Nullable>(a), S<int *_Nullable>(*(b)),
+                S<int(*_Nullable)> c, S<int *(*(*_Nullable))> d,
+                S<int *_Nullable (*)()> e) {
       *a.arg;    // [[unsafe]]
-      *b->arg;   // [[unsafe]]
+      *b->arg;   // TODO: fix false negative
       *c.arg;    // [[unsafe]]
       ***d.arg;  // [[unsafe]]
-      *e.arg;    // [[unsafe]]
+      *e.arg;    // TODO: fix false negative
 
       *e.arg();  // TODO: fix false negative.
     }
+  )cc");
+}
 
-    void targetNonnull(S<int *_Nonnull>(a), S<int *_Nonnull>(*(b)),
-                       S<int(*_Nonnull)> c, S<int *(*(*_Nonnull))> d,
-                       S<int *_Nonnull (*)()> e) {
+TEST(PointerNullabilityTest, ParenTypeInTemplate4) {
+  checkDiagnostics(R"cc(
+    template <typename T>
+    struct S {
+      T arg;
+    };
+
+    void target(S<int *_Nonnull>(a), S<int *_Nonnull>(*(b)),
+                S<int(*_Nonnull)> c, S<int *(*(*_Nonnull))> d,
+                S<int *_Nonnull (*)()> e) {
       *a.arg;
       *b->arg;
       *c.arg;
