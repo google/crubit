@@ -49,17 +49,10 @@ crubit_rust_binary(
 crubit_rust_test(
     name = "cc_bindings_from_rs_test",
     crate = ":cc_bindings_from_rs",
-    data = select({
-        "//conditions:default": [
-            "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
-        ],
-    }),
-    # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
-    rustc_flags = select({
-        "//conditions:default": [
-            "--cfg=oss",
-        ],
-    }),
+    data = [
+        "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
+    ],
+    rustc_flags = ["--cfg=oss"],
     tags = [
         "not_build:arm",
         "noubsan",  # rustc-as-a-library isn't supported for UBSan.

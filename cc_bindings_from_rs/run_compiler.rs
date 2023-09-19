@@ -249,12 +249,11 @@ pub mod tests {
         Ok(())
     }
 
-    #[cfg(llvm_unstable)]
-    const CROSSTOOL_VERSION: &str = "llvm_unstable";
-    #[cfg(stable)]
-    const CROSSTOOL_VERSION: &str = "stable";
     #[cfg(oss)]
-    const CROSSTOOL_VERSION: &str = "oss";
+    const TOOLCHAIN_ROOT: &str = "rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain/lib/rustlib/x86_64-unknown-linux-gnu";
+    #[cfg(not(oss))]
+    const TOOLCHAIN_ROOT: &str =
+        "google3/nowhere/llvm/rust/main_sysroot";
 
     /// Returns the `rustc` sysroot that is suitable for the environment where
     /// unit tests run.
@@ -264,11 +263,7 @@ pub mod tests {
     /// `run_compiler`
     pub fn get_sysroot_for_testing() -> PathBuf {
         let runfiles = runfiles::Runfiles::create().unwrap();
-        let loc = runfiles.rlocation(if CROSSTOOL_VERSION == "oss" {
-            "rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain/lib/rustlib/x86_64-unknown-linux-gnu".into()
-        } else {
-            format!("google3/third_party/crosstool/v18/{CROSSTOOL_VERSION}/rust/main_sysroot")
-        });
+        let loc = runfiles.rlocation(std::path::Path::new(TOOLCHAIN_ROOT));
         assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
         assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
         loc
