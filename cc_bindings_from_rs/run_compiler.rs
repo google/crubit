@@ -382,6 +382,7 @@ pub mod tests {
             registry: rustc_errors::registry::Registry::new(rustc_error_codes::DIAGNOSTICS),
             locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES,
             ice_file: None,
+            expanded_args: vec![],
         };
 
         rustc_interface::interface::run_compiler(config, |compiler| {
