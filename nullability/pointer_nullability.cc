@@ -4,9 +4,12 @@
 
 #include "nullability/pointer_nullability.h"
 
-#include <utility>
+#include <cassert>
+#include <optional>
 
+#include "nullability/type_nullability.h"
 #include "clang/AST/Type.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
@@ -18,7 +21,9 @@ namespace clang::tidy::nullability {
 
 using dataflow::AtomicBoolValue;
 using dataflow::BoolValue;
+using dataflow::DataflowAnalysisContext;
 using dataflow::Environment;
+using dataflow::Formula;
 using dataflow::PointerValue;
 using dataflow::Value;
 
@@ -41,41 +46,55 @@ bool hasPointerNullState(const dataflow::PointerValue &PointerVal) {
          PointerVal.getProperty(kNull) != nullptr;
 }
 
-std::pair<AtomicBoolValue &, AtomicBoolValue &> getPointerNullState(
-    const PointerValue &PointerVal) {
+PointerNullState getPointerNullState(const PointerValue &PointerVal) {
   auto &FromNullable =
       *cast<AtomicBoolValue>(PointerVal.getProperty(kFromNullable));
   auto &Null = *cast<AtomicBoolValue>(PointerVal.getProperty(kNull));
-  return {FromNullable, Null};
+  return {FromNullable.formula(), Null.formula()};
 }
 
-void initPointerBoolProperty(PointerValue &PointerVal, llvm::StringRef Name,
-                             BoolValue *BoolVal, Environment &Env) {
-  if (PointerVal.getProperty(Name) != nullptr) return;
-  // The property must always be a non-null boolean atom.
-  if (!isa_and_nonnull<AtomicBoolValue>(BoolVal)) {
-    auto &Atom = Env.makeAtomicBoolValue();
-    if (BoolVal)
-      Env.addToFlowCondition(
-          Env.arena().makeEquals(Atom.formula(), BoolVal->formula()));
-    BoolVal = &Atom;
+static bool tryCreatePointerNullState(PointerValue &PointerVal,
+                                      dataflow::Arena &A,
+                                      const Formula *FromNullable = nullptr,
+                                      const Formula *IsNull = nullptr) {
+  // TODO: for now we assume that we have both nullability properties, or none.
+  // We'll need to relax this when properties can be independently widened away.
+  if (hasPointerNullState(PointerVal)) return false;
+  if (!FromNullable) FromNullable = &A.makeAtomRef(A.makeAtom());
+  if (!IsNull) IsNull = &A.makeAtomRef(A.makeAtom());
+  PointerVal.setProperty(kFromNullable, A.makeBoolValue(*FromNullable));
+  PointerVal.setProperty(kNull, A.makeBoolValue(*IsNull));
+  return true;
+}
+
+void initPointerNullState(PointerValue &PointerVal,
+                          DataflowAnalysisContext &Ctx,
+                          std::optional<PointerTypeNullability> Source) {
+  auto &A = Ctx.arena();
+  if (tryCreatePointerNullState(PointerVal, A,
+                                Source ? &Source->isNullable(A) : nullptr)) {
+    // The symbolic/nonnull check is not needed for correctness, but it avoids
+    // adding meaningless (false => !null) invariant clauses.
+    // TODO: remove this once such clauses are recognized and dropped.
+    if (Source &&
+        (Source->isSymbolic() || Source == NullabilityKind::NonNull)) {
+      const Formula &IsNull = getPointerNullState(PointerVal).IsNull;
+      Ctx.addInvariant(A.makeImplies(Source->isNonnull(A), A.makeNot(IsNull)));
+    }
   }
-  PointerVal.setProperty(Name, BoolVal ? *BoolVal : Env.makeAtomicBoolValue());
 }
 
-void initPointerNullState(PointerValue &PointerVal, Environment &Env,
-                          BoolValue *FromNullableConstraint,
-                          BoolValue *NullConstraint) {
-  initPointerBoolProperty(PointerVal, kFromNullable, FromNullableConstraint,
-                          Env);
-  initPointerBoolProperty(PointerVal, kNull, NullConstraint, Env);
+void initNullPointer(PointerValue &PointerVal, DataflowAnalysisContext &Ctx) {
+  tryCreatePointerNullState(PointerVal, Ctx.arena(),
+                            /*FromNullable=*/&Ctx.arena().makeLiteral(true),
+                            /*IsNull=*/&Ctx.arena().makeLiteral(true));
 }
 
 bool isNullable(const PointerValue &PointerVal, const Environment &Env,
                 const dataflow::Formula *AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
   auto [FromNullable, Null] = getPointerNullState(PointerVal);
-  auto *ForseeablyNull = &A.makeAnd(FromNullable.formula(), Null.formula());
+  auto *ForseeablyNull = &A.makeAnd(FromNullable, Null);
   if (AdditionalConstraints)
     ForseeablyNull = &A.makeAnd(*AdditionalConstraints, *ForseeablyNull);
   return !Env.flowConditionImplies(A.makeNot(*ForseeablyNull));
@@ -85,7 +104,7 @@ NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
                                const dataflow::Environment &Env,
                                const dataflow::Formula *AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
-  auto *Null = &getPointerNullState(PointerVal).second.formula();
+  auto *Null = &getPointerNullState(PointerVal).IsNull;
   if (AdditionalConstraints) Null = &A.makeAnd(*AdditionalConstraints, *Null);
   if (Env.flowConditionImplies(A.makeNot(*Null)))
     return NullabilityKind::NonNull;

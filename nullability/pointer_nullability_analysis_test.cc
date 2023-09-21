@@ -71,21 +71,20 @@ TEST(PointerNullabilityAnalysis, AssignNullabilityVariable) {
   auto *Ret =
       dyn_cast_or_null<dataflow::PointerValue>(ExitState.Env.getReturnValue());
   ASSERT_NE(Ret, nullptr);
-  auto [RetFromNullable, RetNull] = getPointerNullState(*Ret);
+  auto State = getPointerNullState(*Ret);
 
   // The param nullability hasn't been fixed.
   EXPECT_EQ(std::nullopt, evaluate(PN.isNonnull(A), ExitState.Env));
   EXPECT_EQ(std::nullopt, evaluate(PN.isNullable(A), ExitState.Env));
   // Nor has the the nullability of the returned pointer.
-  EXPECT_EQ(std::nullopt, evaluate(RetFromNullable.formula(), ExitState.Env));
-  EXPECT_EQ(std::nullopt, evaluate(RetNull.formula(), ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(State.FromNullable, ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(State.IsNull, ExitState.Env));
   // However, the two are linked as expected.
-  EXPECT_EQ(true, evaluate(A.makeImplies(PN.isNonnull(A),
-                                         A.makeNot(RetNull.formula())),
-                           ExitState.Env));
   EXPECT_EQ(true,
-            evaluate(A.makeEquals(PN.isNullable(A), RetFromNullable.formula()),
+            evaluate(A.makeImplies(PN.isNonnull(A), A.makeNot(State.IsNull)),
                      ExitState.Env));
+  EXPECT_EQ(true, evaluate(A.makeEquals(PN.isNullable(A), State.FromNullable),
+                           ExitState.Env));
 }
 
 }  // namespace

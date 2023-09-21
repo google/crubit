@@ -40,6 +40,7 @@ using ast_matchers::MatchFinder;
 using dataflow::BoolValue;
 using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
+using dataflow::Formula;
 using dataflow::PointerValue;
 using dataflow::StorageLocation;
 using dataflow::TransferState;
@@ -264,40 +265,15 @@ PointerTypeNullability getPointerTypeNullability(
 void initPointerFromTypeNullability(
     PointerValue &PointerVal, const Expr *E,
     TransferState<PointerNullabilityLattice> &State) {
-  if (auto Nullability = getPointerTypeNullability(E, State.Lattice);
-      Nullability.isSymbolic()) {
-    auto &Arena = State.Env.getDataflowAnalysisContext().arena();
-    auto &Nonnull = Nullability.isNonnull(Arena);
-    auto &Nullable = Nullability.isNullable(Arena);
-    // from_nullable = nullable
-    initPointerNullState(PointerVal, State.Env, &Arena.makeBoolValue(Nullable));
-    // nonnull => !is_null
-    auto [FromNullable, IsNull] = getPointerNullState(PointerVal);
-    State.Env.addToFlowCondition(
-        Arena.makeImplies(Nonnull, Arena.makeNot(IsNull.formula())));
-  } else {
-    // TODO: The above code should also handle concrete nullability correctly.
-    //       But right now, the formulas it creates are overcomplicated.
-    //       Eliminate this case once we simplify true/false in formulas, and
-    //       make addToFlowCondition(true) a no-op.
-    switch (Nullability.concrete()) {
-      case NullabilityKind::NonNull:
-        initNotNullPointer(PointerVal, State.Env);
-        break;
-      case NullabilityKind::Nullable:
-        initNullablePointer(PointerVal, State.Env);
-        break;
-      default:
-        initUnknownPointer(PointerVal, State.Env);
-    }
-  }
+  initPointerNullState(PointerVal, State.Env.getDataflowAnalysisContext(),
+                       getPointerTypeNullability(E, State.Lattice));
 }
 
 void transferFlowSensitiveNullPointer(
     const Expr *NullPointer, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   if (auto *PointerVal = getPointerValueFromExpr(NullPointer, State.Env)) {
-    initNullPointer(*PointerVal, State.Env);
+    initNullPointer(*PointerVal, State.Env.getDataflowAnalysisContext());
   }
 }
 
@@ -305,7 +281,8 @@ void transferFlowSensitiveNotNullPointer(
     const Expr *NotNullPointer, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   if (auto *PointerVal = getPointerValueFromExpr(NotNullPointer, State.Env)) {
-    initNotNullPointer(*PointerVal, State.Env);
+    initPointerNullState(*PointerVal, State.Env.getDataflowAnalysisContext(),
+                         NullabilityKind::NonNull);
   }
 }
 
@@ -330,26 +307,24 @@ void transferFlowSensitiveNullCheckComparison(
   if (!LHS || !RHS) return;
   if (!hasPointerNullState(*LHS) || !hasPointerNullState(*RHS)) return;
 
-  BoolValue &LHSNullVal = getPointerNullState(*LHS).second;
-  BoolValue &RHSNullVal = getPointerNullState(*RHS).second;
-  auto &LHSNull = LHSNullVal.formula();
-  auto &RHSNull = RHSNullVal.formula();
+  auto &LHSNull = getPointerNullState(*LHS).IsNull;
+  auto &RHSNull = getPointerNullState(*RHS).IsNull;
 
   // Special case: Are we comparing against `nullptr`?
   // We can avoid modifying the flow condition in this case and simply propagate
   // the nullability of the other operand (potentially with a negation).
   if (&LHSNull == &A.makeLiteral(true)) {
     if (BinaryOp->getOpcode() == BO_EQ)
-      State.Env.setValue(*BinaryOp, RHSNullVal);
+      State.Env.setValue(*BinaryOp, A.makeBoolValue(RHSNull));
     else
-      State.Env.setValue(*BinaryOp, State.Env.makeNot(RHSNullVal));
+      State.Env.setValue(*BinaryOp, A.makeBoolValue(A.makeNot(RHSNull)));
     return;
   }
   if (&RHSNull == &A.makeLiteral(true)) {
     if (BinaryOp->getOpcode() == BO_EQ)
-      State.Env.setValue(*BinaryOp, LHSNullVal);
+      State.Env.setValue(*BinaryOp, A.makeBoolValue(LHSNull));
     else
-      State.Env.setValue(*BinaryOp, State.Env.makeNot(LHSNullVal));
+      State.Env.setValue(*BinaryOp, A.makeBoolValue(A.makeNot(LHSNull)));
     return;
   }
 
@@ -380,12 +355,13 @@ void transferFlowSensitiveNullCheckComparison(
 void transferFlowSensitiveNullCheckImplicitCastPtrToBool(
     const Expr *CastExpr, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
+  auto &A = State.Env.arena();
   auto *PointerVal =
       getPointerValueFromExpr(CastExpr->IgnoreImplicit(), State.Env);
   if (!PointerVal) return;
 
-  auto [FromNullable, PointerNull] = getPointerNullState(*PointerVal);
-  State.Env.setValue(*CastExpr, State.Env.makeNot(PointerNull));
+  auto Nullability = getPointerNullState(*PointerVal);
+  State.Env.setValue(*CastExpr, A.makeBoolValue(A.makeNot(Nullability.IsNull)));
 }
 
 void initializeOutputParameter(const Expr *Arg, dataflow::Environment &Env,
@@ -426,7 +402,8 @@ void initializeOutputParameter(const Expr *Arg, dataflow::Environment &Env,
 
   auto *InnerPointer =
       cast<PointerValue>(Env.createValue(ParamTy->getPointeeType()));
-  initUnknownPointer(*InnerPointer, Env);
+  initPointerNullState(*InnerPointer, Env.getDataflowAnalysisContext(),
+                       NullabilityKind::Unspecified);
 
   Env.setValue(*Loc, *InnerPointer);
 }
@@ -857,9 +834,11 @@ void PointerNullabilityAnalysis::transfer(const CFGElement &Elt,
   FlowSensitiveTransferer(Elt, getASTContext(), State);
 }
 
-static BoolValue &mergeBoolValues(BoolValue &Bool1, const Environment &Env1,
-                                  BoolValue &Bool2, const Environment &Env2,
-                                  Environment &MergedEnv) {
+static const Formula &mergeFormulas(const Formula &Bool1,
+                                    const Environment &Env1,
+                                    const Formula &Bool2,
+                                    const Environment &Env2,
+                                    Environment &MergedEnv) {
   if (&Bool1 == &Bool2) {
     return Bool1;
   }
@@ -872,11 +851,10 @@ static BoolValue &mergeBoolValues(BoolValue &Bool1, const Environment &Env1,
   // path taken - this simplifies the flow condition tracked in `MergedEnv`.
   // Otherwise, information about which path was taken is used to associate
   // `MergedBool` with `Bool1` and `Bool2`.
-  if (Env1.flowConditionImplies(Bool1.formula()) &&
-      Env2.flowConditionImplies(Bool2.formula())) {
+  if (Env1.flowConditionImplies(Bool1) && Env2.flowConditionImplies(Bool2)) {
     MergedEnv.addToFlowCondition(MergedBool);
-  } else if (Env1.flowConditionImplies(A.makeNot(Bool1.formula())) &&
-             Env2.flowConditionImplies(A.makeNot(Bool2.formula()))) {
+  } else if (Env1.flowConditionImplies(A.makeNot(Bool1)) &&
+             Env2.flowConditionImplies(A.makeNot(Bool2))) {
     MergedEnv.addToFlowCondition(A.makeNot(MergedBool));
   } else {
     // TODO(b/233582219): Flow conditions are not necessarily mutually
@@ -884,13 +862,11 @@ static BoolValue &mergeBoolValues(BoolValue &Bool1, const Environment &Env1,
     // this section when the patch is commited.
     auto FC1 = Env1.getFlowConditionToken();
     auto FC2 = Env2.getFlowConditionToken();
-    MergedEnv.addToFlowCondition(
-        A.makeOr(A.makeAnd(A.makeAtomRef(FC1),
-                           A.makeEquals(MergedBool, Bool1.formula())),
-                 A.makeAnd(A.makeAtomRef(FC2),
-                           A.makeEquals(MergedBool, Bool2.formula()))));
+    MergedEnv.addToFlowCondition(A.makeOr(
+        A.makeAnd(A.makeAtomRef(FC1), A.makeEquals(MergedBool, Bool1)),
+        A.makeAnd(A.makeAtomRef(FC2), A.makeEquals(MergedBool, Bool2))));
   }
-  return A.makeBoolValue(MergedBool);
+  return MergedBool;
 }
 
 bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
@@ -908,15 +884,22 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
     return false;
   }
 
-  auto [FromNullable1, Null1] = getPointerNullState(cast<PointerValue>(Val1));
-  auto [FromNullable2, Null2] = getPointerNullState(cast<PointerValue>(Val2));
+  auto Nullability1 = getPointerNullState(cast<PointerValue>(Val1));
+  auto Nullability2 = getPointerNullState(cast<PointerValue>(Val2));
 
   auto &FromNullable =
-      mergeBoolValues(FromNullable1, Env1, FromNullable2, Env2, MergedEnv);
-  auto &Null = mergeBoolValues(Null1, Env1, Null2, Env2, MergedEnv);
+      mergeFormulas(Nullability1.FromNullable, Env1, Nullability2.FromNullable,
+                    Env2, MergedEnv);
+  auto &Null = mergeFormulas(Nullability1.IsNull, Env1, Nullability2.IsNull,
+                             Env2, MergedEnv);
 
-  initPointerNullState(cast<PointerValue>(MergedVal), MergedEnv, &FromNullable,
-                       &Null);
+  initPointerNullState(cast<PointerValue>(MergedVal),
+                       MergedEnv.getDataflowAnalysisContext());
+  auto MergedNullability = getPointerNullState(cast<PointerValue>(MergedVal));
+  auto &A = MergedEnv.arena();
+  MergedEnv.addToFlowCondition(
+      A.makeEquals(MergedNullability.FromNullable, FromNullable));
+  MergedEnv.addToFlowCondition(A.makeEquals(MergedNullability.IsNull, Null));
 
   return true;
 }

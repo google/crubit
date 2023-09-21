@@ -126,8 +126,7 @@ void collectEvidenceFromDereference(
       getPointerValueFromExpr(Target, Env);
   if (!DereferencedValue) return;
   auto &A = Env.getDataflowAnalysisContext().arena();
-  auto &NotIsNull =
-      A.makeNot(getPointerNullState(*DereferencedValue).second.formula());
+  auto &NotIsNull = A.makeNot(getPointerNullState(*DereferencedValue).IsNull);
 
   // If the flow conditions already imply the dereferenced value is not null,
   // then we don't have any new evidence of a necessary annotation.

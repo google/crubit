@@ -13,12 +13,15 @@
 //    (e.g. a nullptr literal, or a reference to a Nullable-annotated variable)
 //    If this is false, dereferencing may be safe: we don't know the contract.
 
-#include <utility>
+#include <optional>
 
+#include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTDumper.h"
 #include "clang/AST/Expr.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/Specifiers.h"
 
@@ -39,70 +42,47 @@ dataflow::PointerValue *getPointerValueFromExpr(
 // PointerNullabilityAnalysis, not by the dataflow framework.
 bool hasPointerNullState(const dataflow::PointerValue &PointerVal);
 
+/// The properties representing nullness information for a pointer.
+///
+/// We attach these properties to every PointerValue taken by an expression.
+struct PointerNullState {
+  /// Did the pointer come from a known-nullable source?
+  const dataflow::Formula &FromNullable;
+  /// Is the pointer's value null?
+  const dataflow::Formula &IsNull;
+  // These are independent: sources with unknown nullability can yield nullptr!
+};
+
 /// Returns the properties representing the nullness information of a pointer.
-///
-/// The first indicates if the pointer's value is from a known-nullable source.
-/// The second indicates if the pointer's value is null.
-///
-/// These are independent: sources with unknown nullability can yield nullptr.
-std::pair<dataflow::AtomicBoolValue &, dataflow::AtomicBoolValue &>
-getPointerNullState(const dataflow::PointerValue &PointerVal);
+PointerNullState getPointerNullState(const dataflow::PointerValue &PointerVal);
 
-/// Sets the nullness properties on `PointerVal` if not already initialised.
+/// Creates the nullness properties on `PointerVal` if not already initialised.
 ///
-/// The boolean properties may be constrained by `FromNullableConstraint`
-/// and `NullConstraint`. Otherwise, the properties are set to freshly
-/// created atomic booleans.
-void initPointerNullState(dataflow::PointerValue &PointerVal,
-                          dataflow::Environment &Env,
-                          dataflow::BoolValue *FromNullableConstraint = nullptr,
-                          dataflow::BoolValue *NullConstraint = nullptr);
+/// We call this when the framework produces a PointerValue for an expression.
+/// This ensures that the variable has usable "from nullable" and "is null"
+/// boolean variables, and that they are constrained based on the *original*
+/// source of the PointerValue.
+///
+/// For example:
+///    Unknown<int> *x = makeNullable();
+///                      ~~~~~~~~~~~~~~ <-- initPointerNullState(Nullable)
+///    *x;
+///     ~ <-- initPointerNullState(Unknown) - no effect, already initialized
+///
+/// The constraints are added to the context as a non-flow-sensitive invariant,
+/// so the source nullability may not depend on flow-sensitive information.
+///
+/// (We assume that the framework will not provide the same pointer from
+/// different initial sources, so the `Source` nullability is the same
+/// regardless of block evaluation order).
+void initPointerNullState(
+    dataflow::PointerValue &PointerVal, dataflow::DataflowAnalysisContext &Ctx,
+    std::optional<PointerTypeNullability> Source = std::nullopt);
 
-/// Sets the nullness properties on `PointerVal` representing a nullptr if not
-/// already initialised.
-///
-/// `Known` is constrained to true, `Null` is constrained to true.
-inline void initNullPointer(dataflow::PointerValue &PointerVal,
-                            dataflow::Environment &Env) {
-  initPointerNullState(
-      PointerVal, Env,
-      /*FromNullableConstraint=*/&Env.getBoolLiteralValue(true),
-      /*NullConstraint=*/&Env.getBoolLiteralValue(true));
-}
-
-/// Sets the nullness properties on `PointerVal` representing a pointer that is
-/// not null if not already initialised.
-///
-/// `Known` is constrained to true, `Null` is constrained to false.
-inline void initNotNullPointer(dataflow::PointerValue &PointerVal,
-                               dataflow::Environment &Env) {
-  initPointerNullState(
-      PointerVal, Env,
-      /*FromNullableConstraint=*/&Env.getBoolLiteralValue(false),
-      /*NullConstraint=*/&Env.getBoolLiteralValue(false));
-}
-
-/// Sets the nullness properties on `PointerVal` representing a pointer that is
-/// nullable if not already initialised.
-///
-/// `Known` is constrained to true, `Null` is unconstrained.
-inline void initNullablePointer(dataflow::PointerValue &PointerVal,
-                                dataflow::Environment &Env) {
-  initPointerNullState(
-      PointerVal, Env,
-      /*FromNullableConstraint=*/&Env.getBoolLiteralValue(true));
-}
-
-/// Sets the nullness properties on `PointerVal` representing a pointer with
-/// unknown nullability if not already initialised.
-///
-/// `Known` is constrained to false, `Null` is unconstrained.
-inline void initUnknownPointer(dataflow::PointerValue &PointerVal,
-                               dataflow::Environment &Env) {
-  initPointerNullState(
-      PointerVal, Env,
-      /*FromNullableConstraint=*/&Env.getBoolLiteralValue(false));
-}
+/// Variant of initPointerNullState, where the pointer is guaranteed null.
+/// (This is flow-insensitive, but PointerTypeNullability can't represent it).
+void initNullPointer(dataflow::PointerValue &PointerVal,
+                     dataflow::DataflowAnalysisContext &Ctx);
 
 /// Returns true if there is evidence that `PointerVal` may hold a nullptr.
 bool isNullable(const dataflow::PointerValue &PointerVal,

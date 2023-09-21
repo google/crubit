@@ -100,6 +100,7 @@ cc_library(
         "//nullability/test:__pkg__",
     ],
     deps = [
+        ":type_nullability",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
@@ -112,6 +113,7 @@ cc_test(
     srcs = ["pointer_nullability_test.cc"],
     deps = [
         ":pointer_nullability",
+        ":type_nullability",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",

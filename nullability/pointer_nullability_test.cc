@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include "nullability/type_nullability.h"
 #include "clang/AST/Type.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
@@ -19,12 +20,17 @@ namespace {
 
 class NullabilityPropertiesTest : public ::testing::Test {
  protected:
-  dataflow::PointerValue &makePointer(const dataflow::Formula &FromNullable,
-                                      const dataflow::Formula &Null) {
+  dataflow::PointerValue &makePointer(PointerTypeNullability N) {
     auto &P = Env.create<dataflow::PointerValue>(
         DACtx.createStorageLocation(QualType()));
-    initPointerNullState(P, Env, &Env.arena().makeBoolValue(FromNullable),
-                         &Env.arena().makeBoolValue(Null));
+    initPointerNullState(P, DACtx, N);
+    return P;
+  }
+
+  dataflow::PointerValue &makeNullPointer() {
+    auto &P = Env.create<dataflow::PointerValue>(
+        DACtx.createStorageLocation(QualType()));
+    initNullPointer(P, DACtx);
     return P;
   }
 
@@ -34,43 +40,46 @@ class NullabilityPropertiesTest : public ::testing::Test {
 };
 
 TEST_F(NullabilityPropertiesTest, Test) {
-  auto &True = DACtx.arena().makeLiteral(true);
-  auto &False = DACtx.arena().makeLiteral(false);
-  auto &False2 = DACtx.arena().makeNot(True);
+  auto &A = DACtx.arena();
 
-  EXPECT_TRUE(
-      isNullable(makePointer(/*FromNullable=*/True, /*Null=*/True), Env));
-  EXPECT_FALSE(
-      isNullable(makePointer(/*FromNullable=*/True, /*Null=*/False), Env));
-  EXPECT_FALSE(
-      isNullable(makePointer(/*FromNullable=*/False, /*Null=*/True), Env));
-  EXPECT_FALSE(
-      isNullable(makePointer(/*FromNullable=*/False, /*Null=*/False), Env));
+  EXPECT_TRUE(isNullable(makeNullPointer(), Env));
 
-  EXPECT_FALSE(
-      isNullable(makePointer(/*FromNullable=*/True, /*Null=*/False2), Env));
-  EXPECT_FALSE(
-      isNullable(makePointer(/*FromNullable=*/False2, /*Null=*/True), Env));
+  auto &NullableButNotNull = makePointer(NullabilityKind::Nullable);
+  EXPECT_TRUE(isNullable(NullableButNotNull, Env));
+  Env.addToFlowCondition(
+      A.makeNot(getPointerNullState(NullableButNotNull).IsNull));
+  EXPECT_FALSE(isNullable(NullableButNotNull, Env));
+
+  auto &NullableAndNull = makePointer(NullabilityKind::Nullable);
+  Env.addToFlowCondition(getPointerNullState(NullableAndNull).IsNull);
+  EXPECT_TRUE(isNullable(NullableAndNull, Env));
+
+  auto &NonnullAndNotNull = makePointer(NullabilityKind::NonNull);
+  EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
+  Env.addToFlowCondition(
+      A.makeNot(getPointerNullState(NonnullAndNotNull).IsNull));
+  EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
+
+  // This is a little surprising: if a pointer comes from a non-null source but
+  // is dynamically discovered to be definitely null, we still don't consider
+  // it nullable.
+  auto &NonnullAndNull = makePointer(NullabilityKind::NonNull);
+  Env.addToFlowCondition(getPointerNullState(NonnullAndNotNull).IsNull);
+  EXPECT_FALSE(isNullable(NonnullAndNull, Env));
 }
 
 TEST_F(NullabilityPropertiesTest, IsNullableAdditionalConstraints) {
-  auto &FromNullable = Env.makeAtomicBoolValue().formula();
-  auto &Null = Env.makeAtomicBoolValue().formula();
-  EXPECT_TRUE(isNullable(makePointer(FromNullable, Null), Env));
-
-  auto *NotNull = &DACtx.arena().makeNot(Null);
-  EXPECT_FALSE(isNullable(makePointer(FromNullable, Null), Env, NotNull));
+  auto &P = makePointer(NullabilityKind::Nullable);
+  EXPECT_TRUE(isNullable(P, Env));
+  auto *NotNull = &DACtx.arena().makeNot(getPointerNullState(P).IsNull);
+  EXPECT_FALSE(isNullable(P, Env, NotNull));
 }
 
 TEST_F(NullabilityPropertiesTest, GetNullabilityAdditionalConstraints) {
-  auto &FromNullable = Env.makeAtomicBoolValue().formula();
-  auto &Null = Env.makeAtomicBoolValue().formula();
-  EXPECT_EQ(getNullability(makePointer(FromNullable, Null), Env),
-            NullabilityKind::Nullable);
-
-  auto *NotNull = &DACtx.arena().makeNot(Null);
-  EXPECT_EQ(getNullability(makePointer(FromNullable, Null), Env, NotNull),
-            NullabilityKind::NonNull);
+  auto &P = makePointer(NullabilityKind::Nullable);
+  EXPECT_EQ(getNullability(P, Env), NullabilityKind::Nullable);
+  auto *NotNull = &DACtx.arena().makeNot(getPointerNullState(P).IsNull);
+  EXPECT_EQ(getNullability(P, Env, NotNull), NullabilityKind::NonNull);
 }
 
 }  // namespace
