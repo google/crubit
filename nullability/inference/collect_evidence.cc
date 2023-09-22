@@ -149,13 +149,14 @@ const dataflow::Formula *getInferrableSlotsUnknownConstraint(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferrableSlots,
     const dataflow::Environment &Env) {
   dataflow::Arena &A = Env.getDataflowAnalysisContext().arena();
-  const dataflow::Formula *CallerSlotsUnknown = &A.makeLiteral(true);
+  const dataflow::Formula *InferrableSlotsUnknown = &A.makeLiteral(true);
   for (auto &[Nullability, Slot] : InferrableSlots) {
-    CallerSlotsUnknown = &A.makeAnd(
-        *CallerSlotsUnknown, A.makeAnd(A.makeNot(Nullability.isNullable(A)),
-                                       A.makeNot(Nullability.isNonnull(A))));
+    InferrableSlotsUnknown =
+        &A.makeAnd(*InferrableSlotsUnknown,
+                   A.makeAnd(A.makeNot(Nullability.isNullable(A)),
+                             A.makeNot(Nullability.isNonnull(A))));
   }
-  return CallerSlotsUnknown;
+  return InferrableSlotsUnknown;
 }
 
 void collectEvidenceFromCallExpr(
