@@ -47,9 +47,8 @@ bool hasPointerNullState(const dataflow::PointerValue &PointerVal) {
 }
 
 PointerNullState getPointerNullState(const PointerValue &PointerVal) {
-  auto &FromNullable =
-      *cast<AtomicBoolValue>(PointerVal.getProperty(kFromNullable));
-  auto &Null = *cast<AtomicBoolValue>(PointerVal.getProperty(kNull));
+  auto &FromNullable = *cast<BoolValue>(PointerVal.getProperty(kFromNullable));
+  auto &Null = *cast<BoolValue>(PointerVal.getProperty(kNull));
   return {FromNullable.formula(), Null.formula()};
 }
 
