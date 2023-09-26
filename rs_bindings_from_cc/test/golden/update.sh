@@ -31,13 +31,21 @@ for header in *.h; do
   TARGETS+=(":${header%.h}_rs_file")
 done
 
-bazel build "${TARGETS[@]}"
+BUILD_EVENT_PROTOCOL_JSON="${G3}/${PKG}/build_event_protocol.json"
+bazel build "${TARGETS[@]}" --build_event_json_file="${BUILD_EVENT_PROTOCOL_JSON}"
 
-for header in *.h; do
-  if [[ "${HEADERS_TO_SKIP[@]}" =~ "${header}" ]]; then
-    continue;
-  fi
-  # Since these files are checked in, they need a license header.
-  cat LICENSE_HEADER "$(bazel info bazel-bin)/${PKG}/${header%.h}_cc_rust_api.rs" > "${header%.h}_rs_api.rs"
-  cat LICENSE_HEADER "$(bazel info bazel-bin)/${PKG}/${header%.h}_cc_rust_api_impl.cc" > "${header%.h}_rs_api_impl.cc"
+# As the targets undergo bazel transition (to be built under Crubit development flavor), the output
+# will be stored in the directory of k8-fastbuild-ST-<hash>. To get the output directory, we parse
+# the output of Build Event Protocol (https://bazel.build/remote/bep), which contains the precise
+# output path prefix.
+OUTPUT_FILES=($(jq '.completed.importantOutput | select(.) | .[] | .name' -r "${BUILD_EVENT_PROTOCOL_JSON}"))
+OUTPUT_PATH_PREFIXES=($(jq '.completed.importantOutput | select(.) | .[] | (.pathPrefix | join ("/"))' -r "${BUILD_EVENT_PROTOCOL_JSON}"))
+rm "${BUILD_EVENT_PROTOCOL_JSON}"
+
+for i in "${!OUTPUT_FILES[@]}"; do
+  # Goldens are stored in the same directory as the build targets, so their names need to be
+  # different from the file outputted by the build rule.
+  output_file=$(basename "${OUTPUT_FILES[$i]}" | sed "s/_cc_rust/_rs/g")
+  # Prepend license headers to output files, since they are checked in.
+  cat LICENSE_HEADER "$(bazel info execution_root)/${OUTPUT_PATH_PREFIXES[$i]}/${OUTPUT_FILES[$i]}" > "${output_file}"
 done
