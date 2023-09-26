@@ -30,7 +30,8 @@ tasks:
   ubuntu2004:
     name: Stable Bazel Version With Clang and LLD
     <<: *default_linux_task
-  ubuntu2004_rolling:
-    name: Rolling Bazel Version With Clang and LLD
-    bazel: "rolling"
-    <<: *default_linux_task
+  # TODO(b/302114986): Reenable once fixed.
+  # ubuntu2004_rolling:
+  #   name: Rolling Bazel Version With Clang and LLD
+  #   bazel: "rolling"
+  #   <<: *default_linux_task
