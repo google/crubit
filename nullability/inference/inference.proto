@@ -72,6 +72,8 @@ message Evidence {
     NONNULL_RETURN = 8;
     // A value with Unknown nullability was returned.
     UNKNOWN_RETURN = 9;
+    // A value was passed to a Nonnull parameter.
+    PASSED_TO_NONNULL = 10;
   }
 }
 

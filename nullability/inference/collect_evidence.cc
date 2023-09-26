@@ -36,6 +36,7 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Index/USRGeneration.h"
 #include "llvm/ADT/DenseMap.h"
@@ -109,6 +110,33 @@ std::pair<Expr *, SourceLocation> describeDereference(
   return {nullptr, SourceLocation()};
 }
 
+// Records evidence derived from the assumption that Value is nonnull.
+// It may be dereferenced, passed as a nonnull param, etc, per EvidenceKind.
+void collectMustBeNonnullEvidence(
+    const dataflow::PointerValue &Value, const dataflow::Environment &Env,
+    SourceLocation Loc,
+    std::vector<std::pair<PointerTypeNullability, Slot>> &InferrableSlots,
+    Evidence::Kind EvidenceKind, llvm::function_ref<EvidenceEmitter> Emit) {
+  auto &A = Env.getDataflowAnalysisContext().arena();
+  auto &NotIsNull = A.makeNot(getPointerNullState(Value).IsNull);
+
+  // If the flow conditions already imply that Value is not null, then we don't
+  // have any new evidence of a necessary annotation.
+  if (Env.flowConditionImplies(NotIsNull)) return;
+
+  // Otherwise, if an inferrable slot being annotated Nonnull would imply that
+  // Value is not null, then we have evidence suggesting that slot should be
+  // annotated. For now, we simply choose the first such slot, sidestepping
+  // complexities around the possibility of multiple such slots, any one of
+  // which would be sufficient if annotated Nonnull.
+  for (auto &[Nullability, Slot] : InferrableSlots) {
+    auto &SlotNonnullImpliesValueNonnull =
+        A.makeImplies(Nullability.isNonnull(A), NotIsNull);
+    if (Env.flowConditionImplies(SlotNonnullImpliesValueNonnull))
+      Emit(*Env.getCurrentFunc(), Slot, EvidenceKind, Loc);
+  }
+}
+
 void collectEvidenceFromDereference(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferrableSlots,
     const CFGElement &Element, const dataflow::Environment &Env,
@@ -125,24 +153,8 @@ void collectEvidenceFromDereference(
   dataflow::PointerValue *DereferencedValue =
       getPointerValueFromExpr(Target, Env);
   if (!DereferencedValue) return;
-  auto &A = Env.getDataflowAnalysisContext().arena();
-  auto &NotIsNull = A.makeNot(getPointerNullState(*DereferencedValue).IsNull);
-
-  // If the flow conditions already imply the dereferenced value is not null,
-  // then we don't have any new evidence of a necessary annotation.
-  if (Env.flowConditionImplies(NotIsNull)) return;
-
-  // Otherwise, if an inferrable slot being annotated Nonnull would imply that
-  // the dereferenced value is not null, then we have evidence suggesting that
-  // slot should be annotated. For now, we simply choose the first such slot,
-  // sidestepping complexities around the possibility of multiple such slots,
-  // any one of which would be sufficient if annotated Nonnull.
-  for (auto &[Nullability, Slot] : InferrableSlots) {
-    auto &SlotNonnullImpliesDerefValueNonnull =
-        A.makeImplies(Nullability.isNonnull(A), NotIsNull);
-    if (Env.flowConditionImplies(SlotNonnullImpliesDerefValueNonnull))
-      Emit(*Env.getCurrentFunc(), Slot, Evidence::UNCHECKED_DEREFERENCE, Loc);
-  }
+  collectMustBeNonnullEvidence(*DereferencedValue, Env, Loc, InferrableSlots,
+                               Evidence::UNCHECKED_DEREFERENCE, Emit);
 }
 
 const dataflow::Formula *getInferrableSlotsUnknownConstraint(
@@ -157,6 +169,20 @@ const dataflow::Formula *getInferrableSlotsUnknownConstraint(
                              A.makeNot(Nullability.isNonnull(A))));
   }
   return InferrableSlotsUnknown;
+}
+
+void collectEvidenceFromParamAnnotation(
+    TypeNullability &ParamNullability, const dataflow::PointerValue &ArgPV,
+    std::vector<std::pair<PointerTypeNullability, Slot>> &InferrableCallerSlots,
+    const dataflow::Environment &Env, SourceLocation ArgLoc,
+    llvm::function_ref<EvidenceEmitter> Emit) {
+  //  TODO: Account for variance and each layer of nullability when we handle
+  //  more than top-level pointers.
+  if (ParamNullability.empty()) return;
+  if (ParamNullability[0].concrete() == NullabilityKind::NonNull) {
+    collectMustBeNonnullEvidence(ArgPV, Env, ArgLoc, InferrableCallerSlots,
+                                 Evidence::PASSED_TO_NONNULL, Emit);
+  }
 }
 
 void collectEvidenceFromCallExpr(
@@ -185,9 +211,9 @@ void collectEvidenceFromCallExpr(
 
   // For each pointer parameter of the callee, ...
   for (; ParamI < CalleeDecl->param_size(); ++ParamI, ++ArgI) {
-    if (!isSupportedPointerType(
-            CalleeDecl->getParamDecl(ParamI)->getType().getNonReferenceType()))
-      continue;
+    auto ParamType =
+        CalleeDecl->getParamDecl(ParamI)->getType().getNonReferenceType();
+    if (!isSupportedPointerType(ParamType)) continue;
     // the corresponding argument should also be a pointer.
     CHECK(isSupportedPointerType(CallExpr->getArg(ArgI)->getType()));
 
@@ -195,11 +221,15 @@ void collectEvidenceFromCallExpr(
         getPointerValueFromExpr(CallExpr->getArg(ArgI), Env);
     if (!PV) continue;
 
-    // TODO: Check if the parameter is annotated. If annotated Nonnull, (instead
-    // of collecting evidence for it?) collect evidence similar to a
-    // dereference, i.e. if the argument is not already proven Nonnull, collect
-    // evidence for a parameter that could be annotated Nonnull as a way to
-    // force the argument to be Nonnull.
+    SourceLocation ArgLoc = CallExpr->getArg(ArgI)->getExprLoc();
+
+    // TODO: Include inferred annotations from previous rounds when propagating.
+    auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
+
+    // Collect evidence from the binding of the argument to the parameter's
+    // nullability, if known.
+    collectEvidenceFromParamAnnotation(
+        ParamNullability, *PV, InferrableCallerSlots, Env, ArgLoc, Emit);
 
     // Emit evidence of the parameter's nullability. First, calculate that
     // nullability based on InferrableSlots for the caller being assigned to
@@ -219,8 +249,7 @@ void collectEvidenceFromCallExpr(
       default:
         ArgEvidenceKind = Evidence::UNKNOWN_ARGUMENT;
     }
-    Emit(*CalleeDecl, paramSlot(ParamI), ArgEvidenceKind,
-         CallExpr->getArg(ArgI)->getExprLoc());
+    Emit(*CalleeDecl, paramSlot(ParamI), ArgEvidenceKind, ArgLoc);
   }
 }
 

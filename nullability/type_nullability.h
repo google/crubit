@@ -44,7 +44,6 @@ namespace clang::tidy::nullability {
 
 /// Is this exactly a pointer type that we track outer nullability for?
 /// This unwraps sugar, i.e. it looks at the canonical type.
-/// Does not unwrap sugar, consider isSupportedPointer(T.getCanonicalType()).
 ///
 /// (For now, only regular `PointerType`s, in future we should consider
 /// supporting pointer-to-member, ObjC pointers, `unique_ptr`, etc).

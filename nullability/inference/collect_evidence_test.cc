@@ -441,6 +441,17 @@ TEST(CollectEvidenceFromImplementationTest, MemberOperatorCallVarArgs) {
                                 functionNamed("operator()"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest, PassedToNonnull) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(Nonnull<int*> i);
+
+    void target(int* p) { callee(p); }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(paramSlot(0), Evidence::PASSED_TO_NONNULL,
+                                functionNamed("target"))));
+}
+
 TEST(CollectEvidenceFromImplementationTest, NotInferenceTarget) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T>

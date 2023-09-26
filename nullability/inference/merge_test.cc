@@ -237,5 +237,10 @@ TEST_F(InferTest, ReturnValues) {
   EXPECT_EQ(Inference::NULLABLE, infer());
 }
 
+TEST_F(InferTest, PassedToNonnull) {
+  add(Evidence::PASSED_TO_NONNULL);
+  EXPECT_EQ(Inference::NONNULL, infer());
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
