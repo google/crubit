@@ -18,7 +18,7 @@ DISABLED_FEATURES = ["module_maps"]
 def _append_escaped_newline(sequence):
     return [a + " \\\n" for a in sequence]
 
-def get_cc_command_line_for_action(ctx, action_name):
+def get_cc_command_line_for_action(ctx, action_name, compilation_contexts):
     """Returns the command line flags for the given cc action name.
 
     Args:
@@ -36,14 +36,26 @@ def get_cc_command_line_for_action(ctx, action_name):
         requested_features = ctx.features,
         unsupported_features = DISABLED_FEATURES + ctx.disabled_features,
     )
-    stl = ctx.attr._stl[CcInfo].compilation_context
     variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
         user_compile_flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.cxxopts,
-        system_include_directories = depset(cc_toolchain.built_in_include_directories, transitive = [stl.system_includes]),
-        include_directories = stl.includes,
-        quote_include_directories = stl.quote_includes,
+        system_include_directories = depset(cc_toolchain.built_in_include_directories, transitive = [
+            compilation_context.system_includes
+            for compilation_context in compilation_contexts
+        ]),
+        include_directories = depset([
+            include_directory
+            for compilation_context in compilation_contexts
+            for include_directory in compilation_context.includes.to_list()
+        ]),
+        quote_include_directories = depset(
+            [
+                quote_include
+                for compilation_context in compilation_contexts
+                for quote_include in compilation_context.quote_includes.to_list()
+            ],
+        ),
     )
     return cc_common.get_memory_inefficient_command_line(
         feature_configuration = feature_configuration,
@@ -52,7 +64,9 @@ def get_cc_command_line_for_action(ctx, action_name):
     )
 
 def _with_cc_toolchain_flags_impl(ctx):
-    command_line = get_cc_command_line_for_action(ctx, ACTION_NAMES.cpp_header_parsing)
+    command_line = get_cc_command_line_for_action(ctx, ACTION_NAMES.cpp_header_parsing, [
+        ctx.attr._stl[CcInfo].compilation_context,
+    ])
     driver = ctx.actions.declare_file(ctx.attr.name)
     ctx.actions.write(
         is_executable = True,
