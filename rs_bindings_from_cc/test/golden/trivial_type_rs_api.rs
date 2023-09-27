@@ -34,7 +34,7 @@ pub mod ns {
     pub struct Trivial {
         pub trivial_field: ::core::ffi::c_int,
     }
-    forward_declare::unsafe_define!(forward_declare::symbol!("Trivial"), crate::ns::Trivial);
+    forward_declare::unsafe_define!(forward_declare::symbol!("ns :: Trivial"), crate::ns::Trivial);
 
     impl Default for Trivial {
         #[inline(always)]
@@ -130,7 +130,7 @@ pub mod ns {
         pub trivial_field: ::core::ffi::c_int,
     }
     forward_declare::unsafe_define!(
-        forward_declare::symbol!("TrivialNonfinal"),
+        forward_declare::symbol!("ns :: TrivialNonfinal"),
         crate::ns::TrivialNonfinal
     );
 

@@ -28,6 +28,11 @@ crubit_test_cc_library(
 )
 
 crubit_test_cc_library(
+    name = "declaration_other",
+    hdrs = ["declaration_other.h"],
+)
+
+crubit_test_cc_library(
     name = "no_definition_in_headers",
     hdrs = ["no_definition_in_headers.h"],
 )
@@ -38,11 +43,13 @@ crubit_rust_test(
     cc_deps = [
         ":declaration_1",
         ":declaration_2",
+        ":declaration_other",
         ":definition",
         ":no_definition_in_headers",
     ],
     deps = [
         "//support:ctor",
         "//support:forward_declare",
+        "@crate_index//:static_assertions",
     ],
 )

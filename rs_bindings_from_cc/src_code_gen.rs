@@ -2028,12 +2028,17 @@ fn namespace_qualifier_of_item(item_id: ItemId, ir: &IR) -> Result<NamespaceQual
 }
 
 /// Generates Rust source code for a given incomplete record declaration.
-fn generate_incomplete_record(incomplete_record: &IncompleteRecord) -> Result<GeneratedItem> {
+fn generate_incomplete_record(
+    db: &Database,
+    incomplete_record: &IncompleteRecord,
+) -> Result<GeneratedItem> {
     let ident = make_rs_ident(incomplete_record.rs_name.as_ref());
-    let name = incomplete_record.rs_name.as_ref();
+    let namespace_qualifier =
+        namespace_qualifier_of_item(incomplete_record.id, &db.ir())?.format_for_cc()?;
+    let symbol = quote! {#namespace_qualifier #ident}.to_string();
     Ok(quote! {
         forward_declare::forward_declare!(
-            pub #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#name)
+            pub #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#symbol)
         );
     }
     .into())
@@ -2353,9 +2358,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         quote! {}
     };
 
-    // TODO(b/227442773): After namespace support is added, use the fully-namespaced
-    // name.
-    let incomplete_symbol = record.cc_name.as_ref();
+    let incomplete_symbol = cc_tagless_type_name_for_record(record, &ir)?.to_string();
     let incomplete_definition = quote! {
         forward_declare::unsafe_define!(forward_declare::symbol!(#incomplete_symbol), #qualified_ident);
     };
@@ -2766,7 +2769,9 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
                 }
             }
         },
-        Item::IncompleteRecord(incomplete_record) => generate_incomplete_record(incomplete_record)?,
+        Item::IncompleteRecord(incomplete_record) => {
+            generate_incomplete_record(db, incomplete_record)?
+        }
         Item::Record(record) => generate_record(db, record)?,
         Item::Enum(enum_) => generate_enum(db, enum_)?,
         Item::TypeAlias(type_alias) => {

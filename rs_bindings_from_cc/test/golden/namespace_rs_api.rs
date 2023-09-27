@@ -27,7 +27,7 @@ pub mod test_namespace_bindings {
         pub i: ::core::ffi::c_int,
     }
     forward_declare::unsafe_define!(
-        forward_declare::symbol!("S"),
+        forward_declare::symbol!("test_namespace_bindings :: S"),
         crate::test_namespace_bindings::S
     );
 
@@ -123,7 +123,7 @@ pub mod test_namespace_bindings_reopened_0 {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         forward_declare::unsafe_define!(
-            forward_declare::symbol!("S"),
+            forward_declare::symbol!("test_namespace_bindings_reopened :: inner :: S"),
             crate::test_namespace_bindings_reopened::inner::S
         );
 
@@ -209,7 +209,9 @@ pub mod test_namespace_bindings_inline {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
         forward_declare::unsafe_define!(
-            forward_declare::symbol!("StructInInlineNamespace"),
+            forward_declare::symbol!(
+                "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
+            ),
             crate::test_namespace_bindings_inline::inner::StructInInlineNamespace
         );
 

@@ -366,7 +366,7 @@ pub struct __CcTemplateInst10MyTemplateIiE {
     pub value: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate<int>"),
+    forward_declare::symbol!("MyTemplate < int >"),
     crate::__CcTemplateInst10MyTemplateIiE
 );
 
@@ -432,7 +432,7 @@ pub struct __CcTemplateInst10MyTemplateIfE {
     pub value: f32,
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate<float>"),
+    forward_declare::symbol!("MyTemplate < float >"),
     crate::__CcTemplateInst10MyTemplateIfE
 );
 

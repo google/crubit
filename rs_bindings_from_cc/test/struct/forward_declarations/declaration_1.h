@@ -6,6 +6,8 @@
 
 #pragma clang lifetime_elision
 
+namespace ns {
+
 struct UnpinStruct;
 struct NonunpinStruct;
 
@@ -26,5 +28,7 @@ inline int InlineFunctionTakingUnpinStruct(const UnpinStruct& s) {
 inline int InlineFunctionTakingNonunpinStruct(const NonunpinStruct& s) {
   return ReadNonunpinStruct(s);
 }
+
+}  // namespace ns
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_FORWARD_DECLARATIONS_DECLARATION_1_H_

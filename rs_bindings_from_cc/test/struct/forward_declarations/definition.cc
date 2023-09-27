@@ -3,7 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "rs_bindings_from_cc/test/struct/forward_declarations/definition.h"
 
+namespace ns {
 int ReadUnpinStruct(const UnpinStruct& s) { return s.field; }
 void WriteUnpinStruct(UnpinStruct& s, int value) { s.field = value; }
 int ReadNonunpinStruct(const NonunpinStruct& s) { return s.field; }
 void WriteNonunpinStruct(NonunpinStruct& s, int value) { s.field = value; }
+}  // namespace ns

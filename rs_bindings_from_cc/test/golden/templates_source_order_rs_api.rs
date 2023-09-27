@@ -64,7 +64,7 @@ pub mod test_namespace_bindings {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     forward_declare::unsafe_define!(
-        forward_declare::symbol!("Inner"),
+        forward_declare::symbol!("test_namespace_bindings :: Inner"),
         crate::test_namespace_bindings::Inner
     );
 
@@ -103,7 +103,7 @@ pub struct __CcTemplateInst10MyTemplateI8TopLevelE {
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate<TopLevel>"),
+    forward_declare::symbol!("MyTemplate < TopLevel >"),
     crate::__CcTemplateInst10MyTemplateI8TopLevelE
 );
 
@@ -138,7 +138,7 @@ pub struct __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate<test_namespace_bindings::Inner>"),
+    forward_declare::symbol!("MyTemplate < test_namespace_bindings :: Inner >"),
     crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
 );
 
@@ -173,7 +173,7 @@ pub struct __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate<MyTemplate<TopLevel>>"),
+    forward_declare::symbol!("MyTemplate < MyTemplate < TopLevel >>"),
     crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
 );
 
@@ -211,7 +211,7 @@ pub struct __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate<MyTemplate<test_namespace_bindings::Inner>>"),
+    forward_declare::symbol!("MyTemplate < MyTemplate < test_namespace_bindings :: Inner >>"),
     crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
 );
 
@@ -249,7 +249,7 @@ pub struct __CcTemplateInst10MyTemplateIbE {
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate<bool>"),
+    forward_declare::symbol!("MyTemplate < bool >"),
     crate::__CcTemplateInst10MyTemplateIbE
 );
 
@@ -284,7 +284,7 @@ pub struct __CcTemplateInst10MyTemplateIcE {
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate<char>"),
+    forward_declare::symbol!("MyTemplate < char >"),
     crate::__CcTemplateInst10MyTemplateIcE
 );
 
@@ -319,7 +319,7 @@ pub struct __CcTemplateInst10MyTemplateIdE {
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 8],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate<double>"),
+    forward_declare::symbol!("MyTemplate < double >"),
     crate::__CcTemplateInst10MyTemplateIdE
 );
 
@@ -354,7 +354,7 @@ pub struct __CcTemplateInst10MyTemplateIfE {
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate<float>"),
+    forward_declare::symbol!("MyTemplate < float >"),
     crate::__CcTemplateInst10MyTemplateIfE
 );
 
@@ -389,7 +389,7 @@ pub struct __CcTemplateInst10MyTemplateIiE {
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate<int>"),
+    forward_declare::symbol!("MyTemplate < int >"),
     crate::__CcTemplateInst10MyTemplateIiE
 );
 

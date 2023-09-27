@@ -6,6 +6,8 @@
 
 #pragma clang lifetime_elision
 
+namespace ns {
+
 struct UnpinStruct;
 struct NonunpinStruct;
 
@@ -14,5 +16,7 @@ void WriteUnpinStruct(UnpinStruct& s, int value);
 
 int ReadNonunpinStruct(const NonunpinStruct& s);
 void WriteNonunpinStruct(NonunpinStruct& s, int value);
+
+}  // namespace ns
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_FORWARD_DECLARATIONS_DECLARATION_2_H_

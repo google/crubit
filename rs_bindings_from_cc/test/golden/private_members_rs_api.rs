@@ -31,7 +31,7 @@ pub mod test_namespace_bindings {
         pub(crate) private_member_variable_: [::core::mem::MaybeUninit<u8>; 4],
     }
     forward_declare::unsafe_define!(
-        forward_declare::symbol!("SomeClass"),
+        forward_declare::symbol!("test_namespace_bindings :: SomeClass"),
         crate::test_namespace_bindings::SomeClass
     );
 

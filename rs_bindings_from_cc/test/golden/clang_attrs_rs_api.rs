@@ -467,7 +467,7 @@ pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("template_with_preferred_name::SomeTemplate<int>"),
+    forward_declare::symbol!("template_with_preferred_name :: SomeTemplate < int >"),
     crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 );
 

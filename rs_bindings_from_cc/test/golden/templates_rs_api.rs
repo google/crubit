@@ -87,7 +87,7 @@ pub mod test_namespace_bindings {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     forward_declare::unsafe_define!(
-        forward_declare::symbol!("TemplateParam"),
+        forward_declare::symbol!("test_namespace_bindings :: TemplateParam"),
         crate::test_namespace_bindings::TemplateParam
     );
 
@@ -223,7 +223,7 @@ pub mod private_classes {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
     forward_declare::unsafe_define!(
-        forward_declare::symbol!("HasPrivateType"),
+        forward_declare::symbol!("private_classes :: HasPrivateType"),
         crate::private_classes::HasPrivateType
     );
 
@@ -318,7 +318,7 @@ pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentSco
     pub(crate) value_: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("test_namespace_bindings::MyTemplate<DifferentScope>"),
+    forward_declare::symbol!("test_namespace_bindings :: MyTemplate < DifferentScope >"),
     crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 );
 
@@ -400,7 +400,7 @@ pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateP
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(
-        "test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>"
+        "test_namespace_bindings :: MyTemplate < test_namespace_bindings :: TemplateParam >"
     ),
     crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 );
@@ -482,7 +482,7 @@ pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("test_namespace_bindings::MyTemplate<int>"),
+    forward_declare::symbol!("test_namespace_bindings :: MyTemplate < int >"),
     crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 );
 
@@ -562,7 +562,7 @@ pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(
-        "test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>"
+        "test_namespace_bindings :: TemplateWithTwoParams < test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"
     ),
     crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 );
@@ -620,7 +620,7 @@ pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifE
     pub value2: f32,
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("test_namespace_bindings::TemplateWithTwoParams<int, float>"),
+    forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < int , float >"),
     crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 );
 
@@ -677,7 +677,7 @@ pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiE
     pub value2: ::core::ffi::c_int,
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("test_namespace_bindings::TemplateWithTwoParams<int, int>"),
+    forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < int , int >"),
     crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
 );
 
@@ -735,7 +735,7 @@ pub struct __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("test_namespace_bindings::MyStruct<char>"),
+    forward_declare::symbol!("test_namespace_bindings :: MyStruct < char >"),
     crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE
 );
 
@@ -833,7 +833,7 @@ pub struct __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13Temp
     pub value: crate::test_namespace_bindings::TemplateParam,
 }
 forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTopLevelTemplate<test_namespace_bindings::TemplateParam>"),
+    forward_declare::symbol!("MyTopLevelTemplate < test_namespace_bindings :: TemplateParam >"),
     crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 );
 
@@ -892,7 +892,7 @@ pub struct __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(
-        "template_template_params::MyTemplate<template_template_params::Policy>"
+        "template_template_params :: MyTemplate < template_template_params :: Policy >"
     ),
     crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 );
