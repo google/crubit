@@ -57,7 +57,7 @@ CcBindingsFromRustInfo = provider(
         # TODO(b/271857814): A `CRATE_NAME` might not be globally unique - the
         # key needs to also cover a "hash" of the crate version and compilation
         # flags.
-        "crate_key": "String with a crate key to use in --other-crate-bindings",
+        "crate_key": "String with a crate key to use in --bindings-from-dependency",
         "h_out_file": "File object representing the generated ..._cc_api.h.",
     },
 )

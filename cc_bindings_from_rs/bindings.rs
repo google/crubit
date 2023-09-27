@@ -505,7 +505,7 @@ fn format_ty_for_cc<'tcx>(
                     .ok_or_else(|| {
                         anyhow!(
                             "Type `{ty}` comes from the `{other_crate_name}` crate, \
-                             but no `--other-crate-bindings` were specified for this crate"
+                             but no `--bindings-from-dependency` was specified for this crate"
                         )
                     })?;
                 prereqs.includes.insert(include.clone());
@@ -6633,7 +6633,7 @@ pub mod tests {
             (
                 "std::cmp::Ordering",
                 "Type `std::cmp::Ordering` comes from the `core` crate, \
-                 but no `--other-crate-bindings` were specified for this crate",
+                 but no `--bindings-from-dependency` was specified for this crate",
             ),
             ("Option<i8>", "Generic types are not supported yet (b/259749095)"),
             (
