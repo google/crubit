@@ -24,7 +24,7 @@ struct FfiBindings {
 
 // This function is implemented in Rust.
 extern "C" FfiBindings GenerateBindingsImpl(
-    FfiU8Slice json, FfiU8Slice crubit_support_path,
+    FfiU8Slice json, FfiU8Slice crubit_support_path_format,
     FfiU8Slice clang_format_exe_path, FfiU8Slice rustfmt_exe_path,
     FfiU8Slice rustfmt_config_path, bool generate_error_report,
     SourceLocationDocComment generate_source_location_in_doc_comment);
@@ -52,13 +52,13 @@ static void FreeFfiBindings(FfiBindings ffi_bindings) {
 }
 
 absl::StatusOr<Bindings> GenerateBindings(
-    const IR& ir, absl::string_view crubit_support_path,
+    const IR& ir, absl::string_view crubit_support_path_format,
     absl::string_view clang_format_exe_path, absl::string_view rustfmt_exe_path,
     absl::string_view rustfmt_config_path, bool generate_error_report,
     SourceLocationDocComment generate_source_location_in_doc_comment) {
   std::string json = llvm::formatv("{0}", ir.ToJson());
   FfiBindings ffi_bindings = GenerateBindingsImpl(
-      MakeFfiU8Slice(json), MakeFfiU8Slice(crubit_support_path),
+      MakeFfiU8Slice(json), MakeFfiU8Slice(crubit_support_path_format),
       MakeFfiU8Slice(clang_format_exe_path), MakeFfiU8Slice(rustfmt_exe_path),
       MakeFfiU8Slice(rustfmt_config_path), generate_error_report,
       generate_source_location_in_doc_comment);

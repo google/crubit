@@ -47,7 +47,7 @@ fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
 }
 
 fn new_input<'tcx>(cmdline: &Cmdline, tcx: TyCtxt<'tcx>) -> Input<'tcx> {
-    let crubit_support_path = cmdline.crubit_support_path.as_str().into();
+    let crubit_support_path_format = cmdline.crubit_support_path_format.as_str().into();
 
     let crate_name_to_include_path = cmdline
         .bindings_from_dependencies
@@ -57,7 +57,7 @@ fn new_input<'tcx>(cmdline: &Cmdline, tcx: TyCtxt<'tcx>) -> Input<'tcx> {
         })
         .collect();
 
-    Input { tcx, crubit_support_path, crate_name_to_include_path, _features: () }
+    Input { tcx, crubit_support_path_format, crate_name_to_include_path, _features: () }
 }
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
@@ -247,7 +247,7 @@ mod tests {
                 "cc_bindings_from_rs_unittest_executable".to_string(),
                 format!("--h-out={}", h_path.display()),
                 format!("--rs-out={}", rs_path.display()),
-                format!("--crubit-support-path=crubit/support/for/tests"),
+                "--crubit-support-path-format=<crubit/support/{header}>".to_string(),
                 format!("--clang-format-exe-path={CLANG_FORMAT_EXE_PATH_FOR_TESTING}"),
                 format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH_FOR_TESTING}"),
             ];

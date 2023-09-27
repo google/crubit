@@ -106,7 +106,7 @@ def _generate_bindings(ctx, basename, inputs, rustc_args, rustc_env):
     crubit_args.add("--h-out", h_out_file)
     crubit_args.add("--rs-out", rs_out_file)
 
-    crubit_args.add("--crubit-support-path", "support")
+    crubit_args.add("--crubit-support-path-format", "\"support/{header}\"")
 
     crubit_args.add("--clang-format-exe-path", ctx.file._clang_format)
     crubit_args.add("--rustfmt-exe-path", ctx.file._rustfmt)

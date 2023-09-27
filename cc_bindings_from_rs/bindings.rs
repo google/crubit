@@ -31,10 +31,11 @@ pub struct Input<'tcx> {
     /// for.
     pub tcx: TyCtxt<'tcx>,
 
-    /// Path to a the `crubit/support` directory in a format that should be used
-    /// in the `#include` directives inside the generated C++ files.
-    /// Example: "crubit/support".
-    pub crubit_support_path: Rc<str>,
+    /// Format specifier for `#include` Crubit C++ support library headers,
+    /// using `{header}` as the place holder.  Example:
+    /// `<crubit/support/{header}>` results in `#include
+    /// <crubit/support/hdr.h>`.
+    pub crubit_support_path_format: Rc<str>,
 
     /// A map from a crate name to the include path with the corresponding C++
     /// bindings. This is used when formatting a type exported from another
@@ -52,9 +53,7 @@ impl<'tcx> Input<'tcx> {
     // easier if separate functions are provided for each support header - e.g.
     // `rs_char()`, `return_value_slot()`, etc.
     fn support_header(&self, suffix: &str) -> CcInclude {
-        let support_path = &*self.crubit_support_path;
-        let full_path = format!("{support_path}/{suffix}");
-        CcInclude::user_header(full_path.into())
+        CcInclude::support_lib_header(self.crubit_support_path_format.clone(), suffix.into())
     }
 }
 
@@ -6404,7 +6403,7 @@ pub mod tests {
             ("u32", ("std::uint32_t", "<cstdint>", "", "")),
             ("u64", ("std::uint64_t", "<cstdint>", "", "")),
             ("usize", ("std::uintptr_t", "<cstdint>", "", "")),
-            ("char", ("rs_std::rs_char", "\"crubit/support/for/tests/rs_std/rs_char.h\"", "", "")),
+            ("char", ("rs_std::rs_char", "<crubit/support/for/tests/rs_std/rs_char.h>", "", "")),
             ("SomeStruct", ("::rust_out::SomeStruct", "", "SomeStruct", "")),
             ("SomeEnum", ("::rust_out::SomeEnum", "", "SomeEnum", "")),
             ("SomeUnion", ("::rust_out::SomeUnion", "", "SomeUnion", "")),
@@ -6442,7 +6441,7 @@ pub mod tests {
                 "extern \"C\" fn (f32, f32) -> f32",
                 (
                     "crubit :: type_identity_t < float (float , float) > &",
-                    "\"crubit/support/for/tests/internal/cxx20_backports.h\"",
+                    "<crubit/support/for/tests/internal/cxx20_backports.h>",
                     "",
                     "",
                 ),
@@ -6454,7 +6453,7 @@ pub mod tests {
                 "*const extern \"C\" fn (f32, f32) -> f32",
                 (
                     "crubit :: type_identity_t < float (float , float) > * const *",
-                    "\"crubit/support/for/tests/internal/cxx20_backports.h\"",
+                    "<crubit/support/for/tests/internal/cxx20_backports.h>",
                     "",
                     "",
                 ),
@@ -6893,7 +6892,7 @@ pub mod tests {
     fn bindings_input_for_tests(tcx: TyCtxt) -> Input {
         Input {
             tcx,
-            crubit_support_path: "crubit/support/for/tests".into(),
+            crubit_support_path_format: "<crubit/support/for/tests/{header}>".into(),
             crate_name_to_include_path: Default::default(),
             _features: (),
         }

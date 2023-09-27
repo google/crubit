@@ -30,7 +30,7 @@ class Cmdline {
   static absl::StatusOr<Cmdline> CreateForTesting(
       std::string current_target, std::string cc_out, std::string rs_out,
       std::string ir_out, std::string namespaces_out,
-      std::string crubit_support_path, std::string clang_format_exe_path,
+      std::string crubit_support_path_format, std::string clang_format_exe_path,
       std::string rustfmt_exe_path, std::string rustfmt_config_path,
       bool do_nothing, std::vector<std::string> public_headers,
       std::string target_args_str, std::vector<std::string> extra_rs_srcs,
@@ -40,7 +40,7 @@ class Cmdline {
     return CreateFromArgs(
         std::move(current_target), std::move(cc_out), std::move(rs_out),
         std::move(ir_out), std::move(namespaces_out),
-        std::move(crubit_support_path), std::move(clang_format_exe_path),
+        std::move(crubit_support_path_format), std::move(clang_format_exe_path),
         std::move(rustfmt_exe_path), std::move(rustfmt_config_path), do_nothing,
         std::move(public_headers), std::move(target_args_str),
         std::move(extra_rs_srcs), std::move(srcs_to_scan_for_instantiations),
@@ -57,7 +57,9 @@ class Cmdline {
   absl::string_view rs_out() const { return rs_out_; }
   absl::string_view ir_out() const { return ir_out_; }
   absl::string_view namespaces_out() const { return namespaces_out_; }
-  absl::string_view crubit_support_path() const { return crubit_support_path_; }
+  absl::string_view crubit_support_path_format() const {
+    return crubit_support_path_format_;
+  }
   absl::string_view clang_format_exe_path() const {
     return clang_format_exe_path_;
   }
@@ -99,7 +101,7 @@ class Cmdline {
   static absl::StatusOr<Cmdline> CreateFromArgs(
       std::string current_target, std::string cc_out, std::string rs_out,
       std::string ir_out, std::string namespaces_out,
-      std::string crubit_support_path, std::string clang_format_exe_path,
+      std::string crubit_support_path_format, std::string clang_format_exe_path,
       std::string rustfmt_exe_path, std::string rustfmt_config_path,
       bool do_nothing, std::vector<std::string> public_headers,
       std::string target_args_str, std::vector<std::string> extra_rs_srcs,
@@ -112,7 +114,7 @@ class Cmdline {
   std::string cc_out_;
   std::string rs_out_;
   std::string ir_out_;
-  std::string crubit_support_path_;
+  std::string crubit_support_path_format_;
   std::string clang_format_exe_path_;
   std::string rustfmt_exe_path_;
   std::string rustfmt_config_path_;

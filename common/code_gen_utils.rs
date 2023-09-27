@@ -213,8 +213,15 @@ pub fn format_namespace_bound_cc_tokens(
 /// `CcInclude` represents a single `#include ...` directive in C++.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum CcInclude {
+    /// Represents a system header, e.g., `cstdef`, which will be included by
+    /// angular brackets.
     SystemHeader(&'static str),
+    /// Represents a user header, which will be included by quotes.
     UserHeader(Rc<str>),
+    /// Represents an `#include` for Crubit C++ support library headers: the
+    /// format specifier for what comes after `#include` and path of the support
+    /// library header.
+    SupportLibHeader(Rc<str>, Rc<str>),
 }
 
 impl CcInclude {
@@ -256,6 +263,12 @@ impl CcInclude {
     pub fn user_header(path: Rc<str>) -> Self {
         Self::UserHeader(path)
     }
+
+    /// Creates a support library header include based on the specified format.
+    /// E.g., `\"{header}\"` and `hdr.h` produces `#include "hdr.h"`.
+    pub fn support_lib_header(format: Rc<str>, path: Rc<str>) -> Self {
+        Self::SupportLibHeader(format, path)
+    }
 }
 
 impl ToTokens for CcInclude {
@@ -269,6 +282,13 @@ impl ToTokens for CcInclude {
             }
             Self::UserHeader(path) => {
                 quote! { __HASH_TOKEN__ include #path __NEWLINE__ }.to_tokens(tokens)
+            }
+            Self::SupportLibHeader(format, path) => {
+                let full_path: TokenStream = format
+                    .replace("{header}", path)
+                    .parse()
+                    .expect("Failed to parse support lib `#include` path");
+                quote! { __HASH_TOKEN__ include #full_path __NEWLINE__ }.to_tokens(tokens)
             }
         }
     }
@@ -731,6 +751,47 @@ pub mod tests {
                 }  // namespace foo::working_module::bar
             },
         );
+    }
+
+    #[test]
+    fn test_format_cc_include_support_lib_header() {
+        let tests = vec![
+            (
+                "\"crubit/support/path/for/test/{header}\"",
+                "header.h",
+                "\"crubit/support/path/for/test/header.h\"",
+            ),
+            (
+                "\"crubit/support/path/for/test/{header}\"",
+                "subdir/header.h",
+                "\"crubit/support/path/for/test/subdir/header.h\"",
+            ),
+            (
+                "<crubit/support/path/for/test/{header}>",
+                "header.h",
+                "<crubit/support/path/for/test/header.h>",
+            ),
+            ("\"{header}\"", "header.h", "\"header.h\""),
+        ];
+
+        for (support_path_format, header, expected_output) in tests.iter() {
+            let header = CcInclude::support_lib_header(
+                support_path_format.to_string().into(),
+                header.to_string().into(),
+            );
+            let mut actual_tokens = TokenStream::default();
+            header.to_tokens(&mut actual_tokens);
+
+            let expected_output: TokenStream =
+                expected_output.parse().expect("Failed to convert expected_output to TokenStream");
+
+            assert_cc_matches!(
+                actual_tokens,
+                quote! {
+                  __HASH_TOKEN__ include #expected_output
+                }
+            );
+        }
     }
 
     #[test]

@@ -87,7 +87,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
   bool generate_error_report = !cmdline.error_report_out().empty();
   CRUBIT_ASSIGN_OR_RETURN(
       Bindings bindings,
-      GenerateBindings(ir, cmdline.crubit_support_path(),
+      GenerateBindings(ir, cmdline.crubit_support_path_format(),
                        cmdline.clang_format_exe_path(),
                        cmdline.rustfmt_exe_path(),
                        cmdline.rustfmt_config_path(), generate_error_report,

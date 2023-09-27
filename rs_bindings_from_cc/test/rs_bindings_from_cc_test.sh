@@ -36,15 +36,15 @@ function test::cmd_line_api() {
       --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 | \
-      grep 'please specify --crubit_support_path' > /dev/null" \
-    "generator should show help message for --crubit_support_path"
+      grep 'please specify --crubit_support_path_format' > /dev/null" \
+    "generator should show help message for --crubit_support_path_format"
 
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
       --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 \
-      --crubit_support_path=test/crubit/support/path | \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" | \
       grep 'please specify --clang_format_exe_path' > /dev/null" \
     "generator should show help message for --clang_format_exe_path"
 
@@ -53,7 +53,7 @@ function test::cmd_line_api() {
       --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 \
-      --crubit_support_path=test/crubit/support/path \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" | \
       grep 'please specify --rustfmt_exe_path' > /dev/null" \
     "generator should show help message for --rustfmt_exe_path"
@@ -63,7 +63,7 @@ function test::cmd_line_api() {
       --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 \
-      --crubit_support_path=test/crubit/support/path \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" | \
       grep 'please specify --public_headers' > /dev/null" \
@@ -77,7 +77,7 @@ function test::cmd_line_api() {
       --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
-      --crubit_support_path=test/crubit/support/path \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" 2>&1 | \
@@ -95,7 +95,7 @@ EOT
       --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
-      --crubit_support_path=test/crubit/support/path \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
@@ -120,7 +120,7 @@ EOT
       --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
-      --crubit_support_path=test/crubit/support/path \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
@@ -153,7 +153,7 @@ EOT
       --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
-      --crubit_support_path=test/crubit/support/path \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
@@ -184,7 +184,7 @@ EOT
       --target=//foo/bar:baz \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
-      --crubit_support_path=test/crubit/support/path \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${header_1},${header_2}\" \
@@ -214,7 +214,7 @@ EOT
       --target=//foo/bar:baz \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
-      --crubit_support_path=test/crubit/support/path \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
@@ -244,7 +244,7 @@ EOF
       --target=//foo/bar:baz\
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
-      --crubit_support_path=test/crubit/support/path \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --rustfmt_config_path=\"${rustfmt_config_path}\" \
@@ -266,7 +266,7 @@ EOF
     "Verify function args are *not* on single line when using custom rustfmt config (2)"
 }
 
-function test::crubit_support_path() {
+function test::crubit_support_path_format() {
   local rs_out="${TEST_TMPDIR}/rs_api.rs"
   local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
 
@@ -284,7 +284,7 @@ EOT
       --target=//foo/bar:baz \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
-      --crubit_support_path=test/specific/crubit/support/path \
+      --crubit_support_path_format=\"<test/specific/crubit/support/path/{header}>\" \
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
@@ -292,8 +292,8 @@ EOT
 
   EXPECT_FILE_NOT_EMPTY "${cc_out}"
   EXPECT_SUCCEED \
-    "grep \"#include.*test/specific/crubit/support/path/[a-z]\" \"${cc_out}\"" \
-    "Verify #include paths are based on the argument of --crubit_support_path"
+    "grep \"#include <test/specific/crubit/support/path/.*>\" \"${cc_out}\"" \
+    "Verify #include paths are based on the argument of --crubit_support_path_format"
 }
 
 gbash::unit::main "$@"

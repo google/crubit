@@ -43,24 +43,24 @@ pub struct FfiBindings {
 /// Expectations:
 ///    * `json` should be a FfiU8Slice for a valid array of bytes with the given
 ///      size.
-///    * `crubit_support_path` should be a FfiU8Slice for a valid array of bytes
-///      representing an UTF8-encoded string
+///    * `crubit_support_path_format` should be a FfiU8Slice for a valid array
+///      of bytes representing an UTF8-encoded string
 ///    * `rustfmt_exe_path` and `rustfmt_config_path` should both be a
 ///      FfiU8Slice for a valid array of bytes representing an UTF8-encoded
 ///      string (without the UTF-8 requirement, it seems that Rust doesn't offer
 ///      a way to convert to OsString on Windows)
-///    * `json`, `crubit_support_path`, `rustfmt_exe_path`, and
+///    * `json`, `crubit_support_path_format`, `rustfmt_exe_path`, and
 ///      `rustfmt_config_path` shouldn't change during the call.
 ///
 /// Ownership:
 ///    * function doesn't take ownership of (in other words it borrows) the
-///      input params: `json`, `crubit_support_path`, `rustfmt_exe_path`, and
-///      `rustfmt_config_path`
+///      input params: `json`, `crubit_support_path_format`, `rustfmt_exe_path`,
+///      and `rustfmt_config_path`
 ///    * function passes ownership of the returned value to the caller
 #[no_mangle]
 pub unsafe extern "C" fn GenerateBindingsImpl(
     json: FfiU8Slice,
-    crubit_support_path: FfiU8Slice,
+    crubit_support_path_format: FfiU8Slice,
     clang_format_exe_path: FfiU8Slice,
     rustfmt_exe_path: FfiU8Slice,
     rustfmt_config_path: FfiU8Slice,
@@ -68,7 +68,8 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> FfiBindings {
     let json: &[u8] = json.as_slice();
-    let crubit_support_path: &str = std::str::from_utf8(crubit_support_path.as_slice()).unwrap();
+    let crubit_support_path_format: &str =
+        std::str::from_utf8(crubit_support_path_format.as_slice()).unwrap();
     let clang_format_exe_path: OsString =
         std::str::from_utf8(clang_format_exe_path.as_slice()).unwrap().into();
     let rustfmt_exe_path: OsString =
@@ -81,7 +82,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
             if generate_error_report { Rc::new(ErrorReport::new()) } else { Rc::new(IgnoreErrors) };
         let Bindings { rs_api, rs_api_impl } = generate_bindings(
             json,
-            crubit_support_path,
+            crubit_support_path_format,
             &clang_format_exe_path,
             &rustfmt_exe_path,
             &rustfmt_config_path,
@@ -152,7 +153,7 @@ struct BindingsTokens {
 
 fn generate_bindings(
     json: &[u8],
-    crubit_support_path: &str,
+    crubit_support_path_format: &str,
     clang_format_exe_path: &OsStr,
     rustfmt_exe_path: &OsStr,
     rustfmt_config_path: &OsStr,
@@ -163,7 +164,7 @@ fn generate_bindings(
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(
         ir.clone(),
-        crubit_support_path,
+        crubit_support_path_format,
         errors,
         generate_source_loc_doc_comment,
     )?;
@@ -2934,7 +2935,7 @@ fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>>> {
 // needed to support it.
 fn generate_bindings_tokens(
     ir: Rc<IR>,
-    crubit_support_path: &str,
+    crubit_support_path_format: &str,
     errors: Rc<dyn ErrorReporting>,
     generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<BindingsTokens> {
@@ -2945,7 +2946,7 @@ fn generate_bindings_tokens(
     let mut items = vec![];
     let mut thunks = vec![];
     let mut thunk_impls = vec![
-        generate_rs_api_impl_includes(&mut db, crubit_support_path)?,
+        generate_rs_api_impl_includes(&mut db, crubit_support_path_format)?,
         quote! {
             __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
             // Disable Clang thread-safety-analysis warnings that would otherwise
@@ -4248,7 +4249,7 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
 
 fn generate_rs_api_impl_includes(
     db: &mut Database,
-    crubit_support_path: &str,
+    crubit_support_path_format: &str,
 ) -> Result<TokenStream> {
     let ir = db.ir();
 
@@ -4256,13 +4257,15 @@ fn generate_rs_api_impl_includes(
     internal_includes.insert(CcInclude::memory()); // ubiquitous.
     if ir.records().next().is_some() {
         internal_includes.insert(CcInclude::cstddef());
-        internal_includes.insert(CcInclude::user_header(
-            format!("{crubit_support_path}/internal/sizeof.h").into(),
+        internal_includes.insert(CcInclude::SupportLibHeader(
+            crubit_support_path_format.into(),
+            "internal/sizeof.h".into(),
         ));
     };
     for crubit_header in ["internal/cxx20_backports.h", "internal/offsetof.h"] {
-        internal_includes.insert(CcInclude::user_header(
-            format!("{crubit_support_path}/{crubit_header}").into(),
+        internal_includes.insert(CcInclude::SupportLibHeader(
+            crubit_support_path_format.into(),
+            crubit_header.into(),
         ));
     }
     let internal_includes = format_cc_includes(&internal_includes);
@@ -5418,13 +5421,13 @@ mod tests {
         // type) are references with lifetimes.  Something like this:
         //     #pragma clang lifetime_elision
         //     const int& (*get_ptr_to_func())(const int&, const int&); "#)?;
-        // 1) Need to investigate why this fails - seeing raw pointers in Rust
-        //    seems to indicate that no lifetimes are present at the `importer.cc`
-        //    level. Maybe lifetime elision doesn't support this scenario? Unclear
-        //    how to explicitly apply [[clang::annotate("lifetimes", "a, b -> a")]]
-        //    to the _inner_ function.
-        // 2) It is important to have 2 reference parameters, so see if the problem
-        //    of passing `lifetimes` by value would have been caught - see:
+        // 1) Need to investigate why this fails - seeing raw pointers in Rust seems to
+        //    indicate that no lifetimes are present at the `importer.cc` level. Maybe
+        //    lifetime elision doesn't support this scenario? Unclear how to explicitly
+        //    apply [[clang::annotate("lifetimes", "a, b -> a")]] to the _inner_
+        //    function.
+        // 2) It is important to have 2 reference parameters, so see if the problem of
+        //    passing `lifetimes` by value would have been caught - see:
         //    cl/428079010/depot/rs_bindings_from_cc/
         // importer.cc?version=s6#823
 
