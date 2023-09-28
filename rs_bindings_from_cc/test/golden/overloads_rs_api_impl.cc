@@ -6,10 +6,10 @@
 // //rs_bindings_from_cc/test/golden:overloads_cc
 // Features: experimental, supported
 
-#include <memory>
-
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+
+#include <memory>
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/overloads.h"

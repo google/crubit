@@ -5,13 +5,12 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_
 
+#include "support/internal/attribute_macros.h"
 #include <stddef.h>
 #include <stdint.h>
 
 #include <cstddef>
 #include <cstdint>
-
-#include "support/internal/attribute_macros.h"
 
 // Not a template, so that it isn't visible to the bindings generator.
 // We're just here to save typing.
