@@ -33,11 +33,6 @@ ABSL_FLAG(std::string, cc_out, "",
 ABSL_FLAG(std::string, ir_out, "",
           "(optional) output path for the JSON IR. If not present, the JSON IR "
           "will not be dumped.");
-// TODO(b/284301702): Remove this flag once Crosstool unstable has CL/566667051.
-ABSL_FLAG(std::string, crubit_support_path, "",
-          "path to the crubit/support directory in a format that "
-          "should be used in the #include directives inside the generated .cc "
-          "files. This flag is deprecated, use `crubit_support_path_format`");
 ABSL_FLAG(std::string, crubit_support_path_format, "",
           "the format of `#include` for including Crubit C++ support library "
           "headers in the "
