@@ -32,6 +32,7 @@ Inference finalize(const Partial &);
 struct InferResult {
   Inference::Nullability Nullability;
   bool Conflict = false;
+  bool Trivial = false;
 };
 // Final inference decisions, based on event counts.
 // TODO: once this interface sticks, move to a dedicated file.

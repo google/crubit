@@ -109,6 +109,7 @@ TEST(MergeEvidenceTest, Finalize) {
                   kind_count { key: 3 value: 1 }  # UNCHECKED_DEREFERENCE
                 }
                 slot { kind_count { key: 0 value: 1 } }  # ANNOTATED_UNKNOWN
+                slot { kind_count { key: 1 value: 1 } }  # ANNOTATED_NULLABLE
               )pb")),
               EqualsProto(R"pb(
                 symbol { usr: "func" }
@@ -121,6 +122,7 @@ TEST(MergeEvidenceTest, Finalize) {
                 }
                 slot_inference { slot: 2 nullability: NONNULL }
                 slot_inference { slot: 3 nullability: UNKNOWN }
+                slot_inference { slot: 4 nullability: NULLABLE trivial: true }
               )pb"));
 }
 
@@ -142,7 +144,7 @@ TEST(MergeEvidenceTest, TreeShapedMerge) {
     symbol {}
     slot_inference { slot: 0 nullability: UNKNOWN conflict: true }
     slot_inference { slot: 2 nullability: NONNULL }
-    slot_inference { slot: 4 nullability: NULLABLE }
+    slot_inference { slot: 4 nullability: NULLABLE trivial: true }
   )pb");
 
   EXPECT_THAT(
@@ -183,9 +185,11 @@ class InferTest : public ::testing::Test {
  protected:
   void add(Evidence::Kind E, int N = 1) { Counts[E] += N; }
 
-  Inference::Nullability infer(bool ExpectConflict = false) {
+  Inference::Nullability infer(bool ExpectConflict = false,
+                               bool ExpectTrivial = false) {
     auto Result = nullability::infer(Counts);
     EXPECT_EQ(ExpectConflict, Result.Conflict);
+    EXPECT_EQ(ExpectTrivial, Result.Trivial);
     return Result.Nullability;
   }
 };
@@ -194,9 +198,11 @@ TEST_F(InferTest, NoEvidence) { EXPECT_EQ(Inference::UNKNOWN, infer()); }
 
 TEST_F(InferTest, Annotated) {
   add(Evidence::ANNOTATED_NULLABLE);
-  EXPECT_EQ(Inference::NULLABLE, infer());
+  EXPECT_EQ(Inference::NULLABLE,
+            infer(/*ExpectConflict=*/false, /*ExpectTrivial=*/true));
   add(Evidence::UNCHECKED_DEREFERENCE);  // No conflict, annotation wins.
-  EXPECT_EQ(Inference::NULLABLE, infer());
+  EXPECT_EQ(Inference::NULLABLE,
+            infer(/*ExpectConflict=*/false, /*ExpectTrivial=*/true));
   add(Evidence::ANNOTATED_NONNULL);  // Conflicting annotations!
   EXPECT_EQ(Inference::UNKNOWN, infer(/*ExpectConflict=*/true));
 }

@@ -90,6 +90,11 @@ message Inference {
     optional bool conflict = 3;
     // Examples of evidence that contributed. Optional, for debugging only.
     repeated Evidence sample_evidence = 4;
+    // Indicates that this inference does not represent new information beyond
+    // what is explicitly written in the source code, and so does not need to be
+    // separately propagated from one round of inference into the next.
+    // e.g. an inference gathered from ANNOTATED_NONNULL Evidence.
+    optional bool trivial = 5;
   }
 
   enum Nullability {

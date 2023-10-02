@@ -85,6 +85,7 @@ Inference finalize(const Partial &P) {
     auto Result = infer(KindCounts);
     Slot.set_nullability(Result.Nullability);
     if (Result.Conflict) Slot.set_conflict(true);
+    if (Result.Trivial) Slot.set_trivial(true);
   }
   return Result;
 }
@@ -111,8 +112,10 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
       Counts[Evidence::ANNOTATED_NULLABLE]) {
     return {Inference::UNKNOWN, /*Conflict=*/true};
   }
-  if (Counts[Evidence::ANNOTATED_NONNULL]) return {Inference::NONNULL};
-  if (Counts[Evidence::ANNOTATED_NULLABLE]) return {Inference::NULLABLE};
+  if (Counts[Evidence::ANNOTATED_NONNULL])
+    return {Inference::NONNULL, /*Conflict=*/false, /*Trivial=*/true};
+  if (Counts[Evidence::ANNOTATED_NULLABLE])
+    return {Inference::NULLABLE, /*Conflict=*/false, /*Trivial=*/true};
 
   // Mandatory inference rules, required by type-checking.
   // Ordered from most confident to least.

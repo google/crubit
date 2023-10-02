@@ -135,7 +135,6 @@ cc_binary(
     name = "infer_tu_main",
     srcs = ["infer_tu_main.cc"],
     deps = [
-        ":collect_evidence",
         ":infer_tu",
         ":inference_cc_proto",
         "@absl//absl/log:check",

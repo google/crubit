@@ -15,7 +15,6 @@
 #include <utility>
 
 #include "absl/log/check.h"
-#include "nullability/inference/collect_evidence.h"
 #include "nullability/inference/infer_tu.h"
 #include "nullability/inference/inference.proto.h"
 #include "clang/AST/ASTConsumer.h"
@@ -134,15 +133,6 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
   }
 };
 
-bool isTrivial(const Inference::SlotInference &I) {
-  if (I.conflict()) return false;
-  for (const auto &E : I.sample_evidence())
-    if (E.kind() == Evidence::ANNOTATED_NONNULL ||
-        E.kind() == Evidence::ANNOTATED_NULLABLE)
-      return true;
-  return false;
-}
-
 // Selects which declarations to analyze based on filter flags.
 struct DeclFilter {
   bool operator()(const Decl &D) const {
@@ -199,7 +189,9 @@ class Action : public SyntaxOnlyAction {
         auto Results = inferTU(Ctx, DeclFilter());
         if (!IncludeTrivial)
           llvm::erase_if(Results, [](Inference &I) {
-            llvm::erase_if(*I.mutable_slot_inference(), isTrivial);
+            llvm::erase_if(
+                *I.mutable_slot_inference(),
+                [](const Inference::SlotInference &S) { return S.trivial(); });
             return I.slot_inference_size() == 0;
           });
         if (PrintProtos)
