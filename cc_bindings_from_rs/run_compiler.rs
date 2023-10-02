@@ -3,7 +3,20 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 //! The `run_compiler` crate mostly wraps and simplifies a subset of APIs
-//! from the `rustc_driver` module, providing an easy way to `run_compiler`.
+//! from the `rustc_driver` crate, providing an easy way to `run_compiler`.
+#![feature(rustc_private)]
+#![deny(rustc::internal)]
+
+extern crate rustc_driver;
+extern crate rustc_error_codes;
+extern crate rustc_errors;
+extern crate rustc_feature;
+extern crate rustc_interface;
+extern crate rustc_lint_defs;
+extern crate rustc_middle;
+extern crate rustc_session;
+extern crate rustc_span;
+extern crate rustc_target;
 
 use anyhow::anyhow;
 use either::Either;
@@ -111,7 +124,7 @@ where
     R: Send,
 {
     /// Configures how `rustc` internals work when invoked via `run_compiler`.
-    /// Note that `run_compiler_for_testing` uses a separate `Config`.
+    /// Note that `run_compiler_test_support` uses a separate `Config`.
     fn config(&mut self, config: &mut rustc_interface::interface::Config) {
         // Silence warnings in the target crate to avoid reporting them twice: once when
         // compiling the crate via `rustc` and once when "compiling" the crate
@@ -129,7 +142,13 @@ where
         _compiler: &Compiler,
         queries: &'tcx Queries<'tcx>,
     ) -> rustc_driver::Compilation {
-        let rustc_result = enter_tcx(queries, |tcx| {
+        // `after_analysis` is only called by `rustc_driver` if earlier compiler
+        // analysis was successful (which as the *last* compilation phase
+        // presumably covers *all* errors).
+        let mut query_context = queries
+            .global_ctxt()
+            .expect("Expecting no compile errors inside `after_analysis` callback.");
+        query_context.enter(|tcx| {
             let callback = {
                 let temporary_placeholder = Either::Right(Err(anyhow::anyhow!("unused")));
                 std::mem::replace(&mut self.callback_or_result, temporary_placeholder)
@@ -138,36 +157,14 @@ where
             self.callback_or_result = Either::Right(callback(tcx));
         });
 
-        // `expect`ing no errors in `rustc_result`, because `after_analysis` is only
-        // called by `rustc_driver` if earlier compiler analysis was successful
-        // (which as the *last* compilation phase presumably covers *all*
-        // errors).
-        rustc_result.expect("Expecting no compile errors inside `after_analysis` callback.");
-
         rustc_driver::Compilation::Stop
     }
 }
 
-/// Helper (used by `run_compiler` and `run_compiler_for_testing`) for invoking
-/// functions operating on `TyCtxt`.
-fn enter_tcx<'tcx, F, T>(
-    queries: &'tcx Queries<'tcx>,
-    f: F,
-) -> rustc_interface::interface::Result<T>
-where
-    F: FnOnce(TyCtxt<'tcx>) -> T + Send,
-    T: Send,
-{
-    let mut query_context = queries.global_ctxt()?;
-    Ok(query_context.enter(f))
-}
-
 #[cfg(test)]
-pub mod tests {
-    use super::run_compiler;
-
-    use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
-    use std::path::PathBuf;
+mod tests {
+    use super::*;
+    use run_compiler_test_support::get_sysroot_for_testing;
     use tempfile::tempdir;
 
     const DEFAULT_RUST_SOURCE_FOR_TESTING: &'static str = r#" pub mod public_module {
@@ -247,165 +244,5 @@ pub mod tests {
         // Verify that compilation didn't continue after the initial analysis.
         assert!(!out_path.exists());
         Ok(())
-    }
-
-    #[cfg(oss)]
-    const TOOLCHAIN_ROOT: &str = "rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain/lib/rustlib/x86_64-unknown-linux-gnu";
-    #[cfg(not(oss))]
-    const TOOLCHAIN_ROOT: &str =
-        "google3/nowhere/llvm/rust/main_sysroot";
-
-    /// Returns the `rustc` sysroot that is suitable for the environment where
-    /// unit tests run.
-    ///
-    /// The sysroot is used internally by `run_compiler_for_testing`, but it may
-    /// also be passed as `--sysroot=...` in `rustc_args` argument of
-    /// `run_compiler`
-    pub fn get_sysroot_for_testing() -> PathBuf {
-        let runfiles = runfiles::Runfiles::create().unwrap();
-        let loc = runfiles.rlocation(std::path::Path::new(TOOLCHAIN_ROOT));
-        assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
-        assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
-        loc
-    }
-
-    #[test]
-    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
-    fn test_run_compiler_for_testing_panic_when_test_input_contains_syntax_errors() {
-        run_compiler_for_testing("syntax error here", |_tcx| panic!("This part shouldn't execute"))
-    }
-
-    #[test]
-    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
-    fn test_run_compiler_for_testing_panic_when_test_input_triggers_analysis_errors() {
-        run_compiler_for_testing("#![feature(no_such_feature)]", |_tcx| {
-            panic!("This part shouldn't execute")
-        })
-    }
-
-    #[test]
-    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
-    fn test_run_compiler_for_testing_panic_when_test_input_triggers_warnings() {
-        run_compiler_for_testing("pub fn foo(unused_parameter: i32) {}", |_tcx| {
-            panic!("This part shouldn't execute")
-        })
-    }
-
-    #[test]
-    fn test_run_compiler_for_testing_nightly_features_ok_in_test_input() {
-        // This test arbitrarily picks `yeet_expr` as an example of a feature that
-        // hasn't yet been stabilized.
-        let test_src = r#"
-                // This test is supposed to test that *nightly* features are ok
-                // in the test input.  The `forbid` directive below helps to
-                // ensure that we'll realize in the future when the `yeet_expr`
-                // feature gets stabilized, making it not quite fitting for use
-                // in this test.
-                #![forbid(stable_features)]
-
-                #![feature(yeet_expr)]
-            "#;
-        run_compiler_for_testing(test_src, |_tcx| ())
-    }
-
-    #[test]
-    fn test_run_compiler_for_testing_stabilized_features_ok_in_test_input() {
-        // This test arbitrarily picks `const_ptr_offset_from` as an example of a
-        // feature that has been already stabilized.
-        run_compiler_for_testing("#![feature(const_ptr_offset_from)]", |_tcx| ())
-    }
-
-    /// `run_compiler_for_testing` is similar to `run_compiler`: it invokes the
-    /// `callback` after parsing and analysis are done, but instead of taking
-    /// `rustc_args` it:
-    ///
-    /// * Invokes the Rust compiler on the given Rust `source`
-    /// * Hardcodes other compiler flags (e.g. picks Rust 2021 edition, and opts
-    ///   into treating all warnings as errors).
-    pub fn run_compiler_for_testing<F, T>(source: impl Into<String>, callback: F) -> T
-    where
-        F: for<'tcx> FnOnce(TyCtxt<'tcx>) -> T + Send,
-        T: Send,
-    {
-        use rustc_session::config::{
-            CodegenOptions, CrateType, Input, Options, OutputType, OutputTypes,
-        };
-
-        const TEST_FILENAME: &str = "crubit_unittests.rs";
-
-        // Setting `output_types` that will trigger code gen - otherwise some parts of
-        // the analysis will be missing (e.g. `tcx.exported_symbols()`).
-        // The choice of `Bitcode` is somewhat arbitrary (e.g. `Assembly`,
-        // `Mir`, etc. would also trigger code gen).
-        let output_types = OutputTypes::new(&[(OutputType::Bitcode, None /* PathBuf */)]);
-
-        let opts = Options {
-            crate_types: vec![CrateType::Rlib], // Test inputs simulate library crates.
-            maybe_sysroot: Some(get_sysroot_for_testing()),
-            output_types,
-            edition: rustc_span::edition::Edition::Edition2021,
-            unstable_features: rustc_feature::UnstableFeatures::Allow,
-            lint_opts: vec![
-                ("warnings".to_string(), rustc_lint_defs::Level::Deny),
-                ("stable_features".to_string(), rustc_lint_defs::Level::Allow),
-            ],
-            cg: CodegenOptions {
-                // As pointed out in `panics_and_exceptions.md` the tool only supports `-C
-                // panic=abort` and therefore we explicitly opt into this config for tests.
-                panic: Some(rustc_target::spec::PanicStrategy::Abort),
-                ..Default::default()
-            },
-            ..Default::default()
-        };
-
-        let config = rustc_interface::interface::Config {
-            opts,
-            crate_cfg: Default::default(),
-            crate_check_cfg: Default::default(),
-            input: Input::Str {
-                name: rustc_span::FileName::Custom(TEST_FILENAME.to_string()),
-                input: source.into(),
-            },
-            output_file: None,
-            output_dir: None,
-            file_loader: None,
-            lint_caps: Default::default(),
-            parse_sess_created: None,
-            register_lints: None,
-            override_queries: None,
-            make_codegen_backend: None,
-            registry: rustc_errors::registry::Registry::new(rustc_error_codes::DIAGNOSTICS),
-            locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES,
-            ice_file: None,
-            expanded_args: vec![],
-        };
-
-        rustc_interface::interface::run_compiler(config, |compiler| {
-            compiler.enter(|queries| {
-                use rustc_interface::interface::Result;
-                let result: Result<Result<()>> = super::enter_tcx(queries, |tcx| {
-                    // Explicitly force full `analysis` stage to detect compilation
-                    // errors that the earlier stages might miss.  This helps ensure that the
-                    // test inputs are valid Rust (even if `callback` wouldn't
-                    // have triggered full analysis).
-                    tcx.analysis(())
-                });
-
-                // Flatten the outer and inner results into a single result.  (outer result
-                // comes from `enter_tcx`; inner result comes from `analysis`).
-                //
-                // TODO(lukasza): Use `Result::flatten` API when it gets stabilized.  See also
-                // https://github.com/rust-lang/rust/issues/70142
-                let result: Result<()> = result.and_then(|result| result);
-
-                // `analysis` might succeed even if there are some lint / warning errors.
-                // Detecting these requires explicitly checking `compile_status`.
-                let result: Result<()> = result.and_then(|()| compiler.session().compile_status());
-
-                // Run the provided callback.
-                let result: Result<T> = result.and_then(|()| super::enter_tcx(queries, callback));
-                result.expect("Test inputs shouldn't cause compilation errors")
-            })
-        })
     }
 }

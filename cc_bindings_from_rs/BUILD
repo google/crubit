@@ -19,7 +19,6 @@ crubit_rust_binary(
         "bindings.rs",
         "cc_bindings_from_rs.rs",
         "cmdline.rs",
-        "run_compiler.rs",
     ],
     crate_root = "cc_bindings_from_rs.rs",
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
@@ -31,6 +30,7 @@ crubit_rust_binary(
         "//visibility:public",
     ],
     deps = [
+        ":run_compiler",
         ":toposort",
         "//common:code_gen_utils",
         "//common:token_stream_printer",
@@ -49,15 +49,12 @@ crubit_rust_binary(
 crubit_rust_test(
     name = "cc_bindings_from_rs_test",
     crate = ":cc_bindings_from_rs",
-    data = [
-        "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
-    ],
-    rustc_flags = ["--cfg=oss"],
     tags = [
         "not_build:arm",
         "noubsan",  # rustc-as-a-library isn't supported for UBSan.
     ],
     deps = [
+        ":run_compiler_test_support",
         "//common:token_stream_matchers",
         "@crate_index//:regex",
         "@crate_index//:tempfile",
@@ -73,6 +70,59 @@ sh_test(
     deps = [
         "//util/shell/gbash",
         "//util/shell/gbash:unit",
+    ],
+)
+
+rust_library(
+    name = "run_compiler",
+    srcs = [
+        "run_compiler.rs",
+    ],
+    deps = [
+        "@crate_index//:anyhow",
+        "@crate_index//:either",
+        "@crate_index//:once_cell",
+    ],
+)
+
+crubit_rust_test(
+    name = "run_compiler_test",
+    crate = ":run_compiler",
+    tags = [
+        "not_build:arm",
+        "noubsan",  # rustc-as-a-library isn't supported for UBSan.
+    ],
+    deps = [
+        ":run_compiler_test_support",
+        "@crate_index//:tempfile",
+    ],
+)
+
+rust_library(
+    name = "run_compiler_test_support",
+    testonly = True,
+    srcs = [
+        "run_compiler_test_support.rs",
+    ],
+    data = [
+        "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
+    ],
+    rustc_flags = ["--cfg=oss"],
+    deps = [
+        "@crate_index//:anyhow",
+        "@crate_index//:either",
+        "@crate_index//:once_cell",
+        "@rules_rust//tools/runfiles",
+    ],
+)
+
+crubit_rust_test(
+    name = "run_compiler_test_support_test",
+    crate = ":run_compiler_test_support",
+    rustc_flags = ["--cfg=oss"],
+    tags = [
+        "not_build:arm",
+        "noubsan",  # rustc-as-a-library isn't supported for UBSan.
     ],
 )
 

@@ -22,11 +22,9 @@ extern crate rustc_target;
 extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 
-// TODO(b/254679226): `bindings`, `cmdline`, and `run_compiler` should be
-// separate crates.
+// TODO(b/254679226): these should be separate crates.
 mod bindings;
 mod cmdline;
-mod run_compiler;
 
 use anyhow::Context;
 use itertools::Itertools;
@@ -148,9 +146,9 @@ fn main() -> anyhow::Result<()> {
 mod tests {
     use super::run_with_cmdline_args;
 
-    use crate::run_compiler::tests::get_sysroot_for_testing;
     use itertools::Itertools;
     use regex::{Regex, RegexBuilder};
+    use run_compiler_test_support::get_sysroot_for_testing;
     use std::path::PathBuf;
     use tempfile::{tempdir, TempDir};
     use token_stream_printer::{CLANG_FORMAT_EXE_PATH_FOR_TESTING, RUSTFMT_EXE_PATH_FOR_TESTING};
@@ -409,9 +407,8 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
     /// results in an error.
     ///
     /// This is tested at the `cc_bindings_from_rs.rs` level instead of at the
-    /// `bindings.rs` level,
-    /// because `run_compiler::tests::run_compiler_for_testing` doesn't support
-    /// specifying a custom panic mechanism.
+    /// `bindings.rs` level, because `run_compiler_test_support` doesn't
+    /// support specifying a custom panic mechanism.
     #[test]
     fn test_rustc_unsupported_panic_mechanism() -> anyhow::Result<()> {
         let err = TestArgs::default_args()?

@@ -2410,8 +2410,8 @@ pub mod tests {
     use rustc_middle::ty::{Ty, TyCtxt};
     use rustc_span::def_id::LocalDefId;
 
-    use crate::run_compiler::tests::run_compiler_for_testing;
     use code_gen_utils::format_cc_includes;
+    use run_compiler_test_support::run_compiler_for_testing;
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
