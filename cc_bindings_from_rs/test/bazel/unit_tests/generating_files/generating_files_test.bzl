@@ -10,7 +10,7 @@ load(
 )
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
+    "//cc_bindings_from_rs/bazel_support:providers.bzl",
     "CcBindingsFromRustInfo",
 )
 load(

@@ -6,8 +6,11 @@
 
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "CcBindingsFromRustInfo",
     "cc_bindings_from_rust_aspect",
+)
+load(
+    "//cc_bindings_from_rs/bazel_support:providers.bzl",
+    "CcBindingsFromRustInfo",
 )
 
 ActionsInfo = provider(

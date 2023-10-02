@@ -12,3 +12,11 @@ bzl_library(
         "//visibility:private",  # Only private by automation, not intent. Owner may accept CLs adding visibility. See <internal link>.
     ],
 )
+
+bzl_library(
+    name = "providers_bzl",
+    srcs = ["providers.bzl"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+)

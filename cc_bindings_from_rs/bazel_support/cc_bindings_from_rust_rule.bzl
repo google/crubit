@@ -36,6 +36,10 @@ load(
     "find_toolchain",
 )
 load(
+    "//cc_bindings_from_rs/bazel_support:providers.bzl",
+    "CcBindingsFromRustInfo",
+)
+load(
     "//rs_bindings_from_cc/bazel_support:compile_rust.bzl",
     "compile_rust",
 )
@@ -48,19 +52,6 @@ load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain", "use_c
 # Targets which do not receive C++ bindings at all.
 targets_to_remove = [
 ]
-
-CcBindingsFromRustInfo = provider(
-    doc = ("A provider that contains compile and linking information for the generated" +
-           " `.rs` and `.h` files."),
-    fields = {
-        "cc_info": "A CcInfo provider for the API projection.",
-        # TODO(b/271857814): A `CRATE_NAME` might not be globally unique - the
-        # key needs to also cover a "hash" of the crate version and compilation
-        # flags.
-        "crate_key": "String with a crate key to use in --bindings-from-dependency",
-        "h_out_file": "File object representing the generated ..._cc_api.h.",
-    },
-)
 
 def _get_dep_bindings_infos(ctx):
     """Returns `CcBindingsFromRustInfo`s of direct, non-transitive dependencies.
@@ -80,7 +71,7 @@ def _get_dep_bindings_infos(ctx):
     """
     return [
         dep[CcBindingsFromRustInfo]
-        for dep in ctx.rule.attr.deps
+        for dep in ctx.rule.attr.deps + getattr(ctx.rule.attr, "cc_deps", [])
         if CcBindingsFromRustInfo in dep
     ]
 
@@ -113,8 +104,9 @@ def _generate_bindings(ctx, basename, inputs, rustc_args, rustc_env):
     crubit_args.add("--rustfmt-config-path", ctx.file._rustfmt_cfg)
 
     for dep_bindings_info in _get_dep_bindings_infos(ctx):
-        arg = dep_bindings_info.crate_key + "=" + dep_bindings_info.h_out_file.short_path
-        crubit_args.add("--bindings-from-dependency", arg)
+        for header in dep_bindings_info.headers:
+            arg = dep_bindings_info.crate_key + "=" + header.short_path
+            crubit_args.add("--bindings-from-dependency", arg)
 
     ctx.actions.run(
         outputs = [h_out_file, rs_out_file],
@@ -304,7 +296,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         CcBindingsFromRustInfo(
             cc_info = cc_info,
             crate_key = crate_info.name,
-            h_out_file = h_out_file,
+            headers = [h_out_file],
         ),
         OutputGroupInfo(out = depset([h_out_file, rs_out_file])),
     ]
