@@ -31,7 +31,9 @@ mod run_compiler;
 use anyhow::Context;
 use itertools::Itertools;
 use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
+use std::collections::HashMap;
 use std::path::Path;
+use std::rc::Rc;
 
 use bindings::Input;
 use cmdline::Cmdline;
@@ -49,15 +51,13 @@ fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
 fn new_input<'tcx>(cmdline: &Cmdline, tcx: TyCtxt<'tcx>) -> Input<'tcx> {
     let crubit_support_path_format = cmdline.crubit_support_path_format.as_str().into();
 
-    let crate_name_to_include_path = cmdline
-        .bindings_from_dependencies
-        .iter()
-        .map(|(crate_name, include_path)| {
-            (crate_name.as_str().into(), CcInclude::user_header(include_path.as_str().into()))
-        })
-        .collect();
+    let mut crate_name_to_include_paths = <HashMap<Rc<str>, Vec<CcInclude>>>::new();
+    for (crate_name, include_path) in &cmdline.bindings_from_dependencies {
+        let paths = crate_name_to_include_paths.entry(crate_name.as_str().into()).or_default();
+        paths.push(CcInclude::user_header(include_path.as_str().into()));
+    }
 
-    Input { tcx, crubit_support_path_format, crate_name_to_include_path, _features: () }
+    Input { tcx, crubit_support_path_format, crate_name_to_include_paths, _features: () }
 }
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {

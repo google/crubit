@@ -37,12 +37,12 @@ pub struct Input<'tcx> {
     /// <crubit/support/hdr.h>`.
     pub crubit_support_path_format: Rc<str>,
 
-    /// A map from a crate name to the include path with the corresponding C++
-    /// bindings. This is used when formatting a type exported from another
+    /// A map from a crate name to the include paths of the corresponding C++
+    /// headers This is used when formatting a type exported from another
     /// crate.
     // TODO(b/271857814): A crate name might not be globally unique - the key needs to also cover
     // a "hash" of the crate version and compilation flags.
-    pub crate_name_to_include_path: HashMap<Rc<str>, CcInclude>,
+    pub crate_name_to_include_paths: HashMap<Rc<str>, Vec<CcInclude>>,
 
     // TODO(b/262878759): Provide a set of enabled/disabled Crubit features.
     pub _features: (),
@@ -499,8 +499,8 @@ fn format_ty_for_cc<'tcx>(
                 prereqs.defs.insert(def_id.expect_local());
             } else {
                 let other_crate_name = input.tcx.crate_name(def_id.krate);
-                let include = input
-                    .crate_name_to_include_path
+                let includes = input
+                    .crate_name_to_include_paths
                     .get(other_crate_name.as_str())
                     .ok_or_else(|| {
                         anyhow!(
@@ -508,7 +508,7 @@ fn format_ty_for_cc<'tcx>(
                              but no `--bindings-from-dependency` was specified for this crate"
                         )
                     })?;
-                prereqs.includes.insert(include.clone());
+                prereqs.includes.extend(includes.iter().cloned());
             }
 
             // Verify if definition of `ty` can be succesfully imported and bail otherwise.
@@ -6893,7 +6893,7 @@ pub mod tests {
         Input {
             tcx,
             crubit_support_path_format: "<crubit/support/for/tests/{header}>".into(),
-            crate_name_to_include_path: Default::default(),
+            crate_name_to_include_paths: Default::default(),
             _features: (),
         }
     }

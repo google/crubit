@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{bail, ensure, Result};
 use clap::Parser;
 use rustc_session::config::ErrorOutputType;
 use rustc_session::EarlyErrorHandler;
@@ -97,9 +97,9 @@ fn validate_crubit_support_path_format(s: &str) -> Result<String> {
 /// Adapted from
 /// https://github.com/clap-rs/clap/blob/cc1474f97c78002f3d99261699114e61d70b0634/examples/typed-derive.rs#L47-L59
 fn parse_bindings_from_dependency(s: &str) -> Result<(String, String)> {
-    let pos = s
-        .find('=')
-        .ok_or_else(|| anyhow!("Expected KEY=VALUE syntax but no `=` found in `{s}`"))?;
+    let Some(pos) = s.find('=') else {
+        bail!("Expected KEY=VALUE syntax but no `=` found in `{s}`");
+    };
 
     let crate_name = &s[..pos];
     ensure!(!crate_name.is_empty(), "Empty crate names are invalid");
