@@ -992,7 +992,7 @@ std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
     // upcast thunks.
     llvm::SmallString<128> storage;
     llvm::raw_svector_ostream buffer(storage);
-    mangler_->mangleTypeName(ctx_.getRecordType(record_decl), buffer);
+    mangler_->mangleCanonicalTypeName(ctx_.getRecordType(record_decl), buffer);
 
     // The Itanium mangler does not provide a way to get the mangled
     // representation of a type. Instead, we call mangleTypeName() that

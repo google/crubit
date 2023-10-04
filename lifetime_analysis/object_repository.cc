@@ -483,7 +483,8 @@ llvm::Expected<ObjectRepository> ObjectRepository::Create(
   if (method_decl) {
     if (!method_decl->isStatic()) {
       object_repository.this_object_ = object_repository.CreateObject(
-          method_decl->getThisObjectType(), Lifetime::CreateVariable(),
+          method_decl->getFunctionObjectParameterType(),
+          Lifetime::CreateVariable(),
           [](const clang::Expr*) { return Lifetime::CreateVariable(); });
     }
   }

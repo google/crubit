@@ -100,7 +100,7 @@ FunctionLifetimes FunctionLifetimes::ForOverriddenMethod(
   ret.this_lifetimes_ = ValueLifetimes::ForPointerLikeType(
       method->getThisType(),
       this_lifetimes_.value().GetPointeeLifetimes().GetFieldOrBaseLifetimes(
-          method->getThisObjectType(), {}));
+          method->getFunctionObjectParameterType(), {}));
   assert(ret.IsValidForDecl(method));
   return ret;
 }
