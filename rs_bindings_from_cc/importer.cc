@@ -394,7 +394,7 @@ std::vector<ItemId> Importer::GetOrderedItemIdsOfTemplateInstantiations()
 void Importer::ImportFreeComments() {
   clang::SourceManager& sm = ctx_.getSourceManager();
   for (const auto& header : invocation_.public_headers_) {
-    if (auto file = sm.getFileManager().getFile(header.IncludePath())) {
+    if (auto file = sm.getFileManager().getFileRef(header.IncludePath())) {
       if (auto comments_in_file = ctx_.Comments.getCommentsInFile(
               sm.getOrCreateFileID(*file, clang::SrcMgr::C_User))) {
         for (const auto& [_, comment] : *comments_in_file) {
