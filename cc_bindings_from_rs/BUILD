@@ -18,7 +18,6 @@ crubit_rust_binary(
         # TODO(b/254679226): These should be separate crates.
         "bindings.rs",
         "cc_bindings_from_rs.rs",
-        "cmdline.rs",
     ],
     crate_root = "cc_bindings_from_rs.rs",
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
@@ -30,6 +29,7 @@ crubit_rust_binary(
         "//visibility:public",
     ],
     deps = [
+        ":cmdline",
         ":run_compiler",
         ":toposort",
         "//common:code_gen_utils",
@@ -70,6 +70,31 @@ sh_test(
     deps = [
         "//util/shell/gbash",
         "//util/shell/gbash:unit",
+    ],
+)
+
+rust_library(
+    name = "cmdline",
+    srcs = [
+        "cmdline.rs",
+    ],
+    deps = [
+        "@crate_index//:anyhow",
+        "@crate_index//:clap",
+    ],
+)
+
+crubit_rust_test(
+    name = "cmdline_test",
+    crate = ":cmdline",
+    tags = [
+        "not_build:arm",
+        "noubsan",  # rustc-as-a-library isn't supported for UBSan.
+    ],
+    deps = [
+        ":run_compiler_test_support",
+        "@crate_index//:itertools",
+        "@crate_index//:tempfile",
     ],
 )
 

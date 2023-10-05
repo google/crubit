@@ -24,7 +24,6 @@ extern crate rustc_type_ir;
 
 // TODO(b/254679226): these should be separate crates.
 mod bindings;
-mod cmdline;
 
 use anyhow::Context;
 use itertools::Itertools;
