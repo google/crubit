@@ -4,6 +4,8 @@ build:generic_clang --cxxopt=-std=c++17 --host_cxxopt=-std=c++17 --repo_env=BAZE
 build:generic_clang --copt=-Wall --copt=-Werror --host_copt=-Wall --host_copt=-Werror
 build:generic_clang --cxxopt=-Wno-range-loop-analysis --host_cxxopt=-Wno-range-loop-analysis
 build:generic_clang --copt=-Wno-deprecated --host_copt=-Wno-deprecated
+# https://buildkite.com/bazel/crubit-presubmit/builds/289#018b0116-2039-4c89-b211-c0b25b7432f2/445-473
+build:generic_clang --copt=-Wno-missing-braces --host_copt=-Wno-missing-braces
 
 # enable linking against prebuilt LLVM with no RTTI
 build:generic_clang --copt=-fno-rtti --host_copt=-fno-rtti

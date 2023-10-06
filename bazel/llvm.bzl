@@ -58,10 +58,10 @@ def llvm_loader_repository_dependencies():
     new_git_repository(
         name = "llvm-raw",
         build_file_content = "# empty",
-        commit = "afb73f7a913ec8e7e8704afe18784571f320ebf6",
+        commit = "173fd67a124dfd0241b95c72935d572a677d2874",
         # `shallow_since` is not required but it improves the performance of CI
         # builds.
-        shallow_since = "1685492206 -0700",
+        shallow_since = "1696357171 -0700",
         remote = "https://github.com/llvm/llvm-project.git",
     )
 
