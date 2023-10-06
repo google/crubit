@@ -134,11 +134,6 @@ where
 
     fn after_analysis<'tcx>(
         &mut self,
-        // TODO(b/300606577): Remove after stable picks this up.
-        #[cfg(not(
-            google3_internal_rustc_contains_commit_2eca717a240a37e4e996d727b6506d2f2e990b74
-        ))]
-        _handler: &EarlyErrorHandler,
         _compiler: &Compiler,
         queries: &'tcx Queries<'tcx>,
     ) -> rustc_driver::Compilation {
