@@ -8,15 +8,10 @@
 #![deny(rustc::internal)]
 
 extern crate rustc_driver;
-extern crate rustc_error_codes;
-extern crate rustc_errors;
-extern crate rustc_feature;
 extern crate rustc_interface;
 extern crate rustc_lint_defs;
 extern crate rustc_middle;
 extern crate rustc_session;
-extern crate rustc_span;
-extern crate rustc_target;
 
 use anyhow::anyhow;
 use either::Either;

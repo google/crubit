@@ -19,10 +19,8 @@ rust_library(
         ":run_compiler",
         ":toposort",
         "//common:code_gen_utils",
-        "//common:token_stream_printer",
         "@crate_index//:anyhow",
         "@crate_index//:itertools",
-        "@crate_index//:once_cell",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
         "@crate_index//:syn",
@@ -41,7 +39,6 @@ crubit_rust_test(
         ":run_compiler_test_support",
         "//common:token_stream_matchers",
         "@crate_index//:itertools",
-        "@crate_index//:tempfile",
     ],
 )
 
@@ -154,12 +151,7 @@ rust_library(
         "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
     ],
     rustc_flags = ["--cfg=oss"],
-    deps = [
-        "@crate_index//:anyhow",
-        "@crate_index//:either",
-        "@crate_index//:once_cell",
-        "@rules_rust//tools/runfiles",
-    ],
+    deps = ["@rules_rust//tools/runfiles"],
 )
 
 crubit_rust_test(
