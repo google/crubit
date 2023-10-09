@@ -1,6 +1,17 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![feature(rustc_private)]
+#![deny(rustc::internal)]
+
+extern crate rustc_attr;
+extern crate rustc_hir;
+extern crate rustc_infer;
+extern crate rustc_middle;
+extern crate rustc_span;
+extern crate rustc_target;
+extern crate rustc_trait_selection;
+extern crate rustc_type_ir;
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use code_gen_utils::{

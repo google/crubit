@@ -6,24 +6,7 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
-extern crate rustc_attr;
-extern crate rustc_driver;
-extern crate rustc_error_codes;
-extern crate rustc_errors;
-extern crate rustc_feature;
-extern crate rustc_hir;
-extern crate rustc_infer;
-extern crate rustc_interface;
-extern crate rustc_lint_defs;
 extern crate rustc_middle;
-extern crate rustc_session;
-extern crate rustc_span;
-extern crate rustc_target;
-extern crate rustc_trait_selection;
-extern crate rustc_type_ir;
-
-// TODO(b/254679226): these should be separate crates.
-mod bindings;
 
 use anyhow::Context;
 use itertools::Itertools;
