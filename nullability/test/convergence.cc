@@ -276,5 +276,28 @@ TEST(PointerNullabilityTest, WhileAssignment2) {
   )cc"));
 }
 
+// Repro for a false positive caused by an inconsistent representation of state
+// in a loop.
+TEST(PointerNullabilityTest, InconsistentLoopStateRepro) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int* _Nullable GetNullable();
+    bool cond();
+
+    void target(int* b, int* e) {
+      // This loop is necessary for the false positive to occur.
+      for (; b != e; ++b)
+        ;
+
+      int* ptr = GetNullable();
+      if (ptr != nullptr) {
+        while (cond()) {
+          // TODO: False positive. This dereference is safe.
+          (void)*ptr;  // [[unsafe]]
+        }
+      }
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
