@@ -44,28 +44,36 @@ TEST_F(NullabilityPropertiesTest, Test) {
 
   EXPECT_TRUE(isNullable(makeNullPointer(), Env));
 
-  auto &NullableButNotNull = makePointer(NullabilityKind::Nullable);
-  EXPECT_TRUE(isNullable(NullableButNotNull, Env));
-  Env.addToFlowCondition(
-      A.makeNot(getPointerNullState(NullableButNotNull).IsNull));
-  EXPECT_FALSE(isNullable(NullableButNotNull, Env));
+  {
+    auto &NullableButNotNull = makePointer(NullabilityKind::Nullable);
+    EXPECT_TRUE(isNullable(NullableButNotNull, Env));
+    Env.addToFlowCondition(
+        A.makeNot(getPointerNullState(NullableButNotNull).IsNull));
+    EXPECT_FALSE(isNullable(NullableButNotNull, Env));
+  }
 
-  auto &NullableAndNull = makePointer(NullabilityKind::Nullable);
-  Env.addToFlowCondition(getPointerNullState(NullableAndNull).IsNull);
-  EXPECT_TRUE(isNullable(NullableAndNull, Env));
+  {
+    auto &NullableAndNull = makePointer(NullabilityKind::Nullable);
+    Env.addToFlowCondition(getPointerNullState(NullableAndNull).IsNull);
+    EXPECT_TRUE(isNullable(NullableAndNull, Env));
+  }
 
-  auto &NonnullAndNotNull = makePointer(NullabilityKind::NonNull);
-  EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
-  Env.addToFlowCondition(
-      A.makeNot(getPointerNullState(NonnullAndNotNull).IsNull));
-  EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
+  {
+    auto &NonnullAndNotNull = makePointer(NullabilityKind::NonNull);
+    EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
+    Env.addToFlowCondition(
+        A.makeNot(getPointerNullState(NonnullAndNotNull).IsNull));
+    EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
+  }
 
-  // This is a little surprising: if a pointer comes from a non-null source but
-  // is dynamically discovered to be definitely null, we still don't consider
-  // it nullable.
-  auto &NonnullAndNull = makePointer(NullabilityKind::NonNull);
-  Env.addToFlowCondition(getPointerNullState(NonnullAndNotNull).IsNull);
-  EXPECT_FALSE(isNullable(NonnullAndNull, Env));
+  {
+    // This is a little surprising: if a pointer comes from a non-null source
+    // but is dynamically discovered to be definitely null, we still don't
+    // consider it nullable.
+    auto &NonnullAndNull = makePointer(NullabilityKind::NonNull);
+    Env.addToFlowCondition(getPointerNullState(NonnullAndNull).IsNull);
+    EXPECT_FALSE(isNullable(NonnullAndNull, Env));
+  }
 }
 
 TEST_F(NullabilityPropertiesTest, IsNullableAdditionalConstraints) {
