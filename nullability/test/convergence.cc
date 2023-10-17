@@ -134,8 +134,7 @@ TEST(PointerNullabilityTest, PointerLoop_Checked) {
     int* _Nullable GetNext();
     void target() {
       for (int* p = GetFirst(); p != nullptr; p = GetNext()) {
-        // TODO: False positive. This dereference is safe.
-        *p;  // [[unsafe]]
+        *p;
       }
     }
   )cc"));
@@ -255,8 +254,7 @@ TEST(PointerNullabilityTest, WhileAssignment) {
     void target() {
       int* p;
       while ((p = GetNext())) {
-        // TODO: False positive. This dereference is safe.
-        *p;  // [[unsafe]]
+        *p;
       }
     }
   )cc"));
@@ -269,8 +267,7 @@ TEST(PointerNullabilityTest, WhileAssignment2) {
     void target() {
       int* _Nullable p = GetFirst();
       while ((p = GetNext()) != nullptr) {
-        // TODO: False positive. This dereference is safe.
-        *p;  // [[unsafe]]
+        *p;
       }
     }
   )cc"));
