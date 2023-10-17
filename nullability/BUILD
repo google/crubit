@@ -24,11 +24,25 @@ cc_library(
     hdrs = ["pointer_nullability_matchers.h"],
     visibility = [
         "//nullability/inference:__pkg__",
+        "//nullability/test:__pkg__",
     ],
     deps = [
         ":type_nullability",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
+    ],
+)
+
+cc_test(
+    name = "pointer_nullability_matchers_test",
+    srcs = ["pointer_nullability_matchers_test.cc"],
+    deps = [
+        ":pointer_nullability_matchers",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:testing",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
     ],
 )
 

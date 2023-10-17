@@ -33,6 +33,7 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
 
@@ -461,6 +462,35 @@ void transferFlowSensitiveCallExpr(
                               FuncDecl->getParamDecl(i)->getType());
   }
 }
+void transferFlowSensitiveAccessorCall(
+    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  auto *member = Result.Nodes.getNodeAs<clang::ValueDecl>("member-decl");
+  dataflow::RecordStorageLocation *RecordLoc =
+      dataflow::getImplicitObjectLocation(*MCE, State.Env);
+  StorageLocation *Loc = RecordLoc->getChild(*member);
+  if (auto *PointerVal = dyn_cast<PointerValue>(State.Env.getValue(*Loc))) {
+    State.Env.setValue(*MCE, *PointerVal);
+    initPointerFromTypeNullability(*PointerVal, MCE, State);
+  }
+}
+
+void transferFlowSensitiveNonConstMemberCall(
+    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  // When a non-const member function is called, reset all pointer-type fields
+  // of the implicit object.
+  if (dataflow::RecordStorageLocation *RecordLoc =
+          dataflow::getImplicitObjectLocation(*MCE, State.Env)) {
+    for (const auto [Field, FieldLoc] : RecordLoc->children()) {
+      if (!isSupportedPointerType(Field->getType())) continue;
+      Value *V = State.Env.createValue(Field->getType());
+      State.Env.setValue(*FieldLoc, *V);
+    }
+  }
+  // The nullability of the Expr itself still needs to be handled.
+  transferFlowSensitiveCallExpr(MCE, Result, State);
+}
 
 // If nullability for the decl D has been overridden, patch N to reflect it.
 // (N is the nullability of an access to D).
@@ -783,6 +813,10 @@ auto buildFlowSensitiveTransferer() {
       // pointers to the non-flow-sensitive part of the analysis.
       .CaseOfCFGStmt<Expr>(isNullPointerLiteral(),
                            transferFlowSensitiveNullPointer)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
+                                        transferFlowSensitiveAccessorCall)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isNonConstMemberCall(),
+                                        transferFlowSensitiveNonConstMemberCall)
       .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferFlowSensitiveCallExpr)
       .CaseOfCFGStmt<Expr>(isPointerExpr(), transferFlowSensitivePointer)
       // Handles comparison between 2 pointers.
