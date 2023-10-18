@@ -111,6 +111,23 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "slot_fingerprint",
+    srcs = ["slot_fingerprint.cc"],
+    hdrs = ["slot_fingerprint.h"],
+    deps = ["@llvm-project//llvm:Support"],
+)
+
+cc_test(
+    name = "slot_fingerprint_test",
+    srcs = ["slot_fingerprint_test.cc"],
+    deps = [
+        ":slot_fingerprint",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
 cc_test(
     name = "infer_tu_test",
     srcs = ["infer_tu_test.cc"],
