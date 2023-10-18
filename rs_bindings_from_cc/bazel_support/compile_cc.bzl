@@ -32,6 +32,11 @@ def compile_cc(
     """
     cc_info = cc_common.merge_cc_infos(cc_infos = cc_infos)
 
+    user_copts = []
+    for copt in getattr(attr, "copts", []):
+        # ctx.expand_make_variables is deprecated, but its replacement ctx.var does not suffice.
+        user_copts.append(ctx.expand_make_variables("copts", copt, {}))
+
     (compilation_context, compilation_outputs) = cc_common.compile(
         name = src.basename,
         actions = ctx.actions,
@@ -39,7 +44,7 @@ def compile_cc(
         cc_toolchain = cc_toolchain,
         srcs = [src],
         additional_inputs = extra_cc_compilation_action_inputs,
-        user_compile_flags = attr.copts if hasattr(attr, "copts") else [],
+        user_compile_flags = user_copts,
         compilation_contexts = [cc_info.compilation_context],
     )
 
