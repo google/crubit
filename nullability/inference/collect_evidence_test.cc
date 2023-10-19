@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "nullability/inference/inference.proto.h"
+#include "nullability/inference/slot_fingerprint.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -16,6 +17,7 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/raw_ostream.h"
@@ -29,10 +31,13 @@ using ::clang::ast_matchers::hasName;
 using ::clang::ast_matchers::isTemplateInstantiation;
 using ::clang::ast_matchers::match;
 using ::testing::_;
+using ::testing::AllOf;
 using ::testing::Contains;
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
+using ::testing::IsSupersetOf;
 using ::testing::Not;
+using ::testing::ResultOf;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 
@@ -66,7 +71,9 @@ clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
 }
 
 std::vector<Evidence> collectEvidenceFromTargetFunction(
-    llvm::StringRef Source) {
+    llvm::StringRef Source,
+    const llvm::DenseSet<SlotFingerprint>& PreviouslyInferredNullable = {},
+    const llvm::DenseSet<SlotFingerprint>& PreviouslyInferredNonnull = {}) {
   std::vector<Evidence> Results;
   clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
   USRCache usr_cache;
@@ -75,7 +82,7 @@ std::vector<Evidence> collectEvidenceFromTargetFunction(
           *dataflow::test::findValueDecl(AST.context(), "target")),
       evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
                       usr_cache),
-      usr_cache);
+      usr_cache, PreviouslyInferredNullable, PreviouslyInferredNonnull);
   if (Err) ADD_FAILURE() << toString(std::move(Err));
   return Results;
 }
@@ -486,6 +493,52 @@ TEST(CollectEvidenceFromImplementationTest, NotInferenceTarget) {
       usr_cache);
   if (Err) ADD_FAILURE() << toString(std::move(Err));
   EXPECT_THAT(Results, IsEmpty());
+}
+
+TEST(CollectEvidenceFromImplementationTest, PropagatesPreviousInferences) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void calledWithToBeNullable(int* x);
+    void calledWithToBeNonnull(int* a);
+    void target(int* p, int* q) {
+      target(nullptr, q);
+      calledWithToBeNullable(p);
+      *q;
+      calledWithToBeNonnull(q);
+    }
+  )cc";
+  std::string TargetUsr = "c:@F@target#*I#S0_#";
+  std::vector ExpectedBothRoundResults = {
+      evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+               AllOf(functionNamed("target"),
+                     // Double-check that target's usr is as expected before we
+                     // use it to create SlotFingerprints.
+                     ResultOf([](Symbol S) { return S.usr(); }, TargetUsr))),
+      evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE,
+               functionNamed("target")),
+  };
+  std::vector ExpectedSecondRoundResults = {
+      evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+               functionNamed("calledWithToBeNullable")),
+      evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
+               functionNamed("calledWithToBeNonnull"))};
+
+  // Only proceed if we have the correct USR for target and the first round
+  // results contain the evidence needed to produce our expected inferences and
+  // do not contain the evidence only found from propagating inferences from the
+  // first round.
+  auto FirstRoundResults = collectEvidenceFromTargetFunction(Src);
+  ASSERT_THAT(FirstRoundResults, IsSupersetOf(ExpectedBothRoundResults));
+  for (const auto& E : ExpectedSecondRoundResults) {
+    ASSERT_THAT(FirstRoundResults, Not(Contains(E)));
+  }
+
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src, /* PreviouslyInferredNullable= */
+                                        {fingerprint(TargetUsr, paramSlot(0))},
+                                        /* PreviouslyInferredNonnull= */
+                                        {fingerprint(TargetUsr, paramSlot(1))}),
+      AllOf(IsSupersetOf(ExpectedBothRoundResults),
+            IsSupersetOf(ExpectedSecondRoundResults)));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, VariableDeclIgnored) {

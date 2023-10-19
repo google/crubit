@@ -31,6 +31,7 @@ cc_test(
     deps = [
         ":collect_evidence",
         ":inference_cc_proto",
+        ":slot_fingerprint",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
