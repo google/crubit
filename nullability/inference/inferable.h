@@ -16,7 +16,7 @@ bool isInferenceTarget(const Decl &);
 ///
 /// This may not be all the slots in the type: e.g. `int** X` has outer and
 /// inner nullability, we may support only inferring outer.
-int countInferrableSlots(const clang::Decl &);
+int countInferableSlots(const clang::Decl &);
 
 }  // namespace clang::tidy::nullability
 

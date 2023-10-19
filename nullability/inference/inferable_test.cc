@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "nullability/inference/inferrable.h"
+#include "nullability/inference/inferable.h"
 
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -25,7 +25,7 @@ const T &lookup(llvm::StringRef Name, const DeclContext &DC) {
   return *Result;
 }
 
-TEST(InferrableTest, IsInferenceTarget) {
+TEST(InferableTest, IsInferenceTarget) {
   TestAST AST(R"cc(
     int* Pointer;
     int* func(int*, int**);
@@ -63,7 +63,7 @@ TEST(InferrableTest, IsInferenceTarget) {
   EXPECT_FALSE(isInferenceTarget(FuncTmpl2));
 }
 
-TEST(InferrableTest, CountInferrableSlots) {
+TEST(InferableTest, CountInferableSlots) {
   TestAST AST(R"cc(
     using Pointer = int *;
     template <class T>
@@ -87,21 +87,21 @@ TEST(InferrableTest, CountInferrableSlots) {
   auto &TU = *AST.context().getTranslationUnitDecl();
 
   // All the 'f's have a single pointer arg.
-  EXPECT_EQ(1, countInferrableSlots(lookup("f1", TU)));
-  EXPECT_EQ(1, countInferrableSlots(lookup("f2", TU)));
-  EXPECT_EQ(1, countInferrableSlots(lookup("f3", TU)));
-  EXPECT_EQ(1, countInferrableSlots(lookup("f4", TU)));
-  EXPECT_EQ(1, countInferrableSlots(lookup("f5", TU)));
-  EXPECT_EQ(1, countInferrableSlots(lookup("f6", TU)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f1", TU)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f2", TU)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f3", TU)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f4", TU)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f5", TU)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f6", TU)));
 
   // All the 'g's have a pointer return.
-  EXPECT_EQ(1, countInferrableSlots(lookup("g1", TU)));
-  EXPECT_EQ(1, countInferrableSlots(lookup("g2", TU)));
+  EXPECT_EQ(1, countInferableSlots(lookup("g1", TU)));
+  EXPECT_EQ(1, countInferableSlots(lookup("g2", TU)));
 
   // The 'h's have types that aren't really pointers.
-  EXPECT_EQ(0, countInferrableSlots(lookup("h1", TU)));
-  EXPECT_EQ(0, countInferrableSlots(lookup("h2", TU)));
-  EXPECT_EQ(0, countInferrableSlots(lookup("h3", TU)));
+  EXPECT_EQ(0, countInferableSlots(lookup("h1", TU)));
+  EXPECT_EQ(0, countInferableSlots(lookup("h2", TU)));
+  EXPECT_EQ(0, countInferableSlots(lookup("h3", TU)));
 }
 
 }  // namespace

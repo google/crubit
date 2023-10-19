@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "nullability/inference/inferrable.h"
+#include "nullability/inference/inferable.h"
 
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
@@ -14,19 +14,19 @@ namespace clang::tidy::nullability {
 
 namespace {
 
-bool isInferrable(QualType T) {
+bool isInferable(QualType T) {
   return isSupportedPointerType(T.getNonReferenceType());
 }
 
 }  // namespace
 
-int countInferrableSlots(const Decl& D) {
+int countInferableSlots(const Decl& D) {
   const clang::FunctionDecl* Func = dyn_cast<clang::FunctionDecl>(&D);
   if (!Func) return 0;
   int Slots = 0;
-  if (isInferrable(Func->getReturnType())) ++Slots;
+  if (isInferable(Func->getReturnType())) ++Slots;
   for (auto* P : Func->parameters())
-    if (isInferrable(P->getType())) ++Slots;
+    if (isInferable(P->getType())) ++Slots;
   return Slots;
 }
 
@@ -35,7 +35,7 @@ bool isInferenceTarget(const Decl& D) {
   const auto* FD = dyn_cast<FunctionDecl>(&D);
   if (!FD) return false;
   return
-      // Function templates are in principle inferrable.
+      // Function templates are in principle inferable.
       // However since we don't analyze their bodies, and other implementations
       // cannot interact with them directly, we can't perform any nontrivial
       // inference, just propagate annotations across redecls.

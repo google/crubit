@@ -9,8 +9,9 @@ cc_library(
     srcs = ["collect_evidence.cc"],
     hdrs = ["collect_evidence.h"],
     deps = [
+        ":inferable",
         ":inference_cc_proto",
-        ":inferrable",
+        ":slot_fingerprint",
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
@@ -70,9 +71,9 @@ cc_test(
 )
 
 cc_library(
-    name = "inferrable",
-    srcs = ["inferrable.cc"],
-    hdrs = ["inferrable.h"],
+    name = "inferable",
+    srcs = ["inferable.cc"],
+    hdrs = ["inferable.h"],
     deps = [
         "//nullability:type_nullability",
         "@llvm-project//clang:ast",
@@ -81,17 +82,14 @@ cc_library(
 )
 
 cc_test(
-    name = "inferrable_test",
-    srcs = ["inferrable_test.cc"],
+    name = "inferable_test",
+    srcs = ["inferable_test.cc"],
     deps = [
-        ":inference_cc_proto",
-        ":inferrable",
+        ":inferable",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:testing",
-        "@llvm-project//clang/unittests:dataflow_testing_support",
         "@llvm-project//llvm:Support",
-        "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],

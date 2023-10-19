@@ -558,7 +558,7 @@ TEST(EvidenceSitesTest, Variables) {
     };
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
-  // For now, variables are not inferrable.
+  // For now, variables are not inferable.
   EXPECT_THAT(Sites.Declarations, IsEmpty());
   // For now, we don't examine variable initializers.
   EXPECT_THAT(Sites.Implementations, IsEmpty());

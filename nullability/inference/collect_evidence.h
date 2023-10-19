@@ -5,12 +5,13 @@
 #ifndef CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_H_
 #define CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_H_
 
-#include <string>
 #include <vector>
 
 #include "nullability/inference/inference.proto.h"
+#include "nullability/inference/slot_fingerprint.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/Basic/SourceLocation.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/Support/Error.h"
@@ -34,7 +35,9 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
 // It is up to the caller to ensure the implementation is eligible for inference
 // (function has a body, is not dependent, etc).
 llvm::Error collectEvidenceFromImplementation(
-    const Decl &, llvm::function_ref<EvidenceEmitter>);
+    const Decl &, llvm::function_ref<EvidenceEmitter>,
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable = {},
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull = {});
 
 // Gathers evidence of a symbol's nullability from a declaration of it.
 //
@@ -42,13 +45,13 @@ llvm::Error collectEvidenceFromImplementation(
 //   void foo(Nullable<int*>);
 // The first parameter of foo must be nullable.
 //
-// It is the caller's responsibility to ensure that the symbol is inferrable.
+// It is the caller's responsibility to ensure that the symbol is inferable.
 void collectEvidenceFromTargetDeclaration(const clang::Decl &,
                                           llvm::function_ref<EvidenceEmitter>);
 
 // Describes locations within an AST that provide evidence for use in inference.
 struct EvidenceSites {
-  // Declarations of inferrable symbols.
+  // Declarations of inferable symbols.
   std::vector<const Decl *> Declarations;
   // Implementations (e.g. function body) that can be analyzed.
   // This will always be concrete code, not a template pattern.

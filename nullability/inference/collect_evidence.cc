@@ -11,8 +11,9 @@
 #include <vector>
 
 #include "absl/log/check.h"
+#include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
-#include "nullability/inference/inferrable.h"
+#include "nullability/inference/slot_fingerprint.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_lattice.h"
@@ -40,6 +41,7 @@
 #include "clang/Basic/Specifiers.h"
 #include "clang/Index/USRGeneration.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/Support/Error.h"
@@ -115,7 +117,7 @@ std::pair<Expr *, SourceLocation> describeDereference(
 void collectMustBeNonnullEvidence(
     const dataflow::PointerValue &Value, const dataflow::Environment &Env,
     SourceLocation Loc,
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferrableSlots,
+    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
     Evidence::Kind EvidenceKind, llvm::function_ref<EvidenceEmitter> Emit) {
   auto &A = Env.getDataflowAnalysisContext().arena();
   auto &NotIsNull = A.makeNot(getPointerNullState(Value).IsNull);
@@ -124,12 +126,12 @@ void collectMustBeNonnullEvidence(
   // have any new evidence of a necessary annotation.
   if (Env.flowConditionImplies(NotIsNull)) return;
 
-  // Otherwise, if an inferrable slot being annotated Nonnull would imply that
+  // Otherwise, if an inferable slot being annotated Nonnull would imply that
   // Value is not null, then we have evidence suggesting that slot should be
   // annotated. For now, we simply choose the first such slot, sidestepping
   // complexities around the possibility of multiple such slots, any one of
   // which would be sufficient if annotated Nonnull.
-  for (auto &[Nullability, Slot] : InferrableSlots) {
+  for (auto &[Nullability, Slot] : InferableSlots) {
     auto &SlotNonnullImpliesValueNonnull =
         A.makeImplies(Nullability.isNonnull(A), NotIsNull);
     if (Env.flowConditionImplies(SlotNonnullImpliesValueNonnull))
@@ -138,7 +140,7 @@ void collectMustBeNonnullEvidence(
 }
 
 void collectEvidenceFromDereference(
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferrableSlots,
+    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
     const CFGElement &Element, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   auto [Target, Loc] = describeDereference(Element);
@@ -153,40 +155,51 @@ void collectEvidenceFromDereference(
   dataflow::PointerValue *DereferencedValue =
       getPointerValueFromExpr(Target, Env);
   if (!DereferencedValue) return;
-  collectMustBeNonnullEvidence(*DereferencedValue, Env, Loc, InferrableSlots,
+  collectMustBeNonnullEvidence(*DereferencedValue, Env, Loc, InferableSlots,
                                Evidence::UNCHECKED_DEREFERENCE, Emit);
 }
 
-const dataflow::Formula *getInferrableSlotsUnknownConstraint(
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferrableSlots,
+// Inferable slots are nullability slots not explicitly annotated in source
+// code that we are currently capable of handling. This returns a boolean
+// constraint representing these slots having a) the nullability inferred from
+// the previous round for this slot or b) Unknown nullability if no inference
+// was made in the previous round or there was no previous round.
+const dataflow::Formula *getInferableSlotsAsInferredOrUnknownConstraint(
+    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable,
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull,
     const dataflow::Environment &Env) {
   dataflow::Arena &A = Env.getDataflowAnalysisContext().arena();
-  const dataflow::Formula *InferrableSlotsUnknown = &A.makeLiteral(true);
-  for (auto &[Nullability, Slot] : InferrableSlots) {
-    InferrableSlotsUnknown =
-        &A.makeAnd(*InferrableSlotsUnknown,
-                   A.makeAnd(A.makeNot(Nullability.isNullable(A)),
-                             A.makeNot(Nullability.isNonnull(A))));
+  const dataflow::Formula *InferableSlotsUnknown = &A.makeLiteral(true);
+  for (auto &[Nullability, Slot] : InferableSlots) {
+    // TODO: get access to the current function's USR and look up the
+    // fingerprint for that USR and `Slot` in the previously inferred sets,
+    // instead of assuming Unknown.
+    InferableSlotsUnknown = &A.makeAnd(
+        *InferableSlotsUnknown, A.makeAnd(A.makeNot(Nullability.isNullable(A)),
+                                          A.makeNot(Nullability.isNonnull(A))));
   }
-  return InferrableSlotsUnknown;
+  return InferableSlotsUnknown;
 }
 
 void collectEvidenceFromParamAnnotation(
     TypeNullability &ParamNullability, const dataflow::PointerValue &ArgPV,
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferrableCallerSlots,
+    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableCallerSlots,
     const dataflow::Environment &Env, SourceLocation ArgLoc,
     llvm::function_ref<EvidenceEmitter> Emit) {
   //  TODO: Account for variance and each layer of nullability when we handle
   //  more than top-level pointers.
   if (ParamNullability.empty()) return;
   if (ParamNullability[0].concrete() == NullabilityKind::NonNull) {
-    collectMustBeNonnullEvidence(ArgPV, Env, ArgLoc, InferrableCallerSlots,
+    collectMustBeNonnullEvidence(ArgPV, Env, ArgLoc, InferableCallerSlots,
                                  Evidence::PASSED_TO_NONNULL, Emit);
   }
 }
 
 void collectEvidenceFromCallExpr(
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferrableCallerSlots,
+    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableCallerSlots,
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable,
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull,
     const CFGElement &Element, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   // Is this CFGElement a call to a function?
@@ -228,16 +241,18 @@ void collectEvidenceFromCallExpr(
 
     // Collect evidence from the binding of the argument to the parameter's
     // nullability, if known.
-    collectEvidenceFromParamAnnotation(
-        ParamNullability, *PV, InferrableCallerSlots, Env, ArgLoc, Emit);
+    collectEvidenceFromParamAnnotation(ParamNullability, *PV,
+                                       InferableCallerSlots, Env, ArgLoc, Emit);
 
     // Emit evidence of the parameter's nullability. First, calculate that
-    // nullability based on InferrableSlots for the caller being assigned to
+    // nullability based on InferableSlots for the caller being assigned to
     // Unknown, to reflect the current annotations and not all possible
     // annotations for them.
-    NullabilityKind ArgNullability = getNullability(
-        *PV, Env,
-        getInferrableSlotsUnknownConstraint(InferrableCallerSlots, Env));
+    NullabilityKind ArgNullability =
+        getNullability(*PV, Env,
+                       getInferableSlotsAsInferredOrUnknownConstraint(
+                           InferableCallerSlots, PreviouslyInferredNullable,
+                           PreviouslyInferredNonnull, Env));
     Evidence::Kind ArgEvidenceKind;
     switch (ArgNullability) {
       case NullabilityKind::Nullable:
@@ -254,7 +269,9 @@ void collectEvidenceFromCallExpr(
 }
 
 void collectEvidenceFromReturn(
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferrableSlots,
+    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable,
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull,
     const CFGElement &Element, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   // Is this CFGElement a return statement?
@@ -271,7 +288,9 @@ void collectEvidenceFromReturn(
 
   NullabilityKind ReturnNullability =
       getNullability(ReturnExpr, Env,
-                     getInferrableSlotsUnknownConstraint(InferrableSlots, Env));
+                     getInferableSlotsAsInferredOrUnknownConstraint(
+                         InferableSlots, PreviouslyInferredNullable,
+                         PreviouslyInferredNonnull, Env));
   Evidence::Kind ReturnEvidenceKind;
   switch (ReturnNullability) {
     case NullabilityKind::Nullable:
@@ -288,12 +307,16 @@ void collectEvidenceFromReturn(
 }
 
 void collectEvidenceFromElement(
-    std::vector<std::pair<PointerTypeNullability, Slot>> InferrableSlots,
+    std::vector<std::pair<PointerTypeNullability, Slot>> InferableSlots,
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable,
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull,
     const CFGElement &Element, const Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  collectEvidenceFromDereference(InferrableSlots, Element, Env, Emit);
-  collectEvidenceFromCallExpr(InferrableSlots, Element, Env, Emit);
-  collectEvidenceFromReturn(InferrableSlots, Element, Env, Emit);
+  collectEvidenceFromDereference(InferableSlots, Element, Env, Emit);
+  collectEvidenceFromCallExpr(InferableSlots, PreviouslyInferredNullable,
+                              PreviouslyInferredNonnull, Element, Env, Emit);
+  collectEvidenceFromReturn(InferableSlots, PreviouslyInferredNullable,
+                            PreviouslyInferredNonnull, Element, Env, Emit);
   // TODO: add more heuristic collections here
 }
 
@@ -312,7 +335,9 @@ std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
 }  // namespace
 
 llvm::Error collectEvidenceFromImplementation(
-    const Decl &Decl, llvm::function_ref<EvidenceEmitter> Emit) {
+    const Decl &Decl, llvm::function_ref<EvidenceEmitter> Emit,
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable,
+    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull) {
   const FunctionDecl *Func = dyn_cast<FunctionDecl>(&Decl);
   if (!Func || !Func->doesThisDeclarationHaveABody()) {
     return llvm::createStringError(
@@ -329,12 +354,12 @@ llvm::Error collectEvidenceFromImplementation(
   Environment Environment(AnalysisContext, *Func);
   PointerNullabilityAnalysis Analysis(
       Decl.getDeclContext()->getParentASTContext());
-  std::vector<std::pair<PointerTypeNullability, Slot>> InferrableSlots;
+  std::vector<std::pair<PointerTypeNullability, Slot>> InferableSlots;
   auto Parameters = Func->parameters();
   for (auto I = 0; I < Parameters.size(); ++I) {
     auto T = Parameters[I]->getType().getNonReferenceType();
     if (isSupportedPointerType(T) && !evidenceKindFromDeclaredType(T)) {
-      InferrableSlots.push_back(
+      InferableSlots.push_back(
           std::make_pair(Analysis.assignNullabilityVariable(
                              Parameters[I], AnalysisContext.arena()),
                          paramSlot(I)));
@@ -346,8 +371,9 @@ llvm::Error collectEvidenceFromImplementation(
              [&](const CFGElement &Element,
                  const dataflow::DataflowAnalysisState<
                      PointerNullabilityLattice> &State) {
-               collectEvidenceFromElement(InferrableSlots, Element, State.Env,
-                                          Emit);
+               collectEvidenceFromElement(
+                   InferableSlots, PreviouslyInferredNullable,
+                   PreviouslyInferredNonnull, Element, State.Env, Emit);
              })
       .takeError();
 }
