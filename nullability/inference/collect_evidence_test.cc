@@ -69,10 +69,13 @@ std::vector<Evidence> collectEvidenceFromTargetFunction(
     llvm::StringRef Source) {
   std::vector<Evidence> Results;
   clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
+  USRCache usr_cache;
   auto Err = collectEvidenceFromImplementation(
       cast<FunctionDecl>(
           *dataflow::test::findValueDecl(AST.context(), "target")),
-      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); }));
+      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
+                      usr_cache),
+      usr_cache);
   if (Err) ADD_FAILURE() << toString(std::move(Err));
   return Results;
 }
@@ -80,9 +83,11 @@ std::vector<Evidence> collectEvidenceFromTargetFunction(
 std::vector<Evidence> collectEvidenceFromTargetDecl(llvm::StringRef Source) {
   std::vector<Evidence> Results;
   clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
+  USRCache usr_cache;
   collectEvidenceFromTargetDeclaration(
       *dataflow::test::findValueDecl(AST.context(), "target"),
-      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); }));
+      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
+                      usr_cache));
   return Results;
 }
 
@@ -472,10 +477,13 @@ TEST(CollectEvidenceFromImplementationTest, NotInferenceTarget) {
       "target", TargetInstantiationNodes);
   ASSERT_NE(InstantiationDecl, nullptr);
 
+  USRCache usr_cache;
   std::vector<Evidence> Results;
   auto Err = collectEvidenceFromImplementation(
       *InstantiationDecl,
-      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); }));
+      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
+                      usr_cache),
+      usr_cache);
   if (Err) ADD_FAILURE() << toString(std::move(Err));
   EXPECT_THAT(Results, IsEmpty());
 }
@@ -610,7 +618,8 @@ TEST(EvidenceEmitterTest, NotInferenceTarget) {
       dataflow::test::findValueDecl(AST.context(), "target");
   ASSERT_NE(TargetDecl, nullptr);
 
-  EXPECT_DEATH(evidenceEmitter([](const Evidence& e) {})(
+  USRCache usr_cache;
+  EXPECT_DEATH(evidenceEmitter([](const Evidence& e) {}, usr_cache)(
                    *TargetDecl, Slot{}, Evidence::ANNOTATED_UNKNOWN,
                    TargetDecl->getLocation()),
                "not an inference target");

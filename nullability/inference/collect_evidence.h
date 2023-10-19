@@ -5,12 +5,15 @@
 #ifndef CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_H_
 #define CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_H_
 
+#include <string>
+#include <string_view>
 #include <vector>
 
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/Basic/SourceLocation.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
@@ -18,13 +21,17 @@
 
 namespace clang::tidy::nullability {
 
+using USRCache = llvm::DenseMap<const Decl *, std::string>;
+
+std::string_view getOrGenerateUSR(USRCache &Cache, const Decl &);
+
 // Callback used to report collected nullability evidence.
 using EvidenceEmitter = void(const Decl &Target, Slot, Evidence::Kind,
                              SourceLocation);
 // Creates an EvidenceEmitter that serializes the evidence as Evidence protos.
 // This emitter caches USR generation, and should be reused for the whole AST.
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(
-    llvm::unique_function<void(const Evidence &) const>);
+    llvm::unique_function<void(const Evidence &) const>, USRCache &USRCache);
 
 // Analyze code (such as a function body) to infer nullability.
 //
@@ -35,7 +42,7 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
 // It is up to the caller to ensure the implementation is eligible for inference
 // (function has a body, is not dependent, etc).
 llvm::Error collectEvidenceFromImplementation(
-    const Decl &, llvm::function_ref<EvidenceEmitter>,
+    const Decl &, llvm::function_ref<EvidenceEmitter>, USRCache &USRCache,
     const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable = {},
     const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull = {});
 

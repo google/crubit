@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -40,7 +41,6 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Index/USRGeneration.h"
-#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
@@ -51,13 +51,24 @@ namespace clang::tidy::nullability {
 using ::clang::dataflow::DataflowAnalysisContext;
 using ::clang::dataflow::Environment;
 
+std::string_view getOrGenerateUSR(USRCache &Cache, const Decl &Decl) {
+  auto [It, Inserted] = Cache.try_emplace(&Decl);
+  if (Inserted) {
+    llvm::SmallString<128> USR;
+    if (!index::generateUSRForDecl(&Decl, USR)) It->second = USR.str();
+  }
+  return It->second;
+}
+
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(
-    llvm::unique_function<void(const Evidence &) const> Emit) {
+    llvm::unique_function<void(const Evidence &) const> Emit,
+    nullability::USRCache &USRCache) {
   class EvidenceEmitterImpl {
    public:
     EvidenceEmitterImpl(
-        llvm::unique_function<void(const Evidence &) const> Emit)
-        : Emit(std::move(Emit)) {}
+        llvm::unique_function<void(const Evidence &) const> Emit,
+        nullability::USRCache &USRCache)
+        : Emit(std::move(Emit)), USRCache(USRCache) {}
 
     void operator()(const Decl &Target, Slot S, Evidence::Kind Kind,
                     SourceLocation Loc) const {
@@ -68,13 +79,9 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
       E.set_slot(S);
       E.set_kind(Kind);
 
-      auto [It, Inserted] = USRCache.try_emplace(&Target);
-      if (Inserted) {
-        llvm::SmallString<128> USR;
-        if (!index::generateUSRForDecl(&Target, USR)) It->second = USR.str();
-      }
-      if (It->second.empty()) return;  // Can't emit without a USR
-      E.mutable_symbol()->set_usr(It->second);
+      std::string_view USR = getOrGenerateUSR(USRCache, Target);
+      if (USR.empty()) return;  // Can't emit without a USR
+      E.mutable_symbol()->set_usr(USR);
 
       // TODO: make collecting and propagating location information optional?
       auto &SM =
@@ -88,10 +95,10 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
     }
 
    private:
-    mutable llvm::DenseMap<const Decl *, std::string> USRCache;
     llvm::unique_function<void(const Evidence &) const> Emit;
+    nullability::USRCache &USRCache;
   };
-  return EvidenceEmitterImpl(std::move(Emit));
+  return EvidenceEmitterImpl(std::move(Emit), USRCache);
 }
 
 namespace {
@@ -336,6 +343,7 @@ std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
 
 llvm::Error collectEvidenceFromImplementation(
     const Decl &Decl, llvm::function_ref<EvidenceEmitter> Emit,
+    USRCache &USRCache,
     const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable,
     const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull) {
   const FunctionDecl *Func = dyn_cast<FunctionDecl>(&Decl);

@@ -11,6 +11,7 @@
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/merge.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/Basic/SourceManager.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
@@ -35,14 +36,17 @@ std::vector<Inference> inferTU(ASTContext& Ctx,
 
   // Collect all evidence.
   auto Sites = EvidenceSites::discover(Ctx);
-  auto Emitter = evidenceEmitter([&](auto& E) { AllEvidence.push_back(E); });
+  USRCache USRCache;
+  auto Emitter =
+      evidenceEmitter([&](auto& E) { AllEvidence.push_back(E); }, USRCache);
   for (const auto* Decl : Sites.Declarations) {
     if (Filter && !Filter(*Decl)) continue;
     collectEvidenceFromTargetDeclaration(*Decl, Emitter);
   }
   for (const auto* Impl : Sites.Implementations) {
     if (Filter && !Filter(*Impl)) continue;
-    if (auto Err = collectEvidenceFromImplementation(*Impl, Emitter)) {
+    if (auto Err =
+            collectEvidenceFromImplementation(*Impl, Emitter, USRCache)) {
       llvm::errs() << "Skipping function: " << toString(std::move(Err)) << "\n";
       Impl->print(llvm::errs());
     }
