@@ -273,6 +273,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         force_all_deps_direct = False,
         stamp = False,
         use_json_output = False,
+        skip_expanding_rustc_env = True,
     )
 
     (h_out_file, rs_out_file) = _generate_bindings(

@@ -9,9 +9,6 @@ not be used yet.
 """
 
 # buildifier: disable=bzl-visibility
-load("@rules_rust//rust/private:common.bzl", "rust_common")
-
-# buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
 
 # buildifier: disable=bzl-visibility
@@ -80,7 +77,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps):
         ctx = ctx,
         attr = attr,
         toolchain = toolchain,
-        crate_info = rust_common.create_crate_info(
+        crate_info_dict = dict(
             name = crate_name,
             type = "rlib",
             root = src,
