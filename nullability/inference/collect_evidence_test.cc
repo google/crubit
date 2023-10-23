@@ -71,9 +71,7 @@ clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
 }
 
 std::vector<Evidence> collectEvidenceFromTargetFunction(
-    llvm::StringRef Source,
-    const llvm::DenseSet<SlotFingerprint>& PreviouslyInferredNullable = {},
-    const llvm::DenseSet<SlotFingerprint>& PreviouslyInferredNonnull = {}) {
+    llvm::StringRef Source, PreviousInferences PreviousInferences = {}) {
   std::vector<Evidence> Results;
   clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
   USRCache usr_cache;
@@ -82,7 +80,7 @@ std::vector<Evidence> collectEvidenceFromTargetFunction(
           *dataflow::test::findValueDecl(AST.context(), "target")),
       evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
                       usr_cache),
-      usr_cache, PreviouslyInferredNullable, PreviouslyInferredNonnull);
+      usr_cache, PreviousInferences);
   if (Err) ADD_FAILURE() << toString(std::move(Err));
   return Results;
 }
@@ -532,13 +530,11 @@ TEST(CollectEvidenceFromImplementationTest, PropagatesPreviousInferences) {
     ASSERT_THAT(FirstRoundResults, Not(Contains(E)));
   }
 
-  EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src, /* PreviouslyInferredNullable= */
-                                        {fingerprint(TargetUsr, paramSlot(0))},
-                                        /* PreviouslyInferredNonnull= */
-                                        {fingerprint(TargetUsr, paramSlot(1))}),
-      AllOf(IsSupersetOf(ExpectedBothRoundResults),
-            IsSupersetOf(ExpectedSecondRoundResults)));
+  EXPECT_THAT(collectEvidenceFromTargetFunction(
+                  Src, {/*Nullable=*/{fingerprint(TargetUsr, paramSlot(0))},
+                        /*Nonnull=*/{fingerprint(TargetUsr, paramSlot(1))}}),
+              AllOf(IsSupersetOf(ExpectedBothRoundResults),
+                    IsSupersetOf(ExpectedSecondRoundResults)));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, VariableDeclIgnored) {

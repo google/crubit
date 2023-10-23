@@ -33,6 +33,11 @@ using EvidenceEmitter = void(const Decl &Target, Slot, Evidence::Kind,
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(
     llvm::unique_function<void(const Evidence &) const>, USRCache &USRCache);
 
+struct PreviousInferences {
+  const llvm::DenseSet<SlotFingerprint> &Nullable = {};
+  const llvm::DenseSet<SlotFingerprint> &Nonnull = {};
+};
+
 // Analyze code (such as a function body) to infer nullability.
 //
 // Produces Evidence constraining the nullability slots of the symbols that
@@ -43,8 +48,7 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
 // (function has a body, is not dependent, etc).
 llvm::Error collectEvidenceFromImplementation(
     const Decl &, llvm::function_ref<EvidenceEmitter>, USRCache &USRCache,
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable = {},
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull = {});
+    PreviousInferences PreviousInferences = {});
 
 // Gathers evidence of a symbol's nullability from a declaration of it.
 //

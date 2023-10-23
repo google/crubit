@@ -174,24 +174,21 @@ void collectEvidenceFromDereference(
 // was made in the previous round or there was no previous round.
 const Formula *getInferableSlotsAsInferredOrUnknownConstraint(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable,
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull,
-    USRCache &USRCache, const dataflow::Environment &Env) {
-  dataflow::Arena &A = Env.getDataflowAnalysisContext().arena();
-  const Formula *InferableSlotsUnknown = &A.makeLiteral(true);
-  std::string_view USR = getOrGenerateUSR(USRCache, *Env.getCurrentFunc());
+    const PreviousInferences &PreviousInferences, USRCache &USRCache,
+    dataflow::Arena &A, const Decl &CurrentFunc) {
+  const Formula *Constraint = &A.makeLiteral(true);
+  std::string_view USR = getOrGenerateUSR(USRCache, CurrentFunc);
   for (auto &[Nullability, Slot] : InferableSlots) {
     SlotFingerprint Fingerprint = fingerprint(USR, Slot);
-    const Formula &Nullable = PreviouslyInferredNullable.contains(Fingerprint)
+    const Formula &Nullable = PreviousInferences.Nullable.contains(Fingerprint)
                                   ? Nullability.isNullable(A)
                                   : A.makeNot(Nullability.isNullable(A));
-    const Formula &Nonnull = PreviouslyInferredNonnull.contains(Fingerprint)
+    const Formula &Nonnull = PreviousInferences.Nonnull.contains(Fingerprint)
                                  ? Nullability.isNonnull(A)
                                  : A.makeNot(Nullability.isNonnull(A));
-    InferableSlotsUnknown =
-        &A.makeAnd(*InferableSlotsUnknown, A.makeAnd(Nullable, Nonnull));
+    Constraint = &A.makeAnd(*Constraint, A.makeAnd(Nullable, Nonnull));
   }
-  return InferableSlotsUnknown;
+  return Constraint;
 }
 
 void collectEvidenceFromParamAnnotation(
@@ -210,9 +207,7 @@ void collectEvidenceFromParamAnnotation(
 
 void collectEvidenceFromCallExpr(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableCallerSlots,
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable,
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull,
-    USRCache USRCache, const CFGElement &Element,
+    const Formula *InferableSlotsConstraint, const CFGElement &Element,
     const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   // Is this CFGElement a call to a function?
@@ -262,10 +257,7 @@ void collectEvidenceFromCallExpr(
     // Unknown, to reflect the current annotations and not all possible
     // annotations for them.
     NullabilityKind ArgNullability =
-        getNullability(*PV, Env,
-                       getInferableSlotsAsInferredOrUnknownConstraint(
-                           InferableCallerSlots, PreviouslyInferredNullable,
-                           PreviouslyInferredNonnull, USRCache, Env));
+        getNullability(*PV, Env, InferableSlotsConstraint);
     Evidence::Kind ArgEvidenceKind;
     switch (ArgNullability) {
       case NullabilityKind::Nullable:
@@ -283,9 +275,7 @@ void collectEvidenceFromCallExpr(
 
 void collectEvidenceFromReturn(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable,
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull,
-    USRCache USRCache, const CFGElement &Element,
+    const Formula *InferableSlotsConstraint, const CFGElement &Element,
     const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   // Is this CFGElement a return statement?
@@ -301,10 +291,7 @@ void collectEvidenceFromReturn(
   if (!isInferenceTarget(*Env.getCurrentFunc())) return;
 
   NullabilityKind ReturnNullability =
-      getNullability(ReturnExpr, Env,
-                     getInferableSlotsAsInferredOrUnknownConstraint(
-                         InferableSlots, PreviouslyInferredNullable,
-                         PreviouslyInferredNonnull, USRCache, Env));
+      getNullability(ReturnExpr, Env, InferableSlotsConstraint);
   Evidence::Kind ReturnEvidenceKind;
   switch (ReturnNullability) {
     case NullabilityKind::Nullable:
@@ -322,17 +309,13 @@ void collectEvidenceFromReturn(
 
 void collectEvidenceFromElement(
     std::vector<std::pair<PointerTypeNullability, Slot>> InferableSlots,
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable,
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull,
-    USRCache USRCache, const CFGElement &Element, const Environment &Env,
-    llvm::function_ref<EvidenceEmitter> Emit) {
+    const Formula *InferableSlotsConstraint, const CFGElement &Element,
+    const Environment &Env, llvm::function_ref<EvidenceEmitter> Emit) {
   collectEvidenceFromDereference(InferableSlots, Element, Env, Emit);
-  collectEvidenceFromCallExpr(InferableSlots, PreviouslyInferredNullable,
-                              PreviouslyInferredNonnull, USRCache, Element, Env,
-                              Emit);
-  collectEvidenceFromReturn(InferableSlots, PreviouslyInferredNullable,
-                            PreviouslyInferredNonnull, USRCache, Element, Env,
-                            Emit);
+  collectEvidenceFromCallExpr(InferableSlots, InferableSlotsConstraint, Element,
+                              Env, Emit);
+  collectEvidenceFromReturn(InferableSlots, InferableSlotsConstraint, Element,
+                            Env, Emit);
   // TODO: add more heuristic collections here
 }
 
@@ -352,9 +335,7 @@ std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
 
 llvm::Error collectEvidenceFromImplementation(
     const Decl &Decl, llvm::function_ref<EvidenceEmitter> Emit,
-    USRCache &USRCache,
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNullable,
-    const llvm::DenseSet<SlotFingerprint> &PreviouslyInferredNonnull) {
+    USRCache &USRCache, const PreviousInferences PreviousInferences) {
   const FunctionDecl *Func = dyn_cast<FunctionDecl>(&Decl);
   if (!Func || !Func->doesThisDeclarationHaveABody()) {
     return llvm::createStringError(
@@ -382,6 +363,10 @@ llvm::Error collectEvidenceFromImplementation(
                          paramSlot(I)));
     }
   }
+  const auto *InferableSlotsConstraint =
+      getInferableSlotsAsInferredOrUnknownConstraint(
+          InferableSlots, PreviousInferences, USRCache, AnalysisContext.arena(),
+          Decl);
 
   return dataflow::runDataflowAnalysis(
              *ControlFlowContext, Analysis, Environment,
@@ -389,9 +374,8 @@ llvm::Error collectEvidenceFromImplementation(
                  const dataflow::DataflowAnalysisState<
                      PointerNullabilityLattice> &State) {
                collectEvidenceFromElement(InferableSlots,
-                                          PreviouslyInferredNullable,
-                                          PreviouslyInferredNonnull, USRCache,
-                                          Element, State.Env, Emit);
+                                          InferableSlotsConstraint, Element,
+                                          State.Env, Emit);
              })
       .takeError();
 }
