@@ -172,7 +172,7 @@ void collectEvidenceFromDereference(
 // constraint representing these slots having a) the nullability inferred from
 // the previous round for this slot or b) Unknown nullability if no inference
 // was made in the previous round or there was no previous round.
-const Formula *getInferableSlotsAsInferredOrUnknownConstraint(
+const Formula &getInferableSlotsAsInferredOrUnknownConstraint(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
     const PreviousInferences &PreviousInferences, USRCache &USRCache,
     dataflow::Arena &A, const Decl &CurrentFunc) {
@@ -188,7 +188,7 @@ const Formula *getInferableSlotsAsInferredOrUnknownConstraint(
                                  : A.makeNot(Nullability.isNonnull(A));
     Constraint = &A.makeAnd(*Constraint, A.makeAnd(Nullable, Nonnull));
   }
-  return Constraint;
+  return *Constraint;
 }
 
 void collectEvidenceFromParamAnnotation(
@@ -207,7 +207,7 @@ void collectEvidenceFromParamAnnotation(
 
 void collectEvidenceFromCallExpr(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableCallerSlots,
-    const Formula *InferableSlotsConstraint, const CFGElement &Element,
+    const Formula &InferableSlotsConstraint, const CFGElement &Element,
     const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   // Is this CFGElement a call to a function?
@@ -257,7 +257,7 @@ void collectEvidenceFromCallExpr(
     // Unknown, to reflect the current annotations and not all possible
     // annotations for them.
     NullabilityKind ArgNullability =
-        getNullability(*PV, Env, InferableSlotsConstraint);
+        getNullability(*PV, Env, &InferableSlotsConstraint);
     Evidence::Kind ArgEvidenceKind;
     switch (ArgNullability) {
       case NullabilityKind::Nullable:
@@ -275,7 +275,7 @@ void collectEvidenceFromCallExpr(
 
 void collectEvidenceFromReturn(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    const Formula *InferableSlotsConstraint, const CFGElement &Element,
+    const Formula &InferableSlotsConstraint, const CFGElement &Element,
     const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   // Is this CFGElement a return statement?
@@ -291,7 +291,7 @@ void collectEvidenceFromReturn(
   if (!isInferenceTarget(*Env.getCurrentFunc())) return;
 
   NullabilityKind ReturnNullability =
-      getNullability(ReturnExpr, Env, InferableSlotsConstraint);
+      getNullability(ReturnExpr, Env, &InferableSlotsConstraint);
   Evidence::Kind ReturnEvidenceKind;
   switch (ReturnNullability) {
     case NullabilityKind::Nullable:
@@ -309,7 +309,7 @@ void collectEvidenceFromReturn(
 
 void collectEvidenceFromElement(
     std::vector<std::pair<PointerTypeNullability, Slot>> InferableSlots,
-    const Formula *InferableSlotsConstraint, const CFGElement &Element,
+    const Formula &InferableSlotsConstraint, const CFGElement &Element,
     const Environment &Env, llvm::function_ref<EvidenceEmitter> Emit) {
   collectEvidenceFromDereference(InferableSlots, Element, Env, Emit);
   collectEvidenceFromCallExpr(InferableSlots, InferableSlotsConstraint, Element,
@@ -363,7 +363,7 @@ llvm::Error collectEvidenceFromImplementation(
                          paramSlot(I)));
     }
   }
-  const auto *InferableSlotsConstraint =
+  const auto &InferableSlotsConstraint =
       getInferableSlotsAsInferredOrUnknownConstraint(
           InferableSlots, PreviousInferences, USRCache, AnalysisContext.arena(),
           Decl);
