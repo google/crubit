@@ -494,7 +494,7 @@ void transferFlowSensitiveNonConstMemberCall(
 
 // If nullability for the decl D has been overridden, patch N to reflect it.
 // (N is the nullability of an access to D).
-void overrideNullabilityFromDecl(const ValueDecl *D,
+void overrideNullabilityFromDecl(const Decl *D,
                                  PointerNullabilityLattice &Lattice,
                                  TypeNullability &N) {
   // For now, overrides are always for pointer values only, and override only
@@ -706,8 +706,11 @@ void transferNonFlowSensitiveCallExpr(
     // TODO(mboehme): Instead of relying on Clang to propagate nullability sugar
     // to the `CallExpr`'s type, we should extract nullability directly from the
     // callee `Expr .
-    return substituteNullabilityAnnotationsInFunctionTemplate(CE->getType(),
-                                                              CE);
+    auto Nullability =
+        substituteNullabilityAnnotationsInFunctionTemplate(CE->getType(), CE);
+    overrideNullabilityFromDecl(CE->getCalleeDecl(), State.Lattice,
+                                Nullability);
+    return Nullability;
   });
 }
 

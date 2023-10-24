@@ -17,6 +17,7 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
@@ -535,6 +536,93 @@ TEST(CollectEvidenceFromImplementationTest, PropagatesPreviousInferences) {
                         /*Nonnull=*/{fingerprint(TargetUsr, paramSlot(1))}}),
               AllOf(IsSupersetOf(ExpectedBothRoundResults),
                     IsSupersetOf(ExpectedSecondRoundResults)));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     AnalysisUsesPreviousInferencesForSlotsOutsideTargetImplementation) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* returnsToBeNonnull(int* a) {
+      return a;
+    }
+    int* target(int* q) {
+      *q;
+      return returnsToBeNonnull(q);
+    }
+  )cc";
+  std::string TargetUsr = "c:@F@target#*I#";
+  std::string ReturnsToBeNonnullUsr = "c:@F@returnsToBeNonnull#*I#";
+  const llvm::DenseMap<int, std::vector<testing::Matcher<const Evidence&>>>
+      ExpectedNewResultsPerRound = {
+          {{0,
+            {evidence(
+                paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                AllOf(functionNamed("target"),
+                      // Double-check that target's usr is as expected before
+                      // we use it to create SlotFingerprints.
+                      ResultOf([](Symbol S) { return S.usr(); }, TargetUsr)))}},
+           {1,
+            {evidence(
+                paramSlot(0), Evidence::NONNULL_ARGUMENT,
+                AllOf(functionNamed("returnsToBeNonnull"),
+                      // Double-check that returnsToBeNonnull's usr is as
+                      // expected before we use it to create SlotFingerprints.
+                      ResultOf([](Symbol S) { return S.usr(); },
+                               ReturnsToBeNonnullUsr)))}},
+           {2,
+            {
+                // No new evidence from target's implementation in this round,
+                // but in a full-TU analysis, this would be the round where we
+                // decide returnsToBeNonnull returns Nonnull, based on the
+                // now-Nonnull argument that is the only return value.
+            }},
+           {3,
+            {evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
+                      functionNamed("target"))}}}};
+
+  // Assert first round results because they don't rely on previous inference
+  // propagation at all and in this case are test setup and preconditions.
+  auto FirstRoundResults = collectEvidenceFromTargetFunction(Src);
+  ASSERT_THAT(FirstRoundResults,
+              IsSupersetOf(ExpectedNewResultsPerRound.at(0)));
+  for (const auto& E : ExpectedNewResultsPerRound.at(1)) {
+    ASSERT_THAT(FirstRoundResults, Not(Contains(E)));
+  }
+
+  auto SecondRoundResults = collectEvidenceFromTargetFunction(
+      Src, {.Nonnull = {fingerprint(TargetUsr, paramSlot(0))}});
+  EXPECT_THAT(SecondRoundResults,
+              AllOf(IsSupersetOf(ExpectedNewResultsPerRound.at(0)),
+                    IsSupersetOf(ExpectedNewResultsPerRound.at(1))));
+  for (const auto& E : ExpectedNewResultsPerRound.at(2)) {
+    ASSERT_THAT(SecondRoundResults, Not(Contains(E)));
+  }
+
+  auto ThirdRoundResults = collectEvidenceFromTargetFunction(
+      Src, {.Nonnull = {fingerprint(TargetUsr, paramSlot(0)),
+                        fingerprint(ReturnsToBeNonnullUsr, paramSlot(0))}});
+  EXPECT_THAT(ThirdRoundResults,
+              AllOf(IsSupersetOf(ExpectedNewResultsPerRound.at(0)),
+                    IsSupersetOf(ExpectedNewResultsPerRound.at(1)),
+                    IsSupersetOf(ExpectedNewResultsPerRound.at(2))));
+  for (const auto& E : ExpectedNewResultsPerRound.at(3)) {
+    ASSERT_THAT(ThirdRoundResults, Not(Contains(E)));
+  }
+
+  auto FourthRoundResults = collectEvidenceFromTargetFunction(
+      Src,
+      {.Nonnull = {
+           fingerprint(TargetUsr, paramSlot(0)),
+           fingerprint(ReturnsToBeNonnullUsr, paramSlot(0)),
+           // As noted in the Evidence matcher list above, we don't infer the
+           // return type of returnsToBeNonnull from only collecting evidence
+           // from target's implementation, but for the sake of this test, let's
+           // pretend we collected evidence from the entire TU.
+           fingerprint(ReturnsToBeNonnullUsr, SLOT_RETURN_TYPE)}});
+  EXPECT_THAT(FourthRoundResults,
+              AllOf(IsSupersetOf(ExpectedNewResultsPerRound.at(0)),
+                    IsSupersetOf(ExpectedNewResultsPerRound.at(1)),
+                    IsSupersetOf(ExpectedNewResultsPerRound.at(2)),
+                    IsSupersetOf(ExpectedNewResultsPerRound.at(3))));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, VariableDeclIgnored) {

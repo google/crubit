@@ -16,6 +16,7 @@ cc_library(
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
         "//nullability:type_nullability",
+        "@absl//absl/container:flat_hash_map",
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",

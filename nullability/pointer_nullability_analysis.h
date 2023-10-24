@@ -5,19 +5,21 @@
 #ifndef CRUBIT_NULLABILITY_POINTER_NULLABILITY_ANALYSIS_H_
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_ANALYSIS_H_
 
+#include <optional>
 #include <utility>
 
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/Type.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
-#include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
+#include "llvm/ADT/FunctionExtras.h"
 
 namespace clang {
 namespace tidy {
@@ -66,6 +68,13 @@ class PointerNullabilityAnalysis
   // The returned nullability is guaranteed to be symbolic.
   PointerTypeNullability assignNullabilityVariable(const ValueDecl *D,
                                                    dataflow::Arena &);
+
+  void assignNullabilityOverride(
+      llvm::unique_function<
+          std::optional<const PointerTypeNullability *>(const Decl &) const>
+          Override) {
+    NFS.ConcreteNullabilityOverride = std::move(Override);
+  }
 
   void transfer(const CFGElement &Elt, PointerNullabilityLattice &Lattice,
                 dataflow::Environment &Env);

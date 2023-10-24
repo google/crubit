@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
@@ -51,6 +52,10 @@ namespace clang::tidy::nullability {
 using ::clang::dataflow::DataflowAnalysisContext;
 using ::clang::dataflow::Environment;
 using ::clang::dataflow::Formula;
+
+using ConcreteNullabilityCache =
+    absl::flat_hash_map<const Decl *,
+                        std::optional<const PointerTypeNullability>>;
 
 std::string_view getOrGenerateUSR(USRCache &Cache, const Decl &Decl) {
   auto [It, Inserted] = Cache.try_emplace(&Decl);
@@ -174,7 +179,7 @@ void collectEvidenceFromDereference(
 // was made in the previous round or there was no previous round.
 const Formula &getInferableSlotsAsInferredOrUnknownConstraint(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    const PreviousInferences &PreviousInferences, USRCache &USRCache,
+    USRCache &USRCache, const PreviousInferences &PreviousInferences,
     dataflow::Arena &A, const Decl &CurrentFunc) {
   const Formula *Constraint = &A.makeLiteral(true);
   std::string_view USR = getOrGenerateUSR(USRCache, CurrentFunc);
@@ -254,8 +259,8 @@ void collectEvidenceFromCallExpr(
 
     // Emit evidence of the parameter's nullability. First, calculate that
     // nullability based on InferableSlots for the caller being assigned to
-    // Unknown, to reflect the current annotations and not all possible
-    // annotations for them.
+    // Unknown or their previously-inferred value, to reflect the current
+    // annotations and not all possible annotations for them.
     NullabilityKind ArgNullability =
         getNullability(*PV, Env, &InferableSlotsConstraint);
     Evidence::Kind ArgEvidenceKind;
@@ -331,6 +336,49 @@ std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
       return Evidence::ANNOTATED_NULLABLE;
   }
 }
+
+// Returns a function that the analysis can use to override Decl nullability
+// values from the source code being analyzed with previously inferred
+// nullabilities.
+//
+// In practice, this should only override the default nullability for Decls that
+// do not spell out a nullability in source code, because we only pass in
+// inferences from the previous round which are non-trivial and annotations
+// "inferred" by reading an annotation from source code in the previous round
+// were marked trivial.
+auto getConcreteNullabilityOverrideFromPreviousInferences(
+    ConcreteNullabilityCache &Cache, USRCache &USRCache,
+    const PreviousInferences &PreviousInferences) {
+  return [&](const Decl &D) -> std::optional<const PointerTypeNullability *> {
+    auto [It, Inserted] = Cache.try_emplace(&D);
+    if (Inserted) {
+      std::optional<const Decl *> fingerprintedDecl;
+      Slot Slot;
+      if (auto *FD = clang::dyn_cast_or_null<FunctionDecl>(&D)) {
+        fingerprintedDecl = (ValueDecl *)FD;
+        Slot = SLOT_RETURN_TYPE;
+      } else if (auto *PD = clang::dyn_cast_or_null<ParmVarDecl>(&D)) {
+        if (auto *Parent = clang::dyn_cast_or_null<FunctionDecl>(
+                PD->getParentFunctionOrMethod())) {
+          fingerprintedDecl = (ValueDecl *)Parent;
+          Slot = paramSlot(PD->getFunctionScopeIndex());
+        }
+      }
+      if (!fingerprintedDecl) return std::nullopt;
+      auto fp =
+          fingerprint(getOrGenerateUSR(USRCache, **fingerprintedDecl), Slot);
+      if (PreviousInferences.Nullable.contains(fp)) {
+        It->second.emplace(NullabilityKind::Nullable);
+      } else if (PreviousInferences.Nonnull.contains(fp)) {
+        It->second.emplace(NullabilityKind::NonNull);
+      } else {
+        It->second = std::nullopt;
+      }
+    }
+    if (!It->second) return std::nullopt;
+    return &*It->second;
+  };
+}
 }  // namespace
 
 llvm::Error collectEvidenceFromImplementation(
@@ -365,8 +413,13 @@ llvm::Error collectEvidenceFromImplementation(
   }
   const auto &InferableSlotsConstraint =
       getInferableSlotsAsInferredOrUnknownConstraint(
-          InferableSlots, PreviousInferences, USRCache, AnalysisContext.arena(),
+          InferableSlots, USRCache, PreviousInferences, AnalysisContext.arena(),
           Decl);
+
+  ConcreteNullabilityCache ConcreteNullabilityCache;
+  Analysis.assignNullabilityOverride(
+      getConcreteNullabilityOverrideFromPreviousInferences(
+          ConcreteNullabilityCache, USRCache, PreviousInferences));
 
   return dataflow::runDataflowAnalysis(
              *ControlFlowContext, Analysis, Environment,

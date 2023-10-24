@@ -6,6 +6,7 @@
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_LATTICE_H_
 
 #include <functional>
+#include <optional>
 #include <ostream>
 
 #include "absl/container/flat_hash_map.h"
@@ -14,18 +15,26 @@
 #include "clang/AST/Expr.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
+#include "clang/Basic/LLVM.h"
+#include "llvm/ADT/FunctionExtras.h"
 
 namespace clang::tidy::nullability {
-
 class PointerNullabilityLattice {
  public:
   struct NonFlowSensitiveState {
     absl::flat_hash_map<const Expr *, TypeNullability> ExprToNullability;
     // Overridden symbolic nullability for pointer-typed decls.
     // These are set by PointerNullabilityAnalysis::assignNullabilityVariable,
-    // and take precedence over the declared type.
+    // and take precedence over the declared type and over any result from
+    // ConcreteNullabilityOverride.
     absl::flat_hash_map<const ValueDecl *, PointerTypeNullability>
         DeclTopLevelNullability;
+    // Returns overriding concrete nullability for decls. This is set by
+    // PointerNullabilityAnalysis::assignNullabilityOverride, and the result, if
+    // present, takes precedence over the declared type.
+    llvm::unique_function<std::optional<const PointerTypeNullability *>(
+        const Decl &) const>
+        ConcreteNullabilityOverride = [](const Decl &) { return std::nullopt; };
   };
 
   PointerNullabilityLattice(NonFlowSensitiveState &NFS) : NFS(NFS) {}
@@ -54,11 +63,18 @@ class PointerNullabilityLattice {
   }
 
   // Returns overridden nullability information associated with a declaration.
-  // For now we only track top-level decl nullability symbolically.
-  const PointerTypeNullability *getDeclNullability(const ValueDecl *D) const {
-    auto It = NFS.DeclTopLevelNullability.find(D);
-    if (It == NFS.DeclTopLevelNullability.end()) return nullptr;
-    return &It->second;
+  // For now we only track top-level decl nullability symbolically and check for
+  // concrete nullability override results.
+  const PointerTypeNullability *getDeclNullability(const Decl *D) const {
+    if (!D) return nullptr;
+    if (const auto *VD = dyn_cast_or_null<ValueDecl>(D)) {
+      auto It = NFS.DeclTopLevelNullability.find(VD);
+      if (It != NFS.DeclTopLevelNullability.end()) return &It->second;
+    }
+    if (const std::optional<const PointerTypeNullability *> N =
+            NFS.ConcreteNullabilityOverride(*D))
+      return *N;
+    return nullptr;
   }
 
   bool operator==(const PointerNullabilityLattice &Other) const { return true; }
