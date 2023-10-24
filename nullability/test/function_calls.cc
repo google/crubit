@@ -644,5 +644,26 @@ TEST(PointerNullabilityTest, CallBuiltinFunction) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CallNoreturnDestructor) {
+  // This test demonstrates that the check considers program execution to end
+  // when a `noreturn` destructor is called.
+  // Among other things, this is intended to demonstrate that Abseil's logging
+  // instruction `LOG(FATAL)` (which creates an object with a `noreturn`
+  // destructor) is correctly interpreted as terminating the program.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Fatal {
+      __attribute__((noreturn)) ~Fatal();
+      void method(int);
+    };
+    void target(int* _Nullable p) {
+      // Do warn here, as the `*p` dereference happens before the `Fatal` object
+      // is destroyed.
+      Fatal().method(*p);  // [[unsafe]]
+      // Don't warn here: We know that this code never gets executed.
+      *p;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
