@@ -34,12 +34,13 @@ TEST(PointerNullabilityTest, MatchMemberFunctions) {
       int *_Nullable get(int i) const { return x; }
       int *_Nullable get_nonconst() { return x; }
       int *_Nullable get_external() { return ds.p; }
-      void mutate(){};
+      void may_mutate(){};
 
      private:
       int *x;
       DummyStruct ds;
     };
+    C foo() { return C(); }
   )cc");
 
   EXPECT_TRUE(matches(Input, "void target(){ C().get(); }",
@@ -52,8 +53,10 @@ TEST(PointerNullabilityTest, MatchMemberFunctions) {
                       isSupportedPointerAccessorCall()));
   EXPECT_TRUE(matches(Input, "void target(){ C().get_nonconst(); }",
                       isSupportedPointerAccessorCall()));
+  EXPECT_TRUE(matches(Input, "void target(){ foo().get(); }",
+                      isSupportedPointerAccessorCall()));
 
-  EXPECT_FALSE(matches(Input, "void target(){ C().mutate(); }",
+  EXPECT_FALSE(matches(Input, "void target(){ C().may_mutate(); }",
                        isSupportedPointerAccessorCall()));
   EXPECT_FALSE(matches(Input, "void target(){ C().get_external(); }",
                        isSupportedPointerAccessorCall()));

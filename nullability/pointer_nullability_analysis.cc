@@ -462,14 +462,20 @@ void transferFlowSensitiveCallExpr(
                               FuncDecl->getParamDecl(i)->getType());
   }
 }
+
 void transferFlowSensitiveAccessorCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   auto *member = Result.Nodes.getNodeAs<clang::ValueDecl>("member-decl");
-  dataflow::RecordStorageLocation *RecordLoc =
-      dataflow::getImplicitObjectLocation(*MCE, State.Env);
-  StorageLocation *Loc = RecordLoc->getChild(*member);
-  if (auto *PointerVal = dyn_cast<PointerValue>(State.Env.getValue(*Loc))) {
+  PointerValue *PointerVal = nullptr;
+  if (dataflow::RecordStorageLocation *RecordLoc =
+          dataflow::getImplicitObjectLocation(*MCE, State.Env)) {
+    StorageLocation *Loc = RecordLoc->getChild(*member);
+    PointerVal = dyn_cast<PointerValue>(State.Env.getValue(*Loc));
+  } else {
+    PointerVal = getPointerValueFromExpr(MCE, State.Env);
+  }
+  if (PointerVal) {
     State.Env.setValue(*MCE, *PointerVal);
     initPointerFromTypeNullability(*PointerVal, MCE, State);
   }

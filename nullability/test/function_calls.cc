@@ -665,5 +665,54 @@ TEST(PointerNullabilityTest, CallNoreturnDestructor) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ConstMethodNoParamsCheckFirst) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct C {
+      int *_Nullable property() const { return x; }
+      int *_Nullable x;
+    };
+    void target() {
+      C obj;
+      int x = 0;
+      if (obj.property() != nullptr) x = *obj.property();
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, FieldUndefinedValue) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct C {
+      int *_Nullable property() const { return x; }
+      int *_Nullable x;
+    };
+    C foo();
+    void target() {
+      C obj;
+      int x = 0;
+      if (foo().x != nullptr) x = *foo().x;  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, MethodNoParamsUndefinedValue) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct C {
+      int *_Nullable property() const { return x; }
+      int *_Nullable x = nullptr;
+    };
+    C foo();
+    void target() {
+      int x = 0;
+      if (C().property() != nullptr) {
+        *C().property();  // [[unsafe]]
+      }
+      C obj = C();
+      if (obj.property() != nullptr) {
+        *obj.property();
+      }
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
