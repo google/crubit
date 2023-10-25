@@ -204,6 +204,16 @@ cc_test(
 )
 
 cc_test(
+    name = "path_sensitive",
+    srcs = ["path_sensitive.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "pointer_arithmetic",
     srcs = ["pointer_arithmetic.cc"],
     deps = [
