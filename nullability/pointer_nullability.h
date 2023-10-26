@@ -15,6 +15,7 @@
 
 #include <optional>
 
+#include "absl/base/nullability.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTDumper.h"
@@ -45,11 +46,14 @@ bool hasPointerNullState(const dataflow::PointerValue &PointerVal);
 /// The properties representing nullness information for a pointer.
 ///
 /// We attach these properties to every PointerValue taken by an expression.
+///
+/// A null pointer for `FromNullable` or `IsNull` represents "top", i.e. we have
+/// no information on this property.
 struct PointerNullState {
   /// Did the pointer come from a known-nullable source?
-  const dataflow::Formula &FromNullable;
+  absl::Nullable<const dataflow::Formula *> FromNullable;
   /// Is the pointer's value null?
-  const dataflow::Formula &IsNull;
+  absl::Nullable<const dataflow::Formula *> IsNull;
   // These are independent: sources with unknown nullability can yield nullptr!
 };
 
@@ -78,6 +82,20 @@ PointerNullState getPointerNullState(const dataflow::PointerValue &PointerVal);
 void initPointerNullState(
     dataflow::PointerValue &PointerVal, dataflow::DataflowAnalysisContext &Ctx,
     std::optional<PointerTypeNullability> Source = std::nullopt);
+
+// Sets the `FromNullable` state of `PointerVal` to null (interpreted as "top").
+// Explicitly indicating that we don't know whether the source was nullable is a
+// form of widening that allows analysis to converge.
+// This mutates the `PointerValue`, so it should be freshly created and not have
+// been shared with other environments.
+void forgetFromNullable(dataflow::PointerValue &PointerVal,
+                        dataflow::DataflowAnalysisContext &Ctx);
+
+// Sets the `IsNull` state of `PointerVal` to null (interpreted as "top").
+// This mutates the `PointerValue`, so it should be freshly created and not have
+// been shared with other environments.
+void forgetIsNull(dataflow::PointerValue &PointerVal,
+                  dataflow::DataflowAnalysisContext &Ctx);
 
 /// Variant of initPointerNullState, where the pointer is guaranteed null.
 /// (This is flow-insensitive, but PointerTypeNullability can't represent it).

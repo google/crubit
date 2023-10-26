@@ -20,7 +20,6 @@
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
-#include "llvm/Support/Error.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
@@ -72,18 +71,20 @@ TEST(PointerNullabilityAnalysis, AssignNullabilityVariable) {
       dyn_cast_or_null<dataflow::PointerValue>(ExitState.Env.getReturnValue());
   ASSERT_NE(Ret, nullptr);
   auto State = getPointerNullState(*Ret);
+  ASSERT_NE(State.FromNullable, nullptr);
+  ASSERT_NE(State.IsNull, nullptr);
 
   // The param nullability hasn't been fixed.
   EXPECT_EQ(std::nullopt, evaluate(PN.isNonnull(A), ExitState.Env));
   EXPECT_EQ(std::nullopt, evaluate(PN.isNullable(A), ExitState.Env));
   // Nor has the the nullability of the returned pointer.
-  EXPECT_EQ(std::nullopt, evaluate(State.FromNullable, ExitState.Env));
-  EXPECT_EQ(std::nullopt, evaluate(State.IsNull, ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(*State.FromNullable, ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(*State.IsNull, ExitState.Env));
   // However, the two are linked as expected.
   EXPECT_EQ(true,
-            evaluate(A.makeImplies(PN.isNonnull(A), A.makeNot(State.IsNull)),
+            evaluate(A.makeImplies(PN.isNonnull(A), A.makeNot(*State.IsNull)),
                      ExitState.Env));
-  EXPECT_EQ(true, evaluate(A.makeEquals(PN.isNullable(A), State.FromNullable),
+  EXPECT_EQ(true, evaluate(A.makeEquals(PN.isNullable(A), *State.FromNullable),
                            ExitState.Env));
 }
 

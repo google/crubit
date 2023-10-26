@@ -25,6 +25,7 @@ using dataflow::DataflowAnalysisContext;
 using dataflow::Environment;
 using dataflow::Formula;
 using dataflow::PointerValue;
+using dataflow::TopBoolValue;
 using dataflow::Value;
 
 /// The nullness information of a pointer is represented by two properties
@@ -47,17 +48,22 @@ bool hasPointerNullState(const dataflow::PointerValue &PointerVal) {
 }
 
 PointerNullState getPointerNullState(const PointerValue &PointerVal) {
-  auto &FromNullable = *cast<BoolValue>(PointerVal.getProperty(kFromNullable));
-  auto &Null = *cast<BoolValue>(PointerVal.getProperty(kNull));
-  return {FromNullable.formula(), Null.formula()};
+  Value *FromNullableProp = PointerVal.getProperty(kFromNullable);
+  Value *NullProp = PointerVal.getProperty(kNull);
+
+  return {
+      isa<TopBoolValue>(FromNullableProp)
+          ? nullptr
+          : &cast<BoolValue>(FromNullableProp)->formula(),
+      isa<TopBoolValue>(NullProp) ? nullptr
+                                  : &cast<BoolValue>(NullProp)->formula(),
+  };
 }
 
 static bool tryCreatePointerNullState(PointerValue &PointerVal,
                                       dataflow::Arena &A,
                                       const Formula *FromNullable = nullptr,
                                       const Formula *IsNull = nullptr) {
-  // TODO: for now we assume that we have both nullability properties, or none.
-  // We'll need to relax this when properties can be independently widened away.
   if (hasPointerNullState(PointerVal)) return false;
   if (!FromNullable) FromNullable = &A.makeAtomRef(A.makeAtom());
   if (!IsNull) IsNull = &A.makeAtomRef(A.makeAtom());
@@ -77,10 +83,21 @@ void initPointerNullState(PointerValue &PointerVal,
     // TODO: remove this once such clauses are recognized and dropped.
     if (Source &&
         (Source->isSymbolic() || Source == NullabilityKind::NonNull)) {
-      const Formula &IsNull = getPointerNullState(PointerVal).IsNull;
-      Ctx.addInvariant(A.makeImplies(Source->isNonnull(A), A.makeNot(IsNull)));
+      if (const Formula *IsNull = getPointerNullState(PointerVal).IsNull)
+        Ctx.addInvariant(
+            A.makeImplies(Source->isNonnull(A), A.makeNot(*IsNull)));
     }
   }
+}
+
+void forgetFromNullable(dataflow::PointerValue &PointerVal,
+                        DataflowAnalysisContext &Ctx) {
+  PointerVal.setProperty(kFromNullable, Ctx.arena().makeTopValue());
+}
+
+void forgetIsNull(dataflow::PointerValue &PointerVal,
+                  DataflowAnalysisContext &Ctx) {
+  PointerVal.setProperty(kNull, Ctx.arena().makeTopValue());
 }
 
 void initNullPointer(PointerValue &PointerVal, DataflowAnalysisContext &Ctx) {
@@ -93,9 +110,18 @@ bool isNullable(const PointerValue &PointerVal, const Environment &Env,
                 const dataflow::Formula *AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
   auto [FromNullable, Null] = getPointerNullState(PointerVal);
-  auto *ForseeablyNull = &A.makeAnd(FromNullable, Null);
+
+  // A value is nullable if two things can be simultaneously true:
+  // - We got it from a nullable source
+  //   (values from unknown sources may be null, but are not nullable)
+  // - The value is actually null
+  //   (if a value from a nullable source was checked, it's not nullable)
+  const Formula *ForseeablyNull = &A.makeLiteral(true);
+  if (FromNullable) ForseeablyNull = &A.makeAnd(*ForseeablyNull, *FromNullable);
+  if (Null) ForseeablyNull = &A.makeAnd(*ForseeablyNull, *Null);
   if (AdditionalConstraints)
-    ForseeablyNull = &A.makeAnd(*AdditionalConstraints, *ForseeablyNull);
+    ForseeablyNull = &A.makeAnd(*ForseeablyNull, *AdditionalConstraints);
+
   return !Env.flowConditionImplies(A.makeNot(*ForseeablyNull));
 }
 
@@ -103,10 +129,11 @@ NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
                                const dataflow::Environment &Env,
                                const dataflow::Formula *AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
-  auto *Null = &getPointerNullState(PointerVal).IsNull;
-  if (AdditionalConstraints) Null = &A.makeAnd(*AdditionalConstraints, *Null);
-  if (Env.flowConditionImplies(A.makeNot(*Null)))
-    return NullabilityKind::NonNull;
+  if (auto *Null = getPointerNullState(PointerVal).IsNull) {
+    if (AdditionalConstraints) Null = &A.makeAnd(*AdditionalConstraints, *Null);
+    if (Env.flowConditionImplies(A.makeNot(*Null)))
+      return NullabilityKind::NonNull;
+  }
   return isNullable(PointerVal, Env, AdditionalConstraints)
              ? NullabilityKind::Nullable
              : NullabilityKind::Unspecified;

@@ -117,6 +117,7 @@ cc_library(
     ],
     deps = [
         ":type_nullability",
+        "@absl//absl/base:nullability",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
@@ -133,6 +134,7 @@ cc_test(
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
+        "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
