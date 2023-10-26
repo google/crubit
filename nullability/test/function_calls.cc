@@ -669,12 +669,11 @@ TEST(PointerNullabilityTest, ConstMethodNoParamsCheckFirst) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct C {
       int *_Nullable property() const { return x; }
-      int *_Nullable x;
+      int *_Nullable x = nullptr;
     };
     void target() {
       C obj;
-      int x = 0;
-      if (obj.property() != nullptr) x = *obj.property();
+      if (obj.property() != nullptr) *obj.property();
     }
   )cc"));
 }
@@ -683,13 +682,12 @@ TEST(PointerNullabilityTest, FieldUndefinedValue) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct C {
       int *_Nullable property() const { return x; }
-      int *_Nullable x;
+      int *_Nullable x = nullptr;
     };
     C foo();
     void target() {
       C obj;
-      int x = 0;
-      if (foo().x != nullptr) x = *foo().x;  // [[unsafe]]
+      if (foo().x != nullptr) *foo().x;  // [[unsafe]]
     }
   )cc"));
 }
@@ -700,13 +698,12 @@ TEST(PointerNullabilityTest, MethodNoParamsUndefinedValue) {
       int *_Nullable property() const { return x; }
       int *_Nullable x = nullptr;
     };
-    C foo();
     void target() {
       int x = 0;
       if (C().property() != nullptr) {
         *C().property();  // [[unsafe]]
       }
-      C obj = C();
+      C obj;
       if (obj.property() != nullptr) {
         *obj.property();
       }
