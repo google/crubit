@@ -473,6 +473,7 @@ void transferFlowSensitiveAccessorCall(
     StorageLocation *Loc = RecordLoc->getChild(*member);
     PointerVal = dyn_cast<PointerValue>(State.Env.getValue(*Loc));
   } else {
+    // Use value that may have been set by the builtin transfer function.
     PointerVal = getPointerValueFromExpr(MCE, State.Env);
   }
   if (PointerVal) {
