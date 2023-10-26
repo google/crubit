@@ -692,6 +692,23 @@ TEST(PointerNullabilityTest, FieldUndefinedValue) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, Accessor_BaseObjectReturnedByReference) {
+  // Crash repro:
+  // If the base object of the accessor call expression is a reference returned
+  // from a function call, we have a storage location for the object but no
+  // values for its fields. Check that we don't crash in this case.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct C {
+      int *_Nullable property() const { return x; }
+      int *_Nullable x = nullptr;
+    };
+    C &foo();
+    void target() {
+      if (foo().property() != nullptr) int x = *foo().property();  // [[unsafe]]
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, MethodNoParamsUndefinedValue) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct C {

@@ -527,9 +527,11 @@ void transferFlowSensitiveAccessorCall(
   if (dataflow::RecordStorageLocation *RecordLoc =
           dataflow::getImplicitObjectLocation(*MCE, State.Env)) {
     StorageLocation *Loc = RecordLoc->getChild(*member);
-    PointerVal = dyn_cast<PointerValue>(State.Env.getValue(*Loc));
-  } else {
-    // Use value that may have been set by the builtin transfer function.
+    PointerVal = dyn_cast_or_null<PointerValue>(State.Env.getValue(*Loc));
+  }
+  if (!PointerVal) {
+    // Use value that may have been set by the builtin transfer function or by
+    // `ensurePointerHasValue()`.
     PointerVal = getPointerValueFromExpr(MCE, State.Env);
   }
   if (PointerVal) {
