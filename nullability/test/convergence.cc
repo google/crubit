@@ -35,8 +35,7 @@ TEST(PointerNullabilityTest, PointerLoop_Nonnull_Nullable) {
     int* _Nullable GetNext();
     void target() {
       for (int* p = GetFirst();; p = GetNext()) {
-        // TODO: False negative. This dereference should be flagged as unsafe.
-        *p;
+        *p;  // [[unsafe]]
       }
     }
   )cc"));
@@ -72,8 +71,7 @@ TEST(PointerNullabilityTest, PointerLoop_Unknown_Nullable) {
     int* _Nullable GetNext();
     void target() {
       for (int* p = GetFirst();; p = GetNext()) {
-        // TODO: False negative. This dereference should be flagged as unsafe.
-        *p;
+        *p;  // [[unsafe]]
       }
     }
   )cc"));
@@ -150,8 +148,7 @@ TEST(PointerNullabilityTest, PointerLoop_UnrelatedCondition) {
     bool cond();
     void target() {
       for (int* p = GetFirst(); cond(); p = GetNext()) {
-        // TODO: False negative. This dereference should be flagged as unsafe.
-        *p;
+        *p;  // [[unsafe]]
       }
     }
   )cc"));
@@ -165,8 +162,7 @@ TEST(PointerNullabilityTest, PointerLoop_Counted) {
     void target() {
       int* p = GetFirst();
       for (int i = 0; i < 10; ++i, p = GetNext()) {
-        // TODO: False negative. This dereference should be flagged as unsafe.
-        *p;
+        *p;  // [[unsafe]]
       }
     }
   )cc"));
@@ -288,8 +284,7 @@ TEST(PointerNullabilityTest, InconsistentLoopStateRepro) {
       int* ptr = GetNullable();
       if (ptr != nullptr) {
         while (cond()) {
-          // TODO: False positive. This dereference is safe.
-          (void)*ptr;  // [[unsafe]]
+          (void)*ptr;
         }
       }
     }

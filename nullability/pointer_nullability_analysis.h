@@ -84,7 +84,26 @@ class PointerNullabilityAnalysis
              const dataflow::Environment &Env2, dataflow::Value &MergedVal,
              dataflow::Environment &MergedEnv) override;
 
+  dataflow::ComparisonResult compare(
+      QualType Type, const dataflow::Value &Val1,
+      const dataflow::Environment &Env1, const dataflow::Value &Val2,
+      const dataflow::Environment &Env2) override;
+
+  dataflow::Value *widen(QualType Type, dataflow::Value &Prev,
+                         const dataflow::Environment &PrevEnv,
+                         dataflow::Value &Current,
+                         dataflow::Environment &CurrentEnv) override;
+
  private:
+  // Returns a storage location representing "top", i.e. a storage location of
+  // type `Ty` about which nothing else is known.
+  // Known limitation: We can't prevent a "top" storage location from being
+  // associated with a value. This is somewhat strange but does not appear to
+  // have any ill effects in practice. To disallow this, we may at some point
+  // want to move the concept of "top" storage locations to the framework.
+  dataflow::StorageLocation &getTopStorageLocation(
+      dataflow::DataflowAnalysisContext &DACtx, QualType Ty);
+
   // Applies non-flow-sensitive transfer functions on statements
   dataflow::CFGMatchSwitch<dataflow::TransferState<PointerNullabilityLattice>>
       NonFlowSensitiveTransferer;
@@ -92,6 +111,9 @@ class PointerNullabilityAnalysis
   // Applies flow-sensitive transfer functions on statements
   dataflow::CFGMatchSwitch<dataflow::TransferState<PointerNullabilityLattice>>
       FlowSensitiveTransferer;
+
+  // Storage locations that represent "top" for each given type.
+  llvm::DenseMap<QualType, dataflow::StorageLocation *> TopStorageLocations;
 };
 }  // namespace nullability
 }  // namespace tidy

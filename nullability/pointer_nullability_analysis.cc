@@ -4,6 +4,7 @@
 
 #include "nullability/pointer_nullability_analysis.h"
 
+#include <cassert>
 #include <functional>
 #include <optional>
 #include <utility>
@@ -39,8 +40,10 @@
 namespace clang::tidy::nullability {
 
 using ast_matchers::MatchFinder;
+using dataflow::Arena;
 using dataflow::BoolValue;
 using dataflow::CFGMatchSwitchBuilder;
+using dataflow::ComparisonResult;
 using dataflow::DataflowAnalysisContext;
 using dataflow::Environment;
 using dataflow::Formula;
@@ -272,6 +275,33 @@ void initPointerFromTypeNullability(
                        getPointerTypeNullability(E, State.Lattice));
 }
 
+/// Returns a new pointer value referencing the same location as `PointerVal`
+/// but with any "top" nullability properties unpacked into fresh atoms.
+/// This is analogous to the unpacking done on `TopBoolValue`s in the framework.
+/// TODO(mboehme): When we add support for smart pointers, this function will
+/// also need to be called when accessing the `PointerValue` that underlies the
+/// smart pointer.
+PointerValue *unpackPointerValue(PointerValue &PointerVal, Environment &Env) {
+  auto [FromNullable, Null] = getPointerNullState(PointerVal);
+  if (FromNullable && Null) return nullptr;
+
+  auto &A = Env.getDataflowAnalysisContext().arena();
+
+  auto &NewPointerVal = Env.create<PointerValue>(PointerVal.getPointeeLoc());
+  initPointerNullState(NewPointerVal, Env.getDataflowAnalysisContext());
+  auto NewNullability = getPointerNullState(NewPointerVal);
+  assert(NewNullability.FromNullable != nullptr);
+  assert(NewNullability.IsNull != nullptr);
+
+  if (FromNullable != nullptr)
+    Env.addToFlowCondition(
+        A.makeEquals(*NewNullability.FromNullable, *FromNullable));
+  if (Null != nullptr)
+    Env.addToFlowCondition(A.makeEquals(*NewNullability.IsNull, *Null));
+
+  return &NewPointerVal;
+}
+
 void transferFlowSensitiveNullPointer(
     const Expr *NullPointer, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
@@ -292,8 +322,20 @@ void transferFlowSensitiveNotNullPointer(
 void transferFlowSensitivePointer(
     const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (auto *PointerVal = getPointerValueFromExpr(PointerExpr, State.Env))
-    initPointerFromTypeNullability(*PointerVal, PointerExpr, State);
+  auto *PointerVal = getPointerValueFromExpr(PointerExpr, State.Env);
+  if (!PointerVal) return;
+
+  initPointerFromTypeNullability(*PointerVal, PointerExpr, State);
+
+  if (const auto *Cast = dyn_cast<CastExpr>(PointerExpr);
+      Cast && Cast->getCastKind() == CK_LValueToRValue) {
+    PointerValue *NewPointerVal = unpackPointerValue(*PointerVal, State.Env);
+    if (!NewPointerVal) return;
+    if (StorageLocation *Loc =
+            State.Env.getStorageLocation(*Cast->getSubExpr()))
+      State.Env.setValue(*Loc, *NewPointerVal);
+    State.Env.setValue(*PointerExpr, *NewPointerVal);
+  }
 }
 
 // TODO(b/233582219): Implement promotion of nullability for initially
@@ -975,6 +1017,130 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
     forgetIsNull(MergedPointerVal, Ctx);
 
   return true;
+}
+
+ComparisonResult PointerNullabilityAnalysis::compare(QualType Type,
+                                                     const Value &Val1,
+                                                     const Environment &Env1,
+                                                     const Value &Val2,
+                                                     const Environment &Env2) {
+  if (const auto *PointerVal1 = dyn_cast<PointerValue>(&Val1)) {
+    const auto &PointerVal2 = cast<PointerValue>(Val2);
+
+    if (&PointerVal1->getPointeeLoc() != &PointerVal2.getPointeeLoc())
+      return ComparisonResult::Different;
+
+    if (hasPointerNullState(*PointerVal1) != hasPointerNullState(PointerVal2))
+      return ComparisonResult::Different;
+
+    if (!hasPointerNullState(*PointerVal1)) return ComparisonResult::Same;
+
+    auto Nullability1 = getPointerNullState(*PointerVal1);
+    auto Nullability2 = getPointerNullState(PointerVal2);
+
+    // Ideally, we would be checking for equivalence of formulas, but that's
+    // expensive, so we simply check for identity instead.
+    return Nullability1.FromNullable == Nullability2.FromNullable &&
+                   Nullability1.IsNull == Nullability2.IsNull
+               ? ComparisonResult::Same
+               : ComparisonResult::Different;
+  }
+
+  return ComparisonResult::Unknown;
+}
+
+// Returns the result of widening a nullability property.
+// `Prev` is the formula in the previous iteration, `Cur` is the formula in the
+// current iteration.
+// If the two formulas are equivalent (though not necessarily identical),
+// returns `Cur`, as this is the formula that is appropriate to use in the
+// current environment (where we will produce the widened pointer). Otherwise,
+// returns null, to indicate that the property should be widened to "top".
+static const Formula *widenNullabilityProperty(const Formula *Prev,
+                                               const Environment &PrevEnv,
+                                               const Formula *Cur,
+                                               Environment &CurEnv) {
+  if (Prev == Cur) return Cur;
+  if (Prev == nullptr || Cur == nullptr) return nullptr;
+
+  Arena &A = CurEnv.arena();
+
+  if (PrevEnv.flowConditionImplies(*Prev)) {
+    if (CurEnv.flowConditionImplies(*Cur)) return Cur;
+  } else if (PrevEnv.flowConditionImplies(A.makeNot(*Prev)) &&
+             CurEnv.flowConditionImplies(A.makeNot(*Cur))) {
+    return Cur;
+  }
+
+  return nullptr;
+}
+
+Value *PointerNullabilityAnalysis::widen(QualType Type, Value &Prev,
+                                         const Environment &PrevEnv,
+                                         Value &Current,
+                                         Environment &CurrentEnv) {
+  // Widen pointers to a pointer with a "top" storage location.
+  if (auto *PrevPtr = dyn_cast<PointerValue>(&Prev)) {
+    auto &CurPtr = cast<PointerValue>(Current);
+
+    DataflowAnalysisContext &DACtx = CurrentEnv.getDataflowAnalysisContext();
+    assert(&PrevEnv.getDataflowAnalysisContext() == &DACtx);
+
+    if (!hasPointerNullState(*PrevPtr) || !hasPointerNullState(CurPtr))
+      return nullptr;
+
+    auto [FromNullablePrev, NullPrev] = getPointerNullState(*PrevPtr);
+    auto [FromNullableCur, NullCur] = getPointerNullState(CurPtr);
+
+    const Formula *FromNullableWidened = widenNullabilityProperty(
+        FromNullablePrev, PrevEnv, FromNullableCur, CurrentEnv);
+    const Formula *NullWidened =
+        widenNullabilityProperty(NullPrev, PrevEnv, NullCur, CurrentEnv);
+
+    // Is `PrevPtr` already equivalent to the widened pointer we are about to
+    // produce? If so, return `PrevPtr` to signal this.
+    if (&PrevPtr->getPointeeLoc() ==
+            &getTopStorageLocation(DACtx, PrevPtr->getPointeeLoc().getType()) &&
+        // Check whether
+        // - the previous nullability property is equivalent to the current
+        //   property (in which case the widened property is non-null), or
+        // - the previous nullability property is already "top" (i.e. null)
+        (FromNullableWidened != nullptr || FromNullablePrev == nullptr) &&
+        (NullWidened != nullptr || NullPrev == nullptr)) {
+      return PrevPtr;
+    }
+
+    // Widen the nullability properties.
+    auto &WidenedPtr = CurrentEnv.create<PointerValue>(
+        getTopStorageLocation(DACtx, CurPtr.getPointeeLoc().getType()));
+    initPointerNullState(WidenedPtr, DACtx);
+    auto WidenedNullability = getPointerNullState(WidenedPtr);
+    assert(WidenedNullability.FromNullable != nullptr);
+    assert(WidenedNullability.IsNull != nullptr);
+
+    auto &A = CurrentEnv.arena();
+    if (FromNullableWidened != nullptr)
+      CurrentEnv.addToFlowCondition(
+          A.makeEquals(*WidenedNullability.FromNullable, *FromNullableWidened));
+    else
+      forgetFromNullable(WidenedPtr, DACtx);
+    if (NullWidened != nullptr)
+      CurrentEnv.addToFlowCondition(
+          A.makeEquals(*WidenedNullability.IsNull, *NullWidened));
+    else
+      forgetIsNull(WidenedPtr, DACtx);
+
+    return &WidenedPtr;
+  }
+
+  return nullptr;
+}
+
+StorageLocation &PointerNullabilityAnalysis::getTopStorageLocation(
+    DataflowAnalysisContext &DACtx, QualType Ty) {
+  auto [It, Inserted] = TopStorageLocations.try_emplace(Ty, nullptr);
+  if (Inserted) It->second = &DACtx.createStorageLocation(Ty);
+  return *It->second;
 }
 
 }  // namespace clang::tidy::nullability
