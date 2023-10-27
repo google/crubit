@@ -49,7 +49,7 @@ TEST_F(NullabilityPropertiesTest, Test) {
     EXPECT_TRUE(isNullable(NullableButNotNull, Env));
     auto *IsNull = getPointerNullState(NullableButNotNull).IsNull;
     ASSERT_NE(IsNull, nullptr);
-    Env.addToFlowCondition(A.makeNot(*IsNull));
+    Env.assume(A.makeNot(*IsNull));
     EXPECT_FALSE(isNullable(NullableButNotNull, Env));
   }
 
@@ -57,7 +57,7 @@ TEST_F(NullabilityPropertiesTest, Test) {
     auto &NullableAndNull = makePointer(NullabilityKind::Nullable);
     auto *IsNull = getPointerNullState(NullableAndNull).IsNull;
     ASSERT_NE(IsNull, nullptr);
-    Env.addToFlowCondition(*IsNull);
+    Env.assume(*IsNull);
     EXPECT_TRUE(isNullable(NullableAndNull, Env));
   }
 
@@ -66,7 +66,7 @@ TEST_F(NullabilityPropertiesTest, Test) {
     EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
     auto *IsNull = getPointerNullState(NonnullAndNotNull).IsNull;
     ASSERT_NE(IsNull, nullptr);
-    Env.addToFlowCondition(A.makeNot(*IsNull));
+    Env.assume(A.makeNot(*IsNull));
     EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
   }
 
@@ -77,7 +77,7 @@ TEST_F(NullabilityPropertiesTest, Test) {
     auto &NonnullAndNull = makePointer(NullabilityKind::NonNull);
     auto *IsNull = getPointerNullState(NonnullAndNull).IsNull;
     ASSERT_NE(IsNull, nullptr);
-    Env.addToFlowCondition(*IsNull);
+    Env.assume(*IsNull);
     EXPECT_FALSE(isNullable(NonnullAndNull, Env));
   }
 }

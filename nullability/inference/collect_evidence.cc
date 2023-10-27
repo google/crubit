@@ -140,7 +140,7 @@ void collectMustBeNonnullEvidence(
 
   // If the flow conditions already imply that Value is not null, then we don't
   // have any new evidence of a necessary annotation.
-  if (Env.flowConditionImplies(NotIsNull)) return;
+  if (Env.proves(NotIsNull)) return;
 
   // Otherwise, if an inferable slot being annotated Nonnull would imply that
   // Value is not null, then we have evidence suggesting that slot should be
@@ -150,7 +150,7 @@ void collectMustBeNonnullEvidence(
   for (auto &[Nullability, Slot] : InferableSlots) {
     auto &SlotNonnullImpliesValueNonnull =
         A.makeImplies(Nullability.isNonnull(A), NotIsNull);
-    if (Env.flowConditionImplies(SlotNonnullImpliesValueNonnull))
+    if (Env.proves(SlotNonnullImpliesValueNonnull))
       Emit(*Env.getCurrentFunc(), Slot, EvidenceKind, Loc);
   }
 }

@@ -33,8 +33,8 @@ NamedDecl *lookup(StringRef Name, const DeclContext &DC) {
 
 std::optional<bool> evaluate(const dataflow::Formula &B,
                              dataflow::Environment &Env) {
-  if (Env.flowConditionImplies(B)) return true;
-  if (Env.flowConditionImplies(Env.arena().makeNot(B))) return false;
+  if (Env.proves(B)) return true;
+  if (Env.proves(Env.arena().makeNot(B))) return false;
   return std::nullopt;
 }
 

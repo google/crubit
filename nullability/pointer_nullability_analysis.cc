@@ -395,13 +395,12 @@ void transferFlowSensitiveNullCheckComparison(
                         : PointerComparison;
 
   // nullptr == nullptr
-  State.Env.addToFlowCondition(
-      A.makeImplies(A.makeAnd(*LHSNull, *RHSNull), PointerEQ));
+  State.Env.assume(A.makeImplies(A.makeAnd(*LHSNull, *RHSNull), PointerEQ));
   // nullptr != notnull
-  State.Env.addToFlowCondition(
+  State.Env.assume(
       A.makeImplies(A.makeAnd(*LHSNull, A.makeNot(*RHSNull)), PointerNE));
   // notnull != nullptr
-  State.Env.addToFlowCondition(
+  State.Env.assume(
       A.makeImplies(A.makeAnd(A.makeNot(*LHSNull), *RHSNull), PointerNE));
 }
 
@@ -955,18 +954,17 @@ static const Formula *mergeFormulas(const Formula *Bool1,
   // path taken - this simplifies the flow condition tracked in `MergedEnv`.
   // Otherwise, information about which path was taken is used to associate
   // `MergedBool` with `Bool1` and `Bool2`.
-  if (Env1.flowConditionImplies(*Bool1) && Env2.flowConditionImplies(*Bool2)) {
-    MergedEnv.addToFlowCondition(MergedBool);
-  } else if (Env1.flowConditionImplies(A.makeNot(*Bool1)) &&
-             Env2.flowConditionImplies(A.makeNot(*Bool2))) {
-    MergedEnv.addToFlowCondition(A.makeNot(MergedBool));
+  if (Env1.proves(*Bool1) && Env2.proves(*Bool2)) {
+    MergedEnv.assume(MergedBool);
+  } else if (Env1.proves(A.makeNot(*Bool1)) && Env2.proves(A.makeNot(*Bool2))) {
+    MergedEnv.assume(A.makeNot(MergedBool));
   } else {
     // TODO(b/233582219): Flow conditions are not necessarily mutually
     // exclusive, a fix is in order: https://reviews.llvm.org/D130270. Update
     // this section when the patch is commited.
     auto FC1 = Env1.getFlowConditionToken();
     auto FC2 = Env2.getFlowConditionToken();
-    MergedEnv.addToFlowCondition(A.makeOr(
+    MergedEnv.assume(A.makeOr(
         A.makeAnd(A.makeAtomRef(FC1), A.makeEquals(MergedBool, *Bool1)),
         A.makeAnd(A.makeAtomRef(FC2), A.makeEquals(MergedBool, *Bool2))));
   }
@@ -1006,15 +1004,14 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
   if (auto *FromNullable =
           mergeFormulas(Nullability1.FromNullable, Env1,
                         Nullability2.FromNullable, Env2, MergedEnv))
-    MergedEnv.addToFlowCondition(
+    MergedEnv.assume(
         A.makeEquals(*MergedNullability.FromNullable, *FromNullable));
   else
     forgetFromNullable(MergedPointerVal, Ctx);
 
   if (auto *Null = mergeFormulas(Nullability1.IsNull, Env1, Nullability2.IsNull,
                                  Env2, MergedEnv))
-    MergedEnv.addToFlowCondition(
-        A.makeEquals(*MergedNullability.IsNull, *Null));
+    MergedEnv.assume(A.makeEquals(*MergedNullability.IsNull, *Null));
   else
     forgetIsNull(MergedPointerVal, Ctx);
 

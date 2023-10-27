@@ -122,7 +122,7 @@ bool isNullable(const PointerValue &PointerVal, const Environment &Env,
   if (AdditionalConstraints)
     ForseeablyNull = &A.makeAnd(*ForseeablyNull, *AdditionalConstraints);
 
-  return !Env.flowConditionImplies(A.makeNot(*ForseeablyNull));
+  return Env.allows(*ForseeablyNull);
 }
 
 NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
@@ -131,8 +131,7 @@ NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
   auto &A = Env.getDataflowAnalysisContext().arena();
   if (auto *Null = getPointerNullState(PointerVal).IsNull) {
     if (AdditionalConstraints) Null = &A.makeAnd(*AdditionalConstraints, *Null);
-    if (Env.flowConditionImplies(A.makeNot(*Null)))
-      return NullabilityKind::NonNull;
+    if (Env.proves(A.makeNot(*Null))) return NullabilityKind::NonNull;
   }
   return isNullable(PointerVal, Env, AdditionalConstraints)
              ? NullabilityKind::Nullable
