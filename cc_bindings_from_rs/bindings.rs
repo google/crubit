@@ -31,7 +31,7 @@ use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_target::abi::{Abi, FieldsShape, Integer, Layout, Primitive, Scalar};
 use rustc_target::spec::PanicStrategy;
 use rustc_trait_selection::infer::InferCtxtExt;
-use rustc_type_ir::sty::RegionKind;
+use rustc_type_ir::RegionKind;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::ops::AddAssign;
