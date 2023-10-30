@@ -9,6 +9,7 @@
 
 #include "nullability/inference/inference.proto.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclBase.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 
 namespace clang::tidy::nullability {
@@ -22,7 +23,8 @@ struct EvidenceSites;
 //
 // If Filter is provided, only considers decls that return true.
 std::vector<Inference> inferTU(
-    ASTContext &, llvm::function_ref<bool(const Decl &)> Filter = nullptr);
+    ASTContext &, unsigned Iterations = 1,
+    llvm::function_ref<bool(const Decl &)> Filter = nullptr);
 
 }  // namespace clang::tidy::nullability
 

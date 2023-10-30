@@ -72,6 +72,11 @@ llvm::cl::opt<std::string> NameFilter{
     llvm::cl::desc("Regular expression decl names must match to be analyzed. "
                    "May be negated with - prefix."),
 };
+llvm::cl::opt<unsigned> Iterations{
+    "iterations",
+    llvm::cl::desc("Number of inference iterations"),
+    llvm::cl::init(1),
+};
 
 namespace clang::tidy::nullability {
 namespace {
@@ -186,7 +191,7 @@ class Action : public SyntaxOnlyAction {
       void HandleTranslationUnit(ASTContext &Ctx) override {
         llvm::errs() << "Running inference...\n";
 
-        auto Results = inferTU(Ctx, DeclFilter());
+        auto Results = inferTU(Ctx, Iterations, DeclFilter());
         if (!IncludeTrivial)
           llvm::erase_if(Results, [](Inference &I) {
             llvm::erase_if(

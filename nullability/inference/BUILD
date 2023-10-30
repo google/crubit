@@ -105,6 +105,7 @@ cc_library(
         ":collect_evidence",
         ":inference_cc_proto",
         ":merge",
+        ":slot_fingerprint",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
@@ -132,7 +133,6 @@ cc_test(
     name = "infer_tu_test",
     srcs = ["infer_tu_test.cc"],
     deps = [
-        ":collect_evidence",
         ":infer_tu",
         ":inference_cc_proto",
         "//nullability:proto_matchers",
