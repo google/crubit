@@ -136,7 +136,7 @@ void collectMustBeNonnullEvidence(
   auto *IsNull = getPointerNullState(Value).IsNull;
   // If `IsNull` is top, we can't infer anything about it.
   if (IsNull == nullptr) return;
-  auto &NotIsNull = A.makeNot(*getPointerNullState(Value).IsNull);
+  auto &NotIsNull = A.makeNot(*IsNull);
 
   // If the flow conditions already imply that Value is not null, then we don't
   // have any new evidence of a necessary annotation.
