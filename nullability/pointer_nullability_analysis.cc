@@ -770,8 +770,10 @@ void transferNonFlowSensitiveCallExpr(
     // callee `Expr .
     auto Nullability =
         substituteNullabilityAnnotationsInFunctionTemplate(CE->getType(), CE);
-    overrideNullabilityFromDecl(CE->getCalleeDecl(), State.Lattice,
-                                Nullability);
+    if (!Nullability.empty()) {
+      overrideNullabilityFromDecl(CE->getCalleeDecl(), State.Lattice,
+                                  Nullability);
+    }
     return Nullability;
   });
 }

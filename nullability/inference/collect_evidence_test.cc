@@ -463,6 +463,14 @@ TEST(CollectEvidenceFromImplementationTest, PassedToNonnull) {
                                 functionNamed("target"))));
 }
 
+// A crash repro involving callable parameters.
+TEST(CollectEvidenceFromImplementationTest, FunctionPointerParam) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(void (*f)()) { f(); }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+}
+
 TEST(CollectEvidenceFromImplementationTest, NotInferenceTarget) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T>
