@@ -294,10 +294,8 @@ PointerValue *unpackPointerValue(PointerValue &PointerVal, Environment &Env) {
   assert(NewNullability.IsNull != nullptr);
 
   if (FromNullable != nullptr)
-    Env.addToFlowCondition(
-        A.makeEquals(*NewNullability.FromNullable, *FromNullable));
-  if (Null != nullptr)
-    Env.addToFlowCondition(A.makeEquals(*NewNullability.IsNull, *Null));
+    Env.assume(A.makeEquals(*NewNullability.FromNullable, *FromNullable));
+  if (Null != nullptr) Env.assume(A.makeEquals(*NewNullability.IsNull, *Null));
 
   return &NewPointerVal;
 }
@@ -1064,10 +1062,10 @@ static const Formula *widenNullabilityProperty(const Formula *Prev,
 
   Arena &A = CurEnv.arena();
 
-  if (PrevEnv.flowConditionImplies(*Prev)) {
-    if (CurEnv.flowConditionImplies(*Cur)) return Cur;
-  } else if (PrevEnv.flowConditionImplies(A.makeNot(*Prev)) &&
-             CurEnv.flowConditionImplies(A.makeNot(*Cur))) {
+  if (PrevEnv.proves(*Prev)) {
+    if (CurEnv.proves(*Cur)) return Cur;
+  } else if (PrevEnv.proves(A.makeNot(*Prev)) &&
+             CurEnv.proves(A.makeNot(*Cur))) {
     return Cur;
   }
 
@@ -1119,13 +1117,12 @@ Value *PointerNullabilityAnalysis::widen(QualType Type, Value &Prev,
 
     auto &A = CurrentEnv.arena();
     if (FromNullableWidened != nullptr)
-      CurrentEnv.addToFlowCondition(
+      CurrentEnv.assume(
           A.makeEquals(*WidenedNullability.FromNullable, *FromNullableWidened));
     else
       forgetFromNullable(WidenedPtr, DACtx);
     if (NullWidened != nullptr)
-      CurrentEnv.addToFlowCondition(
-          A.makeEquals(*WidenedNullability.IsNull, *NullWidened));
+      CurrentEnv.assume(A.makeEquals(*WidenedNullability.IsNull, *NullWidened));
     else
       forgetIsNull(WidenedPtr, DACtx);
 
