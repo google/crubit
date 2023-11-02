@@ -947,27 +947,28 @@ static const Formula *mergeFormulas(const Formula *Bool1,
   if (Bool1 == nullptr || Bool2 == nullptr) return nullptr;
 
   auto &A = MergedEnv.arena();
-  auto &MergedBool = A.makeAtomRef(A.makeAtom());
 
-  // If `Bool1` and `Bool2` is constrained to the same true / false value,
-  // `MergedBool` can be constrained similarly without needing to consider the
-  // path taken - this simplifies the flow condition tracked in `MergedEnv`.
-  // Otherwise, information about which path was taken is used to associate
-  // `MergedBool` with `Bool1` and `Bool2`.
-  if (Env1.proves(*Bool1) && Env2.proves(*Bool2)) {
-    MergedEnv.assume(MergedBool);
+  // If `Bool1` and `Bool2` is constrained to the same true / false value, that
+  // can serve as the return value - this simplifies the flow condition tracked
+  // in `MergedEnv`.  Otherwise, information about which path was taken is used
+  // to associate the return value with `Bool1` and `Bool2`.
+  if (Env1.proves(*Bool1)) {
+    if (Env2.proves(*Bool2)) {
+      return &A.makeLiteral(true);
+    }
   } else if (Env1.proves(A.makeNot(*Bool1)) && Env2.proves(A.makeNot(*Bool2))) {
-    MergedEnv.assume(A.makeNot(MergedBool));
-  } else {
-    // TODO(b/233582219): Flow conditions are not necessarily mutually
-    // exclusive, a fix is in order: https://reviews.llvm.org/D130270. Update
-    // this section when the patch is commited.
-    auto FC1 = Env1.getFlowConditionToken();
-    auto FC2 = Env2.getFlowConditionToken();
-    MergedEnv.assume(A.makeOr(
-        A.makeAnd(A.makeAtomRef(FC1), A.makeEquals(MergedBool, *Bool1)),
-        A.makeAnd(A.makeAtomRef(FC2), A.makeEquals(MergedBool, *Bool2))));
+    return &A.makeLiteral(false);
   }
+
+  auto &MergedBool = A.makeAtomRef(A.makeAtom());
+  // TODO(b/233582219): Flow conditions are not necessarily mutually
+  // exclusive, a fix is in order: https://reviews.llvm.org/D130270. Update
+  // this section when the patch is commited.
+  auto FC1 = Env1.getFlowConditionToken();
+  auto FC2 = Env2.getFlowConditionToken();
+  MergedEnv.assume(A.makeOr(
+      A.makeAnd(A.makeAtomRef(FC1), A.makeEquals(MergedBool, *Bool1)),
+      A.makeAnd(A.makeAtomRef(FC2), A.makeEquals(MergedBool, *Bool2))));
   return &MergedBool;
 }
 
