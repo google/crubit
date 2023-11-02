@@ -452,6 +452,22 @@ TEST(CollectEvidenceFromImplementationTest, MemberOperatorCallVarArgs) {
                                 functionNamed("operator()"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest, ConstructorCall) {
+  static constexpr llvm::StringRef Src = R"cc(
+    class S {
+     public:
+      S(Nonnull<int*> a);
+    };
+    void target(int* p) { S s(p); }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target")),
+                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("S"))));
+}
+
 TEST(CollectEvidenceFromImplementationTest, PassedToNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nonnull<int*> i);
@@ -709,6 +725,7 @@ TEST(EvidenceSitesTest, Functions) {
     auto Lambda = []() {};  // Not analyzed yet.
 
     struct S {
+      S() {}
       void member();
     };
     void S::member() {}
@@ -716,11 +733,11 @@ TEST(EvidenceSitesTest, Functions) {
   auto Sites = EvidenceSites::discover(AST.context());
   EXPECT_THAT(Sites.Declarations,
               ElementsAre(declNamed("foo"), declNamed("bar"), declNamed("bar"),
-                          declNamed("baz"), declNamed("S::member"),
+                          declNamed("baz"), declNamed("S::S"),
+                          declNamed("S::member"), declNamed("S::member")));
+  EXPECT_THAT(Sites.Implementations,
+              ElementsAre(declNamed("bar"), declNamed("baz"), declNamed("S::S"),
                           declNamed("S::member")));
-  EXPECT_THAT(
-      Sites.Implementations,
-      ElementsAre(declNamed("bar"), declNamed("baz"), declNamed("S::member")));
 }
 
 TEST(EvidenceSitesTest, Variables) {
