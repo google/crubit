@@ -244,7 +244,7 @@ TEST_F(InferTest, ReturnValues) {
 }
 
 TEST_F(InferTest, PassedToNonnull) {
-  add(Evidence::PASSED_TO_NONNULL);
+  add(Evidence::BOUND_TO_NONNULL);
   EXPECT_EQ(Inference::NONNULL, infer());
 }
 

@@ -199,17 +199,20 @@ const Formula &getInferableSlotsAsInferredOrUnknownConstraint(
   return *Constraint;
 }
 
-void collectEvidenceFromParamAnnotation(
-    TypeNullability &ParamNullability, const dataflow::PointerValue &ArgPV,
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableCallerSlots,
-    const dataflow::Environment &Env, SourceLocation ArgLoc,
+void collectEvidenceFromBindingToType(
+    TypeNullability &TypeNullability,
+    const dataflow::PointerValue &PointerValue,
+    std::vector<std::pair<PointerTypeNullability, Slot>>
+        &InferableSlotsFromValueContext,
+    const dataflow::Environment &Env, SourceLocation ValueLoc,
     llvm::function_ref<EvidenceEmitter> Emit) {
   //  TODO: Account for variance and each layer of nullability when we handle
   //  more than top-level pointers.
-  if (ParamNullability.empty()) return;
-  if (ParamNullability[0].concrete() == NullabilityKind::NonNull) {
-    collectMustBeNonnullEvidence(ArgPV, Env, ArgLoc, InferableCallerSlots,
-                                 Evidence::PASSED_TO_NONNULL, Emit);
+  if (TypeNullability.empty()) return;
+  if (TypeNullability[0].concrete() == NullabilityKind::NonNull) {
+    collectMustBeNonnullEvidence(PointerValue, Env, ValueLoc,
+                                 InferableSlotsFromValueContext,
+                                 Evidence::BOUND_TO_NONNULL, Emit);
   }
 }
 
@@ -257,8 +260,8 @@ void collectEvidenceFromCallExpr(
 
     // Collect evidence from the binding of the argument to the parameter's
     // nullability, if known.
-    collectEvidenceFromParamAnnotation(ParamNullability, *PV,
-                                       InferableCallerSlots, Env, ArgLoc, Emit);
+    collectEvidenceFromBindingToType(ParamNullability, *PV,
+                                     InferableCallerSlots, Env, ArgLoc, Emit);
 
     // Emit evidence of the parameter's nullability. First, calculate that
     // nullability based on InferableSlots for the caller being assigned to
@@ -315,6 +318,45 @@ void collectEvidenceFromReturn(
        ReturnExpr->getExprLoc());
 }
 
+void collectEvidenceFromAssignment(
+    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
+    const CFGElement &Element, const dataflow::Environment &Env,
+    llvm::function_ref<EvidenceEmitter> Emit) {
+  auto CFGStmt = Element.getAs<clang::CFGStmt>();
+  if (!CFGStmt) return;
+
+  // Initialization of new decl.
+  if (auto *DeclStmt = dyn_cast_or_null<clang::DeclStmt>(CFGStmt->getStmt())) {
+    for (auto *Decl : DeclStmt->decls()) {
+      if (auto *VarDecl = dyn_cast_or_null<clang::VarDecl>(Decl);
+          VarDecl && isSupportedPointerType(VarDecl->getType()) &&
+          VarDecl->hasInit()) {
+        auto *PV = getPointerValueFromExpr(VarDecl->getInit(), Env);
+        if (!PV) return;
+        TypeNullability TypeNullability =
+            getNullabilityAnnotationsFromType(VarDecl->getType());
+        collectEvidenceFromBindingToType(TypeNullability, *PV, InferableSlots,
+                                         Env, VarDecl->getInit()->getExprLoc(),
+                                         Emit);
+      }
+    }
+  }
+
+  // Assignment to existing decl.
+  if (auto *BinaryOperator =
+          dyn_cast_or_null<clang::BinaryOperator>(CFGStmt->getStmt());
+      BinaryOperator && BinaryOperator->isAssignmentOp() &&
+      isSupportedPointerType(BinaryOperator->getLHS()->getType())) {
+    auto *PV = getPointerValueFromExpr(BinaryOperator->getRHS(), Env);
+    if (!PV) return;
+    TypeNullability TypeNullability =
+        getNullabilityAnnotationsFromType(BinaryOperator->getLHS()->getType());
+    collectEvidenceFromBindingToType(TypeNullability, *PV, InferableSlots, Env,
+                                     BinaryOperator->getRHS()->getExprLoc(),
+                                     Emit);
+  }
+}
+
 void collectEvidenceFromElement(
     std::vector<std::pair<PointerTypeNullability, Slot>> InferableSlots,
     const Formula &InferableSlotsConstraint, const CFGElement &Element,
@@ -324,6 +366,7 @@ void collectEvidenceFromElement(
                               Env, Emit);
   collectEvidenceFromReturn(InferableSlots, InferableSlotsConstraint, Element,
                             Env, Emit);
+  collectEvidenceFromAssignment(InferableSlots, Element, Env, Emit);
   // TODO: add more heuristic collections here
 }
 

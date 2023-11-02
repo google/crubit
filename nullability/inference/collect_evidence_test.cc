@@ -458,9 +458,29 @@ TEST(CollectEvidenceFromImplementationTest, PassedToNonnull) {
 
     void target(int* p) { callee(p); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              Contains(evidence(paramSlot(0), Evidence::PASSED_TO_NONNULL,
-                                functionNamed("target"))));
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target")),
+                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("callee"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, AssignedToNonnull) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, int* q, int* r) {
+      Nonnull<int*> a = p, b = q;
+      a = r;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target")),
+                           evidence(paramSlot(1), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target")),
+                           evidence(paramSlot(2), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target"))));
 }
 
 // A crash repro involving callable parameters.

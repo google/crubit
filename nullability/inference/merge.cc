@@ -127,7 +127,7 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
   if (Counts[Evidence::NONNULL_RETURN] && !Counts[Evidence::NULLABLE_RETURN] &&
       !Counts[Evidence::UNKNOWN_RETURN])
     update(Result, Inference::NONNULL);
-  if (Counts[Evidence::PASSED_TO_NONNULL]) update(Result, Inference::NONNULL);
+  if (Counts[Evidence::BOUND_TO_NONNULL]) update(Result, Inference::NONNULL);
   if (Result) return *Result;
 
   // Optional "soft" inference heuristics.
