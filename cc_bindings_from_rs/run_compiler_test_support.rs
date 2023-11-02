@@ -100,6 +100,7 @@ where
         locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES,
         ice_file: None,
         expanded_args: vec![],
+        using_internal_features: std::sync::Arc::new(false.into()),
     };
 
     rustc_interface::interface::run_compiler(config, |compiler| {
