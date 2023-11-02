@@ -266,6 +266,7 @@ mod value_exists {
     #[test]
     fn use_alias_doesnt_exist() {
         mod m {
+            #[allow(unused_imports)]
             pub use ::std::num::NonZeroU8 as X;
         }
         assert!(!item_exists::value_exists!(m::X));
