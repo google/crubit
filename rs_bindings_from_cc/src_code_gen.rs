@@ -2651,11 +2651,22 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
             &namespace.name.identifier,
             reopened_namespace_idx - 1
         ));
-        quote! { pub use super::#previous_namespace_ident::*; __NEWLINE__ __NEWLINE__ }
+        // unused_imports warns a re-export of an empty module. Currently, there is no
+        // infra in Crubit to tell if the (generated) module is empty, so we
+        // emit `allow(unused_imports)`. TODO(b/308949532): Skip re-export if
+        // previous module is empty (transitively).
+        quote! {
+          __HASH_TOKEN__ [allow(unused_imports)]
+          pub use super::#previous_namespace_ident::*; __NEWLINE__ __NEWLINE__
+        }
     };
-
     let use_stmt_for_inline_namespace = if namespace.is_inline && is_canonical_namespace_module {
-        quote! {pub use #name::*; __NEWLINE__}
+        // TODO(b/308949532): Skip re-export if the canonical module is empty
+        // (transitively).
+        quote! {
+          __HASH_TOKEN__ [allow(unused_imports)]
+          pub use #name::*; __NEWLINE__
+        }
     } else {
         quote! {}
     };
@@ -2795,9 +2806,12 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
         Item::UseMod(use_mod) => {
             let UseMod { path, mod_name, .. } = &**use_mod;
             let mod_name = make_rs_ident(&mod_name.identifier);
+            // TODO(b/308949532): Skip re-export if the module being used is empty
+            // (transitively).
             quote! {
                 #[path = #path]
                 mod #mod_name;
+                __HASH_TOKEN__ [allow(unused_imports)]
                 pub use #mod_name::*;
             }
             .into()
@@ -8825,9 +8839,11 @@ mod tests {
                 }
                 ...
                 pub mod test_namespace_bindings {
+                    __HASH_TOKEN__[allow(unused_imports)]
                     pub use super::test_namespace_bindings_0::*;
                     ...
                     pub mod inner {
+                        __HASH_TOKEN__[allow(unused_imports)]
                         pub use super::inner_0::*;
                         ...
                     }
@@ -8893,6 +8909,7 @@ mod tests {
                         ...
                         pub struct MyStruct {...} ...
                     }
+                    __HASH_TOKEN__[allow(unused_imports)]
                     pub use inner::*;
                     ...
                     pub fn processMyStruct(
@@ -8931,11 +8948,13 @@ mod tests {
                pub mod my_inline_0 {}
                pub mod foo {}
                pub mod my_inline {
+                   __HASH_TOKEN__[allow(unused_imports)]
                    pub use super::my_inline_0::*;
                    ...
                    pub struct MyStruct {...}
                    ...
                }
+               __HASH_TOKEN__[allow(unused_imports)]
                pub use my_inline::*;
                ...
             }

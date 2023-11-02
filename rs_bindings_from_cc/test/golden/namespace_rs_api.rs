@@ -176,6 +176,7 @@ pub mod test_namespace_bindings_reopened_0 {
 // namespace test_namespace_bindings_reopened
 
 pub mod test_namespace_bindings_reopened {
+    #[allow(unused_imports)]
     pub use super::test_namespace_bindings_reopened_0::*;
 
     #[inline(always)]
@@ -184,6 +185,7 @@ pub mod test_namespace_bindings_reopened {
     }
 
     pub mod inner {
+        #[allow(unused_imports)]
         pub use super::inner_0::*;
 
         #[inline(always)]
@@ -255,6 +257,7 @@ pub mod test_namespace_bindings_inline {
             }
         }
     }
+    #[allow(unused_imports)]
     pub use inner::*;
 
     // namespace inner
