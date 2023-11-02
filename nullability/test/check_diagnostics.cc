@@ -29,6 +29,15 @@ constexpr char kPreamble[] = R"cc(
 
   template <typename T>
   T value();
+
+  template <typename T>
+  using Nullable [[clang::annotate("Nullable")]] = T;
+
+  template <typename T>
+  using Nonnull [[clang::annotate("Nonnull")]] = T;
+
+  template <typename T>
+  using NullabilityUnknown [[clang::annotate("Nullability_Unspecified")]] = T;
 )cc";
 
 constexpr char kNewHeader[] = R"cc(
