@@ -31,6 +31,8 @@ using ::clang::ast_matchers::functionDecl;
 using ::clang::ast_matchers::hasName;
 using ::clang::ast_matchers::isTemplateInstantiation;
 using ::clang::ast_matchers::match;
+using ::clang::ast_matchers::parameterCountIs;
+using ::clang::ast_matchers::selectFirst;
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::Contains;
@@ -77,13 +79,13 @@ std::vector<Evidence> collectEvidenceFromTargetFunction(
     llvm::StringRef Source, PreviousInferences PreviousInferences = {}) {
   std::vector<Evidence> Results;
   clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
-  USRCache usr_cache;
+  USRCache UsrCache;
   auto Err = collectEvidenceFromImplementation(
       cast<FunctionDecl>(
           *dataflow::test::findValueDecl(AST.context(), "target")),
       evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                      usr_cache),
-      usr_cache, PreviousInferences);
+                      UsrCache),
+      UsrCache, PreviousInferences);
   if (Err) ADD_FAILURE() << toString(std::move(Err));
   return Results;
 }
@@ -468,6 +470,66 @@ TEST(CollectEvidenceFromImplementationTest, ConstructorCall) {
                                     functionNamed("target")),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                     functionNamed("S"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     ConstructorCallWithBaseInitializer) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct TakeNonnull {
+      explicit TakeNonnull(Nonnull<int *>);
+    };
+    struct target : TakeNonnull {
+      target(int *i) : TakeNonnull(i) {}
+    };
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     ConstructorCallWithDelegatingConstructor) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct target {
+      target(int* i);
+      target() : target(nullptr){};
+    };
+  )cc";
+
+  std::vector<Evidence> Results;
+  clang::TestAST AST(Src);
+  USRCache UsrCache;
+
+  const auto& Delegator = *selectFirst<FunctionDecl>(
+      "d", match(functionDecl(hasName("target"), parameterCountIs(0)).bind("d"),
+                 AST.context()));
+
+  auto Err = collectEvidenceFromImplementation(
+      Delegator,
+      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
+                      UsrCache),
+      UsrCache);
+  if (Err) ADD_FAILURE() << toString(std::move(Err));
+
+  EXPECT_THAT(Results,
+              Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                functionNamed("target"))));
+}
+
+// Not yet supported: Needs special handling for CXXCtorInitializer, but is
+// not likely to produce many inference results as long as we are not
+// inferring annotations for fields.
+TEST(DISABLED_CollectEvidenceFromImplementationTest,
+     ConstructorCallWithFieldInitializer) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct target {
+      target(int *i) : i_(i) {}
+      Nonnull<int *> i_;
+    };
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, PassedToNonnull) {
