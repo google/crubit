@@ -585,9 +585,14 @@ TEST(CollectEvidenceFromImplementationTest, FunctionPointerParam) {
 
 TEST(CollectEvidenceFromImplementationTest, NotInferenceTarget) {
   static constexpr llvm::StringRef Src = R"cc(
+    void isATarget(Nonnull<int*> a);
     template <typename T>
     T* target(T* p) {
       *p;
+      Nonnull<int*> a = p;
+      isATarget(p);
+      target<T>(nullptr);
+      target<int>(nullptr);
       return nullptr;
     }
 
@@ -611,7 +616,11 @@ TEST(CollectEvidenceFromImplementationTest, NotInferenceTarget) {
                       usr_cache),
       usr_cache);
   if (Err) ADD_FAILURE() << toString(std::move(Err));
-  EXPECT_THAT(Results, IsEmpty());
+  // Doesn't collect any evidence for target from target's body, only collects
+  // some for isATarget.
+  EXPECT_THAT(Results, UnorderedElementsAre(
+                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("isATarget"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, PropagatesPreviousInferences) {

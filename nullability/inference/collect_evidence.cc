@@ -80,7 +80,10 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
     void operator()(const Decl &Target, Slot S, Evidence::Kind Kind,
                     SourceLocation Loc) const {
       CHECK(isInferenceTarget(Target))
-          << "Evidence emitted for a Target which is not an inference target.";
+          << "Evidence emitted for a Target which is not an inference target: "
+          << (dyn_cast<NamedDecl>(&Target)
+                  ? dyn_cast<NamedDecl>(&Target)->getQualifiedNameAsString()
+                  : "not a named decl");
 
       Evidence E;
       E.set_slot(S);
@@ -257,6 +260,9 @@ void collectEvidenceFromArgsAndParams(
       isa<clang::CXXMethodDecl>(CalleeDecl))
     ++ArgI;
 
+  bool CollectEvidenceForCallee = isInferenceTarget(CalleeDecl);
+  bool CollectEvidenceForCaller = isInferenceTarget(*Env.getCurrentFunc());
+
   // For each pointer parameter of the callee, ...
   for (; ParamI < CalleeDecl.param_size(); ++ParamI, ++ArgI) {
     const auto *ParamDecl = CalleeDecl.getParamDecl(ParamI);
@@ -271,33 +277,37 @@ void collectEvidenceFromArgsAndParams(
 
     SourceLocation ArgLoc = Expr.getArg(ArgI)->getExprLoc();
 
-    auto ParamNullability = getNullabilityAnnotationsFromTypeAndOverrides(
-        ParamType, ParamDecl, Lattice);
+    if (CollectEvidenceForCaller) {
+      auto ParamNullability = getNullabilityAnnotationsFromTypeAndOverrides(
+          ParamType, ParamDecl, Lattice);
 
-    // Collect evidence from the binding of the argument to the parameter's
-    // nullability, if known.
-    collectEvidenceFromBindingToType(
-        ParamNullability, *PV, InferableCallerSlots, InferableSlotsConstraint,
-        Env, ArgLoc, Emit);
-
-    // Emit evidence of the parameter's nullability. First, calculate that
-    // nullability based on InferableSlots for the caller being assigned to
-    // Unknown or their previously-inferred value, to reflect the current
-    // annotations and not all possible annotations for them.
-    NullabilityKind ArgNullability =
-        getNullability(*PV, Env, &InferableSlotsConstraint);
-    Evidence::Kind ArgEvidenceKind;
-    switch (ArgNullability) {
-      case NullabilityKind::Nullable:
-        ArgEvidenceKind = Evidence::NULLABLE_ARGUMENT;
-        break;
-      case NullabilityKind::NonNull:
-        ArgEvidenceKind = Evidence::NONNULL_ARGUMENT;
-        break;
-      default:
-        ArgEvidenceKind = Evidence::UNKNOWN_ARGUMENT;
+      // Collect evidence from the binding of the argument to the parameter's
+      // nullability, if known.
+      collectEvidenceFromBindingToType(
+          ParamNullability, *PV, InferableCallerSlots, InferableSlotsConstraint,
+          Env, ArgLoc, Emit);
     }
-    Emit(CalleeDecl, paramSlot(ParamI), ArgEvidenceKind, ArgLoc);
+
+    if (CollectEvidenceForCallee) {
+      // Emit evidence of the parameter's nullability. First, calculate that
+      // nullability based on InferableSlots for the caller being assigned to
+      // Unknown or their previously-inferred value, to reflect the current
+      // annotations and not all possible annotations for them.
+      NullabilityKind ArgNullability =
+          getNullability(*PV, Env, &InferableSlotsConstraint);
+      Evidence::Kind ArgEvidenceKind;
+      switch (ArgNullability) {
+        case NullabilityKind::Nullable:
+          ArgEvidenceKind = Evidence::NULLABLE_ARGUMENT;
+          break;
+        case NullabilityKind::NonNull:
+          ArgEvidenceKind = Evidence::NONNULL_ARGUMENT;
+          break;
+        default:
+          ArgEvidenceKind = Evidence::UNKNOWN_ARGUMENT;
+      }
+      Emit(CalleeDecl, paramSlot(ParamI), ArgEvidenceKind, ArgLoc);
+    }
   }
 }
 
@@ -313,7 +323,7 @@ void collectEvidenceFromCallExpr(
   if (!CallExpr || !CallExpr->getCalleeDecl()) return;
   auto *CalleeDecl =
       dyn_cast_or_null<clang::FunctionDecl>(CallExpr->getCalleeDecl());
-  if (!CalleeDecl || !isInferenceTarget(*CalleeDecl)) return;
+  if (!CalleeDecl) return;
 
   collectEvidenceFromArgsAndParams(*CalleeDecl, *CallExpr, InferableCallerSlots,
                                    InferableSlotsConstraint, Lattice, Env,
@@ -380,6 +390,7 @@ void collectEvidenceFromAssignment(
     llvm::function_ref<EvidenceEmitter> Emit) {
   auto CFGStmt = Element.getAs<clang::CFGStmt>();
   if (!CFGStmt) return;
+  if (!isInferenceTarget(*Env.getCurrentFunc())) return;
 
   // Initialization of new decl.
   if (auto *DeclStmt = dyn_cast_or_null<clang::DeclStmt>(CFGStmt->getStmt())) {
