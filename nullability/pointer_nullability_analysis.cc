@@ -554,25 +554,12 @@ void transferFlowSensitiveNonConstMemberCall(
   transferFlowSensitiveCallExpr(MCE, Result, State);
 }
 
-// If nullability for the decl D has been overridden, patch N to reflect it.
-// (N is the nullability of an access to D).
-void overrideNullabilityFromDecl(const Decl *D,
-                                 PointerNullabilityLattice &Lattice,
-                                 TypeNullability &N) {
-  // For now, overrides are always for pointer values only, and override only
-  // the top-level nullability.
-  if (auto *PN = Lattice.getDeclNullability(D)) {
-    CHECK(!N.empty());
-    N.front() = *PN;
-  }
-}
-
 void transferNonFlowSensitiveDeclRefExpr(
     const DeclRefExpr *DRE, const MatchFinder::MatchResult &MR,
     TransferState<PointerNullabilityLattice> &State) {
   computeNullability(DRE, State, [&] {
     auto Nullability = getNullabilityAnnotationsFromType(DRE->getType());
-    overrideNullabilityFromDecl(DRE->getDecl(), State.Lattice, Nullability);
+    State.Lattice.overrideNullabilityFromDecl(DRE->getDecl(), Nullability);
     return Nullability;
   });
 }
@@ -595,8 +582,7 @@ void transferNonFlowSensitiveMemberExpr(
     }
     auto Nullability = substituteNullabilityAnnotationsInClassTemplate(
         MemberType, BaseNullability, ME->getBase()->getType());
-    overrideNullabilityFromDecl(ME->getMemberDecl(), State.Lattice,
-                                Nullability);
+    State.Lattice.overrideNullabilityFromDecl(ME->getMemberDecl(), Nullability);
     return Nullability;
   });
 }
@@ -771,8 +757,8 @@ void transferNonFlowSensitiveCallExpr(
     auto Nullability =
         substituteNullabilityAnnotationsInFunctionTemplate(CE->getType(), CE);
     if (!Nullability.empty()) {
-      overrideNullabilityFromDecl(CE->getCalleeDecl(), State.Lattice,
-                                  Nullability);
+      State.Lattice.overrideNullabilityFromDecl(CE->getCalleeDecl(),
+                                                Nullability);
     }
     return Nullability;
   });

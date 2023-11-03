@@ -65,6 +65,8 @@ clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
     using Nullable [[clang::annotate("Nullable")]] = T;
     template <typename T>
     using Nonnull [[clang::annotate("Nonnull")]] = T;
+    template <typename T>
+    using Unknown [[clang::annotate("Nullability_Unspecified")]] = T;
   )cc";
   Inputs.ExtraArgs.push_back("-include");
   Inputs.ExtraArgs.push_back("nullability.h");
@@ -499,6 +501,18 @@ TEST(CollectEvidenceFromImplementationTest, AssignedToNonnull) {
                                     functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest, AssignedToNullableOrUnknown) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, int* q, int* r) {
+      Nullable<int*> a = p;
+      int* b = q;
+      Unknown<int*> c = r;
+      q = r;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+}
+
 // A crash repro involving callable parameters.
 TEST(CollectEvidenceFromImplementationTest, FunctionPointerParam) {
   static constexpr llvm::StringRef Src = R"cc(
@@ -597,31 +611,31 @@ TEST(CollectEvidenceFromImplementationTest,
   std::string ReturnsToBeNonnullUsr = "c:@F@returnsToBeNonnull#*I#";
   const llvm::DenseMap<int, std::vector<testing::Matcher<const Evidence&>>>
       ExpectedNewResultsPerRound = {
-          {{0,
-            {evidence(
-                paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
-                AllOf(functionNamed("target"),
-                      // Double-check that target's usr is as expected before
-                      // we use it to create SlotFingerprints.
-                      ResultOf([](Symbol S) { return S.usr(); }, TargetUsr)))}},
-           {1,
-            {evidence(
-                paramSlot(0), Evidence::NONNULL_ARGUMENT,
-                AllOf(functionNamed("returnsToBeNonnull"),
-                      // Double-check that returnsToBeNonnull's usr is as
-                      // expected before we use it to create SlotFingerprints.
-                      ResultOf([](Symbol S) { return S.usr(); },
-                               ReturnsToBeNonnullUsr)))}},
-           {2,
-            {
-                // No new evidence from target's implementation in this round,
-                // but in a full-TU analysis, this would be the round where we
-                // decide returnsToBeNonnull returns Nonnull, based on the
-                // now-Nonnull argument that is the only return value.
-            }},
-           {3,
-            {evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
-                      functionNamed("target"))}}}};
+          {0,
+           {evidence(
+               paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+               AllOf(functionNamed("target"),
+                     // Double-check that target's usr is as expected before
+                     // we use it to create SlotFingerprints.
+                     ResultOf([](Symbol S) { return S.usr(); }, TargetUsr)))}},
+          {1,
+           {evidence(
+               paramSlot(0), Evidence::NONNULL_ARGUMENT,
+               AllOf(functionNamed("returnsToBeNonnull"),
+                     // Double-check that returnsToBeNonnull's usr is as
+                     // expected before we use it to create SlotFingerprints.
+                     ResultOf([](Symbol S) { return S.usr(); },
+                              ReturnsToBeNonnullUsr)))}},
+          {2,
+           {
+               // No new evidence from target's implementation in this round,
+               // but in a full-TU analysis, this would be the round where we
+               // decide returnsToBeNonnull returns Nonnull, based on the
+               // now-Nonnull argument that is the only return value.
+           }},
+          {3,
+           {evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
+                     functionNamed("target"))}}};
 
   // Assert first round results because they don't rely on previous inference
   // propagation at all and in this case are test setup and preconditions.
@@ -667,6 +681,29 @@ TEST(CollectEvidenceFromImplementationTest,
                     IsSupersetOf(ExpectedNewResultsPerRound.at(1)),
                     IsSupersetOf(ExpectedNewResultsPerRound.at(2)),
                     IsSupersetOf(ExpectedNewResultsPerRound.at(3))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     PreviousInferencesOfNonTargetParameterNullabilitiesPropagate) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void takesToBeNonnull(int* a) {
+      // Not read when collecting evidence only from Target, but corresponding
+      // inference is explicitly input below.
+      *a;
+    }
+    void target(int* q) { takesToBeNonnull(q); }
+  )cc";
+  std::string TakesToBeNonnullUsr = "c:@F@takesToBeNonnull#*I#";
+
+  // Pretend that in a first round of inferring for all functions, we made this
+  // inference about takesToBeNonnull's first parameter.
+  // This test confirms that we use that information when collecting from
+  // target's implementation.
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(
+          Src, {.Nonnull = {fingerprint(TakesToBeNonnullUsr, paramSlot(0))}}),
+      Contains(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                        functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, VariableDeclIgnored) {

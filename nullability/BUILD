@@ -4,6 +4,7 @@ package(default_applicable_licenses = ["//:license"])
 
 cc_library(
     name = "pointer_nullability_lattice",
+    srcs = ["pointer_nullability_lattice.cc"],
     hdrs = ["pointer_nullability_lattice.h"],
     visibility = [
         "//nullability/inference:__pkg__",

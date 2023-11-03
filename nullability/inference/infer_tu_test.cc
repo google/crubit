@@ -215,10 +215,13 @@ TEST_F(InferTUTest, Filter) {
 
 TEST_F(InferTUTest, IterationsPropagateInferences) {
   build(R"cc(
+    void takesToBeNonnull(int* x) { *x; }
     int* returnsToBeNonnull(int* a) { return a; }
-    int* target(int* q) {
-      *q;
-      return returnsToBeNonnull(q);
+    int* target(int* p, int* q, int* r) {
+      *p;
+      takesToBeNonnull(q);
+      q = r;
+      return returnsToBeNonnull(p);
     }
   )cc");
   EXPECT_THAT(
@@ -228,31 +231,44 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
                                         inferredSlot(1, Inference::NONNULL)}),
           inference(hasName("returnsToBeNonnull"),
                     {inferredSlot(0, Inference::UNKNOWN),
-                     inferredSlot(1, Inference::UNKNOWN)})));
+                     inferredSlot(1, Inference::UNKNOWN)}),
+          inference(hasName("takesToBeNonnull"),
+                    {inferredSlot(1, Inference::NONNULL)})));
   EXPECT_THAT(
       inferTU(AST->context(), /*Iterations=*/2),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Inference::UNKNOWN),
-                                        inferredSlot(1, Inference::NONNULL)}),
+                                        inferredSlot(1, Inference::NONNULL),
+                                        inferredSlot(2, Inference::NONNULL)}),
           inference(hasName("returnsToBeNonnull"),
                     {inferredSlot(0, Inference::UNKNOWN),
-                     inferredSlot(1, Inference::NONNULL)})));
+                     inferredSlot(1, Inference::NONNULL)}),
+          inference(hasName("takesToBeNonnull"),
+                    {inferredSlot(1, Inference::NONNULL)})));
   EXPECT_THAT(
       inferTU(AST->context(), /*Iterations=*/3),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Inference::UNKNOWN),
-                                        inferredSlot(1, Inference::NONNULL)}),
+                                        inferredSlot(1, Inference::NONNULL),
+                                        inferredSlot(2, Inference::NONNULL),
+                                        inferredSlot(3, Inference::NONNULL)}),
           inference(hasName("returnsToBeNonnull"),
                     {inferredSlot(0, Inference::NONNULL),
-                     inferredSlot(1, Inference::NONNULL)})));
+                     inferredSlot(1, Inference::NONNULL)}),
+          inference(hasName("takesToBeNonnull"),
+                    {inferredSlot(1, Inference::NONNULL)})));
   EXPECT_THAT(
       inferTU(AST->context(), /*Iterations=*/4),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Inference::NONNULL),
-                                        inferredSlot(1, Inference::NONNULL)}),
+                                        inferredSlot(1, Inference::NONNULL),
+                                        inferredSlot(2, Inference::NONNULL),
+                                        inferredSlot(3, Inference::NONNULL)}),
           inference(hasName("returnsToBeNonnull"),
                     {inferredSlot(0, Inference::NONNULL),
-                     inferredSlot(1, Inference::NONNULL)})));
+                     inferredSlot(1, Inference::NONNULL)}),
+          inference(hasName("takesToBeNonnull"),
+                    {inferredSlot(1, Inference::NONNULL)})));
 }
 
 }  // namespace

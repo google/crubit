@@ -62,20 +62,9 @@ class PointerNullabilityLattice {
     return Iterator->second;
   }
 
-  // Returns overridden nullability information associated with a declaration.
-  // For now we only track top-level decl nullability symbolically and check for
-  // concrete nullability override results.
-  const PointerTypeNullability *getDeclNullability(const Decl *D) const {
-    if (!D) return nullptr;
-    if (const auto *VD = dyn_cast_or_null<ValueDecl>(D)) {
-      auto It = NFS.DeclTopLevelNullability.find(VD);
-      if (It != NFS.DeclTopLevelNullability.end()) return &It->second;
-    }
-    if (const std::optional<const PointerTypeNullability *> N =
-            NFS.ConcreteNullabilityOverride(*D))
-      return *N;
-    return nullptr;
-  }
+  // If nullability for the decl D has been overridden, patch N to reflect it.
+  // (N is the nullability of an access to D).
+  void overrideNullabilityFromDecl(const Decl *D, TypeNullability &N) const;
 
   bool operator==(const PointerNullabilityLattice &Other) const { return true; }
 

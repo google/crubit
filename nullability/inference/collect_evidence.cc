@@ -200,17 +200,39 @@ const Formula &getInferableSlotsAsInferredOrUnknownConstraint(
   return *Constraint;
 }
 
+auto getNullabilityAnnotationsFromTypeAndOverrides(
+    QualType Type, const Decl *D, const PointerNullabilityLattice &Lattice) {
+  auto N = getNullabilityAnnotationsFromType(Type);
+  if (N.empty()) {
+    // We expect this not to be the case, but not to a crash-worthy level, so
+    // just log if it is.
+    llvm::errs() << "Nullability for type " << Type.getAsString();
+    if (auto *ND = dyn_cast_or_null<clang::NamedDecl>(D)) {
+      llvm::errs() << "for Decl named " << ND->getName();
+    }
+    llvm::errs() << " requested with overrides, but is an empty vector.\n";
+  } else {
+    Lattice.overrideNullabilityFromDecl(D, N);
+  }
+  return N;
+}
+
 void collectEvidenceFromBindingToType(
     TypeNullability &TypeNullability,
     const dataflow::PointerValue &PointerValue,
     std::vector<std::pair<PointerTypeNullability, Slot>>
         &InferableSlotsFromValueContext,
-    const dataflow::Environment &Env, SourceLocation ValueLoc,
-    llvm::function_ref<EvidenceEmitter> Emit) {
+    const Formula &InferableSlotsConstraint, const dataflow::Environment &Env,
+    SourceLocation ValueLoc, llvm::function_ref<EvidenceEmitter> Emit) {
   //  TODO: Account for variance and each layer of nullability when we handle
   //  more than top-level pointers.
   if (TypeNullability.empty()) return;
-  if (TypeNullability[0].concrete() == NullabilityKind::NonNull) {
+  PointerTypeNullability &TopLevel = TypeNullability[0];
+  dataflow::Arena &A = Env.arena();
+  if (TopLevel.concrete() == NullabilityKind::NonNull ||
+      (TopLevel.isSymbolic() &&
+       Env.proves(
+           A.makeImplies(InferableSlotsConstraint, TopLevel.isNonnull(A))))) {
     collectMustBeNonnullEvidence(PointerValue, Env, ValueLoc,
                                  InferableSlotsFromValueContext,
                                  Evidence::BOUND_TO_NONNULL, Emit);
@@ -221,7 +243,8 @@ template <typename CallOrConstructExpr>
 void collectEvidenceFromArgsAndParams(
     const FunctionDecl &CalleeDecl, const CallOrConstructExpr &Expr,
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableCallerSlots,
-    const Formula &InferableSlotsConstraint, const dataflow::Environment &Env,
+    const Formula &InferableSlotsConstraint,
+    const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   unsigned ParamI = 0;
   unsigned ArgI = 0;
@@ -236,8 +259,8 @@ void collectEvidenceFromArgsAndParams(
 
   // For each pointer parameter of the callee, ...
   for (; ParamI < CalleeDecl.param_size(); ++ParamI, ++ArgI) {
-    auto ParamType =
-        CalleeDecl.getParamDecl(ParamI)->getType().getNonReferenceType();
+    const auto *ParamDecl = CalleeDecl.getParamDecl(ParamI);
+    const auto ParamType = ParamDecl->getType().getNonReferenceType();
     if (!isSupportedPointerType(ParamType)) continue;
     // the corresponding argument should also be a pointer.
     CHECK(isSupportedPointerType(Expr.getArg(ArgI)->getType()));
@@ -248,13 +271,14 @@ void collectEvidenceFromArgsAndParams(
 
     SourceLocation ArgLoc = Expr.getArg(ArgI)->getExprLoc();
 
-    // TODO: Include inferred annotations from previous rounds when propagating.
-    auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
+    auto ParamNullability = getNullabilityAnnotationsFromTypeAndOverrides(
+        ParamType, ParamDecl, Lattice);
 
     // Collect evidence from the binding of the argument to the parameter's
     // nullability, if known.
-    collectEvidenceFromBindingToType(ParamNullability, *PV,
-                                     InferableCallerSlots, Env, ArgLoc, Emit);
+    collectEvidenceFromBindingToType(
+        ParamNullability, *PV, InferableCallerSlots, InferableSlotsConstraint,
+        Env, ArgLoc, Emit);
 
     // Emit evidence of the parameter's nullability. First, calculate that
     // nullability based on InferableSlots for the caller being assigned to
@@ -280,7 +304,7 @@ void collectEvidenceFromArgsAndParams(
 void collectEvidenceFromCallExpr(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableCallerSlots,
     const Formula &InferableSlotsConstraint, const CFGElement &Element,
-    const dataflow::Environment &Env,
+    const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   // Is this CFGElement a call to a function?
   auto CFGStmt = Element.getAs<clang::CFGStmt>();
@@ -292,13 +316,14 @@ void collectEvidenceFromCallExpr(
   if (!CalleeDecl || !isInferenceTarget(*CalleeDecl)) return;
 
   collectEvidenceFromArgsAndParams(*CalleeDecl, *CallExpr, InferableCallerSlots,
-                                   InferableSlotsConstraint, Env, Emit);
+                                   InferableSlotsConstraint, Lattice, Env,
+                                   Emit);
 }
 
 void collectEvidenceFromConstructExpr(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
     const Formula &InferableSlotsConstraint, const CFGElement &Element,
-    const dataflow::Environment &Env,
+    const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   auto CFGStmt = Element.getAs<clang::CFGStmt>();
   if (!CFGStmt) return;
@@ -311,7 +336,7 @@ void collectEvidenceFromConstructExpr(
 
   collectEvidenceFromArgsAndParams(*ConstructorDecl, *ConstructExpr,
                                    InferableSlots, InferableSlotsConstraint,
-                                   Env, Emit);
+                                   Lattice, Env, Emit);
 }
 
 void collectEvidenceFromReturn(
@@ -350,7 +375,8 @@ void collectEvidenceFromReturn(
 
 void collectEvidenceFromAssignment(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    const CFGElement &Element, const dataflow::Environment &Env,
+    const Formula &InferableSlotsConstraint, const CFGElement &Element,
+    const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   auto CFGStmt = Element.getAs<clang::CFGStmt>();
   if (!CFGStmt) return;
@@ -364,10 +390,11 @@ void collectEvidenceFromAssignment(
         auto *PV = getPointerValueFromExpr(VarDecl->getInit(), Env);
         if (!PV) return;
         TypeNullability TypeNullability =
-            getNullabilityAnnotationsFromType(VarDecl->getType());
-        collectEvidenceFromBindingToType(TypeNullability, *PV, InferableSlots,
-                                         Env, VarDecl->getInit()->getExprLoc(),
-                                         Emit);
+            getNullabilityAnnotationsFromTypeAndOverrides(VarDecl->getType(),
+                                                          VarDecl, Lattice);
+        collectEvidenceFromBindingToType(
+            TypeNullability, *PV, InferableSlots, InferableSlotsConstraint, Env,
+            VarDecl->getInit()->getExprLoc(), Emit);
       }
     }
   }
@@ -379,26 +406,35 @@ void collectEvidenceFromAssignment(
       isSupportedPointerType(BinaryOperator->getLHS()->getType())) {
     auto *PV = getPointerValueFromExpr(BinaryOperator->getRHS(), Env);
     if (!PV) return;
-    TypeNullability TypeNullability =
-        getNullabilityAnnotationsFromType(BinaryOperator->getLHS()->getType());
-    collectEvidenceFromBindingToType(TypeNullability, *PV, InferableSlots, Env,
-                                     BinaryOperator->getRHS()->getExprLoc(),
-                                     Emit);
+    TypeNullability TypeNullability;
+    if (auto *DeclRefExpr =
+            dyn_cast_or_null<clang::DeclRefExpr>(BinaryOperator->getLHS())) {
+      TypeNullability = getNullabilityAnnotationsFromTypeAndOverrides(
+          BinaryOperator->getLHS()->getType(), DeclRefExpr->getDecl(), Lattice);
+    } else {
+      TypeNullability = getNullabilityAnnotationsFromType(
+          BinaryOperator->getLHS()->getType());
+    }
+    collectEvidenceFromBindingToType(
+        TypeNullability, *PV, InferableSlots, InferableSlotsConstraint, Env,
+        BinaryOperator->getRHS()->getExprLoc(), Emit);
   }
 }
 
 void collectEvidenceFromElement(
     std::vector<std::pair<PointerTypeNullability, Slot>> InferableSlots,
     const Formula &InferableSlotsConstraint, const CFGElement &Element,
-    const Environment &Env, llvm::function_ref<EvidenceEmitter> Emit) {
+    const PointerNullabilityLattice &Lattice, const Environment &Env,
+    llvm::function_ref<EvidenceEmitter> Emit) {
   collectEvidenceFromDereference(InferableSlots, Element, Env, Emit);
   collectEvidenceFromCallExpr(InferableSlots, InferableSlotsConstraint, Element,
-                              Env, Emit);
+                              Lattice, Env, Emit);
   collectEvidenceFromConstructExpr(InferableSlots, InferableSlotsConstraint,
-                                   Element, Env, Emit);
+                                   Element, Lattice, Env, Emit);
   collectEvidenceFromReturn(InferableSlots, InferableSlotsConstraint, Element,
                             Env, Emit);
-  collectEvidenceFromAssignment(InferableSlots, Element, Env, Emit);
+  collectEvidenceFromAssignment(InferableSlots, InferableSlotsConstraint,
+                                Element, Lattice, Env, Emit);
   // TODO: add more heuristic collections here
 }
 
@@ -506,7 +542,7 @@ llvm::Error collectEvidenceFromImplementation(
                      PointerNullabilityLattice> &State) {
                collectEvidenceFromElement(InferableSlots,
                                           InferableSlotsConstraint, Element,
-                                          State.Env, Emit);
+                                          State.Lattice, State.Env, Emit);
              })
       .takeError();
 }
