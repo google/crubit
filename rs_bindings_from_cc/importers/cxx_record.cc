@@ -99,20 +99,20 @@ AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
 absl::StatusOr<RecordType> TranslateRecordType(
     const clang::RecordDecl& record_decl) {
   switch (record_decl.getTagKind()) {
-    case clang::TTK_Struct:
+    case clang::TagTypeKind::Struct:
       return RecordType::kStruct;
-    case clang::TTK_Union:
+    case clang::TagTypeKind::Union:
       return RecordType::kUnion;
-    case clang::TTK_Class:
+    case clang::TagTypeKind::Class:
       return RecordType::kClass;
-    case clang::TTK_Enum:
+    case clang::TagTypeKind::Enum:
       llvm::report_fatal_error(
-          "clang::RecordDecl::getTagKind shouldn't return TTK_Enum");
-    case clang::TTK_Interface:
+          "clang::RecordDecl::getTagKind shouldn't return TagTypeKind::Enum");
+    case clang::TagTypeKind::Interface:
       // Some docs about `__interface` can be found here:
       // https://docs.microsoft.com/en-us/cpp/cpp/interface?view=msvc-170
       return absl::UnimplementedError(
-          "`__interface` / clang::TTK_Interface is not supported");
+          "`__interface` / clang::TagTypeKind::Interface is not supported");
   }
 
   llvm::report_fatal_error("Unrecognized clang::TagKind");
