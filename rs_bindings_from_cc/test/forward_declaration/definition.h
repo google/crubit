@@ -9,4 +9,8 @@
 
 class A final {};
 
+namespace my_namespace {
+class B final {};
+}  // namespace my_namespace
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_FORWARD_DECLARATION_DEFINITION_H_
