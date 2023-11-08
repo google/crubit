@@ -54,6 +54,9 @@ std::optional<IR::Item> FindItemById(const IR& ir, ItemId id) {
       return item;
     } else if (auto* ns = std::get_if<Namespace>(&item); ns && ns->id == id) {
       return item;
+    } else if (auto* incomplete = std::get_if<IncompleteRecord>(&item);
+               incomplete && incomplete->id == id) {
+      return item;
     }
   }
   return std::nullopt;
@@ -793,6 +796,7 @@ TEST(ImporterTest, NotTrivialAbi) {
 
 TEST(ImporterTest, TopLevelItemIds) {
   absl::string_view file = R"cc(
+    struct ForwardDeclaration;
     struct TopLevelStruct {};
     // Top level comment
 
@@ -815,15 +819,41 @@ TEST(ImporterTest, TopLevelItemIds) {
     items.push_back(*item);
   }
 
-  EXPECT_THAT(ir.top_level_item_ids, SizeIs(5));
+  EXPECT_THAT(ir.top_level_item_ids, SizeIs(6));
   EXPECT_THAT(
       items,
       ElementsAre(
+          VariantWith<IncompleteRecord>(RsNameIs("ForwardDeclaration")),
           VariantWith<Record>(RsNameIs("TopLevelStruct")),
           VariantWith<Comment>(TextIs("Top level comment")),
           VariantWith<Func>(IdentifierIs("top_level_func")),
           VariantWith<Namespace>(IdentifierIs("top_level_namespace")),
           VariantWith<Comment>(TextIs("namespace top_level_namespace"))));
+}
+
+TEST(ImporterTest, ForwardDeclarationAndDefinition) {
+  absl::string_view file = R"cc(
+    struct ForwardDeclaredStruct;
+    struct ForwardDeclaredStruct {};
+    struct Struct {};
+    struct Struct;
+    struct ForwardDeclaredStructWithNoDefinition;
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+
+  std::vector<IR::Item> items;
+  for (const auto& id : ir.top_level_item_ids) {
+    auto item = FindItemById(ir, id);
+    std::cout << ItemToString(item) << std::endl;
+    items.push_back(*item);
+  }
+
+  EXPECT_THAT(ir.top_level_item_ids, SizeIs(3));
+  EXPECT_THAT(
+      items, ElementsAre(VariantWith<Record>(RsNameIs("ForwardDeclaredStruct")),
+                         VariantWith<Record>(RsNameIs("Struct")),
+                         VariantWith<IncompleteRecord>(RsNameIs(
+                             "ForwardDeclaredStructWithNoDefinition"))));
 }
 
 TEST(ImporterTest, RecordItemIds) {

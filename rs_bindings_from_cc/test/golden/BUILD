@@ -38,6 +38,9 @@ DEPS = {
         "unsupported",
     ],
     "types": ["//support/rs_std:rs_char"],
+    "definition_of_forward_declaration": [
+        "forward_declaration",
+    ],
 }
 
 TAGS = {}
