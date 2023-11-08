@@ -844,7 +844,6 @@ TEST(ImporterTest, ForwardDeclarationAndDefinition) {
   std::vector<IR::Item> items;
   for (const auto& id : ir.top_level_item_ids) {
     auto item = FindItemById(ir, id);
-    std::cout << ItemToString(item) << std::endl;
     items.push_back(*item);
   }
 
@@ -854,6 +853,24 @@ TEST(ImporterTest, ForwardDeclarationAndDefinition) {
                          VariantWith<Record>(RsNameIs("Struct")),
                          VariantWith<IncompleteRecord>(RsNameIs(
                              "ForwardDeclaredStructWithNoDefinition"))));
+}
+
+TEST(ImporterTest, DuplicateForwardDeclarations) {
+  absl::string_view file = R"cc(
+    struct ForwardDeclaredStructWithNoDefinition;
+    struct ForwardDeclaredStructWithNoDefinition;
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+
+  std::vector<IR::Item> items;
+  for (const auto& id : ir.top_level_item_ids) {
+    auto item = FindItemById(ir, id);
+    items.push_back(*item);
+  }
+
+  EXPECT_THAT(ir.top_level_item_ids, SizeIs(1));
+  EXPECT_THAT(items, ElementsAre(VariantWith<IncompleteRecord>(
+                         RsNameIs("ForwardDeclaredStructWithNoDefinition"))));
 }
 
 TEST(ImporterTest, RecordItemIds) {
