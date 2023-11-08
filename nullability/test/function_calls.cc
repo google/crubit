@@ -678,6 +678,60 @@ TEST(PointerNullabilityTest, ConstMethodNoParamsCheckFirst) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ConstMethodNoImpl) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct C {
+      int *_Nullable property() const;
+      void may_mutate();
+    };
+    void target() {
+      C obj;
+      if (obj.property() != nullptr) {
+        obj.may_mutate();
+        *obj.property();  // [[unsafe]]
+      };
+      if (obj.property() != nullptr) *obj.property();
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, ConstMethodEarlyReturn) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct C {
+      int *_Nullable property() const;
+    };
+    void target() {
+      C c;
+      if (!c.property()) return;
+      // No false positive in this case, as there is no join.
+      *c.property();
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, ConstMethodEarlyReturnWithConditional) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct C {
+      int *_Nullable property() const;
+    };
+    bool cond();
+    void some_operation(int);
+    void target() {
+      C c;
+      if (!c.property()) return;
+      if (cond()) {
+        some_operation(1);
+      } else {
+        some_operation(2);
+      }
+      // TODO(b/309667920): False positive below due to clearing the const
+      // method return values on join. If this is a pattern that occurs
+      // frequently in real code, we need to fix this.
+      *c.property();  // [[unsafe]]
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, FieldUndefinedValue) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct C {

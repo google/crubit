@@ -537,6 +537,21 @@ void transferFlowSensitiveAccessorCall(
   }
 }
 
+void transferFlowSensitiveConstMemberCall(
+    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  if (!isSupportedPointerType(MCE->getType())) return;
+  dataflow::RecordStorageLocation *RecordLoc =
+      dataflow::getImplicitObjectLocation(*MCE, State.Env);
+  if (RecordLoc == nullptr) return;
+  PointerValue *PointerVal =
+      State.Lattice.getConstMethodReturnValue(*RecordLoc, MCE, State.Env);
+  if (PointerVal) {
+    State.Env.setValue(*MCE, *PointerVal);
+    initPointerFromTypeNullability(*PointerVal, MCE, State);
+  }
+}
+
 void transferFlowSensitiveNonConstMemberCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -549,6 +564,7 @@ void transferFlowSensitiveNonConstMemberCall(
       Value *V = State.Env.createValue(Field->getType());
       State.Env.setValue(*FieldLoc, *V);
     }
+    State.Lattice.clearConstMethodReturnValues(*RecordLoc);
   }
   // The nullability of the Expr itself still needs to be handled.
   transferFlowSensitiveCallExpr(MCE, Result, State);
@@ -868,6 +884,8 @@ auto buildFlowSensitiveTransferer() {
                            transferFlowSensitiveNullPointer)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
                                         transferFlowSensitiveAccessorCall)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),
+                                        transferFlowSensitiveConstMemberCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isNonConstMemberCall(),
                                         transferFlowSensitiveNonConstMemberCall)
       .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferFlowSensitiveCallExpr)

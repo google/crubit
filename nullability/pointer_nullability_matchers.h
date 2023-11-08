@@ -30,6 +30,7 @@ ast_matchers::internal::Matcher<Stmt> isCallExpr();
 ast_matchers::internal::Matcher<Stmt> isPointerReturn();
 ast_matchers::internal::Matcher<Stmt> isConstructExpr();
 ast_matchers::internal::Matcher<CXXCtorInitializer> isCtorMemberInitializer();
+ast_matchers::internal::Matcher<Stmt> isZeroParamConstMemberCall();
 ast_matchers::internal::Matcher<Stmt> isNonConstMemberCall();
 ast_matchers::internal::Matcher<Stmt> isSupportedPointerAccessorCall();
 

@@ -39,6 +39,7 @@ using ast_matchers::isArrow;
 using ast_matchers::isConst;
 using ast_matchers::isMemberInitializer;
 using ast_matchers::memberExpr;
+using ast_matchers::parameterCountIs;
 using ast_matchers::returnStmt;
 using ast_matchers::statementCountIs;
 using ast_matchers::unaryOperator;
@@ -73,6 +74,11 @@ Matcher<Stmt> isPointerReturn() {
 Matcher<Stmt> isConstructExpr() { return cxxConstructExpr(); }
 Matcher<CXXCtorInitializer> isCtorMemberInitializer() {
   return cxxCtorInitializer(isMemberInitializer());
+}
+
+Matcher<Stmt> isZeroParamConstMemberCall() {
+  return cxxMemberCallExpr(
+      callee(cxxMethodDecl(parameterCountIs(0), isConst())));
 }
 
 Matcher<Stmt> isNonConstMemberCall() {

@@ -12,9 +12,13 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "nullability/type_nullability.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
+#include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
+#include "clang/Analysis/FlowSensitive/StorageLocation.h"
+#include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/FunctionExtras.h"
 
@@ -62,6 +66,25 @@ class PointerNullabilityLattice {
     return Iterator->second;
   }
 
+  // Gets the PointerValue associated with the RecordStorageLocation and
+  // MethodDecl of the CallExpr, creating one if it doesn't yet exist. Requires
+  // the CXXMemberCallExpr to have a supported pointer type.
+  dataflow::PointerValue *getConstMethodReturnValue(
+      const dataflow::RecordStorageLocation &RecordLoc,
+      const CXXMemberCallExpr *MCE, dataflow::Environment &Env) {
+    auto &ObjMap = ConstMethodReturnValues[&RecordLoc];
+    auto it = ObjMap.find(MCE->getMethodDecl());
+    if (it != ObjMap.end()) return it->second;
+    auto *PV = cast<dataflow::PointerValue>(Env.createValue(MCE->getType()));
+    ObjMap.insert({MCE->getMethodDecl(), PV});
+    return PV;
+  }
+
+  void clearConstMethodReturnValues(
+      const dataflow::RecordStorageLocation &RecordLoc) {
+    ConstMethodReturnValues.erase(&RecordLoc);
+  }
+
   // If nullability for the decl D has been overridden, patch N to reflect it.
   // (N is the nullability of an access to D).
   void overrideNullabilityFromDecl(const Decl *D, TypeNullability &N) const;
@@ -69,13 +92,29 @@ class PointerNullabilityLattice {
   bool operator==(const PointerNullabilityLattice &Other) const { return true; }
 
   dataflow::LatticeJoinEffect join(const PointerNullabilityLattice &Other) {
-    return dataflow::LatticeJoinEffect::Unchanged;
+    if (ConstMethodReturnValues.empty())
+      return dataflow::LatticeJoinEffect::Unchanged;
+    // Conservatively, just clear the `ConstMethodReturnValues` map entirely.
+    // This means that we can't check the return value from a const method
+    // before a join, then call the method again to use the pointer after the
+    // join -- we'll get a false positive in this case.
+    // TODO(b/309667920): Add code to actually join the maps if it turns out
+    // these types of false positives are common.
+    ConstMethodReturnValues.clear();
+    return dataflow::LatticeJoinEffect::Changed;
   }
 
  private:
   // Owned by the PointerNullabilityAnalysis object, shared by all lattice
   // elements within one analysis run.
   NonFlowSensitiveState &NFS;
+
+  // Maps a record storage location and const method to the value to return
+  // from that const method.
+  llvm::SmallDenseMap<
+      const dataflow::RecordStorageLocation *,
+      llvm::SmallDenseMap<const CXXMethodDecl *, dataflow::PointerValue *>>
+      ConstMethodReturnValues;
 };
 
 inline std::ostream &operator<<(std::ostream &OS,

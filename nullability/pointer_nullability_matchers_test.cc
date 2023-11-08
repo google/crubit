@@ -62,5 +62,28 @@ TEST(PointerNullabilityTest, MatchMemberFunctions) {
                        isSupportedPointerAccessorCall()));
 }
 
+TEST(PointerNullabilityTest, MatchConstMemberFunctions) {
+  llvm::StringRef Input(R"cc(
+    class C {
+     public:
+      int *_Nullable get() const;
+      int *_Nullable get(int i) const;
+      int *_Nullable get_with_default_arg(int i = 0) const;
+      int *_Nullable get_nonconst();
+    };
+    C foo() { return C(); }
+  )cc");
+  EXPECT_TRUE(matches(Input, "void target(){ C().get(); }",
+                      isZeroParamConstMemberCall()));
+  EXPECT_TRUE(matches(Input, "void target(){ foo().get(); }",
+                      isZeroParamConstMemberCall()));
+
+  EXPECT_FALSE(matches(Input, "void target(){ C().get(0); }",
+                       isZeroParamConstMemberCall()));
+  EXPECT_FALSE(matches(Input, "void target(){ C().get_with_default_arg(); }",
+                       isZeroParamConstMemberCall()));
+  EXPECT_FALSE(matches(Input, "void target(){ C().get_nonconst(); }",
+                       isZeroParamConstMemberCall()));
+}
 }  // namespace
 }  // namespace clang::tidy::nullability
