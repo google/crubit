@@ -583,6 +583,142 @@ TEST(CollectEvidenceFromImplementationTest, FunctionPointerParam) {
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
+TEST(CollectEvidenceFromImplementationTest, FunctionCallInLoop) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p) {
+      for (int i = 0; i < 3; ++i) {
+        target(nullptr);
+      }
+      for (int i = 0; i < 3; ++i) {
+        target(&i);
+      }
+      for (int i = 0; i < 3; ++i) {
+        target(p);
+      }
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("target")),
+                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("target")),
+                           evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
+                                    functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, OutputParameterPointerToPointer) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void maybeModifyPtr(int** a);
+    void target(int* p) {
+      maybeModifyPtr(&p);
+      *p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Not(Contains(evidence(_, _, functionNamed("target")))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, OutputParameterReferenceToPointer) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void maybeModifyPtr(int*& a);
+    void target(int* p) {
+      maybeModifyPtr(p);
+      *p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Not(Contains(evidence(_, _, functionNamed("target")))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     OutputParameterReferenceToConstPointer) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void dontModifyPtr(int* const& a);
+    void target(int* p) {
+      dontModifyPtr(p);
+      *p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     OutputParameterReferenceToPointerToPointer) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void maybeModifyPtr(int**& a);
+    void target(int** p) {
+      maybeModifyPtr(p);
+      *p;
+      **p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Not(Contains(evidence(_, _, functionNamed("target")))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     OutputParameterPointerToConstPointer) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void dontModifyPtr(int* const* a);
+    void target(int* p) {
+      dontModifyPtr(&p);
+      *p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     OutputParameterConstPointerToPointerToConst) {
+  static constexpr llvm::StringRef Src = R"cc(
+    // Outer pointer and int are const, but inner pointer can still be modified.
+    void maybeModifyPtr(const int** const a);
+    void target(const int* p) {
+      maybeModifyPtr(&p);
+      *p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Not(Contains(evidence(_, _, functionNamed("target")))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     PassAsOutputParameterOrDereference) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void maybeModifyPtr(int** a);
+    void target(int* p, bool b) {
+      if (b) {
+        maybeModifyPtr(&p);
+      } else {
+        *p;
+      }
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     ConditionallyPassAsOutputParameterAlwaysDereference) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void maybeModifyPtr(int** a);
+    void target(int* p, bool b) {
+      if (b) maybeModifyPtr(&p);
+      *p;  // Because we model p as Unknown post-output-parameter-use, adding an
+           // annotation would not be considered sufficient to make this
+           // dereference safe, so we do not collect evidence for p.
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Not(Contains(evidence(_, _, functionNamed("target")))));
+}
+
 TEST(CollectEvidenceFromImplementationTest, NotInferenceTarget) {
   static constexpr llvm::StringRef Src = R"cc(
     void isATarget(Nonnull<int*> a);
