@@ -113,18 +113,14 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
 
 namespace {
 
-// If Element is a dereference, returns its target and location.
-std::pair<Expr *, SourceLocation> describeDereference(
-    const CFGElement &Element) {
-  if (auto CFGStmt = Element.getAs<clang::CFGStmt>()) {
-    if (auto *Op = dyn_cast<UnaryOperator>(CFGStmt->getStmt());
-        Op && Op->getOpcode() == UO_Deref) {
-      return {Op->getSubExpr(), Op->getOperatorLoc()};
-    }
-    if (auto *ME = dyn_cast<MemberExpr>(CFGStmt->getStmt());
-        ME && ME->isArrow()) {
-      return {ME->getBase(), ME->getOperatorLoc()};
-    }
+// If Stmt is a dereference, returns its target and location.
+std::pair<Expr *, SourceLocation> describeDereference(const Stmt &Stmt) {
+  if (auto *Op = dyn_cast<UnaryOperator>(&Stmt);
+      Op && Op->getOpcode() == UO_Deref) {
+    return {Op->getSubExpr(), Op->getOperatorLoc()};
+  }
+  if (auto *ME = dyn_cast<MemberExpr>(&Stmt); ME && ME->isArrow()) {
+    return {ME->getBase(), ME->getOperatorLoc()};
   }
   return {nullptr, SourceLocation()};
 }
@@ -164,9 +160,9 @@ void collectMustBeNonnullEvidence(
 
 void collectEvidenceFromDereference(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    const CFGElement &Element, const dataflow::Environment &Env,
+    const Stmt &Stmt, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  auto [Target, Loc] = describeDereference(Element);
+  auto [Target, Loc] = describeDereference(Stmt);
   if (!Target || !Target->getType()->isPointerType()) return;
 
   // It is a dereference of a pointer. Now gather evidence from it.
@@ -316,13 +312,10 @@ void collectEvidenceFromArgsAndParams(
 
 void collectEvidenceFromCallExpr(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableCallerSlots,
-    const Formula &InferableSlotsConstraint, const CFGElement &Element,
+    const Formula &InferableSlotsConstraint, const Stmt &Stmt,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  // Is this CFGElement a call to a function?
-  auto CFGStmt = Element.getAs<clang::CFGStmt>();
-  if (!CFGStmt) return;
-  auto *CallExpr = dyn_cast_or_null<clang::CallExpr>(CFGStmt->getStmt());
+  auto *CallExpr = dyn_cast_or_null<clang::CallExpr>(&Stmt);
   if (!CallExpr || !CallExpr->getCalleeDecl()) return;
   auto *CalleeDecl =
       dyn_cast_or_null<clang::FunctionDecl>(CallExpr->getCalleeDecl());
@@ -335,13 +328,10 @@ void collectEvidenceFromCallExpr(
 
 void collectEvidenceFromConstructExpr(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    const Formula &InferableSlotsConstraint, const CFGElement &Element,
+    const Formula &InferableSlotsConstraint, const Stmt &Stmt,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  auto CFGStmt = Element.getAs<clang::CFGStmt>();
-  if (!CFGStmt) return;
-  auto *ConstructExpr =
-      dyn_cast_or_null<clang::CXXConstructExpr>(CFGStmt->getStmt());
+  auto *ConstructExpr = dyn_cast_or_null<clang::CXXConstructExpr>(&Stmt);
   if (!ConstructExpr || !ConstructExpr->getConstructor()) return;
   auto *ConstructorDecl = dyn_cast_or_null<clang::CXXConstructorDecl>(
       ConstructExpr->getConstructor());
@@ -354,13 +344,11 @@ void collectEvidenceFromConstructExpr(
 
 void collectEvidenceFromReturn(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    const Formula &InferableSlotsConstraint, const CFGElement &Element,
+    const Formula &InferableSlotsConstraint, const Stmt &Stmt,
     const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   // Is this CFGElement a return statement?
-  auto CFGStmt = Element.getAs<clang::CFGStmt>();
-  if (!CFGStmt) return;
-  auto *ReturnStmt = dyn_cast_or_null<clang::ReturnStmt>(CFGStmt->getStmt());
+  auto *ReturnStmt = dyn_cast_or_null<clang::ReturnStmt>(&Stmt);
   if (!ReturnStmt) return;
   auto *ReturnExpr = ReturnStmt->getRetValue();
   if (!ReturnExpr || !isSupportedPointerType(ReturnExpr->getType())) return;
@@ -388,15 +376,13 @@ void collectEvidenceFromReturn(
 
 void collectEvidenceFromAssignment(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    const Formula &InferableSlotsConstraint, const CFGElement &Element,
+    const Formula &InferableSlotsConstraint, const Stmt &Stmt,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  auto CFGStmt = Element.getAs<clang::CFGStmt>();
-  if (!CFGStmt) return;
   if (!isInferenceTarget(*Env.getCurrentFunc())) return;
 
   // Initialization of new decl.
-  if (auto *DeclStmt = dyn_cast_or_null<clang::DeclStmt>(CFGStmt->getStmt())) {
+  if (auto *DeclStmt = dyn_cast_or_null<clang::DeclStmt>(&Stmt)) {
     for (auto *Decl : DeclStmt->decls()) {
       if (auto *VarDecl = dyn_cast_or_null<clang::VarDecl>(Decl);
           VarDecl && VarDecl->hasInit()) {
@@ -425,8 +411,7 @@ void collectEvidenceFromAssignment(
   }
 
   // Assignment to existing decl.
-  if (auto *BinaryOperator =
-          dyn_cast_or_null<clang::BinaryOperator>(CFGStmt->getStmt());
+  if (auto *BinaryOperator = dyn_cast_or_null<clang::BinaryOperator>(&Stmt);
       BinaryOperator &&
       BinaryOperator->getOpcode() == clang::BinaryOperatorKind::BO_Assign) {
     bool LhsSupported =
@@ -463,15 +448,19 @@ void collectEvidenceFromElement(
     const Formula &InferableSlotsConstraint, const CFGElement &Element,
     const PointerNullabilityLattice &Lattice, const Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  collectEvidenceFromDereference(InferableSlots, Element, Env, Emit);
-  collectEvidenceFromCallExpr(InferableSlots, InferableSlotsConstraint, Element,
+  auto CFGStmt = Element.getAs<clang::CFGStmt>();
+  if (!CFGStmt) return;
+  auto *Stmt = CFGStmt->getStmt();
+  if (!Stmt) return;
+  collectEvidenceFromDereference(InferableSlots, *Stmt, Env, Emit);
+  collectEvidenceFromCallExpr(InferableSlots, InferableSlotsConstraint, *Stmt,
                               Lattice, Env, Emit);
   collectEvidenceFromConstructExpr(InferableSlots, InferableSlotsConstraint,
-                                   Element, Lattice, Env, Emit);
-  collectEvidenceFromReturn(InferableSlots, InferableSlotsConstraint, Element,
+                                   *Stmt, Lattice, Env, Emit);
+  collectEvidenceFromReturn(InferableSlots, InferableSlotsConstraint, *Stmt,
                             Env, Emit);
-  collectEvidenceFromAssignment(InferableSlots, InferableSlotsConstraint,
-                                Element, Lattice, Env, Emit);
+  collectEvidenceFromAssignment(InferableSlots, InferableSlotsConstraint, *Stmt,
+                                Lattice, Env, Emit);
   // TODO: add more heuristic collections here
 }
 
