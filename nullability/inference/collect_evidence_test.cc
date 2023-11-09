@@ -575,6 +575,34 @@ TEST(CollectEvidenceFromImplementationTest, AssignedToNullableOrUnknown) {
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
+TEST(CollectEvidenceFromImplementationTest, IrrelevantAssignments) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      S(int* i);
+    };
+
+    void target(int* p) {
+      int* a = p;  // No useful information.
+
+      // We don't collect if types on either side are not a supported pointer
+      // type.
+      int* b = 0;
+      int c = 4;
+      bool d = false;
+      S e = a;
+
+      // We don't collect from compound assignments.
+      b += 8;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      // From the constructor call constructing an S; no evidence from
+      // assignments.
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("S"))));
+}
+
 // A crash repro involving callable parameters.
 TEST(CollectEvidenceFromImplementationTest, FunctionPointerParam) {
   static constexpr llvm::StringRef Src = R"cc(

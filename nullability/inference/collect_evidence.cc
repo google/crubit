@@ -137,6 +137,9 @@ void collectMustBeNonnullEvidence(
     std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
     Evidence::Kind EvidenceKind, llvm::function_ref<EvidenceEmitter> Emit) {
   auto &A = Env.getDataflowAnalysisContext().arena();
+  CHECK(hasPointerNullState(Value))
+      << "Value should be the value of an expression. Cannot collect evidence "
+         "for nonnull-ness if there is no null state.";
   auto *IsNull = getPointerNullState(Value).IsNull;
   // If `IsNull` is top, we can't infer anything about it.
   if (IsNull == nullptr) return;
@@ -396,8 +399,19 @@ void collectEvidenceFromAssignment(
   if (auto *DeclStmt = dyn_cast_or_null<clang::DeclStmt>(CFGStmt->getStmt())) {
     for (auto *Decl : DeclStmt->decls()) {
       if (auto *VarDecl = dyn_cast_or_null<clang::VarDecl>(Decl);
-          VarDecl && isSupportedPointerType(VarDecl->getType()) &&
-          VarDecl->hasInit()) {
+          VarDecl && VarDecl->hasInit()) {
+        bool DeclTypeSupported = isSupportedPointerType(VarDecl->getType());
+        bool InitTypeSupported =
+            isSupportedPointerType(VarDecl->getInit()->getType());
+        if (!DeclTypeSupported) return;
+        if (!InitTypeSupported) {
+          // TODO: we could perhaps support pointer initialization from numeric
+          // values, but this is very rare and not the most useful for
+          // nullability.
+          llvm::errs() << "Unsupported init type: "
+                       << VarDecl->getInit()->getType() << "\n";
+          return;
+        }
         auto *PV = getPointerValueFromExpr(VarDecl->getInit(), Env);
         if (!PV) return;
         TypeNullability TypeNullability =
@@ -413,8 +427,20 @@ void collectEvidenceFromAssignment(
   // Assignment to existing decl.
   if (auto *BinaryOperator =
           dyn_cast_or_null<clang::BinaryOperator>(CFGStmt->getStmt());
-      BinaryOperator && BinaryOperator->isAssignmentOp() &&
-      isSupportedPointerType(BinaryOperator->getLHS()->getType())) {
+      BinaryOperator &&
+      BinaryOperator->getOpcode() == clang::BinaryOperatorKind::BO_Assign) {
+    bool LhsSupported =
+        isSupportedPointerType(BinaryOperator->getLHS()->getType());
+    bool RhsSupported =
+        isSupportedPointerType(BinaryOperator->getRHS()->getType());
+    if (!LhsSupported) return;
+    if (!RhsSupported) {
+      // TODO: we could perhaps support pointer assignments to numeric
+      // values, but this is very rare and not the most useful for
+      // nullability.
+      llvm::errs() << "Unsupported RHS type: "
+                   << BinaryOperator->getRHS()->getType() << "\n";
+    }
     auto *PV = getPointerValueFromExpr(BinaryOperator->getRHS(), Env);
     if (!PV) return;
     TypeNullability TypeNullability;
