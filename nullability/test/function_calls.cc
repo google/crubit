@@ -732,6 +732,24 @@ TEST(PointerNullabilityTest, ConstMethodEarlyReturnWithConditional) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ConstMethodNoRecordForCallObject) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      int* _Nullable property() const;
+    };
+
+    S makeS();
+
+    void target() {
+      if (makeS().property()) {
+        // This is a const member call on a different object, so it's not safe.
+        // But this line and the line above also don't cause any crashes.
+        *(makeS().property());  // [[unsafe]]
+      }
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, FieldUndefinedValue) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct C {

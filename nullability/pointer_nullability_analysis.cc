@@ -7,7 +7,6 @@
 #include <cassert>
 #include <functional>
 #include <optional>
-#include <utility>
 #include <vector>
 
 #include "absl/log/check.h"
@@ -540,10 +539,18 @@ void transferFlowSensitiveAccessorCall(
 void transferFlowSensitiveConstMemberCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (!isSupportedRawPointerType(MCE->getType())) return;
+  if (!isSupportedRawPointerType(MCE->getType())) {
+    // We can't handle it as a special case, but still need to handle it.
+    transferFlowSensitiveCallExpr(MCE, Result, State);
+    return;
+  }
   dataflow::RecordStorageLocation *RecordLoc =
       dataflow::getImplicitObjectLocation(*MCE, State.Env);
-  if (RecordLoc == nullptr) return;
+  if (RecordLoc == nullptr) {
+    // We can't handle it as a special case, but still need to handle it.
+    transferFlowSensitiveCallExpr(MCE, Result, State);
+    return;
+  }
   PointerValue *PointerVal =
       State.Lattice.getConstMethodReturnValue(*RecordLoc, MCE, State.Env);
   if (PointerVal) {
