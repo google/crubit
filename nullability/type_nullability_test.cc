@@ -19,7 +19,7 @@ namespace clang::tidy::nullability {
 namespace {
 using testing::ElementsAre;
 
-TEST(TypeNullabilityTest, IsSupportedPointerType) {
+TEST(TypeNullabilityTest, IsSupportedRawPointerType) {
   TestAST AST(R"cpp(
     using NotPointer = int;
     using Pointer = NotPointer*;
@@ -36,6 +36,12 @@ TEST(TypeNullabilityTest, IsSupportedPointerType) {
     template <class>
     struct Container;
     using ContainsPointers = Container<int*>;
+
+    namespace std {
+    template <typename T>
+    class unique_ptr;
+    }
+    using UniquePointer = std::unique_ptr<NotPointer>;
   )cpp");
 
   auto Underlying = [&](llvm::StringRef Name) {
@@ -44,14 +50,58 @@ TEST(TypeNullabilityTest, IsSupportedPointerType) {
     EXPECT_TRUE(Lookup.isSingleResult());
     return Lookup.find_first<TypeAliasDecl>()->getUnderlyingType();
   };
-  EXPECT_FALSE(isSupportedPointerType(Underlying("NotPointer")));
-  EXPECT_TRUE(isSupportedPointerType(Underlying("Pointer")));
-  EXPECT_TRUE(isSupportedPointerType(Underlying("FuncPointer")));
-  EXPECT_TRUE(isSupportedPointerType(Underlying("SugaredPointer")));
-  EXPECT_FALSE(isSupportedPointerType(Underlying("PointerDataMember")));
-  EXPECT_FALSE(isSupportedPointerType(Underlying("PointerMemberFunction")));
-  EXPECT_FALSE(isSupportedPointerType(Underlying("ObjCPointer")));
-  EXPECT_FALSE(isSupportedPointerType(Underlying("ContainsPointers")));
+  EXPECT_FALSE(isSupportedRawPointerType(Underlying("NotPointer")));
+  EXPECT_TRUE(isSupportedRawPointerType(Underlying("Pointer")));
+  EXPECT_TRUE(isSupportedRawPointerType(Underlying("FuncPointer")));
+  EXPECT_TRUE(isSupportedRawPointerType(Underlying("SugaredPointer")));
+  EXPECT_FALSE(isSupportedRawPointerType(Underlying("PointerDataMember")));
+  EXPECT_FALSE(isSupportedRawPointerType(Underlying("PointerMemberFunction")));
+  EXPECT_FALSE(isSupportedRawPointerType(Underlying("ObjCPointer")));
+  EXPECT_FALSE(isSupportedRawPointerType(Underlying("ContainsPointers")));
+  EXPECT_FALSE(isSupportedRawPointerType(Underlying("UniquePointer")));
+}
+
+TEST(TypeNullabilityTest, IsSupportedSmartPointerType) {
+  TestAST AST(R"cpp(
+    namespace std {
+    template <typename>
+    class unique_ptr;
+    template <typename>
+    class shared_ptr;
+    template <typename>
+    class weak_ptr;
+    }  // namespace std
+    template <typename>
+    class unique_ptr;
+
+    using NotPointer = int;
+    using UniquePointer = std::unique_ptr<NotPointer>;
+    using SharedPointer = std::shared_ptr<NotPointer>;
+    using WeakPointer = std::weak_ptr<NotPointer>;
+
+    using UniquePointerWrongNamespace = ::unique_ptr<NotPointer>;
+
+    using SugaredPointer = UniquePointer;
+
+    template <class>
+    struct Container;
+    using ContainsPointers = Container<std::unique_ptr<int>>;
+  )cpp");
+
+  auto Underlying = [&](llvm::StringRef Name) {
+    auto Lookup = AST.context().getTranslationUnitDecl()->lookup(
+        &AST.context().Idents.get(Name));
+    EXPECT_TRUE(Lookup.isSingleResult());
+    return Lookup.find_first<TypeAliasDecl>()->getUnderlyingType();
+  };
+  EXPECT_FALSE(isSupportedSmartPointerType(Underlying("NotPointer")));
+  EXPECT_TRUE(isSupportedSmartPointerType(Underlying("UniquePointer")));
+  EXPECT_TRUE(isSupportedSmartPointerType(Underlying("SharedPointer")));
+  EXPECT_FALSE(isSupportedSmartPointerType(Underlying("WeakPointer")));
+  EXPECT_FALSE(
+      isSupportedSmartPointerType(Underlying("UniquePointerWrongNamespace")));
+  EXPECT_TRUE(isSupportedSmartPointerType(Underlying("SugaredPointer")));
+  EXPECT_FALSE(isSupportedRawPointerType(Underlying("ContainsPointers")));
 }
 
 class GetNullabilityAnnotationsFromTypeTest : public ::testing::Test {

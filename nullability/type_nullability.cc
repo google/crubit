@@ -28,7 +28,25 @@
 
 namespace clang::tidy::nullability {
 
-bool isSupportedPointerType(QualType T) { return T->isPointerType(); }
+bool isSupportedPointerType(QualType T) {
+  return isSupportedRawPointerType(T) || isSupportedSmartPointerType(T);
+}
+
+bool isSupportedRawPointerType(QualType T) { return T->isPointerType(); }
+
+bool isSupportedSmartPointerType(QualType T) {
+  // TODO(b/304963199): Add support for the `absl_nullability_compatible` tag.
+  const CXXRecordDecl *RD = T.getCanonicalType()->getAsCXXRecordDecl();
+  if (RD == nullptr) return false;
+
+  if (!RD->getDeclContext()->isStdNamespace()) return false;
+
+  const IdentifierInfo *ID = RD->getIdentifier();
+  if (ID == nullptr) return false;
+
+  StringRef Name = ID->getName();
+  return Name == "unique_ptr" || Name == "shared_ptr";
+}
 
 PointerTypeNullability PointerTypeNullability::createSymbolic(
     dataflow::Arena &A) {

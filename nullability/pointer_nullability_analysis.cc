@@ -435,7 +435,7 @@ void initializeOutputParameter(const Expr *Arg, dataflow::Environment &Env,
 
   if (ParamTy.isNull()) return;
   if (ParamTy->getPointeeType().isNull()) return;
-  if (!isSupportedPointerType(ParamTy->getPointeeType())) return;
+  if (!isSupportedRawPointerType(ParamTy->getPointeeType())) return;
   if (ParamTy->getPointeeType().isConstQualified()) return;
 
   // TODO(b/298200521): This should extend support to annotations that suggest
@@ -483,7 +483,7 @@ void transferFlowSensitiveCallExpr(
     }
   }
 
-  if (isSupportedPointerType(CallExpr->getType())) {
+  if (isSupportedRawPointerType(CallExpr->getType())) {
     // Create a pointer so that we can attach nullability to it and have the
     // nullability propagate with the pointer.
     auto *PointerVal = getPointerValueFromExpr(CallExpr, State.Env);
@@ -540,7 +540,7 @@ void transferFlowSensitiveAccessorCall(
 void transferFlowSensitiveConstMemberCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (!isSupportedPointerType(MCE->getType())) return;
+  if (!isSupportedRawPointerType(MCE->getType())) return;
   dataflow::RecordStorageLocation *RecordLoc =
       dataflow::getImplicitObjectLocation(*MCE, State.Env);
   if (RecordLoc == nullptr) return;
@@ -560,7 +560,7 @@ void transferFlowSensitiveNonConstMemberCall(
   if (dataflow::RecordStorageLocation *RecordLoc =
           dataflow::getImplicitObjectLocation(*MCE, State.Env)) {
     for (const auto [Field, FieldLoc] : RecordLoc->children()) {
-      if (!isSupportedPointerType(Field->getType())) continue;
+      if (!isSupportedRawPointerType(Field->getType())) continue;
       Value *V = State.Env.createValue(Field->getType());
       State.Env.setValue(*FieldLoc, *V);
     }
@@ -830,8 +830,8 @@ void transferNonFlowSensitiveArraySubscriptExpr(
   computeNullability(ASE, State, [&]() {
     auto &BaseNullability = getNullabilityForChild(ASE->getBase(), State);
     QualType BaseType = ASE->getBase()->getType();
-    CHECK(isSupportedPointerType(BaseType) || BaseType->isVectorType());
-    return isSupportedPointerType(BaseType)
+    CHECK(isSupportedRawPointerType(BaseType) || BaseType->isVectorType());
+    return isSupportedRawPointerType(BaseType)
                ? ArrayRef(BaseNullability).slice(1).vec()
                : BaseNullability;
   });
@@ -906,7 +906,8 @@ void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
   if (!S) return;
 
   auto *E = dyn_cast<Expr>(S->getStmt());
-  if (E == nullptr || !E->isPRValue() || !isSupportedPointerType(E->getType()))
+  if (E == nullptr || !E->isPRValue() ||
+      !isSupportedRawPointerType(E->getType()))
     return;
 
   if (Env.getValue(*E) == nullptr)
@@ -982,7 +983,7 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
                                        const Environment &Env2,
                                        Value &MergedVal,
                                        Environment &MergedEnv) {
-  if (!isSupportedPointerType(Type)) {
+  if (!isSupportedRawPointerType(Type)) {
     return false;
   }
 

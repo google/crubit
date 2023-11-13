@@ -49,6 +49,15 @@ namespace clang::tidy::nullability {
 /// supporting pointer-to-member, ObjC pointers, `unique_ptr`, etc).
 bool isSupportedPointerType(QualType);
 
+/// Is this exactly a raw (non-smart) pointer type that we track outer
+/// nullability for?
+/// This unwraps sugar, i.e. it looks at the canonical type.
+bool isSupportedRawPointerType(QualType);
+
+/// Is this exactly a smart pointer type that we track outer nullability for?
+/// This unwraps sugar, i.e. it looks at the canonical type.
+bool isSupportedSmartPointerType(QualType);
+
 /// Describes the nullability contract of a pointer "slot" within a type.
 ///
 /// This may be concrete: nullable/non-null/unknown nullability.

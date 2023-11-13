@@ -266,9 +266,9 @@ void collectEvidenceFromArgsAndParams(
   for (; ParamI < CalleeDecl.param_size(); ++ParamI, ++ArgI) {
     const auto *ParamDecl = CalleeDecl.getParamDecl(ParamI);
     const auto ParamType = ParamDecl->getType().getNonReferenceType();
-    if (!isSupportedPointerType(ParamType)) continue;
+    if (!isSupportedRawPointerType(ParamType)) continue;
     // the corresponding argument should also be a pointer.
-    CHECK(isSupportedPointerType(Expr.getArg(ArgI)->getType()));
+    CHECK(isSupportedRawPointerType(Expr.getArg(ArgI)->getType()));
 
     dataflow::PointerValue *PV =
         getPointerValueFromExpr(Expr.getArg(ArgI), Env);
@@ -351,7 +351,7 @@ void collectEvidenceFromReturn(
   auto *ReturnStmt = dyn_cast_or_null<clang::ReturnStmt>(&Stmt);
   if (!ReturnStmt) return;
   auto *ReturnExpr = ReturnStmt->getRetValue();
-  if (!ReturnExpr || !isSupportedPointerType(ReturnExpr->getType())) return;
+  if (!ReturnExpr || !isSupportedRawPointerType(ReturnExpr->getType())) return;
 
   // Skip gathering evidence about the current function if the current function
   // is not an inference target.
@@ -386,7 +386,7 @@ void collectEvidenceFromAssignment(
     for (auto *Decl : DeclStmt->decls()) {
       if (auto *VarDecl = dyn_cast_or_null<clang::VarDecl>(Decl);
           VarDecl && VarDecl->hasInit()) {
-        bool DeclTypeSupported = isSupportedPointerType(VarDecl->getType());
+        bool DeclTypeSupported = isSupportedRawPointerType(VarDecl->getType());
         bool InitTypeSupported =
             isSupportedPointerType(VarDecl->getInit()->getType());
         if (!DeclTypeSupported) return;
@@ -415,9 +415,9 @@ void collectEvidenceFromAssignment(
       BinaryOperator &&
       BinaryOperator->getOpcode() == clang::BinaryOperatorKind::BO_Assign) {
     bool LhsSupported =
-        isSupportedPointerType(BinaryOperator->getLHS()->getType());
+        isSupportedRawPointerType(BinaryOperator->getLHS()->getType());
     bool RhsSupported =
-        isSupportedPointerType(BinaryOperator->getRHS()->getType());
+        isSupportedRawPointerType(BinaryOperator->getRHS()->getType());
     if (!LhsSupported) return;
     if (!RhsSupported) {
       // TODO: we could perhaps support pointer assignments to numeric
@@ -465,7 +465,7 @@ void collectEvidenceFromElement(
 }
 
 std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
-  if (!isSupportedPointerType(T.getNonReferenceType())) return std::nullopt;
+  if (!isSupportedRawPointerType(T.getNonReferenceType())) return std::nullopt;
   auto Nullability = getNullabilityAnnotationsFromType(T);
   switch (Nullability.front().concrete()) {
     default:
@@ -544,7 +544,7 @@ llvm::Error collectEvidenceFromImplementation(
   auto Parameters = Func->parameters();
   for (auto I = 0; I < Parameters.size(); ++I) {
     auto T = Parameters[I]->getType().getNonReferenceType();
-    if (isSupportedPointerType(T) && !evidenceKindFromDeclaredType(T)) {
+    if (isSupportedRawPointerType(T) && !evidenceKindFromDeclaredType(T)) {
       InferableSlots.push_back(
           std::make_pair(Analysis.assignNullabilityVariable(
                              Parameters[I], AnalysisContext.arena()),

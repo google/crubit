@@ -46,7 +46,7 @@ using ast_matchers::unaryOperator;
 using ast_matchers::unless;
 using ast_matchers::internal::Matcher;
 
-Matcher<Stmt> isPointerExpr() { return expr(hasType(isSupportedPointer())); }
+Matcher<Stmt> isPointerExpr() { return expr(hasType(isSupportedRawPointer())); }
 Matcher<Stmt> isNullPointerLiteral() {
   return implicitCastExpr(anyOf(hasCastKind(CK_NullToPointer),
                                 hasCastKind(CK_NullToMemberPointer)));
@@ -63,13 +63,13 @@ Matcher<Stmt> isImplicitCastPointerToBool() {
   return implicitCastExpr(hasCastKind(CK_PointerToBoolean));
 }
 Matcher<Stmt> isMemberOfPointerType() {
-  return memberExpr(hasType(isSupportedPointer()));
+  return memberExpr(hasType(isSupportedRawPointer()));
 }
 Matcher<Stmt> isPointerArrow() { return memberExpr(isArrow()); }
 Matcher<Stmt> isCXXThisExpr() { return cxxThisExpr(); }
 Matcher<Stmt> isCallExpr() { return callExpr(); }
 Matcher<Stmt> isPointerReturn() {
-  return returnStmt(hasReturnValue(hasType(isSupportedPointer())));
+  return returnStmt(hasReturnValue(hasType(isSupportedRawPointer())));
 }
 Matcher<Stmt> isConstructExpr() { return cxxConstructExpr(); }
 Matcher<CXXCtorInitializer> isCtorMemberInitializer() {
@@ -92,7 +92,7 @@ Matcher<Stmt> isSupportedPointerAccessorCall() {
           hasCastKind(CK_LValueToRValue),
           has(ignoringParenImpCasts(
               memberExpr(has(ignoringParenImpCasts(cxxThisExpr())),
-                         hasType(isSupportedPointer()),
+                         hasType(isSupportedRawPointer()),
                          hasDeclaration(decl().bind("member-decl"))))))))))))));
 }
 

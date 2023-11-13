@@ -63,7 +63,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
 SmallVector<PointerNullabilityDiagnostic> diagnoseTypeExprCompatibility(
     QualType DeclaredType, const Expr *E, const Environment &Env,
     ASTContext &Ctx) {
-  CHECK(isSupportedPointerType(DeclaredType));
+  CHECK(isSupportedRawPointerType(DeclaredType));
   return getNullabilityKind(DeclaredType, Ctx) == NullabilityKind::NonNull
              ? diagnoseNonnullExpected(E, Env)
              : SmallVector<PointerNullabilityDiagnostic>{};
@@ -96,7 +96,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArgumentCompatibility(
   SmallVector<PointerNullabilityDiagnostic> Diagnostics;
   for (unsigned int I = 0; I < Args.size(); ++I) {
     auto ParamType = ParamTypes[I].getNonReferenceType();
-    if (isSupportedPointerType(ParamType))
+    if (isSupportedRawPointerType(ParamType))
       Diagnostics.append(
           diagnoseTypeExprCompatibility(ParamType, Args[I], Env, Ctx));
   }
@@ -260,12 +260,12 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
   auto ReturnType = cast<FunctionDecl>(State.Env.getDeclCtx())->getReturnType();
 
   // TODO: Handle non-pointer return types.
-  if (!isSupportedPointerType(ReturnType)) {
+  if (!isSupportedRawPointerType(ReturnType)) {
     return {};
   }
 
   auto *ReturnExpr = RS->getRetValue();
-  CHECK(isSupportedPointerType(ReturnExpr->getType()));
+  CHECK(isSupportedRawPointerType(ReturnExpr->getType()));
 
   return diagnoseTypeExprCompatibility(ReturnType, ReturnExpr, State.Env,
                                        *Result.Context);
@@ -276,7 +276,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   CHECK(CI->isAnyMemberInitializer());
   auto MemberType = CI->getAnyMember()->getType();
-  if (!isSupportedPointerType(MemberType)) return {};
+  if (!isSupportedRawPointerType(MemberType)) return {};
 
   auto *MemberInitExpr = CI->getInit();
   return diagnoseTypeExprCompatibility(MemberType, MemberInitExpr, State.Env,

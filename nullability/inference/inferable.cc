@@ -15,7 +15,7 @@ namespace clang::tidy::nullability {
 namespace {
 
 bool isInferable(QualType T) {
-  return isSupportedPointerType(T.getNonReferenceType());
+  return isSupportedRawPointerType(T.getNonReferenceType());
 }
 
 }  // namespace
