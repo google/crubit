@@ -10,6 +10,7 @@ cc_library(
     srcs = ["check_diagnostics.cc"],
     hdrs = ["check_diagnostics.h"],
     deps = [
+        ":headers_for_test",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_diagnosis",
         "@llvm-project//clang:analysis",
@@ -20,11 +21,25 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "headers_for_test",
+    testonly = 1,
+    srcs = ["headers_for_test.cc"],
+    hdrs = ["headers_for_test.h"],
+    visibility = [
+        "//nullability/inference:__pkg__",
+    ],
+    deps = [
+        "@llvm-project//clang:tooling",
+    ],
+)
+
 cc_test(
     name = "assert_nullability_test",
     srcs = ["assert_nullability_test.cc"],
     deps = [
         ":check_diagnostics",
+        "@llvm-project//llvm:TestingSupport",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],

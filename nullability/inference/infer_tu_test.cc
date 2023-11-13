@@ -9,6 +9,7 @@
 
 #include "nullability/inference/inference.proto.h"
 #include "nullability/proto_matchers.h"
+#include "nullability/test/headers_for_test.h"
 #include "clang/AST/Decl.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
@@ -45,14 +46,10 @@ class InferTUTest : public ::testing::Test {
 
   void build(llvm::StringRef Code) {
     TestInputs Inputs = Code;
-    Inputs.ExtraFiles["nullability.h"] = R"cc(
-      template <typename T>
-      using Nullable [[clang::annotate("Nullable")]] = T;
-      template <typename T>
-      using Nonnull [[clang::annotate("Nonnull")]] = T;
-    )cc";
+    Inputs.ExtraFiles = headersForTestAsStringMap();
     Inputs.ExtraArgs.push_back("-include");
-    Inputs.ExtraArgs.push_back("nullability.h");
+    Inputs.ExtraArgs.push_back("preamble.h");
+    Inputs.ExtraArgs.push_back("-I.");
     AST.emplace(Inputs);
   }
 

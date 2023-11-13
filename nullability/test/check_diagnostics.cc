@@ -9,6 +9,7 @@
 
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_diagnosis.h"
+#include "nullability/test/headers_for_test.h"
 #include "clang/Analysis/CFG.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/STLExtras.h"
@@ -16,40 +17,6 @@
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
-
-constexpr char kPreamble[] = R"cc(
-  enum NullabilityKind {
-    NK_nonnull,
-    NK_nullable,
-    NK_unspecified,
-  };
-
-  template <NullabilityKind... NK, typename T>
-  void __assert_nullability(const T &);
-
-  template <typename T>
-  T value();
-
-  template <typename T>
-  using Nullable [[clang::annotate("Nullable")]] = T;
-
-  template <typename T>
-  using Nonnull [[clang::annotate("Nonnull")]] = T;
-
-  template <typename T>
-  using NullabilityUnknown [[clang::annotate("Nullability_Unspecified")]] = T;
-)cc";
-
-constexpr char kNewHeader[] = R"cc(
-  namespace std {
-  struct nothrow_t {
-    explicit nothrow_t() = default;
-  };
-  extern const nothrow_t nothrow;
-  using size_t = decltype(sizeof(int));
-  }  // namespace std
-  void *operator new(std::size_t size, const std::nothrow_t &) noexcept;
-)cc";
 
 bool checkDiagnostics(llvm::StringRef SourceCode) {
   std::vector<PointerNullabilityDiagnostic> Diagnostics;
@@ -69,8 +36,7 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
                 auto EltDiagnostics = Diagnoser(Elt, Ctx, State);
                 llvm::move(EltDiagnostics, std::back_inserter(Diagnostics));
               })
-              .withASTBuildVirtualMappedFiles(
-                  {{"preamble.h", kPreamble}, {"new", kNewHeader}})
+              .withASTBuildVirtualMappedFiles(headersForTest())
               .withASTBuildArgs({"-fsyntax-only", "-std=c++17",
                                  "-Wno-unused-value", "-Wno-nonnull",
                                  "-include", "preamble.h", "-I."}),

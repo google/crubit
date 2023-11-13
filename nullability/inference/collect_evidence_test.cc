@@ -10,6 +10,7 @@
 
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
+#include "nullability/test/headers_for_test.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -62,16 +63,10 @@ MATCHER_P(functionNamed, Name, "") {
 
 clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
   clang::TestInputs Inputs = Source;
-  Inputs.ExtraFiles["nullability.h"] = R"cc(
-    template <typename T>
-    using Nullable [[clang::annotate("Nullable")]] = T;
-    template <typename T>
-    using Nonnull [[clang::annotate("Nonnull")]] = T;
-    template <typename T>
-    using Unknown [[clang::annotate("Nullability_Unspecified")]] = T;
-  )cc";
+  Inputs.ExtraFiles = headersForTestAsStringMap();
   Inputs.ExtraArgs.push_back("-include");
-  Inputs.ExtraArgs.push_back("nullability.h");
+  Inputs.ExtraArgs.push_back("preamble.h");
+  Inputs.ExtraArgs.push_back("-I.");
   return Inputs;
 }
 
@@ -568,7 +563,7 @@ TEST(CollectEvidenceFromImplementationTest, AssignedToNullableOrUnknown) {
     void target(int* p, int* q, int* r) {
       Nullable<int*> a = p;
       int* b = q;
-      Unknown<int*> c = r;
+      NullabilityUnknown<int*> c = r;
       q = r;
     }
   )cc";
