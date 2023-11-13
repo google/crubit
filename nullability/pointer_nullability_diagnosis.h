@@ -6,6 +6,8 @@
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_DIAGNOSIS_H_
 
 #include <functional>
+#include <optional>
+#include <string>
 
 #include "nullability/pointer_nullability_lattice.h"
 #include "clang/AST/ASTContext.h"
@@ -29,7 +31,23 @@ struct PointerNullabilityDiagnostic {
     AssertFailed,
   };
   ErrorCode Code;
+  /// Context in which the error occurred.
+  enum class Context {
+    /// Dereferencing a pointer.
+    NullableDereference,
+    /// Initializing a variable.
+    Initializer,
+    /// Value of a return statement.
+    ReturnValue,
+    /// Function argument.
+    FunctionArgument,
+    Other
+  } Ctx = Context::Other;
   CharSourceRange Range;
+  /// Name of the parameter that the argument is being passed to.
+  /// Populated only if `Ctx` is `FunctionArgument` and the parameter name is
+  /// known.
+  std::optional<std::string> ParamName;
 };
 
 /// Checks that nullable pointers are used safely, using nullability information
