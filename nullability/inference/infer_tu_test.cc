@@ -27,6 +27,7 @@ namespace {
 using ast_matchers::hasName;
 using testing::_;
 using testing::ElementsAre;
+using testing::IsEmpty;
 using testing::UnorderedElementsAre;
 
 MATCHER_P2(inferredSlot, I, Nullability, "") {
@@ -266,6 +267,45 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
                      inferredSlot(1, Inference::NONNULL)}),
           inference(hasName("takesToBeNonnull"),
                     {inferredSlot(1, Inference::NONNULL)})));
+}
+
+using InferTUSmartPointerTest = InferTUTest;
+
+TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
+  build(R"cc(
+#include <memory>
+    void callee(std::unique_ptr<int> p, std::unique_ptr<int> q,
+                std::unique_ptr<int> r);
+    void target(std::unique_ptr<int> a, Nonnull<std::unique_ptr<int>> b,
+                Nullable<std::unique_ptr<int>> c) {
+      callee(a, b, c);
+    }
+  )cc");
+
+  // TODO(b/304963199): Currently not inferring anything because we don't
+  // support smart pointers. The expected result is the same as for the
+  // `ParamsFromCallSite` test.
+  ASSERT_THAT(infer(), IsEmpty());
+}
+
+TEST_F(InferTUSmartPointerTest, ReturnTypeNullable) {
+  build(R"cc(
+#include <memory>
+    std::unique_ptr<int> target() { return std::unique_ptr<int>(); }
+  )cc");
+  // TODO(b/304963199): Currently not inferring anything because we don't
+  // support smart pointers. The expected result is a nullable return type.
+  EXPECT_THAT(infer(), IsEmpty());
+}
+
+TEST_F(InferTUSmartPointerTest, ReturnTypeNonnull) {
+  build(R"cc(
+#include <memory>
+    std::unique_ptr<int> target() { return std::make_unique<int>(0); }
+  )cc");
+  // TODO(b/304963199): Currently not inferring anything because we don't
+  // support smart pointers. The expected result is a nonnull return type.
+  EXPECT_THAT(infer(), IsEmpty());
 }
 
 }  // namespace

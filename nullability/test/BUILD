@@ -248,6 +248,16 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "smart_pointers",
+    srcs = ["smart_pointers.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
 nullability_test(
     name = "symbolic_nullability",
     srcs = ["symbolic_nullability.cc"],

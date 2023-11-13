@@ -40,8 +40,24 @@ constexpr char kNewHeader[] = R"cc(
   void *operator new(std::size_t size, const std::nothrow_t &) noexcept;
 )cc";
 
+constexpr char kMemoryHeader[] = R"cc(
+  namespace std {
+  template <class T>
+  class unique_ptr {
+   public:
+    unique_ptr() {}
+    T &operator*() const;
+  };
+
+  template <class T, class... Args>
+  unique_ptr<T> make_unique(Args &&...args);
+  }  // namespace std
+)cc";
+
 tooling::FileContentMappings headersForTest() {
-  return {{"preamble.h", kPreamble}, {"new", kNewHeader}};
+  return {{"preamble.h", kPreamble},
+          {"new", kNewHeader},
+          {"memory", kMemoryHeader}};
 }
 
 llvm::StringMap<std::string> headersForTestAsStringMap() {
