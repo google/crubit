@@ -178,8 +178,10 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
     header_includes = []
     for hdr in public_hdrs:
+        # Use full `path`, instead of `short_path`, so that generated headers (e.g.,
+        # `empty_source_no_public_headers.h`) can be found.
         header_includes.append("-include")
-        header_includes.append(hdr.short_path)
+        header_includes.append(hdr.path)
 
     return generate_and_compile_bindings(
         ctx,

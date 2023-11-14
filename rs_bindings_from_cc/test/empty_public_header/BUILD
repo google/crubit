@@ -21,17 +21,11 @@ crubit_test_cc_library(
     ],
 )
 
+# Regression test to ensure Crubit can have a C++ target depending on a Rust target in `cc_deps`.
 crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
     cc_deps = [
         ":cc_library_with_rust_deps",
-    ],
-    tags = [
-        # Currently, the test fails:
-        # crubit/rs_bindings_from_cc/test/empty_public_header/rust_library.empty_source_no_public_headers.h file not found
-        "manual",
-        "nobuilder",
-        "notap",
     ],
 )
