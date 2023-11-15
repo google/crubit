@@ -539,7 +539,7 @@ void transferFlowSensitiveAccessorCall(
 void transferFlowSensitiveConstMemberCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (!isSupportedRawPointerType(MCE->getType())) {
+  if (!isSupportedRawPointerType(MCE->getType()) || !MCE->isPRValue()) {
     // We can't handle it as a special case, but still need to handle it.
     transferFlowSensitiveCallExpr(MCE, Result, State);
     return;
