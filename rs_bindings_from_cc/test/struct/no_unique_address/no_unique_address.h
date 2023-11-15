@@ -67,4 +67,23 @@ struct FieldInTailPadding {
   char char_in_tail_padding_of_prev_field;  // offset: 5 (dsize of `s`).
 };
 
+struct EmptyStruct {};
+
+// Crubit currently crashes when there is a field before an empty and
+// no_unique_address field (which would be placed at offset 0).
+// But it crashes at slightly difference places for public and private fields.
+// rs_bindings_from_cc/src_code_gen.rs: 'Unexpected offset+size for field'.
+// struct StructWithFieldsWrittenBeforeEmptyNoUniqueAddressField final {
+//   int field1;
+//   [[no_unique_address]] EmptyStruct no_unique_address_field;
+// };
+
+// rs_bindings_from_cc/src_code_gen.rs: 'attempt to subtract with overflow'.
+// (We need field2_ to repro for the private field case.)
+// class ClassWithFieldsWrittenBeforeEmptyNoUniqueAddressField1 final {
+//   int field1_;
+//   int field2_;
+//   [[no_unique_address]] EmptyStruct no_unique_address_field_;
+// };
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_NO_UNIQUE_ADDRESS_NO_UNIQUE_ADDRESS_H_
