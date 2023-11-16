@@ -119,7 +119,6 @@ with_cc_toolchain_flags = rule(
     },
     executable = True,
     fragments = ["cpp"],
-    host_fragments = ["cpp"],
     toolchains = [
         "@rules_rust//rust:toolchain",
         "@bazel_tools//tools/cpp:toolchain_type",
