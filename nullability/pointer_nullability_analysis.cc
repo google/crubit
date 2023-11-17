@@ -882,6 +882,11 @@ auto buildNonFlowSensitiveTransferer() {
 }
 
 auto buildFlowSensitiveTransferer() {
+  // The flow sensitive transfer functions must establish:
+  // - if we're transferring over an Expr
+  // - and the Expr has a supported pointer type
+  // - and the Expr's value is modeled by the framework (or this analysis)
+  // - then the PointerValue has nullability properties (is_null/from_nullable)
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       // Handles initialization of the null states of pointers.
       .CaseOfCFGStmt<Expr>(isAddrOf(), transferFlowSensitiveNotNullPointer)
