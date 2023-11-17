@@ -422,15 +422,22 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
       }
     }
 
+    uint64_t size;
+    if (field_decl->isZeroSize(ictx_.ctx_)) {
+      size = 0;
+    } else if (field_decl->isBitField()) {
+      size = field_decl->getBitWidthValue(ictx_.ctx_);
+    } else {
+      size = ictx_.ctx_.getTypeSize(field_decl->getType());
+    }
+
     fields.push_back(
         {.identifier = GetTranslatedFieldName(field_decl),
          .doc_comment = ictx_.GetComment(field_decl),
          .type = std::move(type),
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex()),
-         .size = field_decl->isBitField()
-                     ? field_decl->getBitWidthValue(ictx_.ctx_)
-                     : ictx_.ctx_.getTypeSize(field_decl->getType()),
+         .size = size,
          .is_no_unique_address =
              field_decl->hasAttr<clang::NoUniqueAddressAttr>(),
          .is_bitfield = field_decl->isBitField(),
