@@ -2093,6 +2093,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
     let mut field_copy_trait_assertions: Vec<TokenStream> = vec![];
 
     let fields_with_bounds = (record.fields.iter())
+        .filter(|field| field.size != 0)
         .map(|field| {
             (
                 // We don't represent bitfields directly in Rust. We drop the field itself here
@@ -4000,6 +4001,10 @@ fn cc_struct_layout_assertion(db: &Database, record: &Record) -> Result<TokenStr
 fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<TokenStream> {
     let mut fields = vec![];
     let mut types = vec![];
+    let mut zero_sized_fields = vec![];
+    let mut zero_sized_field_offsets = vec![];
+    let mut types_for_zero_sized_fields = vec![];
+    let mut zero_sized_field_doc_comments = vec![];
     for field in &record.fields {
         if field.access != AccessSpecifier::Public || !field.is_no_unique_address {
             continue;
@@ -4008,31 +4013,56 @@ fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<To
         // into no_unique_address fields, despite laying them out as opaque
         // blobs of bytes.
         if let Ok(rs_type) = field.type_.as_ref().map(|t| t.rs_type.clone()) {
-            fields.push(make_rs_ident(
-                &field
-                    .identifier
-                    .as_ref()
-                    .expect("Unnamed fields can't be annotated with [[no_unique_address]]")
-                    .identifier,
-            ));
-            types.push(db.rs_type_kind(rs_type).with_context(|| {
+            ({ if field.size == 0 { &mut zero_sized_fields } else { &mut fields } }).push(
+                make_rs_ident(
+                    &field
+                        .identifier
+                        .as_ref()
+                        .expect("Unnamed fields can't be annotated with [[no_unique_address]]")
+                        .identifier,
+                ),
+            );
+            let type_ident = db.rs_type_kind(rs_type).with_context(|| {
                 format!("Failed to format type for field {:?} on record {:?}", field, record)
-            })?);
+            })?;
+            ({ if field.size == 0 { &mut types_for_zero_sized_fields } else { &mut types } })
+                .push(type_ident);
+            if field.size == 0 {
+                zero_sized_field_offsets.push(Literal::usize_unsuffixed(field.offset));
+                let doc_comment = generate_doc_comment(
+                    field.doc_comment.as_deref(),
+                    None,
+                    db.generate_source_loc_doc_comment(),
+                );
+                zero_sized_field_doc_comments.push(doc_comment);
+            }
         }
     }
-
-    if fields.is_empty() {
+    if fields.is_empty() && zero_sized_fields.is_empty() {
         return Ok(quote! {});
     }
-
+    let field_accessors = quote! {
+      #(
+        pub fn #fields(&self) -> &#types {
+            unsafe {&* (&self.#fields as *const _ as *const #types)}
+        }
+      )*
+    };
+    let zero_sized_field_accessors = quote! {
+    #(
+      #zero_sized_field_doc_comments
+      pub fn #zero_sized_fields(&self) -> &#types_for_zero_sized_fields {
+        unsafe {
+          let ptr = (self as *const Self as *const u8).offset(#zero_sized_field_offsets);
+          &*(ptr as *const #types_for_zero_sized_fields)
+        }
+      }
+    )*};
     let ident = make_rs_ident(record.rs_name.as_ref());
     Ok(quote! {
         impl #ident {
-            #(
-                pub fn #fields(&self) -> &#types {
-                    unsafe {&* (&self.#fields as *const _ as *const #types)}
-                }
-            )*
+            #field_accessors
+            #zero_sized_field_accessors
         }
     })
 }
@@ -5948,6 +5978,7 @@ mod tests {
             r#"
             class Field {};
             struct Struct final {
+                // Doc comment for no_unique_address empty class type field.
                 [[no_unique_address]] Field field;
                 int x;
             };
@@ -5957,12 +5988,21 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                #[repr(C, align(4))]
+                #[repr(C)]
                 pub struct Struct {
-                    ...
-                    pub(crate) field: [::core::mem::MaybeUninit<u8>; 0],
                     pub x: ::core::ffi::c_int,
                 }
+                ...
+                impl Struct {
+                  # [doc = " Doc comment for no_unique_address empty class type field."]
+                  pub fn field(&self) -> &crate::Field {
+                        unsafe {
+                            let ptr = (self as *const Self as *const u8).offset(0);
+                            &*(ptr as *const crate::Field)
+                        }
+                      }
+                }
+                ...
             }
         );
         Ok(())
@@ -5974,6 +6014,7 @@ mod tests {
             r#"
             class Field {};
             struct Struct final {
+                // Doc comment for no_unique_address empty class type field.
                 [[no_unique_address]] Field field;
             };
         "#,
@@ -5983,10 +6024,18 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C)]
-                pub struct Struct {
-                    ...
-                    pub(crate) field: [::core::mem::MaybeUninit<u8>; 1],
-                }
+                pub struct Struct {}
+                ...
+                impl Struct {
+                  # [doc = " Doc comment for no_unique_address empty class type field."]
+                  pub fn field(&self) -> &crate::Field {
+                      unsafe {
+                          let ptr = (self as *const Self as *const u8).offset(0);
+                          &*(ptr as *const crate::Field)
+                      }
+                  }
+              }
+              ...
             }
         );
         Ok(())
