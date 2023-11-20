@@ -7,43 +7,75 @@
 
 #include <cstddef>
 #include <utility>
+
 #pragma clang lifetime_elision
 
 // A deliberately !Unpin class.
 class Nonunpin {
  public:
-  Nonunpin() {}
-  explicit Nonunpin(int value) : value_(value) {}
-  Nonunpin(const Nonunpin& other) : Nonunpin(other.value_) {}
+  Nonunpin() { CheckInvariant(); }
+  explicit Nonunpin(int value) : value_(value) { CheckInvariant(); }
+  Nonunpin(const Nonunpin& other) : Nonunpin(other.value_) { CheckInvariant(); }
   // We have a nonconventional assignment operator which returns a
   // non-trivially-relocatable value, by value.
   //
   // NOLINTNEXTLINE(misc-unconventional-assign-operator)
   Nonunpin operator=(const Nonunpin& other) {
+    CheckInvariant();
     value_ = other.value_;
     return *this;
   }
-  Nonunpin(Nonunpin&& other) : Nonunpin(other.value_) { other.value_ = 0; }
+  Nonunpin(Nonunpin&& other) : Nonunpin(other.value_) {
+    CheckInvariant();
+    other.value_ = 0;
+  }
   Nonunpin& operator=(Nonunpin&& other) {
+    CheckInvariant();
     value_ = other.value_;
     other.value_ = 0;
     return *this;
   }
-  ~Nonunpin() {}
+  ~Nonunpin() { CheckInvariant(); }
 
-  size_t addr() const { return addr_; }
-  int value() const { return value_; }
-  void set_value(int new_value) { value_ = new_value; }
+  size_t addr() const {
+    CheckInvariant();
+    return addr_;
+  }
+  int value() const {
+    CheckInvariant();
+    return value_;
+  }
+  void set_value(int new_value) {
+    CheckInvariant();
+    value_ = new_value;
+  }
 
-  Nonunpin& AsMutRef() { return *this; }
-  Nonunpin&& AsRvalueRef() { return std::move(*this); }
+  Nonunpin& AsMutRef() {
+    CheckInvariant();
+    return *this;
+  }
+  Nonunpin&& AsRvalueRef() {
+    CheckInvariant();
+    return std::move(*this);
+  }
 
-  const Nonunpin& AsConstRef() const { return *this; }
-  const Nonunpin&& AsConstRvalueRef() const { return std::move(*this); }
+  const Nonunpin& AsConstRef() const {
+    CheckInvariant();
+    return *this;
+  }
+  const Nonunpin&& AsConstRvalueRef() const {
+    CheckInvariant();
+    return std::move(*this);
+  }
 
-  Nonunpin AsValue() const { return *this; }
+  Nonunpin AsValue() const {
+    CheckInvariant();
+    return *this;
+  }
 
  private:
+  void CheckInvariant() const;
+
   int value_ = 0;
   size_t addr_ = reinterpret_cast<size_t>(this);
 };

@@ -7,7 +7,9 @@ package(default_applicable_licenses = ["//:license"])
 
 crubit_test_cc_library(
     name = "nonunpin",
+    srcs = ["nonunpin.cc"],
     hdrs = ["nonunpin.h"],
+    deps = ["@absl//absl/log:check"],
 )
 
 crubit_rust_test(
