@@ -749,7 +749,17 @@ fn liberate_and_deanonymize_late_bound_regions<'tcx>(
             let id = br.kind.get_id().unwrap_or(fn_def_id);
             ty::BoundRegionKind::BrNamed(id, name)
         });
-        ty::Region::new_free(tcx, fn_def_id, *new_kind)
+        // TODO(b/312164489): clean up after the commit reaches stable rust.
+        #[cfg(google3_internal_rustc_contains_commit_3da059398d232421b7356463918a39657ab5fe84)]
+        {
+            ty::Region::new_late_param(tcx, fn_def_id, *new_kind)
+        }
+        #[cfg(not(
+            google3_internal_rustc_contains_commit_3da059398d232421b7356463918a39657ab5fe84
+        ))]
+        {
+            ty::Region::new_free(tcx, fn_def_id, *new_kind)
+        }
     })
 }
 
@@ -892,6 +902,13 @@ fn format_thunk_impl<'tcx>(
             })
             .filter(|region| match region.kind() {
                 RegionKind::ReStatic => false,
+                #[cfg(
+                    google3_internal_rustc_contains_commit_3da059398d232421b7356463918a39657ab5fe84
+                )]
+                RegionKind::ReLateParam(_) => true,
+                #[cfg(not(
+                    google3_internal_rustc_contains_commit_3da059398d232421b7356463918a39657ab5fe84
+                ))]
                 RegionKind::ReFree(_) => true,
                 _ => panic!("Unexpected region kind: {region}"),
             })
