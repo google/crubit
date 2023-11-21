@@ -2432,48 +2432,15 @@ pub mod tests {
     use super::*;
 
     use anyhow::Result;
-    use itertools::Itertools;
     use proc_macro2::TokenStream;
     use quote::quote;
     use rustc_middle::ty::{Ty, TyCtxt};
-    use rustc_span::def_id::LocalDefId;
 
     use code_gen_utils::format_cc_includes;
-    use run_compiler_test_support::run_compiler_for_testing;
+    use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
-
-    #[test]
-    #[should_panic(expected = "No items named `missing_name`.\n\
-                               Instead found:\n`bar`,\n`foo`,\n`m1`,\n`m2`,\n`std`")]
-    fn test_find_def_id_by_name_panic_when_no_item_with_matching_name() {
-        let test_src = r#"
-                pub extern "C" fn foo() {}
-
-                pub mod m1 {
-                    pub fn bar() {}
-                }
-                pub mod m2 {
-                    pub fn bar() {}
-                }
-            "#;
-        run_compiler_for_testing(test_src, |tcx| find_def_id_by_name(tcx, "missing_name"));
-    }
-
-    #[test]
-    #[should_panic(expected = "More than one item named `some_name`")]
-    fn test_find_def_id_by_name_panic_when_multiple_items_with_matching_name() {
-        let test_src = r#"
-                pub mod m1 {
-                    pub fn some_name() {}
-                }
-                pub mod m2 {
-                    pub fn some_name() {}
-                }
-            "#;
-        run_compiler_for_testing(test_src, |tcx| find_def_id_by_name(tcx, "some_name"));
-    }
 
     /// This test covers only a single example of a function that should get a
     /// C++ binding. The test focuses on verification that the output from
@@ -6893,28 +6860,6 @@ pub mod tests {
 
             test_function(result)
         })
-    }
-
-    /// Finds the definition id of a Rust item with the specified `name`.
-    /// Panics if no such item is found, or if there is more than one match.
-    fn find_def_id_by_name(tcx: TyCtxt, name: &str) -> LocalDefId {
-        let hir_items = || tcx.hir().items().map(|item_id| tcx.hir().item(item_id));
-        let items_with_matching_name =
-            hir_items().filter(|item| item.ident.name.as_str() == name).collect_vec();
-        match *items_with_matching_name.as_slice() {
-            [] => {
-                let found_names = hir_items()
-                    .map(|item| item.ident.name.as_str())
-                    .filter(|s| !s.is_empty())
-                    .sorted()
-                    .dedup()
-                    .map(|name| format!("`{name}`"))
-                    .join(",\n");
-                panic!("No items named `{name}`.\nInstead found:\n{found_names}");
-            }
-            [item] => item.owner_id.def_id,
-            _ => panic!("More than one item named `{name}`"),
-        }
     }
 
     fn bindings_input_for_tests(tcx: TyCtxt) -> Input {

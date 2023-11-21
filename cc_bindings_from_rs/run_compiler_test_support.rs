@@ -15,9 +15,11 @@ extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_target;
+use itertools::Itertools;
 
 use rustc_middle::ty::TyCtxt;
 use rustc_session::config::{CodegenOptions, CrateType, Input, Options, OutputType, OutputTypes};
+use rustc_span::def_id::LocalDefId;
 
 use std::path::PathBuf;
 
@@ -128,6 +130,28 @@ where
     })
 }
 
+/// Finds the definition id of a Rust item with the specified `name`.
+/// Panics if no such item is found, or if there is more than one match.
+pub fn find_def_id_by_name(tcx: TyCtxt, name: &str) -> LocalDefId {
+    let hir_items = || tcx.hir().items().map(|item_id| tcx.hir().item(item_id));
+    let items_with_matching_name =
+        hir_items().filter(|item| item.ident.name.as_str() == name).collect_vec();
+    match *items_with_matching_name.as_slice() {
+        [] => {
+            let found_names = hir_items()
+                .map(|item| item.ident.name.as_str())
+                .filter(|s| !s.is_empty())
+                .sorted()
+                .dedup()
+                .map(|name| format!("`{name}`"))
+                .join(",\n");
+            panic!("No items named `{name}`.\nInstead found:\n{found_names}");
+        }
+        [item] => item.owner_id.def_id,
+        _ => panic!("More than one item named `{name}`"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -176,5 +200,36 @@ mod tests {
         // This test arbitrarily picks `const_ptr_offset_from` as an example of a
         // feature that has been already stabilized.
         run_compiler_for_testing("#![feature(const_ptr_offset_from)]", |_tcx| ())
+    }
+
+    #[test]
+    #[should_panic(expected = "No items named `missing_name`.\n\
+                               Instead found:\n`bar`,\n`foo`,\n`m1`,\n`m2`,\n`std`")]
+    fn test_find_def_id_by_name_panic_when_no_item_with_matching_name() {
+        let test_src = r#"
+                pub extern "C" fn foo() {}
+
+                pub mod m1 {
+                    pub fn bar() {}
+                }
+                pub mod m2 {
+                    pub fn bar() {}
+                }
+            "#;
+        run_compiler_for_testing(test_src, |tcx| find_def_id_by_name(tcx, "missing_name"));
+    }
+
+    #[test]
+    #[should_panic(expected = "More than one item named `some_name`")]
+    fn test_find_def_id_by_name_panic_when_multiple_items_with_matching_name() {
+        let test_src = r#"
+                pub mod m1 {
+                    pub fn some_name() {}
+                }
+                pub mod m2 {
+                    pub fn some_name() {}
+                }
+            "#;
+        run_compiler_for_testing(test_src, |tcx| find_def_id_by_name(tcx, "some_name"));
     }
 }

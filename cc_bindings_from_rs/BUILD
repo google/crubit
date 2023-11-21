@@ -151,7 +151,10 @@ rust_library(
         "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
     ],
     rustc_flags = ["--cfg=oss"],
-    deps = ["@rules_rust//tools/runfiles"],
+    deps = [
+        "@crate_index//:itertools",
+        "@rules_rust//tools/runfiles",
+    ],
 )
 
 crubit_rust_test(
