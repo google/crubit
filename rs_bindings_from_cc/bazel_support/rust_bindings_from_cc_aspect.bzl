@@ -230,6 +230,5 @@ rust_bindings_from_cc_aspect = aspect(
         "@rules_rust//rust:toolchain_type",
         "@bazel_tools//tools/cpp:toolchain_type",
     ],
-    host_fragments = ["cpp"],
     fragments = ["cpp", "google_cpp"],
 )

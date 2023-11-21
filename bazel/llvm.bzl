@@ -58,7 +58,7 @@ def llvm_loader_repository_dependencies():
     new_git_repository(
         name = "llvm-raw",
         build_file_content = "# empty",
-        commit = "LLVM_COMMIT_HASH_TO_BE_POPULATED_BY_COPYBARA",
+        commit = "ec1086f2a0852e1ab3b00de306df0c3aa6fd7698",
         remote = "https://github.com/llvm/llvm-project.git",
     )
 
