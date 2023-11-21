@@ -10,6 +10,7 @@
 extern crate rustc_driver;
 extern crate rustc_interface;
 extern crate rustc_lint_defs;
+extern crate rustc_log;
 extern crate rustc_middle;
 extern crate rustc_session;
 
@@ -35,7 +36,7 @@ where
     F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
     R: Send,
 {
-    // Calling `init_env_logger` 1) here and 2) via `sync::Lazy` helps to ensure
+    // Calling `init_logger` 1) here and 2) via `sync::Lazy` helps to ensure
     // that logging is intialized exactly once, even if the `run_compiler`
     // function is invoked by mutliple unit tests running in parallel on
     // separate threads.  This is important for avoiding flaky/racy
@@ -46,6 +47,14 @@ where
     use once_cell::sync::Lazy;
     static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| {
         let early_error_handler = EarlyErrorHandler::new(ErrorOutputType::default());
+        #[cfg(google3_internal_rustc_contains_commit_581a317bbbbad807fd88eab490516787f1e9249e)]
+        rustc_driver::init_logger(
+            &early_error_handler,
+            rustc_log::LoggerConfig::from_env("CRUBIT_LOG"),
+        );
+        #[cfg(not(
+            google3_internal_rustc_contains_commit_581a317bbbbad807fd88eab490516787f1e9249e
+        ))]
         rustc_driver::init_env_logger(&early_error_handler, "CRUBIT_LOG");
     });
     Lazy::force(&ENV_LOGGER_INIT);
