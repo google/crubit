@@ -11,10 +11,12 @@
     custom_inner_attributes,
     impl_trait_in_assoc_type,
     negative_impls,
+    register_tool,
     type_alias_impl_trait
 )]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -27,6 +29,7 @@
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(64))]
+#[__crubit::annotate(cc_type = "HasCustomAlignment")]
 pub struct HasCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -127,6 +130,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmen
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "HasFieldWithCustomAlignment")]
 pub struct HasFieldWithCustomAlignment {
     pub field: crate::HasCustomAlignment,
 }
@@ -227,6 +231,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasFieldWithCusto
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(64))]
+#[__crubit::annotate(cc_type = "InheritsFromBaseWithCustomAlignment")]
 pub struct InheritsFromBaseWithCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -343,6 +348,7 @@ unsafe impl oops::Inherits<crate::HasCustomAlignment>
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(64))]
+#[__crubit::annotate(cc_type = "HasCustomAlignmentWithGnuAttr")]
 pub struct HasCustomAlignmentWithGnuAttr {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -463,6 +469,7 @@ pub mod template_with_preferred_name {
 /// forward declaration of `basic_string_view` class template.
 #[::ctor::recursively_pinned]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "template_with_preferred_name :: SomeTemplate < int >")]
 pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

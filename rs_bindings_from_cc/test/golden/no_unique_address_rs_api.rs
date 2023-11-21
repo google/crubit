@@ -11,10 +11,12 @@
     custom_inner_attributes,
     impl_trait_in_assoc_type,
     negative_impls,
+    register_tool,
     type_alias_impl_trait
 )]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -32,6 +34,7 @@
 /// inspect and verify the expected layout of the generated Rust struct.
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
+#[__crubit::annotate(cc_type = "Struct")]
 pub struct Struct {
     /// Nobody would ever use a no_unique_address int/char field, this is just
     /// enough to test that the transmute is correct.
@@ -111,6 +114,7 @@ impl Struct {
 /// cl/448287893 `field2` would be incorrectly placed at offset 1.
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
+#[__crubit::annotate(cc_type = "PaddingBetweenFields")]
 pub struct PaddingBetweenFields {
     /// size: 1, alignment: 1 => offset: 0
     pub field1: u8,
@@ -189,6 +193,7 @@ impl PaddingBetweenFields {
 /// - size: 8 (dsize adjusted up to account for alignment)
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "FieldInTailPadding_InnerStruct")]
 pub struct FieldInTailPadding_InnerStruct {
     /// size: 4, alignment: 4 => offset: 0
     pub inner_int_field: ::core::ffi::c_int,
@@ -273,6 +278,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 /// put `char_in_tail_padding_of_prev_field` at offset 8.
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
+#[__crubit::annotate(cc_type = "FieldInTailPadding")]
 pub struct FieldInTailPadding {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

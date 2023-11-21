@@ -2359,9 +2359,9 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         quote! {}
     };
 
-    let incomplete_symbol = cc_tagless_type_name_for_record(record, &ir)?.to_string();
+    let fully_qualified_cc_name = cc_tagless_type_name_for_record(record, &ir)?.to_string();
     let incomplete_definition = quote! {
-        forward_declare::unsafe_define!(forward_declare::symbol!(#incomplete_symbol), #qualified_ident);
+        forward_declare::unsafe_define!(forward_declare::symbol!(#fully_qualified_cc_name), #qualified_ident);
     };
 
     let no_unique_address_accessors = cc_struct_no_unique_address_impl(db, record)?;
@@ -2402,6 +2402,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         #derives
         #recursively_pinned_attribute
         #[repr(#( #repr_attributes ),*)]
+        #[__crubit::annotate(cc_type=#fully_qualified_cc_name)]
         pub #record_kind #ident {
             #head_padding
             #( #field_definitions, )*
@@ -2989,6 +2990,8 @@ fn generate_bindings_tokens(
 
     // For #![rustfmt::skip].
     features.insert(make_rs_ident("custom_inner_attributes"));
+    // For #![register_tool(...)]
+    features.insert(make_rs_ident("register_tool"));
 
     for top_level_item_id in ir.top_level_item_ids() {
         let item =
@@ -3041,6 +3044,13 @@ fn generate_bindings_tokens(
         rs_api: quote! {
             #features __NEWLINE__
             #![no_std] __NEWLINE__
+            // Allows the use of #[__crubit::foo] attributes to control the behavior of
+            // cc_bindings_from_rs on the generated code.
+            //
+            // Note that we use `__crubit`, not `crubit`. This way, namespaces and types can be
+            // named `crubit` without causing obscure internal failures during bindings generation.
+            // In particular, well, crubit itself does use `namespace crubit`...
+            #![register_tool(__crubit)]
 
             // `rust_builtin_type_abi_assumptions.md` documents why the generated
             // bindings need to relax the `improper_ctypes_definitions` warning
@@ -4533,6 +4543,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C)]
+                #[__crubit::annotate(cc_type="MyTemplate < int >")]
                 pub struct __CcTemplateInst10MyTemplateIiE {
                     pub field: ::core::ffi::c_int,
                 }
@@ -4662,6 +4673,7 @@ mod tests {
             quote! {
                 #[::ctor::recursively_pinned(PinnedDrop)]
                 #[repr(C, align(4))]
+                #[__crubit::annotate(cc_type="SomeStruct")]
                 pub struct SomeStruct {
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
                     pub public_int: ::core::ffi::c_int,
@@ -4929,6 +4941,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C, align(4))]
+                #[__crubit::annotate(cc_type="StructWithUnsupportedField")]
                 pub struct StructWithUnsupportedField {
                     #[doc = " Doc comment for `my_field`.\n \n Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnsupportedField::NestedStruct': No generated bindings found for 'NestedStruct'"]
                     pub(crate) my_field: [::core::mem::MaybeUninit<u8>; 4],
@@ -4963,6 +4976,7 @@ mod tests {
             rs_api,
             quote! {
                #[repr(C, align(4))]
+                #[__crubit::annotate(cc_type="SomeStruct")]
                pub struct SomeStruct { ...  }
             }
         );
@@ -4994,15 +5008,16 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-               #[repr(C, align(4))]
-               pub struct SomeStruct {
-                   pub first_field: ::core::ffi::c_int, ...
-                   __bitfields1: [::core::mem::MaybeUninit<u8>; 4],
-                   pub last_field: ::core::ffi::c_int,
-               }
-               ...
-               const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, first_field) == 0);
-               const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, last_field) == 8);
+                #[repr(C, align(4))]
+                #[__crubit::annotate(cc_type="SomeStruct")]
+                pub struct SomeStruct {
+                    pub first_field: ::core::ffi::c_int, ...
+                    __bitfields1: [::core::mem::MaybeUninit<u8>; 4],
+                    pub last_field: ::core::ffi::c_int,
+                }
+                ...
+                const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, first_field) == 0);
+                const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, last_field) == 8);
             }
         );
         Ok(())
@@ -5199,6 +5214,7 @@ mod tests {
             rs_api,
             quote! {
                #[repr(C, align(4))]
+                #[__crubit::annotate(cc_type="StructWithUnnamedMembers")]
                pub struct StructWithUnnamedMembers {
                    pub first_field: ::core::ffi::c_int,
                    #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:7:15)': No generated bindings found for ''"]
@@ -5745,6 +5761,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C, align(8))]
+                #[__crubit::annotate(cc_type="Derived")]
                 pub struct Derived {
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
                     pub z: ::core::ffi::c_short,
@@ -5770,6 +5787,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C, align(8))]
+                #[__crubit::annotate(cc_type="Derived")]
                 pub struct Derived {
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
                     pub z: ::core::ffi::c_short,
@@ -5795,6 +5813,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C, align(8))]
+                #[__crubit::annotate(cc_type="Derived")]
                 pub struct Derived {
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
                     pub z: ::core::ffi::c_short,
@@ -5819,6 +5838,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C, align(8))]
+                #[__crubit::annotate(cc_type="Derived")]
                 pub struct Derived {
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
                 }
@@ -5840,6 +5860,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C)]
+                #[__crubit::annotate(cc_type="Derived")]
                 pub struct Derived {
                     ...
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
@@ -5863,6 +5884,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
+                #[__crubit::annotate(cc_type="Derived")]
                 pub struct Derived {
                     pub x: ::core::ffi::c_short,
                 }
@@ -5917,6 +5939,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C, align(8))]
+                #[__crubit::annotate(cc_type="Struct")]
                 pub struct Struct {
                     ...
                     pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
@@ -5961,6 +5984,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C, align(8))]
+                #[__crubit::annotate(cc_type="Struct")]
                 pub struct Struct {
                     ...
                     pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
@@ -5989,6 +6013,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C)]
+                #[__crubit::annotate(cc_type="Struct")]
                 pub struct Struct {
                     pub x: ::core::ffi::c_int,
                 }
@@ -6024,6 +6049,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C)]
+                #[__crubit::annotate(cc_type="Struct")]
                 pub struct Struct {}
                 ...
                 impl Struct {
@@ -6338,6 +6364,7 @@ mod tests {
                 #[doc = " Doc Comment\n \n  * with bullet\n \n Generated from: google3/ir_from_cc_virtual_header.h;l=6"]
                 #[derive(Clone, Copy)]
                 #[repr(C)]
+                #[__crubit::annotate(cc_type="SomeStruct")]
                 pub struct SomeStruct {
                     # [doc = " Field doc"]
                     pub field: ::core::ffi::c_int,
@@ -6365,6 +6392,7 @@ mod tests {
             quote! {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
+                #[__crubit::annotate(cc_type="SomeUnion")]
                 pub union SomeUnion {
                     pub some_field: ::core::ffi::c_int,
                     pub some_bigger_field: ::core::ffi::c_longlong,
@@ -6409,6 +6437,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C, align(4))]
+                #[__crubit::annotate(cc_type="MyUnion")]
                 pub union MyUnion { ...
                     first_field: [::core::mem::MaybeUninit<u8>; 56],
                     pub second_field: ::core::ffi::c_int,
@@ -6464,6 +6493,7 @@ mod tests {
             quote! {
                 #[derive(Clone, Copy)]
                 #[repr(C, align(8))]
+                #[__crubit::annotate(cc_type="SomeUnionWithPrivateFields")]
                 pub union SomeUnionWithPrivateFields {
                     pub public_field: ::core::ffi::c_int,
                     #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
@@ -6514,6 +6544,7 @@ mod tests {
             quote! {
                 #[::ctor::recursively_pinned]
                 #[repr(C)]
+                #[__crubit::annotate(cc_type="UnionWithNontrivialField")]
                 pub union UnionWithNontrivialField { ... }
             }
         );
@@ -6534,6 +6565,7 @@ mod tests {
             quote! {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
+                #[__crubit::annotate(cc_type="EmptyStruct")]
                 pub struct EmptyStruct {
                     ...
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
@@ -6566,6 +6598,7 @@ mod tests {
             quote! {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
+                #[__crubit::annotate(cc_type="EmptyUnion")]
                 pub union EmptyUnion {
                     ...
                     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
@@ -6601,6 +6634,7 @@ mod tests {
             rs_api,
             quote! {
                 #[repr(C)]
+                #[__crubit::annotate(cc_type="UnionWithNontrivialField")]
                 pub union UnionWithNontrivialField {
                     pub trivial_field: ::core::ffi::c_int,
                     pub nontrivial_field: ::core::mem::ManuallyDrop<crate::NontrivialStruct>,
@@ -6635,6 +6669,7 @@ mod tests {
             quote! {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
+                #[__crubit::annotate(cc_type="UnionWithDefaultConstructors")]
                 pub union UnionWithDefaultConstructors {
                     pub a: ::core::ffi::c_int,
                 }
@@ -8054,8 +8089,9 @@ mod tests {
         let rs_api = generate_bindings_tokens(ir).unwrap().rs_api;
 
         assert_rs_matches! {rs_api, quote! {
-         #[repr(C)]
-         pub struct SomeStruct { ... }
+            #[repr(C)]
+            #[__crubit::annotate(cc_type="SomeStruct")]
+            pub struct SomeStruct { ... }
         }};
     }
 
@@ -8066,6 +8102,7 @@ mod tests {
 
         assert_rs_matches! {rs_api, quote! {
            #[repr(C, align(64))]
+            #[__crubit::annotate(cc_type="SomeStruct")]
            pub struct SomeStruct { ... }
           }
         };

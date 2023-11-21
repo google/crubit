@@ -11,10 +11,12 @@
     custom_inner_attributes,
     impl_trait_in_assoc_type,
     negative_impls,
+    register_tool,
     type_alias_impl_trait
 )]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -27,6 +29,7 @@
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(4))]
+#[__crubit::annotate(cc_type = "WithBitfields")]
 pub struct WithBitfields {
     // f1 : 2 bits
     __bitfields0: [::core::mem::MaybeUninit<u8>; 1],
@@ -145,6 +148,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for WithBitfields {
 /// generated struct was wrong/missing.
 #[::ctor::recursively_pinned]
 #[repr(C, align(4))]
+#[__crubit::annotate(cc_type = "AlignmentRegressionTest")]
 pub struct AlignmentRegressionTest {
     // code_point : 31 bits
     // status : 1 bits

@@ -11,10 +11,12 @@
     custom_inner_attributes,
     impl_trait_in_assoc_type,
     negative_impls,
+    register_tool,
     type_alias_impl_trait
 )]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -27,6 +29,7 @@
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
+#[__crubit::annotate(cc_type = "PolymorphicBase")]
 pub struct PolymorphicBase {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 8],
 }
@@ -96,6 +99,7 @@ impl ::ctor::PinnedDrop for PolymorphicBase {
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
+#[__crubit::annotate(cc_type = "PolymorphicBase2")]
 pub struct PolymorphicBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 8],
 }
@@ -172,6 +176,7 @@ impl ::ctor::PinnedDrop for PolymorphicBase2 {
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
+#[__crubit::annotate(cc_type = "PolymorphicDerived")]
 pub struct PolymorphicDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
 }

@@ -11,10 +11,12 @@
     custom_inner_attributes,
     impl_trait_in_assoc_type,
     negative_impls,
+    register_tool,
     type_alias_impl_trait
 )]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -27,6 +29,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "DifferentScope")]
 pub struct DifferentScope {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -83,6 +86,7 @@ pub mod test_namespace_bindings {
 
     #[derive(Clone, Copy)]
     #[repr(C)]
+    #[__crubit::annotate(cc_type = "test_namespace_bindings :: TemplateParam")]
     pub struct TemplateParam {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -219,6 +223,7 @@ pub mod forward_declared_template {
 pub mod private_classes {
     #[::ctor::recursively_pinned]
     #[repr(C)]
+    #[__crubit::annotate(cc_type = "private_classes :: HasPrivateType")]
     pub struct HasPrivateType {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -311,6 +316,7 @@ pub mod private_classes {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "test_namespace_bindings :: MyTemplate < DifferentScope >")]
 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -392,6 +398,9 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(
+    cc_type = "test_namespace_bindings :: MyTemplate < test_namespace_bindings :: TemplateParam >"
+)]
 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -475,6 +484,7 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
+#[__crubit::annotate(cc_type = "test_namespace_bindings :: MyTemplate < int >")]
 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -556,6 +566,9 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(
+    cc_type = "test_namespace_bindings :: TemplateWithTwoParams < test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"
+)]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {
     pub value1: crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
     pub value2: ::core::ffi::c_int,
@@ -615,6 +628,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "test_namespace_bindings :: TemplateWithTwoParams < int , float >")]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {
     pub value1: ::core::ffi::c_int,
     pub value2: f32,
@@ -672,6 +686,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "test_namespace_bindings :: TemplateWithTwoParams < int , int >")]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
     pub value1: ::core::ffi::c_int,
     pub value2: ::core::ffi::c_int,
@@ -731,6 +746,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 /// even when not instantiated if there is a type alias for it.
 #[::ctor::recursively_pinned]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "test_namespace_bindings :: MyStruct < char >")]
 pub struct __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -829,6 +845,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "MyTopLevelTemplate < test_namespace_bindings :: TemplateParam >")]
 pub struct __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE {
     pub value: crate::test_namespace_bindings::TemplateParam,
 }
@@ -887,6 +904,9 @@ forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = 
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
+#[__crubit::annotate(
+    cc_type = "template_template_params :: MyTemplate < template_template_params :: Policy >"
+)]
 pub struct __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

@@ -7,9 +7,10 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes)]
+#![feature(custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -23,6 +24,7 @@
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy)]
     #[repr(C, align(4))]
+    #[__crubit::annotate(cc_type = "test_namespace_bindings :: SomeClass")]
     pub struct SomeClass {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         pub public_member_variable_: ::core::ffi::c_int,

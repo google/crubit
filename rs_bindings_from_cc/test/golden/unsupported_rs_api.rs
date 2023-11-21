@@ -11,10 +11,12 @@
     custom_inner_attributes,
     impl_trait_in_assoc_type,
     negative_impls,
+    register_tool,
     type_alias_impl_trait
 )]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -27,6 +29,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "TrivialCustomType")]
 pub struct TrivialCustomType {
     pub i: ::core::ffi::c_int,
 }
@@ -83,6 +86,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialCusto
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "NontrivialCustomType")]
 pub struct NontrivialCustomType {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub i: ::core::ffi::c_int,
@@ -131,6 +135,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialCus
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "ContainingStruct")]
 pub struct ContainingStruct {
     /// Doc comment for an unsupported field.
     ///

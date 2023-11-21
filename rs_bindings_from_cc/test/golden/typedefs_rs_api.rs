@@ -11,10 +11,12 @@
     custom_inner_attributes,
     impl_trait_in_assoc_type,
     negative_impls,
+    register_tool,
     type_alias_impl_trait
 )]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -27,6 +29,7 @@
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "SomeStruct")]
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -130,6 +133,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "SomeOtherStruct")]
 pub struct SomeOtherStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -230,6 +234,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "SomeUnion")]
 pub union SomeUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -280,6 +285,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeUnion {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "SomeOtherUnion")]
 pub union SomeOtherUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

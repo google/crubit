@@ -11,10 +11,12 @@
     custom_inner_attributes,
     impl_trait_in_assoc_type,
     negative_impls,
+    register_tool,
     type_alias_impl_trait
 )]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -27,6 +29,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
+#[__crubit::annotate(cc_type = "AddableConstMember")]
 pub struct AddableConstMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -92,6 +95,7 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableConstMember> for &'a crate::Adda
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
+#[__crubit::annotate(cc_type = "AddableNonConstMember")]
 pub struct AddableNonConstMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -163,6 +167,7 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableNonConstMember>
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
+#[__crubit::annotate(cc_type = "AddableFriend")]
 pub struct AddableFriend {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -225,6 +230,7 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFr
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddableFreeByConstRef")]
 pub struct AddableFreeByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -275,6 +281,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeB
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddableFreeByMutRef")]
 pub struct AddableFreeByMutRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -325,6 +332,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeB
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddableFreeByValue")]
 pub struct AddableFreeByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -375,6 +383,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeB
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddableFreeByRValueRef")]
 pub struct AddableFreeByRValueRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -472,6 +481,7 @@ impl ::core::ops::Add<Self> for AddableFreeByValue {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "Overloaded")]
 pub struct Overloaded {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -535,6 +545,7 @@ impl<'a> ::core::ops::Add<::core::ffi::c_uint> for &'a crate::Overloaded {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "IncompatibleLHS")]
 pub struct IncompatibleLHS {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -591,6 +602,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Incompatible
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
+#[__crubit::annotate(cc_type = "AddableReturnsVoid")]
 pub struct AddableReturnsVoid {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -652,6 +664,7 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableReturnsVoid> for &'a crate::Adda
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
+#[__crubit::annotate(cc_type = "AddableConstMemberNonunpin")]
 pub struct AddableConstMemberNonunpin {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -748,6 +761,7 @@ impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddAssignMemberInt")]
 pub struct AddAssignMemberInt {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -807,6 +821,7 @@ impl ::core::ops::AddAssign<::core::ffi::c_int> for AddAssignMemberInt {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddAssignMemberByConstRef")]
 pub struct AddAssignMemberByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -866,6 +881,7 @@ impl<'b> ::core::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddAssignFreeByConstRef")]
 pub struct AddAssignFreeByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -919,6 +935,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFre
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddAssignFreeByValue")]
 pub struct AddAssignFreeByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -978,6 +995,7 @@ impl ::core::ops::AddAssign<Self> for AddAssignFreeByValue {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddAssignFriendByConstRef")]
 pub struct AddAssignFriendByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -1028,6 +1046,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFri
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddAssignFriendByValue")]
 pub struct AddAssignFriendByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -1087,6 +1106,7 @@ impl ::core::ops::AddAssign<Self> for AddAssignFriendByValue {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddAssignProhibitedConstMember")]
 pub struct AddAssignProhibitedConstMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -1144,6 +1164,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignPro
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "AddAssignProhibitedFriendConstLhs")]
 pub struct AddAssignProhibitedFriendConstLhs {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -1205,6 +1226,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "ManyOperators")]
 pub struct ManyOperators {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

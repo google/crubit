@@ -7,9 +7,10 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes)]
+#![feature(custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -22,6 +23,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "FirstStruct")]
 pub struct FirstStruct {
     pub field: ::core::ffi::c_int,
 }
@@ -74,6 +76,7 @@ pub fn first_func() -> ::core::ffi::c_int {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "SecondStruct")]
 pub struct SecondStruct {
     pub field: ::core::ffi::c_int,
 }

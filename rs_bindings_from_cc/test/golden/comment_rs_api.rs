@@ -7,9 +7,10 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes)]
+#![feature(custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -29,6 +30,7 @@
 /// Foo
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "Foo")]
 pub struct Foo {
     /// A field
     pub i: ::core::ffi::c_int,
@@ -101,6 +103,7 @@ pub fn foo() {
 /// Bar
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "Bar")]
 pub struct Bar {
     pub i: ::core::ffi::c_int,
 }
@@ -149,6 +152,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Bar {
 /// d
 #[derive(Clone, Copy)]
 #[repr(C)]
+#[__crubit::annotate(cc_type = "HasNoComments")]
 pub struct HasNoComments {
     pub i: ::core::ffi::c_int,
 }

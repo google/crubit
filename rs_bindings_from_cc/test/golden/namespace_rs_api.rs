@@ -7,9 +7,10 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes)]
+#![feature(custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -23,6 +24,7 @@
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy)]
     #[repr(C)]
+    #[__crubit::annotate(cc_type = "test_namespace_bindings :: S")]
     pub struct S {
         pub i: ::core::ffi::c_int,
     }
@@ -119,6 +121,7 @@ pub mod test_namespace_bindings_reopened_0 {
     pub mod inner_0 {
         #[derive(Clone, Copy)]
         #[repr(C)]
+        #[__crubit::annotate(cc_type = "test_namespace_bindings_reopened :: inner :: S")]
         pub struct S {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -207,6 +210,9 @@ pub mod test_namespace_bindings_inline {
     pub mod inner {
         #[derive(Clone, Copy)]
         #[repr(C)]
+        #[__crubit::annotate(
+            cc_type = "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
+        )]
         pub struct StructInInlineNamespace {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
