@@ -545,9 +545,9 @@ crubit_rust_test(
 filegroup(
     name = "builtin_headers",
     srcs = [
-        "@llvm-project//clang:builtin_headers_filegroup",
-        "@llvm-project//compiler-rt:fuzzer_filegroup",
-        "@llvm-project//compiler-rt:sanitizer_filegroup",
+        "//llvm/llvm-project/clang:builtin_headers_filegroup",
+        "//llvm/llvm-project/compiler-rt:fuzzer_filegroup",
+        "//llvm/llvm-project/compiler-rt:sanitizer_filegroup",
     ],
     visibility = ["//visibility:public"],
 )

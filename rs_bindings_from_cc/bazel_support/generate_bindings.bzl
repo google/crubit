@@ -17,6 +17,9 @@ def _get_hdrs_command_line(hdrs):
 def _get_extra_rs_srcs_command_line(extra_rs_srcs):
     return ["--extra_rs_srcs=" + ",".join([x.path for x in extra_rs_srcs])]
 
+def _get_include_paths_for_builtin_headers_and_compiler_rt_headers(ctx, cc_toolchain):
+    return [cc_toolchain.built_in_include_directories[1]]
+
 def generate_bindings(
         ctx,
         attr,
@@ -77,20 +80,16 @@ def generate_bindings(
             "--error_report_out",
             error_report_output.path,
         ]
-
-    clang_builtin_headers = "third_party/llvm/llvm-project/clang/lib/Headers"
     variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
         system_include_directories = depset(
             direct = [
+                # libcxx headers.
                 cc_toolchain.built_in_include_directories[0],
-                # Clang's builtin headers:
-                clang_builtin_headers,
-                # Fuzzer and sanitizer headers:
-                "third_party/llvm/llvm-project/compiler-rt/include",
+            ] + _get_include_paths_for_builtin_headers_and_compiler_rt_headers(ctx, cc_toolchain) + [
                 cc_toolchain.built_in_include_directories[2],
-                ],
+            ],
             transitive = [compilation_context.system_includes],
         ),
         include_directories = compilation_context.includes,
