@@ -10,7 +10,6 @@ default_linux_targets: &default_linux_targets
   - "//rs_bindings_from_cc:importer_test"
   - "//rs_bindings_from_cc:cc_collect_instantiations_test"
   - "//rs_bindings_from_cc:collect_instantiations_test"
-  - "//rs_bindings_from_cc:bazel_types_test"
   - "//rs_bindings_from_cc:cmdline_test"
   - "//rs_bindings_from_cc:rs_ir_test"
   - "//support/cc_template/..."

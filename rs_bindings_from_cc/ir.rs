@@ -299,6 +299,38 @@ impl BazelLabel {
         }
         &self.0
     }
+
+    // Returns the bazel label as a valid C++ identifier, with a leading underscore.
+    // Non-alphanumeric characters are escaped as `_xx`, where `xx` is the the byte
+    // as hexadecimal.
+    //
+    // For instance, `//foo` becomes `__2f_2ffoo`.
+    pub fn convert_to_cc_identifier(&self) -> String {
+        use std::fmt::Write;
+        let mut result = "_".to_string();
+        result.reserve_exact(self.0.len().checked_mul(2).unwrap_or(self.0.len()));
+
+        // This is yet another escaping scheme... :-/  Compare this with
+        // https://github.com/bazelbuild/rules_rust/blob/1f2e6231de29d8fad8d21486f0d16403632700bf/rust/private/utils.bzl#L459-L586
+        for b in self.0.bytes() {
+            if (b as char).is_ascii_alphanumeric() {
+                result.push(b as char);
+            } else {
+                write!(result, "_{b:02x}").unwrap();
+            }
+        }
+        result.shrink_to_fit();
+
+        #[cfg(debug_assertions)]
+        for c in result.chars() {
+            debug_assert!(
+                c.is_ascii_alphanumeric() || c == '_',
+                "invalid result identifier: {result:?}"
+            );
+        }
+
+        result
+    }
 }
 
 impl<T: Into<String>> From<T> for BazelLabel {
@@ -1357,5 +1389,33 @@ mod tests {
             let label: BazelLabel = s.into();
             assert_eq!(label.target_name(), "", "label={s:?}");
         }
+    }
+
+    #[test]
+    fn test_bazel_to_cc_identifier_empty() {
+        assert_eq!(BazelLabel::from("").convert_to_cc_identifier(), "_");
+    }
+
+    #[test]
+    fn test_bazel_to_cc_identifier_alphanumeric_not_transformed() {
+        assert_eq!(BazelLabel::from("abc").convert_to_cc_identifier(), "_abc");
+        assert_eq!(BazelLabel::from("foo123").convert_to_cc_identifier(), "_foo123");
+        assert_eq!(BazelLabel::from("123foo").convert_to_cc_identifier(), "_123foo");
+    }
+
+    #[test]
+    fn test_bazel_to_cc_identifier_simple_targets() {
+        assert_eq!(
+            BazelLabel::from("//foo/bar:baz_abc").convert_to_cc_identifier(),
+            "__2f_2ffoo_2fbar_3abaz_5fabc"
+        );
+    }
+
+    #[test]
+    fn test_bazel_to_cc_identifier_conflict() {
+        assert_ne!(
+            BazelLabel::from("//foo_bar:baz").convert_to_cc_identifier(),
+            BazelLabel::from("//foo/bar:baz").convert_to_cc_identifier()
+        );
     }
 }

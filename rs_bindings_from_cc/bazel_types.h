@@ -14,10 +14,6 @@ namespace crubit {
 // Representation of a Bazel label (for example //foo/bar:baz).
 CRUBIT_DEFINE_STRING_TYPE(BazelLabel);
 
-// Coverts the argument to a valid C++ identifier (e.g. replacing characters
-// like ":" or "/" with "_").
-std::string ConvertToCcIdentifier(const BazelLabel&);
-
 }  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_BAZEL_TYPES_H_

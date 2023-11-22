@@ -4138,7 +4138,12 @@ fn cc_struct_upcast_impl(record: &Rc<Record>, ir: &IR) -> Result<GeneratedItem> 
 }
 
 fn thunk_ident(func: &Func) -> Ident {
-    format_ident!("__rust_thunk__{}", func.mangled_name.as_ref())
+    let odr_suffix = if func.is_member_or_descendant_of_class_template {
+        func.owning_target.convert_to_cc_identifier()
+    } else {
+        String::new()
+    };
+    format_ident!("__rust_thunk__{}{odr_suffix}", func.mangled_name.as_ref())
 }
 
 fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<TokenStream> {

@@ -141,7 +141,7 @@ cc_library(
 
 cc_library(
     name = "bazel_types",
-    srcs = ["bazel_types.cc"],
+    srcs = [],
     hdrs = ["bazel_types.h"],
     visibility = [
         ":__subpackages__",
@@ -150,16 +150,6 @@ cc_library(
         "//common:string_type",
         "@absl//absl/log:check",
         "@absl//absl/strings",
-    ],
-)
-
-crubit_cc_test(
-    name = "bazel_types_test",
-    srcs = ["bazel_types_test.cc"],
-    deps = [
-        ":bazel_types",
-        "@absl//absl/strings:string_view",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 

@@ -290,15 +290,6 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
   }
 
-  std::string mangled_name = ictx_.GetMangledName(function_decl);
-  if (is_member_or_descendant_of_class_template) {
-    // `thunks_for_class_template_member_functions.md` explains in more detail
-    // why the `mangled_name` has to include the target name when working with
-    // members or descendants of a class template.
-    mangled_name += '_';
-    mangled_name += ConvertToCcIdentifier(ictx_.GetOwningTarget(function_decl));
-  }
-
   // Silence ClangTidy, checked above: calling `add_error` if
   // `!return_type.ok()` and returning early if `!errors.empty()`.
   CHECK_OK(return_type);
@@ -307,7 +298,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .name = *translated_name,
       .owning_target = ictx_.GetOwningTarget(function_decl),
       .doc_comment = std::move(doc_comment),
-      .mangled_name = std::move(mangled_name),
+      .mangled_name = ictx_.GetMangledName(function_decl),
       .return_type = *return_type,
       .params = std::move(params),
       .lifetime_params = std::move(lifetime_params),

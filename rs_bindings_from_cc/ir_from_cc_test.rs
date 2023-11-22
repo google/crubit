@@ -1162,7 +1162,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
           Func {
             name: "GetValue",
             owning_target: BazelLabel("//test:testing_target"),
-            mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv__2f_2ftest_3atesting_5ftarget", ...
+            mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv", ...
             doc_comment: Some("Doc comment of GetValue method."), ...
             is_inline: true, ...
             member_func_metadata: Some(MemberFuncMetadata {
@@ -1182,7 +1182,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
           Func {
               name: "operator=",
               owning_target: BazelLabel("//test:testing_target"),
-              mangled_name: "_ZN23test_namespace_bindings8MyStructIiEaSERKS1___2f_2ftest_3atesting_5ftarget", ...
+              mangled_name: "_ZN23test_namespace_bindings8MyStructIiEaSERKS1_", ...
               doc_comment: None, ...
           }
         }
@@ -1251,7 +1251,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
           Func {
             name: "GetValue",
             owning_target: BazelLabel("//test:testing_target"),
-            mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv__2f_2ftest_3atesting_5ftarget", ...
+            mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv", ...
             doc_comment: Some("Doc comment of the GetValue method specialization for T=int."), ...
             is_inline: true, ...
             member_func_metadata: Some(MemberFuncMetadata {
@@ -1348,11 +1348,11 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
         .collect_vec();
     assert_eq!(
         vec![
-            "_ZN8MyStructI3StrE8MyMethodEv__2f_2ftest_3atesting_5ftarget",
-            "_ZN8MyStructIS_IiEE8MyMethodEv__2f_2ftest_3atesting_5ftarget",
-            "_ZN8MyStructIbE8MyMethodEv__2f_2ftest_3atesting_5ftarget",
-            "_ZN8MyStructIiE8MyMethodEv__2f_2ftest_3atesting_5ftarget",
-            "_ZN8MyStructIxE8MyMethodEv__2f_2ftest_3atesting_5ftarget"
+            "_ZN8MyStructI3StrE8MyMethodEv",
+            "_ZN8MyStructIS_IiEE8MyMethodEv",
+            "_ZN8MyStructIbE8MyMethodEv",
+            "_ZN8MyStructIiE8MyMethodEv",
+            "_ZN8MyStructIxE8MyMethodEv"
         ],
         method_mangled_names
     );
@@ -1498,7 +1498,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
         quote! {
             Func {
                 name: "GetSum", ...
-                mangled_name: "_ZN8MyStructIJiiEE6GetSumEii__2f_2ftest_3atesting_5ftarget", ...
+                mangled_name: "_ZN8MyStructIJiiEE6GetSumEii", ...
                 params: [
                     FuncParam {
                         type_: MappedType {
