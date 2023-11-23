@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <utility>
 
+#include "absl/log/check.h"
+
 #pragma clang lifetime_elision
 
 // A deliberately !Unpin class.
@@ -74,7 +76,11 @@ class Nonunpin {
   }
 
  private:
-  void CheckInvariant() const;
+  void CheckInvariant() const {
+    CHECK_EQ(reinterpret_cast<const void*>(addr_),
+             static_cast<const void*>(this))
+        << "Object was trivially relocated, but that is not supported.";
+  }
 
   int value_ = 0;
   size_t addr_ = reinterpret_cast<size_t>(this);

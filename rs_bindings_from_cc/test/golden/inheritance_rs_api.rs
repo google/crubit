@@ -498,7 +498,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualBase1 {
 
 unsafe impl oops::Inherits<crate::Base1> for crate::VirtualBase1 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
-        crate::detail::__crubit_dynamic_upcast__12VirtualBase1__to__5Base1(derived)
+        crate::detail::__crubit_dynamic_upcast__12VirtualBase1__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(derived)
     }
 }
 
@@ -602,7 +602,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualBase2 {
 
 unsafe impl oops::Inherits<crate::Base1> for crate::VirtualBase2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
-        crate::detail::__crubit_dynamic_upcast__12VirtualBase2__to__5Base1(derived)
+        crate::detail::__crubit_dynamic_upcast__12VirtualBase2__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(derived)
     }
 }
 
@@ -706,17 +706,17 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualDerived {
 
 unsafe impl oops::Inherits<crate::VirtualBase1> for crate::VirtualDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase1 {
-        crate::detail::__crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase1(derived)
+        crate::detail::__crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(derived)
     }
 }
 unsafe impl oops::Inherits<crate::Base1> for crate::VirtualDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
-        crate::detail::__crubit_dynamic_upcast__14VirtualDerived__to__5Base1(derived)
+        crate::detail::__crubit_dynamic_upcast__14VirtualDerived__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(derived)
     }
 }
 unsafe impl oops::Inherits<crate::VirtualBase2> for crate::VirtualDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase2 {
-        crate::detail::__crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase2(derived)
+        crate::detail::__crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(derived)
     }
 }
 
@@ -1134,7 +1134,7 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::VirtualBase1>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase1>,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualBase1>;
-        pub fn __crubit_dynamic_upcast__12VirtualBase1__to__5Base1(
+        pub fn __crubit_dynamic_upcast__12VirtualBase1__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
             from: *const crate::VirtualBase1,
         ) -> *const crate::Base1;
         pub(crate) fn __rust_thunk___ZN12VirtualBase2C1Ev<'a>(
@@ -1156,7 +1156,7 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::VirtualBase2>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase2>,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualBase2>;
-        pub fn __crubit_dynamic_upcast__12VirtualBase2__to__5Base1(
+        pub fn __crubit_dynamic_upcast__12VirtualBase2__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
             from: *const crate::VirtualBase2,
         ) -> *const crate::Base1;
         pub(crate) fn __rust_thunk___ZN14VirtualDerivedC1Ev<'a>(
@@ -1178,13 +1178,13 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::VirtualDerived>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualDerived>,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualDerived>;
-        pub fn __crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase1(
+        pub fn __crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
             from: *const crate::VirtualDerived,
         ) -> *const crate::VirtualBase1;
-        pub fn __crubit_dynamic_upcast__14VirtualDerived__to__5Base1(
+        pub fn __crubit_dynamic_upcast__14VirtualDerived__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
             from: *const crate::VirtualDerived,
         ) -> *const crate::Base1;
-        pub fn __crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase2(
+        pub fn __crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
             from: *const crate::VirtualDerived,
         ) -> *const crate::VirtualBase2;
         pub(crate) fn __rust_thunk___ZN15MyAbstractClassaSERKS_<'a, 'b>(

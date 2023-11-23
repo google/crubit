@@ -47,7 +47,8 @@ extern "C" struct Derived2* __rust_thunk___ZN8Derived2aSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-extern "C" const class Base0& __crubit_dynamic_upcast__8Derived2__to__5Base0(
+extern "C" const class Base0&
+__crubit_dynamic_upcast__8Derived2__to__5Base0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(
     const struct Derived2& from) {
   return from;
 }
@@ -81,17 +82,17 @@ extern "C" class VirtualDerived2* __rust_thunk___ZN15VirtualDerived2aSEOS_(
 }
 
 extern "C" const class VirtualBase1&
-__crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase1(
+__crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(
     const class VirtualDerived2& from) {
   return from;
 }
 extern "C" const class Base1&
-__crubit_dynamic_upcast__15VirtualDerived2__to__5Base1(
+__crubit_dynamic_upcast__15VirtualDerived2__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(
     const class VirtualDerived2& from) {
   return from;
 }
 extern "C" const class VirtualBase2&
-__crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase2(
+__crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(
     const class VirtualDerived2& from) {
   return from;
 }

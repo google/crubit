@@ -4102,8 +4102,10 @@ fn cc_struct_upcast_impl(record: &Rc<Record>, ir: &IR) -> Result<GeneratedItem> 
             body = quote! {(derived as *const _ as *const u8).offset(#offset) as *const #base_name};
         } else {
             let cast_fn_name = make_rs_ident(&format!(
-                "__crubit_dynamic_upcast__{}__to__{}",
-                record.mangled_cc_name, base_record.mangled_cc_name
+                "__crubit_dynamic_upcast__{derived}__to__{base}_{odr_suffix}",
+                derived = record.mangled_cc_name,
+                base = base_record.mangled_cc_name,
+                odr_suffix = record.owning_target.convert_to_cc_identifier(),
             ));
             let base_cc_name = cc_type_name_for_record(base_record.as_ref(), ir)?;
             let derived_cc_name = cc_type_name_for_record(record.as_ref(), ir)?;
@@ -6736,7 +6738,7 @@ mod tests {
             quote! {
                 unsafe impl oops::Inherits<crate::VirtualBase> for crate::Derived {
                     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase {
-                        crate::detail::__crubit_dynamic_upcast__7Derived__to__11VirtualBase(derived)
+                        crate::detail::__crubit_dynamic_upcast__7Derived__to__11VirtualBase___2f_2ftest_3atesting_5ftarget(derived)
                     }
                 }
             }

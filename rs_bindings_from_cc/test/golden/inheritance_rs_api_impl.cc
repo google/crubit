@@ -152,7 +152,7 @@ extern "C" class VirtualBase1* __rust_thunk___ZN12VirtualBase1aSEOS_(
 }
 
 extern "C" const class Base1&
-__crubit_dynamic_upcast__12VirtualBase1__to__5Base1(
+__crubit_dynamic_upcast__12VirtualBase1__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
     const class VirtualBase1& from) {
   return from;
 }
@@ -186,7 +186,7 @@ extern "C" class VirtualBase2* __rust_thunk___ZN12VirtualBase2aSEOS_(
 }
 
 extern "C" const class Base1&
-__crubit_dynamic_upcast__12VirtualBase2__to__5Base1(
+__crubit_dynamic_upcast__12VirtualBase2__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
     const class VirtualBase2& from) {
   return from;
 }
@@ -220,17 +220,17 @@ extern "C" class VirtualDerived* __rust_thunk___ZN14VirtualDerivedaSEOS_(
 }
 
 extern "C" const class VirtualBase1&
-__crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase1(
+__crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
     const class VirtualDerived& from) {
   return from;
 }
 extern "C" const class Base1&
-__crubit_dynamic_upcast__14VirtualDerived__to__5Base1(
+__crubit_dynamic_upcast__14VirtualDerived__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
     const class VirtualDerived& from) {
   return from;
 }
 extern "C" const class VirtualBase2&
-__crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase2(
+__crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
     const class VirtualDerived& from) {
   return from;
 }

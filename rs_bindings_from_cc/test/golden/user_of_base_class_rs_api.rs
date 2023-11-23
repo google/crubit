@@ -133,7 +133,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Derived2 {
 
 unsafe impl oops::Inherits<inheritance_cc::Base0> for crate::Derived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base0 {
-        crate::detail::__crubit_dynamic_upcast__8Derived2__to__5Base0(derived)
+        crate::detail::__crubit_dynamic_upcast__8Derived2__to__5Base0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(derived)
     }
 }
 unsafe impl oops::Inherits<inheritance_cc::Base1> for crate::Derived2 {
@@ -250,17 +250,17 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualDerived2 {
 
 unsafe impl oops::Inherits<inheritance_cc::VirtualBase1> for crate::VirtualDerived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::VirtualBase1 {
-        crate::detail::__crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase1(derived)
+        crate::detail::__crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(derived)
     }
 }
 unsafe impl oops::Inherits<inheritance_cc::Base1> for crate::VirtualDerived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base1 {
-        crate::detail::__crubit_dynamic_upcast__15VirtualDerived2__to__5Base1(derived)
+        crate::detail::__crubit_dynamic_upcast__15VirtualDerived2__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(derived)
     }
 }
 unsafe impl oops::Inherits<inheritance_cc::VirtualBase2> for crate::VirtualDerived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::VirtualBase2 {
-        crate::detail::__crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase2(derived)
+        crate::detail::__crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(derived)
     }
 }
 
@@ -289,7 +289,7 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::Derived2>,
             __param_0: ::ctor::RvalueReference<'b, crate::Derived2>,
         ) -> ::core::pin::Pin<&'a mut crate::Derived2>;
-        pub fn __crubit_dynamic_upcast__8Derived2__to__5Base0(
+        pub fn __crubit_dynamic_upcast__8Derived2__to__5Base0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(
             from: *const crate::Derived2,
         ) -> *const inheritance_cc::Base0;
         pub(crate) fn __rust_thunk___ZN15VirtualDerived2C1Ev<'a>(
@@ -311,13 +311,13 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::VirtualDerived2>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualDerived2>,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualDerived2>;
-        pub fn __crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase1(
+        pub fn __crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(
             from: *const crate::VirtualDerived2,
         ) -> *const inheritance_cc::VirtualBase1;
-        pub fn __crubit_dynamic_upcast__15VirtualDerived2__to__5Base1(
+        pub fn __crubit_dynamic_upcast__15VirtualDerived2__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(
             from: *const crate::VirtualDerived2,
         ) -> *const inheritance_cc::Base1;
-        pub fn __crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase2(
+        pub fn __crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(
             from: *const crate::VirtualDerived2,
         ) -> *const inheritance_cc::VirtualBase2;
     }
