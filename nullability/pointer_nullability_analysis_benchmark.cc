@@ -4,10 +4,10 @@
 
 #include <cstdint>
 
-#include "testing/base/public/benchmark.h"
 #include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "third_party/benchmark/include/benchmark/benchmark.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_diagnosis.h"
 #include "clang/AST/ASTContext.h"
@@ -221,3 +221,9 @@ BENCHMARK(BM_PointerAnalysisCallInLoop);
 
 }  // namespace
 }  // namespace clang::tidy::nullability
+
+int main(int argc, char **argv) {
+  benchmark::Initialize(&argc, argv);
+  benchmark::RunSpecifiedBenchmarks();
+  return 0;
+}

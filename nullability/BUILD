@@ -194,10 +194,10 @@ cc_test(
     deps = [
         ":pointer_nullability_analysis",
         ":pointer_nullability_diagnosis",
+        "//third_party/benchmark",
         "@absl//absl/log:check",
         "@absl//absl/strings",
         "@absl//absl/strings:string_view",
-        "@com_google_googletest//:gtest_main",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
