@@ -536,7 +536,7 @@ llvm::Error collectEvidenceFromImplementation(
   if (!ControlFlowContext) return ControlFlowContext.takeError();
 
   DataflowAnalysisContext AnalysisContext(
-      std::make_unique<dataflow::WatchedLiteralsSolver>(100000));
+      std::make_unique<dataflow::WatchedLiteralsSolver>(200000));
   Environment Environment(AnalysisContext, *Func);
   PointerNullabilityAnalysis Analysis(
       Decl.getDeclContext()->getParentASTContext());

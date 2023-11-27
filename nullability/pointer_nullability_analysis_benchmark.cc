@@ -32,7 +32,7 @@ void benchmarkAnalysisOnCode(benchmark::State &State, llvm::StringRef Code) {
       lookup("Target", *AST.context().getTranslationUnitDecl()));
 
   auto Diagnoser = pointerNullabilityDiagnoser();
-  constexpr std::int64_t MaxSATIterations = 1'000'000;
+  constexpr std::int64_t MaxSATIterations = 2'000'000;
   for (auto _ : State) {
     (void)dataflow::diagnoseFunction<PointerNullabilityAnalysis,
                                      PointerNullabilityDiagnostic>(
