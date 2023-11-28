@@ -53,12 +53,14 @@ def _llvm_loader_repository(repository_ctx):
             executable = False,
         )
 
+LLVM_COMMIT_SHA = "5e5a22caf88ac1ccfa8dc5720295fdeba0ad9372"
+
 def llvm_loader_repository_dependencies():
     # This *declares* the dependency, but it won't actually be *downloaded* unless it's used.
     new_git_repository(
         name = "llvm-raw",
         build_file_content = "# empty",
-        commit = "5e5a22caf88ac1ccfa8dc5720295fdeba0ad9372",
+        commit = LLVM_COMMIT_SHA,
         remote = "https://github.com/llvm/llvm-project.git",
     )
 
