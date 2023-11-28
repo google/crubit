@@ -1242,6 +1242,7 @@ impl<'a, T> Captures<'a> for T {}
 mod test {
     use super::*;
     use std::cell::RefCell;
+    use std::pin::Pin;
     use std::sync::Mutex;
 
     #[test]

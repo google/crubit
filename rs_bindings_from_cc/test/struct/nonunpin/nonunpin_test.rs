@@ -1,11 +1,12 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![feature(negative_impls)]
 
 #[cfg(test)]
 mod tests {
-    use ctor::{ctor, ConstRvalueReference, RvalueReference};
-    use ctor::{Assign as _, CtorNew as _};
+    use ctor::{ctor, emplace, mov, ConstRvalueReference, Ctor, Emplace, RvalueReference};
+    use ctor::{Assign as _, CtorNew as _, ReconstructUnchecked as _};
     use nonunpin::{Nonmovable, Nonunpin, NonunpinStruct, ReturnsNonmovable};
     use std::pin::Pin;
 
@@ -177,5 +178,86 @@ mod tests {
             let x = ReturnsNonmovable();
         }
         assert_eq!(x.addr, &*x as *const _ as usize);
+    }
+
+    /// An example showing a C++ non-trivially-relocatable class as a field in a
+    /// Rust struct. There are two ways to do this:
+    ///
+    ///   1. storing C++ class indirectly (e.g., in a Box), or,
+    ///   2. storing by-value.
+    ///
+    /// This test specicially demonstrates the second: storing a C++ class by
+    /// value, even in the worst case of it not being trivially-relocatable.
+    /// In that case, the struct containing it must *also* become
+    /// non-trivially-relocatable, and it becomes ~exactly as difficult to deal
+    /// with as the C++ class it contains.
+    #[test]
+    fn test_struct_field() {
+        #[ctor::recursively_pinned]
+        struct MyStruct {
+            field_1: u32,
+            field_2: Nonunpin,
+        }
+
+        impl MyStruct {
+            fn new() -> impl Ctor<Output = Self> {
+                ctor!(MyStruct { field_1: 4, field_2: Nonunpin::ctor_new(2) })
+            }
+        }
+
+        emplace! { let mut my_struct = MyStruct::new(); }
+        assert_eq!(my_struct.field_1, 4);
+        assert_eq!(my_struct.field_2.value(), 2);
+        // use projection (from recursively_pinned/pin_project) to mutate the struct:
+        let mut my_struct = my_struct.project_pin();
+        *my_struct.field_1 = 5;
+        my_struct.field_2.as_mut().assign(mov!(emplace!(Nonunpin::ctor_new(3))));
+        assert_eq!(*my_struct.field_1, 5);
+        assert_eq!(my_struct.field_2.value(), 3);
+    }
+
+    /// An example showing a C++ non-trivially-relocatable class as a field in a
+    /// Rust union. This mirrors the struct case, storing by value.
+    ///
+    /// It is also quite ugly, but, fortunately, these unions are not common.
+    #[test]
+    fn test_union_field() {
+        union MyUnion {
+            int: u32,
+            cxx_class: ::std::mem::ManuallyDrop<Nonunpin>,
+        }
+        unsafe impl ctor::RecursivelyPinned for MyUnion {
+            type CtorInitializedFields = Self;
+        }
+
+        // No safe helpers here. :)
+        unsafe {
+            emplace! {
+                let mut my_union = ctor!(MyUnion {
+                    cxx_class: ctor::ManuallyDropCtor::new(Nonunpin::ctor_new(4))
+                });
+            }
+            assert_eq!(my_union.cxx_class.value(), 4);
+            std::mem::ManuallyDrop::drop(
+                &mut Pin::into_inner_unchecked(my_union.as_mut()).cxx_class,
+            );
+            my_union.as_mut().reconstruct_unchecked(ctor!(MyUnion { int: 2 }));
+            assert_eq!(my_union.int, 2);
+        }
+    }
+
+    /// The example from the ctor.rs docs; copy-pasted.
+    #[test]
+    fn test_swap() {
+        fn swap(mut x: Pin<&mut Nonunpin>, mut y: Pin<&mut Nonunpin>) {
+            emplace! { let mut tmp = mov!(x.as_mut()); }
+            x.assign(mov!(y.as_mut()));
+            y.assign(mov!(tmp));
+        }
+        let mut c1 = Box::emplace(Nonunpin::ctor_new(1));
+        let mut c2 = Box::emplace(Nonunpin::ctor_new(2));
+        swap(c1.as_mut(), c2.as_mut());
+        assert_eq!(c1.value(), 2);
+        assert_eq!(c2.value(), 1);
     }
 }
