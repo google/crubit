@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::std::string_view;
-use core::convert::TryFrom;
 use core::ptr;
 
 impl From<string_view> for *const [u8] {
@@ -20,43 +19,8 @@ impl From<string_view> for *const [u8] {
         ptr::slice_from_raw_parts(data, size)
     }
 }
-
-/// Converts a C++ string_view to a Rust byte slice.
-///
-/// SAFETY: this is currently super dangerous (exactly as dangerous as C++),
-/// because it assumes that all string views have `&'static` lifetime. Be
-/// exactly as cautious with this as you would in C++.
-// TODO(b/246425449): This should implement correct lifetimes, once string_view
-// has lifetime annotations.
-impl From<string_view> for &'static [u8] {
-    fn from(sv: string_view) -> Self {
-        let raw_slice: *const [u8] = sv.into();
-        unsafe { &*raw_slice }
-    }
-}
-
-/// Converts a C++ string_view to a Rust string, failing if the string_view is
-/// not UTF8.
-///
-/// SAFETY: this is currently super dangerous (exactly as dangerous as C++),
-/// because it assumes that all string views have `&'static` lifetime. Be
-/// exactly as cautious with this as you would in C++.
-// TODO(b/246425449): This should implement correct lifetimes, once string_view
-// has lifetime annotations.
-impl TryFrom<string_view> for &'static str {
-    type Error = core::str::Utf8Error;
-    fn try_from(sv: string_view) -> Result<Self, Self::Error> {
-        core::str::from_utf8(sv.into())
-    }
-}
-
-/// Currently only implementing conversion from &'static str, because
-/// string_view isn't yet annotated with lifetimes, and so is unsafe to use
-/// with non-static lifetimes.
-// TODO(b/246425449): This should implement correct lifetimes, once string_view
-// has lifetime annotations.
-impl From<&'static [u8]> for string_view {
-    fn from(s: &'static [u8]) -> Self {
+impl From<&[u8]> for string_view {
+    fn from(s: &[u8]) -> Self {
         let size = s.len();
         let ptr = if size == 0 { 0 as *const _ } else { s.as_ptr() };
 
@@ -72,10 +36,8 @@ impl From<&'static [u8]> for string_view {
     }
 }
 
-// TODO(b/246425449): This should implement correct lifetimes, once string_view
-// has lifetime annotations.
-impl From<&'static str> for string_view {
-    fn from(s: &'static str) -> Self {
+impl From<&str> for string_view {
+    fn from(s: &str) -> Self {
         string_view::from(s.as_bytes())
     }
 }

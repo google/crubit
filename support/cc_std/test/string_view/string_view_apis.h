@@ -10,8 +10,6 @@ namespace crubit_string_view {
 
 inline std::string_view GetHelloWorld() { return "Hello, world!"; }
 
-inline std::string_view GetInvalidUtf8() { return "Not a UTF-8 byte: \xff"; }
-
 }  // namespace crubit_string_view
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_CC_STD_STRING_VIEW_STRING_VIEW_APIS_H_
