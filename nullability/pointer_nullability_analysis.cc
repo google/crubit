@@ -299,7 +299,7 @@ PointerValue *unpackPointerValue(PointerValue &PointerVal, Environment &Env) {
   return &NewPointerVal;
 }
 
-void transferFlowSensitiveNullPointer(
+void transferValue_NullPointer(
     const Expr *NullPointer, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   if (auto *PointerVal = getPointerValueFromExpr(NullPointer, State.Env)) {
@@ -307,7 +307,7 @@ void transferFlowSensitiveNullPointer(
   }
 }
 
-void transferFlowSensitiveNotNullPointer(
+void transferValue_NotNullPointer(
     const Expr *NotNullPointer, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   if (auto *PointerVal = getPointerValueFromExpr(NotNullPointer, State.Env)) {
@@ -316,9 +316,9 @@ void transferFlowSensitiveNotNullPointer(
   }
 }
 
-void transferFlowSensitivePointer(
-    const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+void transferValue_Pointer(const Expr *PointerExpr,
+                           const MatchFinder::MatchResult &Result,
+                           TransferState<PointerNullabilityLattice> &State) {
   auto *PointerVal = getPointerValueFromExpr(PointerExpr, State.Env);
   if (!PointerVal) return;
 
@@ -338,7 +338,7 @@ void transferFlowSensitivePointer(
 // TODO(b/233582219): Implement promotion of nullability for initially
 // unknown pointers when there is evidence that it is nullable, for example
 // when the pointer is compared to nullptr, or casted to boolean.
-void transferFlowSensitiveNullCheckComparison(
+void transferValue_NullCheckComparison(
     const BinaryOperator *BinaryOp, const MatchFinder::MatchResult &result,
     TransferState<PointerNullabilityLattice> &State) {
   auto &A = State.Env.arena();
@@ -401,7 +401,7 @@ void transferFlowSensitiveNullCheckComparison(
       A.makeImplies(A.makeAnd(A.makeNot(*LHSNull), *RHSNull), PointerNE));
 }
 
-void transferFlowSensitiveNullCheckImplicitCastPtrToBool(
+void transferValue_NullCheckImplicitCastPtrToBool(
     const Expr *CastExpr, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   auto &A = State.Env.arena();
@@ -461,9 +461,9 @@ void initializeOutputParameter(const Expr *Arg, dataflow::Environment &Env,
   Env.setValue(*Loc, *InnerPointer);
 }
 
-void transferFlowSensitiveCallExpr(
-    const CallExpr *CallExpr, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+void transferValue_CallExpr(const CallExpr *CallExpr,
+                            const MatchFinder::MatchResult &Result,
+                            TransferState<PointerNullabilityLattice> &State) {
   // The dataflow framework itself does not create values for `CallExpr`s.
   // However, we need these in some cases, so we produce them ourselves.
 
@@ -515,7 +515,7 @@ void transferFlowSensitiveCallExpr(
   }
 }
 
-void transferFlowSensitiveAccessorCall(
+void transferValue_AccessorCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   auto *member = Result.Nodes.getNodeAs<clang::ValueDecl>("member-decl");
@@ -536,19 +536,19 @@ void transferFlowSensitiveAccessorCall(
   }
 }
 
-void transferFlowSensitiveConstMemberCall(
+void transferValue_ConstMemberCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   if (!isSupportedRawPointerType(MCE->getType()) || !MCE->isPRValue()) {
     // We can't handle it as a special case, but still need to handle it.
-    transferFlowSensitiveCallExpr(MCE, Result, State);
+    transferValue_CallExpr(MCE, Result, State);
     return;
   }
   dataflow::RecordStorageLocation *RecordLoc =
       dataflow::getImplicitObjectLocation(*MCE, State.Env);
   if (RecordLoc == nullptr) {
     // We can't handle it as a special case, but still need to handle it.
-    transferFlowSensitiveCallExpr(MCE, Result, State);
+    transferValue_CallExpr(MCE, Result, State);
     return;
   }
   PointerValue *PointerVal =
@@ -559,7 +559,7 @@ void transferFlowSensitiveConstMemberCall(
   }
 }
 
-void transferFlowSensitiveNonConstMemberCall(
+void transferValue_NonConstMemberCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   // When a non-const member function is called, reset all pointer-type fields
@@ -574,12 +574,12 @@ void transferFlowSensitiveNonConstMemberCall(
     State.Lattice.clearConstMethodReturnValues(*RecordLoc);
   }
   // The nullability of the Expr itself still needs to be handled.
-  transferFlowSensitiveCallExpr(MCE, Result, State);
+  transferValue_CallExpr(MCE, Result, State);
 }
 
-void transferNonFlowSensitiveDeclRefExpr(
-    const DeclRefExpr *DRE, const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+void transferType_DeclRefExpr(const DeclRefExpr *DRE,
+                              const MatchFinder::MatchResult &MR,
+                              TransferState<PointerNullabilityLattice> &State) {
   computeNullability(DRE, State, [&] {
     auto Nullability = getNullabilityAnnotationsFromType(DRE->getType());
     State.Lattice.overrideNullabilityFromDecl(DRE->getDecl(), Nullability);
@@ -587,9 +587,9 @@ void transferNonFlowSensitiveDeclRefExpr(
   });
 }
 
-void transferNonFlowSensitiveMemberExpr(
-    const MemberExpr *ME, const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+void transferType_MemberExpr(const MemberExpr *ME,
+                             const MatchFinder::MatchResult &MR,
+                             TransferState<PointerNullabilityLattice> &State) {
   computeNullability(ME, State, [&]() {
     auto BaseNullability = getNullabilityForChild(ME->getBase(), State);
     QualType MemberType = ME->getType();
@@ -610,7 +610,7 @@ void transferNonFlowSensitiveMemberExpr(
   });
 }
 
-void transferNonFlowSensitiveMemberCallExpr(
+void transferType_MemberCallExpr(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &MR,
     TransferState<PointerNullabilityLattice> &State) {
   computeNullability(MCE, State, [&]() {
@@ -620,9 +620,9 @@ void transferNonFlowSensitiveMemberCallExpr(
   });
 }
 
-void transferNonFlowSensitiveCastExpr(
-    const CastExpr *CE, const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+void transferType_CastExpr(const CastExpr *CE,
+                           const MatchFinder::MatchResult &MR,
+                           TransferState<PointerNullabilityLattice> &State) {
   computeNullability(CE, State, [&]() -> TypeNullability {
     // Most casts that can convert ~unrelated types drop nullability in general.
     // As a special case, preserve nullability of outer pointer types.
@@ -760,7 +760,7 @@ void transferNonFlowSensitiveCastExpr(
   });
 }
 
-void transferNonFlowSensitiveMaterializeTemporaryExpr(
+void transferType_MaterializeTemporaryExpr(
     const MaterializeTemporaryExpr *MTE, const MatchFinder::MatchResult &MR,
     TransferState<PointerNullabilityLattice> &State) {
   computeNullability(MTE, State, [&]() {
@@ -768,9 +768,9 @@ void transferNonFlowSensitiveMaterializeTemporaryExpr(
   });
 }
 
-void transferNonFlowSensitiveCallExpr(
-    const CallExpr *CE, const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+void transferType_CallExpr(const CallExpr *CE,
+                           const MatchFinder::MatchResult &MR,
+                           TransferState<PointerNullabilityLattice> &State) {
   // TODO: Check CallExpr arguments in the diagnoser against the nullability of
   // parameters.
   computeNullability(CE, State, [&]() {
@@ -787,7 +787,7 @@ void transferNonFlowSensitiveCallExpr(
   });
 }
 
-void transferNonFlowSensitiveUnaryOperator(
+void transferType_UnaryOperator(
     const UnaryOperator *UO, const MatchFinder::MatchResult &MR,
     TransferState<PointerNullabilityLattice> &State) {
   computeNullability(UO, State, [&]() -> TypeNullability {
@@ -820,9 +820,9 @@ void transferNonFlowSensitiveUnaryOperator(
   });
 }
 
-void transferNonFlowSensitiveNewExpr(
-    const CXXNewExpr *NE, const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+void transferType_NewExpr(const CXXNewExpr *NE,
+                          const MatchFinder::MatchResult &MR,
+                          TransferState<PointerNullabilityLattice> &State) {
   computeNullability(NE, State, [&]() {
     TypeNullability result = getNullabilityAnnotationsFromType(NE->getType());
     result.front() = NE->shouldNullCheckAllocation() ? NullabilityKind::Nullable
@@ -831,7 +831,7 @@ void transferNonFlowSensitiveNewExpr(
   });
 }
 
-void transferNonFlowSensitiveArraySubscriptExpr(
+void transferType_ArraySubscriptExpr(
     const ArraySubscriptExpr *ASE, const MatchFinder::MatchResult &MR,
     TransferState<PointerNullabilityLattice> &State) {
   computeNullability(ASE, State, [&]() {
@@ -844,9 +844,9 @@ void transferNonFlowSensitiveArraySubscriptExpr(
   });
 }
 
-void transferNonFlowSensitiveThisExpr(
-    const CXXThisExpr *TE, const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+void transferType_ThisExpr(const CXXThisExpr *TE,
+                           const MatchFinder::MatchResult &MR,
+                           TransferState<PointerNullabilityLattice> &State) {
   computeNullability(TE, State, [&]() {
     TypeNullability result = getNullabilityAnnotationsFromType(TE->getType());
     result.front() = NullabilityKind::NonNull;
@@ -854,60 +854,56 @@ void transferNonFlowSensitiveThisExpr(
   });
 }
 
-auto buildNonFlowSensitiveTransferer() {
+auto buildTypeTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       .CaseOfCFGStmt<DeclRefExpr>(ast_matchers::declRefExpr(),
-                                  transferNonFlowSensitiveDeclRefExpr)
+                                  transferType_DeclRefExpr)
       .CaseOfCFGStmt<MemberExpr>(ast_matchers::memberExpr(),
-                                 transferNonFlowSensitiveMemberExpr)
+                                 transferType_MemberExpr)
       .CaseOfCFGStmt<CXXMemberCallExpr>(ast_matchers::cxxMemberCallExpr(),
-                                        transferNonFlowSensitiveMemberCallExpr)
-      .CaseOfCFGStmt<CastExpr>(ast_matchers::castExpr(),
-                               transferNonFlowSensitiveCastExpr)
+                                        transferType_MemberCallExpr)
+      .CaseOfCFGStmt<CastExpr>(ast_matchers::castExpr(), transferType_CastExpr)
       .CaseOfCFGStmt<MaterializeTemporaryExpr>(
           ast_matchers::materializeTemporaryExpr(),
-          transferNonFlowSensitiveMaterializeTemporaryExpr)
-      .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(),
-                               transferNonFlowSensitiveCallExpr)
+          transferType_MaterializeTemporaryExpr)
+      .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(), transferType_CallExpr)
       .CaseOfCFGStmt<UnaryOperator>(ast_matchers::unaryOperator(),
-                                    transferNonFlowSensitiveUnaryOperator)
+                                    transferType_UnaryOperator)
       .CaseOfCFGStmt<CXXNewExpr>(ast_matchers::cxxNewExpr(),
-                                 transferNonFlowSensitiveNewExpr)
-      .CaseOfCFGStmt<ArraySubscriptExpr>(
-          ast_matchers::arraySubscriptExpr(),
-          transferNonFlowSensitiveArraySubscriptExpr)
+                                 transferType_NewExpr)
+      .CaseOfCFGStmt<ArraySubscriptExpr>(ast_matchers::arraySubscriptExpr(),
+                                         transferType_ArraySubscriptExpr)
       .CaseOfCFGStmt<CXXThisExpr>(ast_matchers::cxxThisExpr(),
-                                  transferNonFlowSensitiveThisExpr)
+                                  transferType_ThisExpr)
       .Build();
 }
 
-auto buildFlowSensitiveTransferer() {
-  // The flow sensitive transfer functions must establish:
+auto buildValueTransferer() {
+  // The value transfer functions must establish:
   // - if we're transferring over an Expr
   // - and the Expr has a supported pointer type
   // - and the Expr's value is modeled by the framework (or this analysis)
   // - then the PointerValue has nullability properties (is_null/from_nullable)
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       // Handles initialization of the null states of pointers.
-      .CaseOfCFGStmt<Expr>(isAddrOf(), transferFlowSensitiveNotNullPointer)
+      .CaseOfCFGStmt<Expr>(isAddrOf(), transferValue_NotNullPointer)
       // TODO(mboehme): I believe we should be able to move handling of null
       // pointers to the non-flow-sensitive part of the analysis.
-      .CaseOfCFGStmt<Expr>(isNullPointerLiteral(),
-                           transferFlowSensitiveNullPointer)
+      .CaseOfCFGStmt<Expr>(isNullPointerLiteral(), transferValue_NullPointer)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
-                                        transferFlowSensitiveAccessorCall)
+                                        transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),
-                                        transferFlowSensitiveConstMemberCall)
+                                        transferValue_ConstMemberCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isNonConstMemberCall(),
-                                        transferFlowSensitiveNonConstMemberCall)
-      .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferFlowSensitiveCallExpr)
-      .CaseOfCFGStmt<Expr>(isPointerExpr(), transferFlowSensitivePointer)
+                                        transferValue_NonConstMemberCall)
+      .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferValue_CallExpr)
+      .CaseOfCFGStmt<Expr>(isPointerExpr(), transferValue_Pointer)
       // Handles comparison between 2 pointers.
       .CaseOfCFGStmt<BinaryOperator>(isPointerCheckBinOp(),
-                                     transferFlowSensitiveNullCheckComparison)
+                                     transferValue_NullCheckComparison)
       // Handles checking of pointer as boolean.
       .CaseOfCFGStmt<Expr>(isImplicitCastPointerToBool(),
-                           transferFlowSensitiveNullCheckImplicitCastPtrToBool)
+                           transferValue_NullCheckImplicitCastPtrToBool)
       .Build();
 }
 
@@ -932,8 +928,8 @@ void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
 PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext &Context)
     : DataflowAnalysis<PointerNullabilityAnalysis, PointerNullabilityLattice>(
           Context),
-      NonFlowSensitiveTransferer(buildNonFlowSensitiveTransferer()),
-      FlowSensitiveTransferer(buildFlowSensitiveTransferer()) {}
+      TypeTransferer(buildTypeTransferer()),
+      ValueTransferer(buildValueTransferer()) {}
 
 PointerTypeNullability PointerNullabilityAnalysis::assignNullabilityVariable(
     const ValueDecl *D, dataflow::Arena &A) {
@@ -948,8 +944,8 @@ void PointerNullabilityAnalysis::transfer(const CFGElement &Elt,
   TransferState<PointerNullabilityLattice> State(Lattice, Env);
 
   ensurePointerHasValue(Elt, Env);
-  NonFlowSensitiveTransferer(Elt, getASTContext(), State);
-  FlowSensitiveTransferer(Elt, getASTContext(), State);
+  TypeTransferer(Elt, getASTContext(), State);
+  ValueTransferer(Elt, getASTContext(), State);
 }
 
 static const Formula *mergeFormulas(const Formula *Bool1,

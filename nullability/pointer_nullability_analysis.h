@@ -104,13 +104,13 @@ class PointerNullabilityAnalysis
   dataflow::StorageLocation &getTopStorageLocation(
       dataflow::DataflowAnalysisContext &DACtx, QualType Ty);
 
-  // Applies non-flow-sensitive transfer functions on statements
+  // Transfers (non-flow-sensitive) type properties through statements.
   dataflow::CFGMatchSwitch<dataflow::TransferState<PointerNullabilityLattice>>
-      NonFlowSensitiveTransferer;
+      TypeTransferer;
 
-  // Applies flow-sensitive transfer functions on statements
+  // Transfers (flow-sensitive) value properties through statements.
   dataflow::CFGMatchSwitch<dataflow::TransferState<PointerNullabilityLattice>>
-      FlowSensitiveTransferer;
+      ValueTransferer;
 
   // Storage locations that represent "top" for each given type.
   llvm::DenseMap<QualType, dataflow::StorageLocation *> TopStorageLocations;
