@@ -20,6 +20,7 @@ cc_library(
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:index",
         "@llvm-project//llvm:Support",

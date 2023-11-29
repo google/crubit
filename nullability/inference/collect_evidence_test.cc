@@ -406,6 +406,117 @@ TEST(CollectEvidenceFromImplementationTest, MultipleReturns) {
                                     functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromImplemetationTest, FunctionCallDereferenced) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* makePtr();
+    void target() { *makePtr(); }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
+                        functionNamed("makePtr"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     FunctionCallResultDereferencedAfterAssignedLocally) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* makePtr();
+    void target() {
+      auto p = makePtr();
+      *p;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
+                        functionNamed("makePtr"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     FunctionCallResultDereferencedAfterAssignedLocallyAndChecked) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* makePtr();
+    void target() {
+      auto p = makePtr();
+      if (p) *p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     FunctionCallResultDereferencedAfterUnrelatedConditionChecked) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* makePtr();
+    void target(bool cond) {
+      auto p = makePtr();
+      if (cond) *p;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
+                        functionNamed("makePtr"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, FunctionCallDereferencedWithArrow) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      void member();
+    };
+
+    S* makePtr();
+    void target() { makePtr()->member(); }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
+                        functionNamed("makePtr"))));
+}
+
+TEST(CollectEvidenceFromImplemetationTest,
+     AlreadyNonnullFunctionCallDereferenced) {
+  static constexpr llvm::StringRef Src = R"cc(
+    Nonnull<int*> makeNonnullPtr();
+    void target() { *makeNonnullPtr(); }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromImplemetationTest,
+     ConstAccessorDereferencedAfterCheck) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      int* accessor() const { return i; }
+      int* i = nullptr;
+    };
+    void target() {
+      S s;
+      if (s.accessor() != nullptr) {
+        *s.accessor();
+      }
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     MemberCallOperatorReturnDereferenced) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      int* operator()();
+    };
+    void target() {
+      S s;
+      *s();
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
+                        functionNamed("operator()"))));
+}
+
 TEST(CollectEvidenceFromImplementationTest, MemberOperatorCall) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {

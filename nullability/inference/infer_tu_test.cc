@@ -198,6 +198,20 @@ TEST_F(InferTUTest, ReturnTypeNonnullAndNullable) {
                                  {inferredSlot(0, Inference::NULLABLE)})));
 }
 
+TEST_F(InferTUTest, ReturnTypeDereferenced) {
+  build(R"cc(
+    struct S {
+      void member();
+    };
+
+    S* makePtr();
+    void target() { makePtr()->member(); }
+  )cc");
+  EXPECT_THAT(infer(),
+              ElementsAre(inference(hasName("makePtr"),
+                                    {inferredSlot(0, Inference::NONNULL)})));
+}
+
 TEST_F(InferTUTest, Filter) {
   build(R"cc(
     int* target1() { return nullptr; }

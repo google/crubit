@@ -30,6 +30,8 @@
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
+#include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/ControlFlowContext.h"
@@ -50,6 +52,12 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
+using ::clang::ast_matchers::callee;
+using ::clang::ast_matchers::callExpr;
+using ::clang::ast_matchers::forEachDescendant;
+using ::clang::ast_matchers::functionDecl;
+using ::clang::ast_matchers::qualType;
+using ::clang::ast_matchers::returns;
 using ::clang::dataflow::DataflowAnalysisContext;
 using ::clang::dataflow::Environment;
 using ::clang::dataflow::Formula;
@@ -113,6 +121,25 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
 
 namespace {
 
+class InferableSlot {
+ public:
+  InferableSlot(PointerTypeNullability Nullability, Slot Slot, const Decl &Decl)
+      : SymbolicNullability(Nullability),
+        TargetSlot(Slot),
+        InferenceTarget(Decl) {}
+
+  const PointerTypeNullability &getSymbolicNullability() const {
+    return SymbolicNullability;
+  }
+  Slot getTargetSlot() const { return TargetSlot; }
+  const Decl &getInferenceTarget() const { return InferenceTarget; }
+
+ private:
+  const PointerTypeNullability SymbolicNullability;
+  const Slot TargetSlot;
+  const Decl &InferenceTarget;
+};
+
 // If Stmt is a dereference, returns its target and location.
 std::pair<Expr *, SourceLocation> describeDereference(const Stmt &Stmt) {
   if (auto *Op = dyn_cast<UnaryOperator>(&Stmt);
@@ -129,48 +156,40 @@ std::pair<Expr *, SourceLocation> describeDereference(const Stmt &Stmt) {
 // It may be dereferenced, passed as a nonnull param, etc, per EvidenceKind.
 void collectMustBeNonnullEvidence(
     const dataflow::PointerValue &Value, const dataflow::Environment &Env,
-    SourceLocation Loc,
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
+    SourceLocation Loc, const std::vector<InferableSlot> &InferableSlots,
     Evidence::Kind EvidenceKind, llvm::function_ref<EvidenceEmitter> Emit) {
-  auto &A = Env.getDataflowAnalysisContext().arena();
   CHECK(hasPointerNullState(Value))
       << "Value should be the value of an expression. Cannot collect evidence "
          "for nonnull-ness if there is no null state.";
   auto *IsNull = getPointerNullState(Value).IsNull;
   // If `IsNull` is top, we can't infer anything about it.
   if (IsNull == nullptr) return;
-  auto &NotIsNull = A.makeNot(*IsNull);
-
   // If the flow conditions already imply that Value is not null, then we don't
   // have any new evidence of a necessary annotation.
-  if (Env.proves(NotIsNull)) return;
+  if (!Env.allows(*IsNull)) return;
 
+  auto &A = Env.getDataflowAnalysisContext().arena();
   // Otherwise, if an inferable slot being annotated Nonnull would imply that
   // Value is not null, then we have evidence suggesting that slot should be
   // annotated. For now, we simply choose the first such slot, sidestepping
   // complexities around the possibility of multiple such slots, any one of
   // which would be sufficient if annotated Nonnull.
-  for (auto &[Nullability, Slot] : InferableSlots) {
-    auto &SlotNonnullImpliesValueNonnull =
-        A.makeImplies(Nullability.isNonnull(A), NotIsNull);
+  for (auto &IS : InferableSlots) {
+    auto &SlotNonnullImpliesValueNonnull = A.makeImplies(
+        IS.getSymbolicNullability().isNonnull(A), A.makeNot(*IsNull));
     if (Env.proves(SlotNonnullImpliesValueNonnull))
-      Emit(*Env.getCurrentFunc(), Slot, EvidenceKind, Loc);
+      Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
   }
 }
 
 void collectEvidenceFromDereference(
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    const Stmt &Stmt, const dataflow::Environment &Env,
+    const std::vector<InferableSlot> &InferableSlots, const Stmt &Stmt,
+    const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   auto [Target, Loc] = describeDereference(Stmt);
-  if (!Target || !Target->getType()->isPointerType()) return;
+  if (!Target || !isSupportedPointerType(Target->getType())) return;
 
   // It is a dereference of a pointer. Now gather evidence from it.
-
-  // Skip gathering evidence about the current function if the current
-  // function is not an inference target.
-  if (!isInferenceTarget(*Env.getCurrentFunc())) return;
-
   dataflow::PointerValue *DereferencedValue =
       getPointerValueFromExpr(Target, Env);
   if (!DereferencedValue) return;
@@ -184,13 +203,13 @@ void collectEvidenceFromDereference(
 // the previous round for this slot or b) Unknown nullability if no inference
 // was made in the previous round or there was no previous round.
 const Formula &getInferableSlotsAsInferredOrUnknownConstraint(
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    USRCache &USRCache, const PreviousInferences &PreviousInferences,
-    dataflow::Arena &A, const Decl &CurrentFunc) {
+    const std::vector<InferableSlot> &InferableSlots, USRCache &USRCache,
+    const PreviousInferences &PreviousInferences, dataflow::Arena &A) {
   const Formula *Constraint = &A.makeLiteral(true);
-  std::string_view USR = getOrGenerateUSR(USRCache, CurrentFunc);
-  for (auto &[Nullability, Slot] : InferableSlots) {
-    SlotFingerprint Fingerprint = fingerprint(USR, Slot);
+  for (auto &IS : InferableSlots) {
+    std::string_view USR = getOrGenerateUSR(USRCache, IS.getInferenceTarget());
+    SlotFingerprint Fingerprint = fingerprint(USR, IS.getTargetSlot());
+    auto Nullability = IS.getSymbolicNullability();
     const Formula &Nullable = PreviousInferences.Nullable.contains(Fingerprint)
                                   ? Nullability.isNullable(A)
                                   : A.makeNot(Nullability.isNullable(A));
@@ -222,8 +241,7 @@ auto getNullabilityAnnotationsFromTypeAndOverrides(
 void collectEvidenceFromBindingToType(
     TypeNullability &TypeNullability,
     const dataflow::PointerValue &PointerValue,
-    std::vector<std::pair<PointerTypeNullability, Slot>>
-        &InferableSlotsFromValueContext,
+    const std::vector<InferableSlot> &InferableSlotsFromValueContext,
     const Formula &InferableSlotsConstraint, const dataflow::Environment &Env,
     SourceLocation ValueLoc, llvm::function_ref<EvidenceEmitter> Emit) {
   //  TODO: Account for variance and each layer of nullability when we handle
@@ -244,7 +262,7 @@ void collectEvidenceFromBindingToType(
 template <typename CallOrConstructExpr>
 void collectEvidenceFromArgsAndParams(
     const FunctionDecl &CalleeDecl, const CallOrConstructExpr &Expr,
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableCallerSlots,
+    const std::vector<InferableSlot> &InferableCallerSlots,
     const Formula &InferableSlotsConstraint,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
@@ -313,7 +331,7 @@ void collectEvidenceFromArgsAndParams(
 }
 
 void collectEvidenceFromCallExpr(
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableCallerSlots,
+    const std::vector<InferableSlot> &InferableCallerSlots,
     const Formula &InferableSlotsConstraint, const Stmt &Stmt,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
@@ -329,7 +347,7 @@ void collectEvidenceFromCallExpr(
 }
 
 void collectEvidenceFromConstructExpr(
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
+    const std::vector<InferableSlot> &InferableSlots,
     const Formula &InferableSlotsConstraint, const Stmt &Stmt,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
@@ -344,11 +362,11 @@ void collectEvidenceFromConstructExpr(
                                    Lattice, Env, Emit);
 }
 
-void collectEvidenceFromReturn(
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
-    const Formula &InferableSlotsConstraint, const Stmt &Stmt,
-    const dataflow::Environment &Env,
-    llvm::function_ref<EvidenceEmitter> Emit) {
+void collectEvidenceFromReturn(const std::vector<InferableSlot> &InferableSlots,
+                               const Formula &InferableSlotsConstraint,
+                               const Stmt &Stmt,
+                               const dataflow::Environment &Env,
+                               llvm::function_ref<EvidenceEmitter> Emit) {
   // Is this CFGElement a return statement?
   auto *ReturnStmt = dyn_cast_or_null<clang::ReturnStmt>(&Stmt);
   if (!ReturnStmt) return;
@@ -377,7 +395,7 @@ void collectEvidenceFromReturn(
 }
 
 void collectEvidenceFromAssignment(
-    std::vector<std::pair<PointerTypeNullability, Slot>> &InferableSlots,
+    const std::vector<InferableSlot> &InferableSlots,
     const Formula &InferableSlotsConstraint, const Stmt &Stmt,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
@@ -446,7 +464,7 @@ void collectEvidenceFromAssignment(
 }
 
 void collectEvidenceFromElement(
-    std::vector<std::pair<PointerTypeNullability, Slot>> InferableSlots,
+    const std::vector<InferableSlot> &InferableSlots,
     const Formula &InferableSlotsConstraint, const CFGElement &Element,
     const PointerNullabilityLattice &Lattice, const Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
@@ -521,12 +539,43 @@ auto getConcreteNullabilityOverrideFromPreviousInferences(
     return &*It->second;
   };
 }
+
+// Adds InferableSlots for the return types of functions called by
+// `CurrentFunction`. If a called function's return value is dereferenced,
+// this enables us to collect evidence that the return type should be Nonnull.
+void addInferableSlotsForCalledFunctions(
+    const FunctionDecl &CurrentFunction,
+    std::vector<InferableSlot> &InferableSlots,
+    PointerNullabilityAnalysis &Analysis, dataflow::Arena &Arena) {
+  static constexpr std::string_view ReturnTypeNodeId = "ReturnType";
+  static constexpr std::string_view FunctionDeclNodeId = "FunctionDecl";
+
+  llvm::DenseSet<const FunctionDecl *> Functions;
+  for (const auto &Match : clang::ast_matchers::match(
+           functionDecl(forEachDescendant(callExpr(
+               callee(functionDecl(returns(qualType().bind(ReturnTypeNodeId)))
+                          .bind(FunctionDeclNodeId))))),
+           CurrentFunction, CurrentFunction.getASTContext())) {
+    auto *ReturnType = Match.getNodeAs<QualType>(ReturnTypeNodeId);
+    if (!ReturnType || !isSupportedRawPointerType(*ReturnType) ||
+        evidenceKindFromDeclaredType(*ReturnType))
+      continue;
+    auto *CalledFunction = Match.getNodeAs<FunctionDecl>(FunctionDeclNodeId);
+    if (!CalledFunction || !isInferenceTarget(*CalledFunction)) continue;
+    auto [it, inserted] = Functions.insert(CalledFunction);
+    if (inserted) {
+      InferableSlots.emplace_back(
+          Analysis.assignNullabilityVariable(CalledFunction, Arena),
+          SLOT_RETURN_TYPE, *CalledFunction);
+    }
+  }
+}
 }  // namespace
 
 llvm::Error collectEvidenceFromImplementation(
-    const Decl &Decl, llvm::function_ref<EvidenceEmitter> Emit,
+    const Decl &ImplementationDecl, llvm::function_ref<EvidenceEmitter> Emit,
     USRCache &USRCache, const PreviousInferences PreviousInferences) {
-  const FunctionDecl *Func = dyn_cast<FunctionDecl>(&Decl);
+  const FunctionDecl *Func = dyn_cast<FunctionDecl>(&ImplementationDecl);
   if (!Func || !Func->doesThisDeclarationHaveABody()) {
     return llvm::createStringError(
         llvm::inconvertibleErrorCode(),
@@ -541,22 +590,25 @@ llvm::Error collectEvidenceFromImplementation(
       std::make_unique<dataflow::WatchedLiteralsSolver>(200000));
   Environment Environment(AnalysisContext, *Func);
   PointerNullabilityAnalysis Analysis(
-      Decl.getDeclContext()->getParentASTContext());
-  std::vector<std::pair<PointerTypeNullability, Slot>> InferableSlots;
-  auto Parameters = Func->parameters();
-  for (auto I = 0; I < Parameters.size(); ++I) {
-    auto T = Parameters[I]->getType().getNonReferenceType();
-    if (isSupportedRawPointerType(T) && !evidenceKindFromDeclaredType(T)) {
-      InferableSlots.push_back(
-          std::make_pair(Analysis.assignNullabilityVariable(
-                             Parameters[I], AnalysisContext.arena()),
-                         paramSlot(I)));
+      Func->getDeclContext()->getParentASTContext());
+  std::vector<InferableSlot> InferableSlots;
+  if (isInferenceTarget(*Func)) {
+    auto Parameters = Func->parameters();
+    for (auto I = 0; I < Parameters.size(); ++I) {
+      auto T = Parameters[I]->getType().getNonReferenceType();
+      if (isSupportedRawPointerType(T) && !evidenceKindFromDeclaredType(T)) {
+        InferableSlots.emplace_back(Analysis.assignNullabilityVariable(
+                                        Parameters[I], AnalysisContext.arena()),
+                                    paramSlot(I), *Func);
+      }
     }
   }
+  addInferableSlotsForCalledFunctions(*Func, InferableSlots, Analysis,
+                                      AnalysisContext.arena());
   const auto &InferableSlotsConstraint =
-      getInferableSlotsAsInferredOrUnknownConstraint(
-          InferableSlots, USRCache, PreviousInferences, AnalysisContext.arena(),
-          Decl);
+      getInferableSlotsAsInferredOrUnknownConstraint(InferableSlots, USRCache,
+                                                     PreviousInferences,
+                                                     AnalysisContext.arena());
 
   ConcreteNullabilityCache ConcreteNullabilityCache;
   Analysis.assignNullabilityOverride(
