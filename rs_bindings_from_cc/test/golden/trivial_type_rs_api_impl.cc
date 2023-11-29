@@ -51,12 +51,6 @@ extern "C" void __rust_thunk___ZN2ns15TrivialNonfinalC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN2ns15TrivialNonfinalC1ERKS0_(
-    struct ns::TrivialNonfinal* __this,
-    const struct ns::TrivialNonfinal* __param_0) {
-  crubit::construct_at(__this, *__param_0);
-}
-
 extern "C" void __rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_(
     struct ns::TrivialNonfinal* __this, struct ns::TrivialNonfinal* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));

@@ -74,12 +74,6 @@ __rust_thunk___ZN23test_namespace_bindings13TemplateParamaSEOS0_(
 static_assert(sizeof(class private_classes::HasPrivateType) == 1);
 static_assert(alignof(class private_classes::HasPrivateType) == 1);
 
-extern "C" void __rust_thunk___ZN15private_classes14HasPrivateTypeC1ERKS0_(
-    class private_classes::HasPrivateType* __this,
-    const class private_classes::HasPrivateType* __param_0) {
-  crubit::construct_at(__this, *__param_0);
-}
-
 extern "C" void __rust_thunk___ZN15private_classes14HasPrivateTypeC1EOS0_(
     class private_classes::HasPrivateType* __this,
     class private_classes::HasPrivateType* __param_0) {
@@ -415,13 +409,6 @@ __rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1Ev__2f_2fthird_5fparty_2
 }
 
 extern "C" void
-__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-    struct test_namespace_bindings::MyStruct<char>* __this,
-    const struct test_namespace_bindings::MyStruct<char>* __param_0) {
-  crubit::construct_at(__this, *__param_0);
-}
-
-extern "C" void
 __rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
     struct test_namespace_bindings::MyStruct<char>* __this,
     struct test_namespace_bindings::MyStruct<char>* __param_0) {
@@ -495,15 +482,6 @@ __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev__2f_2ft
     class template_template_params::MyTemplate<
         template_template_params::Policy>* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void
-__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-    class template_template_params::MyTemplate<
-        template_template_params::Policy>* __this,
-    const class template_template_params::MyTemplate<
-        template_template_params::Policy>* __param_0) {
-  crubit::construct_at(__this, *__param_0);
 }
 
 extern "C" void

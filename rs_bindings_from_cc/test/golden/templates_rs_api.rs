@@ -7,13 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(
-    custom_inner_attributes,
-    impl_trait_in_assoc_type,
-    negative_impls,
-    register_tool,
-    type_alias_impl_trait
-)]
+#![feature(custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -221,7 +215,7 @@ pub mod forward_declared_template {
 // namespace forward_declared_template
 
 pub mod private_classes {
-    #[::ctor::recursively_pinned]
+    #[derive(Clone, Copy)]
     #[repr(C)]
     #[__crubit::annotate(cc_type = "private_classes :: HasPrivateType")]
     pub struct HasPrivateType {
@@ -232,61 +226,22 @@ pub mod private_classes {
         crate::private_classes::HasPrivateType
     );
 
-    impl<'b> ::ctor::CtorNew<&'b Self> for HasPrivateType {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasPrivateType {
         #[inline(always)]
-        fn ctor_new(args: &'b Self) -> Self::CtorType {
-            let __param_0 = args;
+        fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                ::ctor::FnCtor::new(
-                    move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                        crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeC1ERKS0_(
-                            ::core::pin::Pin::into_inner_unchecked(dest),
-                            __param_0,
-                        );
-                    },
-                )
+                crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeC1EOS0_(
+                    &mut tmp, __param_0,
+                );
+                tmp.assume_init()
             }
         }
     }
-    impl<'b> ::ctor::CtorNew<(&'b Self,)> for HasPrivateType {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-        #[inline(always)]
-        fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-            let (arg,) = args;
-            <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-        }
-    }
 
-    impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasPrivateType {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    impl<'b> ::ctor::UnpinAssign<&'b Self> for HasPrivateType {
         #[inline(always)]
-        fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-            let __param_0 = args;
-            unsafe {
-                ::ctor::FnCtor::new(
-                    move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                        crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeC1EOS0_(
-                            ::core::pin::Pin::into_inner_unchecked(dest),
-                            __param_0,
-                        );
-                    },
-                )
-            }
-        }
-    }
-    impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for HasPrivateType {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-        #[inline(always)]
-        fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
-            let (arg,) = args;
-            <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
-        }
-    }
-
-    impl<'b> ::ctor::Assign<&'b Self> for HasPrivateType {
-        #[inline(always)]
-        fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+        fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
             unsafe {
                 crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeaSERKS0_(
                     self, __param_0,
@@ -295,12 +250,9 @@ pub mod private_classes {
         }
     }
 
-    impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasPrivateType {
+    impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasPrivateType {
         #[inline(always)]
-        fn assign<'a>(
-            self: ::core::pin::Pin<&'a mut Self>,
-            __param_0: ::ctor::RvalueReference<'b, Self>,
-        ) {
+        fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
             unsafe {
                 crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeaSEOS0_(
                     self, __param_0,
@@ -744,7 +696,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 
 /// Explicit class template specialization with definition should be imported
 /// even when not instantiated if there is a type alias for it.
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "test_namespace_bindings :: MyStruct < char >")]
 pub struct __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
@@ -755,88 +707,44 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE
 );
 
-impl ::ctor::CtorNew<()> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+impl Default for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
     #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::core::pin::Pin::into_inner_unchecked(dest));
-                },
-            )
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp);
+            tmp.assume_init()
         }
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b Self> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::core::pin::Pin::into_inner_unchecked(dest),__param_0);
-                },
-            )
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(&'b Self,)> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-    }
-}
-
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
+impl<'b> From<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::core::pin::Pin::into_inner_unchecked(dest),__param_0);
-                },
-            )
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp,__param_0);
+            tmp.assume_init()
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)>
-    for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
-{
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
-    }
-}
 
-impl<'b> ::ctor::Assign<&'b Self> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
+impl<'b> ::ctor::UnpinAssign<&'b Self> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
     #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
         }
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
 {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, Self>,
-    ) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
         }
@@ -902,7 +810,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 
 forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = forward_declare::symbol!("__CcTemplateInst18MyTopLevelTemplateIiE"));
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(
     cc_type = "template_template_params :: MyTemplate < template_template_params :: Policy >"
@@ -917,94 +825,46 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 );
 
-impl ::ctor::CtorNew<()> for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+impl Default for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
     #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::core::pin::Pin::into_inner_unchecked(dest));
-                },
-            )
+            crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp);
+            tmp.assume_init()
         }
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b Self>
+impl<'b> From<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::core::pin::Pin::into_inner_unchecked(dest),__param_0);
-                },
-            )
+            crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp,__param_0);
+            tmp.assume_init()
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b Self,)>
-    for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
-{
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-    }
-}
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
-    for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
-{
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::core::pin::Pin::into_inner_unchecked(dest),__param_0);
-                },
-            )
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)>
-    for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
-{
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
-    }
-}
-
-impl<'b> ::ctor::Assign<&'b Self>
+impl<'b> ::ctor::UnpinAssign<&'b Self>
     for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
     #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
         }
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, Self>,
-    ) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
         }
@@ -1062,22 +922,18 @@ mod detail {
         >(
             i: Option<::core::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>>,
         );
-        pub(crate) fn __rust_thunk___ZN15private_classes14HasPrivateTypeC1ERKS0_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::private_classes::HasPrivateType>,
-            __param_0: &'b crate::private_classes::HasPrivateType,
-        );
         pub(crate) fn __rust_thunk___ZN15private_classes14HasPrivateTypeC1EOS0_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::private_classes::HasPrivateType>,
             __param_0: ::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,
         );
         pub(crate) fn __rust_thunk___ZN15private_classes14HasPrivateTypeaSERKS0_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::private_classes::HasPrivateType>,
+            __this: &'a mut crate::private_classes::HasPrivateType,
             __param_0: &'b crate::private_classes::HasPrivateType,
-        ) -> ::core::pin::Pin<&'a mut crate::private_classes::HasPrivateType>;
+        ) -> &'a mut crate::private_classes::HasPrivateType;
         pub(crate) fn __rust_thunk___ZN15private_classes14HasPrivateTypeaSEOS0_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::private_classes::HasPrivateType>,
+            __this: &'a mut crate::private_classes::HasPrivateType,
             __param_0: ::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,
-        ) -> ::core::pin::Pin<&'a mut crate::private_classes::HasPrivateType>;
+        ) -> &'a mut crate::private_classes::HasPrivateType;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -1297,15 +1153,6 @@ mod detail {
                 crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
-            'a,
-            'b,
-        >(
-            __this: &'a mut ::core::mem::MaybeUninit<
-                crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-            >,
-            __param_0: &'b crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-        );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
@@ -1322,23 +1169,19 @@ mod detail {
             'a,
             'b,
         >(
-            __this: ::core::pin::Pin<
-                &'a mut crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-            >,
+            __this: &'a mut crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
             __param_0: &'b crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-        ) -> ::core::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>;
+        ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIcEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(
-            __this: ::core::pin::Pin<
-                &'a mut crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-            >,
+            __this: &'a mut crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
             __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
             >,
-        ) -> ::core::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>;
+        ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE;
         pub(crate) fn __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -1360,15 +1203,6 @@ mod detail {
                 crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
-            'a,
-            'b,
-        >(
-            __this: &'a mut ::core::mem::MaybeUninit<
-                crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-            >,
-            __param_0:&'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        );
         pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
@@ -1385,23 +1219,19 @@ mod detail {
             'a,
             'b,
         >(
-            __this: ::core::pin::Pin<&'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>,
+            __this:&'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
             __param_0:&'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        ) -> ::core::pin::Pin<
-            &'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        >;
+        ) -> &'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE;
         pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(
-            __this: ::core::pin::Pin<&'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>,
+            __this:&'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
             __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
             >,
-        ) -> ::core::pin::Pin<
-            &'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        >;
+        ) -> &'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE;
         pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEE9GetPolicyEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc()
         -> ::core::ffi::c_int;
     }
@@ -1437,7 +1267,10 @@ const _: () = {
 const _: () = assert!(::core::mem::size_of::<crate::private_classes::HasPrivateType>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::private_classes::HasPrivateType>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::private_classes::HasPrivateType:Copy);
+    static_assertions::assert_impl_all!(crate::private_classes::HasPrivateType:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::private_classes::HasPrivateType:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::private_classes::HasPrivateType:Drop);
@@ -1622,7 +1455,10 @@ const _: () = assert!(
     ::core::mem::align_of::<crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>() == 1
 );
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE:Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE:Drop);
@@ -1665,7 +1501,10 @@ const _: () = assert!(
     >() == 1
 );
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE:Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE:Drop);

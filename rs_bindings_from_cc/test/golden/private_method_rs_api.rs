@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls, register_tool)]
+#![feature(custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -24,7 +24,7 @@
 // Error while generating bindings for item 'Ptr':
 // Class templates are not supported yet
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "Outer")]
 pub struct Outer {
@@ -54,7 +54,10 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::Outer>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::Outer>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Outer:Copy);
+    static_assertions::assert_impl_all!(crate::Outer:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::Outer:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Outer:Drop);

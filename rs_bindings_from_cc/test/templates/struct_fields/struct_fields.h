@@ -18,7 +18,6 @@ class MyTemplate {
 };
 
 struct MyStruct {
-  MyStruct(int i) : public_field(i) {}
   MyTemplate<int> public_field;
 };
 

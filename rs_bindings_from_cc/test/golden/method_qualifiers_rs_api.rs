@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls, register_tool)]
+#![feature(custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -21,7 +21,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "Noninline")]
 pub struct Noninline {
@@ -79,7 +79,7 @@ impl Noninline {
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "Inline")]
 pub struct Inline {
@@ -172,7 +172,10 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::Noninline>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::Noninline>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Noninline:Copy);
+    static_assertions::assert_impl_all!(crate::Noninline:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::Noninline:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Noninline:Drop);
@@ -181,7 +184,10 @@ const _: () = {
 const _: () = assert!(::core::mem::size_of::<crate::Inline>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::Inline>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Inline:Copy);
+    static_assertions::assert_impl_all!(crate::Inline:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::Inline:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Inline:Drop);

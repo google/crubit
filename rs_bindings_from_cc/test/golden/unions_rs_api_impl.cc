@@ -153,12 +153,6 @@ extern "C" void __rust_thunk___ZN21TrivialButInheritableC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN21TrivialButInheritableC1ERKS_(
-    struct TrivialButInheritable* __this,
-    const struct TrivialButInheritable* __param_0) {
-  crubit::construct_at(__this, *__param_0);
-}
-
 extern "C" void __rust_thunk___ZN21TrivialButInheritableC1EOS_(
     struct TrivialButInheritable* __this,
     struct TrivialButInheritable* __param_0) {
@@ -186,12 +180,6 @@ static_assert(CRUBIT_OFFSET_OF(t, union UnionWithInheritable) == 0);
 extern "C" void __rust_thunk___ZN20UnionWithInheritableC1Ev(
     union UnionWithInheritable* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN20UnionWithInheritableC1ERKS_(
-    union UnionWithInheritable* __this,
-    const union UnionWithInheritable* __param_0) {
-  crubit::construct_at(__this, *__param_0);
 }
 
 extern "C" void __rust_thunk___ZN20UnionWithInheritableC1EOS_(
@@ -242,12 +230,6 @@ static_assert(CRUBIT_OFFSET_OF(t, TypedefUnionWithInheritable) == 0);
 extern "C" void __rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
     TypedefUnionWithInheritable* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN27TypedefUnionWithInheritableC1ERKS_(
-    TypedefUnionWithInheritable* __this,
-    const TypedefUnionWithInheritable* __param_0) {
-  crubit::construct_at(__this, *__param_0);
 }
 
 extern "C" void __rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_(

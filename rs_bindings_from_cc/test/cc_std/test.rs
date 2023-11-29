@@ -11,21 +11,19 @@ mod tests {
     #[test]
     fn test_ctime() {
         // Tests of items from the `<ctime>` header.
-        ctor::emplace! {
-            let _t = ctor::ctor!(tm {
-                tm_gmtoff: 0,
-                tm_hour: 1,
-                tm_isdst: 2,
-                tm_mday: 3,
-                tm_min: 4,
-                tm_mon: 5,
-                tm_sec: 6,
-                tm_wday: 7,
-                tm_yday: 8,
-                tm_year: 9,
-                tm_zone: "zone".as_ptr(),
-            });
-        }
+        let _t = tm {
+            tm_gmtoff: 0,
+            tm_hour: 1,
+            tm_isdst: 2,
+            tm_mday: 3,
+            tm_min: 4,
+            tm_mon: 5,
+            tm_sec: 6,
+            tm_wday: 7,
+            tm_yday: 8,
+            tm_year: 9,
+            tm_zone: "zone".as_ptr(),
+        };
     }
 
     #[test]

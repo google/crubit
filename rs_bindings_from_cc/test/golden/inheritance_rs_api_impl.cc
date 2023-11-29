@@ -26,11 +26,6 @@ extern "C" void __rust_thunk___ZN5Base0C1Ev(class Base0* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN5Base0C1ERKS_(class Base0* __this,
-                                               const class Base0* __param_0) {
-  crubit::construct_at(__this, *__param_0);
-}
-
 extern "C" void __rust_thunk___ZN5Base0C1EOS_(class Base0* __this,
                                               class Base0* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
@@ -53,11 +48,6 @@ extern "C" void __rust_thunk___ZN5Base1C1Ev(class Base1* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN5Base1C1ERKS_(class Base1* __this,
-                                               const class Base1* __param_0) {
-  crubit::construct_at(__this, *__param_0);
-}
-
 extern "C" void __rust_thunk___ZN5Base1C1EOS_(class Base1* __this,
                                               class Base1* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
@@ -78,11 +68,6 @@ static_assert(alignof(class Base2) == 2);
 
 extern "C" void __rust_thunk___ZN5Base2C1Ev(class Base2* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN5Base2C1ERKS_(class Base2* __this,
-                                               const class Base2* __param_0) {
-  crubit::construct_at(__this, *__param_0);
 }
 
 extern "C" void __rust_thunk___ZN5Base2C1EOS_(class Base2* __this,
@@ -250,11 +235,6 @@ extern "C" void __rust_thunk___ZN11MethodBase1C1Ev(class MethodBase1* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN11MethodBase1C1ERKS_(
-    class MethodBase1* __this, const class MethodBase1* __param_0) {
-  crubit::construct_at(__this, *__param_0);
-}
-
 extern "C" void __rust_thunk___ZN11MethodBase1C1EOS_(
     class MethodBase1* __this, class MethodBase1* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
@@ -275,11 +255,6 @@ static_assert(alignof(class MethodBase2) == 1);
 
 extern "C" void __rust_thunk___ZN11MethodBase2C1Ev(class MethodBase2* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN11MethodBase2C1ERKS_(
-    class MethodBase2* __this, const class MethodBase2* __param_0) {
-  crubit::construct_at(__this, *__param_0);
 }
 
 extern "C" void __rust_thunk___ZN11MethodBase2C1EOS_(

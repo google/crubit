@@ -1,22 +1,24 @@
 # `Unpin` for C++ Types
 
 SUMMARY: A C++ type is `Unpin` if it is trivially relocatable (e.g., a trivial
-type, or a nontrivial type which is `[[clang::trivial_abi]]`), and is `final`.
-Any such type can be used by value or plain reference/pointer in interop, all
-non-`Unpin` types must instead be used behind pinned pointers and references.
+type, or a nontrivial type which is `[[clang::trivial_abi]]`). Any such type can
+be used by value or plain reference/pointer in interop, all non-`Unpin` types
+must instead be used behind pinned pointers and references.
 
-A C++ type `T` is `Unpin` (always safe to manipulate through `&mut T`) if it is
-known to be a **trivially relocatable type** (move+destroy is logically
-equivalent to `memcpy`+release) with **insignificant padding** (it does not
-matter if the padding is included in that `memcpy`).
+A C++ type `T` is `Unpin` if it is known to be a **trivially relocatable type**
+(move+destroy is logically equivalent to `memcpy`+release).
 
 `Unpin` C++ types can be used like any other normal Rust type: they are always
 safe to access by reference or by value. Non-`Unpin` types, in contrast, can
 only be accessed behind pins such as `Pin<&mut T>`, or `Pin<Box<T>>`, because it
 may not be safe to directly mutate. These types are never used directly by value
 in Rust, because value-like assignment has incorrect semantics: it fails to run
-C++ special members for non-trivially-relocatable types, it can overwrite
-padding for types with significant padding.
+C++ special members for non-trivially-relocatable types.
+
+Note that not every object with an `Unpin` type is actually safe to hold in a
+mutable reference. Objects with live aliases still must not be used with `&mut`,
+and "potentially overlapping objects" can produce unexpected behavior in Rust.
+(See [Reference Safety](#reference_safety).)
 
 ## Trivially Relocatable Types
 
@@ -93,122 +95,97 @@ could make types trivially relocatable without requiring ABI changes as
 `[[clang::trivial_abi]]` does, although in the short term this doesn't seem very
 likely.
 
-## Insignificant Padding
+## Reference Safety
 
-If a type has padding, then even if the type is trivially relocatable and
-therefore safe to write as if by `memcpy`, **Rust will `memcpy` an incorrect
-number of bytes**: Rust will include the padding, though C++ would not.
-Trivially relocatable types where the padding potentially has semantic meaning
-can still be handled by value, but are `!Unpin`, and all mutable references Rust
-receives from C++ must be `Pin<&mut T>`. Only trivially relocatable types where
-the padding has no significance can be `Unpin` and safe to deal with via `&mut`.
+Not every object with an `Unpin` type can actually safely be pointed to by a
+Rust reference.
 
-Significant padding occurs via inheritance -- derived types may reuse the
-padding for other objects -- and from the `[[no_unique_address]]` attribute
-(which declares the padding to be reusable).
+### Conventional aliasing
 
-For the purposes of C++/Rust interop, `[[no_unique_address]]` is an unsafe
-feature, and any type which cannot be inherited from (via e.g. `final`) is
-considered to have insignificant padding.
+If a C++ reference mutably aliases, it is unsafe to pass to Rust as a Rust
+reference. Do not under any circumstance create aliasing Rust references, the
+behavior of doing so is undefined.
 
-### When is padding significant?
+For example:
 
-In C++, if you take a mutable reference to a base class subobject, and pass it
-around, this is ultimately pretty safe. If you assign to it, it is a bit bad --
-it will assign to only the base class subobject (if it's nonvirtual), not just
-the subclass -- but it's possible for this to make sense, and if it were truly
-dangerous they'd probably have deleted assignment or not inherited from the base
-class.
+```rust
+pub fn foo(_: &mut i32, _: &mut i32) {}
+```
 
-In Rust, this is *extremely dangerous*, because the size of the base class
-subobject can extend to include fields from the derived class. For example, take
-this class hierarchy:
+It is Undefined Behavior to, in C++, call `foo(x, x)`.
+
+### Tail padding
+
+In C++, tail padding is not part of the object, and the space in the tail
+padding can be taken up by other unrelated objects. Avoid creating a Rust
+reference to a base class, or to a `[[no_unique_address]]` field, as these are
+"potentially overlapping". This can cause surprising behavior, or unintended
+aliasing and undefined behavior.
+
+Consider the following struct:
 
 ```c++
-class Base {
-  int64_t x_;
-  int32_t y_;
-  /* ...methods... */
-};
+struct A {};
+struct B {
+    [[no_unique_address]] A field_1_;
+    char field_2_;
 
-class Derived : public Base {
-  int32_t size_;
-  char* data_;
-  /* ...methods... */
+    A& field_1() { return field_1_; }
+    char& field_2() { return field_2_; }
 };
 ```
 
-Here we have a class `Derived` with some string data, which inherits from
-`Base`. But something unfortunate happens: because `Base` has an extra 32 bits
-of tail padding, and is not POD for the purpose of layout, the `size_` member of
-the derived class is stored inside the tail padding for `Base`. This is allowed
-by the C++ standard, and actually taken advantage of in the Itanium ABI.
+Here, while `sizeof(A)` is `1`, it has no data, only tail padding. A C++
+assignment to `field_1_` will not write anything. And so C++ can store an
+unrelated object inside of the tail padding. `[[no_unique_address]]` marks the
+tail padding as available for use. `field_2_` may actually be stored inside the
+tail padding of `field_1_`, and the `sizeof(B)` may also be `1`.
 
-In C++, this presents no problems, as C++ assignment doesn't do something like
-`memcpy sizeof(x) bytes`, even when the class is trivially assignable. It only
-copies the real data size, excluding padding. And so this code will not
-accidentally overwrite the `size_` field:
+(Base classes also allow their tail padding to be reused, and the same example
+works with `struct B : A`.)
 
 ```c++
-Derived& d = ...;
-Base& b1 = d;
-Base& b2 = ...;
-std::swap(b1, b2);
+static_assert(sizeof(A) == sizeof(B));
+static_assert(offsetof(B, field_1) == offsetof(B, field_2));
 ```
 
-But the seemingly equivalent Rust code absolutely will:
+Rust does not work this way. In Rust, tail padding *is* part of the object. Rust
+references refer to the full span of the pointed-to object, including that tail
+padding. And so a Rust reference to `field_1_` would encompass `field_2_` by
+accident.
 
-```rs
-let d : &mut Derived = ...;
-let b1 : &mut Base = d.into();
-let b2 : &mut Base = ...;
-// This overwrites size_ from the derived class with uninitialized memory from
-// b2.
-std::mem::swap(b1, b2); // Catastrophically bad.
+This means that the following code has undefined behavior via conventional
+aliasing, despite looking fairly innocent:
+
+```c++
+B b = ...;
+// Rust: pub fn foo(_: &mut A, _: &mut u8)
+foo(b.field_1, b.field_2); // C++
 ```
 
-As a consequence, types like `Base` should not be exposed as `&mut` references:
-they might refer to a base class subobject, in which case assignment in Rust
-will do the wrong thing. Even if they are trivially relocatable and assignment
-is equivalent to a `memcpy`, Rust will memcpy the wrong number of bytes.
+And the following Rust code would perform unintended mutations to `field_2`:
 
-### Gaps
+```rust
+let mut b1: B = ...;
+let mut b2: B = ...;
+// This actually swaps field_2!
+std::mem::swap(&mut b1.field_1(), &mut b2.field_1());
+```
 
-#### `[[no_unique_address]]`
+### C++20
 
-The exact same behavior can occur with `[[no_unique_address]]`. There are three
-options:
+In C++17 and earlier, there was only one way to create a potentially-overlapping
+object: inheritance (["EBO"](https://en.cppreference.com/w/cpp/language/ebo)).
+Making inheritable types non-`Unpin` could have removed or mitigated the risk of
+overlapping objects in C++17 and below.
 
-1.  Live with the unsafety of `[[no_unique_address]]`, and make it buyer beware.
-    This is similar to how we treat packed struct fields.
+However, as of C++20, **any** object can alias another in the tail padding.
+C++20 introduced `[[no_unique_address]]`, which makes tail padding available for
+reuse for any type. Since `[[no_unique_address]]` may be used fairly extensively
+in library code (it has no negative effects in C++), we can't assume that it
+does not exist.
 
-2.  Forbid `[[no_unique_address]]` in the C++ style guide, except for zero-sized
-    types (which we can probably handle fine).
-
-3.  Switch approaches: rather than only allowing it for `final` classes and the
-    like, only allow it for classes whose data size is guaranteed to be the same
-    as their stride, possibly using something like a `[[pod_layout]]` attribute.
-
-For now, we take approach #1: `[[no_unique_address]]` is considered an unsafe
-feature, which can render padding significant on any type which has padding.
-
-#### Lambdas
-
-TODO: implement this.
-
-Lambdas are class types, are not `final`, and cannot be marked `final`. Most
-likely, we need to simply pretend that they are `final` -- it is not very useful
-to inherit from a lambda, and this should not break people in practice.
-
-### How common is this?
-
-Only ~4% of classes at Google are base
-classes to some other type.
-
-This means the number of classes that *should* be pinned due to potentially
-significant padding is low, and the number of classes that *should* be marked
-final is high. Mixed blessings: more boilerplate in C++, but less annoyance in
-Rust, as the vast majority of classes can be marked `final` via LSC.
-
-However, 4% doesn't quite seem small enough that we can pretend the issue
-doesn't exist.
+In modern C++, `final` types are not much safer than other types. One must be
+careful **when creating Rust references**, to ensure that those Rust references
+do not contain data in their tail padding, or otherwise alias, and there is no
+way to guarantee this at the type level.

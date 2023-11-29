@@ -8,12 +8,13 @@
 
 namespace ns {
 
-struct UnpinStruct final {
+struct UnpinStruct {
   int field = 0;
 };
 
-struct NonunpinStruct /* non-final */ {
+struct NonunpinStruct {
   int field = 0;
+  ~NonunpinStruct() {}
 };
 
 int ReadUnpinStruct(const UnpinStruct& s);

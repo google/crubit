@@ -4,7 +4,6 @@
 
 #[cfg(test)]
 mod tests {
-    use ctor::CtorNew as _;
     use struct_fields::*;
 
     // This tests whether Crubit supports template specialization/instantiation in a
@@ -16,9 +15,7 @@ mod tests {
         // specialization/instantiation gets translated to.
 
         // Class template instantiation used as a type of a public field.
-        ctor::emplace! {
-            let s = MyStruct::ctor_new(123);
-        }
+        let s = MyStruct { public_field: 123.into() };
         assert_eq!(123, *s.public_field.value());
     }
 }

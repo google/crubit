@@ -605,28 +605,13 @@ impl Record {
     /// If a type `T` is mut reference safe, it can be possed as a `&mut T`
     /// safely. Otherwise, mutable references must use `Pin<&mut T>`.
     ///
-    /// Conditions:
-    ///
-    /// 1. It is trivially relocatable, and thus can be passed by value and have
-    ///    its memory directly mutated by Rust using memcpy-like
-    ///    assignment/swap.
-    ///
-    /// 2. It cannot overlap with any other objects. In particular, it cannot be
-    ///    inherited from, as inheritance allows for the tail padding to be
-    ///    reused by other objects.
-    ///
-    ///    (In future versions, we could also include types which are POD for
-    ///    the purpose of layout, but this is less predictable to C++ users,
-    ///    and ABI-specific.)
-    ///
-    ///    We are assuming, for the moment, that no object is stored in a
-    ///    `[[no_unique_address]]` variable. Much like packed structs and
-    ///    the like, users of `[[no_unique_address]]` must be very careful
-    ///    when passing mutable references to Rust.
+    /// In C++, this is called "trivially relocatable". Such types can be passed
+    /// by value and have their memory directly mutated by Rust using
+    /// memcpy-like assignment/swap.
     ///
     /// Described in more detail at: docs/unpin
     pub fn is_unpin(&self) -> bool {
-        self.is_trivial_abi && !self.is_inheritable && self.fields.iter().all(|f| !f.is_inheritable)
+        self.is_trivial_abi
     }
 
     pub fn is_union(&self) -> bool {

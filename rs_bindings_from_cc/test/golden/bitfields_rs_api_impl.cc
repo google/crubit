@@ -30,11 +30,6 @@ extern "C" void __rust_thunk___ZN13WithBitfieldsC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN13WithBitfieldsC1ERKS_(
-    struct WithBitfields* __this, const struct WithBitfields* __param_0) {
-  crubit::construct_at(__this, *__param_0);
-}
-
 extern "C" void __rust_thunk___ZN13WithBitfieldsC1EOS_(
     struct WithBitfields* __this, struct WithBitfields* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
@@ -56,12 +51,6 @@ static_assert(alignof(struct AlignmentRegressionTest) == 4);
 extern "C" void __rust_thunk___ZN23AlignmentRegressionTestC1Ev(
     struct AlignmentRegressionTest* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN23AlignmentRegressionTestC1ERKS_(
-    struct AlignmentRegressionTest* __this,
-    const struct AlignmentRegressionTest* __param_0) {
-  crubit::construct_at(__this, *__param_0);
 }
 
 extern "C" void __rust_thunk___ZN23AlignmentRegressionTestC1EOS_(

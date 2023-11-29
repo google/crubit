@@ -4537,6 +4537,7 @@ mod tests {
             let dependency_src = r#" #pragma clang lifetime_elision
                     template <typename T>
                     struct MyTemplate {
+                        ~MyTemplate();
                         T GetValue() { return field; }
                         T field;
                     }; "#;
@@ -4560,7 +4561,7 @@ mod tests {
             rs_api,
             quote! {
                 impl __CcTemplateInst10MyTemplateIiE {
-                    #[doc = " Generated from: google3/test/dependency_header.h;l=4"]
+                    #[doc = " Generated from: google3/test/dependency_header.h;l=5"]
                     #[inline(always)]
                     pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> ::core::ffi::c_int { unsafe {
                         crate::detail::__rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget(
@@ -5030,42 +5031,6 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn test_struct_with_inheritable_field() -> Result<()> {
-        let ir = ir_from_cc(
-            r#"
-            struct TrivialButInheritable {
-              int x;
-            };
-            struct StructWithInheritable final {
-              TrivialButInheritable t;
-            };
-        "#,
-        )?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
-        assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
-        Ok(())
-    }
-
-    #[test]
-    fn test_union_with_inheritable_field() -> Result<()> {
-        let ir = ir_from_cc(
-            r#"
-            struct TrivialButInheritable {
-              int x;
-            };
-            union UnionWithInheritable {
-              TrivialButInheritable t;
-            };
-        "#,
-        )?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
-        assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
-        Ok(())
-    }
-
     /// Classes with a non-public destructor shouldn't be constructible, not
     /// even via Copy/Clone.
     #[test]
@@ -5263,19 +5228,6 @@ mod tests {
     fn test_copy_derives_not_is_trivial_abi() {
         let mut record = ir_record("S");
         record.is_trivial_abi = false;
-        assert_eq!(generate_derives(&record), &[""; 0]);
-    }
-
-    /// Even if it's trivially relocatable, !Unpin C++ type cannot be
-    /// cloned/copied or otherwise used by value, because values would allow
-    /// assignment into the Pin.
-    ///
-    /// All !Unpin C++ types, not just non trivially relocatable ones, are
-    /// unsafe to assign in the Rust sense.
-    #[test]
-    fn test_copy_derives_not_final() {
-        let mut record = ir_record("S");
-        record.is_inheritable = true;
         assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
@@ -6819,16 +6771,6 @@ mod tests {
         Ok(())
     }
 
-    /// A non-final struct, even if it's trivial, is not usable by mut
-    /// reference, and so is !Unpin.
-    #[test]
-    fn test_negative_impl_unpin_nonfinal() -> Result<()> {
-        let ir = ir_from_cc("struct Nonfinal {};")?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned]});
-        Ok(())
-    }
-
     /// At the least, a trivial type should have no drop impl if or until we add
     /// empty drop impls.
     #[test]
@@ -7361,6 +7303,7 @@ mod tests {
             r#"
             #pragma clang lifetime_elision
             struct SomeStruct {
+                ~SomeStruct();
                 SomeStruct& operator=(const SomeStruct& other);
             };"#,
         )?;
@@ -7387,6 +7330,7 @@ mod tests {
             r#"
             #pragma clang lifetime_elision
             struct SomeStruct {
+                ~SomeStruct();
                 SomeStruct& operator=(int other);
             };"#,
         )?;
@@ -7413,6 +7357,7 @@ mod tests {
             r#"
             #pragma clang lifetime_elision
             struct SomeStruct {
+                ~SomeStruct();
                 int operator=(const SomeStruct& other);
             };"#,
         )?;
@@ -7863,9 +7808,9 @@ mod tests {
     fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
         let db = db_from_cc(
             "#pragma clang lifetime_elision
-             struct SomeStruct {};
-             void foo(const SomeStruct& foo_param);
-             void bar(SomeStruct& bar_param);",
+            struct SomeStruct {};
+            void foo(const SomeStruct& foo_param);
+            void bar(SomeStruct& bar_param);",
         )?;
         let ir = db.ir();
         let record = ir.records().next().unwrap();
@@ -8222,10 +8167,13 @@ mod tests {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
             // This type must be `!Unpin`.
-            struct HasConstructor {explicit HasConstructor() {}};"#,
+            struct HasConstructor {
+                explicit HasConstructor() {}
+                ~HasConstructor();
+            };"#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned]});
+        assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned(PinnedDrop)]});
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -8252,10 +8200,13 @@ mod tests {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
             // This type must be `!Unpin`.
-            struct HasConstructor {explicit HasConstructor(unsigned char input) {}};"#,
+            struct HasConstructor {
+                explicit HasConstructor(unsigned char input) {}
+                ~HasConstructor();
+            };"#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned]});
+        assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned(PinnedDrop)]});
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -8282,10 +8233,13 @@ mod tests {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
             // This type must be `!Unpin`.
-            struct HasConstructor {explicit HasConstructor(unsigned char input1, signed char input2) {}};"#,
+            struct HasConstructor {
+                explicit HasConstructor(unsigned char input1, signed char input2) {}
+                ~HasConstructor();
+            };"#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned]});
+        assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned(PinnedDrop)]});
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -8322,10 +8276,11 @@ mod tests {
                 // the right is doing: the `a` lifetime is present in some places, but eventually
                 // removed from the public interface.)
                 explicit HasConstructor(const int& x, HasConstructor y, HasConstructor b) {}
+                ~HasConstructor();
             };"#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned]});
+        assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned(PinnedDrop)]});
         assert_rs_matches!(
             rs_api,
             quote! {

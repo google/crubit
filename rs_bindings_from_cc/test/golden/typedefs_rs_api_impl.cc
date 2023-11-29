@@ -26,11 +26,6 @@ extern "C" void __rust_thunk___ZN10SomeStructC1Ev(struct SomeStruct* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN10SomeStructC1ERKS_(
-    struct SomeStruct* __this, const struct SomeStruct* __param_0) {
-  crubit::construct_at(__this, *__param_0);
-}
-
 extern "C" void __rust_thunk___ZN10SomeStructC1EOS_(
     struct SomeStruct* __this, struct SomeStruct* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
@@ -52,11 +47,6 @@ static_assert(alignof(SomeOtherStruct) == 1);
 extern "C" void __rust_thunk___ZN15SomeOtherStructC1Ev(
     SomeOtherStruct* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN15SomeOtherStructC1ERKS_(
-    SomeOtherStruct* __this, const SomeOtherStruct* __param_0) {
-  crubit::construct_at(__this, *__param_0);
 }
 
 extern "C" void __rust_thunk___ZN15SomeOtherStructC1EOS_(

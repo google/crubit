@@ -101,6 +101,7 @@ inline int GetValueFromValue(Nonunpin nonunpin) { return nonunpin.value(); }
 // A deliberately !Unpin (aggregate) struct.
 struct NonunpinStruct {
   int value;
+  ~NonunpinStruct() {}
 };
 
 // A deliberately non-movable, non-copyable struct. (And, therefore, !Unpin).

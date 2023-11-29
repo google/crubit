@@ -100,7 +100,7 @@ pub unsafe fn take_pointer(p: *mut ::core::ffi::c_int) {
     crate::detail::__rust_thunk___Z12take_pointerPi(p)
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C, align(4))]
 #[__crubit::annotate(cc_type = "WrappedValue")]
 pub struct WrappedValue {
@@ -188,7 +188,10 @@ const _: () = {
 const _: () = assert!(::core::mem::size_of::<crate::WrappedValue>() == 4);
 const _: () = assert!(::core::mem::align_of::<crate::WrappedValue>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::WrappedValue:Copy);
+    static_assertions::assert_impl_all!(crate::WrappedValue:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::WrappedValue:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::WrappedValue:Drop);

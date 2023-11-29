@@ -7,14 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(
-    arbitrary_self_types,
-    custom_inner_attributes,
-    impl_trait_in_assoc_type,
-    negative_impls,
-    register_tool,
-    type_alias_impl_trait
-)]
+#![feature(arbitrary_self_types, custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -127,7 +120,7 @@ pub mod ns {
 
     /// This struct is trivial, and therefore trivially relocatable etc., but still
     /// not safe to pass by reference as it is not final.
-    #[::ctor::recursively_pinned]
+    #[derive(Clone, Copy)]
     #[repr(C)]
     #[__crubit::annotate(cc_type = "ns :: TrivialNonfinal")]
     pub struct TrivialNonfinal {
@@ -138,90 +131,40 @@ pub mod ns {
         crate::ns::TrivialNonfinal
     );
 
-    impl ::ctor::CtorNew<()> for TrivialNonfinal {
-        type CtorType = impl ::ctor::Ctor<Output = Self>;
+    impl Default for TrivialNonfinal {
         #[inline(always)]
-        fn ctor_new(args: ()) -> Self::CtorType {
-            let () = args;
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                ::ctor::FnCtor::new(
-                    move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                        crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1Ev(
-                            ::core::pin::Pin::into_inner_unchecked(dest),
-                        );
-                    },
-                )
+                crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1Ev(&mut tmp);
+                tmp.assume_init()
             }
         }
     }
 
-    impl<'b> ::ctor::CtorNew<&'b Self> for TrivialNonfinal {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
         #[inline(always)]
-        fn ctor_new(args: &'b Self) -> Self::CtorType {
-            let __param_0 = args;
+        fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                ::ctor::FnCtor::new(
-                    move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                        crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1ERKS0_(
-                            ::core::pin::Pin::into_inner_unchecked(dest),
-                            __param_0,
-                        );
-                    },
-                )
+                crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_(&mut tmp, __param_0);
+                tmp.assume_init()
             }
         }
     }
-    impl<'b> ::ctor::CtorNew<(&'b Self,)> for TrivialNonfinal {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-        #[inline(always)]
-        fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-            let (arg,) = args;
-            <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-        }
-    }
 
-    impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    impl<'b> ::ctor::UnpinAssign<&'b Self> for TrivialNonfinal {
         #[inline(always)]
-        fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-            let __param_0 = args;
-            unsafe {
-                ::ctor::FnCtor::new(
-                    move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                        crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_(
-                            ::core::pin::Pin::into_inner_unchecked(dest),
-                            __param_0,
-                        );
-                    },
-                )
-            }
-        }
-    }
-    impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for TrivialNonfinal {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-        #[inline(always)]
-        fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
-            let (arg,) = args;
-            <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
-        }
-    }
-
-    impl<'b> ::ctor::Assign<&'b Self> for TrivialNonfinal {
-        #[inline(always)]
-        fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+        fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalaSERKS0_(self, __param_0);
             }
         }
     }
 
-    impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
+    impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
         #[inline(always)]
-        fn assign<'a>(
-            self: ::core::pin::Pin<&'a mut Self>,
-            __param_0: ::ctor::RvalueReference<'b, Self>,
-        ) {
+        fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalaSEOS0_(self, __param_0);
             }
@@ -242,16 +185,15 @@ pub mod ns {
 
     #[inline(always)]
     pub fn TakesTrivialNonfinalByValue(
-        trivial: impl ::ctor::Ctor<Output = crate::ns::TrivialNonfinal>,
-    ) -> impl ::ctor::Ctor<Output = crate::ns::TrivialNonfinal> {
+        mut trivial: crate::ns::TrivialNonfinal,
+    ) -> crate::ns::TrivialNonfinal {
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<
-                    &mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
-                >| {
-                    crate::detail::__rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(::core::pin::Pin::into_inner_unchecked(dest),::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(trivial)));
-                },
-            )
+            let mut __return = ::core::mem::MaybeUninit::<crate::ns::TrivialNonfinal>::uninit();
+            crate::detail::__rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
+                &mut __return,
+                &mut trivial,
+            );
+            __return.assume_init()
         }
     }
 
@@ -262,8 +204,8 @@ pub mod ns {
 
     #[inline(always)]
     pub fn TakesTrivialNonfinalByReference<'a>(
-        trivial: ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
-    ) -> ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal> {
+        trivial: &'a mut crate::ns::TrivialNonfinal,
+    ) -> &'a mut crate::ns::TrivialNonfinal {
         unsafe {
             crate::detail::__rust_thunk___ZN2ns31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE(trivial)
         }
@@ -372,22 +314,18 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
         );
-        pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalC1ERKS0_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
-            __param_0: &'b crate::ns::TrivialNonfinal,
-        );
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
         );
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalaSERKS0_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
+            __this: &'a mut crate::ns::TrivialNonfinal,
             __param_0: &'b crate::ns::TrivialNonfinal,
-        ) -> ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
+        ) -> &'a mut crate::ns::TrivialNonfinal;
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalaSEOS0_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
+            __this: &'a mut crate::ns::TrivialNonfinal,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
-        ) -> ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
+        ) -> &'a mut crate::ns::TrivialNonfinal;
         pub(crate) fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
             __return: &mut ::core::mem::MaybeUninit<crate::ns::Trivial>,
             trivial: &mut crate::ns::Trivial,
@@ -404,8 +342,8 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN2ns31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE<
             'a,
         >(
-            trivial: ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
-        ) -> ::core::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
+            trivial: &'a mut crate::ns::TrivialNonfinal,
+        ) -> &'a mut crate::ns::TrivialNonfinal;
         #[link_name = "_ZN2ns21TakesByConstReferenceERKNS_7TrivialE"]
         pub(crate) fn __rust_thunk___ZN2ns21TakesByConstReferenceERKNS_7TrivialE<'a>(
             trivial: &'a crate::ns::Trivial,
@@ -456,7 +394,10 @@ const _: () = assert!(memoffset::offset_of!(crate::ns::Trivial, trivial_field) =
 const _: () = assert!(::core::mem::size_of::<crate::ns::TrivialNonfinal>() == 4);
 const _: () = assert!(::core::mem::align_of::<crate::ns::TrivialNonfinal>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::ns::TrivialNonfinal:Copy);
+    static_assertions::assert_impl_all!(crate::ns::TrivialNonfinal:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::ns::TrivialNonfinal:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::ns::TrivialNonfinal:Drop);

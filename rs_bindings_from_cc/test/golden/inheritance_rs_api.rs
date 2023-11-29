@@ -30,7 +30,7 @@
 /// Using classes to force these to be non-POD.
 /// In the Itanium ABI, the tail padding of POD types cannot be reused by other
 /// objects, even if the POD type is potentially-overlapping.
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "Base0")]
 pub struct Base0 {
@@ -38,97 +38,47 @@ pub struct Base0 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), crate::Base0);
 
-impl ::ctor::CtorNew<()> for Base0 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+impl Default for Base0 {
     #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN5Base0C1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                    );
-                },
-            )
+            crate::detail::__rust_thunk___ZN5Base0C1Ev(&mut tmp);
+            tmp.assume_init()
         }
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b Self> for Base0 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for Base0 {
     #[inline(always)]
-    fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN5Base0C1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            crate::detail::__rust_thunk___ZN5Base0C1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b Self,)> for Base0 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-    }
-}
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base0 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+impl<'b> ::ctor::UnpinAssign<&'b Self> for Base0 {
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN5Base0C1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Base0 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
-    }
-}
-
-impl<'b> ::ctor::Assign<&'b Self> for Base0 {
-    #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base0aSERKS_(self, __param_0);
         }
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base0 {
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Base0 {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, Self>,
-    ) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base0aSEOS_(self, __param_0);
         }
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C, align(8))]
 #[__crubit::annotate(cc_type = "Base1")]
 pub struct Base1 {
@@ -142,97 +92,47 @@ pub struct Base1 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1);
 
-impl ::ctor::CtorNew<()> for Base1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+impl Default for Base1 {
     #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN5Base1C1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                    );
-                },
-            )
+            crate::detail::__rust_thunk___ZN5Base1C1Ev(&mut tmp);
+            tmp.assume_init()
         }
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b Self> for Base1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for Base1 {
     #[inline(always)]
-    fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN5Base1C1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            crate::detail::__rust_thunk___ZN5Base1C1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b Self,)> for Base1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-    }
-}
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+impl<'b> ::ctor::UnpinAssign<&'b Self> for Base1 {
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN5Base1C1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Base1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
-    }
-}
-
-impl<'b> ::ctor::Assign<&'b Self> for Base1 {
-    #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base1aSERKS_(self, __param_0);
         }
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base1 {
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Base1 {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, Self>,
-    ) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base1aSEOS_(self, __param_0);
         }
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C, align(2))]
 #[__crubit::annotate(cc_type = "Base2")]
 pub struct Base2 {
@@ -243,90 +143,40 @@ pub struct Base2 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), crate::Base2);
 
-impl ::ctor::CtorNew<()> for Base2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+impl Default for Base2 {
     #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN5Base2C1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                    );
-                },
-            )
+            crate::detail::__rust_thunk___ZN5Base2C1Ev(&mut tmp);
+            tmp.assume_init()
         }
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b Self> for Base2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for Base2 {
     #[inline(always)]
-    fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN5Base2C1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            crate::detail::__rust_thunk___ZN5Base2C1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b Self,)> for Base2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-    }
-}
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+impl<'b> ::ctor::UnpinAssign<&'b Self> for Base2 {
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN5Base2C1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Base2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
-    }
-}
-
-impl<'b> ::ctor::Assign<&'b Self> for Base2 {
-    #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base2aSERKS_(self, __param_0);
         }
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base2 {
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Base2 {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, Self>,
-    ) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base2aSEOS_(self, __param_0);
         }
@@ -747,7 +597,7 @@ impl<'b> ::ctor::Assign<&'b Self> for MyAbstractClass {
 }
 
 /// Method inheritance
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "MethodBase1")]
 pub struct MethodBase1 {
@@ -755,90 +605,40 @@ pub struct MethodBase1 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase1"), crate::MethodBase1);
 
-impl ::ctor::CtorNew<()> for MethodBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+impl Default for MethodBase1 {
     #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN11MethodBase1C1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                    );
-                },
-            )
+            crate::detail::__rust_thunk___ZN11MethodBase1C1Ev(&mut tmp);
+            tmp.assume_init()
         }
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b Self> for MethodBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
     #[inline(always)]
-    fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN11MethodBase1C1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            crate::detail::__rust_thunk___ZN11MethodBase1C1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b Self,)> for MethodBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-    }
-}
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+impl<'b> ::ctor::UnpinAssign<&'b Self> for MethodBase1 {
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN11MethodBase1C1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for MethodBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
-    }
-}
-
-impl<'b> ::ctor::Assign<&'b Self> for MethodBase1 {
-    #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN11MethodBase1aSERKS_(self, __param_0);
         }
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, Self>,
-    ) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN11MethodBase1aSEOS_(self, __param_0);
         }
@@ -847,26 +647,26 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
 
 impl MethodBase1 {
     #[inline(always)]
-    pub fn Public<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn Public<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(self) }
     }
 }
 
 impl MethodBase1 {
     #[inline(always)]
-    pub fn Colliding1<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn Colliding1<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(self) }
     }
 }
 
 impl MethodBase1 {
     #[inline(always)]
-    pub fn Colliding2<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn Colliding2<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(self) }
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "MethodBase2")]
 pub struct MethodBase2 {
@@ -874,90 +674,40 @@ pub struct MethodBase2 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase2"), crate::MethodBase2);
 
-impl ::ctor::CtorNew<()> for MethodBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+impl Default for MethodBase2 {
     #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN11MethodBase2C1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                    );
-                },
-            )
+            crate::detail::__rust_thunk___ZN11MethodBase2C1Ev(&mut tmp);
+            tmp.assume_init()
         }
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b Self> for MethodBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
     #[inline(always)]
-    fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN11MethodBase2C1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            crate::detail::__rust_thunk___ZN11MethodBase2C1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b Self,)> for MethodBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-    }
-}
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+impl<'b> ::ctor::UnpinAssign<&'b Self> for MethodBase2 {
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN11MethodBase2C1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for MethodBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
-    }
-}
-
-impl<'b> ::ctor::Assign<&'b Self> for MethodBase2 {
-    #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN11MethodBase2aSERKS_(self, __param_0);
         }
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, Self>,
-    ) {
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN11MethodBase2aSEOS_(self, __param_0);
         }
@@ -966,14 +716,14 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
 
 impl MethodBase2 {
     #[inline(always)]
-    pub fn Colliding1<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn Colliding1<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(self) }
     }
 }
 
 impl MethodBase2 {
     #[inline(always)]
-    pub fn Colliding2<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    pub fn Colliding2<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(self) }
     }
 }
@@ -1046,60 +796,48 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN5Base0C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base0>,
         );
-        pub(crate) fn __rust_thunk___ZN5Base0C1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Base0>,
-            __param_0: &'b crate::Base0,
-        );
         pub(crate) fn __rust_thunk___ZN5Base0C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base0>,
             __param_0: ::ctor::RvalueReference<'b, crate::Base0>,
         );
         pub(crate) fn __rust_thunk___ZN5Base0aSERKS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::Base0>,
+            __this: &'a mut crate::Base0,
             __param_0: &'b crate::Base0,
-        ) -> ::core::pin::Pin<&'a mut crate::Base0>;
+        ) -> &'a mut crate::Base0;
         pub(crate) fn __rust_thunk___ZN5Base0aSEOS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::Base0>,
+            __this: &'a mut crate::Base0,
             __param_0: ::ctor::RvalueReference<'b, crate::Base0>,
-        ) -> ::core::pin::Pin<&'a mut crate::Base0>;
+        ) -> &'a mut crate::Base0;
         pub(crate) fn __rust_thunk___ZN5Base1C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base1>,
-        );
-        pub(crate) fn __rust_thunk___ZN5Base1C1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Base1>,
-            __param_0: &'b crate::Base1,
         );
         pub(crate) fn __rust_thunk___ZN5Base1C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base1>,
             __param_0: ::ctor::RvalueReference<'b, crate::Base1>,
         );
         pub(crate) fn __rust_thunk___ZN5Base1aSERKS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::Base1>,
+            __this: &'a mut crate::Base1,
             __param_0: &'b crate::Base1,
-        ) -> ::core::pin::Pin<&'a mut crate::Base1>;
+        ) -> &'a mut crate::Base1;
         pub(crate) fn __rust_thunk___ZN5Base1aSEOS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::Base1>,
+            __this: &'a mut crate::Base1,
             __param_0: ::ctor::RvalueReference<'b, crate::Base1>,
-        ) -> ::core::pin::Pin<&'a mut crate::Base1>;
+        ) -> &'a mut crate::Base1;
         pub(crate) fn __rust_thunk___ZN5Base2C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base2>,
-        );
-        pub(crate) fn __rust_thunk___ZN5Base2C1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Base2>,
-            __param_0: &'b crate::Base2,
         );
         pub(crate) fn __rust_thunk___ZN5Base2C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base2>,
             __param_0: ::ctor::RvalueReference<'b, crate::Base2>,
         );
         pub(crate) fn __rust_thunk___ZN5Base2aSERKS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::Base2>,
+            __this: &'a mut crate::Base2,
             __param_0: &'b crate::Base2,
-        ) -> ::core::pin::Pin<&'a mut crate::Base2>;
+        ) -> &'a mut crate::Base2;
         pub(crate) fn __rust_thunk___ZN5Base2aSEOS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::Base2>,
+            __this: &'a mut crate::Base2,
             __param_0: ::ctor::RvalueReference<'b, crate::Base2>,
-        ) -> ::core::pin::Pin<&'a mut crate::Base2>;
+        ) -> &'a mut crate::Base2;
         pub(crate) fn __rust_thunk___ZN7DerivedC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Derived>,
         );
@@ -1194,60 +932,52 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN11MethodBase1C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase1>,
         );
-        pub(crate) fn __rust_thunk___ZN11MethodBase1C1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase1>,
-            __param_0: &'b crate::MethodBase1,
-        );
         pub(crate) fn __rust_thunk___ZN11MethodBase1C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase1>,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodBase1>,
         );
         pub(crate) fn __rust_thunk___ZN11MethodBase1aSERKS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::MethodBase1>,
+            __this: &'a mut crate::MethodBase1,
             __param_0: &'b crate::MethodBase1,
-        ) -> ::core::pin::Pin<&'a mut crate::MethodBase1>;
+        ) -> &'a mut crate::MethodBase1;
         pub(crate) fn __rust_thunk___ZN11MethodBase1aSEOS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::MethodBase1>,
+            __this: &'a mut crate::MethodBase1,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodBase1>,
-        ) -> ::core::pin::Pin<&'a mut crate::MethodBase1>;
+        ) -> &'a mut crate::MethodBase1;
         #[link_name = "_ZN11MethodBase16PublicEv"]
         pub(crate) fn __rust_thunk___ZN11MethodBase16PublicEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::MethodBase1>,
+            __this: &'a mut crate::MethodBase1,
         );
         #[link_name = "_ZN11MethodBase110Colliding1Ev"]
         pub(crate) fn __rust_thunk___ZN11MethodBase110Colliding1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::MethodBase1>,
+            __this: &'a mut crate::MethodBase1,
         );
         #[link_name = "_ZN11MethodBase110Colliding2Ev"]
         pub(crate) fn __rust_thunk___ZN11MethodBase110Colliding2Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::MethodBase1>,
+            __this: &'a mut crate::MethodBase1,
         );
         pub(crate) fn __rust_thunk___ZN11MethodBase2C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase2>,
-        );
-        pub(crate) fn __rust_thunk___ZN11MethodBase2C1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase2>,
-            __param_0: &'b crate::MethodBase2,
         );
         pub(crate) fn __rust_thunk___ZN11MethodBase2C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase2>,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodBase2>,
         );
         pub(crate) fn __rust_thunk___ZN11MethodBase2aSERKS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::MethodBase2>,
+            __this: &'a mut crate::MethodBase2,
             __param_0: &'b crate::MethodBase2,
-        ) -> ::core::pin::Pin<&'a mut crate::MethodBase2>;
+        ) -> &'a mut crate::MethodBase2;
         pub(crate) fn __rust_thunk___ZN11MethodBase2aSEOS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::MethodBase2>,
+            __this: &'a mut crate::MethodBase2,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodBase2>,
-        ) -> ::core::pin::Pin<&'a mut crate::MethodBase2>;
+        ) -> &'a mut crate::MethodBase2;
         #[link_name = "_ZN11MethodBase210Colliding1Ev"]
         pub(crate) fn __rust_thunk___ZN11MethodBase210Colliding1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::MethodBase2>,
+            __this: &'a mut crate::MethodBase2,
         );
         #[link_name = "_ZN11MethodBase210Colliding2Ev"]
         pub(crate) fn __rust_thunk___ZN11MethodBase210Colliding2Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::MethodBase2>,
+            __this: &'a mut crate::MethodBase2,
         );
         pub(crate) fn __rust_thunk___ZN13MethodDerivedC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MethodDerived>,
@@ -1272,7 +1002,10 @@ const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::siz
 const _: () = assert!(::core::mem::size_of::<crate::Base0>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::Base0>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Base0:Copy);
+    static_assertions::assert_impl_all!(crate::Base0:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::Base0:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Base0:Drop);
@@ -1281,7 +1014,10 @@ const _: () = {
 const _: () = assert!(::core::mem::size_of::<crate::Base1>() == 16);
 const _: () = assert!(::core::mem::align_of::<crate::Base1>() == 8);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Base1:Copy);
+    static_assertions::assert_impl_all!(crate::Base1:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::Base1:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Base1:Drop);
@@ -1292,7 +1028,10 @@ const _: () = assert!(memoffset::offset_of!(crate::Base1, b1_2_) == 8);
 const _: () = assert!(::core::mem::size_of::<crate::Base2>() == 2);
 const _: () = assert!(::core::mem::align_of::<crate::Base2>() == 2);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::Base2:Copy);
+    static_assertions::assert_impl_all!(crate::Base2:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::Base2:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Base2:Drop);
@@ -1351,7 +1090,10 @@ const _: () = {
 const _: () = assert!(::core::mem::size_of::<crate::MethodBase1>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::MethodBase1>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::MethodBase1:Copy);
+    static_assertions::assert_impl_all!(crate::MethodBase1:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::MethodBase1:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::MethodBase1:Drop);
@@ -1360,7 +1102,10 @@ const _: () = {
 const _: () = assert!(::core::mem::size_of::<crate::MethodBase2>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::MethodBase2>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::MethodBase2:Copy);
+    static_assertions::assert_impl_all!(crate::MethodBase2:Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::MethodBase2:Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::MethodBase2:Drop);
