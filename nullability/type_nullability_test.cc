@@ -19,7 +19,17 @@ namespace clang::tidy::nullability {
 namespace {
 using testing::ElementsAre;
 
-TEST(TypeNullabilityTest, IsSupportedRawPointerType) {
+class PointerTypeTest : public ::testing::Test {
+ protected:
+  QualType underlying(llvm::StringRef Name, TestAST& AST) {
+    auto Lookup = AST.context().getTranslationUnitDecl()->lookup(
+        &AST.context().Idents.get(Name));
+    EXPECT_TRUE(Lookup.isSingleResult());
+    return Lookup.find_first<TypeAliasDecl>()->getUnderlyingType();
+  }
+};
+
+TEST_F(PointerTypeTest, IsSupportedRawPointerType) {
   TestAST AST(R"cpp(
     using NotPointer = int;
     using Pointer = NotPointer*;
@@ -44,34 +54,29 @@ TEST(TypeNullabilityTest, IsSupportedRawPointerType) {
     using UniquePointer = std::unique_ptr<NotPointer>;
   )cpp");
 
-  auto Underlying = [&](llvm::StringRef Name) {
-    auto Lookup = AST.context().getTranslationUnitDecl()->lookup(
-        &AST.context().Idents.get(Name));
-    EXPECT_TRUE(Lookup.isSingleResult());
-    return Lookup.find_first<TypeAliasDecl>()->getUnderlyingType();
-  };
-  EXPECT_FALSE(isSupportedRawPointerType(Underlying("NotPointer")));
-  EXPECT_TRUE(isSupportedRawPointerType(Underlying("Pointer")));
-  EXPECT_TRUE(isSupportedRawPointerType(Underlying("FuncPointer")));
-  EXPECT_TRUE(isSupportedRawPointerType(Underlying("SugaredPointer")));
-  EXPECT_FALSE(isSupportedRawPointerType(Underlying("PointerDataMember")));
-  EXPECT_FALSE(isSupportedRawPointerType(Underlying("PointerMemberFunction")));
-  EXPECT_FALSE(isSupportedRawPointerType(Underlying("ObjCPointer")));
-  EXPECT_FALSE(isSupportedRawPointerType(Underlying("ContainsPointers")));
-  EXPECT_FALSE(isSupportedRawPointerType(Underlying("UniquePointer")));
+  EXPECT_FALSE(isSupportedRawPointerType(underlying("NotPointer", AST)));
+  EXPECT_TRUE(isSupportedRawPointerType(underlying("Pointer", AST)));
+  EXPECT_TRUE(isSupportedRawPointerType(underlying("FuncPointer", AST)));
+  EXPECT_TRUE(isSupportedRawPointerType(underlying("SugaredPointer", AST)));
+  EXPECT_FALSE(isSupportedRawPointerType(underlying("PointerDataMember", AST)));
+  EXPECT_FALSE(
+      isSupportedRawPointerType(underlying("PointerMemberFunction", AST)));
+  EXPECT_FALSE(isSupportedRawPointerType(underlying("ObjCPointer", AST)));
+  EXPECT_FALSE(isSupportedRawPointerType(underlying("ContainsPointers", AST)));
+  EXPECT_FALSE(isSupportedRawPointerType(underlying("UniquePointer", AST)));
 }
 
-TEST(TypeNullabilityTest, IsSupportedSmartPointerType) {
+TEST_F(PointerTypeTest, IsSupportedSmartPointerType) {
   TestAST AST(R"cpp(
     namespace std {
-    template <typename>
+    template <typename T>
     class unique_ptr;
-    template <typename>
+    template <typename T>
     class shared_ptr;
-    template <typename>
+    template <typename T>
     class weak_ptr;
     }  // namespace std
-    template <typename>
+    template <typename T>
     class unique_ptr;
 
     using NotPointer = int;
@@ -88,20 +93,80 @@ TEST(TypeNullabilityTest, IsSupportedSmartPointerType) {
     using ContainsPointers = Container<std::unique_ptr<int>>;
   )cpp");
 
-  auto Underlying = [&](llvm::StringRef Name) {
-    auto Lookup = AST.context().getTranslationUnitDecl()->lookup(
-        &AST.context().Idents.get(Name));
-    EXPECT_TRUE(Lookup.isSingleResult());
-    return Lookup.find_first<TypeAliasDecl>()->getUnderlyingType();
-  };
-  EXPECT_FALSE(isSupportedSmartPointerType(Underlying("NotPointer")));
-  EXPECT_TRUE(isSupportedSmartPointerType(Underlying("UniquePointer")));
-  EXPECT_TRUE(isSupportedSmartPointerType(Underlying("SharedPointer")));
-  EXPECT_FALSE(isSupportedSmartPointerType(Underlying("WeakPointer")));
-  EXPECT_FALSE(
-      isSupportedSmartPointerType(Underlying("UniquePointerWrongNamespace")));
-  EXPECT_TRUE(isSupportedSmartPointerType(Underlying("SugaredPointer")));
-  EXPECT_FALSE(isSupportedRawPointerType(Underlying("ContainsPointers")));
+  EXPECT_FALSE(isSupportedSmartPointerType(underlying("NotPointer", AST)));
+  EXPECT_TRUE(isSupportedSmartPointerType(underlying("UniquePointer", AST)));
+  EXPECT_TRUE(isSupportedSmartPointerType(underlying("SharedPointer", AST)));
+  EXPECT_FALSE(isSupportedSmartPointerType(underlying("WeakPointer", AST)));
+  EXPECT_FALSE(isSupportedSmartPointerType(
+      underlying("UniquePointerWrongNamespace", AST)));
+  EXPECT_TRUE(isSupportedSmartPointerType(underlying("SugaredPointer", AST)));
+  EXPECT_FALSE(isSupportedRawPointerType(underlying("ContainsPointers", AST)));
+}
+
+using UnderlyingRawPointerTest = PointerTypeTest;
+
+TEST_F(UnderlyingRawPointerTest, Instantiated) {
+  // Test the case where the smart pointer type is instantiated and
+  // `underlyingRawPointerType()` therefore looks at the type aliases `pointer`
+  // or `element_type`.
+  // To test that we're really looking at these type aliases, make them refer to
+  // `char *` / `char`, independent of the template argument.
+  TestAST AST(R"cpp(
+    namespace std {
+    template <typename T>
+    class unique_ptr {
+      using pointer = char *;
+    };
+    template <typename T>
+    class shared_ptr {
+      using element_type = char;
+    };
+    }  // namespace std
+
+    using UniquePointer = std::unique_ptr<int>;
+    using SharedPointer = std::shared_ptr<int>;
+    // Force the compiler to instantiate the templates. Otherwise, the
+    // `ClassTemplateSpecializationDecl` won't contain a `TypedefNameDecl` for
+    // `pointer` or `element_type`, and `underlyingRawPointerType()` will
+    // use the fallback behavior of looking at the template argument.
+    template class std::unique_ptr<int>;
+    template class std::shared_ptr<int>;
+  )cpp");
+
+  QualType PointerToCharTy = AST.context().getPointerType(AST.context().CharTy);
+  EXPECT_EQ(underlyingRawPointerType(underlying("UniquePointer", AST)),
+            PointerToCharTy);
+  EXPECT_EQ(underlyingRawPointerType(underlying("SharedPointer", AST)),
+            PointerToCharTy);
+}
+
+TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
+  // Test the fallback behavior for `underlyingRawPointerType()` where the smart
+  // pointer type is not instantiated. (In fact, we can't even see the template
+  // definition here.)
+  TestAST AST(R"cpp(
+    namespace std {
+    template <typename T>
+    class unique_ptr;
+    template <typename T>
+    class shared_ptr;
+    }  // namespace std
+
+    using UniquePointer = std::unique_ptr<int>;
+    using ArrayUniquePointer = std::unique_ptr<int[]>;
+    using SharedPointer = std::shared_ptr<int>;
+    using ArraySharedPointer = std::shared_ptr<int[]>;
+  )cpp");
+
+  QualType PointerToIntTy = AST.context().getPointerType(AST.context().IntTy);
+  EXPECT_EQ(underlyingRawPointerType(underlying("UniquePointer", AST)),
+            PointerToIntTy);
+  EXPECT_EQ(underlyingRawPointerType(underlying("ArrayUniquePointer", AST)),
+            PointerToIntTy);
+  EXPECT_EQ(underlyingRawPointerType(underlying("SharedPointer", AST)),
+            PointerToIntTy);
+  EXPECT_EQ(underlyingRawPointerType(underlying("ArraySharedPointer", AST)),
+            PointerToIntTy);
 }
 
 class GetNullabilityAnnotationsFromTypeTest : public ::testing::Test {

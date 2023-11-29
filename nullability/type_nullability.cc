@@ -35,17 +35,43 @@ bool isSupportedPointerType(QualType T) {
 bool isSupportedRawPointerType(QualType T) { return T->isPointerType(); }
 
 bool isSupportedSmartPointerType(QualType T) {
+  return !underlyingRawPointerType(T).isNull();
+}
+
+QualType underlyingRawPointerType(QualType T) {
   // TODO(b/304963199): Add support for the `absl_nullability_compatible` tag.
   const CXXRecordDecl *RD = T.getCanonicalType()->getAsCXXRecordDecl();
-  if (RD == nullptr) return false;
+  if (RD == nullptr) return QualType();
 
-  if (!RD->getDeclContext()->isStdNamespace()) return false;
+  if (!RD->getDeclContext()->isStdNamespace()) return QualType();
 
   const IdentifierInfo *ID = RD->getIdentifier();
-  if (ID == nullptr) return false;
+  if (ID == nullptr) return QualType();
 
   StringRef Name = ID->getName();
-  return Name == "unique_ptr" || Name == "shared_ptr";
+  if (Name != "unique_ptr" && Name != "shared_ptr") return QualType();
+
+  const ASTContext &ASTCtx = RD->getASTContext();
+  const auto &Idents = ASTCtx.Idents;
+  if (auto PointerIt = Idents.find("pointer"); PointerIt != Idents.end()) {
+    if (auto *TND =
+            RD->lookup(PointerIt->getValue()).find_first<TypedefNameDecl>())
+      return TND->getUnderlyingType();
+  }
+  if (auto PointerIt = Idents.find("element_type"); PointerIt != Idents.end()) {
+    if (auto *TND =
+            RD->lookup(PointerIt->getValue()).find_first<TypedefNameDecl>())
+      return ASTCtx.getPointerType(TND->getUnderlyingType());
+  }
+
+  const auto *TST = T->getAs<TemplateSpecializationType>();
+  if (TST == nullptr) return QualType();
+  if (TST->template_arguments().empty()) return QualType();
+  if (TST->template_arguments()[0].getKind() != TemplateArgument::Type)
+    return QualType();
+
+  QualType TemplateArg = TST->template_arguments()[0].getAsType();
+  return ASTCtx.getPointerType(ASTCtx.getBaseElementType(TemplateArg));
 }
 
 PointerTypeNullability PointerTypeNullability::createSymbolic(

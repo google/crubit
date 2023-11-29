@@ -58,6 +58,13 @@ bool isSupportedRawPointerType(QualType);
 /// This unwraps sugar, i.e. it looks at the canonical type.
 bool isSupportedSmartPointerType(QualType);
 
+/// Returns the raw pointer type underlying a smart pointer type.
+/// If this isn't a supported smart pointer type, returns a null type.
+/// If the smart pointer type is not instantiated, falls back to determining
+/// the raw pointer type from the first template argument, rather than from the
+/// `pointer` or `element_type` type aliases.
+QualType underlyingRawPointerType(QualType);
+
 /// Describes the nullability contract of a pointer "slot" within a type.
 ///
 /// This may be concrete: nullable/non-null/unknown nullability.
