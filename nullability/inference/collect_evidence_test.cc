@@ -434,9 +434,10 @@ TEST(CollectEvidenceFromImplementationTest, VarArgs) {
     void callee(int*...);
     void target() { callee(nullptr, nullptr); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                functionNamed("callee"))));
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("callee"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, MemberOperatorCallVarArgs) {
@@ -446,9 +447,10 @@ TEST(CollectEvidenceFromImplementationTest, MemberOperatorCallVarArgs) {
     };
     void target() { S{}(nullptr, nullptr); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                functionNamed("operator()"))));
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("operator()"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, ConstructorCall) {
@@ -511,6 +513,21 @@ TEST(CollectEvidenceFromImplementationTest,
                                 functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest, VariadicConstructorCall) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      S(Nonnull<int*> i, ...);
+    };
+    void target(int* p, int* q) { S s(p, q); }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target")),
+                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("S"))));
+}
+
 // Not yet supported: Needs special handling for CXXCtorInitializer, but is
 // not likely to produce many inference results as long as we are not
 // inferring annotations for fields.
@@ -530,6 +547,20 @@ TEST(DISABLED_CollectEvidenceFromImplementationTest,
 TEST(CollectEvidenceFromImplementationTest, PassedToNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nonnull<int*> i);
+
+    void target(int* p) { callee(p); }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target")),
+                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("callee"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, PassedToNonnullRef) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(Nonnull<int*>& i);
 
     void target(int* p) { callee(p); }
   )cc";

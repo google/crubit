@@ -268,7 +268,9 @@ void collectEvidenceFromArgsAndParams(
     const auto ParamType = ParamDecl->getType().getNonReferenceType();
     if (!isSupportedRawPointerType(ParamType)) continue;
     // the corresponding argument should also be a pointer.
-    CHECK(isSupportedRawPointerType(Expr.getArg(ArgI)->getType()));
+    CHECK(isSupportedRawPointerType(Expr.getArg(ArgI)->getType()))
+        << "Unsupported argument " << ArgI
+        << " type: " << Expr.getArg(ArgI)->getType().getAsString();
 
     dataflow::PointerValue *PV =
         getPointerValueFromExpr(Expr.getArg(ArgI), Env);
