@@ -3,6 +3,9 @@ load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
 
+#
+# Test: Crubit is disabled for all cc_library targets.
+#
 cc_library(
     # https://bazel.build/concepts/labels#target-names, with the following modifications:
     # - Removed `"` and `'`, since .cppmap disallows them in module names, as they aren't valid C++
@@ -29,16 +32,9 @@ cc_library(
 
 crubit_rust_test(
     name = "test_with_cc_library_with_invalid_character_in_transitive_deps",
-    srcs = ["test.rs"],
+    srcs = ["test_with_cc_library_with_invalid_character_in_transitive_deps.rs"],
     cc_deps = [
         ":crubit_disabled_cc_library_with_invalid_character_in_transitive_deps",
-    ],
-    tags = [
-        # b/216587072: It currently doesn't build due to target with invalid character in its
-        # transitive dependencies.
-        "manual",
-        "nobuilder",
-        "notap",
     ],
 )
 
@@ -51,15 +47,9 @@ crubit_test_cc_library(
 
 crubit_rust_test(
     name = "test_with_crubit_enabled_cc_library_with_invalid_character_in_transitive_deps",
-    srcs = ["test.rs"],
+    srcs = ["test_with_crubit_enabled_cc_library_with_invalid_character_in_transitive_deps.rs"],
     cc_deps = [
         ":crubit_enabled_cc_library_with_invalid_character_in_transitive_deps",
-    ],
-    tags = [
-        # b/216587072: It currently doesn't build.
-        "manual",
-        "nobuilder",
-        "notap",
     ],
 )
 
@@ -68,17 +58,10 @@ crubit_test_cc_library(
     hdrs = ["header.h"],
 )
 
-# TODO(b/216587072): Modify the test file to cover the generated crate name.
 crubit_rust_test(
     name = "test_crubit_enabled_cc_library_with_invalid_character",
-    srcs = ["test.rs"],
+    srcs = ["test_with_crubit_enabled_cc_library_with_invalid_character.rs"],
     cc_deps = [
-        ":crubit_enabled_cc_library_with_/!./%-@^#$&()*-+,;<=>?[]{|}~",
-    ],
-    tags = [
-        # b/216587072: It currently doesn't build.
-        "manual",
-        "nobuilder",
-        "notap",
+        ":crubit_enabled_cc_library_with_!./%-@^#$&()*-+,;<=>?[]{|}~",
     ],
 )

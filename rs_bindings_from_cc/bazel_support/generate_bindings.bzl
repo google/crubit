@@ -6,6 +6,10 @@
 """
 
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
+load(
+    "@@//rs_bindings_from_cc/bazel_support:compile_rust.bzl",
+    "escape_cpp_target_name",
+)
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 
 def _get_hdrs_command_line(hdrs):
@@ -48,9 +52,10 @@ def generate_bindings(
     Returns:
       tuple(cc_output, rs_output, namespaces_output, error_report_output): The generated source files.
     """
-    cc_output = ctx.actions.declare_file(ctx.label.name + "_rust_api_impl.cc")
-    rs_output = ctx.actions.declare_file(ctx.label.name + "_rust_api.rs")
-    namespaces_output = ctx.actions.declare_file(ctx.label.name + "_namespaces.json")
+    crate_name = escape_cpp_target_name(ctx)
+    cc_output = ctx.actions.declare_file(crate_name + "_rust_api_impl.cc")
+    rs_output = ctx.actions.declare_file(crate_name + "_rust_api.rs")
+    namespaces_output = ctx.actions.declare_file(crate_name + "_namespaces.json")
     error_report_output = None
 
     rs_bindings_from_cc_flags = [
@@ -72,7 +77,7 @@ def generate_bindings(
         ctx.file._rustfmt_cfg.path,
     ] + extra_rs_bindings_from_cc_cli_flags
     if ctx.attr._generate_error_report[BuildSettingInfo].value:
-        error_report_output = ctx.actions.declare_file(ctx.label.name + "_rust_api_error_report.json")
+        error_report_output = ctx.actions.declare_file(crate_name + "_rust_api_error_report.json")
         rs_bindings_from_cc_flags += [
             "--error_report_out",
             error_report_output.path,

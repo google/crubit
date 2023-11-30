@@ -5,5 +5,5 @@
 
 mod tests {
     #[test]
-    fn test_compile() {}
+    fn test_build_with_cc_library_with_invalid_character_in_transitive_deps() {}
 }

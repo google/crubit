@@ -4,10 +4,6 @@
 #[cfg(test)]
 
 mod tests {
-    use crubit_enabled_cc_library_with____________________________::func;
-
     #[test]
-    fn test_build_with_crubit_enabled_cc_library_with_invalid_character() {
-        func();
-    }
+    fn test_build_with_crubit_enabled_cc_library_with_invalid_character_in_transitive_deps() {}
 }
