@@ -1,8 +1,5 @@
 # cc_bindings_from_rs
 
-Disclaimer: This project is experimental, under heavy development, and should
-not be used yet.
-
 ## Invoking the tool on the command line
 
 Most `rustc` cmdline parameters should be supported (e.g. `--crate-type`).

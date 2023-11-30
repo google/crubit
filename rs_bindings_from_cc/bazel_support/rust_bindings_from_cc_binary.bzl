@@ -8,9 +8,6 @@ We need this wrapper so we can specify a transition and thus avoid the circular 
 that happens when we try to build the rs_bindings_from_cc:
 rust_bindings_from_cc_aspect -> rs_bindings_from_cc -> rust_library
               ^_____________________________________________|
-
-Disclaimer: This project is experimental, under heavy development, and should
-not be used yet.
 """
 
 load(

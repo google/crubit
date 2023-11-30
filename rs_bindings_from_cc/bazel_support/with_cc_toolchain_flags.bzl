@@ -5,9 +5,6 @@
 """Creates a wrapper shell script that passes all the clang flags for header parsing.
 
 This rule simplifies experimenting with the binary.
-
-Disclaimer: This project is experimental, under heavy development, and should
-not be used yet.
 """
 
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")

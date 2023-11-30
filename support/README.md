@@ -1,8 +1,5 @@
 # Crubit runtime support library
 
-Disclaimer: This project is experimental, under heavy development, and should
-not be used yet.
-
 This directory contains C++ and Rust libraries needed to support the C++ and
 Rust FFI bindings that Crubit's tools generate:
 

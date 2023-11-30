@@ -3,9 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 """Utility module for sharing logic between rules and aspects that generate Rust bindings from C++.
-
-Disclaimer: This project is experimental, under heavy development, and should
-not be used yet.
 """
 
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")

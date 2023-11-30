@@ -2,11 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-"""`cc_bindings_from_rust` rule.
-
-Disclaimer: This project is experimental, under heavy development, and should
-not be used yet.
-"""
+"""`cc_bindings_from_rust` rule."""
 
 load(
     "@rules_rust//rust:rust_common.bzl",

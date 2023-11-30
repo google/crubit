@@ -2,7 +2,7 @@
 
 [![Build status](https://badge.buildkite.com/7a57a14e68aa3a0ab70972cbf2a35fd79d342ba152fee4a5b4.svg)](https://buildkite.com/bazel/crubit)
 
-Crubit is an experimental bidirectional bindings generator for C++ and Rust.
+Crubit is a bidirectional bindings generator for C++ and Rust.
 
 Please don't use, this is an experiment and we don't yet know where will it take
 us. There will be breaking changes without warning.  Unfortunately, we can't

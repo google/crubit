@@ -2,11 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-"""A rule that collects C++ and Rust dependencies for the generated bindings files.
-
-Disclaimer: This project is experimental, under heavy development, and should
-not be used yet.
-"""
+"""A rule that collects C++ and Rust dependencies for the generated bindings files."""
 
 # buildifier: disable=bzl-visibility
 load(

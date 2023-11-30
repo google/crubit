@@ -1,8 +1,5 @@
 # Crubit `rs_std` library
 
-Disclaimer: This project is experimental, under heavy development, and should
-not be used yet.
-
 This directory contains the `rs_std` C++ library that provides the following
 APIs:
 - Manually authored APIs that help work with Rust builtin types.  For

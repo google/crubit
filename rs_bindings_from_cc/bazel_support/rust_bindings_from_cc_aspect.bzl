@@ -6,9 +6,6 @@
 The tool creates Rust source code with the C++ API projection as well as implementation of the API
 projection. See <internal link> and <internal link> for
 more context.
-
-Disclaimer: This project is experimental, under heavy development, and should
-not be used yet.
 """
 
 load(
