@@ -121,6 +121,38 @@ cc_library(
     deps = ["@llvm-project//llvm:Support"],
 )
 
+cc_library(
+    name = "eligible_ranges",
+    srcs = ["eligible_ranges.cc"],
+    hdrs = ["eligible_ranges.h"],
+    deps = [
+        ":inference_cc_proto",
+        "//nullability:type_nullability",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:index",
+        "@llvm-project//clang:transformer",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_test(
+    name = "eligible_ranges_test",
+    srcs = ["eligible_ranges_test.cc"],
+    deps = [
+        ":eligible_ranges",
+        "@absl//absl/log:check",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:testing",
+        "@llvm-project//llvm:TestingAnnotations",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
 cc_test(
     name = "slot_fingerprint_test",
     srcs = ["slot_fingerprint_test.cc"],

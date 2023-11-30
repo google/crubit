@@ -121,3 +121,18 @@ message Partial {
     repeated string location = 1;
   }
 }
+
+// The half-open source range of a slot: [begin, end).
+message SlotRange {
+  optional uint32 slot = 1;
+  optional uint64 begin = 2;
+  optional uint64 end = 3;
+};
+
+// A set of slot ranges and their associated file.
+message TypeLocRanges {
+  // Path of the file to which the ranges refer.
+  optional string path = 2;
+  // Source ranges of type locations (written types) in `path`.
+  repeated SlotRange range = 3;
+};
