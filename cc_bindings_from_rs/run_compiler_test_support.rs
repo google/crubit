@@ -120,7 +120,7 @@ where
 
                 // `analysis` might succeed even if there are some lint / warning errors.
                 // Detecting these requires explicitly checking `compile_status`.
-                compiler.session().compile_status()?;
+                compiler.sess.compile_status()?;
 
                 // Run the provided callback.
                 Ok(query_context.enter(callback))
