@@ -16,6 +16,7 @@ rust_library(
     name = "bindings",
     srcs = ["bindings.rs"],
     deps = [
+        ":crubit_attr",
         ":run_compiler",
         ":toposort",
         "//common:code_gen_utils",
@@ -114,6 +115,25 @@ crubit_rust_test(
         "@crate_index//:itertools",
         "@crate_index//:tempfile",
     ],
+)
+
+rust_library(
+    name = "crubit_attr",
+    srcs = ["crubit_attr.rs"],
+    deps = [
+        "@crate_index//:anyhow",
+        "@crate_index//:once_cell",
+    ],
+)
+
+crubit_rust_test(
+    name = "crubit_attr_test",
+    crate = ":crubit_attr",
+    tags = [
+        "not_build:arm",
+        "noubsan",  # rustc-as-a-library isn't supported for UBSan.
+    ],
+    deps = [":run_compiler_test_support"],
 )
 
 rust_library(

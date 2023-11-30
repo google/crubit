@@ -83,6 +83,7 @@ bzl_library(
         ":compile_rust_bzl",
         ":generate_bindings_bzl",
         ":providers_bzl",
+        "//cc_bindings_from_rs/bazel_support:providers_bzl",
         "@bazel_tools//tools/cpp:toolchain_utils",
     ],
 )

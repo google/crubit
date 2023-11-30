@@ -10,8 +10,8 @@ use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashSet};
 use std::rc::Rc;
 
-/// Formats a C++ identifier. Returns an error when `ident` is a C++ reserved
-/// keyword or is an invalid identifier.
+/// Formats a C++ (qualified) identifier. Returns an error when `ident` is a C++
+/// reserved keyword or is an invalid identifier.
 pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
     ensure!(!ident.is_empty(), "Empty string is not a valid C++ identifier");
 
@@ -472,11 +472,12 @@ pub mod tests {
         assert_cc_matches!(format_cc_ident("MyTemplate<int>").unwrap(), quote! { MyTemplate<int> });
     }
 
+    /// https://en.cppreference.com/w/cpp/language/identifiers#Qualified_identifiers
+    ///
+    /// This may appear in `IR::Record::cc_name`, or in
+    /// `__crubit::annotate(cc_type=...)`.
     #[test]
     fn test_format_cc_ident_qualified_identifiers() {
-        // https://en.cppreference.com/w/cpp/language/identifiers#Qualified_identifiers
-
-        // This may appear in `IR::Record::cc_name`.
         assert_cc_matches!(
             format_cc_ident("std::vector<int>").unwrap(),
             quote! { std::vector<int> }

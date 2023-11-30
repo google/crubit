@@ -2,12 +2,20 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "common/test/bidirectional_deps/leaf_cc_lib.h"  // IWYU pragma: keep
-#include "common/test/bidirectional_deps/middle_rs_lib_cc_api.h"  // IWYU pragma: keep
+#include "gtest/gtest.h"
+#include "common/test/bidirectional_deps/leaf_cc_lib.h"
+#include "common/test/bidirectional_deps/middle_rs_lib_cc_api.h"
 
+namespace crubit {
 namespace {
 
-// TODO(b/274834739): Test that CcType(RsType(X)) == X, and remove the IWYU
-// pragmas.
+TEST(BidirectionalDepsTest, RoundTrip) {
+  LeafCcType value_from_cc = Wrap(4);
+  ASSERT_EQ(middle_rs_lib::unwrap(value_from_cc), 4);
+
+  LeafCcType value_from_rs = middle_rs_lib::wrap(2);
+  ASSERT_EQ(Unwrap(value_from_rs), 2);
+}
 
 }  // namespace
+}  // namespace crubit

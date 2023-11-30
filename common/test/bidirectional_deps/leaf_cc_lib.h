@@ -5,12 +5,17 @@
 #ifndef CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_CC_LIB_H_
 #define CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_CC_LIB_H_
 
-struct LeafCcType {
+#pragma clang lifetime_elision
+
+namespace crubit {
+
+struct LeafCcType final {
   unsigned char field;
 };
 
 inline LeafCcType Wrap(unsigned char x) { return LeafCcType{x}; }
 
 inline unsigned char Unwrap(LeafCcType x) { return x.field; }
+}  // namespace crubit
 
 #endif  // CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_CC_LIB_H_

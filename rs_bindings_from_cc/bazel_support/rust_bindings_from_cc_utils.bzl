@@ -5,6 +5,10 @@
 """Utility module for sharing logic between rules and aspects that generate Rust bindings from C++.
 """
 
+load(
+    "//cc_bindings_from_rs/bazel_support:providers.bzl",
+    "CcBindingsFromRustInfo",
+)
 load("@@//rs_bindings_from_cc/bazel_support:compile_cc.bzl", "compile_cc")
 load("@@//rs_bindings_from_cc/bazel_support:compile_rust.bzl", "compile_rust")
 load("@@//rs_bindings_from_cc/bazel_support:generate_bindings.bzl", "generate_bindings")
@@ -112,6 +116,12 @@ def generate_and_compile_bindings(
             namespaces_file = namespaces_output,
         ),
         OutputGroupInfo(out = depset([x for x in [cc_output, rs_output, namespaces_output, error_report_output] if x != None])),
+        # The C++ bindings of the generated Rust bindings are the original C++ file.
+        CcBindingsFromRustInfo(
+            cc_info = cc_info,
+            crate_key = dep_variant_info.crate_info.name,
+            headers = public_hdrs,
+        ),
     ]
 
 bindings_attrs = {

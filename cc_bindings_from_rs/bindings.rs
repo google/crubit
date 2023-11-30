@@ -238,6 +238,13 @@ struct FullyQualifiedName {
     /// * `Some("Ordering")` for `std::cmp::Ordering`.
     /// * `None` for `ItemKind::Use` - e.g.: `use submodule::*`
     name: Option<Symbol>,
+
+    /// The fully-qualified C++ type to use for this, if this was originally a
+    /// C++ type.
+    ///
+    /// For example, if a type has `#[__crubit::annotate(cc_type="x::y")]`, then
+    /// cc_type will be `Some(x::y)`.
+    cc_type: Option<Symbol>,
 }
 
 impl FullyQualifiedName {
@@ -247,6 +254,10 @@ impl FullyQualifiedName {
     // TODO(b/259724276): This function's results should be memoized.
     fn new(tcx: TyCtxt, def_id: DefId) -> Self {
         let krate = tcx.crate_name(def_id.krate);
+
+        // Crash OK: these attributes are introduced by crubit itself, and "should
+        // never" be malformed.
+        let cc_type = crubit_attr::get(tcx, def_id).unwrap().cc_type;
 
         let mut full_path = tcx.def_path(def_id).data; // mod_path + name
         let name = full_path.pop().expect("At least the item's name should be present");
@@ -259,10 +270,15 @@ impl FullyQualifiedName {
                 .map(|s| Rc::<str>::from(s.as_str())),
         );
 
-        Self { krate, mod_path, name }
+        Self { krate, mod_path, name, cc_type }
     }
 
     fn format_for_cc(&self) -> Result<TokenStream> {
+        if let Some(path) = self.cc_type {
+            let path = format_cc_ident(path.as_str())?;
+            return Ok(quote! {#path});
+        }
+
         let name =
             self.name.as_ref().expect("`format_for_cc` can't be called on name-less item kinds");
 
@@ -274,7 +290,7 @@ impl FullyQualifiedName {
 
     fn format_for_rs(&self) -> TokenStream {
         let name =
-            self.name.as_ref().expect("`format_for_cc` can't be called on name-less item kinds");
+            self.name.as_ref().expect("`format_for_rs` can't be called on name-less item kinds");
 
         let krate = make_rs_ident(self.krate.as_str());
         let mod_path = self.mod_path.format_for_rs();
@@ -840,7 +856,7 @@ fn format_thunk_decl<'tcx>(
 /// to call. Examples of valid arguments:
 /// - `::crate_name::some_module::free_function`
 /// - `::crate_name::some_module::SomeStruct::method`
-/// - `<::create_name::some_module::SomeStruct as
+/// - `<::crate_name::some_module::SomeStruct as
 ///   ::core::default::Default>::default`
 fn format_thunk_impl<'tcx>(
     tcx: TyCtxt<'tcx>,
@@ -6411,6 +6427,7 @@ pub mod tests {
             ("SomeStruct", ("::rust_out::SomeStruct", "", "SomeStruct", "")),
             ("SomeEnum", ("::rust_out::SomeEnum", "", "SomeEnum", "")),
             ("SomeUnion", ("::rust_out::SomeUnion", "", "SomeUnion", "")),
+            ("OriginallyCcStruct", ("cc_namespace :: CcStruct", "", "OriginallyCcStruct", "")),
             ("*const i32", ("std :: int32_t const *", "<cstdint>", "", "")),
             ("*mut i32", ("std::int32_t*", "<cstdint>", "", "")),
             (
@@ -6467,6 +6484,8 @@ pub mod tests {
         ];
         let preamble = quote! {
             #![allow(unused_parens)]
+            #![feature(register_tool)]
+            #![register_tool(__crubit)]
 
             pub struct SomeStruct {
                 pub x: i32,
@@ -6479,6 +6498,11 @@ pub mod tests {
             pub union SomeUnion {
                 pub x: i32,
                 pub y: i32,
+            }
+
+            #[__crubit::annotate(cc_type = "cc_namespace::CcStruct")]
+            pub struct OriginallyCcStruct {
+                pub x: i32
             }
         };
         test_ty(
