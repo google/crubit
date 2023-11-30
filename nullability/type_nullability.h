@@ -168,6 +168,7 @@ std::string printWithNullability(QualType, const TypeNullability &,
 /// Returns an equivalent type annotated with the provided nullability.
 /// Any existing sugar (including nullability) is discarded.
 /// Symbolic nullability is not annotated.
+/// Smart pointers are not annotated.
 /// rebuildWithNullability(int *, {Nullable}) ==> int * _Nullable.
 QualType rebuildWithNullability(QualType, const TypeNullability &,
                                 ASTContext &);
