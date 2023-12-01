@@ -300,6 +300,28 @@ impl BazelLabel {
         &self.0
     }
 
+    fn package_name(&self) -> &str {
+        self.0.rsplit_once(':').unwrap_or((&self.0, "")).0
+    }
+
+    fn last_package_component(&self) -> &str {
+        self.package_name().rsplit_once('/').unwrap_or(("", "")).1
+    }
+    // TODO(b/216587072): Remove this hacky escaping and use the import! macro once
+    // available.
+    // For now, use the simple escaping scheme of mapping all invalid characters
+    // to underscore, instead of the one similar to `convert_to_cc_identifier`, so
+    // that the escaped target name doesn't become longer (rustc currently produces
+    // .o artifacts that repeat the target name twice, which can easily cause
+    // the path length of artifacts to exceed the limit of the file system.)
+    pub fn target_name_escaped(&self) -> String {
+        let mut target_name = self.target_name().to_owned();
+        if target_name == "core" {
+            target_name = "core_".to_owned() + self.last_package_component();
+        }
+        target_name.replace(|c: char| !c.is_ascii_alphanumeric(), "_")
+    }
+
     // Returns the bazel label as a valid C++ identifier, with a leading underscore.
     // Non-alphanumeric characters are escaped as `_xx`, where `xx` is the the byte
     // as hexadecimal.
@@ -1374,6 +1396,42 @@ mod tests {
             let label: BazelLabel = s.into();
             assert_eq!(label.target_name(), "", "label={s:?}");
         }
+    }
+
+    #[test]
+    fn test_bazel_label_escape_target_name_with_relative_label() {
+        let label: BazelLabel = "foo".into();
+        assert_eq!(label.target_name_escaped(), "foo");
+    }
+
+    #[test]
+    fn test_bazel_label_escape_target_name_with_invalid_characters() {
+        let label: BazelLabel = "//:!./%-@^#$&()*-+,;<=>?[]{|}~".into();
+        assert_eq!(label.target_name_escaped(), "___________________________");
+    }
+
+    #[test]
+    fn test_bazel_label_escape_target_name_core() {
+        let label: BazelLabel = "//foo~:core".into();
+        assert_eq!(label.target_name_escaped(), "core_foo_");
+    }
+
+    #[test]
+    fn test_bazel_label_escape_target_name_with_no_target_name() {
+        let label: BazelLabel = "//foo/bar~".into();
+        assert_eq!(label.target_name_escaped(), "bar_");
+    }
+
+    #[test]
+    fn test_bazel_label_escape_target_name_with_no_package_name() {
+        let label: BazelLabel = "//:foo~".into();
+        assert_eq!(label.target_name_escaped(), "foo_");
+    }
+
+    #[test]
+    fn test_bazel_label_escape_target_name_core_with_no_package_name_with_no_target_name() {
+        let label: BazelLabel = "core".into();
+        assert_eq!(label.target_name_escaped(), "core_");
     }
 
     #[test]

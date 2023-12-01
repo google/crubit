@@ -3084,11 +3084,7 @@ fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ident> 
     if ir.is_current_target(owning_target) {
         None
     } else {
-        let owning_crate_name = owning_target.target_name();
-        // TODO(b/216587072): Remove this hacky escaping and use the import! macro once
-        // available
-        let escaped_owning_crate_name = owning_crate_name.replace('-', "_");
-        let owning_crate = make_rs_ident(&escaped_owning_crate_name);
+        let owning_crate = make_rs_ident(&owning_target.target_name_escaped());
         Some(owning_crate)
     }
 }

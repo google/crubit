@@ -52,7 +52,7 @@ def generate_bindings(
     Returns:
       tuple(cc_output, rs_output, namespaces_output, error_report_output): The generated source files.
     """
-    crate_name = escape_cpp_target_name(ctx)
+    crate_name = escape_cpp_target_name(ctx.label.package, ctx.label.name)
     cc_output = ctx.actions.declare_file(crate_name + "_rust_api_impl.cc")
     rs_output = ctx.actions.declare_file(crate_name + "_rust_api.rs")
     namespaces_output = ctx.actions.declare_file(crate_name + "_namespaces.json")

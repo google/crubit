@@ -1,7 +1,7 @@
 package(default_applicable_licenses = ["//:license"])
 
-# Intentionally not use crubit_cc_library, which enables Crubit on the target, to demonstrate that
-# having a non-Crubit-enabled dependency named "core" is enough to cause build error.
+# Intentionally not use crubit_cc_library, which enables Crubit on the target, as a regression test
+# that Crubit should be able to handle 'core' as a Crubit-disabled cc_library.
 cc_library(
     name = "core",
     hdrs = ["header.h"],

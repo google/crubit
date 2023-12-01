@@ -33,11 +33,17 @@ def _get_cc_info(providers):
             return provider
     fail("Couldn't find a CcInfo in the list of providers")
 
-def escape_cpp_target_name(ctx):
+def escape_cpp_target_name(package_name, crate_name):
+    # Crubit generates assertions with `::core`, which would resolve to current crate, if current
+    # crate (i.e., cc_library) is named 'core'.
+    if crate_name == "core":
+        _, _, last_path_component = package_name.rpartition("/")
+        crate_name = "core_" + last_path_component
+
     # b/216587072: Sync the escaping logic with bazel_rules/rules_rust/rust/private:utils.bzl's
     # encode_label_as_crate_name. Currently, the encoding contains a (escaped and hence longer) copy
     # of both the package name _and_ the target name, which causes "File name too long" error.
-    return "".join([char if char.isalnum() else "_" for char in ctx.label.name.elems()])
+    return "".join([char if char.isalnum() else "_" for char in crate_name.elems()])
 
 def compile_rust(ctx, attr, src, extra_srcs, deps):
     """Compiles a Rust source file.
@@ -57,7 +63,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps):
     output_hash = repr(hash(src.path))
 
     # TODO(b/216587072): Remove this hacky escaping and use the import! macro once available
-    crate_name = escape_cpp_target_name(ctx)
+    crate_name = escape_cpp_target_name(ctx.label.package, ctx.label.name)
 
     lib_name = "{prefix}{name}-{lib_hash}{extension}".format(
         prefix = "lib",
