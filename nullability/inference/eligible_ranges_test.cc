@@ -71,7 +71,8 @@ TEST(GenEditsTest, OnlyFirstParameterIdentified) {
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, DeclCovered) {
+// Checks that a function decl without a body is handled correctly.
+TEST(GenEditsTest, DeclHandled) {
   auto Input = Annotations("void foo([[int *]]p1, int p2);");
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
@@ -79,18 +80,52 @@ TEST(GenEditsTest, DeclCovered) {
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, ConstIncludeInType) {
-  std::string Input = "void foo(const int *p1, int p2);";
-  // TODO: fix, once `const` is supported.
+TEST(GenEditsTest, NestedPointerEligible) {
+  auto Input = Annotations("void foo([[int **]]p);");
+  EXPECT_THAT(
+      getEligibleRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
+}
+
+TEST(GenEditsTest, DeclConstExcluded) {
+  auto Input = Annotations("void foo([[int *]] const p1, int p2);");
+  EXPECT_THAT(
+      getEligibleRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
+}
+
+TEST(GenEditsTest, PointeeConstIncluded) {
+  auto Input = Annotations("void foo([[const int *]]p1, int p2);");
+  EXPECT_THAT(
+      getEligibleRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
+}
+
+TEST(GenEditsTest, NestedPointeeConstIncluded) {
+  auto Input = Annotations("void foo([[const int **]]p1, int p2);");
+  EXPECT_THAT(
+      getEligibleRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
+}
+
+TEST(GenEditsTest, FunctionPointerTypeIgnored) {
+  std::string Input = "void foo(int (*p)(int));";
   EXPECT_EQ(getEligibleRanges(Input), std::nullopt);
 }
 
-// TODO: Add additional tests for type corner cases, e.g.
-//
-// int (*foo)(int (*a))
-// void foo(int **x())
-// void foo(int x[])
-// void foo(int (*z[3])(float))
+TEST(GenEditsTest, ArrayTypeIgnored) {
+  std::string Input = "void foo(int p[]);";
+  EXPECT_EQ(getEligibleRanges(Input), std::nullopt);
+}
+
+TEST(GenEditsTest, FunctionAndArrayTypeIgnored) {
+  std::string Input = "void foo(int (*z[3])(float));";
+  EXPECT_EQ(getEligibleRanges(Input), std::nullopt);
+}
 
 }  // namespace
 }  // namespace clang::tidy::nullability
