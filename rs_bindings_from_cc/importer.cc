@@ -517,11 +517,13 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
     // error messages for those decls, so we're visiting.
     ImportDeclsFromDeclContext(record_decl);
   }
-  if (auto* specialization_decl =
-          llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
-    // Store `specialization_decl`s so that they will get included in
-    // IR::top_level_item_ids.
-    class_template_instantiations_.insert(specialization_decl);
+  if (result.has_value()) {
+    if (auto* specialization_decl =
+            llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
+      // Store `specialization_decl`s so that they will get included in
+      // IR::top_level_item_ids.
+      class_template_instantiations_.insert(specialization_decl);
+    }
   }
   return result;
 }
