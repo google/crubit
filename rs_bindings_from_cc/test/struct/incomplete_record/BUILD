@@ -18,11 +18,4 @@ crubit_rust_test(
     cc_deps = [
         ":reference_incomplete_record_by_value",
     ],
-    tags = [
-        # b/314152421: It currently crashes Crubit with:
-        # IncompleteRecord is unexpected as a parameter type or return type.
-        "manual",
-        "nobuilder",
-        "notap",
-    ],
 )

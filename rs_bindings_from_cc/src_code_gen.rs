@@ -3287,7 +3287,12 @@ impl RsTypeKind {
                 underlying_type.is_c_abi_compatible_by_value()
             }
             RsTypeKind::IncompleteRecord { .. } => {
-                panic!("IncompleteRecord is unexpected as a parameter type or return type")
+                // Incomplete record (forward declaration) as parameter type or return type is
+                // unusual but it's a valid cc_library and such a header can be made to work
+                // when its user code includes headers that define the forward-declared type.
+                // Thus we don't panic here and simply return false, to allow
+                // Crubit to generate bindings for other un-impacted APIs.
+                false
             }
             // `rs_bindings_from_cc` can change the type of fields (e.g. using a blob of bytes for
             // unsupported field types, or for no_unique_address fields).  Changing the type
