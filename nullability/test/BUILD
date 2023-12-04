@@ -238,6 +238,11 @@ cc_test(
     ],
 )
 
+nullability_test(
+    name = "smart_pointers",
+    srcs = ["smart_pointers.cc"],
+)
+
 cc_test(
     name = "smart_pointers_diagnostics",
     srcs = ["smart_pointers_diagnostics.cc"],
