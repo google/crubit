@@ -249,8 +249,8 @@ cc_test(
 )
 
 cc_test(
-    name = "smart_pointers",
-    srcs = ["smart_pointers.cc"],
+    name = "smart_pointers_diagnostics",
+    srcs = ["smart_pointers_diagnostics.cc"],
     deps = [
         ":check_diagnostics",
         "@llvm-project//third-party/unittest:gtest",

@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Tests that involve smart pointers.
+// Tests for diagnostics on smart pointers.
 
 // TODO(b/304963199): We do not actually check smart pointers, so these tests
 // are full of false negatives. For now, they are mainly intended to check that
