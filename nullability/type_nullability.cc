@@ -28,6 +28,14 @@
 
 namespace clang::tidy::nullability {
 
+static bool SmartPointersEnabled = false;
+
+namespace test {
+
+EnableSmartPointers::EnableSmartPointers() { SmartPointersEnabled = true; }
+
+}  // namespace test
+
 bool isSupportedPointerType(QualType T) {
   return isSupportedRawPointerType(T) || isSupportedSmartPointerType(T);
 }
@@ -39,6 +47,8 @@ bool isSupportedSmartPointerType(QualType T) {
 }
 
 QualType underlyingRawPointerType(QualType T) {
+  if (!SmartPointersEnabled) return QualType();
+
   // TODO(b/304963199): Add support for the `absl_nullability_compatible` tag.
   const CXXRecordDecl *RD = T.getCanonicalType()->getAsCXXRecordDecl();
   if (RD == nullptr) return QualType();

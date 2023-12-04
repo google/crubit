@@ -19,6 +19,8 @@ namespace clang::tidy::nullability {
 namespace {
 using testing::ElementsAre;
 
+static test::EnableSmartPointers Enable;
+
 class PointerTypeTest : public ::testing::Test {
  protected:
   QualType underlying(llvm::StringRef Name, TestAST& AST) {

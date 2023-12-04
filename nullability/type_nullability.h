@@ -42,6 +42,20 @@
 
 namespace clang::tidy::nullability {
 
+namespace test {
+
+/// Instantiating a global instance of this class turns on support for smart
+/// pointers in the type_nullability library. For the time being, if smart
+/// pointer support is not turned on explicitly, `isSupportedSmartPointerType()`
+/// always returns false, `countPointers()` does not count smart pointers, etc.
+/// This class should only be used in tests for now.
+class EnableSmartPointers {
+ public:
+  EnableSmartPointers();
+};
+
+}  // namespace test
+
 /// Is this exactly a pointer type that we track outer nullability for?
 /// This unwraps sugar, i.e. it looks at the canonical type.
 ///
