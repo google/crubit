@@ -136,11 +136,11 @@ namespace {
 // This will visit the contained PointerType in the correct order to produce
 // the TypeNullability vector.
 //
-// Subclasses must provide `void report(const PointerType*, NullabilityKind)`,
+// Subclasses must provide `void report(const Type*, NullabilityKind)`,
 // and may override TypeVisitor Visit*Type methods to customize the traversal.
 //
 // Canonically-equivalent Types produce equivalent sequences of report() calls:
-//  - corresponding PointerTypes are canonically-equivalent
+//  - corresponding pointer Types are canonically-equivalent
 //  - the NullabilityKind may be different, as it derives from type sugar
 template <class Impl>
 class NullabilityWalker : public TypeVisitor<Impl> {
@@ -315,7 +315,8 @@ class NullabilityWalker : public TypeVisitor<Impl> {
         Desugar != T)
       return Base::Visit(Desugar);
 
-    // We don't expect to see any nullable non-sugar types except PointerType.
+    // We don't expect to see any nullable non-sugar types except PointerType
+    // and `RecordType`s that correspond to smart pointers.
     ignoreUnexpectedNullability();
     Base::VisitType(T);
   }
@@ -350,7 +351,13 @@ class NullabilityWalker : public TypeVisitor<Impl> {
 
     auto *CRD = TST->getAsCXXRecordDecl();
     CHECK(CRD) << "Expected an alias or class specialization in concrete code";
-    ignoreUnexpectedNullability();
+    if (isSupportedSmartPointerType(QualType(TST, 0))) {
+      derived().report(
+          TST, PendingNullability.value_or(NullabilityKind::Unspecified));
+      PendingNullability.reset();
+    } else {
+      ignoreUnexpectedNullability();
+    }
     Visit(CRD->getDeclContext());
     for (auto TA : TST->template_arguments()) Visit(TA);
     // `TST->template_arguments()` doesn't contain any default arguments.
@@ -439,7 +446,13 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   }
 
   void VisitRecordType(const RecordType *RT) {
-    ignoreUnexpectedNullability();
+    if (isSupportedSmartPointerType(QualType(RT, 0))) {
+      derived().report(
+          RT, PendingNullability.value_or(NullabilityKind::Unspecified));
+      PendingNullability.reset();
+    } else {
+      ignoreUnexpectedNullability();
+    }
     Visit(RT->getDecl()->getDeclContext());
     if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
       // TODO: if this is an instantiation, these args lack sugar.
@@ -478,7 +491,7 @@ template <typename T>
 unsigned countPointers(const T &Object) {
   struct Walker : public NullabilityWalker<Walker> {
     unsigned Count = 0;
-    void report(const PointerType *, NullabilityKind) { ++Count; }
+    void report(const Type *, NullabilityKind) { ++Count; }
   } PointerCountWalker;
   PointerCountWalker.Visit(Object);
   return PointerCountWalker.Count;
@@ -511,9 +524,7 @@ TypeNullability getNullabilityAnnotationsFromType(
     std::vector<PointerTypeNullability> Annotations;
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam;
 
-    void report(const PointerType *, NullabilityKind NK) {
-      Annotations.push_back(NK);
-    }
+    void report(const Type *, NullabilityKind NK) { Annotations.push_back(NK); }
 
     void VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType *ST) {
       if (SubstituteTypeParam) {

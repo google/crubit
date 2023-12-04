@@ -575,6 +575,28 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AnnotateNullable) {
               ElementsAre(NullabilityKind::NonNull));
 }
 
+TEST_F(GetNullabilityAnnotationsFromTypeTest, SmartPointers) {
+  Preamble = R"cpp(
+    namespace std {
+    template <class T>
+    class unique_ptr {};
+    }  // namespace std
+    template <class T>
+    using Nullable [[clang::annotate("Nullable")]] = T;
+    template <class T>
+    using NonNull [[clang::annotate("Nonnull")]] = T;
+  )cpp";
+  EXPECT_THAT(nullVec("int"), ElementsAre());
+  EXPECT_THAT(nullVec("std::unique_ptr<int>"),
+              ElementsAre(NullabilityKind::Unspecified));
+  EXPECT_THAT(
+      nullVec("std::unique_ptr<std::unique_ptr<int>>"),
+      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::Unspecified));
+  EXPECT_THAT(
+      nullVec("NonNull<std::unique_ptr<Nullable<std::unique_ptr<int>>>>"),
+      ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
+}
+
 class PrintWithNullabilityTest : public ::testing::Test {
  protected:
   // C++ declarations prepended before parsing type in nullVec().
