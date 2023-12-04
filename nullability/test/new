@@ -1,0 +1,14 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Mock of standard library <new> header.
+
+namespace std {
+struct nothrow_t {
+  explicit nothrow_t() = default;
+};
+extern const nothrow_t nothrow;
+using size_t = decltype(sizeof(int));
+}  // namespace std
+void *operator new(std::size_t size, const std::nothrow_t &) noexcept;

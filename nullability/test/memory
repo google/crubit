@@ -1,0 +1,17 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Mock of standard library <memory> header.
+
+namespace std {
+template <class T>
+class unique_ptr {
+public:
+unique_ptr() {}
+T &operator*() const;
+};
+
+template <class T, class... Args>
+unique_ptr<T> make_unique(Args &&...args);
+}  // namespace std

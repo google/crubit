@@ -11,27 +11,15 @@ cc_library(
     srcs = ["check_diagnostics.cc"],
     hdrs = ["check_diagnostics.h"],
     deps = [
-        ":headers_for_test",
+        ":test_headers",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_diagnosis",
         "@llvm-project//clang:analysis",
+        "@llvm-project//clang:tooling",
         "@llvm-project//clang/unittests:dataflow_testing_support",
         "@llvm-project//llvm:Support",
         "@llvm-project//llvm:TestingSupport",
         "@llvm-project//third-party/unittest:gtest",
-    ],
-)
-
-cc_library(
-    name = "headers_for_test",
-    testonly = 1,
-    srcs = ["headers_for_test.cc"],
-    hdrs = ["headers_for_test.h"],
-    visibility = [
-        "//nullability/inference:__pkg__",
-    ],
-    deps = [
-        "@llvm-project//clang:tooling",
     ],
 )
 
@@ -312,11 +300,18 @@ cc_test(
 
 cc_embed_data(
     name = "test_headers",
-    srcs = ["nullability_test.h"],
+    srcs = [
+        "nullability_annotations.h",
+        "nullability_test.h",
+        "check_diagnostics_preamble.h",
+        "new",
+        "memory",
+    ],
     outs = [
         "test_headers.cc",
         "test_headers.h",
         "test_headers.o",
     ],
     embedopts = ["--namespace=clang::tidy::nullability"],
+    visibility = ["//nullability:__subpackages__"],
 )

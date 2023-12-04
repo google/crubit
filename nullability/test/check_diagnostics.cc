@@ -9,9 +9,11 @@
 
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_diagnosis.h"
-#include "nullability/test/headers_for_test.h"
+#include "nullability/test/test_headers.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Tooling/Tooling.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Testing/Support/Error.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
@@ -22,6 +24,10 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
   std::vector<PointerNullabilityDiagnostic> Diagnostics;
   PointerNullabilityDiagnoser Diagnoser = pointerNullabilityDiagnoser();
   bool Failed = false;
+  tooling::FileContentMappings TestHeaders;
+  for (const auto &Entry :
+       llvm::ArrayRef(test_headers_create(), test_headers_size()))
+    TestHeaders.emplace_back(Entry.name, Entry.data);
   EXPECT_THAT_ERROR(
       dataflow::test::checkDataflow<PointerNullabilityAnalysis>(
           dataflow::test::AnalysisInputs<PointerNullabilityAnalysis>(
@@ -36,10 +42,11 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
                 auto EltDiagnostics = Diagnoser(Elt, Ctx, State);
                 llvm::move(EltDiagnostics, std::back_inserter(Diagnostics));
               })
-              .withASTBuildVirtualMappedFiles(headersForTest())
+              .withASTBuildVirtualMappedFiles(std::move(TestHeaders))
               .withASTBuildArgs({"-fsyntax-only", "-std=c++17",
                                  "-Wno-unused-value", "-Wno-nonnull",
-                                 "-include", "preamble.h", "-I."}),
+                                 "-include", "check_diagnostics_preamble.h",
+                                 "-I."}),
           [&Diagnostics, &Failed](
               const llvm::DenseMap<unsigned, std::string> &Annotations,
               const dataflow::test::AnalysisOutputs &AnalysisData) {

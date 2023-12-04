@@ -9,7 +9,7 @@
 
 #include "nullability/inference/inference.proto.h"
 #include "nullability/proto_matchers.h"
-#include "nullability/test/headers_for_test.h"
+#include "nullability/test/test_headers.h"
 #include "clang/AST/Decl.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
@@ -47,9 +47,11 @@ class InferTUTest : public ::testing::Test {
 
   void build(llvm::StringRef Code) {
     TestInputs Inputs = Code;
-    Inputs.ExtraFiles = headersForTestAsStringMap();
+    for (const auto &Entry :
+         llvm::ArrayRef(test_headers_create(), test_headers_size()))
+      Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
     Inputs.ExtraArgs.push_back("-include");
-    Inputs.ExtraArgs.push_back("preamble.h");
+    Inputs.ExtraArgs.push_back("nullability_annotations.h");
     Inputs.ExtraArgs.push_back("-I.");
     AST.emplace(Inputs);
   }

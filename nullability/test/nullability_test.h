@@ -25,6 +25,8 @@
 #ifndef CRUBIT_NULLABILITY_TEST_NULLABILITY_TEST_H_
 #define CRUBIT_NULLABILITY_TEST_NULLABILITY_TEST_H_
 
+#include "nullability_annotations.h"  // IWYU pragma: export
+
 namespace preamble_detail {
 template <typename, typename>
 struct require_same;
@@ -67,11 +69,6 @@ template <typename T>
 void unknown(T) {}
 
 ///////////////// Helpers to make writing tests more convenient ////////////////
-
-template <typename T>
-using Nullable [[clang::annotate("Nullable")]] = T;
-template <typename T>
-using Nonnull [[clang::annotate("Nonnull")]] = T;
 
 // Marker annotations for pointer types whose nullability is symbolic.
 // This means we track it as a variable: without assuming a specific value.
