@@ -14,7 +14,7 @@ cat >$SOURCE <<EOF
     nullable(x);
   }
 EOF
-if ! $DRIVER $SOURCE -- > $LOG; then
+if ! $DRIVER $SOURCE -- 2> $LOG; then
   echo "Should have passed good test"
   exit 1
 fi
@@ -27,7 +27,7 @@ cat >$SOURCE <<EOF
   }
 EOF
 
-if $DRIVER $SOURCE -- > $LOG; then
+if $DRIVER $SOURCE -- 2> $LOG; then
   echo "Should have failed bad nullable() test!"
   exit 1
 fi
@@ -40,7 +40,7 @@ cat >$SOURCE <<EOF
     type<int *_Nonnull>(x);
   }
 EOF
-if $DRIVER $SOURCE -- > $LOG; then
+if $DRIVER $SOURCE -- 2> $LOG; then
   echo "Should have failed bad type() test!"
   exit 1
 fi
@@ -60,7 +60,7 @@ cat >$SOURCE <<EOF
     type<symbolic::A<int *>*>(y);
   }
 EOF
-if $DRIVER $SOURCE -- > $LOG; then
+if $DRIVER $SOURCE -- 2> $LOG; then
   echo "Should have failed bad symbolic type() test!"
   exit 1
 fi
@@ -71,7 +71,7 @@ command -v grep && grep "static nullability is \[Nullable, Unspecified\], expect
 cat >$SOURCE <<EOF
   [[clang::annotate("test")]] int x;
 EOF
-if $DRIVER $SOURCE -- > $LOG; then
+if $DRIVER $SOURCE -- 2> $LOG; then
   echo "Should have failed with 'test' annotation attached to wrong node!"
   exit 1
 fi

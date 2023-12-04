@@ -287,7 +287,7 @@ void runTest(const FunctionDecl &Func, Diagnoser &Diags,
 class TestOutput : public DiagnosticConsumer {
  public:
   TestOutput()
-      : Out(llvm::outs()),
+      : Out(llvm::errs()),
         XMLStorage(openXML()),
         XML(XMLStorage ? *XMLStorage : llvm::nulls()) {
     XML << "<testsuites>\n";
@@ -385,7 +385,7 @@ class TestOutput : public DiagnosticConsumer {
   bool HadErrors = false;
   LangOptions LangOpts;
 
-  llvm::raw_ostream &Out;  // Plain-text stdout stream.
+  llvm::raw_ostream &Out;  // Plain-text output stream.
   std::unique_ptr<llvm::raw_ostream> XMLStorage;
   llvm::raw_ostream &XML;  // test.xml output stream (or null stream if no XML).
 
