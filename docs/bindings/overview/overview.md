@@ -46,7 +46,7 @@ cc_library(
     srcs = ["example.cc"],
 
     # Opting into providing Rust bindings for this C++ library:
-    aspect_hints = ["//:experimental"],
+    aspect_hints = ["//features:experimental"],
 )
 ```
 

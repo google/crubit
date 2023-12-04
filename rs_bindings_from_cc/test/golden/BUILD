@@ -54,7 +54,7 @@ rust_bindings_from_cc_cli_flag(
     name = name + "_cc",
     hdrs = [name + ".h"],
     aspect_hints = [
-        "//:experimental",
+        "//features:experimental",
         ":disable_source_location_in_doc_comment",
     ],
     copts = ["-Wno-google3-inline-namespace"],

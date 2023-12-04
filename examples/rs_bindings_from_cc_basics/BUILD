@@ -8,7 +8,7 @@ cc_library(
     hdrs = ["example.h"],
 
     # Opting into using Crubit (including Crubit's experimental features).
-    aspect_hints = ["//:experimental"],
+    aspect_hints = ["//features:experimental"],
 )
 
 rust_binary(

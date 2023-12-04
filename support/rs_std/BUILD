@@ -8,7 +8,7 @@ cc_library(
     name = "rs_char",
     hdrs = ["rs_char.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
-    aspect_hints = ["//:experimental"],
+    aspect_hints = ["//features:experimental"],
     visibility = [
         "//visibility:public",
     ],

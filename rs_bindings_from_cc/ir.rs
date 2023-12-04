@@ -1034,8 +1034,8 @@ impl CrubitFeature {
     /// The aspect hint required to enable this feature.
     pub fn aspect_hint(&self) -> &'static str {
         match self {
-            Self::Supported => "//:supported",
-            Self::Experimental => "//:experimental",
+            Self::Supported => "//features:supported",
+            Self::Experimental => "//features:experimental",
         }
     }
 }
