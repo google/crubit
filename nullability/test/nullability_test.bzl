@@ -13,11 +13,9 @@ def nullability_test(name, srcs):
         name = name,
         data = srcs + [
             "//nullability/test:nullability_test",
-            "//nullability/test:nullability_test.h",
         ],
         srcs = ["nullability_test.sh"],
         args = [
             "$(location //nullability/test:nullability_test)",
-            "nullability/test",
-        ] + ["$(location " + src + ")" for src in srcs],
+        ] + ["$(location " + src + ")" for src in srcs] + ["--"],
     )

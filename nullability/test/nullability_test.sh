@@ -3,10 +3,5 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-DRIVER="$1"
-shift
-INCLUDES="$1"
-shift
-
-exec "$DRIVER" "$@" -- -I"$INCLUDES"
-
+# This shell script adds nothing, but is needed for sh_test.
+exec "$@"

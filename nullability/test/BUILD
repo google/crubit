@@ -1,6 +1,7 @@
 # Integration tests for nullability verification.
 
 load("//nullability/test:nullability_test.bzl", "nullability_test")
+load("@bazel_tools//tools/build_defs/cc:cc_embed_data.bzl", "cc_embed_data")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -50,6 +51,7 @@ cc_binary(
     testonly = 1,
     srcs = ["nullability_test.cc"],
     deps = [
+        ":test_headers",
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
@@ -306,4 +308,15 @@ cc_test(
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
+)
+
+cc_embed_data(
+    name = "test_headers",
+    srcs = ["nullability_test.h"],
+    outs = [
+        "test_headers.cc",
+        "test_headers.h",
+        "test_headers.o",
+    ],
+    embedopts = ["--namespace=clang::tidy::nullability"],
 )

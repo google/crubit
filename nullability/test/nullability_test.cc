@@ -35,6 +35,7 @@
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_lattice.h"
+#include "nullability/test/test_headers.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTTypeTraits.h"
@@ -59,9 +60,11 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/TextDiagnostic.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
+#include "clang/Tooling/ArgumentsAdjusters.h"
 #include "clang/Tooling/CompilationDatabase.h"
 #include "clang/Tooling/StandaloneExecution.h"
 #include "clang/Tooling/Tooling.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringExtras.h"
@@ -493,10 +496,17 @@ int main(int argc, const char **argv) {
       argc, argv, Err);
   llvm::cl::ParseCommandLineOptions(argc, argv);
   if (!CDB) {
-    llvm::errs() << "Usage: nullability_test source.cc -- -Ipath/to/headers\n";
+    llvm::errs() << "Usage: nullability_test source.cc\n" << Err << "\n";
     exit(1);
   }
   clang::tooling::StandaloneToolExecutor Executor{*CDB, Sources};
-  require(Executor.execute(clang::tooling::newFrontendActionFactory(&F, &F)));
+  for (const auto &Entry :
+       llvm::ArrayRef(test_headers_create(), test_headers_size()))
+    Executor.mapVirtualFile(Entry.name, Entry.data);
+  require(Executor.execute(
+      clang::tooling::newFrontendActionFactory(&F, &F),
+      // Ensure test_headers are on the include path.
+      clang::tooling::getInsertArgumentAdjuster(
+          "-isystem.", clang::tooling::ArgumentInsertPosition::END)));
   return F.Output.hadErrors() ? 1 : 0;
 }
