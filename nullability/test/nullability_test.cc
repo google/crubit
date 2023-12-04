@@ -411,6 +411,7 @@ class Consumer : public ASTConsumer {
 
   void HandleTranslationUnit(ASTContext &Ctx) override {
     assert(Diagnoser.has_value());
+    if (Ctx.getDiagnostics().hasUncompilableErrorOccurred()) return;
     // Walk the AST, calling runTestAt on every TEST annotation.
     struct TestVisitor : public RecursiveASTVisitor<TestVisitor> {
       Consumer &Outer;
