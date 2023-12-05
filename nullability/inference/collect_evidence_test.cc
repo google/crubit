@@ -260,6 +260,43 @@ TEST(CollectEvidenceFromImplementationTest, DerefBeforeGuardedDeref) {
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
+TEST(CollectEvidenceFromImplementationTest, FirstSufficientSlotOnly) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, int* q) {
+      // Marking either of p or q Nonnull is sufficient to avoid dereferencing
+      // without a check. We choose to record evidence only for the first
+      // sufficient slot which can be Nonnull without the dereference becoming
+      // dead code.
+      int* a;
+      if (p) {
+        a = p;
+      } else {
+        a = q;
+      }
+      *a;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     FirstSufficientSlotNotContradictingFlowConditions) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, int* q) {
+      // Marking p Nonnull would make the dereference dead, so we collect
+      // evidence for q being Nonnull instead, since it is also sufficient.
+      if (!p) {
+        *q;
+      }
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
+}
+
 TEST(CollectEvidenceFromImplementationTest, EarlyReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *p0) {

@@ -152,8 +152,8 @@ std::pair<Expr *, SourceLocation> describeDereference(const Stmt &Stmt) {
   return {nullptr, SourceLocation()};
 }
 
-// Records evidence derived from the assumption that Value is nonnull.
-// It may be dereferenced, passed as a nonnull param, etc, per EvidenceKind.
+// Records evidence derived from the assumption that `Value` is nonnull.
+// It may be dereferenced, passed as a nonnull param, etc, per `EvidenceKind`.
 void collectMustBeNonnullEvidence(
     const dataflow::PointerValue &Value, const dataflow::Environment &Env,
     SourceLocation Loc, const std::vector<InferableSlot> &InferableSlots,
@@ -170,15 +170,35 @@ void collectMustBeNonnullEvidence(
 
   auto &A = Env.getDataflowAnalysisContext().arena();
   // Otherwise, if an inferable slot being annotated Nonnull would imply that
-  // Value is not null, then we have evidence suggesting that slot should be
+  // `Value` is not null, then we have evidence suggesting that slot should be
   // annotated. For now, we simply choose the first such slot, sidestepping
   // complexities around the possibility of multiple such slots, any one of
   // which would be sufficient if annotated Nonnull.
   for (auto &IS : InferableSlots) {
-    auto &SlotNonnullImpliesValueNonnull = A.makeImplies(
-        IS.getSymbolicNullability().isNonnull(A), A.makeNot(*IsNull));
-    if (Env.proves(SlotNonnullImpliesValueNonnull))
+    auto &SlotNonnull = IS.getSymbolicNullability().isNonnull(A);
+    auto &SlotNonnullImpliesValueNonnull =
+        A.makeImplies(SlotNonnull, A.makeNot(*IsNull));
+    // Don't collect evidence if the implication is true by virtue of
+    // `SlotNonnull` being false.
+    //
+    // In practice, `SlotNonnull` can be made false by a flow condition, and
+    // marking the slot Nonnull would make that conditioned block dead code.
+    // Technically, this does make the dereference "safe", but we'd prefer to
+    // mark a different slot Nonnull that has a more direct relationship with
+    // the nullability of `Value`.
+    //
+    // e.g. We'd prefer to mark `q` Nonnull rather than `p` in the following:
+    // ```
+    // void target(int* p, int* q) {
+    //   if (!p) {
+    //     *q;
+    //   }
+    // }
+    // ```
+    if (Env.allows(SlotNonnull) && Env.proves(SlotNonnullImpliesValueNonnull)) {
       Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
+      return;
+    }
   }
 }
 
