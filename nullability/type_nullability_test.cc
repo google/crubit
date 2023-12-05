@@ -158,6 +158,10 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
     using ArrayUniquePointer = std::unique_ptr<int[]>;
     using SharedPointer = std::shared_ptr<int>;
     using ArraySharedPointer = std::shared_ptr<int[]>;
+
+    template <typename T>
+    using Nullable [[clang::annotate("Nullable")]] = T;
+    using NullableUniquePointer = Nullable<std::unique_ptr<int>>;
   )cpp");
 
   QualType PointerToIntTy = AST.context().getPointerType(AST.context().IntTy);
@@ -168,6 +172,9 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
   EXPECT_EQ(underlyingRawPointerType(underlying("SharedPointer", AST)),
             PointerToIntTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("ArraySharedPointer", AST)),
+            PointerToIntTy);
+
+  EXPECT_EQ(underlyingRawPointerType(underlying("NullableUniquePointer", AST)),
             PointerToIntTy);
 }
 

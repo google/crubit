@@ -74,13 +74,13 @@ QualType underlyingRawPointerType(QualType T) {
       return ASTCtx.getPointerType(TND->getUnderlyingType());
   }
 
-  const auto *TST = T->getAs<TemplateSpecializationType>();
-  if (TST == nullptr) return QualType();
-  if (TST->template_arguments().empty()) return QualType();
-  if (TST->template_arguments()[0].getKind() != TemplateArgument::Type)
+  auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD);
+  if (CTSD == nullptr) return QualType();
+  if (CTSD->getTemplateArgs().size() == 0) return QualType();
+  if (CTSD->getTemplateArgs()[0].getKind() != TemplateArgument::Type)
     return QualType();
 
-  QualType TemplateArg = TST->template_arguments()[0].getAsType();
+  QualType TemplateArg = CTSD->getTemplateArgs()[0].getAsType();
   return ASTCtx.getPointerType(ASTCtx.getBaseElementType(TemplateArg));
 }
 
