@@ -90,11 +90,11 @@ std::vector<Evidence> collectEvidenceFromTargetFunction(
 std::vector<Evidence> collectEvidenceFromTargetDecl(llvm::StringRef Source) {
   std::vector<Evidence> Results;
   clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
-  USRCache usr_cache;
+  USRCache USRCache;
   collectEvidenceFromTargetDeclaration(
       *dataflow::test::findValueDecl(AST.context(), "target"),
       evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                      usr_cache));
+                      USRCache));
   return Results;
 }
 
@@ -1064,13 +1064,13 @@ TEST(CollectEvidenceFromImplementationTest, NotInferenceTarget) {
       "target", TargetInstantiationNodes);
   ASSERT_NE(InstantiationDecl, nullptr);
 
-  USRCache usr_cache;
+  USRCache USRCache;
   std::vector<Evidence> Results;
   auto Err = collectEvidenceFromImplementation(
       *InstantiationDecl,
       evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                      usr_cache),
-      usr_cache);
+                      USRCache),
+      USRCache);
   if (Err) ADD_FAILURE() << toString(std::move(Err));
   // Doesn't collect any evidence for target from target's body, only collects
   // some for isATarget.
@@ -1364,8 +1364,8 @@ TEST(EvidenceEmitterTest, NotInferenceTarget) {
       dataflow::test::findValueDecl(AST.context(), "target");
   ASSERT_NE(TargetDecl, nullptr);
 
-  USRCache usr_cache;
-  EXPECT_DEATH(evidenceEmitter([](const Evidence& e) {}, usr_cache)(
+  USRCache USRCache;
+  EXPECT_DEATH(evidenceEmitter([](const Evidence& e) {}, USRCache)(
                    *TargetDecl, Slot{}, Evidence::ANNOTATED_UNKNOWN,
                    TargetDecl->getLocation()),
                "not an inference target");

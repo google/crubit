@@ -588,24 +588,24 @@ auto getConcreteNullabilityOverrideFromPreviousInferences(
   return [&](const Decl &D) -> std::optional<const PointerTypeNullability *> {
     auto [It, Inserted] = Cache.try_emplace(&D);
     if (Inserted) {
-      std::optional<const Decl *> fingerprintedDecl;
+      std::optional<const Decl *> FingerprintedDecl;
       Slot Slot;
       if (auto *FD = clang::dyn_cast_or_null<FunctionDecl>(&D)) {
-        fingerprintedDecl = FD;
+        FingerprintedDecl = FD;
         Slot = SLOT_RETURN_TYPE;
       } else if (auto *PD = clang::dyn_cast_or_null<ParmVarDecl>(&D)) {
         if (auto *Parent = clang::dyn_cast_or_null<FunctionDecl>(
                 PD->getParentFunctionOrMethod())) {
-          fingerprintedDecl = Parent;
+          FingerprintedDecl = Parent;
           Slot = paramSlot(PD->getFunctionScopeIndex());
         }
       }
-      if (!fingerprintedDecl) return std::nullopt;
-      auto fp =
-          fingerprint(getOrGenerateUSR(USRCache, **fingerprintedDecl), Slot);
-      if (PreviousInferences.Nullable.contains(fp)) {
+      if (!FingerprintedDecl) return std::nullopt;
+      auto Fingerprint =
+          fingerprint(getOrGenerateUSR(USRCache, **FingerprintedDecl), Slot);
+      if (PreviousInferences.Nullable.contains(Fingerprint)) {
         It->second.emplace(NullabilityKind::Nullable);
-      } else if (PreviousInferences.Nonnull.contains(fp)) {
+      } else if (PreviousInferences.Nonnull.contains(Fingerprint)) {
         It->second.emplace(NullabilityKind::NonNull);
       } else {
         It->second = std::nullopt;
