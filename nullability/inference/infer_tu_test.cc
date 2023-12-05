@@ -214,6 +214,26 @@ TEST_F(InferTUTest, ReturnTypeDereferenced) {
                                     {inferredSlot(0, Inference::NONNULL)})));
 }
 
+TEST_F(InferTUTest, PassedToNonnull) {
+  build(R"cc(
+    void takesNonnull(Nonnull<int*>);
+    void target(int* p) { takesNonnull(p); }
+  )cc");
+  EXPECT_THAT(infer(),
+              Contains(inference(hasName("target"),
+                                 {inferredSlot(1, Inference::NONNULL)})));
+}
+
+TEST_F(InferTUTest, PassedToMutableNullableRef) {
+  build(R"cc(
+    void takesMutableNullableRef(Nullable<int*>&);
+    void target(int* p) { takesMutableNullableRef(p); }
+  )cc");
+  EXPECT_THAT(infer(),
+              Contains(inference(hasName("target"),
+                                 {inferredSlot(1, Inference::NULLABLE)})));
+}
+
 TEST_F(InferTUTest, Filter) {
   build(R"cc(
     int* target1() { return nullptr; }

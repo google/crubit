@@ -248,5 +248,12 @@ TEST_F(InferTest, PassedToNonnull) {
   EXPECT_EQ(Inference::NONNULL, infer());
 }
 
+TEST_F(InferTest, PassedToMutableNullable) {
+  add(Evidence::BOUND_TO_MUTABLE_NULLABLE);
+  EXPECT_EQ(Inference::NULLABLE, infer());
+  add(Evidence::BOUND_TO_NONNULL);
+  EXPECT_EQ(Inference::NONNULL, infer(/*ExpectConflict=*/true));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

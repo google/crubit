@@ -12,21 +12,17 @@
 
 namespace clang::tidy::nullability {
 
-namespace {
-
-bool isInferable(QualType T) {
+bool hasInferable(QualType T) {
   return isSupportedRawPointerType(T.getNonReferenceType());
 }
-
-}  // namespace
 
 int countInferableSlots(const Decl& D) {
   const clang::FunctionDecl* Func = dyn_cast<clang::FunctionDecl>(&D);
   if (!Func) return 0;
   int Slots = 0;
-  if (isInferable(Func->getReturnType())) ++Slots;
+  if (hasInferable(Func->getReturnType())) ++Slots;
   for (auto* P : Func->parameters())
-    if (isInferable(P->getType())) ++Slots;
+    if (hasInferable(P->getType())) ++Slots;
   return Slots;
 }
 

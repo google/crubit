@@ -6,8 +6,12 @@
 #define CRUBIT_NULLABILITY_INFERENCE_INFERRABLE_H_
 
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/Type.h"
 
 namespace clang::tidy::nullability {
+
+// Are there inferable slots in this type?
+bool hasInferable(QualType T);
 
 /// Should we attempt to deduce nullability for this symbol?
 bool isInferenceTarget(const Decl &);

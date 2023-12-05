@@ -722,6 +722,67 @@ TEST(CollectEvidenceFromImplementationTest, PassedToNonnullRef) {
                                     functionNamed("callee"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest, PassedToNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(Nullable<int*> i);
+
+    void target(int* p) { callee(p); }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Not(Contains(evidence(_, _, functionNamed("target")))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, PassedToNullableRef) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(Nullable<int*>& i);
+
+    void target(int* p) { callee(p); }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                           functionNamed("target")),
+                  evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                           functionNamed("callee"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     PassedToNullableRefFromStoredFunctionCall) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(Nullable<int*>& i);
+    int* producer();
+
+    void target() {
+      auto p = producer();
+      callee(p);
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                   functionNamed("producer")),
+          evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                   functionNamed("callee"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     PassedToNullableRefFromFunctionCall) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(Nullable<int*>& i);
+    int*& producer();
+
+    void target() { callee(producer()); }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                   functionNamed("producer")),
+          evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                   functionNamed("callee"))));
+}
+
 TEST(CollectEvidenceFromImplementationTest, AssignedToNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* p, int* q, int* r) {
@@ -739,6 +800,18 @@ TEST(CollectEvidenceFromImplementationTest, AssignedToNonnull) {
                                     functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest, RefAssignedToNonnullRef) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int*& p) {
+      Nonnull<int*>& a = p;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target"))));
+}
+
 TEST(CollectEvidenceFromImplementationTest, AssignedToNullableOrUnknown) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* p, int* q, int* r) {
@@ -749,6 +822,49 @@ TEST(CollectEvidenceFromImplementationTest, AssignedToNullableOrUnknown) {
     }
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromImplementationTest, AssignedToNullableRef) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p) {
+      Nullable<int*>& a = p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(evidence(paramSlot(0),
+                                            Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                                            functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, RefAssignedToNullableRef) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int*& p) {
+      Nullable<int*>& a = p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(evidence(paramSlot(0),
+                                            Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                                            functionNamed("target"))));
+}
+
+// Ternary expressions are not currently modeled correctly by the analysis, but
+// are necessary to test the case of multiple connected decls.
+//
+// DISABLED until ternary expressions are handle.
+TEST(CollectEvidenceFromImplementationTest,
+     DISABLED_AssignedToNullableRefAllConnectedDecls) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, int* q, bool b) {
+      Nullable<int*>& x = b ? p : q;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                           functionNamed("target")),
+                  evidence(paramSlot(1), Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                           functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, IrrelevantAssignments) {

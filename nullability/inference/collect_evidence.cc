@@ -258,8 +258,53 @@ auto getNullabilityAnnotationsFromTypeAndOverrides(
   return N;
 }
 
+// Collect evidence for each of `InferableSlots` if that slot being marked
+// Nullable would imply `Value`'s FromNullable property.
+//
+// This function is called when we have reason to believe that `Value` must be
+// Nullable. As we can't directly retrieve the combination of Decl and Slot that
+// corresponds to `Value`'s nullability, we consider each inferable slot and
+// emit evidence for all inferable slots that, if marked Nullable, cause `Value`
+// to be considered explicitly Nullable.
+void collectMustBeMarkedNullableEvidence(
+    const dataflow::PointerValue &Value, const dataflow::Environment &Env,
+    SourceLocation Loc, const std::vector<InferableSlot> &InferableSlots,
+    Evidence::Kind EvidenceKind, llvm::function_ref<EvidenceEmitter> Emit) {
+  CHECK(hasPointerNullState(Value))
+      << "Value should be the value of an expression. Cannot collect evidence "
+         "for nonnull-ness if there is no null state.";
+  auto *FromNullable = getPointerNullState(Value).FromNullable;
+  // If `FromNullable` is top, we can't infer anything about it.
+  if (FromNullable == nullptr) return;
+  // If the flow conditions already imply that `Value` is from a Nullable, then
+  // we don't have any new evidence of a necessary annotation.
+  if (Env.proves(*FromNullable)) return;
+
+  auto &A = Env.getDataflowAnalysisContext().arena();
+  // Otherwise, if an inferable slot being annotated Nullable would imply that
+  // `Value` is from a Nullable, then we have evidence suggesting that slot
+  // should be annotated. We collect this evidence for every slot that connects
+  // in this way to `Value`.
+  //
+  // e.g. We should mark both `p` and `q` Nullable in the following:
+  // ```
+  // void target(int* p, int* q, bool b) {
+  //   Nullable<int*>& x = b ? p : q;
+  //   ...
+  // }
+  // ```
+  // because at runtime, either `p` or `q` could be taken as a mutable reference
+  // and later set to nullptr.
+  for (auto &IS : InferableSlots) {
+    auto &SlotNullableImpliesValueFromNullable =
+        A.makeImplies(IS.getSymbolicNullability().isNullable(A), *FromNullable);
+    if (Env.proves(SlotNullableImpliesValueFromNullable))
+      Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
+  }
+}
+
 void collectEvidenceFromBindingToType(
-    TypeNullability &TypeNullability,
+    QualType Type, TypeNullability &TypeNullability,
     const dataflow::PointerValue &PointerValue,
     const std::vector<InferableSlot> &InferableSlotsFromValueContext,
     const Formula &InferableSlotsConstraint, const dataflow::Environment &Env,
@@ -276,6 +321,14 @@ void collectEvidenceFromBindingToType(
     collectMustBeNonnullEvidence(PointerValue, Env, ValueLoc,
                                  InferableSlotsFromValueContext,
                                  Evidence::BOUND_TO_NONNULL, Emit);
+  } else if (!Type.isConstQualified() && Type->isReferenceType() &&
+             (TopLevel.concrete() == NullabilityKind::Nullable ||
+              (TopLevel.isSymbolic() &&
+               Env.proves(A.makeImplies(InferableSlotsConstraint,
+                                        TopLevel.isNullable(A)))))) {
+    collectMustBeMarkedNullableEvidence(
+        PointerValue, Env, ValueLoc, InferableSlotsFromValueContext,
+        Evidence::BOUND_TO_MUTABLE_NULLABLE, Emit);
   }
 }
 
@@ -323,8 +376,8 @@ void collectEvidenceFromArgsAndParams(
       // Collect evidence from the binding of the argument to the parameter's
       // nullability, if known.
       collectEvidenceFromBindingToType(
-          ParamNullability, *PV, InferableCallerSlots, InferableSlotsConstraint,
-          Env, ArgLoc, Emit);
+          ParamDecl->getType(), ParamNullability, *PV, InferableCallerSlots,
+          InferableSlotsConstraint, Env, ArgLoc, Emit);
     }
 
     if (CollectEvidenceForCallee) {
@@ -426,9 +479,10 @@ void collectEvidenceFromAssignment(
     for (auto *Decl : DeclStmt->decls()) {
       if (auto *VarDecl = dyn_cast_or_null<clang::VarDecl>(Decl);
           VarDecl && VarDecl->hasInit()) {
-        bool DeclTypeSupported = isSupportedRawPointerType(VarDecl->getType());
-        bool InitTypeSupported =
-            isSupportedPointerType(VarDecl->getInit()->getType());
+        bool DeclTypeSupported =
+            isSupportedRawPointerType(VarDecl->getType().getNonReferenceType());
+        bool InitTypeSupported = isSupportedPointerType(
+            VarDecl->getInit()->getType().getNonReferenceType());
         if (!DeclTypeSupported) return;
         if (!InitTypeSupported) {
           // TODO: we could perhaps support pointer initialization from numeric
@@ -444,8 +498,9 @@ void collectEvidenceFromAssignment(
             getNullabilityAnnotationsFromTypeAndOverrides(VarDecl->getType(),
                                                           VarDecl, Lattice);
         collectEvidenceFromBindingToType(
-            TypeNullability, *PV, InferableSlots, InferableSlotsConstraint, Env,
-            VarDecl->getInit()->getExprLoc(), Emit);
+            VarDecl->getType(), TypeNullability, *PV, InferableSlots,
+            InferableSlotsConstraint, Env, VarDecl->getInit()->getExprLoc(),
+            Emit);
       }
     }
   }
@@ -478,7 +533,8 @@ void collectEvidenceFromAssignment(
           BinaryOperator->getLHS()->getType());
     }
     collectEvidenceFromBindingToType(
-        TypeNullability, *PV, InferableSlots, InferableSlotsConstraint, Env,
+        BinaryOperator->getLHS()->getType(), TypeNullability, *PV,
+        InferableSlots, InferableSlotsConstraint, Env,
         BinaryOperator->getRHS()->getExprLoc(), Emit);
   }
 }
@@ -577,7 +633,7 @@ void addInferableSlotsForCalledFunctions(
                           .bind(FunctionDeclNodeId))))),
            CurrentFunction, CurrentFunction.getASTContext())) {
     auto *ReturnType = Match.getNodeAs<QualType>(ReturnTypeNodeId);
-    if (!ReturnType || !isSupportedRawPointerType(*ReturnType) ||
+    if (!ReturnType || !hasInferable(*ReturnType) ||
         evidenceKindFromDeclaredType(*ReturnType))
       continue;
     auto *CalledFunction = Match.getNodeAs<FunctionDecl>(FunctionDeclNodeId);

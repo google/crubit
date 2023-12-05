@@ -74,6 +74,8 @@ message Evidence {
     UNKNOWN_RETURN = 9;
     // A value was bound to a Nonnull declaration.
     BOUND_TO_NONNULL = 10;
+    // A value was bound to a mutable Nullable declaration.
+    BOUND_TO_MUTABLE_NULLABLE = 11;
   }
 }
 
