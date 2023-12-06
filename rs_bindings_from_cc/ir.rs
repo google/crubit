@@ -1016,6 +1016,7 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Comment> {
 flagset::flags! {
     pub enum CrubitFeature : u8 {
         Supported,
+        ExternC,
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
         Experimental,
@@ -1028,6 +1029,7 @@ impl CrubitFeature {
         match self {
             Self::Supported => "supported",
             Self::Experimental => "experimental",
+            Self::ExternC => "extern_c",
         }
     }
 
@@ -1036,6 +1038,7 @@ impl CrubitFeature {
         match self {
             Self::Supported => "//features:supported",
             Self::Experimental => "//features:experimental",
+            Self::ExternC => "//features:extern_c",
         }
     }
 }
@@ -1055,6 +1058,7 @@ impl<'de> serde::Deserialize<'de> for CrubitFeaturesIR {
             features |= match &*feature {
                 "experimental" => CrubitFeature::Experimental,
                 "supported" => CrubitFeature::Supported,
+                "extern_c" => CrubitFeature::ExternC,
                 other => {
                     return Err(<D::Error as serde::de::Error>::custom(format!(
                         "Unexpected Crubit feature: {other}"

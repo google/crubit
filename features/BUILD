@@ -7,6 +7,11 @@ _SUPPORTED_FEATURES = [
     "supported",
 ]
 
+_EXPERIMENTAL_CLIENTS = [
+    "//security/ise_memory_safety/safe_json_parsing:__subpackages__",
+    "//:__subpackages__",
+]
+
 crubit_feature_hint(
     name = "supported",
     crubit_features = _SUPPORTED_FEATURES,
@@ -14,10 +19,13 @@ crubit_feature_hint(
 )
 
 crubit_feature_hint(
+    name = "extern_c",
+    crubit_features = ["extern_c"],
+    visibility = _EXPERIMENTAL_CLIENTS,
+)
+
+crubit_feature_hint(
     name = "experimental",
     crubit_features = _SUPPORTED_FEATURES + ["experimental"],
-    visibility = [
-        "//:__subpackages__",
-        "//security/ise_memory_safety/safe_json_parsing:__subpackages__",
-    ],
+    visibility = _EXPERIMENTAL_CLIENTS,
 )
