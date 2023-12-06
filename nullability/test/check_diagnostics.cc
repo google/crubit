@@ -32,8 +32,8 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
       dataflow::test::checkDataflow<PointerNullabilityAnalysis>(
           dataflow::test::AnalysisInputs<PointerNullabilityAnalysis>(
               SourceCode, ast_matchers::hasName("target"),
-              [](ASTContext &ASTCtx, dataflow::Environment &) {
-                return PointerNullabilityAnalysis(ASTCtx);
+              [](ASTContext &ASTCtx, dataflow::Environment &Env) {
+                return PointerNullabilityAnalysis(ASTCtx, Env);
               })
               .withPostVisitCFG([&Diagnostics, &Diagnoser](
                                     ASTContext &Ctx, const CFGElement &Elt,

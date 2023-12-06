@@ -33,6 +33,7 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/StringMap.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -925,11 +926,19 @@ void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
 
 }  // namespace
 
-PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext &Context)
+PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext &Context,
+                                                       Environment &Env)
     : DataflowAnalysis<PointerNullabilityAnalysis, PointerNullabilityLattice>(
           Context),
       TypeTransferer(buildTypeTransferer()),
-      ValueTransferer(buildValueTransferer()) {}
+      ValueTransferer(buildValueTransferer()) {
+  Env.getDataflowAnalysisContext().setSyntheticFieldCallback(
+      [](QualType Ty) -> llvm::StringMap<QualType> {
+        QualType RawPointerTy = underlyingRawPointerType(Ty);
+        if (RawPointerTy.isNull()) return {};
+        return {{PtrField, RawPointerTy}};
+      });
+}
 
 PointerTypeNullability PointerNullabilityAnalysis::assignNullabilityVariable(
     const ValueDecl *D, dataflow::Arena &A) {

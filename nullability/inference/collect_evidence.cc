@@ -666,7 +666,7 @@ llvm::Error collectEvidenceFromImplementation(
       std::make_unique<dataflow::WatchedLiteralsSolver>(200000));
   Environment Environment(AnalysisContext, *Func);
   PointerNullabilityAnalysis Analysis(
-      Func->getDeclContext()->getParentASTContext());
+      Func->getDeclContext()->getParentASTContext(), Environment);
   std::vector<InferableSlot> InferableSlots;
   if (isInferenceTarget(*Func)) {
     auto Parameters = Func->parameters();

@@ -34,7 +34,8 @@ class PointerNullabilityAnalysis
   PointerNullabilityLattice::NonFlowSensitiveState NFS;
 
  public:
-  explicit PointerNullabilityAnalysis(ASTContext &context);
+  explicit PointerNullabilityAnalysis(ASTContext &Context,
+                                      dataflow::Environment &Env);
 
   PointerNullabilityLattice initialElement() {
     return PointerNullabilityLattice(NFS);

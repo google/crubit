@@ -28,6 +28,10 @@
 
 namespace clang::tidy::nullability {
 
+/// Name of the synthetic field that models a smart pointer's underlying
+/// pointer.
+inline constexpr llvm::StringRef PtrField = "ptr";
+
 /// Returns the `PointerValue` allocated to `PointerExpr` if available.
 /// Otherwise, returns nullptr.
 dataflow::PointerValue *getPointerValueFromExpr(

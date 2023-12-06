@@ -274,10 +274,11 @@ void runTest(const FunctionDecl &Func, Diagnoser &Diags,
       std::make_unique<dataflow::WatchedLiteralsSolver>(), Opts);
   auto &Ctx = Func.getDeclContext()->getParentASTContext();
   auto CFCtx = require(dataflow::ControlFlowContext::build(Func));
-  PointerNullabilityAnalysis Analysis(Ctx);
+  dataflow::Environment Env(DACtx, Func);
+  PointerNullabilityAnalysis Analysis(Ctx, Env);
   auto Symbolic = bindSymbolicNullability(Func, Analysis, DACtx.arena());
   require(
-      runDataflowAnalysis(CFCtx, Analysis, dataflow::Environment(DACtx, Func),
+      runDataflowAnalysis(CFCtx, Analysis, std::move(Env),
                           [&](const CFGElement &Elt, AnalysisState &State) {
                             if (auto CS = Elt.getAs<CFGStmt>())
                               if (auto *CE = dyn_cast<CallExpr>(CS->getStmt()))

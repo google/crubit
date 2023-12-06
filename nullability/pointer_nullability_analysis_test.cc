@@ -20,6 +20,7 @@
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
+#include "llvm/Support/Error.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
@@ -60,32 +61,33 @@ TEST(PointerNullabilityAnalysis, AssignNullabilityVariable) {
       std::make_unique<dataflow::WatchedLiteralsSolver>(), Opts);
   auto &A = DACtx.arena();
   auto CFCtx = dataflow::ControlFlowContext::build(*Target);
-  PointerNullabilityAnalysis Analysis(AST.context());
+  dataflow::Environment Env(DACtx, *Target);
+  PointerNullabilityAnalysis Analysis(AST.context(), Env);
   auto PN = Analysis.assignNullabilityVariable(P, A);
   auto ExitState = std::move(
-      *cantFail(dataflow::runDataflowAnalysis(
-                    *CFCtx, Analysis, dataflow::Environment(DACtx, *Target)))
-           .front());
+      cantFail(dataflow::runDataflowAnalysis(*CFCtx, Analysis, std::move(Env)))
+          .front());
+  ASSERT_TRUE(ExitState.has_value());
   // Get the nullability model of the return value.
   auto *Ret =
-      dyn_cast_or_null<dataflow::PointerValue>(ExitState.Env.getReturnValue());
+      dyn_cast_or_null<dataflow::PointerValue>(ExitState->Env.getReturnValue());
   ASSERT_NE(Ret, nullptr);
   auto State = getPointerNullState(*Ret);
   ASSERT_NE(State.FromNullable, nullptr);
   ASSERT_NE(State.IsNull, nullptr);
 
   // The param nullability hasn't been fixed.
-  EXPECT_EQ(std::nullopt, evaluate(PN.isNonnull(A), ExitState.Env));
-  EXPECT_EQ(std::nullopt, evaluate(PN.isNullable(A), ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(PN.isNonnull(A), ExitState->Env));
+  EXPECT_EQ(std::nullopt, evaluate(PN.isNullable(A), ExitState->Env));
   // Nor has the the nullability of the returned pointer.
-  EXPECT_EQ(std::nullopt, evaluate(*State.FromNullable, ExitState.Env));
-  EXPECT_EQ(std::nullopt, evaluate(*State.IsNull, ExitState.Env));
+  EXPECT_EQ(std::nullopt, evaluate(*State.FromNullable, ExitState->Env));
+  EXPECT_EQ(std::nullopt, evaluate(*State.IsNull, ExitState->Env));
   // However, the two are linked as expected.
   EXPECT_EQ(true,
             evaluate(A.makeImplies(PN.isNonnull(A), A.makeNot(*State.IsNull)),
-                     ExitState.Env));
+                     ExitState->Env));
   EXPECT_EQ(true, evaluate(A.makeEquals(PN.isNullable(A), *State.FromNullable),
-                           ExitState.Env));
+                           ExitState->Env));
 }
 
 }  // namespace
