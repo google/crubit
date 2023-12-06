@@ -60,13 +60,13 @@ void type(Actual) {}
 
 // Asserts that its argument is considered nullable.
 template <typename T>
-void nullable(T) {}
+void nullable(const T &) {}
 // Asserts that its argument is considered non-null.
 template <typename T>
-void nonnull(T) {}
+void nonnull(const T &) {}
 // Asserts that its argument is neither considered nullable nor non-null.
 template <typename T>
-void unknown(T) {}
+void unknown(const T &) {}
 
 ///////////////// Helpers to make writing tests more convenient ////////////////
 

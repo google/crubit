@@ -34,19 +34,6 @@ TEST(SmartPointerTest, MakeUniqueReturnsNonNull) {
   )cc"));
 }
 
-TEST(SmartPointerTest, ParameterAnnotations) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-#include <memory>
-    void target(Nonnull<std::unique_ptr<int>> nonnull,
-                Nullable<std::unique_ptr<int>> nullable,
-                std::unique_ptr<int> unknown) {
-      *nonnull;
-      *nullable;  // TODO(b/304963199): False negative.
-      *unknown;
-    }
-  )cc"));
-}
-
 TEST(SmartPointerTest, ReturnValue_Nonnull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>

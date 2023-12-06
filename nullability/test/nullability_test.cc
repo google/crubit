@@ -82,6 +82,8 @@ namespace {
 llvm::cl::list<std::string> Sources(llvm::cl::Positional, llvm::cl::OneOrMore);
 llvm::cl::opt<bool> EmitTestLog("log");
 
+test::EnableSmartPointers Enable;
+
 // Deal with unexpected llvm::Errors by exiting with failure status.
 void require(llvm::Error E) {
   if (E) {

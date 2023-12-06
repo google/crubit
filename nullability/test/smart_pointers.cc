@@ -7,3 +7,21 @@
 #include <memory>
 
 #include "nullability_test.h"
+
+TEST void parameterAnnotations(Nonnull<std::unique_ptr<int>> nonnullParam,
+                               Nullable<std::unique_ptr<int>> nullableParam,
+                               std::unique_ptr<int> unknownParam) {
+  nonnull(nonnullParam);
+  nullable(nullableParam);
+  unknown(unknownParam);
+}
+
+Nonnull<std::unique_ptr<int>> returnsNonnull();
+Nullable<std::unique_ptr<int>> returnsNullable();
+std::unique_ptr<int> returnsUnknown();
+
+TEST void returnValueAnnotations() {
+  nonnull(returnsNonnull());
+  nullable(returnsNullable());
+  unknown(returnsUnknown());
+}

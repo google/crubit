@@ -30,12 +30,21 @@ namespace clang::tidy::nullability {
 
 /// Name of the synthetic field that models a smart pointer's underlying
 /// pointer.
+/// Where possible, use accessors such as `getPointerValueFromSmartPointer()`
+/// instead of accessing this field directly.
 inline constexpr llvm::StringRef PtrField = "ptr";
 
 /// Returns the `PointerValue` allocated to `PointerExpr` if available.
 /// Otherwise, returns nullptr.
 dataflow::PointerValue *getPointerValueFromExpr(
     const Expr *PointerExpr, const dataflow::Environment &Env);
+
+/// Returns the `PointerValue` underlying a smart pointer, or null if no
+/// `PointerValue` is assigned to the smart pointer in the environment.
+/// If `SmartPointerLoc` is null, returns null.
+absl::Nullable<dataflow::PointerValue *> getPointerValueFromSmartPointer(
+    absl::Nullable<dataflow::RecordStorageLocation *> SmartPointerLoc,
+    const dataflow::Environment &Env);
 
 // Returns true if the pointer has all properties necessary for representing
 // complete nullness information.
@@ -121,13 +130,9 @@ clang::NullabilityKind getNullability(
 
 /// Returns the strongest provable assertion we can make about the value of
 /// `E` in `Env`.
-inline clang::NullabilityKind getNullability(
+clang::NullabilityKind getNullability(
     const Expr *E, const dataflow::Environment &Env,
-    const dataflow::Formula *AdditionalConstraints = nullptr) {
-  if (auto *P = getPointerValueFromExpr(E, Env))
-    return getNullability(*P, Env, AdditionalConstraints);
-  return clang::NullabilityKind::Unspecified;
-}
+    const dataflow::Formula *AdditionalConstraints = nullptr);
 
 // Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
 template <typename T>

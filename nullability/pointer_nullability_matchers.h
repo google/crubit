@@ -17,6 +17,12 @@ AST_MATCHER(QualType, isSupportedRawPointer) {
   return isSupportedRawPointerType(Node);
 }
 
+AST_MATCHER(QualType, isSupportedSmartPointer) {
+  return isSupportedSmartPointerType(Node);
+}
+
+AST_MATCHER(Expr, isGLValue) { return Node.isGLValue(); }
+
 ast_matchers::internal::Matcher<Stmt> isPointerExpr();
 ast_matchers::internal::Matcher<Stmt> isMemberOfPointerType();
 ast_matchers::internal::Matcher<Stmt> isPointerArrow();
@@ -32,6 +38,7 @@ ast_matchers::internal::Matcher<Stmt> isConstructExpr();
 ast_matchers::internal::Matcher<CXXCtorInitializer> isCtorMemberInitializer();
 ast_matchers::internal::Matcher<Stmt> isZeroParamConstMemberCall();
 ast_matchers::internal::Matcher<Stmt> isNonConstMemberCall();
+ast_matchers::internal::Matcher<Stmt> isSmartPointerGlValue();
 ast_matchers::internal::Matcher<Stmt> isSupportedPointerAccessorCall();
 
 }  // namespace nullability

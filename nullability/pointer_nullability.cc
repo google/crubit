@@ -25,6 +25,7 @@ using dataflow::DataflowAnalysisContext;
 using dataflow::Environment;
 using dataflow::Formula;
 using dataflow::PointerValue;
+using dataflow::RecordStorageLocation;
 using dataflow::TopBoolValue;
 using dataflow::Value;
 
@@ -40,6 +41,14 @@ NullabilityKind getNullabilityKind(QualType Type, ASTContext &Ctx) {
 PointerValue *getPointerValueFromExpr(const Expr *PointerExpr,
                                       const Environment &Env) {
   return cast_or_null<PointerValue>(Env.getValue(*PointerExpr));
+}
+
+absl::Nullable<PointerValue *> getPointerValueFromSmartPointer(
+    absl::Nullable<RecordStorageLocation *> SmartPointerLoc,
+    const Environment &Env) {
+  if (SmartPointerLoc == nullptr) return nullptr;
+  return cast_or_null<dataflow::PointerValue>(
+      Env.getValue(SmartPointerLoc->getSyntheticField(PtrField)));
 }
 
 bool hasPointerNullState(const dataflow::PointerValue &PointerVal) {
@@ -136,6 +145,20 @@ NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
   return isNullable(PointerVal, Env, AdditionalConstraints)
              ? NullabilityKind::Nullable
              : NullabilityKind::Unspecified;
+}
+
+NullabilityKind getNullability(const Expr *E, const dataflow::Environment &Env,
+                               const dataflow::Formula *AdditionalConstraints) {
+  dataflow::PointerValue *P = nullptr;
+  if (isSupportedRawPointerType(E->getType()))
+    P = getPointerValueFromExpr(E, Env);
+  else if (isSupportedSmartPointerType(E->getType()))
+    P = getPointerValueFromSmartPointer(
+        cast_or_null<dataflow::RecordStorageLocation>(
+            Env.getStorageLocation(*E)),
+        Env);
+  if (P != nullptr) return getNullability(*P, Env, AdditionalConstraints);
+  return clang::NullabilityKind::Unspecified;
 }
 
 }  // namespace clang::tidy::nullability

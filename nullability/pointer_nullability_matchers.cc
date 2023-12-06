@@ -85,6 +85,10 @@ Matcher<Stmt> isNonConstMemberCall() {
   return cxxMemberCallExpr(callee(cxxMethodDecl(unless(isConst()))));
 }
 
+Matcher<Stmt> isSmartPointerGlValue() {
+  return expr(hasType(isSupportedSmartPointer()), isGLValue());
+}
+
 Matcher<Stmt> isSupportedPointerAccessorCall() {
   return cxxMemberCallExpr(callee(cxxMethodDecl(hasBody(compoundStmt(
       statementCountIs(1),

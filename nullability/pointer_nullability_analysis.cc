@@ -48,6 +48,7 @@ using dataflow::DataflowAnalysisContext;
 using dataflow::Environment;
 using dataflow::Formula;
 using dataflow::PointerValue;
+using dataflow::RecordStorageLocation;
 using dataflow::StorageLocation;
 using dataflow::TransferState;
 using dataflow::Value;
@@ -315,6 +316,27 @@ void transferValue_NotNullPointer(
     initPointerNullState(*PointerVal, State.Env.getDataflowAnalysisContext(),
                          NullabilityKind::NonNull);
   }
+}
+
+void transferValue_SmartPointer(
+    const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  auto *Loc = cast_or_null<RecordStorageLocation>(
+      State.Env.getStorageLocation(*PointerExpr));
+  if (Loc == nullptr) {
+    Loc = &cast<RecordStorageLocation>(
+        State.Env.createStorageLocation(*PointerExpr));
+    State.Env.setStorageLocation(*PointerExpr, *Loc);
+  }
+
+  StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
+  auto *Val = cast_or_null<PointerValue>(State.Env.getValue(PtrLoc));
+  if (Val == nullptr) {
+    Val = cast<PointerValue>(State.Env.createValue(PtrLoc.getType()));
+    State.Env.setValue(PtrLoc, *Val);
+  }
+
+  initPointerFromTypeNullability(*Val, PointerExpr, State);
 }
 
 void transferValue_Pointer(const Expr *PointerExpr,
@@ -898,6 +920,7 @@ auto buildValueTransferer() {
       .CaseOfCFGStmt<CXXMemberCallExpr>(isNonConstMemberCall(),
                                         transferValue_NonConstMemberCall)
       .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferValue_CallExpr)
+      .CaseOfCFGStmt<Expr>(isSmartPointerGlValue(), transferValue_SmartPointer)
       .CaseOfCFGStmt<Expr>(isPointerExpr(), transferValue_Pointer)
       // Handles comparison between 2 pointers.
       .CaseOfCFGStmt<BinaryOperator>(isPointerCheckBinOp(),
