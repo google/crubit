@@ -31,6 +31,12 @@ impl From<&str> for string_view {
     }
 }
 
+impl From<&core::ffi::CStr> for string_view {
+    fn from(cstr: &core::ffi::CStr) -> Self {
+        string_view::from(cstr.to_bytes())
+    }
+}
+
 impl From<*const [u8]> for string_view {
     fn from(slice: *const [u8]) -> Self {
         // No stable way to do this per se, but the UCG documents this transmute is OK.

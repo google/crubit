@@ -31,6 +31,15 @@ fn test_round_trip_str() {
 }
 
 #[test]
+fn test_round_trip_cstr() {
+    let original: &'static str = "hello, world\0";
+    let cstr = core::ffi::CStr::from_bytes_with_nul(original.as_bytes()).unwrap();
+    let original = &original[..original.len() - 1]; // cut off nul for the comparison.
+    let sv: std::string_view = cstr.into();
+    assert_eq!(unsafe { to_str(sv) }, original);
+}
+
+#[test]
 fn test_ffi() {
     assert_eq!(unsafe { to_str(GetHelloWorld()) }, "Hello, world!");
 }
