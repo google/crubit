@@ -8,8 +8,13 @@ namespace std {
 template <class T>
 class unique_ptr {
 public:
-unique_ptr() {}
-T &operator*() const;
+  unique_ptr() {}
+
+  // Make sure `unique_ptr` is not trivially destructible so that the AST for
+  // expressions using this mock look the same as for the real class.
+  ~unique_ptr() {}
+
+  T &operator*() const;
 };
 
 template <class T, class... Args>

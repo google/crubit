@@ -791,6 +791,14 @@ void transferType_MaterializeTemporaryExpr(
   });
 }
 
+void transferType_CXXBindTemporaryExpr(
+    const CXXBindTemporaryExpr *BTE, const MatchFinder::MatchResult &MR,
+    TransferState<PointerNullabilityLattice> &State) {
+  computeNullability(BTE, State, [&]() {
+    return getNullabilityForChild(BTE->getSubExpr(), State);
+  });
+}
+
 void transferType_CallExpr(const CallExpr *CE,
                            const MatchFinder::MatchResult &MR,
                            TransferState<PointerNullabilityLattice> &State) {
@@ -889,6 +897,8 @@ auto buildTypeTransferer() {
       .CaseOfCFGStmt<MaterializeTemporaryExpr>(
           ast_matchers::materializeTemporaryExpr(),
           transferType_MaterializeTemporaryExpr)
+      .CaseOfCFGStmt<CXXBindTemporaryExpr>(ast_matchers::cxxBindTemporaryExpr(),
+                                           transferType_CXXBindTemporaryExpr)
       .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(), transferType_CallExpr)
       .CaseOfCFGStmt<UnaryOperator>(ast_matchers::unaryOperator(),
                                     transferType_UnaryOperator)
