@@ -114,7 +114,7 @@ def _generate_bindings(ctx, basename, inputs, rustc_args, rustc_env):
         executable = ctx.executable._cc_bindings_from_rs_tool,
         mnemonic = "CcBindingsFromRust",
         progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
-        # TODO(lukasza): Figure out why we need a '-Cpanic=abort' here.
+        # TODO(b/254049425): We shouldn't override the panic arg, and instead work fine in any case.
         arguments = [crubit_args, "--", rustc_args, "-Cpanic=abort"],
     )
 
