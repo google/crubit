@@ -39,6 +39,7 @@ ast_matchers::internal::Matcher<CXXCtorInitializer> isCtorMemberInitializer();
 ast_matchers::internal::Matcher<Stmt> isZeroParamConstMemberCall();
 ast_matchers::internal::Matcher<Stmt> isNonConstMemberCall();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerGlValue();
+ast_matchers::internal::Matcher<Stmt> isSmartPointerConstructor();
 ast_matchers::internal::Matcher<Stmt> isSupportedPointerAccessorCall();
 
 }  // namespace nullability

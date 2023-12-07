@@ -5,10 +5,55 @@
 // Mock of standard library <memory> header.
 
 namespace std {
+
+// Adding some definitions here for convenience that really belong in other
+// headers.
+
+using nullptr_t = decltype(nullptr);
+
+using size_t = decltype(sizeof(int));
+
 template <class T>
+struct remove_extent { using type = T; };
+template <class T>
+struct remove_extent<T[]> { using type = T; };
+template <class T, size_t N>
+struct remove_extent<T[N]> { using type = T; };
+
+template <class T>
+struct remove_reference {
+  using type = T;
+};
+template <class T>
+struct remove_reference<T &> {
+  using type = T;
+};
+template <class T>
+struct remove_reference<T &&> {
+  using type = T;
+};
+
+template <class T>
+constexpr typename remove_reference<T>::type &&move(T &&);
+
+template <class T> struct default_delete{};
+template <class T> struct allocator{};
+
+template <class T, class Deleter = default_delete<T>>
 class unique_ptr {
 public:
+  using pointer = T*;
+
   unique_ptr() {}
+  unique_ptr(nullptr_t) {}
+  unique_ptr(pointer) {}
+  // We're restricting ourselves to just one possible case for the deleter
+  // parameter.
+  unique_ptr(pointer, const Deleter &) {}
+  unique_ptr(unique_ptr &&) {}
+  template <class OtherT, class OtherDeleter>
+  unique_ptr(unique_ptr<OtherT, OtherDeleter> &&) {}
+  unique_ptr(const unique_ptr &) = delete;
 
   // Make sure `unique_ptr` is not trivially destructible so that the AST for
   // expressions using this mock look the same as for the real class.
@@ -17,6 +62,52 @@ public:
   T &operator*() const;
 };
 
+// Array specialization of `unique_ptr`. We only introduce the members that are
+// used in tests.
+template <class T, class Deleter>
+class unique_ptr<T[], Deleter> {
+public:
+  using pointer = T*;
+
+  unique_ptr() {}
+  template <class ArrayT>
+  explicit unique_ptr(ArrayT) {}
+  template <class ArrayT>
+  explicit unique_ptr(ArrayT, const Deleter &) {}
+  unique_ptr(const unique_ptr &) = delete;
+
+  ~unique_ptr() {}
+};
+
 template <class T, class... Args>
 unique_ptr<T> make_unique(Args &&...args);
+
+template <class T> class weak_ptr{};
+
+// This definition of `shared_ptr` only introduces the members that are used in
+// tests.
+template <class T>
+class shared_ptr {
+public:
+  using element_type = remove_extent<T>::type;
+
+  template <class Deleter>
+  shared_ptr(nullptr_t, Deleter);
+  template <class Deleter, class Alloc>
+  shared_ptr(nullptr_t, Deleter, Alloc);
+  template <class OtherT, class Deleter, class Alloc>
+  shared_ptr(OtherT *, Deleter, Alloc);
+  template <class OtherT>
+  shared_ptr(const shared_ptr<OtherT> &, element_type *);
+  template <class OtherT>
+  shared_ptr(shared_ptr<OtherT> &&, element_type *);
+  shared_ptr(const shared_ptr &);
+  template <class OtherT>
+  explicit shared_ptr(const weak_ptr<OtherT> &);
+  template <class OtherT, class Deleter>
+  explicit shared_ptr(unique_ptr<OtherT, Deleter> &&);
+
+  ~shared_ptr() {}
+};
+
 }  // namespace std

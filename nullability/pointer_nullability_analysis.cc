@@ -318,6 +318,83 @@ void transferValue_NotNullPointer(
   }
 }
 
+bool isStdWeakPtrType(QualType Ty) {
+  const CXXRecordDecl *RD = Ty.getCanonicalType()->getAsCXXRecordDecl();
+  if (RD == nullptr) return false;
+
+  if (!RD->getDeclContext()->isStdNamespace()) return false;
+
+  const IdentifierInfo *ID = RD->getIdentifier();
+  if (ID == nullptr) return false;
+
+  return ID->getName() == "weak_ptr";
+}
+
+void transferValue_SmartPointerConstructor(
+    const CXXConstructExpr *Ctor, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*Ctor);
+  // Create a `RecordValue`, associate it with the `Loc` and the expression.
+  State.Env.setValue(*Ctor, refreshRecordValue(Loc, State.Env));
+  StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
+
+  // Default and `nullptr_t` constructor.
+  if (Ctor->getConstructor()->isDefaultConstructor() ||
+      (Ctor->getNumArgs() >= 1 &&
+       Ctor->getArg(0)->getType()->isNullPtrType())) {
+    State.Env.setValue(
+        PtrLoc,
+        createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
+    return;
+  }
+
+  // Construct from raw pointer.
+  if (Ctor->getNumArgs() >= 1 &&
+      isSupportedRawPointerType(Ctor->getArg(0)->getType())) {
+    if (Value *Val = State.Env.getValue(*Ctor->getArg(0)))
+      State.Env.setValue(PtrLoc, *Val);
+    return;
+  }
+
+  // Copy or move from an existing smart pointer.
+  if (Ctor->getNumArgs() >= 1 &&
+      isSupportedSmartPointerType(Ctor->getArg(0)->getType())) {
+    auto *SrcLoc = cast_or_null<RecordStorageLocation>(
+        State.Env.getStorageLocation(*Ctor->getArg(0)));
+    if (Ctor->getNumArgs() == 2 &&
+        isSupportedRawPointerType(Ctor->getArg(1)->getType())) {
+      // `shared_ptr` aliasing constructor.
+      if (PointerValue *Val =
+              getPointerValueFromExpr(Ctor->getArg(1), State.Env))
+        State.Env.setValue(PtrLoc, *Val);
+    } else {
+      if (PointerValue *Val =
+              getPointerValueFromSmartPointer(SrcLoc, State.Env))
+        State.Env.setValue(PtrLoc, *Val);
+    }
+
+    if (Ctor->getConstructor()
+            ->getParamDecl(0)
+            ->getType()
+            ->isRValueReferenceType() &&
+        SrcLoc != nullptr) {
+      State.Env.setValue(
+          SrcLoc->getSyntheticField(PtrField),
+          createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
+    }
+    return;
+  }
+
+  // Construct from `weak_ptr`. This throws if the `weak_ptr` is empty, so we
+  // can assume the `shared_ptr` is non-null if the constructor returns.
+  if (Ctor->getNumArgs() == 1 && isStdWeakPtrType(Ctor->getArg(0)->getType())) {
+    auto &Val = *cast<PointerValue>(State.Env.createValue(PtrLoc.getType()));
+    initPointerNullState(Val, State.Env.getDataflowAnalysisContext(),
+                         NullabilityKind::NonNull);
+    State.Env.setValue(PtrLoc, Val);
+  }
+}
+
 void transferValue_SmartPointer(
     const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -923,6 +1000,8 @@ auto buildValueTransferer() {
       // TODO(mboehme): I believe we should be able to move handling of null
       // pointers to the non-flow-sensitive part of the analysis.
       .CaseOfCFGStmt<Expr>(isNullPointerLiteral(), transferValue_NullPointer)
+      .CaseOfCFGStmt<CXXConstructExpr>(isSmartPointerConstructor(),
+                                       transferValue_SmartPointerConstructor)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),

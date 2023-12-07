@@ -115,6 +115,12 @@ void forgetIsNull(dataflow::PointerValue &PointerVal,
 void initNullPointer(dataflow::PointerValue &PointerVal,
                      dataflow::DataflowAnalysisContext &Ctx);
 
+/// Creates a null pointer with the given pointee type. The null state for the
+/// pointer is set to reflect that the pointer is null. This always returns the
+/// same `PointerValue` for a given `PointeeType`.
+dataflow::PointerValue &createNullPointer(QualType PointeeType,
+                                          dataflow::Environment &Env);
+
 /// Returns true if there is evidence that `PointerVal` may hold a nullptr.
 bool isNullable(const dataflow::PointerValue &PointerVal,
                 const dataflow::Environment &Env,

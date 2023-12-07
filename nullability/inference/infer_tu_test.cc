@@ -314,7 +314,7 @@ TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
                 std::unique_ptr<int> r);
     void target(std::unique_ptr<int> a, Nonnull<std::unique_ptr<int>> b,
                 Nullable<std::unique_ptr<int>> c) {
-      callee(a, b, c);
+      callee(std::move(a), std::move(b), std::move(c));
     }
   )cc");
 

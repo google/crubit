@@ -115,6 +115,12 @@ void initNullPointer(PointerValue &PointerVal, DataflowAnalysisContext &Ctx) {
                             /*IsNull=*/&Ctx.arena().makeLiteral(true));
 }
 
+PointerValue &createNullPointer(QualType PointeeType, Environment &Env) {
+  PointerValue &PointerVal = Env.getOrCreateNullPointerValue(PointeeType);
+  initNullPointer(PointerVal, Env.getDataflowAnalysisContext());
+  return PointerVal;
+}
+
 bool isNullable(const PointerValue &PointerVal, const Environment &Env,
                 const dataflow::Formula *AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();

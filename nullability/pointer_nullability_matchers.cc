@@ -89,6 +89,10 @@ Matcher<Stmt> isSmartPointerGlValue() {
   return expr(hasType(isSupportedSmartPointer()), isGLValue());
 }
 
+Matcher<Stmt> isSmartPointerConstructor() {
+  return cxxConstructExpr(hasType(isSupportedSmartPointer()));
+}
+
 Matcher<Stmt> isSupportedPointerAccessorCall() {
   return cxxMemberCallExpr(callee(cxxMethodDecl(hasBody(compoundStmt(
       statementCountIs(1),
