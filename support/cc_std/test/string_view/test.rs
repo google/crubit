@@ -18,7 +18,9 @@ unsafe fn to_str(sv: std::string_view) -> &'static str {
 fn test_round_trip_empty_slice() {
     let original: &'static [u8] = &[];
     let sv: std::string_view = original.into();
-    assert_eq!(unsafe { &*<*const [u8]>::from(sv) }, original);
+    let raw_round_tripped = <*const [u8]>::from(sv);
+    assert_ne!(raw_round_tripped, original as *const _); // dangling -> null -> new dangling
+    assert_eq!(unsafe { &*raw_round_tripped }, original);
 }
 
 #[test]
