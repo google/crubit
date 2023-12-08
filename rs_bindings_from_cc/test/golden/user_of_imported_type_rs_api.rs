@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -36,6 +36,8 @@ pub fn UsesImportedType(mut t: trivial_type_cc::ns::Trivial) -> trivial_type_cc:
 pub struct UserOfImportedType {
     pub trivial: *mut trivial_type_cc::ns::Trivial,
 }
+impl !Send for UserOfImportedType {}
+impl !Sync for UserOfImportedType {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("UserOfImportedType"),
     crate::UserOfImportedType

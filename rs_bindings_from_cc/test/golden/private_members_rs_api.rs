@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -32,6 +32,8 @@ pub mod test_namespace_bindings {
         /// Types of non-public C++ fields can be elided away
         pub(crate) private_member_variable_: [::core::mem::MaybeUninit<u8>; 4],
     }
+    impl !Send for SomeClass {}
+    impl !Sync for SomeClass {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("test_namespace_bindings :: SomeClass"),
         crate::test_namespace_bindings::SomeClass

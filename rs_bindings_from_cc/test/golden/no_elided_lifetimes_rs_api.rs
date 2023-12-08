@@ -32,6 +32,8 @@ pub unsafe fn free_function(p1: *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_
 pub struct S {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for S {}
+impl !Sync for S {}
 forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
 // Error while generating bindings for item 'S::S':
@@ -77,6 +79,8 @@ impl S {
 pub struct TriviallyCopyableButNontriviallyDestructible {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for TriviallyCopyableButNontriviallyDestructible {}
+impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TriviallyCopyableButNontriviallyDestructible"),
     crate::TriviallyCopyableButNontriviallyDestructible
@@ -109,6 +113,8 @@ pub struct WrappedValue {
     /// Types of non-public C++ fields can be elided away
     pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
 }
+impl !Send for WrappedValue {}
+impl !Sync for WrappedValue {}
 forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate::WrappedValue);
 
 // Error while generating bindings for item 'WrappedValue::WrappedValue':

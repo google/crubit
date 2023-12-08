@@ -33,6 +33,8 @@
 pub struct TrivialCustomType {
     pub i: ::core::ffi::c_int,
 }
+impl !Send for TrivialCustomType {}
+impl !Sync for TrivialCustomType {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TrivialCustomType"),
     crate::TrivialCustomType
@@ -91,6 +93,8 @@ pub struct NontrivialCustomType {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub i: ::core::ffi::c_int,
 }
+impl !Send for NontrivialCustomType {}
+impl !Sync for NontrivialCustomType {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialCustomType"),
     crate::NontrivialCustomType
@@ -143,6 +147,8 @@ pub struct ContainingStruct {
     /// Unsupported type 'struct ContainingStruct::NestedStruct': No generated bindings found for 'NestedStruct'
     pub(crate) nested_struct: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for ContainingStruct {}
+impl !Sync for ContainingStruct {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("ContainingStruct"),
     crate::ContainingStruct

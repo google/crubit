@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -27,6 +27,8 @@
 pub struct Noninline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for Noninline {}
+impl !Sync for Noninline {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Noninline"), crate::Noninline);
 
 // Error while generating bindings for item 'Noninline::Noninline':
@@ -85,6 +87,8 @@ impl Noninline {
 pub struct Inline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for Inline {}
+impl !Sync for Inline {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Inline"), crate::Inline);
 
 // Error while generating bindings for item 'Inline::Inline':

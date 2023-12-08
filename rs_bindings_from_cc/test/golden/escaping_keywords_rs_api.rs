@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -27,6 +27,8 @@
 pub struct r#type {
     pub r#dyn: ::core::ffi::c_int,
 }
+impl !Send for r#type {}
+impl !Sync for r#type {}
 forward_declare::unsafe_define!(forward_declare::symbol!("type"), crate::r#type);
 
 impl Default for r#type {

@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -24,6 +24,8 @@
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct Color(::core::ffi::c_uint);
+impl !Send for Color {}
+impl !Sync for Color {}
 impl Color {
     pub const kRed: Color = Color(0);
     pub const kBlue: Color = Color(1);
@@ -43,6 +45,8 @@ impl From<Color> for ::core::ffi::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct Empty(::core::ffi::c_uint);
+impl !Send for Empty {}
+impl !Sync for Empty {}
 impl Empty {}
 impl From<::core::ffi::c_uint> for Empty {
     fn from(value: ::core::ffi::c_uint) -> Empty {
@@ -58,6 +62,8 @@ impl From<Empty> for ::core::ffi::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct EmptyBool(bool);
+impl !Send for EmptyBool {}
+impl !Sync for EmptyBool {}
 impl EmptyBool {}
 impl From<bool> for EmptyBool {
     fn from(value: bool) -> EmptyBool {
@@ -73,6 +79,8 @@ impl From<EmptyBool> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct EmptyInt(::core::ffi::c_uint);
+impl !Send for EmptyInt {}
+impl !Sync for EmptyInt {}
 impl EmptyInt {}
 impl From<::core::ffi::c_uint> for EmptyInt {
     fn from(value: ::core::ffi::c_uint) -> EmptyInt {
@@ -88,6 +96,8 @@ impl From<EmptyInt> for ::core::ffi::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct EmptyChar(u8);
+impl !Send for EmptyChar {}
+impl !Sync for EmptyChar {}
 impl EmptyChar {}
 impl From<u8> for EmptyChar {
     fn from(value: u8) -> EmptyChar {
@@ -103,6 +113,8 @@ impl From<EmptyChar> for u8 {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct NonEmptyBool(bool);
+impl !Send for NonEmptyBool {}
+impl !Sync for NonEmptyBool {}
 impl NonEmptyBool {
     pub const kBool1: NonEmptyBool = NonEmptyBool(false);
     pub const kBool2: NonEmptyBool = NonEmptyBool(true);
@@ -121,6 +133,8 @@ impl From<NonEmptyBool> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct NonEmptyInt(::core::ffi::c_uint);
+impl !Send for NonEmptyInt {}
+impl !Sync for NonEmptyInt {}
 impl NonEmptyInt {
     pub const kInt1: NonEmptyInt = NonEmptyInt(0);
     pub const kInt2: NonEmptyInt = NonEmptyInt(4294967295);
@@ -139,6 +153,8 @@ impl From<NonEmptyInt> for ::core::ffi::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct NonEmptyChar(u8);
+impl !Send for NonEmptyChar {}
+impl !Sync for NonEmptyChar {}
 impl NonEmptyChar {
     pub const kChar1: NonEmptyChar = NonEmptyChar(0);
     pub const kChar2: NonEmptyChar = NonEmptyChar(97);
@@ -157,6 +173,8 @@ impl From<NonEmptyChar> for u8 {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct EmptyClass(::core::ffi::c_int);
+impl !Send for EmptyClass {}
+impl !Sync for EmptyClass {}
 impl EmptyClass {}
 impl From<::core::ffi::c_int> for EmptyClass {
     fn from(value: ::core::ffi::c_int) -> EmptyClass {
@@ -172,6 +190,8 @@ impl From<EmptyClass> for ::core::ffi::c_int {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct EmptyBoolClass(bool);
+impl !Send for EmptyBoolClass {}
+impl !Sync for EmptyBoolClass {}
 impl EmptyBoolClass {}
 impl From<bool> for EmptyBoolClass {
     fn from(value: bool) -> EmptyBoolClass {
@@ -187,6 +207,8 @@ impl From<EmptyBoolClass> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct EmptyIntClass(::core::ffi::c_int);
+impl !Send for EmptyIntClass {}
+impl !Sync for EmptyIntClass {}
 impl EmptyIntClass {}
 impl From<::core::ffi::c_int> for EmptyIntClass {
     fn from(value: ::core::ffi::c_int) -> EmptyIntClass {
@@ -202,6 +224,8 @@ impl From<EmptyIntClass> for ::core::ffi::c_int {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct EmptyCharClass(u8);
+impl !Send for EmptyCharClass {}
+impl !Sync for EmptyCharClass {}
 impl EmptyCharClass {}
 impl From<u8> for EmptyCharClass {
     fn from(value: u8) -> EmptyCharClass {
@@ -217,6 +241,8 @@ impl From<EmptyCharClass> for u8 {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct NonEmptyBoolClass(bool);
+impl !Send for NonEmptyBoolClass {}
+impl !Sync for NonEmptyBoolClass {}
 impl NonEmptyBoolClass {
     pub const k1: NonEmptyBoolClass = NonEmptyBoolClass(false);
     pub const k2: NonEmptyBoolClass = NonEmptyBoolClass(true);
@@ -235,6 +261,8 @@ impl From<NonEmptyBoolClass> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct NonEmptyIntClass(::core::ffi::c_uint);
+impl !Send for NonEmptyIntClass {}
+impl !Sync for NonEmptyIntClass {}
 impl NonEmptyIntClass {
     pub const k1: NonEmptyIntClass = NonEmptyIntClass(0);
     pub const k2: NonEmptyIntClass = NonEmptyIntClass(4294967295);
@@ -253,6 +281,8 @@ impl From<NonEmptyIntClass> for ::core::ffi::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct NonEmptyCharClass(u8);
+impl !Send for NonEmptyCharClass {}
+impl !Sync for NonEmptyCharClass {}
 impl NonEmptyCharClass {
     pub const k1: NonEmptyCharClass = NonEmptyCharClass(0);
     pub const k2: NonEmptyCharClass = NonEmptyCharClass(97);

@@ -39,6 +39,8 @@ pub struct Derived2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 20],
     pub derived_1: u8,
 }
+impl !Send for Derived2 {}
+impl !Sync for Derived2 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), crate::Derived2);
 
 impl ::ctor::CtorNew<()> for Derived2 {
@@ -153,6 +155,8 @@ unsafe impl oops::Inherits<inheritance_cc::Base2> for crate::Derived2 {
 pub struct VirtualDerived2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 32],
 }
+impl !Send for VirtualDerived2 {}
+impl !Sync for VirtualDerived2 {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("VirtualDerived2"),
     crate::VirtualDerived2

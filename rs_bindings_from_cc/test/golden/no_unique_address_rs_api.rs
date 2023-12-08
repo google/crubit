@@ -46,6 +46,8 @@ pub struct Struct {
     /// `[[no_unique_address]]` attribute was present.
     pub(crate) field2: [::core::mem::MaybeUninit<u8>; 4],
 }
+impl !Send for Struct {}
+impl !Sync for Struct {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Struct"), crate::Struct);
 impl Struct {
     pub fn field1(&self) -> &::core::ffi::c_int {
@@ -125,6 +127,8 @@ pub struct PaddingBetweenFields {
     /// `[[no_unique_address]]` attribute was present.
     pub(crate) field2: [::core::mem::MaybeUninit<u8>; 4],
 }
+impl !Send for PaddingBetweenFields {}
+impl !Sync for PaddingBetweenFields {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("PaddingBetweenFields"),
     crate::PaddingBetweenFields
@@ -200,6 +204,8 @@ pub struct FieldInTailPadding_InnerStruct {
     /// size: 1, alignment: 1 => offset: 4
     pub inner_char_field: u8,
 }
+impl !Send for FieldInTailPadding_InnerStruct {}
+impl !Sync for FieldInTailPadding_InnerStruct {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("FieldInTailPadding_InnerStruct"),
     crate::FieldInTailPadding_InnerStruct
@@ -287,6 +293,8 @@ pub struct FieldInTailPadding {
     /// offset: 5 (dsize of `s`).
     pub char_in_tail_padding_of_prev_field: u8,
 }
+impl !Send for FieldInTailPadding {}
+impl !Sync for FieldInTailPadding {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("FieldInTailPadding"),
     crate::FieldInTailPadding

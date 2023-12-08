@@ -36,6 +36,8 @@ pub struct AddableConstMember {
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
 }
+impl !Send for AddableConstMember {}
+impl !Sync for AddableConstMember {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableConstMember"),
     crate::AddableConstMember
@@ -102,6 +104,8 @@ pub struct AddableNonConstMember {
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
 }
+impl !Send for AddableNonConstMember {}
+impl !Sync for AddableNonConstMember {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableNonConstMember"),
     crate::AddableNonConstMember
@@ -174,6 +178,8 @@ pub struct AddableFriend {
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
 }
+impl !Send for AddableFriend {}
+impl !Sync for AddableFriend {}
 forward_declare::unsafe_define!(forward_declare::symbol!("AddableFriend"), crate::AddableFriend);
 
 impl Default for AddableFriend {
@@ -234,6 +240,8 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFr
 pub struct AddableFreeByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddableFreeByConstRef {}
+impl !Sync for AddableFreeByConstRef {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableFreeByConstRef"),
     crate::AddableFreeByConstRef
@@ -285,6 +293,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeB
 pub struct AddableFreeByMutRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddableFreeByMutRef {}
+impl !Sync for AddableFreeByMutRef {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableFreeByMutRef"),
     crate::AddableFreeByMutRef
@@ -336,6 +346,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeB
 pub struct AddableFreeByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddableFreeByValue {}
+impl !Sync for AddableFreeByValue {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableFreeByValue"),
     crate::AddableFreeByValue
@@ -387,6 +399,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeB
 pub struct AddableFreeByRValueRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddableFreeByRValueRef {}
+impl !Sync for AddableFreeByRValueRef {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableFreeByRValueRef"),
     crate::AddableFreeByRValueRef
@@ -485,6 +499,8 @@ impl ::core::ops::Add<Self> for AddableFreeByValue {
 pub struct Overloaded {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for Overloaded {}
+impl !Sync for Overloaded {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Overloaded"), crate::Overloaded);
 
 impl Default for Overloaded {
@@ -549,6 +565,8 @@ impl<'a> ::core::ops::Add<::core::ffi::c_uint> for &'a crate::Overloaded {
 pub struct IncompatibleLHS {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for IncompatibleLHS {}
+impl !Sync for IncompatibleLHS {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("IncompatibleLHS"),
     crate::IncompatibleLHS
@@ -609,6 +627,8 @@ pub struct AddableReturnsVoid {
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
 }
+impl !Send for AddableReturnsVoid {}
+impl !Sync for AddableReturnsVoid {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableReturnsVoid"),
     crate::AddableReturnsVoid
@@ -671,6 +691,8 @@ pub struct AddableConstMemberNonunpin {
     /// Types of non-public C++ fields can be elided away
     pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
 }
+impl !Send for AddableConstMemberNonunpin {}
+impl !Sync for AddableConstMemberNonunpin {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableConstMemberNonunpin"),
     crate::AddableConstMemberNonunpin
@@ -765,6 +787,8 @@ impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
 pub struct AddAssignMemberInt {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddAssignMemberInt {}
+impl !Sync for AddAssignMemberInt {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignMemberInt"),
     crate::AddAssignMemberInt
@@ -825,6 +849,8 @@ impl ::core::ops::AddAssign<::core::ffi::c_int> for AddAssignMemberInt {
 pub struct AddAssignMemberByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddAssignMemberByConstRef {}
+impl !Sync for AddAssignMemberByConstRef {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignMemberByConstRef"),
     crate::AddAssignMemberByConstRef
@@ -885,6 +911,8 @@ impl<'b> ::core::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
 pub struct AddAssignFreeByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddAssignFreeByConstRef {}
+impl !Sync for AddAssignFreeByConstRef {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFreeByConstRef"),
     crate::AddAssignFreeByConstRef
@@ -939,6 +967,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFre
 pub struct AddAssignFreeByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddAssignFreeByValue {}
+impl !Sync for AddAssignFreeByValue {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFreeByValue"),
     crate::AddAssignFreeByValue
@@ -999,6 +1029,8 @@ impl ::core::ops::AddAssign<Self> for AddAssignFreeByValue {
 pub struct AddAssignFriendByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddAssignFriendByConstRef {}
+impl !Sync for AddAssignFriendByConstRef {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFriendByConstRef"),
     crate::AddAssignFriendByConstRef
@@ -1050,6 +1082,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFri
 pub struct AddAssignFriendByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddAssignFriendByValue {}
+impl !Sync for AddAssignFriendByValue {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFriendByValue"),
     crate::AddAssignFriendByValue
@@ -1110,6 +1144,8 @@ impl ::core::ops::AddAssign<Self> for AddAssignFriendByValue {
 pub struct AddAssignProhibitedConstMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddAssignProhibitedConstMember {}
+impl !Sync for AddAssignProhibitedConstMember {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignProhibitedConstMember"),
     crate::AddAssignProhibitedConstMember
@@ -1168,6 +1204,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignPro
 pub struct AddAssignProhibitedFriendConstLhs {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for AddAssignProhibitedFriendConstLhs {}
+impl !Sync for AddAssignProhibitedFriendConstLhs {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignProhibitedFriendConstLhs"),
     crate::AddAssignProhibitedFriendConstLhs
@@ -1230,6 +1268,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 pub struct ManyOperators {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for ManyOperators {}
+impl !Sync for ManyOperators {}
 forward_declare::unsafe_define!(forward_declare::symbol!("ManyOperators"), crate::ManyOperators);
 
 impl Default for ManyOperators {

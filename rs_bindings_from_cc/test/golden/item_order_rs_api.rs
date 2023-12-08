@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -27,6 +27,8 @@
 pub struct FirstStruct {
     pub field: ::core::ffi::c_int,
 }
+impl !Send for FirstStruct {}
+impl !Sync for FirstStruct {}
 forward_declare::unsafe_define!(forward_declare::symbol!("FirstStruct"), crate::FirstStruct);
 
 impl Default for FirstStruct {
@@ -80,6 +82,8 @@ pub fn first_func() -> ::core::ffi::c_int {
 pub struct SecondStruct {
     pub field: ::core::ffi::c_int,
 }
+impl !Send for SecondStruct {}
+impl !Sync for SecondStruct {}
 forward_declare::unsafe_define!(forward_declare::symbol!("SecondStruct"), crate::SecondStruct);
 
 impl Default for SecondStruct {

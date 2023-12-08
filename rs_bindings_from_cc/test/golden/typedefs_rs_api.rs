@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -27,6 +27,8 @@
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for SomeStruct {}
+impl !Sync for SomeStruct {}
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
 impl Default for SomeStruct {
@@ -81,6 +83,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
 pub struct SomeOtherStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for SomeOtherStruct {}
+impl !Sync for SomeOtherStruct {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("SomeOtherStruct"),
     crate::SomeOtherStruct
@@ -132,6 +136,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeOtherStr
 pub union SomeUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for SomeUnion {}
+impl !Sync for SomeUnion {}
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeUnion"), crate::SomeUnion);
 
 impl Default for SomeUnion {
@@ -183,6 +189,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeUnion {
 pub union SomeOtherUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for SomeOtherUnion {}
+impl !Sync for SomeOtherUnion {}
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeOtherUnion"), crate::SomeOtherUnion);
 
 impl Default for SomeOtherUnion {

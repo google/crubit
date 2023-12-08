@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -33,6 +33,8 @@
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for SomeStruct {}
+impl !Sync for SomeStruct {}
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
 impl Default for SomeStruct {
@@ -124,6 +126,8 @@ pub struct FieldTypeTestStruct {
     /// const SomeStruct&& const_struct_rvalue_ref_field;
     pub forward_declared_ptr_field: *mut crate::ForwardDeclaredStruct,
 }
+impl !Send for FieldTypeTestStruct {}
+impl !Sync for FieldTypeTestStruct {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("FieldTypeTestStruct"),
     crate::FieldTypeTestStruct

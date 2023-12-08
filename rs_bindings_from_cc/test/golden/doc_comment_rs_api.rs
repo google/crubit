@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -32,6 +32,8 @@ pub struct DocCommentSlashes {
     /// A field.
     pub i: ::core::ffi::c_int,
 }
+impl !Send for DocCommentSlashes {}
+impl !Sync for DocCommentSlashes {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("DocCommentSlashes"),
     crate::DocCommentSlashes
@@ -128,6 +130,8 @@ pub struct DocCommentBang {
     /// A field
     pub i: ::core::ffi::c_int,
 }
+impl !Send for DocCommentBang {}
+impl !Sync for DocCommentBang {}
 forward_declare::unsafe_define!(forward_declare::symbol!("DocCommentBang"), crate::DocCommentBang);
 
 impl Default for DocCommentBang {
@@ -180,6 +184,8 @@ pub struct MultilineCommentTwoStars {
     /// A field
     pub i: ::core::ffi::c_int,
 }
+impl !Send for MultilineCommentTwoStars {}
+impl !Sync for MultilineCommentTwoStars {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MultilineCommentTwoStars"),
     crate::MultilineCommentTwoStars
@@ -235,6 +241,8 @@ pub struct LineComment {
     /// A field
     pub i: ::core::ffi::c_int,
 }
+impl !Send for LineComment {}
+impl !Sync for LineComment {}
 forward_declare::unsafe_define!(forward_declare::symbol!("LineComment"), crate::LineComment);
 
 impl Default for LineComment {
@@ -287,6 +295,8 @@ pub struct MultilineOneStar {
     /// A field
     pub i: ::core::ffi::c_int,
 }
+impl !Send for MultilineOneStar {}
+impl !Sync for MultilineOneStar {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MultilineOneStar"),
     crate::MultilineOneStar
@@ -372,6 +382,8 @@ pub struct __CcTemplateInst10MyTemplateIiE {
     /// Data member.
     pub value: ::core::ffi::c_int,
 }
+impl !Send for __CcTemplateInst10MyTemplateIiE {}
+impl !Sync for __CcTemplateInst10MyTemplateIiE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < int >"),
     crate::__CcTemplateInst10MyTemplateIiE
@@ -439,6 +451,8 @@ pub struct __CcTemplateInst10MyTemplateIfE {
     /// Data member in a specialization.
     pub value: f32,
 }
+impl !Send for __CcTemplateInst10MyTemplateIfE {}
+impl !Sync for __CcTemplateInst10MyTemplateIfE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < float >"),
     crate::__CcTemplateInst10MyTemplateIfE

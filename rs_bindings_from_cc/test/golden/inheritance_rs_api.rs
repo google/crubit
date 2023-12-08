@@ -36,6 +36,8 @@
 pub struct Base0 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for Base0 {}
+impl !Sync for Base0 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), crate::Base0);
 
 impl Default for Base0 {
@@ -90,6 +92,8 @@ pub struct Base1 {
     /// Types of non-public C++ fields can be elided away
     pub(crate) b1_2_: [::core::mem::MaybeUninit<u8>; 8],
 }
+impl !Send for Base1 {}
+impl !Sync for Base1 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1);
 
 impl Default for Base1 {
@@ -141,6 +145,8 @@ pub struct Base2 {
     /// Types of non-public C++ fields can be elided away
     pub(crate) b2_1_: [::core::mem::MaybeUninit<u8>; 2],
 }
+impl !Send for Base2 {}
+impl !Sync for Base2 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), crate::Base2);
 
 impl Default for Base2 {
@@ -190,6 +196,8 @@ pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 12],
     pub derived_1: u8,
 }
+impl !Send for Derived {}
+impl !Sync for Derived {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Derived);
 
 impl Default for Derived {
@@ -254,6 +262,8 @@ unsafe impl oops::Inherits<crate::Base2> for crate::Derived {
 pub struct VirtualBase1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 24],
 }
+impl !Send for VirtualBase1 {}
+impl !Sync for VirtualBase1 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase1"), crate::VirtualBase1);
 
 impl ::ctor::CtorNew<()> for VirtualBase1 {
@@ -358,6 +368,8 @@ unsafe impl oops::Inherits<crate::Base1> for crate::VirtualBase1 {
 pub struct VirtualBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 24],
 }
+impl !Send for VirtualBase2 {}
+impl !Sync for VirtualBase2 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase2"), crate::VirtualBase2);
 
 impl ::ctor::CtorNew<()> for VirtualBase2 {
@@ -462,6 +474,8 @@ unsafe impl oops::Inherits<crate::Base1> for crate::VirtualBase2 {
 pub struct VirtualDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 32],
 }
+impl !Send for VirtualDerived {}
+impl !Sync for VirtualDerived {}
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived"), crate::VirtualDerived);
 
 impl ::ctor::CtorNew<()> for VirtualDerived {
@@ -576,6 +590,8 @@ unsafe impl oops::Inherits<crate::VirtualBase2> for crate::VirtualDerived {
 pub struct MyAbstractClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 8],
 }
+impl !Send for MyAbstractClass {}
+impl !Sync for MyAbstractClass {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyAbstractClass"),
     crate::MyAbstractClass
@@ -603,6 +619,8 @@ impl<'b> ::ctor::Assign<&'b Self> for MyAbstractClass {
 pub struct MethodBase1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for MethodBase1 {}
+impl !Sync for MethodBase1 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase1"), crate::MethodBase1);
 
 impl Default for MethodBase1 {
@@ -672,6 +690,8 @@ impl MethodBase1 {
 pub struct MethodBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for MethodBase2 {}
+impl !Sync for MethodBase2 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase2"), crate::MethodBase2);
 
 impl Default for MethodBase2 {
@@ -734,6 +754,8 @@ impl MethodBase2 {
 pub struct MethodDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for MethodDerived {}
+impl !Sync for MethodDerived {}
 forward_declare::unsafe_define!(forward_declare::symbol!("MethodDerived"), crate::MethodDerived);
 
 impl Default for MethodDerived {

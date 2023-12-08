@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -64,6 +64,8 @@ pub struct TypeMapOverrideFieldTypes {
     /// Unsupported type 'TooFewArgs': No generated bindings found for 'TooFewArgs'
     pub(crate) error: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for TypeMapOverrideFieldTypes {}
+impl !Sync for TypeMapOverrideFieldTypes {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TypeMapOverrideFieldTypes"),
     crate::TypeMapOverrideFieldTypes

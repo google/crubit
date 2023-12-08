@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -37,6 +37,8 @@ pub struct Foo {
     /// Another field
     pub j: ::core::ffi::c_int,
 }
+impl !Send for Foo {}
+impl !Sync for Foo {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 
 impl Default for Foo {
@@ -107,6 +109,8 @@ pub fn foo() {
 pub struct Bar {
     pub i: ::core::ffi::c_int,
 }
+impl !Send for Bar {}
+impl !Sync for Bar {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Bar"), crate::Bar);
 
 impl Default for Bar {
@@ -156,6 +160,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Bar {
 pub struct HasNoComments {
     pub i: ::core::ffi::c_int,
 }
+impl !Send for HasNoComments {}
+impl !Sync for HasNoComments {}
 forward_declare::unsafe_define!(forward_declare::symbol!("HasNoComments"), crate::HasNoComments);
 
 impl Default for HasNoComments {

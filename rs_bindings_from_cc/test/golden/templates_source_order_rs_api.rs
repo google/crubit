@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -30,6 +30,8 @@
 pub struct TopLevel {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for TopLevel {}
+impl !Sync for TopLevel {}
 forward_declare::unsafe_define!(forward_declare::symbol!("TopLevel"), crate::TopLevel);
 
 // Error while generating bindings for item 'TopLevel::TopLevel':
@@ -66,6 +68,8 @@ pub mod test_namespace_bindings {
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
+    impl !Send for Inner {}
+    impl !Sync for Inner {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("test_namespace_bindings :: Inner"),
         crate::test_namespace_bindings::Inner
@@ -106,6 +110,8 @@ pub struct __CcTemplateInst10MyTemplateI8TopLevelE {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for __CcTemplateInst10MyTemplateI8TopLevelE {}
+impl !Sync for __CcTemplateInst10MyTemplateI8TopLevelE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < TopLevel >"),
     crate::__CcTemplateInst10MyTemplateI8TopLevelE
@@ -142,6 +148,8 @@ pub struct __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {}
+impl !Sync for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < test_namespace_bindings :: Inner >"),
     crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
@@ -178,6 +186,8 @@ pub struct __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for __CcTemplateInst10MyTemplateIS_I8TopLevelEE {}
+impl !Sync for __CcTemplateInst10MyTemplateIS_I8TopLevelEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < MyTemplate < TopLevel >>"),
     crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
@@ -217,6 +227,8 @@ pub struct __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {}
+impl !Sync for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < MyTemplate < test_namespace_bindings :: Inner >>"),
     crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
@@ -256,6 +268,8 @@ pub struct __CcTemplateInst10MyTemplateIbE {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for __CcTemplateInst10MyTemplateIbE {}
+impl !Sync for __CcTemplateInst10MyTemplateIbE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < bool >"),
     crate::__CcTemplateInst10MyTemplateIbE
@@ -292,6 +306,8 @@ pub struct __CcTemplateInst10MyTemplateIcE {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for __CcTemplateInst10MyTemplateIcE {}
+impl !Sync for __CcTemplateInst10MyTemplateIcE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < char >"),
     crate::__CcTemplateInst10MyTemplateIcE
@@ -328,6 +344,8 @@ pub struct __CcTemplateInst10MyTemplateIdE {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 8],
 }
+impl !Send for __CcTemplateInst10MyTemplateIdE {}
+impl !Sync for __CcTemplateInst10MyTemplateIdE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < double >"),
     crate::__CcTemplateInst10MyTemplateIdE
@@ -364,6 +382,8 @@ pub struct __CcTemplateInst10MyTemplateIfE {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 4],
 }
+impl !Send for __CcTemplateInst10MyTemplateIfE {}
+impl !Sync for __CcTemplateInst10MyTemplateIfE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < float >"),
     crate::__CcTemplateInst10MyTemplateIfE
@@ -400,6 +420,8 @@ pub struct __CcTemplateInst10MyTemplateIiE {
     /// Types of non-public C++ fields can be elided away
     pub(crate) t: [::core::mem::MaybeUninit<u8>; 4],
 }
+impl !Send for __CcTemplateInst10MyTemplateIiE {}
+impl !Sync for __CcTemplateInst10MyTemplateIiE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < int >"),
     crate::__CcTemplateInst10MyTemplateIiE

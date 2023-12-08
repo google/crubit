@@ -33,6 +33,8 @@
 pub struct PolymorphicBase {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 8],
 }
+impl !Send for PolymorphicBase {}
+impl !Sync for PolymorphicBase {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("PolymorphicBase"),
     crate::PolymorphicBase
@@ -103,6 +105,8 @@ impl ::ctor::PinnedDrop for PolymorphicBase {
 pub struct PolymorphicBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 8],
 }
+impl !Send for PolymorphicBase2 {}
+impl !Sync for PolymorphicBase2 {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("PolymorphicBase2"),
     crate::PolymorphicBase2
@@ -180,6 +184,8 @@ impl ::ctor::PinnedDrop for PolymorphicBase2 {
 pub struct PolymorphicDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
 }
+impl !Send for PolymorphicDerived {}
+impl !Sync for PolymorphicDerived {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("PolymorphicDerived"),
     crate::PolymorphicDerived

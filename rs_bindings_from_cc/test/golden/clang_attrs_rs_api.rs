@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -27,6 +27,8 @@
 pub struct HasCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
+impl !Send for HasCustomAlignment {}
+impl !Sync for HasCustomAlignment {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasCustomAlignment"),
     crate::HasCustomAlignment
@@ -78,6 +80,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasCustomAli
 pub struct HasFieldWithCustomAlignment {
     pub field: crate::HasCustomAlignment,
 }
+impl !Send for HasFieldWithCustomAlignment {}
+impl !Sync for HasFieldWithCustomAlignment {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasFieldWithCustomAlignment"),
     crate::HasFieldWithCustomAlignment
@@ -131,6 +135,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasFieldWith
 pub struct InheritsFromBaseWithCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
+impl !Send for InheritsFromBaseWithCustomAlignment {}
+impl !Sync for InheritsFromBaseWithCustomAlignment {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("InheritsFromBaseWithCustomAlignment"),
     crate::InheritsFromBaseWithCustomAlignment
@@ -198,6 +204,8 @@ unsafe impl oops::Inherits<crate::HasCustomAlignment>
 pub struct HasCustomAlignmentWithGnuAttr {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
+impl !Send for HasCustomAlignmentWithGnuAttr {}
+impl !Sync for HasCustomAlignmentWithGnuAttr {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasCustomAlignmentWithGnuAttr"),
     crate::HasCustomAlignmentWithGnuAttr
@@ -271,6 +279,8 @@ pub mod template_with_preferred_name {
 pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {}
+impl !Sync for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("template_with_preferred_name :: SomeTemplate < int >"),
     crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE

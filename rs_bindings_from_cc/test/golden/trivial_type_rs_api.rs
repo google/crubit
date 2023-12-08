@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(arbitrary_self_types, custom_inner_attributes, register_tool)]
+#![feature(arbitrary_self_types, custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -30,6 +30,8 @@ pub mod ns {
     pub struct Trivial {
         pub trivial_field: ::core::ffi::c_int,
     }
+    impl !Send for Trivial {}
+    impl !Sync for Trivial {}
     forward_declare::unsafe_define!(forward_declare::symbol!("ns :: Trivial"), crate::ns::Trivial);
 
     impl Default for Trivial {
@@ -126,6 +128,8 @@ pub mod ns {
     pub struct TrivialNonfinal {
         pub trivial_field: ::core::ffi::c_int,
     }
+    impl !Send for TrivialNonfinal {}
+    impl !Sync for TrivialNonfinal {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("ns :: TrivialNonfinal"),
         crate::ns::TrivialNonfinal

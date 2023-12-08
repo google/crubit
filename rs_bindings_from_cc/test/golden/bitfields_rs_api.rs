@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -41,6 +41,8 @@ pub struct WithBitfields {
     // f8 : 2 bits
     __bitfields6: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for WithBitfields {}
+impl !Sync for WithBitfields {}
 forward_declare::unsafe_define!(forward_declare::symbol!("WithBitfields"), crate::WithBitfields);
 impl WithBitfields {
     pub fn f7(&self) -> &u8 {
@@ -98,6 +100,8 @@ pub struct AlignmentRegressionTest {
     // status : 1 bits
     __bitfields0: [::core::mem::MaybeUninit<u8>; 4],
 }
+impl !Send for AlignmentRegressionTest {}
+impl !Sync for AlignmentRegressionTest {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AlignmentRegressionTest"),
     crate::AlignmentRegressionTest

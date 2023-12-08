@@ -33,6 +33,8 @@
 pub union EmptyUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for EmptyUnion {}
+impl !Sync for EmptyUnion {}
 forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), crate::EmptyUnion);
 
 impl Default for EmptyUnion {
@@ -82,6 +84,8 @@ pub struct Nontrivial {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field: ::core::ffi::c_int,
 }
+impl !Send for Nontrivial {}
+impl !Sync for Nontrivial {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
 impl ::ctor::CtorNew<()> for Nontrivial {
@@ -133,6 +137,8 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Nontrivial {
 pub struct TriviallyCopyableButNontriviallyDestructible {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for TriviallyCopyableButNontriviallyDestructible {}
+impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TriviallyCopyableButNontriviallyDestructible"),
     crate::TriviallyCopyableButNontriviallyDestructible
@@ -188,6 +194,8 @@ pub union NonEmptyUnion {
     pub int_field: ::core::ffi::c_int,
     pub long_long_field: ::core::ffi::c_longlong,
 }
+impl !Send for NonEmptyUnion {}
+impl !Sync for NonEmptyUnion {}
 forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), crate::NonEmptyUnion);
 
 impl Default for NonEmptyUnion {
@@ -237,6 +245,8 @@ pub union NonCopyUnion {
     pub trivial_member: bool,
     pub nontrivial_member: ::core::mem::ManuallyDrop<crate::Nontrivial>,
 }
+impl !Send for NonCopyUnion {}
+impl !Sync for NonCopyUnion {}
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion"), crate::NonCopyUnion);
 
 #[repr(C)]
@@ -246,6 +256,8 @@ pub union NonCopyUnion2 {
     pub nontrivial_member:
         ::core::mem::ManuallyDrop<crate::TriviallyCopyableButNontriviallyDestructible>,
 }
+impl !Send for NonCopyUnion2 {}
+impl !Sync for NonCopyUnion2 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion2"), crate::NonCopyUnion2);
 
 // Error while generating bindings for item 'NonCopyUnion2::NonCopyUnion2':
@@ -280,6 +292,8 @@ pub union UnionWithOpaqueField {
     /// Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
     pub(crate) constant_array_field_not_yet_supported: [::core::mem::MaybeUninit<u8>; 42],
 }
+impl !Send for UnionWithOpaqueField {}
+impl !Sync for UnionWithOpaqueField {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("UnionWithOpaqueField"),
     crate::UnionWithOpaqueField
@@ -331,6 +345,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UnionWithOpa
 pub struct TrivialButInheritable {
     pub x: ::core::ffi::c_int,
 }
+impl !Send for TrivialButInheritable {}
+impl !Sync for TrivialButInheritable {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TrivialButInheritable"),
     crate::TrivialButInheritable
@@ -382,6 +398,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialButIn
 pub union UnionWithInheritable {
     pub t: crate::TrivialButInheritable,
 }
+impl !Send for UnionWithInheritable {}
+impl !Sync for UnionWithInheritable {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("UnionWithInheritable"),
     crate::UnionWithInheritable
@@ -433,6 +451,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UnionWithInh
 pub union TypedefUnion {
     pub trivial_member: bool,
 }
+impl !Send for TypedefUnion {}
+impl !Sync for TypedefUnion {}
 forward_declare::unsafe_define!(forward_declare::symbol!("TypedefUnion"), crate::TypedefUnion);
 
 impl Default for TypedefUnion {
@@ -481,6 +501,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TypedefUnion
 pub union TypedefUnionWithInheritable {
     pub t: crate::TrivialButInheritable,
 }
+impl !Send for TypedefUnionWithInheritable {}
+impl !Sync for TypedefUnionWithInheritable {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TypedefUnionWithInheritable"),
     crate::TypedefUnionWithInheritable

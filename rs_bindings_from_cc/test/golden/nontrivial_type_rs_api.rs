@@ -40,6 +40,8 @@ pub struct Nontrivial {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field: ::core::ffi::c_int,
 }
+impl !Send for Nontrivial {}
+impl !Sync for Nontrivial {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
 impl ::ctor::CtorNew<()> for Nontrivial {
@@ -315,6 +317,8 @@ pub struct NontrivialInline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field: ::core::ffi::c_int,
 }
+impl !Send for NontrivialInline {}
+impl !Sync for NontrivialInline {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialInline"),
     crate::NontrivialInline
@@ -489,6 +493,8 @@ impl NontrivialInline {
 pub struct NontrivialMembers {
     pub nontrivial_member: ::core::mem::ManuallyDrop<crate::Nontrivial>,
 }
+impl !Send for NontrivialMembers {}
+impl !Sync for NontrivialMembers {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialMembers"),
     crate::NontrivialMembers
@@ -598,6 +604,8 @@ pub struct NontrivialUnpin {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field: ::core::ffi::c_int,
 }
+impl !Send for NontrivialUnpin {}
+impl !Sync for NontrivialUnpin {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialUnpin"),
     crate::NontrivialUnpin
@@ -819,6 +827,8 @@ pub fn TakesUnpinByConstRvalueReference<'a>(
 pub struct NontrivialByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for NontrivialByValue {}
+impl !Sync for NontrivialByValue {}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialByValue"),
     crate::NontrivialByValue
@@ -879,6 +889,8 @@ impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivi
 pub struct Nonmovable {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
+impl !Send for Nonmovable {}
+impl !Sync for Nonmovable {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::Nonmovable);
 
 impl ::ctor::CtorNew<()> for Nonmovable {

@@ -7,7 +7,7 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, register_tool)]
+#![feature(custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
@@ -28,6 +28,8 @@ pub mod test_namespace_bindings {
     pub struct S {
         pub i: ::core::ffi::c_int,
     }
+    impl !Send for S {}
+    impl !Sync for S {}
     forward_declare::unsafe_define!(
         forward_declare::symbol!("test_namespace_bindings :: S"),
         crate::test_namespace_bindings::S
@@ -125,6 +127,8 @@ pub mod test_namespace_bindings_reopened_0 {
         pub struct S {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
+        impl !Send for S {}
+        impl !Sync for S {}
         forward_declare::unsafe_define!(
             forward_declare::symbol!("test_namespace_bindings_reopened :: inner :: S"),
             crate::test_namespace_bindings_reopened::inner::S
@@ -216,6 +220,8 @@ pub mod test_namespace_bindings_inline {
         pub struct StructInInlineNamespace {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
+        impl !Send for StructInInlineNamespace {}
+        impl !Sync for StructInInlineNamespace {}
         forward_declare::unsafe_define!(
             forward_declare::symbol!(
                 "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
