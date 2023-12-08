@@ -66,6 +66,8 @@ public:
   unique_ptr &operator=(const unique_ptr &) = delete;
 
   T &operator*() const;
+
+  pointer release();
 };
 
 // Array specialization of `unique_ptr`. We only introduce the members that are

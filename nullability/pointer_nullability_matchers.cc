@@ -31,6 +31,7 @@ using ast_matchers::hasArgument;
 using ast_matchers::hasBody;
 using ast_matchers::hasCastKind;
 using ast_matchers::hasDeclaration;
+using ast_matchers::hasName;
 using ast_matchers::hasOperands;
 using ast_matchers::hasOperatorName;
 using ast_matchers::hasOverloadedOperatorName;
@@ -43,6 +44,7 @@ using ast_matchers::isArrow;
 using ast_matchers::isConst;
 using ast_matchers::isMemberInitializer;
 using ast_matchers::memberExpr;
+using ast_matchers::on;
 using ast_matchers::parameterCountIs;
 using ast_matchers::returnStmt;
 using ast_matchers::statementCountIs;
@@ -101,6 +103,11 @@ Matcher<Stmt> isSmartPointerAssignment() {
   return cxxOperatorCallExpr(
       hasOverloadedOperatorName("="), argumentCountIs(2),
       hasArgument(0, hasType(isSupportedSmartPointer())));
+}
+
+Matcher<Stmt> isSmartPointerReleaseCall() {
+  return cxxMemberCallExpr(on(hasType(isSupportedSmartPointer())),
+                           callee(cxxMethodDecl(hasName("release"))));
 }
 
 Matcher<Stmt> isSupportedPointerAccessorCall() {

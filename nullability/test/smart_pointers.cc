@@ -161,3 +161,15 @@ TEST void copyAssignment(Nonnull<std::shared_ptr<int>> nonnullParam,
   nullable(nullableParam);
   unknown(unknownParam);
 }
+
+TEST void release(Nonnull<std::unique_ptr<int>> nonnullParam,
+                  Nullable<std::unique_ptr<int>> nullableParam,
+                  std::unique_ptr<int> unknownParam) {
+  nonnull(nonnullParam.release());
+  nullable(nullableParam.release());
+  unknown(unknownParam.release());
+
+  nullable(nonnullParam);
+  nullable(nullableParam);
+  nullable(unknownParam);
+}

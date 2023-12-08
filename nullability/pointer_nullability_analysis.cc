@@ -425,6 +425,19 @@ void transferValue_SmartPointerAssignment(
   }
 }
 
+void transferValue_SmartPointerReleaseCall(
+    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  RecordStorageLocation *Loc = getImplicitObjectLocation(*MCE, State.Env);
+  if (Loc == nullptr) return;
+  StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
+
+  if (auto *Val = cast_or_null<PointerValue>(State.Env.getValue(PtrLoc)))
+    State.Env.setValue(*MCE, *Val);
+  State.Env.setValue(
+      PtrLoc, createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
+}
+
 void transferValue_SmartPointer(
     const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -1034,6 +1047,8 @@ auto buildValueTransferer() {
                                        transferValue_SmartPointerConstructor)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerAssignment(),
                                           transferValue_SmartPointerAssignment)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerReleaseCall(),
+                                        transferValue_SmartPointerReleaseCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),
