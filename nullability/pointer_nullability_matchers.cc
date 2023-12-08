@@ -12,6 +12,7 @@
 namespace clang::tidy::nullability {
 
 using ast_matchers::anyOf;
+using ast_matchers::argumentCountIs;
 using ast_matchers::binaryOperator;
 using ast_matchers::callee;
 using ast_matchers::callExpr;
@@ -20,16 +21,19 @@ using ast_matchers::cxxConstructExpr;
 using ast_matchers::cxxCtorInitializer;
 using ast_matchers::cxxMemberCallExpr;
 using ast_matchers::cxxMethodDecl;
+using ast_matchers::cxxOperatorCallExpr;
 using ast_matchers::cxxThisExpr;
 using ast_matchers::decl;
 using ast_matchers::expr;
 using ast_matchers::has;
 using ast_matchers::hasAnyOperatorName;
+using ast_matchers::hasArgument;
 using ast_matchers::hasBody;
 using ast_matchers::hasCastKind;
 using ast_matchers::hasDeclaration;
 using ast_matchers::hasOperands;
 using ast_matchers::hasOperatorName;
+using ast_matchers::hasOverloadedOperatorName;
 using ast_matchers::hasReturnValue;
 using ast_matchers::hasType;
 using ast_matchers::hasUnaryOperand;
@@ -91,6 +95,12 @@ Matcher<Stmt> isSmartPointerGlValue() {
 
 Matcher<Stmt> isSmartPointerConstructor() {
   return cxxConstructExpr(hasType(isSupportedSmartPointer()));
+}
+
+Matcher<Stmt> isSmartPointerAssignment() {
+  return cxxOperatorCallExpr(
+      hasOverloadedOperatorName("="), argumentCountIs(2),
+      hasArgument(0, hasType(isSupportedSmartPointer())));
 }
 
 Matcher<Stmt> isSupportedPointerAccessorCall() {

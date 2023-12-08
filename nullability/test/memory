@@ -59,6 +59,12 @@ public:
   // expressions using this mock look the same as for the real class.
   ~unique_ptr() {}
 
+  unique_ptr &operator=(unique_ptr &&) {}
+  template <class OtherT, class OtherDeleter>
+  unique_ptr &operator=(unique_ptr<OtherT, OtherDeleter> &&) {}
+  unique_ptr &operator=(nullptr_t) {}
+  unique_ptr &operator=(const unique_ptr &) = delete;
+
   T &operator*() const;
 };
 
@@ -91,23 +97,28 @@ class shared_ptr {
 public:
   using element_type = remove_extent<T>::type;
 
+  shared_ptr() {}
   template <class Deleter>
-  shared_ptr(nullptr_t, Deleter);
+  shared_ptr(nullptr_t, Deleter) {}
   template <class Deleter, class Alloc>
-  shared_ptr(nullptr_t, Deleter, Alloc);
+  shared_ptr(nullptr_t, Deleter, Alloc) {}
   template <class OtherT, class Deleter, class Alloc>
-  shared_ptr(OtherT *, Deleter, Alloc);
+  shared_ptr(OtherT *, Deleter, Alloc) {}
   template <class OtherT>
-  shared_ptr(const shared_ptr<OtherT> &, element_type *);
+  shared_ptr(const shared_ptr<OtherT> &, element_type *) {}
   template <class OtherT>
-  shared_ptr(shared_ptr<OtherT> &&, element_type *);
-  shared_ptr(const shared_ptr &);
+  shared_ptr(shared_ptr<OtherT> &&, element_type *) {}
+  shared_ptr(const shared_ptr &) {}
   template <class OtherT>
-  explicit shared_ptr(const weak_ptr<OtherT> &);
+  explicit shared_ptr(const weak_ptr<OtherT> &) {}
   template <class OtherT, class Deleter>
-  explicit shared_ptr(unique_ptr<OtherT, Deleter> &&);
+  explicit shared_ptr(unique_ptr<OtherT, Deleter> &&) {}
 
   ~shared_ptr() {}
+
+  shared_ptr &operator=(const shared_ptr &) {}
+  template <class OtherT>
+  shared_ptr &operator=(const shared_ptr<OtherT> &) {}
 };
 
 }  // namespace std

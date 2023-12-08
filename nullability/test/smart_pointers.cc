@@ -124,3 +124,40 @@ TEST void aliasingConstructor(Nonnull<std::shared_ptr<int>> nonnullParam) {
 TEST void sharedPtrFromWeakPtr(std::weak_ptr<int> weak) {
   nonnull(std::shared_ptr<int>(weak));
 }
+
+TEST void nullptrAssignment() {
+  std::unique_ptr<int> p = makeUnknown();
+  unknown(p);
+  p = nullptr;
+  nullable(p);
+}
+
+TEST void moveAssignment(Nonnull<std::unique_ptr<int>> nonnullParam,
+                         Nullable<std::unique_ptr<int>> nullableParam,
+                         std::unique_ptr<int> unknownParam) {
+  std::unique_ptr<int> nonnullLocal;
+  nonnull(nonnullLocal = std::move(nonnullParam));
+  std::unique_ptr<int> nullableLocal;
+  nullable(nullableLocal = std::move(nullableParam));
+  std::unique_ptr<int> unknownLocal;
+  unknown(unknownLocal = std::move(unknownParam));
+
+  nullable(nonnullParam);
+  nullable(nullableParam);
+  nullable(unknownParam);
+}
+
+TEST void copyAssignment(Nonnull<std::shared_ptr<int>> nonnullParam,
+                         Nullable<std::shared_ptr<int>> nullableParam,
+                         std::shared_ptr<int> unknownParam) {
+  std::shared_ptr<int> nonnullLocal;
+  nonnull(nonnullLocal = nonnullParam);
+  std::shared_ptr<int> nullableLocal;
+  nullable(nullableLocal = nullableParam);
+  std::shared_ptr<int> unknownLocal;
+  unknown(unknownLocal = unknownParam);
+
+  nonnull(nonnullParam);
+  nullable(nullableParam);
+  unknown(unknownParam);
+}

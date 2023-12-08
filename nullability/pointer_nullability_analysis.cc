@@ -395,6 +395,36 @@ void transferValue_SmartPointerConstructor(
   }
 }
 
+void transferValue_SmartPointerAssignment(
+    const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  auto *Loc = cast<RecordStorageLocation>(
+      State.Env.getStorageLocation(*OpCall->getArg(0)));
+  if (Loc == nullptr) return;
+  StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
+
+  if (OpCall->getArg(1)->getType()->isNullPtrType()) {
+    State.Env.setValue(
+        PtrLoc,
+        createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
+    return;
+  }
+
+  auto *SrcLoc = cast_or_null<RecordStorageLocation>(
+      State.Env.getStorageLocation(*OpCall->getArg(1)));
+  if (PointerValue *Val = getPointerValueFromSmartPointer(SrcLoc, State.Env))
+    State.Env.setValue(PtrLoc, *Val);
+
+  // If this is the move assignment operator, set the source to null.
+  auto *Method = dyn_cast_or_null<CXXMethodDecl>(OpCall->getCalleeDecl());
+  if (Method != nullptr &&
+      Method->getParamDecl(0)->getType()->isRValueReferenceType()) {
+    State.Env.setValue(
+        SrcLoc->getSyntheticField(PtrField),
+        createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
+  }
+}
+
 void transferValue_SmartPointer(
     const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -1002,6 +1032,8 @@ auto buildValueTransferer() {
       .CaseOfCFGStmt<Expr>(isNullPointerLiteral(), transferValue_NullPointer)
       .CaseOfCFGStmt<CXXConstructExpr>(isSmartPointerConstructor(),
                                        transferValue_SmartPointerConstructor)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerAssignment(),
+                                          transferValue_SmartPointerAssignment)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),
