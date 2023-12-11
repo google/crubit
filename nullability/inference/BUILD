@@ -16,6 +16,7 @@ cc_library(
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
         "//nullability:type_nullability",
+        "@absl//absl/base:nullability",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
@@ -191,6 +192,7 @@ cc_binary(
     deps = [
         ":infer_tu",
         ":inference_cc_proto",
+        "@absl//absl/base:nullability",
         "@absl//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",

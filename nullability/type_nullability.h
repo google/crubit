@@ -30,6 +30,7 @@
 #include <tuple>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Expr.h"
@@ -191,15 +192,15 @@ QualType rebuildWithNullability(QualType, const TypeNullability &,
 /// Each of these could conceptually be nullable, so this is the length of
 /// the nullability vector computed by getNullabilityAnnotationsFromType().
 unsigned countPointersInType(QualType T);
-unsigned countPointersInType(const Expr *E);
-unsigned countPointersInType(TemplateArgument TA);
-unsigned countPointersInType(const DeclContext *DC);
+unsigned countPointersInType(absl::Nonnull<const Expr *> E);
+unsigned countPointersInType(const TemplateArgument &TA);
+unsigned countPointersInType(absl::Nonnull<const DeclContext *> DC);
 
 /// Returns the type of an expression for the purposes of nullability.
 /// This handles wrinkles in the type system like BoundMember.
-QualType exprType(const Expr *E);
+QualType exprType(absl::Nonnull<const Expr *> E);
 
-TypeNullability unspecifiedNullability(const Expr *E);
+TypeNullability unspecifiedNullability(absl::Nonnull<const Expr *> E);
 
 }  // namespace clang::tidy::nullability
 

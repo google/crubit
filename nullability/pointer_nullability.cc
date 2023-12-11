@@ -7,6 +7,7 @@
 #include <cassert>
 #include <optional>
 
+#include "absl/base/nullability.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Type.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
@@ -40,8 +41,8 @@ NullabilityKind getNullabilityKind(QualType Type, ASTContext &Ctx) {
   return Type->getNullability().value_or(NullabilityKind::Unspecified);
 }
 
-PointerValue *getPointerValueFromExpr(const Expr *PointerExpr,
-                                      const Environment &Env) {
+absl::Nullable<PointerValue *> getPointerValueFromExpr(
+    absl::Nonnull<const Expr *> PointerExpr, const Environment &Env) {
   return cast_or_null<PointerValue>(Env.getValue(*PointerExpr));
 }
 
@@ -88,10 +89,10 @@ PointerNullState getPointerNullState(const PointerValue &PointerVal) {
   };
 }
 
-static bool tryCreatePointerNullState(PointerValue &PointerVal,
-                                      dataflow::Arena &A,
-                                      const Formula *FromNullable = nullptr,
-                                      const Formula *IsNull = nullptr) {
+static bool tryCreatePointerNullState(
+    PointerValue &PointerVal, dataflow::Arena &A,
+    absl::Nullable<const Formula *> FromNullable = nullptr,
+    absl::Nullable<const Formula *> IsNull = nullptr) {
   if (hasPointerNullState(PointerVal)) return false;
   if (!FromNullable) FromNullable = &A.makeAtomRef(A.makeAtom());
   if (!IsNull) IsNull = &A.makeAtomRef(A.makeAtom());
@@ -140,8 +141,9 @@ PointerValue &createNullPointer(QualType PointeeType, Environment &Env) {
   return PointerVal;
 }
 
-bool isNullable(const PointerValue &PointerVal, const Environment &Env,
-                const dataflow::Formula *AdditionalConstraints) {
+bool isNullable(
+    const PointerValue &PointerVal, const Environment &Env,
+    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
   auto [FromNullable, Null] = getPointerNullState(PointerVal);
 
@@ -159,9 +161,9 @@ bool isNullable(const PointerValue &PointerVal, const Environment &Env,
   return Env.allows(*ForseeablyNull);
 }
 
-NullabilityKind getNullability(const dataflow::PointerValue &PointerVal,
-                               const dataflow::Environment &Env,
-                               const dataflow::Formula *AdditionalConstraints) {
+NullabilityKind getNullability(
+    const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
+    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
   if (auto *Null = getPointerNullState(PointerVal).IsNull) {
     if (AdditionalConstraints) Null = &A.makeAnd(*AdditionalConstraints, *Null);

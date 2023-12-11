@@ -8,6 +8,7 @@
 #include <optional>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "nullability/pointer_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -26,7 +27,7 @@
 namespace clang::tidy::nullability {
 namespace {
 
-NamedDecl *lookup(StringRef Name, const DeclContext &DC) {
+absl::Nonnull<NamedDecl *> lookup(StringRef Name, const DeclContext &DC) {
   auto Result = DC.lookup(&DC.getParentASTContext().Idents.get(Name));
   EXPECT_TRUE(Result.isSingleResult()) << Name;
   return Result.front();

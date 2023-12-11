@@ -9,6 +9,7 @@
 #include <optional>
 #include <ostream>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "nullability/type_nullability.h"
@@ -31,7 +32,8 @@ class PointerNullabilityLattice {
     // These are set by PointerNullabilityAnalysis::assignNullabilityVariable,
     // and take precedence over the declared type and over any result from
     // ConcreteNullabilityOverride.
-    absl::flat_hash_map<const ValueDecl *, PointerTypeNullability>
+    absl::flat_hash_map<absl::Nonnull<const ValueDecl *>,
+                        PointerTypeNullability>
         DeclTopLevelNullability;
     // Returns overriding concrete nullability for decls. This is set by
     // PointerNullabilityAnalysis::assignNullabilityOverride, and the result, if
@@ -43,7 +45,8 @@ class PointerNullabilityLattice {
 
   PointerNullabilityLattice(NonFlowSensitiveState &NFS) : NFS(NFS) {}
 
-  const TypeNullability *getExprNullability(const Expr *E) const {
+  absl::Nullable<const TypeNullability *> getExprNullability(
+      absl::Nonnull<const Expr *> E) const {
     auto I = NFS.ExprToNullability.find(&dataflow::ignoreCFGOmittedNodes(*E));
     return I == NFS.ExprToNullability.end() ? nullptr : &I->second;
   }
@@ -53,7 +56,8 @@ class PointerNullabilityLattice {
   // the provided GetNullability.
   // Returns the (cached or computed) nullability.
   const TypeNullability &insertExprNullabilityIfAbsent(
-      const Expr *E, const std::function<TypeNullability()> &GetNullability) {
+      absl::Nonnull<const Expr *> E,
+      const std::function<TypeNullability()> &GetNullability) {
     E = &dataflow::ignoreCFGOmittedNodes(*E);
     if (auto It = NFS.ExprToNullability.find(E);
         It != NFS.ExprToNullability.end())
@@ -69,9 +73,10 @@ class PointerNullabilityLattice {
   // Gets the PointerValue associated with the RecordStorageLocation and
   // MethodDecl of the CallExpr, creating one if it doesn't yet exist. Requires
   // the CXXMemberCallExpr to have a supported pointer type.
-  dataflow::PointerValue *getConstMethodReturnValue(
+  absl::Nonnull<dataflow::PointerValue *> getConstMethodReturnValue(
       const dataflow::RecordStorageLocation &RecordLoc,
-      const CXXMemberCallExpr *MCE, dataflow::Environment &Env) {
+      absl::Nonnull<const CXXMemberCallExpr *> MCE,
+      dataflow::Environment &Env) {
     auto &ObjMap = ConstMethodReturnValues[&RecordLoc];
     auto it = ObjMap.find(MCE->getMethodDecl());
     if (it != ObjMap.end()) return it->second;
@@ -87,7 +92,8 @@ class PointerNullabilityLattice {
 
   // If nullability for the decl D has been overridden, patch N to reflect it.
   // (N is the nullability of an access to D).
-  void overrideNullabilityFromDecl(const Decl *D, TypeNullability &N) const;
+  void overrideNullabilityFromDecl(absl::Nullable<const Decl *> D,
+                                   TypeNullability &N) const;
 
   bool operator==(const PointerNullabilityLattice &Other) const { return true; }
 

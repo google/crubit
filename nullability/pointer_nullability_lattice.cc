@@ -6,6 +6,7 @@
 
 #include <optional>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
@@ -17,8 +18,8 @@ namespace {
 // Returns overridden nullability information associated with a declaration.
 // For now we only track top-level decl nullability symbolically and check for
 // concrete nullability override results.
-const PointerTypeNullability *getDeclNullability(
-    const Decl *D,
+absl::Nullable<const PointerTypeNullability *> getDeclNullability(
+    absl::Nullable<const Decl *> D,
     const PointerNullabilityLattice::NonFlowSensitiveState &NFS) {
   if (!D) return nullptr;
   if (const auto *VD = dyn_cast_or_null<ValueDecl>(D)) {
@@ -33,7 +34,7 @@ const PointerTypeNullability *getDeclNullability(
 }  // namespace
 
 void PointerNullabilityLattice::overrideNullabilityFromDecl(
-    const Decl *D, TypeNullability &N) const {
+    absl::Nullable<const Decl *> D, TypeNullability &N) const {
   // For now, overrides are always for pointer values only, and override only
   // the top-level nullability.
   if (auto *PN = getDeclNullability(D, NFS)) {

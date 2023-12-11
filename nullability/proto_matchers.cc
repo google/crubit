@@ -8,6 +8,7 @@
 #include <ostream>
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "third_party/protobuf/message.h"
@@ -23,8 +24,9 @@ class EqualsProtoMatcher
  public:
   EqualsProtoMatcher(llvm::StringRef Expected) : Expected(Expected) {}
 
-  bool MatchAndExplain(const proto2::Message &M,
-                       testing::MatchResultListener *Listener) const override {
+  bool MatchAndExplain(
+      const proto2::Message &M,
+      absl::Nonnull<testing::MatchResultListener *> Listener) const override {
     std::unique_ptr<proto2::Message> Parsed(M.New());
     if (!proto2::TextFormat::ParseFromString(Expected, Parsed.get())) {
       *Listener << "where <<<\n"
@@ -45,7 +47,7 @@ class EqualsProtoMatcher
                                        Listener);
   }
 
-  void DescribeTo(std::ostream *OS) const override {
+  void DescribeTo(absl::Nonnull<std::ostream *> OS) const override {
     *OS << "equals proto <<<\n" << Expected << "\n>>>";
   }
 };

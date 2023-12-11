@@ -14,6 +14,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "nullability/inference/infer_tu.h"
 #include "nullability/inference/inference.proto.h"
@@ -84,7 +85,8 @@ namespace {
 // Walks the AST looking for declarations of symbols we inferred.
 // When it finds them, prints the inference as diagnostics.
 class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
-  llvm::DenseMap<llvm::StringRef, const Inference *> InferenceByUSR;
+  llvm::DenseMap<llvm::StringRef, absl::Nonnull<const Inference *>>
+      InferenceByUSR;
   DiagnosticsEngine &Diags;
   unsigned DiagInferHere;
   unsigned DiagSample;
@@ -130,7 +132,7 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
     DiagSample = Diags.getCustomDiagID(DiagnosticsEngine::Note, "%0 here");
   }
 
-  bool VisitDecl(const Decl *FD) {
+  bool VisitDecl(absl::Nonnull<const Decl *> FD) {
     llvm::SmallString<128> USR;
     if (!index::generateUSRForDecl(FD, USR))
       if (auto *I = InferenceByUSR.lookup(USR)) render(*I, FD->getLocation());
@@ -185,8 +187,8 @@ struct DeclFilter {
 };
 
 class Action : public SyntaxOnlyAction {
-  std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &,
-                                                 llvm::StringRef) override {
+  absl::Nonnull<std::unique_ptr<ASTConsumer>> CreateASTConsumer(
+      CompilerInstance &, llvm::StringRef) override {
     class Consumer : public ASTConsumer {
       void HandleTranslationUnit(ASTContext &Ctx) override {
         llvm::errs() << "Running inference...\n";
@@ -212,7 +214,7 @@ class Action : public SyntaxOnlyAction {
 }  // namespace
 }  // namespace clang::tidy::nullability
 
-int main(int argc, const char **argv) {
+int main(int argc, absl::Nonnull<const char **> argv) {
   using namespace clang::tooling;
   auto Exec = createExecutorFromCommandLineArgs(argc, argv, Opts);
   QCHECK(Exec) << toString(Exec.takeError());

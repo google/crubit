@@ -4,6 +4,7 @@
 
 #include <cstdint>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -20,7 +21,8 @@
 namespace clang::tidy::nullability {
 namespace {
 
-NamedDecl *lookup(absl::string_view Name, const DeclContext &DC) {
+absl::Nonnull<NamedDecl *> lookup(absl::string_view Name,
+                                  const DeclContext &DC) {
   auto Result = DC.lookup(&DC.getParentASTContext().Idents.get(Name));
   CHECK(Result.isSingleResult()) << Name;
   return Result.front();
@@ -222,7 +224,7 @@ BENCHMARK(BM_PointerAnalysisCallInLoop);
 }  // namespace
 }  // namespace clang::tidy::nullability
 
-int main(int argc, char **argv) {
+int main(int argc, absl::Nonnull<char **> argv) {
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();
   return 0;

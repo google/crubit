@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTFwd.h"
@@ -299,7 +300,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     if (TA.getKind() == TemplateArgument::Pack)
       for (const auto &PackElt : TA.getPackAsArray()) Visit(PackElt);
   }
-  void Visit(const DeclContext *DC) {
+  void Visit(absl::Nonnull<const DeclContext *> DC) {
     // For now, only consider enclosing classes.
     // TODO: The nullability of template functions can affect local classes too,
     // this can be relevant e.g. when instantiating templates with such types.
@@ -307,7 +308,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
       Visit(DC->getParentASTContext().getRecordType(CRD));
   }
 
-  void VisitType(const Type *T) {
+  void VisitType(absl::Nonnull<const Type *> T) {
     // For sugar not explicitly handled below, desugar and continue.
     // (We need to walk the full structure of the canonical type.)
     if (auto *Desugar =
@@ -321,13 +322,14 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     Base::VisitType(T);
   }
 
-  void VisitFunctionProtoType(const FunctionProtoType *FPT) {
+  void VisitFunctionProtoType(absl::Nonnull<const FunctionProtoType *> FPT) {
     ignoreUnexpectedNullability();
     Visit(FPT->getReturnType());
     for (auto ParamType : FPT->getParamTypes()) Visit(ParamType);
   }
 
-  void VisitTemplateSpecializationType(const TemplateSpecializationType *TST) {
+  void VisitTemplateSpecializationType(
+      absl::Nonnull<const TemplateSpecializationType *> TST) {
     if (TST->isTypeAlias()) {
       if (auto NK = getAliasNullability(TST->getTemplateName()))
         sawNullability(*NK);
@@ -372,7 +374,8 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     }
   }
 
-  void VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType *T) {
+  void VisitSubstTemplateTypeParmType(
+      absl::Nonnull<const SubstTemplateTypeParmType *> T) {
     // The underlying type of T in the AST has no sugar, as the template has
     // only one body instantiated per canonical args.
     // Instead, try to find the (sugared) template argument that T is bound to.
@@ -410,7 +413,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   }
 
   // If we see foo<args>::ty then we may need sugar from args to resugar ty.
-  void VisitElaboratedType(const ElaboratedType *ET) {
+  void VisitElaboratedType(absl::Nonnull<const ElaboratedType *> ET) {
     std::vector<TemplateContext> BoundTemplateArgs;
     // Iterate over qualifiers right-to-left, looking for template args.
     for (auto *NNS = ET->getQualifier(); NNS; NNS = NNS->getPrefix()) {
@@ -445,7 +448,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     Visit(ET->getNamedType());
   }
 
-  void VisitRecordType(const RecordType *RT) {
+  void VisitRecordType(absl::Nonnull<const RecordType *> RT) {
     if (isSupportedSmartPointerType(QualType(RT, 0))) {
       derived().report(
           RT, PendingNullability.value_or(NullabilityKind::Unspecified));
@@ -461,7 +464,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     }
   }
 
-  void VisitAttributedType(const AttributedType *AT) {
+  void VisitAttributedType(absl::Nonnull<const AttributedType *> AT) {
     if (auto NK = AT->getImmediateNullability()) sawNullability(*NK);
     Visit(AT->getModifiedType());
     CHECK(!PendingNullability.has_value())
@@ -469,50 +472,55 @@ class NullabilityWalker : public TypeVisitor<Impl> {
         << AT->getModifiedType().getAsString();
   }
 
-  void VisitPointerType(const PointerType *PT) {
+  void VisitPointerType(absl::Nonnull<const PointerType *> PT) {
     derived().report(PT,
                      PendingNullability.value_or(NullabilityKind::Unspecified));
     PendingNullability.reset();
     Visit(PT->getPointeeType());
   }
 
-  void VisitReferenceType(const ReferenceType *RT) {
+  void VisitReferenceType(absl::Nonnull<const ReferenceType *> RT) {
     ignoreUnexpectedNullability();
     Visit(RT->getPointeeTypeAsWritten());
   }
 
-  void VisitArrayType(const ArrayType *AT) {
+  void VisitArrayType(absl::Nonnull<const ArrayType *> AT) {
     ignoreUnexpectedNullability();
     Visit(AT->getElementType());
   }
 };
 
-template <typename T>
-unsigned countPointers(const T &Object) {
-  struct Walker : public NullabilityWalker<Walker> {
-    unsigned Count = 0;
-    void report(const Type *, NullabilityKind) { ++Count; }
-  } PointerCountWalker;
-  PointerCountWalker.Visit(Object);
+struct CountWalker : public NullabilityWalker<CountWalker> {
+  unsigned Count = 0;
+  void report(absl::Nonnull<const Type *>, NullabilityKind) { ++Count; }
+};
+}  // namespace
+
+unsigned countPointersInType(QualType T) {
+  CountWalker PointerCountWalker;
+  PointerCountWalker.Visit(T);
   return PointerCountWalker.Count;
 }
 
-}  // namespace
-
-unsigned countPointersInType(QualType T) { return countPointers(T); }
-
-unsigned countPointersInType(const DeclContext *DC) {
-  return countPointers(DC);
+unsigned countPointersInType(absl::Nonnull<const DeclContext *> DC) {
+  CountWalker PointerCountWalker;
+  PointerCountWalker.Visit(DC);
+  return PointerCountWalker.Count;
 }
-unsigned countPointersInType(TemplateArgument TA) { return countPointers(TA); }
 
-QualType exprType(const Expr *E) {
+unsigned countPointersInType(const TemplateArgument &TA) {
+  CountWalker PointerCountWalker;
+  PointerCountWalker.Visit(TA);
+  return PointerCountWalker.Count;
+}
+
+QualType exprType(absl::Nonnull<const Expr *> E) {
   if (E->hasPlaceholderType(BuiltinType::BoundMember))
     return Expr::findBoundMemberType(E);
   return E->getType();
 }
 
-unsigned countPointersInType(const Expr *E) {
+unsigned countPointersInType(absl::Nonnull<const Expr *> E) {
   return countPointersInType(exprType(E));
 }
 
@@ -520,13 +528,17 @@ TypeNullability getNullabilityAnnotationsFromType(
     QualType T,
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam) {
   CHECK(!T->isDependentType()) << T.getAsString();
+
   struct Walker : NullabilityWalker<Walker> {
     std::vector<PointerTypeNullability> Annotations;
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam;
 
-    void report(const Type *, NullabilityKind NK) { Annotations.push_back(NK); }
+    void report(absl::Nonnull<const Type *>, NullabilityKind NK) {
+      Annotations.push_back(NK);
+    }
 
-    void VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType *ST) {
+    void VisitSubstTemplateTypeParmType(
+        absl::Nonnull<const SubstTemplateTypeParmType *> ST) {
       if (SubstituteTypeParam) {
         if (auto Subst = SubstituteTypeParam(ST)) {
           DCHECK_EQ(Subst->size(),
@@ -540,12 +552,13 @@ TypeNullability getNullabilityAnnotationsFromType(
       NullabilityWalker::VisitSubstTemplateTypeParmType(ST);
     }
   } AnnotationVisitor;
+
   AnnotationVisitor.SubstituteTypeParam = SubstituteTypeParam;
   AnnotationVisitor.Visit(T);
   return std::move(AnnotationVisitor.Annotations);
 }
 
-TypeNullability unspecifiedNullability(const Expr *E) {
+TypeNullability unspecifiedNullability(absl::Nonnull<const Expr *> E) {
   return TypeNullability(countPointersInType(E), NullabilityKind::Unspecified);
 }
 
@@ -582,9 +595,9 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
   }
 
   // Default behavior for unhandled types: do not transform.
-  QualType VisitType(const Type *T) { return QualType(T, 0); }
+  QualType VisitType(absl::Nonnull<const Type *> T) { return QualType(T, 0); }
 
-  QualType VisitPointerType(const PointerType *PT) {
+  QualType VisitPointerType(absl::Nonnull<const PointerType *> PT) {
     CHECK(!Nullability.empty())
         << "Nullability vector too short at " << QualType(PT, 0).getAsString();
     NullabilityKind NK = Nullability.front().concrete();
@@ -596,7 +609,7 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
                                  Rebuilt, Rebuilt);
   }
 
-  QualType VisitRecordType(const RecordType *RT) {
+  QualType VisitRecordType(absl::Nonnull<const RecordType *> RT) {
     if (const auto *CTSD =
             dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
       std::vector<TemplateArgument> TransformedArgs;
@@ -609,31 +622,34 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
     return QualType(RT, 0);
   }
 
-  QualType VisitFunctionProtoType(const FunctionProtoType *T) {
+  QualType VisitFunctionProtoType(absl::Nonnull<const FunctionProtoType *> T) {
     QualType Ret = Visit(T->getReturnType());
     std::vector<QualType> Params;
     for (const auto &Param : T->getParamTypes()) Params.push_back(Visit(Param));
     return Ctx.getFunctionType(Ret, Params, T->getExtProtoInfo());
   }
 
-  QualType VisitLValueReferenceType(const LValueReferenceType *T) {
+  QualType VisitLValueReferenceType(
+      absl::Nonnull<const LValueReferenceType *> T) {
     return Ctx.getLValueReferenceType(Visit(T->getPointeeType()));
   }
-  QualType VisitRValueReferenceType(const RValueReferenceType *T) {
+  QualType VisitRValueReferenceType(
+      absl::Nonnull<const RValueReferenceType *> T) {
     return Ctx.getRValueReferenceType(Visit(T->getPointeeType()));
   }
 
-  QualType VisitConstantArrayType(const ConstantArrayType *AT) {
+  QualType VisitConstantArrayType(absl::Nonnull<const ConstantArrayType *> AT) {
     return Ctx.getConstantArrayType(Visit(AT->getElementType()), AT->getSize(),
                                     AT->getSizeExpr(), AT->getSizeModifier(),
                                     AT->getIndexTypeCVRQualifiers());
   }
-  QualType VisitIncompleteArrayType(const IncompleteArrayType *AT) {
+  QualType VisitIncompleteArrayType(
+      absl::Nonnull<const IncompleteArrayType *> AT) {
     return Ctx.getIncompleteArrayType(Visit(AT->getElementType()),
                                       AT->getSizeModifier(),
                                       AT->getIndexTypeCVRQualifiers());
   }
-  QualType VisitVariableArrayType(const VariableArrayType *AT) {
+  QualType VisitVariableArrayType(absl::Nonnull<const VariableArrayType *> AT) {
     return Ctx.getVariableArrayType(
         Visit(AT->getElementType()), AT->getSizeExpr(), AT->getSizeModifier(),
         AT->getIndexTypeCVRQualifiers(), AT->getBracketsRange());

@@ -8,6 +8,7 @@
 #include <optional>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
@@ -67,8 +68,8 @@ class PointerNullabilityAnalysis
   // variables are only associated with direct reads of pointer values from D.
   //
   // The returned nullability is guaranteed to be symbolic.
-  PointerTypeNullability assignNullabilityVariable(const ValueDecl *D,
-                                                   dataflow::Arena &);
+  PointerTypeNullability assignNullabilityVariable(
+      absl::Nonnull<const ValueDecl *> D, dataflow::Arena &);
 
   void assignNullabilityOverride(
       llvm::unique_function<
@@ -90,10 +91,10 @@ class PointerNullabilityAnalysis
       const dataflow::Environment &Env1, const dataflow::Value &Val2,
       const dataflow::Environment &Env2) override;
 
-  dataflow::Value *widen(QualType Type, dataflow::Value &Prev,
-                         const dataflow::Environment &PrevEnv,
-                         dataflow::Value &Current,
-                         dataflow::Environment &CurrentEnv) override;
+  absl::Nullable<dataflow::Value *> widen(
+      QualType Type, dataflow::Value &Prev,
+      const dataflow::Environment &PrevEnv, dataflow::Value &Current,
+      dataflow::Environment &CurrentEnv) override;
 
  private:
   // Returns a storage location representing "top", i.e. a storage location of

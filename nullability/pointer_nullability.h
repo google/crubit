@@ -36,8 +36,8 @@ inline constexpr llvm::StringRef PtrField = "ptr";
 
 /// Returns the `PointerValue` allocated to `PointerExpr` if available.
 /// Otherwise, returns nullptr.
-dataflow::PointerValue *getPointerValueFromExpr(
-    const Expr *PointerExpr, const dataflow::Environment &Env);
+absl::Nullable<dataflow::PointerValue *> getPointerValueFromExpr(
+    absl::Nonnull<const Expr *> PointerExpr, const dataflow::Environment &Env);
 
 /// Returns the `PointerValue` underlying a smart pointer, or null if no
 /// `PointerValue` is assigned to the smart pointer in the environment.
@@ -133,9 +133,9 @@ dataflow::PointerValue &createNullPointer(QualType PointeeType,
                                           dataflow::Environment &Env);
 
 /// Returns true if there is evidence that `PointerVal` may hold a nullptr.
-bool isNullable(const dataflow::PointerValue &PointerVal,
-                const dataflow::Environment &Env,
-                const dataflow::Formula *AdditionalConstraints = nullptr);
+bool isNullable(
+    const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
+    absl::Nullable<const dataflow::Formula *> AdditionalConstraints = nullptr);
 
 /// Returns the strongest provable assertion we can make about `PointerVal`.
 /// If PointerVal may not be null, returns Nonnull.
@@ -143,13 +143,13 @@ bool isNullable(const dataflow::PointerValue &PointerVal,
 /// Otherwise, returns Unspecified.
 clang::NullabilityKind getNullability(
     const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
-    const dataflow::Formula *AdditionalConstraints = nullptr);
+    absl::Nullable<const dataflow::Formula *> AdditionalConstraints = nullptr);
 
 /// Returns the strongest provable assertion we can make about the value of
 /// `E` in `Env`.
 clang::NullabilityKind getNullability(
-    const Expr *E, const dataflow::Environment &Env,
-    const dataflow::Formula *AdditionalConstraints = nullptr);
+    absl::Nonnull<const Expr *> E, const dataflow::Environment &Env,
+    absl::Nullable<const dataflow::Formula *> AdditionalConstraints = nullptr);
 
 // Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
 template <typename T>

@@ -6,6 +6,7 @@
 
 #include <optional>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_matchers.h"
@@ -40,7 +41,7 @@ namespace {
 
 // Diagnoses whether `E` violates the expectation that it is nonnull.
 SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
-    const Expr *E, const Environment &Env,
+    absl::Nonnull<const Expr *> E, const Environment &Env,
     PointerNullabilityDiagnostic::Context DiagCtx,
     std::optional<std::string> ParamName = std::nullopt) {
   if (auto *ActualVal = getPointerValueFromExpr(E, Env)) {
@@ -66,8 +67,9 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
 // Diagnoses whether the nullability of `E` is incompatible with the expectation
 // set by `DeclaredType`.
 SmallVector<PointerNullabilityDiagnostic> diagnoseTypeExprCompatibility(
-    QualType DeclaredType, const Expr *E, const Environment &Env,
-    ASTContext &Ctx, PointerNullabilityDiagnostic::Context DiagCtx,
+    QualType DeclaredType, absl::Nonnull<const Expr *> E,
+    const Environment &Env, ASTContext &Ctx,
+    PointerNullabilityDiagnostic::Context DiagCtx,
     std::optional<std::string> ParamName = std::nullopt) {
   CHECK(isSupportedRawPointerType(DeclaredType));
   return getNullabilityKind(DeclaredType, Ctx) == NullabilityKind::NonNull
@@ -76,7 +78,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseTypeExprCompatibility(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(
-    const UnaryOperator *UnaryOp, const MatchFinder::MatchResult &,
+    absl::Nonnull<const UnaryOperator *> UnaryOp,
+    const MatchFinder::MatchResult &,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   return diagnoseNonnullExpected(
       UnaryOp->getSubExpr(), State.Env,
@@ -84,7 +87,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
-    const MemberExpr *MemberExpr, const MatchFinder::MatchResult &Result,
+    absl::Nonnull<const MemberExpr *> MemberExpr,
+    const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   return diagnoseNonnullExpected(
       MemberExpr->getBase(), State.Env,
@@ -161,7 +165,7 @@ NullabilityKind parseNullabilityKind(StringRef EnumName) {
 ///    }
 /// \endcode
 SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
-    const CallExpr *CE,
+    absl::Nonnull<const CallExpr *> CE,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State,
     ASTContext &Ctx) {
   auto *DRE = cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
@@ -207,7 +211,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
-    const CallExpr *CE, const MatchFinder::MatchResult &Result,
+    absl::Nonnull<const CallExpr *> CE, const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   // Check whether the callee is null.
   // - Skip direct callees to avoid handling builtin functions, which don't
@@ -270,7 +274,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
-    const CXXConstructExpr *CE, const MatchFinder::MatchResult &Result,
+    absl::Nonnull<const CXXConstructExpr *> CE,
+    const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   auto *CalleeFPT = CE->getConstructor()->getType()->getAs<FunctionProtoType>();
   if (!CalleeFPT) return {};
@@ -283,7 +288,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
-    const ReturnStmt *RS, const MatchFinder::MatchResult &Result,
+    absl::Nonnull<const ReturnStmt *> RS,
+    const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   auto ReturnType = cast<FunctionDecl>(State.Env.getDeclCtx())->getReturnType();
 
@@ -301,7 +307,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
-    const CXXCtorInitializer *CI, const MatchFinder::MatchResult &Result,
+    absl::Nonnull<const CXXCtorInitializer *> CI,
+    const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   CHECK(CI->isAnyMemberInitializer());
   auto MemberType = CI->getAnyMember()->getType();

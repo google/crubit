@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "nullability/inference/inferable.h"
@@ -242,7 +243,8 @@ const Formula &getInferableSlotsAsInferredOrUnknownConstraint(
 }
 
 auto getNullabilityAnnotationsFromTypeAndOverrides(
-    QualType Type, const Decl *D, const PointerNullabilityLattice &Lattice) {
+    QualType Type, absl::Nonnull<const Decl *> D,
+    const PointerNullabilityLattice &Lattice) {
   auto N = getNullabilityAnnotationsFromType(Type);
   if (N.empty()) {
     // We expect this not to be the case, but not to a crash-worthy level, so
@@ -788,7 +790,7 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
     // We do want to see concrete code, including function instantiations.
     bool shouldVisitTemplateInstantiations() const { return true; }
 
-    bool VisitFunctionDecl(const FunctionDecl *FD) {
+    bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
       if (isInferenceTarget(*FD)) Out.Declarations.push_back(FD);
 
       // Visiting template instantiations is fine, these are valid functions!
