@@ -14,10 +14,12 @@ namespace clang::tidy::nullability {
 using ast_matchers::anyOf;
 using ast_matchers::argumentCountIs;
 using ast_matchers::binaryOperator;
+using ast_matchers::booleanType;
 using ast_matchers::callee;
 using ast_matchers::callExpr;
 using ast_matchers::compoundStmt;
 using ast_matchers::cxxConstructExpr;
+using ast_matchers::cxxConversionDecl;
 using ast_matchers::cxxCtorInitializer;
 using ast_matchers::cxxMemberCallExpr;
 using ast_matchers::cxxMethodDecl;
@@ -118,6 +120,11 @@ Matcher<Stmt> isSmartPointerFreeSwapCall() {
                   argumentCountIs(2),
                   hasArgument(0, hasType(isSupportedSmartPointer())),
                   hasArgument(1, hasType(isSupportedSmartPointer())));
+}
+
+Matcher<Stmt> isSmartPointerBoolConversionCall() {
+  return cxxMemberCallExpr(on(hasType(isSupportedSmartPointer())),
+                           callee(cxxConversionDecl()), hasType(booleanType()));
 }
 
 Matcher<Stmt> isSmartPointerFactoryCall() {

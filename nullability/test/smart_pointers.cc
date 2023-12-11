@@ -265,6 +265,11 @@ TEST void get(int *raw) {
   provable(p.get() == raw);
 }
 
+TEST void operatorBool() {
+  provable(!std::unique_ptr<int>());
+  provable(static_cast<bool>(std::make_unique<int>()));
+}
+
 TEST void makeUnique() {
   nonnull(std::make_unique<int>());
   nonnull(std::make_unique<int>(42));

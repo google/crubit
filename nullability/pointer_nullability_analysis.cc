@@ -484,6 +484,17 @@ void transferValue_SmartPointerGetCall(
     State.Env.setValue(*MCE, *Val);
 }
 
+void transferValue_SmartPointerBoolConversionCall(
+    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  if (PointerValue *Val = getPointerValueFromSmartPointer(
+          getImplicitObjectLocation(*MCE, State.Env), State.Env)) {
+    if (const Formula *IsNull = getPointerNullState(*Val).IsNull)
+      State.Env.setValue(
+          *MCE, State.Env.makeNot(State.Env.arena().makeBoolValue(*IsNull)));
+  }
+}
+
 void transferValue_SmartPointerFactoryCall(
     const CallExpr *CE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -1117,6 +1128,9 @@ auto buildValueTransferer() {
                                transferValue_SmartPointerFreeSwapCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("get"),
                                         transferValue_SmartPointerGetCall)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(
+          isSmartPointerBoolConversionCall(),
+          transferValue_SmartPointerBoolConversionCall)
       .CaseOfCFGStmt<CallExpr>(isSmartPointerFactoryCall(),
                                transferValue_SmartPointerFactoryCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),

@@ -74,6 +74,8 @@ public:
   void swap(unique_ptr &) {}
 
   pointer get() const {}
+
+  explicit operator bool() const {}
 };
 
 // Array specialization of `unique_ptr`. We only introduce the members that are
