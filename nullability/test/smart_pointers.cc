@@ -173,3 +173,11 @@ TEST void release(Nonnull<std::unique_ptr<int>> nonnullParam,
   nullable(nullableParam);
   nullable(unknownParam);
 }
+
+TEST void get(int *raw) {
+  std::unique_ptr<int> null;
+  provable(null.get() == nullptr);
+
+  std::unique_ptr<int> p(raw);
+  provable(p.get() == raw);
+}

@@ -68,6 +68,8 @@ public:
   T &operator*() const;
 
   pointer release();
+
+  pointer get() const {}
 };
 
 // Array specialization of `unique_ptr`. We only introduce the members that are

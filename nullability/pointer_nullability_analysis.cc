@@ -438,6 +438,14 @@ void transferValue_SmartPointerReleaseCall(
       PtrLoc, createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
 }
 
+void transferValue_SmartPointerGetCall(
+    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  if (Value *Val = getPointerValueFromSmartPointer(
+          getImplicitObjectLocation(*MCE, State.Env), State.Env))
+    State.Env.setValue(*MCE, *Val);
+}
+
 void transferValue_SmartPointer(
     const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -1049,8 +1057,10 @@ auto buildValueTransferer() {
                                        transferValue_SmartPointerConstructor)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerAssignment(),
                                           transferValue_SmartPointerAssignment)
-      .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerReleaseCall(),
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("release"),
                                         transferValue_SmartPointerReleaseCall)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("get"),
+                                        transferValue_SmartPointerGetCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),

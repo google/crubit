@@ -105,9 +105,9 @@ Matcher<Stmt> isSmartPointerAssignment() {
       hasArgument(0, hasType(isSupportedSmartPointer())));
 }
 
-Matcher<Stmt> isSmartPointerReleaseCall() {
+Matcher<Stmt> isSmartPointerMethodCall(llvm::StringRef Name) {
   return cxxMemberCallExpr(on(hasType(isSupportedSmartPointer())),
-                           callee(cxxMethodDecl(hasName("release"))));
+                           callee(cxxMethodDecl(hasName(Name))));
 }
 
 Matcher<Stmt> isSupportedPointerAccessorCall() {
