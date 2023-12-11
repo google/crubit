@@ -6,6 +6,7 @@
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_MATCHERS_H_
 
 #include "nullability/type_nullability.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/ASTMatchers/ASTMatchersInternal.h"
 #include "clang/ASTMatchers/ASTMatchersMacros.h"
 
@@ -22,6 +23,12 @@ AST_MATCHER(QualType, isSupportedSmartPointer) {
 }
 
 AST_MATCHER(Expr, isGLValue) { return Node.isGLValue(); }
+
+AST_MATCHER(Stmt, isRawPointerValueInit) {
+  const auto *ValueInit = dyn_cast<CXXScalarValueInitExpr>(&Node);
+  return ValueInit != nullptr &&
+         isSupportedRawPointerType(ValueInit->getType());
+}
 
 ast_matchers::internal::Matcher<Stmt> isPointerExpr();
 ast_matchers::internal::Matcher<Stmt> isMemberOfPointerType();

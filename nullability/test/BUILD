@@ -161,9 +161,14 @@ cc_test(
     ],
 )
 
-cc_test(
+nullability_test(
     name = "initialization",
     srcs = ["initialization.cc"],
+)
+
+cc_test(
+    name = "initialization_diagnostics",
+    srcs = ["initialization_diagnostics.cc"],
     deps = [
         ":check_diagnostics",
         "@llvm-project//third-party/unittest:gtest",

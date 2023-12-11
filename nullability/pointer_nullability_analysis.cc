@@ -1043,6 +1043,8 @@ auto buildValueTransferer() {
       // TODO(mboehme): I believe we should be able to move handling of null
       // pointers to the non-flow-sensitive part of the analysis.
       .CaseOfCFGStmt<Expr>(isNullPointerLiteral(), transferValue_NullPointer)
+      .CaseOfCFGStmt<CXXScalarValueInitExpr>(isRawPointerValueInit(),
+                                             transferValue_NullPointer)
       .CaseOfCFGStmt<CXXConstructExpr>(isSmartPointerConstructor(),
                                        transferValue_SmartPointerConstructor)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerAssignment(),
