@@ -12,6 +12,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
+#include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
@@ -26,6 +27,7 @@ using dataflow::Environment;
 using dataflow::Formula;
 using dataflow::PointerValue;
 using dataflow::RecordStorageLocation;
+using dataflow::StorageLocation;
 using dataflow::TopBoolValue;
 using dataflow::Value;
 
@@ -49,6 +51,16 @@ absl::Nullable<PointerValue *> getPointerValueFromSmartPointer(
   if (SmartPointerLoc == nullptr) return nullptr;
   return cast_or_null<dataflow::PointerValue>(
       Env.getValue(SmartPointerLoc->getSyntheticField(PtrField)));
+}
+
+void setSmartPointerValue(dataflow::RecordStorageLocation &SmartPointerLoc,
+                          absl::Nullable<dataflow::PointerValue *> Val,
+                          Environment &Env) {
+  StorageLocation &PointerLoc = SmartPointerLoc.getSyntheticField(PtrField);
+  if (Val)
+    Env.setValue(PointerLoc, *Val);
+  else
+    Env.clearValue(PointerLoc);
 }
 
 bool hasPointerNullState(const dataflow::PointerValue &PointerVal) {

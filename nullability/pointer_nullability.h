@@ -46,6 +46,13 @@ absl::Nullable<dataflow::PointerValue *> getPointerValueFromSmartPointer(
     absl::Nullable<dataflow::RecordStorageLocation *> SmartPointerLoc,
     const dataflow::Environment &Env);
 
+/// Sets the `PointerValue` underlying a smart pointer. If `PointerValue` is
+/// null, clears any association between the smart pointer and an underlying
+/// `PointerValue` in the environment.
+void setSmartPointerValue(dataflow::RecordStorageLocation &SmartPointerLoc,
+                          absl::Nullable<dataflow::PointerValue *> Val,
+                          dataflow::Environment &Env);
+
 // Returns true if the pointer has all properties necessary for representing
 // complete nullness information.
 // Otherwise, returns false.

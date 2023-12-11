@@ -463,6 +463,34 @@ void transferValue_SmartPointerResetCall(
     State.Env.setValue(PtrLoc, *Val);
 }
 
+void swapSmartPointers(RecordStorageLocation *Loc1, RecordStorageLocation *Loc2,
+                       Environment &Env) {
+  PointerValue *Val1 = getPointerValueFromSmartPointer(Loc1, Env);
+  PointerValue *Val2 = getPointerValueFromSmartPointer(Loc2, Env);
+
+  if (Loc1) setSmartPointerValue(*Loc1, Val2, Env);
+  if (Loc2) setSmartPointerValue(*Loc2, Val1, Env);
+}
+
+void transferValue_SmartPointerMemberSwapCall(
+    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  swapSmartPointers(getImplicitObjectLocation(*MCE, State.Env),
+                    cast_or_null<RecordStorageLocation>(
+                        State.Env.getStorageLocation(*MCE->getArg(0))),
+                    State.Env);
+}
+
+void transferValue_SmartPointerFreeSwapCall(
+    const CallExpr *CE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  swapSmartPointers(cast_or_null<RecordStorageLocation>(
+                        State.Env.getStorageLocation(*CE->getArg(0))),
+                    cast_or_null<RecordStorageLocation>(
+                        State.Env.getStorageLocation(*CE->getArg(1))),
+                    State.Env);
+}
+
 void transferValue_SmartPointerGetCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -1097,6 +1125,11 @@ auto buildValueTransferer() {
                                         transferValue_SmartPointerReleaseCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("reset"),
                                         transferValue_SmartPointerResetCall)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(
+          isSmartPointerMethodCall("swap"),
+          transferValue_SmartPointerMemberSwapCall)
+      .CaseOfCFGStmt<CallExpr>(isSmartPointerFreeSwapCall(),
+                               transferValue_SmartPointerFreeSwapCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("get"),
                                         transferValue_SmartPointerGetCall)
       .CaseOfCFGStmt<CallExpr>(isSmartPointerFactoryCall(),

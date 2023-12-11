@@ -235,6 +235,28 @@ TEST void reset() {
   }
 }
 
+TEST void swap() {
+  {
+    auto p1 = std::make_unique<int>();
+    auto p2 = std::make_unique<int>();
+    int *raw1 = p1.get();
+    int *raw2 = p2.get();
+    p1.swap(p2);
+    provable(p1.get() == raw2);
+    provable(p2.get() == raw1);
+  }
+
+  {
+    auto p1 = std::make_unique<int>();
+    auto p2 = std::make_unique<int>();
+    int *raw1 = p1.get();
+    int *raw2 = p2.get();
+    std::swap(p1, p2);
+    provable(p1.get() == raw2);
+    provable(p2.get() == raw1);
+  }
+}
+
 TEST void get(int *raw) {
   std::unique_ptr<int> null;
   provable(null.get() == nullptr);

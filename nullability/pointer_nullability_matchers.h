@@ -50,6 +50,7 @@ ast_matchers::internal::Matcher<Stmt> isSmartPointerConstructor();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerAssignment();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerMethodCall(
     llvm::StringRef Name);
+ast_matchers::internal::Matcher<Stmt> isSmartPointerFreeSwapCall();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerFactoryCall();
 ast_matchers::internal::Matcher<Stmt> isSupportedPointerAccessorCall();
 

@@ -113,6 +113,13 @@ Matcher<Stmt> isSmartPointerMethodCall(llvm::StringRef Name) {
                            callee(cxxMethodDecl(hasName(Name))));
 }
 
+Matcher<Stmt> isSmartPointerFreeSwapCall() {
+  return callExpr(callee(functionDecl(isInStdNamespace(), hasName("swap"))),
+                  argumentCountIs(2),
+                  hasArgument(0, hasType(isSupportedSmartPointer())),
+                  hasArgument(1, hasType(isSupportedSmartPointer())));
+}
+
 Matcher<Stmt> isSmartPointerFactoryCall() {
   return callExpr(
       hasType(isSupportedSmartPointer()),
