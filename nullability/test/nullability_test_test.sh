@@ -15,7 +15,7 @@ cat >$SOURCE <<EOF
   }
 EOF
 if ! $DRIVER $SOURCE -- 2> $LOG; then
-  echo "Should have passed good test"
+  echo "Should have passed good nullable test"
   exit 1
 fi
 
@@ -76,3 +76,48 @@ if $DRIVER $SOURCE -- 2> $LOG; then
   exit 1
 fi
 command -v grep && grep "TEST on VarDecl node is not supported" $LOG
+
+cat >$SOURCE <<EOF
+  void provable(bool b) {}
+  void possible(bool b) {}
+
+  [[clang::annotate("test")]] void goodProvablePossible(bool b) {
+    possible(b);
+    possible(!b);
+    if (b)
+      provable(b);
+  }
+EOF
+if ! $DRIVER $SOURCE -- 2> $LOG; then
+  echo "Should have passed good provable/possible test"
+  exit 1
+fi
+
+cat >$SOURCE <<EOF
+  void provable(bool b) {}
+
+  [[clang::annotate("test")]] void badProvable(bool b) {
+    provable(b);
+  }
+EOF
+
+if $DRIVER $SOURCE -- 2> $LOG; then
+  echo "Should have failed bad provable() test!"
+  exit 1
+fi
+command -v grep && grep "expression cannot be proved true" $LOG
+
+cat >$SOURCE <<EOF
+  void possible(bool b) {}
+
+  [[clang::annotate("test")]] void badPossible(bool b) {
+    if (!b)
+      possible(b);
+  }
+EOF
+
+if $DRIVER $SOURCE -- 2> $LOG; then
+  echo "Should have failed bad possible() test!"
+  exit 1
+fi
+command -v grep && grep "expression is provably false" $LOG

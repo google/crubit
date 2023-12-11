@@ -110,7 +110,13 @@ class Diagnoser {
         WrongTypeNullability(Diags.getCustomDiagID(
             DiagnosticsEngine::Error, "static nullability is %1, expected %0")),
         WrongNodeKind(Diags.getCustomDiagID(
-            DiagnosticsEngine::Error, "TEST on %0 node is not supported")) {}
+            DiagnosticsEngine::Error, "TEST on %0 node is not supported")),
+        NoValue(Diags.getCustomDiagID(DiagnosticsEngine::Error,
+                                      "no value for boolean expression")),
+        NotProvable(Diags.getCustomDiagID(DiagnosticsEngine::Error,
+                                          "expression cannot be proved true")),
+        NotPossible(Diags.getCustomDiagID(DiagnosticsEngine::Error,
+                                          "expression is provably false")) {}
 
   void diagnoseNullability(SourceLocation Call, SourceRange Arg,
                            NullabilityKind Want, NullabilityKind Got) {
@@ -131,6 +137,21 @@ class Diagnoser {
     }
   }
 
+  void diagnoseNoValue(const Expr &Arg) {
+    Diags.Report(Arg.getSourceRange().getBegin(), NoValue)
+        << Arg.getSourceRange();
+  }
+
+  void diagnoseNotProvable(const Expr &Arg) {
+    Diags.Report(Arg.getSourceRange().getBegin(), NotProvable)
+        << Arg.getSourceRange();
+  }
+
+  void diagnoseNotPossible(const Expr &Arg) {
+    Diags.Report(Arg.getSourceRange().getBegin(), NotPossible)
+        << Arg.getSourceRange();
+  }
+
   void diagnoseBadTest(const DynTypedNode &N) {
     Diags.Report(N.getSourceRange().getBegin(), WrongNodeKind)
         << N.getNodeKind().asStringRef() << N.getSourceRange();
@@ -142,6 +163,9 @@ class Diagnoser {
   unsigned WrongTypeCanonical;
   unsigned WrongTypeNullability;
   unsigned WrongNodeKind;
+  unsigned NoValue;
+  unsigned NotProvable;
+  unsigned NotPossible;
 };
 
 // Match a nullable()/nonnull()/unknown() call, return the nullability asserted.
@@ -173,6 +197,17 @@ std::optional<QualType> getAssertedType(const CallExpr &Call) {
     return std::nullopt;
 
   return DRE->getTemplateArgs()[0].getTypeSourceInfo()->getType();
+}
+
+// Match a provable()/possible() call, return the name of the called function.
+llvm::StringRef getBoolAssertionName(const CallExpr &Call) {
+  if (Call.getNumArgs() != 1) return {};
+  auto *FD = Call.getDirectCallee();
+  if (!FD || !FD->getDeclContext()->isTranslationUnit() ||
+      !FD->getDeclName().isIdentifier())
+    return {};
+  if (FD->getName() != "provable" && FD->getName() != "possible") return {};
+  return FD->getName();
 }
 
 using AnalysisState =
@@ -241,6 +276,16 @@ void diagnoseCall(const CallExpr &CE, const ASTContext &Ctx, Diagnoser &Diags,
     if (const auto *GN = State.Lattice.getExprNullability(&Got)) GotNulls = *GN;
     Diags.diagnoseType(CE.getBeginLoc(), Got.getSourceRange(), WantCanon,
                        GotCanon, WantNulls, GotNulls);
+  }
+  if (llvm::StringRef Name = getBoolAssertionName(CE); !Name.empty()) {
+    auto &Arg = *CE.getArgs()[0];
+    auto *Val = cast_or_null<dataflow::BoolValue>(State.Env.getValue(Arg));
+    if (!Val) Diags.diagnoseNoValue(Arg);
+    if (Name == "provable") {
+      if (!State.Env.proves(Val->formula())) Diags.diagnoseNotProvable(Arg);
+    } else {
+      if (!State.Env.allows(Val->formula())) Diags.diagnoseNotPossible(Arg);
+    }
   }
 }
 

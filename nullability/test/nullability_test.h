@@ -56,7 +56,7 @@ void type(Actual) {}
 
 // Assertions for the full (flow-sensitive) analysis results.
 // (These check whether from_nullable and is_null are implied by the flow
-// condition).
+// condition. In addition, we provide general-purpose assertions for booleans.)
 
 // Asserts that its argument is considered nullable.
 template <typename T>
@@ -67,6 +67,11 @@ void nonnull(const T &) {}
 // Asserts that its argument is neither considered nullable nor non-null.
 template <typename T>
 void unknown(const T &) {}
+
+// Asserts that the analysis can prove `b` must be true at this point.
+void provable(bool b) {}
+// Asserts that the analysis can show `b` may be true at this point.
+void possible(bool b) {}
 
 ///////////////// Helpers to make writing tests more convenient ////////////////
 
