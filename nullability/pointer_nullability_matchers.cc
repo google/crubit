@@ -25,7 +25,9 @@ using ast_matchers::cxxOperatorCallExpr;
 using ast_matchers::cxxThisExpr;
 using ast_matchers::decl;
 using ast_matchers::expr;
+using ast_matchers::functionDecl;
 using ast_matchers::has;
+using ast_matchers::hasAnyName;
 using ast_matchers::hasAnyOperatorName;
 using ast_matchers::hasArgument;
 using ast_matchers::hasBody;
@@ -42,6 +44,7 @@ using ast_matchers::ignoringParenImpCasts;
 using ast_matchers::implicitCastExpr;
 using ast_matchers::isArrow;
 using ast_matchers::isConst;
+using ast_matchers::isInStdNamespace;
 using ast_matchers::isMemberInitializer;
 using ast_matchers::memberExpr;
 using ast_matchers::on;
@@ -108,6 +111,16 @@ Matcher<Stmt> isSmartPointerAssignment() {
 Matcher<Stmt> isSmartPointerMethodCall(llvm::StringRef Name) {
   return cxxMemberCallExpr(on(hasType(isSupportedSmartPointer())),
                            callee(cxxMethodDecl(hasName(Name))));
+}
+
+Matcher<Stmt> isSmartPointerFactoryCall() {
+  return callExpr(
+      hasType(isSupportedSmartPointer()),
+      callee(functionDecl(
+          isInStdNamespace(),
+          hasAnyName("make_unique", "make_unique_for_overwrite", "make_shared",
+                     "make_shared_for_overwrite", "allocate_shared",
+                     "allocate_shared_for_overwrite"))));
 }
 
 Matcher<Stmt> isSupportedPointerAccessorCall() {

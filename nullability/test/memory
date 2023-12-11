@@ -89,8 +89,14 @@ public:
   ~unique_ptr() {}
 };
 
+// We're restricting ourselves to just some of the overloads that are required
+// to provide sufficient test coverage.
 template <class T, class... Args>
 unique_ptr<T> make_unique(Args &&...args);
+template <class T>
+unique_ptr<T> make_unique_for_overwrite();
+template <class T>
+unique_ptr<T> make_unique_for_overwrite(size_t);
 
 template <class T> class weak_ptr{};
 
@@ -124,5 +130,25 @@ public:
   template <class OtherT>
   shared_ptr &operator=(const shared_ptr<OtherT> &) {}
 };
+
+// We're restricting ourselves to just some of the overloads that are required
+// to provide sufficient test coverage.
+template <class T>
+shared_ptr<T> make_shared();
+template <class T, class... Args>
+shared_ptr<T> make_shared(Args &&...args);
+template <class T>
+shared_ptr<T> make_shared_for_overwrite();
+template <class T>
+shared_ptr<T> make_shared_for_overwrite(size_t);
+
+template <class T, class Alloc>
+shared_ptr<T> allocate_shared(const Alloc &);
+template <class T, class Alloc, class... Args>
+shared_ptr<T> allocate_shared(const Alloc &, Args &&...args);
+template <class T, class Alloc>
+shared_ptr<T> allocate_shared_for_overwrite(const Alloc &);
+template <class T, class Alloc>
+shared_ptr<T> allocate_shared_for_overwrite(const Alloc &, size_t);
 
 }  // namespace std

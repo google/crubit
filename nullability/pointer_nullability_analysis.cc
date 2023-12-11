@@ -301,6 +301,13 @@ PointerValue *unpackPointerValue(PointerValue &PointerVal, Environment &Env) {
   return &NewPointerVal;
 }
 
+void setToNonNullPointer(StorageLocation &PtrLoc, Environment &Env) {
+  auto &Val = *cast<PointerValue>(Env.createValue(PtrLoc.getType()));
+  initPointerNullState(Val, Env.getDataflowAnalysisContext(),
+                       NullabilityKind::NonNull);
+  Env.setValue(PtrLoc, Val);
+}
+
 void transferValue_NullPointer(
     const Expr *NullPointer, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
@@ -387,12 +394,8 @@ void transferValue_SmartPointerConstructor(
 
   // Construct from `weak_ptr`. This throws if the `weak_ptr` is empty, so we
   // can assume the `shared_ptr` is non-null if the constructor returns.
-  if (Ctor->getNumArgs() == 1 && isStdWeakPtrType(Ctor->getArg(0)->getType())) {
-    auto &Val = *cast<PointerValue>(State.Env.createValue(PtrLoc.getType()));
-    initPointerNullState(Val, State.Env.getDataflowAnalysisContext(),
-                         NullabilityKind::NonNull);
-    State.Env.setValue(PtrLoc, Val);
-  }
+  if (Ctor->getNumArgs() == 1 && isStdWeakPtrType(Ctor->getArg(0)->getType()))
+    setToNonNullPointer(PtrLoc, State.Env);
 }
 
 void transferValue_SmartPointerAssignment(
@@ -444,6 +447,17 @@ void transferValue_SmartPointerGetCall(
   if (Value *Val = getPointerValueFromSmartPointer(
           getImplicitObjectLocation(*MCE, State.Env), State.Env))
     State.Env.setValue(*MCE, *Val);
+}
+
+void transferValue_SmartPointerFactoryCall(
+    const CallExpr *CE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*CE);
+  // Create a `RecordValue`, associate it with the `Loc` and the expression.
+  State.Env.setValue(*CE, refreshRecordValue(Loc, State.Env));
+  StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
+
+  setToNonNullPointer(PtrLoc, State.Env);
 }
 
 void transferValue_SmartPointer(
@@ -1061,6 +1075,8 @@ auto buildValueTransferer() {
                                         transferValue_SmartPointerReleaseCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("get"),
                                         transferValue_SmartPointerGetCall)
+      .CaseOfCFGStmt<CallExpr>(isSmartPointerFactoryCall(),
+                               transferValue_SmartPointerFactoryCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),

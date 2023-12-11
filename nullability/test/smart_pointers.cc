@@ -181,3 +181,25 @@ TEST void get(int *raw) {
   std::unique_ptr<int> p(raw);
   provable(p.get() == raw);
 }
+
+TEST void makeUnique() {
+  nonnull(std::make_unique<int>());
+  nonnull(std::make_unique<int>(42));
+  nonnull(std::make_unique_for_overwrite<int>());
+  nonnull(std::make_unique_for_overwrite<int[]>(5));
+}
+
+TEST void makeShared() {
+  nonnull(std::make_shared<int>());
+  nonnull(std::make_shared<int>(42));
+  nonnull(std::make_shared_for_overwrite<int>());
+  nonnull(std::make_shared_for_overwrite<int[]>(5));
+}
+
+TEST void allocateShared() {
+  nonnull(std::allocate_shared<int>(std::allocator<int>()));
+  nonnull(std::allocate_shared<int>(std::allocator<int>(), 42));
+  nonnull(std::allocate_shared_for_overwrite<int>(std::allocator<int>()));
+  nonnull(
+      std::allocate_shared_for_overwrite<int[]>(std::allocator<int[]>(), 5));
+}
