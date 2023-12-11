@@ -441,6 +441,28 @@ void transferValue_SmartPointerReleaseCall(
       PtrLoc, createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
 }
 
+void transferValue_SmartPointerResetCall(
+    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  RecordStorageLocation *Loc = getImplicitObjectLocation(*MCE, State.Env);
+  if (Loc == nullptr) return;
+  StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
+
+  // Zero-arg and `nullptr_t` overloads, as well as single-argument constructor
+  // with default argument.
+  if (MCE->getNumArgs() == 0 ||
+      (MCE->getNumArgs() == 1 && MCE->getArg(0)->getType()->isNullPtrType()) ||
+      (MCE->getNumArgs() == 1 && MCE->getArg(0)->isDefaultArgument())) {
+    State.Env.setValue(
+        PtrLoc,
+        createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
+    return;
+  }
+
+  if (Value *Val = State.Env.getValue(*MCE->getArg(0)))
+    State.Env.setValue(PtrLoc, *Val);
+}
+
 void transferValue_SmartPointerGetCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -1073,6 +1095,8 @@ auto buildValueTransferer() {
                                           transferValue_SmartPointerAssignment)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("release"),
                                         transferValue_SmartPointerReleaseCall)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("reset"),
+                                        transferValue_SmartPointerResetCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("get"),
                                         transferValue_SmartPointerGetCall)
       .CaseOfCFGStmt<CallExpr>(isSmartPointerFactoryCall(),

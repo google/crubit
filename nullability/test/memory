@@ -69,6 +69,8 @@ public:
 
   pointer release();
 
+  void reset(pointer p = pointer()) {}
+
   pointer get() const {}
 };
 
@@ -87,6 +89,12 @@ public:
   unique_ptr(const unique_ptr &) = delete;
 
   ~unique_ptr() {}
+
+  template <class ArrayT>
+  void reset(ArrayT) {}
+  void reset(nullptr_t = nullptr) {}
+
+  pointer get() const {}
 };
 
 // We're restricting ourselves to just some of the overloads that are required
@@ -129,6 +137,16 @@ public:
   shared_ptr &operator=(const shared_ptr &) {}
   template <class OtherT>
   shared_ptr &operator=(const shared_ptr<OtherT> &) {}
+
+  void reset() {}
+  template <class OtherT>
+  void reset(OtherT *) {}
+  template <class OtherT, class Deleter>
+  void reset(OtherT *, Deleter) {}
+  template <class OtherT, class Deleter, class Alloc>
+  void reset(OtherT *, Deleter, Alloc) {}
+
+  element_type* get() const;
 };
 
 // We're restricting ourselves to just some of the overloads that are required

@@ -174,6 +174,67 @@ TEST void release(Nonnull<std::unique_ptr<int>> nonnullParam,
   nullable(unknownParam);
 }
 
+TEST void reset() {
+  {
+    auto p = std::make_unique<int>();
+    p.reset();
+    provable(p.get() == nullptr);
+  }
+
+  {
+    std::unique_ptr<int> p;
+    int *raw = new int();
+    p.reset(raw);
+    provable(p.get() == raw);
+  }
+
+  {
+    auto p = std::make_unique<int[]>(1);
+    p.reset();
+    provable(p.get() == nullptr);
+  }
+
+  {
+    auto p = std::make_unique<int[]>(1);
+    p.reset(nullptr);
+    provable(p.get() == nullptr);
+  }
+
+  {
+    std::unique_ptr<int[]> p;
+    int *raw = new int[1];
+    p.reset(raw);
+    provable(p.get() == raw);
+  }
+
+  {
+    auto p = std::make_shared<int>();
+    p.reset();
+    provable(p.get() == nullptr);
+  }
+
+  {
+    std::shared_ptr<int> p;
+    int *raw = new int();
+    p.reset(raw);
+    provable(p.get() == raw);
+  }
+
+  {
+    std::shared_ptr<int> p;
+    int *raw = new int();
+    p.reset(raw, std::default_delete<int>());
+    provable(p.get() == raw);
+  }
+
+  {
+    std::shared_ptr<int> p;
+    int *raw = new int();
+    p.reset(raw, std::default_delete<int>(), std::allocator<int>());
+    provable(p.get() == raw);
+  }
+}
+
 TEST void get(int *raw) {
   std::unique_ptr<int> null;
   provable(null.get() == nullptr);
