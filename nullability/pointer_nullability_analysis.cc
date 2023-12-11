@@ -343,23 +343,20 @@ void transferValue_SmartPointerConstructor(
   RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*Ctor);
   // Create a `RecordValue`, associate it with the `Loc` and the expression.
   State.Env.setValue(*Ctor, refreshRecordValue(Loc, State.Env));
-  StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
 
   // Default and `nullptr_t` constructor.
   if (Ctor->getConstructor()->isDefaultConstructor() ||
       (Ctor->getNumArgs() >= 1 &&
        Ctor->getArg(0)->getType()->isNullPtrType())) {
-    State.Env.setValue(
-        PtrLoc,
-        createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
+    setSmartPointerToNull(Loc, State.Env);
     return;
   }
 
   // Construct from raw pointer.
   if (Ctor->getNumArgs() >= 1 &&
       isSupportedRawPointerType(Ctor->getArg(0)->getType())) {
-    if (Value *Val = State.Env.getValue(*Ctor->getArg(0)))
-      State.Env.setValue(PtrLoc, *Val);
+    setSmartPointerValue(
+        Loc, getPointerValueFromExpr(Ctor->getArg(0), State.Env), State.Env);
     return;
   }
 
@@ -371,13 +368,11 @@ void transferValue_SmartPointerConstructor(
     if (Ctor->getNumArgs() == 2 &&
         isSupportedRawPointerType(Ctor->getArg(1)->getType())) {
       // `shared_ptr` aliasing constructor.
-      if (PointerValue *Val =
-              getPointerValueFromExpr(Ctor->getArg(1), State.Env))
-        State.Env.setValue(PtrLoc, *Val);
+      setSmartPointerValue(
+          Loc, getPointerValueFromExpr(Ctor->getArg(1), State.Env), State.Env);
     } else {
-      if (PointerValue *Val =
-              getPointerValueFromSmartPointer(SrcLoc, State.Env))
-        State.Env.setValue(PtrLoc, *Val);
+      setSmartPointerValue(
+          Loc, getPointerValueFromSmartPointer(SrcLoc, State.Env), State.Env);
     }
 
     if (Ctor->getConstructor()
@@ -385,9 +380,7 @@ void transferValue_SmartPointerConstructor(
             ->getType()
             ->isRValueReferenceType() &&
         SrcLoc != nullptr) {
-      State.Env.setValue(
-          SrcLoc->getSyntheticField(PtrField),
-          createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
+      setSmartPointerToNull(*SrcLoc, State.Env);
     }
     return;
   }
@@ -395,7 +388,7 @@ void transferValue_SmartPointerConstructor(
   // Construct from `weak_ptr`. This throws if the `weak_ptr` is empty, so we
   // can assume the `shared_ptr` is non-null if the constructor returns.
   if (Ctor->getNumArgs() == 1 && isStdWeakPtrType(Ctor->getArg(0)->getType()))
-    setToNonNullPointer(PtrLoc, State.Env);
+    setToNonNullPointer(Loc.getSyntheticField(PtrField), State.Env);
 }
 
 void transferValue_SmartPointerAssignment(
@@ -404,27 +397,22 @@ void transferValue_SmartPointerAssignment(
   auto *Loc = cast<RecordStorageLocation>(
       State.Env.getStorageLocation(*OpCall->getArg(0)));
   if (Loc == nullptr) return;
-  StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
 
   if (OpCall->getArg(1)->getType()->isNullPtrType()) {
-    State.Env.setValue(
-        PtrLoc,
-        createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
+    setSmartPointerToNull(*Loc, State.Env);
     return;
   }
 
   auto *SrcLoc = cast_or_null<RecordStorageLocation>(
       State.Env.getStorageLocation(*OpCall->getArg(1)));
-  if (PointerValue *Val = getPointerValueFromSmartPointer(SrcLoc, State.Env))
-    State.Env.setValue(PtrLoc, *Val);
+  setSmartPointerValue(*Loc, getPointerValueFromSmartPointer(SrcLoc, State.Env),
+                       State.Env);
 
   // If this is the move assignment operator, set the source to null.
   auto *Method = dyn_cast_or_null<CXXMethodDecl>(OpCall->getCalleeDecl());
   if (Method != nullptr &&
       Method->getParamDecl(0)->getType()->isRValueReferenceType()) {
-    State.Env.setValue(
-        SrcLoc->getSyntheticField(PtrField),
-        createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
+    setSmartPointerToNull(*SrcLoc, State.Env);
   }
 }
 
@@ -446,21 +434,18 @@ void transferValue_SmartPointerResetCall(
     TransferState<PointerNullabilityLattice> &State) {
   RecordStorageLocation *Loc = getImplicitObjectLocation(*MCE, State.Env);
   if (Loc == nullptr) return;
-  StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
 
   // Zero-arg and `nullptr_t` overloads, as well as single-argument constructor
   // with default argument.
   if (MCE->getNumArgs() == 0 ||
       (MCE->getNumArgs() == 1 && MCE->getArg(0)->getType()->isNullPtrType()) ||
       (MCE->getNumArgs() == 1 && MCE->getArg(0)->isDefaultArgument())) {
-    State.Env.setValue(
-        PtrLoc,
-        createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
+    setSmartPointerToNull(*Loc, State.Env);
     return;
   }
 
-  if (Value *Val = State.Env.getValue(*MCE->getArg(0)))
-    State.Env.setValue(PtrLoc, *Val);
+  setSmartPointerValue(*Loc, getPointerValueFromExpr(MCE->getArg(0), State.Env),
+                       State.Env);
 }
 
 void swapSmartPointers(RecordStorageLocation *Loc1, RecordStorageLocation *Loc2,

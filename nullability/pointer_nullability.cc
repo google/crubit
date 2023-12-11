@@ -63,6 +63,13 @@ void setSmartPointerValue(dataflow::RecordStorageLocation &SmartPointerLoc,
     Env.clearValue(PointerLoc);
 }
 
+void setSmartPointerToNull(dataflow::RecordStorageLocation &SmartPointerLoc,
+                           Environment &Env) {
+  StorageLocation &PointerLoc = SmartPointerLoc.getSyntheticField(PtrField);
+  Env.setValue(PointerLoc,
+               createNullPointer(PointerLoc.getType()->getPointeeType(), Env));
+}
+
 bool hasPointerNullState(const dataflow::PointerValue &PointerVal) {
   return PointerVal.getProperty(kFromNullable) != nullptr &&
          PointerVal.getProperty(kNull) != nullptr;

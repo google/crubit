@@ -53,6 +53,10 @@ void setSmartPointerValue(dataflow::RecordStorageLocation &SmartPointerLoc,
                           absl::Nullable<dataflow::PointerValue *> Val,
                           dataflow::Environment &Env);
 
+// Sets the `PointerValue` underlying a smart pointer to null.
+void setSmartPointerToNull(dataflow::RecordStorageLocation &SmartPointerLoc,
+                           dataflow::Environment &Env);
+
 // Returns true if the pointer has all properties necessary for representing
 // complete nullness information.
 // Otherwise, returns false.
