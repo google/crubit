@@ -722,6 +722,53 @@ TEST(CollectEvidenceFromImplementationTest, PassedToNonnullRef) {
                                     functionNamed("callee"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest, PassedToNonnullInMemberFunction) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      void callee(Nonnull<int*> i);
+    };
+
+    void target(int* p) {
+      S s;
+      s.callee(p);
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target")),
+                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("callee"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     PassedToNonnullInFunctionPointerParam) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, void (*callee)(Nonnull<int*> i)) {
+      callee(p);
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     PassedToNonnullInFunctionPointerFromAddressOfFunctionDecl) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(Nonnull<int*> i);
+
+    void target(int* p) { (&callee)(p); }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target")),
+                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("callee"))));
+}
+
 TEST(CollectEvidenceFromImplementationTest, PassedToNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nullable<int*> i);

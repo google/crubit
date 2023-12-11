@@ -403,20 +403,84 @@ void collectEvidenceFromArgsAndParams(
   }
 }
 
+// Similar to collectEvidenceFromArgsAndParams, but handles the case of a call
+// to a function pointer that is provided as a parameter to the caller.
+//
+// e.g. We can collect evidence for the nullability of `p` and (when we handle
+// more than top-level pointer slots) `j` in the following, based on the call to
+// `callee`:
+// ```
+//  void target(int* p, void (*callee)(Nonnull<int*> i, int* j)) {
+//    callee(p, nullptr);
+//  }
+// ```
+//
+// With `CalleeDecl` in this case being a ParmVarDecl instead of a FunctionDecl
+// as in most CallExpr cases, distinct handling is needed.
+void collectEvidenceFromCallExprWithoutDecl(
+    const Decl &CalleeDecl, const CallExpr &Expr,
+    const std::vector<InferableSlot> &InferableCallerSlots,
+    const Formula &InferableSlotsConstraint,
+    const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
+    llvm::function_ref<EvidenceEmitter> Emit) {
+  // Function pointer params are the only case we know of so far that needs this
+  // special handling, so if we run into others, skip them, but log first.
+  if (!CalleeDecl.isFunctionPointerType() || !isa<ParmVarDecl>(CalleeDecl)) {
+    llvm::errs() << "Unsupported case of a CallExpr without a FunctionDecl. "
+                    "Not collecting any evidence from this CallExpr:\n";
+    Expr.dump();
+    return;
+  }
+  auto *CalleeType = CalleeDecl.getFunctionType()->getAs<FunctionProtoType>();
+  if (!CalleeType) return;
+  if (!isInferenceTarget(*Env.getCurrentFunc())) return;
+
+  // For each pointer parameter of the callee, ...
+  for (unsigned I = 0; I < CalleeType->getNumParams(); ++I) {
+    const auto ParamType = CalleeType->getParamType(I);
+    if (!isSupportedRawPointerType(ParamType.getNonReferenceType())) continue;
+    // the corresponding argument should also be a pointer.
+    CHECK(isSupportedRawPointerType(Expr.getArg(I)->getType()))
+        << "Unsupported argument " << I
+        << " type: " << Expr.getArg(I)->getType().getAsString();
+
+    dataflow::PointerValue *PV = getPointerValueFromExpr(Expr.getArg(I), Env);
+    if (!PV) continue;
+
+    auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
+
+    // Collect evidence from the binding of the argument to the parameter's
+    // nullability, if known.
+    collectEvidenceFromBindingToType(
+        ParamType, ParamNullability, *PV, InferableCallerSlots,
+        InferableSlotsConstraint, Env, Expr.getArg(I)->getExprLoc(), Emit);
+
+    // TODO: When we collect evidence for more complex slots than just top-level
+    // pointers, emit evidence of the nullability of the parameter of the
+    // function pointer as a slot in the caller's declaration, i.e. of `j` in
+    // the example in the function comment above.
+  }
+}
+
 void collectEvidenceFromCallExpr(
     const std::vector<InferableSlot> &InferableCallerSlots,
     const Formula &InferableSlotsConstraint, const Stmt &Stmt,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
   auto *CallExpr = dyn_cast_or_null<clang::CallExpr>(&Stmt);
-  if (!CallExpr || !CallExpr->getCalleeDecl()) return;
-  auto *CalleeDecl =
-      dyn_cast_or_null<clang::FunctionDecl>(CallExpr->getCalleeDecl());
+  if (!CallExpr) return;
+  auto *CalleeDecl = CallExpr->getCalleeDecl();
   if (!CalleeDecl) return;
-
-  collectEvidenceFromArgsAndParams(*CalleeDecl, *CallExpr, InferableCallerSlots,
-                                   InferableSlotsConstraint, Lattice, Env,
-                                   Emit);
+  if (auto *CalleeFunctionDecl =
+          dyn_cast_or_null<clang::FunctionDecl>(CalleeDecl)) {
+    collectEvidenceFromArgsAndParams(
+        *CalleeFunctionDecl, *CallExpr, InferableCallerSlots,
+        InferableSlotsConstraint, Lattice, Env, Emit);
+  } else {
+    collectEvidenceFromCallExprWithoutDecl(
+        *CalleeDecl, *CallExpr, InferableCallerSlots, InferableSlotsConstraint,
+        Lattice, Env, Emit);
+  }
 }
 
 void collectEvidenceFromConstructExpr(
