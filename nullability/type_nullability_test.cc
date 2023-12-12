@@ -102,7 +102,8 @@ TEST_F(PointerTypeTest, IsSupportedSmartPointerType) {
   EXPECT_FALSE(isSupportedSmartPointerType(
       underlying("UniquePointerWrongNamespace", AST)));
   EXPECT_TRUE(isSupportedSmartPointerType(underlying("SugaredPointer", AST)));
-  EXPECT_FALSE(isSupportedRawPointerType(underlying("ContainsPointers", AST)));
+  EXPECT_FALSE(
+      isSupportedSmartPointerType(underlying("ContainsPointers", AST)));
 }
 
 using UnderlyingRawPointerTest = PointerTypeTest;
