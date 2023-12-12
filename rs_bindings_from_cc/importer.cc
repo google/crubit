@@ -517,11 +517,19 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
     // error messages for those decls, so we're visiting.
     ImportDeclsFromDeclContext(record_decl);
   }
+
+  // Logic for `ClassTemplateSpecializationDecl`: insert them into
+  // `class_template_instantiations_`, so that they will get included in
+  // IR::top_level_item_ids.
+  // Note: The 'gating' logic here needs to be consistent with the 'gating'
+  // logic in `GetItemIdsInSourceOrder`, or else the class template
+  // instantiation decl ID is inserted into the IR::top_level_item_ids but does
+  // not have its corresponding IR item, resulting in lookup failures (crashes)
+  // when generating bindings.
   if (result.has_value()) {
     if (auto* specialization_decl =
-            llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
-      // Store `specialization_decl`s so that they will get included in
-      // IR::top_level_item_ids.
+            llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl);
+        specialization_decl && IsFromCurrentTarget(specialization_decl)) {
       class_template_instantiations_.insert(specialization_decl);
     }
   }
