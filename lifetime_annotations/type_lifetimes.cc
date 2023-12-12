@@ -703,8 +703,10 @@ GetTemplateArgs(clang::TypeLoc type_loc) {
     return std::nullopt;
   }
 
-  // Again, there is no `TypeLoc` for the type that a `DecltypeType` refers to.
-  if (type_loc.getType()->getAs<clang::DecltypeType>() != nullptr) {
+  // Again, there is no `TypeLoc` for the type that a `DecltypeType` or
+  // `AutoType` refers to.
+  if (type_loc.getType()->getAs<clang::DecltypeType>() != nullptr ||
+      type_loc.getType()->getAs<clang::AutoType>() != nullptr) {
     return std::nullopt;
   }
 
