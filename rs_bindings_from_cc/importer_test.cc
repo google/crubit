@@ -935,5 +935,15 @@ TEST(ImporterTest, CrashRepro_DecltypeInvolvingTemplate) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 }
 
+// TODO(b/315776857): Re-enable when fixed.
+TEST(DISABLED_ImporterTest, CrashRepro_AutoInvolvingTemplate) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct Template {};
+    auto Func() { return Template<int>{}; }
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+}
+
 }  // namespace
 }  // namespace crubit
