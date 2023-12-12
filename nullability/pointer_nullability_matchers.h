@@ -47,7 +47,8 @@ ast_matchers::internal::Matcher<Stmt> isZeroParamConstMemberCall();
 ast_matchers::internal::Matcher<Stmt> isNonConstMemberCall();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerGlValue();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerConstructor();
-ast_matchers::internal::Matcher<Stmt> isSmartPointerAssignment();
+ast_matchers::internal::Matcher<Stmt> isSmartPointerOperatorCall(
+    llvm::StringRef Name);
 ast_matchers::internal::Matcher<Stmt> isSmartPointerMethodCall(
     llvm::StringRef Name);
 ast_matchers::internal::Matcher<Stmt> isSmartPointerFreeSwapCall();

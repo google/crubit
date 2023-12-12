@@ -65,9 +65,10 @@ public:
   unique_ptr &operator=(nullptr_t) {}
   unique_ptr &operator=(const unique_ptr &) = delete;
 
-  T &operator*() const;
+  T &operator*() const {}
+  T *operator->() const {}
 
-  pointer release();
+  pointer release() {}
 
   void reset(pointer p = pointer()) {}
 

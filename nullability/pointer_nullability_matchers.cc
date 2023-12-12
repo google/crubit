@@ -104,9 +104,9 @@ Matcher<Stmt> isSmartPointerConstructor() {
   return cxxConstructExpr(hasType(isSupportedSmartPointer()));
 }
 
-Matcher<Stmt> isSmartPointerAssignment() {
+Matcher<Stmt> isSmartPointerOperatorCall(llvm::StringRef Name) {
   return cxxOperatorCallExpr(
-      hasOverloadedOperatorName("="), argumentCountIs(2),
+      hasOverloadedOperatorName(Name),
       hasArgument(0, hasType(isSupportedSmartPointer())));
 }
 

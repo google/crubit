@@ -278,6 +278,41 @@ TEST void operatorBool() {
   provable((&p)->operator bool());
 }
 
+TEST void operatorStar() {
+  auto p = std::make_unique<bool>();
+  *p = false;
+  provable(!*p);
+  *p = true;
+  provable(*p);
+
+  // TODO(mboehme): We'd like to be able to write the following, but the
+  // dataflow framework currently doesn't consider two different `PointerValue`s
+  // with the same location to be the same.
+  // Instead, we need to take a slightly more indirect approach to testing
+  // `operator*()`, see above. Once we have better pointer comparisons in the
+  // framework, replace the test above with the test below.
+  // auto p = std::make_unique<int>();
+  // provable(p.get() == &*p);
+}
+
+TEST void operatorArrow() {
+  std::unique_ptr<std::unique_ptr<int>> pp;
+  int *raw = new int();
+  pp->reset(raw);
+  provable(pp->get() == raw);
+
+  // TODO(mboehme): Replace the more indirect test above with this test below
+  // once the framework considers two different `PointerValue`s with the same
+  // location to be the same.
+#if 0
+  struct S {
+    int i;
+  };
+  auto p = std::make_unique<S>();
+  provable(&p.get()->b == &p->b);
+#endif
+}
+
 TEST void makeUnique() {
   nonnull(std::make_unique<int>());
   nonnull(std::make_unique<int>(42));
