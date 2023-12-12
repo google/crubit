@@ -914,8 +914,7 @@ TEST(ImporterTest, CrashRepro_FunctionTypeAlias) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 }
 
-// TODO(b/315776857): Re-enable when fixed.
-TEST(DISABLED_ImporterTest, CrashRepro_DecltypeInvolvingTemplate) {
+TEST(ImporterTest, CrashRepro_DecltypeInvolvingTemplate) {
   absl::string_view file = R"cc(
     template <class T>
     struct A {};

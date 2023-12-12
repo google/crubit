@@ -703,6 +703,11 @@ GetTemplateArgs(clang::TypeLoc type_loc) {
     return std::nullopt;
   }
 
+  // Again, there is no `TypeLoc` for the type that a `DecltypeType` refers to.
+  if (type_loc.getType()->getAs<clang::DecltypeType>() != nullptr) {
+    return std::nullopt;
+  }
+
   llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> args;
 
   if (auto elaborated_type_loc = type_loc.getAs<clang::ElaboratedTypeLoc>()) {
