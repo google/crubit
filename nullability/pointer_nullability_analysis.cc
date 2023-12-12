@@ -398,7 +398,7 @@ void transferValue_SmartPointerConstructor(
 void transferValue_SmartPointerAssignment(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  auto *Loc = cast<RecordStorageLocation>(
+  auto *Loc = cast_or_null<RecordStorageLocation>(
       State.Env.getStorageLocation(*OpCall->getArg(0)));
   if (Loc == nullptr) return;
 
