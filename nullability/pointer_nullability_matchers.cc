@@ -49,10 +49,10 @@ using ast_matchers::isConst;
 using ast_matchers::isInStdNamespace;
 using ast_matchers::isMemberInitializer;
 using ast_matchers::memberExpr;
-using ast_matchers::on;
 using ast_matchers::parameterCountIs;
 using ast_matchers::returnStmt;
 using ast_matchers::statementCountIs;
+using ast_matchers::thisPointerType;
 using ast_matchers::unaryOperator;
 using ast_matchers::unless;
 using ast_matchers::internal::Matcher;
@@ -111,7 +111,7 @@ Matcher<Stmt> isSmartPointerAssignment() {
 }
 
 Matcher<Stmt> isSmartPointerMethodCall(llvm::StringRef Name) {
-  return cxxMemberCallExpr(on(hasType(isSupportedSmartPointer())),
+  return cxxMemberCallExpr(thisPointerType(isSupportedSmartPointer()),
                            callee(cxxMethodDecl(hasName(Name))));
 }
 
@@ -123,7 +123,7 @@ Matcher<Stmt> isSmartPointerFreeSwapCall() {
 }
 
 Matcher<Stmt> isSmartPointerBoolConversionCall() {
-  return cxxMemberCallExpr(on(hasType(isSupportedSmartPointer())),
+  return cxxMemberCallExpr(thisPointerType(isSupportedSmartPointer()),
                            callee(cxxConversionDecl()), hasType(booleanType()));
 }
 

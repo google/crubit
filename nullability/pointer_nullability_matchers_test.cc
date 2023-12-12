@@ -4,6 +4,7 @@
 
 #include "nullability/pointer_nullability_matchers.h"
 
+#include "nullability/type_nullability.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/StringRef.h"
@@ -11,6 +12,9 @@
 
 namespace clang::tidy::nullability {
 namespace {
+
+// Static initializer turns on support for smart pointers.
+test::EnableSmartPointers Enable;
 
 using ast_matchers::match;
 
@@ -85,5 +89,65 @@ TEST(PointerNullabilityTest, MatchConstMemberFunctions) {
   EXPECT_FALSE(matches(Input, "void target(){ C().get_nonconst(); }",
                        isZeroParamConstMemberCall()));
 }
+
+TEST(PointerNullabilityTest, MatchSmartPointerMethodCall) {
+  llvm::StringRef Input(R"cc(
+    namespace std {
+    template <class T>
+    struct unique_ptr {
+      T *get() const;
+    };
+    }  // namespace std
+    template <class T>
+    struct MyUniquePtr {
+      T *get() const;
+    };
+  )cc");
+  // Call using `.method()` syntax.
+  EXPECT_TRUE(matches(Input, "void target(){ std::unique_ptr<int>().get(); }",
+                      isSmartPointerMethodCall("get")));
+  // Call using `->method()` syntax.
+  EXPECT_TRUE(matches(Input,
+                      "void target(std::unique_ptr<int> *p) { p->get(); }",
+                      isSmartPointerMethodCall("get")));
+  // Querying for wrong method name.
+  EXPECT_FALSE(matches(Input, "void target(){ std::unique_ptr<int>().get(); }",
+                       isSmartPointerMethodCall("reset")));
+  // Not a supported smart pointer type.
+  EXPECT_FALSE(matches(Input, "void target(){ MyUniquePtr<int>().get(); }",
+                       isSmartPointerMethodCall("get")));
+}
+
+TEST(PointerNullabilityTest, MatchSmartPointerBoolConversionCall) {
+  llvm::StringRef Input(R"cc(
+    namespace std {
+    template <class T>
+    struct unique_ptr {
+      explicit operator bool() const;
+    };
+    }  // namespace std
+    template <class T>
+    struct MyUniquePtr {
+      explicit operator bool() const;
+    };
+  )cc");
+  // Call using `static_cast<bool>()` syntax.
+  EXPECT_TRUE(matches(
+      Input, "void target(){ static_cast<bool>(std::unique_ptr<int>()); }",
+      isSmartPointerBoolConversionCall()));
+  // Explicit call using `.method()` syntax.
+  EXPECT_TRUE(
+      matches(Input, "void target(){ std::unique_ptr<int>().operator bool(); }",
+              isSmartPointerBoolConversionCall()));
+  // Explicit call using `->method()` syntax.
+  EXPECT_TRUE(matches(
+      Input, "void target(std::unique_ptr<int> *p) { p->operator bool(); }",
+      isSmartPointerBoolConversionCall()));
+  // Not a supported smart pointer type.
+  EXPECT_FALSE(
+      matches(Input, "void target(){ static_cast<bool>(MyUniquePtr<int>()); }",
+              isSmartPointerBoolConversionCall()));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

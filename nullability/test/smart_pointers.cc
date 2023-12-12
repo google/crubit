@@ -263,11 +263,19 @@ TEST void get(int *raw) {
 
   std::unique_ptr<int> p(raw);
   provable(p.get() == raw);
+
+  // Test `->method()` call syntax.
+  provable((&null)->get() == nullptr);
+  provable((&p)->get() == raw);
 }
 
 TEST void operatorBool() {
   provable(!std::unique_ptr<int>());
   provable(static_cast<bool>(std::make_unique<int>()));
+
+  // Test `->method()` call syntax.
+  auto p = std::make_unique<int>();
+  provable((&p)->operator bool());
 }
 
 TEST void makeUnique() {
