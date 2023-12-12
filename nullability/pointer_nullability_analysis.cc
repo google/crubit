@@ -33,6 +33,7 @@
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/Specifiers.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/Support/Debug.h"
@@ -530,6 +531,47 @@ void transferValue_SmartPointerFactoryCall(
   StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
 
   setToNonNullPointer(PtrLoc, State.Env);
+}
+
+void transferValue_SmartPointerComparisonOpCall(
+    const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  // Formula representing an equality (`==`) comparison of the two operands.
+  // If the operator is `!=`, this will need to be negated below.
+  const Formula *EqualityFormula = nullptr;
+
+  bool NullPtr1 = OpCall->getArg(0)->getType()->isNullPtrType();
+  bool NullPtr2 = OpCall->getArg(1)->getType()->isNullPtrType();
+  assert(!NullPtr1 || !NullPtr2);
+
+  PointerValue *Val1 = nullptr;
+  if (!NullPtr1)
+    Val1 = getPointerValueFromSmartPointerGLValue(OpCall->getArg(0), State.Env);
+
+  PointerValue *Val2 = nullptr;
+  if (!NullPtr2)
+    Val2 = getPointerValueFromSmartPointerGLValue(OpCall->getArg(1), State.Env);
+
+  if (NullPtr1) {
+    if (Val2 == nullptr) return;
+    EqualityFormula = getPointerNullState(*Val2).IsNull;
+  } else if (NullPtr2) {
+    if (Val1 == nullptr) return;
+    EqualityFormula = getPointerNullState(*Val1).IsNull;
+  } else {
+    if (Val1 == nullptr || Val2 == nullptr) return;
+    EqualityFormula = &State.Env.arena().makeLiteral(&Val1->getPointeeLoc() ==
+                                                     &Val2->getPointeeLoc());
+  }
+
+  if (EqualityFormula == nullptr) return;
+
+  BoolValue &EqualityValue = State.Env.arena().makeBoolValue(*EqualityFormula);
+
+  if (OpCall->getOperator() == OO_EqualEqual)
+    State.Env.setValue(*OpCall, EqualityValue);
+  else
+    State.Env.setValue(*OpCall, State.Env.makeNot(EqualityValue));
 }
 
 void transferValue_SmartPointer(
@@ -1172,6 +1214,9 @@ auto buildValueTransferer() {
           transferValue_SmartPointerOperatorArrow)
       .CaseOfCFGStmt<CallExpr>(isSmartPointerFactoryCall(),
                                transferValue_SmartPointerFactoryCall)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(
+          isSmartPointerComparisonOpCall(),
+          transferValue_SmartPointerComparisonOpCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),

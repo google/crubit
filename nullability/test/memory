@@ -177,4 +177,17 @@ shared_ptr<T> allocate_shared_for_overwrite(const Alloc &);
 template <class T, class Alloc>
 shared_ptr<T> allocate_shared_for_overwrite(const Alloc &, size_t);
 
+template <class T1, class T2>
+bool operator==(const shared_ptr<T1> &, const shared_ptr<T2> &);
+template <class T1, class T2>
+bool operator!=(const shared_ptr<T1> &, const shared_ptr<T2> &);
+template <class T>
+bool operator==(const shared_ptr<T> &, std::nullptr_t);
+template <class T>
+bool operator==(std::nullptr_t, const shared_ptr<T> &);
+template <class T>
+bool operator!=(const shared_ptr<T> &, std::nullptr_t);
+template <class T>
+bool operator!=(std::nullptr_t, const shared_ptr<T> &);
+
 }  // namespace std

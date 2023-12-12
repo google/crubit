@@ -334,3 +334,26 @@ TEST void allocateShared() {
   nonnull(
       std::allocate_shared_for_overwrite<int[]>(std::allocator<int[]>(), 5));
 }
+
+TEST void operatorEqualsAndNotEquals() {
+  // We perform this test on `shared_ptr` rather than `unique_ptr` because it
+  // allows us the test to be stronger: We can check that two different
+  // `shared_ptr`s with the same underlying raw pointer compare equal. We can't
+  // test this with `unique_ptr` because it is, well, unique.
+  auto p1 = std::make_shared<int>();
+  auto p2 = std::make_shared<int>();
+  std::shared_ptr<int> null;
+
+  provable(p1 == p1);
+  provable(p1 == std::shared_ptr<int>(p1));
+  provable(null == std::shared_ptr<int>());
+
+  provable(p1 != p2);
+  provable(p1 != null);
+  provable(p2 != null);
+
+  provable(null == nullptr);
+  provable(p1 != nullptr);
+  provable(nullptr == null);
+  provable(nullptr != p1);
+}

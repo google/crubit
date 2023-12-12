@@ -54,6 +54,14 @@ absl::Nullable<PointerValue *> getPointerValueFromSmartPointer(
       Env.getValue(SmartPointerLoc->getSyntheticField(PtrField)));
 }
 
+absl::Nullable<PointerValue *> getPointerValueFromSmartPointerGLValue(
+    absl::Nonnull<const Expr *> SmartPointerGLValue, const Environment &Env) {
+  return getPointerValueFromSmartPointer(
+      cast_or_null<RecordStorageLocation>(
+          Env.getStorageLocation(*SmartPointerGLValue)),
+      Env);
+}
+
 void setSmartPointerValue(dataflow::RecordStorageLocation &SmartPointerLoc,
                           absl::Nullable<dataflow::PointerValue *> Val,
                           Environment &Env) {

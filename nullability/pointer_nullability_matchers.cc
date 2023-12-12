@@ -7,7 +7,9 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/Stmt.h"
+#include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/ASTMatchers/ASTMatchersMacros.h"
 
 namespace clang::tidy::nullability {
 
@@ -31,6 +33,7 @@ using ast_matchers::functionDecl;
 using ast_matchers::has;
 using ast_matchers::hasAnyName;
 using ast_matchers::hasAnyOperatorName;
+using ast_matchers::hasAnyOverloadedOperatorName;
 using ast_matchers::hasArgument;
 using ast_matchers::hasBody;
 using ast_matchers::hasCastKind;
@@ -56,6 +59,12 @@ using ast_matchers::thisPointerType;
 using ast_matchers::unaryOperator;
 using ast_matchers::unless;
 using ast_matchers::internal::Matcher;
+
+namespace {
+
+AST_MATCHER(QualType, isNullPtrType) { return Node->isNullPtrType(); }
+
+}  // namespace
 
 Matcher<Stmt> isPointerExpr() { return expr(hasType(isSupportedRawPointer())); }
 Matcher<Stmt> isNullPointerLiteral() {
@@ -135,6 +144,19 @@ Matcher<Stmt> isSmartPointerFactoryCall() {
           hasAnyName("make_unique", "make_unique_for_overwrite", "make_shared",
                      "make_shared_for_overwrite", "allocate_shared",
                      "allocate_shared_for_overwrite"))));
+}
+
+Matcher<Stmt> isSmartPointerComparisonOpCall() {
+  return cxxOperatorCallExpr(
+      hasAnyOverloadedOperatorName("==", "!="), argumentCountIs(2),
+      anyOf(hasArgument(0, hasType(isSupportedSmartPointer())),
+            hasArgument(1, hasType(isSupportedSmartPointer()))),
+      // If one of the arguments isn't a smart pointer, it has to be
+      // `std::nullptr_t`.
+      hasArgument(0, anyOf(hasType(isSupportedSmartPointer()),
+                           hasType(isNullPtrType()))),
+      hasArgument(1, anyOf(hasType(isSupportedSmartPointer()),
+                           hasType(isNullPtrType()))));
 }
 
 Matcher<Stmt> isSupportedPointerAccessorCall() {

@@ -46,6 +46,13 @@ absl::Nullable<dataflow::PointerValue *> getPointerValueFromSmartPointer(
     absl::Nullable<dataflow::RecordStorageLocation *> SmartPointerLoc,
     const dataflow::Environment &Env);
 
+/// Returns the `PointerValue` underlying a smart pointer glvalue, if avoilable.
+/// Returns null if the glvalue is not associated with a storage location or
+/// the smart pointer is not associated with a `PointerValue`.
+absl::Nullable<dataflow::PointerValue *> getPointerValueFromSmartPointerGLValue(
+    absl::Nonnull<const Expr *> SmartPointerGLValue,
+    const dataflow::Environment &Env);
+
 /// Sets the `PointerValue` underlying a smart pointer. If `PointerValue` is
 /// null, clears any association between the smart pointer and an underlying
 /// `PointerValue` in the environment.
