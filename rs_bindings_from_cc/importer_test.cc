@@ -914,5 +914,27 @@ TEST(ImporterTest, CrashRepro_FunctionTypeAlias) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 }
 
+// TODO(b/315776857): Re-enable when fixed.
+TEST(DISABLED_ImporterTest, CrashRepro_DecltypeInvolvingTemplate) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct A {};
+    struct B {
+      A<int> a;
+    };
+    template <class Trait>
+    struct C {
+      static decltype(Trait::a) Func();
+    };
+    // Note that to trigger the crash, we specifically require the following:
+    // - `C::Func()` needs to be static.
+    // - We need to call `C` function on a variable `c` (we don't crash if we
+    //   call `C::Func()`.
+    // - `c` needs to be a parameter (we don't crash if it is a local variable).
+    void Func(C<B> c) { c.Func(); }
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+}
+
 }  // namespace
 }  // namespace crubit
