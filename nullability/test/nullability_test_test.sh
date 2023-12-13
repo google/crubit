@@ -121,3 +121,18 @@ if $DRIVER $SOURCE -- 2> $LOG; then
   exit 1
 fi
 command -v grep && grep "expression is provably false" $LOG
+
+cat >$SOURCE <<EOF
+  void provable(bool b) {}
+  bool f();
+
+  [[clang::annotate("test")]] void noValueForProvable() {
+    provable(f());
+  }
+EOF
+
+if $DRIVER $SOURCE -- 2> $LOG; then
+  echo "Should have failed no-value test!"
+  exit 1
+fi
+command -v grep && grep "no value for boolean expression" $LOG
