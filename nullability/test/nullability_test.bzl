@@ -19,3 +19,9 @@ def nullability_test(name, srcs):
             "$(location //nullability/test:nullability_test)",
         ] + ["$(location " + src + ")" for src in srcs] + ["--"],
     )
+
+    # Additional target to verify that the source file builds with non-mock headers.
+    native.cc_library(
+        name = name + "_compile_test",
+        srcs = srcs + ["nullability_test.h", "nullability_annotations.h"],
+    )
