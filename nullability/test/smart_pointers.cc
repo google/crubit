@@ -357,3 +357,8 @@ TEST void operatorEqualsAndNotEquals() {
   provable(nullptr == null);
   provable(nullptr != p1);
 }
+
+TEST void weakPtrLocReturnsNullable(std::shared_ptr<int> shared) {
+  std::weak_ptr<int> weak(shared);
+  nullable(weak.lock());
+}

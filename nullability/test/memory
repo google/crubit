@@ -114,7 +114,7 @@ unique_ptr<T> make_unique_for_overwrite(size_t);
 template <class T, class Deleter>
 void swap(unique_ptr<T, Deleter> &, unique_ptr<T, Deleter> &) {}
 
-template <class T> class weak_ptr{};
+template <class T> class weak_ptr;
 
 // This definition of `shared_ptr` only introduces the members that are used in
 // tests.
@@ -189,5 +189,14 @@ template <class T>
 bool operator!=(const shared_ptr<T> &, std::nullptr_t);
 template <class T>
 bool operator!=(std::nullptr_t, const shared_ptr<T> &);
+
+// This mock only provides the definitions needed to test that
+// `weak_ptr::lock()` returns a nullable pointer.
+template <class T> class weak_ptr {
+public:
+  template <class OtherT>
+  weak_ptr(const shared_ptr<OtherT> &);
+  shared_ptr<T> lock() const;
+};
 
 }  // namespace std

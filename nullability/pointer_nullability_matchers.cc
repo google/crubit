@@ -26,6 +26,7 @@ using ast_matchers::cxxCtorInitializer;
 using ast_matchers::cxxMemberCallExpr;
 using ast_matchers::cxxMethodDecl;
 using ast_matchers::cxxOperatorCallExpr;
+using ast_matchers::cxxRecordDecl;
 using ast_matchers::cxxThisExpr;
 using ast_matchers::decl;
 using ast_matchers::expr;
@@ -157,6 +158,12 @@ Matcher<Stmt> isSmartPointerComparisonOpCall() {
                            hasType(isNullPtrType()))),
       hasArgument(1, anyOf(hasType(isSupportedSmartPointer()),
                            hasType(isNullPtrType()))));
+}
+
+Matcher<Stmt> isWeakPtrLockCall() {
+  return cxxMemberCallExpr(
+      thisPointerType(cxxRecordDecl(isInStdNamespace(), hasName("weak_ptr"))),
+      callee(cxxMethodDecl(hasName("lock"))));
 }
 
 Matcher<Stmt> isSupportedPointerAccessorCall() {

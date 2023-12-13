@@ -305,10 +305,10 @@ absl::Nullable<PointerValue *> unpackPointerValue(PointerValue &PointerVal,
   return &NewPointerVal;
 }
 
-void setToNonNullPointer(StorageLocation &PtrLoc, Environment &Env) {
+void setToPointerWithNullability(StorageLocation &PtrLoc, NullabilityKind NK,
+                                 Environment &Env) {
   auto &Val = *cast<PointerValue>(Env.createValue(PtrLoc.getType()));
-  initPointerNullState(Val, Env.getDataflowAnalysisContext(),
-                       NullabilityKind::NonNull);
+  initPointerNullState(Val, Env.getDataflowAnalysisContext(), NK);
   Env.setValue(PtrLoc, Val);
 }
 
@@ -393,7 +393,8 @@ void transferValue_SmartPointerConstructor(
   // Construct from `weak_ptr`. This throws if the `weak_ptr` is empty, so we
   // can assume the `shared_ptr` is non-null if the constructor returns.
   if (Ctor->getNumArgs() == 1 && isStdWeakPtrType(Ctor->getArg(0)->getType()))
-    setToNonNullPointer(Loc.getSyntheticField(PtrField), State.Env);
+    setToPointerWithNullability(Loc.getSyntheticField(PtrField),
+                                NullabilityKind::NonNull, State.Env);
 }
 
 void transferValue_SmartPointerAssignment(
@@ -526,7 +527,7 @@ void transferValue_SmartPointerFactoryCall(
   State.Env.setValue(*CE, refreshRecordValue(Loc, State.Env));
   StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
 
-  setToNonNullPointer(PtrLoc, State.Env);
+  setToPointerWithNullability(PtrLoc, NullabilityKind::NonNull, State.Env);
 }
 
 void transferValue_SmartPointerComparisonOpCall(
@@ -568,6 +569,17 @@ void transferValue_SmartPointerComparisonOpCall(
     State.Env.setValue(*OpCall, EqualityValue);
   else
     State.Env.setValue(*OpCall, State.Env.makeNot(EqualityValue));
+}
+
+void transferValue_WeakPtrLockCall(
+    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*MCE);
+  // Create a `RecordValue`, associate it with the `Loc` and the expression.
+  State.Env.setValue(*MCE, refreshRecordValue(Loc, State.Env));
+  StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
+
+  setToPointerWithNullability(PtrLoc, NullabilityKind::Nullable, State.Env);
 }
 
 void transferValue_SmartPointer(
@@ -1213,6 +1225,8 @@ auto buildValueTransferer() {
       .CaseOfCFGStmt<CXXOperatorCallExpr>(
           isSmartPointerComparisonOpCall(),
           transferValue_SmartPointerComparisonOpCall)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isWeakPtrLockCall(),
+                                        transferValue_WeakPtrLockCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),
