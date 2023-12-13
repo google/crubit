@@ -37,10 +37,6 @@ using dataflow::Value;
 constexpr llvm::StringLiteral kFromNullable = "from_nullable";
 constexpr llvm::StringLiteral kNull = "is_null";
 
-NullabilityKind getNullabilityKind(QualType Type, ASTContext &Ctx) {
-  return Type->getNullability().value_or(NullabilityKind::Unspecified);
-}
-
 absl::Nullable<PointerValue *> getPointerValueFromExpr(
     absl::Nonnull<const Expr *> PointerExpr, const Environment &Env) {
   return cast_or_null<PointerValue>(Env.getValue(*PointerExpr));

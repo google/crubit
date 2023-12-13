@@ -72,7 +72,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseTypeExprCompatibility(
     PointerNullabilityDiagnostic::Context DiagCtx,
     std::optional<std::string> ParamName = std::nullopt) {
   CHECK(isSupportedRawPointerType(DeclaredType));
-  return getNullabilityKind(DeclaredType, Ctx) == NullabilityKind::NonNull
+  return getNullabilityAnnotationsFromType(DeclaredType).front().concrete() ==
+                 NullabilityKind::NonNull
              ? diagnoseNonnullExpected(E, Env, DiagCtx, ParamName)
              : SmallVector<PointerNullabilityDiagnostic>{};
 }

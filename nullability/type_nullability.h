@@ -156,10 +156,6 @@ class PointerTypeNullability {
 /// PointerType encountered in a preorder traversal of the canonical type.
 using TypeNullability = std::vector<PointerTypeNullability>;
 
-/// Returns the `NullabilityKind` corresponding to the nullability annotation on
-/// `Type` if present. Otherwise, returns `NullabilityKind::Unspecified`.
-NullabilityKind getNullabilityKind(QualType Type, ASTContext &Ctx);
-
 /// Returns a human-readable debug representation of a nullability vector.
 std::string nullabilityToString(const TypeNullability &Nullability);
 

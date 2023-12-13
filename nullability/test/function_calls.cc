@@ -424,6 +424,63 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
   )cc"));
 }
 
+// Test that relevant diagnostics are produced for declarations with templated
+// annotations.
+TEST(PointerNullabilityTest, CallExprParamAssignmentTemplateAnnotations) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include "nullability_annotations.h"
+
+    void takeNonnull(Nonnull<int *>);
+    void takeNullable(Nullable<int *>);
+    void takeUnknown(NullabilityUnknown<int *>);
+
+    void target(Nonnull<int *> ptr_nonnull, Nullable<int *> ptr_nullable,
+                NullabilityUnknown<int *> ptr_unknown) {
+      takeNonnull(nullptr);  // [[unsafe]]
+      takeNonnull(ptr_nonnull);
+      takeNonnull(ptr_nullable);  // [[unsafe]]
+      takeNonnull(ptr_unknown);
+
+      takeNullable(nullptr);
+      takeNullable(ptr_nonnull);
+      takeNullable(ptr_nullable);
+      takeNullable(ptr_unknown);
+
+      takeUnknown(nullptr);
+      takeUnknown(ptr_nonnull);
+      takeUnknown(ptr_nullable);
+      takeUnknown(ptr_unknown);
+    }
+  )cc"));
+}
+
+// Test that templated annotations work interchangeably, in diagnosis, with the
+// built-in Clang annotations.
+TEST(PointerNullabilityTest, CallExprParamAssignmentTemplateBuiltinMixed) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include "nullability_annotations.h"
+
+    void takeNonnull(int *_Nonnull);
+    void takeNullable(int *_Nullable);
+    void takeUnannotated(int *);
+
+    void target(Nonnull<int *> ptr_nonnull, Nullable<int *> ptr_nullable,
+                NullabilityUnknown<int *> ptr_unknown) {
+      takeNonnull(ptr_nonnull);
+      takeNonnull(ptr_nullable);  // [[unsafe]]
+      takeNonnull(ptr_unknown);
+
+      takeNullable(ptr_nonnull);
+      takeNullable(ptr_nullable);
+      takeNullable(ptr_unknown);
+
+      takeUnannotated(ptr_nonnull);
+      takeUnannotated(ptr_nullable);
+      takeUnannotated(ptr_unknown);
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, CallExprMultiNonnullParams) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void take(int *_Nonnull, int *_Nullable, int *_Nonnull);
