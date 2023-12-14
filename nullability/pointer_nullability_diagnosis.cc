@@ -21,6 +21,7 @@
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
@@ -34,6 +35,7 @@ namespace clang::tidy::nullability {
 using ast_matchers::MatchFinder;
 using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
+using dataflow::PointerValue;
 using dataflow::TransferStateForDiagnostics;
 using ::llvm::SmallVector;
 
@@ -44,7 +46,12 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
     absl::Nonnull<const Expr *> E, const Environment &Env,
     PointerNullabilityDiagnostic::Context DiagCtx,
     std::optional<std::string> ParamName = std::nullopt) {
-  if (auto *ActualVal = getPointerValueFromExpr(E, Env)) {
+  PointerValue *ActualVal = nullptr;
+  if (isSupportedRawPointerType(E->getType()))
+    ActualVal = getPointerValueFromExpr(E, Env);
+  else
+    ActualVal = getPointerValueFromSmartPointerGLValue(E, Env);
+  if (ActualVal != nullptr) {
     if (isNullable(*ActualVal, Env))
       return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
                DiagCtx, CharSourceRange::getTokenRange(E->getSourceRange()),
@@ -84,6 +91,15 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   return diagnoseNonnullExpected(
       UnaryOp->getSubExpr(), State.Env,
+      PointerNullabilityDiagnostic::Context::NullableDereference);
+}
+
+SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerDereference(
+    absl::Nonnull<const CXXOperatorCallExpr *> Op,
+    const MatchFinder::MatchResult &,
+    const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
+  return diagnoseNonnullExpected(
+      Op->getArg(0), State.Env,
       PointerNullabilityDiagnostic::Context::NullableDereference);
 }
 
@@ -338,11 +354,17 @@ PointerNullabilityDiagnoser pointerNullabilityDiagnoser() {
                                SmallVector<PointerNullabilityDiagnostic>>()
       // (*)
       .CaseOfCFGStmt<UnaryOperator>(isPointerDereference(), diagnoseDereference)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("*"),
+                                          diagnoseSmartPointerDereference)
       // ([])
       .CaseOfCFGStmt<ArraySubscriptExpr>(isPointerSubscript(),
                                          diagnoseSubscript)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("->"),
+                                          diagnoseSmartPointerDereference)
       // (->)
       .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("[]"),
+                                          diagnoseSmartPointerDereference)
       // Check compatibility of parameter assignments
       .CaseOfCFGStmt<CallExpr>(isCallExpr(), diagnoseCallExpr)
       .CaseOfCFGStmt<ReturnStmt>(isPointerReturn(), diagnoseReturn)

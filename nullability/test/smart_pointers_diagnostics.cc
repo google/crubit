@@ -4,32 +4,45 @@
 
 // Tests for diagnostics on smart pointers.
 
-// TODO(b/304963199): We do not actually check smart pointers, so these tests
-// are full of false negatives. For now, they are mainly intended to check that
-// the check does not crash or assert-fail on smart pointers.
-
 #include "nullability/test/check_diagnostics.h"
+#include "nullability/type_nullability.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
 
-TEST(SmartPointerTest, DefaultConstructedSmartPointerIsNull) {
+// Static initializer turns on support for smart pointers.
+test::EnableSmartPointers Enable;
+
+TEST(SmartPointerTest, Dereference) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>
     void target() {
-      std::unique_ptr<int> p;
-      *p;  // TODO(b/304963199): False negative.
+      *std::unique_ptr<int>();  // [[unsafe]]
+      *std::make_unique<int>();
     }
   )cc"));
 }
 
-TEST(SmartPointerTest, MakeUniqueReturnsNonNull) {
+TEST(SmartPointerTest, ArrowOp) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct S {
+      int i = 0;
+    };
+    void target() {
+      std::unique_ptr<S>()->i;  // [[unsafe]]
+      std::make_unique<S>()->i;
+    }
+  )cc"));
+}
+
+TEST(SmartPointerTest, Subscript) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>
     void target() {
-      auto p = std::make_unique<int>(0);
-      *p;
+      std::unique_ptr<int[]>()[0];  // [[unsafe]]
+      std::make_unique<int[]>(1)[0];
     }
   )cc"));
 }

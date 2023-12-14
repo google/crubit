@@ -100,6 +100,8 @@ public:
   void reset(nullptr_t = nullptr) {}
 
   pointer get() const {}
+
+  T &operator[](size_t) const;
 };
 
 // We're restricting ourselves to just some of the overloads that are required

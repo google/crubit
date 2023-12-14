@@ -253,6 +253,7 @@ cc_test(
     srcs = ["smart_pointers_diagnostics.cc"],
     deps = [
         ":check_diagnostics",
+        "//nullability:type_nullability",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
