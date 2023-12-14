@@ -1300,8 +1300,10 @@ auto buildValueTransferer() {
           transferValue_SmartPointerComparisonOpCall)
       .CaseOfCFGStmt<CallExpr>(isSharedPtrCastCall(),
                                transferValue_SharedPtrCastCall)
-      .CaseOfCFGStmt<CXXMemberCallExpr>(isWeakPtrLockCall(),
-                                        transferValue_WeakPtrLockCall)
+      // TODO(b/316410576): Disabled because causing a crash in production
+      // pipeline.
+      // .CaseOfCFGStmt<CXXMemberCallExpr>(isWeakPtrLockCall(),
+      //                                  transferValue_WeakPtrLockCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),
