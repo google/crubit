@@ -335,6 +335,130 @@ TEST void allocateShared() {
       std::allocate_shared_for_overwrite<int[]>(std::allocator<int[]>(), 5));
 }
 
+// Tests for `shared_ptr::..._pointer_cast`. We put these in a namespace so that
+// the types we create for them don't "leak" out beyond the tests.
+namespace pointer_casts {
+
+struct Base {
+  virtual ~Base();
+};
+struct Derived : public Base {
+  ~Derived() override;
+};
+
+TEST void staticPointerCast(Nonnull<std::shared_ptr<Base>> nonnullParam,
+                            Nullable<std::shared_ptr<Base>> nullableParam,
+                            std::shared_ptr<Base> unknownParam) {
+  provable(std::static_pointer_cast<Derived>(std::shared_ptr<Base>()) ==
+           nullptr);
+
+  nonnull(std::static_pointer_cast<Derived>(nonnullParam));
+  nullable(std::static_pointer_cast<Derived>(nullableParam));
+  unknown(std::static_pointer_cast<Derived>(unknownParam));
+
+  // Arguments are unchanged after calling const lvalue reference overload.
+  nonnull(nonnullParam);
+  nullable(nullableParam);
+  unknown(unknownParam);
+
+  nonnull(std::static_pointer_cast<Derived>(std::move(nonnullParam)));
+  nullable(std::static_pointer_cast<Derived>(std::move(nullableParam)));
+  unknown(std::static_pointer_cast<Derived>(std::move(unknownParam)));
+
+  // Arguments are empty after calling rvalue reference overload.
+  provable(!nonnullParam);
+  provable(!nullableParam);
+  provable(!unknownParam);
+}
+
+TEST void dynamicPointerCast(Nonnull<std::shared_ptr<Base>> nonnullParam,
+                             Nullable<std::shared_ptr<Base>> nullableParam,
+                             std::shared_ptr<Base> unknownParam) {
+  provable(std::dynamic_pointer_cast<Derived>(std::shared_ptr<Base>()) ==
+           nullptr);
+
+  nullable(std::dynamic_pointer_cast<Derived>(nonnullParam));
+  nullable(std::dynamic_pointer_cast<Derived>(nullableParam));
+  nullable(std::dynamic_pointer_cast<Derived>(unknownParam));
+
+  // Arguments are unchanged after calling const lvalue reference overload.
+  nonnull(nonnullParam);
+  nullable(nullableParam);
+  unknown(unknownParam);
+
+  nullable(std::dynamic_pointer_cast<Derived>(std::move(nonnullParam)));
+  nullable(std::dynamic_pointer_cast<Derived>(std::move(nullableParam)));
+  nullable(std::dynamic_pointer_cast<Derived>(std::move(unknownParam)));
+
+  // Arguments are nullable (but not provably null) after calling rvalue
+  // reference overload (because they may or may not have been moved from).
+  nullable(nonnullParam);
+  nullable(nullableParam);
+  nullable(unknownParam);
+  possible(nonnullParam != nullptr);
+  possible(nullableParam != nullptr);
+  possible(unknownParam != nullptr);
+
+  // However, if the argument was null, then it should remain null (and not just
+  // nullable) after calling the rvalue reference overload.
+  std::shared_ptr<Base> null;
+  provable(std::dynamic_pointer_cast<Derived>(null) == nullptr);
+  provable(null == nullptr);
+}
+
+TEST void constPointerCast() {
+  // A `const_pointer_cast`, unlike the other cast types, will definitely
+  // produce a pointer with the same storage location as the source, so we can
+  // test this cast more easily than the others.
+
+  provable(std::const_pointer_cast<int>(std::shared_ptr<const int>()) ==
+           nullptr);
+
+  auto p = std::make_shared<const int>();
+  provable(std::const_pointer_cast<int>(p).get() == p.get());
+  provable(p != nullptr);
+  std::const_pointer_cast<int>(std::move(p));
+  provable(!p);
+}
+
+// `S` and `S::i` are pointer-interconvertible.
+struct S {
+  int i;
+};
+
+TEST void reinterpretPointerCast(Nonnull<std::shared_ptr<S>> nonnullParam,
+                                 Nullable<std::shared_ptr<S>> nullableParam,
+                                 std::shared_ptr<S> unknownParam) {
+  // By the standard, the pointers we produce through `reinterpret_pointer_cast`
+  // in this test should have the same address, but the dataflow framework does
+  // not allow us to express this (as it requires different `StorageLocation`s
+  // for different types). Therefore, we need to test `reinterpret_pointer_cast`
+  // more indirectly, similar to `static_pointer_cast` and
+  // `dynamic_pointer_cast` above.
+
+  provable(std::reinterpret_pointer_cast<int>(std::shared_ptr<S>()) == nullptr);
+
+  nonnull(std::reinterpret_pointer_cast<int>(nonnullParam));
+  nullable(std::reinterpret_pointer_cast<int>(nullableParam));
+  unknown(std::reinterpret_pointer_cast<int>(unknownParam));
+
+  // Arguments are unchanged after calling const lvalue reference overload.
+  nonnull(nonnullParam);
+  nullable(nullableParam);
+  unknown(unknownParam);
+
+  nonnull(std::reinterpret_pointer_cast<int>(std::move(nonnullParam)));
+  nullable(std::reinterpret_pointer_cast<int>(std::move(nullableParam)));
+  unknown(std::reinterpret_pointer_cast<int>(std::move(unknownParam)));
+
+  // Arguments are empty after calling rvalue reference overload.
+  provable(!nonnullParam);
+  provable(!nullableParam);
+  provable(!unknownParam);
+}
+
+}  // namespace pointer_casts
+
 TEST void operatorEqualsAndNotEquals() {
   // We perform this test on `shared_ptr` rather than `unique_ptr` because it
   // allows us the test to be stronger: We can check that two different

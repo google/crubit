@@ -571,6 +571,79 @@ void transferValue_SmartPointerComparisonOpCall(
     State.Env.setValue(*OpCall, State.Env.makeNot(EqualityValue));
 }
 
+void transferValue_SharedPtrCastCall(
+    const CallExpr *CE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  Environment &Env = State.Env;
+  DataflowAnalysisContext &Ctx = Env.getDataflowAnalysisContext();
+  Arena &A = Env.arena();
+
+  auto *Callee = dyn_cast_or_null<FunctionDecl>(CE->getCalleeDecl());
+  if (Callee == nullptr) return;
+
+  auto *SrcLoc = cast_or_null<RecordStorageLocation>(
+      Env.getStorageLocation(*CE->getArg(0)));
+  if (SrcLoc == nullptr) return;
+  StorageLocation &SrcPtrLoc = SrcLoc->getSyntheticField(PtrField);
+  auto *SrcPtrVal = cast_or_null<PointerValue>(Env.getValue(SrcPtrLoc));
+  if (SrcPtrVal == nullptr) return;
+
+  RecordStorageLocation &DestLoc = Env.getResultObjectLocation(*CE);
+  // Create a `RecordValue`, associate it with the `DestLoc` and the expression.
+  Env.setValue(*CE, refreshRecordValue(DestLoc, Env));
+  StorageLocation &DestPtrLoc = DestLoc.getSyntheticField(PtrField);
+
+  if (Callee->getName() == "const_pointer_cast") {
+    // A `const_pointer_cast` will definitely produce a pointer with the same
+    // storage location as the source, so we can simply copy the underlying
+    // pointer value.
+    Env.setValue(DestPtrLoc, *SrcPtrVal);
+  } else {
+    auto &DestPtrVal =
+        *cast<PointerValue>(Env.createValue(DestPtrLoc.getType()));
+    initPointerNullState(DestPtrVal, Ctx);
+    State.Env.setValue(DestPtrLoc, DestPtrVal);
+
+    PointerNullState SrcNullability = getPointerNullState(*SrcPtrVal);
+    PointerNullState DestNullability = getPointerNullState(DestPtrVal);
+    assert(DestNullability.IsNull != nullptr);
+    assert(DestNullability.FromNullable != nullptr);
+
+    if (Callee->getName() == "dynamic_pointer_cast") {
+      // A `dynamic_pointer_cast` may fail. So source `IsNull` implies
+      // destination `IsNull` (but not the other way around), and the result is
+      // always nullable.
+      if (SrcNullability.IsNull != nullptr)
+        Env.assume(
+            A.makeImplies(*SrcNullability.IsNull, *DestNullability.IsNull));
+      Env.assume(*DestNullability.FromNullable);
+    } else {
+      if (SrcNullability.IsNull != nullptr)
+        Env.assume(
+            A.makeEquals(*SrcNullability.IsNull, *DestNullability.IsNull));
+      if (SrcNullability.FromNullable != nullptr)
+        Env.assume(A.makeEquals(*SrcNullability.FromNullable,
+                                *DestNullability.FromNullable));
+    }
+  }
+
+  // Is this an overload taking an rvalue reference?
+  if (Callee->getParamDecl(0)->getType()->isRValueReferenceType()) {
+    if (Callee->getName() == "dynamic_pointer_cast") {
+      // `dynamic_pointer_cast` sets its argument to null only if the cast
+      // succeeded. So if the argument wasn't yet nullable, replace it with a
+      // new nullable pointer.
+      PointerNullState SrcNullability = getPointerNullState(*SrcPtrVal);
+      if (SrcNullability.FromNullable == nullptr ||
+          !Env.proves(*SrcNullability.FromNullable))
+        setToPointerWithNullability(SrcPtrLoc, NullabilityKind::Nullable,
+                                    State.Env);
+    } else {
+      setSmartPointerToNull(*SrcLoc, State.Env);
+    }
+  }
+}
+
 void transferValue_WeakPtrLockCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -1225,6 +1298,8 @@ auto buildValueTransferer() {
       .CaseOfCFGStmt<CXXOperatorCallExpr>(
           isSmartPointerComparisonOpCall(),
           transferValue_SmartPointerComparisonOpCall)
+      .CaseOfCFGStmt<CallExpr>(isSharedPtrCastCall(),
+                               transferValue_SharedPtrCastCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isWeakPtrLockCall(),
                                         transferValue_WeakPtrLockCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),

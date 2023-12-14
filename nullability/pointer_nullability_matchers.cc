@@ -37,6 +37,7 @@ using ast_matchers::hasAnyOperatorName;
 using ast_matchers::hasAnyOverloadedOperatorName;
 using ast_matchers::hasArgument;
 using ast_matchers::hasBody;
+using ast_matchers::hasCanonicalType;
 using ast_matchers::hasCastKind;
 using ast_matchers::hasDeclaration;
 using ast_matchers::hasName;
@@ -158,6 +159,17 @@ Matcher<Stmt> isSmartPointerComparisonOpCall() {
                            hasType(isNullPtrType()))),
       hasArgument(1, anyOf(hasType(isSupportedSmartPointer()),
                            hasType(isNullPtrType()))));
+}
+
+Matcher<Stmt> isSharedPtrCastCall() {
+  return callExpr(
+      argumentCountIs(1),
+      hasArgument(0, hasType(hasCanonicalType(hasDeclaration(cxxRecordDecl(
+                         isInStdNamespace(), hasName("shared_ptr")))))),
+      callee(functionDecl(
+          isInStdNamespace(),
+          hasAnyName("static_pointer_cast", "dynamic_pointer_cast",
+                     "const_pointer_cast", "reinterpret_pointer_cast"))));
 }
 
 Matcher<Stmt> isWeakPtrLockCall() {

@@ -155,6 +155,8 @@ public:
   void reset(OtherT *, Deleter, Alloc) {}
 
   element_type* get() const;
+
+  explicit operator bool() const {}
 };
 
 // We're restricting ourselves to just some of the overloads that are required
@@ -176,6 +178,23 @@ template <class T, class Alloc>
 shared_ptr<T> allocate_shared_for_overwrite(const Alloc &);
 template <class T, class Alloc>
 shared_ptr<T> allocate_shared_for_overwrite(const Alloc &, size_t);
+
+template <class DestT, class SrcT>
+shared_ptr<DestT> static_pointer_cast(const shared_ptr<SrcT> &);
+template <class DestT, class SrcT>
+shared_ptr<DestT> static_pointer_cast(const shared_ptr<SrcT> &&);
+template <class DestT, class SrcT>
+shared_ptr<DestT> dynamic_pointer_cast(const shared_ptr<SrcT> &);
+template <class DestT, class SrcT>
+shared_ptr<DestT> dynamic_pointer_cast(const shared_ptr<SrcT> &&);
+template <class DestT, class SrcT>
+shared_ptr<DestT> const_pointer_cast(const shared_ptr<SrcT> &);
+template <class DestT, class SrcT>
+shared_ptr<DestT> const_pointer_cast(const shared_ptr<SrcT> &&);
+template <class DestT, class SrcT>
+shared_ptr<DestT> reinterpret_pointer_cast(const shared_ptr<SrcT> &);
+template <class DestT, class SrcT>
+shared_ptr<DestT> reinterpret_pointer_cast(const shared_ptr<SrcT> &&);
 
 template <class T1, class T2>
 bool operator==(const shared_ptr<T1> &, const shared_ptr<T2> &);

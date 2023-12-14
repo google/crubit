@@ -55,6 +55,7 @@ ast_matchers::internal::Matcher<Stmt> isSmartPointerFreeSwapCall();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerBoolConversionCall();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerFactoryCall();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerComparisonOpCall();
+ast_matchers::internal::Matcher<Stmt> isSharedPtrCastCall();
 ast_matchers::internal::Matcher<Stmt> isWeakPtrLockCall();
 ast_matchers::internal::Matcher<Stmt> isSupportedPointerAccessorCall();
 
