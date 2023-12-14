@@ -15,6 +15,7 @@ namespace clang::tidy::nullability {
 
 using ast_matchers::anyOf;
 using ast_matchers::argumentCountIs;
+using ast_matchers::arraySubscriptExpr;
 using ast_matchers::binaryOperator;
 using ast_matchers::booleanType;
 using ast_matchers::callee;
@@ -36,6 +37,7 @@ using ast_matchers::hasAnyName;
 using ast_matchers::hasAnyOperatorName;
 using ast_matchers::hasAnyOverloadedOperatorName;
 using ast_matchers::hasArgument;
+using ast_matchers::hasBase;
 using ast_matchers::hasBody;
 using ast_matchers::hasCanonicalType;
 using ast_matchers::hasCastKind;
@@ -76,6 +78,9 @@ Matcher<Stmt> isNullPointerLiteral() {
 Matcher<Stmt> isAddrOf() { return unaryOperator(hasOperatorName("&")); }
 Matcher<Stmt> isPointerDereference() {
   return unaryOperator(hasOperatorName("*"), hasUnaryOperand(isPointerExpr()));
+}
+Matcher<Stmt> isPointerSubscript() {
+  return arraySubscriptExpr(hasBase(isPointerExpr()));
 }
 Matcher<Stmt> isPointerCheckBinOp() {
   return binaryOperator(hasAnyOperatorName("!=", "=="),

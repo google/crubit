@@ -233,5 +233,19 @@ TEST(PointerNullabilityTest, ArrowOperatorOnUnknownPtr) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ArraySubscript) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int *_Nonnull nonnull, int *_Nullable nullable, int *unknown) {
+      nonnull[0];
+      nullable[0];  // [[unsafe]]
+      unknown[0];
+
+      0 [nonnull];
+      0 [nullable];  // [[unsafe]]
+      0 [unknown];
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

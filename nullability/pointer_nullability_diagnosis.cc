@@ -87,6 +87,15 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(
       PointerNullabilityDiagnostic::Context::NullableDereference);
 }
 
+SmallVector<PointerNullabilityDiagnostic> diagnoseSubscript(
+    absl::Nonnull<const ArraySubscriptExpr *> Subscript,
+    const MatchFinder::MatchResult &,
+    const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
+  return diagnoseNonnullExpected(
+      Subscript->getBase(), State.Env,
+      PointerNullabilityDiagnostic::Context::NullableDereference);
+}
+
 SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
     absl::Nonnull<const MemberExpr *> MemberExpr,
     const MatchFinder::MatchResult &Result,
@@ -329,6 +338,9 @@ PointerNullabilityDiagnoser pointerNullabilityDiagnoser() {
                                SmallVector<PointerNullabilityDiagnostic>>()
       // (*)
       .CaseOfCFGStmt<UnaryOperator>(isPointerDereference(), diagnoseDereference)
+      // ([])
+      .CaseOfCFGStmt<ArraySubscriptExpr>(isPointerSubscript(),
+                                         diagnoseSubscript)
       // (->)
       .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
       // Check compatibility of parameter assignments
