@@ -25,6 +25,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -37,6 +38,7 @@
 #include "llvm/ADT/APSInt.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
 
@@ -98,6 +100,18 @@ inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
 // and records), as well as location of comments and items we don't yet support.
 //  We use ItemIds for this.
 CRUBIT_DEFINE_STRONG_INT_TYPE(ItemId, uintptr_t);
+
+inline std::string DebugStringFromDecl(const clang::Decl* decl) {
+  auto canonical_decl_id =
+      reinterpret_cast<uintptr_t>(decl->getCanonicalDecl());
+  auto decl_id = reinterpret_cast<uintptr_t>(decl);
+  std::string decl_name;
+  auto ostream = llvm::raw_string_ostream(decl_name);
+  decl->print(ostream);
+  ostream.flush();
+  return absl::StrFormat("Canonical DeclID: %ull; DeclID: %ull; decl: %s",
+                         canonical_decl_id, decl_id, decl_name);
+}
 
 inline ItemId GenerateItemId(const clang::Decl* decl) {
   if (auto namespace_decl = clang::dyn_cast<clang::NamespaceDecl>(decl)) {

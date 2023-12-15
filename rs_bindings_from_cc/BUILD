@@ -314,6 +314,7 @@ cc_library(
         "@absl//absl/log:check",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
+        "@absl//absl/strings:str_format",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
