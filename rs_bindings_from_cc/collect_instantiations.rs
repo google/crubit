@@ -81,8 +81,7 @@ fn find_cc_template_calls(input: TokenStream, results: &mut HashSet<String>) {
                 // TODO(lukasza, hlopko): More explicitly ensure that the same canonicalization
                 // (e.g. TokenStream->String transformation) is used here and in
                 // `cc_template/cc_template_impl.rs`.
-                let instantiation_name = m.tokens.to_string();
-
+                let instantiation_name = m.tokens.to_string().replace(' ', "");
                 results.insert(instantiation_name);
             }
         }
@@ -138,7 +137,7 @@ mod tests {
         let result =
             write_file_and_collect_instantiations(quote! { cc_template!(MyTemplate<int>) })
                 .unwrap();
-        assert_eq!(result, vec!["MyTemplate < int >".to_string()]);
+        assert_eq!(result, vec!["MyTemplate<int>".to_string()]);
     }
 
     #[test]
@@ -146,7 +145,7 @@ mod tests {
         let result =
             write_file_and_collect_instantiations(quote! { cc_template![MyTemplate<int>] })
                 .unwrap();
-        assert_eq!(result, vec!["MyTemplate < int >".to_string()]);
+        assert_eq!(result, vec!["MyTemplate<int>".to_string()]);
     }
 
     #[test]
@@ -154,7 +153,7 @@ mod tests {
         let result =
             write_file_and_collect_instantiations(quote! { cc_template!{MyTemplate<int>} })
                 .unwrap();
-        assert_eq!(result, vec!["MyTemplate < int >".to_string()]);
+        assert_eq!(result, vec!["MyTemplate<int>".to_string()]);
     }
 
     #[test]
@@ -168,9 +167,9 @@ mod tests {
         assert_eq!(
             result,
             vec![
-                "MyTemplate < int >".to_string(),
-                "MyTemplate < long >".to_string(),
-                "MyTemplate < short >".to_string(),
+                "MyTemplate<int>".to_string(),
+                "MyTemplate<long>".to_string(),
+                "MyTemplate<short>".to_string(),
             ]
         );
     }
@@ -187,9 +186,9 @@ mod tests {
         assert_eq!(
             result,
             vec![
-                "MyTemplate < 42 >".to_string(),
-                "std :: unique_ptr < absl :: Time >".to_string(),
-                "std :: vector < Foo >".to_string(),
+                "MyTemplate<42>".to_string(),
+                "std::unique_ptr<absl::Time>".to_string(),
+                "std::vector<Foo>".to_string(),
             ]
         );
     }
@@ -203,7 +202,7 @@ mod tests {
             }
         })
         .unwrap();
-        assert_eq!(result, vec!["std :: vector < Foo >".to_string(),]);
+        assert_eq!(result, vec!["std::vector<Foo>".to_string(),]);
     }
 
     fn collect_instantiations_from_json(json: &str) -> String {
@@ -221,7 +220,7 @@ mod tests {
         );
         assert_eq!(
             collect_instantiations_from_json(&format!("[\"{}\"]", filename.display())),
-            "[\"std :: vector < bool >\",\"std :: vector < int >\"]"
+            "[\"std::vector<bool>\",\"std::vector<int>\"]"
         );
     }
 }

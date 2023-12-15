@@ -51,7 +51,7 @@ fn get_instantiation_struct_name(
     // TODO(lukasza, hlopko): More explicitly ensure that the same canonicalization
     // (e.g. TokenStream->String transformation) is used here and in
     // `rs_bindings_from_cc/collect_instantiations.rs`.
-    let instantiation_name = input.to_string();
+    let instantiation_name = input.to_string().replace(' ', "");
 
     match instantiations.get(&instantiation_name) {
         Some(concrete_struct_name) => {
@@ -139,9 +139,9 @@ mod tests {
     #[test]
     fn test_successful_expansion() {
         let expanded = get_instantiation_struct_name(
-            quote!{ std::vector<bool> },
+            quote! { std::vector<bool> },
             hashmap! {
-                quote!{ std::vector<bool> }.to_string() => "__std_vector__bool__".to_string(),
+                quote!{ std::vector<bool> }.to_string().replace(' ', "") => "__std_vector__bool__".to_string(),
             },
         )
         .unwrap();
