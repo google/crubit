@@ -1229,6 +1229,30 @@ void transferType_ThisExpr(absl::Nonnull<const CXXThisExpr *> TE,
   });
 }
 
+// We don't handle all cases of default arguments, because the expressions used
+// for the argument are not available in the CFG for the callsite, because the
+// AST nodes are children of the ParmVarDecl, not the CallExpr. Including them
+// in the CFG would be a significant undertaking, so for now, only handle
+// nullptr literals (and 0) and expressions whose types already include an
+// annotation, which we can handle with just this function and should represent
+// the majority of cases.
+void transferType_CXXDefaultArgExpr(
+    absl::Nonnull<const CXXDefaultArgExpr *> DAE,
+    const MatchFinder::MatchResult &MR,
+    TransferState<PointerNullabilityLattice> &State) {
+  computeNullability(DAE, State, [&]() {
+    // Handle nullptr constants
+    if (DAE->getExpr()->isNullPointerConstant(
+            DAE->getUsedContext()->getParentASTContext(),
+            Expr::NPC_ValueDependentIsNotNull)) {
+      return TypeNullability{NullabilityKind::Nullable};
+    }
+
+    // Handle annotated expressions
+    return getNullabilityAnnotationsFromType(DAE->getExpr()->getType());
+  });
+}
+
 auto buildTypeTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       .CaseOfCFGStmt<DeclRefExpr>(ast_matchers::declRefExpr(),
@@ -1252,6 +1276,8 @@ auto buildTypeTransferer() {
                                          transferType_ArraySubscriptExpr)
       .CaseOfCFGStmt<CXXThisExpr>(ast_matchers::cxxThisExpr(),
                                   transferType_ThisExpr)
+      .CaseOfCFGStmt<CXXDefaultArgExpr>(ast_matchers::cxxDefaultArgExpr(),
+                                        transferType_CXXDefaultArgExpr)
       .Build();
 }
 
