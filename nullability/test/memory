@@ -123,7 +123,7 @@ template <class T> class weak_ptr;
 template <class T>
 class shared_ptr {
 public:
-  using element_type = remove_extent<T>::type;
+  using element_type = typename remove_extent<T>::type;
 
   shared_ptr() {}
   template <class Deleter>
