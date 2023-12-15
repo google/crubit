@@ -34,7 +34,13 @@ extern "C" FfiU8SliceBox json_from_cc_dependency(
              std::string(StringViewFromFfiU8Slice(dependency_header_source))}},
        .headers_to_targets = {{HeaderName(std::string(kDependencyHeaderName)),
                                BazelLabel{std::string(kDependencyTarget)}}},
-       .clang_args = {"-target", StringViewFromFfiU8Slice(target_triple)}});
+       .clang_args = {
+           // The version should be consistent with the one passed by the C++
+           // toolchain.
+           "-std=gnu++20",
+           "-target",
+           StringViewFromFfiU8Slice(target_triple),
+       }});
 
   // TODO(forster): For now it is good enough to just exit: We are just
   // using this from tests, which are ok to just fail. Clang has already

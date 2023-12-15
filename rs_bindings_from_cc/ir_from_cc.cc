@@ -79,7 +79,6 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
                               kInstantiationsNamespaceName);
   }
   std::vector<std::string> args_as_strings = {
-      "-std=gnu++17",
       // Parse non-doc comments that are used as documentation
       "-fparse-all-comments"};
   args_as_strings.insert(args_as_strings.end(), options.clang_args.begin(),
