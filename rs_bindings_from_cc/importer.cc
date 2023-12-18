@@ -605,7 +605,7 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
     if (!filename) {
       return BazelLabel("//:_nothing_should_depend_on_private_builtin_hdrs");
     }
-    if (filename->startswith("./")) {
+    if (filename->starts_with("./")) {
       filename = filename->substr(2);
     }
 
