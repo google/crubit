@@ -191,6 +191,7 @@ cc_library(
 
 cc_test(
     name = "pointer_nullability_analysis_benchmark",
+    timeout = "long",
     srcs = ["pointer_nullability_analysis_benchmark.cc"],
     tags = ["benchmark"],
     deps = [
