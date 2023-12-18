@@ -1104,7 +1104,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         None => None,
     };
 
-    let method_kind = match tcx.hir().get_by_def_id(local_def_id) {
+    let method_kind = match tcx.hir_node_by_def_id(local_def_id) {
         Node::Item(_) => FunctionKind::Free,
         Node::ImplItem(_) => match tcx.fn_arg_names(def_id).get(0) {
             Some(arg_name) if arg_name.name == kw::SelfLower => {

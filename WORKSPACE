@@ -57,7 +57,7 @@ load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_regi
 
 rules_rust_dependencies()
 
-RUST_TOOLCHAIN_VERSION = "nightly/2023-10-01"
+RUST_TOOLCHAIN_VERSION = "nightly/2023-12-17"
 
 rust_register_toolchains(
     allocator_library = "@//common:rust_allocator_shims",
