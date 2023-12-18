@@ -47,15 +47,10 @@ where
     use once_cell::sync::Lazy;
     static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| {
         let early_error_handler = EarlyErrorHandler::new(ErrorOutputType::default());
-        #[cfg(google3_internal_rustc_contains_commit_581a317bbbbad807fd88eab490516787f1e9249e)]
         rustc_driver::init_logger(
             &early_error_handler,
             rustc_log::LoggerConfig::from_env("CRUBIT_LOG"),
         );
-        #[cfg(not(
-            google3_internal_rustc_contains_commit_581a317bbbbad807fd88eab490516787f1e9249e
-        ))]
-        rustc_driver::init_env_logger(&early_error_handler, "CRUBIT_LOG");
     });
     Lazy::force(&ENV_LOGGER_INIT);
 
