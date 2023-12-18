@@ -482,8 +482,7 @@ TEST void operatorEqualsAndNotEquals() {
   provable(nullptr != p1);
 }
 
-// TODO(b/316410576): re-enable after bug fix.
-// TEST void weakPtrLocReturnsNullable(std::shared_ptr<int> shared) {
-//  std::weak_ptr<int> weak(shared);
-//  nullable(weak.lock());
-// }
+TEST void weakPtrLocReturnsNullable(std::shared_ptr<int> shared) {
+  std::weak_ptr<int> weak(shared);
+  nullable(weak.lock());
+}

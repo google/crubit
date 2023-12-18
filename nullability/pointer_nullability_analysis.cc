@@ -574,6 +574,8 @@ void transferValue_SmartPointerComparisonOpCall(
 void transferValue_SharedPtrCastCall(
     const CallExpr *CE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
+  if (!smartPointersEnabled()) return;
+
   Environment &Env = State.Env;
   DataflowAnalysisContext &Ctx = Env.getDataflowAnalysisContext();
   Arena &A = Env.arena();
@@ -647,6 +649,8 @@ void transferValue_SharedPtrCastCall(
 void transferValue_WeakPtrLockCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
+  if (!smartPointersEnabled()) return;
+
   RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*MCE);
   // Create a `RecordValue`, associate it with the `Loc` and the expression.
   State.Env.setValue(*MCE, refreshRecordValue(Loc, State.Env));
@@ -1326,10 +1330,8 @@ auto buildValueTransferer() {
           transferValue_SmartPointerComparisonOpCall)
       .CaseOfCFGStmt<CallExpr>(isSharedPtrCastCall(),
                                transferValue_SharedPtrCastCall)
-      // TODO(b/316410576): Disabled because causing a crash in production
-      // pipeline.
-      // .CaseOfCFGStmt<CXXMemberCallExpr>(isWeakPtrLockCall(),
-      //                                  transferValue_WeakPtrLockCall)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isWeakPtrLockCall(),
+                                        transferValue_WeakPtrLockCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),

@@ -37,6 +37,8 @@ EnableSmartPointers::EnableSmartPointers() { SmartPointersEnabled = true; }
 
 }  // namespace test
 
+bool smartPointersEnabled() { return SmartPointersEnabled; }
+
 bool isSupportedPointerType(QualType T) {
   return isSupportedRawPointerType(T) || isSupportedSmartPointerType(T);
 }

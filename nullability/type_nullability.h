@@ -57,6 +57,9 @@ class EnableSmartPointers {
 
 }  // namespace test
 
+/// Returns whether support for smart pointers has been turned on.
+bool smartPointersEnabled();
+
 /// Is this exactly a pointer type that we track outer nullability for?
 /// This unwraps sugar, i.e. it looks at the canonical type.
 ///
