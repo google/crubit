@@ -18,9 +18,12 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/TemplateName.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
 #include "clang/AST/TypeVisitor.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
 #include "clang/Basic/Specifiers.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
@@ -135,12 +138,22 @@ std::optional<NullabilityKind> getAliasNullability(const TemplateName &TN) {
 }
 
 namespace {
+FileID getGoverningFile(absl::Nullable<const Decl *> D) {
+  if (!D) return FileID();
+  return D->getASTContext()
+      .getSourceManager()
+      .getDecomposedExpansionLoc(D->getLocation())
+      .first;
+}
+
 // Traverses a Type to find the points where it might be nullable.
 // This will visit the contained PointerType in the correct order to produce
 // the TypeNullability vector.
 //
-// Subclasses must provide `void report(const Type*, NullabilityKind)`,
-// and may override TypeVisitor Visit*Type methods to customize the traversal.
+// Subclasses must provide
+//   `void report(const Type*, FileID, optional<NullabilityKind>)`
+//   (the FileID is the one whose #pragma governs the type)
+// They may override TypeVisitor Visit*Type methods to customize the traversal.
 //
 // Canonically-equivalent Types produce equivalent sequences of report() calls:
 //  - corresponding pointer Types are canonically-equivalent
@@ -154,6 +167,9 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   // There may be sugar in between: Attributed -> Typedef -> Typedef -> Pointer.
   // All non-sugar types must consume nullability, most will ignore it.
   std::optional<NullabilityKind> PendingNullability;
+
+  // The file whose #pragma governs the type currently being walked.
+  FileID File;
 
   void sawNullability(NullabilityKind NK) {
     // If we see nullability applied twice, the outer one wins.
@@ -192,6 +208,8 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     // The sugared template arguments to AssociatedDecl, as written in the code.
     // If absent, the arguments could not be reconstructed.
     std::optional<ArrayRef<TemplateArgument>> Args;
+    // The file whose #pragma governs types written in Args.
+    FileID ArgsFile;
     // In general, multiple template params are in scope (nested templates).
     // These are a linked list: *this describes one, *Extends describes the
     // next. In practice, this is the enclosing class template.
@@ -296,6 +314,8 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   }
 
  public:
+  NullabilityWalker(FileID File) : File(File) {}
+
   void Visit(QualType T) { Base::Visit(T.getTypePtr()); }
   void Visit(const TemplateArgument &TA) {
     if (TA.getKind() == TemplateArgument::Type) Visit(TA.getAsType());
@@ -345,10 +365,13 @@ class NullabilityWalker : public TypeVisitor<Impl> {
       const TemplateContext Ctx{
           /*AssociatedDecl=*/TST->getTemplateName().getAsTemplateDecl(),
           /*Args=*/TST->template_arguments(),
+          /*ArgsFile=*/File,
           /*Extends=*/CurrentTemplateContext,
           /*ArgContext=*/CurrentTemplateContext,
       };
       llvm::SaveAndRestore UseAlias(CurrentTemplateContext, &Ctx);
+      llvm::SaveAndRestore SwitchFile(
+          File, getGoverningFile(TST->getTemplateName().getAsTemplateDecl()));
       VisitType(TST);
       return;
     }
@@ -356,8 +379,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     auto *CRD = TST->getAsCXXRecordDecl();
     CHECK(CRD) << "Expected an alias or class specialization in concrete code";
     if (isSupportedSmartPointerType(QualType(TST, 0))) {
-      derived().report(
-          TST, PendingNullability.value_or(NullabilityKind::Unspecified));
+      derived().report(TST, File, PendingNullability);
       PendingNullability.reset();
     } else {
       ignoreUnexpectedNullability();
@@ -402,6 +424,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
         // argument was written.
         llvm::SaveAndRestore OriginalContext(
             CurrentTemplateContext, CurrentTemplateContext->ArgContext);
+        llvm::SaveAndRestore SwitchFile(File, Ctx->ArgsFile);
         return Visit(Arg);
       }
     }
@@ -430,6 +453,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
               dyn_cast_or_null<TemplateSpecializationType>(NNS->getAsType())) {
         TemplateContext Ctx;
         Ctx.Args = TST->template_arguments();
+        Ctx.ArgsFile = File;
         Ctx.ArgContext = CurrentTemplateContext;
         // `Extends` is initialized below: we chain BoundTemplateArgs together.
         Ctx.AssociatedDecl =
@@ -450,10 +474,14 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     Visit(ET->getNamedType());
   }
 
+  void VisitTypedefType(const TypedefType *T) {
+    llvm::SaveAndRestore SwitchFile(File, getGoverningFile(T->getDecl()));
+    VisitType(T);
+  }
+
   void VisitRecordType(absl::Nonnull<const RecordType *> RT) {
     if (isSupportedSmartPointerType(QualType(RT, 0))) {
-      derived().report(
-          RT, PendingNullability.value_or(NullabilityKind::Unspecified));
+      derived().report(RT, File, PendingNullability);
       PendingNullability.reset();
     } else {
       ignoreUnexpectedNullability();
@@ -475,8 +503,7 @@ class NullabilityWalker : public TypeVisitor<Impl> {
   }
 
   void VisitPointerType(absl::Nonnull<const PointerType *> PT) {
-    derived().report(PT,
-                     PendingNullability.value_or(NullabilityKind::Unspecified));
+    derived().report(PT, File, PendingNullability);
     PendingNullability.reset();
     Visit(PT->getPointeeType());
   }
@@ -493,8 +520,12 @@ class NullabilityWalker : public TypeVisitor<Impl> {
 };
 
 struct CountWalker : public NullabilityWalker<CountWalker> {
+  CountWalker() : NullabilityWalker(FileID()) {}
   unsigned Count = 0;
-  void report(absl::Nonnull<const Type *>, NullabilityKind) { ++Count; }
+  void report(absl::Nonnull<const Type *>, FileID,
+              std::optional<NullabilityKind>) {
+    ++Count;
+  }
 };
 }  // namespace
 
@@ -526,17 +557,30 @@ unsigned countPointersInType(absl::Nonnull<const Expr *> E) {
   return countPointersInType(exprType(E));
 }
 
-TypeNullability getNullabilityAnnotationsFromType(
-    QualType T,
+NullabilityKind TypeNullabilityDefaults::get(FileID File) const {
+  if (FileNullability && File.isValid())
+    if (auto It = FileNullability->find(File); It != FileNullability->end())
+      return It->second;
+  return DefaultNullability;
+}
+
+TypeNullability getTypeNullability(
+    QualType T, FileID File, const TypeNullabilityDefaults &Defaults,
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam) {
   CHECK(!T->isDependentType()) << T.getAsString();
 
   struct Walker : NullabilityWalker<Walker> {
     std::vector<PointerTypeNullability> Annotations;
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam;
+    const TypeNullabilityDefaults &Defaults;
 
-    void report(absl::Nonnull<const Type *>, NullabilityKind NK) {
-      Annotations.push_back(NK);
+    Walker(FileID File, const TypeNullabilityDefaults &Defaults)
+        : NullabilityWalker(File), Defaults(Defaults) {}
+
+    void report(absl::Nonnull<const Type *>, FileID File,
+                std::optional<NullabilityKind> NK) {
+      if (!NK) NK = Defaults.get(File);
+      Annotations.push_back(*NK);
     }
 
     void VisitSubstTemplateTypeParmType(
@@ -553,11 +597,37 @@ TypeNullability getNullabilityAnnotationsFromType(
       }
       NullabilityWalker::VisitSubstTemplateTypeParmType(ST);
     }
-  } AnnotationVisitor;
+  } AnnotationVisitor(File, Defaults);
 
   AnnotationVisitor.SubstituteTypeParam = SubstituteTypeParam;
   AnnotationVisitor.Visit(T);
   return std::move(AnnotationVisitor.Annotations);
+}
+
+TypeNullability getTypeNullability(
+    TypeLoc TL, const TypeNullabilityDefaults &Defaults,
+    llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam) {
+  return getTypeNullability(TL.getType(),
+                            Defaults.Ctx
+                                ? Defaults.Ctx->getSourceManager().getFileID(
+                                      TL.getLocalSourceRange().getBegin())
+                                : FileID(),
+                            Defaults, SubstituteTypeParam);
+}
+
+TypeNullability getTypeNullability(
+    const ValueDecl &D, const TypeNullabilityDefaults &Defaults,
+    llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam) {
+  return getTypeNullability(D.getType(), getGoverningFile(&D), Defaults,
+                            SubstituteTypeParam);
+}
+
+TypeNullability getTypeNullability(
+    const TypeDecl &D, const TypeNullabilityDefaults &Defaults,
+    llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam) {
+  return getTypeNullability(D.getASTContext().getTypeDeclType(&D),
+                            getGoverningFile(&D), Defaults,
+                            SubstituteTypeParam);
 }
 
 TypeNullability unspecifiedNullability(absl::Nonnull<const Expr *> E) {

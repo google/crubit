@@ -150,6 +150,7 @@ cc_library(
         "//nullability/test:__pkg__",
     ],
     deps = [
+        ":pragma",
         "@absl//absl/base:nullability",
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
@@ -163,10 +164,12 @@ cc_test(
     name = "type_nullability_test",
     srcs = ["type_nullability_test.cc"],
     deps = [
+        ":pragma",
         ":type_nullability",
         "@absl//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
+        "@llvm-project//clang:frontend",
         "@llvm-project//clang:testing",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",

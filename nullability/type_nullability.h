@@ -32,13 +32,18 @@
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
+#include "nullability/pragma.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/Type.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 
 namespace clang::tidy::nullability {
@@ -166,14 +171,66 @@ std::string nullabilityToString(const TypeNullability &Nullability);
 /// substituted template parameter (which has no sugar of its own).
 using GetTypeParamNullability =
     std::optional<TypeNullability>(const SubstTemplateTypeParmType *ST);
+
+/// Describes how we should interpret unannotated pointer types (like `int*`).
+/// Typically these are treated as Unknown, and this behavior can be overridden
+/// by per-file pragmas.
+struct TypeNullabilityDefaults {
+  // TODO(sammccall): remove this legacy constructor that ignores pragmas
+  TypeNullabilityDefaults() : Ctx(nullptr), FileNullability(nullptr) {}
+  TypeNullabilityDefaults(ASTContext &Ctx, const NullabilityPragmas &Pragmas)
+      : Ctx(&Ctx), FileNullability(&Pragmas) {}
+
+  // Get the effective default nullability for a particular file.
+  NullabilityKind get(FileID) const;
+
+  // The AST context is needed to resolve the associated file in some cases.
+  // TODO(sammccall): this should always be provided, clean up callers.
+  absl::Nullable<ASTContext *> Ctx;
+  // The nullability of pointer types in this translation unit, where no
+  // nullability annotations or pragmas apply.
+  NullabilityKind DefaultNullability = NullabilityKind::Unspecified;
+  // Files where per-file pragmas have changed the default nullability.
+  // TODO(sammccall)): this should always be provided, clean up callers.
+  absl::Nullable<const NullabilityPragmas *> FileNullability;
+};
+
 /// Traverse over a type to get its nullability. For example, if T is the type
 /// Struct3Arg<int * _Nonnull, int, pair<int * _Nullable, int *>> * _Nonnull,
 /// the resulting nullability annotations will be {_Nonnull, _Nonnull,
 /// _Nullable, _Unknown}. Note that non-pointer elements (e.g., the second
 /// argument of Struct3Arg) do not get a nullability annotation.
-TypeNullability getNullabilityAnnotationsFromType(
-    QualType T,
+
+/// Extract nullability of a clang type written somewhere in the code.
+///
+/// The file where it is written affects the interpretation of unannotated
+/// pointer types.
+/// Where possible, prefer the foolproof TypeLoc or Decl overloads.
+TypeNullability getTypeNullability(
+    QualType, FileID, const TypeNullabilityDefaults &,
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam = nullptr);
+
+TypeNullability getTypeNullability(
+    TypeLoc, const TypeNullabilityDefaults &,
+    llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam = nullptr);
+
+TypeNullability getTypeNullability(
+    const ValueDecl &, const TypeNullabilityDefaults &,
+    llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam = nullptr);
+
+TypeNullability getTypeNullability(
+    const TypeDecl &, const TypeNullabilityDefaults &,
+    llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam = nullptr);
+
+/// Legacy getTypeNullability variant; treats unannotated pointers as Unknown.
+/// Per-file pragmas are ignored.
+/// TODO(sammccall): clean up all callers and remove this.
+inline TypeNullability getNullabilityAnnotationsFromType(
+    QualType T,
+    llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam = nullptr) {
+  TypeNullabilityDefaults LegacyDefaults;
+  return getTypeNullability(T, FileID(), LegacyDefaults, SubstituteTypeParam);
+}
 
 /// Prints QualType's underlying canonical type, annotated with nullability.
 /// See rebuildWithNullability().

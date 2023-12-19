@@ -4,12 +4,17 @@
 
 #include "nullability/type_nullability.h"
 
+#include <memory>
 #include <string>
 
 #include "absl/log/check.h"
+#include "nullability/pragma.h"
+#include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Specifiers.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendActions.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
@@ -182,17 +187,39 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
 class GetNullabilityAnnotationsFromTypeTest : public ::testing::Test {
  protected:
   // C++ declarations prepended before parsing type in nullVec().
+  TestInputs Inputs;
+  std::string &Header;
   std::string Preamble;
+
+  GetNullabilityAnnotationsFromTypeTest()
+      : Header(Inputs.ExtraFiles["header.h"]) {
+    Inputs.ExtraArgs.push_back("-include");
+    Inputs.ExtraArgs.push_back("header.h");
+  }
 
   // Parses `Type` and returns getNullabilityAnnotationsFromType().
   TypeNullability nullVec(llvm::StringRef Type) {
-    clang::TestAST AST((Preamble + "\nusing Target = " + Type + ";").str());
+    NullabilityPragmas Pragmas;
+    Inputs.Code = (Preamble + "\nusing Target = " + Type + ";").str();
+    Inputs.MakeAction = [&] {
+      struct Action : public SyntaxOnlyAction {
+        NullabilityPragmas &Pragmas;
+        Action(NullabilityPragmas &Pragmas) : Pragmas(Pragmas) {}
+
+        std::unique_ptr<ASTConsumer> CreateASTConsumer(
+            CompilerInstance &CI, llvm::StringRef File) override {
+          registerPragmaHandler(CI.getPreprocessor(), Pragmas);
+          return SyntaxOnlyAction::CreateASTConsumer(CI, File);
+        }
+      };
+      return std::make_unique<Action>(Pragmas);
+    };
+    TestAST AST(Inputs);
     auto Target = AST.context().getTranslationUnitDecl()->lookup(
         &AST.context().Idents.get("Target"));
     CHECK(Target.isSingleResult());
-    QualType TargetType =
-        AST.context().getTypedefType(Target.find_first<TypeAliasDecl>());
-    return getNullabilityAnnotationsFromType(TargetType);
+    return getTypeNullability(*Target.find_first<TypeAliasDecl>(),
+                              TypeNullabilityDefaults(AST.context(), Pragmas));
   }
 };
 
@@ -206,7 +233,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, Pointers) {
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, Sugar) {
-  Preamble = "using X = int* _Nonnull;";
+  Header = "using X = int* _Nonnull;";
 
   EXPECT_THAT(nullVec("X"), ElementsAre(NullabilityKind::NonNull));
   EXPECT_THAT(nullVec("X*"), ElementsAre(NullabilityKind::Unspecified,
@@ -236,7 +263,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, Arrays) {
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <typename T>
     using Nullable = T _Nullable;
     template <typename T>
@@ -253,7 +280,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
               ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable,
                           NullabilityKind::NonNull));
 
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <typename T, typename U>
     struct Pair;
     template <typename T>
@@ -263,7 +290,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
       nullVec("Two<int* _Nullable>"),
       ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable));
 
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <typename T1>
     using A = T1 *_Nullable;
     template <typename T2>
@@ -272,7 +299,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
   EXPECT_THAT(nullVec("B<int>"),
               ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
 
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <typename T, typename U, typename V>
     struct Triple;
     template <typename A, typename... Rest>
@@ -282,7 +309,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
               ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable,
                           NullabilityKind::Unspecified));
 
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class... Ts>
     using First = __type_pack_element<0, Ts...>;
   )cpp";
@@ -292,7 +319,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentAlias) {
   // Simple dependent type-aliases.
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class T>
     struct Nullable {
       using type = T _Nullable;
@@ -304,7 +331,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentAlias) {
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassTemplate) {
   // Simple struct inside template.
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class T>
     struct Outer {
       struct Inner;
@@ -317,7 +344,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassTemplate) {
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassInstantiation) {
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class T, class U>
     struct Pair;
     template <class T, class U>
@@ -344,7 +371,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassInstantiation) {
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, ReferenceOuterTemplateParam) {
   // Referencing type-params from indirectly-enclosing template.
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class A, class B>
     struct Pair;
 
@@ -359,7 +386,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, ReferenceOuterTemplateParam) {
   EXPECT_THAT(nullVec("Outer<int *_Nullable>::Inner<int *_Nonnull>::type"),
               ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
   // Same where Inner is an alias template.
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class A, class B>
     struct Pair;
 
@@ -374,7 +401,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, ReferenceOuterTemplateParam) {
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, MixedQualiferChain) {
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class A, class B>
     class Pair;
 
@@ -422,7 +449,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, MixedQualiferChain) {
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentlyNamedTemplate) {
   // Instantiation of dependent-named template
-  Preamble = R"cpp(
+  Header = R"cpp(
     struct Wrapper {
       template <class T>
       using Nullable = T _Nullable;
@@ -438,7 +465,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentlyNamedTemplate) {
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, PartialSpecialization) {
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class>
     struct S;
     template <class T>
@@ -451,7 +478,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, PartialSpecialization) {
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateTemplateParams) {
   // Template template params
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class X>
     struct Nullable {
       using type = X _Nullable;
@@ -471,7 +498,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateTemplateParams) {
   EXPECT_THAT(nullVec("Pointer<Nullable, Pointer<Nonnull, int>::type>::type"),
               ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
   // Same thing, but with alias templates.
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class X>
     using Nullable = X _Nullable;
     template <class X>
@@ -490,7 +517,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateTemplateParams) {
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateParamPack) {
   // Parameter packs
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class... X>
     struct TupleWrapper {
       class Tuple;
@@ -512,8 +539,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateParamPack) {
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplateWithDefaultArg) {
-  Preamble =
-      "template <typename T1, typename T2 = T1> using AliasTemplate = T2;";
+  Header = "template <typename T1, typename T2 = T1> using AliasTemplate = T2;";
 
   // TODO(b/281474380): This should be [Nullable], but we don't yet handle
   // default arguments correctly.
@@ -522,7 +548,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplateWithDefaultArg) {
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateWithDefaultArg) {
-  Preamble = "template <typename T1, typename T2 = T1> class ClassTemplate {};";
+  Header = "template <typename T1, typename T2 = T1> class ClassTemplate {};";
 
   // TODO(b/281474380): This should be [Nullable, Nullable], but we don't yet
   // handle default arguments correctly.
@@ -532,7 +558,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateWithDefaultArg) {
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateArgsBehindAlias) {
-  Preamble = R"cpp(
+  Header = R"cpp(
     template <class X>
     struct Outer {
       using Inner = X;
@@ -545,7 +571,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateArgsBehindAlias) {
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, AnnotateNullable) {
-  Preamble = R"cpp(
+  Header = R"cpp(
     namespace custom {
     template <class T>
     using Nullable [[clang::annotate("Nullable")]] = T;
@@ -569,7 +595,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AnnotateNullable) {
               ElementsAre(NullabilityKind::NonNull, NullabilityKind::NonNull));
 
   // Should still work if aliases *do* apply _Nullable.
-  Preamble = R"cpp(
+  Header = R"cpp(
     namespace custom {
     template <class T>
     using Nullable [[clang::annotate("Nullable")]] = T _Nullable;
@@ -584,7 +610,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, AnnotateNullable) {
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, SmartPointers) {
-  Preamble = R"cpp(
+  Header = R"cpp(
     namespace std {
     template <class T>
     class unique_ptr {};
@@ -603,6 +629,78 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, SmartPointers) {
   EXPECT_THAT(
       nullVec("NonNull<std::unique_ptr<Nullable<std::unique_ptr<int>>>>"),
       ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, Pragma) {
+  EXPECT_THAT(nullVec("int*"), ElementsAre(NullabilityKind::Unspecified));
+  Preamble = "#pragma nullability file_default nonnull";
+  EXPECT_THAT(nullVec("int*"), ElementsAre(NullabilityKind::NonNull));
+  Preamble = "#pragma nullability file_default nullable";
+  EXPECT_THAT(nullVec("int*"), ElementsAre(NullabilityKind::Nullable));
+  Preamble = "#pragma nullability file_default unspecified";
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, PragmaTypedef) {
+  Inputs.ExtraFiles["p.h"] = R"cpp(
+#pragma nullability file_default nullable
+    typedef int *P;
+  )cpp";
+  Header = R"cpp(
+#include "p.h"
+#pragma nullability file_default nonnull
+    using PP = P*;
+  )cpp";
+  EXPECT_THAT(nullVec("PP*"),
+              ElementsAre(NullabilityKind::Unspecified,
+                          NullabilityKind::NonNull, NullabilityKind::Nullable));
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, PragmaMacroUsesExpansionLoc) {
+  Header = R"cpp(
+#pragma nullability file_default nonnull
+#define P int*
+#define PTR(X) X*
+  )cpp";
+  Preamble = "#pragma nullability file_default nullable";
+  // Ideally we'd track the spelling location of the `*`, but instead we just
+  // use the expansion location.
+  EXPECT_THAT(nullVec("P*"), ElementsAre(NullabilityKind::Nullable,
+                                         NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("PTR(int*)"), ElementsAre(NullabilityKind::Nullable,
+                                                NullabilityKind::Nullable));
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, PragmaTemplate) {
+  Header = R"cpp(
+#pragma nullability file_default nonnull
+
+    template <class X>
+    using P = X*;
+
+    template <class X>
+    struct S {
+      using P = X*;
+    };
+  )cpp";
+  // int* is written in the main file, so the main file's "unspecified" applies.
+  EXPECT_THAT(nullVec("P<int*>"), ElementsAre(NullabilityKind::NonNull,
+                                              NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("S<int*>::P"), ElementsAre(NullabilityKind::NonNull,
+                                                 NullabilityKind::Unspecified));
+}
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, LostSugarCausesWrongType) {
+  Preamble = "#pragma nullability file_default nonnull";
+  Header = R"cpp(
+#pragma nullability file_default nullable
+    using NullablePointer = int*;
+
+    auto identity(auto X) { return X; }
+  )cpp";
+  Inputs.ExtraArgs.push_back("-std=c++20");
+  // identity() destroys sugar, so we incorrectly use main-file's "nonnull".
+  EXPECT_THAT(nullVec("decltype(identity(NullablePointer{}))"),
+              ElementsAre(NullabilityKind::NonNull));
 }
 
 class PrintWithNullabilityTest : public ::testing::Test {
