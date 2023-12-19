@@ -4,8 +4,8 @@ load(
     "rust_bindings_from_cc_cli_flag",
 )
 load(
-    "//rs_bindings_from_cc/test/golden:generate_bindings.bzl",
-    "generate_bindings",
+    "//rs_bindings_from_cc/test/golden:golden_test.bzl",
+    "golden_test",
 )
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
@@ -64,39 +64,12 @@ rust_bindings_from_cc_cli_flag(
     ],
 ) for name in TESTS]
 
-[generate_bindings(
-    name = name + "_generated_bindings",
-    cc_library = name + "_cc",
-) for name in TESTS]
-
-[filegroup(
-    name = name + "_rs_file",
-    srcs = [name + "_generated_bindings"],
-    output_group = "rust_file",
-) for name in TESTS]
-
-[filegroup(
-    name = name + "_cc_file",
-    srcs = [name + "_generated_bindings"],
-    output_group = "cc_file",
-) for name in TESTS]
-
-[sh_test(
+[golden_test(
     name = name + "_test",
-    srcs = ["test.sh"],
-    args = [
-        "$(location %s_rs_api_impl.cc)" % name,
-        "$(location %s_cc_file)" % name,
-        "$(location %s_rs_api.rs)" % name,
-        "$(location %s_rs_file)" % name,
-    ],
-    data = [
-        name + "_rs_api_impl.cc",
-        name + "_cc_file",
-        name + "_rs_api.rs",
-        name + "_rs_file",
-        "LICENSE_HEADER",
-    ],
+    basename = name,
+    cc_library = name + "_cc",
+    golden_cc = name + "_rs_api_impl.cc",
+    golden_rs = name + "_rs_api.rs",
     tags = [tag for tag in (TAGS[name] if name in TAGS else [])],
 ) for name in TESTS]
 
@@ -115,29 +88,11 @@ cc_library(
     copts = ["-Wno-google3-inline-namespace"],
 )
 
-generate_bindings(
-    name = "namespaces_json_generated_bindings",
-    cc_library = "namespaces_json",
-)
-
-filegroup(
-    name = "namespaces_json_file",
-    srcs = ["namespaces_json_generated_bindings"],
-    output_group = "namespaces_file",
-)
-
-sh_test(
+golden_test(
     name = "namespaces_json_test",
-    srcs = ["test.sh"],
-    args = [
-        "$(location namespaces_json.json)",
-        "$(location namespaces_json_file)",
-    ],
-    data = [
-        "LICENSE_HEADER",
-        ":namespaces_json.json",
-        ":namespaces_json_file",
-    ],
+    basename = "namespaces_json",
+    cc_library = "namespaces_json",
+    golden_namespaces = "namespaces_json.json",
 )
 
 # Only there so build-cleaner doesn't try to add separate targets for generated files.
@@ -148,8 +103,8 @@ filegroup(
 )
 
 bzl_library(
-    name = "generate_bindings_bzl",
-    srcs = ["generate_bindings.bzl"],
+    name = "golden_test",
+    srcs = ["golden_test.bzl"],
     visibility = ["//visibility:private"],
     deps = [
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect",

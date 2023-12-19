@@ -27,8 +27,8 @@ for header in *.h; do
   if [[ "${HEADERS_TO_SKIP[@]}" =~ "${header}" ]]; then
     continue;
   fi
-  TARGETS+=(":${header%.h}_cc_file")
-  TARGETS+=(":${header%.h}_rs_file")
+  TARGETS+=(":${header%.h}.cc_file")
+  TARGETS+=(":${header%.h}.rs_file")
 done
 
 BUILD_EVENT_PROTOCOL_JSON="${G3}/${PKG}/build_event_protocol.json"

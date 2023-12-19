@@ -7,16 +7,22 @@ function prepend_license() {
   cat rs_bindings_from_cc/test/golden/LICENSE_HEADER "$1"
 }
 
-diff -u "$1" <(prepend_license "$2")
-STATUS1=$?
+STATUS=0
+while (("$#" != 0))
+do
+  if [ "$#" == 1 ]; then
+    echo >&2 "INTERNAL ERROR: test.sh requires an even number of arguments."
+    exit 1
+  fi
+  diff -u "$1" <(prepend_license "$2")
+  NEW_STATUS="$?"
+  if [ $STATUS == 0 ]; then
+    STATUS="$NEW_STATUS"
+  fi
+  shift 2
+done
 
-if [ "$#" == 2 ]; then
-  STATUS2=0
-else
-  diff -u "$3" <(prepend_license "$4")
-  STATUS2=$?
-fi
-
-if (($STATUS1 != 0 || $STATUS2 != 0)); then
+if (($STATUS != 0)); then
+  echo >&2 "To regenerate the goldens, run rs_bindings_from_cc/test/golden/update.sh"
   exit 1
 fi
