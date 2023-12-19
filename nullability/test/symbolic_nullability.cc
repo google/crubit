@@ -4,8 +4,8 @@
 
 #include "nullability_test.h"
 
-TEST void symbolicNullability(symbolic::X<int *> p, symbolic::Y<int *> q) {
-  type<symbolic::X<int *>>(p);
-  type<Nonnull<symbolic::X<int *> *>>(&p);
-  type<symbolic::Y<int *>>(q);
+TEST void symbolicNullability(symbolic::X<int *> P, symbolic::Y<int *> Q) {
+  type<symbolic::X<int *>>(P);
+  type<Nonnull<symbolic::X<int *> *>>(&P);
+  type<symbolic::Y<int *>>(Q);
 }

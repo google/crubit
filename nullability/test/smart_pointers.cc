@@ -23,12 +23,12 @@ Nonnull<int *> makeNonnullRaw();
 Nullable<int *> makeNullableRaw();
 int *makeUnknownRaw();
 
-TEST void parameterAnnotations(Nonnull<std::unique_ptr<int>> nonnullParam,
-                               Nullable<std::unique_ptr<int>> nullableParam,
-                               std::unique_ptr<int> unknownParam) {
-  nonnull(nonnullParam);
-  nullable(nullableParam);
-  unknown(unknownParam);
+TEST void parameterAnnotations(Nonnull<std::unique_ptr<int>> NonnullParam,
+                               Nullable<std::unique_ptr<int>> NullableParam,
+                               std::unique_ptr<int> UnknownParam) {
+  nonnull(NonnullParam);
+  nullable(NullableParam);
+  unknown(UnknownParam);
 }
 
 TEST void returnValueAnnotations() {
@@ -77,196 +77,196 @@ TEST void constructorTakingPointer_ArrayVersion() {
       std::unique_ptr<int[]>(makeUnknownRaw(), std::default_delete<int[]>()));
 }
 
-TEST void moveConstructor(Nonnull<std::unique_ptr<int>> nonnullParam,
-                          Nullable<std::unique_ptr<int>> nullableParam,
-                          std::unique_ptr<int> unknownParam) {
-  nonnull(std::unique_ptr<int>(std::move(nonnullParam)));
-  nullable(std::unique_ptr<int>(std::move(nullableParam)));
-  unknown(std::unique_ptr<int>(std::move(unknownParam)));
+TEST void moveConstructor(Nonnull<std::unique_ptr<int>> NonnullParam,
+                          Nullable<std::unique_ptr<int>> NullableParam,
+                          std::unique_ptr<int> UnknownParam) {
+  nonnull(std::unique_ptr<int>(std::move(NonnullParam)));
+  nullable(std::unique_ptr<int>(std::move(NullableParam)));
+  unknown(std::unique_ptr<int>(std::move(UnknownParam)));
 
-  nullable(nonnullParam);
-  nullable(nullableParam);
-  nullable(unknownParam);
+  nullable(NonnullParam);
+  nullable(NullableParam);
+  nullable(UnknownParam);
 }
 
-TEST void sharedPtrFromUniquePtr(Nonnull<std::unique_ptr<int>> nonnullParam,
-                                 Nullable<std::unique_ptr<int>> nullableParam,
-                                 std::unique_ptr<int> unknownParam) {
-  nonnull(std::shared_ptr<int>(std::move(nonnullParam)));
-  nullable(std::shared_ptr<int>(std::move(nullableParam)));
-  unknown(std::shared_ptr<int>(std::move(unknownParam)));
+TEST void sharedPtrFromUniquePtr(Nonnull<std::unique_ptr<int>> NonnullParam,
+                                 Nullable<std::unique_ptr<int>> NullableParam,
+                                 std::unique_ptr<int> UnknownParam) {
+  nonnull(std::shared_ptr<int>(std::move(NonnullParam)));
+  nullable(std::shared_ptr<int>(std::move(NullableParam)));
+  unknown(std::shared_ptr<int>(std::move(UnknownParam)));
 
-  nullable(nonnullParam);
-  nullable(nullableParam);
-  nullable(unknownParam);
+  nullable(NonnullParam);
+  nullable(NullableParam);
+  nullable(UnknownParam);
 }
 
-TEST void copyConstructor(Nonnull<std::shared_ptr<int>> nonnullParam,
-                          Nullable<std::shared_ptr<int>> nullableParam,
-                          std::shared_ptr<int> unknownParam) {
-  nonnull(std::shared_ptr<int>(nonnullParam));
-  nullable(std::shared_ptr<int>(nullableParam));
-  unknown(std::shared_ptr<int>(unknownParam));
+TEST void copyConstructor(Nonnull<std::shared_ptr<int>> NonnullParam,
+                          Nullable<std::shared_ptr<int>> NullableParam,
+                          std::shared_ptr<int> UnknownParam) {
+  nonnull(std::shared_ptr<int>(NonnullParam));
+  nullable(std::shared_ptr<int>(NullableParam));
+  unknown(std::shared_ptr<int>(UnknownParam));
 
-  nonnull(nonnullParam);
-  nullable(nullableParam);
-  unknown(unknownParam);
+  nonnull(NonnullParam);
+  nullable(NullableParam);
+  unknown(UnknownParam);
 }
 
-TEST void aliasingConstructor(Nonnull<std::shared_ptr<int>> nonnullParam) {
-  nullable(std::shared_ptr<int>(nonnullParam, nullptr));
-  nonnull(nonnullParam);
+TEST void aliasingConstructor(Nonnull<std::shared_ptr<int>> NonnullParam) {
+  nullable(std::shared_ptr<int>(NonnullParam, nullptr));
+  nonnull(NonnullParam);
 
-  nullable(std::shared_ptr<int>(std::move(nonnullParam), nullptr));
-  nullable(nonnullParam);
+  nullable(std::shared_ptr<int>(std::move(NonnullParam), nullptr));
+  nullable(NonnullParam);
 }
 
-TEST void sharedPtrFromWeakPtr(std::weak_ptr<int> weak) {
-  nonnull(std::shared_ptr<int>(weak));
+TEST void sharedPtrFromWeakPtr(std::weak_ptr<int> Weak) {
+  nonnull(std::shared_ptr<int>(Weak));
 }
 
 TEST void nullptrAssignment() {
-  std::unique_ptr<int> p = makeUnknown();
-  unknown(p);
-  p = nullptr;
-  nullable(p);
+  std::unique_ptr<int> P = makeUnknown();
+  unknown(P);
+  P = nullptr;
+  nullable(P);
 }
 
-TEST void moveAssignment(Nonnull<std::unique_ptr<int>> nonnullParam,
-                         Nullable<std::unique_ptr<int>> nullableParam,
-                         std::unique_ptr<int> unknownParam) {
-  std::unique_ptr<int> nonnullLocal;
-  nonnull(nonnullLocal = std::move(nonnullParam));
-  std::unique_ptr<int> nullableLocal;
-  nullable(nullableLocal = std::move(nullableParam));
-  std::unique_ptr<int> unknownLocal;
-  unknown(unknownLocal = std::move(unknownParam));
+TEST void moveAssignment(Nonnull<std::unique_ptr<int>> NonnullParam,
+                         Nullable<std::unique_ptr<int>> NullableParam,
+                         std::unique_ptr<int> UnknownParam) {
+  std::unique_ptr<int> NonnullLocal;
+  nonnull(NonnullLocal = std::move(NonnullParam));
+  std::unique_ptr<int> NullableLocal;
+  nullable(NullableLocal = std::move(NullableParam));
+  std::unique_ptr<int> UnknownLocal;
+  unknown(UnknownLocal = std::move(UnknownParam));
 
-  nullable(nonnullParam);
-  nullable(nullableParam);
-  nullable(unknownParam);
+  nullable(NonnullParam);
+  nullable(NullableParam);
+  nullable(UnknownParam);
 }
 
-TEST void copyAssignment(Nonnull<std::shared_ptr<int>> nonnullParam,
-                         Nullable<std::shared_ptr<int>> nullableParam,
-                         std::shared_ptr<int> unknownParam) {
-  std::shared_ptr<int> nonnullLocal;
-  nonnull(nonnullLocal = nonnullParam);
-  std::shared_ptr<int> nullableLocal;
-  nullable(nullableLocal = nullableParam);
-  std::shared_ptr<int> unknownLocal;
-  unknown(unknownLocal = unknownParam);
+TEST void copyAssignment(Nonnull<std::shared_ptr<int>> NonnullParam,
+                         Nullable<std::shared_ptr<int>> NullableParam,
+                         std::shared_ptr<int> UnknownParam) {
+  std::shared_ptr<int> NonnullLocal;
+  nonnull(NonnullLocal = NonnullParam);
+  std::shared_ptr<int> NullableLocal;
+  nullable(NullableLocal = NullableParam);
+  std::shared_ptr<int> UnknownLocal;
+  unknown(UnknownLocal = UnknownParam);
 
-  nonnull(nonnullParam);
-  nullable(nullableParam);
-  unknown(unknownParam);
+  nonnull(NonnullParam);
+  nullable(NullableParam);
+  unknown(UnknownParam);
 }
 
-TEST void release(Nonnull<std::unique_ptr<int>> nonnullParam,
-                  Nullable<std::unique_ptr<int>> nullableParam,
-                  std::unique_ptr<int> unknownParam) {
-  nonnull(nonnullParam.release());
-  nullable(nullableParam.release());
-  unknown(unknownParam.release());
+TEST void release(Nonnull<std::unique_ptr<int>> NonnullParam,
+                  Nullable<std::unique_ptr<int>> NullableParam,
+                  std::unique_ptr<int> UnknownParam) {
+  nonnull(NonnullParam.release());
+  nullable(NullableParam.release());
+  unknown(UnknownParam.release());
 
-  nullable(nonnullParam);
-  nullable(nullableParam);
-  nullable(unknownParam);
+  nullable(NonnullParam);
+  nullable(NullableParam);
+  nullable(UnknownParam);
 }
 
 TEST void reset() {
   {
-    auto p = std::make_unique<int>();
-    p.reset();
-    provable(p.get() == nullptr);
+    auto P = std::make_unique<int>();
+    P.reset();
+    provable(P.get() == nullptr);
   }
 
   {
-    std::unique_ptr<int> p;
-    int *raw = new int();
-    p.reset(raw);
-    provable(p.get() == raw);
+    std::unique_ptr<int> P;
+    int *Raw = new int();
+    P.reset(Raw);
+    provable(P.get() == Raw);
   }
 
   {
-    auto p = std::make_unique<int[]>(1);
-    p.reset();
-    provable(p.get() == nullptr);
+    auto P = std::make_unique<int[]>(1);
+    P.reset();
+    provable(P.get() == nullptr);
   }
 
   {
-    auto p = std::make_unique<int[]>(1);
-    p.reset(nullptr);
-    provable(p.get() == nullptr);
+    auto P = std::make_unique<int[]>(1);
+    P.reset(nullptr);
+    provable(P.get() == nullptr);
   }
 
   {
-    std::unique_ptr<int[]> p;
-    int *raw = new int[1];
-    p.reset(raw);
-    provable(p.get() == raw);
+    std::unique_ptr<int[]> P;
+    int *Raw = new int[1];
+    P.reset(Raw);
+    provable(P.get() == Raw);
   }
 
   {
-    auto p = std::make_shared<int>();
-    p.reset();
-    provable(p.get() == nullptr);
+    auto P = std::make_shared<int>();
+    P.reset();
+    provable(P.get() == nullptr);
   }
 
   {
-    std::shared_ptr<int> p;
-    int *raw = new int();
-    p.reset(raw);
-    provable(p.get() == raw);
+    std::shared_ptr<int> P;
+    int *Raw = new int();
+    P.reset(Raw);
+    provable(P.get() == Raw);
   }
 
   {
-    std::shared_ptr<int> p;
-    int *raw = new int();
-    p.reset(raw, std::default_delete<int>());
-    provable(p.get() == raw);
+    std::shared_ptr<int> P;
+    int *Raw = new int();
+    P.reset(Raw, std::default_delete<int>());
+    provable(P.get() == Raw);
   }
 
   {
-    std::shared_ptr<int> p;
-    int *raw = new int();
-    p.reset(raw, std::default_delete<int>(), std::allocator<int>());
-    provable(p.get() == raw);
+    std::shared_ptr<int> P;
+    int *Raw = new int();
+    P.reset(Raw, std::default_delete<int>(), std::allocator<int>());
+    provable(P.get() == Raw);
   }
 }
 
 TEST void swap() {
   {
-    auto p1 = std::make_unique<int>();
-    auto p2 = std::make_unique<int>();
-    int *raw1 = p1.get();
-    int *raw2 = p2.get();
-    p1.swap(p2);
-    provable(p1.get() == raw2);
-    provable(p2.get() == raw1);
+    auto P1 = std::make_unique<int>();
+    auto P2 = std::make_unique<int>();
+    int *Raw1 = P1.get();
+    int *Raw2 = P2.get();
+    P1.swap(P2);
+    provable(P1.get() == Raw2);
+    provable(P2.get() == Raw1);
   }
 
   {
-    auto p1 = std::make_unique<int>();
-    auto p2 = std::make_unique<int>();
-    int *raw1 = p1.get();
-    int *raw2 = p2.get();
-    std::swap(p1, p2);
-    provable(p1.get() == raw2);
-    provable(p2.get() == raw1);
+    auto P1 = std::make_unique<int>();
+    auto P2 = std::make_unique<int>();
+    int *Raw1 = P1.get();
+    int *Raw2 = P2.get();
+    std::swap(P1, P2);
+    provable(P1.get() == Raw2);
+    provable(P2.get() == Raw1);
   }
 }
 
-TEST void get(int *raw) {
-  std::unique_ptr<int> null;
-  provable(null.get() == nullptr);
+TEST void get(int *Raw) {
+  std::unique_ptr<int> Null;
+  provable(Null.get() == nullptr);
 
-  std::unique_ptr<int> p(raw);
-  provable(p.get() == raw);
+  std::unique_ptr<int> P(Raw);
+  provable(P.get() == Raw);
 
   // Test `->method()` call syntax.
-  provable((&null)->get() == nullptr);
-  provable((&p)->get() == raw);
+  provable((&Null)->get() == nullptr);
+  provable((&P)->get() == Raw);
 }
 
 TEST void operatorBool() {
@@ -274,16 +274,16 @@ TEST void operatorBool() {
   provable(static_cast<bool>(std::make_unique<int>()));
 
   // Test `->method()` call syntax.
-  auto p = std::make_unique<int>();
-  provable((&p)->operator bool());
+  auto P = std::make_unique<int>();
+  provable((&P)->operator bool());
 }
 
 TEST void operatorStar() {
-  auto p = std::make_unique<bool>();
-  *p = false;
-  provable(!*p);
-  *p = true;
-  provable(*p);
+  auto P = std::make_unique<bool>();
+  *P = false;
+  provable(!*P);
+  *P = true;
+  provable(*P);
 
   // TODO(mboehme): We'd like to be able to write the following, but the
   // dataflow framework currently doesn't consider two different `PointerValue`s
@@ -291,15 +291,15 @@ TEST void operatorStar() {
   // Instead, we need to take a slightly more indirect approach to testing
   // `operator*()`, see above. Once we have better pointer comparisons in the
   // framework, replace the test above with the test below.
-  // auto p = std::make_unique<int>();
-  // provable(p.get() == &*p);
+  // auto P = std::make_unique<int>();
+  // provable(P.get() == &*P);
 }
 
 TEST void operatorArrow() {
-  std::unique_ptr<std::unique_ptr<int>> pp;
-  int *raw = new int();
-  pp->reset(raw);
-  provable(pp->get() == raw);
+  std::unique_ptr<std::unique_ptr<int>> PP;
+  int *Raw = new int();
+  PP->reset(Raw);
+  provable(PP->get() == Raw);
 
   // TODO(mboehme): Replace the more indirect test above with this test below
   // once the framework considers two different `PointerValue`s with the same
@@ -308,8 +308,8 @@ TEST void operatorArrow() {
   struct S {
     int i;
   };
-  auto p = std::make_unique<S>();
-  provable(&p.get()->b == &p->b);
+  auto P = std::make_unique<S>();
+  provable(&P.get()->b == &P->b);
 #endif
 }
 
@@ -346,64 +346,64 @@ struct Derived : public Base {
   ~Derived() override;
 };
 
-TEST void staticPointerCast(Nonnull<std::shared_ptr<Base>> nonnullParam,
-                            Nullable<std::shared_ptr<Base>> nullableParam,
-                            std::shared_ptr<Base> unknownParam) {
+TEST void staticPointerCast(Nonnull<std::shared_ptr<Base>> NonnullParam,
+                            Nullable<std::shared_ptr<Base>> NullableParam,
+                            std::shared_ptr<Base> UnknownParam) {
   provable(std::static_pointer_cast<Derived>(std::shared_ptr<Base>()) ==
            nullptr);
 
-  nonnull(std::static_pointer_cast<Derived>(nonnullParam));
-  nullable(std::static_pointer_cast<Derived>(nullableParam));
-  unknown(std::static_pointer_cast<Derived>(unknownParam));
+  nonnull(std::static_pointer_cast<Derived>(NonnullParam));
+  nullable(std::static_pointer_cast<Derived>(NullableParam));
+  unknown(std::static_pointer_cast<Derived>(UnknownParam));
 
   // Arguments are unchanged after calling const lvalue reference overload.
-  nonnull(nonnullParam);
-  nullable(nullableParam);
-  unknown(unknownParam);
+  nonnull(NonnullParam);
+  nullable(NullableParam);
+  unknown(UnknownParam);
 
-  nonnull(std::static_pointer_cast<Derived>(std::move(nonnullParam)));
-  nullable(std::static_pointer_cast<Derived>(std::move(nullableParam)));
-  unknown(std::static_pointer_cast<Derived>(std::move(unknownParam)));
+  nonnull(std::static_pointer_cast<Derived>(std::move(NonnullParam)));
+  nullable(std::static_pointer_cast<Derived>(std::move(NullableParam)));
+  unknown(std::static_pointer_cast<Derived>(std::move(UnknownParam)));
 
   // Arguments are empty after calling rvalue reference overload.
-  provable(!nonnullParam);
-  provable(!nullableParam);
-  provable(!unknownParam);
+  provable(!NonnullParam);
+  provable(!NullableParam);
+  provable(!UnknownParam);
 }
 
-TEST void dynamicPointerCast(Nonnull<std::shared_ptr<Base>> nonnullParam,
-                             Nullable<std::shared_ptr<Base>> nullableParam,
-                             std::shared_ptr<Base> unknownParam) {
+TEST void dynamicPointerCast(Nonnull<std::shared_ptr<Base>> NonnullParam,
+                             Nullable<std::shared_ptr<Base>> NullableParam,
+                             std::shared_ptr<Base> UnknownParam) {
   provable(std::dynamic_pointer_cast<Derived>(std::shared_ptr<Base>()) ==
            nullptr);
 
-  nullable(std::dynamic_pointer_cast<Derived>(nonnullParam));
-  nullable(std::dynamic_pointer_cast<Derived>(nullableParam));
-  nullable(std::dynamic_pointer_cast<Derived>(unknownParam));
+  nullable(std::dynamic_pointer_cast<Derived>(NonnullParam));
+  nullable(std::dynamic_pointer_cast<Derived>(NullableParam));
+  nullable(std::dynamic_pointer_cast<Derived>(UnknownParam));
 
   // Arguments are unchanged after calling const lvalue reference overload.
-  nonnull(nonnullParam);
-  nullable(nullableParam);
-  unknown(unknownParam);
+  nonnull(NonnullParam);
+  nullable(NullableParam);
+  unknown(UnknownParam);
 
-  nullable(std::dynamic_pointer_cast<Derived>(std::move(nonnullParam)));
-  nullable(std::dynamic_pointer_cast<Derived>(std::move(nullableParam)));
-  nullable(std::dynamic_pointer_cast<Derived>(std::move(unknownParam)));
+  nullable(std::dynamic_pointer_cast<Derived>(std::move(NonnullParam)));
+  nullable(std::dynamic_pointer_cast<Derived>(std::move(NullableParam)));
+  nullable(std::dynamic_pointer_cast<Derived>(std::move(UnknownParam)));
 
-  // Arguments are nullable (but not provably null) after calling rvalue
+  // Arguments are nullable (but not provably Null) after calling rvalue
   // reference overload (because they may or may not have been moved from).
-  nullable(nonnullParam);
-  nullable(nullableParam);
-  nullable(unknownParam);
-  possible(nonnullParam != nullptr);
-  possible(nullableParam != nullptr);
-  possible(unknownParam != nullptr);
+  nullable(NonnullParam);
+  nullable(NullableParam);
+  nullable(UnknownParam);
+  possible(NonnullParam != nullptr);
+  possible(NullableParam != nullptr);
+  possible(UnknownParam != nullptr);
 
-  // However, if the argument was null, then it should remain null (and not just
+  // However, if the argument was Null, then it should remain Null (and not just
   // nullable) after calling the rvalue reference overload.
-  std::shared_ptr<Base> null;
-  provable(std::dynamic_pointer_cast<Derived>(null) == nullptr);
-  provable(null == nullptr);
+  std::shared_ptr<Base> Null;
+  provable(std::dynamic_pointer_cast<Derived>(Null) == nullptr);
+  provable(Null == nullptr);
 }
 
 TEST void constPointerCast() {
@@ -414,21 +414,21 @@ TEST void constPointerCast() {
   provable(std::const_pointer_cast<int>(std::shared_ptr<const int>()) ==
            nullptr);
 
-  auto p = std::make_shared<const int>();
-  provable(std::const_pointer_cast<int>(p).get() == p.get());
-  provable(p != nullptr);
-  std::const_pointer_cast<int>(std::move(p));
-  provable(!p);
+  auto P = std::make_shared<const int>();
+  provable(std::const_pointer_cast<int>(P).get() == P.get());
+  provable(P != nullptr);
+  std::const_pointer_cast<int>(std::move(P));
+  provable(!P);
 }
 
-// `S` and `S::i` are pointer-interconvertible.
+// `S` and `S::I` are pointer-interconvertible.
 struct S {
-  int i;
+  int I;
 };
 
-TEST void reinterpretPointerCast(Nonnull<std::shared_ptr<S>> nonnullParam,
-                                 Nullable<std::shared_ptr<S>> nullableParam,
-                                 std::shared_ptr<S> unknownParam) {
+TEST void reinterpretPointerCast(Nonnull<std::shared_ptr<S>> NonnullParam,
+                                 Nullable<std::shared_ptr<S>> NullableParam,
+                                 std::shared_ptr<S> UnknownParam) {
   // By the standard, the pointers we produce through `reinterpret_pointer_cast`
   // in this test should have the same address, but the dataflow framework does
   // not allow us to express this (as it requires different `StorageLocation`s
@@ -438,23 +438,23 @@ TEST void reinterpretPointerCast(Nonnull<std::shared_ptr<S>> nonnullParam,
 
   provable(std::reinterpret_pointer_cast<int>(std::shared_ptr<S>()) == nullptr);
 
-  nonnull(std::reinterpret_pointer_cast<int>(nonnullParam));
-  nullable(std::reinterpret_pointer_cast<int>(nullableParam));
-  unknown(std::reinterpret_pointer_cast<int>(unknownParam));
+  nonnull(std::reinterpret_pointer_cast<int>(NonnullParam));
+  nullable(std::reinterpret_pointer_cast<int>(NullableParam));
+  unknown(std::reinterpret_pointer_cast<int>(UnknownParam));
 
   // Arguments are unchanged after calling const lvalue reference overload.
-  nonnull(nonnullParam);
-  nullable(nullableParam);
-  unknown(unknownParam);
+  nonnull(NonnullParam);
+  nullable(NullableParam);
+  unknown(UnknownParam);
 
-  nonnull(std::reinterpret_pointer_cast<int>(std::move(nonnullParam)));
-  nullable(std::reinterpret_pointer_cast<int>(std::move(nullableParam)));
-  unknown(std::reinterpret_pointer_cast<int>(std::move(unknownParam)));
+  nonnull(std::reinterpret_pointer_cast<int>(std::move(NonnullParam)));
+  nullable(std::reinterpret_pointer_cast<int>(std::move(NullableParam)));
+  unknown(std::reinterpret_pointer_cast<int>(std::move(UnknownParam)));
 
   // Arguments are empty after calling rvalue reference overload.
-  provable(!nonnullParam);
-  provable(!nullableParam);
-  provable(!unknownParam);
+  provable(!NonnullParam);
+  provable(!NullableParam);
+  provable(!UnknownParam);
 }
 
 }  // namespace pointer_casts
@@ -462,27 +462,27 @@ TEST void reinterpretPointerCast(Nonnull<std::shared_ptr<S>> nonnullParam,
 TEST void operatorEqualsAndNotEquals() {
   // We perform this test on `shared_ptr` rather than `unique_ptr` because it
   // allows us the test to be stronger: We can check that two different
-  // `shared_ptr`s with the same underlying raw pointer compare equal. We can't
+  // `shared_ptr`s with the same underlying Raw pointer compare equal. We can't
   // test this with `unique_ptr` because it is, well, unique.
-  auto p1 = std::make_shared<int>();
-  auto p2 = std::make_shared<int>();
-  std::shared_ptr<int> null;
+  auto P1 = std::make_shared<int>();
+  auto P2 = std::make_shared<int>();
+  std::shared_ptr<int> Null;
 
-  provable(p1 == p1);
-  provable(p1 == std::shared_ptr<int>(p1));
-  provable(null == std::shared_ptr<int>());
+  provable(P1 == P1);
+  provable(P1 == std::shared_ptr<int>(P1));
+  provable(Null == std::shared_ptr<int>());
 
-  provable(p1 != p2);
-  provable(p1 != null);
-  provable(p2 != null);
+  provable(P1 != P2);
+  provable(P1 != Null);
+  provable(P2 != Null);
 
-  provable(null == nullptr);
-  provable(p1 != nullptr);
-  provable(nullptr == null);
-  provable(nullptr != p1);
+  provable(Null == nullptr);
+  provable(P1 != nullptr);
+  provable(nullptr == Null);
+  provable(nullptr != P1);
 }
 
-TEST void weakPtrLocReturnsNullable(std::shared_ptr<int> shared) {
-  std::weak_ptr<int> weak(shared);
-  nullable(weak.lock());
+TEST void weakPtrLocReturnsNullable(std::shared_ptr<int> Shared) {
+  std::weak_ptr<int> Weak(Shared);
+  nullable(Weak.lock());
 }

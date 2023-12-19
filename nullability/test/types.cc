@@ -14,12 +14,12 @@ bool cond();
 int *merged(int *, int *);
 int *_Nullable merged(int *_Nullable, int *);
 int *merged(int *, Nullable<int *>);
-TEST int *merged(int *a, int *b) {
-  type<Nullable<int *>>(a);   // _Nullable attributes are merged
-  type<int *>(b);             // clang::annotate-based attributes are not merged
+TEST int *merged(int *A, int *B) {
+  type<Nullable<int *>>(A);  // _Nullable attributes are merged
+  type<int *>(B);            // clang::annotate-based attributes are not merged
   // Put a condition in front of recursive call to prevent error message about
   // infinite recursion.
-  if (cond()) type<int *>(merged(a, b));  // return types are not merged
+  if (cond()) type<int *>(merged(A, B));  // return types are not merged
 
   return nullptr;
 }
