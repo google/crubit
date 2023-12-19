@@ -245,7 +245,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
   // - Skip member callees, as they are not pointers at all (rather "bound
   //   member function type").
   //   Note that in `(obj.*nullable_pmf)()` the deref is *before* the call.
-  if (!CE->getDirectCallee() && !isa<CXXMemberCallExpr>(CE)) {
+  if (!CE->getDirectCallee() &&
+      !CE->getCallee()->hasPlaceholderType(BuiltinType::BoundMember)) {
     auto D =
         diagnoseNonnullExpected(CE->getCallee(), State.Env,
                                 PointerNullabilityDiagnostic::Context::Other);

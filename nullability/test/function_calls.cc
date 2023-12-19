@@ -888,5 +888,16 @@ TEST(PointerNullabilityTest, MethodNoParamsUndefinedValue) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CallPseudoDestructor) {
+  // Repro for assertion failure:
+  // We used to assert-fail on calls to `CXXPseudoDestructorExpr` because we
+  // didn't detect that they were "bound member function types" (with which we
+  // don't associate nullability as they aren't pointers).
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    using Int = int;
+    void target(Int i) { i.~Int(); }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
