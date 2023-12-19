@@ -96,7 +96,7 @@ Matcher<Stmt> isPointerArrow() { return memberExpr(isArrow()); }
 Matcher<Stmt> isCXXThisExpr() { return cxxThisExpr(); }
 Matcher<Stmt> isCallExpr() { return callExpr(); }
 Matcher<Stmt> isPointerReturn() {
-  return returnStmt(hasReturnValue(hasType(isSupportedRawPointer())));
+  return returnStmt(hasReturnValue(hasType(isSupportedPointer())));
 }
 Matcher<Stmt> isConstructExpr() { return cxxConstructExpr(); }
 Matcher<CXXCtorInitializer> isCtorMemberInitializer() {

@@ -504,8 +504,8 @@ void transferValue_SmartPointerBoolConversionCall(
 void transferValue_SmartPointerOperatorStar(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (PointerValue *Val = getPointerValueFromSmartPointerGLValue(
-          OpCall->getArg(0), State.Env)) {
+  if (PointerValue *Val =
+          getPointerValueFromSmartPointerExpr(OpCall->getArg(0), State.Env)) {
     State.Env.setStorageLocation(*OpCall, Val->getPointeeLoc());
   }
 }
@@ -513,8 +513,8 @@ void transferValue_SmartPointerOperatorStar(
 void transferValue_SmartPointerOperatorArrow(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (PointerValue *Val = getPointerValueFromSmartPointerGLValue(
-          OpCall->getArg(0), State.Env)) {
+  if (PointerValue *Val =
+          getPointerValueFromSmartPointerExpr(OpCall->getArg(0), State.Env)) {
     State.Env.setValue(*OpCall, *Val);
   }
 }
@@ -543,11 +543,11 @@ void transferValue_SmartPointerComparisonOpCall(
 
   PointerValue *Val1 = nullptr;
   if (!NullPtr1)
-    Val1 = getPointerValueFromSmartPointerGLValue(OpCall->getArg(0), State.Env);
+    Val1 = getPointerValueFromSmartPointerExpr(OpCall->getArg(0), State.Env);
 
   PointerValue *Val2 = nullptr;
   if (!NullPtr2)
-    Val2 = getPointerValueFromSmartPointerGLValue(OpCall->getArg(1), State.Env);
+    Val2 = getPointerValueFromSmartPointerExpr(OpCall->getArg(1), State.Env);
 
   if (NullPtr1) {
     if (Val2 == nullptr) return;

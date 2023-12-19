@@ -47,15 +47,62 @@ TEST(SmartPointerTest, Subscript) {
   )cc"));
 }
 
-TEST(SmartPointerTest, ReturnValue_Nonnull) {
+TEST(SmartPointerTest, FunctionParameters) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>
-    bool cond();
-    Nonnull<std::unique_ptr<int>> target() {
-      if (cond())
-        return std::make_unique<int>(0);
-      else
-        return std::unique_ptr<int>();  // TODO(b/304963199): False negative.
+    void TakeNonnull(Nonnull<std::shared_ptr<int>>);
+    void TakeNullable(Nullable<std::shared_ptr<int>>);
+    void TakeUnannotated(std::shared_ptr<int>);
+    void target(Nonnull<std::shared_ptr<int>> NonnullPtr,
+                Nullable<std::shared_ptr<int>> NullablePtr,
+                std::shared_ptr<int> UnannotatedPtr) {
+      TakeNonnull(std::shared_ptr<int>());  // [[unsafe]]
+      TakeNonnull(NonnullPtr);
+      TakeNonnull(NullablePtr);  // [[unsafe]]
+      TakeNonnull(UnannotatedPtr);
+
+      TakeNullable(std::shared_ptr<int>());
+      TakeNullable(NonnullPtr);
+      TakeNullable(NullablePtr);
+      TakeNullable(UnannotatedPtr);
+
+      TakeUnannotated(std::shared_ptr<int>());
+      TakeUnannotated(NonnullPtr);
+      TakeUnannotated(NullablePtr);
+      TakeUnannotated(UnannotatedPtr);
+    }
+  )cc"));
+}
+
+TEST(SmartPointerTest, ConstructorParameters) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct TakeNonnull {
+      TakeNonnull(Nonnull<std::shared_ptr<int>>);
+    };
+    struct TakeNullable {
+      TakeNullable(Nullable<std::shared_ptr<int>>);
+    };
+    struct TakeUnannotated {
+      TakeUnannotated(std::shared_ptr<int>);
+    };
+    void target(Nonnull<std::shared_ptr<int>> NonnullPtr,
+                Nullable<std::shared_ptr<int>> NullablePtr,
+                std::shared_ptr<int> UnannotatedPtr) {
+      TakeNonnull{std::shared_ptr<int>()};  // [[unsafe]]
+      TakeNonnull{NonnullPtr};
+      TakeNonnull{NullablePtr};  // [[unsafe]]
+      TakeNonnull{UnannotatedPtr};
+
+      TakeNullable{std::shared_ptr<int>()};
+      TakeNullable{NonnullPtr};
+      TakeNullable{NullablePtr};
+      TakeNullable{UnannotatedPtr};
+
+      TakeUnannotated{std::shared_ptr<int>()};
+      TakeUnannotated{NonnullPtr};
+      TakeUnannotated{NullablePtr};
+      TakeUnannotated{UnannotatedPtr};
     }
   )cc"));
 }
@@ -83,6 +130,51 @@ TEST(SmartPointerTest, ReturnValue_Unknown) {
       else
         return std::unique_ptr<int>();
     }
+  )cc"));
+}
+
+TEST(SmartPointerTest, InitializeMemberWithNonnull) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct target {
+      target(Nonnull<std::shared_ptr<int>> NonnullPtr)
+          : NonnullMember(NonnullPtr),
+            NullableMember(NonnullPtr),
+            UnannotatedMember(NonnullPtr) {}
+      Nonnull<std::shared_ptr<int>> NonnullMember;
+      Nullable<std::shared_ptr<int>> NullableMember;
+      std::shared_ptr<int> UnannotatedMember;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest, InitializeMemberWithNullable) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct target {
+      target(Nullable<std::shared_ptr<int>> NullablePtr)
+          : NonnullMember(NullablePtr),  // [[unsafe]]
+            NullableMember(NullablePtr),
+            UnannotatedMember(NullablePtr) {}
+      Nonnull<std::shared_ptr<int>> NonnullMember;
+      Nullable<std::shared_ptr<int>> NullableMember;
+      std::shared_ptr<int> UnannotatedMember;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest, InitializeMemberWithUnannotated) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct target {
+      target(std::shared_ptr<int> UnannotatedPtr)
+          : NonnullMember(UnannotatedPtr),
+            NullableMember(UnannotatedPtr),
+            UnannotatedMember(UnannotatedPtr) {}
+      Nonnull<std::shared_ptr<int>> NonnullMember;
+      Nullable<std::shared_ptr<int>> NullableMember;
+      std::shared_ptr<int> UnannotatedMember;
+    };
   )cc"));
 }
 

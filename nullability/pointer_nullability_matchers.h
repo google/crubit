@@ -14,6 +14,10 @@ namespace clang {
 namespace tidy {
 namespace nullability {
 
+AST_MATCHER(QualType, isSupportedPointer) {
+  return isSupportedPointerType(Node);
+}
+
 AST_MATCHER(QualType, isSupportedRawPointer) {
   return isSupportedRawPointerType(Node);
 }

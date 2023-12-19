@@ -50,7 +50,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
   if (isSupportedRawPointerType(E->getType()))
     ActualVal = getPointerValueFromExpr(E, Env);
   else
-    ActualVal = getPointerValueFromSmartPointerGLValue(E, Env);
+    ActualVal = getPointerValueFromSmartPointerExpr(E, Env);
   if (ActualVal != nullptr) {
     if (isNullable(*ActualVal, Env))
       return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
@@ -62,8 +62,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
   LLVM_DEBUG({
     llvm::dbgs()
         << "The dataflow analysis framework does not model a PointerValue "
-           "for "
-           "the following Expr, and thus its dereference is marked as "
+           "for the following Expr, and thus its dereference is marked as "
            "unsafe:\n";
     E->dump();
   });
@@ -78,7 +77,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseTypeExprCompatibility(
     const Environment &Env, ASTContext &Ctx,
     PointerNullabilityDiagnostic::Context DiagCtx,
     std::optional<std::string> ParamName = std::nullopt) {
-  CHECK(isSupportedRawPointerType(DeclaredType));
+  CHECK(isSupportedPointerType(DeclaredType));
   return getNullabilityAnnotationsFromType(DeclaredType).front().concrete() ==
                  NullabilityKind::NonNull
              ? diagnoseNonnullExpected(E, Env, DiagCtx, ParamName)
@@ -137,7 +136,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArgumentCompatibility(
   SmallVector<PointerNullabilityDiagnostic> Diagnostics;
   for (unsigned int I = 0; I < Args.size(); ++I) {
     auto ParamType = ParamTypes[I].getNonReferenceType();
-    if (isSupportedRawPointerType(ParamType)) {
+    if (isSupportedPointerType(ParamType)) {
       std::string ParamName = (I < ParmDecls.size())
                                   ? ParmDecls[I]->getDeclName().getAsString()
                                   : "";
@@ -321,12 +320,12 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
   auto ReturnType = cast<FunctionDecl>(State.Env.getDeclCtx())->getReturnType();
 
   // TODO: Handle non-pointer return types.
-  if (!isSupportedRawPointerType(ReturnType)) {
+  if (!isSupportedPointerType(ReturnType)) {
     return {};
   }
 
   auto *ReturnExpr = RS->getRetValue();
-  CHECK(isSupportedRawPointerType(ReturnExpr->getType()));
+  CHECK(isSupportedPointerType(ReturnExpr->getType()));
 
   return diagnoseTypeExprCompatibility(
       ReturnType, ReturnExpr, State.Env, *Result.Context,
@@ -339,7 +338,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   CHECK(CI->isAnyMemberInitializer());
   auto MemberType = CI->getAnyMember()->getType();
-  if (!isSupportedRawPointerType(MemberType)) return {};
+  if (!isSupportedPointerType(MemberType)) return {};
 
   auto *MemberInitExpr = CI->getInit();
   return diagnoseTypeExprCompatibility(
@@ -366,10 +365,11 @@ PointerNullabilityDiagnoser pointerNullabilityDiagnoser() {
       .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("[]"),
                                           diagnoseSmartPointerDereference)
-      // Check compatibility of parameter assignments
+      // Check compatibility of parameter assignments and return values.
       .CaseOfCFGStmt<CallExpr>(isCallExpr(), diagnoseCallExpr)
-      .CaseOfCFGStmt<ReturnStmt>(isPointerReturn(), diagnoseReturn)
       .CaseOfCFGStmt<CXXConstructExpr>(isConstructExpr(), diagnoseConstructExpr)
+      .CaseOfCFGStmt<ReturnStmt>(isPointerReturn(), diagnoseReturn)
+      // Check compatibility of member initializers.
       .CaseOfCFGInit<CXXCtorInitializer>(isCtorMemberInitializer(),
                                          diagnoseMemberInitializer)
       .Build();
