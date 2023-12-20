@@ -16,13 +16,17 @@ do
   fi
   diff -u "$1" <(prepend_license "$2")
   NEW_STATUS="$?"
-  if [ $STATUS == 0 ]; then
-    STATUS="$NEW_STATUS"
+  if [ $NEW_STATUS != 0 ]; then
+    if [ -n "$WRITE_GOLDENS" ]; then
+      prepend_license "$2" > "$1"
+    elif [ $STATUS == 0 ]; then
+      STATUS="$NEW_STATUS"
+    fi
   fi
   shift 2
 done
 
-if (($STATUS != 0)); then
+if [ $STATUS != 0 ]; then
   echo >&2 "To regenerate the goldens, run rs_bindings_from_cc/test/golden/update.sh"
   exit 1
 fi

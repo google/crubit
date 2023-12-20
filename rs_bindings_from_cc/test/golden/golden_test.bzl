@@ -45,7 +45,7 @@ _generate_bindings = rule(
 def golden_test(
         name,
         cc_library,
-        tags = [],
+        tags = None,
         basename = None,
         golden_cc = None,
         golden_rs = None,
@@ -64,6 +64,9 @@ def golden_test(
     """
     if not basename:
         basename = name
+    if not tags:
+        tags = []
+    tags.append("crubit_golden_test")
 
     bindings_name = basename + ".generated_bindings"
 
