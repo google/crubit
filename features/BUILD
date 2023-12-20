@@ -8,7 +8,6 @@ _SUPPORTED_FEATURES = [
 ]
 
 _EXPERIMENTAL_CLIENTS = [
-    "//security/ise_memory_safety/safe_json_parsing:__subpackages__",
     "//:__subpackages__",
 ]
 
