@@ -242,8 +242,8 @@ TEST(PointerNullabilityTest, RangeFor_CustomIterator) {
   )cc"));
 }
 
-// Currently fails (produces a false positive), because of a framework bug. We
-// need an extra narrowing step to fix this.
+// This test and the one below are regression tests for false positives caused
+// by a framework bug: https://github.com/llvm/llvm-project/issues/67834.
 TEST(PointerNullabilityTest, WhileAssignment) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     Nullable<int*> GetNext();
@@ -269,8 +269,8 @@ TEST(PointerNullabilityTest, WhileAssignment2) {
   )cc"));
 }
 
-// Repro for a false positive caused by an inconsistent representation of state
-// in a loop.
+// Regression test for a false positive that was caused by an inconsistent
+// representation of state in a loop: b/300979650.
 TEST(PointerNullabilityTest, InconsistentLoopStateRepro) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     Nullable<int*> GetNullable();
