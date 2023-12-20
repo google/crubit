@@ -34,3 +34,17 @@ fn test_returns_nontrivial_ptr() {
 fn test_returns_nontrivial_value() {
     assert!(!value_exists!(no_bindings::crubit_returns_nontrivial_value));
 }
+
+// vectorcall attribute is outright ignored on e.g. ARM -- so on that platform,
+// this isn't actually a different calling convention, and we'd expect bindings
+// to exist after all.
+#[cfg(target_arch = "x86_64")]
+#[test]
+fn test_vectorcall() {
+    assert!(!value_exists!(no_bindings::crubit_vectorcall));
+}
+
+#[test]
+fn test_noreturn() {
+    assert!(!value_exists!(no_bindings::crubit_noreturn));
+}

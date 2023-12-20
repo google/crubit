@@ -21,6 +21,13 @@ inline void crubit_accepts_nontrivial_ptr(Nontrivial*) {}
 inline void crubit_accepts_nontrivial_value(Nontrivial) {}
 inline Nontrivial* crubit_returns_nontrivial_ptr() { return nullptr; }
 inline Nontrivial crubit_returns_nontrivial_value() { return {}; }
+
+[[clang::vectorcall]] inline void crubit_vectorcall() {}
+
+[[noreturn]] inline void crubit_noreturn() {
+  for (volatile unsigned int x = 0;; ++x) {
+  }
+}
 }
 
 }  // namespace crubit::no_bindings

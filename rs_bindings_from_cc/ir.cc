@@ -334,6 +334,7 @@ llvm::json::Value Func::ToJson() const {
       {"is_inline", is_inline},
       {"member_func_metadata", member_func_metadata},
       {"is_extern_c", is_extern_c},
+      {"is_noreturn", is_noreturn},
       {"has_c_calling_convention", has_c_calling_convention},
       {"is_member_or_descendant_of_class_template",
        is_member_or_descendant_of_class_template},

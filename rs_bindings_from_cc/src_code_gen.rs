@@ -2966,6 +2966,9 @@ fn crubit_features_for_item(
             } else {
                 crubit_features |= ir::CrubitFeature::Experimental;
             }
+            if !func.has_c_calling_convention || func.is_noreturn {
+                crubit_features |= ir::CrubitFeature::Experimental;
+            }
             Ok(crubit_features)
         }
         _ => Ok(ir::CrubitFeature::Experimental.into()),

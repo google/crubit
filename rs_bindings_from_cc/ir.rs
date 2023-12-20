@@ -443,6 +443,7 @@ pub struct Func {
     pub is_inline: bool,
     pub member_func_metadata: Option<MemberFuncMetadata>,
     pub is_extern_c: bool,
+    pub is_noreturn: bool,
     pub has_c_calling_convention: bool,
     pub is_member_or_descendant_of_class_template: bool,
     pub source_loc: Rc<str>,

@@ -305,6 +305,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .is_inline = function_decl->isInlined(),
       .member_func_metadata = std::move(member_func_metadata),
       .is_extern_c = function_decl->isExternC(),
+      .is_noreturn = function_decl->isNoReturn(),
       .has_c_calling_convention = has_c_calling_convention,
       .is_member_or_descendant_of_class_template =
           is_member_or_descendant_of_class_template,
