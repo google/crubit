@@ -28,6 +28,13 @@ inline Nontrivial crubit_returns_nontrivial_value() { return {}; }
   for (volatile unsigned int x = 0;; ++x) {
   }
 }
+
+[[nodiscard]] inline void* crubit_nodiscard() { return nullptr; }
+
+// Note to robots: please do not automatically delete the following
+// function. We need to actually test deprecated functions!
+// Note to humans: please figure out a good way to control the robots.
+[[deprecated]] inline void crubit_deprecated() {}
 }
 
 }  // namespace crubit::no_bindings

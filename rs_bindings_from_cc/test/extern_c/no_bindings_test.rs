@@ -48,3 +48,13 @@ fn test_vectorcall() {
 fn test_noreturn() {
     assert!(!value_exists!(no_bindings::crubit_noreturn));
 }
+
+#[test]
+fn test_nodiscard() {
+    assert!(!value_exists!(no_bindings::crubit_nodiscard));
+}
+
+#[test]
+fn test_deprecated() {
+    assert!(!value_exists!(no_bindings::crubit_deprecated));
+}

@@ -23,6 +23,7 @@
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/Attrs.inc"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/LLVM.h"
@@ -290,6 +291,17 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
   }
 
+  std::optional<std::string> nodiscard;
+  if (auto* warn_unused_result_attr =
+          function_decl->getAttr<clang::WarnUnusedResultAttr>()) {
+    nodiscard.emplace(warn_unused_result_attr->getMessage());
+  }
+
+  std::optional<std::string> deprecated;
+  if (auto* deprecated_attr = function_decl->getAttr<clang::DeprecatedAttr>()) {
+    deprecated.emplace(deprecated_attr->getMessage());
+  }
+
   // Silence ClangTidy, checked above: calling `add_error` if
   // `!return_type.ok()` and returning early if `!errors.empty()`.
   CHECK_OK(return_type);
@@ -306,6 +318,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .member_func_metadata = std::move(member_func_metadata),
       .is_extern_c = function_decl->isExternC(),
       .is_noreturn = function_decl->isNoReturn(),
+      .nodiscard = std::move(nodiscard),
+      .deprecated = std::move(deprecated),
       .has_c_calling_convention = has_c_calling_convention,
       .is_member_or_descendant_of_class_template =
           is_member_or_descendant_of_class_template,
