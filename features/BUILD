@@ -26,6 +26,9 @@ crubit_feature_hint(
 
 crubit_feature_hint(
     name = "experimental",
-    crubit_features = _SUPPORTED_FEATURES + ["experimental"],
+    crubit_features = _SUPPORTED_FEATURES + [
+        "extern_c",
+        "experimental",
+    ],
     visibility = _EXPERIMENTAL_CLIENTS,
 )

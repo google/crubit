@@ -331,7 +331,7 @@ def _target_features_nonempty_test_impl(ctx):
     )
     asserts.equals(
         env,
-        ["experimental", "supported"],
+        ["experimental", "extern_c", "supported"],
         target_args[1]["f"],
     )
 

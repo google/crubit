@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/golden:trivial_type_cc
-// Features: experimental, supported
+// Features: experimental, extern_c, supported
 
 #![rustfmt::skip]
 #![feature(arbitrary_self_types, custom_inner_attributes, negative_impls, register_tool)]

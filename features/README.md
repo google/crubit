@@ -54,6 +54,15 @@ b/313732494 tracks the initial release of a nonempty `:supported`.
 
 <!-- TODO(b/313732494): update here when a release happens. :) -->
 
+### `"//features:extern_c"`
+
+The `extern_c` feature enables simple `extern "C"` functions, and simple types.
+
+`extern_c` is the next feature release of Crubit, and will become part of
+`:supported` in b/313732494.
+
+<!-- TODO(b/313732494): update here when a release happens. :) -->
+
 ### `"//features:experimental"`
 
 The `experimental` feature enables internal-only experimental capabilities. This
