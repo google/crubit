@@ -456,6 +456,7 @@ struct Func {
   bool is_inline;
   // If null, this is not a member function.
   std::optional<MemberFuncMetadata> member_func_metadata;
+  bool is_extern_c = false;
   bool has_c_calling_convention = true;
   bool is_member_or_descendant_of_class_template = false;
   std::string source_loc;

@@ -442,6 +442,7 @@ pub struct Func {
     pub lifetime_params: Vec<LifetimeName>,
     pub is_inline: bool,
     pub member_func_metadata: Option<MemberFuncMetadata>,
+    pub is_extern_c: bool,
     pub has_c_calling_convention: bool,
     pub is_member_or_descendant_of_class_template: bool,
     pub source_loc: Rc<str>,
@@ -486,6 +487,11 @@ impl Func {
             .as_ref()
             .filter(|meta| meta.instance_method_metadata.is_some())
             .is_some()
+    }
+
+    /// Returns the return and parameter types of this function.
+    pub fn types(&self) -> impl Iterator<Item = &MappedType> + '_ {
+        [&self.return_type].into_iter().chain(self.params.iter().map(|p| &p.type_))
     }
 }
 

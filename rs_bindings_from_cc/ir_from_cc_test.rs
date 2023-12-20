@@ -85,6 +85,7 @@ fn test_function() {
                 lifetime_params: [],
                 is_inline: false,
                 member_func_metadata: None,
+                is_extern_c: false,
                 has_c_calling_convention: true,
                 is_member_or_descendant_of_class_template: false,
                 source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3",

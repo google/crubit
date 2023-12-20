@@ -2894,7 +2894,16 @@ fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
     // instantiation (if it is a template) an item are in a translation unit which
     // doesn't have the required Crubit features.
     for target in item.defining_target().into_iter().chain(item.owning_target()) {
-        let missing_features = crubit_features_for_item(item) - ir.target_crubit_features(target);
+        let required_features = match crubit_features_for_item(db, item) {
+            Ok(features) => features,
+            Err(error) => {
+                return HasBindings::No(NoBindingsReason::DependencyFailed {
+                    context: item.debug_name(&ir),
+                    error,
+                });
+            }
+        };
+        let missing_features = required_features - ir.target_crubit_features(target);
         if !missing_features.is_empty() {
             return HasBindings::No(NoBindingsReason::MissingRequiredFeatures {
                 missing_features,
@@ -2940,10 +2949,26 @@ impl From<NoBindingsReason> for Error {
 ///
 /// If the item does have a defining target, and it doesn't enable the specified
 /// features, then bindings are suppressed for this item.
-fn crubit_features_for_item(item: &Item) -> flagset::FlagSet<ir::CrubitFeature> {
+fn crubit_features_for_item(
+    db: &dyn BindingsGenerator,
+    item: &Item,
+) -> Result<flagset::FlagSet<ir::CrubitFeature>> {
     match item {
-        Item::UnsupportedItem(..) => Default::default(),
-        _ => ir::CrubitFeature::Experimental.into(),
+        Item::UnsupportedItem(..) => Ok(Default::default()),
+        Item::Func(func) => {
+            let mut crubit_features = flagset::FlagSet::<ir::CrubitFeature>::default();
+            for t in func.types() {
+                let t = db.rs_type_kind(t.rs_type.clone())?;
+                crubit_features |= t.required_crubit_features()
+            }
+            if func.is_extern_c {
+                crubit_features |= ir::CrubitFeature::ExternC;
+            } else {
+                crubit_features |= ir::CrubitFeature::Experimental;
+            }
+            Ok(crubit_features)
+        }
+        _ => Ok(ir::CrubitFeature::Experimental.into()),
     }
 }
 
@@ -3285,6 +3310,41 @@ impl RsTypeKind {
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_unpin(),
             _ => true,
         }
+    }
+
+    /// Returns the features required to use this type.
+    ///
+    /// If a struct contains this type as a field, or a function accepts or
+    /// returns this type, then the function or struct will itself also
+    /// require this feature.
+    pub fn required_crubit_features(&self) -> flagset::FlagSet<CrubitFeature> {
+        /// Required features, sans recursion.
+        fn required_crubit_features_flat(
+            type_kind: &RsTypeKind,
+        ) -> flagset::FlagSet<CrubitFeature> {
+            match type_kind {
+                RsTypeKind::Pointer { .. } => CrubitFeature::ExternC.into(),
+                RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
+                    CrubitFeature::Experimental.into()
+                }
+                // TODO(b/314382764): Carve out some function pointer types that can be ExternC.
+                RsTypeKind::FuncPtr { .. } => CrubitFeature::Experimental.into(),
+                RsTypeKind::IncompleteRecord { .. } => CrubitFeature::Experimental.into(),
+                // TODO(b/314382764): Carve out some record types that can be ExternC.
+                RsTypeKind::Record { .. } => CrubitFeature::Experimental.into(),
+                // TODO(b/314382764): Carve out some aliases that can be ExternC.
+                RsTypeKind::TypeAlias { .. } => CrubitFeature::Experimental.into(),
+                RsTypeKind::Unit => CrubitFeature::ExternC.into(),
+                // TODO(b/314382764): Carve out builtin types, etc. that can be ExternC.
+                RsTypeKind::Other { .. } => CrubitFeature::Experimental.into(),
+            }
+        }
+
+        let mut features = flagset::FlagSet::<CrubitFeature>::default();
+        for type_kind in self.dfs_iter() {
+            features |= required_crubit_features_flat(type_kind);
+        }
+        features
     }
 
     /// Returns true if the type can be passed by value through `extern "C"` ABI
@@ -9365,11 +9425,30 @@ mod tests {
         Ok(())
     }
 
-    /// The default crubit feature set currently results in no bindings at all.
+    /// The default crubit feature set currently doesn't include extern_c.
     #[test]
-    fn test_default_crubit_features_disabled() -> Result<()> {
+    fn test_default_crubit_features_disabled_extern_c() -> Result<()> {
+        for item in ["extern \"C\" void NotPresent() {}"] {
+            let mut ir = ir_from_cc(item)?;
+            ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            assert_rs_not_matches!(rs_api, quote! {NotPresent});
+            assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
+            let expected = "\
+                Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+                Error while generating bindings for item 'NotPresent':\n\
+                Missing required features on //test:testing_target: [//features:extern_c]\
+            ";
+            assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
+        }
+        Ok(())
+    }
+
+    /// The default crubit feature set currently doesn't include experimetnal.
+    #[test]
+    fn test_default_crubit_features_disabled_experimental() -> Result<()> {
         for item in
-            ["struct NotPresent {};", "inline void NotPresent() {}", "using NotPresent = int;"]
+            ["struct NotPresent {};", "inline int NotPresent() {}", "using NotPresent = int;"]
         {
             let mut ir = ir_from_cc(item)?;
             ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
