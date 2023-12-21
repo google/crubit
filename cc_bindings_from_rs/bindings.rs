@@ -895,6 +895,14 @@ fn format_thunk_impl<'tcx>(
             #fully_qualified_fn_name( #( #fn_args ),* )
         }
     };
+    // Wrap the call in an unsafe block, for the sake of RFC #2585
+    // `unsafe_block_in_unsafe_fn`.
+    if sig.unsafety == Unsafety::Unsafe {
+        // Note: This causes unsafe {... unsafe {...} ...}, which seems not ideal.
+        // Either the inner unsafe should be moved out, or just elided when
+        // there's an outer unsafe.
+        thunk_body = quote! {unsafe {#thunk_body}};
+    }
     if !is_c_abi_compatible_by_value(sig.output()) {
         thunk_params.push(quote! {
             __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
@@ -936,9 +944,16 @@ fn format_thunk_impl<'tcx>(
     };
 
     let thunk_name = make_rs_ident(thunk_name);
+    let unsafe_qualifier = if sig.unsafety == Unsafety::Unsafe {
+        quote! {unsafe}
+    } else {
+        quote! {}
+    };
     Ok(quote! {
         #[no_mangle]
-        extern "C" fn #thunk_name #generic_params ( #( #thunk_params ),* ) -> #thunk_ret_type {
+        #unsafe_qualifier extern "C" fn #thunk_name #generic_params (
+            #( #thunk_params ),*
+        ) -> #thunk_ret_type {
             #thunk_body
         }
     })
@@ -948,14 +963,6 @@ fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
     if sig.c_variadic {
         // TODO(b/254097223): Add support for variadic functions.
         bail!("C variadic functions are not supported (b/254097223)");
-    }
-
-    match sig.unsafety {
-        Unsafety::Normal => (),
-        Unsafety::Unsafe => {
-            // TODO(b/254095482): Figure out how to handle `unsafe` functions.
-            bail!("Bindings for `unsafe` functions are not fully designed yet (b/254095482)");
-        }
     }
 
     Ok(())
@@ -3271,17 +3278,56 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_item_unsupported_fn_unsafe() {
+    fn test_format_item_fn_extern_c_unsafe() {
         let test_src = r#"
                 #[no_mangle]
                 pub unsafe extern "C" fn foo() {}
             "#;
         test_format_item(test_src, "foo", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "Bindings for `unsafe` functions \
-                             are not fully designed yet (b/254095482)"
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    void foo();
+                }
+            );
+            assert!(result.rs_details.is_empty());
+        });
+    }
+
+    /// For non-extern "C" unsafe functions, we need a thunk, and it needs some
+    /// `unsafe`.
+    ///
+    /// The thunk itself needs to be unsafe, because it wraps an unsafe function
+    /// and is still in-principle itself directly callable. It also needs to
+    /// have an unsafe block inside of it due to RFC #2585
+    /// `unsafe_block_in_unsafe_fn`.
+    #[test]
+    fn test_format_item_fn_unsafe() {
+        let test_src = r#"
+                #[no_mangle]
+                pub unsafe fn foo() {}
+            "#;
+        test_format_item(test_src, "foo", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    void foo();
+                }
+            );
+            assert_cc_matches!(
+                result.rs_details,
+                quote! {
+                    #[no_mangle]
+                    unsafe extern "C" fn __crubit_thunk_foo() -> () {
+                        unsafe { ::rust_out::foo() }
+                    }
+                }
             );
         });
     }
@@ -6450,6 +6496,16 @@ pub mod tests {
                     "",
                 ),
             ),
+            // Unsafe extern "C" function pointers are, to C++, just function pointers.
+            (
+                "unsafe extern \"C\" fn(f32, f32) -> f32",
+                (
+                    "crubit :: type_identity_t < float (float , float) > &",
+                    "<crubit/support/for/tests/internal/cxx20_backports.h>",
+                    "",
+                    "",
+                ),
+            ),
             (
                 // Nested function pointer (i.e. `TypeLocation::Other`) means that
                 // we need to generate a C++ function *pointer*, rather than a C++
@@ -6622,10 +6678,6 @@ pub mod tests {
             (
                 "extern \"C\" fn (f32, f32) -> SomeStruct",
                 "Function pointers can't have a thunk: Return type requires a thunk",
-            ),
-            (
-                "unsafe fn(i32) -> i32",
-                "Bindings for `unsafe` functions are not fully designed yet (b/254095482)",
             ),
             // TODO(b/254094650): Consider mapping this to Clang's (and GCC's) `__int128`
             // or to `absl::in128`.

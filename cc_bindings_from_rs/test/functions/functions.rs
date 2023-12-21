@@ -118,3 +118,13 @@ pub mod other_fn_param_tests {
         x + y
     }
 }
+
+pub mod unsafe_fn_tests {
+    /// # Safety
+    ///
+    /// This function has no safety requirements - it is only marked as `unsafe`
+    /// to facilitate minimal testing of bindings generated for such functions.
+    pub unsafe fn unsafe_add(x: i32, y: i32) -> i32 {
+        x + y
+    }
+}
