@@ -39,6 +39,8 @@ def escape_cpp_target_name(package_name, crate_name):
     if crate_name == "core":
         _, _, last_path_component = package_name.rpartition("/")
         crate_name = "core_" + last_path_component
+    elif crate_name[0].isdigit():
+        crate_name = "n" + crate_name
 
     # b/216587072: Sync the escaping logic with bazel_rules/rules_rust/rust/private:utils.bzl's
     # encode_label_as_crate_name. Currently, the encoding contains a (escaped and hence longer) copy

@@ -318,6 +318,8 @@ impl BazelLabel {
         let mut target_name = self.target_name().to_owned();
         if target_name == "core" {
             target_name = "core_".to_owned() + self.last_package_component();
+        } else if target_name.starts_with(char::is_numeric) {
+            target_name.insert(0, 'n');
         }
         target_name.replace(|c: char| !c.is_ascii_alphanumeric(), "_")
     }
@@ -1449,6 +1451,12 @@ mod tests {
     fn test_bazel_label_escape_target_name_core_with_no_package_name_with_no_target_name() {
         let label: BazelLabel = "core".into();
         assert_eq!(label.target_name_escaped(), "core_");
+    }
+
+    #[test]
+    fn test_bazel_label_escape_target_name_starting_with_digit() {
+        let label: BazelLabel = "12345".into();
+        assert_eq!(label.target_name_escaped(), "n12345");
     }
 
     #[test]

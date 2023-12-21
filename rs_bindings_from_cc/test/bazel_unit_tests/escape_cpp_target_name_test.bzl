@@ -18,6 +18,7 @@ def _escape_cpp_target_name_test_impl(ctx):
     asserts.equals(env, "bar_", escape_cpp_target_name("foo/bar~", "bar~"))
     asserts.equals(env, "foo_", escape_cpp_target_name("", "foo~"))
     asserts.equals(env, "core_", escape_cpp_target_name("", "core"))
+    asserts.equals(env, "n12345", escape_cpp_target_name("", "12345"))
     return unittest.end(env)
 
 escape_cpp_target_name_test = unittest.make(_escape_cpp_target_name_test_impl)
