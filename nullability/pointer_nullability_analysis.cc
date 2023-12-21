@@ -368,8 +368,7 @@ void transferValue_SmartPointerConstructor(
   // Copy or move from an existing smart pointer.
   if (Ctor->getNumArgs() >= 1 &&
       isSupportedSmartPointerType(Ctor->getArg(0)->getType())) {
-    auto *SrcLoc = cast_or_null<RecordStorageLocation>(
-        State.Env.getStorageLocation(*Ctor->getArg(0)));
+    auto *SrcLoc = State.Env.get<RecordStorageLocation>(*Ctor->getArg(0));
     if (Ctor->getNumArgs() == 2 &&
         isSupportedRawPointerType(Ctor->getArg(1)->getType())) {
       // `shared_ptr` aliasing constructor.
@@ -400,8 +399,7 @@ void transferValue_SmartPointerConstructor(
 void transferValue_SmartPointerAssignment(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  auto *Loc = cast_or_null<RecordStorageLocation>(
-      State.Env.getStorageLocation(*OpCall->getArg(0)));
+  auto *Loc = State.Env.get<RecordStorageLocation>(*OpCall->getArg(0));
   if (Loc == nullptr) return;
 
   if (OpCall->getArg(1)->getType()->isNullPtrType()) {
@@ -409,8 +407,7 @@ void transferValue_SmartPointerAssignment(
     return;
   }
 
-  auto *SrcLoc = cast_or_null<RecordStorageLocation>(
-      State.Env.getStorageLocation(*OpCall->getArg(1)));
+  auto *SrcLoc = State.Env.get<RecordStorageLocation>(*OpCall->getArg(1));
   setSmartPointerValue(*Loc, getPointerValueFromSmartPointer(SrcLoc, State.Env),
                        State.Env);
 
@@ -429,7 +426,7 @@ void transferValue_SmartPointerReleaseCall(
   if (Loc == nullptr) return;
   StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
 
-  if (auto *Val = cast_or_null<PointerValue>(State.Env.getValue(PtrLoc)))
+  if (auto *Val = State.Env.get<PointerValue>(PtrLoc))
     State.Env.setValue(*MCE, *Val);
   State.Env.setValue(
       PtrLoc, createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
@@ -467,18 +464,15 @@ void transferValue_SmartPointerMemberSwapCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   swapSmartPointers(getImplicitObjectLocation(*MCE, State.Env),
-                    cast_or_null<RecordStorageLocation>(
-                        State.Env.getStorageLocation(*MCE->getArg(0))),
+                    State.Env.get<RecordStorageLocation>(*MCE->getArg(0)),
                     State.Env);
 }
 
 void transferValue_SmartPointerFreeSwapCall(
     const CallExpr *CE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  swapSmartPointers(cast_or_null<RecordStorageLocation>(
-                        State.Env.getStorageLocation(*CE->getArg(0))),
-                    cast_or_null<RecordStorageLocation>(
-                        State.Env.getStorageLocation(*CE->getArg(1))),
+  swapSmartPointers(State.Env.get<RecordStorageLocation>(*CE->getArg(0)),
+                    State.Env.get<RecordStorageLocation>(*CE->getArg(1)),
                     State.Env);
 }
 
@@ -583,11 +577,10 @@ void transferValue_SharedPtrCastCall(
   auto *Callee = dyn_cast_or_null<FunctionDecl>(CE->getCalleeDecl());
   if (Callee == nullptr) return;
 
-  auto *SrcLoc = cast_or_null<RecordStorageLocation>(
-      Env.getStorageLocation(*CE->getArg(0)));
+  auto *SrcLoc = Env.get<RecordStorageLocation>(*CE->getArg(0));
   if (SrcLoc == nullptr) return;
   StorageLocation &SrcPtrLoc = SrcLoc->getSyntheticField(PtrField);
-  auto *SrcPtrVal = cast_or_null<PointerValue>(Env.getValue(SrcPtrLoc));
+  auto *SrcPtrVal = Env.get<PointerValue>(SrcPtrLoc);
   if (SrcPtrVal == nullptr) return;
 
   RecordStorageLocation &DestLoc = Env.getResultObjectLocation(*CE);
@@ -662,8 +655,7 @@ void transferValue_WeakPtrLockCall(
 void transferValue_SmartPointer(
     const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  auto *Loc = cast_or_null<RecordStorageLocation>(
-      State.Env.getStorageLocation(*PointerExpr));
+  auto *Loc = State.Env.get<RecordStorageLocation>(*PointerExpr);
   if (Loc == nullptr) {
     Loc = &cast<RecordStorageLocation>(
         State.Env.createStorageLocation(*PointerExpr));
@@ -671,7 +663,7 @@ void transferValue_SmartPointer(
   }
 
   StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
-  auto *Val = cast_or_null<PointerValue>(State.Env.getValue(PtrLoc));
+  auto *Val = State.Env.get<PointerValue>(PtrLoc);
   if (Val == nullptr) {
     Val = cast<PointerValue>(State.Env.createValue(PtrLoc.getType()));
     State.Env.setValue(PtrLoc, *Val);

@@ -39,15 +39,14 @@ constexpr llvm::StringLiteral kNull = "is_null";
 
 absl::Nullable<PointerValue *> getPointerValueFromExpr(
     absl::Nonnull<const Expr *> PointerExpr, const Environment &Env) {
-  return cast_or_null<PointerValue>(Env.getValue(*PointerExpr));
+  return Env.get<PointerValue>(*PointerExpr);
 }
 
 absl::Nullable<PointerValue *> getPointerValueFromSmartPointer(
     absl::Nullable<RecordStorageLocation *> SmartPointerLoc,
     const Environment &Env) {
   if (SmartPointerLoc == nullptr) return nullptr;
-  return cast_or_null<dataflow::PointerValue>(
-      Env.getValue(SmartPointerLoc->getSyntheticField(PtrField)));
+  return Env.get<PointerValue>(SmartPointerLoc->getSyntheticField(PtrField));
 }
 
 absl::Nullable<PointerValue *> getPointerValueFromSmartPointerExpr(
@@ -56,8 +55,7 @@ absl::Nullable<PointerValue *> getPointerValueFromSmartPointerExpr(
   if (SmartPointerExpr->isPRValue())
     Loc = &Env.getResultObjectLocation(*SmartPointerExpr);
   else
-    Loc = cast_or_null<RecordStorageLocation>(
-        Env.getStorageLocation(*SmartPointerExpr));
+    Loc = Env.get<RecordStorageLocation>(*SmartPointerExpr);
   return getPointerValueFromSmartPointer(Loc, Env);
 }
 
@@ -187,10 +185,8 @@ NullabilityKind getNullability(const Expr *E, const dataflow::Environment &Env,
   if (isSupportedRawPointerType(E->getType()))
     P = getPointerValueFromExpr(E, Env);
   else if (isSupportedSmartPointerType(E->getType()))
-    P = getPointerValueFromSmartPointer(
-        cast_or_null<dataflow::RecordStorageLocation>(
-            Env.getStorageLocation(*E)),
-        Env);
+    P = getPointerValueFromSmartPointer(Env.get<RecordStorageLocation>(*E),
+                                        Env);
   if (P != nullptr) return getNullability(*P, Env, AdditionalConstraints);
   return clang::NullabilityKind::Unspecified;
 }

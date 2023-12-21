@@ -279,7 +279,7 @@ void diagnoseCall(const CallExpr &CE, const ASTContext &Ctx, Diagnoser &Diags,
   }
   if (llvm::StringRef Name = getBoolAssertionName(CE); !Name.empty()) {
     auto &Arg = *CE.getArgs()[0];
-    auto *Val = cast_or_null<dataflow::BoolValue>(State.Env.getValue(Arg));
+    auto *Val = State.Env.get<dataflow::BoolValue>(Arg);
     if (!Val) {
       Diags.diagnoseNoValue(Arg);
       return;
