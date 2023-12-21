@@ -11,7 +11,7 @@ extern crate rustc_session;
 use anyhow::{bail, ensure, Result};
 use clap::Parser;
 use rustc_session::config::ErrorOutputType;
-use rustc_session::EarlyErrorHandler;
+use rustc_session::EarlyDiagCtxt;
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -71,7 +71,7 @@ impl Cmdline {
         );
         let exe_name = args[0].clone();
 
-        let early_error_handler = EarlyErrorHandler::new(ErrorOutputType::default());
+        let early_error_handler = EarlyDiagCtxt::new(ErrorOutputType::default());
 
         // Ensure that `@file` expansion also covers *our* args.
         //

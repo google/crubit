@@ -20,7 +20,7 @@ use rustc_interface::interface::Compiler;
 use rustc_interface::Queries;
 use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
 use rustc_session::config::ErrorOutputType;
-use rustc_session::EarlyErrorHandler;
+use rustc_session::EarlyDiagCtxt;
 
 /// Wrapper around `rustc_driver::RunCompiler::run` that exposes a
 /// simplified API:
@@ -46,7 +46,7 @@ where
     // `tracing::subscriber::set_global_default` always succeeds.
     use once_cell::sync::Lazy;
     static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| {
-        let early_error_handler = EarlyErrorHandler::new(ErrorOutputType::default());
+        let early_error_handler = EarlyDiagCtxt::new(ErrorOutputType::default());
         rustc_driver::init_logger(
             &early_error_handler,
             rustc_log::LoggerConfig::from_env("CRUBIT_LOG"),
