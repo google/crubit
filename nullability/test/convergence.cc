@@ -291,5 +291,26 @@ TEST(PointerNullabilityTest, InconsistentLoopStateRepro) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ReproForFalsePositiveTriggeredByUnrelatedLoop) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    bool cond();
+    struct Node {
+      const Node* _Nonnull parent() const;
+    };
+    void target(const Node* _Nonnull node) {
+      // Redundant null check -- but if we comment this out, the analysis
+      // doesn't converge.
+      if (node == nullptr) return;
+      // We get no false positive if the following unrelated loop is commented
+      // out.
+      for (bool b = cond(); cond(); b = 0 & b) {
+      }
+      while (cond())
+        // TODO(mboehme): False positive.
+        node = node->parent();  // [[unsafe]]
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
