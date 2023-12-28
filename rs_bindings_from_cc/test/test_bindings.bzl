@@ -37,7 +37,32 @@ def crubit_test_cc_library(name, **kwargs):
             "generated_bindings/" + name + "_rust_api.rs",
             "generated_bindings/" + name + "_rust_api_impl.cc",
         ],
+        **_get_forwarded_kwargs(kwargs)
     )
+
+def _get_forwarded_kwargs(
+        kwargs,
+        attrs = [
+            # These are built-in starlark attributes for every rule. Take from Bazel's Java
+            # implementation: analysis.BaseRuleClasses.commonCoreAndStarlarkAttributes.
+            "visibility",
+            "transitive_configs",
+            "deprecation",
+            "tags",
+            "generator_name",
+            "generator_function",
+            "generator_location",
+            "testonly",
+            "compatible_with",
+            "restricted_to",
+            "applicable_licenses",
+            "aspect_hints",
+        ]):
+    forwarded_kwargs = {}
+    for attr in attrs:
+        if attr in kwargs:
+            forwarded_kwargs[attr] = kwargs[attr]
+    return forwarded_kwargs
 
 def _write_crubit_outs_impl(ctx):
     cc_library = ctx.attr.cc_library[0]
