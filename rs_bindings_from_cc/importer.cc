@@ -46,6 +46,7 @@
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
@@ -740,8 +741,31 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
   // side-effect and we rely on this here. `decl->getDefinition()` can
   // return nullptr before the call to sema and return its definition
   // afterwards.
+  // Note: Here we instantiate class template specialization eagerly: its
+  // usages in headers may not require the class template specialization to be
+  // instantiated (and hence it may not be instantiable), but we attempt
+  // instantiation here. So we may attempt non-instantiable template, which
+  // would cause the diagnostic stream to contain error, which would case
+  // clang::tooling::runToolOnCodeWithArgs to return an error status. To avoid
+  // erroring out, we temporarily use our own implementation of
+  // DiagnosticConsumer here.
+  // Unfortunately, this hides template instantiation errors, which sometimes
+  // indicates a malformed header (that should ideally be fixed), which
+  // sometimes indicates Crubit is more eager to instantiate templates than
+  // necessary (e.g., an attempting to instantiate a template that's only
+  // forward-declared).
+  // TODO(b/317866933): Consider surfacing the instantiation error in generated
+  // bindings or to stderr.
+  std::unique_ptr<clang::DiagnosticConsumer> original_client =
+      sema_.getDiagnostics().takeClient();
+  clang::DiagnosticConsumer diagnostic_consumer;
+  sema_.getDiagnostics().setClient(&diagnostic_consumer, false);
+  // Attempt to instantiate.
   (void)sema_.isCompleteType(specialization_decl->getLocation(),
                              ctx_.getRecordType(specialization_decl));
+  // Restore.
+  sema_.getDiagnostics().setClient(original_client.release(),
+                                   /*ShouldOwnClient=*/true);
 
   // TODO(lukasza): Limit specialization depth? (e.g. using
   // `isSpecializationDepthGreaterThan` from earlier prototypes).

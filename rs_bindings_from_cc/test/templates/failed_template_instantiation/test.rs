@@ -2,5 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use failed_template_instantiation::*;
+
 #[test]
-fn test_build() {}
+fn test_build() {
+    let ok = Ok::default();
+    Func1(ok);
+    let c = CSpecializedForInt::default();
+    Func2(c);
+}

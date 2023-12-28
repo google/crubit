@@ -6,12 +6,6 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "failed_template_instantiation",
     hdrs = ["failed_template_instantiation.h"],
-    tags = [
-        # b/316334776: Remove when fixed.
-        "manual",
-        "nobuilder",
-        "notap",
-    ],
 )
 
 crubit_rust_test(
@@ -19,11 +13,5 @@ crubit_rust_test(
     srcs = ["test.rs"],
     cc_deps = [
         ":failed_template_instantiation",
-    ],
-    tags = [
-        # b/316334776: Remove when fixed.
-        "manual",
-        "nobuilder",
-        "notap",
     ],
 )

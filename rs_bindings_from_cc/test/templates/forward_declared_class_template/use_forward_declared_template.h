@@ -5,6 +5,8 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_FORWARD_DECLARED_CLASS_TEMPLATE_USE_FORWARD_DECLARED_TEMPLATE_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_FORWARD_DECLARED_CLASS_TEMPLATE_USE_FORWARD_DECLARED_TEMPLATE_H_
 
+#pragma clang lifetime_elision
+
 template <typename T>
 struct TemplateWithFullDefinition final {
   // We need a field to depend on T to introduce the "implicit  instantiation of
