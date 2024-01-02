@@ -151,7 +151,7 @@ TEST(CollectEvidenceFromImplementationTest, DerefArrow) {
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
 }
-TEST(InferAnnotationsTest, DerefOfNonnull) {
+TEST(CollectEvidenceFromImplementationTest, DerefOfNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(Nonnull<int *> p) {
       *p;
@@ -160,7 +160,7 @@ TEST(InferAnnotationsTest, DerefOfNonnull) {
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
-TEST(InferAnnotationsTest, Location) {
+TEST(CollectEvidenceFromImplementationTest, Location) {
   llvm::StringRef Code = "void target(int *p) { *p; }";
   //                      12345678901234567890123456
   //                      0        1         2
@@ -193,6 +193,22 @@ TEST(CollectEvidenceFromImplementationTest, DereferenceAfterAssignment) {
     }
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     DereferenceAfterAssignmentFromReturn) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int& getIntRef();
+    int* getIntPtr();
+    void target(int* p) {
+      p = &getIntRef();
+      *p;
+      p = getIntPtr();
+      *p;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, DerefOfPtrRef) {
@@ -252,6 +268,25 @@ TEST(CollectEvidenceFromImplementationTest, DerefBeforeGuardedDeref) {
       int a = *p0;
       if (p0 != nullptr) {
         int b = *p0;
+      }
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
+}
+
+TEST(CollectEvidenceFromImplementationTest, DerefAndOrCheckOfCopiedPtr) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, int* q) {
+      int* a = p;
+      *a;
+      int* b = q;
+      if (q) {
+        *b;
+      }
+      if (b) {
+        *q;
       }
     }
   )cc";
@@ -613,6 +648,50 @@ TEST(CollectEvidenceFromImplemetationTest,
     }
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+}
+
+// Special modeling of accessors is not implemented for accessors returning
+// references.
+TEST(CollectEvidenceFromImplementationTest,
+     ReferenceConstAccessorDereferencedAfterCheck) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      int* const& accessor() const { return i; }
+      int* i = nullptr;
+    };
+    void target() {
+      S s;
+      if (s.accessor() != nullptr) {
+        *s.accessor();
+      }
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
+                                            Evidence::UNCHECKED_DEREFERENCE,
+                                            functionNamed("accessor"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     ConstAccessorOnTwoDifferentObjectsDereferencedAfterCheck) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      int* const& accessor() const { return i; }
+      int* i = nullptr;
+    };
+
+    S makeS();
+
+    void target() {
+      if (makeS().accessor() != nullptr) {
+        *makeS().accessor();
+      }
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
+                                            Evidence::UNCHECKED_DEREFERENCE,
+                                            functionNamed("accessor"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest,
