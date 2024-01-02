@@ -433,59 +433,8 @@ TEST(CollectEvidenceFromImplementationTest, NonPtrArgPassed) {
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
-TEST(CollectEvidenceFromImplementationTest, DefaultArgumentNullptrLiteral) {
-  static constexpr llvm::StringRef Src =
-      R"cc(void hasDefault(int* = nullptr);
-           void target() { hasDefault(); })cc";
-  EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                    functionNamed("hasDefault"))));
-}
-
-TEST(CollectEvidenceFromImplementationTest, DefaultArgumentZeroLiteral) {
-  static constexpr llvm::StringRef Src =
-      R"cc(void hasDefault(int* = 0);
-           void target() { hasDefault(); })cc";
-  EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                    functionNamed("hasDefault"))));
-}
-
 TEST(CollectEvidenceFromImplementationTest,
-     DefaultArgumentAnnotatedVariableAndTwoCalls) {
-  static constexpr llvm::StringRef Src = R"cc(
-    Nonnull<int*> q;
-    void hasDefault(int* = q);
-    void target() {
-      hasDefault();
-      hasDefault();
-    }
-  )cc";
-  EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
-                                    functionNamed("hasDefault")),
-                           evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
-                                    functionNamed("hasDefault"))));
-}
-
-TEST(CollectEvidenceFromImplementationTest,
-     DefaultArgumentCallingAnnotatedFunction) {
-  static constexpr llvm::StringRef Src = R"cc(
-    Nullable<int*> getDefault();
-    void hasDefault(int* = getDefault());
-    void target() { hasDefault(); }
-  )cc";
-  EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                    functionNamed("hasDefault"))));
-}
-
-TEST(CollectEvidenceFromImplementationTest,
-     DefaultArgumentUnableToEvaluateExpression) {
+     DefaultArgumentsProduceNoEvidenceFromImplementation) {
   static constexpr llvm::StringRef Src = R"cc(
     int* getDefault();
     void hasDefaultUnannotatedFunc(int* = getDefault());
@@ -499,14 +448,7 @@ TEST(CollectEvidenceFromImplementationTest,
       hasDefaultExpressionOfVariable();
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
-                           functionNamed("hasDefaultUnannotatedFunc")),
-                  evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
-                           functionNamed("hasDefaultUnannotatedVariable")),
-                  evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
-                           functionNamed("hasDefaultExpressionOfVariable"))));
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromImplementationTest, NullableReturn) {
@@ -1470,6 +1412,68 @@ TEST(CollectEvidenceFromDeclarationTest, FunctionTemplateIgnored) {
     };
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromDeclarationTest, DefaultArgumentNullptrLiteral) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* = nullptr);
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetDecl(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDeclarationTest, DefaultArgumentZeroLiteral) {
+  static constexpr llvm::StringRef Src =
+      R"cc(
+    void target(int* = 0);
+      )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetDecl(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDeclarationTest, DefaultArgumentAnnotatedVariable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    Nonnull<int*> q;
+    void target(int* = q);
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetDecl(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
+                                    functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDeclarationTest,
+     DefaultArgumentCallingAnnotatedFunction) {
+  static constexpr llvm::StringRef Src = R"cc(
+    Nullable<int*> getDefault();
+    void target(int* = getDefault());
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetDecl(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDeclarationTest,
+     DefaultArgumentUnannotatedNonLiteralExpressionsUnknown) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* getDefault();
+    int* q = nullptr;
+    int i = 1;
+    void target(int* = getDefault(), int* = q, int* = &i);
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetDecl(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("target")),
+                           evidence(paramSlot(1), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("target")),
+                           evidence(paramSlot(2), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("target"))));
 }
 
 MATCHER_P(declNamed, Name, "") {

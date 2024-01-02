@@ -334,6 +334,17 @@ void collectEvidenceFromBindingToType(
   }
 }
 
+Evidence::Kind getArgEvidenceKindFromNullability(NullabilityKind Nullability) {
+  switch (Nullability) {
+    case NullabilityKind::Nullable:
+      return Evidence::NULLABLE_ARGUMENT;
+    case NullabilityKind::NonNull:
+      return Evidence::NONNULL_ARGUMENT;
+    default:
+      return Evidence::UNKNOWN_ARGUMENT;
+  }
+}
+
 template <typename CallOrConstructExpr>
 void collectEvidenceFromArgsAndParams(
     const FunctionDecl &CalleeDecl, const CallOrConstructExpr &Expr,
@@ -364,6 +375,12 @@ void collectEvidenceFromArgsAndParams(
     CHECK(isSupportedRawPointerType(Expr.getArg(ArgI)->getType()))
         << "Unsupported argument " << ArgI
         << " type: " << Expr.getArg(ArgI)->getType().getAsString();
+    if (isa<clang::CXXDefaultArgExpr>(Expr.getArg(ArgI))) {
+      // Evidence collection for the callee from default argument values is
+      // handled when collection from declarations, and there's no useful
+      // evidence to collect for the caller.
+      return;
+    }
 
     dataflow::PointerValue *PV =
         getPointerValueFromExpr(Expr.getArg(ArgI), Env);
@@ -389,18 +406,8 @@ void collectEvidenceFromArgsAndParams(
       // annotations and not all possible annotations for them.
       NullabilityKind ArgNullability =
           getNullability(*PV, Env, &InferableSlotsConstraint);
-      Evidence::Kind ArgEvidenceKind;
-      switch (ArgNullability) {
-        case NullabilityKind::Nullable:
-          ArgEvidenceKind = Evidence::NULLABLE_ARGUMENT;
-          break;
-        case NullabilityKind::NonNull:
-          ArgEvidenceKind = Evidence::NONNULL_ARGUMENT;
-          break;
-        default:
-          ArgEvidenceKind = Evidence::UNKNOWN_ARGUMENT;
-      }
-      Emit(CalleeDecl, paramSlot(ParamI), ArgEvidenceKind, ArgLoc);
+      Emit(CalleeDecl, paramSlot(ParamI),
+           getArgEvidenceKindFromNullability(ArgNullability), ArgLoc);
     }
   }
 }
@@ -778,8 +785,39 @@ void collectEvidenceFromTargetDeclaration(
   if (auto K = evidenceKindFromDeclaredType(Fn->getReturnType()))
     Emit(*Fn, SLOT_RETURN_TYPE, *K, Fn->getReturnTypeSourceRange().getBegin());
   for (unsigned I = 0; I < Fn->param_size(); ++I) {
-    if (auto K = evidenceKindFromDeclaredType(Fn->getParamDecl(I)->getType()))
-      Emit(*Fn, paramSlot(I), *K, Fn->getParamDecl(I)->getTypeSpecStartLoc());
+    auto *ParamDecl = Fn->getParamDecl(I);
+    if (auto K = evidenceKindFromDeclaredType(ParamDecl->getType())) {
+      Emit(*Fn, paramSlot(I), *K, ParamDecl->getTypeSpecStartLoc());
+    }
+
+    // We don't handle all cases of default arguments, because the expressions
+    // used for the argument are not available in any CFG, because the AST nodes
+    // are once-per-decl children of the ParmVarDecl, not once-per-call children
+    // of the CallExpr. Including them in the callsite CFG would be a
+    // significant undertaking, so for now, only handle nullptr literals (and 0)
+    // and expressions whose types already include an annotation, which we can
+    // handle just from declarations instead of call sites and should handle the
+    // majority of cases.
+    if (ParamDecl->hasDefaultArg() &&
+        isSupportedPointerType(
+            ParamDecl->getDefaultArg()->getType().getNonReferenceType())) {
+      const Expr *DefaultArg = ParamDecl->getDefaultArg();
+      if (DefaultArg->isNullPointerConstant(
+              D.getASTContext(), Expr::NPC_ValueDependentIsNotNull)) {
+        Emit(*Fn, paramSlot(I), Evidence::NULLABLE_ARGUMENT,
+             DefaultArg->getExprLoc());
+      } else {
+        auto Nullability =
+            getNullabilityAnnotationsFromType(DefaultArg->getType());
+        if (auto K = getArgEvidenceKindFromNullability(
+                Nullability.front().concrete())) {
+          Emit(*Fn, paramSlot(I), K, DefaultArg->getExprLoc());
+        } else {
+          Emit(*Fn, paramSlot(I), Evidence::UNKNOWN_ARGUMENT,
+               DefaultArg->getExprLoc());
+        }
+      }
+    }
   }
 }
 
