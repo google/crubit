@@ -12,6 +12,7 @@
 #include "nullability/pointer_nullability_matchers.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
@@ -359,11 +360,11 @@ PointerNullabilityDiagnoser pointerNullabilityDiagnoser() {
       // ([])
       .CaseOfCFGStmt<ArraySubscriptExpr>(isPointerSubscript(),
                                          diagnoseSubscript)
-      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("->"),
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("[]"),
                                           diagnoseSmartPointerDereference)
       // (->)
       .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
-      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("[]"),
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("->"),
                                           diagnoseSmartPointerDereference)
       // Check compatibility of parameter assignments and return values.
       .CaseOfCFGStmt<CallExpr>(isCallExpr(), diagnoseCallExpr)

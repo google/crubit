@@ -424,23 +424,6 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
   )cc"));
 }
 
-// TODO(b/314772440) This test passes, but doesn't actually do anything. The
-// diagnoser doesn't seem to run over the decl, and there are no statements to
-// check in the bodies. We should fix that.
-TEST(PointerNullabilityTest, DefaultArgumentNullptrLiteral) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nonnull = nullptr) {}  // [[unsafe]]
-  )cc"));
-
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* _Nullable = nullptr) {}
-  )cc"));
-
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int* = nullptr) {}
-  )cc"));
-}
-
 // Test that relevant diagnostics are produced for declarations with templated
 // annotations.
 TEST(PointerNullabilityTest, CallExprParamAssignmentTemplateAnnotations) {
