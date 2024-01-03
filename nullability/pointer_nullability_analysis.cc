@@ -1149,10 +1149,7 @@ void transferType_CallExpr(absl::Nonnull<const CallExpr *> CE,
     // callee `Expr .
     auto Nullability =
         substituteNullabilityAnnotationsInFunctionTemplate(CE->getType(), CE);
-    if (!Nullability.empty()) {
-      State.Lattice.overrideNullabilityFromDecl(CE->getCalleeDecl(),
-                                                Nullability);
-    }
+    State.Lattice.overrideNullabilityFromDecl(CE->getCalleeDecl(), Nullability);
     return Nullability;
   });
 }

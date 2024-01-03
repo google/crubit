@@ -37,8 +37,8 @@ void PointerNullabilityLattice::overrideNullabilityFromDecl(
     absl::Nullable<const Decl *> D, TypeNullability &N) const {
   // For now, overrides are always for pointer values only, and override only
   // the top-level nullability.
+  if (N.empty()) return;
   if (auto *PN = getDeclNullability(D, NFS)) {
-    CHECK(!N.empty());
     N.front() = *PN;
   }
 }
