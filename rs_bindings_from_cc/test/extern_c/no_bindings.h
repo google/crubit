@@ -35,6 +35,9 @@ inline Nontrivial crubit_returns_nontrivial_value() { return {}; }
 // function. We need to actually test deprecated functions!
 // Note to humans: please figure out a good way to control the robots.
 [[deprecated]] inline void crubit_deprecated() {}
+
+[[deprecated]] inline void crubit_enable_if()
+    __attribute__((enable_if(2 + 2 == 4, ""))) {}
 }
 
 }  // namespace crubit::no_bindings

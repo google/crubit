@@ -23,6 +23,7 @@
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/Type.h"
@@ -292,12 +293,40 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   }
 
   std::optional<std::string> nodiscard;
+  std::optional<std::string> deprecated;
+  std::optional<std::string> unknown_attr;
+  if (function_decl->hasAttrs()) {
+    // Surprisingly, getAttrs() does not return an empty vec if there are no
+    // attrs, it crashes.
+    for (clang::Attr* attr : function_decl->getAttrs()) {
+      if (auto* unused_attr =
+              clang::dyn_cast<clang::WarnUnusedResultAttr>(attr)) {
+        nodiscard.emplace(unused_attr->getMessage());
+      } else if (auto* deprecated_attr =
+                     clang::dyn_cast<clang::DeprecatedAttr>(attr)) {
+        deprecated.emplace(deprecated_attr->getMessage());
+      } else if (clang::isa<clang::NoReturnAttr>(attr)) {
+        continue;  // we call isNoReturn below, instead
+      } else if (clang::isa<clang::NoThrowAttr>(attr)) {
+        // nothrow attributes don't affect Rust.
+        continue;
+      } else {
+        if (unknown_attr.has_value()) {
+          absl::StrAppend(&*unknown_attr, ", ");
+        } else {
+          unknown_attr.emplace("");
+        }
+        absl::StrAppend(&*unknown_attr, attr->getAttrName()
+                                            ? attr->getNormalizedFullName()
+                                            : attr->getSpelling());
+      }
+    }
+  }
   if (auto* warn_unused_result_attr =
           function_decl->getAttr<clang::WarnUnusedResultAttr>()) {
     nodiscard.emplace(warn_unused_result_attr->getMessage());
   }
 
-  std::optional<std::string> deprecated;
   if (auto* deprecated_attr = function_decl->getAttr<clang::DeprecatedAttr>()) {
     deprecated.emplace(deprecated_attr->getMessage());
   }
@@ -320,6 +349,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .is_noreturn = function_decl->isNoReturn(),
       .nodiscard = std::move(nodiscard),
       .deprecated = std::move(deprecated),
+      .unknown_attr = std::move(unknown_attr),
       .has_c_calling_convention = has_c_calling_convention,
       .is_member_or_descendant_of_class_template =
           is_member_or_descendant_of_class_template,

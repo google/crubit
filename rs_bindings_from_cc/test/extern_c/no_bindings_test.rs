@@ -58,3 +58,8 @@ fn test_nodiscard() {
 fn test_deprecated() {
     assert!(!value_exists!(no_bindings::crubit_deprecated));
 }
+
+#[test]
+fn test_enable_if() {
+    assert!(!value_exists!(no_bindings::crubit_enable_if));
+}

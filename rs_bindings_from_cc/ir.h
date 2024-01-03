@@ -460,6 +460,7 @@ struct Func {
   bool is_noreturn = false;
   std::optional<std::string> nodiscard;
   std::optional<std::string> deprecated;
+  std::optional<std::string> unknown_attr;
   bool has_c_calling_convention = true;
   bool is_member_or_descendant_of_class_template = false;
   std::string source_loc;

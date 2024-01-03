@@ -89,6 +89,7 @@ fn test_function() {
                 is_noreturn: false,
                 nodiscard: None,
                 deprecated: None,
+                unknown_attr: None,
                 has_c_calling_convention: true,
                 is_member_or_descendant_of_class_template: false,
                 source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3",

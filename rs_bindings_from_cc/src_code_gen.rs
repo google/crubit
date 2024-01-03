@@ -2953,6 +2953,8 @@ fn crubit_features_for_item(
     db: &dyn BindingsGenerator,
     item: &Item,
 ) -> Result<flagset::FlagSet<ir::CrubitFeature>> {
+    // TODO(b/318006909): Explain why a given feature is required, don't just return
+    // a FlagSet.
     match item {
         Item::UnsupportedItem(..) => Ok(Default::default()),
         Item::Func(func) => {
@@ -2970,6 +2972,7 @@ fn crubit_features_for_item(
                 || func.is_noreturn
                 || func.nodiscard.is_some()
                 || func.deprecated.is_some()
+                || func.unknown_attr.is_some()
             {
                 crubit_features |= ir::CrubitFeature::Experimental;
             }

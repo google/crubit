@@ -452,6 +452,12 @@ pub struct Func {
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
     pub deprecated: Option<Rc<str>>,
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    ///
+    /// Because attributes can change the behavior or semantics of functions in
+    /// fairly significant ways, and in ways that may affect interop, we
+    /// default-closed and do not expose functions with unknown attributes.
+    pub unknown_attr: Option<Rc<str>>,
     pub has_c_calling_convention: bool,
     pub is_member_or_descendant_of_class_template: bool,
     pub source_loc: Rc<str>,
