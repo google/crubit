@@ -776,6 +776,42 @@ llvm::Error collectEvidenceFromImplementation(
       .takeError();
 }
 
+void collectEvidenceFromDefaultArgument(
+    const clang::FunctionDecl &Fn, const clang::ParmVarDecl &ParamDecl,
+    Slot ParamSlot, llvm::function_ref<EvidenceEmitter> Emit) {
+  // We don't handle all cases of default arguments, because the expressions
+  // used for the argument are not available in any CFG, because the AST nodes
+  // are once-per-decl children of the ParmVarDecl, not once-per-call children
+  // of the CallExpr. Including them in the callsite CFG would be a
+  // significant undertaking, so for now, only handle nullptr literals (and 0)
+  // and expressions whose types already include an annotation, which we can
+  // handle just from declarations instead of call sites and should handle the
+  // majority of cases.
+  if (!isSupportedRawPointerType(ParamDecl.getType().getNonReferenceType()))
+    return;
+  if (!ParamDecl.hasDefaultArg()) return;
+  if (ParamDecl.hasUnparsedDefaultArg() ||
+      ParamDecl.hasUninstantiatedDefaultArg()) {
+    Emit(Fn, ParamSlot, Evidence::UNKNOWN_ARGUMENT, ParamDecl.getEndLoc());
+    return;
+  }
+  const Expr *DefaultArg = ParamDecl.getDefaultArg();
+  CHECK(DefaultArg);
+
+  if (DefaultArg->isNullPointerConstant(Fn.getASTContext(),
+                                        Expr::NPC_ValueDependentIsNotNull)) {
+    Emit(Fn, ParamSlot, Evidence::NULLABLE_ARGUMENT, DefaultArg->getExprLoc());
+  } else {
+    auto Nullability = getNullabilityAnnotationsFromType(DefaultArg->getType());
+    if (auto K =
+            getArgEvidenceKindFromNullability(Nullability.front().concrete())) {
+      Emit(Fn, ParamSlot, K, DefaultArg->getExprLoc());
+    } else {
+      Emit(Fn, ParamSlot, Evidence::UNKNOWN_ARGUMENT, DefaultArg->getExprLoc());
+    }
+  }
+}
+
 void collectEvidenceFromTargetDeclaration(
     const clang::Decl &D, llvm::function_ref<EvidenceEmitter> Emit) {
   // For now, we can only describe the nullability of functions.
@@ -790,34 +826,7 @@ void collectEvidenceFromTargetDeclaration(
       Emit(*Fn, paramSlot(I), *K, ParamDecl->getTypeSpecStartLoc());
     }
 
-    // We don't handle all cases of default arguments, because the expressions
-    // used for the argument are not available in any CFG, because the AST nodes
-    // are once-per-decl children of the ParmVarDecl, not once-per-call children
-    // of the CallExpr. Including them in the callsite CFG would be a
-    // significant undertaking, so for now, only handle nullptr literals (and 0)
-    // and expressions whose types already include an annotation, which we can
-    // handle just from declarations instead of call sites and should handle the
-    // majority of cases.
-    if (ParamDecl->hasDefaultArg() &&
-        isSupportedPointerType(
-            ParamDecl->getDefaultArg()->getType().getNonReferenceType())) {
-      const Expr *DefaultArg = ParamDecl->getDefaultArg();
-      if (DefaultArg->isNullPointerConstant(
-              D.getASTContext(), Expr::NPC_ValueDependentIsNotNull)) {
-        Emit(*Fn, paramSlot(I), Evidence::NULLABLE_ARGUMENT,
-             DefaultArg->getExprLoc());
-      } else {
-        auto Nullability =
-            getNullabilityAnnotationsFromType(DefaultArg->getType());
-        if (auto K = getArgEvidenceKindFromNullability(
-                Nullability.front().concrete())) {
-          Emit(*Fn, paramSlot(I), K, DefaultArg->getExprLoc());
-        } else {
-          Emit(*Fn, paramSlot(I), Evidence::UNKNOWN_ARGUMENT,
-               DefaultArg->getExprLoc());
-        }
-      }
-    }
+    collectEvidenceFromDefaultArgument(*Fn, *ParamDecl, paramSlot(I), Emit);
   }
 }
 
