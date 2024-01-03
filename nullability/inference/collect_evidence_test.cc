@@ -702,8 +702,7 @@ TEST(CollectEvidenceFromImplementationTest, MemberOperatorCallVarArgs) {
 
 TEST(CollectEvidenceFromImplementationTest, ConstructorCall) {
   static constexpr llvm::StringRef Src = R"cc(
-    class S {
-     public:
+    struct S {
       S(Nonnull<int*> a);
     };
     void target(int* p) { S s(p); }
@@ -714,6 +713,22 @@ TEST(CollectEvidenceFromImplementationTest, ConstructorCall) {
                                     functionNamed("target")),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                     functionNamed("S"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, NonTargetConstructorCall) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T>
+    struct S {
+      // Not a target due to templating, but the annotation here can still
+      // provide evidence for `p` from the call in `target`'s body.
+      S(Nonnull<T*> a);
+    };
+    void target(int* p) { S s(p); }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest,
@@ -852,6 +867,21 @@ TEST(CollectEvidenceFromImplementationTest,
 }
 
 TEST(CollectEvidenceFromImplementationTest,
+     PassedToNonnullInFunctionPointerField) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      void (*callee)(Nonnull<int*> i);
+    };
+
+    void target(int* p) { S().callee(p); }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
      PassedToNonnullInFunctionPointerFromAddressOfFunctionDecl) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nonnull<int*> i);
@@ -864,6 +894,74 @@ TEST(CollectEvidenceFromImplementationTest,
                                     functionNamed("target")),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                     functionNamed("callee"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, FunctionCallPassedToNonnull) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(Nonnull<int*> i);
+    int* makeIntPtr();
+
+    void target() { callee(makeIntPtr()); }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
+                           functionNamed("makeIntPtr")),
+                  evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                           functionNamed("callee"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     FunctionCallPassedToNonnullFunctionPointer) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* makeIntPtr();
+
+    void target(void (*callee)(Nonnull<int*> i)) { callee(makeIntPtr()); }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
+                                            Evidence::BOUND_TO_NONNULL,
+                                            functionNamed("makeIntPtr"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     FunctionCallPassedToNonnullFunctionPointerTargetNotAnInferenceTarget) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* makeIntPtr();
+
+    template <typename T>
+    void target(void (*callee)(Nonnull<T*> i), int* a) {
+      callee(makeIntPtr());
+      *a;
+    }
+
+    void instantiate() {
+      target<int>([](Nonnull<int*> i) {}, nullptr);
+    }
+  )cc";
+
+  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
+  auto TargetInstantiationNodes = match(
+      functionDecl(hasName("target"), isTemplateInstantiation()).bind("target"),
+      AST.context());
+  ASSERT_THAT(TargetInstantiationNodes, SizeIs(1));
+  auto* const InstantiationDecl = ast_matchers::selectFirst<FunctionDecl>(
+      "target", TargetInstantiationNodes);
+  ASSERT_NE(InstantiationDecl, nullptr);
+
+  USRCache USRCache;
+  std::vector<Evidence> Results;
+  auto Err = collectEvidenceFromImplementation(
+      *InstantiationDecl,
+      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
+                      USRCache),
+      USRCache);
+  if (Err) ADD_FAILURE() << toString(std::move(Err));
+  // Doesn't collect any evidence for target from target's body, only collects
+  // some for makeIntPtr.
+  EXPECT_THAT(Results, UnorderedElementsAre(evidence(
+                           SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
+                           functionNamed("makeIntPtr"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, PassedToNullable) {
@@ -954,6 +1052,43 @@ TEST(CollectEvidenceFromImplementationTest, RefAssignedToNonnullRef) {
       collectEvidenceFromTargetFunction(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest,
+     FunctionCallAssignedToNonnullTargetNotAnInferenceTarget) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* makeIntPtr();
+
+    template <typename T>
+    void target() {
+      Nonnull<T*> p = makeIntPtr();
+    }
+
+    void instantiate() { target<int>(); }
+  )cc";
+
+  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
+  auto TargetInstantiationNodes = match(
+      functionDecl(hasName("target"), isTemplateInstantiation()).bind("target"),
+      AST.context());
+  ASSERT_THAT(TargetInstantiationNodes, SizeIs(1));
+  auto* const InstantiationDecl = ast_matchers::selectFirst<FunctionDecl>(
+      "target", TargetInstantiationNodes);
+  ASSERT_NE(InstantiationDecl, nullptr);
+
+  USRCache USRCache;
+  std::vector<Evidence> Results;
+  auto Err = collectEvidenceFromImplementation(
+      *InstantiationDecl,
+      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
+                      USRCache),
+      USRCache);
+  if (Err) ADD_FAILURE() << toString(std::move(Err));
+  // Doesn't collect any evidence for target from target's body, only collects
+  // some for makeIntPtr.
+  EXPECT_THAT(Results, UnorderedElementsAre(evidence(
+                           SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
+                           functionNamed("makeIntPtr"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, AssignedToNullableOrUnknown) {

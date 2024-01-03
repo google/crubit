@@ -348,7 +348,7 @@ Evidence::Kind getArgEvidenceKindFromNullability(NullabilityKind Nullability) {
 template <typename CallOrConstructExpr>
 void collectEvidenceFromArgsAndParams(
     const FunctionDecl &CalleeDecl, const CallOrConstructExpr &Expr,
-    const std::vector<InferableSlot> &InferableCallerSlots,
+    const std::vector<InferableSlot> &InferableSlots,
     const Formula &InferableSlotsConstraint,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
@@ -364,7 +364,7 @@ void collectEvidenceFromArgsAndParams(
     ++ArgI;
 
   bool CollectEvidenceForCallee = isInferenceTarget(CalleeDecl);
-  bool CollectEvidenceForCaller = isInferenceTarget(*Env.getCurrentFunc());
+  bool CollectEvidenceForCaller = !InferableSlots.empty();
 
   // For each pointer parameter of the callee, ...
   for (; ParamI < CalleeDecl.param_size(); ++ParamI, ++ArgI) {
@@ -395,7 +395,7 @@ void collectEvidenceFromArgsAndParams(
       // Collect evidence from the binding of the argument to the parameter's
       // nullability, if known.
       collectEvidenceFromBindingToType(
-          ParamDecl->getType(), ParamNullability, *PV, InferableCallerSlots,
+          ParamDecl->getType(), ParamNullability, *PV, InferableSlots,
           InferableSlotsConstraint, Env, ArgLoc, Emit);
     }
 
@@ -413,7 +413,8 @@ void collectEvidenceFromArgsAndParams(
 }
 
 // Similar to collectEvidenceFromArgsAndParams, but handles the case of a call
-// to a function pointer that is provided as a parameter to the caller.
+// to a function pointer that is provided as a parameter or another decl, e.g.
+// a field or local variable.
 //
 // e.g. We can collect evidence for the nullability of `p` and (when we handle
 // more than top-level pointer slots) `j` in the following, based on the call to
@@ -424,51 +425,55 @@ void collectEvidenceFromArgsAndParams(
 //  }
 // ```
 //
-// With `CalleeDecl` in this case being a ParmVarDecl instead of a FunctionDecl
-// as in most CallExpr cases, distinct handling is needed.
+// With `CalleeDecl` in this case not being a FunctionDecl as in most CallExpr
+// cases, distinct handling is needed.
 void collectEvidenceFromCallExprWithoutDecl(
     const Decl &CalleeDecl, const CallExpr &Expr,
-    const std::vector<InferableSlot> &InferableCallerSlots,
+    const std::vector<InferableSlot> &InferableSlots,
     const Formula &InferableSlotsConstraint,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  // Function pointer params are the only case we know of so far that needs this
+  // Function pointers are the only case we know of so far that needs this
   // special handling, so if we run into others, skip them, but log first.
-  if (!CalleeDecl.isFunctionPointerType() || !isa<ParmVarDecl>(CalleeDecl)) {
+  if (!CalleeDecl.isFunctionPointerType()) {
     llvm::errs() << "Unsupported case of a CallExpr without a FunctionDecl. "
                     "Not collecting any evidence from this CallExpr:\n";
+    Expr.getBeginLoc().dump(CalleeDecl.getASTContext().getSourceManager());
     Expr.dump();
+    CalleeDecl.dump();
     return;
   }
-  auto *CalleeType = CalleeDecl.getFunctionType()->getAs<FunctionProtoType>();
-  if (!CalleeType) return;
-  if (!isInferenceTarget(*Env.getCurrentFunc())) return;
 
-  // For each pointer parameter of the callee, ...
-  for (unsigned I = 0; I < CalleeType->getNumParams(); ++I) {
-    const auto ParamType = CalleeType->getParamType(I);
-    if (!isSupportedRawPointerType(ParamType.getNonReferenceType())) continue;
-    // the corresponding argument should also be a pointer.
-    CHECK(isSupportedRawPointerType(Expr.getArg(I)->getType()))
-        << "Unsupported argument " << I
-        << " type: " << Expr.getArg(I)->getType().getAsString();
+  if (!InferableSlots.empty()) {
+    auto *CalleeType = CalleeDecl.getFunctionType()->getAs<FunctionProtoType>();
+    if (!CalleeType) return;
 
-    dataflow::PointerValue *PV = getPointerValueFromExpr(Expr.getArg(I), Env);
-    if (!PV) continue;
+    // For each pointer parameter of the callee, ...
+    for (unsigned I = 0; I < CalleeType->getNumParams(); ++I) {
+      const auto ParamType = CalleeType->getParamType(I);
+      if (!isSupportedRawPointerType(ParamType.getNonReferenceType())) continue;
+      // the corresponding argument should also be a pointer.
+      CHECK(isSupportedRawPointerType(Expr.getArg(I)->getType()))
+          << "Unsupported argument " << I
+          << " type: " << Expr.getArg(I)->getType().getAsString();
 
-    auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
+      dataflow::PointerValue *PV = getPointerValueFromExpr(Expr.getArg(I), Env);
+      if (!PV) continue;
 
-    // Collect evidence from the binding of the argument to the parameter's
-    // nullability, if known.
-    collectEvidenceFromBindingToType(
-        ParamType, ParamNullability, *PV, InferableCallerSlots,
-        InferableSlotsConstraint, Env, Expr.getArg(I)->getExprLoc(), Emit);
+      auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
 
-    // TODO: When we collect evidence for more complex slots than just top-level
-    // pointers, emit evidence of the nullability of the parameter of the
-    // function pointer as a slot in the caller's declaration, i.e. of `j` in
-    // the example in the function comment above.
+      // Collect evidence from the binding of the argument to the parameter's
+      // nullability, if known.
+      collectEvidenceFromBindingToType(ParamType, ParamNullability, *PV,
+                                       InferableSlots, InferableSlotsConstraint,
+                                       Env, Expr.getArg(I)->getExprLoc(), Emit);
+    }
   }
+
+  // TODO: When we collect evidence for more complex slots than just top-level
+  // pointers, emit evidence of the  function-pointer parameter's nullability
+  // as a slot in the appropriate declaration, i.e. of `j` in the example in the
+  // function comment above.
 }
 
 void collectEvidenceFromCallExpr(
@@ -501,7 +506,7 @@ void collectEvidenceFromConstructExpr(
   if (!ConstructExpr || !ConstructExpr->getConstructor()) return;
   auto *ConstructorDecl = dyn_cast_or_null<clang::CXXConstructorDecl>(
       ConstructExpr->getConstructor());
-  if (!ConstructorDecl || !isInferenceTarget(*ConstructorDecl)) return;
+  if (!ConstructorDecl) return;
 
   collectEvidenceFromArgsAndParams(*ConstructorDecl, *ConstructExpr,
                                    InferableSlots, InferableSlotsConstraint,
@@ -545,7 +550,7 @@ void collectEvidenceFromAssignment(
     const Formula &InferableSlotsConstraint, const Stmt &Stmt,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  if (!isInferenceTarget(*Env.getCurrentFunc())) return;
+  if (InferableSlots.empty()) return;
 
   // Initialization of new decl.
   if (auto *DeclStmt = dyn_cast_or_null<clang::DeclStmt>(&Stmt)) {
