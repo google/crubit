@@ -305,9 +305,9 @@ TEST(PointerNullabilityTest, ReproForFalsePositiveTriggeredByUnrelatedLoop) {
       // out.
       for (bool b = cond(); cond(); b = 0 & b) {
       }
-      while (cond())
-        // TODO(mboehme): False positive.
-        node = node->parent();  // [[unsafe]]
+      while (cond()) {
+        node = node->parent();
+      }
     }
   )cc"));
 }

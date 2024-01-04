@@ -1475,29 +1475,57 @@ ComparisonResult PointerNullabilityAnalysis::compare(QualType Type,
   return ComparisonResult::Unknown;
 }
 
+namespace {
+enum class WidenedProperty {
+  Identical,
+  False,
+  True,
+  Top,
+};
+}  // namespace
+
 // Returns the result of widening a nullability property.
 // `Prev` is the formula in the previous iteration, `Cur` is the formula in the
 // current iteration.
-// If the two formulas are equivalent (though not necessarily identical),
-// returns `Cur`, as this is the formula that is appropriate to use in the
-// current environment (where we will produce the widened pointer). Otherwise,
-// returns null, to indicate that the property should be widened to "top".
-static absl::Nullable<const Formula *> widenNullabilityProperty(
+// Returns `Identical`, if `Prev == Cur`, Otherwise, if they are
+// (only) equivalent, returns `True` or `False`, depending on the formulas'
+// (common) truth value. Otherwise, returns `Top`, indicating the lack of common
+// truth value.
+static WidenedProperty widenNullabilityProperty(
     absl::Nullable<const Formula *> Prev, const Environment &PrevEnv,
     absl::Nullable<const Formula *> Cur, Environment &CurEnv) {
-  if (Prev == Cur) return Cur;
-  if (Prev == nullptr || Cur == nullptr) return nullptr;
+  if (Prev == Cur) return WidenedProperty::Identical;
+  if (Prev == nullptr || Cur == nullptr) return WidenedProperty::Top;
 
   Arena &A = CurEnv.arena();
 
   if (PrevEnv.proves(*Prev)) {
-    if (CurEnv.proves(*Cur)) return Cur;
+    if (CurEnv.proves(*Cur)) return WidenedProperty::True;
   } else if (PrevEnv.proves(A.makeNot(*Prev)) &&
              CurEnv.proves(A.makeNot(*Cur))) {
-    return Cur;
+    return WidenedProperty::False;
   }
 
-  return nullptr;
+  return WidenedProperty::Top;
+}
+
+// Assumes `P` or its negation in `Env`, based on `W`. `W` may not be `Top`.
+static void maybeAssumeNullabilityProperty(WidenedProperty W,
+                                           const Formula &Prev,
+                                           Environment &Env) {
+  switch (W) {
+    case WidenedProperty::False:
+      Env.assume(Env.arena().makeNot(Prev));
+      break;
+    case WidenedProperty::True:
+      Env.assume(Prev);
+      break;
+    default:
+      // No action needs to be taken, either because `Prev` is identical to the
+      // current property (and therefore sufficiently valid in `Env` already) or
+      // because `W` is `Top`.
+      break;
+  }
 }
 
 absl::Nullable<Value *> PointerNullabilityAnalysis::widen(
@@ -1516,9 +1544,9 @@ absl::Nullable<Value *> PointerNullabilityAnalysis::widen(
     auto [FromNullablePrev, NullPrev] = getPointerNullState(*PrevPtr);
     auto [FromNullableCur, NullCur] = getPointerNullState(CurPtr);
 
-    const Formula *FromNullableWidened = widenNullabilityProperty(
+    WidenedProperty FromNullableWidened = widenNullabilityProperty(
         FromNullablePrev, PrevEnv, FromNullableCur, CurrentEnv);
-    const Formula *NullWidened =
+    WidenedProperty NullWidened =
         widenNullabilityProperty(NullPrev, PrevEnv, NullCur, CurrentEnv);
 
     // Is `PrevPtr` already equivalent to the widened pointer we are about to
@@ -1527,10 +1555,20 @@ absl::Nullable<Value *> PointerNullabilityAnalysis::widen(
             &getTopStorageLocation(DACtx, PrevPtr->getPointeeLoc().getType()) &&
         // Check whether
         // - the previous nullability property is equivalent to the current
-        //   property (in which case the widened property is non-null), or
+        //   property (in which case the widened property is non-Top), or
         // - the previous nullability property is already "top" (i.e. null)
-        (FromNullableWidened != nullptr || FromNullablePrev == nullptr) &&
-        (NullWidened != nullptr || NullPrev == nullptr)) {
+        (FromNullableWidened != WidenedProperty::Top ||
+         FromNullablePrev == nullptr) &&
+        (NullWidened != WidenedProperty::Top || NullPrev == nullptr)) {
+      // The formulas of the nullability properties in `Prev` may only be valid
+      // in `PrevEnv`. So, we need to re-assert them in the current environment
+      // to keep `PrevPtr` valid.
+      if (FromNullablePrev != nullptr)
+        maybeAssumeNullabilityProperty(FromNullableWidened, *FromNullablePrev,
+                                       CurrentEnv);
+      if (NullPrev != nullptr)
+        maybeAssumeNullabilityProperty(NullWidened, *NullPrev, CurrentEnv);
+
       return PrevPtr;
     }
 
@@ -1543,13 +1581,14 @@ absl::Nullable<Value *> PointerNullabilityAnalysis::widen(
     assert(WidenedNullability.IsNull != nullptr);
 
     auto &A = CurrentEnv.arena();
-    if (FromNullableWidened != nullptr)
+    if (FromNullableWidened != WidenedProperty::Top &&
+        FromNullableCur != nullptr)
       CurrentEnv.assume(
-          A.makeEquals(*WidenedNullability.FromNullable, *FromNullableWidened));
+          A.makeEquals(*WidenedNullability.FromNullable, *FromNullableCur));
     else
       forgetFromNullable(WidenedPtr, DACtx);
-    if (NullWidened != nullptr)
-      CurrentEnv.assume(A.makeEquals(*WidenedNullability.IsNull, *NullWidened));
+    if (NullWidened != WidenedProperty::Top && NullCur != nullptr)
+      CurrentEnv.assume(A.makeEquals(*WidenedNullability.IsNull, *NullCur));
     else
       forgetIsNull(WidenedPtr, DACtx);
 
