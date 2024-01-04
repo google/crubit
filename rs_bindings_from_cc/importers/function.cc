@@ -27,6 +27,7 @@
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Sema/Sema.h"
@@ -203,24 +204,40 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     params.push_back({*param_type, *std::move(param_name)});
   }
 
-  if (function_decl->getReturnType()->isUndeducedType()) {
-    bool still_undeduced = ictx_.sema_.DeduceReturnType(
+  bool undeduced_return_type =
+      function_decl->getReturnType()->isUndeducedType();
+  if (undeduced_return_type) {
+    // TODO(b/317866933): Consider surfacing the instantiation error in
+    // generated bindings or to stderr.
+    // Use a custom diagnoser as the `DeduceReturnType` call may fail, which is
+    // OK if this is a method of a class template, since Crubit instantiates the
+    // members of the class templates eagerly.
+    std::unique_ptr<clang::DiagnosticConsumer> original_client =
+        ictx_.sema_.getDiagnostics().takeClient();
+    clang::DiagnosticConsumer diagnostic_consumer;
+    ictx_.sema_.getDiagnostics().setClient(&diagnostic_consumer, false);
+    // Attempt to deduce the return type.
+    undeduced_return_type = ictx_.sema_.DeduceReturnType(
         function_decl, function_decl->getLocation());
-    if (still_undeduced) {
+    // Restore the diagnostic client.
+    ictx_.sema_.getDiagnostics().setClient(original_client.release(),
+                                           /*ShouldOwnClient=*/true);
+    if (undeduced_return_type) {
       add_error("Couldn't deduce the return type");
     }
   }
-
-  const clang::tidy::lifetimes::ValueLifetimes* return_lifetimes = nullptr;
-  if (lifetimes) {
-    return_lifetimes = &lifetimes->GetReturnLifetimes();
-  }
-
-  auto return_type = ictx_.ConvertQualType(function_decl->getReturnType(),
-                                           return_lifetimes, std::nullopt);
-  if (!return_type.ok()) {
-    add_error(absl::StrCat("Return type is not supported: ",
-                           return_type.status().message()));
+  absl::StatusOr<MappedType> return_type;
+  if (!undeduced_return_type) {
+    const clang::tidy::lifetimes::ValueLifetimes* return_lifetimes = nullptr;
+    if (lifetimes) {
+      return_lifetimes = &lifetimes->GetReturnLifetimes();
+    }
+    return_type = ictx_.ConvertQualType(function_decl->getReturnType(),
+                                        return_lifetimes, std::nullopt);
+    if (!return_type.ok()) {
+      add_error(absl::StrCat("Return type is not supported: ",
+                             return_type.status().message()));
+    }
   }
 
   llvm::DenseSet<clang::tidy::lifetimes::Lifetime> all_free_lifetimes;

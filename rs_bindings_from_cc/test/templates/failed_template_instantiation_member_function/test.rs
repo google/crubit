@@ -5,4 +5,7 @@
 /// Test to ensure that Crubit can import class template specialization with
 /// un-instantiable member function.
 #[test]
-fn test_build() {}
+fn test_failed_template_instantiation_member_function() {
+    use failed_template_instantiation_member_function::*;
+    Func(B::default());
+}
