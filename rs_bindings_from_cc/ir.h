@@ -109,7 +109,7 @@ inline std::string DebugStringFromDecl(const clang::Decl* decl) {
   auto ostream = llvm::raw_string_ostream(decl_name);
   decl->print(ostream);
   ostream.flush();
-  return absl::StrFormat("Canonical DeclID: %ull; DeclID: %ull; decl: %s",
+  return absl::StrFormat("Canonical DeclID: %d; DeclID: %d; decl: %s",
                          canonical_decl_id, decl_id, decl_name);
 }
 
