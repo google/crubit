@@ -2961,7 +2961,7 @@ fn crubit_features_for_item(
             let mut crubit_features = flagset::FlagSet::<ir::CrubitFeature>::default();
             for t in func.types() {
                 let t = db.rs_type_kind(t.rs_type.clone())?;
-                crubit_features |= t.required_crubit_features()
+                crubit_features |= t.required_crubit_features(&db.ir())?
             }
             if func.is_extern_c {
                 crubit_features |= ir::CrubitFeature::ExternC;
@@ -2977,6 +2977,9 @@ fn crubit_features_for_item(
                 crubit_features |= ir::CrubitFeature::Experimental;
             }
             Ok(crubit_features)
+        }
+        Item::Record(record) => {
+            RsTypeKind::new_record(record.clone(), &db.ir())?.required_crubit_features(&db.ir())
         }
         _ => Ok(ir::CrubitFeature::Experimental.into()),
     }
@@ -3324,37 +3327,52 @@ impl RsTypeKind {
 
     /// Returns the features required to use this type.
     ///
-    /// If a struct contains this type as a field, or a function accepts or
-    /// returns this type, then the function or struct will itself also
-    /// require this feature.
-    pub fn required_crubit_features(&self) -> flagset::FlagSet<CrubitFeature> {
+    /// If a function accepts or returns this type, or an alias refers to this
+    /// type, then the function or type alias will itself also require this
+    /// feature. However, in the case of fields inside compound data types,
+    /// only those fields require the feature, not the entire type.
+    pub fn required_crubit_features(&self, ir: &IR) -> Result<flagset::FlagSet<CrubitFeature>> {
         /// Required features, sans recursion.
         fn required_crubit_features_flat(
             type_kind: &RsTypeKind,
-        ) -> flagset::FlagSet<CrubitFeature> {
+            ir: &IR,
+        ) -> Result<flagset::FlagSet<CrubitFeature>> {
             match type_kind {
-                RsTypeKind::Pointer { .. } => CrubitFeature::ExternC.into(),
+                RsTypeKind::Pointer { .. } => Ok(CrubitFeature::ExternC.into()),
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
-                    CrubitFeature::Experimental.into()
+                    Ok(CrubitFeature::Experimental.into())
                 }
                 // TODO(b/314382764): Carve out some function pointer types that can be ExternC.
-                RsTypeKind::FuncPtr { .. } => CrubitFeature::Experimental.into(),
-                RsTypeKind::IncompleteRecord { .. } => CrubitFeature::Experimental.into(),
-                // TODO(b/314382764): Carve out some record types that can be ExternC.
-                RsTypeKind::Record { .. } => CrubitFeature::Experimental.into(),
+                RsTypeKind::FuncPtr { .. } => Ok(CrubitFeature::Experimental.into()),
+                RsTypeKind::IncompleteRecord { .. } => Ok(CrubitFeature::Experimental.into()),
+                // Here, we can very carefully be non-recursive into the _structure_ of the type.
+                //
+                // Whether a record type is supported in rust does _not_ depend on whether each
+                // field is supported in Rust -- we can, if those fields are unsupported, replace
+                // them with opaque blobs.
+                //
+                // Instead, what matters is the abstract properties of the struct itself!
+                RsTypeKind::Record { record, .. } => {
+                    let record = RsTypeKind::new_record(record.clone(), ir)?;
+                    if record.is_unpin() {
+                        Ok(CrubitFeature::ExternC.into())
+                    } else {
+                        Ok(CrubitFeature::Experimental.into())
+                    }
+                }
                 // TODO(b/314382764): Carve out some aliases that can be ExternC.
-                RsTypeKind::TypeAlias { .. } => CrubitFeature::Experimental.into(),
-                RsTypeKind::Unit => CrubitFeature::ExternC.into(),
+                RsTypeKind::TypeAlias { .. } => Ok(CrubitFeature::Experimental.into()),
+                RsTypeKind::Unit => Ok(CrubitFeature::ExternC.into()),
                 // TODO(b/314382764): Carve out builtin types, etc. that can be ExternC.
-                RsTypeKind::Other { .. } => CrubitFeature::Experimental.into(),
+                RsTypeKind::Other { .. } => Ok(CrubitFeature::Experimental.into()),
             }
         }
 
         let mut features = flagset::FlagSet::<CrubitFeature>::default();
         for type_kind in self.dfs_iter() {
-            features |= required_crubit_features_flat(type_kind);
+            features |= required_crubit_features_flat(type_kind, ir)?;
         }
-        features
+        Ok(features)
     }
 
     /// Returns true if the type can be passed by value through `extern "C"` ABI
@@ -9435,10 +9453,41 @@ mod tests {
         Ok(())
     }
 
+    /// Unsupported fields on supported structs are replaced with opaque blobs.
+    ///
+    /// This is hard to test any other way than token comparison!
+    #[test]
+    fn test_extern_c_suppressed_field_types() -> Result<()> {
+        let mut ir = ir_from_cc(
+            "#
+            struct Nontrivial {
+                ~Nontrivial();
+            };
+
+            struct Trivial {
+                Nontrivial* hidden_field;
+            };
+        
+        #",
+        )?;
+        *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+            ir::CrubitFeature::ExternC.into();
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+            struct Trivial {
+                ...
+                pub(crate) hidden_field: [::core::mem::MaybeUninit<u8>; 8],
+            }}
+        );
+        Ok(())
+    }
+
     /// The default crubit feature set currently doesn't include extern_c.
     #[test]
     fn test_default_crubit_features_disabled_extern_c() -> Result<()> {
-        for item in ["extern \"C\" void NotPresent() {}"] {
+        for item in ["extern \"C\" void NotPresent() {}", "struct NotPresent {};"] {
             let mut ir = ir_from_cc(item)?;
             ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
             let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -9457,9 +9506,7 @@ mod tests {
     /// The default crubit feature set currently doesn't include experimetnal.
     #[test]
     fn test_default_crubit_features_disabled_experimental() -> Result<()> {
-        for item in
-            ["struct NotPresent {};", "inline int NotPresent() {}", "using NotPresent = int;"]
-        {
+        for item in ["inline int NotPresent() {}", "using NotPresent = int;"] {
             let mut ir = ir_from_cc(item)?;
             ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
             let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -9476,8 +9523,28 @@ mod tests {
     }
 
     #[test]
-    fn test_default_crubit_features_disabled_dependency_function_parameter() -> Result<()> {
-        for dependency in ["struct NotPresent {};", "using NotPresent = int;"] {
+    fn test_default_crubit_features_disabled_dependency_extern_c_function_parameter() -> Result<()>
+    {
+        for dependency in ["struct NotPresent {};"] {
+            let mut ir = ir_from_cc_dependency("void Func(NotPresent);", dependency)?;
+            ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            assert_rs_not_matches!(rs_api, quote! {Func});
+            assert_cc_not_matches!(rs_api_impl, quote! {Func});
+            let expected = "\
+                Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+                Error while generating bindings for item 'Func':\n\
+                Failed to format type of parameter 0: Missing required features on //test:dependency: [//features:extern_c]\
+            ";
+            assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_default_crubit_features_disabled_dependency_experimental_function_parameter()
+    -> Result<()> {
+        for dependency in ["using NotPresent = int;"] {
             let mut ir = ir_from_cc_dependency("void Func(NotPresent);", dependency)?;
             ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
             let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -9494,8 +9561,28 @@ mod tests {
     }
 
     #[test]
-    fn test_default_crubit_features_disabled_dependency_function_return_type() -> Result<()> {
-        for dependency in ["struct NotPresent {};", "using NotPresent = int;"] {
+    fn test_default_crubit_features_disabled_dependency_extern_c_function_return_type() -> Result<()>
+    {
+        for dependency in ["struct NotPresent {};"] {
+            let mut ir = ir_from_cc_dependency("NotPresent Func();", dependency)?;
+            ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            assert_rs_not_matches!(rs_api, quote! {Func});
+            assert_cc_not_matches!(rs_api_impl, quote! {Func});
+            let expected = "\
+                Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+                Error while generating bindings for item 'Func':\n\
+                Failed to format return type: Missing required features on //test:dependency: [//features:extern_c]\
+            ";
+            assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_default_crubit_features_disabled_dependency_experimental_function_return_type()
+    -> Result<()> {
+        for dependency in ["using NotPresent = int;"] {
             let mut ir = ir_from_cc_dependency("NotPresent Func();", dependency)?;
             ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
             let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;

@@ -21,6 +21,9 @@ crubit_rust_test(
     cc_deps = [
         ":has_bindings",
     ],
+    proc_macro_deps = [
+        "//common:item_exists",
+    ],
 )
 
 crubit_rust_test(
