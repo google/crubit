@@ -125,6 +125,7 @@ pub struct FieldTypeTestStruct {
     /// SomeStruct&& struct_rvalue_ref_field;
     /// const SomeStruct&& const_struct_rvalue_ref_field;
     pub forward_declared_ptr_field: *mut crate::ForwardDeclaredStruct,
+    pub cyclic_ptr_field: *mut crate::FieldTypeTestStruct,
 }
 impl !Send for FieldTypeTestStruct {}
 impl !Sync for FieldTypeTestStruct {}
@@ -250,7 +251,7 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeStruct:Drop);
 };
 
-const _: () = assert!(::core::mem::size_of::<crate::FieldTypeTestStruct>() == 200);
+const _: () = assert!(::core::mem::size_of::<crate::FieldTypeTestStruct>() == 208);
 const _: () = assert!(::core::mem::align_of::<crate::FieldTypeTestStruct>() == 8);
 const _: () = {
     static_assertions::assert_impl_all!(crate::FieldTypeTestStruct:Clone);
@@ -302,3 +303,4 @@ const _: () =
     assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, const_struct_ref_field) == 184);
 const _: () =
     assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, forward_declared_ptr_field) == 192);
+const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, cyclic_ptr_field) == 200);

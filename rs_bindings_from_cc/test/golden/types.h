@@ -62,6 +62,8 @@ struct FieldTypeTestStruct final {
   // const SomeStruct&& const_struct_rvalue_ref_field;
 
   ForwardDeclaredStruct* forward_declared_ptr_field;
+
+  FieldTypeTestStruct* cyclic_ptr_field;
 };
 
 void FunctionTakingPointersAndReferences(const int& const_ref_param,
