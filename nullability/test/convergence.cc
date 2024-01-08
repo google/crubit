@@ -306,6 +306,7 @@ TEST(PointerNullabilityTest, ReproForFalsePositiveTriggeredByUnrelatedLoop) {
       for (bool b = cond(); cond(); b = 0 & b) {
       }
       while (cond()) {
+        // This is the line where the false positive occurred (now fixed).
         node = node->parent();
       }
     }
