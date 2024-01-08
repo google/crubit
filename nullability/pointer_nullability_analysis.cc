@@ -1509,21 +1509,23 @@ static WidenedProperty widenNullabilityProperty(
   return WidenedProperty::Top;
 }
 
-// Assumes `P` or its negation in `Env`, based on `W`. `W` may not be `Top`.
+// Assumes `Prev` or its negation in `Env`, based on `W`. `W` may not be `Top`.
 static void maybeAssumeNullabilityProperty(WidenedProperty W,
                                            const Formula &Prev,
                                            Environment &Env) {
   switch (W) {
+    case WidenedProperty::Identical:
+      // No action needs to be taken because `Prev` is identical to the current
+      // property (and therefore sufficiently valid in `Env` already).
+      break;
     case WidenedProperty::False:
       Env.assume(Env.arena().makeNot(Prev));
       break;
     case WidenedProperty::True:
       Env.assume(Prev);
       break;
-    default:
-      // No action needs to be taken, either because `Prev` is identical to the
-      // current property (and therefore sufficiently valid in `Env` already) or
-      // because `W` is `Top`.
+    case WidenedProperty::Top:
+      assert(false);
       break;
   }
 }
