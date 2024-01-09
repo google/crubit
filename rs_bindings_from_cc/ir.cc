@@ -421,6 +421,7 @@ llvm::json::Value IncompleteRecord::ToJson() const {
       {"rs_name", rs_name},
       {"id", id},
       {"owning_target", owning_target},
+      {"unknown_attr", unknown_attr},
       {"record_type", RecordTypeToString(record_type)},
       {"enclosing_namespace_id", enclosing_namespace_id},
   };
@@ -451,6 +452,7 @@ llvm::json::Value Record::ToJson() const {
       {"id", id},
       {"owning_target", owning_target},
       {"defining_target", defining_target},
+      {"unknown_attr", unknown_attr},
       {"doc_comment", doc_comment},
       {"source_loc", source_loc},
       {"unambiguous_public_bases", unambiguous_public_bases},

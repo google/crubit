@@ -2955,10 +2955,13 @@ fn crubit_features_for_item(
 ) -> Result<flagset::FlagSet<ir::CrubitFeature>> {
     // TODO(b/318006909): Explain why a given feature is required, don't just return
     // a FlagSet.
+    let mut crubit_features = flagset::FlagSet::<ir::CrubitFeature>::default();
+    if item.unknown_attr().is_some() {
+        crubit_features |= ir::CrubitFeature::Experimental;
+    }
     match item {
-        Item::UnsupportedItem(..) => Ok(Default::default()),
+        Item::UnsupportedItem(..) => {}
         Item::Func(func) => {
-            let mut crubit_features = flagset::FlagSet::<ir::CrubitFeature>::default();
             for t in func.types() {
                 let t = db.rs_type_kind(t.rs_type.clone())?;
                 crubit_features |= t.required_crubit_features(&db.ir())?
@@ -2972,17 +2975,19 @@ fn crubit_features_for_item(
                 || func.is_noreturn
                 || func.nodiscard.is_some()
                 || func.deprecated.is_some()
-                || func.unknown_attr.is_some()
             {
                 crubit_features |= ir::CrubitFeature::Experimental;
             }
-            Ok(crubit_features)
         }
         Item::Record(record) => {
-            RsTypeKind::new_record(record.clone(), &db.ir())?.required_crubit_features(&db.ir())
+            crubit_features |= RsTypeKind::new_record(record.clone(), &db.ir())?
+                .required_crubit_features(&db.ir())?
         }
-        _ => Ok(ir::CrubitFeature::Experimental.into()),
+        _ => {
+            crubit_features |= ir::CrubitFeature::Experimental;
+        }
     }
+    Ok(crubit_features)
 }
 
 /// Identifies all functions having overloads that we can't import (yet).
@@ -9393,6 +9398,9 @@ mod tests {
         }
         fn source_loc(&self) -> Option<Rc<str>> {
             self.source_loc.clone()
+        }
+        fn unknown_attr(&self) -> Option<Rc<str>> {
+            None
         }
     }
 

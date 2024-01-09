@@ -2389,6 +2389,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
               id: ItemId(...),
               owning_target: BazelLabel("//test:testing_target"),
               defining_target: None,
+              unknown_attr: None,
               doc_comment: Some(...),
               source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=15",
               unambiguous_public_bases: [],

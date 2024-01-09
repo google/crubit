@@ -16,6 +16,14 @@ struct Nontrivial {
   ~Nontrivial() {}  // NOLINT(modernize-use-equals-default)
 };
 
+// This struct would receive bindings, if it weren't for the unrecognized
+// attribute on the struct.
+struct [[deprecated]] UnknownAttrStruct final {
+  int* x;
+  float y;
+  UnknownAttrStruct* z;
+};
+
 extern "C" {
 inline void crubit_accepts_nontrivial_ptr(Nontrivial*) {}
 inline void crubit_accepts_nontrivial_value(Nontrivial) {}

@@ -587,6 +587,7 @@ struct Record {
   ItemId id;
   BazelLabel owning_target;
   std::optional<BazelLabel> defining_target;
+  std::optional<std::string> unknown_attr;
   std::optional<std::string> doc_comment;
   std::string source_loc;
   std::vector<BaseClass> unambiguous_public_bases;
@@ -662,6 +663,7 @@ struct IncompleteRecord {
   std::string rs_name;
   ItemId id;
   BazelLabel owning_target;
+  std::optional<std::string> unknown_attr;
   RecordType record_type;
   std::optional<ItemId> enclosing_namespace_id;
 };

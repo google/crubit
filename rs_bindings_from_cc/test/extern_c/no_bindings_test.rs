@@ -63,3 +63,8 @@ fn test_deprecated() {
 fn test_enable_if() {
     assert!(!value_exists!(no_bindings::crubit_enable_if));
 }
+
+#[test]
+fn test_unknown_attr_struct() {
+    assert!(!type_exists!(no_bindings::UnknownAttrStruct));
+}

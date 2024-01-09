@@ -28,6 +28,10 @@ pub trait GenericItem {
 
     /// The recorded source location, or None if none is present.
     fn source_loc(&self) -> Option<Rc<str>>;
+
+    /// A human-readable list of unknown attributes, or None if all attributes
+    /// were understood.
+    fn unknown_attr(&self) -> Option<Rc<str>>;
 }
 
 impl<T> GenericItem for Rc<T>
@@ -42,6 +46,9 @@ where
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         (**self).source_loc()
+    }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
+        (**self).unknown_attr()
     }
 }
 
@@ -494,6 +501,9 @@ impl GenericItem for Func {
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
     }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
+        self.unknown_attr.clone()
+    }
 }
 
 impl Func {
@@ -556,6 +566,12 @@ pub struct IncompleteRecord {
     pub rs_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    ///
+    /// Because attributes can change the behavior or semantics of types in
+    /// fairly significant ways, and in ways that may affect interop, we
+    /// default-closed and do not expose functions with unknown attributes.
+    pub unknown_attr: Option<Rc<str>>,
     pub record_type: RecordType,
     pub enclosing_namespace_id: Option<ItemId>,
 }
@@ -569,6 +585,9 @@ impl GenericItem for IncompleteRecord {
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
+    }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
+        self.unknown_attr.clone()
     }
 }
 
@@ -608,6 +627,12 @@ pub struct Record {
     /// The target containing the template definition, if this is a templated
     /// record type.
     pub defining_target: Option<BazelLabel>,
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    ///
+    /// Because attributes can change the behavior or semantics of types in
+    /// fairly significant ways, and in ways that may affect interop, we
+    /// default-closed and do not expose functions with unknown attributes.
+    pub unknown_attr: Option<Rc<str>>,
     pub doc_comment: Option<Rc<str>>,
     pub source_loc: Rc<str>,
     pub unambiguous_public_bases: Vec<BaseClass>,
@@ -638,6 +663,9 @@ impl GenericItem for Record {
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
+    }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
+        self.unknown_attr.clone()
     }
 }
 
@@ -687,6 +715,9 @@ impl GenericItem for Enum {
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
     }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
+        None // TODO(b/314838274): Implement this.
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -718,6 +749,9 @@ impl GenericItem for TypeAlias {
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
+    }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
+        None // TODO(b/314838274): Implement this.
     }
 }
 
@@ -765,6 +799,9 @@ impl GenericItem for UnsupportedItem {
     fn source_loc(&self) -> Option<Rc<str>> {
         self.source_loc.clone()
     }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
+        None
+    }
 }
 
 impl UnsupportedItem {
@@ -811,6 +848,9 @@ impl GenericItem for Comment {
     fn source_loc(&self) -> Option<Rc<str>> {
         None
     }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
+        None
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -836,6 +876,9 @@ impl GenericItem for Namespace {
     fn source_loc(&self) -> Option<Rc<str>> {
         None
     }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
+        None // TODO(b/314838274): Implement this.
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -854,6 +897,9 @@ impl GenericItem for UseMod {
         format!("[internal] use mod {}::* = {}", self.mod_name, self.path).into()
     }
     fn source_loc(&self) -> Option<Rc<str>> {
+        None
+    }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
         None
     }
 }
@@ -877,6 +923,9 @@ impl GenericItem for TypeMapOverride {
         self.cc_name.clone()
     }
     fn source_loc(&self) -> Option<Rc<str>> {
+        None
+    }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
         None
     }
 }
@@ -931,6 +980,13 @@ impl GenericItem for Item {
         forward_item! {
             match self {
                 _(x) => x.source_loc()
+            }
+        }
+    }
+    fn unknown_attr(&self) -> Option<Rc<str>> {
+        forward_item! {
+            match self {
+                _(x) => x.unknown_attr()
             }
         }
     }

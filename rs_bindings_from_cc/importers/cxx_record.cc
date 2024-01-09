@@ -25,6 +25,8 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Attr.h"
+#include "clang/AST/Attrs.inc"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
@@ -182,17 +184,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (record_decl->isInvalidDecl()) {
     return std::nullopt;
   }
-  if (record_decl->isInStdNamespace() &&
-      record_decl->hasAttr<clang::VisibilityAttr>()) {
-    auto visibility = record_decl->getAttr<clang::VisibilityAttr>();
-    if (visibility->getVisibility() ==
-        clang::VisibilityAttr::VisibilityType::Hidden) {
-      return ictx_.ImportUnsupportedItem(
-          record_decl,
-          "Records from the standard library with hidden visibility are not "
-          "supported");
-    }
-  }
 
   absl::StatusOr<RecordType> record_type = TranslateRecordType(*record_decl);
   if (!record_type.ok()) {
@@ -207,6 +198,37 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                   })) {
     return ictx_.ImportUnsupportedItem(
         record_decl, "Records with packed layout are not supported");
+  }
+
+  std::optional<std::string> unknown_attr;
+  if (record_decl->hasAttrs()) {
+    // Surprisingly, getAttrs() does not return an empty vec if there are no
+    // attrs, it crashes.
+    for (clang::Attr* attr : record_decl->getAttrs()) {
+      if (clang::isa<clang::AlignedAttr>(attr)) {
+        continue;
+      } else if (clang::isa<clang::FinalAttr>(attr)) {
+        continue;
+      } else if (auto* visibility =
+                     clang::dyn_cast<clang::VisibilityAttr>(attr);
+                 visibility && record_decl->isInStdNamespace()) {
+        if (visibility->getVisibility() ==
+            clang::VisibilityAttr::VisibilityType::Hidden) {
+          return ictx_.ImportUnsupportedItem(
+              record_decl,
+              "Records from the standard library with hidden visibility are "
+              "not supported");
+        }
+      }
+      if (unknown_attr.has_value()) {
+        absl::StrAppend(&*unknown_attr, ", ");
+      } else {
+        unknown_attr.emplace("");
+      }
+      absl::StrAppend(&*unknown_attr, attr->getAttrName()
+                                          ? attr->getNormalizedFullName()
+                                          : attr->getSpelling());
+    }
   }
 
   std::string rs_name, cc_name, preferred_cc_name;
@@ -283,6 +305,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         .rs_name = std::move(rs_name),
         .id = GenerateItemId(record_decl),
         .owning_target = ictx_.GetOwningTarget(record_decl),
+        .unknown_attr = std::move(unknown_attr),
         .record_type = *record_type,
         .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl)};
   }
@@ -313,6 +336,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .id = GenerateItemId(record_decl),
       .owning_target = ictx_.GetOwningTarget(record_decl),
       .defining_target = std::move(defining_target),
+      .unknown_attr = std::move(unknown_attr),
       .doc_comment = std::move(doc_comment),
       .source_loc = ictx_.ConvertSourceLocation(source_loc),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
