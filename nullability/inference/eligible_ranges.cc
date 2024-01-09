@@ -26,6 +26,7 @@
 #include "clang/Lex/Token.h"
 #include "clang/Tooling/Transformer/SourceCode.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/Path.h"
 
 namespace clang::tidy::nullability {
 
@@ -134,10 +135,11 @@ static std::optional<TypeLocRanges> getEligibleRanges(const FunctionDecl &Fun) {
 
   if (Result.range().empty()) return std::nullopt;
   // Extract the path in which `Fun` is located.
-  const clang::FileEntry *Entry =
-      Context.getSourceManager().getFileEntryForID(DeclFID);
-  if (Entry == nullptr) return std::nullopt;
-  Result.set_path(std::string_view(Entry->getName()));
+  const clang::OptionalFileEntryRef Entry =
+      Context.getSourceManager().getFileEntryRefForID(DeclFID);
+  if (!Entry) return std::nullopt;
+  Result.set_path(std::string_view(
+      llvm::sys::path::remove_leading_dotslash(Entry->getName())));
   return Result;
 }
 
