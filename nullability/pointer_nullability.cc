@@ -110,13 +110,14 @@ void initPointerNullState(PointerValue &PointerVal,
                           DataflowAnalysisContext &Ctx,
                           std::optional<PointerTypeNullability> Source) {
   auto &A = Ctx.arena();
-  if (tryCreatePointerNullState(PointerVal, A,
-                                Source ? &Source->isNullable(A) : nullptr)) {
-    // The symbolic/nonnull check is not needed for correctness, but it avoids
-    // adding meaningless (false => !null) invariant clauses.
+  if (tryCreatePointerNullState(
+          PointerVal, A, Source ? &Source->isNullable(A) : nullptr,
+          Source == NullabilityKind::NonNull ? &A.makeLiteral(false)
+                                             : nullptr)) {
+    // The `isSymbolic()` check is not needed for correctness, but it avoids
+    // adding meaningless (false => !null) or (true => true) invariant clauses.
     // TODO: remove this once such clauses are recognized and dropped.
-    if (Source &&
-        (Source->isSymbolic() || Source == NullabilityKind::NonNull)) {
+    if (Source && Source->isSymbolic()) {
       if (const Formula *IsNull = getPointerNullState(PointerVal).IsNull)
         Ctx.addInvariant(
             A.makeImplies(Source->isNonnull(A), A.makeNot(*IsNull)));

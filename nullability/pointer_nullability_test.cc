@@ -64,8 +64,15 @@ TEST_F(NullabilityPropertiesTest, Test) {
   {
     auto &NonnullAndNotNull = makePointer(NullabilityKind::NonNull);
     EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
+
     auto *IsNull = getPointerNullState(NonnullAndNotNull).IsNull;
     ASSERT_NE(IsNull, nullptr);
+
+    // `IsNull` should not just be provably false but an actual false literal.
+    ASSERT_EQ(IsNull, &A.makeLiteral(false));
+
+    // Assuming the pointer is non-null is a no-op, but make sure it doesn't
+    // change the result of `isNullable()`.
     Env.assume(A.makeNot(*IsNull));
     EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
   }
