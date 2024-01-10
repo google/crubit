@@ -440,7 +440,11 @@ cc_library(
 
 rust_library(
     name = "src_code_gen_impl",
-    srcs = ["src_code_gen.rs"],
+    srcs = [
+        "rs_snippet.rs",
+        "src_code_gen.rs",
+    ],
+    crate_root = "src_code_gen.rs",
     deps = [
         ":error_report",
         ":ir",

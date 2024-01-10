@@ -7,9 +7,9 @@
 //! information.
 
 use arc_anyhow::{anyhow, bail, Context, Error, Result};
-use code_gen_utils::NamespaceQualifier;
+use code_gen_utils::{make_rs_ident, NamespaceQualifier};
 use once_cell::unsync::OnceCell;
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 use serde::Deserialize;
 use std::collections::hash_map::{Entry, HashMap};
@@ -1407,6 +1407,19 @@ impl IR {
             }
         }
         Ok(NamespaceQualifier::new(namespaces.into_iter().rev()))
+    }
+}
+
+// TODO(jeanpierreda): This should probably be a method on IR accepting a GenericItem,
+// and returning the crate name, or similar.
+
+/// Returns Some(crate_ident) if this is an imported crate.
+pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ident> {
+    if ir.is_current_target(owning_target) {
+        None
+    } else {
+        let owning_crate = make_rs_ident(&owning_target.target_name_escaped());
+        Some(owning_crate)
     }
 }
 
