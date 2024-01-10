@@ -1551,10 +1551,13 @@ absl::Nullable<Value *> PointerNullabilityAnalysis::widen(
     WidenedProperty NullWidened =
         widenNullabilityProperty(NullPrev, PrevEnv, NullCur, CurrentEnv);
 
-    // Is `PrevPtr` already equivalent to the widened pointer we are about to
-    // produce? If so, return `PrevPtr` to signal this.
-    if (&PrevPtr->getPointeeLoc() ==
-            &getTopStorageLocation(DACtx, PrevPtr->getPointeeLoc().getType()) &&
+    // Is `PrevPtr` already equivalent to either of the current pointer or the
+    // widened pointer we are about to produce? If so, return `PrevPtr` to
+    // signal this.
+    if ((&PrevPtr->getPointeeLoc() == &CurPtr.getPointeeLoc() ||
+         &PrevPtr->getPointeeLoc() ==
+             &getTopStorageLocation(DACtx,
+                                    PrevPtr->getPointeeLoc().getType())) &&
         // Check whether
         // - the previous nullability property is equivalent to the current
         //   property (in which case the widened property is non-Top), or
