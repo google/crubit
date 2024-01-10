@@ -7,6 +7,7 @@
 //! information.
 
 use arc_anyhow::{anyhow, bail, Context, Error, Result};
+use code_gen_utils::NamespaceQualifier;
 use once_cell::unsync::OnceCell;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
@@ -1387,6 +1388,25 @@ impl IR {
         function_name: &UnqualifiedIdentifier,
     ) -> impl Iterator<Item = &Rc<Func>> {
         self.function_name_to_functions.get(function_name).map_or([].iter(), |v| v.iter())
+    }
+
+    pub fn namespace_qualifier(&self, item: &impl GenericItem) -> Result<NamespaceQualifier> {
+        let mut namespaces = vec![];
+        let item: &Item = self.find_decl(item.id())?;
+        let mut enclosing_namespace_id = item.enclosing_namespace_id();
+        while let Some(parent_id) = enclosing_namespace_id {
+            let namespace_item = self.find_decl(parent_id)?;
+            match namespace_item {
+                Item::Namespace(ns) => {
+                    namespaces.push(ns.name.identifier.clone());
+                    enclosing_namespace_id = ns.enclosing_namespace_id;
+                }
+                _ => {
+                    bail!("Expected namespace");
+                }
+            }
+        }
+        Ok(NamespaceQualifier::new(namespaces.into_iter().rev()))
     }
 }
 

@@ -326,6 +326,7 @@ rust_library(
     srcs = ["ir.rs"],
     deps = [
         "//common:arc_anyhow",
+        "//common:code_gen_utils",
         "@crate_index//:flagset",
         "@crate_index//:itertools",
         "@crate_index//:once_cell",
