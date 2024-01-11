@@ -5,6 +5,22 @@
 use crate::std::string_view;
 use core::ptr;
 
+impl string_view {
+    /// Returns an equivalent Rust slice pointer.
+    ///
+    /// The resulting slice pointer is valid for the lifetime of the pointed-to
+    /// object.
+    ///
+    /// Note: For empty strings, the address of the slice pointer may not be the
+    /// same as the address of the string_view. Null pointers are converted
+    /// to valid, but dangling, pointers.
+    #[inline(always)]
+    pub fn as_raw_bytes(self) -> *const [u8] {
+        self.into()
+    }
+}
+
+/// Equivalent to `as_raw_bytes()`.
 impl From<string_view> for *const [u8] {
     fn from(sv: string_view) -> Self {
         let mut data = unsafe { string_view::data(&sv) };
