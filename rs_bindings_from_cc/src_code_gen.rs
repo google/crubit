@@ -2905,6 +2905,11 @@ fn crubit_features_for_item(
             {
                 crubit_features |= ir::CrubitFeature::Experimental;
             }
+            for param in &func.params {
+                if param.unknown_attr.is_some() {
+                    crubit_features |= ir::CrubitFeature::Experimental;
+                }
+            }
         }
         Item::Record(record) => {
             crubit_features |= RsTypeKind::new_record(record.clone(), &db.ir())?

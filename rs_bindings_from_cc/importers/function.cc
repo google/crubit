@@ -176,7 +176,11 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         add_error(absl::StrCat("`this` parameter is not supported: ",
                                param_type.status().message()));
       } else {
-        params.push_back({*std::move(param_type), Identifier("__this")});
+        params.push_back(
+            {.type = *std::move(param_type),
+             .identifier = Identifier("__this"),
+             // TODO(b/319524852): catch `[[clang::lifetimbound]]` on `this`.
+             .unknown_attr = {}});
       }
     }
   }
@@ -199,9 +203,27 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       continue;
     }
 
+    std::optional<std::string> unknown_attr;
+    if (param->hasAttrs()) {
+      // Surprisingly, getAttrs() does not return an empty vec if there are no
+      // attrs, it crashes.
+      for (clang::Attr* attr : param->getAttrs()) {
+        if (unknown_attr.has_value()) {
+          absl::StrAppend(&*unknown_attr, ", ");
+        } else {
+          unknown_attr.emplace("");
+        }
+        absl::StrAppend(&*unknown_attr, attr->getAttrName()
+                                            ? attr->getNormalizedFullName()
+                                            : attr->getSpelling());
+      }
+    }
+
     std::optional<Identifier> param_name = GetTranslatedParamName(param);
     CHECK(param_name.has_value());  // No known failure cases.
-    params.push_back({*param_type, *std::move(param_name)});
+    params.push_back({.type = *param_type,
+                      .identifier = *std::move(param_name),
+                      .unknown_attr = std::move(unknown_attr)});
   }
 
   bool undeduced_return_type =

@@ -258,6 +258,7 @@ llvm::json::Value FuncParam::ToJson() const {
   return llvm::json::Object{
       {"type", type},
       {"identifier", identifier},
+      {"unknown_attr", unknown_attr},
   };
 }
 

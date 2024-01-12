@@ -63,6 +63,7 @@ fn test_function() {
                             },
                         },
                         identifier: "a",
+                        unknown_attr: None,
                     },
                     FuncParam {
                         type_: MappedType {
@@ -80,6 +81,7 @@ fn test_function() {
                             },
                         },
                         identifier: "b",
+                        unknown_attr: None,
                     },
                 ],
                 lifetime_params: [],
@@ -1511,6 +1513,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
                             cc_type: CcType { name: Some("int"), ...  },
                         },
                         identifier: "__my_args_0",
+                        unknown_attr: None,
                     },
                     FuncParam {
                         type_: MappedType {
@@ -1518,6 +1521,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
                             cc_type: CcType { name: Some("int"), ...  },
                         },
                         identifier: "__my_args_1",
+                        unknown_attr: None,
                     },
                 ], ...
             }
@@ -1635,6 +1639,7 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
                     },
                 },
                 identifier: "my_param",
+                unknown_attr: None,
             }], ...
             is_inline: false, ...
             member_func_metadata: None, ...
@@ -2145,17 +2150,18 @@ fn test_well_known_types_check_namespaces() -> Result<()> {
             name: "f", ...
             params: [
              FuncParam {
-               type_: MappedType {
-                 rs_type: RsType {
-                   name: None, ...
-                   decl_id: Some(...), ...
-                 },
-                 cc_type: CcType {
-                   name: None, ...
-                   decl_id: Some(...), ...
-                 },
-               },
-               identifier: "i",
+              type_: MappedType {
+                rs_type: RsType {
+                  name: None, ...
+                  decl_id: Some(...), ...
+                },
+                cc_type: CcType {
+                  name: None, ...
+                  decl_id: Some(...), ...
+                },
+              },
+              identifier: "i",
+              unknown_attr: None,
              }], ...
           }
         }
@@ -2501,17 +2507,18 @@ fn test_integer_typedef_usage() -> Result<()> {
          name: "f", ...
          params: [
            FuncParam {
-             type_: MappedType {
-               rs_type: RsType {
-                 name: None, ...
-                 decl_id: Some(...), ...
-               },
-               cc_type: CcType {
-                 name: None, ...
-                 decl_id: Some(...), ...
-               },
-             },
-             identifier: "my_typedef",
+            type_: MappedType {
+              rs_type: RsType {
+                name: None, ...
+                decl_id: Some(...), ...
+              },
+              cc_type: CcType {
+                name: None, ...
+                decl_id: Some(...), ...
+              },
+            },
+            identifier: "my_typedef",
+            unknown_attr: None,
            }], ...
         } }
     );

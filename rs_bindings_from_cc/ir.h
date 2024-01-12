@@ -391,6 +391,7 @@ struct FuncParam {
 
   MappedType type;
   Identifier identifier;
+  std::optional<std::string> unknown_attr;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const FuncParam& param) {

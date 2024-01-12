@@ -433,6 +433,15 @@ pub struct FuncParam {
     #[serde(rename(deserialize = "type"))]
     pub type_: MappedType,
     pub identifier: Identifier,
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    ///
+    /// Because attributes can change the behavior or semantics of function
+    /// parameters in ways that may affect interop, we default-closed and
+    /// do not expose functions with unknown attributes.
+    ///
+    /// One notable example is `lifetimebound`, which we might expect to map
+    /// to Rust lifetimes.
+    pub unknown_attr: Option<Rc<str>>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

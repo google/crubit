@@ -45,6 +45,11 @@ fn test_vectorcall() {
 }
 
 #[test]
+fn test_parameter_lifetimebound() {
+    assert!(!value_exists!(no_bindings::crubit_parameter_lifetimebound));
+}
+
+#[test]
 fn test_noreturn() {
     assert!(!value_exists!(no_bindings::crubit_noreturn));
 }
