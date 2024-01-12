@@ -194,6 +194,102 @@ pub fn check_by_value(record: &Record) -> Result<()> {
     Ok(())
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum PrimitiveType {
+    /// (), void
+    Unit,
+    bool,
+    u8,
+    i8,
+    u16,
+    i16,
+    u32,
+    i32,
+    u64,
+    i64,
+    usize,
+    isize,
+    f32,
+    f64,
+    c_uchar,
+    c_schar,
+    c_ushort,
+    c_short,
+    c_uint,
+    c_int,
+    c_ulong,
+    c_long,
+    c_ulonglong,
+    c_longlong,
+}
+
+impl PrimitiveType {
+    pub fn from_str(s: &str) -> Option<Self> {
+        Some(match s {
+            "()" => Self::Unit,
+            "bool" => Self::bool,
+            "u8" => Self::u8,
+            "i8" => Self::i8,
+            "u16" => Self::u16,
+            "i16" => Self::i16,
+            "u32" => Self::u32,
+            "i32" => Self::i32,
+            "u64" => Self::u64,
+            "i64" => Self::i64,
+            "usize" => Self::usize,
+            "isize" => Self::isize,
+            "f32" => Self::f32,
+            "f64" => Self::f64,
+            "::core::ffi::c_uchar" => Self::c_uchar,
+            "::core::ffi::c_schar" => Self::c_schar,
+            "::core::ffi::c_ushort" => Self::c_ushort,
+            "::core::ffi::c_short" => Self::c_short,
+            "::core::ffi::c_uint" => Self::c_uint,
+            "::core::ffi::c_int" => Self::c_int,
+            "::core::ffi::c_ulong" => Self::c_ulong,
+            "::core::ffi::c_long" => Self::c_long,
+            "::core::ffi::c_ulonglong" => Self::c_ulonglong,
+            "::core::ffi::c_longlong" => Self::c_longlong,
+            _ => return None,
+        })
+    }
+}
+
+impl ToTokens for PrimitiveType {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            // This doesn't affect void in function return values, as those are special-cased to be
+            // omitted.
+            Self::Unit => quote! {::core::ffi::c_void},
+            Self::bool => quote! {bool},
+            Self::u8 => quote! {u8},
+            Self::i8 => quote! {i8},
+            Self::u16 => quote! {u16},
+            Self::i16 => quote! {i16},
+            Self::u32 => quote! {u32},
+            Self::i32 => quote! {i32},
+            Self::u64 => quote! {u64},
+            Self::i64 => quote! {i64},
+            Self::usize => quote! {usize},
+            Self::isize => quote! {isize},
+            Self::f32 => quote! {f32},
+            Self::f64 => quote! {f64},
+            Self::c_uchar => quote! {::core::ffi::c_uchar},
+            Self::c_schar => quote! {::core::ffi::c_schar},
+            Self::c_ushort => quote! {::core::ffi::c_ushort},
+            Self::c_short => quote! {::core::ffi::c_short},
+            Self::c_uint => quote! {::core::ffi::c_uint},
+            Self::c_int => quote! {::core::ffi::c_int},
+            Self::c_ulong => quote! {::core::ffi::c_ulong},
+            Self::c_long => quote! {::core::ffi::c_long},
+            Self::c_ulonglong => quote! {::core::ffi::c_ulonglong},
+            Self::c_longlong => quote! {::core::ffi::c_longlong},
+        }
+        .to_tokens(tokens)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum RsTypeKind {
     Pointer {
@@ -230,7 +326,7 @@ pub enum RsTypeKind {
         underlying_type: Rc<RsTypeKind>,
         crate_path: Rc<CratePath>,
     },
-    Unit,
+    Primitive(PrimitiveType),
     Other {
         name: Rc<str>,
         type_args: Rc<[RsTypeKind]>,
@@ -303,7 +399,7 @@ impl RsTypeKind {
                 }
                 // TODO(b/314382764): Carve out some aliases that can be ExternC.
                 RsTypeKind::TypeAlias { .. } => Ok(CrubitFeature::Experimental.into()),
-                RsTypeKind::Unit => Ok(CrubitFeature::ExternC.into()),
+                RsTypeKind::Primitive { .. } => Ok(CrubitFeature::ExternC.into()),
                 // TODO(b/314382764): Carve out builtin types, etc. that can be ExternC.
                 RsTypeKind::Other { .. } => Ok(CrubitFeature::Experimental.into()),
             }
@@ -374,7 +470,7 @@ impl RsTypeKind {
 
     pub fn format_as_return_type_fragment(&self, self_record: Option<&Record>) -> TokenStream {
         match self {
-            RsTypeKind::Unit => quote! {},
+            RsTypeKind::Primitive(PrimitiveType::Unit) => quote! {},
             other_type => {
                 let other_type_ = other_type.to_token_stream_replacing_by_self(self_record);
                 quote! { -> #other_type_ }
@@ -452,7 +548,7 @@ impl RsTypeKind {
         // assertions in the generated Rust code (because incorrect results
         // can silently lead to unsafe behavior).
         match self {
-            RsTypeKind::Unit => true,
+            RsTypeKind::Primitive { .. } => true,
             RsTypeKind::Pointer { .. } => true,
             RsTypeKind::FuncPtr { .. } => true,
             RsTypeKind::Reference { mutability: Mutability::Const, .. } => true,
@@ -499,7 +595,7 @@ impl RsTypeKind {
 
     pub fn is_bool(&self) -> bool {
         match self {
-            RsTypeKind::Other { name, .. } => &**name == "bool",
+            RsTypeKind::Primitive(PrimitiveType::bool) => true,
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_bool(),
             _ => false,
         }
@@ -661,9 +757,7 @@ impl ToTokens for RsTypeKind {
                 let ident = make_rs_ident(&type_alias.identifier.identifier);
                 quote! { #crate_path #ident }
             }
-            // This doesn't affect void in function return values, as those are special-cased to be
-            // omitted.
-            RsTypeKind::Unit => quote! {::core::ffi::c_void},
+            RsTypeKind::Primitive(primitive) => quote! {#primitive},
             RsTypeKind::Other { name, type_args, .. } => {
                 let name: TokenStream = name.parse().expect("Invalid RsType::name in the IR");
                 let generic_params =
@@ -692,7 +786,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
             None => None,
             Some(curr) => {
                 match curr {
-                    RsTypeKind::Unit
+                    RsTypeKind::Primitive { .. }
                     | RsTypeKind::IncompleteRecord { .. }
                     | RsTypeKind::Record { .. } => {}
                     RsTypeKind::Pointer { pointee, .. } => self.todo.push(pointee),

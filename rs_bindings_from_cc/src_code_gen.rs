@@ -7,7 +7,8 @@ mod rs_snippet;
 
 use crate::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
-    should_derive_clone, should_derive_copy, CratePath, Lifetime, Mutability, RsTypeKind,
+    should_derive_clone, should_derive_copy, CratePath, Lifetime, Mutability, PrimitiveType,
+    RsTypeKind,
 };
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
@@ -1202,7 +1203,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
         if param.is_unpin() {
             continue;
         }
-        let value = std::mem::replace(param, RsTypeKind::Unit); // Temporarily swap in a garbage value.
+        let value = std::mem::replace(param, RsTypeKind::Primitive(PrimitiveType::Unit)); // Temporarily swap in a garbage value.
         *param = RsTypeKind::RvalueReference {
             referent: Rc::new(value),
             mutability: Mutability::Mut,
@@ -1397,7 +1398,7 @@ fn generate_func(
                     }
 
                     // We would need to do this, but it's no longer used:
-                    //    return_type = RsTypeKind::Unit;
+                    //    return_type = RsTypeKind::Primitive(PrimitiveType::Unit);
                     let _ = return_type; // proof that we don't need to update it.
                     quoted_return_type = quote! {};
                 }
@@ -1759,7 +1760,7 @@ fn function_signature(
         }
     }
 
-    let return_type_fragment = if return_type == &RsTypeKind::Unit {
+    let return_type_fragment = if return_type == &RsTypeKind::Primitive(PrimitiveType::Unit) {
         quote! {}
     } else {
         let ty = quoted_return_type.unwrap_or_else(|| quote! {#return_type});
@@ -3148,12 +3149,6 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
             }
         }
         Some(name) => match name {
-            "()" => {
-                if !ty.type_args.is_empty() {
-                    bail!("Unit type must not have type arguments: {:?}", ty);
-                }
-                RsTypeKind::Unit
-            }
             "*mut" => RsTypeKind::Pointer { pointee: get_pointee()?, mutability: Mutability::Mut },
             "*const" => {
                 RsTypeKind::Pointer { pointee: get_pointee()?, mutability: Mutability::Const }
@@ -3180,34 +3175,39 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
             },
             name => {
                 let mut type_args = get_type_args()?;
-                match name.strip_prefix("#funcPtr ") {
-                    None => RsTypeKind::Other {
+
+                if let Some(primitive) = PrimitiveType::from_str(name) {
+                    if !type_args.is_empty() {
+                        bail!("{name} type must not have type arguments: {:?}", ty);
+                    }
+                    RsTypeKind::Primitive(primitive)
+                } else if let Some(abi) = name.strip_prefix("#funcPtr ") {
+                    // Assert that function pointers in the IR either have static lifetime or
+                    // no lifetime.
+                    match get_lifetime() {
+                        Err(_) => (), // No lifetime
+                        Ok(lifetime) => assert_eq!(lifetime.0.as_ref(), "static"),
+                    }
+
+                    assert!(
+                        !type_args.is_empty(),
+                        "In well-formed IR function pointers include at least the return type",
+                    );
+                    ensure!(
+                        type_args.iter().all(|t| t.is_c_abi_compatible_by_value()),
+                        "Either the return type or some of the parameter types require \
+                            an FFI thunk (and function pointers don't have a thunk)",
+                    );
+                    RsTypeKind::FuncPtr {
+                        abi: abi.into(),
+                        return_type: Rc::new(type_args.remove(type_args.len() - 1)),
+                        param_types: Rc::from(type_args),
+                    }
+                } else {
+                    RsTypeKind::Other {
                         name: name.into(),
                         type_args: Rc::from(type_args),
                         is_same_abi: true,
-                    },
-                    Some(abi) => {
-                        // Assert that function pointers in the IR either have static lifetime or
-                        // no lifetime.
-                        match get_lifetime() {
-                            Err(_) => (), // No lifetime
-                            Ok(lifetime) => assert_eq!(lifetime.0.as_ref(), "static"),
-                        }
-
-                        assert!(
-                            !type_args.is_empty(),
-                            "In well-formed IR function pointers include at least the return type",
-                        );
-                        ensure!(
-                            type_args.iter().all(|t| t.is_c_abi_compatible_by_value()),
-                            "Either the return type or some of the parameter types require \
-                             an FFI thunk (and function pointers don't have a thunk)",
-                        );
-                        RsTypeKind::FuncPtr {
-                            abi: abi.into(),
-                            return_type: Rc::new(type_args.remove(type_args.len() - 1)),
-                            param_types: Rc::from(type_args),
-                        }
                     }
                 }
             }
@@ -8677,7 +8677,11 @@ mod tests {
     /// The default crubit feature set currently doesn't include extern_c.
     #[test]
     fn test_default_crubit_features_disabled_extern_c() -> Result<()> {
-        for item in ["extern \"C\" void NotPresent() {}", "struct NotPresent {};"] {
+        for item in [
+            "extern \"C\" void NotPresent() {}",
+            "struct NotPresent {};",
+            "extern \"C\" int NotPresent() {}",
+        ] {
             let mut ir = ir_from_cc(item)?;
             ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
             let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -8696,7 +8700,7 @@ mod tests {
     /// The default crubit feature set currently doesn't include experimetnal.
     #[test]
     fn test_default_crubit_features_disabled_experimental() -> Result<()> {
-        for item in ["inline int NotPresent() {}", "using NotPresent = int;"] {
+        for item in ["using NotPresent = int;"] {
             let mut ir = ir_from_cc(item)?;
             ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
             let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;

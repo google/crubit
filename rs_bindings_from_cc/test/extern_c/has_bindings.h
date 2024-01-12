@@ -16,6 +16,7 @@ struct Struct final {
 
 inline void crubit_void_function() {}
 inline const void* crubit_void_ptr_identity(const void* x) { return x; }
+inline int crubit_add(int x, int y) { return x + y; }
 inline Struct crubit_anystruct(Struct x, const Struct*) { return x; }
 }
 }  // namespace crubit::has_bindings
