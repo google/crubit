@@ -64,8 +64,6 @@ using PointerNullabilityDiagnoser =
         const dataflow::TransferStateForDiagnostics<PointerNullabilityLattice>
             &)>;
 
-PointerNullabilityDiagnoser pointerNullabilityDiagnoser();
-
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
 diagnosePointerNullability(const FunctionDecl *Func);
 

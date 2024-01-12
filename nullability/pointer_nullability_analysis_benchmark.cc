@@ -33,13 +33,7 @@ void benchmarkAnalysisOnCode(benchmark::State &State, llvm::StringRef Code) {
   auto *Target = cast<FunctionDecl>(
       lookup("Target", *AST.context().getTranslationUnitDecl()));
 
-  auto Diagnoser = pointerNullabilityDiagnoser();
-  constexpr std::int64_t MaxSATIterations = 2'000'000;
-  for (auto _ : State) {
-    (void)dataflow::diagnoseFunction<PointerNullabilityAnalysis,
-                                     PointerNullabilityDiagnostic>(
-        *Target, AST.context(), Diagnoser, MaxSATIterations);
-  }
+  for (auto _ : State) (void)diagnosePointerNullability(Target);
 }
 
 void BM_PointerAnalysisCopyPointer(benchmark::State &State) {

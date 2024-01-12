@@ -401,8 +401,6 @@ void checkParmVarDeclWithPointerDefaultArg(
                    Parm.getNameAsString()});
 }
 
-}  // namespace
-
 PointerNullabilityDiagnoser pointerNullabilityDiagnoser() {
   return CFGMatchSwitchBuilder<const dataflow::TransferStateForDiagnostics<
                                    PointerNullabilityLattice>,
@@ -429,6 +427,8 @@ PointerNullabilityDiagnoser pointerNullabilityDiagnoser() {
                                          diagnoseMemberInitializer)
       .Build();
 }
+
+}  // namespace
 
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
 diagnosePointerNullability(const FunctionDecl *Func) {
