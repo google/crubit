@@ -9,7 +9,7 @@
 // The generated bindings are in a header at the same path as the
 // `example_crate` `rust_library` and with the name that follows the `<crate
 // name>_cc_api.h` pattern:
-#include "examples/cc_bindings_from_rs_basics/example_crate_cc_api.h"
+#include "examples/rust/function/example_crate_cc_api.h"
 
 int main(int argc, char* argv[]) {
   // The generated bindings are in a namespace with the same name as the

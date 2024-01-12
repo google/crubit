@@ -1,5 +1,3 @@
-""" Minimal example of C++ bindings for Rust APIs."""
-
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",

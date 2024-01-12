@@ -7,6 +7,6 @@
 
 #include <stdint.h>
 
-int32_t add_two_integers(int32_t x, int32_t y);
+inline int32_t add_two_integers(int32_t x, int32_t y) { return x + y; }
 
 #endif  // CRUBIT_EXAMPLES_RS_BINDINGS_FROM_CC_BASICS_EXAMPLE_H_

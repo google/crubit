@@ -1,10 +1,7 @@
-""" Minimal example of Rust bindings for C++ APIs."""
-
 load("@rules_rust//rust:defs.bzl", "rust_binary")
 
 cc_library(
     name = "example_lib",
-    srcs = ["example.cc"],
     hdrs = ["example.h"],
 
     # Opting into using Crubit (including Crubit's experimental features).
