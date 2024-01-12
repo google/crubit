@@ -4,11 +4,13 @@
 
 #include "nullability/pointer_nullability_diagnosis.h"
 
+#include <cstdint>
 #include <optional>
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "nullability/pointer_nullability.h"
+#include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_matchers.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
@@ -21,6 +23,7 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
@@ -347,6 +350,57 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
       PointerNullabilityDiagnostic::Context::Initializer);
 }
 
+bool shouldDiagnoseExpectedNonnullDefaultArgValue(clang::ASTContext &Ctx,
+                                                  const Expr &DefaultArg) {
+  if (DefaultArg.isNullPointerConstant(Ctx,
+                                       Expr::NPC_ValueDependentIsNotNull)) {
+    return true;
+  } else if (isSupportedPointerType(DefaultArg.getType()) &&
+             !DefaultArg.getType()->isDependentType()) {
+    if (TypeNullability DefaultValueAnnotation =
+            getNullabilityAnnotationsFromType(DefaultArg.getType());
+        !DefaultValueAnnotation.empty() &&
+        DefaultValueAnnotation.front().concrete() ==
+            NullabilityKind::Nullable) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Checks for simple cases of default arguments that conflict with annotations
+// on the parameter declaration.
+//
+// Default argument values are missing from the CFG at callsites, so they can't
+// be analyzed in the same way as other function arguments. And the
+// PointerNullabilityDiagnoser is only run over the CFG (not the entire AST),
+// which doesn't really include elements of function declarations, only their
+// bodies. Therefore, these initializations must be checked separately to ensure
+// diagnostics are produced exactly once per invalid default argument
+// declaration, regardless of how many times the function is called (including
+// not called at all).
+void checkParmVarDeclWithPointerDefaultArg(
+    clang::ASTContext &Ctx, const clang::ParmVarDecl &Parm,
+    llvm::SmallVector<PointerNullabilityDiagnostic> &Diags) {
+  QualType ParmType = Parm.getType();
+  if (ParmType->isDependentType()) return;
+  TypeNullability DeclAnnotation = getNullabilityAnnotationsFromType(ParmType);
+  if (DeclAnnotation.empty() ||
+      DeclAnnotation.front().concrete() != NullabilityKind::NonNull) {
+    return;
+  }
+
+  const Expr *DefaultVal = Parm.getInit();
+  if (!DefaultVal ||
+      !shouldDiagnoseExpectedNonnullDefaultArgValue(Ctx, *DefaultVal))
+    return;
+
+  Diags.push_back({PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
+                   PointerNullabilityDiagnostic::Context::Initializer,
+                   CharSourceRange::getTokenRange(DefaultVal->getSourceRange()),
+                   Parm.getNameAsString()});
+}
+
 }  // namespace
 
 PointerNullabilityDiagnoser pointerNullabilityDiagnoser() {
@@ -374,6 +428,32 @@ PointerNullabilityDiagnoser pointerNullabilityDiagnoser() {
       .CaseOfCFGInit<CXXCtorInitializer>(isCtorMemberInitializer(),
                                          diagnoseMemberInitializer)
       .Build();
+}
+
+llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
+diagnosePointerNullability(const FunctionDecl *Func) {
+  llvm::SmallVector<PointerNullabilityDiagnostic> Diags;
+
+  if (Func->isTemplated()) return Diags;
+
+  ASTContext &Ctx = Func->getASTContext();
+
+  for (const ParmVarDecl *Parm : Func->parameters())
+    checkParmVarDeclWithPointerDefaultArg(Ctx, *Parm, Diags);
+
+  if (!Func->hasBody()) return Diags;
+
+  auto Diagnoser = pointerNullabilityDiagnoser();
+  const std::int64_t MaxSATIterations = 2'000'000;
+
+  if (auto CfgDiags = dataflow::diagnoseFunction<PointerNullabilityAnalysis,
+                                                 PointerNullabilityDiagnostic>(
+          *Func, Ctx, Diagnoser, MaxSATIterations)) {
+    Diags.insert(Diags.end(), CfgDiags->begin(), CfgDiags->end());
+    return Diags;
+  } else {
+    return CfgDiags.takeError();
+  }
 }
 
 }  // namespace clang::tidy::nullability

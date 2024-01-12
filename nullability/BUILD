@@ -95,6 +95,7 @@ cc_library(
     visibility = ["//nullability/test:__pkg__"],
     deps = [
         ":pointer_nullability",
+        ":pointer_nullability_analysis",
         ":pointer_nullability_lattice",
         ":pointer_nullability_matchers",
         ":type_nullability",

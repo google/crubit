@@ -66,6 +66,9 @@ using PointerNullabilityDiagnoser =
 
 PointerNullabilityDiagnoser pointerNullabilityDiagnoser();
 
+llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
+diagnosePointerNullability(const FunctionDecl *Func);
+
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang

@@ -12,13 +12,12 @@ cc_library(
     hdrs = ["check_diagnostics.h"],
     deps = [
         ":test_headers",
-        "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_diagnosis",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:tooling",
         "@llvm-project//clang/unittests:dataflow_testing_support",
         "@llvm-project//llvm:Support",
-        "@llvm-project//llvm:TestingSupport",
+        "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
     ],
 )
@@ -134,6 +133,16 @@ cc_test(
 cc_test(
     name = "convergence",
     srcs = ["convergence.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "default_arguments",
+    srcs = ["default_arguments.cc"],
     deps = [
         ":check_diagnostics",
         "@llvm-project//third-party/unittest:gtest",
