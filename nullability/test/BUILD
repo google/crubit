@@ -95,6 +95,13 @@ cc_test(
     srcs = ["basic.cc"],
     deps = [
         ":check_diagnostics",
+        "//nullability:pointer_nullability_diagnosis",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:tooling",
+        "@llvm-project//llvm:TestingSupport",
+        "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],

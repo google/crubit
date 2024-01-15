@@ -4,11 +4,25 @@
 
 // Tests for basic functionality (simple dereferences without control flow).
 
+#include <memory>
+
+#include "nullability/pointer_nullability_diagnosis.h"
 #include "nullability/test/check_diagnostics.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/Basic/LLVM.h"
+#include "clang/Frontend/ASTUnit.h"
+#include "clang/Tooling/Tooling.h"
+#include "llvm/Testing/Support/Error.h"
+#include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
+
+using ::testing::IsEmpty;
+using ::testing::SizeIs;
 
 TEST(PointerNullabilityTest, NoPointerOperations) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
@@ -260,6 +274,34 @@ TEST(PointerNullabilityTest, ForwardDeclaration) {
       *p;
     }
   )cc"));
+}
+
+TEST(PointerNullabilityTest, AnalyzeFunctionWithForwardDeclarationOnlyOnce) {
+  std::unique_ptr<ASTUnit> Unit = tooling::buildASTFromCode(R"cc(
+    // Check that we analyze a function with a forward declaration only once
+    // (for the definition), and not for every redeclaration that we encounter.
+    void target();
+    void target() {
+      int *p = nullptr;
+      *p;
+    }
+  )cc");
+
+  ASTContext &Context = Unit->getASTContext();
+  DeclContextLookupResult Result =
+      Context.getTranslationUnitDecl()->lookup(&Context.Idents.get("target"));
+  ASSERT_TRUE(Result.isSingleResult());
+  auto *Target = cast<FunctionDecl>(Result.front());
+  SmallVector<FunctionDecl *> Redecls(Target->redecls());
+  ASSERT_EQ(Redecls.size(), 2);
+
+  EXPECT_TRUE(Redecls[0]->doesThisDeclarationHaveABody());
+  EXPECT_THAT_EXPECTED(diagnosePointerNullability(Redecls[0]),
+                       llvm::HasValue(SizeIs(1)));
+
+  EXPECT_FALSE(Redecls[1]->doesThisDeclarationHaveABody());
+  EXPECT_THAT_EXPECTED(diagnosePointerNullability(Redecls[1]),
+                       llvm::HasValue(IsEmpty()));
 }
 
 }  // namespace

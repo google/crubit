@@ -441,10 +441,9 @@ diagnosePointerNullability(const FunctionDecl *Func) {
   for (const ParmVarDecl *Parm : Func->parameters())
     checkParmVarDeclWithPointerDefaultArg(Ctx, *Parm, Diags);
 
-  // If `Func` has multiple declarations in the current TU, make sure we use the
-  // one that defines the body of the function. (We retrieve this using the
-  // output parameter of `hasBody()`.)
-  if (!Func->hasBody(Func)) return Diags;
+  // Use `doesThisDeclarationHaveABody()` rather than `hasBody()` to ensure we
+  // analyze forward-declared functions only once.
+  if (!Func->doesThisDeclarationHaveABody()) return Diags;
 
   auto Diagnoser = pointerNullabilityDiagnoser();
   const std::int64_t MaxSATIterations = 2'000'000;
