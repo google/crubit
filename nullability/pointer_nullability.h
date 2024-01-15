@@ -115,19 +115,13 @@ void initPointerNullState(
     dataflow::PointerValue &PointerVal, dataflow::DataflowAnalysisContext &Ctx,
     std::optional<PointerTypeNullability> Source = std::nullopt);
 
-// Sets the `FromNullable` state of `PointerVal` to null (interpreted as "top").
-// Explicitly indicating that we don't know whether the source was nullable is a
-// form of widening that allows analysis to converge.
-// This mutates the `PointerValue`, so it should be freshly created and not have
-// been shared with other environments.
-void forgetFromNullable(dataflow::PointerValue &PointerVal,
-                        dataflow::DataflowAnalysisContext &Ctx);
-
-// Sets the `IsNull` state of `PointerVal` to null (interpreted as "top").
-// This mutates the `PointerValue`, so it should be freshly created and not have
-// been shared with other environments.
-void forgetIsNull(dataflow::PointerValue &PointerVal,
-                  dataflow::DataflowAnalysisContext &Ctx);
+/// Initializes the nullness properties on `PointerVal` from `State`.
+///
+/// This overload may only be called on a freshly created `PointerValue` that
+/// does not yet have nullability properties.
+void initPointerNullState(dataflow::PointerValue &PointerVal,
+                          dataflow::DataflowAnalysisContext &Ctx,
+                          PointerNullState State);
 
 /// Variant of initPointerNullState, where the pointer is guaranteed null.
 /// (This is flow-insensitive, but PointerTypeNullability can't represent it).

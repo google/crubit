@@ -125,14 +125,21 @@ void initPointerNullState(PointerValue &PointerVal,
   }
 }
 
-void forgetFromNullable(dataflow::PointerValue &PointerVal,
-                        DataflowAnalysisContext &Ctx) {
-  PointerVal.setProperty(kFromNullable, Ctx.arena().makeTopValue());
-}
+void initPointerNullState(PointerValue &PointerVal,
+                          DataflowAnalysisContext &Ctx,
+                          PointerNullState State) {
+  assert(!hasPointerNullState(PointerVal));
 
-void forgetIsNull(dataflow::PointerValue &PointerVal,
-                  DataflowAnalysisContext &Ctx) {
-  PointerVal.setProperty(kNull, Ctx.arena().makeTopValue());
+  auto &A = Ctx.arena();
+
+  // Internally, we encode "top" as `TopBoolValue`.
+  BoolValue &FromNullable = State.FromNullable != nullptr
+                                ? A.makeBoolValue(*State.FromNullable)
+                                : A.makeTopValue();
+  BoolValue &IsNull = State.IsNull != nullptr ? A.makeBoolValue(*State.IsNull)
+                                              : A.makeTopValue();
+  PointerVal.setProperty(kFromNullable, FromNullable);
+  PointerVal.setProperty(kNull, IsNull);
 }
 
 void initNullPointer(PointerValue &PointerVal, DataflowAnalysisContext &Ctx) {

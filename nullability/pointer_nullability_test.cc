@@ -18,6 +18,9 @@
 namespace clang::tidy::nullability {
 namespace {
 
+using dataflow::Arena;
+using dataflow::Formula;
+
 class NullabilityPropertiesTest : public ::testing::Test {
  protected:
   dataflow::PointerValue &makePointer(PointerTypeNullability N) {
@@ -107,18 +110,25 @@ TEST_F(NullabilityPropertiesTest, GetNullabilityAdditionalConstraints) {
   EXPECT_EQ(getNullability(P, Env, NotNull), NullabilityKind::NonNull);
 }
 
+TEST_F(NullabilityPropertiesTest, InitNullabilityPropertiesWithFormulas) {
+  auto &P = Env.create<dataflow::PointerValue>(
+      DACtx.createStorageLocation(QualType()));
+
+  Arena &A = DACtx.arena();
+  const Formula &FromNullable = A.makeAtomRef(A.makeAtom());
+  const Formula &IsNull = A.makeAtomRef(A.makeAtom());
+
+  initPointerNullState(P, DACtx, PointerNullState{&FromNullable, &IsNull});
+  ASSERT_EQ(getPointerNullState(P).FromNullable, &FromNullable);
+  ASSERT_EQ(getPointerNullState(P).IsNull, &IsNull);
+}
+
 TEST_F(NullabilityPropertiesTest, InitNullabilityPropertiesWithTop) {
   auto &P = Env.create<dataflow::PointerValue>(
       DACtx.createStorageLocation(QualType()));
 
-  initPointerNullState(P, DACtx);
-  ASSERT_NE(getPointerNullState(P).FromNullable, nullptr);
-  ASSERT_NE(getPointerNullState(P).IsNull, nullptr);
-
-  forgetFromNullable(P, DACtx);
+  initPointerNullState(P, DACtx, PointerNullState{nullptr, nullptr});
   ASSERT_EQ(getPointerNullState(P).FromNullable, nullptr);
-
-  forgetIsNull(P, DACtx);
   ASSERT_EQ(getPointerNullState(P).IsNull, nullptr);
 }
 

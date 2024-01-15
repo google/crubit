@@ -1413,34 +1413,18 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
     return false;
   }
 
-  auto &MergedPointerVal = cast<PointerValue>(MergedVal);
-  DataflowAnalysisContext &Ctx = MergedEnv.getDataflowAnalysisContext();
-  auto &A = MergedEnv.arena();
-
   auto Nullability1 = getPointerNullState(cast<PointerValue>(Val1));
   auto Nullability2 = getPointerNullState(cast<PointerValue>(Val2));
 
-  // Initialize `MergedPointerVal`'s nullability properties with atoms. These
-  // are potentially replaced with "top" below.
-  assert(!hasPointerNullState(MergedPointerVal));
-  initPointerNullState(MergedPointerVal, Ctx);
-  auto MergedNullability = getPointerNullState(MergedPointerVal);
-  assert(MergedNullability.FromNullable != nullptr);
-  assert(MergedNullability.IsNull != nullptr);
+  auto *FromNullable =
+      mergeFormulas(Nullability1.FromNullable, Env1, Nullability2.FromNullable,
+                    Env2, MergedEnv);
+  auto *Null = mergeFormulas(Nullability1.IsNull, Env1, Nullability2.IsNull,
+                             Env2, MergedEnv);
 
-  if (auto *FromNullable =
-          mergeFormulas(Nullability1.FromNullable, Env1,
-                        Nullability2.FromNullable, Env2, MergedEnv))
-    MergedEnv.assume(
-        A.makeEquals(*MergedNullability.FromNullable, *FromNullable));
-  else
-    forgetFromNullable(MergedPointerVal, Ctx);
-
-  if (auto *Null = mergeFormulas(Nullability1.IsNull, Env1, Nullability2.IsNull,
-                                 Env2, MergedEnv))
-    MergedEnv.assume(A.makeEquals(*MergedNullability.IsNull, *Null));
-  else
-    forgetIsNull(MergedPointerVal, Ctx);
+  initPointerNullState(cast<PointerValue>(MergedVal),
+                       MergedEnv.getDataflowAnalysisContext(),
+                       {FromNullable, Null});
 
   return true;
 }
@@ -1580,22 +1564,11 @@ absl::Nullable<Value *> PointerNullabilityAnalysis::widen(
     // Widen the nullability properties.
     auto &WidenedPtr = CurrentEnv.create<PointerValue>(
         getTopStorageLocation(DACtx, CurPtr.getPointeeLoc().getType()));
-    initPointerNullState(WidenedPtr, DACtx);
-    auto WidenedNullability = getPointerNullState(WidenedPtr);
-    assert(WidenedNullability.FromNullable != nullptr);
-    assert(WidenedNullability.IsNull != nullptr);
-
-    auto &A = CurrentEnv.arena();
-    if (FromNullableWidened != WidenedProperty::Top &&
-        FromNullableCur != nullptr)
-      CurrentEnv.assume(
-          A.makeEquals(*WidenedNullability.FromNullable, *FromNullableCur));
-    else
-      forgetFromNullable(WidenedPtr, DACtx);
-    if (NullWidened != WidenedProperty::Top && NullCur != nullptr)
-      CurrentEnv.assume(A.makeEquals(*WidenedNullability.IsNull, *NullCur));
-    else
-      forgetIsNull(WidenedPtr, DACtx);
+    initPointerNullState(
+        WidenedPtr, CurrentEnv.getDataflowAnalysisContext(),
+        {FromNullableWidened == WidenedProperty::Top ? nullptr
+                                                     : FromNullableCur,
+         NullWidened == WidenedProperty::Top ? nullptr : NullCur});
 
     return &WidenedPtr;
   }
