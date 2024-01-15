@@ -247,5 +247,20 @@ TEST(PointerNullabilityTest, ArraySubscript) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ForwardDeclaration) {
+  // Check that we handle a function with a forward declaration correctly. This
+  // is a regression test for a bug where we erroneously used the `ParmVarDecl`s
+  // of the first declaration when creating initial values for the parameters;
+  // the body uses the `ParmVarDecl`s of the second declaration, so it would not
+  // see these initial values.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* _Nullable p);
+    void target(int* _Nullable p) {
+      if (p == nullptr) return;
+      *p;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
