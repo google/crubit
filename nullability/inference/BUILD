@@ -194,6 +194,7 @@ cc_binary(
         ":inference_cc_proto",
         "@absl//absl/base:nullability",
         "@absl//absl/log:check",
+        "@absl//absl/strings",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",

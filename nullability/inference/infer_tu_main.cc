@@ -16,6 +16,7 @@
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
+#include "absl/strings/str_cat.h"
 #include "nullability/inference/infer_tu.h"
 #include "nullability/inference/inference.proto.h"
 #include "clang/AST/ASTConsumer.h"
@@ -202,7 +203,7 @@ class Action : public SyntaxOnlyAction {
             return I.slot_inference_size() == 0;
           });
         if (PrintProtos)
-          for (const auto &I : Results) llvm::outs() << I.DebugString() << "\n";
+          for (const auto &I : Results) llvm::outs() << absl::StrCat(I) << "\n";
         if (Diagnostics)
           DiagnosticPrinter(Results, Ctx.getDiagnostics()).TraverseAST(Ctx);
       }
