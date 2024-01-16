@@ -401,7 +401,7 @@ void checkParmVarDeclWithPointerDefaultArg(
                    Parm.getNameAsString()});
 }
 
-PointerNullabilityDiagnoser pointerNullabilityDiagnoser() {
+auto pointerNullabilityDiagnoser() {
   return CFGMatchSwitchBuilder<const dataflow::TransferStateForDiagnostics<
                                    PointerNullabilityLattice>,
                                SmallVector<PointerNullabilityDiagnostic>>()

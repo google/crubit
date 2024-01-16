@@ -5,14 +5,10 @@
 #ifndef CRUBIT_NULLABILITY_POINTER_NULLABILITY_DIAGNOSIS_H_
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_DIAGNOSIS_H_
 
-#include <functional>
 #include <optional>
 #include <string>
 
-#include "nullability/pointer_nullability_lattice.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/AST/Stmt.h"
-#include "clang/Analysis/FlowSensitive/MatchSwitch.h"
+#include "clang/AST/Decl.h"
 #include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/SmallVector.h"
 
@@ -57,13 +53,7 @@ struct PointerNullabilityDiagnostic {
 /// without null checks, and assignments between pointers of incompatible
 /// nullability.
 ///
-/// The diagnoser returns an empty vector when no issues are found in the code.
-using PointerNullabilityDiagnoser =
-    std::function<llvm::SmallVector<PointerNullabilityDiagnostic>(
-        const CFGElement &, ASTContext &,
-        const dataflow::TransferStateForDiagnostics<PointerNullabilityLattice>
-            &)>;
-
+/// Returns an empty vector when no issues are found in the code.
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
 diagnosePointerNullability(const FunctionDecl *Func);
 
