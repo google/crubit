@@ -720,14 +720,14 @@ void transferValue_NullCheckComparison(
   // Special case: Are we comparing against `nullptr`?
   // We can avoid modifying the flow condition in this case and simply propagate
   // the nullability of the other operand (potentially with a negation).
-  if (LHSNull == &A.makeLiteral(true)) {
+  if (LHSNull->isLiteral(true)) {
     if (BinaryOp->getOpcode() == BO_EQ)
       State.Env.setValue(*BinaryOp, A.makeBoolValue(*RHSNull));
     else
       State.Env.setValue(*BinaryOp, A.makeBoolValue(A.makeNot(*RHSNull)));
     return;
   }
-  if (RHSNull == &A.makeLiteral(true)) {
+  if (RHSNull->isLiteral(true)) {
     if (BinaryOp->getOpcode() == BO_EQ)
       State.Env.setValue(*BinaryOp, A.makeBoolValue(*LHSNull));
     else
