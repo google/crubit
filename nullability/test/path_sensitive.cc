@@ -59,5 +59,19 @@ TEST(PointerNullabilityTest, ConditionalInitialization2) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ComplexLoopCondition) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int* _Nullable produce_int();
+    void target() {
+      int* p1;
+      int* p2;
+      while ((p1 = produce_int()) != nullptr && (p2 = produce_int()) != nullptr) {
+        *p1;
+        *p2;
+      }
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
