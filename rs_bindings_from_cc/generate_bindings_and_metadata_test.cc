@@ -10,6 +10,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "common/ffi_types.h"
@@ -33,25 +35,30 @@ constexpr absl::string_view kDefaultRustfmtExePath =
 constexpr absl::string_view kDefaultClangFormatExePath =
     "third_party/crosstool/google3_users/clang-format";
 
-TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
-  constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h"]}
-  ])";
+/// Returns a Cmdline for the given header.
+Cmdline MakeCmdline(std::string header) {
+  auto args = CmdlineArgs{
+      .current_target = BazelLabel("//:target"),
+      .cc_out = "cc_out",
+      .rs_out = "rs_out",
+      .ir_out = "ir_out",
+      .namespaces_out = "namespaces_out",
+      .crubit_support_path_format = "<crubit/support/path/{header}>",
+      .clang_format_exe_path = std::string(kDefaultClangFormatExePath),
+      .rustfmt_exe_path = std::string(kDefaultRustfmtExePath),
+      .rustfmt_config_path = "nowhere/rustfmt.toml",
+      .generate_source_location_in_doc_comment =
+          SourceLocationDocComment::Enabled,
+      .public_headers = {HeaderName(header)},
+  };
+  args.headers_to_targets[args.public_headers[0]] = args.current_target;
+  absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
+  CHECK_OK(cmdline);
+  return *cmdline;
+}
 
-  ASSERT_OK_AND_ASSIGN(
-      Cmdline cmdline,
-      Cmdline::CreateForTesting(
-          "//:target", "cc_out", "rs_out", "ir_out", "namespaces_out",
-          /*crubit_support_path_format=*/
-          "<crubit/support/path/for/test/{header}>",
-          std::string(kDefaultClangFormatExePath),
-          std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
-          /* do_nothing= */ false,
-          /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
-          /* extra_rs_srcs= */ {},
-          /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ "",
-          /* error_report_out= */ "", SourceLocationDocComment::Enabled));
+TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
+  Cmdline cmdline = MakeCmdline("a.h");
 
   ASSERT_OK_AND_ASSIGN(
       BindingsAndMetadata result,
@@ -65,27 +72,11 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
 
   // Check that IR items have the proper owning target set.
   auto item = result.ir.get_items_if<Namespace>().front();
-  ASSERT_EQ(item->owning_target.value(), "target1");
+  ASSERT_EQ(item->owning_target.value(), "//:target");
 }
 
 TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
-  constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h"]}
-  ])";
-  ASSERT_OK_AND_ASSIGN(
-      Cmdline cmdline,
-      Cmdline::CreateForTesting(
-          "//:target", "cc_out", "rs_out", "ir_out", "namespaces_out",
-          /*crubit_support_path_format=*/
-          "<crubit/support/path/for/test/{header}>",
-          std::string(kDefaultClangFormatExePath),
-          std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
-          /* do_nothing= */ false,
-          /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
-          /* extra_rs_srcs= */ {},
-          /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ "",
-          /* error_report_out= */ "", SourceLocationDocComment::Enabled));
+  Cmdline cmdline = MakeCmdline("a.h");
 
   ASSERT_OK_AND_ASSIGN(
       BindingsAndMetadata result,
@@ -100,30 +91,16 @@ absl::StatusOr<absl::flat_hash_map<std::string, std::string>>
 GetInstantiationsFor(absl::string_view header_content,
                      absl::string_view rust_source) {
   std::string a_rs_path = WriteFileForCurrentTest("a.rs", rust_source);
-  constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h"]}
-  ])";
-
-  CRUBIT_ASSIGN_OR_RETURN(
-      Cmdline cmdline,
-      Cmdline::CreateForTesting(
-          "//:target", "cc_out", "rs_out", "ir_out", "namespaces_out",
-          /*crubit_support_path_format=*/
-          "<crubit/support/path/for/test/{header}>",
-          std::string(kDefaultClangFormatExePath),
-          std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
-          /* do_nothing= */ false,
-          /* public_headers= */
-          {"a.h"}, std::string(kTargetsAndHeaders),
-          /* extra_rs_srcs= */ {},
-          /* srcs_to_scan_for_instantiations= */ {a_rs_path},
-          "instantiations_out", /* error_report_out= */ "",
-          SourceLocationDocComment::Enabled));
+  CmdlineArgs args = MakeCmdline("a.h").args();
+  args.srcs_to_scan_for_instantiations = {a_rs_path};
+  args.instantiations_out = "instantiations_out";
+  absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
+  CHECK_OK(cmdline);
 
   CRUBIT_ASSIGN_OR_RETURN(
       BindingsAndMetadata result,
       GenerateBindingsAndMetadata(
-          cmdline, DefaultClangArgs(),
+          *cmdline, DefaultClangArgs(),
           /*virtual_headers_contents_for_testing=*/
           {{HeaderName("a.h"), std::string(header_content)}}));
 
@@ -223,9 +200,6 @@ TEST(GenerateBindingsAndMetadataTest,
 }
 
 TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
-  constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "//:target1", "h": ["a.h"]}
-  ])";
   constexpr absl::string_view kHeaderContent = R"(
     namespace top_level_1 {
       namespace middle {
@@ -243,7 +217,7 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
     namespace top_level_1 {}
   )";
   constexpr absl::string_view kExpected = R"({
-  "label": "//:target1",
+  "label": "//:target",
   "namespaces": [
     {
       "children": [
@@ -275,20 +249,7 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
   ]
 })";
 
-  ASSERT_OK_AND_ASSIGN(
-      Cmdline cmdline,
-      Cmdline::CreateForTesting(
-          "//:target1", "cc_out", "rs_out", "ir_out", "namespaces_json",
-          /*crubit_support_path_format=*/
-          "<crubit/support/path/for/test/{header}>",
-          std::string(kDefaultClangFormatExePath),
-          std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
-          /* do_nothing= */ false,
-          /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
-          /* extra_rs_srcs= */ {},
-          /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ "", /* error_report_out= */ "",
-          SourceLocationDocComment::Enabled));
+  Cmdline cmdline = MakeCmdline("a.h");
   ASSERT_OK_AND_ASSIGN(BindingsAndMetadata result,
                        GenerateBindingsAndMetadata(
                            cmdline, DefaultClangArgs(),

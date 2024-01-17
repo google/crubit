@@ -122,6 +122,8 @@ crubit_cc_test(
         "//common:status_macros",
         "//common:test_utils",
         "@absl//absl/container:flat_hash_map",
+        "@absl//absl/log:check",
+        "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@com_google_googletest//:gtest_main",
@@ -173,6 +175,7 @@ cc_library(
     deps = [
         ":bazel_types",
         ":cc_ir",
+        ":cmdline_flags",
         "//common:cc_ffi_types",
         "//common:status_macros",
         "@absl//absl/container:flat_hash_map",
@@ -186,6 +189,13 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "cmdline_flags",
+    hdrs = ["cmdline_flags.h"],
+    visibility = ["//visibility:private"],
+    deps = ["@absl//absl/flags:flag"],
+)
+
 crubit_cc_test(
     name = "cmdline_test",
     srcs = ["cmdline_test.cc"],
@@ -193,8 +203,11 @@ crubit_cc_test(
         ":bazel_types",
         ":cc_ir",
         ":cmdline",
+        ":cmdline_flags",
         "//common:cc_ffi_types",
+        "//common:status_macros",
         "//common:status_test_matchers",
+        "@absl//absl/flags:flag",
         "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/strings:string_view",

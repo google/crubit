@@ -36,57 +36,57 @@ std::string InstantiationsAsJson(
   return std::string(llvm::formatv("{0:2}", llvm::json::Value(std::move(obj))));
 }
 
-absl::Status Main(absl::Span<char* const> args) {
-  CRUBIT_ASSIGN_OR_RETURN(Cmdline cmdline, Cmdline::Create());
+absl::Status Main(absl::Span<char* const> positional_args) {
+  CRUBIT_ASSIGN_OR_RETURN(Cmdline cmdline, Cmdline::FromFlags());
+  const CmdlineArgs& args = cmdline.args();
 
-  if (cmdline.do_nothing()) {
+  if (args.do_nothing) {
     CRUBIT_RETURN_IF_ERROR(SetFileContents(
-        cmdline.rs_out(),
+        args.rs_out,
         "// intentionally left empty because --do_nothing was passed."));
     CRUBIT_RETURN_IF_ERROR(SetFileContents(
-        cmdline.cc_out(),
+        args.cc_out,
         "// intentionally left empty because --do_nothing was passed."));
-    if (!cmdline.instantiations_out().empty()) {
-      CRUBIT_RETURN_IF_ERROR(
-          SetFileContents(cmdline.instantiations_out(), "[]"));
+    if (!args.instantiations_out.empty()) {
+      CRUBIT_RETURN_IF_ERROR(SetFileContents(args.instantiations_out, "[]"));
     }
-    if (!cmdline.namespaces_out().empty()) {
-      CRUBIT_RETURN_IF_ERROR(SetFileContents(cmdline.namespaces_out(), "[]"));
+    if (!args.namespaces_out.empty()) {
+      CRUBIT_RETURN_IF_ERROR(SetFileContents(args.namespaces_out, "[]"));
     }
     return absl::OkStatus();
   }
 
   std::vector<std::string> clang_args;
-  clang_args.insert(clang_args.end(), args.begin(), args.end());
+  clang_args.insert(clang_args.end(), positional_args.begin(),
+                    positional_args.end());
 
   CRUBIT_ASSIGN_OR_RETURN(
       BindingsAndMetadata bindings_and_metadata,
       GenerateBindingsAndMetadata(cmdline, std::move(clang_args)));
 
-  if (!cmdline.ir_out().empty()) {
+  if (!args.ir_out.empty()) {
     CRUBIT_RETURN_IF_ERROR(
-        SetFileContents(cmdline.ir_out(), IrToJson(bindings_and_metadata.ir)));
+        SetFileContents(args.ir_out, IrToJson(bindings_and_metadata.ir)));
   }
 
   CRUBIT_RETURN_IF_ERROR(
-      SetFileContents(cmdline.rs_out(), bindings_and_metadata.rs_api));
+      SetFileContents(args.rs_out, bindings_and_metadata.rs_api));
   CRUBIT_RETURN_IF_ERROR(
-      SetFileContents(cmdline.cc_out(), bindings_and_metadata.rs_api_impl));
+      SetFileContents(args.cc_out, bindings_and_metadata.rs_api_impl));
 
-  if (!cmdline.instantiations_out().empty()) {
-    CRUBIT_RETURN_IF_ERROR(
-        SetFileContents(cmdline.instantiations_out(),
-                        InstantiationsAsJson(bindings_and_metadata)));
-  }
-
-  if (!cmdline.namespaces_out().empty()) {
+  if (!args.instantiations_out.empty()) {
     CRUBIT_RETURN_IF_ERROR(SetFileContents(
-        cmdline.namespaces_out(),
+        args.instantiations_out, InstantiationsAsJson(bindings_and_metadata)));
+  }
+
+  if (!args.namespaces_out.empty()) {
+    CRUBIT_RETURN_IF_ERROR(SetFileContents(
+        args.namespaces_out,
         crubit::NamespacesAsJson(bindings_and_metadata.namespaces)));
   }
 
-  if (!cmdline.error_report_out().empty()) {
-    CRUBIT_RETURN_IF_ERROR(SetFileContents(cmdline.error_report_out(),
+  if (!args.error_report_out.empty()) {
+    CRUBIT_RETURN_IF_ERROR(SetFileContents(args.error_report_out,
                                            bindings_and_metadata.error_report));
   }
 

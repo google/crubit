@@ -64,34 +64,34 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
   std::vector<absl::string_view> clang_args_view;
   clang_args_view.insert(clang_args_view.end(), clang_args.begin(),
                          clang_args.end());
+  const CmdlineArgs& args = cmdline.args();
 
   CRUBIT_ASSIGN_OR_RETURN(
       std::vector<std::string> requested_instantiations,
-      CollectInstantiations(cmdline.srcs_to_scan_for_instantiations()));
+      CollectInstantiations(args.srcs_to_scan_for_instantiations));
 
   CRUBIT_ASSIGN_OR_RETURN(
-      IR ir, IrFromCc({.current_target = cmdline.current_target(),
-                       .public_headers = cmdline.public_headers(),
+      IR ir, IrFromCc({.current_target = args.current_target,
+                       .public_headers = args.public_headers,
                        .virtual_headers_contents_for_testing =
                            std::move(virtual_headers_contents_for_testing),
-                       .headers_to_targets = cmdline.headers_to_targets(),
-                       .extra_rs_srcs = cmdline.extra_rs_srcs(),
+                       .headers_to_targets = args.headers_to_targets,
+                       .extra_rs_srcs = args.extra_rs_srcs,
                        .clang_args = clang_args_view,
                        .extra_instantiations = requested_instantiations,
-                       .crubit_features = cmdline.target_to_features()}));
+                       .crubit_features = args.target_to_features}));
 
-  if (!cmdline.instantiations_out().empty()) {
+  if (!args.instantiations_out.empty()) {
     ir.crate_root_path = "__cc_template_instantiations_rs_api";
   }
 
-  bool generate_error_report = !cmdline.error_report_out().empty();
+  bool generate_error_report = !args.error_report_out.empty();
   CRUBIT_ASSIGN_OR_RETURN(
       Bindings bindings,
-      GenerateBindings(ir, cmdline.crubit_support_path_format(),
-                       cmdline.clang_format_exe_path(),
-                       cmdline.rustfmt_exe_path(),
-                       cmdline.rustfmt_config_path(), generate_error_report,
-                       cmdline.generate_source_location_in_doc_comment()));
+      GenerateBindings(ir, args.crubit_support_path_format,
+                       args.clang_format_exe_path, args.rustfmt_exe_path,
+                       args.rustfmt_config_path, generate_error_report,
+                       args.generate_source_location_in_doc_comment));
 
   absl::flat_hash_map<std::string, std::string> instantiations;
   std::optional<const Namespace*> ns =

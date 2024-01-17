@@ -19,6 +19,7 @@
 #include "common/ffi_types.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/JSON.h"
@@ -106,100 +107,20 @@ bool fromJSON(const llvm::json::Value& json, TargetArgs& out,
          mapper.mapOptional("f", out.features);
 }
 
+std::vector<HeaderName> PublicHeaders() {
+  std::vector<HeaderName> public_headers;
+  const std::vector<std::string>& public_headers_string =
+      absl::GetFlag(FLAGS_public_headers);
+  std::transform(public_headers_string.begin(), public_headers_string.end(),
+                 std::back_inserter(public_headers),
+                 [](const std::string& s) { return HeaderName(s); });
+  return public_headers;
+}
 }  // namespace
 
-absl::StatusOr<Cmdline> Cmdline::Create() {
-  return CreateFromArgs(
-      absl::GetFlag(FLAGS_target), absl::GetFlag(FLAGS_cc_out),
-      absl::GetFlag(FLAGS_rs_out), absl::GetFlag(FLAGS_ir_out),
-      absl::GetFlag(FLAGS_namespaces_out),
-      absl::GetFlag(FLAGS_crubit_support_path_format),
-      absl::GetFlag(FLAGS_clang_format_exe_path),
-      absl::GetFlag(FLAGS_rustfmt_exe_path),
-      absl::GetFlag(FLAGS_rustfmt_config_path), absl::GetFlag(FLAGS_do_nothing),
-      absl::GetFlag(FLAGS_public_headers), absl::GetFlag(FLAGS_target_args),
-      absl::GetFlag(FLAGS_extra_rs_srcs),
-      absl::GetFlag(FLAGS_srcs_to_scan_for_instantiations),
-      absl::GetFlag(FLAGS_instantiations_out),
-      absl::GetFlag(FLAGS_error_report_out),
-      absl::GetFlag(FLAGS_generate_source_location_in_doc_comment)
-          ? SourceLocationDocComment::Enabled
-          : SourceLocationDocComment::Disabled);
-}
-
-absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
-    std::string current_target, std::string cc_out, std::string rs_out,
-    std::string ir_out, std::string namespaces_out,
-    std::string crubit_support_path_format, std::string clang_format_exe_path,
-    std::string rustfmt_exe_path, std::string rustfmt_config_path,
-    bool do_nothing, std::vector<std::string> public_headers,
-    std::string target_args_str, std::vector<std::string> extra_rs_srcs,
-    std::vector<std::string> srcs_to_scan_for_instantiations,
-    std::string instantiations_out, std::string error_report_out,
-    SourceLocationDocComment generate_source_location_in_doc_comment) {
-  Cmdline cmdline;
-  if (current_target.empty()) {
-    return absl::InvalidArgumentError("please specify --target");
-  }
-  cmdline.current_target_ = BazelLabel(std::move(current_target));
-
-  if (rs_out.empty()) {
-    return absl::InvalidArgumentError("please specify --rs_out");
-  }
-  cmdline.rs_out_ = std::move(rs_out);
-
-  if (cc_out.empty()) {
-    return absl::InvalidArgumentError("please specify --cc_out");
-  }
-  cmdline.cc_out_ = std::move(cc_out);
-
-  cmdline.ir_out_ = std::move(ir_out);
-
-  cmdline.namespaces_out_ = std::move(namespaces_out);
-
-  if (crubit_support_path_format.empty()) {
-    return absl::InvalidArgumentError(
-        "please specify --crubit_support_path_format");
-  } else if (!absl::StrContains(crubit_support_path_format, "{header}")) {
-    return absl::InvalidArgumentError(
-        "cannot find `{header}` placeholder in crubit_support_path_format");
-  }
-  cmdline.crubit_support_path_format_ = std::move(crubit_support_path_format);
-
-  if (clang_format_exe_path.empty()) {
-    return absl::InvalidArgumentError("please specify --clang_format_exe_path");
-  }
-  cmdline.clang_format_exe_path_ = std::move(clang_format_exe_path);
-
-  if (rustfmt_exe_path.empty()) {
-    return absl::InvalidArgumentError("please specify --rustfmt_exe_path");
-  }
-  cmdline.rustfmt_exe_path_ = std::move(rustfmt_exe_path);
-
-  cmdline.rustfmt_config_path_ = std::move(rustfmt_config_path);
-  cmdline.do_nothing_ = do_nothing;
-  cmdline.generate_source_location_in_doc_comment_ =
-      generate_source_location_in_doc_comment;
-
-  if (public_headers.empty()) {
-    return absl::InvalidArgumentError("please specify --public_headers");
-  }
-  std::transform(public_headers.begin(), public_headers.end(),
-                 std::back_inserter(cmdline.public_headers_),
-                 [](const std::string& s) { return HeaderName(s); });
-
-  cmdline.extra_rs_srcs_ = std::move(extra_rs_srcs);
-
-  if (srcs_to_scan_for_instantiations.empty() != instantiations_out.empty()) {
-    return absl::InvalidArgumentError(
-        "please specify both --rust_sources and --instantiations_out when "
-        "requesting a template instantiation mode");
-  }
-  cmdline.instantiations_out_ = std::move(instantiations_out);
-  cmdline.srcs_to_scan_for_instantiations_ =
-      std::move(srcs_to_scan_for_instantiations);
-  cmdline.error_report_out_ = std::move(error_report_out);
-
+namespace internal {
+absl::Status ParseTargetArgs(absl::string_view target_args_str,
+                             CmdlineArgs& args) {
   if (target_args_str.empty()) {
     return absl::InvalidArgumentError("please specify --target_args");
   }
@@ -223,7 +144,7 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
             "array of non-empty strings");
       }
       BazelLabel target_label(target);
-      auto [it, inserted] = cmdline.headers_to_targets_.try_emplace(
+      auto [it, inserted] = args.headers_to_targets.try_emplace(
           HeaderName(header), std::move(target_label));
       if (!inserted) {
         LOG(WARNING) << "The `--target_args` cmdline argument assigns `"
@@ -242,28 +163,99 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
             "Expected `f` (feature) fields of `--target_args` to be an "
             "array of non-empty strings");
       }
-      cmdline.target_to_features_[BazelLabel(target)].insert(feature);
+      args.target_to_features[BazelLabel(target)].insert(feature);
     }
   }
+  return absl::OkStatus();
+}
 
-  for (const HeaderName& public_header : cmdline.public_headers_) {
-    CRUBIT_RETURN_IF_ERROR(cmdline.FindHeader(public_header).status());
+}  // namespace internal
+
+absl::StatusOr<Cmdline> Cmdline::FromFlags() {
+  auto args = CmdlineArgs{
+      .current_target = BazelLabel(absl::GetFlag(FLAGS_target)),
+      .cc_out = absl::GetFlag(FLAGS_cc_out),
+      .rs_out = absl::GetFlag(FLAGS_rs_out),
+      .ir_out = absl::GetFlag(FLAGS_ir_out),
+      .namespaces_out = absl::GetFlag(FLAGS_namespaces_out),
+      .crubit_support_path_format =
+          absl::GetFlag(FLAGS_crubit_support_path_format),
+      .clang_format_exe_path = absl::GetFlag(FLAGS_clang_format_exe_path),
+      .rustfmt_exe_path = absl::GetFlag(FLAGS_rustfmt_exe_path),
+      .rustfmt_config_path = absl::GetFlag(FLAGS_rustfmt_config_path),
+      .error_report_out = absl::GetFlag(FLAGS_error_report_out),
+      .do_nothing = absl::GetFlag(FLAGS_do_nothing),
+      .generate_source_location_in_doc_comment =
+          absl::GetFlag(FLAGS_generate_source_location_in_doc_comment)
+              ? SourceLocationDocComment::Enabled
+              : SourceLocationDocComment::Disabled,
+      .public_headers = PublicHeaders(),
+      .extra_rs_srcs = absl::GetFlag(FLAGS_extra_rs_srcs),
+      .srcs_to_scan_for_instantiations =
+          absl::GetFlag(FLAGS_srcs_to_scan_for_instantiations),
+      .instantiations_out = absl::GetFlag(FLAGS_instantiations_out)};
+  absl::Status parse_target_args_status =
+      internal::ParseTargetArgs(absl::GetFlag(FLAGS_target_args), args);
+  absl::StatusOr<Cmdline> cmdline = Cmdline::Create(std::move(args));
+  if (!parse_target_args_status.ok() || !cmdline.ok()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat(cmdline.status().message(), cmdline.ok() ? "" : "\n",
+                     parse_target_args_status.message()));
   }
-
   return cmdline;
 }
 
-absl::StatusOr<BazelLabel> Cmdline::FindHeader(const HeaderName& header) const {
-  auto it = headers_to_targets_.find(header);
-  if (it == headers_to_targets_.end()) {
-    return absl::InvalidArgumentError(absl::Substitute(
-        "Couldn't find header '$0' in the `headers_to_target` map "
-        "derived from the --target_args cmdline argument",
-        header.IncludePath()));
+absl::StatusOr<Cmdline> Cmdline::Create(CmdlineArgs args) {
+  std::string error;
+  if (args.current_target.empty()) {
+    absl::StrAppend(&error, "please specify --target\n");
   }
-  return it->second;
-}
+  if (args.rs_out.empty()) {
+    absl::StrAppend(&error, "please specify --rs_out\n");
+  }
+  if (args.cc_out.empty()) {
+    absl::StrAppend(&error, "please specify --cc_out\n");
+  }
+  if (args.public_headers.empty()) {
+    absl::StrAppend(&error, "please specify --public_headers\n");
+  }
+  if (args.clang_format_exe_path.empty()) {
+    absl::StrAppend(&error, "please specify --clang_format_exe_path\n");
+  }
+  if (args.rustfmt_exe_path.empty()) {
+    absl::StrAppend(&error, "please specify --rustfmt_exe_path\n");
+  }
 
-Cmdline::Cmdline() = default;
+  if (args.crubit_support_path_format.empty()) {
+    absl::StrAppend(&error, "please specify --crubit_support_path_format\n");
+  } else if (!absl::StrContains(args.crubit_support_path_format, "{header}")) {
+    absl::StrAppend(
+        &error,
+        "cannot find `{header}` placeholder in crubit_support_path_format\n");
+  }
+  if (args.srcs_to_scan_for_instantiations.empty() !=
+      args.instantiations_out.empty()) {
+    absl::StrAppend(
+        &error,
+        "please specify both --rust_sources and --instantiations_out when "
+        "requesting a template instantiation mode\n");
+  }
+  for (const HeaderName& header : args.public_headers) {
+    if (auto it = args.headers_to_targets.find(header);
+        it == args.headers_to_targets.end()) {
+      absl::StrAppend(
+          &error,
+          absl::Substitute(
+              "Couldn't find header '$0' in the `headers_to_target` map "
+              "derived from the --target_args cmdline argument\n",
+              header.IncludePath()));
+    }
+  }
+  if (!error.empty()) {
+    error.erase(error.size() - 1);  // remove trailing \n
+    return absl::InvalidArgumentError(error);
+  }
+  return Cmdline(std::move(args));
+}
 
 }  // namespace crubit
