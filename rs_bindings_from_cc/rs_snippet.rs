@@ -397,8 +397,9 @@ impl RsTypeKind {
                         Ok(CrubitFeature::Experimental.into())
                     }
                 }
-                // TODO(b/314382764): Carve out some aliases that can be ExternC.
-                RsTypeKind::TypeAlias { .. } => Ok(CrubitFeature::Experimental.into()),
+                // the alias itself is extern_c, but the overall features require depends on the
+                // aliased type, which is also visited by dfs_iter.
+                RsTypeKind::TypeAlias { .. } => Ok(CrubitFeature::ExternC.into()),
                 RsTypeKind::Primitive { .. } => Ok(CrubitFeature::ExternC.into()),
                 RsTypeKind::Other { .. } => Ok(CrubitFeature::Experimental.into()),
             }

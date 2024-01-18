@@ -2936,6 +2936,10 @@ fn crubit_features_for_item(
             crubit_features |= RsTypeKind::new_record(record.clone(), &db.ir())?
                 .required_crubit_features(&db.ir())?
         }
+        Item::TypeAlias(alias) => {
+            crubit_features |=
+                new_type_alias(db, alias.clone())?.required_crubit_features(&db.ir())?;
+        }
         _ => {
             crubit_features |= ir::CrubitFeature::Experimental;
         }
@@ -3155,17 +3159,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                         // Until this is supported, we import this as the underlying type.
                         db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?
                     } else {
-                        RsTypeKind::TypeAlias {
-                            type_alias: type_alias.clone(),
-                            crate_path: Rc::new(CratePath::new(
-                                &ir,
-                                ir.namespace_qualifier(type_alias)?,
-                                rs_imported_crate_name(&type_alias.owning_target, &ir),
-                            )),
-                            underlying_type: Rc::new(
-                                db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?,
-                            ),
-                        }
+                        new_type_alias(db, type_alias.clone())?
                     }
                 }
                 Item::TypeMapOverride(type_map_override) => {
@@ -3240,6 +3234,17 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
         },
     };
     Ok(result)
+}
+
+fn new_type_alias(db: &dyn BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<RsTypeKind> {
+    let ir = db.ir();
+    let underlying_type = Rc::new(db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?);
+    let crate_path = Rc::new(CratePath::new(
+        &ir,
+        ir.namespace_qualifier(&type_alias)?,
+        rs_imported_crate_name(&type_alias.owning_target, &ir),
+    ));
+    Ok(RsTypeKind::TypeAlias { type_alias: type_alias, crate_path, underlying_type })
 }
 
 fn cc_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
@@ -8754,7 +8759,7 @@ mod tests {
     /// The default crubit feature set currently doesn't include experimetnal.
     #[test]
     fn test_default_crubit_features_disabled_experimental() -> Result<()> {
-        for item in ["using NotPresent = int;"] {
+        for item in ["struct NotPresent {~NotPresent();};"] {
             let mut ir = ir_from_cc(item)?;
             ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
             let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -8792,7 +8797,7 @@ mod tests {
     #[test]
     fn test_default_crubit_features_disabled_dependency_experimental_function_parameter()
     -> Result<()> {
-        for dependency in ["using NotPresent = int;"] {
+        for dependency in ["struct NotPresent {~NotPresent();};"] {
             let mut ir = ir_from_cc_dependency("void Func(NotPresent);", dependency)?;
             ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
             let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -8830,7 +8835,7 @@ mod tests {
     #[test]
     fn test_default_crubit_features_disabled_dependency_experimental_function_return_type()
     -> Result<()> {
-        for dependency in ["using NotPresent = int;"] {
+        for dependency in ["struct NotPresent {~NotPresent();};"] {
             let mut ir = ir_from_cc_dependency("NotPresent Func();", dependency)?;
             ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
             let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;

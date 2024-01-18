@@ -16,6 +16,11 @@ fn test_nontrivial_type() {
 }
 
 #[test]
+fn test_nontrivial_alias() {
+    assert!(!type_exists!(no_bindings::NontrivialAlias));
+}
+
+#[test]
 fn test_accepts_nontrivial_ptr() {
     assert!(!value_exists!(no_bindings::crubit_accepts_nontrivial_ptr));
 }

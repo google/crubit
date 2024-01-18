@@ -26,6 +26,14 @@ fn test_user_struct() {
 }
 
 #[test]
+fn test_alias() {
+    assert_eq!(
+        std::any::TypeId::of::<has_bindings::Struct>(),
+        std::any::TypeId::of::<has_bindings::StructAlias>(),
+    )
+}
+
+#[test]
 fn test_crubit_add() {
     assert_eq!(has_bindings::crubit_add(1, 2), 3);
 }

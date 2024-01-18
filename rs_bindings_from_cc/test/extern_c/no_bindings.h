@@ -16,6 +16,8 @@ struct Nontrivial {
   ~Nontrivial() {}  // NOLINT(modernize-use-equals-default)
 };
 
+using NontrivialAlias = Nontrivial;
+
 // This struct would receive bindings, if it weren't for the unrecognized
 // attribute on the struct.
 struct [[deprecated]] UnknownAttrStruct final {
