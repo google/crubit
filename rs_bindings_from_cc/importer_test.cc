@@ -819,7 +819,6 @@ TEST(ImporterTest, TopLevelItemIds) {
     items.push_back(*item);
   }
 
-  EXPECT_THAT(ir.top_level_item_ids, SizeIs(6));
   EXPECT_THAT(
       items,
       ElementsAre(
@@ -847,7 +846,6 @@ TEST(ImporterTest, ForwardDeclarationAndDefinition) {
     items.push_back(*item);
   }
 
-  EXPECT_THAT(ir.top_level_item_ids, SizeIs(3));
   EXPECT_THAT(
       items, ElementsAre(VariantWith<Record>(RsNameIs("ForwardDeclaredStruct")),
                          VariantWith<Record>(RsNameIs("Struct")),
@@ -868,7 +866,6 @@ TEST(ImporterTest, DuplicateForwardDeclarations) {
     items.push_back(*item);
   }
 
-  EXPECT_THAT(ir.top_level_item_ids, SizeIs(1));
   EXPECT_THAT(items, ElementsAre(VariantWith<IncompleteRecord>(
                          RsNameIs("ForwardDeclaredStructWithNoDefinition"))));
 }
@@ -889,7 +886,7 @@ TEST(ImporterTest, RecordItemIds) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records, SizeIs(1));
+  ASSERT_EQ(records.size(), 1);
 
   std::vector<IR::Item> items;
   for (const auto& id : records[0]->child_item_ids) {
