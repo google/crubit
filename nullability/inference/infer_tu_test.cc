@@ -310,6 +310,7 @@ using InferTUSmartPointerTest = InferTUTest;
 TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
   build(R"cc(
 #include <memory>
+#include <utility>
     void callee(std::unique_ptr<int> p, std::unique_ptr<int> q,
                 std::unique_ptr<int> r);
     void target(std::unique_ptr<int> a, Nonnull<std::unique_ptr<int>> b,

@@ -12,6 +12,7 @@
 // in `unique_ptr`.
 
 #include <memory>
+#include <utility>
 
 #include "nullability_test.h"
 

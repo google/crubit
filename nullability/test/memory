@@ -20,22 +20,6 @@ struct remove_extent<T[]> { using type = T; };
 template <class T, size_t N>
 struct remove_extent<T[N]> { using type = T; };
 
-template <class T>
-struct remove_reference {
-  using type = T;
-};
-template <class T>
-struct remove_reference<T &> {
-  using type = T;
-};
-template <class T>
-struct remove_reference<T &&> {
-  using type = T;
-};
-
-template <class T>
-constexpr typename remove_reference<T>::type &&move(T &&);
-
 template <class T> struct default_delete{};
 template <class T> struct allocator{};
 
