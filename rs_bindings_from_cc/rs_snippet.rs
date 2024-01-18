@@ -400,7 +400,6 @@ impl RsTypeKind {
                 // TODO(b/314382764): Carve out some aliases that can be ExternC.
                 RsTypeKind::TypeAlias { .. } => Ok(CrubitFeature::Experimental.into()),
                 RsTypeKind::Primitive { .. } => Ok(CrubitFeature::ExternC.into()),
-                // TODO(b/314382764): Carve out builtin types, etc. that can be ExternC.
                 RsTypeKind::Other { .. } => Ok(CrubitFeature::Experimental.into()),
             }
         }
