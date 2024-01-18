@@ -305,7 +305,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
 
     member_func_metadata = MemberFuncMetadata{
-        .record_id = GenerateItemId(method_decl->getParent()),
+        .record_id = ictx_.GenerateItemId(method_decl->getParent()),
         .instance_method_metadata = instance_metadata};
   }
 
@@ -393,8 +393,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .is_member_or_descendant_of_class_template =
           is_member_or_descendant_of_class_template,
       .source_loc = ictx_.ConvertSourceLocation(function_decl->getBeginLoc()),
-      .id = GenerateItemId(function_decl),
-      .enclosing_namespace_id = GetEnclosingNamespaceId(function_decl),
+      .id = ictx_.GenerateItemId(function_decl),
+      .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(function_decl),
   };
 }
 

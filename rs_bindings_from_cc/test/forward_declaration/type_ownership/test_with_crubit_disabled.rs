@@ -4,5 +4,5 @@
 
 #[test]
 fn test_build() {
-    // Crubit is disabled for `definition.h`  no `definition.h` API to test.
+    // Crubit is disabled for `definition.h`, no `definition.h` API to test.
 }

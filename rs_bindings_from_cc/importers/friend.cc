@@ -58,8 +58,8 @@ std::optional<IR::Item> FriendDeclImporter::Import(
   // enclosing record note because as a friend function it is not visible at top
   // level.
   Func result = *func_item;
-  result.id = GenerateItemId(friend_decl);
-  result.adl_enclosing_record = GenerateItemId(enclosing_record_decl);
+  result.id = ictx_.GenerateItemId(friend_decl);
+  result.adl_enclosing_record = ictx_.GenerateItemId(enclosing_record_decl);
   return result;
 }
 

@@ -31,9 +31,6 @@ crubit_rust_test(
         ":forward_declaration1",
         ":forward_declaration2",
     ],
-    proc_macro_deps = [
-        "//common:item_exists",
-    ],
     deps = [
         "//support:forward_declare",
     ],

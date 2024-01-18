@@ -20,6 +20,7 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Sema/Sema.h"
@@ -100,6 +101,14 @@ class ImportContext {
   virtual std::optional<IR::Item> GetDeclItem(clang::Decl* decl) = 0;
 
   virtual std::optional<IR::Item> GetImportedItem(
+      const clang::Decl* decl) const = 0;
+
+  virtual ItemId GenerateItemId(const clang::Decl* decl) const = 0;
+  virtual ItemId GenerateItemId(const clang::RawComment* comment) const = 0;
+  // Returns the ID of the parent namespace, if such exists, and `std::nullopt`
+  // for top level decls. We use this function to assign a parent namespace to
+  // all the IR items.
+  virtual std::optional<ItemId> GetEnclosingNamespaceId(
       const clang::Decl* decl) const = 0;
 
   // Imports children of `decl`.

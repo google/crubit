@@ -63,7 +63,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       if (!ictx_.EnsureSuccessfullyImported(record_decl)) {
         return ictx_.ImportUnsupportedItem(decl, "Couldn't import the parent");
       }
-      enclosing_record_id = GenerateItemId(record_decl);
+      enclosing_record_id = ictx_.GenerateItemId(record_decl);
     }
   }
 
@@ -88,13 +88,13 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   ictx_.MarkAsSuccessfullyImported(decl);
   return TypeAlias{
       .identifier = *identifier,
-      .id = GenerateItemId(decl),
+      .id = ictx_.GenerateItemId(decl),
       .owning_target = ictx_.GetOwningTarget(decl),
       .doc_comment = ictx_.GetComment(decl),
       .underlying_type = *underlying_type,
       .source_loc = ictx_.ConvertSourceLocation(decl->getBeginLoc()),
       .enclosing_record_id = enclosing_record_id,
-      .enclosing_namespace_id = GetEnclosingNamespaceId(decl),
+      .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(decl),
   };
 }
 

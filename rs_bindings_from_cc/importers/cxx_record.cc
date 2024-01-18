@@ -295,24 +295,17 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     }
   }
 
-  if (clang::CXXRecordDecl* complete = record_decl->getDefinition()) {
-    record_decl = complete;
-  } else {
-    CHECK(!record_decl->isCompleteDefinition());
-    ictx_.MarkAsSuccessfullyImported(record_decl);
+  ictx_.MarkAsSuccessfullyImported(record_decl);
+  if (!record_decl->isCompleteDefinition()) {
     return IncompleteRecord{
         .cc_name = std::move(cc_name),
         .rs_name = std::move(rs_name),
-        .id = GenerateItemId(record_decl),
+        .id = ictx_.GenerateItemId(record_decl),
         .owning_target = ictx_.GetOwningTarget(record_decl),
         .unknown_attr = std::move(unknown_attr),
         .record_type = *record_type,
-        .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl)};
+        .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(record_decl)};
   }
-
-  // At this point we know that the import of `record_decl` will succeed /
-  // cannot fail.
-  ictx_.MarkAsSuccessfullyImported(record_decl);
 
   ictx_.sema_.ForceDeclarationOfImplicitMembers(record_decl);
 
@@ -333,7 +326,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
       .mangled_cc_name = ictx_.GetMangledName(record_decl),
-      .id = GenerateItemId(record_decl),
+      .id = ictx_.GenerateItemId(record_decl),
       .owning_target = ictx_.GetOwningTarget(record_decl),
       .defining_target = std::move(defining_target),
       .unknown_attr = std::move(unknown_attr),
@@ -360,7 +353,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .is_explicit_class_template_instantiation_definition =
           is_explicit_class_template_instantiation_definition,
       .child_item_ids = std::move(item_ids),
-      .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl),
+      .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(record_decl),
   };
 
   // If the align attribute was attached to the typedef decl, we should
@@ -540,7 +533,7 @@ std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
       CHECK((!offset.has_value() || *offset >= 0) &&
             "Concrete base classes should have non-negative offsets.");
       bases.push_back(
-          BaseClass{.base_record_id = GenerateItemId(base_record_decl),
+          BaseClass{.base_record_id = ictx_.GenerateItemId(base_record_decl),
                     .offset = offset});
       break;
     }

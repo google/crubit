@@ -113,34 +113,6 @@ inline std::string DebugStringFromDecl(const clang::Decl* decl) {
                          canonical_decl_id, decl_id, decl_name);
 }
 
-inline ItemId GenerateItemId(const clang::Decl* decl) {
-  if (auto namespace_decl = clang::dyn_cast<clang::NamespaceDecl>(decl)) {
-    return ItemId(reinterpret_cast<uintptr_t>(namespace_decl));
-  }
-  return ItemId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
-}
-
-inline ItemId GenerateItemId(const clang::RawComment* comment) {
-  return ItemId(reinterpret_cast<uintptr_t>(comment));
-}
-
-// Returns the ID of the parent namespace, if such exists, and `std::nullopt`
-// for top level decls. We use this function to assign a parent namespace to all
-// the IR items.
-inline std::optional<ItemId> GetEnclosingNamespaceId(const clang::Decl* decl) {
-  auto enclosing_namespace =
-      decl->getDeclContext()->getEnclosingNamespaceContext();
-  if (enclosing_namespace->isTranslationUnit()) return std::nullopt;
-
-  // Class template specializations are always emitted in the top-level
-  // namespace.  See also Importer::GetOrderedItemIdsOfTemplateInstantiations.
-  if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl))
-    return std::nullopt;
-
-  auto namespace_decl = clang::cast<clang::NamespaceDecl>(enclosing_namespace);
-  return GenerateItemId(namespace_decl);
-}
-
 // A numerical ID that uniquely identifies a lifetime.
 CRUBIT_DEFINE_STRONG_INT_TYPE(LifetimeId, int);
 

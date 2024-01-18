@@ -32,6 +32,7 @@
 #include "rs_bindings_from_cc/importers/type_map_override.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
@@ -76,6 +77,12 @@ class Importer final : public ImportContext {
   std::optional<IR::Item> ImportDecl(clang::Decl* decl) override;
   std::optional<IR::Item> GetImportedItem(
       const clang::Decl* decl) const override;
+
+  ItemId GenerateItemId(const clang::Decl* decl) const override;
+  ItemId GenerateItemId(const clang::RawComment* comment) const override;
+  std::optional<ItemId> GetEnclosingNamespaceId(
+      const clang::Decl* decl) const override;
+
   std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) override;
   std::string GetMangledName(const clang::NamedDecl* named_decl) const override;
   BazelLabel GetOwningTarget(const clang::Decl* decl) const override;
@@ -104,7 +111,7 @@ class Importer final : public ImportContext {
   bool EnsureSuccessfullyImported(clang::NamedDecl* decl) override {
     // First, return early so that we avoid re-entrant imports.
     if (HasBeenAlreadySuccessfullyImported(decl)) return true;
-    (void)GetDeclItem(decl->getCanonicalDecl());
+    (void)GetDeclItem(CanonicalizeDecl(decl));
     return HasBeenAlreadySuccessfullyImported(decl);
   }
 
@@ -131,6 +138,11 @@ class Importer final : public ImportContext {
   // Stores the comments of this target in source order.
   void ImportFreeComments();
 
+  clang::Decl* CanonicalizeDecl(clang::Decl* decl) const;
+  const clang::Decl* CanonicalizeDecl(const clang::Decl* decl) const;
+
+  std::vector<clang::Decl*> GetCanonicalChildren(
+      const clang::DeclContext* decl_context) const;
   // Converts a type to a MappedType.
   //
   // ref_qualifier_kind is the member function reference qualifier, e.g., `&`

@@ -149,7 +149,7 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
       .owning_target = ictx_.GetOwningTarget(type_decl),
       .size_align = std::move(size_align),
       .is_same_abi = *is_same_abi,
-      .id = GenerateItemId(type_decl),
+      .id = ictx_.GenerateItemId(type_decl),
   };
 }
 

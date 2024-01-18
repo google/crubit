@@ -33,12 +33,12 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   auto item_ids = ictx_.GetItemIdsInSourceOrder(namespace_decl);
   return Namespace{
       .name = *identifier,
-      .id = GenerateItemId(namespace_decl),
+      .id = ictx_.GenerateItemId(namespace_decl),
       .canonical_namespace_id =
-          GenerateItemId(namespace_decl->getCanonicalDecl()),
+          ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()),
       .owning_target = ictx_.GetOwningTarget(namespace_decl),
       .child_item_ids = std::move(item_ids),
-      .enclosing_namespace_id = GetEnclosingNamespaceId(namespace_decl),
+      .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(namespace_decl),
       .is_inline = namespace_decl->isInline()};
 }
 

@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 use core::any::TypeId;
 use forward_declare::CcCast;
-use item_exists::type_exists;
 
 #[test]
 fn test_complete_to_incomplete_ptr_conversion_crossing_crate_boundaries() {
@@ -39,8 +38,7 @@ fn test_complete_to_incomplete_ref_conversion_crossing_crate_boundaries() {
 
 #[test]
 fn test_each_crate_has_distinct_type_for_a() {
+    assert_ne!(TypeId::of::<forward_declaration1::A>(), TypeId::of::<forward_declaration2::A>());
     assert_ne!(TypeId::of::<forward_declaration1::A>(), TypeId::of::<definition::A>());
-    // Note: forward_declaration2 re-uses the (incomplete) type in
-    // forward_declaration1 for A.
-    assert!(!type_exists!(forward_declaration2::A));
+    assert_ne!(TypeId::of::<forward_declaration2::A>(), TypeId::of::<definition::A>());
 }

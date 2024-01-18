@@ -19,4 +19,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
+static_assert(sizeof(struct ForwardDeclaredStruct) == 1);
+static_assert(alignof(struct ForwardDeclaredStruct) == 1);
+
 #pragma clang diagnostic pop

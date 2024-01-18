@@ -277,8 +277,8 @@ class Importer::SourceLocationComparator {
   const clang::SourceManager& sm_;
 };
 
-static std::vector<clang::Decl*> GetCanonicalChildren(
-    const clang::DeclContext* decl_context) {
+std::vector<clang::Decl*> Importer::GetCanonicalChildren(
+    const clang::DeclContext* decl_context) const {
   std::vector<clang::Decl*> result;
   for (clang::Decl* decl : decl_context->decls()) {
     if (const auto* linkage_spec_decl =
@@ -299,13 +299,85 @@ static std::vector<clang::Decl*> GetCanonicalChildren(
     // In general we only import (and include as children) canonical decls.
     // Namespaces are exempted to ensure that we process every one of
     // (potential) multiple namespace blocks with the same name.
-    if (decl == decl->getCanonicalDecl() ||
-        clang::isa<clang::NamespaceDecl>(decl)) {
+    // CXXRecordDecls are exempted because we use the _definition_, not
+    // the "canonical" decl (which may be a forward declaration).
+    if (clang::Decl* canonical_decl = CanonicalizeDecl(decl);
+        canonical_decl == decl) {
       result.push_back(decl);
     }
   }
-
   return result;
+}
+
+const clang::Decl* Importer::CanonicalizeDecl(const clang::Decl* decl) const {
+  if (auto* namespace_decl = llvm::dyn_cast<clang::NamespaceDecl>(decl)) {
+    return namespace_decl;
+  }
+  if (auto* cxx_record_decl = llvm::dyn_cast<clang::CXXRecordDecl>(decl)) {
+    if (cxx_record_decl->isInjectedClassName()) {
+      return nullptr;
+    }
+    auto owning_target = GetOwningTarget(decl);
+    const auto& source_manager = sema_.getSourceManager();
+    clang::Decl* canonical = nullptr;
+    for (auto iter = decl->redecls_begin(); iter != decl->redecls_end();
+         ++iter) {
+      auto* redecl = llvm::dyn_cast<clang::CXXRecordDecl>(*iter);
+      CHECK(redecl);
+      if (redecl->isInjectedClassName()) {
+        continue;
+      }
+      if (GetOwningTarget(redecl) != owning_target) {
+        continue;
+      }
+      if (redecl->isThisDeclarationADefinition()) {
+        canonical = redecl;
+        break;  // Multiple definitions are not allowed for record types.
+      }
+      if (!canonical) {
+        canonical = redecl;
+        continue;
+      }
+      if (source_manager.isBeforeInTranslationUnit(
+              redecl->getSourceRange().getBegin(),
+              canonical->getSourceRange().getBegin())) {
+        canonical = redecl;
+      }
+    }
+    CHECK(canonical != nullptr);
+    return canonical;
+  }
+  return decl->getCanonicalDecl();
+}
+
+clang::Decl* Importer::CanonicalizeDecl(clang::Decl* decl) const {
+  const clang::Decl* decl_const = const_cast<clang::Decl*>(decl);
+  const clang::Decl* ret = CanonicalizeDecl(decl_const);
+  return const_cast<clang::Decl*>(ret);
+}
+
+ItemId Importer::GenerateItemId(const clang::Decl* decl) const {
+  const clang::Decl* canonicalized = CanonicalizeDecl(decl);
+  return ItemId(reinterpret_cast<uintptr_t>(canonicalized));
+}
+
+ItemId Importer::GenerateItemId(const clang::RawComment* comment) const {
+  return ItemId(reinterpret_cast<uintptr_t>(comment));
+}
+
+std::optional<ItemId> Importer::GetEnclosingNamespaceId(
+    const clang::Decl* decl) const {
+  auto enclosing_namespace =
+      decl->getDeclContext()->getEnclosingNamespaceContext();
+  if (enclosing_namespace->isTranslationUnit()) return std::nullopt;
+
+  // Class template specializations are always emitted in the top-level
+  // namespace.  See also Importer::GetOrderedItemIdsOfTemplateInstantiations.
+  if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl))
+    return std::nullopt;
+
+  auto namespace_decl = clang::cast<clang::NamespaceDecl>(enclosing_namespace);
+  return GenerateItemId(namespace_decl);
 }
 
 std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
@@ -1164,13 +1236,13 @@ absl::StatusOr<UnqualifiedIdentifier> Importer::GetTranslatedName(
 
 void Importer::MarkAsSuccessfullyImported(const clang::NamedDecl* decl) {
   known_type_decls_.insert(
-      clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
+      clang::cast<clang::TypeDecl>(CanonicalizeDecl(decl)));
 }
 
 bool Importer::HasBeenAlreadySuccessfullyImported(
     const clang::NamedDecl* decl) const {
   return known_type_decls_.contains(
-      clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
+      clang::cast<clang::TypeDecl>(CanonicalizeDecl(decl)));
 }
 
 }  // namespace crubit
