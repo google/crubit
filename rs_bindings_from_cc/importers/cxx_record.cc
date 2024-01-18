@@ -447,6 +447,21 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
     } else {
       size = ictx_.ctx_.getTypeSize(field_decl->getType());
     }
+    std::optional<std::string> unknown_attr;
+    if (field_decl->hasAttrs()) {
+      // Surprisingly, getAttrs() does not return an empty vec if there are no
+      // attrs, it crashes.
+      for (clang::Attr* attr : field_decl->getAttrs()) {
+        if (unknown_attr.has_value()) {
+          absl::StrAppend(&*unknown_attr, ", ");
+        } else {
+          unknown_attr.emplace("");
+        }
+        absl::StrAppend(&*unknown_attr, attr->getAttrName()
+                                            ? attr->getNormalizedFullName()
+                                            : attr->getSpelling());
+      }
+    }
 
     fields.push_back(
         {.identifier = GetTranslatedFieldName(field_decl),
@@ -455,6 +470,7 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex()),
          .size = size,
+         .unknown_attr = std::move(unknown_attr),
          .is_no_unique_address =
              field_decl->hasAttr<clang::NoUniqueAddressAttr>(),
          .is_bitfield = field_decl->isBitField(),

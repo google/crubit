@@ -475,6 +475,7 @@ struct Field {
   AccessSpecifier access;
   uint64_t offset;            // Field offset in bits.
   uint64_t size;              // Field size in bits.
+  std::optional<std::string> unknown_attr;
   bool is_no_unique_address;  // True if the field is [[no_unique_address]].
   bool is_bitfield;           // True if the field is a bitfield.
   bool is_inheritable;        // True if the field is inheritable.

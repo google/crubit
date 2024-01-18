@@ -547,8 +547,13 @@ pub struct Field {
     pub access: AccessSpecifier,
     pub offset: usize,
     pub size: usize,
+
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    pub unknown_attr: Option<Rc<str>>,
+
     pub is_no_unique_address: bool,
     pub is_bitfield: bool,
+
     // TODO(kinuko): Consider removing this, it is a duplicate of the same information
     // in `Record`.
     pub is_inheritable: bool,

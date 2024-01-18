@@ -2015,14 +2015,36 @@ fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
 
 /// Gets the type of `field` for layout purposes.
 ///
-/// Note that `get_field_rs_type_kind_for_layout` may return Err (for
-/// `is_no_unique_address` fields) even if `rs_type_kind` returns Ok.
-fn get_field_rs_type_kind_for_layout(db: &Database, field: &Field) -> Result<RsTypeKind> {
-    // [[no_unique_address]] fields are replaced by a type-less, unaligned block of
-    // memory which fills space up to the next field.
-    // See: docs/struct_layout
+/// Note that `get_field_rs_type_kind_for_layout` may return Err even if
+/// `rs_type_kind` returns Ok.
+///
+/// In particular, this happens if the field has an attribute which is not
+/// supported (with the current Crubit features). For example,
+/// `[[no_unique_address]]`, or an unrecognized attribute.
+///
+/// Such unsupported fields should be replaced with a typeless, unaligned block
+/// of memory, of a size that can fill up space to the next field.
+///
+/// See docs/struct_layout
+fn get_field_rs_type_kind_for_layout(
+    db: &Database,
+    record: &Record,
+    field: &Field,
+) -> Result<RsTypeKind> {
     if field.is_no_unique_address {
         bail!("`[[no_unique_address]]` attribute was present.");
+    }
+    if let Some(unknown_attr) = &field.unknown_attr {
+        // Both the template definition and its instantiation should enable experimental
+        // features.
+        for target in record.defining_target.iter().chain([&record.owning_target]) {
+            let required_features = db.ir().target_crubit_features(target);
+            ensure!(
+                required_features.contains(ir::CrubitFeature::Experimental),
+                "unknown field attributes are only supported with experimental features \
+                enabled on {target}\nUnknown attribute: {unknown_attr}`"
+            );
+        }
     }
     match &field.type_ {
         Ok(t) => db.rs_type_kind(t.rs_type.clone()),
@@ -2066,7 +2088,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
                 // We retain the end offset of fields only if we have a matching Rust type
                 // to represent them. Otherwise we'll fill up all the space to the next field.
                 // See: docs/struct_layout
-                match get_field_rs_type_kind_for_layout(db, field) {
+                match get_field_rs_type_kind_for_layout(db, record, field) {
                     // Regular field
                     Ok(_rs_type) => Some(field.offset + field.size),
                     // Opaque field
@@ -2125,10 +2147,9 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         })
         .enumerate()
         .map(|(field_index, (field, prev_end, offset, end, desc))| {
-            // `is_opaque_blob` and bitfield representations are always
-            // unaligned, even though the actual C++ field might be aligned.
-            // To put the current field at the right offset, we might need to
-            // insert some extra padding.
+            // opaque blob representations are always unaligned, even though the actual C++
+            // field might be aligned. To put the current field at the right offset, we
+            // might need to insert some extra padding.
             //
             // No padding should be needed if the type of the current field is
             // known (i.e. if the current field is correctly aligned based on
@@ -2137,7 +2158,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             // We also don't need padding if we're in a union.
             let padding_size_in_bits = if record.is_union()
                 || (field.is_some()
-                    && get_field_rs_type_kind_for_layout(db, field.unwrap()).is_ok())
+                    && get_field_rs_type_kind_for_layout(db, record, field.unwrap()).is_ok())
             {
                 0
             } else {
@@ -2167,7 +2188,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             let field = field.unwrap();
 
             let ident = make_rs_field_ident(field, field_index);
-            let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, field);
+            let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
             let doc_comment = match &field_rs_type_kind {
                 Ok(_) => generate_doc_comment(
                     field.doc_comment.as_deref(),
@@ -8661,6 +8682,34 @@ mod tests {
 
             struct Trivial {
                 Nontrivial* hidden_field;
+            };
+        
+        #",
+        )?;
+        *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+            ir::CrubitFeature::ExternC.into();
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+            struct Trivial {
+                ...
+                pub(crate) hidden_field: [::core::mem::MaybeUninit<u8>; 8],
+            }}
+        );
+        Ok(())
+    }
+
+    /// Fields with unknown attributes on supported structs are replaced with
+    /// opaque blobs.
+    ///
+    /// This is hard to test any other way than token comparison!
+    #[test]
+    fn test_extern_c_unknown_attr_field() -> Result<()> {
+        let mut ir = ir_from_cc(
+            "#
+            struct Trivial {
+                [[deprecated]] void* hidden_field;
             };
         
         #",
