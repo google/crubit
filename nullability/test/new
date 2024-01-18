@@ -4,6 +4,9 @@
 
 // Mock of standard library <new> header.
 
+#ifndef CRUBIT_NULLABILITY_TEST_NEW_
+#define CRUBIT_NULLABILITY_TEST_NEW_
+
 namespace std {
 struct nothrow_t {
   explicit nothrow_t() = default;
@@ -12,3 +15,5 @@ extern const nothrow_t nothrow;
 using size_t = decltype(sizeof(int));
 }  // namespace std
 void *operator new(std::size_t size, const std::nothrow_t &) noexcept;
+
+#endif  // CRUBIT_NULLABILITY_TEST_NEW_

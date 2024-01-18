@@ -111,4 +111,4 @@ static T make()
 // Tests define functions that are not declared in any header.
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
 
-#endif
+#endif  // CRUBIT_NULLABILITY_TEST_NULLABILITY_TEST_H_

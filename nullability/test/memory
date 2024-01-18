@@ -4,6 +4,9 @@
 
 // Mock of standard library <memory> header.
 
+#ifndef CRUBIT_NULLABILITY_TEST_MEMORY_
+#define CRUBIT_NULLABILITY_TEST_MEMORY_
+
 namespace std {
 
 // Adding some definitions here for convenience that really belong in other
@@ -205,3 +208,5 @@ public:
 };
 
 }  // namespace std
+
+#endif  // CRUBIT_NULLABILITY_TEST_MEMORY_
