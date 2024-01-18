@@ -74,7 +74,8 @@ class Importer final : public ImportContext {
   IR::Item ImportUnsupportedItem(const clang::Decl* decl,
                                  std::set<std::string> errors) override;
   std::optional<IR::Item> ImportDecl(clang::Decl* decl) override;
-  std::optional<IR::Item> GetImportedItem(const clang::Decl* decl) override;
+  std::optional<IR::Item> GetImportedItem(
+      const clang::Decl* decl) const override;
   std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) override;
   std::string GetMangledName(const clang::NamedDecl* named_decl) const override;
   BazelLabel GetOwningTarget(const clang::Decl* decl) const override;

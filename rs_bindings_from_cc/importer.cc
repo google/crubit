@@ -574,7 +574,8 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
   return std::nullopt;
 }
 
-std::optional<IR::Item> Importer::GetImportedItem(const clang::Decl* decl) {
+std::optional<IR::Item> Importer::GetImportedItem(
+    const clang::Decl* decl) const {
   auto it = import_cache_.find(decl);
   if (it != import_cache_.end()) {
     return it->second;

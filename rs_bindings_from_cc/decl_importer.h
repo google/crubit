@@ -99,7 +99,8 @@ class ImportContext {
   // Updates the cache.
   virtual std::optional<IR::Item> GetDeclItem(clang::Decl* decl) = 0;
 
-  virtual std::optional<IR::Item> GetImportedItem(const clang::Decl* decl) = 0;
+  virtual std::optional<IR::Item> GetImportedItem(
+      const clang::Decl* decl) const = 0;
 
   // Imports children of `decl`.
   //
