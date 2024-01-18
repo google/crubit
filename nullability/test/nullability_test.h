@@ -69,9 +69,9 @@ template <typename T>
 void unknown(const T &) {}
 
 // Asserts that the analysis can prove `b` must be true at this point.
-void provable(bool b) {}
+inline void provable(bool b) {}
 // Asserts that the analysis can show `b` may be true at this point.
-void possible(bool b) {}
+inline void possible(bool b) {}
 
 ///////////////// Helpers to make writing tests more convenient ////////////////
 
