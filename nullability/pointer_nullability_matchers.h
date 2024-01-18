@@ -37,16 +37,13 @@ AST_MATCHER(Stmt, isRawPointerValueInit) {
 ast_matchers::internal::Matcher<Stmt> isPointerExpr();
 ast_matchers::internal::Matcher<Stmt> isMemberOfPointerType();
 ast_matchers::internal::Matcher<Stmt> isPointerArrow();
-ast_matchers::internal::Matcher<Stmt> isCXXThisExpr();
 ast_matchers::internal::Matcher<Stmt> isNullPointerLiteral();
 ast_matchers::internal::Matcher<Stmt> isAddrOf();
 ast_matchers::internal::Matcher<Stmt> isPointerDereference();
 ast_matchers::internal::Matcher<Stmt> isPointerSubscript();
 ast_matchers::internal::Matcher<Stmt> isPointerCheckBinOp();
 ast_matchers::internal::Matcher<Stmt> isImplicitCastPointerToBool();
-ast_matchers::internal::Matcher<Stmt> isCallExpr();
 ast_matchers::internal::Matcher<Stmt> isPointerReturn();
-ast_matchers::internal::Matcher<Stmt> isConstructExpr();
 ast_matchers::internal::Matcher<CXXCtorInitializer> isCtorMemberInitializer();
 ast_matchers::internal::Matcher<Stmt> isZeroParamConstMemberCall();
 ast_matchers::internal::Matcher<Stmt> isNonConstMemberCall();

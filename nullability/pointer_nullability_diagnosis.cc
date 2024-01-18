@@ -21,6 +21,7 @@
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
@@ -419,8 +420,9 @@ auto pointerNullabilityDiagnoser() {
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("->"),
                                           diagnoseSmartPointerDereference)
       // Check compatibility of parameter assignments and return values.
-      .CaseOfCFGStmt<CallExpr>(isCallExpr(), diagnoseCallExpr)
-      .CaseOfCFGStmt<CXXConstructExpr>(isConstructExpr(), diagnoseConstructExpr)
+      .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(), diagnoseCallExpr)
+      .CaseOfCFGStmt<CXXConstructExpr>(ast_matchers::cxxConstructExpr(),
+                                       diagnoseConstructExpr)
       .CaseOfCFGStmt<ReturnStmt>(isPointerReturn(), diagnoseReturn)
       // Check compatibility of member initializers.
       .CaseOfCFGInit<CXXCtorInitializer>(isCtorMemberInitializer(),

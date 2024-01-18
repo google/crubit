@@ -1301,7 +1301,7 @@ auto buildValueTransferer() {
                                         transferValue_ConstMemberCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isNonConstMemberCall(),
                                         transferValue_NonConstMemberCall)
-      .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferValue_CallExpr)
+      .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(), transferValue_CallExpr)
       .CaseOfCFGStmt<Expr>(isSmartPointerGlValue(), transferValue_SmartPointer)
       .CaseOfCFGStmt<Expr>(isPointerExpr(), transferValue_Pointer)
       // Handles comparison between 2 pointers.
