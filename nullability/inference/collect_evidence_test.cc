@@ -135,6 +135,7 @@ TEST(CollectEvidenceFromImplementationTest, Deref) {
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
+
 TEST(CollectEvidenceFromImplementationTest, DerefArrow) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
@@ -151,6 +152,7 @@ TEST(CollectEvidenceFromImplementationTest, DerefArrow) {
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
 }
+
 TEST(CollectEvidenceFromImplementationTest, DerefOfNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(Nonnull<int *> p) {
@@ -364,6 +366,43 @@ TEST(CollectEvidenceFromImplementationTest, UnreachableCode) {
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
+}
+
+TEST(CollectEvidenceFromImplementationTest, PointerToMemberField) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {};
+
+    void target(int S::*p) {
+      S s;
+      s.*p;
+
+      S s2;
+      (&s2)->*p;
+    }
+  )cc";
+  // Pointers to members are not supported pointer types, so no evidence is
+  // collected. If they become a supported pointer type, this test should start
+  // failing.
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromImplementationTest, PointerToMemberMethod) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {};
+
+    void target(void (S::*p)()) {
+      S s;
+      (s.*p)();
+
+      S s2;
+      ((&s2)->*p)();
+    }
+  )cc";
+
+  // Pointers to members are not supported pointer types, so no evidence is
+  // collected. If they become a supported pointer type, this test should start
+  // failing.
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromImplementationTest, NullableArgPassed) {

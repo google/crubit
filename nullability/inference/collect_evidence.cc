@@ -150,6 +150,13 @@ std::pair<Expr *, SourceLocation> describeDereference(const Stmt &Stmt) {
   if (auto *ME = dyn_cast<MemberExpr>(&Stmt); ME && ME->isArrow()) {
     return {ME->getBase(), ME->getOperatorLoc()};
   }
+  // pointers to members; at the time of writing, they aren't a supported
+  // pointer type, so this is a no-op.
+  if (const auto *BO = dyn_cast<BinaryOperator>(&Stmt);
+      BO && (BO->getOpcode() == clang::BinaryOperatorKind::BO_PtrMemD ||
+             BO->getOpcode() == clang::BinaryOperatorKind::BO_PtrMemI)) {
+    return {BO->getRHS(), BO->getOperatorLoc()};
+  }
   return {nullptr, SourceLocation()};
 }
 
@@ -427,53 +434,73 @@ void collectEvidenceFromArgsAndParams(
 //
 // With `CalleeDecl` in this case not being a FunctionDecl as in most CallExpr
 // cases, distinct handling is needed.
-void collectEvidenceFromCallExprWithoutDecl(
+void collectEvidenceFromFunctionPointerCallExpr(
     const Decl &CalleeDecl, const CallExpr &Expr,
     const std::vector<InferableSlot> &InferableSlots,
-    const Formula &InferableSlotsConstraint,
-    const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
+    const Formula &InferableSlotsConstraint, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  // Function pointers are the only case we know of so far that needs this
-  // special handling, so if we run into others, skip them, but log first.
-  if (!CalleeDecl.isFunctionPointerType()) {
-    llvm::errs() << "Unsupported case of a CallExpr without a FunctionDecl. "
-                    "Not collecting any evidence from this CallExpr:\n";
-    Expr.getBeginLoc().dump(CalleeDecl.getASTContext().getSourceManager());
-    Expr.dump();
-    CalleeDecl.dump();
-    return;
-  }
-
-  if (!InferableSlots.empty()) {
-    auto *CalleeType = CalleeDecl.getFunctionType()->getAs<FunctionProtoType>();
-    if (!CalleeType) return;
-
-    // For each pointer parameter of the callee, ...
-    for (unsigned I = 0; I < CalleeType->getNumParams(); ++I) {
-      const auto ParamType = CalleeType->getParamType(I);
-      if (!isSupportedRawPointerType(ParamType.getNonReferenceType())) continue;
-      // the corresponding argument should also be a pointer.
-      CHECK(isSupportedRawPointerType(Expr.getArg(I)->getType()))
-          << "Unsupported argument " << I
-          << " type: " << Expr.getArg(I)->getType().getAsString();
-
-      dataflow::PointerValue *PV = getPointerValueFromExpr(Expr.getArg(I), Env);
-      if (!PV) continue;
-
-      auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
-
-      // Collect evidence from the binding of the argument to the parameter's
-      // nullability, if known.
-      collectEvidenceFromBindingToType(ParamType, ParamNullability, *PV,
-                                       InferableSlots, InferableSlotsConstraint,
-                                       Env, Expr.getArg(I)->getExprLoc(), Emit);
-    }
-  }
-
   // TODO: When we collect evidence for more complex slots than just top-level
   // pointers, emit evidence of the  function-pointer parameter's nullability
   // as a slot in the appropriate declaration, i.e. of `j` in the example in the
   // function comment above.
+
+  if (InferableSlots.empty()) return;
+  auto *CalleeType = CalleeDecl.getFunctionType()->getAs<FunctionProtoType>();
+  CHECK(CalleeType);
+
+  // For each pointer parameter of the function pointer, ...
+  for (unsigned I = 0; I < CalleeType->getNumParams(); ++I) {
+    const auto ParamType = CalleeType->getParamType(I);
+    if (!isSupportedRawPointerType(ParamType.getNonReferenceType())) continue;
+    // the corresponding argument should also be a pointer.
+    CHECK(isSupportedRawPointerType(Expr.getArg(I)->getType()))
+        << "Unsupported argument " << I
+        << " type: " << Expr.getArg(I)->getType().getAsString();
+
+    dataflow::PointerValue *PV = getPointerValueFromExpr(Expr.getArg(I), Env);
+    if (!PV) continue;
+
+    // TODO: when we infer function pointer parameters' nullabilities, check
+    // for overrides from previous inference iterations.
+    auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
+
+    // Collect evidence from the binding of the argument to the parameter's
+    // nullability, if known.
+    collectEvidenceFromBindingToType(ParamType, ParamNullability, *PV,
+                                     InferableSlots, InferableSlotsConstraint,
+                                     Env, Expr.getArg(I)->getExprLoc(), Emit);
+  }
+}
+
+void collectEvidenceFromCallExprWithoutFunctionCalleeDecl(
+    const Decl &CalleeDecl, const CallExpr &Expr,
+    const std::vector<InferableSlot> &InferableSlots,
+    const Formula &InferableSlotsConstraint, const dataflow::Environment &Env,
+    llvm::function_ref<EvidenceEmitter> Emit) {
+  if (CalleeDecl.isFunctionPointerType()) {
+    collectEvidenceFromFunctionPointerCallExpr(
+        CalleeDecl, Expr, InferableSlots, InferableSlotsConstraint, Env, Emit);
+    return;
+  }
+
+  // Ignore calls of pointers to members. These are handled as dereferences at
+  // the BinaryOperator node, which additionally captures pointers to fields.
+  if (const auto *BinaryOpCallee = dyn_cast_or_null<BinaryOperator>(
+          Expr.getCallee()->IgnoreParenImpCasts());
+      BinaryOpCallee &&
+      (BinaryOpCallee->getOpcode() == clang::BinaryOperatorKind::BO_PtrMemD ||
+       BinaryOpCallee->getOpcode() == clang::BinaryOperatorKind::BO_PtrMemI)) {
+    return;
+  }
+
+  // If we run into other cases meeting this criterion, skip them, but log
+  // first so we can potentially add support later.
+  llvm::errs() << "Unsupported case of a CallExpr without a FunctionDecl. "
+                  "Not collecting any evidence from this CallExpr:\n";
+  Expr.getBeginLoc().dump(CalleeDecl.getASTContext().getSourceManager());
+  Expr.dump();
+  llvm::errs() << "Which is a call to:\n";
+  CalleeDecl.dump();
 }
 
 void collectEvidenceFromCallExpr(
@@ -481,19 +508,18 @@ void collectEvidenceFromCallExpr(
     const Formula &InferableSlotsConstraint, const Stmt &Stmt,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  auto *CallExpr = dyn_cast_or_null<clang::CallExpr>(&Stmt);
+  auto *CallExpr = dyn_cast<clang::CallExpr>(&Stmt);
   if (!CallExpr) return;
   auto *CalleeDecl = CallExpr->getCalleeDecl();
   if (!CalleeDecl) return;
-  if (auto *CalleeFunctionDecl =
-          dyn_cast_or_null<clang::FunctionDecl>(CalleeDecl)) {
+  if (auto *CalleeFunctionDecl = dyn_cast<clang::FunctionDecl>(CalleeDecl)) {
     collectEvidenceFromArgsAndParams(
         *CalleeFunctionDecl, *CallExpr, InferableCallerSlots,
         InferableSlotsConstraint, Lattice, Env, Emit);
   } else {
-    collectEvidenceFromCallExprWithoutDecl(
+    collectEvidenceFromCallExprWithoutFunctionCalleeDecl(
         *CalleeDecl, *CallExpr, InferableCallerSlots, InferableSlotsConstraint,
-        Lattice, Env, Emit);
+        Env, Emit);
   }
 }
 
@@ -502,8 +528,8 @@ void collectEvidenceFromConstructExpr(
     const Formula &InferableSlotsConstraint, const Stmt &Stmt,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  auto *ConstructExpr = dyn_cast_or_null<clang::CXXConstructExpr>(&Stmt);
-  if (!ConstructExpr || !ConstructExpr->getConstructor()) return;
+  auto *ConstructExpr = dyn_cast<clang::CXXConstructExpr>(&Stmt);
+  if (!ConstructExpr) return;
   auto *ConstructorDecl = dyn_cast_or_null<clang::CXXConstructorDecl>(
       ConstructExpr->getConstructor());
   if (!ConstructorDecl) return;
@@ -519,7 +545,7 @@ void collectEvidenceFromReturn(const std::vector<InferableSlot> &InferableSlots,
                                const dataflow::Environment &Env,
                                llvm::function_ref<EvidenceEmitter> Emit) {
   // Is this CFGElement a return statement?
-  auto *ReturnStmt = dyn_cast_or_null<clang::ReturnStmt>(&Stmt);
+  auto *ReturnStmt = dyn_cast<clang::ReturnStmt>(&Stmt);
   if (!ReturnStmt) return;
   auto *ReturnExpr = ReturnStmt->getRetValue();
   if (!ReturnExpr || !isSupportedRawPointerType(ReturnExpr->getType())) return;
@@ -553,7 +579,7 @@ void collectEvidenceFromAssignment(
   if (InferableSlots.empty()) return;
 
   // Initialization of new decl.
-  if (auto *DeclStmt = dyn_cast_or_null<clang::DeclStmt>(&Stmt)) {
+  if (auto *DeclStmt = dyn_cast<clang::DeclStmt>(&Stmt)) {
     for (auto *Decl : DeclStmt->decls()) {
       if (auto *VarDecl = dyn_cast_or_null<clang::VarDecl>(Decl);
           VarDecl && VarDecl->hasInit()) {
@@ -584,7 +610,7 @@ void collectEvidenceFromAssignment(
   }
 
   // Assignment to existing decl.
-  if (auto *BinaryOperator = dyn_cast_or_null<clang::BinaryOperator>(&Stmt);
+  if (auto *BinaryOperator = dyn_cast<clang::BinaryOperator>(&Stmt);
       BinaryOperator &&
       BinaryOperator->getOpcode() == clang::BinaryOperatorKind::BO_Assign) {
     bool LhsSupported =
@@ -668,11 +694,11 @@ auto getConcreteNullabilityOverrideFromPreviousInferences(
     if (Inserted) {
       std::optional<const Decl *> FingerprintedDecl;
       Slot Slot;
-      if (auto *FD = clang::dyn_cast_or_null<FunctionDecl>(&D)) {
+      if (auto *FD = dyn_cast<FunctionDecl>(&D)) {
         FingerprintedDecl = FD;
         Slot = SLOT_RETURN_TYPE;
-      } else if (auto *PD = clang::dyn_cast_or_null<ParmVarDecl>(&D)) {
-        if (auto *Parent = clang::dyn_cast_or_null<FunctionDecl>(
+      } else if (auto *PD = dyn_cast<ParmVarDecl>(&D)) {
+        if (auto *Parent = dyn_cast_or_null<FunctionDecl>(
                 PD->getParentFunctionOrMethod())) {
           FingerprintedDecl = Parent;
           Slot = paramSlot(PD->getFunctionScopeIndex());
