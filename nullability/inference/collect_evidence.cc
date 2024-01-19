@@ -445,6 +445,13 @@ void collectEvidenceFromFunctionPointerCallExpr(
   // function comment above.
 
   if (InferableSlots.empty()) return;
+  if (const auto *Callee = Expr.getCallee()) {
+    if (const auto *PV = getPointerValueFromExpr(Callee, Env)) {
+      collectMustBeNonnullEvidence(*PV, Env, Expr.getExprLoc(), InferableSlots,
+                                   Evidence::UNCHECKED_DEREFERENCE, Emit);
+    }
+  }
+
   auto *CalleeType = CalleeDecl.getFunctionType()->getAs<FunctionProtoType>();
   CHECK(CalleeType);
 

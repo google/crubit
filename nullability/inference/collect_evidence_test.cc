@@ -50,15 +50,15 @@ MATCHER_P3(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher, "") {
          KindMatcher.Matches(arg.kind()) && SymbolMatcher.Matches(arg.symbol());
 }
 
-testing::Matcher<const Evidence&> evidence(
-    testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
-    testing::Matcher<const Symbol&> SymbolMatcher = testing::_) {
-  return isEvidenceMatcher(S, Kind, SymbolMatcher);
-}
-
 MATCHER_P(functionNamed, Name, "") {
   return llvm::StringRef(arg.usr()).contains(
       ("@" + llvm::StringRef(Name) + "#").str());
+}
+
+testing::Matcher<const Evidence&> evidence(
+    testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
+    testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target")) {
+  return isEvidenceMatcher(S, Kind, SymbolMatcher);
 }
 
 clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
@@ -614,6 +614,16 @@ TEST(CollectEvidenceFromImplemetationTest,
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
+TEST(CollectEvidenceFromImplementationTest, FunctionPointerCall) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(void (*f)()) { f(); }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(evidence(paramSlot(0),
+                                            Evidence::UNCHECKED_DEREFERENCE,
+                                            functionNamed("target"))));
+}
+
 TEST(CollectEvidenceFromImplemetationTest,
      ConstAccessorDereferencedAfterCheck) {
   static constexpr llvm::StringRef Src = R"cc(
@@ -899,10 +909,12 @@ TEST(CollectEvidenceFromImplementationTest,
       callee(p);
     }
   )cc";
-  EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
-                                    functionNamed("target"))));
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                           functionNamed("target")),
+                  evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest,
@@ -958,9 +970,11 @@ TEST(CollectEvidenceFromImplementationTest,
     void target(void (*callee)(Nonnull<int*> i)) { callee(makeIntPtr()); }
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
-                                            Evidence::BOUND_TO_NONNULL,
-                                            functionNamed("makeIntPtr"))));
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
+                           functionNamed("makeIntPtr")),
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest,
@@ -1211,14 +1225,6 @@ TEST(CollectEvidenceFromImplementationTest, IrrelevantAssignments) {
       // assignments.
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                     functionNamed("S"))));
-}
-
-// A crash repro involving callable parameters.
-TEST(CollectEvidenceFromImplementationTest, FunctionPointerParam) {
-  static constexpr llvm::StringRef Src = R"cc(
-    void target(void (*f)()) { f(); }
-  )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromImplementationTest, FunctionCallInLoop) {
@@ -1552,12 +1558,12 @@ TEST(CollectEvidenceFromImplementationTest,
 }
 
 TEST(CollectEvidenceFromDeclarationTest, VariableDeclIgnored) {
-  llvm::StringLiteral Src = "Nullable<int *> target;";
+  llvm::StringLiteral Src = R"cc(Nullable<int *> target;)cc";
   EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDeclarationTest, FunctionDeclReturnType) {
-  llvm::StringLiteral Src = "Nonnull<int *> target();";
+  llvm::StringLiteral Src = R"cc(Nonnull<int *> target();)cc";
   EXPECT_THAT(
       collectEvidenceFromTargetDecl(Src),
       ElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::ANNOTATED_NONNULL,
@@ -1565,14 +1571,15 @@ TEST(CollectEvidenceFromDeclarationTest, FunctionDeclReturnType) {
 }
 
 TEST(CollectEvidenceFromDeclarationTest, FunctionDeclParams) {
-  llvm::StringLiteral Src = "void target(Nullable<int*>, int*, Nonnull<int*>);";
+  llvm::StringLiteral Src =
+      R"cc(void target(Nullable<int*>, int*, Nonnull<int*>);)cc";
   EXPECT_THAT(collectEvidenceFromTargetDecl(Src),
               ElementsAre(evidence(paramSlot(0), Evidence::ANNOTATED_NULLABLE),
                           evidence(paramSlot(2), Evidence::ANNOTATED_NONNULL)));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, FunctionDeclNonTopLevel) {
-  llvm::StringLiteral Src = "Nonnull<int*>** target(Nullable<int*>*);";
+  llvm::StringLiteral Src = R"cc(Nonnull<int*>** target(Nullable<int*>*);)cc";
   EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
 }
 
