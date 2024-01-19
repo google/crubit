@@ -21,6 +21,11 @@ fn test_nontrivial_alias() {
 }
 
 #[test]
+fn test_deprecated_alias() {
+    assert!(!type_exists!(no_bindings::DeprecatedAlias));
+}
+
+#[test]
 fn test_accepts_nontrivial_ptr() {
     assert!(!value_exists!(no_bindings::crubit_accepts_nontrivial_ptr));
 }

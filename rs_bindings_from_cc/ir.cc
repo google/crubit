@@ -509,6 +509,7 @@ llvm::json::Value TypeAlias::ToJson() const {
       {"identifier", identifier},
       {"id", id},
       {"owning_target", owning_target},
+      {"unknown_attr", unknown_attr},
       {"doc_comment", doc_comment},
       {"underlying_type", underlying_type},
       {"source_loc", source_loc},

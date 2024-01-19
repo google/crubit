@@ -1016,6 +1016,7 @@ fn test_typedef() -> Result<()> {
             id: ItemId(...),
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypedefDecl."),
+            unknown_attr: None,
             underlying_type: #int,
             source_loc: ...
             enclosing_record_id: None,
@@ -1031,6 +1032,7 @@ fn test_typedef() -> Result<()> {
             id: ItemId(...),
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypeAliasDecl."),
+            unknown_attr: None,
             underlying_type: #int,
             source_loc: ...,
             enclosing_record_id: None,

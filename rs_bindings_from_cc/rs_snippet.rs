@@ -399,7 +399,13 @@ impl RsTypeKind {
                 }
                 // the alias itself is extern_c, but the overall features require depends on the
                 // aliased type, which is also visited by dfs_iter.
-                RsTypeKind::TypeAlias { .. } => Ok(CrubitFeature::ExternC.into()),
+                RsTypeKind::TypeAlias { type_alias, .. } => {
+                    if type_alias.unknown_attr.is_some() {
+                        Ok(CrubitFeature::Experimental.into())
+                    } else {
+                        Ok(CrubitFeature::ExternC.into())
+                    }
+                }
                 RsTypeKind::Primitive { .. } => Ok(CrubitFeature::ExternC.into()),
                 RsTypeKind::Other { .. } => Ok(CrubitFeature::Experimental.into()),
             }

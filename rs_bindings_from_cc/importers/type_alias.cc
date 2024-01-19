@@ -10,6 +10,7 @@
 #include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
 #include "lifetime_annotations/type_lifetimes.h"
+#include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -91,6 +92,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       .id = ictx_.GenerateItemId(decl),
       .owning_target = ictx_.GetOwningTarget(decl),
       .doc_comment = ictx_.GetComment(decl),
+      .unknown_attr = CollectUnknownAttrs(*decl),
       .underlying_type = *underlying_type,
       .source_loc = ictx_.ConvertSourceLocation(decl->getBeginLoc()),
       .enclosing_record_id = enclosing_record_id,

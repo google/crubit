@@ -17,6 +17,7 @@ struct Nontrivial {
 };
 
 using NontrivialAlias = Nontrivial;
+using DeprecatedAlias [[deprecated]] = int;
 
 // This struct would receive bindings, if it weren't for the unrecognized
 // attribute on the struct.

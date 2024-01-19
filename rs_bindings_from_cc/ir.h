@@ -673,6 +673,7 @@ struct TypeAlias {
   ItemId id;
   BazelLabel owning_target;
   std::optional<std::string> doc_comment;
+  std::optional<std::string> unknown_attr;
   MappedType underlying_type;
   std::string source_loc;
   std::optional<ItemId> enclosing_record_id;

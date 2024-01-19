@@ -749,6 +749,8 @@ pub struct TypeAlias {
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub doc_comment: Option<Rc<str>>,
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    pub unknown_attr: Option<Rc<str>>,
     pub underlying_type: MappedType,
     pub source_loc: Rc<str>,
     pub enclosing_record_id: Option<ItemId>,
