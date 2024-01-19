@@ -59,7 +59,7 @@ std::vector<const Record*> FindInstantiationsInNamespace(const IR& ir,
 
 absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
     Cmdline& cmdline, std::vector<std::string> clang_args,
-    absl::flat_hash_map<const HeaderName, const std::string>
+    absl::flat_hash_map<HeaderName, std::string>
         virtual_headers_contents_for_testing) {
   std::vector<absl::string_view> clang_args_view;
   clang_args_view.insert(clang_args_view.end(), clang_args.begin(),
@@ -71,15 +71,16 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
       CollectInstantiations(args.srcs_to_scan_for_instantiations));
 
   CRUBIT_ASSIGN_OR_RETURN(
-      IR ir, IrFromCc({.current_target = args.current_target,
-                       .public_headers = args.public_headers,
-                       .virtual_headers_contents_for_testing =
-                           std::move(virtual_headers_contents_for_testing),
-                       .headers_to_targets = args.headers_to_targets,
-                       .extra_rs_srcs = args.extra_rs_srcs,
-                       .clang_args = clang_args_view,
-                       .extra_instantiations = requested_instantiations,
-                       .crubit_features = args.target_to_features}));
+      IR ir, IrFromCc(IrFromCcOptions{
+                 .current_target = args.current_target,
+                 .public_headers = args.public_headers,
+                 .virtual_headers_contents_for_testing =
+                     std::move(virtual_headers_contents_for_testing),
+                 .headers_to_targets = args.headers_to_targets,
+                 .extra_rs_srcs = args.extra_rs_srcs,
+                 .clang_args = clang_args_view,
+                 .extra_instantiations = requested_instantiations,
+                 .crubit_features = args.target_to_features}));
 
   if (!args.instantiations_out.empty()) {
     ir.crate_root_path = "__cc_template_instantiations_rs_api";

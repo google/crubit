@@ -32,7 +32,7 @@ struct IrFromCcOptions final {
   absl::string_view extra_source_code_for_testing = "";
   BazelLabel current_target = BazelLabel{"//test:testing_target"};
   absl::Span<const HeaderName> public_headers = {};
-  absl::flat_hash_map<const HeaderName, const std::string>
+  absl::flat_hash_map<HeaderName, std::string>
       virtual_headers_contents_for_testing = {};
   absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets = {};
   absl::Span<const std::string> extra_rs_srcs = {};
