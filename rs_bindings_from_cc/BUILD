@@ -136,6 +136,8 @@ cc_library(
     hdrs = ["ast_util.h"],
     visibility = ["//:__subpackages__"],
     deps = [
+        "@absl//absl/functional:function_ref",
+        "@absl//absl/strings",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
     ],

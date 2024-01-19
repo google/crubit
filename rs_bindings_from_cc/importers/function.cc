@@ -203,27 +203,11 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       continue;
     }
 
-    std::optional<std::string> unknown_attr;
-    if (param->hasAttrs()) {
-      // Surprisingly, getAttrs() does not return an empty vec if there are no
-      // attrs, it crashes.
-      for (clang::Attr* attr : param->getAttrs()) {
-        if (unknown_attr.has_value()) {
-          absl::StrAppend(&*unknown_attr, ", ");
-        } else {
-          unknown_attr.emplace("");
-        }
-        absl::StrAppend(&*unknown_attr, attr->getAttrName()
-                                            ? attr->getNormalizedFullName()
-                                            : attr->getSpelling());
-      }
-    }
-
     std::optional<Identifier> param_name = GetTranslatedParamName(param);
     CHECK(param_name.has_value());  // No known failure cases.
     params.push_back({.type = *param_type,
                       .identifier = *std::move(param_name),
-                      .unknown_attr = std::move(unknown_attr)});
+                      .unknown_attr = CollectUnknownAttrs(*param)});
   }
 
   bool undeduced_return_type =
@@ -333,42 +317,24 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
   std::optional<std::string> nodiscard;
   std::optional<std::string> deprecated;
-  std::optional<std::string> unknown_attr;
-  if (function_decl->hasAttrs()) {
-    // Surprisingly, getAttrs() does not return an empty vec if there are no
-    // attrs, it crashes.
-    for (clang::Attr* attr : function_decl->getAttrs()) {
-      if (auto* unused_attr =
-              clang::dyn_cast<clang::WarnUnusedResultAttr>(attr)) {
-        nodiscard.emplace(unused_attr->getMessage());
-      } else if (auto* deprecated_attr =
-                     clang::dyn_cast<clang::DeprecatedAttr>(attr)) {
-        deprecated.emplace(deprecated_attr->getMessage());
-      } else if (clang::isa<clang::NoReturnAttr>(attr)) {
-        continue;  // we call isNoReturn below, instead
-      } else if (clang::isa<clang::NoThrowAttr>(attr)) {
-        // nothrow attributes don't affect Rust.
-        continue;
-      } else {
-        if (unknown_attr.has_value()) {
-          absl::StrAppend(&*unknown_attr, ", ");
-        } else {
-          unknown_attr.emplace("");
+  std::optional<std::string> unknown_attr =
+      CollectUnknownAttrs(*function_decl, [&](const clang::Attr& attr) {
+        if (auto* unused_attr =
+                clang::dyn_cast<clang::WarnUnusedResultAttr>(&attr)) {
+          nodiscard.emplace(unused_attr->getMessage());
+          return true;
+        } else if (auto* deprecated_attr =
+                       clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
+          deprecated.emplace(deprecated_attr->getMessage());
+          return true;
+        } else if (clang::isa<clang::NoReturnAttr>(attr)) {
+          return true;  // we call isNoReturn below, instead
+        } else if (clang::isa<clang::NoThrowAttr>(attr)) {
+          // nothrow attributes don't affect Rust.
+          return true;
         }
-        absl::StrAppend(&*unknown_attr, attr->getAttrName()
-                                            ? attr->getNormalizedFullName()
-                                            : attr->getSpelling());
-      }
-    }
-  }
-  if (auto* warn_unused_result_attr =
-          function_decl->getAttr<clang::WarnUnusedResultAttr>()) {
-    nodiscard.emplace(warn_unused_result_attr->getMessage());
-  }
-
-  if (auto* deprecated_attr = function_decl->getAttr<clang::DeprecatedAttr>()) {
-    deprecated.emplace(deprecated_attr->getMessage());
-  }
+        return false;
+      });
 
   // Silence ClangTidy, checked above: calling `add_error` if
   // `!return_type.ok()` and returning early if `!errors.empty()`.

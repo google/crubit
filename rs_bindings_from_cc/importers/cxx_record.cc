@@ -22,6 +22,7 @@
 #include "absl/strings/string_view.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_convert.h"
+#include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
@@ -200,35 +201,29 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         record_decl, "Records with packed layout are not supported");
   }
 
-  std::optional<std::string> unknown_attr;
-  if (record_decl->hasAttrs()) {
-    // Surprisingly, getAttrs() does not return an empty vec if there are no
-    // attrs, it crashes.
-    for (clang::Attr* attr : record_decl->getAttrs()) {
-      if (clang::isa<clang::AlignedAttr>(attr)) {
-        continue;
-      } else if (clang::isa<clang::FinalAttr>(attr)) {
-        continue;
-      } else if (auto* visibility =
-                     clang::dyn_cast<clang::VisibilityAttr>(attr);
-                 visibility && record_decl->isInStdNamespace()) {
-        if (visibility->getVisibility() ==
-            clang::VisibilityAttr::VisibilityType::Hidden) {
-          return ictx_.ImportUnsupportedItem(
-              record_decl,
-              "Records from the standard library with hidden visibility are "
-              "not supported");
+  std::optional<IR::Item> attr_error_item;
+  std::optional<std::string> unknown_attr =
+      CollectUnknownAttrs(*record_decl, [&](const clang::Attr& attr) {
+        if (clang::isa<clang::AlignedAttr>(attr)) {
+          return true;
+        } else if (clang::isa<clang::FinalAttr>(attr)) {
+          return true;
+        } else if (auto* visibility =
+                       clang::dyn_cast<clang::VisibilityAttr>(&attr);
+                   visibility && record_decl->isInStdNamespace()) {
+          if (visibility->getVisibility() ==
+              clang::VisibilityAttr::VisibilityType::Hidden) {
+            attr_error_item = ictx_.ImportUnsupportedItem(
+                record_decl,
+                "Records from the standard library with hidden visibility are "
+                "not supported");
+          }
+          return true;
         }
-      }
-      if (unknown_attr.has_value()) {
-        absl::StrAppend(&*unknown_attr, ", ");
-      } else {
-        unknown_attr.emplace("");
-      }
-      absl::StrAppend(&*unknown_attr, attr->getAttrName()
-                                          ? attr->getNormalizedFullName()
-                                          : attr->getSpelling());
-    }
+        return false;
+      });
+  if (attr_error_item.has_value()) {
+    return attr_error_item;
   }
 
   std::string rs_name, cc_name, preferred_cc_name;
@@ -447,21 +442,6 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
     } else {
       size = ictx_.ctx_.getTypeSize(field_decl->getType());
     }
-    std::optional<std::string> unknown_attr;
-    if (field_decl->hasAttrs()) {
-      // Surprisingly, getAttrs() does not return an empty vec if there are no
-      // attrs, it crashes.
-      for (clang::Attr* attr : field_decl->getAttrs()) {
-        if (unknown_attr.has_value()) {
-          absl::StrAppend(&*unknown_attr, ", ");
-        } else {
-          unknown_attr.emplace("");
-        }
-        absl::StrAppend(&*unknown_attr, attr->getAttrName()
-                                            ? attr->getNormalizedFullName()
-                                            : attr->getSpelling());
-      }
-    }
 
     fields.push_back(
         {.identifier = GetTranslatedFieldName(field_decl),
@@ -470,7 +450,7 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex()),
          .size = size,
-         .unknown_attr = std::move(unknown_attr),
+         .unknown_attr = CollectUnknownAttrs(*field_decl),
          .is_no_unique_address =
              field_decl->hasAttr<clang::NoUniqueAddressAttr>(),
          .is_bitfield = field_decl->isBitField(),
