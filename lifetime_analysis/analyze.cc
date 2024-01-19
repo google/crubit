@@ -630,7 +630,7 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunction(
   FunctionAnalysis analysis{.object_repository = std::move(*object_repository)};
 
   const auto* cxxmethod = clang::dyn_cast<clang::CXXMethodDecl>(func);
-  if (cxxmethod && cxxmethod->isPure()) {
+  if (cxxmethod && cxxmethod->isPureVirtual()) {
     return analysis;
   }
 
@@ -745,7 +745,7 @@ llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
   } else {
     // This can happen only when `func` is a pure virtual method.
     const auto* cxxmethod = clang::dyn_cast<clang::CXXMethodDecl>(func);
-    assert(cxxmethod && cxxmethod->isPure());
+    assert(cxxmethod && cxxmethod->isPureVirtual());
     // Pure virtual member functions can only ever have a single declaration,
     // so we know we're already looking at the canonical declaration.
     if (++cxxmethod->redecls_begin() != cxxmethod->redecls_end()) {
@@ -1121,7 +1121,7 @@ void AnalyzeFunctionRecursive(
 
   auto* cxxmethod = clang::dyn_cast<clang::CXXMethodDecl>(func);
   bool is_virtual = cxxmethod != nullptr && cxxmethod->isVirtual();
-  bool is_pure_virtual = is_virtual && cxxmethod->isPure();
+  bool is_pure_virtual = is_virtual && cxxmethod->isPureVirtual();
 
   if (func->getBuiltinID() != 0) {
     return;

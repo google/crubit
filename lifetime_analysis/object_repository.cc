@@ -472,7 +472,7 @@ llvm::Expected<ObjectRepository> ObjectRepository::Create(
   const auto* method_decl = clang::dyn_cast<clang::CXXMethodDecl>(func);
 
   const auto* definition = func->getDefinition();
-  assert(definition || (method_decl && method_decl->isPure()));
+  assert(definition || (method_decl && method_decl->isPureVirtual()));
   if (definition) func = definition;
   object_repository.func_ = func;
 
