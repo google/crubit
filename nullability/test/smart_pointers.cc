@@ -24,6 +24,10 @@ Nonnull<int *> makeNonnullRaw();
 Nullable<int *> makeNullableRaw();
 int *makeUnknownRaw();
 
+const Nonnull<std::unique_ptr<int>> &returnNonnullRef();
+const Nullable<std::unique_ptr<int>> &returnNullableRef();
+const std::unique_ptr<int> &returnUnknownRef();
+
 TEST void parameterAnnotations(Nonnull<std::unique_ptr<int>> NonnullParam,
                                Nullable<std::unique_ptr<int>> NullableParam,
                                std::unique_ptr<int> UnknownParam) {
@@ -36,6 +40,12 @@ TEST void returnValueAnnotations() {
   nonnull(makeNonnull());
   nullable(makeNullable());
   unknown(makeUnknown());
+}
+
+TEST void returnValueAnnotationsRef() {
+  nonnull(returnNonnullRef());
+  nullable(returnNullableRef());
+  unknown(returnUnknownRef());
 }
 
 TEST void defaultConstructor() { nullable(std::unique_ptr<int>()); }

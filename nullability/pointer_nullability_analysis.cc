@@ -312,6 +312,29 @@ void setToPointerWithNullability(StorageLocation &PtrLoc, NullabilityKind NK,
   Env.setValue(PtrLoc, Val);
 }
 
+void initSmartPointerForExpr(const Expr *E,
+                             TransferState<PointerNullabilityLattice> &State) {
+  RecordStorageLocation *Loc = nullptr;
+  if (E->isPRValue()) {
+    Loc = &State.Env.getResultObjectLocation(*E);
+  } else {
+    Loc = State.Env.get<RecordStorageLocation>(*E);
+    if (Loc == nullptr) {
+      Loc = &cast<RecordStorageLocation>(State.Env.createStorageLocation(*E));
+      State.Env.setStorageLocation(*E, *Loc);
+    }
+  }
+
+  StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
+  auto *Val = State.Env.get<PointerValue>(PtrLoc);
+  if (Val == nullptr) {
+    Val = cast<PointerValue>(State.Env.createValue(PtrLoc.getType()));
+    State.Env.setValue(PtrLoc, *Val);
+  }
+
+  initPointerFromTypeNullability(*Val, E, State);
+}
+
 void transferValue_NullPointer(
     absl::Nonnull<const Expr *> NullPointer, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
@@ -655,21 +678,7 @@ void transferValue_WeakPtrLockCall(
 void transferValue_SmartPointer(
     const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  auto *Loc = State.Env.get<RecordStorageLocation>(*PointerExpr);
-  if (Loc == nullptr) {
-    Loc = &cast<RecordStorageLocation>(
-        State.Env.createStorageLocation(*PointerExpr));
-    State.Env.setStorageLocation(*PointerExpr, *Loc);
-  }
-
-  StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
-  auto *Val = State.Env.get<PointerValue>(PtrLoc);
-  if (Val == nullptr) {
-    Val = cast<PointerValue>(State.Env.createValue(PtrLoc.getType()));
-    State.Env.setValue(PtrLoc, *Val);
-  }
-
-  initPointerFromTypeNullability(*Val, PointerExpr, State);
+  initSmartPointerForExpr(PointerExpr, State);
 }
 
 void transferValue_Pointer(absl::Nonnull<const Expr *> PointerExpr,
@@ -855,6 +864,8 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CallExpr,
       // `Loc` is set iff `CallExpr` is a glvalue, so we know here that it must
       // be a prvalue.
       State.Env.setValue(*CallExpr, *PointerVal);
+  } else if (isSupportedSmartPointerType(CallExpr->getType())) {
+    initSmartPointerForExpr(CallExpr, State);
   }
 
   // Make output parameters (with unknown nullability) initialized to unknown.

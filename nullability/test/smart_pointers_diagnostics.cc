@@ -178,5 +178,25 @@ TEST(SmartPointerTest, InitializeMemberWithUnannotated) {
   )cc"));
 }
 
+TEST(SmartPointerTest, AccessSmartPointerReturnedByReference) {
+  // This is a repro for an assertion failure.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct S {
+      void f();
+    };
+    // The `const` is important for the repro (so that the AST at the callsite
+    // below doesn't contain an `ImplicitCastExpr` to remove the const).
+    const Nonnull<std::unique_ptr<S>>& ReturnNonnull();
+    const Nullable<std::unique_ptr<S>>& ReturnNullable();
+    const std::unique_ptr<S>& ReturnUnannotated();
+    void target() {
+      ReturnNonnull()->f();
+      ReturnNullable()->f();  // [[unsafe]]
+      ReturnUnannotated()->f();
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
