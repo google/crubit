@@ -1495,6 +1495,22 @@ static WidenedProperty widenNullabilityProperty(
   Arena &A = CurEnv.arena();
 
   if (PrevEnv.proves(*Prev)) {
+    // Check for a dead-code environment, which would allow `Prev`, no matter
+    // its value. As an optimization, we skip the check when `Prev` is the true
+    // literal, because, in that case, the environment is irrelevant.
+    //
+    // We only need to consider `PrevEnv`, because it is queried
+    // first. If `PrevEnv` is not dead and `CurEnv` is dead, we'll implicitly
+    // use the state in `PrevEnv`, which is the desired outcome. Note: we do not
+    // know of a scenario in which this can occur, but the logic holds
+    // regardless.
+    auto &True = A.makeLiteral(true);
+    if (Prev != &True && !PrevEnv.allows(True)) {
+      // TODO: Ideally, we'd just preserve `Cur`, rather than trying to
+      // determine its truth value. There's no reason for further processing
+      // except to meet the constraints of the API.
+      if (CurEnv.proves(A.makeNot(*Cur))) return WidenedProperty::False;
+    }
     if (CurEnv.proves(*Cur)) return WidenedProperty::True;
   } else if (PrevEnv.proves(A.makeNot(*Prev)) &&
              CurEnv.proves(A.makeNot(*Cur))) {

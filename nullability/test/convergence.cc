@@ -313,5 +313,52 @@ TEST(PointerNullabilityTest, ReproForFalsePositiveTriggeredByUnrelatedLoop) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, WidenAfterContradictionVarAsCondition) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int *get();
+    bool cond();
+
+    void target() {
+      bool b = true;
+      while (b) {
+        b = cond();
+      }
+      // If this code is analyzed before the loop body, then `b` is true and
+      // this code has a contradictory flow condition: it contains `!b`, that
+      // is, `false`. Once the loop is fully analyzed, `b` will be Top,
+      // resolving the issue (i.e. the code will have a satisfiable flow
+      // condition).
+      int *p = get();
+      while (cond()) {
+        (void)*p;
+      }
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, WidenAfterContradictionArbitraryCondition) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int *get();
+    bool cond();
+
+    void target() {
+      bool b = true;
+      while (cond()) {
+        b = false;
+      }
+      // If this code is analyzed before the loop body, then `b` is true and the
+      // code below the return statement has a contradictory flow condition: it
+      // contains `!b`, that is, `false`. Once the loop is fully analyzed, `b`
+      // will be Top, resolving the issue (i.e. the code will have a satisfiable
+      // flow condition).
+      if (b) return;
+      int *p = get();
+      while (cond()) {
+        (void)*p;
+      }
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
