@@ -66,6 +66,7 @@
 #include "clang/Tooling/Tooling.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
@@ -74,6 +75,7 @@
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/GlobPattern.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -453,10 +455,57 @@ class TestOutput : public DiagnosticConsumer {
   std::optional<TestCase> CurrentCase;
 };
 
+// Provides a filter for running only specific tests.
+struct TestFilter {
+  llvm::SmallVector<llvm::GlobPattern> PositivePatterns, NegativePatterns;
+
+  bool shouldRun(llvm::StringRef Name) const {
+    auto PatternMatchesName = [&](const llvm::GlobPattern &Pattern) {
+      return Pattern.match(Name);
+    };
+    if (!PositivePatterns.empty() &&
+        !llvm::any_of(PositivePatterns, PatternMatchesName))
+      return false;
+    return !llvm::any_of(NegativePatterns, PatternMatchesName);
+  }
+};
+
+llvm::Expected<llvm::SmallVector<llvm::GlobPattern>> globsFromPatternString(
+    llvm::StringRef PatternStr) {
+  llvm::SmallVector<llvm::GlobPattern> Globs;
+  llvm::SmallVector<llvm::StringRef> Patterns;
+  PatternStr.split(Patterns, ':');
+  for (auto Pattern : Patterns) {
+    if (Pattern.empty()) continue;
+    llvm::GlobPattern Glob;
+    if (llvm::Error Err = llvm::GlobPattern::create(Pattern).moveInto(Glob))
+      return Err;
+    Globs.push_back(std::move(Glob));
+  }
+  return Globs;
+}
+
+llvm::Expected<TestFilter> getTestFilter() {
+  // Test filter syntax is the same as that of GoogleTest.
+  llvm::StringRef TestFilterStr = getenv("TESTBRIDGE_TEST_ONLY");
+  auto [PositivePatternsStr, NegativePatternsStr] = TestFilterStr.split('-');
+
+  TestFilter Filter;
+  if (llvm::Error Err = globsFromPatternString(PositivePatternsStr)
+                            .moveInto(Filter.PositivePatterns))
+    return Err;
+  if (llvm::Error Err = globsFromPatternString(NegativePatternsStr)
+                            .moveInto(Filter.NegativePatterns))
+    return Err;
+
+  return Filter;
+}
+
 // AST consumer that analyzes [[clang::annotate("test")]] functions as tests.
 class Consumer : public ASTConsumer {
  public:
-  Consumer(TestOutput &Output) : Output(Output) {}
+  Consumer(TestOutput &Output, const TestFilter &Filter)
+      : Output(Output), Filter(Filter) {}
 
  private:
   void Initialize(ASTContext &Context) override {
@@ -482,6 +531,9 @@ class Consumer : public ASTConsumer {
   // Starting at a TEST annotation, find the associated test and run it.
   void runTestAt(const DynTypedNode &Test, ASTContext &Ctx) {
     if (const auto *FD = Test.get<FunctionDecl>()) {
+      if (FD->getIdentifier() != nullptr && !Filter.shouldRun(FD->getName()))
+        return;
+
       // This is a test we can run directly.
       Output.startTest(*FD);
       auto [LogPath, LogStream] = openTestLog(FD->getName());
@@ -520,6 +572,7 @@ class Consumer : public ASTConsumer {
 
   TestOutput &Output;
   std::optional<Diagnoser> Diagnoser;
+  const TestFilter &Filter;
 };
 
 }  // namespace
@@ -529,9 +582,10 @@ int main(int argc, const char **argv) {
   using namespace clang::tidy::nullability;
   struct Factory : public clang::tooling::SourceFileCallbacks {
     TestOutput Output;
+    TestFilter Filter;
 
     std::unique_ptr<clang::ASTConsumer> newASTConsumer() {
-      return std::make_unique<Consumer>(Output);
+      return std::make_unique<Consumer>(Output, Filter);
     }
     bool handleBeginSource(clang::CompilerInstance &CI) override {
       const auto &SM = CI.getSourceManager();
@@ -548,6 +602,10 @@ int main(int argc, const char **argv) {
   llvm::cl::ParseCommandLineOptions(argc, argv);
   if (!CDB) {
     llvm::errs() << "Usage: nullability_test source.cc\n" << Err << "\n";
+    exit(1);
+  }
+  if (llvm::Error E = getTestFilter().moveInto(F.Filter)) {
+    llvm::errs() << "Invalid test filter: " << E << "\n";
     exit(1);
   }
   clang::tooling::StandaloneToolExecutor Executor{*CDB, Sources};

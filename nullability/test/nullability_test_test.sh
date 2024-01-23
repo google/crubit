@@ -136,3 +136,44 @@ if $DRIVER $SOURCE -- 2> $LOG; then
   exit 1
 fi
 command -v grep && grep "no value for boolean expression" $LOG
+
+cat >$SOURCE <<EOF
+  [[clang::annotate("test")]] void test1() {
+  }
+  [[clang::annotate("test")]] void test2() {
+  }
+EOF
+
+if ! $DRIVER $SOURCE -- 2> $LOG; then
+  echo "Error running empty test filter test"
+  exit 1
+fi
+command -v grep && grep "test1" $LOG
+command -v grep && grep "test2" $LOG
+
+if ! TESTBRIDGE_TEST_ONLY='*test1*' $DRIVER $SOURCE -- 2> $LOG; then
+  echo "Error running '*test1*' test filter test"
+  exit 1
+fi
+command -v grep && grep "test1" $LOG
+command -v grep && grep -v "test2" $LOG
+
+if ! TESTBRIDGE_TEST_ONLY='*test1*:*test2*' $DRIVER $SOURCE -- 2> $LOG; then
+  echo "Error running '*test1*:*test2*' test filter test"
+  exit 1
+fi
+command -v grep && grep "test1" $LOG
+command -v grep && grep "test2" $LOG
+
+if ! TESTBRIDGE_TEST_ONLY='-*test2*' $DRIVER $SOURCE -- 2> $LOG; then
+  echo "Error running '-*test2*' test filter test"
+  exit 1
+fi
+command -v grep && grep "test1" $LOG
+command -v grep && grep -v "test2" $LOG
+
+if TESTBRIDGE_TEST_ONLY='[' $DRIVER $SOURCE -- 2> $LOG; then
+  echo "Test filter test with invalid test syntax should fail"
+  exit 1
+fi
+command -v grep && grep "invalid glob pattern" $LOG
