@@ -23,6 +23,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/RecursiveASTVisitor.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
@@ -92,10 +93,10 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
   unsigned DiagInferHere;
   unsigned DiagSample;
 
-  void render(const Inference &I, SourceLocation Loc) {
+  void render(const Inference &I, const Decl &D) {
     for (const auto &Slot : I.slot_inference()) {
-      Diags.Report(Loc, DiagInferHere)
-          << slotName(Slot.slot())
+      Diags.Report(D.getLocation(), DiagInferHere)
+          << slotName(Slot.slot(), D)
           << Inference::Nullability_Name(Slot.nullability());
       if (PrintEvidence) {
         for (const auto &Sample : Slot.sample_evidence()) {
@@ -106,9 +107,17 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
     }
   }
 
-  std::string slotName(unsigned S) {
+  std::string slotName(unsigned S, const Decl &D) {
     if (S == SLOT_RETURN_TYPE) return "return type";
-    return ("parameter " + llvm::Twine(S - SLOT_PARAM)).str();
+    unsigned ParamIdx = S - SLOT_PARAM;
+    llvm::StringRef ParamName;
+    if (const auto *FD = dyn_cast<FunctionDecl>(&D)) {
+      const ParmVarDecl *Param = FD->getParamDecl(ParamIdx);
+      if (Param->getDeclName().isIdentifier()) ParamName = Param->getName();
+    }
+    llvm::Twine Name = "parameter " + llvm::Twine(ParamIdx);
+    if (ParamName.empty()) return Name.str();
+    return (Name + " ('" + ParamName + "')").str();
   }
 
   // Terrible hack: parse "foo.cc:4:2" back into a SourceLocation.
@@ -136,7 +145,7 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
   bool VisitDecl(absl::Nonnull<const Decl *> FD) {
     llvm::SmallString<128> USR;
     if (!index::generateUSRForDecl(FD, USR))
-      if (auto *I = InferenceByUSR.lookup(USR)) render(*I, FD->getLocation());
+      if (auto *I = InferenceByUSR.lookup(USR)) render(*I, *FD);
     return true;
   }
 };
