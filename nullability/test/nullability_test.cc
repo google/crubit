@@ -348,7 +348,14 @@ class TestOutput : public DiagnosticConsumer {
         XML(XMLStorage ? *XMLStorage : llvm::nulls()) {
     XML << "<testsuites>\n";
   }
-  ~TestOutput() override { XML << "</testsuites>\n"; }
+  ~TestOutput() override {
+    XML << "</testsuites>\n";
+    Out << "Passed " << PassingTests << " test(s)\n";
+    if (!FailingTests.empty()) {
+      Out << "Failed " << FailingTests.size() << " test(s):\n";
+      for (const std::string &Name : FailingTests) Out << "  " << Name << "\n";
+    }
+  }
 
   void startSuite(llvm::StringRef Name) {
     XML << llvm::formatv("<testsuite name='{0}'>\n", escape(Name));
@@ -364,7 +371,13 @@ class TestOutput : public DiagnosticConsumer {
   }
   void endTest(llvm::StringRef LogPath) {
     assert(CurrentCase.has_value());
-    Out << (CurrentCase->Failures.empty() ? "PASS" : "FAIL") << "\n";
+    if (CurrentCase->Failures.empty()) {
+      Out << "PASS\n";
+      ++PassingTests;
+    } else {
+      Out << "FAIL\n";
+      FailingTests.emplace_back(CurrentCase->Name);
+    }
     auto Millis = std::chrono::duration_cast<std::chrono::milliseconds>(
                       std::chrono::steady_clock::now() - CurrentCase->Start)
                       .count();
@@ -439,6 +452,10 @@ class TestOutput : public DiagnosticConsumer {
   }
 
   bool HadErrors = false;
+  int PassingTests = 0;
+  // Names of failing tests. These need to be strings, not `StringRef`s, because
+  // this class may outlive the AST.
+  llvm::SmallVector<std::string> FailingTests;
   LangOptions LangOpts;
 
   llvm::raw_ostream &Out;  // Plain-text output stream.

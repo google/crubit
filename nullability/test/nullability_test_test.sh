@@ -18,6 +18,7 @@ if ! $DRIVER $SOURCE -- 2> $LOG; then
   echo "Should have passed good nullable test"
   exit 1
 fi
+command -v grep && grep "Passed 1 test(s)" $LOG
 
 cat >$SOURCE <<EOF
   template <class T> void nullable(T) {}
@@ -32,6 +33,8 @@ if $DRIVER $SOURCE -- 2> $LOG; then
   exit 1
 fi
 command -v grep && grep "expression is _Nonnull, expected _Nullable" $LOG
+command -v grep && grep "Passed 0 test(s)" $LOG
+command -v grep && grep "Failed 1 test(s)" $LOG
 
 cat >$SOURCE <<EOF
   template <class Expected, class Actual> void type(Actual) {}
