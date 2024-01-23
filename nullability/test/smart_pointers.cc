@@ -48,6 +48,45 @@ TEST void returnValueAnnotationsRef() {
   unknown(returnUnknownRef());
 }
 
+TEST void outputParameters() {
+  // This test checks only a few of the most common cases for output parameters.
+  // The tests for raw pointers cover a broader set of cases. Because we know
+  // that the implementation is shared between raw pointers and smart pointers,
+  // we chose not to duplicate all of those tests here.
+
+  {
+    void maybeModifyPtr(std::unique_ptr<int> * P);
+    std::unique_ptr<int> P;
+    nullable(P);
+    maybeModifyPtr(&P);
+    unknown(P);
+  }
+
+  {
+    void maybeModifyPtr(std::unique_ptr<int> & P);
+    std::unique_ptr<int> P;
+    nullable(P);
+    maybeModifyPtr(P);
+    unknown(P);
+  }
+
+  {
+    void doesntModifyPtr(const std::unique_ptr<int> *P);
+    std::unique_ptr<int> P;
+    nullable(P);
+    doesntModifyPtr(&P);
+    nullable(P);
+  }
+
+  {
+    void doesntModifyPtr(const std::unique_ptr<int> &P);
+    std::unique_ptr<int> P;
+    nullable(P);
+    doesntModifyPtr(P);
+    nullable(P);
+  }
+}
+
 TEST void defaultConstructor() { nullable(std::unique_ptr<int>()); }
 
 TEST void nullptrConstructor() {

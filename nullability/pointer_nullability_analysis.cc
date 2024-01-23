@@ -800,7 +800,7 @@ void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
 
   if (ParamTy.isNull()) return;
   if (ParamTy->getPointeeType().isNull()) return;
-  if (!isSupportedRawPointerType(ParamTy->getPointeeType())) return;
+  if (!isSupportedPointerType(ParamTy->getPointeeType())) return;
   if (ParamTy->getPointeeType().isConstQualified()) return;
 
   // TODO(b/298200521): This should extend support to annotations that suggest
@@ -819,12 +819,18 @@ void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
   }
   if (Loc == nullptr) return;
 
-  auto *InnerPointer =
-      cast<PointerValue>(Env.createValue(ParamTy->getPointeeType()));
-  initPointerNullState(*InnerPointer, Env.getDataflowAnalysisContext(),
-                       NullabilityKind::Unspecified);
+  if (isSupportedRawPointerType(ParamTy->getPointeeType())) {
+    auto *InnerPointer =
+        cast<PointerValue>(Env.createValue(ParamTy->getPointeeType()));
+    initPointerNullState(*InnerPointer, Env.getDataflowAnalysisContext(),
+                         NullabilityKind::Unspecified);
 
-  Env.setValue(*Loc, *InnerPointer);
+    Env.setValue(*Loc, *InnerPointer);
+  } else {
+    auto &SmartPointerLoc = *cast<RecordStorageLocation>(Loc);
+    setToPointerWithNullability(SmartPointerLoc.getSyntheticField(PtrField),
+                                NullabilityKind::Unspecified, Env);
+  }
 }
 
 void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CallExpr,
@@ -869,6 +875,7 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CallExpr,
   }
 
   // Make output parameters (with unknown nullability) initialized to unknown.
+  if (CallExpr->isCallToStdMove()) return;
   const auto *FuncDecl = CallExpr->getDirectCallee();
   if (!FuncDecl) return;
   if (FuncDecl->getNumParams() != CallExpr->getNumArgs()) return;
