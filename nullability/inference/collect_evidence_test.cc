@@ -23,6 +23,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Testing/Support/Error.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"  // IWYU pragma: keep
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
@@ -78,8 +79,8 @@ std::vector<Evidence> collectEvidenceFromTargetFunction(
   clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
   USRCache UsrCache;
   auto Err = collectEvidenceFromImplementation(
-      cast<FunctionDecl>(
-          *dataflow::test::findValueDecl(AST.context(), "target")),
+      *cast<FunctionDecl>(
+          dataflow::test::findValueDecl(AST.context(), "target")),
       evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
                       UsrCache),
       UsrCache, PreviousInferences);
@@ -1555,6 +1556,29 @@ TEST(CollectEvidenceFromImplementationTest,
           Src, {.Nonnull = {fingerprint(TakesToBeNonnullUsr, paramSlot(0))}}),
       Contains(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                         functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, SolverLimitReached) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, int* q) {
+      *p;
+      *q;
+    }
+  )cc";
+  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
+  std::vector<Evidence> Results;
+  USRCache UsrCache;
+  EXPECT_THAT_ERROR(
+      collectEvidenceFromImplementation(
+          *cast<FunctionDecl>(
+              dataflow::test::findValueDecl(AST.context(), "target")),
+          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
+                          UsrCache),
+          UsrCache, /*PreviousInferences=*/{},
+          // Enough iterations to collect one piece of evidence but not both.
+          /*MaxSATIterations=*/100),
+      llvm::FailedWithMessage("SAT solver reached iteration limit"));
+  EXPECT_THAT(Results, SizeIs(1));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, VariableDeclIgnored) {

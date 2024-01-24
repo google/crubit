@@ -48,7 +48,8 @@ struct PreviousInferences {
 // (function has a body, is not dependent, etc).
 llvm::Error collectEvidenceFromImplementation(
     const Decl &, llvm::function_ref<EvidenceEmitter>, USRCache &USRCache,
-    PreviousInferences PreviousInferences = {});
+    PreviousInferences PreviousInferences = {},
+    unsigned MaxSATIterations = 200'000);
 
 // Gathers evidence of a symbol's nullability from a declaration of it.
 //

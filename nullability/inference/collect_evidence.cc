@@ -50,6 +50,7 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/Support/Errc.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -63,6 +64,7 @@ using ::clang::ast_matchers::returns;
 using ::clang::dataflow::DataflowAnalysisContext;
 using ::clang::dataflow::Environment;
 using ::clang::dataflow::Formula;
+using ::clang::dataflow::WatchedLiteralsSolver;
 
 using ConcreteNullabilityCache =
     absl::flat_hash_map<const Decl *,
@@ -749,7 +751,8 @@ void addInferableSlotsForCalledFunctions(
 
 llvm::Error collectEvidenceFromImplementation(
     const Decl &ImplementationDecl, llvm::function_ref<EvidenceEmitter> Emit,
-    USRCache &USRCache, const PreviousInferences PreviousInferences) {
+    USRCache &USRCache, const PreviousInferences PreviousInferences,
+    unsigned MaxSATIterations) {
   const FunctionDecl *Func = dyn_cast<FunctionDecl>(&ImplementationDecl);
   if (!Func || !Func->doesThisDeclarationHaveABody()) {
     return llvm::createStringError(
@@ -761,8 +764,9 @@ llvm::Error collectEvidenceFromImplementation(
       dataflow::ControlFlowContext::build(*Func);
   if (!ControlFlowContext) return ControlFlowContext.takeError();
 
-  DataflowAnalysisContext AnalysisContext(
-      std::make_unique<dataflow::WatchedLiteralsSolver>(200000));
+  auto OwnedSolver = std::make_unique<WatchedLiteralsSolver>(MaxSATIterations);
+  const WatchedLiteralsSolver *Solver = OwnedSolver.get();
+  DataflowAnalysisContext AnalysisContext(std::move(OwnedSolver));
   Environment Environment(AnalysisContext, *Func);
   PointerNullabilityAnalysis Analysis(
       Func->getDeclContext()->getParentASTContext(), Environment);
@@ -790,16 +794,21 @@ llvm::Error collectEvidenceFromImplementation(
       getConcreteNullabilityOverrideFromPreviousInferences(
           ConcreteNullabilityCache, USRCache, PreviousInferences));
 
-  return dataflow::runDataflowAnalysis(
-             *ControlFlowContext, Analysis, Environment,
-             [&](const CFGElement &Element,
-                 const dataflow::DataflowAnalysisState<
-                     PointerNullabilityLattice> &State) {
-               collectEvidenceFromElement(InferableSlots,
-                                          InferableSlotsConstraint, Element,
-                                          State.Lattice, State.Env, Emit);
-             })
-      .takeError();
+  llvm::Error Error =
+      dataflow::runDataflowAnalysis(
+          *ControlFlowContext, Analysis, Environment,
+          [&](const CFGElement &Element,
+              const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
+                  &State) {
+            collectEvidenceFromElement(InferableSlots, InferableSlotsConstraint,
+                                       Element, State.Lattice, State.Env, Emit);
+          })
+          .takeError();
+  if (!Error && Solver->reachedLimit()) {
+    return llvm::createStringError(llvm::errc::interrupted,
+                                   "SAT solver reached iteration limit");
+  }
+  return Error;
 }
 
 void collectEvidenceFromDefaultArgument(

@@ -47,8 +47,8 @@ class InferenceManager {
       if (Filter && !Filter(*Impl)) continue;
       if (auto Err = collectEvidenceFromImplementation(
               *Impl, Emitter, USRCache, InferencesFromLastRound)) {
-        llvm::errs() << "Skipping function: " << toString(std::move(Err))
-                     << "\n";
+        llvm::errs() << "Error in evidence collection: "
+                     << toString(std::move(Err)) << "\n";
       }
     }
     // Group by symbol.
