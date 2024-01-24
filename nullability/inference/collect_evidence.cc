@@ -14,6 +14,7 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
+#include "nullability/ast_helpers.h"
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
@@ -359,50 +360,37 @@ void collectEvidenceFromArgsAndParams(
     const Formula &InferableSlotsConstraint,
     const PointerNullabilityLattice &Lattice, const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
-  unsigned ParamI = 0;
-  unsigned ArgI = 0;
-  // Member operator calls hold the function object as the first argument,
-  // offsetting the indices of parameters and corresponding arguments by 1.
-  // For example: Given struct S { bool operator+(int*); }
-  // The CXXMethodDecl has one parameter, but a call S{}+p is a
-  // CXXOperatorCallExpr with two arguments: an S and an int*.
-  if (isa<clang::CXXOperatorCallExpr>(Expr) &&
-      isa<clang::CXXMethodDecl>(CalleeDecl))
-    ++ArgI;
-
   bool CollectEvidenceForCallee = isInferenceTarget(CalleeDecl);
   bool CollectEvidenceForCaller = !InferableSlots.empty();
 
-  // For each pointer parameter of the callee, ...
-  for (; ParamI < CalleeDecl.param_size(); ++ParamI, ++ArgI) {
-    const auto *ParamDecl = CalleeDecl.getParamDecl(ParamI);
-    const auto ParamType = ParamDecl->getType().getNonReferenceType();
+  for (ParamAndArgIterator<CallOrConstructExpr> Iter(CalleeDecl, Expr); Iter;
+       ++Iter) {
+    const auto ParamType = Iter.param().getType().getNonReferenceType();
     if (!isSupportedRawPointerType(ParamType)) continue;
     // the corresponding argument should also be a pointer.
-    CHECK(isSupportedRawPointerType(Expr.getArg(ArgI)->getType()))
-        << "Unsupported argument " << ArgI
-        << " type: " << Expr.getArg(ArgI)->getType().getAsString();
-    if (isa<clang::CXXDefaultArgExpr>(Expr.getArg(ArgI))) {
+    CHECK(isSupportedRawPointerType(Iter.arg().getType()))
+        << "Unsupported argument " << Iter.argIdx()
+        << " type: " << Iter.arg().getType().getAsString();
+    if (isa<clang::CXXDefaultArgExpr>(Iter.arg())) {
       // Evidence collection for the callee from default argument values is
       // handled when collection from declarations, and there's no useful
       // evidence to collect for the caller.
       return;
     }
 
-    dataflow::PointerValue *PV =
-        getPointerValueFromExpr(Expr.getArg(ArgI), Env);
+    dataflow::PointerValue *PV = getPointerValueFromExpr(&Iter.arg(), Env);
     if (!PV) continue;
 
-    SourceLocation ArgLoc = Expr.getArg(ArgI)->getExprLoc();
+    SourceLocation ArgLoc = Iter.arg().getExprLoc();
 
     if (CollectEvidenceForCaller) {
       auto ParamNullability = getNullabilityAnnotationsFromTypeAndOverrides(
-          ParamType, ParamDecl, Lattice);
+          ParamType, &Iter.param(), Lattice);
 
       // Collect evidence from the binding of the argument to the parameter's
       // nullability, if known.
       collectEvidenceFromBindingToType(
-          ParamDecl->getType(), ParamNullability, *PV, InferableSlots,
+          Iter.param().getType(), ParamNullability, *PV, InferableSlots,
           InferableSlotsConstraint, Env, ArgLoc, Emit);
     }
 
@@ -413,7 +401,7 @@ void collectEvidenceFromArgsAndParams(
       // annotations and not all possible annotations for them.
       NullabilityKind ArgNullability =
           getNullability(*PV, Env, &InferableSlotsConstraint);
-      Emit(CalleeDecl, paramSlot(ParamI),
+      Emit(CalleeDecl, paramSlot(Iter.paramIdx()),
            getArgEvidenceKindFromNullability(ArgNullability), ArgLoc);
     }
   }

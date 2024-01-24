@@ -3,6 +3,16 @@
 package(default_applicable_licenses = ["//:license"])
 
 cc_library(
+    name = "ast_helpers",
+    hdrs = ["ast_helpers.h"],
+    visibility = [
+        "//nullability/inference:__pkg__",
+        "//nullability/test:__pkg__",
+    ],
+    deps = ["@llvm-project//clang:ast"],
+)
+
+cc_library(
     name = "pointer_nullability_lattice",
     srcs = ["pointer_nullability_lattice.cc"],
     hdrs = ["pointer_nullability_lattice.h"],

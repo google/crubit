@@ -12,6 +12,7 @@ cc_library(
         ":inferable",
         ":inference_cc_proto",
         ":slot_fingerprint",
+        "//nullability:ast_helpers",
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
