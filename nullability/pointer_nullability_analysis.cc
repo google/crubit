@@ -833,60 +833,59 @@ void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
   }
 }
 
-void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CallExpr,
+void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
                             const MatchFinder::MatchResult &Result,
                             TransferState<PointerNullabilityLattice> &State) {
   // The dataflow framework itself does not create values for `CallExpr`s.
   // However, we need these in some cases, so we produce them ourselves.
 
   StorageLocation *Loc = nullptr;
-  if (CallExpr->isGLValue()) {
+  if (CE->isGLValue()) {
     // The function returned a reference. Create a storage location for the
     // expression so that if code creates a pointer from the reference, we will
     // produce a `PointerValue`.
-    Loc = State.Env.getStorageLocation(*CallExpr);
+    Loc = State.Env.getStorageLocation(*CE);
     if (!Loc) {
       // This is subtle: We call `createStorageLocation(QualType)`, not
       // `createStorageLocation(const Expr &)`, so that we create a new
       // storage location every time.
-      Loc = &State.Env.createStorageLocation(CallExpr->getType());
-      State.Env.setStorageLocation(*CallExpr, *Loc);
+      Loc = &State.Env.createStorageLocation(CE->getType());
+      State.Env.setStorageLocation(*CE, *Loc);
     }
   }
 
-  if (isSupportedRawPointerType(CallExpr->getType())) {
+  if (isSupportedRawPointerType(CE->getType())) {
     // Create a pointer so that we can attach nullability to it and have the
     // nullability propagate with the pointer.
-    auto *PointerVal = getPointerValueFromExpr(CallExpr, State.Env);
+    auto *PointerVal = getPointerValueFromExpr(CE, State.Env);
     if (!PointerVal) {
-      PointerVal =
-          cast<PointerValue>(State.Env.createValue(CallExpr->getType()));
+      PointerVal = cast<PointerValue>(State.Env.createValue(CE->getType()));
     }
-    initPointerFromTypeNullability(*PointerVal, CallExpr, State);
+    initPointerFromTypeNullability(*PointerVal, CE, State);
 
     if (Loc != nullptr)
       State.Env.setValue(*Loc, *PointerVal);
     else
-      // `Loc` is set iff `CallExpr` is a glvalue, so we know here that it must
+      // `Loc` is set iff `CE` is a glvalue, so we know here that it must
       // be a prvalue.
-      State.Env.setValue(*CallExpr, *PointerVal);
-  } else if (isSupportedSmartPointerType(CallExpr->getType())) {
-    initSmartPointerForExpr(CallExpr, State);
+      State.Env.setValue(*CE, *PointerVal);
+  } else if (isSupportedSmartPointerType(CE->getType())) {
+    initSmartPointerForExpr(CE, State);
   }
 
   // Make output parameters (with unknown nullability) initialized to unknown.
-  if (CallExpr->isCallToStdMove()) return;
-  const auto *FuncDecl = CallExpr->getDirectCallee();
+  if (CE->isCallToStdMove()) return;
+  const auto *FuncDecl = CE->getDirectCallee();
   if (!FuncDecl) return;
-  if (FuncDecl->getNumParams() != CallExpr->getNumArgs()) return;
+  if (FuncDecl->getNumParams() != CE->getNumArgs()) return;
   if (auto *II = FuncDecl->getDeclName().getAsIdentifierInfo();
       II && II->isStr("__assert_nullability")) {
     return;
   }
-  for (unsigned i = 0; i < CallExpr->getNumArgs(); ++i) {
-    const auto *Arg = CallExpr->getArg(i);
+  for (unsigned I = 0; I < CE->getNumArgs(); ++I) {
+    const auto *Arg = CE->getArg(I);
     initializeOutputParameter(Arg, State.Env,
-                              FuncDecl->getParamDecl(i)->getType());
+                              FuncDecl->getParamDecl(I)->getType());
   }
 }
 
