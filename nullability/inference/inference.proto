@@ -76,6 +76,8 @@ message Evidence {
     BOUND_TO_NONNULL = 10;
     // A value was bound to a mutable Nullable declaration.
     BOUND_TO_MUTABLE_NULLABLE = 11;
+    // The program aborts if a value is null.
+    ABORT_IF_NULL = 12;
   }
 }
 
@@ -129,7 +131,7 @@ message SlotRange {
   optional uint32 slot = 1;
   optional uint64 begin = 2;
   optional uint64 end = 3;
-};
+}
 
 // A set of slot ranges and their associated file.
 message TypeLocRanges {
@@ -137,4 +139,4 @@ message TypeLocRanges {
   optional string path = 2;
   // Source ranges of type locations (written types) in `path`.
   repeated SlotRange range = 3;
-};
+}

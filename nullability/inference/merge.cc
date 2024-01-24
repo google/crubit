@@ -130,6 +130,7 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
   if (Counts[Evidence::BOUND_TO_NONNULL]) update(Result, Inference::NONNULL);
   if (Counts[Evidence::BOUND_TO_MUTABLE_NULLABLE])
     update(Result, Inference::NULLABLE);
+  if (Counts[Evidence::ABORT_IF_NULL]) update(Result, Inference::NONNULL);
   if (Result) return *Result;
 
   // Optional "soft" inference heuristics.

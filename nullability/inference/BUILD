@@ -1,5 +1,6 @@
 # Inference of nullability annotations
 
+load("@bazel_tools//tools/build_defs/cc:cc_embed_data.bzl", "cc_embed_data")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -11,6 +12,7 @@ cc_library(
     deps = [
         ":inferable",
         ":inference_cc_proto",
+        ":replace_macros",
         ":slot_fingerprint",
         "//nullability:ast_helpers",
         "//nullability:pointer_nullability",
@@ -33,8 +35,10 @@ cc_test(
     name = "collect_evidence_test",
     srcs = ["collect_evidence_test.cc"],
     deps = [
+        ":clang_tidy_nullability_replacement_macros",
         ":collect_evidence",
         ":inference_cc_proto",
+        ":replace_macros",
         ":slot_fingerprint",
         "//nullability/test:test_headers",
         "@llvm-project//clang:ast",
@@ -214,4 +218,49 @@ proto_library(
 cc_proto_library(
     name = "inference_cc_proto",
     deps = [":inference_proto"],
+)
+
+filegroup(
+    name = "replacement_macros_exclude_from_build_cleaner",
+    srcs = ["clang_tidy_nullability_replacement_macros.h"],
+    tags = ["ignore_srcs"],
+    visibility = ["//visibility:private"],
+)
+
+cc_embed_data(
+    name = "clang_tidy_nullability_replacement_macros",
+    srcs = ["clang_tidy_nullability_replacement_macros.h"],
+    outs = [
+        "ctn_replacement_macros.cc",
+        "ctn_replacement_macros.h",
+        "ctn_replacement_macros.o",
+    ],
+)
+
+cc_library(
+    name = "replace_macros",
+    srcs = ["replace_macros.cc"],
+    hdrs = ["replace_macros.h"],
+    deps = [
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:lex",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_test(
+    name = "replace_macros_test",
+    srcs = ["replace_macros_test.cc"],
+    deps = [
+        ":clang_tidy_nullability_replacement_macros",
+        ":replace_macros",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:testing",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+    ],
 )

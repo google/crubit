@@ -17,6 +17,7 @@
 #include "nullability/ast_helpers.h"
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
+#include "nullability/inference/replace_macros.h"
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
@@ -500,6 +501,24 @@ void collectEvidenceFromCallExprWithoutFunctionCalleeDecl(
   CalleeDecl.dump();
 }
 
+// Given a `CallExpr` for a call to our special macro argument capture function,
+// collect evidence for a slot that can prevent the abort condition from being
+// true if it is annotated Nonnull.
+//
+// e.g. From `CHECK(x)`, we collect evidence for a slot that can cause `x` to
+// not be null.
+void collectEvidenceFromReplacedMacroCall(
+    const CallExpr &CallExpr, const std::vector<InferableSlot> &InferableSlots,
+    const dataflow::Environment &Env,
+    llvm::function_ref<EvidenceEmitter> Emit) {
+  CHECK_EQ(CallExpr.getNumArgs(), 1);
+  const Expr *Arg = CallExpr.getArg(0);
+  const dataflow::PointerValue *PV = getPointerValueFromExpr(Arg, Env);
+  if (!PV) return;
+  collectMustBeNonnullEvidence(*PV, Env, Arg->getExprLoc(), InferableSlots,
+                               Evidence::ABORT_IF_NULL, Emit);
+}
+
 void collectEvidenceFromCallExpr(
     const std::vector<InferableSlot> &InferableCallerSlots,
     const Formula &InferableSlotsConstraint, const Stmt &Stmt,
@@ -510,9 +529,16 @@ void collectEvidenceFromCallExpr(
   auto *CalleeDecl = CallExpr->getCalleeDecl();
   if (!CalleeDecl) return;
   if (auto *CalleeFunctionDecl = dyn_cast<clang::FunctionDecl>(CalleeDecl)) {
-    collectEvidenceFromArgsAndParams(
-        *CalleeFunctionDecl, *CallExpr, InferableCallerSlots,
-        InferableSlotsConstraint, Lattice, Env, Emit);
+    if (CalleeFunctionDecl->getDeclName().isIdentifier() &&
+        CalleeFunctionDecl->getName() == AbortMacroArgCaptureName) {
+      collectEvidenceFromReplacedMacroCall(*CallExpr, InferableCallerSlots, Env,
+                                           Emit);
+      // TODO(b/309626206): collect from comparisons as well
+    } else {
+      collectEvidenceFromArgsAndParams(
+          *CalleeFunctionDecl, *CallExpr, InferableCallerSlots,
+          InferableSlotsConstraint, Lattice, Env, Emit);
+    }
   } else {
     collectEvidenceFromCallExprWithoutFunctionCalleeDecl(
         *CalleeDecl, *CallExpr, InferableCallerSlots, InferableSlotsConstraint,

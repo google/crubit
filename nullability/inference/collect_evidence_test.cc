@@ -4,11 +4,15 @@
 
 #include "nullability/inference/collect_evidence.h"
 
+#include <cassert>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "nullability/inference/ctn_replacement_macros.h"
 #include "nullability/inference/inference.proto.h"
+#include "nullability/inference/replace_macros.h"
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/test/test_headers.h"
 #include "clang/AST/Decl.h"
@@ -67,15 +71,23 @@ clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
   for (const auto& Entry :
        llvm::ArrayRef(test_headers_create(), test_headers_size()))
     Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
+  for (const auto& Entry : llvm::ArrayRef(ctn_replacement_macros_create(),
+                                          ctn_replacement_macros_size()))
+    Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
+  Inputs.ExtraArgs.push_back("-I.");
   Inputs.ExtraArgs.push_back("-include");
   Inputs.ExtraArgs.push_back("nullability_annotations.h");
-  Inputs.ExtraArgs.push_back("-I.");
+  Inputs.ExtraArgs.push_back("-include");
+  Inputs.ExtraArgs.push_back(std::string(ReplacementMacrosHeaderFileName));
+
+  Inputs.MakeAction = [&]() { return std::make_unique<ReplaceMacrosAction>(); };
   return Inputs;
 }
 
 std::vector<Evidence> collectEvidenceFromTargetFunction(
     llvm::StringRef Source, PreviousInferences PreviousInferences = {}) {
   std::vector<Evidence> Results;
+
   clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
   USRCache UsrCache;
   auto Err = collectEvidenceFromImplementation(
@@ -404,6 +416,18 @@ TEST(CollectEvidenceFromImplementationTest, PointerToMemberMethod) {
   // collected. If they become a supported pointer type, this test should start
   // failing.
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromImplementationTest, CheckMacro) {
+  static constexpr llvm::StringRef Src = R"cc(
+#define CHECK(x) \
+      if (!x) __builtin_abort();
+
+    void target(int* p) { CHECK(p); }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL)));
 }
 
 TEST(CollectEvidenceFromImplementationTest, NullableArgPassed) {

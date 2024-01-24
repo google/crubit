@@ -304,5 +304,16 @@ TEST(PointerNullabilityTest, AnalyzeFunctionWithForwardDeclarationOnlyOnce) {
                        llvm::HasValue(IsEmpty()));
 }
 
+TEST(PointerNullabilityTest, CheckMacro) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#define CHECK(x) \
+      if (!x) __builtin_abort();
+    void target(int* _Nullable p) {
+      CHECK(p);
+      *p;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
