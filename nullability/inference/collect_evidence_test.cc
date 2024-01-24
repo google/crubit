@@ -430,6 +430,23 @@ TEST(CollectEvidenceFromImplementationTest, CheckMacro) {
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL)));
 }
 
+TEST(CollectEvidenceFromImplementationTest, CheckNEMacro) {
+  static constexpr llvm::StringRef Src = R"cc(
+#define CHECK_NE(x, y) \
+      if (x == y) __builtin_abort();
+    void target(int* p, int* q, int* r) {
+      CHECK_NE(p, nullptr);
+      if (!q) {
+        CHECK_NE(q, r);
+      }
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
+                           evidence(paramSlot(2), Evidence::ABORT_IF_NULL)));
+}
+
 TEST(CollectEvidenceFromImplementationTest, NullableArgPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(int *q);

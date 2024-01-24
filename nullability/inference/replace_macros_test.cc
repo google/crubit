@@ -23,6 +23,7 @@ namespace clang::tidy::nullability {
 namespace {
 
 using ::clang::CallExpr;
+using ::clang::ast_matchers::anyOf;
 using ::clang::ast_matchers::callExpr;
 using ::clang::ast_matchers::functionDecl;
 using ::clang::ast_matchers::hasDeclaration;
@@ -55,13 +56,38 @@ TEST(ReplaceMacrosAction, ReplacesCHECK) {
   clang::TestAST AST(getInputs(Source));
 
   const CallExpr* ArgumentCapture = selectFirst<CallExpr>(
-      "call", match(callExpr(hasDeclaration(functionDecl(
-                                 hasName(AbortMacroArgCaptureName))))
+      "call", match(callExpr(hasDeclaration(
+                                 functionDecl(hasName(ArgCaptureAbortIfFalse))))
                         .bind("call"),
                     AST.context()));
   ASSERT_THAT(ArgumentCapture, NotNull());
   ASSERT_THAT(ArgumentCapture->getArg(0), NotNull());
   EXPECT_TRUE(ArgumentCapture->getArg(0)->isNullPointerConstant(
+      AST.context(), Expr::NPC_ValueDependentIsNotNull));
+}
+
+TEST(ReplaceMacrosAction, ReplacesCHECK_NE) {
+  static constexpr std::string_view Source = R"cc(
+#define CHECK_NE(x, y) \
+      if (x == y) __builtin_abort();
+
+    void foo() {
+      CHECK_NE(nullptr, nullptr);
+    }
+  )cc";
+  clang::TestAST AST(getInputs(Source));
+
+  const CallExpr* ArgumentCapture = selectFirst<CallExpr>(
+      "call", match(callExpr(hasDeclaration(
+                                 functionDecl(hasName(ArgCaptureAbortIfEqual))))
+                        .bind("call"),
+                    AST.context()));
+  ASSERT_THAT(ArgumentCapture, NotNull());
+  ASSERT_THAT(ArgumentCapture->getArg(0), NotNull());
+  EXPECT_TRUE(ArgumentCapture->getArg(0)->isNullPointerConstant(
+      AST.context(), Expr::NPC_ValueDependentIsNotNull));
+  ASSERT_THAT(ArgumentCapture->getArg(1), NotNull());
+  EXPECT_TRUE(ArgumentCapture->getArg(1)->isNullPointerConstant(
       AST.context(), Expr::NPC_ValueDependentIsNotNull));
 }
 
@@ -77,10 +103,12 @@ TEST(ReplaceMacrosAction, DoesNotReplaceMacroNotInReplacementFile) {
   clang::TestAST AST(getInputs(Source));
 
   const CallExpr* ArgumentCaptureFunctionCall = selectFirst<CallExpr>(
-      "call", match(callExpr(hasDeclaration(functionDecl(
-                                 hasName(AbortMacroArgCaptureName))))
-                        .bind("call"),
-                    AST.context()));
+      "call",
+      match(callExpr(hasDeclaration(
+                         anyOf(functionDecl(hasName(ArgCaptureAbortIfFalse)),
+                               functionDecl(hasName(ArgCaptureAbortIfEqual)))))
+                .bind("call"),
+            AST.context()));
   ASSERT_THAT(ArgumentCaptureFunctionCall, IsNull());
 }
 

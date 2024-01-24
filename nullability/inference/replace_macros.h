@@ -26,8 +26,11 @@ namespace clang::tidy::nullability {
 constexpr llvm::StringRef ReplacementMacrosHeaderFileName =
     "clang_tidy_nullability_replacement_macros.h";
 
-constexpr llvm::StringRef AbortMacroArgCaptureName =
+constexpr llvm::StringRef ArgCaptureAbortIfFalse =
     "clang_tidy_nullability_internal_abortIfFalse";
+
+constexpr llvm::StringRef ArgCaptureAbortIfEqual =
+    "clang_tidy_nullability_internal_abortIfEqual";
 
 class ReplaceMacrosCallbacks : public clang::PPCallbacks {
  public:
@@ -39,11 +42,11 @@ class ReplaceMacrosCallbacks : public clang::PPCallbacks {
       Replacements;
 
   enum class State {
-    HaveNotSeenReplacmentFile,
+    HaveNotSeenReplacementFile,
     InReplacementFile,
     FinishedReplacementFile,
   };
-  State State = State::HaveNotSeenReplacmentFile;
+  State State = State::HaveNotSeenReplacementFile;
 
   clang::MacroDirective *findReplacement(IdentifierInfo &II);
 
@@ -52,7 +55,7 @@ class ReplaceMacrosCallbacks : public clang::PPCallbacks {
 
   void FileChanged(SourceLocation Loc, FileChangeReason Reason,
                    SrcMgr::CharacteristicKind FileType,
-                   FileID PrevFID = FileID()) override;
+                   FileID PrevFID) override;
 };
 
 class ReplaceMacrosAction : public clang::ASTFrontendAction {

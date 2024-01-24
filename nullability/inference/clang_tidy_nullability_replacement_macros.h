@@ -31,9 +31,9 @@ constexpr const T& clang_tidy_nullability_internal_abortIfFalse(const T& Arg) {
 }
 
 // Forwarding function to allow detection of both arguments of assert-like
-// comparisons.
+// not-equal comparisons.
 template <typename First, typename Second>
-constexpr const First& clang_tidy_nullability_internal_abortIfComparisonFails(
+constexpr const First& clang_tidy_nullability_internal_abortIfEqual(
     const First& FirstArg, const Second&) {
   return FirstArg;
 }
@@ -63,11 +63,22 @@ constexpr const First& clang_tidy_nullability_internal_abortIfComparisonFails(
       ::clang::tidy::nullability_internal::abortIfFalse(x))
 #define __clang_tidy_nullability_ABSL_DIE_IF_NULL(x)
 
-#define CHECK_EQ(x, y)               \
-  __clang_tidy_nullability_CHECK_EQ( \
-      ::clang_tidy_nullability_internal_abortIfComparisonFails(x, y), y)
-#define __clang_tidy_nullability_CHECK_EQ(x, y)
+#define CHECK_NE(x, y)               \
+  __clang_tidy_nullability_CHECK_NE( \
+      ::clang_tidy_nullability_internal_abortIfEqual(x, y), y)
+#define __clang_tidy_nullability_CHECK_NE(x, y)
 
-// TODO(b/309626206): Add more comparison macros like CHECK_GT, DCHECK_GT, ...
+#define QCHECK_NE(x, y)               \
+  __clang_tidy_nullability_QCHECK_NE( \
+      ::clang_tidy_nullability_internal_abortIfEqual(x, y), y)
+#define __clang_tidy_nullability_QCHECK_NE(x, y)
+
+#define DCHECK_NE(x, y)               \
+  __clang_tidy_nullability_DCHECK_NE( \
+      ::clang_tidy_nullability_internal_abortIfEqual(x, y), y)
+#define __clang_tidy_nullability_DCHECK_NE(x, y)
+
+// Could infer Nullable from CHECK_EQ comparisons with nullptr, but not as
+// likely to provide additional coverage as CHECK_NE leading to Nonnull.
 
 #endif  // THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_CLANG_TIDY_NULLABILITY_REPLACEMENT_MACROS_H_

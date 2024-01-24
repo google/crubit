@@ -501,13 +501,13 @@ void collectEvidenceFromCallExprWithoutFunctionCalleeDecl(
   CalleeDecl.dump();
 }
 
-// Given a `CallExpr` for a call to our special macro argument capture function,
-// collect evidence for a slot that can prevent the abort condition from being
-// true if it is annotated Nonnull.
+// Given a `CallExpr` for a call to our special macro single-argument capture
+// function, collect evidence for a slot that can prevent the abort condition
+// from being true if it is annotated Nonnull.
 //
 // e.g. From `CHECK(x)`, we collect evidence for a slot that can cause `x` to
 // not be null.
-void collectEvidenceFromReplacedMacroCall(
+void collectEvidenceFromAbortIfFalseMacroCall(
     const CallExpr &CallExpr, const std::vector<InferableSlot> &InferableSlots,
     const dataflow::Environment &Env,
     llvm::function_ref<EvidenceEmitter> Emit) {
@@ -517,6 +517,60 @@ void collectEvidenceFromReplacedMacroCall(
   if (!PV) return;
   collectMustBeNonnullEvidence(*PV, Env, Arg->getExprLoc(), InferableSlots,
                                Evidence::ABORT_IF_NULL, Emit);
+}
+
+// Given a `CallExpr` for a call to our special macro two-argument capture
+// function for not-equal checks, if one of the arguments is a nullptr constant
+// or provably null, collect evidence for a slot that can prevent the other
+// argument from being null.
+//
+// e.g. From `CHECK_NE(x, nullptr)`, we collect evidence for a slot that can
+// cause `x` to not be null.
+void collectEvidenceFromAbortIfEqualMacroCall(
+    const CallExpr &CallExpr, const std::vector<InferableSlot> &InferableSlots,
+    const dataflow::Environment &Env,
+    llvm::function_ref<EvidenceEmitter> Emit) {
+  CHECK_EQ(CallExpr.getNumArgs(), 2);
+  const Expr *First = CallExpr.getArg(0);
+  const Expr *Second = CallExpr.getArg(1);
+
+  ASTContext &Context = CallExpr.getCalleeDecl()->getASTContext();
+  const dataflow::PointerValue *ValueComparedToNull = nullptr;
+  SourceLocation EvidenceLoc;
+  if (First->isNullPointerConstant(Context,
+                                   Expr::NPC_ValueDependentIsNotNull)) {
+    ValueComparedToNull = getPointerValueFromExpr(Second, Env);
+    if (!ValueComparedToNull) return;
+    EvidenceLoc = Second->getExprLoc();
+  } else if (Second->isNullPointerConstant(Context,
+                                           Expr::NPC_ValueDependentIsNotNull)) {
+    ValueComparedToNull = getPointerValueFromExpr(First, Env);
+    if (!ValueComparedToNull) return;
+    EvidenceLoc = First->getExprLoc();
+  } else {
+    const dataflow::PointerValue *FirstPV = getPointerValueFromExpr(First, Env);
+    if (!FirstPV) return;
+    const dataflow::PointerValue *SecondPV =
+        getPointerValueFromExpr(Second, Env);
+    if (!SecondPV) return;
+    PointerNullState FirstNullState = getPointerNullState(*FirstPV);
+    if (!FirstNullState.IsNull) return;
+    PointerNullState SecondNullState = getPointerNullState(*SecondPV);
+    if (!SecondNullState.IsNull) return;
+
+    if (Env.proves(*FirstNullState.IsNull)) {
+      ValueComparedToNull = SecondPV;
+      EvidenceLoc = Second->getExprLoc();
+    } else if (Env.proves(*SecondNullState.IsNull)) {
+      ValueComparedToNull = FirstPV;
+      EvidenceLoc = First->getExprLoc();
+    } else {
+      return;
+    }
+  }
+
+  collectMustBeNonnullEvidence(*ValueComparedToNull, Env, EvidenceLoc,
+                               InferableSlots, Evidence::ABORT_IF_NULL, Emit);
 }
 
 void collectEvidenceFromCallExpr(
@@ -529,16 +583,22 @@ void collectEvidenceFromCallExpr(
   auto *CalleeDecl = CallExpr->getCalleeDecl();
   if (!CalleeDecl) return;
   if (auto *CalleeFunctionDecl = dyn_cast<clang::FunctionDecl>(CalleeDecl)) {
-    if (CalleeFunctionDecl->getDeclName().isIdentifier() &&
-        CalleeFunctionDecl->getName() == AbortMacroArgCaptureName) {
-      collectEvidenceFromReplacedMacroCall(*CallExpr, InferableCallerSlots, Env,
-                                           Emit);
-      // TODO(b/309626206): collect from comparisons as well
-    } else {
-      collectEvidenceFromArgsAndParams(
-          *CalleeFunctionDecl, *CallExpr, InferableCallerSlots,
-          InferableSlotsConstraint, Lattice, Env, Emit);
+    if (CalleeFunctionDecl->getDeclName().isIdentifier()) {
+      llvm::StringRef Name = CalleeFunctionDecl->getName();
+      if (Name == ArgCaptureAbortIfFalse) {
+        collectEvidenceFromAbortIfFalseMacroCall(
+            *CallExpr, InferableCallerSlots, Env, Emit);
+        return;
+      }
+      if (Name == ArgCaptureAbortIfEqual) {
+        collectEvidenceFromAbortIfEqualMacroCall(
+            *CallExpr, InferableCallerSlots, Env, Emit);
+        return;
+      }
     }
+    collectEvidenceFromArgsAndParams(
+        *CalleeFunctionDecl, *CallExpr, InferableCallerSlots,
+        InferableSlotsConstraint, Lattice, Env, Emit);
   } else {
     collectEvidenceFromCallExprWithoutFunctionCalleeDecl(
         *CalleeDecl, *CallExpr, InferableCallerSlots, InferableSlotsConstraint,
