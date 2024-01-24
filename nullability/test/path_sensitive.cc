@@ -32,9 +32,7 @@ TEST(PointerNullabilityTest, ConditionalInitialization) {
       }
       if (b) p = produce_int();
 
-      // TODO(b/306417052): False positive. `p` is set to a non-null pointer on
-      // all possible execution paths.
-      (void)*p;  // [[unsafe]]
+      (void)*p;
     }
   )cc"));
 }
