@@ -17,8 +17,10 @@
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
+#include "nullability/inference/ctn_replacement_macros.h"
 #include "nullability/inference/infer_tu.h"
 #include "nullability/inference/inference.proto.h"
+#include "nullability/inference/replace_macros.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclarationName.h"
@@ -43,6 +45,8 @@
 #include "llvm/Support/Error.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
+
+using ::clang::tidy::nullability::ReplacementMacrosHeaderFileName;
 
 llvm::cl::OptionCategory Opts("infer_tu_main options");
 llvm::cl::opt<bool> PrintProtos{
@@ -219,6 +223,15 @@ class Action : public SyntaxOnlyAction {
     };
     return std::make_unique<Consumer>();
   }
+
+  bool BeginSourceFileAction(clang::CompilerInstance &CI) override {
+    if (!ASTFrontendAction::BeginSourceFileAction(CI)) return false;
+    if (!!CI.getLangOpts().CPlusPlus) return true;
+
+    CI.getPreprocessor().addPPCallbacks(
+        std::make_unique<ReplaceMacrosCallbacks>(CI));
+    return true;
+  }
 };
 
 }  // namespace
@@ -228,9 +241,22 @@ int main(int argc, absl::Nonnull<const char **> argv) {
   using namespace clang::tooling;
   auto Exec = createExecutorFromCommandLineArgs(argc, argv, Opts);
   QCHECK(Exec) << toString(Exec.takeError());
+
+  CHECK_EQ(ctn_replacement_macros_size(), 1);
+  llvm::StringRef MacroReplacementText =
+      ctn_replacement_macros_create()[0].data;
+  (*Exec)->mapVirtualFile(ReplacementMacrosHeaderFileName,
+                          MacroReplacementText);
+
   auto Err = (*Exec)->execute(
       newFrontendActionFactory<clang::tidy::nullability::Action>(),
-      // Disable warnings, testcases are full of unused expressions etc.
-      getInsertArgumentAdjuster("-w", ArgumentInsertPosition::BEGIN));
+
+      getInsertArgumentAdjuster(
+          {// Disable warnings, test cases are full of unused expressions etc.
+           "-w",
+           // Include the file containing macro replacements that enable
+           // additional inference.
+           "-include", std::string(ReplacementMacrosHeaderFileName)},
+          ArgumentInsertPosition::BEGIN));
   QCHECK(!Err) << toString(std::move(Err));
 }

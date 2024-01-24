@@ -196,8 +196,10 @@ cc_binary(
     name = "infer_tu_main",
     srcs = ["infer_tu_main.cc"],
     deps = [
+        ":clang_tidy_nullability_replacement_macros",
         ":infer_tu",
         ":inference_cc_proto",
+        ":replace_macros",
         "@absl//absl/base:nullability",
         "@absl//absl/log:check",
         "@absl//absl/strings",
