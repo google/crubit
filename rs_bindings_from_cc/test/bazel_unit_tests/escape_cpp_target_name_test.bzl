@@ -6,7 +6,7 @@
 
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
 load(
-    "//rs_bindings_from_cc/bazel_support:compile_rust.bzl",
+    "//rs_bindings_from_cc/bazel_support:generate_bindings.bzl",
     "escape_cpp_target_name",
 )
 

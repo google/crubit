@@ -6,11 +6,31 @@
 """
 
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
-load(
-    "@@//rs_bindings_from_cc/bazel_support:compile_rust.bzl",
-    "escape_cpp_target_name",
-)
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
+
+def escape_cpp_target_name(package_name, crate_name):
+    """Produce a valid crate name from the label of the cc_library (or other C++ library-like target).
+
+    Args:
+        package_name: (string) Bazel package of cc_library target.
+        crate_name: (string) name of the cc_library target.
+
+    Returns:
+        string: escaped crate name
+    """
+
+    # Crubit generates assertions with `::core`, which would resolve to current crate, if current
+    # crate (i.e., cc_library) is named 'core'.
+    if crate_name == "core":
+        _, _, last_path_component = package_name.rpartition("/")
+        crate_name = "core_" + last_path_component
+    elif crate_name[0].isdigit():
+        crate_name = "n" + crate_name
+
+    # b/216587072: Sync the escaping logic with bazel_rules/rules_rust/rust/private:utils.bzl's
+    # encode_label_as_crate_name. Currently, the encoding contains a (escaped and hence longer) copy
+    # of both the package name _and_ the target name, which causes "File name too long" error.
+    return "".join([char if char.isalnum() else "_" for char in crate_name.elems()])
 
 def _get_hdrs_command_line(hdrs):
     return ["--public_headers=" + ",".join([x.path for x in hdrs])]

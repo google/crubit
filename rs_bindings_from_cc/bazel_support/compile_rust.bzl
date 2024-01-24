@@ -33,21 +33,7 @@ def _get_cc_info(providers):
             return provider
     fail("Couldn't find a CcInfo in the list of providers")
 
-def escape_cpp_target_name(package_name, crate_name):
-    # Crubit generates assertions with `::core`, which would resolve to current crate, if current
-    # crate (i.e., cc_library) is named 'core'.
-    if crate_name == "core":
-        _, _, last_path_component = package_name.rpartition("/")
-        crate_name = "core_" + last_path_component
-    elif crate_name[0].isdigit():
-        crate_name = "n" + crate_name
-
-    # b/216587072: Sync the escaping logic with bazel_rules/rules_rust/rust/private:utils.bzl's
-    # encode_label_as_crate_name. Currently, the encoding contains a (escaped and hence longer) copy
-    # of both the package name _and_ the target name, which causes "File name too long" error.
-    return "".join([char if char.isalnum() else "_" for char in crate_name.elems()])
-
-def compile_rust(ctx, attr, src, extra_srcs, deps):
+def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name):
     """Compiles a Rust source file.
 
     Args:
@@ -56,6 +42,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps):
       src: The source file to be compiled.
       extra_srcs: Additional source files to include in the crate.
       deps: List[DepVariantInfo]: A list of dependencies needed.
+      crate_name: (string) crate name for naming the output files (.rlib, .rmeta...))
 
     Returns:
       A DepVariantInfo provider.
@@ -63,9 +50,6 @@ def compile_rust(ctx, attr, src, extra_srcs, deps):
     toolchain = ctx.toolchains["@rules_rust//rust:toolchain_type"]
 
     output_hash = repr(hash(src.path))
-
-    # TODO(b/216587072): Remove this hacky escaping and use the import! macro once available
-    crate_name = escape_cpp_target_name(ctx.label.package, ctx.label.name)
 
     lib_name = "{prefix}{name}-{lib_hash}{extension}".format(
         prefix = "lib",

@@ -11,7 +11,11 @@ load(
 )
 load("@@//rs_bindings_from_cc/bazel_support:compile_cc.bzl", "compile_cc")
 load("@@//rs_bindings_from_cc/bazel_support:compile_rust.bzl", "compile_rust")
-load("@@//rs_bindings_from_cc/bazel_support:generate_bindings.bzl", "generate_bindings")
+load(
+    "@@//rs_bindings_from_cc/bazel_support:generate_bindings.bzl",
+    "escape_cpp_target_name",
+    "generate_bindings",
+)
 load(
     "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
     "GeneratedBindingsInfo",
@@ -94,6 +98,9 @@ def generate_and_compile_bindings(
         extra_cc_compilation_action_inputs,
     )
 
+    # TODO(b/216587072): Remove this hacky escaping and use the import! macro once available
+    crate_name = escape_cpp_target_name(ctx.label.package, ctx.label.name)
+
     # Compile the "_rust_api.rs" file together with extra_rs_srcs.
     dep_variant_info = compile_rust(
         ctx,
@@ -101,6 +108,7 @@ def generate_and_compile_bindings(
         rs_output,
         extra_rs_srcs_relocated,
         deps_for_rs_file,
+        crate_name,
     )
 
     return [

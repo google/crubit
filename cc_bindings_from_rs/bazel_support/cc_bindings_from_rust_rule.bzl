@@ -200,6 +200,7 @@ def _compile_rs_out_file(ctx, rs_out_file, target):
         src = rs_out_file,
         extra_srcs = [],
         deps = deps,
+        crate_name = target[CrateInfo].name + "_cc_api_impl",
     )
     return dep_variant_info.cc_info.linking_context
 
