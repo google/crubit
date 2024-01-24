@@ -270,6 +270,30 @@ TEST(PointerNullabilityTest, OutputParameterTemplate) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, OutputParameterVariadicCallee) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void maybeModifyPtr(int** p, ...);
+    void target() {
+      int* p = nullptr;
+      maybeModifyPtr(&p, 0);
+      *p;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OutputParameterMemberOperator) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct MaybeModifyPtr {
+      void operator()(int** p);
+    };
+    void target() {
+      int* p = nullptr;
+      MaybeModifyPtr()(&p);
+      *p;
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, CallExprParamAssignment) {
   // free function with single param
   EXPECT_TRUE(checkDiagnostics(R"cc(

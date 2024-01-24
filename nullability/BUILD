@@ -67,6 +67,7 @@ cc_library(
         "//nullability/test:__pkg__",
     ],
     deps = [
+        ":ast_helpers",
         ":pointer_nullability",
         ":pointer_nullability_lattice",
         ":pointer_nullability_matchers",

@@ -11,6 +11,7 @@
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
+#include "nullability/ast_helpers.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/pointer_nullability_matchers.h"
@@ -877,16 +878,12 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
   if (CE->isCallToStdMove()) return;
   const auto *FuncDecl = CE->getDirectCallee();
   if (!FuncDecl) return;
-  if (FuncDecl->getNumParams() != CE->getNumArgs()) return;
   if (auto *II = FuncDecl->getDeclName().getAsIdentifierInfo();
       II && II->isStr("__assert_nullability")) {
     return;
   }
-  for (unsigned I = 0; I < CE->getNumArgs(); ++I) {
-    const auto *Arg = CE->getArg(I);
-    initializeOutputParameter(Arg, State.Env,
-                              FuncDecl->getParamDecl(I)->getType());
-  }
+  for (ParamAndArgIterator<CallExpr> Iter(*FuncDecl, *CE); Iter; ++Iter)
+    initializeOutputParameter(&Iter.arg(), State.Env, Iter.param().getType());
 }
 
 void transferValue_AccessorCall(
