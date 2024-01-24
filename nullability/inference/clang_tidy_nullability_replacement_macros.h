@@ -43,11 +43,31 @@ constexpr const First& clang_tidy_nullability_internal_abortIfComparisonFails(
       ::clang_tidy_nullability_internal_abortIfFalse(x))
 #define __clang_tidy_nullability_CHECK(x)
 
+#define QCHECK(x)                  \
+  __clang_tidy_nullability_QCHECK( \
+      ::clang::tidy::nullability_internal::abortIfFalse(x))
+#define __clang_tidy_nullability_QCHECK(x)
+
+#define DCHECK(x)                  \
+  __clang_tidy_nullability_DCHECK( \
+      ::clang::tidy::nullability_internal::abortIfFalse(x))
+#define __clang_tidy_nullability_DCHECK(x)
+
+#define PCHECK(x)                  \
+  __clang_tidy_nullability_PCHECK( \
+      ::clang::tidy::nullability_internal::abortIfFalse(x))
+#define __clang_tidy_nullability_PCHECK(x)
+
+#define ABSL_DIE_IF_NULL(x)                  \
+  __clang_tidy_nullability_ABSL_DIE_IF_NULL( \
+      ::clang::tidy::nullability_internal::abortIfFalse(x))
+#define __clang_tidy_nullability_ABSL_DIE_IF_NULL(x)
+
 #define CHECK_EQ(x, y)               \
   __clang_tidy_nullability_CHECK_EQ( \
       ::clang_tidy_nullability_internal_abortIfComparisonFails(x, y), y)
 #define __clang_tidy_nullability_CHECK_EQ(x, y)
 
-// TODO(b/309626206): Add more macros like ABSL_DIE_IF_NULL, QCHECK, DCHECK, ...
+// TODO(b/309626206): Add more comparison macros like CHECK_GT, DCHECK_GT, ...
 
 #endif  // THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_CLANG_TIDY_NULLABILITY_REPLACEMENT_MACROS_H_
