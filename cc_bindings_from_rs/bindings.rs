@@ -2578,6 +2578,8 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_impl() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 pub struct SomeStruct(i32);
 
                 impl SomeStruct {
@@ -2652,6 +2654,8 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_prereq_defs_field_deps_require_reordering() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 // In the generated bindings `Outer` needs to come *after* `Inner`.
                 pub struct Outer(Inner);
                 pub struct Inner(bool);
@@ -2683,6 +2687,8 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_prereq_fwd_decls_for_ptr_param() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 // To preserve original API order we need to forward declare S.
                 pub fn f(_: *const S) {}
                 pub struct S(bool);
@@ -2757,6 +2763,8 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_prereq_fwd_decls_no_duplication() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 // All three functions below require a forward declaration of S.
                 pub fn f1(_: *const S) {}
                 pub fn f2(_: *const S) {}
@@ -2785,6 +2793,8 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_prereq_fwd_decls_deterministic_order() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 // To try to mix things up, the bindings for the functions below
                 // will *ask* for forward declarations in a different order:
                 // * Different from the order in which the forward declarations
@@ -2845,6 +2855,8 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_prereq_fwd_decls_not_needed_because_of_initial_order() {
         let test_src = r#"
+                #[allow(dead_code)]
+
                 pub struct S(bool);
 
                 // S is already defined above - no need for forward declaration in C++.
@@ -3408,6 +3420,8 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_cc_prerequisites_if_cpp_definition_needed() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 pub fn foo(_i: i32) -> S { panic!("foo") }
                 pub struct S(i32);
             "#;
@@ -3961,6 +3975,8 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_rust_abi_returning_struct_by_value() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 pub struct S(i32);
                 pub fn create(i: i32) -> S { S(i) }
             "#;
@@ -4565,6 +4581,8 @@ pub mod tests {
     #[test]
     fn test_format_item_static_method() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 /// No-op `f32` placeholder is used, because ZSTs are not supported
                 /// (b/258259459).
                 pub struct Math(f32);
@@ -4617,6 +4635,8 @@ pub mod tests {
     #[test]
     fn test_format_item_static_method_with_generic_type_parameters() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 /// No-op `f32` placeholder is used, because ZSTs are not supported
                 /// (b/258259459).
                 pub struct SomeStruct(f32);
@@ -4634,7 +4654,7 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             let unsupported_msg = "Error generating bindings for `SomeStruct::generic_method` \
-                                   defined at <crubit_unittests.rs>;l=10: \
+                                   defined at <crubit_unittests.rs>;l=12: \
                                    Generic functions are not supported yet (b/259749023)";
             assert_cc_matches!(
                 main_api.tokens,
@@ -4656,6 +4676,8 @@ pub mod tests {
     #[test]
     fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 /// No-op `f32` placeholder is used, because ZSTs are not supported
                 /// (b/258259459).
                 pub struct SomeStruct(f32);
@@ -4708,6 +4730,8 @@ pub mod tests {
     #[test]
     fn test_format_item_static_method_with_generic_lifetime_parameters_at_impl_level() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 /// No-op `f32` placeholder is used, because ZSTs are not supported
                 /// (b/258259459).
                 pub struct SomeStruct(f32);
@@ -4720,7 +4744,7 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             let unsupported_msg = "Error generating bindings for `SomeStruct::fn_taking_reference` \
-                                   defined at <crubit_unittests.rs>;l=7: \
+                                   defined at <crubit_unittests.rs>;l=9: \
                                    Generic functions are not supported yet (b/259749023)";
             assert_cc_matches!(
                 main_api.tokens,
@@ -5034,6 +5058,8 @@ pub mod tests {
     #[test]
     fn test_format_item_struct_with_default_constructor() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 #[derive(Default)]
                 pub struct Point(i32, i32);
             "#;
@@ -5081,6 +5107,8 @@ pub mod tests {
     #[test]
     fn test_format_item_struct_with_copy_trait() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 #[derive(Clone, Copy)]
                 pub struct Point(i32, i32);
             "#;
@@ -5134,6 +5162,8 @@ pub mod tests {
     #[test]
     fn test_format_item_struct_with_clone_trait() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 pub struct Point(i32, i32);
                 impl Clone for Point {
                     fn clone(&self) -> Self {
@@ -6254,6 +6284,8 @@ pub mod tests {
     #[test]
     fn test_format_item_doc_comments_tuple_struct() {
         let test_src = r#"
+            #![allow(dead_code)]
+
             /// Doc for some tuple struct.
             pub struct SomeTupleStructWithDocs(i32);
         "#;
@@ -6261,7 +6293,7 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             let comment = " Doc for some tuple struct.\n\n\
-                           Generated from: <crubit_unittests.rs>;l=3";
+                           Generated from: <crubit_unittests.rs>;l=5";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -6278,6 +6310,8 @@ pub mod tests {
     #[test]
     fn test_format_item_source_loc_macro_rules() {
         let test_src = r#"
+            #![allow(dead_code)]
+
             macro_rules! some_tuple_struct_macro_for_testing_source_loc {
                 () => {
                     /// Some doc on SomeTupleStructMacroForTesingSourceLoc.
@@ -6291,7 +6325,7 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             let source_loc_comment = " Some doc on SomeTupleStructMacroForTesingSourceLoc.\n\n\
-                                      Generated from: <crubit_unittests.rs>;l=5";
+                                      Generated from: <crubit_unittests.rs>;l=7";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -6308,12 +6342,14 @@ pub mod tests {
     #[test]
     fn test_format_item_source_loc_with_no_doc_comment() {
         let test_src = r#"
+            #![allow(dead_code)]
+
             pub struct SomeTupleStructWithNoDocComment(i32);
         "#;
         test_format_item(test_src, "SomeTupleStructWithNoDocComment", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
-            let comment = "Generated from: <crubit_unittests.rs>;l=2";
+            let comment = "Generated from: <crubit_unittests.rs>;l=4";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -6365,6 +6401,8 @@ pub mod tests {
     #[test]
     fn test_format_item_unsupported_impl_item_const_value() {
         let test_src = r#"
+                #![allow(dead_code)]
+
                 pub struct SomeStruct(i32);
 
                 impl SomeStruct {
@@ -6376,7 +6414,7 @@ pub mod tests {
             let main_api = &result.main_api;
             assert!(!main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::CONST_VALUE` \
-                                   defined at <crubit_unittests.rs>;l=5: \
+                                   defined at <crubit_unittests.rs>;l=7: \
                                    Unsupported `impl` item kind: Const";
             assert_cc_matches!(
                 main_api.tokens,
