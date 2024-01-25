@@ -95,6 +95,12 @@ TEST_F(PointerTypeTest, IsSupportedSmartPointerType) {
 
     using SugaredPointer = UniquePointer;
 
+    template <typename T>
+    struct UserDefinedSmartPointer {
+      using absl_nullability_compatible = void;
+    };
+    using UserDefined = UserDefinedSmartPointer<NotPointer>;
+
     template <class>
     struct Container;
     using ContainsPointers = Container<std::unique_ptr<int>>;
@@ -107,6 +113,7 @@ TEST_F(PointerTypeTest, IsSupportedSmartPointerType) {
   EXPECT_FALSE(isSupportedSmartPointerType(
       underlying("UniquePointerWrongNamespace", AST)));
   EXPECT_TRUE(isSupportedSmartPointerType(underlying("SugaredPointer", AST)));
+  EXPECT_TRUE(isSupportedSmartPointerType(underlying("UserDefined", AST)));
   EXPECT_FALSE(
       isSupportedSmartPointerType(underlying("ContainsPointers", AST)));
 }
@@ -131,20 +138,30 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     };
     }  // namespace std
 
+    template <typename T>
+    struct UserDefinedSmartPointer {
+      using absl_nullability_compatible = void;
+      using pointer = char *;
+    };
+
     using UniquePointer = std::unique_ptr<int>;
     using SharedPointer = std::shared_ptr<int>;
+    using UserDefined = UserDefinedSmartPointer<int>;
     // Force the compiler to instantiate the templates. Otherwise, the
     // `ClassTemplateSpecializationDecl` won't contain a `TypedefNameDecl` for
     // `pointer` or `element_type`, and `underlyingRawPointerType()` will
     // use the fallback behavior of looking at the template argument.
     template class std::unique_ptr<int>;
     template class std::shared_ptr<int>;
+    template class UserDefinedSmartPointer<int>;
   )cpp");
 
   QualType PointerToCharTy = AST.context().getPointerType(AST.context().CharTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("UniquePointer", AST)),
             PointerToCharTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("SharedPointer", AST)),
+            PointerToCharTy);
+  EXPECT_EQ(underlyingRawPointerType(underlying("UserDefined", AST)),
             PointerToCharTy);
 }
 

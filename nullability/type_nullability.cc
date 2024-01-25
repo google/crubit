@@ -52,20 +52,37 @@ bool isSupportedSmartPointerType(QualType T) {
   return !underlyingRawPointerType(T).isNull();
 }
 
+static bool isStandardSmartPointerDecl(const CXXRecordDecl *RD) {
+  if (!RD->getDeclContext()->isStdNamespace()) return false;
+
+  const IdentifierInfo *ID = RD->getIdentifier();
+  if (ID == nullptr) return false;
+
+  StringRef Name = ID->getName();
+  return Name == "unique_ptr" || Name == "shared_ptr";
+}
+
+static bool hasAbslNullabilityCompatibleTag(const CXXRecordDecl *RD) {
+  // If the specialization hasn't been instantiated -- for example because it
+  // is only used as a function parameter type -- then the specialization won't
+  // contain the `absl_nullability_compatible` tag. Therefore, we look at the
+  // template rather than the specialization.
+  if (const auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD))
+    RD = CTSD->getSpecializedTemplate()->getTemplatedDecl();
+  const auto &Idents = RD->getASTContext().Idents;
+  auto It = Idents.find("absl_nullability_compatible");
+  if (It == Idents.end()) return false;
+  return RD->lookup(It->getValue()).find_first<TypedefNameDecl>() != nullptr;
+}
+
 QualType underlyingRawPointerType(QualType T) {
   if (!SmartPointersEnabled) return QualType();
 
-  // TODO(b/304963199): Add support for the `absl_nullability_compatible` tag.
   const CXXRecordDecl *RD = T.getCanonicalType()->getAsCXXRecordDecl();
   if (RD == nullptr) return QualType();
 
-  if (!RD->getDeclContext()->isStdNamespace()) return QualType();
-
-  const IdentifierInfo *ID = RD->getIdentifier();
-  if (ID == nullptr) return QualType();
-
-  StringRef Name = ID->getName();
-  if (Name != "unique_ptr" && Name != "shared_ptr") return QualType();
+  if (!isStandardSmartPointerDecl(RD) && !hasAbslNullabilityCompatibleTag(RD))
+    return QualType();
 
   const ASTContext &ASTCtx = RD->getASTContext();
   const auto &Idents = ASTCtx.Idents;

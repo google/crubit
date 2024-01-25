@@ -536,3 +536,32 @@ TEST void weakPtrLocReturnsNullable(std::shared_ptr<int> Shared) {
   std::weak_ptr<int> Weak(Shared);
   nullable(Weak.lock());
 }
+
+namespace user_defined_smart_pointers {
+
+template <typename T>
+struct UserDefinedSmartPointer {
+  using absl_nullability_compatible = void;
+  using pointer = T *;
+
+  pointer get() const;
+};
+
+TEST void userDefinedSmartPointers(
+    Nonnull<UserDefinedSmartPointer<int>> NonnullParam,
+    Nullable<UserDefinedSmartPointer<int>> NullableParam,
+    UserDefinedSmartPointer<int> UnknownParam) {
+  // Just spot-check some basic behaviors, as the implementation treats
+  // user-defined smart pointers like standard smart pointers, so the tests for
+  // standard smart pointers provide sufficient coverage.
+
+  nonnull(NonnullParam);
+  nullable(NullableParam);
+  unknown(UnknownParam);
+
+  nonnull(NonnullParam.get());
+  nullable(NullableParam.get());
+  unknown(UnknownParam.get());
+}
+
+}  // namespace user_defined_smart_pointers
