@@ -41,10 +41,11 @@
 macro_rules! assert_cc_matches {
     ($input:expr, $pattern:expr $(,)*) => {
         $crate::internal::match_tokens(
-                                    &$input,
-                                    &$pattern,
-                                    &$crate::internal::cc_tokens_to_formatted_string_for_tests)
-                    .expect("input unexpectedly didn't match the pattern");
+            &$input,
+            &$pattern,
+            &$crate::internal::cc_tokens_to_formatted_string_for_tests,
+        )
+        .expect("input unexpectedly didn't match the pattern");
     };
 }
 
@@ -54,11 +55,11 @@ macro_rules! assert_cc_matches {
 macro_rules! assert_rs_matches {
     ($input:expr, $pattern:expr $(,)*) => {
         $crate::internal::match_tokens(
-                                    &$input,
-                                    &$pattern,
-                                    &$crate::internal::rs_tokens_to_formatted_string_for_tests,
-                                )
-                                .expect("input unexpectedly didn't match the pattern");
+            &$input,
+            &$pattern,
+            &$crate::internal::rs_tokens_to_formatted_string_for_tests,
+        )
+        .expect("input unexpectedly didn't match the pattern");
     };
 }
 
@@ -69,10 +70,11 @@ macro_rules! assert_rs_matches {
 macro_rules! assert_cc_not_matches {
     ($input:expr, $pattern:expr $(,)*) => {
         $crate::internal::mismatch_tokens(
-                                   &$input,
-                                   &$pattern,
-                                   &$crate::internal::cc_tokens_to_formatted_string_for_tests)
-                    .unwrap();
+            &$input,
+            &$pattern,
+            &$crate::internal::cc_tokens_to_formatted_string_for_tests,
+        )
+        .unwrap();
     };
 }
 
@@ -82,11 +84,11 @@ macro_rules! assert_cc_not_matches {
 macro_rules! assert_rs_not_matches {
     ($input:expr, $pattern:expr $(,)*) => {
         $crate::internal::mismatch_tokens(
-                                    &$input,
-                                    &$pattern,
-                                    &$crate::internal::rs_tokens_to_formatted_string_for_tests,
-                                )
-                                .unwrap();
+            &$input,
+            &$pattern,
+            &$crate::internal::rs_tokens_to_formatted_string_for_tests,
+        )
+        .unwrap();
     };
 }
 
@@ -430,8 +432,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected =
-r#"input unexpectedly matched the pattern. input:
+    #[should_panic(expected = r#"input unexpectedly matched the pattern. input:
 
 ```
 fn foo() {}
@@ -565,10 +566,12 @@ fn foo() {}
         assert_eq!(
             format!(
                 "{:#}",
-                match_tokens(&quote! {fn foo() {}},
-                             &quote! {fn foo() ()},
-                             &rs_tokens_to_formatted_string_for_tests)
-                    .expect_err("unexpected match")
+                match_tokens(
+                    &quote! {fn foo() {}},
+                    &quote! {fn foo() ()},
+                    &rs_tokens_to_formatted_string_for_tests
+                )
+                .expect_err("unexpected match")
             ),
             r#"expected delimiter Parenthesis for group '()' but got Brace for group '{ }': expected 'fn foo () ()' got 'fn foo () { }': input:
 
@@ -680,8 +683,8 @@ impl Drop {
 
     #[test]
     fn test_wildcard_in_the_beginning_of_the_group() {
-        assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ a ... ] });
-        assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ a a ... ] });
+        assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ ... c ] });
+        assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ ... c c ] });
     }
     #[test]
     fn test_wildcard_in_the_middle_of_the_group() {
@@ -690,8 +693,17 @@ impl Drop {
     }
     #[test]
     fn test_wildcard_in_the_end_of_the_group() {
-        assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ ... c ] });
-        assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ ... c c ] });
+        assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ a ... ] });
+        assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ a a ... ] });
+    }
+    #[test]
+    fn test_pattern_with_wildcards_must_cover_entire_group() {
+        // pattern `[]` would not match the input
+        assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ ... ] });
+        // pattern `[... b]` would not match the input
+        assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ ... c ] });
+        // pattern `[b ...]` would not match the input
+        assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ a ... ] });
     }
 
     #[test]
@@ -703,14 +715,22 @@ impl Drop {
     }
 
     #[test]
+    fn test_multiple_wildcards() {
+        assert_rs_cc_matches!(quote! { [ a b c d e f g ] }, quote! { [ a ... b ... c ... f ... ] });
+        assert_rs_cc_matches!(quote! { [ a b c d e f g ] }, quote! { [ a ... b ... f ... g ] });
+    }
+
+    #[test]
     fn test_error_message_shows_the_longest_match_with_wildcards() {
         assert_eq!(
             format!(
                 "{:#}",
-                match_tokens(&quote! { [ a b b ] },
-                             &quote! { [ a ... c ]},
-                             &|tokens: TokenStream| Ok(tokens.to_string()))
-                    .expect_err("unexpected match")
+                match_tokens(
+                    &quote! { [ a b b ] },
+                    &quote! { [ a ... c ]},
+                    &|tokens: TokenStream| Ok(tokens.to_string())
+                )
+                .expect_err("unexpected match")
             ),
             // the error message shows "longer match" with more tokens consumed by the wildcard
             "expected 'c' but got 'b': \
@@ -721,10 +741,12 @@ impl Drop {
         assert_eq!(
             format!(
                 "{:#}",
-                match_tokens(&quote! {[ a b b ]},
-                             &quote! { [ a ... b c ]},
-                             &|tokens: TokenStream| Ok(tokens.to_string()))
-                    .expect_err("unexpected match")
+                match_tokens(
+                    &quote! {[ a b b ]},
+                    &quote! { [ a ... b c ]},
+                    &|tokens: TokenStream| Ok(tokens.to_string())
+                )
+                .expect_err("unexpected match")
             ),
             // the error message shows "longer match" with branching off the wildcard earlier
             "expected 'c' but got 'b': \
