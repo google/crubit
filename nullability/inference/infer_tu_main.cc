@@ -170,8 +170,8 @@ struct DeclFilter {
     auto [It, Inserted] = FileCache.try_emplace(ID);
     if (Inserted) {
       static auto &Pattern = *new RegexFlagFilter(FileFilter);
-      auto *FID = SM.getFileEntryForID(ID);
-      It->second = !FID || Pattern(FID->getName());
+      auto FID = SM.getFileEntryRefForID(ID);
+      It->second = !FID.has_value() || Pattern(FID->getName());
     }
     return It->second;
   }

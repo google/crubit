@@ -72,7 +72,7 @@ class InferenceManager {
     if (!Ctx.getLangOpts().CPlusPlus) {
       llvm::errs() << "Skipping non-C++ input file: "
                    << Ctx.getSourceManager()
-                          .getFileEntryForID(
+                          .getFileEntryRefForID(
                               Ctx.getSourceManager().getMainFileID())
                           ->getName()
                    << "\n";
