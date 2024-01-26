@@ -44,6 +44,7 @@
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
+#include "clang/Basic/Builtins.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
@@ -370,14 +371,26 @@ void collectEvidenceFromArgsAndParams(
        ++Iter) {
     const auto ParamType = Iter.param().getType().getNonReferenceType();
     if (!isSupportedRawPointerType(ParamType)) continue;
+    if (!isSupportedRawPointerType(Iter.arg().getType())) {
+      // These builtins are declared with pointer type parameters even when
+      // given a valid argument of type uintptr_t. In this case, there's nothing
+      // to infer, but also nothing unexpected to crash over.
+      auto BuiltinID = CalleeDecl.getBuiltinID();
+      if (BuiltinID == Builtin::BI__builtin_is_aligned ||
+          BuiltinID == Builtin::BI__builtin_align_up ||
+          BuiltinID == Builtin::BI__builtin_align_down) {
+        continue;
+      }
+    }
     // the corresponding argument should also be a pointer.
     CHECK(isSupportedRawPointerType(Iter.arg().getType()))
         << "Unsupported argument " << Iter.argIdx()
         << " type: " << Iter.arg().getType().getAsString();
+
     if (isa<clang::CXXDefaultArgExpr>(Iter.arg())) {
       // Evidence collection for the callee from default argument values is
-      // handled when collection from declarations, and there's no useful
-      // evidence to collect for the caller.
+      // handled when collecting from declarations, and there's no useful
+      // evidence available to collect for the caller.
       return;
     }
 
