@@ -392,6 +392,9 @@ fn format_pointer_or_reference_ty_for_cc<'tcx>(
         Mutability::Mut => quote! {},
         Mutability::Not => quote! { const },
     };
+    if pointee.is_c_void(input.tcx) {
+        return Ok(CcSnippet { tokens: quote! { #const_qualifier void* }, ..Default::default() });
+    }
     let CcSnippet { tokens, mut prereqs } = format_ty_for_cc(input, pointee, TypeLocation::Other)?;
     prereqs.move_defs_to_fwd_decls();
     Ok(CcSnippet { prereqs, tokens: quote! { #tokens #const_qualifier #pointer_sigil } })
