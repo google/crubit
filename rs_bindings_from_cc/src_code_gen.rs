@@ -2046,10 +2046,25 @@ fn get_field_rs_type_kind_for_layout(
             );
         }
     }
-    match &field.type_ {
-        Ok(t) => db.rs_type_kind(t.rs_type.clone()),
-        Err(e) => Err(anyhow!("{e}")),
+    let type_kind = match &field.type_ {
+        Ok(t) => db.rs_type_kind(t.rs_type.clone())?,
+        Err(e) => bail!("{e}"),
+    };
+    // In extern_c, we replace nontrivial fields with opaque blobs.
+    // This is because we likely don't want the `ManuallyDrop<T>` solution to be the
+    // one users get.
+    //
+    // Users can still work around this with accessor functions.
+    if should_implement_drop(record) && !record.is_union() && needs_manually_drop(&type_kind) {
+        for target in record.defining_target.iter().chain([&record.owning_target]) {
+            let required_features = db.ir().target_crubit_features(target);
+            ensure!(
+                required_features.contains(ir::CrubitFeature::Experimental),
+                "nontrivial fields would be destroyed in the wrong order"
+            );
+        }
     }
+    Ok(type_kind)
 }
 
 /// Returns the type of a type-less, unaligned block of memory that can hold a
@@ -8768,29 +8783,30 @@ mod tests {
         Ok(())
     }
 
-    /// Fields with unknown attributes on supported structs are replaced with
-    /// opaque blobs.
-    ///
-    /// This is hard to test any other way than token comparison!
+    /// Nontrivial fields are replaced with opaque blobs, even if they're
+    /// supported!
     #[test]
-    fn test_extern_c_unknown_attr_field() -> Result<()> {
+    fn test_extern_c_nontrivial_field() -> Result<()> {
         let mut ir = ir_from_cc(
             "#
-            struct Trivial {
-                [[deprecated]] void* hidden_field;
-            };
+            struct [[clang::trivial_abi]] Inner {~Inner();};
+            struct [[clang::trivial_abi]] Outer {Inner inner_field;};
         
         #",
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
             ir::CrubitFeature::ExternC.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        // Note: inner is a supported type, so it isn't being replaced by a blob because
+        // it's unsupporter or anything.
+        assert_rs_matches!(rs_api, quote! {pub struct Inner});
+        // But it _is_ being replaced by a blob!
         assert_rs_matches!(
             rs_api,
             quote! {
-            struct Trivial {
+            pub struct Outer {
                 ...
-                pub(crate) hidden_field: [::core::mem::MaybeUninit<u8>; 8],
+                pub(crate) inner_field: [::core::mem::MaybeUninit<u8>; 1],
             }}
         );
         Ok(())
