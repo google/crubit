@@ -11,6 +11,12 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 package(default_applicable_licenses = ["//:license"])
 
+# These are needed by golden_test, which can be run in other packages.
+exports_files([
+    "test.sh",
+    "LICENSE_HEADER",
+])
+
 TESTS = [name[:-2] for name in glob(
     ["*.h"],
     exclude = [

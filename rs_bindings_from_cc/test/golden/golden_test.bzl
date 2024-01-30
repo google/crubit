@@ -75,7 +75,7 @@ def golden_test(
         cc_library = cc_library,
     )
     args = []
-    data = ["LICENSE_HEADER"]
+    data = ["//rs_bindings_from_cc/test/golden:LICENSE_HEADER"]
     if golden_cc:
         new_cc = basename + ".cc_file"
         native.filegroup(
@@ -126,7 +126,7 @@ def golden_test(
 
     native.sh_test(
         name = name,
-        srcs = ["test.sh"],
+        srcs = ["//rs_bindings_from_cc/test/golden:test.sh"],
         args = args,
         data = data,
         tags = tags,
