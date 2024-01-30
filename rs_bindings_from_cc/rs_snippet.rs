@@ -410,7 +410,13 @@ impl RsTypeKind {
                         Ok(CrubitFeature::Experimental.into())
                     }
                 }
-                RsTypeKind::Enum { .. } => Ok(CrubitFeature::Experimental.into()),
+                RsTypeKind::Enum { enum_, .. } => {
+                    if enum_.unknown_attr.is_some() {
+                        Ok(CrubitFeature::Experimental.into())
+                    } else {
+                        Ok(CrubitFeature::ExternC.into())
+                    }
+                }
                 // the alias itself is extern_c, but the overall features require depends on the
                 // aliased type, which is also visited by dfs_iter.
                 RsTypeKind::TypeAlias { type_alias, .. } => {

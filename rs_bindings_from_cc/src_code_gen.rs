@@ -2486,10 +2486,18 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
             ),
         );
     };
-    let enumerator_names =
-        enumerators.iter().map(|enumerator| make_rs_ident(&enumerator.identifier.identifier));
-    let enumerator_values = enumerators.iter().map(|enumerator| {
-        if underlying_type.is_bool() {
+    let enumerators = enumerators.iter().map(|enumerator| {
+        if let Some(unknown_attr) = &enumerator.unknown_attr {
+            let comment = format!(
+                "Omitting bindings for {ident}\nreason: unknown attribute(s): {unknown_attr}",
+                ident = &enumerator.identifier.identifier
+            );
+            return quote! {
+                __COMMENT__ #comment
+            };
+        }
+        let ident = make_rs_ident(&enumerator.identifier.identifier);
+        let value = if underlying_type.is_bool() {
             if enumerator.value.wrapped_value == 0 {
                 quote! {false}
             } else {
@@ -2501,7 +2509,8 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
             } else {
                 Literal::u64_unsuffixed(enumerator.value.wrapped_value).into_token_stream()
             }
-        }
+        };
+        quote! {pub const #ident: #name = #name(#value);}
     });
 
     let item = quote! {
@@ -2513,7 +2522,7 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
         impl !Sync for #name {}
 
         impl #name {
-            #(pub const #enumerator_names: #name = #name(#enumerator_values);)*
+            #(#enumerators)*
         }
         impl From<#underlying_type> for #name {
             fn from(value: #underlying_type) -> #name {
@@ -2949,6 +2958,10 @@ fn crubit_features_for_item(
         Item::TypeAlias(alias) => {
             crubit_features |=
                 new_type_alias(db, alias.clone())?.required_crubit_features(&db.ir())?;
+        }
+        Item::Enum(e) => {
+            crubit_features |=
+                RsTypeKind::new_enum(e.clone(), &db.ir())?.required_crubit_features(&db.ir())?
         }
         _ => {
             crubit_features |= ir::CrubitFeature::Experimental;
@@ -8764,6 +8777,27 @@ mod tests {
                 pub(crate) hidden_field: [::core::mem::MaybeUninit<u8>; 8],
             }}
         );
+        Ok(())
+    }
+
+    /// Enumerators with unknown attributes on otherwise-ok enums are omitted.
+    ///
+    /// This is hard to test any other way than token comparison!
+    #[test]
+    fn test_extern_c_unknown_attr_enumerator() -> Result<()> {
+        let mut ir = ir_from_cc(
+            "#
+            enum Enum {
+                kHidden [[deprecated]],
+            };
+        
+        #",
+        )?;
+        *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+            ir::CrubitFeature::ExternC.into();
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(rs_api, quote! {pub struct Enum});
+        assert_rs_not_matches!(rs_api, quote! {kHidden});
         Ok(())
     }
 

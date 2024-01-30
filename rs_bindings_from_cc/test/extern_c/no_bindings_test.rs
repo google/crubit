@@ -83,3 +83,8 @@ fn test_enable_if() {
 fn test_unknown_attr_struct() {
     assert!(!type_exists!(no_bindings::UnknownAttrStruct));
 }
+
+#[test]
+fn test_unknown_attr_enum() {
+    assert!(!type_exists!(no_bindings::UnknownAttrEnum));
+}

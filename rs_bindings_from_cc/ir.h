@@ -647,6 +647,7 @@ struct Enumerator {
 
   Identifier identifier;
   IntegerConstant value;
+  std::optional<std::string> unknown_attr;
 };
 
 struct Enum {
@@ -658,6 +659,7 @@ struct Enum {
   std::string source_loc;
   MappedType underlying_type;
   std::optional<std::vector<Enumerator>> enumerators;
+  std::optional<std::string> unknown_attr;
   std::optional<ItemId> enclosing_record_id;
   std::optional<ItemId> enclosing_namespace_id;
 };

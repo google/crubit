@@ -12,6 +12,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "lifetime_annotations/type_lifetimes.h"
+#include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
@@ -69,6 +70,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     enumerators.push_back(Enumerator{
         .identifier = *enumerator_name,
         .value = IntegerConstant(enumerator->getInitVal()),
+        .unknown_attr = CollectUnknownAttrs(*enumerator),
     });
   }
 
@@ -100,6 +102,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
       .enumerators = enum_decl->isCompleteDefinition()
                          ? std::make_optional(std::move(enumerators))
                          : std::nullopt,
+      .unknown_attr = CollectUnknownAttrs(*enum_decl),
       .enclosing_record_id = enclosing_record_id,
       .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(enum_decl),
   };

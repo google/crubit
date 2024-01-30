@@ -26,6 +26,14 @@ fn test_user_struct() {
 }
 
 #[test]
+fn test_user_enum() {
+    let _: has_bindings::Enum = has_bindings::Enum::kEnumerator;
+    // Can't really assert this due to how value_exists works, sadly.
+    // assert!(!item_exists::value_exists!
+    // (has_bindings::Enum::kUnkownAttrEnumerator));
+}
+
+#[test]
 fn test_alias() {
     assert_eq!(
         std::any::TypeId::of::<has_bindings::Struct>(),
@@ -36,4 +44,11 @@ fn test_alias() {
 #[test]
 fn test_crubit_add() {
     assert_eq!(has_bindings::crubit_add(1, 2), 3);
+}
+#[test]
+fn test_crubit_enum_function() {
+    assert_eq!(
+        has_bindings::crubit_enum_function(has_bindings::Enum::kEnumerator),
+        has_bindings::Enum::kEnumerator
+    );
 }

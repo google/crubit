@@ -722,6 +722,8 @@ pub struct Enum {
     /// is that the former has `Some(vec![])` for the enumerators, while the
     /// latter has `None`.
     pub enumerators: Option<Vec<Enumerator>>,
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    pub unknown_attr: Option<Rc<str>>,
     pub enclosing_record_id: Option<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
 }
@@ -737,7 +739,7 @@ impl GenericItem for Enum {
         Some(self.source_loc.clone())
     }
     fn unknown_attr(&self) -> Option<Rc<str>> {
-        None // TODO(b/314838274): Implement this.
+        self.unknown_attr.clone()
     }
 }
 
@@ -746,6 +748,8 @@ impl GenericItem for Enum {
 pub struct Enumerator {
     pub identifier: Identifier,
     pub value: IntegerConstant,
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    pub unknown_attr: Option<Rc<str>>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

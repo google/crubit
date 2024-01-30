@@ -485,6 +485,7 @@ llvm::json::Value Enumerator::ToJson() const {
   return llvm::json::Object{
       {"identifier", identifier},
       {"value", value},
+      {"unknown_attr", unknown_attr},
   };
 }
 
@@ -496,6 +497,7 @@ llvm::json::Value Enum::ToJson() const {
       {"source_loc", source_loc},
       {"underlying_type", underlying_type},
       {"enumerators", enumerators},
+      {"unknown_attr", unknown_attr},
       {"enclosing_record_id", enclosing_record_id},
       {"enclosing_namespace_id", enclosing_namespace_id},
   };

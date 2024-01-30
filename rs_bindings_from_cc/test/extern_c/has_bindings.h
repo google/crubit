@@ -16,10 +16,18 @@ struct Struct final {
 
 using StructAlias = Struct;
 
+enum Enum {
+  kEnumerator = 0,
+  // This doesn't receive bindings, because the enumerator has an unrecognized
+  // attribute.
+  kUnkownAttrEnumerator [[deprecated]] = 1,
+};
+
 inline void crubit_void_function() {}
 inline const void* crubit_void_ptr_identity(const void* x) { return x; }
 inline int crubit_add(int x, int y) { return x + y; }
 inline Struct crubit_anystruct(Struct x, const StructAlias*) { return x; }
+inline Enum crubit_enum_function(Enum x) { return x; }
 }
 }  // namespace crubit::has_bindings
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_ALLOWED_H_
