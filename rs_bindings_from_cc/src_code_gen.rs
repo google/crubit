@@ -2961,7 +2961,7 @@ fn crubit_features_for_item(
             } else {
                 for t in func.types() {
                     let t = db.rs_type_kind(t.rs_type.clone())?;
-                    crubit_features |= t.required_crubit_features(&db.ir())?
+                    crubit_features |= t.required_crubit_features()?
                 }
                 if func.is_extern_c {
                     crubit_features |= ir::CrubitFeature::ExternC;
@@ -2983,16 +2983,15 @@ fn crubit_features_for_item(
             }
         }
         Item::Record(record) => {
-            crubit_features |= RsTypeKind::new_record(record.clone(), &db.ir())?
-                .required_crubit_features(&db.ir())?
+            crubit_features |=
+                RsTypeKind::new_record(record.clone(), &db.ir())?.required_crubit_features()?
         }
         Item::TypeAlias(alias) => {
-            crubit_features |=
-                new_type_alias(db, alias.clone())?.required_crubit_features(&db.ir())?;
+            crubit_features |= new_type_alias(db, alias.clone())?.required_crubit_features()?;
         }
         Item::Enum(e) => {
             crubit_features |=
-                RsTypeKind::new_enum(e.clone(), &db.ir())?.required_crubit_features(&db.ir())?
+                RsTypeKind::new_enum(e.clone(), &db.ir())?.required_crubit_features()?
         }
         _ => {
             crubit_features |= ir::CrubitFeature::Experimental;

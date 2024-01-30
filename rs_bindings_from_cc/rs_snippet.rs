@@ -390,11 +390,10 @@ impl RsTypeKind {
     /// type, then the function or type alias will itself also require this
     /// feature. However, in the case of fields inside compound data types,
     /// only those fields require the feature, not the entire type.
-    pub fn required_crubit_features(&self, ir: &IR) -> Result<flagset::FlagSet<CrubitFeature>> {
+    pub fn required_crubit_features(&self) -> Result<flagset::FlagSet<CrubitFeature>> {
         /// Required features, sans recursion.
         fn required_crubit_features_flat(
             rs_type_kind: &RsTypeKind,
-            ir: &IR,
         ) -> Result<flagset::FlagSet<CrubitFeature>> {
             match rs_type_kind {
                 RsTypeKind::Pointer { .. } => Ok(CrubitFeature::ExternC.into()),
@@ -416,9 +415,8 @@ impl RsTypeKind {
                 // them with opaque blobs.
                 //
                 // Instead, what matters is the abstract properties of the struct itself!
-                RsTypeKind::Record { record, .. } => {
-                    let record = RsTypeKind::new_record(record.clone(), ir)?;
-                    if record.is_unpin() {
+                RsTypeKind::Record { .. } => {
+                    if rs_type_kind.is_unpin() {
                         Ok(CrubitFeature::ExternC.into())
                     } else {
                         Ok(CrubitFeature::Experimental.into())
@@ -447,7 +445,7 @@ impl RsTypeKind {
 
         let mut features = flagset::FlagSet::<CrubitFeature>::default();
         for rs_type_kind in self.dfs_iter() {
-            features |= required_crubit_features_flat(rs_type_kind, ir)?;
+            features |= required_crubit_features_flat(rs_type_kind)?;
         }
         Ok(features)
     }
