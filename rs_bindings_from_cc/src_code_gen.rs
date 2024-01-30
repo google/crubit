@@ -703,7 +703,7 @@ fn api_func_shape(
         Some(Err(_)) => return Ok(None),
     };
 
-    let has_pointer_params = param_types.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
+    let is_unsafe = param_types.iter().any(|p| p.is_unsafe());
     let impl_kind: ImplKind;
     let func_name: syn::Ident;
 
@@ -979,7 +979,7 @@ fn api_func_shape(
             func_name = make_rs_ident(&id.identifier);
             match maybe_record {
                 None => {
-                    impl_kind = ImplKind::None { is_unsafe: has_pointer_params };
+                    impl_kind = ImplKind::None { is_unsafe };
                 }
                 Some(record) => {
                     let format_first_param_as_self = if func.is_instance_method() {
@@ -993,7 +993,7 @@ fn api_func_shape(
                     impl_kind = ImplKind::Struct {
                         record: record.clone(),
                         format_first_param_as_self,
-                        is_unsafe: has_pointer_params,
+                        is_unsafe,
                     };
                 }
             };
@@ -1037,7 +1037,7 @@ fn api_func_shape(
         UnqualifiedIdentifier::Constructor => {
             let record = maybe_record
                 .ok_or_else(|| anyhow!("Constructors must be associated with a record."))?;
-            if has_pointer_params {
+            if is_unsafe {
                 // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
                 // translating C++ constructors into static methods in Rust).
                 bail!(
@@ -4877,7 +4877,7 @@ mod tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub fn get_ptr_to_func() -> Option<extern "C" fn (*const ::core::ffi::c_int) -> *const ::core::ffi::c_int> {
+                pub fn get_ptr_to_func() -> Option<unsafe extern "C" fn (*const ::core::ffi::c_int) -> *const ::core::ffi::c_int> {
                     unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
                 }
             }
@@ -4891,7 +4891,7 @@ mod tests {
                     extern "C" {
                         #[link_name = "_Z15get_ptr_to_funcv"]
                         pub(crate) fn __rust_thunk___Z15get_ptr_to_funcv()
-                        -> Option<extern "C" fn(*const ::core::ffi::c_int) -> *const ::core::ffi::c_int>;
+                        -> Option<unsafe extern "C" fn(*const ::core::ffi::c_int) -> *const ::core::ffi::c_int>;
                     }
                 }
             }

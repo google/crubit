@@ -16,10 +16,12 @@ The bindings support function pointers with non-`"C"` calling conventions that
 are supported by both `clang` and Rust - e.g. `"fastcall"`, `"vectorcall`,
 `"thiscall"`, or `"stdcall"`.
 
+If the function definition would be `unsafe`, then so is the function pointer --
+for example, a C++ reference to `void(void*)` becomes a Rust `unsafe extern "C"
+fn(_: *mut c_void)`.
+
 The bindings fail for bindings that might require thunks (e.g. when parameter
 types or a return type require passing structs by value).
-
-TODO(b/276461979): Reject function pointer types that pass structs by value.
 
 ## C++ bindings for Rust function pointer types
 

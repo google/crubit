@@ -375,6 +375,15 @@ impl RsTypeKind {
         }
     }
 
+    /// Returns true if this type is unsafe to pass across function boundaries.
+    ///
+    /// In particular, anything representing a pointer with unknown lifetime is
+    /// unsafe.
+    pub fn is_unsafe(&self) -> bool {
+        // TODO(b/315346467): also include string_view, etc. here.
+        matches!(self, RsTypeKind::Pointer { .. })
+    }
+
     /// Returns the features required to use this type.
     ///
     /// If a function accepts or returns this type, or an alias refers to this
@@ -704,7 +713,12 @@ impl RsTypeKind {
                     .map(|type_| type_.to_token_stream_replacing_by_self(self_record))
                     .collect();
                 let return_frag = return_type.format_as_return_type_fragment(self_record);
-                quote! { extern #abi fn( #( #param_types_ ),* ) #return_frag }
+                let unsafe_ = if param_types.iter().any(|p| p.is_unsafe()) {
+                    quote! {unsafe}
+                } else {
+                    quote! {}
+                };
+                quote! { #unsafe_ extern #abi fn( #( #param_types_ ),* ) #return_frag }
             }
             RsTypeKind::Record { record, crate_path } => {
                 if self_record == Some(record) {
@@ -775,7 +789,12 @@ impl ToTokens for RsTypeKind {
             }
             RsTypeKind::FuncPtr { abi, return_type, param_types } => {
                 let return_frag = return_type.format_as_return_type_fragment(None);
-                quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
+                let unsafe_ = if param_types.iter().any(|p| p.is_unsafe()) {
+                    quote! {unsafe}
+                } else {
+                    quote! {}
+                };
+                quote! { #unsafe_ extern #abi fn( #( #param_types ),* ) #return_frag }
             }
             RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => {
                 let record_ident = make_rs_ident(incomplete_record.rs_name.as_ref());

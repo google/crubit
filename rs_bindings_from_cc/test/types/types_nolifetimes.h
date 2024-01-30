@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <type_traits>
+
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NOLIFETIMES_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NOLIFETIMES_H_
 
@@ -27,6 +29,11 @@ TEST(StructPtr, ExampleStruct *);
 TEST(ConstStructPtr, const ExampleStruct *);
 TEST(StructRef, ExampleStruct &);
 TEST(ConstStructRef, const ExampleStruct &);
+
+TEST(FuncRef, std::type_identity_t<void()> &);
+TEST(FuncPtr, std::type_identity_t<void()> *);
+TEST(UnsafeFuncRef, std::type_identity_t<void(void *)> &);
+TEST(UnsafeFuncPtr, std::type_identity_t<void(void *)> *);
 
 #undef TEST
 

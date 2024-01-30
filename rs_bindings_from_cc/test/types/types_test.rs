@@ -156,6 +156,11 @@ type_is!(
     ConstStructPtr => *const types_nolifetimes::ExampleStruct,
     StructRef => *mut types_nolifetimes::ExampleStruct,
     ConstStructRef => *const types_nolifetimes::ExampleStruct,
+
+    FuncRef => extern "C" fn(),
+    FuncPtr => Option<extern "C" fn()>,
+    UnsafeFuncRef => unsafe extern "C" fn(*mut c_void),
+    UnsafeFuncPtr => Option<unsafe extern "C" fn(*mut c_void)>,
 );
 
 // inferred lifetimes depend on location.

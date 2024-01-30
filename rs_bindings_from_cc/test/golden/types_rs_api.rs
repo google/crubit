@@ -173,7 +173,10 @@ pub fn VoidReturningFunction() {
 /// FunctionPointerReturningFunction : () -> (const int&, int*) -> int&
 #[inline(always)]
 pub fn FunctionPointerReturningFunction() -> Option<
-    extern "C" fn(*const ::core::ffi::c_int, *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int,
+    unsafe extern "C" fn(
+        *const ::core::ffi::c_int,
+        *mut ::core::ffi::c_int,
+    ) -> *mut ::core::ffi::c_int,
 > {
     unsafe { crate::detail::__rust_thunk___Z32FunctionPointerReturningFunctionv() }
 }
@@ -225,7 +228,7 @@ mod detail {
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
         pub(crate) fn __rust_thunk___Z32FunctionPointerReturningFunctionv() -> Option<
-            extern "C" fn(
+            unsafe extern "C" fn(
                 *const ::core::ffi::c_int,
                 *mut ::core::ffi::c_int,
             ) -> *mut ::core::ffi::c_int,
