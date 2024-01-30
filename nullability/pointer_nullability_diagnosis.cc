@@ -448,11 +448,15 @@ diagnosePointerNullability(const FunctionDecl *Func) {
   if (!Func->doesThisDeclarationHaveABody()) return Diags;
 
   auto Diagnoser = pointerNullabilityDiagnoser();
-  const std::int64_t MaxSATIterations = 2'000'000;
+  // These limits are set based on empirical observations. Mostly, they are a
+  // rough proxy for a line between "finite" and "effectively infinite", rather
+  // than strict limits on resource use.
+  constexpr std::int64_t MaxSATIterations = 2'000'000;
+  constexpr std::int32_t MaxBlockVisits = 20'000;
 
   if (auto CfgDiags = dataflow::diagnoseFunction<PointerNullabilityAnalysis,
                                                  PointerNullabilityDiagnostic>(
-          *Func, Ctx, Diagnoser, MaxSATIterations)) {
+          *Func, Ctx, Diagnoser, MaxSATIterations, MaxBlockVisits)) {
     Diags.insert(Diags.end(), CfgDiags->begin(), CfgDiags->end());
     return Diags;
   } else {
