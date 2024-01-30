@@ -657,7 +657,7 @@ struct Enum {
   BazelLabel owning_target;
   std::string source_loc;
   MappedType underlying_type;
-  std::vector<Enumerator> enumerators;
+  std::optional<std::vector<Enumerator>> enumerators;
   std::optional<ItemId> enclosing_namespace_id;
 };
 

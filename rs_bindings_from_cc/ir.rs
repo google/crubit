@@ -716,7 +716,12 @@ pub struct Enum {
     pub owning_target: BazelLabel,
     pub source_loc: Rc<str>,
     pub underlying_type: MappedType,
-    pub enumerators: Vec<Enumerator>,
+    /// The enumerators. If None, this is a forward-declared (opaque) enum.
+    ///
+    /// That is, the difference between `enum X : int {};` and `enum X : int;`
+    /// is that the former has `Some(vec![])` for the enumerators, while the
+    /// latter has `None`.
+    pub enumerators: Option<Vec<Enumerator>>,
     pub enclosing_namespace_id: Option<ItemId>,
 }
 

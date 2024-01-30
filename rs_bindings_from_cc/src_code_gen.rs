@@ -2476,9 +2476,19 @@ fn generate_derives(record: &Record) -> Vec<Ident> {
 fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
     let name = make_rs_ident(&enum_.identifier.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.rs_type.clone())?;
+    let Some(enumerators) = &enum_.enumerators else {
+        return generate_unsupported(
+            db,
+            &UnsupportedItem::new_with_message(
+                &db.ir(),
+                enum_,
+                "b/322391132: Forward-declared (opaque) enums are not supported yet",
+            ),
+        );
+    };
     let enumerator_names =
-        enum_.enumerators.iter().map(|enumerator| make_rs_ident(&enumerator.identifier.identifier));
-    let enumerator_values = enum_.enumerators.iter().map(|enumerator| {
+        enumerators.iter().map(|enumerator| make_rs_ident(&enumerator.identifier.identifier));
+    let enumerator_values = enumerators.iter().map(|enumerator| {
         if underlying_type.is_bool() {
             if enumerator.value.wrapped_value == 0 {
                 quote! {false}
@@ -5473,6 +5483,14 @@ mod tests {
                 }
             }
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_opaque_enum() -> Result<()> {
+        let ir = ir_from_cc("enum Color : int;")?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_not_matches!(rs_api, quote! {Color});
         Ok(())
     }
 

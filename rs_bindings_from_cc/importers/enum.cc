@@ -77,7 +77,9 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
       .owning_target = ictx_.GetOwningTarget(enum_decl),
       .source_loc = ictx_.ConvertSourceLocation(enum_decl->getBeginLoc()),
       .underlying_type = *std::move(type),
-      .enumerators = enumerators,
+      .enumerators = enum_decl->isCompleteDefinition()
+                         ? std::make_optional(std::move(enumerators))
+                         : std::nullopt,
       .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(enum_decl),
   };
 }
