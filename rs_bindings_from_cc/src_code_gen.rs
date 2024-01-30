@@ -2417,6 +2417,8 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         #( #items __NEWLINE__ __NEWLINE__)*
     };
     features.insert(make_rs_ident("negative_impls"));
+    // For #![register_tool(__crubit)] / #![__crubit::...]
+    features.insert(make_rs_ident("register_tool"));
 
     let record_trait_assertions = {
         let record_type_name = RsTypeKind::new_record(record.clone(), &ir)?.to_token_stream();
@@ -3046,8 +3048,6 @@ fn generate_bindings_tokens(
 
     // For #![rustfmt::skip].
     features.insert(make_rs_ident("custom_inner_attributes"));
-    // For #![register_tool(...)]
-    features.insert(make_rs_ident("register_tool"));
 
     for top_level_item_id in ir.top_level_item_ids() {
         let item =
@@ -3087,6 +3087,24 @@ fn generate_bindings_tokens(
         }
     };
 
+    // Allows the use of #[__crubit::foo] attributes to control the behavior of
+    // cc_bindings_from_rs on the generated code.
+    //
+    // Note that we use `__crubit`, not `crubit`. This way, namespaces and types can
+    // be named `crubit` without causing obscure internal failures during
+    // bindings generation. In particular, well, crubit itself does use
+    // `namespace crubit`...
+    //
+    // Note also that there is only one tool namespace we use, __crubit. So we can
+    // use the existence of a register_tool feature requirement to signal
+    // whether or not we need to bother registering __crubit, and make the
+    // bindings more compact for headers that don't define any types.
+    let register_crubit_tool = if features.contains(&make_rs_ident("register_tool")) {
+        quote! {#![register_tool(__crubit)] __NEWLINE__}
+    } else {
+        quote! {}
+    };
+
     let features = if features.is_empty() {
         quote! {}
     } else {
@@ -3100,13 +3118,7 @@ fn generate_bindings_tokens(
         rs_api: quote! {
             #features __NEWLINE__
             #![no_std] __NEWLINE__
-            // Allows the use of #[__crubit::foo] attributes to control the behavior of
-            // cc_bindings_from_rs on the generated code.
-            //
-            // Note that we use `__crubit`, not `crubit`. This way, namespaces and types can be
-            // named `crubit` without causing obscure internal failures during bindings generation.
-            // In particular, well, crubit itself does use `namespace crubit`...
-            #![register_tool(__crubit)]
+            #register_crubit_tool
 
             // `rust_builtin_type_abi_assumptions.md` documents why the generated
             // bindings need to relax the `improper_ctypes_definitions` warning
