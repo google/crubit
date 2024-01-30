@@ -26,6 +26,17 @@ fn test_user_struct() {
 }
 
 #[test]
+fn test_nontrivial_struct() {
+    let mut i = 0;
+    {
+        let s = has_bindings::NontrivialStruct { x: &mut i };
+        let _s2 = s; // can still treat it like a normal Rust value!
+    }
+    // and the destructor gets invoked!
+    assert_eq!(i, 42);
+}
+
+#[test]
 fn test_user_enum() {
     let _: has_bindings::Enum = has_bindings::Enum::kEnumerator;
     // Can't really assert this due to how value_exists works, sadly.

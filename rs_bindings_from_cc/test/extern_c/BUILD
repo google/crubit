@@ -7,6 +7,7 @@ crubit_test_cc_library(
     name = "has_bindings",
     hdrs = ["has_bindings.h"],
     aspect_hints = ["//features:extern_c"],
+    deps = ["@absl//absl/base:core_headers"],
 )
 
 crubit_test_cc_library(

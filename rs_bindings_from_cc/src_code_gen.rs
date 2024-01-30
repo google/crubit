@@ -2929,25 +2929,41 @@ fn crubit_features_for_item(
     match item {
         Item::UnsupportedItem(..) => {}
         Item::Func(func) => {
-            for t in func.types() {
-                let t = db.rs_type_kind(t.rs_type.clone())?;
-                crubit_features |= t.required_crubit_features(&db.ir())?
-            }
-            if func.is_extern_c {
+            if func.name == UnqualifiedIdentifier::Destructor {
+                // We support destructors in extern_c even though they use some features we
+                // don't generally support with that feature set, because in this
+                // particular case, it's safe.
                 crubit_features |= ir::CrubitFeature::ExternC;
+                // Rather than walking the parameters -- which are not supported in extern_c
+                // (`&mut self`) -- we just look up the single `this` parameter's feature
+                // requirements.
+                let Some(meta) = &func.member_func_metadata else {
+                    bail!("Destructor without `this`");
+                };
+                let ir = db.ir();
+                let record: &Item = ir.find_decl(meta.record_id)?;
+                crubit_features |= crubit_features_for_item(db, record)?;
             } else {
-                crubit_features |= ir::CrubitFeature::Experimental;
-            }
-            if !func.has_c_calling_convention
-                || func.is_noreturn
-                || func.nodiscard.is_some()
-                || func.deprecated.is_some()
-            {
-                crubit_features |= ir::CrubitFeature::Experimental;
-            }
-            for param in &func.params {
-                if param.unknown_attr.is_some() {
+                for t in func.types() {
+                    let t = db.rs_type_kind(t.rs_type.clone())?;
+                    crubit_features |= t.required_crubit_features(&db.ir())?
+                }
+                if func.is_extern_c {
+                    crubit_features |= ir::CrubitFeature::ExternC;
+                } else {
                     crubit_features |= ir::CrubitFeature::Experimental;
+                }
+                if !func.has_c_calling_convention
+                    || func.is_noreturn
+                    || func.nodiscard.is_some()
+                    || func.deprecated.is_some()
+                {
+                    crubit_features |= ir::CrubitFeature::Experimental;
+                }
+                for param in &func.params {
+                    if param.unknown_attr.is_some() {
+                        crubit_features |= ir::CrubitFeature::Experimental;
+                    }
                 }
             }
         }

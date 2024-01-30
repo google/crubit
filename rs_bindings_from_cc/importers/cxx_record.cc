@@ -208,6 +208,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
           return true;
         } else if (clang::isa<clang::FinalAttr>(attr)) {
           return true;
+        } else if (clang::isa<clang::TrivialABIAttr>(attr)) {
+          return true;
         } else if (auto* visibility =
                        clang::dyn_cast<clang::VisibilityAttr>(&attr);
                    visibility && record_decl->isInStdNamespace()) {

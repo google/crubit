@@ -5,6 +5,7 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_ALLOWED_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_ALLOWED_H_
 
+#include "absl/base/attributes.h"
 namespace crubit::has_bindings {
 extern "C" {
 
@@ -15,6 +16,17 @@ struct Struct final {
 };
 
 using StructAlias = Struct;
+
+struct ABSL_ATTRIBUTE_TRIVIAL_ABI NontrivialStruct {
+  int* x;
+  ~NontrivialStruct() {
+    // this can do anything, but we'll do something silly for the sake of
+    // example.
+    if (x != nullptr) {
+      *x = 42;
+    }
+  }
+};
 
 enum Enum {
   kEnumerator = 0,
