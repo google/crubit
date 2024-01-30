@@ -59,6 +59,9 @@ inline Nontrivial crubit_returns_nontrivial_value() { return {}; }
 inline void* crubit_parameter_lifetimebound(void* x [[clang::lifetimebound]]) {
   return x;
 }
+
+typedef void (*Callback)(Nontrivial* x);
+inline void crubit_invoke_callback(void (*f)(Nontrivial* x)) { f(nullptr); }
 }  // extern "C"
 
 }  // namespace crubit::no_bindings

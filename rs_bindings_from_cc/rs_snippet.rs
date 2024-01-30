@@ -392,8 +392,13 @@ impl RsTypeKind {
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
                     Ok(CrubitFeature::Experimental.into())
                 }
-                // TODO(b/314382764): Carve out some function pointer types that can be ExternC.
-                RsTypeKind::FuncPtr { .. } => Ok(CrubitFeature::Experimental.into()),
+                RsTypeKind::FuncPtr { abi, .. } => {
+                    if &**abi == "C" {
+                        Ok(CrubitFeature::ExternC.into())
+                    } else {
+                        Ok(CrubitFeature::Experimental.into())
+                    }
+                }
                 RsTypeKind::IncompleteRecord { .. } => Ok(CrubitFeature::Experimental.into()),
                 // Here, we can very carefully be non-recursive into the _structure_ of the type.
                 //

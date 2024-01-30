@@ -28,6 +28,11 @@ inline const void* crubit_void_ptr_identity(const void* x) { return x; }
 inline int crubit_add(int x, int y) { return x + y; }
 inline Struct crubit_anystruct(Struct x, const StructAlias*) { return x; }
 inline Enum crubit_enum_function(Enum x) { return x; }
+
+// Note the use of references, rather than pointers. A rust function pointer
+// corresponds to a C++ function reference, more or less.
+typedef void (&Callback)(int* x);
+inline void crubit_invoke_callback(void (&f)(int* x), int* x) { f(x); }
 }
 }  // namespace crubit::has_bindings
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_ALLOWED_H_

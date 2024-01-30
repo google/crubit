@@ -88,3 +88,11 @@ fn test_unknown_attr_struct() {
 fn test_unknown_attr_enum() {
     assert!(!type_exists!(no_bindings::UnknownAttrEnum));
 }
+
+/// Function pointers, like most supported types, are only supported if their
+/// type dependencies are.
+#[test]
+fn test_function_pointers() {
+    assert!(!type_exists!(no_bindings::Callback));
+    assert!(!value_exists!(no_bindings::crubit_invoke_callback));
+}
