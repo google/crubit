@@ -114,6 +114,11 @@ type_is!(
     Struct => types_nonptr::ns::ExampleStruct,
     TypeAlias => types_nonptr::Alias,
     Using => types_nonptr::ns::ExampleStruct,
+
+    Enum => types_nonptr::ns::ExampleEnum,
+    TypeAliasEnum => types_nonptr::AliasEnum,
+    UsingEnum => types_nonptr::ns::ExampleEnum,
+
     TypeMapOverrideStruct => i8,
     TypeMapOverrideClass => i8,
     TypeMapOverrideEnum => i8,

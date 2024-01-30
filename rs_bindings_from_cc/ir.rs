@@ -722,6 +722,7 @@ pub struct Enum {
     /// is that the former has `Some(vec![])` for the enumerators, while the
     /// latter has `None`.
     pub enumerators: Option<Vec<Enumerator>>,
+    pub enclosing_record_id: Option<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
 }
 

@@ -15,6 +15,7 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/LLVM.h"
 
 namespace crubit {
 
@@ -71,6 +72,25 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     });
   }
 
+  std::optional<ItemId> enclosing_record_id = std::nullopt;
+  if (clang::DeclContext* decl_context = enum_decl->getDeclContext()) {
+    if (decl_context->isFunctionOrMethod()) {
+      return std::nullopt;
+    }
+    // TODO(jeanpierreda): The logic for populating enclosing_record_id is
+    // common across everything that has the field, and should be shared.
+    // Also, should report e.g. the name of the parent that could not be
+    // imported.
+    if (auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl_context)) {
+      if (!ictx_.EnsureSuccessfullyImported(record_decl)) {
+        return ictx_.ImportUnsupportedItem(enum_decl,
+                                           "Couldn't import the parent");
+      }
+      enclosing_record_id = ictx_.GenerateItemId(record_decl);
+    }
+  }
+
+  ictx_.MarkAsSuccessfullyImported(enum_decl);
   return Enum{
       .identifier = *enum_name,
       .id = ictx_.GenerateItemId(enum_decl),
@@ -80,6 +100,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
       .enumerators = enum_decl->isCompleteDefinition()
                          ? std::make_optional(std::move(enumerators))
                          : std::nullopt,
+      .enclosing_record_id = enclosing_record_id,
       .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(enum_decl),
   };
 }

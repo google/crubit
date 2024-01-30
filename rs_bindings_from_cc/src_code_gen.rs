@@ -3163,6 +3163,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                     )),
                 },
                 Item::Record(record) => RsTypeKind::new_record(record.clone(), &ir)?,
+                Item::Enum(enum_) => RsTypeKind::new_enum(enum_.clone(), &ir)?,
                 Item::TypeAlias(type_alias) => {
                     // TODO(b/200067824): support nested type aliases.
                     if type_alias.enclosing_record_id.is_some() {
@@ -3175,7 +3176,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                 Item::TypeMapOverride(type_map_override) => {
                     RsTypeKind::new_type_map_override(type_map_override)
                 }
-                other_item => bail!("Item does not define a type: {:?}", other_item),
+                other_item => bail!("Item does not define a type: {other_item:?}"),
             }
         }
         Some(name) => match name {
@@ -3278,6 +3279,21 @@ fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
             Ok(quote! { #tag_kind #namespace_qualifier #ident })
         }
         Item::Record(record) => cc_type_name_for_record(record, ir),
+        Item::Enum(enum_) => {
+            // TODO(jeanpierreda): the logic here is identical for type aliases and enums, and
+            // should PROBABLY be identical for records, too. So we should merge
+            // all of them, and we should even probably merge the parent
+            // namespace / parent record into a single parent_item field.
+            let ident = format_cc_ident(&enum_.identifier.identifier);
+            if let Some(record_id) = enum_.enclosing_record_id {
+                let parent =
+                    cc_tagless_type_name_for_record(ir.find_decl::<Rc<Record>>(record_id)?, ir)?;
+                Ok(quote! { #parent :: #ident })
+            } else {
+                let namespace_qualifier = ir.namespace_qualifier(enum_)?.format_for_cc()?;
+                Ok(quote! { #namespace_qualifier #ident })
+            }
+        }
         Item::TypeAlias(type_alias) => {
             let ident = format_cc_ident(&type_alias.identifier.identifier);
             if let Some(record_id) = type_alias.enclosing_record_id {

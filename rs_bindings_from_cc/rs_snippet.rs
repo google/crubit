@@ -321,6 +321,10 @@ pub enum RsTypeKind {
         record: Rc<Record>,
         crate_path: Rc<CratePath>,
     },
+    Enum {
+        enum_: Rc<Enum>,
+        crate_path: Rc<CratePath>,
+    },
     TypeAlias {
         type_alias: Rc<TypeAlias>,
         underlying_type: Rc<RsTypeKind>,
@@ -342,6 +346,15 @@ impl RsTypeKind {
             rs_imported_crate_name(&record.owning_target, ir),
         ));
         Ok(RsTypeKind::Record { record, crate_path })
+    }
+
+    pub fn new_enum(enum_: Rc<Enum>, ir: &IR) -> Result<Self> {
+        let crate_path = Rc::new(CratePath::new(
+            ir,
+            ir.namespace_qualifier(&enum_)?,
+            rs_imported_crate_name(&enum_.owning_target, ir),
+        ));
+        Ok(RsTypeKind::Enum { enum_, crate_path })
     }
 
     pub fn new_type_map_override(type_map_override: &TypeMapOverride) -> Self {
@@ -397,6 +410,7 @@ impl RsTypeKind {
                         Ok(CrubitFeature::Experimental.into())
                     }
                 }
+                RsTypeKind::Enum { .. } => Ok(CrubitFeature::Experimental.into()),
                 // the alias itself is extern_c, but the overall features require depends on the
                 // aliased type, which is also visited by dfs_iter.
                 RsTypeKind::TypeAlias { type_alias, .. } => {
@@ -562,6 +576,7 @@ impl RsTypeKind {
             RsTypeKind::RvalueReference { .. } => false,
             RsTypeKind::IncompleteRecord { .. } => false,
             RsTypeKind::Record { record, .. } => should_derive_copy(record),
+            RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
             RsTypeKind::Other { type_args, .. } => {
                 // All types that may appear here without `type_args` (e.g.
@@ -759,6 +774,10 @@ impl ToTokens for RsTypeKind {
                 let ident = make_rs_ident(record.rs_name.as_ref());
                 quote! { #crate_path #ident }
             }
+            RsTypeKind::Enum { enum_, crate_path } => {
+                let ident = make_rs_ident(&enum_.identifier.identifier);
+                quote! { #crate_path #ident }
+            }
             RsTypeKind::TypeAlias { type_alias, crate_path, .. } => {
                 let ident = make_rs_ident(&type_alias.identifier.identifier);
                 quote! { #crate_path #ident }
@@ -794,7 +813,8 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                 match curr {
                     RsTypeKind::Primitive { .. }
                     | RsTypeKind::IncompleteRecord { .. }
-                    | RsTypeKind::Record { .. } => {}
+                    | RsTypeKind::Record { .. }
+                    | RsTypeKind::Enum { .. } => {}
                     RsTypeKind::Pointer { pointee, .. } => self.todo.push(pointee),
                     RsTypeKind::Reference { referent, .. } => self.todo.push(referent),
                     RsTypeKind::RvalueReference { referent, .. } => self.todo.push(referent),

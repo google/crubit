@@ -85,6 +85,17 @@ TEST(TypeAlias, Alias);
 using ns::ExampleStruct;
 TEST(Using, ExampleStruct);
 
+namespace ns {
+enum ExampleEnum {};
+}  // namespace ns
+TEST(Enum, ns::ExampleEnum);
+
+using AliasEnum = ns::ExampleEnum;
+TEST(TypeAliasEnum, AliasEnum);
+// NOLINTNEXTLINE(google-global-names-in-headers)
+using ns::ExampleEnum;
+TEST(UsingEnum, ExampleEnum);
+
 struct CRUBIT_INTERNAL_RUST_TYPE("i8") MyI8Struct final {
   signed char x;
 };

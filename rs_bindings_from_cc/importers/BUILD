@@ -55,6 +55,7 @@ cc_library(
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
     ],
 )
 

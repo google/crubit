@@ -496,6 +496,7 @@ llvm::json::Value Enum::ToJson() const {
       {"source_loc", source_loc},
       {"underlying_type", underlying_type},
       {"enumerators", enumerators},
+      {"enclosing_record_id", enclosing_record_id},
       {"enclosing_namespace_id", enclosing_namespace_id},
   };
 

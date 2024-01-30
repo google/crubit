@@ -658,6 +658,7 @@ struct Enum {
   std::string source_loc;
   MappedType underlying_type;
   std::optional<std::vector<Enumerator>> enumerators;
+  std::optional<ItemId> enclosing_record_id;
   std::optional<ItemId> enclosing_namespace_id;
 };
 
