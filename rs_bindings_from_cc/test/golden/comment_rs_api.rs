@@ -204,8 +204,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasNoComment
 
 // e
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMMENT_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

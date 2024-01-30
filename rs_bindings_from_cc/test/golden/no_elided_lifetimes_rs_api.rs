@@ -133,8 +133,6 @@ forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate:
 // Error while generating bindings for item 'WrappedValue::operator+':
 // Expected first parameter to be a record or reference
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NO_ELIDED_LIFETIMES_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

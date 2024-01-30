@@ -548,8 +548,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TypedefUnion
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNIONS_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

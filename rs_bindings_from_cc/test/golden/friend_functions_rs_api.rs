@@ -99,8 +99,6 @@ pub fn multiple_declarations<'a>(__param_0: &'a crate::SomeClass) -> ::core::ffi
     unsafe { crate::detail::__rust_thunk___Z21multiple_declarationsRK9SomeClass(__param_0) }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_FRIEND_FUNCTIONS_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

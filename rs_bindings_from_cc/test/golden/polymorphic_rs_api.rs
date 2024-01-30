@@ -286,8 +286,6 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for PolymorphicDerive
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_POLYMORPHIC_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

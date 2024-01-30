@@ -304,8 +304,6 @@ pub mod r#impl {
 
 // namespace impl
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

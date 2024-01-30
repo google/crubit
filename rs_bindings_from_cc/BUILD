@@ -284,6 +284,7 @@ cc_library(
         "//rs_bindings_from_cc/importers:namespace",
         "//rs_bindings_from_cc/importers:type_alias",
         "//rs_bindings_from_cc/importers:type_map_override",
+        "@absl//absl/base:no_destructor",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
         "@absl//absl/log",

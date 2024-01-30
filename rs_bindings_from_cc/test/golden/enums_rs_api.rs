@@ -294,5 +294,3 @@ impl From<NonEmptyCharClass> for u8 {
         value.0
     }
 }
-
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ENUMS_H_

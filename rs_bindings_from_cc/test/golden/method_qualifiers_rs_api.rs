@@ -139,8 +139,6 @@ impl Inline {
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_METHOD_QUALIFIERS_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

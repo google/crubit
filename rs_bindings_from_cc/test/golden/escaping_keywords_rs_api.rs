@@ -80,8 +80,6 @@ pub fn r#impl(r#match: ::core::ffi::c_int) {
 // Error while generating bindings for item 'become':
 // Function templates are not supported yet
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ESCAPING_KEYWORDS_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

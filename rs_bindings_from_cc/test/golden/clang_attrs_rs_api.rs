@@ -267,8 +267,6 @@ pub mod template_with_preferred_name {
 
 // namespace template_with_preferred_name
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CLANG_ATTRS_H_
-
 /// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
 /// forward declaration of `basic_string_view` class template.
 #[derive(Clone, Copy)]

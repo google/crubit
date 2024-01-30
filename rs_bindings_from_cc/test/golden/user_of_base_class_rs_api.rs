@@ -266,8 +266,6 @@ unsafe impl oops::Inherits<inheritance_cc::VirtualBase2> for crate::VirtualDeriv
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_BASE_CLASS_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

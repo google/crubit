@@ -236,8 +236,6 @@ pub fn FunctionUsingNestedType() -> ::core::ffi::c_int {
     unsafe { crate::detail::__rust_thunk___Z23FunctionUsingNestedTypev() }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPEDEFS_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

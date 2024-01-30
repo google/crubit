@@ -97,8 +97,6 @@ pub mod test_namespace_bindings {
 
 // namespace test_namespace_bindings
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_SOURCE_ORDER_H_
-
 #[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "MyTemplate < TopLevel >")]

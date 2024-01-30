@@ -55,8 +55,6 @@ pub unsafe fn ConsumeArrayWithTypedef(__param_0: *mut ::core::ffi::c_int) {
     crate::detail::__rust_thunk___Z23ConsumeArrayWithTypedefPi(__param_0)
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_LIFETIMES_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

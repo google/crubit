@@ -81,8 +81,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UserOfImport
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_IMPORTED_TYPE_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

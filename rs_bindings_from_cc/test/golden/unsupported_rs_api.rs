@@ -195,8 +195,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ContainingSt
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
 // Nested classes are not supported yet
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

@@ -102,8 +102,6 @@ impl SomeClass {
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_STATIC_METHODS_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

@@ -106,8 +106,6 @@ pub mod test_namespace_bindings {
 
 // namespace test_namespace_bindings
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_PRIVATE_MEMBERS_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

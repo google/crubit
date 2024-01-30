@@ -1550,8 +1550,6 @@ impl<'b> ::core::ops::ShrAssign<&'b Self> for ManyOperators {
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OPERATORS_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

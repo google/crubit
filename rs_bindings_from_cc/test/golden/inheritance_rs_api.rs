@@ -807,8 +807,6 @@ unsafe impl oops::Inherits<crate::MethodBase2> for crate::MethodDerived {
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

@@ -148,8 +148,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AlignmentReg
 // Error while generating bindings for item 'AlignmentRegressionTest::(unnamed enum at ./rs_bindings_from_cc/test/golden/bitfields.h:26:3)':
 // Unnamed enums are not supported yet
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_BITFIELDS_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

@@ -938,8 +938,6 @@ pub fn ReturnsNonmovableByValue() -> impl ::ctor::Ctor<Output = crate::Nonmovabl
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

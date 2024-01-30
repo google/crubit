@@ -268,8 +268,6 @@ pub mod private_classes {
 
 // namespace private_classes
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_
-
 #[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "test_namespace_bindings :: MyTemplate < DifferentScope >")]

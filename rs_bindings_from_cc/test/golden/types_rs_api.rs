@@ -187,8 +187,6 @@ pub unsafe fn FunctionWithVoidPointers(
     crate::detail::__rust_thunk___Z24FunctionWithVoidPointersPvPKv(__param_0, __param_1)
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

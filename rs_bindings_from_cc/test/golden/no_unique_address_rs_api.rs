@@ -405,8 +405,6 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, u8, u8)> for FieldInTailPadding {
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_NO_UNIQUE_ADDRESS_NO_UNIQUE_ADDRESS_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

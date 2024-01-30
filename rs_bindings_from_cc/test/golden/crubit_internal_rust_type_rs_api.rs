@@ -109,8 +109,6 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TypeMapOverr
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CRUBIT_INTERNAL_RS_TYPE_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

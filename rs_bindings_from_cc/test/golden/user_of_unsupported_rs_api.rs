@@ -29,8 +29,6 @@ pub fn UseNontrivialCustomType(
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_UNSUPPORTED_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

@@ -47,8 +47,6 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Outer"), crate::Outer)
 // Error while generating bindings for item 'Outer::operator=':
 // Parameter #0 is not supported: Unsupported type 'Outer &&': Unsupported type: && without lifetime
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_PRIVATE_METHOD_H_
-
 const _: () = assert!(::core::mem::size_of::<crate::Outer>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::Outer>() == 1);
 const _: () = {

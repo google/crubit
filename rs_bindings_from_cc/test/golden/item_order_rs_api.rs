@@ -129,8 +129,6 @@ pub fn second_func() -> ::core::ffi::c_int {
     unsafe { crate::detail::__rust_thunk___Z11second_funcv() }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ITEM_ORDER_H_
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

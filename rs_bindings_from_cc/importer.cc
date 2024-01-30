@@ -20,6 +20,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
@@ -75,6 +76,16 @@ absl::Status CheckImportStatus(const std::optional<IR::Item>& item) {
     return absl::InvalidArgumentError(unsupported->message);
   }
   return absl::OkStatus();
+}
+
+// Returns true if the comment is boilerplate that should be filtered out.
+bool IsFilteredComment(const clang::SourceManager& sm,
+                       const clang::RawComment& comment) {
+  static absl::NoDestructor<llvm::Regex> kHeaderGuard("^// [A-Z_]*_H_ *$");
+  if (kHeaderGuard->match(comment.getRawText(sm))) {
+    return true;
+  }
+  return false;
 }
 }  // namespace
 
@@ -397,6 +408,7 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
            SourceLocationComparator>
       ordered_comments(compare_locations);
   for (auto& comment : comments_in_range) {
+    if (IsFilteredComment(sm, *comment)) continue;
     ordered_comments.insert({comment->getBeginLoc(), comment});
   }
 
