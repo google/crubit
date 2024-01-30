@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/function:example_lib
-// Features: experimental, extern_c, supported
+// Features: extern_c
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
@@ -14,16 +14,16 @@
 #![allow(nonstandard_style)]
 #![deny(warnings)]
 
-/// Generated from: examples/cpp/function/example.h;l=10
+/// Generated from: examples/cpp/function/example.h;l=11
 #[inline(always)]
-pub fn add_two_integers(x: i32, y: i32) -> i32 {
-    unsafe { crate::detail::__rust_thunk___Z16add_two_integersii(x, y) }
+pub fn crubit_add_two_integers(x: i32, y: i32) -> i32 {
+    unsafe { crate::detail::__rust_thunk___Z23crubit_add_two_integers(x, y) }
 }
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___Z16add_two_integersii(x: i32, y: i32) -> i32;
+        pub(crate) fn __rust_thunk___Z23crubit_add_two_integers(x: i32, y: i32) -> i32;
     }
 }
