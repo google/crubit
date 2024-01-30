@@ -415,8 +415,10 @@ impl RsTypeKind {
                 // them with opaque blobs.
                 //
                 // Instead, what matters is the abstract properties of the struct itself!
-                RsTypeKind::Record { .. } => {
-                    if rs_type_kind.is_unpin() {
+                RsTypeKind::Record { record, .. } => {
+                    // Types which aren't rust-movable, or which are template instantiations, are
+                    // only supported experimentally.
+                    if rs_type_kind.is_unpin() && record.defining_target.is_none() {
                         Ok(CrubitFeature::ExternC.into())
                     } else {
                         Ok(CrubitFeature::Experimental.into())

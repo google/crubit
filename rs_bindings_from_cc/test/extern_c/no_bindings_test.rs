@@ -89,6 +89,12 @@ fn test_unknown_attr_enum() {
     assert!(!type_exists!(no_bindings::UnknownAttrEnum));
 }
 
+#[test]
+fn test_templates() {
+    assert!(!type_exists!(no_bindings::TemplatedStruct));
+    assert!(!type_exists!(no_bindings::InstantiatedTemplatedStruct));
+}
+
 /// Function pointers, like most supported types, are only supported if their
 /// type dependencies are.
 #[test]

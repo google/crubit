@@ -33,6 +33,13 @@ enum [[deprecated]] UnknownAttrEnum {
   kConstant = 0,
 };
 
+template <typename T>
+struct TemplatedStruct {
+  T x;
+};
+
+using InstantiatedTemplatedStruct = TemplatedStruct<int>;
+
 extern "C" {
 inline void crubit_accepts_nontrivial_ptr(Nontrivial*) {}
 inline void crubit_accepts_nontrivial_value(Nontrivial) {}
