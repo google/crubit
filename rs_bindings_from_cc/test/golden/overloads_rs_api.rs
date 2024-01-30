@@ -56,5 +56,3 @@ mod detail {
         pub(crate) fn __rust_thunk___Z20AlsoTemplateOverloadv();
     }
 }
-
-const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());

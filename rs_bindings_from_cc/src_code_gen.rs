@@ -3042,15 +3042,6 @@ fn generate_bindings_tokens(
     ];
     let mut assertions = vec![];
 
-    // We import nullable pointers as an Option<&T> and assume that at the ABI
-    // level, None is represented as a zero pointer value whereas Some is
-    // represented as as non-zero pointer value. This seems like a pretty safe
-    // assumption to make, but to provide some safeguard, assert that
-    // `Option<&i32>` and `&i32` have the same size.
-    assertions.push(quote! {
-        const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
-    });
-
     let mut features = BTreeSet::new();
 
     // For #![rustfmt::skip].

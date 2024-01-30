@@ -51,8 +51,6 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Outer"), crate::Outer)
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_PRIVATE_METHOD_H_
 
-const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
-
 const _: () = assert!(::core::mem::size_of::<crate::Outer>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::Outer>() == 1);
 const _: () = {

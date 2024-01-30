@@ -415,8 +415,6 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
-
 const _: () = assert!(::core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
 const _: () = assert!(::core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
 const _: () = {

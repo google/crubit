@@ -299,5 +299,3 @@ impl From<NonEmptyCharClass> for u8 {
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ENUMS_H_
-
-const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());

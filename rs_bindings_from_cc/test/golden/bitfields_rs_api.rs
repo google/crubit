@@ -189,8 +189,6 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
-
 const _: () = assert!(::core::mem::size_of::<crate::WithBitfields>() == 32);
 const _: () = assert!(::core::mem::align_of::<crate::WithBitfields>() == 4);
 const _: () = {

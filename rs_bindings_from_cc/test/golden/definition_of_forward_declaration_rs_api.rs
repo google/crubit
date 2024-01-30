@@ -51,8 +51,6 @@ forward_declare::unsafe_define!(
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DEFINITION_OF_FORWARD_DECLARATION_H_
 
-const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
-
 const _: () = assert!(::core::mem::size_of::<crate::ForwardDeclaredStruct>() == 1);
 const _: () = assert!(::core::mem::align_of::<crate::ForwardDeclaredStruct>() == 1);
 const _: () = {

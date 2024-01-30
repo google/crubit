@@ -80,5 +80,3 @@ mod detail {
         );
     }
 }
-
-const _: () = assert!(::core::mem::size_of::<Option<&i32>>() == ::core::mem::size_of::<&i32>());
