@@ -21,10 +21,6 @@
 #![allow(nonstandard_style)]
 #![deny(warnings)]
 
-// Part of the Crubit project, under the Apache License v2.0 with LLVM
-// Exceptions. See /LICENSE for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-
 /// The same as Derived from inheritance.h, but in a different build target.
 ///
 /// This tests inheritance across library boundaries.

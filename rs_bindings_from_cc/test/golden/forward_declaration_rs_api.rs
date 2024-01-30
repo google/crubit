@@ -14,10 +14,6 @@
 #![allow(nonstandard_style)]
 #![deny(warnings)]
 
-// Part of the Crubit project, under the Apache License v2.0 with LLVM
-// Exceptions. See /LICENSE for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-
 forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
 
 // Intentionally forward declare this struct again, to ensure Crubit can handle

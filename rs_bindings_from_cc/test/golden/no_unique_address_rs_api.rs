@@ -21,10 +21,6 @@
 #![allow(nonstandard_style)]
 #![deny(warnings)]
 
-// Part of the Crubit project, under the Apache License v2.0 with LLVM
-// Exceptions. See /LICENSE for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-
 /// The no_unique_address.h header is present both in
 /// rs_bindings_from_cc/test/struct/no_unique_address/ and in
 /// rs_bindings_from_cc/test/golden/ because the format provides end-to-end

@@ -15,10 +15,6 @@
 #![allow(nonstandard_style)]
 #![deny(warnings)]
 
-// Part of the Crubit project, under the Apache License v2.0 with LLVM
-// Exceptions. See /LICENSE for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-
 // Type bindings for struct MyI8Struct suppressed due to being mapped to an existing Rust type (i8)
 const _: () = assert!(::core::mem::size_of::<i8>() == 1);
 const _: () = assert!(::core::mem::align_of::<i8>() == 1);

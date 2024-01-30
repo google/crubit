@@ -15,10 +15,6 @@
 #![allow(nonstandard_style)]
 #![deny(warnings)]
 
-// Part of the Crubit project, under the Apache License v2.0 with LLVM
-// Exceptions. See /LICENSE for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-
 // Error while generating bindings for item 'PtrDiff':
 // Unsupported type 'decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr))': Unsupported clang::Type class 'Decltype'
 

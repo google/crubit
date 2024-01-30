@@ -85,6 +85,17 @@ bool IsFilteredComment(const clang::SourceManager& sm,
   if (kHeaderGuard->match(comment.getRawText(sm))) {
     return true;
   }
+
+  // This one is a special case -- inside Crubit, we use a boilerplate license
+  // header at the top of all files. It's added to the top of the file of both
+  // the input and the output, and so we don't need to _repeat_ the version
+  // that originated in the input.
+  if (comment.getRawText(sm) ==
+      "// Part of the Crubit project, under the Apache License v2.0 with "
+      "LLVM\n// Exceptions. See /LICENSE for license information.\n// "
+      "SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception") {
+    return true;
+  }
   return false;
 }
 }  // namespace
