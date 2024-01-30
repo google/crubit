@@ -3126,9 +3126,7 @@ fn generate_bindings_tokens(
             #![allow(improper_ctypes)] __NEWLINE__
 
             // C++ names don't follow Rust guidelines:
-            #![allow(non_camel_case_types)] __NEWLINE__
-            #![allow(non_snake_case)] __NEWLINE__
-            #![allow(non_upper_case_globals)] __NEWLINE__
+            #![allow(nonstandard_style)] __NEWLINE__
 
             #![deny(warnings)] __NEWLINE__ __NEWLINE__
 

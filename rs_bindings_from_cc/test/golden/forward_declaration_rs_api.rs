@@ -11,9 +11,7 @@
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
 #![deny(warnings)]
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
