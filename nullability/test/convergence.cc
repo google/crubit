@@ -360,5 +360,21 @@ TEST(PointerNullabilityTest, WidenAfterContradictionArbitraryCondition) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, TriplyNestedForLoopSingleIteration) {
+  // The test is minimized from `ABSL_LOG_INTERNAL_STATEFUL_CONDITION`, which is
+  // used, for example, in the implementation of Abseil's `LOG_FIRST_N` logging
+  // macro.
+  // This used to cause a "maximum number of blocks processed" error.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target() {
+      for (bool b = true; b;)
+        for (int x; b;)
+          for (int c; b; b = false) {
+            (void)0;
+          }
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
