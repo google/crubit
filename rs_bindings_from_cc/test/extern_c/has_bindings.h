@@ -35,11 +35,17 @@ enum Enum {
   kUnkownAttrEnumerator [[deprecated]] = 1,
 };
 
+union Union {
+  int x;
+  int y;
+};
+
 inline void crubit_void_function() {}
 inline const void* crubit_void_ptr_identity(const void* x) { return x; }
 inline int crubit_add(int x, int y) { return x + y; }
 inline Struct crubit_anystruct(Struct x, const StructAlias*) { return x; }
 inline Enum crubit_enum_function(Enum x) { return x; }
+inline Union crubit_union_function(Union x) { return x; }
 
 // Note the use of references, rather than pointers. A C++ function reference
 // corresponds to a Rust function pointer, more or less.

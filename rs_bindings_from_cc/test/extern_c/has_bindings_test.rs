@@ -45,6 +45,13 @@ fn test_user_enum() {
 }
 
 #[test]
+fn test_user_union() {
+    // as close as one gets to verifying that it's a union. It is indeed a union!
+    let _: has_bindings::Union = has_bindings::Union { x: 1 };
+    let _: has_bindings::Union = has_bindings::Union { y: 3 };
+}
+
+#[test]
 fn test_alias() {
     assert_eq!(
         std::any::TypeId::of::<has_bindings::Struct>(),
@@ -56,11 +63,22 @@ fn test_alias() {
 fn test_crubit_add() {
     assert_eq!(has_bindings::crubit_add(1, 2), 3);
 }
+
 #[test]
 fn test_crubit_enum_function() {
     assert_eq!(
         has_bindings::crubit_enum_function(has_bindings::Enum::kEnumerator),
         has_bindings::Enum::kEnumerator
+    );
+}
+
+#[test]
+fn test_crubit_union_function() {
+    let u = has_bindings::crubit_union_function(has_bindings::Union { x: 42 });
+    assert_eq!(
+        // SAFETY: x is initialized, because crubit_union_function is the identity function.
+        unsafe { u.x },
+        42
     );
 }
 
