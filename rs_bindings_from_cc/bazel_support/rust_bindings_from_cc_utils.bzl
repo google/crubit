@@ -109,6 +109,11 @@ def generate_and_compile_bindings(
         extra_rs_srcs_relocated,
         deps_for_rs_file,
         crate_name,
+        # TODO(b/322303104) For now, we don't generate baseline_coverage.dat for generated rust
+        # bindings, because the baseline_coverage.dat this compile action generates conflicts with
+        # the .dat file with the underlying cc_library. Once bazel supports baseline_coverage.dat
+        # for aspects, we can remove this option.
+        include_coverage = False,
     )
 
     return [
