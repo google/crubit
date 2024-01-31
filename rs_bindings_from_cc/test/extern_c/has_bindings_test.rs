@@ -82,3 +82,22 @@ fn test_function_pointer() {
     }
     assert_eq!(state, 42);
 }
+
+#[test]
+fn test_nullable_function_pointer() {
+    extern "C" fn my_callback(a: *mut std::ffi::c_int) {
+        // SAFETY: we're going to pass it a valid pointer to an integer, it's OK!
+        unsafe {
+            *a = 42;
+        }
+    }
+    let f: has_bindings::NullableCallback = Some(my_callback);
+    let mut state = 0;
+
+    // SAFETY: this is the other half of the promise above. `state` is valid, and so
+    // this is safe.
+    unsafe {
+        has_bindings::crubit_invoke_nullable_callback(f, &mut state);
+    }
+    assert_eq!(state, 42);
+}

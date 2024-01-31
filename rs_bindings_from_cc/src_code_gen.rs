@@ -3248,6 +3248,15 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                 mutability: Mutability::Const,
                 lifetime: get_lifetime()?,
             },
+            "Option" => {
+                let mut type_args = get_type_args()?;
+                ensure!(
+                    type_args.len() == 1,
+                    "Option should have exactly 1 type argument (got {})",
+                    type_args.len()
+                );
+                RsTypeKind::Option(Rc::new(type_args.remove(0)))
+            }
             name => {
                 let mut type_args = get_type_args()?;
 

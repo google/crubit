@@ -331,6 +331,8 @@ pub enum RsTypeKind {
         crate_path: Rc<CratePath>,
     },
     Primitive(PrimitiveType),
+    /// Nullable T, using the rust Option type.
+    Option(Rc<RsTypeKind>),
     Other {
         name: Rc<str>,
         type_args: Rc<[RsTypeKind]>,
@@ -441,6 +443,7 @@ impl RsTypeKind {
                     }
                 }
                 RsTypeKind::Primitive { .. } => Ok(CrubitFeature::ExternC.into()),
+                RsTypeKind::Option { .. } => Ok(CrubitFeature::ExternC.into()),
                 RsTypeKind::Other { .. } => Ok(CrubitFeature::Experimental.into()),
             }
         }
@@ -598,6 +601,7 @@ impl RsTypeKind {
             RsTypeKind::Record { record, .. } => should_derive_copy(record),
             RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
+            RsTypeKind::Option(t) => t.implements_copy(),
             RsTypeKind::Other { type_args, .. } => {
                 // All types that may appear here without `type_args` (e.g.
                 // primitive types like `i32`) implement `Copy`. Generic types
@@ -728,6 +732,11 @@ impl RsTypeKind {
                     quote! { #crate_path #ident }
                 }
             }
+            RsTypeKind::Option(t) => {
+                let type_arg = t.to_token_stream_replacing_by_self(self_record);
+                // TODO(jeanpierreda): This should likely be `::core::option::Option`.
+                quote! {Option<#type_arg>}
+            }
             RsTypeKind::Other { name, type_args, .. } => {
                 let name: TokenStream = name.parse().expect("Invalid RsType::name in the IR");
                 let generic_params =
@@ -813,6 +822,10 @@ impl ToTokens for RsTypeKind {
                 quote! { #crate_path #ident }
             }
             RsTypeKind::Primitive(primitive) => quote! {#primitive},
+            RsTypeKind::Option(t) => {
+                // TODO(jeanpierreda): This should likely be `::core::option::Option`.
+                quote! {Option<#t>}
+            }
             RsTypeKind::Other { name, type_args, .. } => {
                 let name: TokenStream = name.parse().expect("Invalid RsType::name in the IR");
                 let generic_params =
@@ -853,6 +866,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                         self.todo.push(return_type);
                         self.todo.extend(param_types.iter().rev());
                     }
+                    RsTypeKind::Option(t) => self.todo.push(t),
                     RsTypeKind::Other { type_args, .. } => self.todo.extend(type_args.iter().rev()),
                 };
                 Some(curr)
