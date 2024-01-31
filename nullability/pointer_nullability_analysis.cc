@@ -1419,12 +1419,18 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
                                        Value &MergedVal,
                                        Environment &MergedEnv) {
   if (!isSupportedRawPointerType(Type)) {
-    return false;
+    return true;
   }
 
   if (!hasPointerNullState(cast<PointerValue>(Val1)) ||
       !hasPointerNullState(cast<PointerValue>(Val2))) {
-    return false;
+    // It can happen that we merge pointers without null state, if either or
+    // both of the pointers has not appeared in an expression (and has not
+    // otherwise been initialized with nullability properties) before the merge.
+    // We return true to keep the `MergedVal` produced by the framework. When
+    // the merged value appears in an expression, `tranferValue_Pointer` will
+    // take care of initializing it with nullability properties.
+    return true;
   }
 
   auto Nullability1 = getPointerNullState(cast<PointerValue>(Val1));
