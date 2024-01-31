@@ -6,41 +6,16 @@ Here we describe how Crubit maps
 
 ## Rust bindings for C++ `enum`s
 
-<!-- the example below is based on rs_bindings_from_cc/test/golden/enums.h -->
-
 For the following C++ header:
 
-```cpp
-enum Color {
-  kRed,
-  kBlue,
-  kGreen,
-};
+```live-snippet
+cs/file:examples/cpp/enum/example.h class:Color
 ```
 
 Crubit will generate the following bindings:
 
-```rust
-#[repr(transparent)]
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-pub struct Color(u32);
-impl Color {
-    pub const kRed: Color = Color(0);
-    pub const kBlue: Color = Color(1);
-    pub const kGreen: Color = Color(2);
-}
-
-impl From<u32> for Color {
-    fn from(value: u32) -> Color {
-        Color(value)
-    }
-}
-
-impl From<Color> for u32 {
-    fn from(value: Color) -> u32 {
-        value.0
-    }
-}
+```live-snippet
+cs/file:examples/cpp/enum/example_generated.rs content:^([^/\n])([^!\n]|$)[^\n]*
 ```
 
 <!-- the explanation below is based on b/208944813#comment1 -->
