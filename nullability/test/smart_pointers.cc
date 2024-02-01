@@ -28,6 +28,10 @@ const Nonnull<std::unique_ptr<int>> &returnNonnullRef();
 const Nullable<std::unique_ptr<int>> &returnNullableRef();
 const std::unique_ptr<int> &returnUnknownRef();
 
+const Nonnull<std::unique_ptr<int>> *returnPtrToNonnull();
+const Nullable<std::unique_ptr<int>> *returnPtrToNullable();
+const std::unique_ptr<int> *returnPtrToUnknown();
+
 TEST void parameterAnnotations(Nonnull<std::unique_ptr<int>> NonnullParam,
                                Nullable<std::unique_ptr<int>> NullableParam,
                                std::unique_ptr<int> UnknownParam) {
@@ -46,6 +50,25 @@ TEST void returnValueAnnotationsRef() {
   nonnull(returnNonnullRef());
   nullable(returnNullableRef());
   unknown(returnUnknownRef());
+}
+
+TEST void returnValueAnnotationsPtrToSmartPtr() {
+  nonnull(*returnPtrToNonnull());
+  nullable(*returnPtrToNullable());
+  unknown(*returnPtrToUnknown());
+}
+
+TEST void returnValueAnnotationsPtrToSmartPtrGet() {
+  // This is a crash repro.
+  // Call `get()` on the smart pointer with `->` syntax, so that there isn't
+  // a glvalue of smart pointer type in the AST. We used to crash on this
+  // because we didn't initialize the nullability properties on the contained
+  // raw pointer.
+  // Don't merge this test with the test above, or the `*` dereferences will
+  // cause the smart pointers to get initialized.
+  nonnull(returnPtrToNonnull()->get());
+  nullable(returnPtrToNullable()->get());
+  unknown(returnPtrToUnknown()->get());
 }
 
 TEST void outputParameters() {

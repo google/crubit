@@ -682,6 +682,42 @@ void transferValue_SmartPointer(
   initSmartPointerForExpr(PointerExpr, State);
 }
 
+void transferValue_SmartPointerArrowMemberExpr(
+    const MemberExpr *ME, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  // Most accesses of a smart pointer involve a glvalue of smart pointer type,
+  // and `transferValue_SmartPointer` will ensure in this case that the
+  // nullability properties of the underlying raw pointer are initialized.
+  // An exception to this is if we access members of a smart pointer using
+  // arrow syntax; in this case, there is no glvalue of smart pointer type,
+  // and this function handles initialization of the underlying raw pointer
+  // in this case.
+
+  const Expr &Base = *ME->getBase();
+  auto *BasePtrVal = State.Env.get<PointerValue>(Base);
+  if (BasePtrVal == nullptr) {
+    BasePtrVal = cast<PointerValue>(State.Env.createValue(Base.getType()));
+    State.Env.setValue(Base, *BasePtrVal);
+  }
+
+  auto &SmartPtrLoc = cast<RecordStorageLocation>(BasePtrVal->getPointeeLoc());
+  StorageLocation &PtrLoc = SmartPtrLoc.getSyntheticField(PtrField);
+  auto *PtrVal = State.Env.get<PointerValue>(PtrLoc);
+  if (PtrVal == nullptr) {
+    PtrVal = cast<PointerValue>(State.Env.createValue(PtrLoc.getType()));
+    State.Env.setValue(PtrLoc, *PtrVal);
+  }
+
+  PointerTypeNullability Nullability = NullabilityKind::Unspecified;
+  if (const auto *ExprNullability =
+          State.Lattice.getExprNullability(ME->getBase())) {
+    if (ExprNullability->size() >= 2) Nullability = (*ExprNullability)[1];
+  }
+
+  initPointerNullState(*PtrVal, State.Env.getDataflowAnalysisContext(),
+                       Nullability);
+}
+
 void transferValue_Pointer(absl::Nonnull<const Expr *> PointerExpr,
                            const MatchFinder::MatchResult &Result,
                            TransferState<PointerNullabilityLattice> &State) {
@@ -1317,6 +1353,8 @@ auto buildValueTransferer() {
                                         transferValue_NonConstMemberCall)
       .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(), transferValue_CallExpr)
       .CaseOfCFGStmt<Expr>(isSmartPointerGlValue(), transferValue_SmartPointer)
+      .CaseOfCFGStmt<MemberExpr>(isSmartPointerArrowMemberExpr(),
+                                 transferValue_SmartPointerArrowMemberExpr)
       .CaseOfCFGStmt<Expr>(isPointerExpr(), transferValue_Pointer)
       // Handles comparison between 2 pointers.
       .CaseOfCFGStmt<BinaryOperator>(isPointerCheckBinOp(),

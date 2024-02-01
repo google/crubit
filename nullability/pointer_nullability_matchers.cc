@@ -43,6 +43,7 @@ using ast_matchers::hasCanonicalType;
 using ast_matchers::hasCastKind;
 using ast_matchers::hasDeclaration;
 using ast_matchers::hasName;
+using ast_matchers::hasObjectExpression;
 using ast_matchers::hasOperands;
 using ast_matchers::hasOperatorName;
 using ast_matchers::hasOverloadedOperatorName;
@@ -57,6 +58,8 @@ using ast_matchers::isInStdNamespace;
 using ast_matchers::isMemberInitializer;
 using ast_matchers::memberExpr;
 using ast_matchers::parameterCountIs;
+using ast_matchers::pointee;
+using ast_matchers::pointerType;
 using ast_matchers::returnStmt;
 using ast_matchers::statementCountIs;
 using ast_matchers::thisPointerType;
@@ -111,6 +114,11 @@ Matcher<Stmt> isNonConstMemberCall() {
 
 Matcher<Stmt> isSmartPointerGlValue() {
   return expr(hasType(isSupportedSmartPointer()), isGLValue());
+}
+
+Matcher<Stmt> isSmartPointerArrowMemberExpr() {
+  return memberExpr(hasObjectExpression(
+      hasType(pointerType(pointee(isSupportedSmartPointer())))));
 }
 
 Matcher<Stmt> isSmartPointerConstructor() {
