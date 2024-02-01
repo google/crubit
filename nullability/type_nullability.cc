@@ -14,6 +14,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTFwd.h"
 #include "clang/AST/Attr.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/TemplateName.h"
@@ -75,36 +76,85 @@ static bool hasAbslNullabilityCompatibleTag(const CXXRecordDecl *RD) {
   return RD->lookup(It->getValue()).find_first<TypedefNameDecl>() != nullptr;
 }
 
+static absl::Nullable<CXXRecordDecl *> getBaseDecl(
+    const CXXBaseSpecifier &Base) {
+  if (CXXRecordDecl *RD = Base.getType()->getAsCXXRecordDecl()) return RD;
+  // If we didn't get a `CXXRecordDecl` above, this could be something like
+  // `unique_ptr<T>` (where `T` is a dependent type). In this case, return the
+  // `CXXRecordDecl` of the underlying template -- it's the best we can do.
+  if (const auto *TST = Base.getType()->getAs<TemplateSpecializationType>())
+    return dyn_cast<CXXRecordDecl>(
+        TST->getTemplateName().getAsTemplateDecl()->getTemplatedDecl());
+  return nullptr;
+}
+
+/// If `RD` or one of its public bases is a smart pointer class, returns that
+/// smart pointer class; otherwise, returns null.
+static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
+    absl::Nullable<const CXXRecordDecl *> RD) {
+  if (RD == nullptr) return nullptr;
+
+  if (isStandardSmartPointerDecl(RD) || hasAbslNullabilityCompatibleTag(RD))
+    return RD;
+
+  if (RD->hasDefinition())
+    for (const CXXBaseSpecifier &Base : RD->bases())
+      if (Base.getAccessSpecifier() == AS_public) {
+        if (const CXXRecordDecl *BaseClass =
+                getSmartPointerBaseClass(getBaseDecl(Base)))
+          return BaseClass;
+      }
+
+  return nullptr;
+}
+
 QualType underlyingRawPointerType(QualType T) {
   if (!SmartPointersEnabled) return QualType();
 
   const CXXRecordDecl *RD = T.getCanonicalType()->getAsCXXRecordDecl();
   if (RD == nullptr) return QualType();
 
-  if (!isStandardSmartPointerDecl(RD) && !hasAbslNullabilityCompatibleTag(RD))
-    return QualType();
-
   const ASTContext &ASTCtx = RD->getASTContext();
+
+  // There's a special case we need to handle here:
+  // If `RD` is a `ClassTemplateSpecializationDecl` for an uninstantiated
+  // specialization of a smart pointer (or a class derived from it), it's just
+  // an empty shell -- it doesn't contain any base specifiers or any of the type
+  // aliases we need (`absl_nullability_compatible`, `pointer`, `element_type`).
+  // We deal with this as follows:
+  // *  We check the primary template for base classes and the
+  //    `absl_nullability_compatible` type alias.
+  // *  We extract the underlying pointer type from the template argument (as
+  //    that's the best we can do).
+  if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD);
+      CTSD && !CTSD->hasDefinition()) {
+    if (getSmartPointerBaseClass(
+            CTSD->getSpecializedTemplate()->getTemplatedDecl()) == nullptr)
+      return QualType();
+
+    if (CTSD->getTemplateArgs().size() == 0) return QualType();
+    if (CTSD->getTemplateArgs()[0].getKind() != TemplateArgument::Type)
+      return QualType();
+
+    QualType TemplateArg = CTSD->getTemplateArgs()[0].getAsType();
+    return ASTCtx.getPointerType(ASTCtx.getBaseElementType(TemplateArg));
+  }
+
+  const CXXRecordDecl *SmartPtrDecl = getSmartPointerBaseClass(RD);
+  if (SmartPtrDecl == nullptr) return QualType();
+
   const auto &Idents = ASTCtx.Idents;
   if (auto PointerIt = Idents.find("pointer"); PointerIt != Idents.end()) {
-    if (auto *TND =
-            RD->lookup(PointerIt->getValue()).find_first<TypedefNameDecl>())
+    if (auto *TND = SmartPtrDecl->lookup(PointerIt->getValue())
+                        .find_first<TypedefNameDecl>())
       return TND->getUnderlyingType();
   }
   if (auto PointerIt = Idents.find("element_type"); PointerIt != Idents.end()) {
-    if (auto *TND =
-            RD->lookup(PointerIt->getValue()).find_first<TypedefNameDecl>())
+    if (auto *TND = SmartPtrDecl->lookup(PointerIt->getValue())
+                        .find_first<TypedefNameDecl>())
       return ASTCtx.getPointerType(TND->getUnderlyingType());
   }
-
-  auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD);
-  if (CTSD == nullptr) return QualType();
-  if (CTSD->getTemplateArgs().size() == 0) return QualType();
-  if (CTSD->getTemplateArgs()[0].getKind() != TemplateArgument::Type)
-    return QualType();
-
-  QualType TemplateArg = CTSD->getTemplateArgs()[0].getAsType();
-  return ASTCtx.getPointerType(ASTCtx.getBaseElementType(TemplateArg));
+  return QualType();
 }
 
 PointerTypeNullability PointerTypeNullability::createSymbolic(

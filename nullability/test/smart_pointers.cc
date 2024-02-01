@@ -565,3 +565,16 @@ TEST void userDefinedSmartPointers(
 }
 
 }  // namespace user_defined_smart_pointers
+
+namespace derived_from_unique_ptr {
+
+template <typename T>
+class DerivedPtr : public std::unique_ptr<T> {};
+
+// This is a crash repro.
+TEST void derivedFromUniquePtr(Nonnull<DerivedPtr<int>> Ptr) {
+  nonnull(Ptr);
+  nonnull(Ptr.get());
+}
+
+}  // namespace derived_from_unique_ptr

@@ -95,11 +95,13 @@ TEST(PointerNullabilityTest, MatchSmartPointerMethodCall) {
     namespace std {
     template <class T>
     struct unique_ptr {
+      using pointer = T *;
       T *get() const;
     };
     }  // namespace std
     template <class T>
     struct MyUniquePtr {
+      using pointer = T *;
       T *get() const;
     };
   )cc");
@@ -123,11 +125,13 @@ TEST(PointerNullabilityTest, MatchSmartPointerBoolConversionCall) {
     namespace std {
     template <class T>
     struct unique_ptr {
+      using pointer = T*;
       explicit operator bool() const;
     };
     }  // namespace std
     template <class T>
     struct MyUniquePtr {
+      using pointer = T*;
       explicit operator bool() const;
     };
   )cc");

@@ -96,6 +96,13 @@ TEST_F(PointerTypeTest, IsSupportedSmartPointerType) {
     using SugaredPointer = UniquePointer;
 
     template <typename T>
+    struct PublicDerived : public std::unique_ptr<T> {};
+    template <typename T>
+    struct PrivateDerived : private std::unique_ptr<T> {};
+    using PublicDerivedPointer = PublicDerived<int>;
+    using PrivateDerivedPointer = PrivateDerived<int>;
+
+    template <typename T>
     struct UserDefinedSmartPointer {
       using absl_nullability_compatible = void;
     };
@@ -114,6 +121,10 @@ TEST_F(PointerTypeTest, IsSupportedSmartPointerType) {
       underlying("UniquePointerWrongNamespace", AST)));
   EXPECT_TRUE(isSupportedSmartPointerType(underlying("SugaredPointer", AST)));
   EXPECT_TRUE(isSupportedSmartPointerType(underlying("UserDefined", AST)));
+  EXPECT_TRUE(
+      isSupportedSmartPointerType(underlying("PublicDerivedPointer", AST)));
+  EXPECT_FALSE(
+      isSupportedSmartPointerType(underlying("PrivateDerivedPointer", AST)));
   EXPECT_FALSE(
       isSupportedSmartPointerType(underlying("ContainsPointers", AST)));
 }
@@ -139,6 +150,9 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     }  // namespace std
 
     template <typename T>
+    struct PublicDerived : public std::unique_ptr<T> {};
+
+    template <typename T>
     struct UserDefinedSmartPointer {
       using absl_nullability_compatible = void;
       using pointer = char *;
@@ -146,6 +160,7 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
 
     using UniquePointer = std::unique_ptr<int>;
     using SharedPointer = std::shared_ptr<int>;
+    using PublicDerivedPointer = PublicDerived<int>;
     using UserDefined = UserDefinedSmartPointer<int>;
     // Force the compiler to instantiate the templates. Otherwise, the
     // `ClassTemplateSpecializationDecl` won't contain a `TypedefNameDecl` for
@@ -153,6 +168,7 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     // use the fallback behavior of looking at the template argument.
     template class std::unique_ptr<int>;
     template class std::shared_ptr<int>;
+    template class PublicDerived<int>;
     template class UserDefinedSmartPointer<int>;
   )cpp");
 
@@ -160,6 +176,8 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
   EXPECT_EQ(underlyingRawPointerType(underlying("UniquePointer", AST)),
             PointerToCharTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("SharedPointer", AST)),
+            PointerToCharTy);
+  EXPECT_EQ(underlyingRawPointerType(underlying("PublicDerivedPointer", AST)),
             PointerToCharTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("UserDefined", AST)),
             PointerToCharTy);
@@ -183,6 +201,10 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
     using ArraySharedPointer = std::shared_ptr<int[]>;
 
     template <typename T>
+    struct PublicDerived : public std::unique_ptr<T> {};
+    using PublicDerivedPointer = PublicDerived<int>;
+
+    template <typename T>
     using Nullable [[clang::annotate("Nullable")]] = T;
     using NullableUniquePointer = Nullable<std::unique_ptr<int>>;
   )cpp");
@@ -195,6 +217,9 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
   EXPECT_EQ(underlyingRawPointerType(underlying("SharedPointer", AST)),
             PointerToIntTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("ArraySharedPointer", AST)),
+            PointerToIntTy);
+
+  EXPECT_EQ(underlyingRawPointerType(underlying("PublicDerivedPointer", AST)),
             PointerToIntTy);
 
   EXPECT_EQ(underlyingRawPointerType(underlying("NullableUniquePointer", AST)),
