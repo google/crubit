@@ -778,7 +778,7 @@ impl GenericItem for TypeAlias {
         Some(self.source_loc.clone())
     }
     fn unknown_attr(&self) -> Option<Rc<str>> {
-        None // TODO(b/314838274): Implement this.
+        self.unknown_attr.clone()
     }
 }
 
