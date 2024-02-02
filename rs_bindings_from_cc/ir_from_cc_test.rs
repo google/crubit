@@ -96,7 +96,7 @@ fn test_function() {
                 is_member_or_descendant_of_class_template: false,
                 source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
                 id: ItemId(...),
-                enclosing_namespace_id: None,
+                enclosing_item_id: None,
                 adl_enclosing_record: None,
             }
         }
@@ -1019,8 +1019,7 @@ fn test_typedef() -> Result<()> {
             unknown_attr: None,
             underlying_type: #int,
             source_loc: ...
-            enclosing_record_id: None,
-            enclosing_namespace_id: None,
+            enclosing_item_id: None,
           }
         }
     );
@@ -1035,8 +1034,7 @@ fn test_typedef() -> Result<()> {
             unknown_attr: None,
             underlying_type: #int,
             source_loc: ...,
-            enclosing_record_id: None,
-            enclosing_namespace_id: None,
+            enclosing_item_id: None,
           }
         }
     );
@@ -1131,7 +1129,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
                 access: Public,
                 offset: 0, ...
             }], ...
-            enclosing_namespace_id: None, ...
+            enclosing_item_id: None, ...
           }
         }
     );
@@ -1240,7 +1238,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
                 access: Public,
                 offset: 0, ...
             }], ...
-            enclosing_namespace_id: None, ...
+            enclosing_item_id: None, ...
           }
         }
     );
@@ -2620,14 +2618,14 @@ fn test_struct_forward_declaration_in_namespace() -> Result<()> {
                 name: "MyNamespace" ...
                 id: ItemId(#ns_id) ...
                 child_item_ids: [ItemId(#child_id)] ...
-                enclosing_namespace_id: None ...
+                enclosing_item_id: None ...
             }),
             IncompleteRecord(IncompleteRecord {
                 cc_name: "FwdDeclared" ...
                 rs_name: "FwdDeclared" ...
                 id: ItemId(#child_id) ...
                 ...
-                enclosing_namespace_id: Some(ItemId(#ns_id)) ...
+                enclosing_item_id: Some(ItemId(#ns_id)) ...
             }),
         }
     );
@@ -3453,7 +3451,7 @@ fn test_nested_namespace_definition() {
 }
 
 #[test]
-fn test_enclosing_namespace_ids() {
+fn test_enclosing_item_ids() {
     let ir = ir_from_cc(
         r#"
         namespace test_namespace_bindings {
@@ -3480,8 +3478,8 @@ fn test_enclosing_namespace_ids() {
     let namespace_items: Vec<&Item> =
         namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
 
-    assert_eq!(namespace.enclosing_namespace_id, None);
-    assert!(namespace_items.iter().all(|item| item.enclosing_namespace_id() == Some(namespace.id)));
+    assert_eq!(namespace.enclosing_item_id, None);
+    assert!(namespace_items.iter().all(|item| item.enclosing_item_id() == Some(namespace.id)));
 
     let inner_namespace = ir.namespaces().find(|n| n.name == ir_id("inner")).unwrap();
     let inner_namespace_items: Vec<&Item> =
@@ -3490,7 +3488,7 @@ fn test_enclosing_namespace_ids() {
     assert!(
         inner_namespace_items
             .iter()
-            .all(|item| item.enclosing_namespace_id() == Some(inner_namespace.id))
+            .all(|item| item.enclosing_item_id() == Some(inner_namespace.id))
     );
 
     let record = ir.records().find(|r| r.rs_name.as_ref() == "S").unwrap();
@@ -3501,7 +3499,7 @@ fn test_enclosing_namespace_ids() {
             Item::UnsupportedItem(_) => {}
             Item::Comment(_) => {}
             _ => {
-                assert!(item.enclosing_namespace_id() == Some(namespace.id));
+                assert!(item.enclosing_item_id() == Some(record.id));
             }
         }
     }
@@ -3755,7 +3753,7 @@ fn test_function_redeclared_as_friend() {
                         ItemId(...),
                         ItemId(#function_id),
                     ] ...
-                    enclosing_namespace_id: None ...
+                    enclosing_item_id: None ...
                 }),
                 Func(Func { name: Constructor ...  }),
                 Func(Func { name: Constructor ...  }),
@@ -3765,7 +3763,7 @@ fn test_function_redeclared_as_friend() {
                 UnsupportedItem(UnsupportedItem { name: "SomeClass::operator=" ...  }),
                 Func(Func {
                     name: "bar" ...
-                    enclosing_namespace_id: None ...
+                    enclosing_item_id: None ...
                     adl_enclosing_record: Some(ItemId(...)) ...
                 }),
             ],
@@ -3805,11 +3803,11 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
                 Namespace(Namespace {
                     name: "ns" ...
                     child_item_ids: [ItemId(#function_id)] ...
-                    enclosing_namespace_id: None ...
+                    enclosing_item_id: None ...
                 }),
                 Func(Func {
                     name: "f" ...
-                    enclosing_namespace_id: Some(ItemId(...)) ...
+                    enclosing_item_id: Some(ItemId(...)) ...
                 }),
                 Namespace(Namespace {
                     name: "ns" ...

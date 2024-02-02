@@ -80,8 +80,8 @@ class Importer final : public ImportContext {
 
   ItemId GenerateItemId(const clang::Decl* decl) const override;
   ItemId GenerateItemId(const clang::RawComment* comment) const override;
-  std::optional<ItemId> GetEnclosingNamespaceId(
-      const clang::Decl* decl) const override;
+  absl::StatusOr<std::optional<ItemId>> GetEnclosingItemId(
+      clang::Decl* decl) override;
 
   std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) override;
   std::string GetMangledName(const clang::NamedDecl* named_decl) const override;

@@ -6,7 +6,7 @@
 //! `rs_bindings_from_cc/ir.h` for more
 //! information.
 
-use arc_anyhow::{anyhow, bail, Context, Error, Result};
+use arc_anyhow::{anyhow, bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, NamespaceQualifier};
 use once_cell::unsync::OnceCell;
 use proc_macro2::{Ident, TokenStream};
@@ -479,7 +479,7 @@ pub struct Func {
     pub is_member_or_descendant_of_class_template: bool,
     pub source_loc: Rc<str>,
     pub id: ItemId,
-    pub enclosing_namespace_id: Option<ItemId>,
+    pub enclosing_item_id: Option<ItemId>,
     pub adl_enclosing_record: Option<ItemId>,
 }
 
@@ -588,7 +588,7 @@ pub struct IncompleteRecord {
     /// default-closed and do not expose functions with unknown attributes.
     pub unknown_attr: Option<Rc<str>>,
     pub record_type: RecordType,
-    pub enclosing_namespace_id: Option<ItemId>,
+    pub enclosing_item_id: Option<ItemId>,
 }
 
 impl GenericItem for IncompleteRecord {
@@ -666,7 +666,7 @@ pub struct Record {
     pub is_aggregate: bool,
     pub is_anon_record_with_typedef: bool,
     pub child_item_ids: Vec<ItemId>,
-    pub enclosing_namespace_id: Option<ItemId>,
+    pub enclosing_item_id: Option<ItemId>,
 }
 
 impl GenericItem for Record {
@@ -724,8 +724,7 @@ pub struct Enum {
     pub enumerators: Option<Vec<Enumerator>>,
     /// A human-readable list of attributes that Crubit doesn't understand.
     pub unknown_attr: Option<Rc<str>>,
-    pub enclosing_record_id: Option<ItemId>,
-    pub enclosing_namespace_id: Option<ItemId>,
+    pub enclosing_item_id: Option<ItemId>,
 }
 
 impl GenericItem for Enum {
@@ -763,8 +762,7 @@ pub struct TypeAlias {
     pub unknown_attr: Option<Rc<str>>,
     pub underlying_type: MappedType,
     pub source_loc: Rc<str>,
-    pub enclosing_record_id: Option<ItemId>,
-    pub enclosing_namespace_id: Option<ItemId>,
+    pub enclosing_item_id: Option<ItemId>,
 }
 
 impl GenericItem for TypeAlias {
@@ -891,7 +889,7 @@ pub struct Namespace {
     pub owning_target: BazelLabel,
     #[serde(default)]
     pub child_item_ids: Vec<ItemId>,
-    pub enclosing_namespace_id: Option<ItemId>,
+    pub enclosing_item_id: Option<ItemId>,
     pub is_inline: bool,
 }
 
@@ -1022,14 +1020,14 @@ impl GenericItem for Item {
 }
 
 impl Item {
-    pub fn enclosing_namespace_id(&self) -> Option<ItemId> {
+    pub fn enclosing_item_id(&self) -> Option<ItemId> {
         match self {
-            Item::Record(record) => record.enclosing_namespace_id,
-            Item::IncompleteRecord(record) => record.enclosing_namespace_id,
-            Item::Enum(enum_) => enum_.enclosing_namespace_id,
-            Item::Func(func) => func.enclosing_namespace_id,
-            Item::Namespace(namespace) => namespace.enclosing_namespace_id,
-            Item::TypeAlias(type_alias) => type_alias.enclosing_namespace_id,
+            Item::Record(record) => record.enclosing_item_id,
+            Item::IncompleteRecord(record) => record.enclosing_item_id,
+            Item::Enum(enum_) => enum_.enclosing_item_id,
+            Item::Func(func) => func.enclosing_item_id,
+            Item::Namespace(namespace) => namespace.enclosing_item_id,
+            Item::TypeAlias(type_alias) => type_alias.enclosing_item_id,
             Item::Comment(..) => None,
             Item::UnsupportedItem(..) => None,
             Item::UseMod(..) => None,
@@ -1059,6 +1057,23 @@ impl Item {
             Item::Namespace(ns) => Some(&ns.owning_target),
             Item::UseMod(..) => None,
             Item::TypeMapOverride(type_override) => Some(&type_override.owning_target),
+        }
+    }
+
+    /// Returns true if this corresponds to the definition of a new name for a
+    /// type.
+    pub fn is_type_definition(&self) -> bool {
+        match self {
+            Item::Func(_) => false,
+            Item::IncompleteRecord(_) => true,
+            Item::Record(_) => true,
+            Item::Enum(_) => true,
+            Item::TypeAlias(_) => true,
+            Item::UnsupportedItem(_) => false,
+            Item::Comment(_) => false,
+            Item::Namespace(_) => false,
+            Item::UseMod(_) => false,
+            Item::TypeMapOverride(_) => false,
         }
     }
 }
@@ -1327,7 +1342,7 @@ impl IR {
         })
     }
 
-    fn find_untyped_decl(&self, decl_id: ItemId) -> &Item {
+    pub fn find_untyped_decl(&self, decl_id: ItemId) -> &Item {
         let idx = *self
             .item_id_to_item_idx
             .get(&decl_id)
@@ -1434,13 +1449,19 @@ impl IR {
     pub fn namespace_qualifier(&self, item: &impl GenericItem) -> Result<NamespaceQualifier> {
         let mut namespaces = vec![];
         let item: &Item = self.find_decl(item.id())?;
-        let mut enclosing_namespace_id = item.enclosing_namespace_id();
-        while let Some(parent_id) = enclosing_namespace_id {
-            let namespace_item = self.find_decl(parent_id)?;
-            match namespace_item {
+        let mut enclosing_item_id = item.enclosing_item_id();
+        while let Some(parent_id) = enclosing_item_id {
+            match self.find_decl(parent_id)? {
                 Item::Namespace(ns) => {
                     namespaces.push(ns.name.identifier.clone());
-                    enclosing_namespace_id = ns.enclosing_namespace_id;
+                    enclosing_item_id = ns.enclosing_item_id;
+                }
+                // TODO(b/200067824): This can lead to bugs, if this is used without checking for a
+                // parent struct. This function will likely need to be expanded to navigate into
+                // records, as part of b/200067824.
+                Item::Record { .. } => {
+                    ensure!(namespaces.is_empty(), "Found namespaces inside of a record");
+                    break;
                 }
                 _ => {
                     bail!("Expected namespace");

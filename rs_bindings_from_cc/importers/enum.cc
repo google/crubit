@@ -74,22 +74,10 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     });
   }
 
-  std::optional<ItemId> enclosing_record_id = std::nullopt;
-  if (clang::DeclContext* decl_context = enum_decl->getDeclContext()) {
-    if (decl_context->isFunctionOrMethod()) {
-      return std::nullopt;
-    }
-    // TODO(jeanpierreda): The logic for populating enclosing_record_id is
-    // common across everything that has the field, and should be shared.
-    // Also, should report e.g. the name of the parent that could not be
-    // imported.
-    if (auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl_context)) {
-      if (!ictx_.EnsureSuccessfullyImported(record_decl)) {
-        return ictx_.ImportUnsupportedItem(enum_decl,
-                                           "Couldn't import the parent");
-      }
-      enclosing_record_id = ictx_.GenerateItemId(record_decl);
-    }
+  auto enclosing_item_id = ictx_.GetEnclosingItemId(enum_decl);
+  if (!enclosing_item_id.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        enum_decl, std::string(enclosing_item_id.status().message()));
   }
 
   ictx_.MarkAsSuccessfullyImported(enum_decl);
@@ -103,8 +91,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
                          ? std::make_optional(std::move(enumerators))
                          : std::nullopt,
       .unknown_attr = CollectUnknownAttrs(*enum_decl),
-      .enclosing_record_id = enclosing_record_id,
-      .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(enum_decl),
+      .enclosing_item_id = *std::move(enclosing_item_id),
   };
 }
 

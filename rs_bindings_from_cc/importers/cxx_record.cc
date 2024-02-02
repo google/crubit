@@ -292,16 +292,21 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     }
   }
 
+  auto enclosing_item_id = ictx_.GetEnclosingItemId(record_decl);
+  if (!enclosing_item_id.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        record_decl, std::string(enclosing_item_id.status().message()));
+  }
+
   ictx_.MarkAsSuccessfullyImported(record_decl);
   if (!record_decl->isCompleteDefinition()) {
-    return IncompleteRecord{
-        .cc_name = std::move(cc_name),
-        .rs_name = std::move(rs_name),
-        .id = ictx_.GenerateItemId(record_decl),
-        .owning_target = ictx_.GetOwningTarget(record_decl),
-        .unknown_attr = std::move(unknown_attr),
-        .record_type = *record_type,
-        .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(record_decl)};
+    return IncompleteRecord{.cc_name = std::move(cc_name),
+                            .rs_name = std::move(rs_name),
+                            .id = ictx_.GenerateItemId(record_decl),
+                            .owning_target = ictx_.GetOwningTarget(record_decl),
+                            .unknown_attr = std::move(unknown_attr),
+                            .record_type = *record_type,
+                            .enclosing_item_id = *std::move(enclosing_item_id)};
   }
 
   ictx_.sema_.ForceDeclarationOfImplicitMembers(record_decl);
@@ -350,7 +355,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .is_explicit_class_template_instantiation_definition =
           is_explicit_class_template_instantiation_definition,
       .child_item_ids = std::move(item_ids),
-      .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(record_decl),
+      .enclosing_item_id = *std::move(enclosing_item_id),
   };
 
   // If the align attribute was attached to the typedef decl, we should

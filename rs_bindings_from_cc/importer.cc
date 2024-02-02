@@ -387,16 +387,26 @@ ItemId Importer::GenerateItemId(const clang::RawComment* comment) const {
   return ItemId(reinterpret_cast<uintptr_t>(comment));
 }
 
-std::optional<ItemId> Importer::GetEnclosingNamespaceId(
-    const clang::Decl* decl) const {
-  auto enclosing_namespace =
-      decl->getDeclContext()->getEnclosingNamespaceContext();
-  if (enclosing_namespace->isTranslationUnit()) return std::nullopt;
+absl::StatusOr<std::optional<ItemId>> Importer::GetEnclosingItemId(
+    clang::Decl* decl) {
+  clang::DeclContext* decl_context = decl->getDeclContext();
 
   // Class template specializations are always emitted in the top-level
   // namespace.  See also Importer::GetOrderedItemIdsOfTemplateInstantiations.
   if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl))
     return std::nullopt;
+
+  if (decl_context->isFunctionOrMethod()) {
+    return std::nullopt;
+  }
+  if (auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl_context)) {
+    if (!EnsureSuccessfullyImported(record_decl)) {
+      return absl::InvalidArgumentError("Couldn't import the parent");
+    }
+    return GenerateItemId(record_decl);
+  }
+  auto enclosing_namespace = decl_context->getEnclosingNamespaceContext();
+  if (enclosing_namespace->isTranslationUnit()) return std::nullopt;
 
   auto namespace_decl = clang::cast<clang::NamespaceDecl>(enclosing_namespace);
   return GenerateItemId(namespace_decl);

@@ -2784,7 +2784,15 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
         Item::Record(record) => generate_record(db, record)?,
         Item::Enum(enum_) => generate_enum(db, enum_)?,
         Item::TypeAlias(type_alias) => {
-            if type_alias.enclosing_record_id.is_some() {
+            let parent = match type_alias.enclosing_item_id {
+                None => None,
+                Some(id) => {
+                    let parent: &ir::Item = ir.find_untyped_decl(id);
+                    Some(parent)
+                }
+            };
+            // TODO(b/200067824): support nested type aliases.
+            if let Some(ir::Item::Record(_)) = parent {
                 // TODO(b/200067824): support nested type aliases.
                 generate_unsupported(
                     db,
@@ -2869,6 +2877,11 @@ enum NoBindingsReason {
         context: Rc<str>,
         error: Error,
     },
+    /// This is directly unsupported.
+    Unsupported {
+        context: Rc<str>,
+        error: Error,
+    },
 }
 
 #[must_use]
@@ -2893,6 +2906,23 @@ fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
                 missing_features,
                 target: target.clone(),
             });
+        }
+    }
+
+    // TODO(b/200067824): Allow nested type items inside records.
+    // Type aliases are special, because they can be replaced by the aliased type.
+    // All other types cannot be defined inside a record.
+    if item.is_type_definition() && !matches!(item, ir::Item::TypeAlias(_)) {
+        if let Some(id) = item.enclosing_item_id() {
+            let parent: &ir::Item = ir.find_untyped_decl(id);
+            if let ir::Item::Record(_) = parent {
+                return HasBindings::No(NoBindingsReason::Unsupported {
+                    context: item.debug_name(&ir),
+                    error: anyhow!(
+                        "b/200067824: type definitions nested inside records are not yet supported"
+                    ),
+                });
+            }
         }
     }
 
@@ -2921,6 +2951,9 @@ impl From<NoBindingsReason> for Error {
             }
             NoBindingsReason::DependencyFailed { context, error } => error.context(format!(
                 "Can't generate bindings for {context} due to missing bindings for its dependency"
+            )),
+            NoBindingsReason::Unsupported { context, error } => error.context(format!(
+                "Can't generate bindings for {context}, because it is unsupported"
             )),
         }
     }
@@ -3212,8 +3245,15 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                 Item::Record(record) => RsTypeKind::new_record(record.clone(), &ir)?,
                 Item::Enum(enum_) => RsTypeKind::new_enum(enum_.clone(), &ir)?,
                 Item::TypeAlias(type_alias) => {
+                    let parent = match type_alias.enclosing_item_id {
+                        None => None,
+                        Some(id) => {
+                            let parent: &ir::Item = ir.find_decl(id)?;
+                            Some(parent)
+                        }
+                    };
                     // TODO(b/200067824): support nested type aliases.
-                    if type_alias.enclosing_record_id.is_some() {
+                    if let Some(ir::Item::Record(_)) = parent {
                         // Until this is supported, we import this as the underlying type.
                         db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?
                     } else {
@@ -3336,36 +3376,39 @@ fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
         }
         Item::Record(record) => cc_type_name_for_record(record, ir),
         Item::Enum(enum_) => {
-            // TODO(jeanpierreda): the logic here is identical for type aliases and enums, and
-            // should PROBABLY be identical for records, too. So we should merge
-            // all of them, and we should even probably merge the parent
-            // namespace / parent record into a single parent_item field.
             let ident = format_cc_ident(&enum_.identifier.identifier);
-            if let Some(record_id) = enum_.enclosing_record_id {
-                let parent =
-                    cc_tagless_type_name_for_record(ir.find_decl::<Rc<Record>>(record_id)?, ir)?;
-                Ok(quote! { #parent :: #ident })
-            } else {
-                let namespace_qualifier = ir.namespace_qualifier(enum_)?.format_for_cc()?;
-                Ok(quote! { #namespace_qualifier #ident })
-            }
+            let qualifier = cc_qualified_path_prefix(item, ir)?;
+            Ok(quote! { #qualifier #ident })
         }
         Item::TypeAlias(type_alias) => {
             let ident = format_cc_ident(&type_alias.identifier.identifier);
-            if let Some(record_id) = type_alias.enclosing_record_id {
-                let parent =
-                    cc_tagless_type_name_for_record(ir.find_decl::<Rc<Record>>(record_id)?, ir)?;
-                Ok(quote! { #parent :: #ident })
-            } else {
-                let namespace_qualifier = ir.namespace_qualifier(type_alias)?.format_for_cc()?;
-                Ok(quote! { #namespace_qualifier #ident })
-            }
+            let qualifier = cc_qualified_path_prefix(item, ir)?;
+            Ok(quote! { #qualifier #ident })
         }
         Item::TypeMapOverride(type_map_override) => type_map_override
             .cc_name
             .parse::<TokenStream>()
             .map_err(|_| anyhow!("malformed type name: {:?}", type_map_override.cc_name)),
         _ => bail!("Item does not define a type: {:?}", item),
+    }
+}
+
+/// Returns the namespace / class qualifiers necessary to access the item.
+///
+/// For example, for `namespace x { struct Y { using X = int; }; }`, the prefix
+/// for `X` is `x::Y::`.
+fn cc_qualified_path_prefix(item: &ir::Item, ir: &ir::IR) -> Result<TokenStream> {
+    let Some(parent) = item.enclosing_item_id() else {
+        return Ok(quote! {});
+    };
+    let parent: &ir::Item = ir.find_decl(parent)?;
+    match parent {
+        ir::Item::Namespace(_) => Ok(ir.namespace_qualifier(item)?.format_for_cc()?),
+        ir::Item::Record(r) => {
+            let name = cc_tagless_type_name_for_record(r, ir)?;
+            Ok(quote! {#name ::})
+        }
+        _ => bail!("Unexpected enclosing item: {item:?}"),
     }
 }
 
@@ -4320,6 +4363,27 @@ mod tests {
         Ok(())
     }
 
+    // TODO(b/200067824): These should generate nested types.
+    #[test]
+    fn test_nested_type_definitions() -> Result<()> {
+        for nested_type in ["enum NotPresent {};", "struct NotPresent {};", "struct NotPresent;"] {
+            let ir = ir_from_cc(&format!(
+                r#"
+                    struct SomeStruct final {{
+                        {nested_type}
+                    }};
+                    SomeStruct::NotPresent* AlsoNotPresent();
+                "#
+            ))?;
+            let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+            assert_rs_not_matches!(rs_api, quote! { NotPresent });
+            assert_rs_not_matches!(rs_api, quote! { AlsoNotPresent });
+        }
+        Ok(())
+    }
+
+    /// Unlike other nested type definitions, typedefs can use the aliased type
+    /// instead.
     #[test]
     fn test_typedef_member() -> Result<()> {
         let ir = ir_from_cc(

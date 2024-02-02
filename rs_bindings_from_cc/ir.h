@@ -438,7 +438,7 @@ struct Func {
   bool is_member_or_descendant_of_class_template = false;
   std::string source_loc;
   ItemId id;
-  std::optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_item_id;
   // If present, this function should only generate top-level bindings if its
   // arguments refer to this enclosing record according to the ADL rules.
   //
@@ -627,7 +627,7 @@ struct Record {
   bool is_explicit_class_template_instantiation_definition = false;
 
   std::vector<ItemId> child_item_ids;
-  std::optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_item_id;
 };
 
 // A forward-declared record (e.g. `struct Foo;`)
@@ -639,7 +639,7 @@ struct IncompleteRecord {
   BazelLabel owning_target;
   std::optional<std::string> unknown_attr;
   RecordType record_type;
-  std::optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_item_id;
 };
 
 struct Enumerator {
@@ -660,8 +660,7 @@ struct Enum {
   MappedType underlying_type;
   std::optional<std::vector<Enumerator>> enumerators;
   std::optional<std::string> unknown_attr;
-  std::optional<ItemId> enclosing_record_id;
-  std::optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_item_id;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Record& r) {
@@ -679,8 +678,7 @@ struct TypeAlias {
   std::optional<std::string> unknown_attr;
   MappedType underlying_type;
   std::string source_loc;
-  std::optional<ItemId> enclosing_record_id;
-  std::optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_item_id;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
@@ -728,7 +726,7 @@ struct Namespace {
   std::optional<std::string> unknown_attr;
   BazelLabel owning_target;
   std::vector<ItemId> child_item_ids;
-  std::optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_item_id;
   bool is_inline = false;
 };
 

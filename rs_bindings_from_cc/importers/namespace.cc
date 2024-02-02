@@ -32,16 +32,21 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
 
   ictx_.ImportDeclsFromDeclContext(namespace_decl);
   auto item_ids = ictx_.GetItemIdsInSourceOrder(namespace_decl);
-  return Namespace{
-      .name = *identifier,
-      .id = ictx_.GenerateItemId(namespace_decl),
-      .canonical_namespace_id =
-          ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()),
-      .unknown_attr = CollectUnknownAttrs(*namespace_decl),
-      .owning_target = ictx_.GetOwningTarget(namespace_decl),
-      .child_item_ids = std::move(item_ids),
-      .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(namespace_decl),
-      .is_inline = namespace_decl->isInline()};
+
+  auto enclosing_item_id = ictx_.GetEnclosingItemId(namespace_decl);
+  if (!enclosing_item_id.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        namespace_decl, std::string(enclosing_item_id.status().message()));
+  }
+  return Namespace{.name = *identifier,
+                   .id = ictx_.GenerateItemId(namespace_decl),
+                   .canonical_namespace_id =
+                       ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()),
+                   .unknown_attr = CollectUnknownAttrs(*namespace_decl),
+                   .owning_target = ictx_.GetOwningTarget(namespace_decl),
+                   .child_item_ids = std::move(item_ids),
+                   .enclosing_item_id = *std::move(enclosing_item_id),
+                   .is_inline = namespace_decl->isInline()};
 }
 
 }  // namespace crubit

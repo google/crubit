@@ -105,11 +105,14 @@ class ImportContext {
 
   virtual ItemId GenerateItemId(const clang::Decl* decl) const = 0;
   virtual ItemId GenerateItemId(const clang::RawComment* comment) const = 0;
-  // Returns the ID of the parent namespace, if such exists, and `std::nullopt`
-  // for top level decls. We use this function to assign a parent namespace to
-  // all the IR items.
-  virtual std::optional<ItemId> GetEnclosingNamespaceId(
-      const clang::Decl* decl) const = 0;
+  // Returns the ID of the parent record or namespace, if it exists, and
+  // `std::nullopt` for top level decls. We use this function to assign a parent
+  // item to all the IR items.
+  //
+  // Imports the parent decl if it is not already imported, and returns a bad
+  // status if the parent cannot be imported.
+  virtual absl::StatusOr<std::optional<ItemId>> GetEnclosingItemId(
+      clang::Decl* decl) = 0;
 
   // Imports children of `decl`.
   //

@@ -343,7 +343,7 @@ llvm::json::Value Func::ToJson() const {
        is_member_or_descendant_of_class_template},
       {"source_loc", source_loc},
       {"id", id},
-      {"enclosing_namespace_id", enclosing_namespace_id},
+      {"enclosing_item_id", enclosing_item_id},
       {"adl_enclosing_record", adl_enclosing_record},
   };
 
@@ -425,7 +425,7 @@ llvm::json::Value IncompleteRecord::ToJson() const {
       {"owning_target", owning_target},
       {"unknown_attr", unknown_attr},
       {"record_type", RecordTypeToString(record_type)},
-      {"enclosing_namespace_id", enclosing_namespace_id},
+      {"enclosing_item_id", enclosing_item_id},
   };
 
   return llvm::json::Object{
@@ -473,7 +473,7 @@ llvm::json::Value Record::ToJson() const {
       {"is_aggregate", is_aggregate},
       {"is_anon_record_with_typedef", is_anon_record_with_typedef},
       {"child_item_ids", std::move(json_item_ids)},
-      {"enclosing_namespace_id", enclosing_namespace_id},
+      {"enclosing_item_id", enclosing_item_id},
   };
 
   return llvm::json::Object{
@@ -498,8 +498,7 @@ llvm::json::Value Enum::ToJson() const {
       {"underlying_type", underlying_type},
       {"enumerators", enumerators},
       {"unknown_attr", unknown_attr},
-      {"enclosing_record_id", enclosing_record_id},
-      {"enclosing_namespace_id", enclosing_namespace_id},
+      {"enclosing_item_id", enclosing_item_id},
   };
 
   return llvm::json::Object{
@@ -516,8 +515,7 @@ llvm::json::Value TypeAlias::ToJson() const {
       {"doc_comment", doc_comment},
       {"underlying_type", underlying_type},
       {"source_loc", source_loc},
-      {"enclosing_record_id", enclosing_record_id},
-      {"enclosing_namespace_id", enclosing_namespace_id},
+      {"enclosing_item_id", enclosing_item_id},
   };
 
   return llvm::json::Object{
@@ -563,7 +561,7 @@ llvm::json::Value Namespace::ToJson() const {
       {"unknown_attr", unknown_attr},
       {"owning_target", owning_target},
       {"child_item_ids", std::move(json_item_ids)},
-      {"enclosing_namespace_id", enclosing_namespace_id},
+      {"enclosing_item_id", enclosing_item_id},
       {"is_inline", is_inline},
   };
 

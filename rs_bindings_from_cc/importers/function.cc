@@ -340,6 +340,12 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   // `!return_type.ok()` and returning early if `!errors.empty()`.
   CHECK_OK(return_type);
 
+  auto enclosing_item_id = ictx_.GetEnclosingItemId(function_decl);
+  if (!enclosing_item_id.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        function_decl, std::string(enclosing_item_id.status().message()));
+  }
+
   return Func{
       .name = *translated_name,
       .owning_target = ictx_.GetOwningTarget(function_decl),
@@ -360,7 +366,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
           is_member_or_descendant_of_class_template,
       .source_loc = ictx_.ConvertSourceLocation(function_decl->getBeginLoc()),
       .id = ictx_.GenerateItemId(function_decl),
-      .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(function_decl),
+      .enclosing_item_id = *std::move(enclosing_item_id),
   };
 }
 

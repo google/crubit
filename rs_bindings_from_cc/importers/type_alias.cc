@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
@@ -55,19 +56,6 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
     return std::nullopt;
   }
 
-  std::optional<ItemId> enclosing_record_id = std::nullopt;
-  if (decl_context) {
-    if (decl_context->isFunctionOrMethod()) {
-      return std::nullopt;
-    }
-    if (auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl_context)) {
-      if (!ictx_.EnsureSuccessfullyImported(record_decl)) {
-        return ictx_.ImportUnsupportedItem(decl, "Couldn't import the parent");
-      }
-      enclosing_record_id = ictx_.GenerateItemId(record_decl);
-    }
-  }
-
   absl::StatusOr<Identifier> identifier = ictx_.GetTranslatedIdentifier(decl);
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
@@ -86,6 +74,11 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
         decl, std::string(underlying_type.status().message()));
   }
 
+  auto enclosing_item_id = ictx_.GetEnclosingItemId(decl);
+  if (!enclosing_item_id.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        decl, std::string(enclosing_item_id.status().message()));
+  }
   ictx_.MarkAsSuccessfullyImported(decl);
   return TypeAlias{
       .identifier = *identifier,
@@ -95,8 +88,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       .unknown_attr = CollectUnknownAttrs(*decl),
       .underlying_type = *underlying_type,
       .source_loc = ictx_.ConvertSourceLocation(decl->getBeginLoc()),
-      .enclosing_record_id = enclosing_record_id,
-      .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(decl),
+      .enclosing_item_id = *std::move(enclosing_item_id),
   };
 }
 
