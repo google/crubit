@@ -2995,6 +2995,9 @@ fn crubit_features_for_item(
             crubit_features |=
                 RsTypeKind::new_enum(e.clone(), &db.ir())?.required_crubit_features()?
         }
+        Item::Namespace(_) => {
+            crubit_features |= ir::CrubitFeature::ExternC;
+        }
         _ => {
             crubit_features |= ir::CrubitFeature::Experimental;
         }
@@ -8767,7 +8770,7 @@ mod tests {
     #[test]
     fn test_extern_c_suppressed_field_types() -> Result<()> {
         let mut ir = ir_from_cc(
-            "#
+            r#"
             struct Nontrivial {
                 ~Nontrivial();
             };
@@ -8776,7 +8779,7 @@ mod tests {
                 Nontrivial* hidden_field;
             };
         
-        #",
+        "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
             ir::CrubitFeature::ExternC.into();
@@ -8797,11 +8800,10 @@ mod tests {
     #[test]
     fn test_extern_c_nontrivial_field() -> Result<()> {
         let mut ir = ir_from_cc(
-            "#
+            r#"
             struct [[clang::trivial_abi]] Inner {~Inner();};
             struct [[clang::trivial_abi]] Outer {Inner inner_field;};
-        
-        #",
+            "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
             ir::CrubitFeature::ExternC.into();
@@ -8827,18 +8829,79 @@ mod tests {
     #[test]
     fn test_extern_c_unknown_attr_enumerator() -> Result<()> {
         let mut ir = ir_from_cc(
-            "#
+            r#"
             enum Enum {
                 kHidden [[deprecated]],
             };
-        
-        #",
+            "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
             ir::CrubitFeature::ExternC.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(rs_api, quote! {pub struct Enum});
         assert_rs_not_matches!(rs_api, quote! {kHidden});
+        Ok(())
+    }
+
+    /// Namespaces with an unknown attribute are not present in extern_c.
+    ///
+    /// This is hard to test any other way than token comparison, because it's
+    /// hard to test for the nonexistence of a module.
+    #[test]
+    fn test_extern_c_unknown_attr_namespace() -> Result<()> {
+        for nested_notpresent in
+            ["struct NotPresent {};", "enum NotPresent {};", "using NotPresent = int;"]
+        {
+            // TODO(b/314838274): Uncomment the extern "C" block.
+            let mut ir = ir_from_cc(&format!(
+                r#"
+                namespace [[deprecated]] unknown_attr_namespace {{
+                    {nested_notpresent}
+                }}
+                // extern "C" {{
+                //     void NotPresent(unknown_attr_namespace::NotPresent);
+                //     unknown_attr_namespace::NotPresent AlsoNotPresent();
+                // }}
+                "#
+            ))?;
+            *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+                ir::CrubitFeature::ExternC.into();
+            let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+            // The namespace, and everything in it or using it, will be missing from the
+            // output.
+            assert_rs_not_matches!(rs_api, quote! {NotPresent});
+            assert_rs_not_matches!(rs_api, quote! {AlsoNotPresent});
+            assert_rs_not_matches!(rs_api, quote! {unknown_attr_namespace});
+        }
+        Ok(())
+    }
+
+    /// Namespaces with an unknown attribute are still merged with the same
+    /// namespace with no unknown attribute.
+    #[test]
+    fn test_extern_c_unknown_attr_namespace_merge() -> Result<()> {
+        let mut ir = ir_from_cc(
+            r#"
+            namespace unknown_attr_namespace {
+                enum Present {};
+            }
+            namespace [[deprecated]] unknown_attr_namespace {
+                enum NotPresent {};
+            }
+            namespace unknown_attr_namespace {
+                enum AlsoPresent {};
+            }
+            "#,
+        )?;
+        *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+            ir::CrubitFeature::ExternC.into();
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        // The namespace, and everything in it or using it, will be missing from the
+        // output.
+        assert_rs_not_matches!(rs_api, quote! {NotPresent});
+        assert_rs_matches!(rs_api, quote! {Present});
+        assert_rs_matches!(rs_api, quote! {AlsoPresent});
+        assert_rs_matches!(rs_api, quote! {unknown_attr_namespace});
         Ok(())
     }
 

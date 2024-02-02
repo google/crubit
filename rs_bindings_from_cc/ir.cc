@@ -560,6 +560,7 @@ llvm::json::Value Namespace::ToJson() const {
       {"name", name},
       {"id", id},
       {"canonical_namespace_id", canonical_namespace_id},
+      {"unknown_attr", unknown_attr},
       {"owning_target", owning_target},
       {"child_item_ids", std::move(json_item_ids)},
       {"enclosing_namespace_id", enclosing_namespace_id},

@@ -9,6 +9,7 @@
 
 #include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
+#include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 
@@ -36,6 +37,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
       .id = ictx_.GenerateItemId(namespace_decl),
       .canonical_namespace_id =
           ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()),
+      .unknown_attr = CollectUnknownAttrs(*namespace_decl),
       .owning_target = ictx_.GetOwningTarget(namespace_decl),
       .child_item_ids = std::move(item_ids),
       .enclosing_namespace_id = ictx_.GetEnclosingNamespaceId(namespace_decl),

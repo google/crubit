@@ -725,6 +725,7 @@ struct Namespace {
   Identifier name;
   ItemId id;
   ItemId canonical_namespace_id;
+  std::optional<std::string> unknown_attr;
   BazelLabel owning_target;
   std::vector<ItemId> child_item_ids;
   std::optional<ItemId> enclosing_namespace_id;

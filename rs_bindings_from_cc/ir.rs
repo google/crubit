@@ -886,6 +886,8 @@ pub struct Namespace {
     pub name: Identifier,
     pub id: ItemId,
     pub canonical_namespace_id: ItemId,
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    pub unknown_attr: Option<Rc<str>>,
     pub owning_target: BazelLabel,
     #[serde(default)]
     pub child_item_ids: Vec<ItemId>,
@@ -904,7 +906,7 @@ impl GenericItem for Namespace {
         None
     }
     fn unknown_attr(&self) -> Option<Rc<str>> {
-        None // TODO(b/314838274): Implement this.
+        self.unknown_attr.clone()
     }
 }
 
@@ -1054,7 +1056,7 @@ impl Item {
             Item::TypeAlias(type_alias) => Some(&type_alias.owning_target),
             Item::UnsupportedItem(..) => None,
             Item::Comment(..) => None,
-            Item::Namespace(..) => None,
+            Item::Namespace(ns) => Some(&ns.owning_target),
             Item::UseMod(..) => None,
             Item::TypeMapOverride(type_override) => Some(&type_override.owning_target),
         }
@@ -1114,6 +1116,19 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Comment> {
     type Error = Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::Comment(c) = value { Ok(c) } else { bail!("Not a Comment: {:#?}", value) }
+    }
+}
+
+impl From<Namespace> for Item {
+    fn from(ns: Namespace) -> Item {
+        Item::Namespace(Rc::new(ns))
+    }
+}
+
+impl<'a> TryFrom<&'a Item> for &'a Rc<Namespace> {
+    type Error = Error;
+    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+        if let Item::Namespace(c) = value { Ok(c) } else { bail!("Not a Namespace: {:#?}", value) }
     }
 }
 
