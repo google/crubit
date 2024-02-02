@@ -234,6 +234,15 @@ TEST_F(InferTUTest, PassedToMutableNullableRef) {
                                  {inferredSlot(1, Inference::NULLABLE)})));
 }
 
+TEST_F(InferTUTest, AssignedFromNullable) {
+  build(R"cc(
+    void target(int* p) { p = nullptr; }
+  )cc");
+  EXPECT_THAT(infer(),
+              Contains(inference(hasName("target"),
+                                 {inferredSlot(1, Inference::NULLABLE)})));
+}
+
 TEST_F(InferTUTest, Filter) {
   build(R"cc(
     int* target1() { return nullptr; }

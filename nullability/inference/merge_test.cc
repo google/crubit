@@ -234,6 +234,13 @@ TEST_F(InferTest, NonnullAndUnknownArgumentsPassed) {
   EXPECT_EQ(Inference::UNKNOWN, infer());
 }
 
+TEST_F(InferTest, AssignedFromNullable) {
+  add(Evidence::ASSIGNED_FROM_NULLABLE);
+  EXPECT_EQ(Inference::NULLABLE, infer());
+  add(Evidence::UNCHECKED_DEREFERENCE);
+  EXPECT_EQ(Inference::NONNULL, infer(/*ExpectConflict=*/true));
+}
+
 TEST_F(InferTest, ReturnValues) {
   add(Evidence::NONNULL_RETURN);
   EXPECT_EQ(Inference::NONNULL, infer());
