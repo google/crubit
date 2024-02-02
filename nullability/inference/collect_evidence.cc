@@ -181,7 +181,7 @@ void collectMustBeNonnullEvidence(
   // have any new evidence of a necessary annotation.
   if (!Env.allows(*IsNull)) return;
 
-  auto &A = Env.getDataflowAnalysisContext().arena();
+  auto &A = Env.arena();
   // Otherwise, if an inferable slot being annotated Nonnull would imply that
   // `Value` is not null, then we have evidence suggesting that slot should be
   // annotated. For now, we simply choose the first such slot, sidestepping
@@ -294,7 +294,7 @@ void collectMustBeMarkedNullableEvidence(
   // we don't have any new evidence of a necessary annotation.
   if (Env.proves(*FromNullable)) return;
 
-  auto &A = Env.getDataflowAnalysisContext().arena();
+  auto &A = Env.arena();
   // Otherwise, if an inferable slot being annotated Nullable would imply that
   // `Value` is from a Nullable, then we have evidence suggesting that slot
   // should be annotated. We collect this evidence for every slot that connects
@@ -415,6 +415,8 @@ void collectEvidenceFromArgsAndParams(
       // nullability based on InferableSlots for the caller being assigned to
       // Unknown or their previously-inferred value, to reflect the current
       // annotations and not all possible annotations for them.
+      // TODO(b/309625642) Consider treating Unknown-but-provably-null values as
+      // nullable arguments, which `getNullability` currently does not.
       NullabilityKind ArgNullability =
           getNullability(*PV, Env, &InferableSlotsConstraint);
       Emit(CalleeDecl, paramSlot(Iter.paramIdx()),
@@ -650,6 +652,8 @@ void collectEvidenceFromReturn(const std::vector<InferableSlot> &InferableSlots,
   // is not an inference target.
   if (!isInferenceTarget(*Env.getCurrentFunc())) return;
 
+  // TODO(b/309625642) Consider treating Unknown-but-provably-null values as
+  // nullable return values, which `getNullability` currently does not.
   NullabilityKind ReturnNullability =
       getNullability(ReturnExpr, Env, &InferableSlotsConstraint);
   Evidence::Kind ReturnEvidenceKind;
@@ -665,6 +669,69 @@ void collectEvidenceFromReturn(const std::vector<InferableSlot> &InferableSlots,
   }
   Emit(*Env.getCurrentFunc(), SLOT_RETURN_TYPE, ReturnEvidenceKind,
        ReturnExpr->getExprLoc());
+}
+
+// Checks whether PointerValue is null or nullable and if so, collects evidence
+// for a slot that would, if marked Nullable, cause TypeNullability's
+// first-layer nullability to be Nullable.
+//
+// e.g. This is used for example to collect from the following:
+// ```
+// void target(int* p, int* q, NullabilityUnknown<int*> r) {
+//   p = nullptr;
+//   if (!r) {
+//     q = r;
+//   }
+// }
+// ```
+// evidence for each of the assignments of `p` and `q` that they were
+// ASSIGNED_FROM_NULLABLE.
+void collectEvidenceFromAssignmentFromNullable(
+    TypeNullability &TypeNullability, dataflow::PointerValue &PointerValue,
+    const std::vector<InferableSlot> &InferableSlots,
+    const Formula &InferableSlotsConstraint, const dataflow::Environment &Env,
+    SourceLocation ValueLoc, llvm::function_ref<EvidenceEmitter> Emit) {
+  if (TypeNullability.empty() || !hasPointerNullState(PointerValue)) return;
+  dataflow::Arena &A = Env.arena();
+  // The following arrangement of formulas specifically does consider an
+  // Unknown-but-provably-null pointer as a value which should cause the type to
+  // be Nullable, a less conservative approach than is taken in verification.
+  //
+  // TODO(b/309625642) Consider extracting this determination of nullability
+  // into a shared function, or extending `getNullability`, if we replace
+  // `getNullability` calls elsewhere in evidence collection with an approach
+  // that matches this one.
+  PointerNullState NullState = getPointerNullState(PointerValue);
+  const Formula *ValueFromNullable = NullState.FromNullable;
+  const Formula *ValueIsNull = NullState.IsNull;
+  const Formula *ValueIsNullOrNullable = &A.makeLiteral(false);
+  if (ValueFromNullable != nullptr) {
+    ValueIsNullOrNullable =
+        &A.makeOr(*ValueFromNullable, *ValueIsNullOrNullable);
+  }
+  if (ValueIsNull != nullptr) {
+    ValueIsNullOrNullable = &A.makeOr(*ValueIsNull, *ValueIsNullOrNullable);
+  }
+  if (Env.proves(
+          A.makeImplies(InferableSlotsConstraint, *ValueIsNullOrNullable))) {
+    const Formula &TypeIsNullable = TypeNullability[0].isNullable(A);
+    if (!Env.allows(TypeIsNullable)) return;
+
+    auto &A = Env.arena();
+    for (auto &IS : InferableSlots) {
+      auto &Implication = A.makeImplies(
+          IS.getSymbolicNullability().isNullable(A), TypeIsNullable);
+      // It's not expected that a slot's Nullable atom could be proven
+      // false by the environment alone (without the InferableSlotsConstraint),
+      // but SAT calls are relatively expensive, so only DCHECK.
+      DCHECK(Env.allows(IS.getSymbolicNullability().isNullable(A)));
+      if (Env.proves(Implication)) {
+        Emit(IS.getInferenceTarget(), IS.getTargetSlot(),
+             Evidence::ASSIGNED_FROM_NULLABLE, ValueLoc);
+        return;
+      }
+    }
+  }
 }
 
 void collectEvidenceFromAssignment(
@@ -685,10 +752,7 @@ void collectEvidenceFromAssignment(
             VarDecl->getInit()->getType().getNonReferenceType());
         if (!DeclTypeSupported) return;
         if (!InitTypeSupported) {
-          // TODO: we could perhaps support pointer initialization from numeric
-          // values, but this is very rare and not the most useful for
-          // nullability.
-          llvm::errs() << "Unsupported init type: "
+          llvm::errs() << "Unsupported init type for pointer decl: "
                        << VarDecl->getInit()->getType() << "\n";
           return;
         }
@@ -701,6 +765,10 @@ void collectEvidenceFromAssignment(
             VarDecl->getType(), TypeNullability, *PV, InferableSlots,
             InferableSlotsConstraint, Env, VarDecl->getInit()->getExprLoc(),
             Emit);
+
+        collectEvidenceFromAssignmentFromNullable(
+            TypeNullability, *PV, InferableSlots, InferableSlotsConstraint, Env,
+            VarDecl->getInit()->getExprLoc(), Emit);
       }
     }
   }
@@ -715,10 +783,7 @@ void collectEvidenceFromAssignment(
         isSupportedRawPointerType(BinaryOperator->getRHS()->getType());
     if (!LhsSupported) return;
     if (!RhsSupported) {
-      // TODO: we could perhaps support pointer assignments to numeric
-      // values, but this is very rare and not the most useful for
-      // nullability.
-      llvm::errs() << "Unsupported RHS type: "
+      llvm::errs() << "Unsupported RHS type in assignment to pointer decl: "
                    << BinaryOperator->getRHS()->getType() << "\n";
     }
     auto *PV = getPointerValueFromExpr(BinaryOperator->getRHS(), Env);
@@ -735,6 +800,10 @@ void collectEvidenceFromAssignment(
     collectEvidenceFromBindingToType(
         BinaryOperator->getLHS()->getType(), TypeNullability, *PV,
         InferableSlots, InferableSlotsConstraint, Env,
+        BinaryOperator->getRHS()->getExprLoc(), Emit);
+
+    collectEvidenceFromAssignmentFromNullable(
+        TypeNullability, *PV, InferableSlots, InferableSlotsConstraint, Env,
         BinaryOperator->getRHS()->getExprLoc(), Emit);
   }
 }

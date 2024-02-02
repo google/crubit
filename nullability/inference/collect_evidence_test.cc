@@ -477,6 +477,22 @@ TEST(CollectEvidenceFromImplementationTest, UnknownArgPassed) {
                                 functionNamed("callee"))));
 }
 
+// TODO(b/309625642) Consider treating Unknown-but-provably-null values as
+// nullable arguments.
+TEST(CollectEvidenceFromImplementationTest, UnknownButProvablyNullArgPassed) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(int *q);
+    void target(int *p) {
+      if (p == nullptr) {
+        callee(p);
+      }
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              Contains(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                functionNamed("callee"))));
+}
+
 TEST(CollectEvidenceFromImplementationTest, CheckedArgPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(int *q);
@@ -536,9 +552,10 @@ TEST(CollectEvidenceFromImplementationTest, NullableReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target() { return nullptr; }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              Contains(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                functionNamed("target"))));
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                    functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, NonnullReturn) {
@@ -547,18 +564,38 @@ TEST(CollectEvidenceFromImplementationTest, NonnullReturn) {
       return p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              Contains(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
-                                functionNamed("target"))));
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
+                                    functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, UnknownReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(int* p) { return p; }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN,
-                                functionNamed("target"))));
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN,
+                                    functionNamed("target"))));
+}
+
+// TODO(b/309625642) Consider treating Unknown-but-provably-null values as
+// nullable return values.
+TEST(CollectEvidenceFromImplementationTest, UnknownButProvablyNullReturn) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* target(int* p) {
+      if (p == nullptr) {
+        return p;
+      }
+      // no return in this path to avoid irrelevant evidence, and this still
+      // compiles, as the lack of return in a path is only a warning.
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN,
+                                    functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, MultipleReturns) {
@@ -1239,6 +1276,67 @@ TEST(CollectEvidenceFromImplementationTest,
                            functionNamed("target")),
                   evidence(paramSlot(1), Evidence::BOUND_TO_MUTABLE_NULLABLE,
                            functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, AssignedFromNullptr) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, int* q) {
+      q = nullptr;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(evidence(paramSlot(1),
+                                            Evidence::ASSIGNED_FROM_NULLABLE,
+                                            functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, AssignedFromNullptrIndirect) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p) {
+      int* a = nullptr;
+      p = a;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(evidence(paramSlot(0),
+                                            Evidence::ASSIGNED_FROM_NULLABLE,
+                                            functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, AssignedFromZero) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, int* q) {
+      q = 0;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(evidence(paramSlot(1),
+                                            Evidence::ASSIGNED_FROM_NULLABLE,
+                                            functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, AssignedFromNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    Nullable<int*> getNullable();
+    void target(int* p) { p = getNullable(); }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(evidence(paramSlot(0),
+                                            Evidence::ASSIGNED_FROM_NULLABLE,
+                                            functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, AssignedFromLocalNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p) {
+      Nullable<int*> a;
+      p = a;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(evidence(paramSlot(0),
+                                            Evidence::ASSIGNED_FROM_NULLABLE,
+                                            functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest, IrrelevantAssignments) {

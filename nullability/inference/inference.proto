@@ -78,6 +78,8 @@ message Evidence {
     BOUND_TO_MUTABLE_NULLABLE = 11;
     // The program aborts if a value is null.
     ABORT_IF_NULL = 12;
+    // A nullable value was assigned.
+    ASSIGNED_FROM_NULLABLE = 13;
   }
 }
 
