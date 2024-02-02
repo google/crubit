@@ -2887,10 +2887,28 @@ fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
         }
     }
 
-    // TODO(b/200067824): Allow nested type items inside records.
-    if item.is_type_definition() {
-        if let Some(id) = item.enclosing_item_id() {
-            let parent: &ir::Item = ir.find_untyped_decl(id);
+    if let Some(parent) = item.enclosing_item_id() {
+        let parent = ir.find_untyped_decl(parent);
+
+        match has_bindings(db, parent) {
+            HasBindings::No(no_parent_bindings) => {
+                return HasBindings::No(NoBindingsReason::DependencyFailed {
+                    context: item.debug_name(&ir),
+                    error: no_parent_bindings.into(),
+                });
+            }
+            HasBindings::Maybe => {
+                // This shouldn't happen, Maybe is meant for Func items.
+                return HasBindings::No(NoBindingsReason::DependencyFailed {
+                    context: item.debug_name(&ir),
+                    error: anyhow!("parent item might not be defined"),
+                });
+            }
+            HasBindings::Yes => {}
+        }
+
+        // TODO(b/200067824): Allow nested type items inside records.
+        if item.is_type_definition() {
             if let ir::Item::Record(_) = parent {
                 return HasBindings::No(NoBindingsReason::Unsupported {
                     context: item.debug_name(&ir),
@@ -8902,18 +8920,17 @@ mod tests {
     #[test]
     fn test_extern_c_unknown_attr_namespace() -> Result<()> {
         for nested_notpresent in
-            ["struct NotPresent {};", "enum NotPresent {};", "using NotPresent = int;"]
+            ["struct NotPresent {};", "struct NotPresent;", "enum NotPresent {};"]
         {
-            // TODO(b/314838274): Uncomment the extern "C" block.
             let mut ir = ir_from_cc(&format!(
                 r#"
                 namespace [[deprecated]] unknown_attr_namespace {{
                     {nested_notpresent}
                 }}
-                // extern "C" {{
-                //     void NotPresent(unknown_attr_namespace::NotPresent);
-                //     unknown_attr_namespace::NotPresent AlsoNotPresent();
-                // }}
+                extern "C" {{
+                    void NotPresent(unknown_attr_namespace::NotPresent);
+                    unknown_attr_namespace::NotPresent AlsoNotPresent();
+                }}
                 "#
             ))?;
             *ir.target_crubit_features_mut(&ir.current_target().clone()) =
@@ -8954,6 +8971,32 @@ mod tests {
         assert_rs_matches!(rs_api, quote! {Present});
         assert_rs_matches!(rs_api, quote! {AlsoPresent});
         assert_rs_matches!(rs_api, quote! {unknown_attr_namespace});
+        Ok(())
+    }
+
+    /// Namespaces with an unknown attribute are not present in extern_c, but
+    /// their typedefs are.
+    #[test]
+    fn test_extern_c_unknown_attr_namespace_typedef() -> Result<()> {
+        let mut ir = ir_from_cc(
+            r#"
+            namespace [[deprecated]] unknown_attr_namespace {
+                using NotPresent = int;
+            }
+            extern "C" {
+                void Func(unknown_attr_namespace::NotPresent x);
+                unknown_attr_namespace::NotPresent Func2();
+            }
+            "#,
+        )?;
+        *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+            ir::CrubitFeature::ExternC.into();
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        // The namespace, and everything in it or using it, will be missing from the
+        // output.
+        assert_rs_not_matches!(rs_api, quote! {NotPresent});
+        assert_rs_matches!(rs_api, quote! {pub fn Func(x: ::core::ffi::c_int)});
+        assert_rs_matches!(rs_api, quote! {pub fn Func2() -> ::core::ffi::c_int});
         Ok(())
     }
 
