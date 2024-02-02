@@ -66,7 +66,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
 }
 
 // Error while generating bindings for item 'nested_type':
-// Typedefs nested in classes are not supported yet
+// Can't generate bindings for nested_type, because it is unsupported: b/200067824: type definitions nested inside records are not yet supported
 
 // Error while generating bindings for item 'SomeStruct':
 // Typedef only used to introduce a name in C. Not importing.

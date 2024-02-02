@@ -2783,29 +2783,7 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
         }
         Item::Record(record) => generate_record(db, record)?,
         Item::Enum(enum_) => generate_enum(db, enum_)?,
-        Item::TypeAlias(type_alias) => {
-            let parent = match type_alias.enclosing_item_id {
-                None => None,
-                Some(id) => {
-                    let parent: &ir::Item = ir.find_untyped_decl(id);
-                    Some(parent)
-                }
-            };
-            // TODO(b/200067824): support nested type aliases.
-            if let Some(ir::Item::Record(_)) = parent {
-                // TODO(b/200067824): support nested type aliases.
-                generate_unsupported(
-                    db,
-                    &UnsupportedItem::new_with_message(
-                        &ir,
-                        type_alias,
-                        "Typedefs nested in classes are not supported yet",
-                    ),
-                )?
-            } else {
-                generate_type_alias(db, type_alias)?
-            }
-        }
+        Item::TypeAlias(type_alias) => generate_type_alias(db, type_alias)?,
         Item::UnsupportedItem(unsupported) => generate_unsupported(db, unsupported)?,
         Item::Comment(comment) => generate_comment(comment)?,
         Item::Namespace(namespace) => generate_namespace(db, namespace)?,
@@ -2910,9 +2888,7 @@ fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
     }
 
     // TODO(b/200067824): Allow nested type items inside records.
-    // Type aliases are special, because they can be replaced by the aliased type.
-    // All other types cannot be defined inside a record.
-    if item.is_type_definition() && !matches!(item, ir::Item::TypeAlias(_)) {
+    if item.is_type_definition() {
         if let Some(id) = item.enclosing_item_id() {
             let parent: &ir::Item = ir.find_untyped_decl(id);
             if let ir::Item::Record(_) = parent {
@@ -3221,15 +3197,42 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                 ty
             );
             let item = ir.item_for_type(&ty)?;
-            match has_bindings(db, item) {
-                HasBindings::Yes => {}
-                HasBindings::Maybe => {
+            let fallback_type = match item {
+                // Type aliases are unique among items, in that if the item defining the alias fails
+                // to receive bindings, we can still use the aliased type.
+                // The one exception to this is that if we don't understand the attribute, we should
+                // not do this, because some attributes on aliases actually modify the type itself.
+                // (This isn't common, because the modern convention is that attributes should be
+                // defined in a way that permits you to ignore them, but some attributes predate
+                // this).
+                // For example, `using my_vector __attribute__ ((vector_size (16))) = int;` -- this
+                // is not an alias to an int, the way it appears to be if you ignore the attribute!
+                ir::Item::TypeAlias(alias) if alias.unknown_attr.is_none() => {
+                    Some(&alias.underlying_type.rs_type)
+                }
+                _ => None,
+            };
+            match (has_bindings(db, item), fallback_type) {
+                (HasBindings::Yes, _) => {}
+                // Additionally, we should not "see through" type aliases that are specifically not
+                // on targets that intend to support Rust users of those type aliases.
+                // (If we did, then a C++ library owner could break Rust callers, which is a
+                // maintenance responsibility that they did not sign up for!)
+                (has_bindings, Some(fallback_type))
+                    if !matches!(
+                        has_bindings,
+                        HasBindings::No(NoBindingsReason::MissingRequiredFeatures { .. })
+                    ) =>
+                {
+                    return db.rs_type_kind(fallback_type.clone());
+                }
+                (HasBindings::Maybe, _) => {
                     bail!(
                         "Type {} may or may not exist, and cannot be used.",
                         item.debug_name(&ir)
                     );
                 }
-                HasBindings::No(reason) => {
+                (HasBindings::No(reason), _) => {
                     return Err(reason.into());
                 }
             }
@@ -3244,22 +3247,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                 },
                 Item::Record(record) => RsTypeKind::new_record(record.clone(), &ir)?,
                 Item::Enum(enum_) => RsTypeKind::new_enum(enum_.clone(), &ir)?,
-                Item::TypeAlias(type_alias) => {
-                    let parent = match type_alias.enclosing_item_id {
-                        None => None,
-                        Some(id) => {
-                            let parent: &ir::Item = ir.find_decl(id)?;
-                            Some(parent)
-                        }
-                    };
-                    // TODO(b/200067824): support nested type aliases.
-                    if let Some(ir::Item::Record(_)) = parent {
-                        // Until this is supported, we import this as the underlying type.
-                        db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?
-                    } else {
-                        new_type_alias(db, type_alias.clone())?
-                    }
-                }
+                Item::TypeAlias(type_alias) => new_type_alias(db, type_alias.clone())?,
                 Item::TypeMapOverride(type_map_override) => {
                     RsTypeKind::new_type_map_override(type_map_override)
                 }
