@@ -2,29 +2,50 @@
 
 [![Build status](https://badge.buildkite.com/7a57a14e68aa3a0ab70972cbf2a35fd79d342ba152fee4a5b4.svg)](https://buildkite.com/bazel/crubit)
 
-Crubit is a bidirectional bindings generator for C++ and Rust.
+NOTE: Crubit currently expects deep integration with the build system, and is
+difficult to deploy to environments dissimilar to Google's monorepo. We do not
+have our tooling set up to accept external contributions at this time.
 
-Please don't use, this is an experiment and we don't yet know where will it take
-us. There will be breaking changes without warning.  Unfortunately, we can't
-take contributions at this point.
+Crubit is a bidirectional bindings generator for C++ and Rust, with the goal of
+integrating the C++ and Rust ecosystems. With Crubit, Rust can be used anywhere
+C++ can be, directly calling and being called by C++. Crubit does not require
+wrapping C++ or Rust libraries in "FFI-friendly", simplified APIs. Any C++
+interface can be called or implemented by Rust code.
 
-Crubit allows for C++ code and Rust code to call each other without manually
-wrapping the APIs in an FFI-friendly interop layer. For example, a C++ function
-like this:
+**Current status:** Crubit is aiming for an initial stable "MVP" version,
+comparable to `bindgen` and `cbindgen`. This will support basic datatypes like
+integers and pointers, (rust-movable) structs/unions/enums, and `extern "C"`
+functions.
+
+<!-- TODO(b/276366603): Link to reference doc which specifies *exactly* what is
+supported. -->
+
+## Example
+
+Consider the following C++ function:
 
 ```c++
-bool IsAbsPath(std::string_view path);
+extern "C" bool IsAbsPath(std::string_view path);
 ```
 
-... becomes callable from Rust as if it were defined as:
+This function, if present in a header file which is processed by Crubit, becomes
+callable from Rust as if it were defined as:
 
 ```rs
 pub fn IsAbsPath(path: std::string_view) -> bool {...}
 ```
 
-Crubit automatically generates ABI-compatible bindings for structs (which can be
-passed both by value and by reference), functions, and methods, for a large
-variety of types. (Trivial types, nontrivial types, templated types, etc.)
+There are some temporary restrictions on the API shape. For example, if `path`
+were a `std::string`, or a non-`extern "C"` function, it would not be callable
+from Rust directly via Crubit. (For example, `std::string` is not rust-movable.)
+These restrictions will be relaxed over time.
+
+For actual copy-pastable examples on getting started with Crubit, see the
+[`examples/`](http://examples) subdirectory.
+`examples/cpp` includes code which actually calls C++ via Crubit, and a snapshot
+of what the generated interface looks like.
+
+<!-- TODO(b/276366603): Link to a codelab and reference documentation.-->
 
 ## Building Crubit
 
