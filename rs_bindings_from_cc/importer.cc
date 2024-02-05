@@ -942,7 +942,6 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
 
   if (auto override_type = GetTypeMapOverride(*type);
       override_type.has_value()) {
-    override_type->rs_type.unknown_attr = CollectUnknownTypeAttrs(*type);
     return *std::move(override_type);
   } else if (type->isPointerType() || type->isLValueReferenceType() ||
              type->isRValueReferenceType()) {
@@ -976,8 +975,6 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
           MappedType mapped_return_type,
           ConvertQualType(func_type->getReturnType(), return_lifetimes,
                           ref_qualifier_kind));
-
-      mapped_return_type.rs_type.unknown_attr = CollectUnknownTypeAttrs(*type);
 
       std::vector<MappedType> mapped_param_types;
       for (unsigned i = 0; i < func_type->getNumParams(); ++i) {
