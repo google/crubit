@@ -3218,16 +3218,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
             let fallback_type = match item {
                 // Type aliases are unique among items, in that if the item defining the alias fails
                 // to receive bindings, we can still use the aliased type.
-                // The one exception to this is that if we don't understand the attribute, we should
-                // not do this, because some attributes on aliases actually modify the type itself.
-                // (This isn't common, because the modern convention is that attributes should be
-                // defined in a way that permits you to ignore them, but some attributes predate
-                // this).
-                // For example, `using my_vector __attribute__ ((vector_size (16))) = int;` -- this
-                // is not an alias to an int, the way it appears to be if you ignore the attribute!
-                ir::Item::TypeAlias(alias) if alias.unknown_attr.is_none() => {
-                    Some(&alias.underlying_type.rs_type)
-                }
+                ir::Item::TypeAlias(alias) => Some(&alias.underlying_type.rs_type),
                 _ => None,
             };
             match (has_bindings(db, item), fallback_type) {

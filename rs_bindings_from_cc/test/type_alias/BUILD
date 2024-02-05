@@ -14,4 +14,7 @@ crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
     cc_deps = [":type_alias"],
+    proc_macro_deps = [
+        "//common:item_exists",
+    ],
 )

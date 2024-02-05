@@ -16,4 +16,8 @@ using ns::Int;
 // compiles.
 inline int return_underlying(Int i) { return i; }
 
+// This one, however, should NOT receive bindings.
+using MyVector __attribute__((vector_size(16))) = int;
+inline void VectorFunction(MyVector v) {}
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPE_ALIAS_TYPE_ALIAS_H_
