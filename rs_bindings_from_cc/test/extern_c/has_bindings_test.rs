@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use has_bindings::crubit::has_bindings;
+use static_assertions::assert_not_impl_any;
 
 #[test]
 fn test_void_function() {
@@ -118,4 +119,12 @@ fn test_nullable_function_pointer() {
         has_bindings::crubit_invoke_nullable_callback(f, &mut state);
     }
     assert_eq!(state, 42);
+}
+
+/// You can use a class that uses inheritance, but to Rust, it looks like
+/// private inheritance: the struct is only available as an opaque thunk within
+/// the derived class.
+#[test]
+fn test_oop() {
+    assert_not_impl_any!(has_bindings::MyDerivedStruct : oops::Inherits<has_bindings::Struct>);
 }

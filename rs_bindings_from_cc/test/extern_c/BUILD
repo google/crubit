@@ -25,6 +25,10 @@ crubit_rust_test(
     proc_macro_deps = [
         "//common:item_exists",
     ],
+    deps = [
+        "//support:oops",
+        "@crate_index//:static_assertions",
+    ],
 )
 
 crubit_rust_test(

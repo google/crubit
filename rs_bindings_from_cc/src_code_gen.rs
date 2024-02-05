@@ -2374,7 +2374,15 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         })
         .collect::<Result<Vec<_>>>()?;
 
-    record_generated_items.push(cc_struct_upcast_impl(record, &ir)?);
+    // Both the template definition and its instantiation should enable experimental
+    // features.
+    let mut crubit_features = ir.target_crubit_features(&record.owning_target);
+    if let Some(defining_target) = &record.defining_target {
+        crubit_features |= ir.target_crubit_features(defining_target);
+    }
+    if crubit_features.contains(ir::CrubitFeature::Experimental) {
+        record_generated_items.push(cc_struct_upcast_impl(record, &ir)?);
+    }
 
     let mut items = vec![];
     let mut thunks_from_record_items = vec![];

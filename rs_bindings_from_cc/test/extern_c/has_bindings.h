@@ -9,7 +9,7 @@
 namespace crubit::has_bindings {
 extern "C" {
 
-struct Struct final {
+struct Struct {
   int* x;
   float y;
   Struct* z;
@@ -57,5 +57,9 @@ inline void crubit_invoke_callback(void (&f)(int* x), int* x) { f(x); }
 typedef void (*NullableCallback)(int* x);
 inline void crubit_invoke_nullable_callback(void (*f)(int* x), int* x) { f(x); }
 }
+
+struct MyDerivedStruct : Struct {
+  int derived_x;
+};
 }  // namespace crubit::has_bindings
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_ALLOWED_H_
