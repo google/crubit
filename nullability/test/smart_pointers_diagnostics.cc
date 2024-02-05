@@ -198,5 +198,23 @@ TEST(SmartPointerTest, AccessSmartPointerReturnedByReference) {
   )cc"));
 }
 
+TEST(SmartPointerTest, AccessSmartPointerReturnedByPointerAlias) {
+  // This is a crash repro.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+
+    // When checking whether the base of a `->` member expression is a
+    // pointer-to-smart-pointer, it used to be that we didn't canonicalize the
+    // type. This test wraps such a return type in a type alias, which used to
+    // cause a crash. The `const` is important because, without it, the AST
+    // contains an `ImplicitCastExpr` that adds a `const`, desugaring the type
+    // in the process.
+    template <typename T>
+    using Alias = T;
+    Alias<const std::unique_ptr<int> *> getPtr();
+    void target() { *getPtr()->get(); }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

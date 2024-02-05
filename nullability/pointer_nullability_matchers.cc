@@ -60,6 +60,7 @@ using ast_matchers::memberExpr;
 using ast_matchers::parameterCountIs;
 using ast_matchers::pointee;
 using ast_matchers::pointerType;
+using ast_matchers::qualType;
 using ast_matchers::returnStmt;
 using ast_matchers::statementCountIs;
 using ast_matchers::thisPointerType;
@@ -117,8 +118,8 @@ Matcher<Stmt> isSmartPointerGlValue() {
 }
 
 Matcher<Stmt> isSmartPointerArrowMemberExpr() {
-  return memberExpr(hasObjectExpression(
-      hasType(pointerType(pointee(isSupportedSmartPointer())))));
+  return memberExpr(hasObjectExpression(hasType(qualType(
+      hasCanonicalType(pointerType(pointee(isSupportedSmartPointer())))))));
 }
 
 Matcher<Stmt> isSmartPointerConstructor() {

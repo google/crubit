@@ -28,9 +28,14 @@ const Nonnull<std::unique_ptr<int>> &returnNonnullRef();
 const Nullable<std::unique_ptr<int>> &returnNullableRef();
 const std::unique_ptr<int> &returnUnknownRef();
 
-const Nonnull<std::unique_ptr<int>> *returnPtrToNonnull();
-const Nullable<std::unique_ptr<int>> *returnPtrToNullable();
-const std::unique_ptr<int> *returnPtrToUnknown();
+// Add an extra wrinkle for the following functions by wrapping the return type
+// in a type alias. It used to be that we didn't canonicalize these types,
+// leading to crashes.
+template <typename T>
+using Alias = T;
+Alias<const Nonnull<std::unique_ptr<int>> *> returnPtrToNonnull();
+Alias<const Nullable<std::unique_ptr<int>> *> returnPtrToNullable();
+Alias<const std::unique_ptr<int> *> returnPtrToUnknown();
 
 TEST void parameterAnnotations(Nonnull<std::unique_ptr<int>> NonnullParam,
                                Nullable<std::unique_ptr<int>> NullableParam,
