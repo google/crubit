@@ -37,6 +37,7 @@ fn test_function() {
                         name: Some("::core::ffi::c_int"),
                         lifetime_args: [],
                         type_args: [],
+                        unknown_attr: None,
                         decl_id: None,
                     },
                     cc_type: CcType {
@@ -53,6 +54,7 @@ fn test_function() {
                                 name: Some("::core::ffi::c_int"),
                                 lifetime_args: [],
                                 type_args: [],
+                                unknown_attr: None,
                                 decl_id: None,
                             },
                             cc_type: CcType {
@@ -71,6 +73,7 @@ fn test_function() {
                                 name: Some("::core::ffi::c_int"),
                                 lifetime_args: [],
                                 type_args: [],
+                                unknown_attr: None,
                                 decl_id: None,
                             },
                             cc_type: CcType {
@@ -691,8 +694,10 @@ fn test_pointer_member_variable() {
                         type_args: [RsType {
                             name: None ...
                             type_args: [],
+                            unknown_attr: None,
                             decl_id: Some(...),
                         }],
+                        unknown_attr: None,
                         decl_id: None,
                     },
                     cc_type: CcType {
@@ -998,6 +1003,7 @@ fn test_typedef() -> Result<()> {
           name: Some("::core::ffi::c_int"),
           lifetime_args: [],
           type_args: [],
+          unknown_attr: None,
           decl_id: None,
         },
         cc_type: CcType {
@@ -1150,6 +1156,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
                     name: None,
                     lifetime_args: [],
                     type_args: [],
+                    unknown_attr: None,
                     decl_id: Some(ItemId(#record_id)),
                 },
                 cc_type: CcType {
@@ -1564,6 +1571,7 @@ fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
                     name: None,
                     lifetime_args: [],
                     type_args: [],
+                    unknown_attr: None,
                     decl_id: Some(ItemId(#record_id)),
                 },
                 cc_type: CcType {
@@ -1622,8 +1630,10 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
                             name: None,
                             lifetime_args: [],
                             type_args: [],
+                            unknown_attr: None,
                             decl_id: Some(ItemId(#record_id)),
                         }],
+                        unknown_attr: None,
                         decl_id: None,
                     },
                     cc_type: CcType {
@@ -1690,6 +1700,7 @@ fn test_fully_instantiated_template_in_public_field() -> Result<()> {
                                name: None,
                                lifetime_args: [],
                                type_args: [],
+                               unknown_attr: None,
                                decl_id: Some(ItemId(#record_id)),
                            },
                            cc_type: CcType {

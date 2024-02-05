@@ -153,6 +153,11 @@ class Importer final : public ImportContext {
       const clang::Type* type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
       std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable);
+  // Converts a type, without processing attributes.
+  absl::StatusOr<MappedType> ConvertUnattributedType(
+      const clang::Type* type,
+      const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
+      std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable);
   absl::StatusOr<MappedType> ConvertTypeDecl(clang::NamedDecl* decl);
 
   // Converts `type` into a MappedType, after first importing the Record behind

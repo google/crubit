@@ -63,6 +63,7 @@ llvm::json::Value RsType::ToJson() const {
                                    : llvm::json::Value(name)},
       {"lifetime_args", lifetime_args},
       {"type_args", type_args},
+      {"unknown_attr", unknown_attr},
       {"decl_id", decl_id},
   };
 }

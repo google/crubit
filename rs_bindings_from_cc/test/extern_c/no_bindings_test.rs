@@ -102,3 +102,9 @@ fn test_function_pointers() {
     assert!(!type_exists!(no_bindings::Callback));
     assert!(!value_exists!(no_bindings::crubit_invoke_callback));
 }
+
+#[test]
+fn test_type_attributes() {
+    assert!(!type_exists!(no_bindings::UnknownTypeAttribute));
+    assert!(!value_exists!(no_bindings::crubit_unknown_type_attribute));
+}

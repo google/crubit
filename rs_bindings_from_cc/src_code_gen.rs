@@ -3186,6 +3186,18 @@ fn unique_lifetimes<'a>(
 }
 
 fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind> {
+    if let Some(unknown_attr) = &ty.unknown_attr {
+        // In most places, we only bail for unknown attributes in extern_c. However,
+        // it's difficult and expensive to generate an RsTypeKind differently
+        // depending on the translation unit for the item that contains it.
+        // Rather than trying to keep going in experimental, we bail
+        // unconditionally.
+        //
+        // The correct fix for this error is to add support for the attributes which are
+        // not yet understood, but need to be used in practice.
+        bail!("unknown attribute(s): {unknown_attr}")
+    }
+
     let ir = db.ir();
     // The lambdas deduplicate code needed by multiple `match` branches.
     let get_type_args = || -> Result<Vec<RsTypeKind>> {

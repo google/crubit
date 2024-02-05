@@ -11,6 +11,7 @@
 #include "absl/functional/function_ref.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/Basic/AttrKinds.h"
 
 namespace crubit {
 
@@ -27,6 +28,14 @@ std::optional<std::string> CollectUnknownAttrs(
     const clang::Decl& decl,
     absl::FunctionRef<bool(const clang::Attr&)> is_known =
         [](const clang::Attr& attr) { return false; });
+
+// Returns a human-readable string containing the list of unknown attrs.
+//
+// is_known is called exactly once on every attribute, and returns true if the
+// attribute is understood.
+std::optional<std::string> CollectUnknownTypeAttrs(
+    const clang::Type& t, absl::FunctionRef<bool(clang::attr::Kind)> is_known =
+                              [](clang::attr::Kind attr) { return false; });
 
 }  // namespace crubit
 

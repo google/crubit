@@ -69,6 +69,9 @@ inline void* crubit_parameter_lifetimebound(void* x [[clang::lifetimebound]]) {
 
 typedef void (*Callback)(Nontrivial* x);
 inline void crubit_invoke_callback(void (*f)(Nontrivial* x)) { f(nullptr); }
+
+using UnknownTypeAttribute = __attribute__((noderef)) int*;
+inline void crubit_unknown_type_attribute(__attribute__((noderef)) int*) {}
 }  // extern "C"
 
 }  // namespace crubit::no_bindings

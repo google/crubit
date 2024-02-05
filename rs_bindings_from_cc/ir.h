@@ -201,6 +201,10 @@ struct RsType {
   // type).
   std::vector<LifetimeId> lifetime_args = {};
 
+  // A human-readable list of unknown attributes that should have applied to
+  // this RsType, or None if all attributes were understood.
+  std::optional<std::string> unknown_attr;
+
   // Type arguments for a generic type. Examples:
   //   i32 has no type arguments.
   //   *mut i32 has a single type argument, i32.

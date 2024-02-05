@@ -6,9 +6,7 @@
 
 #include <stdint.h>
 
-#include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -47,6 +45,7 @@
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/LLVM.h"
@@ -916,6 +915,25 @@ absl::StatusOr<MappedType> Importer::ConvertType(
     const clang::Type* type,
     const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
     std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
+  absl::StatusOr<MappedType> mapped_type =
+      ConvertUnattributedType(type, lifetimes, ref_qualifier_kind, nullable);
+  if (mapped_type.ok()) {
+    mapped_type->rs_type.unknown_attr =
+        CollectUnknownTypeAttrs(*type, [](clang::attr::Kind kind) {
+          using enum clang::attr::Kind;
+          // annotate_type is usually meaningless and can be acked as
+          // understood. The major exception is lifetimes, which we do already
+          // handle separately.
+          return kind == AnnotateType;
+        });
+  }
+  return mapped_type;
+}
+
+absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
+    const clang::Type* type,
+    const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
+    std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
 
@@ -924,6 +942,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
 
   if (auto override_type = GetTypeMapOverride(*type);
       override_type.has_value()) {
+    override_type->rs_type.unknown_attr = CollectUnknownTypeAttrs(*type);
     return *std::move(override_type);
   } else if (type->isPointerType() || type->isLValueReferenceType() ||
              type->isRValueReferenceType()) {
@@ -957,6 +976,8 @@ absl::StatusOr<MappedType> Importer::ConvertType(
           MappedType mapped_return_type,
           ConvertQualType(func_type->getReturnType(), return_lifetimes,
                           ref_qualifier_kind));
+
+      mapped_return_type.rs_type.unknown_attr = CollectUnknownTypeAttrs(*type);
 
       std::vector<MappedType> mapped_param_types;
       for (unsigned i = 0; i < func_type->getNumParams(); ++i) {

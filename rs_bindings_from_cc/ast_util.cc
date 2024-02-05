@@ -9,8 +9,12 @@
 
 #include "absl/functional/function_ref.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
+#include "clang/AST/Attr.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/LLVM.h"
 
 namespace crubit {
@@ -52,6 +56,42 @@ std::optional<std::string> CollectUnknownAttrs(
     absl::StrAppend(&*unknown_attr, attr->getAttrName()
                                         ? attr->getNormalizedFullName()
                                         : attr->getSpelling());
+  }
+  return unknown_attr;
+}
+
+absl::string_view DebugAttrName(clang::attr::Kind attr_kind) {
+  // TODO(jeanpierreda): Give some more human-readable name, e.g. using
+  // ParsedAttrInfo::getAllBuiltin.  Unfortunately, we don't have a TypeLoc,
+  // so we only have access to a Kind, which doesn't specify how it is spelled.
+  //
+  // For now, we use the symbol name, and prefix it with `clang::attr` to make
+  // it obvious it's an internal symbol and not something the user typed.
+  switch (attr_kind) {
+    // (Yes, the X-macro is really the only way to do it. Party like it's 1969!)
+#define ATTR(X)        \
+  case clang::attr::X: \
+    return "clang::attr::Kind::" #X;
+#include "clang/Basic/AttrList.inc"
+#undef ATTR
+  }
+}
+
+std::optional<std::string> CollectUnknownTypeAttrs(
+    const clang::Type& t, absl::FunctionRef<bool(clang::attr::Kind)> is_known) {
+  std::optional<std::string> unknown_attr;
+  const clang::Type* type = &t;
+  while (const auto* attributed_type = type->getAs<clang::AttributedType>()) {
+    clang::attr::Kind attr_kind = attributed_type->getAttrKind();
+    if (!is_known(attr_kind)) {
+      if (unknown_attr.has_value()) {
+        absl::StrAppend(&*unknown_attr, ", ");
+      } else {
+        unknown_attr.emplace("");
+      }
+      absl::StrAppend(&*unknown_attr, DebugAttrName(attr_kind));
+    }
+    type = attributed_type->getEquivalentType().getTypePtr();
   }
   return unknown_attr;
 }

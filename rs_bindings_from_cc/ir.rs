@@ -187,6 +187,7 @@ pub struct RsType {
     pub name: Option<Rc<str>>,
     pub lifetime_args: Rc<[LifetimeId]>,
     pub type_args: Rc<[RsType]>,
+    pub unknown_attr: Option<Rc<str>>,
     pub decl_id: Option<ItemId>,
 }
 
