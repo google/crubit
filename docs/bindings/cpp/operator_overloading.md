@@ -1,4 +1,4 @@
-# Bindings for operators and special member functions
+# Rust bindings for C++ operators and special member functions
 
 Here we describe how Crubit bindings work with C++ special member functions and
 operator overloading (e.g. the copy constructor, or `operator==`) and with

@@ -1,8 +1,4 @@
-# Bindings for function pointers
-
-Here we describe how Crubit maps function pointer types.
-
-## Rust bindings for C++ function pointer types
+# Rust bindings for C++ function pointer types
 
 C++ function pointer types map into the corresponding Rust types as follows:
 
@@ -22,28 +18,6 @@ fn(_: *mut c_void)`.
 
 The bindings fail for bindings that might require thunks (e.g. when parameter
 types or a return type require passing structs by value).
-
-## C++ bindings for Rust function pointer types
-
-When used as function parameter types or function return types, Rust function
-pointer types map into the corresponding C++ types as follows:
-
-Rust                         | C++
----------------------------- | --------------------------------------
-`extern "C" fn(i32)`         | `std::type_identity_t<void(int32_t)>&`
-`Option<extern "C" fn(i32)>` | Not supported
-
-In other scenarios Rust function pointer types map into the corresponding C++
-types as follows:
-
-Rust                         | C++
----------------------------- | --------------------------------------
-`extern "C" fn(i32)`         | `std::type_identity_t<void(int32_t)>*`
-`Option<extern "C" fn(i32)>` | Not supported
-
-TODO: Link to the not-yet-written `references.md` with a longer explanation why
-Rust references are sometimes bound to C++ references and sometimes to C++
-pointers (C++ references can only be bound once; C++ temporaries).
 
 ## Other notes
 
@@ -73,7 +47,3 @@ in template classes like
 [`std::function`](https://en.cppreference.com/w/cpp/utility/functional/function)
 or
 [`absl::AnyInvocable`](https://github.com/abseil/abseil-cpp/blob/master/absl/functional/any_invocable.h).
-
-TODO: To support bindings of types like `std::function`, `absl::AnyInvocable`,
-etc., Crubit may eventually need to provide a way to represent function types in
-Rust using a custom marker type provided via `crubit/support/cc_std`.

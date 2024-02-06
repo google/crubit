@@ -1,6 +1,6 @@
-# Bindings for primitive scalar types
+# Rust bindings for C++ fundamental types
 
-Here we describe how Crubit maps primitive scalar types like integers,
+Here we describe how Crubit maps the fundamental types like integers,
 floating-point numbers, etc.
 
 ## Bidirectional map of types
