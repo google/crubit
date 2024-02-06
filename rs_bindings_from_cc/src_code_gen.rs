@@ -2289,9 +2289,6 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             })
             .collect_vec()
     };
-    // TODO(b/212696226): Generate `assert_impl_all!` or `assert_not_impl_any!`
-    // assertions about the `Copy` trait - this trait should be implemented
-    // iff `should_implement_drop(record)` is false.
     let mut features = BTreeSet::new();
 
     let derives = generate_derives(record);

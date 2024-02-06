@@ -575,9 +575,6 @@ impl RsTypeKind {
     /// Returns whether the type represented by `self` implements the `Copy`
     /// trait.
     pub fn implements_copy(&self) -> bool {
-        // TODO(b/212696226): Verify results of `implements_copy` via static
-        // assertions in the generated Rust code (because incorrect results
-        // can silently lead to unsafe behavior).
         match self {
             RsTypeKind::Primitive { .. } => true,
             RsTypeKind::Pointer { .. } => true,
