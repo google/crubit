@@ -123,6 +123,11 @@ cc_test(
 )
 
 nullability_test(
+    name = "check_macros",
+    srcs = ["check_macros.cc"],
+)
+
+nullability_test(
     name = "comparisons",
     srcs = ["comparisons.cc"],
 )
@@ -172,6 +177,7 @@ cc_test(
     srcs = ["function_calls.cc"],
     deps = [
         ":check_diagnostics",
+        "@absl//absl/strings",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
@@ -340,6 +346,7 @@ cc_embed_data(
     srcs = [
         "nullability_annotations.h",
         "nullability_test.h",
+        "check.h",
         "check_diagnostics_preamble.h",
         "new",
         "memory",

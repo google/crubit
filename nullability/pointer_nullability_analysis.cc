@@ -17,6 +17,7 @@
 #include "nullability/pointer_nullability_matchers.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
@@ -31,6 +32,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
@@ -737,71 +739,78 @@ void transferValue_Pointer(absl::Nonnull<const Expr *> PointerExpr,
   }
 }
 
-// TODO(b/233582219): Implement promotion of nullability for initially
-// unknown pointers when there is evidence that it is nullable, for example
-// when the pointer is compared to nullptr, or casted to boolean.
-void transferValue_NullCheckComparison(
-    absl::Nonnull<const BinaryOperator *> BinaryOp,
-    const MatchFinder::MatchResult &result,
-    TransferState<PointerNullabilityLattice> &State) {
-  auto &A = State.Env.arena();
-
-  auto *LHS = getPointerValueFromExpr(BinaryOp->getLHS(), State.Env);
-  auto *RHS = getPointerValueFromExpr(BinaryOp->getRHS(), State.Env);
-
-  if (!LHS || !RHS) return;
-  if (!hasPointerNullState(*LHS) || !hasPointerNullState(*RHS)) return;
-
-  auto *LHSNull = getPointerNullState(*LHS).IsNull;
-  auto *RHSNull = getPointerNullState(*RHS).IsNull;
+// `ComparisonFormula` represents the comparison between the two pointer values.
+//
+// `LHSNull` and `RHSNull` represent the nullability of the left- and right-hand
+// expresssions, respectively. A nullptr value is interpreted as Top.
+absl::Nullable<BoolValue *> processPointerComparison(
+    const Formula &ComparisonFormula, absl::Nullable<const Formula *> LHSNull,
+    absl::Nullable<const Formula *> RHSNull, BinaryOperatorKind Opcode,
+    Environment &Env) {
+  auto &A = Env.arena();
 
   // If the null state of either pointer is "top", the result of the comparison
   // is a top bool, and we don't have any knowledge we can add to the flow
   // condition.
   if (LHSNull == nullptr || RHSNull == nullptr) {
-    State.Env.setValue(*BinaryOp, A.makeTopValue());
-    return;
+    return &A.makeTopValue();
   }
 
   // Special case: Are we comparing against `nullptr`?
   // We can avoid modifying the flow condition in this case and simply propagate
   // the nullability of the other operand (potentially with a negation).
-  if (LHSNull->isLiteral(true)) {
-    if (BinaryOp->getOpcode() == BO_EQ)
-      State.Env.setValue(*BinaryOp, A.makeBoolValue(*RHSNull));
-    else
-      State.Env.setValue(*BinaryOp, A.makeBoolValue(A.makeNot(*RHSNull)));
-    return;
-  }
-  if (RHSNull->isLiteral(true)) {
-    if (BinaryOp->getOpcode() == BO_EQ)
-      State.Env.setValue(*BinaryOp, A.makeBoolValue(*LHSNull));
-    else
-      State.Env.setValue(*BinaryOp, A.makeBoolValue(A.makeNot(*LHSNull)));
-    return;
-  }
+  if (LHSNull->isLiteral(true))
+    return &A.makeBoolValue(Opcode == BO_EQ ? *RHSNull : A.makeNot(*RHSNull));
 
-  // Boolean representing the comparison between the two pointer values,
-  // automatically created by the dataflow framework.
-  auto &PointerComparison =
-      cast<BoolValue>(State.Env.getValue(*BinaryOp))->formula();
+  if (RHSNull->isLiteral(true))
+    return &A.makeBoolValue(Opcode == BO_EQ ? *LHSNull : A.makeNot(*LHSNull));
 
-  CHECK(BinaryOp->getOpcode() == BO_EQ || BinaryOp->getOpcode() == BO_NE);
-  auto &PointerEQ = BinaryOp->getOpcode() == BO_EQ
-                        ? PointerComparison
-                        : A.makeNot(PointerComparison);
-  auto &PointerNE = BinaryOp->getOpcode() == BO_EQ
-                        ? A.makeNot(PointerComparison)
-                        : PointerComparison;
+  CHECK(Opcode == BO_EQ || Opcode == BO_NE);
+  auto &PointerEQ =
+      Opcode == BO_EQ ? ComparisonFormula : A.makeNot(ComparisonFormula);
+  auto &PointerNE =
+      Opcode == BO_EQ ? A.makeNot(ComparisonFormula) : ComparisonFormula;
 
   // nullptr == nullptr
-  State.Env.assume(A.makeImplies(A.makeAnd(*LHSNull, *RHSNull), PointerEQ));
+  Env.assume(A.makeImplies(A.makeAnd(*LHSNull, *RHSNull), PointerEQ));
   // nullptr != notnull
-  State.Env.assume(
+  Env.assume(
       A.makeImplies(A.makeAnd(*LHSNull, A.makeNot(*RHSNull)), PointerNE));
   // notnull != nullptr
-  State.Env.assume(
+  Env.assume(
       A.makeImplies(A.makeAnd(A.makeNot(*LHSNull), *RHSNull), PointerNE));
+
+  // We used the pre-existing formula, so nothing to return.
+  return nullptr;
+}
+
+// TODO(b/233582219): Implement promotion of nullability for initially
+// unknown pointers when there is evidence that it is nullable, for example
+// when the pointer is compared to nullptr, or cast to boolean.
+void transferValue_NullCheckComparison(
+    absl::Nonnull<const BinaryOperator *> BinaryOp,
+    const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  auto *LHS = BinaryOp->getLHS();
+  auto *RHS = BinaryOp->getRHS();
+  assert(LHS != nullptr && RHS != nullptr);
+
+  // Boolean representing the comparison between the two pointer values.
+  // We can rely on the dataflow framework to have produced a value for this.
+  auto *ComparisonVal = State.Env.get<BoolValue>(*BinaryOp);
+  assert(ComparisonVal != nullptr);
+  auto &ComparisonFormula = ComparisonVal->formula();
+
+  auto *LHSVal = getPointerValueFromExpr(LHS, State.Env);
+  if (!LHSVal || !hasPointerNullState(*LHSVal)) return;
+  auto *RHSVal = getPointerValueFromExpr(RHS, State.Env);
+  if (!RHSVal || !hasPointerNullState(*RHSVal)) return;
+
+  if (auto *Val = processPointerComparison(ComparisonFormula,
+                                           getPointerNullState(*LHSVal).IsNull,
+                                           getPointerNullState(*RHSVal).IsNull,
+                                           BinaryOp->getOpcode(), State.Env))
+    State.Env.setValue(*BinaryOp, *Val);
 }
 
 void transferValue_NullCheckImplicitCastPtrToBool(
@@ -821,7 +830,7 @@ void transferValue_NullCheckImplicitCastPtrToBool(
 }
 
 void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
-                               dataflow::Environment &Env, QualType ParamTy) {
+                               Environment &Env, QualType ParamTy) {
   // When a function has an "output parameter" - a non-const pointer or
   // reference to a pointer of unknown nullability - assume that the function
   // may set the pointer to non-null.
@@ -870,11 +879,114 @@ void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
   }
 }
 
+// `D` is declared somewhere in `absl`, either directly or nested.
+bool isDeclaredInAbseil(const Decl &D) {
+  const auto *DC = D.getDeclContext();
+  if (DC == nullptr || DC->isTranslationUnit()) return false;
+
+  // Find the topmost, non-TU DeclContext.
+  const DeclContext *Parent = DC->getParent();
+  while (Parent != nullptr && !Parent->isTranslationUnit()) {
+    DC = Parent;
+    Parent = DC->getParent();
+  }
+
+  // Check if it is the `absl` namespace.
+  const auto *NS = dyn_cast_or_null<NamespaceDecl>(DC);
+  return NS != nullptr && NS->getDeclName().isIdentifier() &&
+         NS->getName() == "absl";
+}
+
+// Models the Abseil logging `GetReferenceableValue` function.
+void modelAbseilGetReferenceableValue(const CallExpr &CE, Environment &Env) {
+  // We only model the `GetReferenceableValue` overload that takes and returns a
+  // reference.
+  if (!CE.isGLValue()) return;
+  assert(CE.getNumArgs() == 1);
+  assert(CE.getArg(0) != nullptr);
+  if (StorageLocation *Loc = Env.getStorageLocation(*CE.getArg(0)))
+    Env.setStorageLocation(CE, *Loc);
+}
+
+// Models the Abseil logging `CheckNE_Impl` function. Essentially, associates
+// the `IsNull` of the call result with the comparison `arg0 != arg1`.
+void modelAbseilCheckNE(const CallExpr &CE, Environment &Env) {
+  assert(isSupportedRawPointerType(CE.getType()));
+  auto *PointerVal = getPointerValueFromExpr(&CE, Env);
+  if (!PointerVal)
+    PointerVal = cast<PointerValue>(Env.createValue(CE.getType()));
+  // Force the pointer state to `Nullable`, which we will then potentially
+  // refine below.
+  // TODO Add the annotation in the logging library so that we don't have
+  // to hard-code this here.
+  initPointerNullState(*PointerVal, Env.getDataflowAnalysisContext(),
+                       NullabilityKind::Nullable);
+  Env.setValue(CE, *PointerVal);
+  const Formula *IsNull = getPointerNullState(*PointerVal).IsNull;
+  assert(IsNull != nullptr && "`IsNull` can never be 'Top' here");
+
+  auto *LHS = CE.getArg(0);
+  auto *RHS = CE.getArg(1);
+  assert(LHS != nullptr && RHS != nullptr);
+  auto LTy = LHS->getType();
+  auto RTy = RHS->getType();
+
+  if (!isSupportedPointerType(LTy) && !LTy->isNullPtrType()) return;
+  if (!isSupportedPointerType(RTy) && !RTy->isNullPtrType()) return;
+
+  const Formula *LHSNull = nullptr;
+  if (LTy->isNullPtrType()) {
+    // Values of nullptr type are not themselves pointers and so not
+    // modeled directly. They are only modeled if and when they are cast
+    // to pointers. So, we need to supply a formula directly.
+    LHSNull = &Env.arena().makeLiteral(true);
+  } else {
+    auto *V = getPointerValueFromExpr(LHS, Env);
+    if (!V) return;
+    assert(hasPointerNullState(*V));
+    LHSNull = getPointerNullState(*V).IsNull;
+  }
+
+  const Formula *RHSNull = nullptr;
+  if (RTy->isNullPtrType()) {
+    RHSNull = &Env.arena().makeLiteral(true);
+  } else {
+    auto *V = getPointerValueFromExpr(RHS, Env);
+    if (!V) return;
+    assert(hasPointerNullState(*V));
+    RHSNull = getPointerNullState(*V).IsNull;
+  }
+
+  if (auto *Val =
+          processPointerComparison(*IsNull, LHSNull, RHSNull, BO_NE, Env))
+    Env.assume(Env.arena().makeEquals(Val->formula(), *IsNull));
+}
+
 void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
                             const MatchFinder::MatchResult &Result,
                             TransferState<PointerNullabilityLattice> &State) {
-  // The dataflow framework itself does not create values for `CallExpr`s.
-  // However, we need these in some cases, so we produce them ourselves.
+  // The dataflow framework itself generally does not model `CallExpr`s
+  // (including creating values for the results). We model some specific
+  // function calls and handle value creation for certain types.
+
+  const auto *FuncDecl = CE->getDirectCallee();
+  if (FuncDecl != nullptr) {
+    if (const IdentifierInfo *FunII =
+            FuncDecl->getDeclName().getAsIdentifierInfo()) {
+      if (FunII->isStr("__assert_nullability")) return;
+
+      // This is part of the implementation of `CHECK_NE`.
+      if (FunII->isStr("GetReferenceableValue") &&
+          isDeclaredInAbseil(*FuncDecl)) {
+        modelAbseilGetReferenceableValue(*CE, State.Env);
+        return;
+      }
+      if (FunII->isStr("Check_NEImpl") && isDeclaredInAbseil(*FuncDecl)) {
+        modelAbseilCheckNE(*CE, State.Env);
+        return;
+      }
+    }
+  }
 
   StorageLocation *Loc = nullptr;
   if (CE->isGLValue()) {
@@ -898,6 +1010,7 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
     if (!PointerVal) {
       PointerVal = cast<PointerValue>(State.Env.createValue(CE->getType()));
     }
+
     initPointerFromTypeNullability(*PointerVal, CE, State);
 
     if (Loc != nullptr)
@@ -910,14 +1023,9 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
     initSmartPointerForExpr(CE, State);
   }
 
+  if (CE->isCallToStdMove() || FuncDecl == nullptr) return;
+
   // Make output parameters (with unknown nullability) initialized to unknown.
-  if (CE->isCallToStdMove()) return;
-  const auto *FuncDecl = CE->getDirectCallee();
-  if (!FuncDecl) return;
-  if (auto *II = FuncDecl->getDeclName().getAsIdentifierInfo();
-      II && II->isStr("__assert_nullability")) {
-    return;
-  }
   for (ParamAndArgIterator<CallExpr> Iter(*FuncDecl, *CE); Iter; ++Iter)
     initializeOutputParameter(&Iter.arg(), State.Env, Iter.param().getType());
 }
