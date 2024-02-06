@@ -2362,7 +2362,6 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         forward_declare::unsafe_define!(forward_declare::symbol!(#fully_qualified_cc_name), #qualified_ident);
     };
 
-    let no_unique_address_accessors = cc_struct_no_unique_address_impl(db, record)?;
     let mut record_generated_items = record
         .child_item_ids
         .iter()
@@ -2383,6 +2382,11 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
     if crubit_features.contains(ir::CrubitFeature::Experimental) {
         record_generated_items.push(cc_struct_upcast_impl(record, &ir)?);
     }
+    let no_unique_address_accessors = if crubit_features.contains(ir::CrubitFeature::Experimental) {
+        cc_struct_no_unique_address_impl(db, record)?
+    } else {
+        quote! {}
+    };
 
     let mut items = vec![];
     let mut thunks_from_record_items = vec![];
@@ -9008,6 +9012,31 @@ mod tests {
         assert_rs_not_matches!(rs_api, quote! {NotPresent});
         assert_rs_matches!(rs_api, quote! {pub fn Func(x: ::core::ffi::c_int)});
         assert_rs_matches!(rs_api, quote! {pub fn Func2() -> ::core::ffi::c_int});
+        Ok(())
+    }
+
+    #[test]
+    fn test_extern_c_no_unique_address_field() -> Result<()> {
+        let mut ir = ir_from_cc(
+            r#"
+            struct Struct final {
+                [[no_unique_address]] char field;
+            };
+        "#,
+        )?;
+        *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+            ir::CrubitFeature::ExternC.into();
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub struct Struct {
+                    ...
+                    pub(crate) field: [::core::mem::MaybeUninit<u8>; 1],
+                }
+            }
+        );
+        assert_rs_not_matches!(rs_api, quote! {pub fn field});
         Ok(())
     }
 
