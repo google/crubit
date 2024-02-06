@@ -158,10 +158,26 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
       using pointer = char *;
     };
 
+    template <int i>
+    struct Recursive : public Recursive<i - 1> {};
+    template <>
+    class Recursive<0> {};
+
+    template <int i>
+    struct IndirectRecursive;
+    template <int i>
+    struct Base : public IndirectRecursive<i - 1> {};
+    template <int i>
+    struct IndirectRecursive : public Base<i> {};
+    template <>
+    struct IndirectRecursive<0> {};
+
     using UniquePointer = std::unique_ptr<int>;
     using SharedPointer = std::shared_ptr<int>;
     using PublicDerivedPointer = PublicDerived<int>;
     using UserDefined = UserDefinedSmartPointer<int>;
+    using Recursive2 = Recursive<2>;
+    using IndirectRecursive2 = IndirectRecursive<2>;
     // Force the compiler to instantiate the templates. Otherwise, the
     // `ClassTemplateSpecializationDecl` won't contain a `TypedefNameDecl` for
     // `pointer` or `element_type`, and `underlyingRawPointerType()` will
@@ -170,6 +186,8 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     template class std::shared_ptr<int>;
     template class PublicDerived<int>;
     template class UserDefinedSmartPointer<int>;
+    template class Recursive<2>;
+    template class IndirectRecursive<2>;
   )cpp");
 
   QualType PointerToCharTy = AST.context().getPointerType(AST.context().CharTy);
@@ -181,6 +199,9 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
             PointerToCharTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("UserDefined", AST)),
             PointerToCharTy);
+  EXPECT_TRUE(underlyingRawPointerType(underlying("Recursive2", AST)).isNull());
+  EXPECT_TRUE(
+      underlyingRawPointerType(underlying("IndirectRecursive2", AST)).isNull());
 }
 
 TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
@@ -207,6 +228,22 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
     template <typename T>
     using Nullable [[clang::annotate("Nullable")]] = T;
     using NullableUniquePointer = Nullable<std::unique_ptr<int>>;
+
+    template <int i>
+    struct Recursive : public Recursive<i - 1> {};
+    template <>
+    class Recursive<0> {};
+    using Recursive2 = Recursive<2>;
+
+    template <int i>
+    struct IndirectRecursive;
+    template <int i>
+    struct Base : public IndirectRecursive<i - 1> {};
+    template <int i>
+    struct IndirectRecursive : public Base<i> {};
+    template <>
+    struct IndirectRecursive<0> {};
+    using IndirectRecursive2 = IndirectRecursive<2>;
   )cpp");
 
   QualType PointerToIntTy = AST.context().getPointerType(AST.context().IntTy);
@@ -224,6 +261,10 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
 
   EXPECT_EQ(underlyingRawPointerType(underlying("NullableUniquePointer", AST)),
             PointerToIntTy);
+
+  EXPECT_TRUE(underlyingRawPointerType(underlying("Recursive2", AST)).isNull());
+  EXPECT_TRUE(
+      underlyingRawPointerType(underlying("IndirectRecursive2", AST)).isNull());
 }
 
 class GetNullabilityAnnotationsFromTypeTest : public ::testing::Test {

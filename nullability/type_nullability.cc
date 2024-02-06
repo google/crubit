@@ -28,6 +28,7 @@
 #include "clang/Basic/Specifiers.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Support/SaveAndRestore.h"
 #include "llvm/Support/ScopedPrinter.h"
 
@@ -76,22 +77,9 @@ static bool hasAbslNullabilityCompatibleTag(const CXXRecordDecl *RD) {
   return RD->lookup(It->getValue()).find_first<TypedefNameDecl>() != nullptr;
 }
 
-static absl::Nullable<CXXRecordDecl *> getBaseDecl(
-    const CXXBaseSpecifier &Base) {
-  if (CXXRecordDecl *RD = Base.getType()->getAsCXXRecordDecl()) return RD;
-  // If we didn't get a `CXXRecordDecl` above, this could be something like
-  // `unique_ptr<T>` (where `T` is a dependent type). In this case, return the
-  // `CXXRecordDecl` of the underlying template -- it's the best we can do.
-  if (const auto *TST = Base.getType()->getAs<TemplateSpecializationType>())
-    return dyn_cast<CXXRecordDecl>(
-        TST->getTemplateName().getAsTemplateDecl()->getTemplatedDecl());
-  return nullptr;
-}
-
-/// If `RD` or one of its public bases is a smart pointer class, returns that
-/// smart pointer class; otherwise, returns null.
 static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
-    absl::Nullable<const CXXRecordDecl *> RD) {
+    absl::Nullable<const CXXRecordDecl *> RD,
+    llvm::SmallPtrSet<const CXXRecordDecl *, 2> &Seen) {
   if (RD == nullptr) return nullptr;
 
   if (isStandardSmartPointerDecl(RD) || hasAbslNullabilityCompatibleTag(RD))
@@ -100,12 +88,46 @@ static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
   if (RD->hasDefinition())
     for (const CXXBaseSpecifier &Base : RD->bases())
       if (Base.getAccessSpecifier() == AS_public) {
-        if (const CXXRecordDecl *BaseClass =
-                getSmartPointerBaseClass(getBaseDecl(Base)))
-          return BaseClass;
+        const CXXRecordDecl *BaseClass = Base.getType()->getAsCXXRecordDecl();
+
+        // If we didn't get a `CXXRecordDecl` above, this could be something
+        // like `unique_ptr<T>` (where `T` is a dependent type). In this case,
+        // return the `CXXRecordDecl` of the underlying template -- it's the
+        // best we can do.
+        if (BaseClass == nullptr) {
+          if (const auto *TST =
+                  Base.getType()->getAs<TemplateSpecializationType>()) {
+            BaseClass = dyn_cast<CXXRecordDecl>(
+                TST->getTemplateName().getAsTemplateDecl()->getTemplatedDecl());
+
+            // We need to be careful here: Once we start looking at underlying
+            // templates, we may walk into cycles, as a template may derive from
+            // itself (either directly or indirectly), though with different
+            // template arguments.
+            // To protect against infinite recursion, make sure we haven't seen
+            // this particular base class before. (We only need to do this in
+            // this case where we're looking at the template itself rather than
+            // a specialization.)
+            if (BaseClass != nullptr) {
+              if (!Seen.insert(BaseClass).second) return nullptr;
+            }
+          }
+        }
+
+        if (const CXXRecordDecl *Result =
+                getSmartPointerBaseClass(BaseClass, Seen))
+          return Result;
       }
 
   return nullptr;
+}
+
+/// If `RD` or one of its public bases is a smart pointer class, returns that
+/// smart pointer class; otherwise, returns null.
+static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
+    absl::Nullable<const CXXRecordDecl *> RD) {
+  llvm::SmallPtrSet<const CXXRecordDecl *, 2> Seen;
+  return getSmartPointerBaseClass(RD, Seen);
 }
 
 QualType underlyingRawPointerType(QualType T) {
