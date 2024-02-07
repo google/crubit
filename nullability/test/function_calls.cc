@@ -10,8 +10,7 @@
 namespace clang::tidy::nullability {
 namespace {
 
-TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
-  // free function
+TEST(PointerNullabilityTest, CallExprWithPointerReturnTypeFreeFunction) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     int *_Nonnull makeNonnull();
     int *_Nullable makeNullable();
@@ -22,8 +21,9 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       *makeUnannotated();
     }
   )cc"));
+}
 
-  // member function
+TEST(PointerNullabilityTest, CallExprWithPointerReturnTypeMemberFunction) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       int *_Nonnull makeNonnull();
@@ -36,8 +36,9 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       *foo.makeUnannotated();
     }
   )cc"));
+}
 
-  // function pointer
+TEST(PointerNullabilityTest, CallExprWithPointerReturnTypeFunctionPointer) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull (*makeNonnull)(),
                 int *_Nullable (*makeNullable)(), int *(*makeUnannotated)()) {
@@ -46,8 +47,10 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       *makeUnannotated();
     }
   )cc"));
+}
 
-  // pointer to function pointer
+TEST(PointerNullabilityTest,
+     CallExprWithPointerReturnTypePointerToFunctionPointer) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull (**makeNonnull)(),
                 int *_Nullable (**makeNullable)(), int *(**makeUnannotated)()) {
@@ -56,7 +59,10 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       *(*makeUnannotated)();
     }
   )cc"));
+}
 
+TEST(PointerNullabilityTest,
+     CallExprWithPointerReturnTypeFunctionPointerNested) {
   // function returning a function pointer which returns a pointer
   EXPECT_TRUE(checkDiagnostics(R"cc(
     typedef int *_Nonnull (*MakeNonnullT)();
@@ -69,7 +75,9 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       *(*makeUnannotated)()();
     }
   )cc"));
+}
 
+TEST(PointerNullabilityTest, CallExprWithPointerReturnTypePointerRef) {
   // free function returns reference to pointer
   EXPECT_TRUE(checkDiagnostics(R"cc(
     int *_Nonnull &makeNonnull();
@@ -87,7 +95,9 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       __assert_nullability<NK_nonnull, NK_unspecified>(&makeUnannotated());
     }
   )cc"));
+}
 
+TEST(PointerNullabilityTest, CallExprWithPointerReturnTypeInLoop) {
   // function called in loop
   EXPECT_TRUE(checkDiagnostics(R"cc(
     int *_Nullable makeNullable();
