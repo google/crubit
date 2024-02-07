@@ -48,8 +48,6 @@ class ReplaceMacrosCallbacks : public clang::PPCallbacks {
   };
   State State = State::HaveNotSeenReplacementFile;
 
-  clang::MacroDirective *findReplacement(IdentifierInfo &II);
-
   void MacroDefined(const clang::Token &MacroNameTok,
                     const clang::MacroDirective *MD) override;
 
