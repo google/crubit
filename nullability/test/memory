@@ -187,16 +187,21 @@ shared_ptr<DestT> reinterpret_pointer_cast(const shared_ptr<SrcT> &&);
 
 template <class T1, class T2>
 bool operator==(const shared_ptr<T1> &, const shared_ptr<T2> &);
-template <class T1, class T2>
-bool operator!=(const shared_ptr<T1> &, const shared_ptr<T2> &);
 template <class T>
 bool operator==(const shared_ptr<T> &, std::nullptr_t);
+
+// C++20 and later do not define the following overloads because they are
+// provided by rewritten candidates instead.
+#if __cplusplus < 202002L
+template <class T1, class T2>
+bool operator!=(const shared_ptr<T1> &, const shared_ptr<T2> &);
 template <class T>
 bool operator==(std::nullptr_t, const shared_ptr<T> &);
 template <class T>
 bool operator!=(const shared_ptr<T> &, std::nullptr_t);
 template <class T>
 bool operator!=(std::nullptr_t, const shared_ptr<T> &);
+#endif  // __cplusplus < 202002L
 
 // This mock only provides the definitions needed to test that
 // `weak_ptr::lock()` returns a nullable pointer.
