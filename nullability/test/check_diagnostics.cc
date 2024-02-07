@@ -12,12 +12,13 @@
 #include "clang/Tooling/Tooling.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 
-bool checkDiagnostics(llvm::StringRef SourceCode) {
+static bool checkDiagnostics(llvm::StringRef SourceCode, const char *CxxMode) {
   using ast_matchers::BoundNodes;
   using ast_matchers::functionDecl;
   using ast_matchers::hasName;
@@ -26,7 +27,7 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
 
   llvm::Annotations AnnotatedCode(SourceCode);
   std::vector<std::string> ASTBuildArgs = {"-fsyntax-only",
-                                           "-std=c++17",
+                                           CxxMode,
                                            "-Wno-unused-value",
                                            "-Wno-nonnull",
                                            "-include",
@@ -86,6 +87,12 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
   }
 
   return Success;
+}
+
+bool checkDiagnostics(llvm::StringRef SourceCode) {
+  for (const char *CxxMode : {"-std=c++17", "-std=c++20"})
+    if (!checkDiagnostics(SourceCode, CxxMode)) return false;
+  return true;
 }
 
 }  // namespace clang::tidy::nullability
