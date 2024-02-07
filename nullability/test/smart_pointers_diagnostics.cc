@@ -216,5 +216,18 @@ TEST(SmartPointerTest, AccessSmartPointerReturnedByPointerAlias) {
   )cc"));
 }
 
+TEST(SmartPointerTest, SmartPointerFlowSensitive) {
+  // Simple flow-sensitive test with a smart pointer.
+  // This is a repro for a false positive that we used to encounter in C++20
+  // mode.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    void target(Nullable<std::shared_ptr<int>> NullablePtr) {
+      *NullablePtr;  // [[unsafe]]
+      if (NullablePtr != nullptr) *NullablePtr;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

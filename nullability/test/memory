@@ -135,6 +135,8 @@ public:
   template <class OtherT>
   shared_ptr &operator=(const shared_ptr<OtherT> &) {}
 
+  T& operator*() const {}
+
   void reset() {}
   template <class OtherT>
   void reset(OtherT *) {}
