@@ -94,6 +94,5 @@ bindings_for_toolchain_headers = rule(
         "@rules_rust//rust:toolchain_type",
         "@bazel_tools//tools/cpp:toolchain_type",
     ],
-    host_fragments = ["cpp"],
     fragments = ["cpp", "google_cpp"],
 )
