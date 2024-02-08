@@ -2110,7 +2110,8 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
 
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
-        .iter()
+        .into_iter()
+        .flatten()
         .map(|impl_id| tcx.hir().expect_item(impl_id.expect_local()))
         .flat_map(|item| match &item.kind {
             ItemKind::Impl(impl_) => impl_.items,
