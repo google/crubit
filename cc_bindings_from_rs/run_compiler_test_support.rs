@@ -98,7 +98,7 @@ where
         override_queries: None,
         make_codegen_backend: None,
         hash_untracked_state: None,
-        registry: rustc_errors::registry::Registry::new(rustc_error_codes::DIAGNOSTICS),
+        registry: rustc_errors::registry::Registry::new(rustc_errors::DIAGNOSTICS),
         locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES,
         ice_file: None,
         expanded_args: vec![],
