@@ -90,6 +90,8 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, const char *CxxMode) {
 }
 
 bool checkDiagnostics(llvm::StringRef SourceCode) {
+  // Run in C++17 and C++20 mode to cover differences in the AST between modes
+  // (e.g. C++20 can contain `CXXRewrittenBinaryOperator`).
   for (const char *CxxMode : {"-std=c++17", "-std=c++20"})
     if (!checkDiagnostics(SourceCode, CxxMode)) return false;
   return true;
