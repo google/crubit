@@ -38,9 +38,11 @@ static bool SmartPointersEnabled = false;
 
 namespace test {
 
-EnableSmartPointers::EnableSmartPointers() { SmartPointersEnabled = true; }
+EnableSmartPointers::EnableSmartPointers() { enableSmartPointers(true); }
 
 }  // namespace test
+
+void enableSmartPointers(bool Enabled) { SmartPointersEnabled = Enabled; }
 
 bool smartPointersEnabled() { return SmartPointersEnabled; }
 
