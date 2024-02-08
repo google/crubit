@@ -2987,15 +2987,6 @@ fn crubit_features_for_item(
                 // don't generally support with that feature set, because in this
                 // particular case, it's safe.
                 crubit_features |= ir::CrubitFeature::ExternC;
-                // Rather than walking the parameters -- which are not supported in extern_c
-                // (`&mut self`) -- we just look up the single `this` parameter's feature
-                // requirements.
-                let Some(meta) = &func.member_func_metadata else {
-                    bail!("Destructor without `this`");
-                };
-                let ir = db.ir();
-                let record: &Item = ir.find_decl(meta.record_id)?;
-                crubit_features |= crubit_features_for_item(db, record)?;
             } else {
                 for t in func.types() {
                     let t = db.rs_type_kind(t.rs_type.clone())?;
