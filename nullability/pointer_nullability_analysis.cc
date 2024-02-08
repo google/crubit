@@ -44,7 +44,6 @@
 
 namespace clang::tidy::nullability {
 
-using ast_matchers::cxxRewrittenBinaryOperator;
 using ast_matchers::MatchFinder;
 using dataflow::Arena;
 using dataflow::BoolValue;
@@ -830,14 +829,6 @@ void transferValue_NullCheckImplicitCastPtrToBool(
     State.Env.setValue(*CastExpr, A.makeTopValue());
 }
 
-void transferValue_CXXRewrittenBinaryOperator(
-    absl::Nonnull<const CXXRewrittenBinaryOperator *> RBO,
-    const MatchFinder::MatchResult &,
-    TransferState<PointerNullabilityLattice> &State) {
-  if (Value *Val = State.Env.getValue(*RBO->getSemanticForm()))
-    State.Env.setValue(*RBO, *Val);
-}
-
 void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
                                Environment &Env, QualType ParamTy) {
   // When a function has an "output parameter" - a non-const pointer or
@@ -1479,11 +1470,6 @@ auto buildValueTransferer() {
       // Handles checking of pointer as boolean.
       .CaseOfCFGStmt<Expr>(isImplicitCastPointerToBool(),
                            transferValue_NullCheckImplicitCastPtrToBool)
-      // TODO: Remove this once the framework has support for
-      // `CXXRewrittenBinaryOperator`.
-      .CaseOfCFGStmt<CXXRewrittenBinaryOperator>(
-          cxxRewrittenBinaryOperator(),
-          transferValue_CXXRewrittenBinaryOperator)
       .Build();
 }
 
