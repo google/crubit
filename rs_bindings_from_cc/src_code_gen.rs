@@ -21,7 +21,7 @@ use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ffi::{OsStr, OsString};
-use std::fmt::Write as _;
+use std::fmt::{Display, Formatter, Write as _};
 use std::iter::{self, Iterator};
 use std::panic::catch_unwind;
 use std::path::Path;
@@ -2857,8 +2857,8 @@ enum HasBindings {
 #[derive(Clone, PartialEq, Eq)]
 enum NoBindingsReason {
     MissingRequiredFeatures {
-        missing_features: flagset::FlagSet<ir::CrubitFeature>,
-        target: BazelLabel,
+        context: Rc<str>,
+        missing_features: Vec<RequiredCrubitFeature>,
     },
     DependencyFailed {
         context: Rc<str>,
@@ -2871,27 +2871,57 @@ enum NoBindingsReason {
     },
 }
 
+/// A missing set of crubit features caused by a capability that requires that
+/// feature.
+///
+/// For example, if addition is not implemented due to missing the Experimental
+/// feature on //foo, then we might have something like:
+///
+/// ```
+/// RequiredCrubitFeature {
+///   target: "//foo".into(),
+///   item: "kFoo".into(),
+///   missing_features: ir::CrubitFeature::Experimental.into(),
+///   capability_description: "int addition".into(),
+/// }
+/// ```
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct RequiredCrubitFeature {
+    pub target: BazelLabel,
+    pub item: Rc<str>,
+    pub missing_features: flagset::FlagSet<ir::CrubitFeature>,
+    pub capability_description: Rc<str>,
+}
+
+impl Display for RequiredCrubitFeature {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        let Self { target, item, missing_features, capability_description } = self;
+        let feature_strings: Vec<&str> =
+            missing_features.into_iter().map(|feature| feature.aspect_hint()).collect();
+        write!(f, "{target} needs [{features}] for {item}", features = feature_strings.join(", "),)?;
+        if !capability_description.is_empty() {
+            write!(f, " ({capability_description})")?;
+        }
+        Ok(())
+    }
+}
+
 #[must_use]
 fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
     let ir = db.ir();
-    // We refuse to generate bindings if either the definition of an item, or
-    // instantiation (if it is a template) an item are in a translation unit which
-    // doesn't have the required Crubit features.
-    for target in item.defining_target().into_iter().chain(item.owning_target()) {
-        let required_features = match crubit_features_for_item(db, item) {
-            Ok(features) => features,
-            Err(error) => {
-                return HasBindings::No(NoBindingsReason::DependencyFailed {
-                    context: item.debug_name(&ir),
-                    error,
-                });
-            }
-        };
-        let missing_features = required_features - ir.target_crubit_features(target);
-        if !missing_features.is_empty() {
+
+    match required_crubit_features(db, item) {
+        Ok(missing_features) if missing_features.is_empty() => {}
+        Ok(missing_features) => {
             return HasBindings::No(NoBindingsReason::MissingRequiredFeatures {
+                context: item.debug_name(&db.ir()),
                 missing_features,
-                target: target.clone(),
+            });
+        }
+        Err(error) => {
+            return HasBindings::No(NoBindingsReason::DependencyFailed {
+                context: item.debug_name(&db.ir()),
+                error,
             });
         }
     }
@@ -2947,10 +2977,16 @@ fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
 impl From<NoBindingsReason> for Error {
     fn from(reason: NoBindingsReason) -> Error {
         match reason {
-            NoBindingsReason::MissingRequiredFeatures { missing_features, target } => {
-                let feature_strings: Vec<&str> =
-                    missing_features.into_iter().map(|feature| feature.aspect_hint()).collect();
-                anyhow!("Missing required features on {target}: [{}]", feature_strings.join(", "))
+            NoBindingsReason::MissingRequiredFeatures { context, missing_features } => {
+                // This maybe could use .context(), but the ordering is backward.
+                let mut all_missing = vec![];
+                for missing in missing_features {
+                    all_missing.push(missing.to_string());
+                }
+                anyhow!(
+                    "Can't generate bindings for {context}, because of missing required features (<internal link>):\n{}",
+                    all_missing.join("\n")
+                )
             }
             NoBindingsReason::DependencyFailed { context, error } => error.context(format!(
                 "Can't generate bindings for {context} due to missing bindings for its dependency"
@@ -2962,22 +2998,45 @@ impl From<NoBindingsReason> for Error {
     }
 }
 
-/// Returns the crubit features required to support bindings for an item.
+/// Returns Ok(()) if bindings can be generated given the feature requirements
+/// for the item.
 ///
 /// If the item doesn't have a defining target, the return value is meaningless,
 /// and bindings will always be generated.
 ///
 /// If the item does have a defining target, and it doesn't enable the specified
 /// features, then bindings are suppressed for this item.
-fn crubit_features_for_item(
+fn required_crubit_features(
     db: &dyn BindingsGenerator,
     item: &Item,
-) -> Result<flagset::FlagSet<ir::CrubitFeature>> {
-    // TODO(b/318006909): Explain why a given feature is required, don't just return
-    // a FlagSet.
-    let mut crubit_features = flagset::FlagSet::<ir::CrubitFeature>::default();
-    if item.unknown_attr().is_some() {
-        crubit_features |= ir::CrubitFeature::Experimental;
+) -> Result<Vec<RequiredCrubitFeature>> {
+    let mut missing_features = vec![];
+
+    let ir = &db.ir();
+
+    let mut require_features =
+        |required_features: flagset::FlagSet<ir::CrubitFeature>,
+         capability_description: &dyn Fn() -> Rc<str>| {
+            // We refuse to generate bindings if either the definition of an item, or
+            // instantiation (if it is a template) an item are in a translation unit which
+            // doesn't have the required Crubit features.
+            for target in item.defining_target().into_iter().chain(item.owning_target()) {
+                let missing = required_features - ir.target_crubit_features(target);
+                if !missing.is_empty() {
+                    missing_features.push(RequiredCrubitFeature {
+                        target: target.clone(),
+                        item: item.debug_name(ir),
+                        missing_features: missing,
+                        capability_description: capability_description(),
+                    });
+                }
+            }
+        };
+
+    if let Some(unknown_attr) = item.unknown_attr() {
+        require_features(ir::CrubitFeature::Experimental.into(), &|| {
+            format!("unknown attribute(s): {unknown_attr}").into()
+        });
     }
     match item {
         Item::UnsupportedItem(..) => {}
@@ -2986,52 +3045,98 @@ fn crubit_features_for_item(
                 // We support destructors in extern_c even though they use some features we
                 // don't generally support with that feature set, because in this
                 // particular case, it's safe.
-                crubit_features |= ir::CrubitFeature::ExternC;
+                require_features(ir::CrubitFeature::ExternC.into(), &|| "destructors".into());
             } else {
+                // TODO(b/318006909): Explain the required feature from the RsTypeKind in
+                // detail. TODO(b/318006909): Actually specify _which_
+                // parameter, or the return type.
                 for t in func.types() {
                     let t = db.rs_type_kind(t.rs_type.clone())?;
-                    crubit_features |= t.required_crubit_features()?
+                    require_features(t.required_crubit_features()?, &|| {
+                        "parameter or return type which requires this feature".into()
+                    });
                 }
                 if func.is_extern_c {
-                    crubit_features |= ir::CrubitFeature::ExternC;
+                    require_features(ir::CrubitFeature::ExternC.into(), &|| {
+                        "extern \"C\" function".into()
+                    });
                 } else {
-                    crubit_features |= ir::CrubitFeature::Experimental;
+                    require_features(ir::CrubitFeature::Experimental.into(), &|| {
+                        "non-extern \"C\" function".into()
+                    });
                 }
-                if !func.has_c_calling_convention
-                    || func.is_noreturn
-                    || func.nodiscard.is_some()
-                    || func.deprecated.is_some()
-                {
-                    crubit_features |= ir::CrubitFeature::Experimental;
+                if !func.has_c_calling_convention {
+                    require_features(ir::CrubitFeature::Experimental.into(), &|| {
+                        "non-C calling convention".into()
+                    });
+                }
+                if func.is_noreturn {
+                    require_features(ir::CrubitFeature::Experimental.into(), &|| {
+                        "[[noreturn]] attribute".into()
+                    });
+                }
+                if func.nodiscard.is_some() {
+                    require_features(ir::CrubitFeature::Experimental.into(), &|| {
+                        "[[nodiscard]] attribute".into()
+                    });
+                }
+                if func.deprecated.is_some() {
+                    require_features(ir::CrubitFeature::Experimental.into(), &|| {
+                        "[[deprecated]] attribute".into()
+                    });
                 }
                 for param in &func.params {
-                    if param.unknown_attr.is_some() {
-                        crubit_features |= ir::CrubitFeature::Experimental;
+                    if let Some(unknown_attr) = &param.unknown_attr {
+                        require_features(ir::CrubitFeature::Experimental.into(), &|| {
+                            format!(
+                                "param {param} has unknown attribute(s): {unknown_attr}",
+                                param = &param.identifier.identifier
+                            )
+                            .into()
+                        });
                     }
                 }
             }
         }
         Item::Record(record) => {
-            crubit_features |=
-                RsTypeKind::new_record(record.clone(), &db.ir())?.required_crubit_features()?
+            // TODO(b/318006909): Explain the required feature from the RsTypeKind in
+            // detail.
+            require_features(
+                RsTypeKind::new_record(record.clone(), &db.ir())?.required_crubit_features()?,
+                &|| "".into(),
+            );
         }
         Item::TypeAlias(alias) => {
-            crubit_features |= new_type_alias(db, alias.clone())?.required_crubit_features()?;
+            // TODO(b/318006909): Explain the required feature from the RsTypeKind in
+            // detail.
+            require_features(
+                new_type_alias(db, alias.clone())?.required_crubit_features()?,
+                &|| "".into(),
+            );
         }
         Item::Enum(e) => {
-            crubit_features |=
-                RsTypeKind::new_enum(e.clone(), &db.ir())?.required_crubit_features()?
+            // TODO(b/318006909): Explain the required feature from the RsTypeKind in
+            // detail.
+            require_features(
+                RsTypeKind::new_enum(e.clone(), &db.ir())?.required_crubit_features()?,
+                &|| "".into(),
+            );
         }
         Item::Namespace(_) => {
-            crubit_features |= ir::CrubitFeature::ExternC;
+            require_features(ir::CrubitFeature::ExternC.into(), &|| "namespace".into());
         }
-        _ => {
-            crubit_features |= ir::CrubitFeature::Experimental;
+        Item::IncompleteRecord(_) => {
+            require_features(ir::CrubitFeature::Experimental.into(), &|| "incomplete type".into());
+        }
+        Item::Comment { .. } | Item::UseMod { .. } => {}
+        Item::TypeMapOverride { .. } => {
+            require_features(ir::CrubitFeature::Experimental.into(), &|| {
+                "type map override".into()
+            });
         }
     }
-    Ok(crubit_features)
+    Ok(missing_features)
 }
-
 /// Identifies all functions having overloads that we can't import (yet).
 ///
 /// TODO(b/213280424): Implement support for overloaded functions.
@@ -9041,12 +9146,15 @@ mod tests {
             let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
             assert_rs_not_matches!(rs_api, quote! {NotPresent});
             assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
+            let contents = rs_tokens_to_formatted_string_for_tests(rs_api)?;
+            // using a string comparison and leaving off the end, because the exact reason
+            // why differs per item.
             let expected = "\
-                Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
-                Error while generating bindings for item 'NotPresent':\n\
-                Missing required features on //test:testing_target: [//features:extern_c]\
-            ";
-            assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
+                // Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+                // Error while generating bindings for item 'NotPresent':\n\
+                // Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
+                // //test:testing_target needs [//features:extern_c] for NotPresent";
+            assert!(contents.contains(expected), "Missing expected string: {contents}\n")
         }
         Ok(())
     }
@@ -9063,8 +9171,8 @@ mod tests {
             let expected = "\
                 Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
                 Error while generating bindings for item 'NotPresent':\n\
-                Missing required features on //test:testing_target: [//features:experimental]\
-            ";
+                Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
+                //test:testing_target needs [//features:experimental] for NotPresent";
             assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         }
         Ok(())
@@ -9082,8 +9190,8 @@ mod tests {
             let expected = "\
                 Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
                 Error while generating bindings for item 'Func':\n\
-                Failed to format type of parameter 0: Missing required features on //test:dependency: [//features:extern_c]\
-            ";
+                Failed to format type of parameter 0: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
+                //test:dependency needs [//features:extern_c] for NotPresent";
             assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         }
         Ok(())
@@ -9092,57 +9200,53 @@ mod tests {
     #[test]
     fn test_default_crubit_features_disabled_dependency_experimental_function_parameter()
     -> Result<()> {
-        for dependency in ["struct NotPresent {~NotPresent();};"] {
-            let mut ir = ir_from_cc_dependency("void Func(NotPresent);", dependency)?;
-            ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
-            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
-            assert_rs_not_matches!(rs_api, quote! {Func});
-            assert_cc_not_matches!(rs_api_impl, quote! {Func});
-            let expected = "\
-                Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
-                Error while generating bindings for item 'Func':\n\
-                Failed to format type of parameter 0: Missing required features on //test:dependency: [//features:experimental]\
-            ";
-            assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
-        }
+        let mut ir =
+            ir_from_cc_dependency("void Func(NotPresent);", "struct NotPresent {~NotPresent();};")?;
+        ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_not_matches!(rs_api, quote! {Func});
+        assert_cc_not_matches!(rs_api_impl, quote! {Func});
+        let expected = "\
+            Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+            Error while generating bindings for item 'Func':\n\
+            Failed to format type of parameter 0: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
+            //test:dependency needs [//features:experimental] for NotPresent";
+        assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         Ok(())
     }
 
     #[test]
     fn test_default_crubit_features_disabled_dependency_extern_c_function_return_type() -> Result<()>
     {
-        for dependency in ["struct NotPresent {};"] {
-            let mut ir = ir_from_cc_dependency("NotPresent Func();", dependency)?;
-            ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
-            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
-            assert_rs_not_matches!(rs_api, quote! {Func});
-            assert_cc_not_matches!(rs_api_impl, quote! {Func});
-            let expected = "\
-                Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
-                Error while generating bindings for item 'Func':\n\
-                Failed to format return type: Missing required features on //test:dependency: [//features:extern_c]\
-            ";
-            assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
-        }
+        let mut ir = ir_from_cc_dependency("NotPresent Func();", "struct NotPresent {};")?;
+        ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_not_matches!(rs_api, quote! {Func});
+        assert_cc_not_matches!(rs_api_impl, quote! {Func});
+        let expected = "\
+            Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+            Error while generating bindings for item 'Func':\n\
+            Failed to format return type: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
+            //test:dependency needs [//features:extern_c] for NotPresent";
+        assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         Ok(())
     }
 
     #[test]
     fn test_default_crubit_features_disabled_dependency_experimental_function_return_type()
     -> Result<()> {
-        for dependency in ["struct NotPresent {~NotPresent();};"] {
-            let mut ir = ir_from_cc_dependency("NotPresent Func();", dependency)?;
-            ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
-            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
-            assert_rs_not_matches!(rs_api, quote! {Func});
-            assert_cc_not_matches!(rs_api_impl, quote! {Func});
-            let expected = "\
-                Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
-                Error while generating bindings for item 'Func':\n\
-                Failed to format return type: Missing required features on //test:dependency: [//features:experimental]\
-            ";
-            assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
-        }
+        let mut ir =
+            ir_from_cc_dependency("NotPresent Func();", "struct NotPresent {~NotPresent();};")?;
+        ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_not_matches!(rs_api, quote! {Func});
+        assert_cc_not_matches!(rs_api_impl, quote! {Func});
+        let expected = "\
+            Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+            Error while generating bindings for item 'Func':\n\
+            Failed to format return type: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
+            //test:dependency needs [//features:experimental] for NotPresent";
+        assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         Ok(())
     }
 

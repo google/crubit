@@ -393,6 +393,9 @@ impl RsTypeKind {
     /// feature. However, in the case of fields inside compound data types,
     /// only those fields require the feature, not the entire type.
     pub fn required_crubit_features(&self) -> Result<flagset::FlagSet<CrubitFeature>> {
+        // TODO(b/318006909): Explain why a given feature is required, don't just return
+        // a FlagSet.
+
         /// Required features, sans recursion.
         fn required_crubit_features_flat(
             rs_type_kind: &RsTypeKind,
