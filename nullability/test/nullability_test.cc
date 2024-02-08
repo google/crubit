@@ -606,8 +606,15 @@ int main(int argc, const char **argv) {
     }
     bool handleBeginSource(clang::CompilerInstance &CI) override {
       const auto &SM = CI.getSourceManager();
-      Output.startSuite(llvm::sys::path::stem(llvm::sys::path::filename(
-          SM.getBufferName(SM.getLocForStartOfFile(SM.getMainFileID())))));
+      llvm::StringRef FilenameStem =
+          llvm::sys::path::stem(llvm::sys::path::filename(
+              SM.getBufferName(SM.getLocForStartOfFile(SM.getMainFileID()))));
+      llvm::StringRef LangStd =
+          clang::LangStandard::getLangStandardForKind(CI.getLangOpts().LangStd)
+              .getName();
+      std::string SuiteName =
+          (llvm::Twine(FilenameStem) + " (" + LangStd + ")").str();
+      Output.startSuite(SuiteName);
       CI.getDiagnostics().setClient(&Output, /*Owns=*/false);
       return true;
     }
@@ -629,10 +636,13 @@ int main(int argc, const char **argv) {
   for (const auto &Entry :
        llvm::ArrayRef(test_headers_create(), test_headers_size()))
     Executor.mapVirtualFile(Entry.name, Entry.data);
-  require(Executor.execute(
-      clang::tooling::newFrontendActionFactory(&F, &F),
-      // Ensure test_headers are on the include path.
-      clang::tooling::getInsertArgumentAdjuster(
-          "-isystem.", clang::tooling::ArgumentInsertPosition::END)));
+  // Run in C++17 and C++20 mode to cover differences in the AST between modes
+  // (e.g. C++20 can contain `CXXRewrittenBinaryOperator`).
+  for (const char *CxxMode : {"-std=c++17", "-std=c++20"})
+    require(Executor.execute(clang::tooling::newFrontendActionFactory(&F, &F),
+                             clang::tooling::getInsertArgumentAdjuster(
+                                 // Ensure test_headers are on the include path.
+                                 {"-isystem.", CxxMode},
+                                 clang::tooling::ArgumentInsertPosition::END)));
   return F.Output.hadErrors() ? 1 : 0;
 }
