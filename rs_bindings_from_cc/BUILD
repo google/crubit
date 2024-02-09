@@ -343,6 +343,7 @@ cc_library(
 rust_library(
     name = "ir",
     srcs = ["ir.rs"],
+    visibility = ["//rs_bindings_from_cc/generate_bindings:__subpackages__"],
     deps = [
         "//common:arc_anyhow",
         "//common:code_gen_utils",
@@ -365,6 +366,7 @@ rust_library(
     name = "ir_testing",
     testonly = 1,
     srcs = ["ir_testing.rs"],
+    visibility = ["//rs_bindings_from_cc/generate_bindings:__subpackages__"],
     deps = [
         ":ir",
         ":json_from_cc",
@@ -448,9 +450,9 @@ cc_library(
     hdrs = ["src_code_gen.h"],
     deps = [
         ":cc_ir",
-        ":src_code_gen_impl",  # buildcleaner: keep
         "//common:cc_ffi_types",
         "//common:status_macros",
+        "//rs_bindings_from_cc/generate_bindings",  # buildcleaner: keep
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@llvm-project//llvm:Support",
@@ -458,46 +460,9 @@ cc_library(
 )
 
 rust_library(
-    name = "src_code_gen_impl",
-    srcs = [
-        "rs_snippet.rs",
-        "src_code_gen.rs",
-    ],
-    crate_root = "src_code_gen.rs",
-    deps = [
-        ":error_report",
-        ":ir",
-        "//common:arc_anyhow",
-        "//common:code_gen_utils",
-        "//common:ffi_types",
-        "//common:token_stream_printer",
-        "@crate_index//:flagset",
-        "@crate_index//:itertools",
-        "@crate_index//:once_cell",
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
-        "@crate_index//:salsa",
-        "@crate_index//:serde_json",
-        "@crate_index//:syn",
-    ],
-)
-
-multiplatform_rust_test(
-    name = "src_code_gen_impl_test",
-    crate = ":src_code_gen_impl",
-    tags = ["not_run:arm"],
-    deps = [
-        ":ir_matchers",
-        ":ir_testing",
-        "//common:multiplatform_testing",
-        "//common:token_stream_matchers",
-        "@crate_index//:static_assertions",
-    ],
-)
-
-rust_library(
     name = "error_report",
     srcs = ["error_report.rs"],
+    visibility = ["//rs_bindings_from_cc/generate_bindings:__subpackages__"],
     deps = [
         "//common:arc_anyhow",
         "@crate_index//:anyhow",
