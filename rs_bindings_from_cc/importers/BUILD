@@ -87,6 +87,7 @@ cc_library(
         "//rs_bindings_from_cc:bazel_types",
         "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
+        "//rs_bindings_from_cc:recording_diagnostic_consumer",
         "@absl//absl/log:check",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",

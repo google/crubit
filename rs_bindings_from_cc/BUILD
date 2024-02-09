@@ -260,6 +260,8 @@ cc_library(
         "@absl//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:frontend",
+        "@llvm-project//clang:sema",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -522,6 +524,22 @@ cc_library(
         "@absl//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
+    ],
+)
+
+cc_library(
+    name = "recording_diagnostic_consumer",
+    srcs = ["recording_diagnostic_consumer.cc"],
+    hdrs = ["recording_diagnostic_consumer.h"],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        "@absl//absl/log",
+        "@absl//absl/strings",
+        "@absl//absl/strings:str_format",
+        "@llvm-project//clang:basic",
+        "@llvm-project//llvm:Support",
     ],
 )
 

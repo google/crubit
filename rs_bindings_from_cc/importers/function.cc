@@ -23,6 +23,7 @@
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/DeclarationName.h"
@@ -213,23 +214,18 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   bool undeduced_return_type =
       function_decl->getReturnType()->isUndeducedType();
   if (undeduced_return_type) {
-    // TODO(b/317866933): Consider surfacing the instantiation error in
-    // generated bindings or to stderr.
     // Use a custom diagnoser as the `DeduceReturnType` call may fail, which is
     // OK if this is a method of a class template, since Crubit instantiates the
     // members of the class templates eagerly.
-    std::unique_ptr<clang::DiagnosticConsumer> original_client =
-        ictx_.sema_.getDiagnostics().takeClient();
-    clang::DiagnosticConsumer diagnostic_consumer;
-    ictx_.sema_.getDiagnostics().setClient(&diagnostic_consumer, false);
-    // Attempt to deduce the return type.
-    undeduced_return_type = ictx_.sema_.DeduceReturnType(
-        function_decl, function_decl->getLocation());
-    // Restore the diagnostic client.
-    ictx_.sema_.getDiagnostics().setClient(original_client.release(),
-                                           /*ShouldOwnClient=*/true);
+    crubit::RecordingDiagnosticConsumer diagnostic_recorder =
+        crubit::RecordDiagnostics(ictx_.sema_.getDiagnostics(), [&] {
+          undeduced_return_type = ictx_.sema_.DeduceReturnType(
+              function_decl, function_decl->getLocation());
+        });
     if (undeduced_return_type) {
-      add_error("Couldn't deduce the return type");
+      add_error(absl::StrCat("Couldn't deduce the return type",
+                             diagnostic_recorder.ConcatenatedDiagnostics(
+                                 ": Diagnostics emitted:\n")));
     }
   }
   absl::StatusOr<MappedType> return_type;

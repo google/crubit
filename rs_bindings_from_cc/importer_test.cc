@@ -10,6 +10,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "common/status_test_matchers.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -901,6 +902,35 @@ TEST(ImporterTest, RecordItemIds) {
                     Contains(VariantWith<UnsupportedItem>(
                         NameIs("TopLevelStruct::Nested"))),
                     Contains(VariantWith<Func>(IdentifierIs("baz")))));
+}
+
+TEST(ImporterTest, FailedClassTemplateMethod) {
+  absl::string_view file = R"cc(
+    struct NoMethod final {};
+    template <typename T>
+    struct A final {
+      auto CallMethod(T t) { return t.method(); }
+    };
+    using B = A<NoMethod>;
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+
+  const UnsupportedItem* unsupported_method = nullptr;
+  for (auto unsupported_item : ir.get_items_if<UnsupportedItem>()) {
+    if (unsupported_item->name == "A<NoMethod>::CallMethod") {
+      unsupported_method = unsupported_item;
+      break;
+    }
+  }
+  ASSERT_TRUE(unsupported_method != nullptr);
+  EXPECT_TRUE(absl::StrContains(
+      unsupported_method->message,
+      // clang-format off
+R"(Diagnostics emitted:
+ir_from_cc_virtual_header.h:l:5:12: note: in instantiation of member function 'A<NoMethod>::CallMethod' requested here
+ir_from_cc_virtual_header.h:l:5:39: error: no member named 'method' in 'NoMethod')")
+              // clang-format on
+  );
 }
 
 TEST(ImporterTest, CrashRepro_FunctionTypeAlias) {
