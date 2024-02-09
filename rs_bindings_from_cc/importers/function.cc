@@ -70,6 +70,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (!ictx_.IsFromCurrentTarget(function_decl)) return std::nullopt;
   if (function_decl->isDeleted()) return std::nullopt;
 
+  clang::FunctionDecl* template_decl_for_method =
+      function_decl->getInstantiatedFromMemberFunction();
   if (IsInStdNamespace(function_decl)) {
     if (clang::IdentifierInfo* id = function_decl->getIdentifier();
         id != nullptr && id->getName().find("__") != llvm::StringRef::npos) {
@@ -80,11 +82,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     // Disable all member functions except the destructor (which cannot have
     // special requirements) until we can conditionally import them, or disable
     // them on a more fine-grained basis.
-    if (clang::FunctionDecl* templated_function_decl =
-            function_decl->getInstantiatedFromMemberFunction();
-        templated_function_decl != nullptr &&
-        !ictx_.IsFromCurrentTarget(templated_function_decl) &&
-        templated_function_decl->getDeclName().getNameKind() !=
+    if (template_decl_for_method != nullptr &&
+        !ictx_.IsFromCurrentTarget(template_decl_for_method) &&
+        template_decl_for_method->getDeclName().getNameKind() !=
             clang::DeclarationName::NameKind::CXXDestructorName) {
       return ictx_.ImportUnsupportedItem(
           function_decl,
@@ -108,6 +108,66 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
   }
 
+  // We should only import methods of class template specializations
+  // that can be instantiated: the template may spell out the method,
+  // but it's not guaranteed to be instantiable for the template parameter(s);
+  // importing an un-instantiable method causes Crubit to generate a thunk to
+  // invoke this method, which triggers instantiation when compiling the
+  // generated bindings, which fails the build.
+  if (template_decl_for_method) {
+    if (!function_decl->isDefined()) {
+      // Here, we have the option to instantiate the function
+      // definition recursively, that is, to instantiate the function
+      // templates invoked within the (templated) body. This checks the
+      // validity of the function template more thoroughly than simply
+      // ensuring the type of the invoked function template is correct: e.g.,
+      // If `Recursive` is set, a diagnostic would be emitted if the function
+      // template invoked in the body fails to instantiate (e.g., due to a
+      // static_assert) but still passes type checking. However, this has the
+      // side effect of actually instantiating the invoked function template
+      // and the invoked function template would be considered "defined", so
+      // we wouldn't be able to get diagnostics when actually importing the
+      // invoked function template.
+      // TODO(b/248542210): Propagate the validity check of function templates
+      // in a function template body.
+      // TODO(b/248542210): `clang::Sema::InstantiateClassMembers` checks more
+      // constraints (than here) when instantiating the methods, consider use
+      // that API instead (and avoid calling `InstantiateFunctionDefinition`
+      // here). We don't use it now because we cannot clearly attribute
+      // emitted diagnostics to a member decl (we need diagnostics because the
+      // decl may be considered valid `!decl->isInvalidDecl()` while its
+      // instantiation may fail.)
+      auto point_of_instantiation = function_decl->getPointOfInstantiation();
+      // Point of instantiation is invalid if Crubit is eagerly
+      // instantiating a method of a class template specialization.
+      if (point_of_instantiation.isInvalid()) {
+        point_of_instantiation = function_decl->getLocation();
+      }
+      crubit::RecordingDiagnosticConsumer diagnostic_recorder =
+          crubit::RecordDiagnostics(ictx_.sema_.getDiagnostics(), [&] {
+            ictx_.sema_.InstantiateFunctionDefinition(point_of_instantiation,
+                                                      function_decl);
+          });
+      std::string diagnostics = diagnostic_recorder.ConcatenatedDiagnostics(
+          ": Diagnostics emitted:\n");
+      if (diagnostic_recorder.getNumErrors() != 0) {
+        // Clang considers the function decl valid even fatal diagnostics is
+        // emitted during instantiation. However, such diagnostics would fail
+        // compilation of generated bindings, so it's invalid as far as Crubit
+        // is concerned, thus set it as invalid here.
+        function_decl->setInvalidDecl();
+        return ictx_.ImportUnsupportedItem(
+            function_decl,
+            absl::StrCat("Failed to instantiate the function/method template",
+                         diagnostics));
+      }
+    }
+  }
+  if (function_decl->isInvalidDecl()) {
+    return ictx_.ImportUnsupportedItem(
+        function_decl, "Function declaration is considered invalid");
+  }
+
   clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
   std::optional<clang::tidy::lifetimes::FunctionLifetimes> lifetimes;
   llvm::Expected<clang::tidy::lifetimes::FunctionLifetimes> lifetimes_or_err =
@@ -124,10 +184,11 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
           switch (lifetime_err->type()) {
             case LifetimeError::Type::ElisionNotEnabled:
             case LifetimeError::Type::CannotElideOutputLifetimes:
-              // If elision is not enabled or output lifetimes cannot be elided,
-              // we want to import the function with raw lifetime-less pointers.
-              // Just return success here; this will leave the `lifetimes`
-              // optional empty, and we will then handle this accordingly below.
+              // If elision is not enabled or output lifetimes cannot be
+              // elided, we want to import the function with raw lifetime-less
+              // pointers. Just return success here; this will leave the
+              // `lifetimes` optional empty, and we will then handle this
+              // accordingly below.
               return llvm::Error::success();
               break;
             default:
@@ -214,9 +275,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   bool undeduced_return_type =
       function_decl->getReturnType()->isUndeducedType();
   if (undeduced_return_type) {
-    // Use a custom diagnoser as the `DeduceReturnType` call may fail, which is
-    // OK if this is a method of a class template, since Crubit instantiates the
-    // members of the class templates eagerly.
+    // Use a custom diagnoser as the `DeduceReturnType` call may fail, which
+    // is OK if this is a method of a class template, since Crubit
+    // instantiates the members of the class templates eagerly.
     crubit::RecordingDiagnosticConsumer diagnostic_recorder =
         crubit::RecordDiagnostics(ictx_.sema_.getDiagnostics(), [&] {
           undeduced_return_type = ictx_.sema_.DeduceReturnType(
@@ -303,8 +364,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (!doc_comment.has_value() && is_member_or_descendant_of_class_template) {
     // Despite `is_member_or_descendant_of_class_template` check above, we are
     // not guaranteed that a `func_pattern` exists below.  For example, it may
-    // be missing when `function_decl` is an implicitly defined constructor of a
-    // class template -- such decls are generated, not instantiated.
+    // be missing when `function_decl` is an implicitly defined constructor of
+    // a class template -- such decls are generated, not instantiated.
     if (clang::FunctionDecl* func_pattern =
             function_decl->getTemplateInstantiationPattern()) {
       doc_comment = ictx_.GetComment(func_pattern);
