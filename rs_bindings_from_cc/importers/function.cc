@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/function.h"
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <set>
@@ -79,19 +80,6 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
           function_decl,
           "Internal functions from the standard library are not supported");
     }
-    // Disable all member functions except the destructor (which cannot have
-    // special requirements) until we can conditionally import them, or disable
-    // them on a more fine-grained basis.
-    if (template_decl_for_method != nullptr &&
-        !ictx_.IsFromCurrentTarget(template_decl_for_method) &&
-        template_decl_for_method->getDeclName().getNameKind() !=
-            clang::DeclarationName::NameKind::CXXDestructorName) {
-      return ictx_.ImportUnsupportedItem(
-          function_decl,
-          "TODO(b/248542210,b/248577708): as a temporary workaround for "
-          "un-instantiable function templates, template functions from the STL "
-          "cannot be instantiated in user crates");
-    }
   }
   // Method is private, we don't need to import it.
   if (auto* method_decl =
@@ -115,7 +103,19 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   // invoke this method, which triggers instantiation when compiling the
   // generated bindings, which fails the build.
   if (template_decl_for_method) {
-    if (!function_decl->isDefined()) {
+    // Some methods in STL are explicitly marked with
+    // `__attribute__((exclude_from_explicit_instantiation))`, and attempt to
+    // instantiate them may crash clang, so we skip them for now.
+    bool skip_instantiation = false;
+    if (template_decl_for_method->hasAttrs()) {
+      skip_instantiation = std::any_of(
+          function_decl->attr_begin(), function_decl->attr_end(),
+          [](auto attr) {
+            return clang::isa<clang::ExcludeFromExplicitInstantiationAttr>(
+                attr);
+          });
+    }
+    if (!function_decl->isDefined() && !skip_instantiation) {
       // Here, we have the option to instantiate the function
       // definition recursively, that is, to instantiate the function
       // templates invoked within the (templated) body. This checks the

@@ -28,6 +28,8 @@ struct A final {
 
   int Call_MethodReturnInt(T t) { return t.Method(); }
 
+  int Call_Call_MethodReturnInt(T t) { return Call_MethodReturnInt(t); }
+
   // TODO:(b/248542210): Currently, Crubit still imports the following method,
   // since `FailMethod` passes type checking (but would fail instantiation), and
   // Crubit doesn't check function templates recursively.

@@ -26,4 +26,14 @@ fn test_failed_template_instantiation_member_function_preserves_instantiable() {
         1,
         AForHasMethodReturningInt::default().Call_MethodReturnInt(HasMethodReturningInt::default())
     );
+    AForHasMethodReturningInt::default().Call_MethodReturnAuto(HasMethodReturningInt::default());
+    assert_eq!(
+        1,
+        AForHasMethodReturningInt::default().Call_MethodReturnInt(HasMethodReturningInt::default())
+    );
+    assert_eq!(
+        1,
+        AForHasMethodReturningInt::default()
+            .Call_Call_MethodReturnInt(HasMethodReturningInt::default())
+    );
 }

@@ -78,7 +78,7 @@ LIBCXX_HEADERS = [
     "unordered_set",
     "utility",
     "variant",
-    # "vector", # TODO(b/248542210): include vector when we can conditionally import methods.
+    "vector",
 ]
 
 LIBC_HEADERS = []
