@@ -277,6 +277,7 @@ cc_library(
         ":type_map",
         "//common:status_macros",
         "//lifetime_annotations:type_lifetimes",
+        "//rs_bindings_from_cc:recording_diagnostic_consumer",
         "//rs_bindings_from_cc/importers:class_template",
         "//rs_bindings_from_cc/importers:cxx_record",
         "//rs_bindings_from_cc/importers:enum",

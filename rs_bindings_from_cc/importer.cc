@@ -36,6 +36,7 @@
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "rs_bindings_from_cc/type_map.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -854,23 +855,18 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
   // clang::tooling::runToolOnCodeWithArgs to return an error status. To avoid
   // erroring out, we temporarily use our own implementation of
   // DiagnosticConsumer here.
-  // Unfortunately, this hides template instantiation errors, which sometimes
-  // indicates a malformed header (that should ideally be fixed), which
-  // sometimes indicates Crubit is more eager to instantiate templates than
-  // necessary (e.g., an attempting to instantiate a template that's only
-  // forward-declared).
-  // TODO(b/317866933): Consider surfacing the instantiation error in generated
-  // bindings or to stderr.
-  std::unique_ptr<clang::DiagnosticConsumer> original_client =
-      sema_.getDiagnostics().takeClient();
-  clang::DiagnosticConsumer diagnostic_consumer;
-  sema_.getDiagnostics().setClient(&diagnostic_consumer, false);
-  // Attempt to instantiate.
-  (void)sema_.isCompleteType(specialization_decl->getLocation(),
-                             ctx_.getRecordType(specialization_decl));
-  // Restore.
-  sema_.getDiagnostics().setClient(original_client.release(),
-                                   /*ShouldOwnClient=*/true);
+  crubit::RecordingDiagnosticConsumer diagnostic_recorder =
+      crubit::RecordDiagnostics(sema_.getDiagnostics(), [&] {
+        // Attempt to instantiate.
+        (void)sema_.isCompleteType(specialization_decl->getLocation(),
+                                   ctx_.getRecordType(specialization_decl));
+      });
+  if (diagnostic_recorder.getNumErrors() != 0) {
+    return absl::InvalidArgumentError(absl::Substitute(
+        "Failed to complete template specialization type $0: Diagnostics "
+        "emitted:\n$1",
+        type_string, diagnostic_recorder.ConcatenatedDiagnostics()));
+  }
 
   // TODO(lukasza): Limit specialization depth? (e.g. using
   // `isSpecializationDepthGreaterThan` from earlier prototypes).
