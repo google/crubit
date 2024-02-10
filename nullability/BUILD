@@ -36,7 +36,6 @@ cc_library(
     name = "pointer_nullability_matchers",
     srcs = ["pointer_nullability_matchers.cc"],
     hdrs = ["pointer_nullability_matchers.h"],
-    visibility = ["//nullability/test:__pkg__"],
     deps = [
         ":type_nullability",
         "@llvm-project//clang:ast",
