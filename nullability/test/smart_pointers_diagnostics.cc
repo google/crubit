@@ -229,5 +229,26 @@ TEST(SmartPointerTest, SmartPointerFlowSensitive) {
   )cc"));
 }
 
+TEST(SmartPointerTest, SimpleIfFpRepro) {
+  // This is a repro for a false positive.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    bool cond();
+
+    void target() {
+      std::shared_ptr<int> p;
+      while (cond()) {
+        if (p != nullptr) {
+          *p;  // False positive here
+        } else {
+          p = std::make_shared<int>();
+        }
+        if (cond()) continue;
+        p.reset();
+      }
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

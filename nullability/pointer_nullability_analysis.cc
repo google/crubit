@@ -285,9 +285,6 @@ void initPointerFromTypeNullability(
 /// Returns a new pointer value referencing the same location as `PointerVal`
 /// but with any "top" nullability properties unpacked into fresh atoms.
 /// This is analogous to the unpacking done on `TopBoolValue`s in the framework.
-/// TODO(mboehme): When we add support for smart pointers, this function will
-/// also need to be called when accessing the `PointerValue` that underlies the
-/// smart pointer.
 absl::Nullable<PointerValue *> unpackPointerValue(PointerValue &PointerVal,
                                                   Environment &Env) {
   auto [FromNullable, Null] = getPointerNullState(PointerVal);
@@ -682,6 +679,14 @@ void transferValue_SmartPointer(
     const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   initSmartPointerForExpr(PointerExpr, State);
+
+  auto *SmartPtrLoc = State.Env.get<RecordStorageLocation>(*PointerExpr);
+  if (SmartPtrLoc == nullptr) return;
+  StorageLocation &PtrLoc = SmartPtrLoc->getSyntheticField(PtrField);
+  auto *PtrVal = State.Env.get<PointerValue>(PtrLoc);
+  if (PtrVal == nullptr) return;
+  if (PointerValue *NewPtrVal = unpackPointerValue(*PtrVal, State.Env))
+    State.Env.setValue(PtrLoc, *NewPtrVal);
 }
 
 void transferValue_SmartPointerArrowMemberExpr(
