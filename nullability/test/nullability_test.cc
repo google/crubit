@@ -365,7 +365,7 @@ class TestOutput : public DiagnosticConsumer {
 
   void startTest(const FunctionDecl &F) {
     CurrentCase.emplace();
-    CurrentCase->Name = F.getName();
+    CurrentCase->Name = F.getDeclName().getAsString();
     CurrentCase->Start = std::chrono::steady_clock::now();
     Out << "--- Test: " << CurrentCase->Name << " ---\n";
   }
@@ -465,7 +465,7 @@ class TestOutput : public DiagnosticConsumer {
   // Gather info about the currently running test case.
   // The <testcase> element can only be written once it's finished.
   struct TestCase {
-    llvm::StringRef Name;
+    std::string Name;
     std::vector<std::pair<std::string, std::string>> Failures;
     std::chrono::steady_clock::time_point Start;
   };
@@ -553,7 +553,7 @@ class Consumer : public ASTConsumer {
 
       // This is a test we can run directly.
       Output.startTest(*FD);
-      auto [LogPath, LogStream] = openTestLog(FD->getName());
+      auto [LogPath, LogStream] = openTestLog(FD->getDeclName().getAsString());
       runTest(*FD, *Diagnoser, std::move(LogStream));
       Output.endTest(LogPath);
     } else if (Test.get<Attr>() || Test.get<TypeLoc>()) {
