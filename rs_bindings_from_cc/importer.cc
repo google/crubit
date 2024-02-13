@@ -1067,6 +1067,11 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
       case clang::BuiltinType::ULongLong:
         return MappedType::Simple("::core::ffi::c_ulonglong",
                                   "unsigned long long");
+
+      case clang::BuiltinType::Char16:
+        return MappedType::Simple("u16", "char16_t");
+      case clang::BuiltinType::Char32:
+        return MappedType::Simple("u32", "char32_t");
       default:
         return absl::UnimplementedError("Unsupported builtin type");
     }
