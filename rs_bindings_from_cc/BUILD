@@ -182,6 +182,7 @@ cc_library(
         "//common:status_macros",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
+        "@absl//absl/debugging:leak_check",
         "@absl//absl/flags:flag",
         "@absl//absl/log",
         "@absl//absl/status",

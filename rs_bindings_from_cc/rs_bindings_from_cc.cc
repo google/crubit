@@ -96,6 +96,7 @@ absl::Status Main(absl::Span<char* const> positional_args) {
 }  // namespace crubit
 
 int main(int argc, char* argv[]) {
+  crubit::PreprocessTargetArgs(argc, argv);
   auto args = absl::ParseCommandLine(argc, argv);
   absl::Status status = crubit::Main(args);
   if (!status.ok()) {

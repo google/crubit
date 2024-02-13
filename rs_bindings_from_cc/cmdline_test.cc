@@ -4,6 +4,9 @@
 
 #include "rs_bindings_from_cc/cmdline.h"
 
+#include <cstdlib>
+#include <cstring>
+#include <initializer_list>
 #include <string>
 #include <utility>
 #include <vector>
@@ -363,6 +366,57 @@ TEST(CmdlineTest, SupportPathNoPlaceholder) {
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("cannot find `{header}` placeholder in "
                                  "crubit_support_path_format")));
+}
+
+// A mutable test argv, which doesn't leak memory.
+class Args {
+ public:
+  explicit Args(std::vector<std::string> args) {
+    storage_ = std::move(args);
+    for (std::string& arg : storage_) {
+      argv_back_.push_back(arg.data());
+    }
+    argc_ = argv_back_.size();
+    argv_ = argv_back_.data();
+  }
+
+  std::vector<absl::string_view> argv_vector() const {
+    auto span = absl::MakeConstSpan(argv_, argc_);
+    std::vector<absl::string_view> result;
+    result.reserve(span.size());
+    for (const char* arg : span) {
+      result.push_back(arg);
+    }
+    return result;
+  }
+
+  char**& argv() { return argv_; }
+  int& argc() { return argc_; }
+
+ private:
+  // storage_ and argv_back_ need to be separate, because the argv can have
+  // new strings inserted into it (which should _not_ be freed the same way
+  // as the old strings).
+  std::vector<std::string> storage_;
+  std::vector<char*> argv_back_;
+  int argc_;
+  char** argv_;
+};
+
+TEST(PreprocessTargetArgsTest, Noop) {
+  Args args({"binary", "foo", "bar"});
+  PreprocessTargetArgs(args.argc(), args.argv());
+  EXPECT_THAT(args.argv_vector(), ElementsAre("binary", "foo", "bar"));
+}
+
+TEST(PreprocessTargetArgsTest, TargetToArg) {
+  Args args({"binary", "--target_to_arg", R"({"k": "v"})", "--target_to_arg",
+             R"({"k2": "v2"})", "other_args"});
+  PreprocessTargetArgs(args.argc(), args.argv());
+  EXPECT_THAT(
+      args.argv_vector(),
+      ElementsAre("binary", R"(--target_args=[{"k": "v"},{"k2": "v2"}])",
+                  "other_args"));
 }
 
 }  // namespace

@@ -74,6 +74,14 @@ absl::Status ParseTargetArgs(absl::string_view target_args_str,
                              CmdlineArgs& args);
 }  // namespace internal
 
+// Moves `--target_to_arg` arguments into `--target_args`.
+//
+// This must be called before flag parsing.
+//
+// Abseil does not allow for repeated flags, so we need to concatenate the
+// --target_to_args values before moving them to the --target_args flag.
+void PreprocessTargetArgs(int& argc, char** argv);
+
 }  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_

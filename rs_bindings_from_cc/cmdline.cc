@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/debugging/leak_check.h"
 #include "absl/flags/flag.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -256,6 +257,46 @@ absl::StatusOr<Cmdline> Cmdline::Create(CmdlineArgs args) {
     return absl::InvalidArgumentError(error);
   }
   return Cmdline(std::move(args));
+}
+
+void PreprocessTargetArgs(int& argc, char** argv) {
+  // TODO(jeanpierreda): Now that flag parsing logic is no longer in a bash script,
+  // this should probably skip target_args entirely. (For now, the target_args
+  // flag is left in place for compatibility and to avoid test churn.) We put it
+  // in the place of the first --target_to_arg flag, because we can't put it at
+  // the end, because of `--`.
+  char** end = argv + argc;
+  static constexpr absl::string_view kTargetToArg = "--target_to_arg";
+  char** first_target_to_arg = std::find(argv, end, kTargetToArg);
+  if (first_target_to_arg == end) {
+    return;
+  }
+  std::string& target_args =
+      *absl::IgnoreLeak(new std::string("--target_args=["));
+  bool is_target_arg = true;
+  bool is_done = false;
+  auto new_end = std::remove_if(first_target_to_arg + 1, end, [&](char* arg) {
+    if (is_done) {
+      return false;
+    }
+    if (is_target_arg) {
+      absl::StrAppend(&target_args, arg, ",");
+      is_target_arg = false;
+      return true;
+    } else if (arg == kTargetToArg) {
+      is_target_arg = true;
+      return true;
+    } else if (arg == absl::string_view("--")) {
+      is_done = true;
+      return false;
+    } else {
+      return false;
+    }
+  });
+  target_args.pop_back();  // remove trailing comma.
+  absl::StrAppend(&target_args, "]");
+  *first_target_to_arg = target_args.data();
+  argc = new_end - argv;
 }
 
 }  // namespace crubit
