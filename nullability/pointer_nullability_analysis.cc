@@ -282,25 +282,32 @@ void initPointerFromTypeNullability(
                        getPointerTypeNullability(E, State.Lattice));
 }
 
-/// Returns a new pointer value referencing the same location as `PointerVal`
-/// but with any "top" nullability properties unpacked into fresh atoms.
+/// If the pointer value stored at `PointerLoc` has any "top" nullability
+/// properties, creates a new pointer value referencing the same location with
+/// the "top" properties unpacked into fresh atoms. Returns:
+/// -  The unpacked pointer value if unpacking took place.
+/// -  The original pointer value if no unpacking took place.
+/// -  Null if `PointerLoc` is not associated with a value.
 /// This is analogous to the unpacking done on `TopBoolValue`s in the framework.
-absl::Nullable<PointerValue *> unpackPointerValue(PointerValue &PointerVal,
+absl::Nullable<PointerValue *> unpackPointerValue(StorageLocation &PointerLoc,
                                                   Environment &Env) {
-  auto [FromNullable, Null] = getPointerNullState(PointerVal);
-  if (FromNullable && Null) return nullptr;
+  auto *PointerVal = Env.get<PointerValue>(PointerLoc);
+  if (!PointerVal) return nullptr;
+
+  PointerNullState NullState = getPointerNullState(*PointerVal);
+  if (NullState.FromNullable && NullState.IsNull) return PointerVal;
 
   auto &A = Env.getDataflowAnalysisContext().arena();
 
-  auto &NewPointerVal = Env.create<PointerValue>(PointerVal.getPointeeLoc());
-  initPointerNullState(NewPointerVal, Env.getDataflowAnalysisContext());
-  auto NewNullability = getPointerNullState(NewPointerVal);
-  assert(NewNullability.FromNullable != nullptr);
-  assert(NewNullability.IsNull != nullptr);
+  if (NullState.FromNullable == nullptr)
+    NullState.FromNullable = &A.makeAtomRef(A.makeAtom());
+  if (NullState.IsNull == nullptr)
+    NullState.IsNull = &A.makeAtomRef(A.makeAtom());
 
-  if (FromNullable != nullptr)
-    Env.assume(A.makeEquals(*NewNullability.FromNullable, *FromNullable));
-  if (Null != nullptr) Env.assume(A.makeEquals(*NewNullability.IsNull, *Null));
+  auto &NewPointerVal = Env.create<PointerValue>(PointerVal->getPointeeLoc());
+  initPointerNullState(NewPointerVal, Env.getDataflowAnalysisContext(),
+                       NullState);
+  Env.setValue(PointerLoc, NewPointerVal);
 
   return &NewPointerVal;
 }
@@ -683,10 +690,7 @@ void transferValue_SmartPointer(
   auto *SmartPtrLoc = State.Env.get<RecordStorageLocation>(*PointerExpr);
   if (SmartPtrLoc == nullptr) return;
   StorageLocation &PtrLoc = SmartPtrLoc->getSyntheticField(PtrField);
-  auto *PtrVal = State.Env.get<PointerValue>(PtrLoc);
-  if (PtrVal == nullptr) return;
-  if (PointerValue *NewPtrVal = unpackPointerValue(*PtrVal, State.Env))
-    State.Env.setValue(PtrLoc, *NewPtrVal);
+  unpackPointerValue(PtrLoc, State.Env);
 }
 
 void transferValue_SmartPointerArrowMemberExpr(
@@ -735,12 +739,12 @@ void transferValue_Pointer(absl::Nonnull<const Expr *> PointerExpr,
 
   if (const auto *Cast = dyn_cast<CastExpr>(PointerExpr);
       Cast && Cast->getCastKind() == CK_LValueToRValue) {
-    PointerValue *NewPointerVal = unpackPointerValue(*PointerVal, State.Env);
-    if (!NewPointerVal) return;
     if (StorageLocation *Loc =
-            State.Env.getStorageLocation(*Cast->getSubExpr()))
-      State.Env.setValue(*Loc, *NewPointerVal);
-    State.Env.setValue(*PointerExpr, *NewPointerVal);
+            State.Env.getStorageLocation(*Cast->getSubExpr())) {
+      if (PointerValue *Val = unpackPointerValue(*Loc, State.Env)) {
+        State.Env.setValue(*PointerExpr, *Val);
+      }
+    }
   }
 }
 
