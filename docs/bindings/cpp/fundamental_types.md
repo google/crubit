@@ -1,63 +1,69 @@
 # Rust bindings for C++ fundamental types
 
-Here we describe how Crubit maps the fundamental types like integers,
-floating-point numbers, etc.
+Crubit maps most C++ fundamental types to the obvious Rust equivalent. For
+example, `int32_t` becomes `i32`, `int` becomes `ffi::c_int`, `double` becomes
+`f64`, and so on.
 
-## Bidirectional map of types
+The exceptions are `char`, which maps directly to `u8` or `i8`, and the currently-unsupported types `nullptr_t`, `char8_t`, `wchar_t`, and `(u)int128_t`.
 
-The following types are mapped bidirectionally:
+## Bidirectional map of C++ types
 
-C++               | Rust    | Notes
------------------ | ------- | -------------------------------------
-`int8_t`          | `i8`    |
-`int16_t`         | `i16`   |
-`int32_t`         | `i32`   |
-`int64_t`         | `i64`   |
-`intptr_t`        | `isize` |
-`uint8_t`         | `u8`    |
-`uint16_t`        | `u16`   |
-`uint32_t`        | `u32`   |
-`uint64_t`        | `u64`   |
-`uintptr_t`       | `usize` |
-`bool`            | `bool`  |
-`double`          | `f64`   |
-`float`           | `f32`   |
-`rs_std::rs_char` | `char`  | See `crubit/support/rs_std/rs_char.h`
+The following map is bidirectional. If you call a C++ interface from Rust using
+Crubit, then `int32_t` in C++ becomes `i32` in Rust. Vice versa, if you call a
+Rust interface from C++ using Crubit, `i32` in Rust becomes `int32_t` in C++.
+
+C++         | Rust
+----------- | --------------------------------------------
+`void`      | `()` as a return type, `::core::ffi::c_void` otherwise.
+`int8_t`    | `i8`
+`int16_t`   | `i16`
+`int32_t`   | `i32`
+`int64_t`   | `i64`
+`intptr_t`  | `isize`
+`uint8_t`   | `u8`
+`uint16_t`  | `u16`
+`uint32_t`  | `u32`
+`uint64_t`  | `u64`
+`uintptr_t` | `usize`
+`bool`      | `bool`
+`double`    | `f64`
+`float`     | `f32`
 
 ## One-way map of C++ into Rust types
 
-The C++ types below are mapped one-way into the corresponding Rust types.
-("one-way" means that the type doesn't round-trip - for example `size_t` maps to
-`usize`, but `usize` maps to `uintptr_t`.)
+The C++ types below are mapped one-way into the corresponding Rust types. For
+example `size_t` maps to `usize`, but `usize` maps to `uintptr_t`.
 
 TODO(b/283258442): `::core::ffi::*` should eventually be a bidirectional mapping
 
-| C++                  | Rust                       | Notes                    |
-| -------------------- | -------------------------- | ------------------------ |
-| `ptrdiff_t`          | `isize`                    |                          |
-| `size_t`             | `usize`                    |                          |
-| `char16_t`           | `u16`                      |                          |
-| `char32_t`           | `u32`                      | Unlike `rs_std::rs_char` |
-:                      :                            : above, `char32_t` may    :
-:                      :                            : contain invalid Unicode  :
-:                      :                            : characters               :
-| `char`               | `u8` or `i8` depending on  | TODO(b/276790180): This  |
-:                      : whether `char` is signed   : may eventually become    :
-:                      : on the target platform     : `c_char`                 :
-| `signed char`        | `::core::ffi::c_schar`     |                          |
-| `unsigned char`      | `::core::ffi::c_uchar`     |                          |
-| `short`              | `::core::ffi::c_short`     |                          |
-| `unsigned short`     | `::core::ffi::c_ushort`    |                          |
-| `int`                | `::core::ffi::c_int`       |                          |
-| `unsigned int`       | `::core::ffi::c_uint`      |                          |
-| `long`               | `::core::ffi::c_long`      |                          |
-| `unsigned long`      | `::core::ffi::c_ulong`     |                          |
-| `long long`          | `::core::ffi::c_longlong`  |                          |
-| `unsigned long long` | `::core::ffi::c_ulonglong` |                          |
+| C++                  | Rust                                                  |
+| -------------------- | ----------------------------------------------------- |
+| `ptrdiff_t`          | `isize`                                               |
+| `size_t`             | `usize`                                               |
+| `char16_t`           | `u16`                                                 |
+| `char32_t`           | `u32` [^char32_t]                                     |
+| `char`               | `u8` or `i8` depending on whether `char` is signed on |
+:                      : the target platform (b/276931370)                     :
+| `signed char`        | `::core::ffi::c_schar`                                |
+| `unsigned char`      | `::core::ffi::c_uchar`                                |
+| `short`              | `::core::ffi::c_short`                                |
+| `unsigned short`     | `::core::ffi::c_ushort`                               |
+| `int`                | `::core::ffi::c_int`                                  |
+| `unsigned int`       | `::core::ffi::c_uint`                                 |
+| `long`               | `::core::ffi::c_long`                                 |
+| `unsigned long`      | `::core::ffi::c_ulong`                                |
+| `long long`          | `::core::ffi::c_longlong`                             |
+| `unsigned long long` | `::core::ffi::c_ulonglong`                            |
 
 ## Unsupported types
 
 Bindings for the following types are not supported at this point:
 
--   `u128` and `i128` (b/254094650)
--   `wchar_t` (b/283268558)
+*   `nullptr_t` and `char8_t` have not yet been implemented.
+*   b/283268558: `wchar_t` is currently unsupported, for portability reasons.
+*   b/254094650: `int128_t` is currently unsupported, because it does not yet
+    have a decided ABI.
+
+
+[^char32_t]: Unlike Rust `char`, `char16_t` and `char32_t` may contain invalid
+    Unicode characters.
