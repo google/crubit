@@ -76,6 +76,7 @@ def golden_test(
     )
     args = []
     data = ["//rs_bindings_from_cc/test/golden:LICENSE_HEADER"]
+    owned_files = []
     if golden_cc:
         new_cc = basename + ".cc_file"
         native.filegroup(
@@ -91,6 +92,7 @@ def golden_test(
             golden_cc,
             new_cc,
         ]
+        owned_files.append(golden_cc)
 
     if golden_rs:
         new_rs = basename + ".rs_file"
@@ -107,6 +109,7 @@ def golden_test(
             golden_rs,
             new_rs,
         ]
+        owned_files.append(golden_rs)
 
     if golden_namespaces:
         new_namespaces = basename + ".namespaces_file"
@@ -123,6 +126,7 @@ def golden_test(
             golden_namespaces,
             new_namespaces,
         ]
+        owned_files.append(golden_namespaces)
 
     native.sh_test(
         name = name,
@@ -130,4 +134,10 @@ def golden_test(
         args = args,
         data = data,
         tags = tags,
+    )
+    native.filegroup(
+        name = basename + ".build_cleaner_optout",
+        srcs = owned_files,
+        tags = ["ignore_srcs"],
+        visibility = ["//visibility:private"],
     )

@@ -101,13 +101,6 @@ golden_test(
     golden_namespaces = "namespaces_json.json",
 )
 
-# Only there so build-cleaner doesn't try to add separate targets for generated files.
-filegroup(
-    name = "generated_outputs",
-    srcs = [t + "_rs_api_impl.cc" for t in TESTS] + [t + "_rs_api.rs" for t in TESTS],
-    tags = ["ignore_srcs"],
-)
-
 bzl_library(
     name = "golden_test",
     srcs = ["golden_test.bzl"],
