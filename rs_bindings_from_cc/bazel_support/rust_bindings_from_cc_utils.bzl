@@ -62,7 +62,7 @@ def generate_and_compile_bindings(
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
         cc_toolchain = cc_toolchain,
-        requested_features = ctx.features,
+        requested_features = ctx.features + ["compiler_param_file"],
         unsupported_features = ctx.disabled_features + ["module_maps"],
     )
 

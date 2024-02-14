@@ -213,6 +213,7 @@ crubit_cc_test(
         "@absl//absl/flags:flag",
         "@absl//absl/status",
         "@absl//absl/status:statusor",
+        "@absl//absl/strings",
         "@absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],

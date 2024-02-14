@@ -74,6 +74,20 @@ absl::Status ParseTargetArgs(absl::string_view target_args_str,
                              CmdlineArgs& args);
 }  // namespace internal
 
+// Expands paramfiles (@path/to/file) in-place in argv.
+//
+// This must be called before flag parsing.
+//
+// A paramfile is a newline-delimited list of arguments, with some characters
+// escaped by a backslash. See:
+// https://github.com/bazelbuild/bazel/blob/818c5c8693c43fe490c9f6b2c05149eb8f45cf52/src/main/java/com/google/devtools/build/lib/util/GccParamFileEscaper.java#L24-L30
+//
+// Everywhere a `@param/file` is encountered in argv, it is replaced by the
+// list of arguments within that file.
+//
+// Paramfiles cannot include other paramfiles. (Can they?)
+void ExpandParamfiles(int& argc, char**& argv);
+
 // Moves `--target_to_arg` arguments into `--target_args`.
 //
 // This must be called before flag parsing.

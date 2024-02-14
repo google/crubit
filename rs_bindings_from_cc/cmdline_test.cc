@@ -4,18 +4,19 @@
 
 #include "rs_bindings_from_cc/cmdline.h"
 
-#include <cstdlib>
-#include <cstring>
+#include <fstream>
 #include <initializer_list>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "gmock/gmock.h"
+#include "testing/base/public/googletest.h"
 #include "gtest/gtest.h"
 #include "absl/flags/flag.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "common/ffi_types.h"
 #include "common/status_macros.h"
@@ -417,6 +418,57 @@ TEST(PreprocessTargetArgsTest, TargetToArg) {
       args.argv_vector(),
       ElementsAre("binary", R"(--target_args=[{"k": "v"},{"k2": "v2"}])",
                   "other_args"));
+}
+
+std::string Paramfile(absl::string_view contents) {
+  std::string path = absl::StrCat(
+      FLAGS_test_tmpdir, "/",
+      testing::UnitTest::GetInstance()->current_test_info()->name(), ".param");
+  std::ofstream f(path);
+  f << contents;
+  f.close();
+  return absl::StrCat("@", path);
+}
+
+TEST(ExpandParamfilesTest, Noop) {
+  Args args({"binary", "foo", "bar"});
+  ExpandParamfiles(args.argc(), args.argv());
+  EXPECT_THAT(args.argv_vector(), ElementsAre("binary", "foo", "bar"));
+}
+
+TEST(ExpandParamfilesTest, Expand) {
+  Args args({"binary", "foo", Paramfile("arg1\narg2\n"), "bar"});
+  ExpandParamfiles(args.argc(), args.argv());
+  EXPECT_THAT(args.argv_vector(),
+              ElementsAre("binary", "foo", "arg1", "arg2", "bar"));
+}
+
+TEST(ExpandParamfilesTest, Nested) {
+  Args args({"binary", Paramfile("@unexpanded")});
+  ExpandParamfiles(args.argc(), args.argv());
+  EXPECT_THAT(args.argv_vector(), ElementsAre("binary", "@unexpanded"));
+}
+
+TEST(ExpandParamfilesTest, Escapes) {
+  std::string unescaped_contents = "\"'\n\f\v\r";
+  std::string paramfile_contents = "";
+  paramfile_contents.reserve(unescaped_contents.size() * 2);
+  for (char c : unescaped_contents) {
+    paramfile_contents += '\\';
+    paramfile_contents += c;
+  }
+  Args args({"binary", Paramfile(paramfile_contents)});
+  ExpandParamfiles(args.argc(), args.argv());
+  EXPECT_THAT(args.argv_vector(), ElementsAre("binary", unescaped_contents));
+}
+
+// Backslash escapes should be read right to left -- so for instance, while
+// the two bytes `\'` become the single byte `'`, the three bytes `\\'` become
+// the two bytes `\'`.
+TEST(ExpandParamfilesTest, BackslashEscape) {
+  Args args({"binary", Paramfile(R"(\\\')")});
+  ExpandParamfiles(args.argc(), args.argv());
+  EXPECT_THAT(args.argv_vector(), ElementsAre("binary", R"(\')"));
 }
 
 }  // namespace

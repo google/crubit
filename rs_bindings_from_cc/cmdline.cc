@@ -5,7 +5,9 @@
 #include "rs_bindings_from_cc/cmdline.h"
 
 #include <algorithm>
+#include <fstream>
 #include <iterator>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -16,6 +18,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
 #include "common/ffi_types.h"
 #include "common/status_macros.h"
@@ -257,6 +260,54 @@ absl::StatusOr<Cmdline> Cmdline::Create(CmdlineArgs args) {
     return absl::InvalidArgumentError(error);
   }
   return Cmdline(std::move(args));
+}
+
+void ExpandParamfiles(int& argc, char**& argv) {
+  std::vector<char*> new_argv;  // Will be leaked if we find a paramfile.
+  char** begin = argv;
+  char** end = begin + argc;
+  for (;;) {
+    char** next_paramfile =
+        std::find_if(begin, end, [](char* c) { return c[0] == '@'; });
+    if (next_paramfile == end) break;
+    new_argv.insert(new_argv.end(), begin, next_paramfile);
+    begin = next_paramfile + 1;
+    absl::string_view paramfile = *next_paramfile + 1;
+    std::ifstream in(paramfile);
+    std::stringstream ss;
+    ss << in.rdbuf();
+    std::string s = ss.str();
+    std::string next_arg;
+    // Unfortunately, we can't just use something like StrReplaceAll, because an
+    // escaped newline should be part of the value, while an unescaped newline
+    // should not be.
+    for (auto it = s.begin(); it != s.end(); ++it) {
+      if (*it == '\\') {
+        ++it;
+        if (it == s.end()) {
+          absl::StrAppend(&next_arg, "\\");
+          break;
+        } else {
+          absl::StrAppend(&next_arg, absl::string_view(&*it, 1));
+        }
+      } else if (*it == '\n') {
+        new_argv.push_back(
+            absl::IgnoreLeak(new auto(std::move(next_arg)))->data());
+        next_arg.clear();
+      } else {
+        absl::StrAppend(&next_arg, absl::string_view(&*it, 1));
+      }
+    }
+    if (!next_arg.empty()) {
+      new_argv.push_back(
+          absl::IgnoreLeak(new auto(std::move(next_arg)))->data());
+    }
+  }
+  if (begin == argv) return;
+  new_argv.insert(new_argv.end(), begin, end);
+  argv = new_argv.data();
+  argc = new_argv.size();
+  absl::IgnoreLeak(new auto(std::move(new_argv)));  // nowhere else to put it.
 }
 
 void PreprocessTargetArgs(int& argc, char** argv) {
