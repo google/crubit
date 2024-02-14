@@ -1,8 +1,4 @@
-# TODO(b/276366603): Use a regular rust_binary, once stable is sufficiently up to date.
-load(
-    "//common:crubit_wrapper_macros_oss.bzl",
-    "crubit_rust_binary",
-)
+load("@rules_rust//rust:defs.bzl", "rust_binary")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
     "golden_test",
@@ -16,7 +12,7 @@ cc_library(
     aspect_hints = ["//features:extern_c"],
 )
 
-crubit_rust_binary(
+rust_binary(
     name = "main",
     srcs = ["main.rs"],
 
