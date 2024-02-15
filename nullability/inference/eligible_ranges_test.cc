@@ -127,5 +127,18 @@ TEST(GenEditsTest, FunctionAndArrayTypeIgnored) {
   EXPECT_EQ(getEligibleRanges(Input), std::nullopt);
 }
 
+TEST(GenEditsTest, AnnotatedRangesIncludeAnnotation) {
+  auto Input = Annotations(R"(
+  template <typename T>
+  using Nonnull = T;
+
+  void foo([[Nonnull<int *>]] p);
+  )");
+  EXPECT_THAT(
+      getEligibleRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
