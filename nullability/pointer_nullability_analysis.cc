@@ -1280,6 +1280,7 @@ void transferType_CastExpr(absl::Nonnull<const CastExpr *> CE,
       case CK_CopyAndAutoreleaseBlockObject:
       case CK_ZeroToOCLOpaqueType:
       case CK_IntToOCLSampler:
+      case CK_HLSLVectorTruncation:
         return unspecifiedNullability(CE);
 
       case CK_Dependent:
