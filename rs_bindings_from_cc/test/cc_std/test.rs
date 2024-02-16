@@ -22,7 +22,7 @@ mod tests {
             tm_wday: 7,
             tm_yday: 8,
             tm_year: 9,
-            tm_zone: "zone".as_ptr(),
+            tm_zone: "zone".as_ptr() as *const core::ffi::c_char,
         };
     }
 

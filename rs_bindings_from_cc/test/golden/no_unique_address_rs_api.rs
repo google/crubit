@@ -47,8 +47,8 @@ impl Struct {
     pub fn field1(&self) -> &::core::ffi::c_int {
         unsafe { &*(&self.field1 as *const _ as *const ::core::ffi::c_int) }
     }
-    pub fn field2(&self) -> &u8 {
-        unsafe { &*(&self.field2 as *const _ as *const u8) }
+    pub fn field2(&self) -> &::core::ffi::c_char {
+        unsafe { &*(&self.field2 as *const _ as *const ::core::ffi::c_char) }
     }
 }
 
@@ -94,7 +94,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Struct {
 
 impl Struct {
     #[inline(always)]
-    pub fn Make(f1: ::core::ffi::c_int, f2: u8) -> crate::Struct {
+    pub fn Make(f1: ::core::ffi::c_int, f2: ::core::ffi::c_char) -> crate::Struct {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN6Struct4MakeEic(&mut __return, f1, f2);
@@ -113,7 +113,7 @@ impl Struct {
 #[__crubit::annotate(cc_type = "PaddingBetweenFields")]
 pub struct PaddingBetweenFields {
     /// size: 1, alignment: 1 => offset: 0
-    pub field1: u8,
+    pub field1: ::core::ffi::c_char,
     __padding1: [::core::mem::MaybeUninit<u8>; 3],
     /// size: 4, alignment: 4 => offset: 4
     ///
@@ -175,7 +175,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for PaddingBetwe
 
 impl PaddingBetweenFields {
     #[inline(always)]
-    pub fn Make(f1: u8, f2: ::core::ffi::c_int) -> crate::PaddingBetweenFields {
+    pub fn Make(f1: ::core::ffi::c_char, f2: ::core::ffi::c_int) -> crate::PaddingBetweenFields {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(&mut __return, f1, f2);
@@ -196,7 +196,7 @@ pub struct FieldInTailPadding_InnerStruct {
     /// size: 4, alignment: 4 => offset: 0
     pub inner_int_field: ::core::ffi::c_int,
     /// size: 1, alignment: 1 => offset: 4
-    pub inner_char_field: u8,
+    pub inner_char_field: ::core::ffi::c_char,
 }
 impl !Send for FieldInTailPadding_InnerStruct {}
 impl !Sync for FieldInTailPadding_InnerStruct {}
@@ -285,7 +285,7 @@ pub struct FieldInTailPadding {
     /// `[[no_unique_address]]` attribute was present.
     pub(crate) inner_struct: [::core::mem::MaybeUninit<u8>; 5],
     /// offset: 5 (dsize of `s`).
-    pub char_in_tail_padding_of_prev_field: u8,
+    pub char_in_tail_padding_of_prev_field: ::core::ffi::c_char,
 }
 impl !Send for FieldInTailPadding {}
 impl !Sync for FieldInTailPadding {}
@@ -381,10 +381,14 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for FieldInTailPaddin
     }
 }
 
-impl ::ctor::CtorNew<(::core::ffi::c_int, u8, u8)> for FieldInTailPadding {
+impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_char, ::core::ffi::c_char)>
+    for FieldInTailPadding
+{
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (::core::ffi::c_int, u8, u8)) -> Self::CtorType {
+    fn ctor_new(
+        args: (::core::ffi::c_int, ::core::ffi::c_char, ::core::ffi::c_char),
+    ) -> Self::CtorType {
         let (inner_int, inner_char, outer_char) = args;
         unsafe {
             ::ctor::FnCtor::new(
@@ -423,7 +427,7 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN6Struct4MakeEic(
             __return: &mut ::core::mem::MaybeUninit<crate::Struct>,
             f1: ::core::ffi::c_int,
-            f2: u8,
+            f2: ::core::ffi::c_char,
         );
         pub(crate) fn __rust_thunk___ZN20PaddingBetweenFieldsC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::PaddingBetweenFields>,
@@ -442,7 +446,7 @@ mod detail {
         ) -> &'a mut crate::PaddingBetweenFields;
         pub(crate) fn __rust_thunk___ZN20PaddingBetweenFields4MakeEci(
             __return: &mut ::core::mem::MaybeUninit<crate::PaddingBetweenFields>,
-            f1: u8,
+            f1: ::core::ffi::c_char,
             f2: ::core::ffi::c_int,
         );
         pub(crate) fn __rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev<'a>(
@@ -481,8 +485,8 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN18FieldInTailPaddingC1Eicc<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::FieldInTailPadding>,
             inner_int: ::core::ffi::c_int,
-            inner_char: u8,
-            outer_char: u8,
+            inner_char: ::core::ffi::c_char,
+            outer_char: ::core::ffi::c_char,
         );
     }
 }
@@ -531,7 +535,7 @@ const _: () = {
     static_assertions::assert_impl_all!(::core::ffi::c_int:Copy);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(u8:Copy);
+    static_assertions::assert_impl_all!(::core::ffi::c_char:Copy);
 };
 
 const _: () = assert!(::core::mem::size_of::<crate::FieldInTailPadding>() == 8);
@@ -547,5 +551,5 @@ const _: () = assert!(
     memoffset::offset_of!(crate::FieldInTailPadding, char_in_tail_padding_of_prev_field) == 5
 );
 const _: () = {
-    static_assertions::assert_impl_all!(u8:Copy);
+    static_assertions::assert_impl_all!(::core::ffi::c_char:Copy);
 };

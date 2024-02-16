@@ -31,7 +31,7 @@
 #[__crubit::annotate(cc_type = "Derived2")]
 pub struct Derived2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 20],
-    pub derived_1: u8,
+    pub derived_1: ::core::ffi::c_char,
 }
 impl !Send for Derived2 {}
 impl !Sync for Derived2 {}

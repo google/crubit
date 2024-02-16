@@ -114,12 +114,12 @@ UnpinStructByMutRef operator+(UnpinStructByMutRef& lhs,
 UnpinStructByValue operator+(UnpinStructByValue lhs, UnpinStructByValue rhs);
 
 struct AddableOverloaded final {
-  char int16_char;
-  char int32_char;
+  unsigned char int16_char;
+  unsigned char int32_char;
 };
 
-char operator+(AddableOverloaded lhs, std::int16_t rhs);
-char operator+(AddableOverloaded lhs, std::int32_t rhs);
+unsigned char operator+(AddableOverloaded lhs, std::int16_t rhs);
+unsigned char operator+(AddableOverloaded lhs, std::int32_t rhs);
 
 struct AddableFriendByConstRef final {
   friend AddableFriendByConstRef operator+(const AddableFriendByConstRef& lhs,

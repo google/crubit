@@ -184,7 +184,7 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
 #[__crubit::annotate(cc_type = "NonEmptyUnion")]
 pub union NonEmptyUnion {
     pub bool_field: bool,
-    pub char_field: u8,
+    pub char_field: ::core::ffi::c_char,
     pub int_field: ::core::ffi::c_int,
     pub long_long_field: ::core::ffi::c_longlong,
 }
@@ -740,7 +740,7 @@ const _: () = {
     static_assertions::assert_impl_all!(bool:Copy);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(u8:Copy);
+    static_assertions::assert_impl_all!(::core::ffi::c_char:Copy);
 };
 const _: () = {
     static_assertions::assert_impl_all!(::core::ffi::c_int:Copy);

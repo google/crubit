@@ -188,7 +188,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Base2 {
 #[__crubit::annotate(cc_type = "Derived")]
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 12],
-    pub derived_1: u8,
+    pub derived_1: ::core::ffi::c_char,
 }
 impl !Send for Derived {}
 impl !Sync for Derived {}

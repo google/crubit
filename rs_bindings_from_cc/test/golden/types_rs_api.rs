@@ -78,7 +78,7 @@ forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::s
 #[__crubit::annotate(cc_type = "FieldTypeTestStruct")]
 pub struct FieldTypeTestStruct {
     pub bool_field: bool,
-    pub char_field: u8,
+    pub char_field: ::core::ffi::c_char,
     pub unsigned_char_field: ::core::ffi::c_uchar,
     pub signed_char_field: ::core::ffi::c_schar,
     pub char16_t_field: u16,

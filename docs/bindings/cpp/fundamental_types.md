@@ -4,7 +4,8 @@ Crubit maps most C++ fundamental types to the obvious Rust equivalent. For
 example, `int32_t` becomes `i32`, `int` becomes `ffi::c_int`, `double` becomes
 `f64`, and so on.
 
-The exceptions are `char`, which maps directly to `u8` or `i8`, and the currently-unsupported types `nullptr_t`, `char8_t`, `wchar_t`, and `(u)int128_t`.
+The exceptions are the currently-unsupported types `nullptr_t`, `char8_t`,
+`wchar_t`, and `(u)int128_t`.
 
 ## Bidirectional map of C++ types
 
@@ -13,7 +14,7 @@ Crubit, then `int32_t` in C++ becomes `i32` in Rust. Vice versa, if you call a
 Rust interface from C++ using Crubit, `i32` in Rust becomes `int32_t` in C++.
 
 C++         | Rust
------------ | --------------------------------------------
+----------- | -------------------------------------------------------
 `void`      | `()` as a return type, `::core::ffi::c_void` otherwise.
 `int8_t`    | `i8`
 `int16_t`   | `i16`
@@ -36,24 +37,23 @@ example `size_t` maps to `usize`, but `usize` maps to `uintptr_t`.
 
 TODO(b/283258442): `::core::ffi::*` should eventually be a bidirectional mapping
 
-| C++                  | Rust                                                  |
-| -------------------- | ----------------------------------------------------- |
-| `ptrdiff_t`          | `isize`                                               |
-| `size_t`             | `usize`                                               |
-| `char16_t`           | `u16`                                                 |
-| `char32_t`           | `u32` [^char32_t]                                     |
-| `char`               | `u8` or `i8` depending on whether `char` is signed on |
-:                      : the target platform (b/276931370)                     :
-| `signed char`        | `::core::ffi::c_schar`                                |
-| `unsigned char`      | `::core::ffi::c_uchar`                                |
-| `short`              | `::core::ffi::c_short`                                |
-| `unsigned short`     | `::core::ffi::c_ushort`                               |
-| `int`                | `::core::ffi::c_int`                                  |
-| `unsigned int`       | `::core::ffi::c_uint`                                 |
-| `long`               | `::core::ffi::c_long`                                 |
-| `unsigned long`      | `::core::ffi::c_ulong`                                |
-| `long long`          | `::core::ffi::c_longlong`                             |
-| `unsigned long long` | `::core::ffi::c_ulonglong`                            |
+C++                  | Rust
+-------------------- | -----------------------------
+`ptrdiff_t`          | `isize`
+`size_t`             | `usize`
+`char16_t`           | `u16`
+`char32_t`           | `u32` [^char32_t]
+`char`               | `::core::ffi::c_char` [^char]
+`signed char`        | `::core::ffi::c_schar`
+`unsigned char`      | `::core::ffi::c_uchar`
+`short`              | `::core::ffi::c_short`
+`unsigned short`     | `::core::ffi::c_ushort`
+`int`                | `::core::ffi::c_int`
+`unsigned int`       | `::core::ffi::c_uint`
+`long`               | `::core::ffi::c_long`
+`unsigned long`      | `::core::ffi::c_ulong`
+`long long`          | `::core::ffi::c_longlong`
+`unsigned long long` | `::core::ffi::c_ulonglong`
 
 ## Unsupported types
 
@@ -64,6 +64,10 @@ Bindings for the following types are not supported at this point:
 *   b/254094650: `int128_t` is currently unsupported, because it does not yet
     have a decided ABI.
 
-
 [^char32_t]: Unlike Rust `char`, `char16_t` and `char32_t` may contain invalid
     Unicode characters.
+[^char]: Note that Rust `c_char` and C++ `char` have different signedness in
+    Google, or any other codebase with widespread use of unsigned `char` in
+    x86.
+
+    TODO(jeanpierreda): document this in more detail.

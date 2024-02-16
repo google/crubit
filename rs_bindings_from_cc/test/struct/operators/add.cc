@@ -20,10 +20,10 @@ UnpinStructByValue operator+(UnpinStructByValue lhs, UnpinStructByValue rhs) {
   return UnpinStructByValue{lhs.i + rhs.i};
 }
 
-char operator+(AddableOverloaded lhs, std::int16_t rhs) {
+unsigned char operator+(AddableOverloaded lhs, std::int16_t rhs) {
   return lhs.int16_char;
 }
 
-char operator+(AddableOverloaded lhs, std::int32_t rhs) {
+unsigned char operator+(AddableOverloaded lhs, std::int32_t rhs) {
   return lhs.int32_char;
 }

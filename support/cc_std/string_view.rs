@@ -24,7 +24,7 @@ impl string_view {
 /// Equivalent to `as_raw_bytes()`.
 impl From<string_view> for *const [u8] {
     fn from(sv: string_view) -> Self {
-        let mut data = unsafe { string_view::data(&sv) };
+        let mut data = unsafe { string_view::data(&sv) } as *const u8;
         // TODO(b/249376862): use size.
         // let size = unsafe {string_view::size(&sv)};
         let size = unsafe { string_view::end(&sv) as usize - string_view::begin(&sv) as usize };

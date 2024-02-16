@@ -88,17 +88,17 @@ impl From<EmptyInt> for ::core::ffi::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-pub struct EmptyChar(u8);
+pub struct EmptyChar(::core::ffi::c_char);
 impl !Send for EmptyChar {}
 impl !Sync for EmptyChar {}
 impl EmptyChar {}
-impl From<u8> for EmptyChar {
-    fn from(value: u8) -> EmptyChar {
+impl From<::core::ffi::c_char> for EmptyChar {
+    fn from(value: ::core::ffi::c_char) -> EmptyChar {
         EmptyChar(value)
     }
 }
-impl From<EmptyChar> for u8 {
-    fn from(value: EmptyChar) -> u8 {
+impl From<EmptyChar> for ::core::ffi::c_char {
+    fn from(value: EmptyChar) -> ::core::ffi::c_char {
         value.0
     }
 }
@@ -145,20 +145,20 @@ impl From<NonEmptyInt> for ::core::ffi::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-pub struct NonEmptyChar(u8);
+pub struct NonEmptyChar(::core::ffi::c_char);
 impl !Send for NonEmptyChar {}
 impl !Sync for NonEmptyChar {}
 impl NonEmptyChar {
     pub const kChar1: NonEmptyChar = NonEmptyChar(0);
     pub const kChar2: NonEmptyChar = NonEmptyChar(97);
 }
-impl From<u8> for NonEmptyChar {
-    fn from(value: u8) -> NonEmptyChar {
+impl From<::core::ffi::c_char> for NonEmptyChar {
+    fn from(value: ::core::ffi::c_char) -> NonEmptyChar {
         NonEmptyChar(value)
     }
 }
-impl From<NonEmptyChar> for u8 {
-    fn from(value: NonEmptyChar) -> u8 {
+impl From<NonEmptyChar> for ::core::ffi::c_char {
+    fn from(value: NonEmptyChar) -> ::core::ffi::c_char {
         value.0
     }
 }
@@ -216,17 +216,17 @@ impl From<EmptyIntClass> for ::core::ffi::c_int {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-pub struct EmptyCharClass(u8);
+pub struct EmptyCharClass(::core::ffi::c_char);
 impl !Send for EmptyCharClass {}
 impl !Sync for EmptyCharClass {}
 impl EmptyCharClass {}
-impl From<u8> for EmptyCharClass {
-    fn from(value: u8) -> EmptyCharClass {
+impl From<::core::ffi::c_char> for EmptyCharClass {
+    fn from(value: ::core::ffi::c_char) -> EmptyCharClass {
         EmptyCharClass(value)
     }
 }
-impl From<EmptyCharClass> for u8 {
-    fn from(value: EmptyCharClass) -> u8 {
+impl From<EmptyCharClass> for ::core::ffi::c_char {
+    fn from(value: EmptyCharClass) -> ::core::ffi::c_char {
         value.0
     }
 }
@@ -273,20 +273,20 @@ impl From<NonEmptyIntClass> for ::core::ffi::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-pub struct NonEmptyCharClass(u8);
+pub struct NonEmptyCharClass(::core::ffi::c_char);
 impl !Send for NonEmptyCharClass {}
 impl !Sync for NonEmptyCharClass {}
 impl NonEmptyCharClass {
     pub const k1: NonEmptyCharClass = NonEmptyCharClass(0);
     pub const k2: NonEmptyCharClass = NonEmptyCharClass(97);
 }
-impl From<u8> for NonEmptyCharClass {
-    fn from(value: u8) -> NonEmptyCharClass {
+impl From<::core::ffi::c_char> for NonEmptyCharClass {
+    fn from(value: ::core::ffi::c_char) -> NonEmptyCharClass {
         NonEmptyCharClass(value)
     }
 }
-impl From<NonEmptyCharClass> for u8 {
-    fn from(value: NonEmptyCharClass) -> u8 {
+impl From<NonEmptyCharClass> for ::core::ffi::c_char {
+    fn from(value: NonEmptyCharClass) -> ::core::ffi::c_char {
         value.0
     }
 }

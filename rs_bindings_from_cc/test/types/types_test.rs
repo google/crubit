@@ -58,7 +58,7 @@ macro_rules! type_is {
 type_is!(
     types_nonptr,
     Bool => bool,
-    Char => u8,
+    Char => ::core::ffi::c_char,
 
     UnsignedChar => u8,
     SignedChar => i8,

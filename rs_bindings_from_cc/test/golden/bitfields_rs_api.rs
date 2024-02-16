@@ -39,8 +39,8 @@ impl !Send for WithBitfields {}
 impl !Sync for WithBitfields {}
 forward_declare::unsafe_define!(forward_declare::symbol!("WithBitfields"), crate::WithBitfields);
 impl WithBitfields {
-    pub fn f7(&self) -> &u8 {
-        unsafe { &*(&self.f7 as *const _ as *const u8) }
+    pub fn f7(&self) -> &::core::ffi::c_char {
+        unsafe { &*(&self.f7 as *const _ as *const ::core::ffi::c_char) }
     }
 }
 

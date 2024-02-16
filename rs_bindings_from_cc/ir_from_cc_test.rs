@@ -920,12 +920,7 @@ fn test_type_conversion() -> Result<()> {
 
     assert_eq!(type_mapping["bool"], "bool");
 
-    // TODO(b/276790180, b/276931370): use `::core::ffi::c_char` instead.
-    if multiplatform_testing::test_platform() == multiplatform_testing::Platform::X86Linux {
-        assert_eq!(type_mapping["char"], "i8");
-    } else {
-        assert_eq!(type_mapping["char"], "u8");
-    }
+    assert_eq!(type_mapping["char"], "::core::ffi::c_char");
     assert_eq!(type_mapping["unsigned char"], "::core::ffi::c_uchar");
     assert_eq!(type_mapping["signed char"], "::core::ffi::c_schar");
 

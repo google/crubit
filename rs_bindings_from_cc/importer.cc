@@ -1037,11 +1037,8 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
 
       // `char`
       case clang::BuiltinType::Char_S:  // 'char' in targets where it's signed
-        // TODO(b/276790180, b/276931370): use `::core::ffi::c_char` instead.
-        return MappedType::Simple("i8", "char");
       case clang::BuiltinType::Char_U:  // 'char' in targets where it's unsigned
-        // TODO(b/276790180, b/276931370): use `::core::ffi::c_char` instead.
-        return MappedType::Simple("u8", "char");
+        return MappedType::Simple("::core::ffi::c_char", "char");
       case clang::BuiltinType::SChar:  // 'signed char', explicitly qualified
         return MappedType::Simple("::core::ffi::c_schar", "signed char");
       case clang::BuiltinType::UChar:  // 'unsigned char', explicitly qualified
