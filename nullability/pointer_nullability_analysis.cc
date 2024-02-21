@@ -1085,23 +1085,40 @@ void transferValue_ConstMemberCall(
   }
 }
 
+void handleNonConstMemberCall(absl::Nonnull<const CallExpr *> CE,
+                              dataflow::RecordStorageLocation *RecordLoc,
+                              const MatchFinder::MatchResult &Result,
+                              TransferState<PointerNullabilityLattice> &State) {
+  // When a non-const member function is called, reset all pointer-type fields
+  // of the receiver.
+  if (RecordLoc != nullptr) {
+    for (const auto [Field, FieldLoc] : RecordLoc->children()) {
+      if (!isSupportedRawPointerType(Field->getType())) continue;
+      auto &V = *cast<PointerValue>(State.Env.createValue(Field->getType()));
+      State.Env.setValue(*FieldLoc, V);
+    }
+    State.Lattice.clearConstMethodReturnValues(*RecordLoc);
+  }
+
+  // Perform default handling.
+  transferValue_CallExpr(CE, Result, State);
+}
+
 void transferValue_NonConstMemberCall(
     absl::Nonnull<const CXXMemberCallExpr *> MCE,
     const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  // When a non-const member function is called, reset all pointer-type fields
-  // of the implicit object.
-  if (dataflow::RecordStorageLocation *RecordLoc =
-          dataflow::getImplicitObjectLocation(*MCE, State.Env)) {
-    for (const auto [Field, FieldLoc] : RecordLoc->children()) {
-      if (!isSupportedRawPointerType(Field->getType())) continue;
-      Value *V = State.Env.createValue(Field->getType());
-      State.Env.setValue(*FieldLoc, *V);
-    }
-    State.Lattice.clearConstMethodReturnValues(*RecordLoc);
-  }
-  // The nullability of the Expr itself still needs to be handled.
-  transferValue_CallExpr(MCE, Result, State);
+  handleNonConstMemberCall(
+      MCE, dataflow::getImplicitObjectLocation(*MCE, State.Env), Result, State);
+}
+
+void transferValue_NonConstMemberOperatorCall(
+    absl::Nonnull<const CXXOperatorCallExpr *> OCE,
+    const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
+      State.Env.getStorageLocation(*OCE->getArg(0)));
+  handleNonConstMemberCall(OCE, RecordLoc, Result, State);
 }
 
 void transferType_DeclRefExpr(absl::Nonnull<const DeclRefExpr *> DRE,
@@ -1469,6 +1486,9 @@ auto buildValueTransferer() {
                                         transferValue_ConstMemberCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isNonConstMemberCall(),
                                         transferValue_NonConstMemberCall)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(
+          isNonConstMemberOperatorCall(),
+          transferValue_NonConstMemberOperatorCall)
       .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(), transferValue_CallExpr)
       .CaseOfCFGStmt<Expr>(isSmartPointerGlValue(), transferValue_SmartPointer)
       .CaseOfCFGStmt<MemberExpr>(isSmartPointerArrowMemberExpr(),

@@ -113,6 +113,10 @@ Matcher<Stmt> isNonConstMemberCall() {
   return cxxMemberCallExpr(callee(cxxMethodDecl(unless(isConst()))));
 }
 
+Matcher<Stmt> isNonConstMemberOperatorCall() {
+  return cxxOperatorCallExpr(callee(cxxMethodDecl(unless(isConst()))));
+}
+
 Matcher<Stmt> isSmartPointerGlValue() {
   return expr(hasType(isSupportedSmartPointer()), isGLValue());
 }

@@ -774,11 +774,17 @@ TEST(PointerNullabilityTest, ConstMethodNoImpl) {
     struct C {
       int *_Nullable property() const;
       void may_mutate();
+      C &operator=(const C &);
     };
     void target() {
       C obj;
       if (obj.property() != nullptr) {
         obj.may_mutate();
+        *obj.property();  // [[unsafe]]
+      };
+      if (obj.property() != nullptr) {
+        // A non-const operator call may mutate as well.
+        obj = C();
         *obj.property();  // [[unsafe]]
       };
       if (obj.property() != nullptr) *obj.property();
