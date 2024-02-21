@@ -28,7 +28,6 @@ pub struct Position {
 }
 impl !Send for Position {}
 impl !Sync for Position {}
-forward_declare::unsafe_define!(forward_declare::symbol!("Position"), crate::Position);
 
 // Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
 // Error while generating bindings for item 'Position::Position':

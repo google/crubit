@@ -430,9 +430,6 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
     };
 
     let fully_qualified_cc_name = crate::cc_tagless_type_name_for_record(record, &ir)?.to_string();
-    let incomplete_definition = quote! {
-        forward_declare::unsafe_define!(forward_declare::symbol!(#fully_qualified_cc_name), #qualified_ident);
-    };
 
     let mut record_generated_items = record
         .child_item_ids
@@ -456,6 +453,13 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
     }
     let no_unique_address_accessors = if crubit_features.contains(ir::CrubitFeature::Experimental) {
         cc_struct_no_unique_address_impl(db, record)?
+    } else {
+        quote! {}
+    };
+    let incomplete_definition = if crubit_features.contains(ir::CrubitFeature::Experimental) {
+        quote! {
+            forward_declare::unsafe_define!(forward_declare::symbol!(#fully_qualified_cc_name), #qualified_ident);
+        }
     } else {
         quote! {}
     };
