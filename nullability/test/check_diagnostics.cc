@@ -4,6 +4,8 @@
 
 #include "nullability/test/check_diagnostics.h"
 
+#include <algorithm>
+#include <iterator>
 #include <vector>
 
 #include "nullability/pointer_nullability_diagnosis.h"
@@ -13,6 +15,7 @@
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/raw_ostream.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
@@ -82,8 +85,39 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, const char *CxxMode) {
     auto &SrcMgr = Context.getSourceManager();
     for (const auto &Diag : Diagnostics)
       ActualLines.insert(SrcMgr.getPresumedLineNumber(Diag.Range.getBegin()));
-    EXPECT_THAT(ActualLines, testing::ContainerEq(ExpectedLines));
-    if (ActualLines != ExpectedLines) Success = false;
+    if (ActualLines != ExpectedLines) {
+      Success = false;
+
+      // Clang's line numbers are one-based, so add an extra empty line at the
+      // beginning.
+      llvm::SmallVector<llvm::StringRef> Lines = {""};
+      SourceCode.split(Lines, '\n');
+
+      std::vector<unsigned> ExpectedButNotFound;
+      std::set_difference(ExpectedLines.begin(), ExpectedLines.end(),
+                          ActualLines.begin(), ActualLines.end(),
+                          std::back_inserter(ExpectedButNotFound));
+      std::vector<unsigned> FoundButNotExpected;
+      std::set_difference(ActualLines.begin(), ActualLines.end(),
+                          ExpectedLines.begin(), ExpectedLines.end(),
+                          std::back_inserter(FoundButNotExpected));
+
+      std::string ErrorMessage;
+      llvm::raw_string_ostream OS(ErrorMessage);
+
+      if (!ExpectedButNotFound.empty()) {
+        OS << "Expected diagnostics but didn't find them:\n";
+        for (unsigned Line : ExpectedButNotFound)
+          OS << Line << ": " << Lines[Line] << "\n";
+      }
+      if (!FoundButNotExpected.empty()) {
+        OS << "Found diagnostics but didn't expect them:\n";
+        for (unsigned Line : FoundButNotExpected)
+          OS << Line << ": " << Lines[Line] << "\n";
+      }
+
+      ADD_FAILURE() << ErrorMessage;
+    }
   }
 
   return Success;

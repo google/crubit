@@ -34,7 +34,7 @@ TEST(PointerNullabilityTest, UnexpectedDiagnostic) {
                               1;  // [[unsafe]]
                             }
                           )cc"),
-                          "which doesn't have these expected elements");
+                          "Expected diagnostics but didn't find them");
   EXPECT_EQ(Result, false);
 }
 
@@ -46,7 +46,7 @@ TEST(PointerNullabilityTest, MissingDiagnostic) {
                               *p;  // Missing diagnostic
                             }
                           )cc"),
-                          "which has these unexpected elements");
+                          "Found diagnostics but didn't expect them");
   EXPECT_EQ(Result, false);
 }
 
