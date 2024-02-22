@@ -13,6 +13,7 @@ extern crate rustc_lint_defs;
 extern crate rustc_log;
 extern crate rustc_middle;
 extern crate rustc_session;
+extern crate rustc_span;
 
 use anyhow::anyhow;
 use either::Either;
@@ -83,17 +84,25 @@ where
         // Rust compiler unwinds with a special sentinel value to abort compilation on
         // fatal errors. We use `catch_fatal_errors` to 1) catch such panics and
         // translate them into a Result, and 2) resume and propagate other panics.
-        use rustc_interface::interface::Result;
-        let rustc_result: Result<Result<()>> = rustc_driver::catch_fatal_errors(|| {
+        let catch_fatal_errors_result: std::result::Result<
+            std::result::Result<(), rustc_span::ErrorGuaranteed>,
+            rustc_span::fatal_error::FatalError,
+        > = rustc_driver::catch_fatal_errors(|| {
             rustc_driver::RunCompiler::new(self.args, &mut self).run()
         });
 
         // Flatten `Result<Result<T, ...>>` into `Result<T, ...>` (i.e. combine the
         // result from `RunCompiler::run` and `catch_fatal_errors`).
-        //
-        // TODO(lukasza): Use `Result::flatten` API when it gets stabilized.  See also
-        // https://github.com/rust-lang/rust/issues/70142
-        let rustc_result: Result<()> = rustc_result.and_then(|result| result);
+        use rustc_interface::interface::Result;
+        let rustc_result: Result<()> = match catch_fatal_errors_result {
+            Ok(Ok(())) => Ok(()),
+            Ok(Err(a)) => Err(a),
+            Err(_) =>
+            {
+                #[allow(deprecated)]
+                Err(rustc_span::ErrorGuaranteed::unchecked_error_guaranteed())
+            }
+        };
 
         // Translate `rustc_interface::interface::Result` into `anyhow::Result`.  (Can't
         // use `?` because the trait `std::error::Error` is not implemented for
