@@ -861,6 +861,35 @@ TEST(PointerNullabilityTest, ConstMethodNoRecordForCallObject) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, OptionalOperatorArrowCall) {
+  // Check that repeated accesses to a pointer behind an optional are considered
+  // to yield the same pointer -- but only if the optional is not modified in
+  // the meantime.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    namespace std {
+    template <class T>
+    struct optional {
+      bool has_value() const;
+      T* operator->();
+    };
+    }  // namespace std
+
+    struct S {
+      int* _Nullable p;
+    };
+
+    void target(std::optional<S> opt1, std::optional<S> opt2) {
+      if (!opt1.has_value() || !opt2.has_value()) return;
+      *opt1->p;  // [[unsafe]]
+      if (opt1->p != nullptr) {
+        *opt1->p;
+        opt1 = opt2;
+        *opt1->p;  // [[unsafe]]
+      }
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, FieldUndefinedValue) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct C {

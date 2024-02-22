@@ -57,6 +57,7 @@ using ast_matchers::isConst;
 using ast_matchers::isInStdNamespace;
 using ast_matchers::isMemberInitializer;
 using ast_matchers::memberExpr;
+using ast_matchers::ofClass;
 using ast_matchers::parameterCountIs;
 using ast_matchers::pointee;
 using ast_matchers::pointerType;
@@ -107,6 +108,13 @@ Matcher<CXXCtorInitializer> isCtorMemberInitializer() {
 Matcher<Stmt> isZeroParamConstMemberCall() {
   return cxxMemberCallExpr(
       callee(cxxMethodDecl(parameterCountIs(0), isConst())));
+}
+
+Matcher<Stmt> isOptionalOperatorArrowCall() {
+  return cxxOperatorCallExpr(
+      hasOverloadedOperatorName("->"),
+      callee(cxxMethodDecl(ofClass(hasAnyName(
+          "::std::optional", "::absl::optional", "::folly::Optional")))));
 }
 
 Matcher<Stmt> isNonConstMemberCall() {

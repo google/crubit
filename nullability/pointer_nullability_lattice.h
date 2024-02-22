@@ -75,13 +75,14 @@ class PointerNullabilityLattice {
   // the CXXMemberCallExpr to have a supported pointer type.
   absl::Nonnull<dataflow::PointerValue *> getConstMethodReturnValue(
       const dataflow::RecordStorageLocation &RecordLoc,
-      absl::Nonnull<const CXXMemberCallExpr *> MCE,
-      dataflow::Environment &Env) {
+      absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env) {
     auto &ObjMap = ConstMethodReturnValues[&RecordLoc];
-    auto it = ObjMap.find(MCE->getMethodDecl());
+    const FunctionDecl *DirectCallee = CE->getDirectCallee();
+    if (DirectCallee == nullptr) return nullptr;
+    auto it = ObjMap.find(DirectCallee);
     if (it != ObjMap.end()) return it->second;
-    auto *PV = cast<dataflow::PointerValue>(Env.createValue(MCE->getType()));
-    ObjMap.insert({MCE->getMethodDecl(), PV});
+    auto *PV = cast<dataflow::PointerValue>(Env.createValue(CE->getType()));
+    ObjMap.insert({DirectCallee, PV});
     return PV;
   }
 
@@ -119,7 +120,7 @@ class PointerNullabilityLattice {
   // from that const method.
   llvm::SmallDenseMap<
       const dataflow::RecordStorageLocation *,
-      llvm::SmallDenseMap<const CXXMethodDecl *, dataflow::PointerValue *>>
+      llvm::SmallDenseMap<const FunctionDecl *, dataflow::PointerValue *>>
       ConstMethodReturnValues;
 };
 

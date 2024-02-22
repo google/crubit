@@ -1061,28 +1061,42 @@ void transferValue_AccessorCall(
   }
 }
 
+void handleConstMemberCall(absl::Nonnull<const CallExpr *> CE,
+                           dataflow::RecordStorageLocation *RecordLoc,
+                           const MatchFinder::MatchResult &Result,
+                           TransferState<PointerNullabilityLattice> &State) {
+  if (!isSupportedRawPointerType(CE->getType()) || !CE->isPRValue() ||
+      RecordLoc == nullptr) {
+    // Perform default handling.
+    transferValue_CallExpr(CE, Result, State);
+    return;
+  }
+  PointerValue *PointerVal =
+      State.Lattice.getConstMethodReturnValue(*RecordLoc, CE, State.Env);
+  if (PointerVal) {
+    State.Env.setValue(*CE, *PointerVal);
+    initPointerFromTypeNullability(*PointerVal, CE, State);
+  }
+}
+
 void transferValue_ConstMemberCall(
     absl::Nonnull<const CXXMemberCallExpr *> MCE,
     const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (!isSupportedRawPointerType(MCE->getType()) || !MCE->isPRValue()) {
-    // We can't handle it as a special case, but still need to handle it.
-    transferValue_CallExpr(MCE, Result, State);
-    return;
-  }
-  dataflow::RecordStorageLocation *RecordLoc =
-      dataflow::getImplicitObjectLocation(*MCE, State.Env);
-  if (RecordLoc == nullptr) {
-    // We can't handle it as a special case, but still need to handle it.
-    transferValue_CallExpr(MCE, Result, State);
-    return;
-  }
-  PointerValue *PointerVal =
-      State.Lattice.getConstMethodReturnValue(*RecordLoc, MCE, State.Env);
-  if (PointerVal) {
-    State.Env.setValue(*MCE, *PointerVal);
-    initPointerFromTypeNullability(*PointerVal, MCE, State);
-  }
+  handleConstMemberCall(
+      MCE, dataflow::getImplicitObjectLocation(*MCE, State.Env), Result, State);
+}
+
+void transferValue_OptionalOperatorArrowCall(
+    absl::Nonnull<const CXXOperatorCallExpr *> OCE,
+    const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
+      State.Env.getStorageLocation(*OCE->getArg(0)));
+  // `optional::operator->` isn't necessarily const, but it behaves the way we
+  // model "const member calls": It always returns the same pointer if the
+  // optional wasn't mutated in the meantime.
+  handleConstMemberCall(OCE, RecordLoc, Result, State);
 }
 
 void handleNonConstMemberCall(absl::Nonnull<const CallExpr *> CE,
@@ -1484,6 +1498,9 @@ auto buildValueTransferer() {
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),
                                         transferValue_ConstMemberCall)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(
+          isOptionalOperatorArrowCall(),
+          transferValue_OptionalOperatorArrowCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isNonConstMemberCall(),
                                         transferValue_NonConstMemberCall)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(
