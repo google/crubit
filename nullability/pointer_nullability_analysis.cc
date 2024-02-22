@@ -1605,15 +1605,12 @@ static absl::Nullable<const Formula *> mergeFormulas(
   return &MergedBool;
 }
 
-bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
-                                       const Environment &Env1,
-                                       const Value &Val2,
-                                       const Environment &Env2,
-                                       Value &MergedVal,
-                                       Environment &MergedEnv) {
-  if (!isSupportedRawPointerType(Type)) {
-    return true;
-  }
+void PointerNullabilityAnalysis::join(QualType Type, const Value &Val1,
+                                      const Environment &Env1,
+                                      const Value &Val2,
+                                      const Environment &Env2, Value &MergedVal,
+                                      Environment &MergedEnv) {
+  if (!isSupportedRawPointerType(Type)) return;
 
   if (!hasPointerNullState(cast<PointerValue>(Val1)) ||
       !hasPointerNullState(cast<PointerValue>(Val2))) {
@@ -1623,7 +1620,7 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
     // We return true to keep the `MergedVal` produced by the framework. When
     // the merged value appears in an expression, `tranferValue_Pointer` will
     // take care of initializing it with nullability properties.
-    return true;
+    return;
   }
 
   auto Nullability1 = getPointerNullState(cast<PointerValue>(Val1));
@@ -1638,8 +1635,6 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value &Val1,
   initPointerNullState(cast<PointerValue>(MergedVal),
                        MergedEnv.getDataflowAnalysisContext(),
                        {FromNullable, Null});
-
-  return true;
 }
 
 ComparisonResult PointerNullabilityAnalysis::compare(QualType Type,

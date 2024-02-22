@@ -81,10 +81,10 @@ class PointerNullabilityAnalysis
   void transfer(const CFGElement &Elt, PointerNullabilityLattice &Lattice,
                 dataflow::Environment &Env);
 
-  bool merge(QualType Type, const dataflow::Value &Val1,
-             const dataflow::Environment &Env1, const dataflow::Value &Val2,
-             const dataflow::Environment &Env2, dataflow::Value &MergedVal,
-             dataflow::Environment &MergedEnv) override;
+  void join(QualType Type, const dataflow::Value &Val1,
+            const dataflow::Environment &Env1, const dataflow::Value &Val2,
+            const dataflow::Environment &Env2, dataflow::Value &MergedVal,
+            dataflow::Environment &MergedEnv) override;
 
   dataflow::ComparisonResult compare(
       QualType Type, const dataflow::Value &Val1,
