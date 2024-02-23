@@ -17,6 +17,9 @@ rust_library(
     crate_features = [
         "required_feature",
     ],
+    deps = [
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+    ],
 )
 
 cc_bindings_from_rust(

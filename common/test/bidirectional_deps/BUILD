@@ -57,6 +57,7 @@ crubit_cc_test(
     deps = [
         ":leaf_cc_lib",
         ":middle_rs_lib_cc_api",
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
         "@com_google_googletest//:gtest_main",
     ],
 )

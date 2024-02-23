@@ -75,6 +75,7 @@ crubit_cc_binary(
         ":generate_bindings_and_metadata",
         "//common:file_io",
         "//common:status_macros",
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
         "@absl//absl/flags:parse",
         "@absl//absl/status",
         "@absl//absl/strings",
@@ -121,6 +122,7 @@ crubit_cc_test(
         "//common:cc_ffi_types",
         "//common:status_macros",
         "//common:test_utils",
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/log:check",
         "@absl//absl/status",
@@ -180,6 +182,7 @@ cc_library(
         ":cmdline_flags",
         "//common:cc_ffi_types",
         "//common:status_macros",
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
         "@absl//absl/debugging:leak_check",
@@ -390,6 +393,7 @@ crubit_rust_test(
     deps = [
         ":ir_matchers",
         ":ir_testing",
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
         "@crate_index//:quote",
     ],
 )
@@ -440,6 +444,7 @@ multiplatform_rust_test(
         ":ir_testing",
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
@@ -537,6 +542,7 @@ crubit_rust_test(
     deps = [
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
     ],
 )
 
@@ -571,6 +577,7 @@ crubit_cc_test(
         ":cc_collect_instantiations",
         "//common:status_test_matchers",
         "//common:test_utils",
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
         "@com_google_googletest//:gtest_main",
     ],
 )

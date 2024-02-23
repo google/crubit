@@ -15,13 +15,19 @@ rust_library(
     name = "other_crate",
     testonly = 1,
     srcs = ["other_crate.rs"],
+    deps = [
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+    ],
 )
 
 rust_library(
     name = "test_api",
     testonly = 1,
     srcs = ["test_api.rs"],
-    deps = [":other_crate"],
+    deps = [
+        ":other_crate",
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+    ],
 )
 
 cc_bindings_from_rust(

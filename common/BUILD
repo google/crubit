@@ -173,7 +173,10 @@ crubit_rust_test(
     tags = [
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
     ],
-    deps = ["@crate_index//:quote"],
+    deps = [
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+        "@crate_index//:quote",
+    ],
 )
 
 rust_library(

@@ -15,6 +15,9 @@ rust_library(
     name = "impls",
     testonly = 1,
     srcs = ["impls.rs"],
+    deps = [
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+    ],
 )
 
 cc_bindings_from_rust(

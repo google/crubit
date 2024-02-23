@@ -14,7 +14,10 @@ rust_library(
     name = "primitive_types",
     testonly = 1,
     srcs = ["primitive_types.rs"],
-    deps = ["@crate_index//:libc"],
+    deps = [
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+        "@crate_index//:libc",
+    ],
 )
 
 cc_bindings_from_rust(

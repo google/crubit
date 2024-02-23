@@ -18,6 +18,9 @@ rust_library(
     name = "drop",
     testonly = 1,
     srcs = ["drop.rs"],
+    deps = [
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+    ],
 )
 
 cc_bindings_from_rust(

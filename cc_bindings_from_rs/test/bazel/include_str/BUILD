@@ -17,6 +17,9 @@ rust_library(
     testonly = 1,
     srcs = ["include_str.rs"],
     data = ["the_answer.md"],
+    deps = [
+        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+    ],
 )
 
 cc_bindings_from_rust(
