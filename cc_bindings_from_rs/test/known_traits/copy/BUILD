@@ -18,9 +18,6 @@ rust_library(
     name = "copy",
     testonly = 1,
     srcs = ["copy.rs"],
-    deps = [
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
-    ],
 )
 
 cc_bindings_from_rust(

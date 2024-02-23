@@ -31,10 +31,7 @@ rust_library(
     name = "build_rs_out_dir",
     testonly = 1,
     srcs = ["build_rs_out_dir.rs"],
-    deps = [
-        ":build_rs_out_dir_build_script",
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
-    ],
+    deps = [":build_rs_out_dir_build_script"],
 )
 
 cc_bindings_from_rust(

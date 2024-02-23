@@ -9,7 +9,6 @@ cc_binary(
     deps = [
         ":rs_from_cc_lib",
         "//common:file_io",
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
         "@absl//absl/flags:flag",
         "@absl//absl/flags:parse",
         "@absl//absl/log:check",

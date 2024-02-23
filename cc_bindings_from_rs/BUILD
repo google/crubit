@@ -20,7 +20,6 @@ rust_library(
         ":run_compiler",
         ":toposort",
         "//common:code_gen_utils",
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
         "@crate_index//:anyhow",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
@@ -61,7 +60,6 @@ crubit_rust_binary(
         ":run_compiler",
         "//common:code_gen_utils",
         "//common:token_stream_printer",
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
         "@crate_index//:anyhow",
         "@crate_index//:clap",
         "@crate_index//:itertools",
@@ -100,7 +98,6 @@ rust_library(
         "cmdline.rs",
     ],
     deps = [
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
         "@crate_index//:anyhow",
         "@crate_index//:clap",
     ],

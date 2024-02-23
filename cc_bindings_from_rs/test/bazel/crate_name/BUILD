@@ -16,9 +16,6 @@ rust_library(
     name = "custom_crate_name",  # <- This is an important part of this test.
     testonly = 1,
     srcs = ["lib.rs"],
-    deps = [
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
-    ],
 )
 
 cc_bindings_from_rust(

@@ -17,9 +17,6 @@ rust_library(
     name = "functions",
     testonly = 1,
     srcs = ["functions.rs"],
-    deps = [
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
-    ],
 )
 
 cc_bindings_from_rust(

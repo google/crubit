@@ -14,9 +14,6 @@ rust_library(
     name = "env",
     testonly = 1,
     srcs = ["env.rs"],
-    deps = [
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
-    ],
 )
 
 cc_bindings_from_rust(
