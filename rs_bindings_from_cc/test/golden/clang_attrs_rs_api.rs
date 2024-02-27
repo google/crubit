@@ -420,14 +420,14 @@ mod detail {
             'a,
             'b,
         >(
-            __this:&'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            __this: &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             __param_0: &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
         ) -> &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE;
         pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
             'a,
             'b,
         >(
-            __this:&'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            __this: &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
@@ -436,7 +436,7 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiE3fooEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
             'a,
         >(
-            __this:&'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            __this: &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
         ) -> ::core::ffi::c_int;
     }
 }
@@ -444,28 +444,28 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::HasCustomAlignment>() == 64);
     assert!(::core::mem::align_of::<crate::HasCustomAlignment>() == 64);
-    static_assertions::assert_impl_all!(crate::HasCustomAlignment:Clone);
-    static_assertions::assert_impl_all!(crate::HasCustomAlignment:Copy);
-    static_assertions::assert_not_impl_any!(crate::HasCustomAlignment:Drop);
+    static_assertions::assert_impl_all!(crate::HasCustomAlignment: Clone);
+    static_assertions::assert_impl_all!(crate::HasCustomAlignment: Copy);
+    static_assertions::assert_not_impl_any!(crate::HasCustomAlignment: Drop);
 
     assert!(::core::mem::size_of::<crate::HasFieldWithCustomAlignment>() == 64);
     assert!(::core::mem::align_of::<crate::HasFieldWithCustomAlignment>() == 64);
-    static_assertions::assert_impl_all!(crate::HasFieldWithCustomAlignment:Clone);
-    static_assertions::assert_impl_all!(crate::HasFieldWithCustomAlignment:Copy);
-    static_assertions::assert_not_impl_any!(crate::HasFieldWithCustomAlignment:Drop);
+    static_assertions::assert_impl_all!(crate::HasFieldWithCustomAlignment: Clone);
+    static_assertions::assert_impl_all!(crate::HasFieldWithCustomAlignment: Copy);
+    static_assertions::assert_not_impl_any!(crate::HasFieldWithCustomAlignment: Drop);
     assert!(memoffset::offset_of!(crate::HasFieldWithCustomAlignment, field) == 0);
 
     assert!(::core::mem::size_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
     assert!(::core::mem::align_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
-    static_assertions::assert_impl_all!(crate::InheritsFromBaseWithCustomAlignment:Clone);
-    static_assertions::assert_impl_all!(crate::InheritsFromBaseWithCustomAlignment:Copy);
-    static_assertions::assert_not_impl_any!(crate::InheritsFromBaseWithCustomAlignment:Drop);
+    static_assertions::assert_impl_all!(crate::InheritsFromBaseWithCustomAlignment: Clone);
+    static_assertions::assert_impl_all!(crate::InheritsFromBaseWithCustomAlignment: Copy);
+    static_assertions::assert_not_impl_any!(crate::InheritsFromBaseWithCustomAlignment: Drop);
 
     assert!(::core::mem::size_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
     assert!(::core::mem::align_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
-    static_assertions::assert_impl_all!(crate::HasCustomAlignmentWithGnuAttr:Clone);
-    static_assertions::assert_impl_all!(crate::HasCustomAlignmentWithGnuAttr:Copy);
-    static_assertions::assert_not_impl_any!(crate::HasCustomAlignmentWithGnuAttr:Drop);
+    static_assertions::assert_impl_all!(crate::HasCustomAlignmentWithGnuAttr: Clone);
+    static_assertions::assert_impl_all!(crate::HasCustomAlignmentWithGnuAttr: Copy);
+    static_assertions::assert_not_impl_any!(crate::HasCustomAlignmentWithGnuAttr: Drop);
 
     assert!(
         ::core::mem::size_of::<
@@ -477,7 +477,7 @@ const _: () = {
             crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
         >() == 1
     );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE:Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE:Copy);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE:Drop);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE: Clone);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE: Copy);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE: Drop);
 };

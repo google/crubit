@@ -133,9 +133,9 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::test_namespace_bindings::SomeClass>() == 8);
     assert!(::core::mem::align_of::<crate::test_namespace_bindings::SomeClass>() == 4);
-    static_assertions::assert_impl_all!(crate::test_namespace_bindings::SomeClass:Clone);
-    static_assertions::assert_impl_all!(crate::test_namespace_bindings::SomeClass:Copy);
-    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::SomeClass:Drop);
+    static_assertions::assert_impl_all!(crate::test_namespace_bindings::SomeClass: Clone);
+    static_assertions::assert_impl_all!(crate::test_namespace_bindings::SomeClass: Copy);
+    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::SomeClass: Drop);
     assert!(
         memoffset::offset_of!(crate::test_namespace_bindings::SomeClass, public_member_variable_)
             == 0

@@ -667,50 +667,50 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::DocCommentSlashes>() == 4);
     assert!(::core::mem::align_of::<crate::DocCommentSlashes>() == 4);
-    static_assertions::assert_impl_all!(crate::DocCommentSlashes:Clone);
-    static_assertions::assert_impl_all!(crate::DocCommentSlashes:Copy);
-    static_assertions::assert_not_impl_any!(crate::DocCommentSlashes:Drop);
+    static_assertions::assert_impl_all!(crate::DocCommentSlashes: Clone);
+    static_assertions::assert_impl_all!(crate::DocCommentSlashes: Copy);
+    static_assertions::assert_not_impl_any!(crate::DocCommentSlashes: Drop);
     assert!(memoffset::offset_of!(crate::DocCommentSlashes, i) == 0);
 
     assert!(::core::mem::size_of::<crate::DocCommentBang>() == 4);
     assert!(::core::mem::align_of::<crate::DocCommentBang>() == 4);
-    static_assertions::assert_impl_all!(crate::DocCommentBang:Clone);
-    static_assertions::assert_impl_all!(crate::DocCommentBang:Copy);
-    static_assertions::assert_not_impl_any!(crate::DocCommentBang:Drop);
+    static_assertions::assert_impl_all!(crate::DocCommentBang: Clone);
+    static_assertions::assert_impl_all!(crate::DocCommentBang: Copy);
+    static_assertions::assert_not_impl_any!(crate::DocCommentBang: Drop);
     assert!(memoffset::offset_of!(crate::DocCommentBang, i) == 0);
 
     assert!(::core::mem::size_of::<crate::MultilineCommentTwoStars>() == 4);
     assert!(::core::mem::align_of::<crate::MultilineCommentTwoStars>() == 4);
-    static_assertions::assert_impl_all!(crate::MultilineCommentTwoStars:Clone);
-    static_assertions::assert_impl_all!(crate::MultilineCommentTwoStars:Copy);
-    static_assertions::assert_not_impl_any!(crate::MultilineCommentTwoStars:Drop);
+    static_assertions::assert_impl_all!(crate::MultilineCommentTwoStars: Clone);
+    static_assertions::assert_impl_all!(crate::MultilineCommentTwoStars: Copy);
+    static_assertions::assert_not_impl_any!(crate::MultilineCommentTwoStars: Drop);
     assert!(memoffset::offset_of!(crate::MultilineCommentTwoStars, i) == 0);
 
     assert!(::core::mem::size_of::<crate::LineComment>() == 4);
     assert!(::core::mem::align_of::<crate::LineComment>() == 4);
-    static_assertions::assert_impl_all!(crate::LineComment:Clone);
-    static_assertions::assert_impl_all!(crate::LineComment:Copy);
-    static_assertions::assert_not_impl_any!(crate::LineComment:Drop);
+    static_assertions::assert_impl_all!(crate::LineComment: Clone);
+    static_assertions::assert_impl_all!(crate::LineComment: Copy);
+    static_assertions::assert_not_impl_any!(crate::LineComment: Drop);
     assert!(memoffset::offset_of!(crate::LineComment, i) == 0);
 
     assert!(::core::mem::size_of::<crate::MultilineOneStar>() == 4);
     assert!(::core::mem::align_of::<crate::MultilineOneStar>() == 4);
-    static_assertions::assert_impl_all!(crate::MultilineOneStar:Clone);
-    static_assertions::assert_impl_all!(crate::MultilineOneStar:Copy);
-    static_assertions::assert_not_impl_any!(crate::MultilineOneStar:Drop);
+    static_assertions::assert_impl_all!(crate::MultilineOneStar: Clone);
+    static_assertions::assert_impl_all!(crate::MultilineOneStar: Copy);
+    static_assertions::assert_not_impl_any!(crate::MultilineOneStar: Drop);
     assert!(memoffset::offset_of!(crate::MultilineOneStar, i) == 0);
 
     assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE:Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE:Copy);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE:Drop);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Clone);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
     assert!(memoffset::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value) == 0);
 
     assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE:Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE:Copy);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIfE:Drop);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Clone);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Copy);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
     assert!(memoffset::offset_of!(crate::__CcTemplateInst10MyTemplateIfE, value) == 0);
 };

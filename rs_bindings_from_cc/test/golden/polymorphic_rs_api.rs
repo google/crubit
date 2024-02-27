@@ -345,16 +345,16 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::PolymorphicBase>() == 8);
     assert!(::core::mem::align_of::<crate::PolymorphicBase>() == 8);
-    static_assertions::assert_not_impl_any!(crate::PolymorphicBase:Copy);
-    static_assertions::assert_impl_all!(crate::PolymorphicBase:Drop);
+    static_assertions::assert_not_impl_any!(crate::PolymorphicBase: Copy);
+    static_assertions::assert_impl_all!(crate::PolymorphicBase: Drop);
 
     assert!(::core::mem::size_of::<crate::PolymorphicBase2>() == 8);
     assert!(::core::mem::align_of::<crate::PolymorphicBase2>() == 8);
-    static_assertions::assert_not_impl_any!(crate::PolymorphicBase2:Copy);
-    static_assertions::assert_impl_all!(crate::PolymorphicBase2:Drop);
+    static_assertions::assert_not_impl_any!(crate::PolymorphicBase2: Copy);
+    static_assertions::assert_impl_all!(crate::PolymorphicBase2: Drop);
 
     assert!(::core::mem::size_of::<crate::PolymorphicDerived>() == 16);
     assert!(::core::mem::align_of::<crate::PolymorphicDerived>() == 8);
-    static_assertions::assert_not_impl_any!(crate::PolymorphicDerived:Copy);
-    static_assertions::assert_impl_all!(crate::PolymorphicDerived:Drop);
+    static_assertions::assert_not_impl_any!(crate::PolymorphicDerived: Copy);
+    static_assertions::assert_impl_all!(crate::PolymorphicDerived: Drop);
 };

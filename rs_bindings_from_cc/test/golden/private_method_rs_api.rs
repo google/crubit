@@ -46,7 +46,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Outer"), crate::Outer)
 const _: () = {
     assert!(::core::mem::size_of::<crate::Outer>() == 1);
     assert!(::core::mem::align_of::<crate::Outer>() == 1);
-    static_assertions::assert_impl_all!(crate::Outer:Clone);
-    static_assertions::assert_impl_all!(crate::Outer:Copy);
-    static_assertions::assert_not_impl_any!(crate::Outer:Drop);
+    static_assertions::assert_impl_all!(crate::Outer: Clone);
+    static_assertions::assert_impl_all!(crate::Outer: Copy);
+    static_assertions::assert_not_impl_any!(crate::Outer: Drop);
 };

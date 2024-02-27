@@ -124,6 +124,7 @@ pub fn write_unformatted_tokens(
     tokens: TokenStream,
 ) -> Result<()> {
     let mut it = tokens.into_iter().peekable();
+    let mut tt_prev = None;
     while let Some(tt) = it.next() {
         match tt {
             TokenTree::Ident(ref tt) if tt == "__NEWLINE__" => writeln!(result)?,
@@ -159,12 +160,13 @@ pub fn write_unformatted_tokens(
                 // In particular, `a b` is different than `ab`, and `: ::` is different from
                 // `:::`.
                 if let Some(tt_next) = it.peek() {
-                    if tokens_require_whitespace(&tt, tt_next) {
+                    if tokens_require_whitespace(tt_prev.as_ref(), &tt, tt_next) {
                         write!(result, " ")?;
                     }
                 }
             }
         }
+        tt_prev = Some(tt);
     }
     Ok(())
 }
@@ -175,22 +177,50 @@ fn tokens_to_string(tokens: TokenStream) -> Result<String> {
     Ok(result)
 }
 
-/// Returns true if token1 and token2 should have whitespace between them, and
-/// false if they should not.
+/// Returns true if `current` and `next` should have whitespace between them,
+/// and false if they should not.
 ///
 /// For example, `a b` is different than `ab`, and `: ::` is different from
 /// `:::`.
-fn tokens_require_whitespace(token1: &TokenTree, token2: &TokenTree) -> bool {
-    if is_ident_or_literal(token1) && is_ident_or_literal(token2) {
+fn tokens_require_whitespace(
+    prev: Option<&TokenTree>,
+    current: &TokenTree,
+    next: &TokenTree,
+) -> bool {
+    if is_ident_or_literal(current) && is_ident_or_literal(next) {
         return true;
     }
-    match (token1, token2) {
-        (TokenTree::Punct(p1), TokenTree::Punct(p2)) => {
-            p1.spacing() == proc_macro2::Spacing::Alone
-                && p1.as_char() == ':'
-                && p2.as_char() == ':'
+
+    // We (currently) only add a space for `:`.
+    // A lone `:` always gets a space after it. A lone `::` doesn't.
+    // So if the current character is a colon, it gets a space after it if it is not
+    // the start or end of a `::`.
+    fn get_colon(tt: &TokenTree) -> Option<&proc_macro2::Punct> {
+        let TokenTree::Punct(p) = tt else {
+            return None;
+        };
+        if p.as_char() != ':' {
+            return None;
         }
-        _ => false,
+        Some(p)
+    }
+
+    let Some(current_colon) = get_colon(current) else {
+        return false;
+    };
+    if current_colon.spacing() == proc_macro2::Spacing::Joint {
+        // This is the first `:` in `::`
+        return false;
+    }
+    match prev.and_then(get_colon) {
+        // this is the second `:` in `::`
+        Some(prev_colon) if prev_colon.spacing() == proc_macro2::Spacing::Joint => {
+            // a `::` shouldn't have a space after it, generally, but we add one if the next
+            // token is a `:` because otherwise it looks awful.
+            get_colon(next).is_some()
+        }
+        // this is a standalone `:`.
+        _ => true,
     }
 }
 
@@ -290,7 +320,12 @@ mod tests {
     /// `foo : ::bar` is valid syntax, but `foo:::bar` is not.
     #[test]
     fn test_paamayim_nekudotayim() -> Result<()> {
-        assert_eq!(tokens_to_string(quote! { x : ::y })?, "x: ::y");
+        assert_eq!(tokens_to_string(quote! { x : :: y })?, "x: ::y");
+        // The following variants are not syntactically valid, but good to have working
+        // anyway.
+        assert_eq!(tokens_to_string(quote! { x : : y })?, "x: : y");
+        assert_eq!(tokens_to_string(quote! { x :: :: y })?, "x:: ::y");
+        assert_eq!(tokens_to_string(quote! { x :: : y })?, "x:: : y");
         Ok(())
     }
 

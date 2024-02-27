@@ -1014,67 +1014,67 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::Base0>() == 1);
     assert!(::core::mem::align_of::<crate::Base0>() == 1);
-    static_assertions::assert_impl_all!(crate::Base0:Clone);
-    static_assertions::assert_impl_all!(crate::Base0:Copy);
-    static_assertions::assert_not_impl_any!(crate::Base0:Drop);
+    static_assertions::assert_impl_all!(crate::Base0: Clone);
+    static_assertions::assert_impl_all!(crate::Base0: Copy);
+    static_assertions::assert_not_impl_any!(crate::Base0: Drop);
 
     assert!(::core::mem::size_of::<crate::Base1>() == 16);
     assert!(::core::mem::align_of::<crate::Base1>() == 8);
-    static_assertions::assert_impl_all!(crate::Base1:Clone);
-    static_assertions::assert_impl_all!(crate::Base1:Copy);
-    static_assertions::assert_not_impl_any!(crate::Base1:Drop);
+    static_assertions::assert_impl_all!(crate::Base1: Clone);
+    static_assertions::assert_impl_all!(crate::Base1: Copy);
+    static_assertions::assert_not_impl_any!(crate::Base1: Drop);
     assert!(memoffset::offset_of!(crate::Base1, b1_1_) == 0);
     assert!(memoffset::offset_of!(crate::Base1, b1_2_) == 8);
 
     assert!(::core::mem::size_of::<crate::Base2>() == 2);
     assert!(::core::mem::align_of::<crate::Base2>() == 2);
-    static_assertions::assert_impl_all!(crate::Base2:Clone);
-    static_assertions::assert_impl_all!(crate::Base2:Copy);
-    static_assertions::assert_not_impl_any!(crate::Base2:Drop);
+    static_assertions::assert_impl_all!(crate::Base2: Clone);
+    static_assertions::assert_impl_all!(crate::Base2: Copy);
+    static_assertions::assert_not_impl_any!(crate::Base2: Drop);
     assert!(memoffset::offset_of!(crate::Base2, b2_1_) == 0);
 
     assert!(::core::mem::size_of::<crate::Derived>() == 16);
     assert!(::core::mem::align_of::<crate::Derived>() == 8);
-    static_assertions::assert_impl_all!(crate::Derived:Clone);
-    static_assertions::assert_impl_all!(crate::Derived:Copy);
-    static_assertions::assert_not_impl_any!(crate::Derived:Drop);
+    static_assertions::assert_impl_all!(crate::Derived: Clone);
+    static_assertions::assert_impl_all!(crate::Derived: Copy);
+    static_assertions::assert_not_impl_any!(crate::Derived: Drop);
     assert!(memoffset::offset_of!(crate::Derived, derived_1) == 12);
 
     assert!(::core::mem::size_of::<crate::VirtualBase1>() == 24);
     assert!(::core::mem::align_of::<crate::VirtualBase1>() == 8);
-    static_assertions::assert_not_impl_any!(crate::VirtualBase1:Copy);
-    static_assertions::assert_not_impl_any!(crate::VirtualBase1:Drop);
+    static_assertions::assert_not_impl_any!(crate::VirtualBase1: Copy);
+    static_assertions::assert_not_impl_any!(crate::VirtualBase1: Drop);
 
     assert!(::core::mem::size_of::<crate::VirtualBase2>() == 24);
     assert!(::core::mem::align_of::<crate::VirtualBase2>() == 8);
-    static_assertions::assert_not_impl_any!(crate::VirtualBase2:Copy);
-    static_assertions::assert_not_impl_any!(crate::VirtualBase2:Drop);
+    static_assertions::assert_not_impl_any!(crate::VirtualBase2: Copy);
+    static_assertions::assert_not_impl_any!(crate::VirtualBase2: Drop);
 
     assert!(::core::mem::size_of::<crate::VirtualDerived>() == 32);
     assert!(::core::mem::align_of::<crate::VirtualDerived>() == 8);
-    static_assertions::assert_not_impl_any!(crate::VirtualDerived:Copy);
-    static_assertions::assert_not_impl_any!(crate::VirtualDerived:Drop);
+    static_assertions::assert_not_impl_any!(crate::VirtualDerived: Copy);
+    static_assertions::assert_not_impl_any!(crate::VirtualDerived: Drop);
 
     assert!(::core::mem::size_of::<crate::MyAbstractClass>() == 8);
     assert!(::core::mem::align_of::<crate::MyAbstractClass>() == 8);
-    static_assertions::assert_not_impl_any!(crate::MyAbstractClass:Copy);
-    static_assertions::assert_not_impl_any!(crate::MyAbstractClass:Drop);
+    static_assertions::assert_not_impl_any!(crate::MyAbstractClass: Copy);
+    static_assertions::assert_not_impl_any!(crate::MyAbstractClass: Drop);
 
     assert!(::core::mem::size_of::<crate::MethodBase1>() == 1);
     assert!(::core::mem::align_of::<crate::MethodBase1>() == 1);
-    static_assertions::assert_impl_all!(crate::MethodBase1:Clone);
-    static_assertions::assert_impl_all!(crate::MethodBase1:Copy);
-    static_assertions::assert_not_impl_any!(crate::MethodBase1:Drop);
+    static_assertions::assert_impl_all!(crate::MethodBase1: Clone);
+    static_assertions::assert_impl_all!(crate::MethodBase1: Copy);
+    static_assertions::assert_not_impl_any!(crate::MethodBase1: Drop);
 
     assert!(::core::mem::size_of::<crate::MethodBase2>() == 1);
     assert!(::core::mem::align_of::<crate::MethodBase2>() == 1);
-    static_assertions::assert_impl_all!(crate::MethodBase2:Clone);
-    static_assertions::assert_impl_all!(crate::MethodBase2:Copy);
-    static_assertions::assert_not_impl_any!(crate::MethodBase2:Drop);
+    static_assertions::assert_impl_all!(crate::MethodBase2: Clone);
+    static_assertions::assert_impl_all!(crate::MethodBase2: Copy);
+    static_assertions::assert_not_impl_any!(crate::MethodBase2: Drop);
 
     assert!(::core::mem::size_of::<crate::MethodDerived>() == 1);
     assert!(::core::mem::align_of::<crate::MethodDerived>() == 1);
-    static_assertions::assert_impl_all!(crate::MethodDerived:Clone);
-    static_assertions::assert_impl_all!(crate::MethodDerived:Copy);
-    static_assertions::assert_not_impl_any!(crate::MethodDerived:Drop);
+    static_assertions::assert_impl_all!(crate::MethodDerived: Clone);
+    static_assertions::assert_impl_all!(crate::MethodDerived: Copy);
+    static_assertions::assert_not_impl_any!(crate::MethodDerived: Drop);
 };

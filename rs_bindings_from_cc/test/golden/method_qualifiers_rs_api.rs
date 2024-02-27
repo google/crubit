@@ -166,13 +166,13 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::Noninline>() == 1);
     assert!(::core::mem::align_of::<crate::Noninline>() == 1);
-    static_assertions::assert_impl_all!(crate::Noninline:Clone);
-    static_assertions::assert_impl_all!(crate::Noninline:Copy);
-    static_assertions::assert_not_impl_any!(crate::Noninline:Drop);
+    static_assertions::assert_impl_all!(crate::Noninline: Clone);
+    static_assertions::assert_impl_all!(crate::Noninline: Copy);
+    static_assertions::assert_not_impl_any!(crate::Noninline: Drop);
 
     assert!(::core::mem::size_of::<crate::Inline>() == 1);
     assert!(::core::mem::align_of::<crate::Inline>() == 1);
-    static_assertions::assert_impl_all!(crate::Inline:Clone);
-    static_assertions::assert_impl_all!(crate::Inline:Copy);
-    static_assertions::assert_not_impl_any!(crate::Inline:Drop);
+    static_assertions::assert_impl_all!(crate::Inline: Clone);
+    static_assertions::assert_impl_all!(crate::Inline: Copy);
+    static_assertions::assert_not_impl_any!(crate::Inline: Drop);
 };
