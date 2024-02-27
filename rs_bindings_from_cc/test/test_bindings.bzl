@@ -91,9 +91,6 @@ write_crubit_outs = rule(
             cfg = crubit_flavor_transition,
         ),
         "outs": attr.output_list(),
-        "_allowlist_function_transition": attr.label(
-            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
-        ),
     },
     implementation = _write_crubit_outs_impl,
 )

@@ -65,9 +65,6 @@ cc_std_test = rule(
             executable = True,
             cfg = "exec",
         ),
-        "_allowlist_function_transition": attr.label(
-            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
-        ),
     },
     test = True,
 )

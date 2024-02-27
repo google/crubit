@@ -40,9 +40,6 @@ rust_bindings_from_cc_binary = rule(
             doc = ("Executable StandaloneClangTool binary that generates Rust bindings from " +
                    "C++ code."),
         ),
-        "_allowlist_function_transition": attr.label(
-            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
-        ),
         "_clang_format": attr.label(
             default = "//third_party/crosstool/google3_users:stable_clang-format",
             executable = True,

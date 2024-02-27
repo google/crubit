@@ -35,9 +35,6 @@ _generate_bindings = rule(
             aspects = [rust_bindings_from_cc_aspect],
             cfg = crubit_flavor_transition,
         ),
-        "_allowlist_function_transition": attr.label(
-            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
-        ),
     },
     implementation = _generate_bindings_impl,
 )
