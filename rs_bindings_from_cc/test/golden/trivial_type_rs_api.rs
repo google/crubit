@@ -373,27 +373,17 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::ns::Trivial>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::ns::Trivial>() == 4);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::ns::Trivial>() == 4);
+    assert!(::core::mem::align_of::<crate::ns::Trivial>() == 4);
     static_assertions::assert_impl_all!(crate::ns::Trivial:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::ns::Trivial:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::ns::Trivial:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::ns::Trivial, trivial_field) == 0);
-const _: () = assert!(::core::mem::size_of::<crate::ns::TrivialNonfinal>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::ns::TrivialNonfinal>() == 4);
-const _: () = {
+    assert!(memoffset::offset_of!(crate::ns::Trivial, trivial_field) == 0);
+    assert!(::core::mem::size_of::<crate::ns::TrivialNonfinal>() == 4);
+    assert!(::core::mem::align_of::<crate::ns::TrivialNonfinal>() == 4);
     static_assertions::assert_impl_all!(crate::ns::TrivialNonfinal:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::ns::TrivialNonfinal:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::ns::TrivialNonfinal:Drop);
+    assert!(memoffset::offset_of!(crate::ns::TrivialNonfinal, trivial_field) == 0);
 };
-const _: () = assert!(memoffset::offset_of!(crate::ns::TrivialNonfinal, trivial_field) == 0);

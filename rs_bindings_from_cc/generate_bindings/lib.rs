@@ -579,16 +579,19 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
                     an existing Rust type ({rs_type})",
                 cc_type = type_override.debug_name(&ir),
             );
-            let layout_assertions = if let Some(size_align) = &type_override.size_align {
+            let assertions = if let Some(size_align) = &type_override.size_align {
                 generate_record::rs_size_align_assertions(rs_type, size_align)
             } else {
                 quote! {}
             };
-            quote! {
-                __COMMENT__ #disable_comment
-                #layout_assertions
+
+            GeneratedItem {
+                item: quote! {
+                    __COMMENT__ #disable_comment
+                },
+                assertions,
+                ..Default::default()
             }
-            .into()
         }
     };
 
@@ -995,6 +998,16 @@ fn generate_bindings_tokens(
         }
     };
 
+    let assertions = if assertions.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            const _: () = { __NEWLINE__
+                #( #assertions __NEWLINE__ __NEWLINE__ )*
+            }; __NEWLINE__
+        }
+    };
+
     Ok(BindingsTokens {
         rs_api: quote! {
             #features __NEWLINE__
@@ -1015,7 +1028,7 @@ fn generate_bindings_tokens(
 
             #mod_detail __NEWLINE__ __NEWLINE__
 
-            #( #assertions __NEWLINE__ __NEWLINE__ )*
+            #assertions
         },
         rs_api_impl: quote! {#(#thunk_impls  __NEWLINE__ __NEWLINE__ )*},
     })
@@ -2647,10 +2660,14 @@ pub(crate) mod tests {
                     ...
                 }
                 ...
-                const _: () = assert!(::core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
-                const _: () = assert!(::core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
-                ...
-                const _: () = assert!(memoffset::offset_of!(crate::test_namespace_bindings::S, i) == 0);
+                const _: () = {
+                    ...
+                    assert!(::core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
+                    assert!(::core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
+                    ...
+                    assert!(memoffset::offset_of!(crate::test_namespace_bindings::S, i) == 0);
+                    ...
+                };
             }
         );
         Ok(())
@@ -3286,9 +3303,17 @@ pub(crate) mod tests {
         )?)?
         .rs_api;
 
-        assert_rs_not_matches!(rs_api, quote! {::core::mem::size_of::<i32>()});
+        assert_rs_not_matches!(
+            rs_api,
+            quote! {
+            const _: () = { ... ::core::mem::size_of::<i32>() ... } }
+        );
 
-        assert_rs_not_matches!(rs_api, quote! {::core::mem::align_of::<i32>()});
+        assert_rs_not_matches!(
+            rs_api,
+            quote! {
+            const _: () = { ... ::core::mem::align_of::<i32>() ... }}
+        );
         Ok(())
     }
 }

@@ -129,15 +129,11 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::SomeClass>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::SomeClass>() == 4);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::SomeClass>() == 4);
+    assert!(::core::mem::align_of::<crate::SomeClass>() == 4);
     static_assertions::assert_impl_all!(crate::SomeClass:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::SomeClass:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeClass:Drop);
+    assert!(memoffset::offset_of!(crate::SomeClass, field_) == 0);
 };
-const _: () = assert!(memoffset::offset_of!(crate::SomeClass, field_) == 0);

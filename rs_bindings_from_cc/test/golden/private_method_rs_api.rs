@@ -43,14 +43,10 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Outer"), crate::Outer)
 // Error while generating bindings for item 'Outer::operator=':
 // Parameter #0 is not supported: Unsupported type 'Outer &&': Unsupported type: && without lifetime
 
-const _: () = assert!(::core::mem::size_of::<crate::Outer>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::Outer>() == 1);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::Outer>() == 1);
+    assert!(::core::mem::align_of::<crate::Outer>() == 1);
     static_assertions::assert_impl_all!(crate::Outer:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Outer:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Outer:Drop);
 };

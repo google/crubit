@@ -1011,126 +1011,70 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::Base0>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::Base0>() == 1);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::Base0>() == 1);
+    assert!(::core::mem::align_of::<crate::Base0>() == 1);
     static_assertions::assert_impl_all!(crate::Base0:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Base0:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Base0:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::Base1>() == 16);
-const _: () = assert!(::core::mem::align_of::<crate::Base1>() == 8);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::Base1>() == 16);
+    assert!(::core::mem::align_of::<crate::Base1>() == 8);
     static_assertions::assert_impl_all!(crate::Base1:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Base1:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Base1:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::Base1, b1_1_) == 0);
-const _: () = assert!(memoffset::offset_of!(crate::Base1, b1_2_) == 8);
+    assert!(memoffset::offset_of!(crate::Base1, b1_1_) == 0);
+    assert!(memoffset::offset_of!(crate::Base1, b1_2_) == 8);
 
-const _: () = assert!(::core::mem::size_of::<crate::Base2>() == 2);
-const _: () = assert!(::core::mem::align_of::<crate::Base2>() == 2);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::Base2>() == 2);
+    assert!(::core::mem::align_of::<crate::Base2>() == 2);
     static_assertions::assert_impl_all!(crate::Base2:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Base2:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Base2:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::Base2, b2_1_) == 0);
+    assert!(memoffset::offset_of!(crate::Base2, b2_1_) == 0);
 
-const _: () = assert!(::core::mem::size_of::<crate::Derived>() == 16);
-const _: () = assert!(::core::mem::align_of::<crate::Derived>() == 8);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::Derived>() == 16);
+    assert!(::core::mem::align_of::<crate::Derived>() == 8);
     static_assertions::assert_impl_all!(crate::Derived:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Derived:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Derived:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::Derived, derived_1) == 12);
+    assert!(memoffset::offset_of!(crate::Derived, derived_1) == 12);
 
-const _: () = assert!(::core::mem::size_of::<crate::VirtualBase1>() == 24);
-const _: () = assert!(::core::mem::align_of::<crate::VirtualBase1>() == 8);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::VirtualBase1>() == 24);
+    assert!(::core::mem::align_of::<crate::VirtualBase1>() == 8);
     static_assertions::assert_not_impl_any!(crate::VirtualBase1:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::VirtualBase1:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::VirtualBase2>() == 24);
-const _: () = assert!(::core::mem::align_of::<crate::VirtualBase2>() == 8);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::VirtualBase2>() == 24);
+    assert!(::core::mem::align_of::<crate::VirtualBase2>() == 8);
     static_assertions::assert_not_impl_any!(crate::VirtualBase2:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::VirtualBase2:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::VirtualDerived>() == 32);
-const _: () = assert!(::core::mem::align_of::<crate::VirtualDerived>() == 8);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::VirtualDerived>() == 32);
+    assert!(::core::mem::align_of::<crate::VirtualDerived>() == 8);
     static_assertions::assert_not_impl_any!(crate::VirtualDerived:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::VirtualDerived:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::MyAbstractClass>() == 8);
-const _: () = assert!(::core::mem::align_of::<crate::MyAbstractClass>() == 8);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::MyAbstractClass>() == 8);
+    assert!(::core::mem::align_of::<crate::MyAbstractClass>() == 8);
     static_assertions::assert_not_impl_any!(crate::MyAbstractClass:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::MyAbstractClass:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::MethodBase1>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::MethodBase1>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::MethodBase1>() == 1);
+    assert!(::core::mem::align_of::<crate::MethodBase1>() == 1);
     static_assertions::assert_impl_all!(crate::MethodBase1:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::MethodBase1:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::MethodBase1:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::MethodBase2>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::MethodBase2>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::MethodBase2>() == 1);
+    assert!(::core::mem::align_of::<crate::MethodBase2>() == 1);
     static_assertions::assert_impl_all!(crate::MethodBase2:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::MethodBase2:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::MethodBase2:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::MethodDerived>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::MethodDerived>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::MethodDerived>() == 1);
+    assert!(::core::mem::align_of::<crate::MethodDerived>() == 1);
     static_assertions::assert_impl_all!(crate::MethodDerived:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::MethodDerived:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::MethodDerived:Drop);
 };

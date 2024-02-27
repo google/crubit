@@ -407,47 +407,30 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
+    assert!(::core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::S:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::S:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::S:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::test_namespace_bindings::S, i) == 0);
+    assert!(memoffset::offset_of!(crate::test_namespace_bindings::S, i) == 0);
 
-const _: () =
     assert!(::core::mem::size_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);
-const _: () =
     assert!(::core::mem::align_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);
-const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings_reopened::inner::S:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings_reopened::inner::S:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings_reopened::inner::S:Drop);
-};
 
-const _: () = assert!(
-    ::core::mem::size_of::<crate::test_namespace_bindings_inline::inner::StructInInlineNamespace>()
-        == 1
-);
-const _: () = assert!(
-    ::core::mem::align_of::<crate::test_namespace_bindings_inline::inner::StructInInlineNamespace>(
-    ) == 1
-);
-const _: () = {
+    assert!(
+        ::core::mem::size_of::<crate::test_namespace_bindings_inline::inner::StructInInlineNamespace>(
+        ) == 1
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+        >() == 1
+    );
     static_assertions::assert_impl_all!(crate::test_namespace_bindings_inline::inner::StructInInlineNamespace:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings_inline::inner::StructInInlineNamespace:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings_inline::inner::StructInInlineNamespace:Drop);
 };

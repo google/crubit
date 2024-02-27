@@ -253,42 +253,26 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::Foo>() == 8);
-const _: () = assert!(::core::mem::align_of::<crate::Foo>() == 4);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::Foo>() == 8);
+    assert!(::core::mem::align_of::<crate::Foo>() == 4);
     static_assertions::assert_impl_all!(crate::Foo:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Foo:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Foo:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::Foo, i) == 0);
-const _: () = assert!(memoffset::offset_of!(crate::Foo, j) == 4);
+    assert!(memoffset::offset_of!(crate::Foo, i) == 0);
+    assert!(memoffset::offset_of!(crate::Foo, j) == 4);
 
-const _: () = assert!(::core::mem::size_of::<crate::Bar>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::Bar>() == 4);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::Bar>() == 4);
+    assert!(::core::mem::align_of::<crate::Bar>() == 4);
     static_assertions::assert_impl_all!(crate::Bar:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Bar:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Bar:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::Bar, i) == 0);
+    assert!(memoffset::offset_of!(crate::Bar, i) == 0);
 
-const _: () = assert!(::core::mem::size_of::<crate::HasNoComments>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::HasNoComments>() == 4);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::HasNoComments>() == 4);
+    assert!(::core::mem::align_of::<crate::HasNoComments>() == 4);
     static_assertions::assert_impl_all!(crate::HasNoComments:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::HasNoComments:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::HasNoComments:Drop);
+    assert!(memoffset::offset_of!(crate::HasNoComments, i) == 0);
 };
-const _: () = assert!(memoffset::offset_of!(crate::HasNoComments, i) == 0);

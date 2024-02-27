@@ -16,23 +16,15 @@
 #![deny(warnings)]
 
 // Type bindings for struct MyI8Struct suppressed due to being mapped to an existing Rust type (i8)
-const _: () = assert!(::core::mem::size_of::<i8>() == 1);
-const _: () = assert!(::core::mem::align_of::<i8>() == 1);
 
 // Note that this is potentially visited, even if the original declaration is
 // skipped due to crubit_internal_rust_type.
 
 // Type bindings for struct MyI8Class suppressed due to being mapped to an existing Rust type (i8)
-const _: () = assert!(::core::mem::size_of::<i8>() == 1);
-const _: () = assert!(::core::mem::align_of::<i8>() == 1);
 
 // Type bindings for enum MyI8Enum suppressed due to being mapped to an existing Rust type (i8)
-const _: () = assert!(::core::mem::size_of::<i8>() == 1);
-const _: () = assert!(::core::mem::align_of::<i8>() == 1);
 
 // Type bindings for MyI8Alias suppressed due to being mapped to an existing Rust type (i8)
-const _: () = assert!(::core::mem::size_of::<i8>() == 1);
-const _: () = assert!(::core::mem::align_of::<i8>() == 1);
 
 // Error while generating bindings for item 'TooFewArgs':
 // Invalid crubit_internal_rust_type attribute: The `crubit_internal_rust_type` attribute requires a single string literal argument, the Rust type.
@@ -127,19 +119,27 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::TypeMapOverrideFieldTypes>() == 5);
-const _: () = assert!(::core::mem::align_of::<crate::TypeMapOverrideFieldTypes>() == 1);
 const _: () = {
+    assert!(::core::mem::size_of::<i8>() == 1);
+    assert!(::core::mem::align_of::<i8>() == 1);
+
+    assert!(::core::mem::size_of::<i8>() == 1);
+    assert!(::core::mem::align_of::<i8>() == 1);
+
+    assert!(::core::mem::size_of::<i8>() == 1);
+    assert!(::core::mem::align_of::<i8>() == 1);
+
+    assert!(::core::mem::size_of::<i8>() == 1);
+    assert!(::core::mem::align_of::<i8>() == 1);
+
+    assert!(::core::mem::size_of::<crate::TypeMapOverrideFieldTypes>() == 5);
+    assert!(::core::mem::align_of::<crate::TypeMapOverrideFieldTypes>() == 1);
     static_assertions::assert_impl_all!(crate::TypeMapOverrideFieldTypes:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::TypeMapOverrideFieldTypes:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::TypeMapOverrideFieldTypes:Drop);
+    assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_struct) == 0);
+    assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_class) == 1);
+    assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_enum) == 2);
+    assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_alias) == 3);
+    assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, error) == 4);
 };
-const _: () = assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_struct) == 0);
-const _: () = assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_class) == 1);
-const _: () = assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_enum) == 2);
-const _: () = assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_alias) == 3);
-const _: () = assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, error) == 4);

@@ -1253,273 +1253,204 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::DifferentScope>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::DifferentScope>() == 1);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::DifferentScope>() == 1);
+    assert!(::core::mem::align_of::<crate::DifferentScope>() == 1);
     static_assertions::assert_impl_all!(crate::DifferentScope:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::DifferentScope:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::DifferentScope:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
-const _: () =
+    assert!(::core::mem::size_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
     assert!(::core::mem::align_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
-const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::TemplateParam:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::TemplateParam:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::TemplateParam:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::private_classes::HasPrivateType>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::private_classes::HasPrivateType>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::private_classes::HasPrivateType>() == 1);
+    assert!(::core::mem::align_of::<crate::private_classes::HasPrivateType>() == 1);
     static_assertions::assert_impl_all!(crate::private_classes::HasPrivateType:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::private_classes::HasPrivateType:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::private_classes::HasPrivateType:Drop);
-};
 
-const _: () = assert!(
-    ::core::mem::size_of::<
-        crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
-    >() == 1
-);
-const _: () = assert!(
-    ::core::mem::align_of::<
-        crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
-    >() == 1
-);
-const _: () = {
+    assert!(
+        ::core::mem::size_of::<
+            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
+        >() == 1
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
+        >() == 1
+    );
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE:Drop);
-};
-const _: () = assert!(
-    memoffset::offset_of!(
-        crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
-        value_
-    ) == 0
-);
+    assert!(
+        memoffset::offset_of!(
+            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
+            value_
+        ) == 0
+    );
 
-const _: () = assert!(
-    ::core::mem::size_of::<
-        crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
-    >() == 1
-);
-const _: () = assert!(
-    ::core::mem::align_of::<
-        crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
-    >() == 1
-);
-const _: () = {
+    assert!(
+        ::core::mem::size_of::<
+            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
+        >() == 1
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
+        >() == 1
+    );
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE:Drop);
-};
-const _: () = assert!(
-    memoffset::offset_of!(
-        crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
-        value_
-    ) == 0
-);
+    assert!(
+        memoffset::offset_of!(
+            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
+            value_
+        ) == 0
+    );
 
-const _: () = assert!(
-    ::core::mem::size_of::<crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>()
-        == 4
-);
-const _: () = assert!(
-    ::core::mem::align_of::<crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>()
-        == 4
-);
-const _: () = {
+    assert!(
+        ::core::mem::size_of::<crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>()
+            == 4
+    );
+    assert!(
+        ::core::mem::align_of::<crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>(
+        ) == 4
+    );
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE:Drop);
-};
-const _: () = assert!(
-    memoffset::offset_of!(
-        crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
-        value_
-    ) == 0
-);
+    assert!(
+        memoffset::offset_of!(
+            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
+            value_
+        ) == 0
+    );
 
-const _: () = assert!(
-    ::core::mem::size_of::<
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
-    >() == 12
-);
-const _: () = assert!(
-    ::core::mem::align_of::<
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
-    >() == 4
-);
-const _: () = {
+    assert!(
+        ::core::mem::size_of::<
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
+        >() == 12
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
+        >() == 4
+    );
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE:Drop);
-};
-const _: () = assert!(
-    memoffset::offset_of!(
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
-        value1
-    ) == 0
-);
-const _: () = assert!(
-    memoffset::offset_of!(
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
-        value2
-    ) == 8
-);
+    assert!(
+        memoffset::offset_of!(
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
+            value1
+        ) == 0
+    );
+    assert!(
+        memoffset::offset_of!(
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
+            value2
+        ) == 8
+    );
 
-const _: () = assert!(
-    ::core::mem::size_of::<
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
-    >() == 8
-);
-const _: () = assert!(
-    ::core::mem::align_of::<
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
-    >() == 4
-);
-const _: () = {
+    assert!(
+        ::core::mem::size_of::<
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
+        >() == 8
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
+        >() == 4
+    );
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE:Drop);
-};
-const _: () = assert!(
-    memoffset::offset_of!(
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
-        value1
-    ) == 0
-);
-const _: () = assert!(
-    memoffset::offset_of!(
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
-        value2
-    ) == 4
-);
+    assert!(
+        memoffset::offset_of!(
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
+            value1
+        ) == 0
+    );
+    assert!(
+        memoffset::offset_of!(
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
+            value2
+        ) == 4
+    );
 
-const _: () = assert!(
-    ::core::mem::size_of::<
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-    >() == 8
-);
-const _: () = assert!(
-    ::core::mem::align_of::<
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-    >() == 4
-);
-const _: () = {
+    assert!(
+        ::core::mem::size_of::<
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+        >() == 8
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+        >() == 4
+    );
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE:Drop);
-};
-const _: () = assert!(
-    memoffset::offset_of!(
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-        value1
-    ) == 0
-);
-const _: () = assert!(
-    memoffset::offset_of!(
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-        value2
-    ) == 4
-);
+    assert!(
+        memoffset::offset_of!(
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+            value1
+        ) == 0
+    );
+    assert!(
+        memoffset::offset_of!(
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+            value2
+        ) == 4
+    );
 
-const _: () = assert!(
-    ::core::mem::size_of::<crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>() == 1
-);
-const _: () = assert!(
-    ::core::mem::align_of::<crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>() == 1
-);
-const _: () = {
+    assert!(
+        ::core::mem::size_of::<crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>()
+            == 1
+    );
+    assert!(
+        ::core::mem::align_of::<crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>()
+            == 1
+    );
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE:Drop);
-};
 
-const _: () = assert!(
-    ::core::mem::size_of::<
-        crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
-    >() == 1
-);
-const _: () = assert!(
-    ::core::mem::align_of::<
-        crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
-    >() == 1
-);
-const _: () = {
+    assert!(
+        ::core::mem::size_of::<
+            crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
+        >() == 1
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
+        >() == 1
+    );
     static_assertions::assert_impl_all!(crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE:Drop);
-};
-const _: () = assert!(
-    memoffset::offset_of!(
-        crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
-        value
-    ) == 0
-);
+    assert!(
+        memoffset::offset_of!(
+            crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
+            value
+        ) == 0
+    );
 
-const _: () = assert!(
-    ::core::mem::size_of::<
-        crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-    >() == 1
-);
-const _: () = assert!(
-    ::core::mem::align_of::<
-        crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-    >() == 1
-);
-const _: () = {
+    assert!(
+        ::core::mem::size_of::<
+            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        >() == 1
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        >() == 1
+    );
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE:Drop);
 };

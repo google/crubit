@@ -491,65 +491,39 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::Struct>() == 8);
-const _: () = assert!(::core::mem::align_of::<crate::Struct>() == 4);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::Struct>() == 8);
+    assert!(::core::mem::align_of::<crate::Struct>() == 4);
     static_assertions::assert_impl_all!(crate::Struct:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Struct:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Struct:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::Struct, field1) == 0);
-const _: () = assert!(memoffset::offset_of!(crate::Struct, field2) == 4);
+    assert!(memoffset::offset_of!(crate::Struct, field1) == 0);
+    assert!(memoffset::offset_of!(crate::Struct, field2) == 4);
 
-const _: () = assert!(::core::mem::size_of::<crate::PaddingBetweenFields>() == 8);
-const _: () = assert!(::core::mem::align_of::<crate::PaddingBetweenFields>() == 4);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::PaddingBetweenFields>() == 8);
+    assert!(::core::mem::align_of::<crate::PaddingBetweenFields>() == 4);
     static_assertions::assert_impl_all!(crate::PaddingBetweenFields:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::PaddingBetweenFields:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::PaddingBetweenFields:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::PaddingBetweenFields, field1) == 0);
-const _: () = assert!(memoffset::offset_of!(crate::PaddingBetweenFields, field2) == 4);
+    assert!(memoffset::offset_of!(crate::PaddingBetweenFields, field1) == 0);
+    assert!(memoffset::offset_of!(crate::PaddingBetweenFields, field2) == 4);
 
-const _: () = assert!(::core::mem::size_of::<crate::FieldInTailPadding_InnerStruct>() == 8);
-const _: () = assert!(::core::mem::align_of::<crate::FieldInTailPadding_InnerStruct>() == 4);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::FieldInTailPadding_InnerStruct>() == 8);
+    assert!(::core::mem::align_of::<crate::FieldInTailPadding_InnerStruct>() == 4);
     static_assertions::assert_not_impl_any!(crate::FieldInTailPadding_InnerStruct:Copy);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::FieldInTailPadding_InnerStruct:Drop);
-};
-const _: () =
     assert!(memoffset::offset_of!(crate::FieldInTailPadding_InnerStruct, inner_int_field) == 0);
-const _: () =
     assert!(memoffset::offset_of!(crate::FieldInTailPadding_InnerStruct, inner_char_field) == 4);
-const _: () = {
     static_assertions::assert_impl_all!(::core::ffi::c_int:Copy);
-};
-const _: () = {
     static_assertions::assert_impl_all!(::core::ffi::c_char:Copy);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::FieldInTailPadding>() == 8);
-const _: () = assert!(::core::mem::align_of::<crate::FieldInTailPadding>() == 4);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::FieldInTailPadding>() == 8);
+    assert!(::core::mem::align_of::<crate::FieldInTailPadding>() == 4);
     static_assertions::assert_not_impl_any!(crate::FieldInTailPadding:Copy);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::FieldInTailPadding:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::FieldInTailPadding, inner_struct) == 0);
-const _: () = assert!(
-    memoffset::offset_of!(crate::FieldInTailPadding, char_in_tail_padding_of_prev_field) == 5
-);
-const _: () = {
+    assert!(memoffset::offset_of!(crate::FieldInTailPadding, inner_struct) == 0);
+    assert!(
+        memoffset::offset_of!(crate::FieldInTailPadding, char_in_tail_padding_of_prev_field) == 5
+    );
     static_assertions::assert_impl_all!(::core::ffi::c_char:Copy);
 };

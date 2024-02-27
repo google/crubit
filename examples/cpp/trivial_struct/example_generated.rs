@@ -46,16 +46,12 @@ impl !Sync for Position {}
 // Error while generating bindings for item 'Position::operator=':
 // Parameter #0 is not supported: Unsupported type 'Position &&': Unsupported type: && without lifetime
 
-const _: () = assert!(::core::mem::size_of::<crate::Position>() == 8);
-const _: () = assert!(::core::mem::align_of::<crate::Position>() == 4);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::Position>() == 8);
+    assert!(::core::mem::align_of::<crate::Position>() == 4);
     static_assertions::assert_impl_all!(crate::Position:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Position:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Position:Drop);
+    assert!(memoffset::offset_of!(crate::Position, x) == 0);
+    assert!(memoffset::offset_of!(crate::Position, y) == 4);
 };
-const _: () = assert!(memoffset::offset_of!(crate::Position, x) == 0);
-const _: () = assert!(memoffset::offset_of!(crate::Position, y) == 4);

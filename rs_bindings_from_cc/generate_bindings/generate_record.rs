@@ -321,9 +321,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
                             formatted = quote! { ::core::mem::ManuallyDrop<#formatted> }
                         } else {
                             field_copy_trait_assertions.push(quote! {
-                                const _: () = {
-                                    static_assertions::assert_impl_all!(#formatted: Copy);
-                                };
+                                static_assertions::assert_impl_all!(#formatted: Copy);
                             });
                         }
                     };
@@ -356,7 +354,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
                         memoffset::offset_of!(#qualified_ident, #field_ident)
                     };
                     quote! {
-                        const _: () = assert!(#actual_offset_expr == #expected_offset);
+                        assert!(#actual_offset_expr == #expected_offset);
                     }
                 } else {
                     quote! {}
@@ -513,7 +511,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
         let mut assertions: Vec<TokenStream> = vec![];
         let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
             assertions.push(quote! {
-                const _: () = { static_assertions::#assert_impl_macro (#record_type_name: #trait_name); };
+                static_assertions::#assert_impl_macro (#record_type_name: #trait_name);
             });
         };
         if should_derive_clone(record) {
@@ -565,8 +563,8 @@ pub fn rs_size_align_assertions(
     let size = Literal::usize_unsuffixed(size_align.size);
     let alignment = Literal::usize_unsuffixed(size_align.alignment);
     quote! {
-        const _: () = assert!(::core::mem::size_of::<#type_name>() == #size);
-        const _: () = assert!(::core::mem::align_of::<#type_name>() == #alignment);
+        assert!(::core::mem::size_of::<#type_name>() == #size);
+        assert!(::core::mem::align_of::<#type_name>() == #alignment);
     }
 }
 
@@ -923,13 +921,17 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(::core::mem::size_of::<crate::SomeStruct>() == 12);
-                const _: () = assert!(::core::mem::align_of::<crate::SomeStruct>() == 4);
-                const _: () = { static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy); };
-                const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Drop); };
-                const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, public_int) == 0);
-                const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, protected_int) == 4);
-                const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, private_int) == 8);
+                const _ : () = {
+                    ...
+                    assert!(::core::mem::size_of::<crate::SomeStruct>() == 12);
+                    assert!(::core::mem::align_of::<crate::SomeStruct>() == 4);
+                    static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy);
+                    static_assertions::assert_impl_all!(crate::SomeStruct: Drop);
+                    assert!(memoffset::offset_of!(crate::SomeStruct, public_int) == 0);
+                    assert!(memoffset::offset_of!(crate::SomeStruct, protected_int) == 4);
+                    assert!(memoffset::offset_of!(crate::SomeStruct, private_int) == 8);
+                    ...
+                };
             }
         );
         assert_cc_matches!(
@@ -1074,8 +1076,12 @@ mod tests {
                     pub(crate) my_field: [::core::mem::MaybeUninit<u8>; 4],
                 }
                 ...
-                const _: () = assert!(
+                const _: () = {
+                    ...
+                    assert!(
                     memoffset::offset_of!(crate::StructWithUnsupportedField, my_field) == 0);
+                    ...
+                };
             }
         );
         Ok(())
@@ -1109,11 +1115,14 @@ mod tests {
         );
         assert_rs_matches!(
             rs_api,
-            quote! { const _: () = assert!(::core::mem::size_of::<crate::SomeStruct>() == 4); }
-        );
-        assert_rs_matches!(
-            rs_api,
-            quote! {  const _: () = assert!(::core::mem::align_of::<crate::SomeStruct>() == 4); }
+            quote! {
+                const _: () = {
+                    ...
+                    assert!(::core::mem::size_of::<crate::SomeStruct>() == 4);
+                    assert!(::core::mem::align_of::<crate::SomeStruct>() == 4);
+                    ...
+                };
+            }
         );
         Ok(())
     }
@@ -1143,8 +1152,12 @@ mod tests {
                     pub last_field: ::core::ffi::c_int,
                 }
                 ...
-                const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, first_field) == 0);
-                const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, last_field) == 8);
+                const _: () = {
+                    ...
+                    assert!(memoffset::offset_of!(crate::SomeStruct, first_field) == 0);
+                    assert!(memoffset::offset_of!(crate::SomeStruct, last_field) == 8);
+                    ...
+                };
             }
         );
         Ok(())
@@ -1304,25 +1317,29 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-               #[repr(C, align(4))]
+                #[repr(C, align(4))]
                 #[__crubit::annotate(cc_type="StructWithUnnamedMembers")]
-               pub struct StructWithUnnamedMembers {
+                pub struct StructWithUnnamedMembers {
                    pub first_field: ::core::ffi::c_int,
                    #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:7:15)': No generated bindings found for ''"]
                    pub(crate) __unnamed_field1: [::core::mem::MaybeUninit<u8>; 8],
                    #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'union StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:11:15)': No generated bindings found for ''"]
                    pub(crate) __unnamed_field2: [::core::mem::MaybeUninit<u8>; 4],
                    pub last_field: ::core::ffi::c_int,
-               }
-               ...
-               const _: () = assert!(memoffset::offset_of!(
-                       crate::StructWithUnnamedMembers, first_field) == 0);
-               const _: () = assert!(memoffset::offset_of!(
+                }
+                ...
+                const _: () = {
+                    ...
+                    assert!(memoffset::offset_of!(
+                        crate::StructWithUnnamedMembers, first_field) == 0);
+                    assert!(memoffset::offset_of!(
                        crate::StructWithUnnamedMembers, __unnamed_field1) == 4);
-               const _: () = assert!(memoffset::offset_of!(
+                    assert!(memoffset::offset_of!(
                        crate::StructWithUnnamedMembers, __unnamed_field2) == 12);
-               const _: () = assert!(memoffset::offset_of!(
+                    assert!(memoffset::offset_of!(
                        crate::StructWithUnnamedMembers, last_field) == 16);
+                    ...
+                };
             }
         );
         Ok(())
@@ -1796,11 +1813,14 @@ mod tests {
 
         assert_rs_matches!(
             rs_api,
-            quote! { const _: () = assert!(::core::mem::size_of::<crate::MyUnion>() == 56); }
-        );
-        assert_rs_matches!(
-            rs_api,
-            quote! {  const _: () = assert!(::core::mem::align_of::<crate::MyUnion>() == 4); }
+            quote! {
+                const _: () = {
+                    ...
+                    assert!(::core::mem::size_of::<crate::MyUnion>() == 56);
+                    assert!(::core::mem::align_of::<crate::MyUnion>() == 4);
+                    ...
+                };
+            }
         );
         Ok(())
     }
@@ -1854,16 +1874,14 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(::core::mem::size_of::<crate::SomeUnionWithPrivateFields>() == 8);
-                const _: () = assert!(::core::mem::align_of::<crate::SomeUnionWithPrivateFields>() == 8);
                 const _: () = {
-                  static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Clone);
-                };
-                const _: () = {
-                  static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Copy);
-                };
-                const _: () = {
-                  static_assertions::assert_not_impl_any!(crate::SomeUnionWithPrivateFields: Drop);
+                    ...
+                    assert!(::core::mem::size_of::<crate::SomeUnionWithPrivateFields>() == 8);
+                    assert!(::core::mem::align_of::<crate::SomeUnionWithPrivateFields>() == 8);
+                    static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Clone);
+                    static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Copy);
+                    static_assertions::assert_not_impl_any!(crate::SomeUnionWithPrivateFields: Drop);
+                    ...
                 };
             }
         );
@@ -1925,8 +1943,12 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(::core::mem::size_of::<crate::EmptyStruct>() == 1);
-                const _: () = assert!(::core::mem::align_of::<crate::EmptyStruct>() == 1);
+                const _: () = {
+                    ...
+                    assert!(::core::mem::size_of::<crate::EmptyStruct>() == 1);
+                    assert!(::core::mem::align_of::<crate::EmptyStruct>() == 1);
+                    ...
+                };
             }
         );
 
@@ -1958,8 +1980,12 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(::core::mem::size_of::<crate::EmptyUnion>() == 1);
-                const _: () = assert!(::core::mem::align_of::<crate::EmptyUnion>() == 1);
+                const _: () = {
+                    ...
+                    assert!(::core::mem::size_of::<crate::EmptyUnion>() == 1);
+                    assert!(::core::mem::align_of::<crate::EmptyUnion>() == 1);
+                    ...
+                };
             }
         );
 
@@ -1994,8 +2020,12 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(::core::mem::size_of::<crate::UnionWithNontrivialField>() == 4);
-                const _: () = assert!(::core::mem::align_of::<crate::UnionWithNontrivialField>() == 4);
+                const _: () = {
+                    ...
+                    assert!(::core::mem::size_of::<crate::UnionWithNontrivialField>() == 4);
+                    assert!(::core::mem::align_of::<crate::UnionWithNontrivialField>() == 4);
+                    ...
+                };
             }
         );
         Ok(())
@@ -2260,11 +2290,15 @@ mod tests {
                 ...
                 pub struct #my_struct_int {...}
                 ...
-                const _: () = assert!(::core::mem::size_of::<crate::#my_struct_bool>() == 1);
-                ...
-                const _: () = assert!(::core::mem::size_of::<crate::#my_struct_double>() == 1);
-                ...
-                const _: () = assert!(::core::mem::size_of::<crate::#my_struct_int>() == 1);
+                const _: () = {
+                    ...
+                    assert!(::core::mem::size_of::<crate::#my_struct_bool>() == 1);
+                    ...
+                    assert!(::core::mem::size_of::<crate::#my_struct_double>() == 1);
+                    ...
+                    assert!(::core::mem::size_of::<crate::#my_struct_int>() == 1);
+                    ...
+                }
                 ...
             }
         );

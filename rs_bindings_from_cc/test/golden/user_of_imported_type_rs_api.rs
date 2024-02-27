@@ -103,15 +103,11 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::UserOfImportedType>() == 8);
-const _: () = assert!(::core::mem::align_of::<crate::UserOfImportedType>() == 8);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::UserOfImportedType>() == 8);
+    assert!(::core::mem::align_of::<crate::UserOfImportedType>() == 8);
     static_assertions::assert_impl_all!(crate::UserOfImportedType:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::UserOfImportedType:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::UserOfImportedType:Drop);
+    assert!(memoffset::offset_of!(crate::UserOfImportedType, trivial) == 0);
 };
-const _: () = assert!(memoffset::offset_of!(crate::UserOfImportedType, trivial) == 0);

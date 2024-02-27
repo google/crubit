@@ -2028,244 +2028,128 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::AddableConstMember>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::AddableConstMember>() == 4);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::AddableConstMember>() == 4);
+    assert!(::core::mem::align_of::<crate::AddableConstMember>() == 4);
     static_assertions::assert_impl_all!(crate::AddableConstMember:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddableConstMember:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableConstMember:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::AddableConstMember, field_) == 0);
+    assert!(memoffset::offset_of!(crate::AddableConstMember, field_) == 0);
 
-const _: () = assert!(::core::mem::size_of::<crate::AddableNonConstMember>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::AddableNonConstMember>() == 4);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddableNonConstMember>() == 4);
+    assert!(::core::mem::align_of::<crate::AddableNonConstMember>() == 4);
     static_assertions::assert_impl_all!(crate::AddableNonConstMember:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddableNonConstMember:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableNonConstMember:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::AddableNonConstMember, field_) == 0);
+    assert!(memoffset::offset_of!(crate::AddableNonConstMember, field_) == 0);
 
-const _: () = assert!(::core::mem::size_of::<crate::AddableFriend>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::AddableFriend>() == 4);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddableFriend>() == 4);
+    assert!(::core::mem::align_of::<crate::AddableFriend>() == 4);
     static_assertions::assert_impl_all!(crate::AddableFriend:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddableFriend:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableFriend:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::AddableFriend, field_) == 0);
+    assert!(memoffset::offset_of!(crate::AddableFriend, field_) == 0);
 
-const _: () = assert!(::core::mem::size_of::<crate::AddableFreeByConstRef>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddableFreeByConstRef>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddableFreeByConstRef>() == 1);
+    assert!(::core::mem::align_of::<crate::AddableFreeByConstRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddableFreeByConstRef:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddableFreeByConstRef:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableFreeByConstRef:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::AddableFreeByMutRef>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddableFreeByMutRef>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddableFreeByMutRef>() == 1);
+    assert!(::core::mem::align_of::<crate::AddableFreeByMutRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddableFreeByMutRef:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddableFreeByMutRef:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableFreeByMutRef:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::AddableFreeByValue>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddableFreeByValue>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddableFreeByValue>() == 1);
+    assert!(::core::mem::align_of::<crate::AddableFreeByValue>() == 1);
     static_assertions::assert_impl_all!(crate::AddableFreeByValue:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddableFreeByValue:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableFreeByValue:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::AddableFreeByRValueRef>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddableFreeByRValueRef>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddableFreeByRValueRef>() == 1);
+    assert!(::core::mem::align_of::<crate::AddableFreeByRValueRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddableFreeByRValueRef:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddableFreeByRValueRef:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableFreeByRValueRef:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::Overloaded>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::Overloaded>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::Overloaded>() == 1);
+    assert!(::core::mem::align_of::<crate::Overloaded>() == 1);
     static_assertions::assert_impl_all!(crate::Overloaded:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Overloaded:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Overloaded:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::IncompatibleLHS>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::IncompatibleLHS>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::IncompatibleLHS>() == 1);
+    assert!(::core::mem::align_of::<crate::IncompatibleLHS>() == 1);
     static_assertions::assert_impl_all!(crate::IncompatibleLHS:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::IncompatibleLHS:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::IncompatibleLHS:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::AddableReturnsVoid>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::AddableReturnsVoid>() == 4);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddableReturnsVoid>() == 4);
+    assert!(::core::mem::align_of::<crate::AddableReturnsVoid>() == 4);
     static_assertions::assert_impl_all!(crate::AddableReturnsVoid:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddableReturnsVoid:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableReturnsVoid:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::AddableReturnsVoid, field_) == 0);
+    assert!(memoffset::offset_of!(crate::AddableReturnsVoid, field_) == 0);
 
-const _: () = assert!(::core::mem::size_of::<crate::AddableConstMemberNonunpin>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::AddableConstMemberNonunpin>() == 4);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddableConstMemberNonunpin>() == 4);
+    assert!(::core::mem::align_of::<crate::AddableConstMemberNonunpin>() == 4);
     static_assertions::assert_not_impl_any!(crate::AddableConstMemberNonunpin:Copy);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddableConstMemberNonunpin:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::AddableConstMemberNonunpin, field_) == 0);
+    assert!(memoffset::offset_of!(crate::AddableConstMemberNonunpin, field_) == 0);
 
-const _: () = assert!(::core::mem::size_of::<crate::AddAssignMemberInt>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddAssignMemberInt>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddAssignMemberInt>() == 1);
+    assert!(::core::mem::align_of::<crate::AddAssignMemberInt>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignMemberInt:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignMemberInt:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignMemberInt:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::AddAssignMemberByConstRef>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddAssignMemberByConstRef>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddAssignMemberByConstRef>() == 1);
+    assert!(::core::mem::align_of::<crate::AddAssignMemberByConstRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignMemberByConstRef:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignMemberByConstRef:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignMemberByConstRef:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::AddAssignFreeByConstRef>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddAssignFreeByConstRef>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddAssignFreeByConstRef>() == 1);
+    assert!(::core::mem::align_of::<crate::AddAssignFreeByConstRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignFreeByConstRef:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignFreeByConstRef:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignFreeByConstRef:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::AddAssignFreeByValue>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddAssignFreeByValue>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddAssignFreeByValue>() == 1);
+    assert!(::core::mem::align_of::<crate::AddAssignFreeByValue>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignFreeByValue:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignFreeByValue:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignFreeByValue:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::AddAssignFriendByConstRef>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddAssignFriendByConstRef>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddAssignFriendByConstRef>() == 1);
+    assert!(::core::mem::align_of::<crate::AddAssignFriendByConstRef>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignFriendByConstRef:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignFriendByConstRef:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignFriendByConstRef:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::AddAssignFriendByValue>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddAssignFriendByValue>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddAssignFriendByValue>() == 1);
+    assert!(::core::mem::align_of::<crate::AddAssignFriendByValue>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignFriendByValue:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignFriendByValue:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignFriendByValue:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::AddAssignProhibitedConstMember>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddAssignProhibitedConstMember>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddAssignProhibitedConstMember>() == 1);
+    assert!(::core::mem::align_of::<crate::AddAssignProhibitedConstMember>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignProhibitedConstMember:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignProhibitedConstMember:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignProhibitedConstMember:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
+    assert!(::core::mem::align_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
     static_assertions::assert_impl_all!(crate::AddAssignProhibitedFriendConstLhs:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::AddAssignProhibitedFriendConstLhs:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignProhibitedFriendConstLhs:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::ManyOperators>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::ManyOperators>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::ManyOperators>() == 1);
+    assert!(::core::mem::align_of::<crate::ManyOperators>() == 1);
     static_assertions::assert_impl_all!(crate::ManyOperators:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::ManyOperators:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::ManyOperators:Drop);
 };

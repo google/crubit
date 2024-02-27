@@ -158,38 +158,22 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::S>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::S>() == 1);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::S>() == 1);
+    assert!(::core::mem::align_of::<crate::S>() == 1);
     static_assertions::assert_impl_all!(crate::S:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::S:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::S:Drop);
-};
 
-const _: () =
     assert!(::core::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
-const _: () =
     assert!(::core::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::TriviallyCopyableButNontriviallyDestructible:Copy);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::TriviallyCopyableButNontriviallyDestructible:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::WrappedValue>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::WrappedValue>() == 4);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::WrappedValue>() == 4);
+    assert!(::core::mem::align_of::<crate::WrappedValue>() == 4);
     static_assertions::assert_impl_all!(crate::WrappedValue:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::WrappedValue:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::WrappedValue:Drop);
+    assert!(memoffset::offset_of!(crate::WrappedValue, value_) == 0);
 };
-const _: () = assert!(memoffset::offset_of!(crate::WrappedValue, value_) == 0);

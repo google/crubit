@@ -43,14 +43,10 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for item 'ForwardDeclaredStruct::operator=':
 // Parameter #0 is not supported: Unsupported type 'ForwardDeclaredStruct &&': Unsupported type: && without lifetime
 
-const _: () = assert!(::core::mem::size_of::<crate::ForwardDeclaredStruct>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::ForwardDeclaredStruct>() == 1);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::ForwardDeclaredStruct>() == 1);
+    assert!(::core::mem::align_of::<crate::ForwardDeclaredStruct>() == 1);
     static_assertions::assert_impl_all!(crate::ForwardDeclaredStruct:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::ForwardDeclaredStruct:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::ForwardDeclaredStruct:Drop);
 };

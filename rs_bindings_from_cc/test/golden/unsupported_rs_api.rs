@@ -233,38 +233,24 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::TrivialCustomType>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::TrivialCustomType>() == 4);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::TrivialCustomType>() == 4);
+    assert!(::core::mem::align_of::<crate::TrivialCustomType>() == 4);
     static_assertions::assert_impl_all!(crate::TrivialCustomType:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::TrivialCustomType:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::TrivialCustomType:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::TrivialCustomType, i) == 0);
+    assert!(memoffset::offset_of!(crate::TrivialCustomType, i) == 0);
 
-const _: () = assert!(::core::mem::size_of::<crate::NontrivialCustomType>() == 4);
-const _: () = assert!(::core::mem::align_of::<crate::NontrivialCustomType>() == 4);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::NontrivialCustomType>() == 4);
+    assert!(::core::mem::align_of::<crate::NontrivialCustomType>() == 4);
     static_assertions::assert_not_impl_any!(crate::NontrivialCustomType:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::NontrivialCustomType:Drop);
-};
-const _: () = assert!(memoffset::offset_of!(crate::NontrivialCustomType, i) == 0);
+    assert!(memoffset::offset_of!(crate::NontrivialCustomType, i) == 0);
 
-const _: () = assert!(::core::mem::size_of::<crate::ContainingStruct>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::ContainingStruct>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::ContainingStruct>() == 1);
+    assert!(::core::mem::align_of::<crate::ContainingStruct>() == 1);
     static_assertions::assert_impl_all!(crate::ContainingStruct:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::ContainingStruct:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::ContainingStruct:Drop);
+    assert!(memoffset::offset_of!(crate::ContainingStruct, nested_struct) == 0);
 };
-const _: () = assert!(memoffset::offset_of!(crate::ContainingStruct, nested_struct) == 0);

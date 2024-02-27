@@ -163,26 +163,16 @@ mod detail {
     }
 }
 
-const _: () = assert!(::core::mem::size_of::<crate::Noninline>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::Noninline>() == 1);
 const _: () = {
+    assert!(::core::mem::size_of::<crate::Noninline>() == 1);
+    assert!(::core::mem::align_of::<crate::Noninline>() == 1);
     static_assertions::assert_impl_all!(crate::Noninline:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Noninline:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Noninline:Drop);
-};
 
-const _: () = assert!(::core::mem::size_of::<crate::Inline>() == 1);
-const _: () = assert!(::core::mem::align_of::<crate::Inline>() == 1);
-const _: () = {
+    assert!(::core::mem::size_of::<crate::Inline>() == 1);
+    assert!(::core::mem::align_of::<crate::Inline>() == 1);
     static_assertions::assert_impl_all!(crate::Inline:Clone);
-};
-const _: () = {
     static_assertions::assert_impl_all!(crate::Inline:Copy);
-};
-const _: () = {
     static_assertions::assert_not_impl_any!(crate::Inline:Drop);
 };
