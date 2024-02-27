@@ -1103,13 +1103,19 @@ void handleNonConstMemberCall(absl::Nonnull<const CallExpr *> CE,
                               dataflow::RecordStorageLocation *RecordLoc,
                               const MatchFinder::MatchResult &Result,
                               TransferState<PointerNullabilityLattice> &State) {
-  // When a non-const member function is called, reset all pointer-type fields
+  // When a non-const member function is called, clear all pointer-type fields
   // of the receiver.
   if (RecordLoc != nullptr) {
     for (const auto [Field, FieldLoc] : RecordLoc->children()) {
-      if (!isSupportedRawPointerType(Field->getType())) continue;
-      auto &V = *cast<PointerValue>(State.Env.createValue(Field->getType()));
-      State.Env.setValue(*FieldLoc, V);
+      // We can't produce a new `PointerValue` here because we don't necessarily
+      // know what to initialize its nullability properties with. The record may
+      // be a `ClassTemplateSpecializationDecl`, which uses canonical types for
+      // its type arguments (there only be one specialization for the same
+      // canonical type arguments), so the `FieldDecl` doesn't contain
+      // nullability annotations. The best thing we can do, therefore, is to
+      // clear the value.
+      if (isSupportedRawPointerType(Field->getType()))
+        State.Env.clearValue(*FieldLoc);
     }
     State.Lattice.clearConstMethodReturnValues(*RecordLoc);
   }

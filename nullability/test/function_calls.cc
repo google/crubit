@@ -861,6 +861,37 @@ TEST(PointerNullabilityTest, ConstMethodNoRecordForCallObject) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembers) {
+  // This is a crash repro.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void f(char* _Nonnull const&, char* const&);
+
+    struct S {
+      void target() {
+        // This used to cause a crash because of a very specific sequence of
+        // events:
+        // - We visit `p` and initialize its nullability properties.
+        // - We visit `returnsPtr()`, causing us to reset all pointer-type
+        //   fields (in this case, `p`). When we did this, we used to create
+        //   fresh `PointerValue`s for the fields, but without nullability
+        //   properties. This would cause a crash in the next step (see below).
+        //   (Instead, we now simply clear the values associated with the
+        //   fields.)
+        // - We visit the function call and check that `p` is non-null, which
+        //   used to crash because `p` had a `PointerValue` associated with it
+        //   that didn't have nullability properties.
+        // Diagnosis produces a "pointer value not modeled" warning on this line
+        // because the value for `p` has been cleared.
+        f(p, returnsPtr());  // [[unsafe]]
+      }
+
+      char* returnsPtr();
+
+      char* p;
+    };
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, OptionalOperatorArrowCall) {
   // Check that repeated accesses to a pointer behind an optional are considered
   // to yield the same pointer -- but only if the optional is not modified in
