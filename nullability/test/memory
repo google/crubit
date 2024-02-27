@@ -31,39 +31,39 @@ class unique_ptr {
 public:
   using pointer = T*;
 
-  unique_ptr() {}
-  unique_ptr(nullptr_t) {}
-  unique_ptr(pointer) {}
+  unique_ptr();
+  unique_ptr(nullptr_t);
+  unique_ptr(pointer);
   // We're restricting ourselves to just one possible case for the deleter
   // parameter.
-  unique_ptr(pointer, const Deleter &) {}
-  unique_ptr(unique_ptr &&) {}
+  unique_ptr(pointer, const Deleter &);
+  unique_ptr(unique_ptr &&);
   template <class OtherT, class OtherDeleter>
-  unique_ptr(unique_ptr<OtherT, OtherDeleter> &&) {}
+  unique_ptr(unique_ptr<OtherT, OtherDeleter> &&);
   unique_ptr(const unique_ptr &) = delete;
 
   // Make sure `unique_ptr` is not trivially destructible so that the AST for
   // expressions using this mock look the same as for the real class.
-  ~unique_ptr() {}
+  ~unique_ptr();
 
-  unique_ptr &operator=(unique_ptr &&) {}
+  unique_ptr &operator=(unique_ptr &&);
   template <class OtherT, class OtherDeleter>
-  unique_ptr &operator=(unique_ptr<OtherT, OtherDeleter> &&) {}
-  unique_ptr &operator=(nullptr_t) {}
+  unique_ptr &operator=(unique_ptr<OtherT, OtherDeleter> &&);
+  unique_ptr &operator=(nullptr_t);
   unique_ptr &operator=(const unique_ptr &) = delete;
 
-  T &operator*() const {}
-  T *operator->() const {}
+  T &operator*() const;
+  T *operator->() const;
 
-  pointer release() {}
+  pointer release();
 
-  void reset(pointer p = pointer()) {}
+  void reset(pointer p = pointer());
 
-  void swap(unique_ptr &) {}
+  void swap(unique_ptr &);
 
-  pointer get() const {}
+  pointer get() const;
 
-  explicit operator bool() const {}
+  explicit operator bool() const;
 };
 
 // Array specialization of `unique_ptr`. We only introduce the members that are
@@ -73,20 +73,20 @@ class unique_ptr<T[], Deleter> {
 public:
   using pointer = T*;
 
-  unique_ptr() {}
+  unique_ptr();
   template <class ArrayT>
-  explicit unique_ptr(ArrayT) {}
+  explicit unique_ptr(ArrayT);
   template <class ArrayT>
-  explicit unique_ptr(ArrayT, const Deleter &) {}
+  explicit unique_ptr(ArrayT, const Deleter &);
   unique_ptr(const unique_ptr &) = delete;
 
-  ~unique_ptr() {}
+  ~unique_ptr();
 
   template <class ArrayT>
-  void reset(ArrayT) {}
-  void reset(nullptr_t = nullptr) {}
+  void reset(ArrayT);
+  void reset(nullptr_t = nullptr);
 
-  pointer get() const {}
+  pointer get() const;
 
   T &operator[](size_t) const;
 };
@@ -101,7 +101,7 @@ template <class T>
 unique_ptr<T> make_unique_for_overwrite(size_t);
 
 template <class T, class Deleter>
-void swap(unique_ptr<T, Deleter> &, unique_ptr<T, Deleter> &) {}
+void swap(unique_ptr<T, Deleter> &, unique_ptr<T, Deleter> &);
 
 template <class T> class weak_ptr;
 
@@ -112,42 +112,42 @@ class shared_ptr {
 public:
   using element_type = typename remove_extent<T>::type;
 
-  shared_ptr() {}
+  shared_ptr();
   template <class Deleter>
-  shared_ptr(nullptr_t, Deleter) {}
+  shared_ptr(nullptr_t, Deleter);
   template <class Deleter, class Alloc>
-  shared_ptr(nullptr_t, Deleter, Alloc) {}
+  shared_ptr(nullptr_t, Deleter, Alloc);
   template <class OtherT, class Deleter, class Alloc>
-  shared_ptr(OtherT *, Deleter, Alloc) {}
+  shared_ptr(OtherT *, Deleter, Alloc);
   template <class OtherT>
-  shared_ptr(const shared_ptr<OtherT> &, element_type *) {}
+  shared_ptr(const shared_ptr<OtherT> &, element_type *);
   template <class OtherT>
-  shared_ptr(shared_ptr<OtherT> &&, element_type *) {}
-  shared_ptr(const shared_ptr &) {}
+  shared_ptr(shared_ptr<OtherT> &&, element_type *);
+  shared_ptr(const shared_ptr &);
   template <class OtherT>
-  explicit shared_ptr(const weak_ptr<OtherT> &) {}
+  explicit shared_ptr(const weak_ptr<OtherT> &);
   template <class OtherT, class Deleter>
-  explicit shared_ptr(unique_ptr<OtherT, Deleter> &&) {}
+  explicit shared_ptr(unique_ptr<OtherT, Deleter> &&);
 
-  ~shared_ptr() {}
+  ~shared_ptr();
 
-  shared_ptr &operator=(const shared_ptr &) {}
+  shared_ptr &operator=(const shared_ptr &);
   template <class OtherT>
-  shared_ptr &operator=(const shared_ptr<OtherT> &) {}
+  shared_ptr &operator=(const shared_ptr<OtherT> &);
 
-  T& operator*() const {}
+  T& operator*() const;
 
-  void reset() {}
+  void reset();
   template <class OtherT>
-  void reset(OtherT *) {}
+  void reset(OtherT *);
   template <class OtherT, class Deleter>
-  void reset(OtherT *, Deleter) {}
+  void reset(OtherT *, Deleter);
   template <class OtherT, class Deleter, class Alloc>
-  void reset(OtherT *, Deleter, Alloc) {}
+  void reset(OtherT *, Deleter, Alloc);
 
   element_type* get() const;
 
-  explicit operator bool() const {}
+  explicit operator bool() const;
 };
 
 // We're restricting ourselves to just some of the overloads that are required
