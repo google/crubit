@@ -59,7 +59,7 @@ def generate_and_compile_bindings(
     """
     cc_toolchain = find_cpp_toolchain(ctx)
 
-    feature_configuration = cc_common.configure_features(
+    feature_configuration_for_bindings = cc_common.configure_features(
         ctx = ctx,
         cc_toolchain = cc_toolchain,
         requested_features = ctx.features + ["compiler_param_file"],
@@ -70,7 +70,7 @@ def generate_and_compile_bindings(
         ctx = ctx,
         attr = attr,
         cc_toolchain = cc_toolchain,
-        feature_configuration = feature_configuration,
+        feature_configuration = feature_configuration_for_bindings,
         compilation_context = compilation_context,
         public_hdrs = public_hdrs,
         header_includes = header_includes,
@@ -87,12 +87,22 @@ def generate_and_compile_bindings(
         ctx.actions.symlink(output = new_file, target_file = file)
         extra_rs_srcs_relocated.append(new_file)
 
+    # We use a separate feature_configuration for the clang compile action as the feature
+    # configuration for bindings generation needs to use a param file. The clang wrapper script
+    # however does not handle param files well today (b/326976757)
+    feature_configuration_for_cc_compile = cc_common.configure_features(
+        ctx = ctx,
+        cc_toolchain = cc_toolchain,
+        requested_features = ctx.features,
+        unsupported_features = ctx.disabled_features + ["module_maps"],
+    )
+
     # Compile the "_rust_api_impl.cc" file
     cc_info = compile_cc(
         ctx,
         attr,
         cc_toolchain,
-        feature_configuration,
+        feature_configuration_for_cc_compile,
         cc_output,
         deps_for_cc_file,
         extra_cc_compilation_action_inputs,
