@@ -5,9 +5,12 @@
 #include "nullability/inference/infer_tu.h"
 
 #include <optional>
+#include <string>
 #include <vector>
 
+#include "nullability/inference/ctn_replacement_macros.h"
 #include "nullability/inference/inference.proto.h"
+#include "nullability/inference/replace_macros.h"
 #include "nullability/proto_matchers.h"
 #include "nullability/test/test_headers.h"
 #include "clang/AST/Decl.h"
@@ -50,9 +53,18 @@ class InferTUTest : public ::testing::Test {
     for (const auto &Entry :
          llvm::ArrayRef(test_headers_create(), test_headers_size()))
       Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
+    for (const auto &Entry : llvm::ArrayRef(ctn_replacement_macros_create(),
+                                            ctn_replacement_macros_size()))
+      Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
     Inputs.ExtraArgs.push_back("-include");
     Inputs.ExtraArgs.push_back("nullability_annotations.h");
+    Inputs.ExtraArgs.push_back("-include");
+    Inputs.ExtraArgs.push_back(std::string(ReplacementMacrosHeaderFileName));
     Inputs.ExtraArgs.push_back("-I.");
+
+    Inputs.MakeAction = [&]() {
+      return std::make_unique<ReplaceMacrosAction>();
+    };
     AST.emplace(Inputs);
   }
 
@@ -241,6 +253,37 @@ TEST_F(InferTUTest, AssignedFromNullable) {
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
                                  {inferredSlot(1, Inference::NULLABLE)})));
+}
+
+TEST_F(InferTUTest, CHECKMacro) {
+  build(R"cc(
+    // macro must use the parameter, but otherwise body doesn't matter
+#define CHECK(x) x
+    void target(int* p) { CHECK(p); }
+  )cc");
+  EXPECT_THAT(infer(),
+              Contains(inference(hasName("target"),
+                                 {inferredSlot(1, Inference::NONNULL)})));
+}
+
+TEST_F(InferTUTest, CHECKNEMacro) {
+  build(R"cc(
+    // macro must use the first parameter, but otherwise body doesn't matter
+#define CHECK_NE(x, y) x
+    void target(int* p, int* q, int* r, int* s) {
+      CHECK_NE(p, nullptr);
+      CHECK_NE(nullptr, q);
+      int* a = nullptr;
+      CHECK_NE(a, r);
+      CHECK_NE(s, a);
+    }
+  )cc");
+  EXPECT_THAT(infer(),
+              UnorderedElementsAre(inference(
+                  hasName("target"), {inferredSlot(1, Inference::NONNULL),
+                                      inferredSlot(2, Inference::NONNULL),
+                                      inferredSlot(3, Inference::NONNULL),
+                                      inferredSlot(4, Inference::NONNULL)})));
 }
 
 TEST_F(InferTUTest, Filter) {

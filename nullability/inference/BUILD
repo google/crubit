@@ -176,8 +176,10 @@ cc_test(
     name = "infer_tu_test",
     srcs = ["infer_tu_test.cc"],
     deps = [
+        ":clang_tidy_nullability_replacement_macros",
         ":infer_tu",
         ":inference_cc_proto",
+        ":replace_macros",
         "//nullability:proto_matchers",
         "//nullability/test:test_headers",
         "@llvm-project//clang:ast",

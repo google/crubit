@@ -420,6 +420,7 @@ TEST(CollectEvidenceFromImplementationTest, PointerToMemberMethod) {
 
 TEST(CollectEvidenceFromImplementationTest, CheckMacro) {
   static constexpr llvm::StringRef Src = R"cc(
+    // macro must use the parameter, but otherwise body doesn't matter
 #define CHECK(x) \
       if (!x) __builtin_abort();
 
@@ -432,19 +433,35 @@ TEST(CollectEvidenceFromImplementationTest, CheckMacro) {
 
 TEST(CollectEvidenceFromImplementationTest, CheckNEMacro) {
   static constexpr llvm::StringRef Src = R"cc(
+    // macro must use the first parameter, but otherwise body doesn't matter
 #define CHECK_NE(x, y) \
       if (x == y) __builtin_abort();
-    void target(int* p, int* q, int* r) {
+    void target(int* p, int* q, int* r, int* s) {
+      // should collect evidence for params from these calls
       CHECK_NE(p, nullptr);
-      if (!q) {
-        CHECK_NE(q, r);
-      }
+      CHECK_NE(nullptr, q);
+      int* a = nullptr;
+      CHECK_NE(a, r);
+      CHECK_NE(s, a)
+
+      // should not crash when analyzing these calls
+      CHECK_NE(a, 0);
+      int i = 1;
+      CHECK_NE(i, 0);
+      bool b = true;
+      CHECK_NE(true, false);
+      struct S {
+        bool operator==(const S&) const { return false; }
+      };
+      CHECK_NE(S(), S());
     }
   )cc";
   EXPECT_THAT(
       collectEvidenceFromTargetFunction(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
-                           evidence(paramSlot(2), Evidence::ABORT_IF_NULL)));
+                           evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
+                           evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
+                           evidence(paramSlot(3), Evidence::ABORT_IF_NULL)));
 }
 
 TEST(CollectEvidenceFromImplementationTest, NullableArgPassed) {

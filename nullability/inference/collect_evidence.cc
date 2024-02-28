@@ -528,6 +528,7 @@ void collectEvidenceFromAbortIfFalseMacroCall(
     llvm::function_ref<EvidenceEmitter> Emit) {
   CHECK_EQ(CallExpr.getNumArgs(), 1);
   const Expr *Arg = CallExpr.getArg(0);
+  if (!isSupportedRawPointerType(Arg->getType())) return;
   const dataflow::PointerValue *PV = getPointerValueFromExpr(Arg, Env);
   if (!PV) return;
   collectMustBeNonnullEvidence(*PV, Env, Arg->getExprLoc(), InferableSlots,
@@ -548,21 +549,38 @@ void collectEvidenceFromAbortIfEqualMacroCall(
   CHECK_EQ(CallExpr.getNumArgs(), 2);
   const Expr *First = CallExpr.getArg(0);
   const Expr *Second = CallExpr.getArg(1);
+  bool FirstSupported = isSupportedRawPointerType(First->getType());
+  bool SecondSupported = isSupportedRawPointerType(Second->getType());
+  if (!FirstSupported && !SecondSupported) return;
 
   ASTContext &Context = CallExpr.getCalleeDecl()->getASTContext();
   const dataflow::PointerValue *ValueComparedToNull = nullptr;
   SourceLocation EvidenceLoc;
   if (First->isNullPointerConstant(Context,
                                    Expr::NPC_ValueDependentIsNotNull)) {
+    if (!isSupportedRawPointerType(Second->getType())) return;
     ValueComparedToNull = getPointerValueFromExpr(Second, Env);
     if (!ValueComparedToNull) return;
     EvidenceLoc = Second->getExprLoc();
   } else if (Second->isNullPointerConstant(Context,
                                            Expr::NPC_ValueDependentIsNotNull)) {
+    if (!isSupportedRawPointerType(First->getType())) return;
     ValueComparedToNull = getPointerValueFromExpr(First, Env);
     if (!ValueComparedToNull) return;
     EvidenceLoc = First->getExprLoc();
   } else {
+    if (!FirstSupported || !SecondSupported) {
+      // If this happens outside of the nullptr literal case, we'd like to know
+      // about it.
+      llvm::errs()
+          << "Value of a supported raw pointer type compared to a value "
+             "of a type that is not a supported raw pointer type.: \n";
+      CallExpr.dump();
+      CallExpr.getExprLoc().dump(
+          CallExpr.getCalleeDecl()->getASTContext().getSourceManager());
+      return;
+    }
+
     const dataflow::PointerValue *FirstPV = getPointerValueFromExpr(First, Env);
     if (!FirstPV) return;
     const dataflow::PointerValue *SecondPV =
