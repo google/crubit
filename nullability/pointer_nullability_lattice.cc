@@ -4,6 +4,7 @@
 
 #include "nullability/pointer_nullability_lattice.h"
 
+#include <functional>
 #include <optional>
 
 #include "absl/base/nullability.h"
@@ -11,6 +12,11 @@
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/Expr.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
+#include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/StorageLocation.h"
+#include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
 
 namespace clang::tidy::nullability {
@@ -32,6 +38,35 @@ absl::Nullable<const PointerTypeNullability *> getDeclNullability(
   return nullptr;
 }
 }  // namespace
+
+const TypeNullability &PointerNullabilityLattice::insertExprNullabilityIfAbsent(
+    absl::Nonnull<const Expr *> E,
+    const std::function<TypeNullability()> &GetNullability) {
+  E = &dataflow::ignoreCFGOmittedNodes(*E);
+  if (auto It = NFS.ExprToNullability.find(E);
+      It != NFS.ExprToNullability.end())
+    return It->second;
+  // Deliberately perform a separate lookup after calling GetNullability.
+  // It may invalidate iterators, e.g. inserting missing vectors for children.
+  auto [Iterator, Inserted] =
+      NFS.ExprToNullability.insert({E, GetNullability()});
+  CHECK(Inserted) << "GetNullability inserted same " << E->getStmtClassName();
+  return Iterator->second;
+}
+
+absl::Nonnull<dataflow::PointerValue *>
+PointerNullabilityLattice::getConstMethodReturnValue(
+    const dataflow::RecordStorageLocation &RecordLoc,
+    absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env) {
+  auto &ObjMap = ConstMethodReturnValues[&RecordLoc];
+  const FunctionDecl *DirectCallee = CE->getDirectCallee();
+  if (DirectCallee == nullptr) return nullptr;
+  auto it = ObjMap.find(DirectCallee);
+  if (it != ObjMap.end()) return it->second;
+  auto *PV = cast<dataflow::PointerValue>(Env.createValue(CE->getType()));
+  ObjMap.insert({DirectCallee, PV});
+  return PV;
+}
 
 void PointerNullabilityLattice::overrideNullabilityFromDecl(
     absl::Nullable<const Decl *> D, TypeNullability &N) const {

@@ -57,34 +57,14 @@ class PointerNullabilityLattice {
   // Returns the (cached or computed) nullability.
   const TypeNullability &insertExprNullabilityIfAbsent(
       absl::Nonnull<const Expr *> E,
-      const std::function<TypeNullability()> &GetNullability) {
-    E = &dataflow::ignoreCFGOmittedNodes(*E);
-    if (auto It = NFS.ExprToNullability.find(E);
-        It != NFS.ExprToNullability.end())
-      return It->second;
-    // Deliberately perform a separate lookup after calling GetNullability.
-    // It may invalidate iterators, e.g. inserting missing vectors for children.
-    auto [Iterator, Inserted] =
-        NFS.ExprToNullability.insert({E, GetNullability()});
-    CHECK(Inserted) << "GetNullability inserted same " << E->getStmtClassName();
-    return Iterator->second;
-  }
+      const std::function<TypeNullability()> &GetNullability);
 
   // Gets the PointerValue associated with the RecordStorageLocation and
   // MethodDecl of the CallExpr, creating one if it doesn't yet exist. Requires
   // the CXXMemberCallExpr to have a supported pointer type.
   absl::Nonnull<dataflow::PointerValue *> getConstMethodReturnValue(
       const dataflow::RecordStorageLocation &RecordLoc,
-      absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env) {
-    auto &ObjMap = ConstMethodReturnValues[&RecordLoc];
-    const FunctionDecl *DirectCallee = CE->getDirectCallee();
-    if (DirectCallee == nullptr) return nullptr;
-    auto it = ObjMap.find(DirectCallee);
-    if (it != ObjMap.end()) return it->second;
-    auto *PV = cast<dataflow::PointerValue>(Env.createValue(CE->getType()));
-    ObjMap.insert({DirectCallee, PV});
-    return PV;
-  }
+      absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env);
 
   void clearConstMethodReturnValues(
       const dataflow::RecordStorageLocation &RecordLoc) {
