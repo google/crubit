@@ -62,7 +62,7 @@ class PointerNullabilityLattice {
   // Gets the PointerValue associated with the RecordStorageLocation and
   // MethodDecl of the CallExpr, creating one if it doesn't yet exist. Requires
   // the CXXMemberCallExpr to have a supported pointer type.
-  absl::Nonnull<dataflow::PointerValue *> getConstMethodReturnValue(
+  absl::Nullable<dataflow::PointerValue *> getConstMethodReturnValue(
       const dataflow::RecordStorageLocation &RecordLoc,
       absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env);
 

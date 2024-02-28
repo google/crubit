@@ -54,7 +54,7 @@ const TypeNullability &PointerNullabilityLattice::insertExprNullabilityIfAbsent(
   return Iterator->second;
 }
 
-absl::Nonnull<dataflow::PointerValue *>
+absl::Nullable<dataflow::PointerValue *>
 PointerNullabilityLattice::getConstMethodReturnValue(
     const dataflow::RecordStorageLocation &RecordLoc,
     absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env) {
