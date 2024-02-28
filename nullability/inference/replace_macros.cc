@@ -38,7 +38,7 @@ void ReplaceMacrosCallbacks::FileChanged(SourceLocation Loc,
 
   if (Reason != PPCallbacks::EnterFile) return;
 
-  auto FileName = CI.getSourceManager().getFilename(Loc);
+  auto FileName = PP.getSourceManager().getFilename(Loc);
   if (llvm::sys::path::remove_leading_dotslash(FileName) ==
       ReplacementMacrosHeaderFileName) {
     State = State::InReplacementFile;
@@ -68,18 +68,18 @@ void ReplaceMacrosCallbacks::MacroDefined(const clang::Token &MacroNameTok,
       It != Replacements.end()) {
     const clang::MacroDirective *ReplacementDef = It->second;
 
-    IdentifierInfo *CopyII = CI.getPreprocessor().getIdentifierInfo(
-        (CopyPrefix + IIForCurrentMacro->getName()).str());
+    IdentifierInfo *CopyII =
+        PP.getIdentifierInfo((CopyPrefix + IIForCurrentMacro->getName()).str());
 
     // Replace the (empty) definition of the copy with the pre-replacement
     // definition for this macro.
-    CI.getPreprocessor().appendDefMacroDirective(
+    PP.appendDefMacroDirective(
         CopyII, const_cast<clang::MacroInfo *>(MD->getMacroInfo()),
         MD->getLocation());
 
     // Replace the definition of this to-be-replaced macro with the
     // definition from the replacement file.
-    CI.getPreprocessor().appendDefMacroDirective(
+    PP.appendDefMacroDirective(
         IIForCurrentMacro,
         const_cast<clang::MacroInfo *>(ReplacementDef->getMacroInfo()),
         ReplacementDef->getLocation());

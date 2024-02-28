@@ -229,7 +229,7 @@ class Action : public SyntaxOnlyAction {
     if (!!CI.getLangOpts().CPlusPlus) return true;
 
     CI.getPreprocessor().addPPCallbacks(
-        std::make_unique<ReplaceMacrosCallbacks>(CI));
+        std::make_unique<ReplaceMacrosCallbacks>(CI.getPreprocessor()));
     return true;
   }
 };

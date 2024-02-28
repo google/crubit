@@ -45,22 +45,22 @@ constexpr const First& clang_tidy_nullability_internal_abortIfEqual(
 
 #define QCHECK(x)                  \
   __clang_tidy_nullability_QCHECK( \
-      ::clang::tidy::nullability_internal::abortIfFalse(x))
+      ::clang_tidy_nullability_internal_abortIfFalse(x))
 #define __clang_tidy_nullability_QCHECK(x)
 
 #define DCHECK(x)                  \
   __clang_tidy_nullability_DCHECK( \
-      ::clang::tidy::nullability_internal::abortIfFalse(x))
+      ::clang_tidy_nullability_internal_abortIfFalse(x))
 #define __clang_tidy_nullability_DCHECK(x)
 
 #define PCHECK(x)                  \
   __clang_tidy_nullability_PCHECK( \
-      ::clang::tidy::nullability_internal::abortIfFalse(x))
+      ::clang_tidy_nullability_internal_abortIfFalse(x))
 #define __clang_tidy_nullability_PCHECK(x)
 
 #define ABSL_DIE_IF_NULL(x)                  \
   __clang_tidy_nullability_ABSL_DIE_IF_NULL( \
-      ::clang::tidy::nullability_internal::abortIfFalse(x))
+      ::clang_tidy_nullability_internal_abortIfFalse(x))
 #define __clang_tidy_nullability_ABSL_DIE_IF_NULL(x)
 
 #define CHECK_NE(x, y)               \

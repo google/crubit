@@ -19,6 +19,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
 #include "clang/Lex/PPCallbacks.h"
+#include "clang/Lex/Preprocessor.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringRef.h"
 
@@ -34,10 +35,10 @@ constexpr llvm::StringRef ArgCaptureAbortIfEqual =
 
 class ReplaceMacrosCallbacks : public clang::PPCallbacks {
  public:
-  explicit ReplaceMacrosCallbacks(clang::CompilerInstance &CI) : CI(CI) {}
+  explicit ReplaceMacrosCallbacks(clang::Preprocessor &PP) : PP(PP) {}
 
  private:
-  clang::CompilerInstance &CI;
+  clang::Preprocessor &PP;
   llvm::DenseMap<clang::IdentifierInfo *, const clang::MacroDirective *>
       Replacements;
 
@@ -70,7 +71,7 @@ class ReplaceMacrosAction : public clang::ASTFrontendAction {
     if (!ASTFrontendAction::BeginSourceFileAction(CI)) return false;
 
     CI.getPreprocessor().addPPCallbacks(
-        std::make_unique<ReplaceMacrosCallbacks>(CI));
+        std::make_unique<ReplaceMacrosCallbacks>(CI.getPreprocessor()));
     return true;
   }
 
