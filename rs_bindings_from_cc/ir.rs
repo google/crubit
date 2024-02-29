@@ -524,11 +524,6 @@ impl Func {
             .filter(|meta| meta.instance_method_metadata.is_some())
             .is_some()
     }
-
-    /// Returns the return and parameter types of this function.
-    pub fn types(&self) -> impl Iterator<Item = &MappedType> + '_ {
-        [&self.return_type].into_iter().chain(self.params.iter().map(|p| &p.type_))
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]

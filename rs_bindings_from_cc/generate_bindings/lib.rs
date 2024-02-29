@@ -813,12 +813,13 @@ fn required_crubit_features(
                 require_features(ir::CrubitFeature::ExternC.into(), &|| "destructors".into());
             } else {
                 // TODO(b/318006909): Explain the required feature from the RsTypeKind in
-                // detail. TODO(b/318006909): Actually specify _which_
-                // parameter, or the return type.
-                for t in func.types() {
-                    let t = db.rs_type_kind(t.rs_type.clone())?;
-                    require_features(t.required_crubit_features()?, &|| {
-                        "parameter or return type which requires this feature".into()
+                // detail.
+                let return_type = db.rs_type_kind(func.return_type.rs_type.clone())?;
+                require_features(return_type.required_crubit_features()?, &|| "return type".into());
+                for (i, param) in func.params.iter().enumerate() {
+                    let param_type = db.rs_type_kind(param.type_.rs_type.clone())?;
+                    require_features(param_type.required_crubit_features()?, &|| {
+                        format!("the type of {} (parameter #{i})", &param.identifier).into()
                     });
                 }
                 if func.is_extern_c {
