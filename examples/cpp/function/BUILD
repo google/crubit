@@ -26,3 +26,10 @@ golden_test(
     cc_library = "example_lib",
     golden_rs = "example_generated.rs",
 )
+
+# This BUILD rule is here for exposition only. This is an example of what happens if
+# you _don't_ set things up for Crubit.
+cc_library(
+    name = "example_lib_broken",
+    hdrs = ["example.h"],
+)
