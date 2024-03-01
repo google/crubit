@@ -4,6 +4,8 @@
 
 // Tests for CHECK_NE and some of its implementation details.
 
+#include <memory>
+
 #include "check.h"
 #include "nullability_test.h"
 
@@ -40,6 +42,16 @@ TEST void checkNELeft(Nullable<int *> P) {
 }
 
 TEST void checkNERight(Nullable<int *> P) {
+  CHECK_NE(nullptr, P);
+  nonnull(P);
+}
+
+TEST void checkNELeftSmartPointer(std::unique_ptr<int> P) {
+  CHECK_NE(P, nullptr);
+  nonnull(P);
+}
+
+TEST void checkNERightSmartPointer(std::unique_ptr<int> P) {
   CHECK_NE(nullptr, P);
   nonnull(P);
 }

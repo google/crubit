@@ -945,7 +945,7 @@ void modelAbseilCheckNE(const CallExpr &CE, Environment &Env) {
     // to pointers. So, we need to supply a formula directly.
     LHSNull = &Env.arena().makeLiteral(true);
   } else {
-    auto *V = getRawPointerValue(LHS, Env);
+    auto *V = getPointerValue(LHS, Env);
     if (!V) return;
     assert(hasPointerNullState(*V));
     LHSNull = getPointerNullState(*V).IsNull;
@@ -955,7 +955,7 @@ void modelAbseilCheckNE(const CallExpr &CE, Environment &Env) {
   if (RTy->isNullPtrType()) {
     RHSNull = &Env.arena().makeLiteral(true);
   } else {
-    auto *V = getRawPointerValue(RHS, Env);
+    auto *V = getPointerValue(RHS, Env);
     if (!V) return;
     assert(hasPointerNullState(*V));
     RHSNull = getPointerNullState(*V).IsNull;
