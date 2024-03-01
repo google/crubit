@@ -51,12 +51,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
     absl::Nonnull<const Expr *> E, const Environment &Env,
     PointerNullabilityDiagnostic::Context DiagCtx,
     std::optional<std::string> ParamName = std::nullopt) {
-  PointerValue *ActualVal = nullptr;
-  if (isSupportedRawPointerType(E->getType()))
-    ActualVal = getPointerValueFromExpr(E, Env);
-  else
-    ActualVal = getPointerValueFromSmartPointerExpr(E, Env);
-  if (ActualVal != nullptr) {
+  if (PointerValue *ActualVal = getPointerValue(E, Env)) {
     if (isNullable(*ActualVal, Env))
       return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
                DiagCtx, CharSourceRange::getTokenRange(E->getSourceRange()),

@@ -36,7 +36,7 @@ inline constexpr llvm::StringRef PtrField = "ptr";
 
 /// Returns the `PointerValue` allocated to `PointerExpr` if available.
 /// Otherwise, returns nullptr.
-absl::Nullable<dataflow::PointerValue *> getPointerValueFromExpr(
+absl::Nullable<dataflow::PointerValue *> getRawPointerValue(
     absl::Nonnull<const Expr *> PointerExpr, const dataflow::Environment &Env);
 
 /// Returns the `PointerValue` underlying a smart pointer, or null if no
@@ -50,9 +50,17 @@ absl::Nullable<dataflow::PointerValue *> getPointerValueFromSmartPointer(
 /// available.
 /// Returns null if the expression is not associated with a storage location or
 /// the smart pointer is not associated with a `PointerValue`.
-absl::Nullable<dataflow::PointerValue *> getPointerValueFromSmartPointerExpr(
+absl::Nullable<dataflow::PointerValue *> getSmartPointerValue(
     absl::Nonnull<const Expr *> SmartPointerExpr,
     const dataflow::Environment &Env);
+
+/// Returns the `PointerValue` for a raw or smart pointer expression, if
+/// available.
+/// Use this function only if the expression can actually be either a raw or
+/// smart pointer; otherwise, use `getRawPointerValue()` or
+/// `getSmartPointerValue()`.
+absl::Nullable<dataflow::PointerValue *> getPointerValue(
+    absl::Nonnull<const Expr *> PointerExpr, const dataflow::Environment &Env);
 
 /// Sets the `PointerValue` underlying a smart pointer. If `PointerValue` is
 /// null, clears any association between the smart pointer and an underlying

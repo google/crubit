@@ -37,7 +37,7 @@ using dataflow::Value;
 constexpr llvm::StringLiteral kFromNullable = "from_nullable";
 constexpr llvm::StringLiteral kNull = "is_null";
 
-absl::Nullable<PointerValue *> getPointerValueFromExpr(
+absl::Nullable<PointerValue *> getRawPointerValue(
     absl::Nonnull<const Expr *> PointerExpr, const Environment &Env) {
   return Env.get<PointerValue>(*PointerExpr);
 }
@@ -49,7 +49,7 @@ absl::Nullable<PointerValue *> getPointerValueFromSmartPointer(
   return Env.get<PointerValue>(SmartPointerLoc->getSyntheticField(PtrField));
 }
 
-absl::Nullable<PointerValue *> getPointerValueFromSmartPointerExpr(
+absl::Nullable<PointerValue *> getSmartPointerValue(
     absl::Nonnull<const Expr *> SmartPointerExpr, const Environment &Env) {
   RecordStorageLocation *Loc = nullptr;
   if (SmartPointerExpr->isPRValue())
@@ -57,6 +57,13 @@ absl::Nullable<PointerValue *> getPointerValueFromSmartPointerExpr(
   else
     Loc = Env.get<RecordStorageLocation>(*SmartPointerExpr);
   return getPointerValueFromSmartPointer(Loc, Env);
+}
+
+absl::Nullable<dataflow::PointerValue *> getPointerValue(
+    absl::Nonnull<const Expr *> PointerExpr, const Environment &Env) {
+  if (isSupportedRawPointerType(PointerExpr->getType()))
+    return getRawPointerValue(PointerExpr, Env);
+  return getSmartPointerValue(PointerExpr, Env);
 }
 
 void setSmartPointerValue(dataflow::RecordStorageLocation &SmartPointerLoc,
@@ -189,13 +196,8 @@ NullabilityKind getNullability(
 
 NullabilityKind getNullability(const Expr *E, const dataflow::Environment &Env,
                                const dataflow::Formula *AdditionalConstraints) {
-  dataflow::PointerValue *P = nullptr;
-  if (isSupportedRawPointerType(E->getType()))
-    P = getPointerValueFromExpr(E, Env);
-  else if (isSupportedSmartPointerType(E->getType()))
-    P = getPointerValueFromSmartPointer(Env.get<RecordStorageLocation>(*E),
-                                        Env);
-  if (P != nullptr) return getNullability(*P, Env, AdditionalConstraints);
+  if (dataflow::PointerValue *P = getPointerValue(E, Env))
+    return getNullability(*P, Env, AdditionalConstraints);
   return clang::NullabilityKind::Unspecified;
 }
 

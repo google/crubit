@@ -345,7 +345,7 @@ void initSmartPointerForExpr(const Expr *E,
 void transferValue_NullPointer(
     absl::Nonnull<const Expr *> NullPointer, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
-  if (auto *PointerVal = getPointerValueFromExpr(NullPointer, State.Env)) {
+  if (auto *PointerVal = getRawPointerValue(NullPointer, State.Env)) {
     initNullPointer(*PointerVal, State.Env.getDataflowAnalysisContext());
   }
 }
@@ -354,7 +354,7 @@ void transferValue_NotNullPointer(
     absl::Nonnull<const Expr *> NotNullPointer,
     const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
-  if (auto *PointerVal = getPointerValueFromExpr(NotNullPointer, State.Env)) {
+  if (auto *PointerVal = getRawPointerValue(NotNullPointer, State.Env)) {
     initPointerNullState(*PointerVal, State.Env.getDataflowAnalysisContext(),
                          NullabilityKind::NonNull);
   }
@@ -390,8 +390,8 @@ void transferValue_SmartPointerConstructor(
   // Construct from raw pointer.
   if (Ctor->getNumArgs() >= 1 &&
       isSupportedRawPointerType(Ctor->getArg(0)->getType())) {
-    setSmartPointerValue(
-        Loc, getPointerValueFromExpr(Ctor->getArg(0), State.Env), State.Env);
+    setSmartPointerValue(Loc, getRawPointerValue(Ctor->getArg(0), State.Env),
+                         State.Env);
     return;
   }
 
@@ -402,8 +402,8 @@ void transferValue_SmartPointerConstructor(
     if (Ctor->getNumArgs() == 2 &&
         isSupportedRawPointerType(Ctor->getArg(1)->getType())) {
       // `shared_ptr` aliasing constructor.
-      setSmartPointerValue(
-          Loc, getPointerValueFromExpr(Ctor->getArg(1), State.Env), State.Env);
+      setSmartPointerValue(Loc, getRawPointerValue(Ctor->getArg(1), State.Env),
+                           State.Env);
     } else {
       setSmartPointerValue(
           Loc, getPointerValueFromSmartPointer(SrcLoc, State.Env), State.Env);
@@ -477,7 +477,7 @@ void transferValue_SmartPointerResetCall(
     return;
   }
 
-  setSmartPointerValue(*Loc, getPointerValueFromExpr(MCE->getArg(0), State.Env),
+  setSmartPointerValue(*Loc, getRawPointerValue(MCE->getArg(0), State.Env),
                        State.Env);
 }
 
@@ -528,8 +528,7 @@ void transferValue_SmartPointerBoolConversionCall(
 void transferValue_SmartPointerOperatorStar(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (PointerValue *Val =
-          getPointerValueFromSmartPointerExpr(OpCall->getArg(0), State.Env)) {
+  if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
     State.Env.setStorageLocation(*OpCall, Val->getPointeeLoc());
   }
 }
@@ -537,8 +536,7 @@ void transferValue_SmartPointerOperatorStar(
 void transferValue_SmartPointerOperatorArrow(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (PointerValue *Val =
-          getPointerValueFromSmartPointerExpr(OpCall->getArg(0), State.Env)) {
+  if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
     State.Env.setValue(*OpCall, *Val);
   }
 }
@@ -566,12 +564,10 @@ void transferValue_SmartPointerComparisonOpCall(
   assert(!NullPtr1 || !NullPtr2);
 
   PointerValue *Val1 = nullptr;
-  if (!NullPtr1)
-    Val1 = getPointerValueFromSmartPointerExpr(OpCall->getArg(0), State.Env);
+  if (!NullPtr1) Val1 = getSmartPointerValue(OpCall->getArg(0), State.Env);
 
   PointerValue *Val2 = nullptr;
-  if (!NullPtr2)
-    Val2 = getPointerValueFromSmartPointerExpr(OpCall->getArg(1), State.Env);
+  if (!NullPtr2) Val2 = getSmartPointerValue(OpCall->getArg(1), State.Env);
 
   if (NullPtr1) {
     if (Val2 == nullptr) return;
@@ -732,7 +728,7 @@ void transferValue_SmartPointerArrowMemberExpr(
 void transferValue_Pointer(absl::Nonnull<const Expr *> PointerExpr,
                            const MatchFinder::MatchResult &Result,
                            TransferState<PointerNullabilityLattice> &State) {
-  auto *PointerVal = getPointerValueFromExpr(PointerExpr, State.Env);
+  auto *PointerVal = getRawPointerValue(PointerExpr, State.Env);
   if (!PointerVal) return;
 
   initPointerFromTypeNullability(*PointerVal, PointerExpr, State);
@@ -810,9 +806,9 @@ void transferValue_NullCheckComparison(
   assert(ComparisonVal != nullptr);
   auto &ComparisonFormula = ComparisonVal->formula();
 
-  auto *LHSVal = getPointerValueFromExpr(LHS, State.Env);
+  auto *LHSVal = getRawPointerValue(LHS, State.Env);
   if (!LHSVal || !hasPointerNullState(*LHSVal)) return;
-  auto *RHSVal = getPointerValueFromExpr(RHS, State.Env);
+  auto *RHSVal = getRawPointerValue(RHS, State.Env);
   if (!RHSVal || !hasPointerNullState(*RHSVal)) return;
 
   if (auto *Val = processPointerComparison(ComparisonFormula,
@@ -826,8 +822,7 @@ void transferValue_NullCheckImplicitCastPtrToBool(
     absl::Nonnull<const Expr *> CastExpr, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   auto &A = State.Env.arena();
-  auto *PointerVal =
-      getPointerValueFromExpr(CastExpr->IgnoreImplicit(), State.Env);
+  auto *PointerVal = getRawPointerValue(CastExpr->IgnoreImplicit(), State.Env);
   if (!PointerVal) return;
 
   auto Nullability = getPointerNullState(*PointerVal);
@@ -867,7 +862,7 @@ void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
 
   StorageLocation *Loc = nullptr;
   if (ParamTy->isPointerType()) {
-    if (PointerValue *OuterPointer = getPointerValueFromExpr(Arg, Env))
+    if (PointerValue *OuterPointer = getRawPointerValue(Arg, Env))
       Loc = &OuterPointer->getPointeeLoc();
   } else if (ParamTy->isReferenceType()) {
     Loc = Env.getStorageLocation(*Arg);
@@ -921,7 +916,7 @@ void modelAbseilGetReferenceableValue(const CallExpr &CE, Environment &Env) {
 // the `IsNull` of the call result with the comparison `arg0 != arg1`.
 void modelAbseilCheckNE(const CallExpr &CE, Environment &Env) {
   assert(isSupportedRawPointerType(CE.getType()));
-  auto *PointerVal = getPointerValueFromExpr(&CE, Env);
+  auto *PointerVal = getRawPointerValue(&CE, Env);
   if (!PointerVal)
     PointerVal = cast<PointerValue>(Env.createValue(CE.getType()));
   // Force the pointer state to `Nullable`, which we will then potentially
@@ -950,7 +945,7 @@ void modelAbseilCheckNE(const CallExpr &CE, Environment &Env) {
     // to pointers. So, we need to supply a formula directly.
     LHSNull = &Env.arena().makeLiteral(true);
   } else {
-    auto *V = getPointerValueFromExpr(LHS, Env);
+    auto *V = getRawPointerValue(LHS, Env);
     if (!V) return;
     assert(hasPointerNullState(*V));
     LHSNull = getPointerNullState(*V).IsNull;
@@ -960,7 +955,7 @@ void modelAbseilCheckNE(const CallExpr &CE, Environment &Env) {
   if (RTy->isNullPtrType()) {
     RHSNull = &Env.arena().makeLiteral(true);
   } else {
-    auto *V = getPointerValueFromExpr(RHS, Env);
+    auto *V = getRawPointerValue(RHS, Env);
     if (!V) return;
     assert(hasPointerNullState(*V));
     RHSNull = getPointerNullState(*V).IsNull;
@@ -1015,7 +1010,7 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
   if (isSupportedRawPointerType(CE->getType())) {
     // Create a pointer so that we can attach nullability to it and have the
     // nullability propagate with the pointer.
-    auto *PointerVal = getPointerValueFromExpr(CE, State.Env);
+    auto *PointerVal = getRawPointerValue(CE, State.Env);
     if (!PointerVal) {
       PointerVal = cast<PointerValue>(State.Env.createValue(CE->getType()));
     }
@@ -1053,7 +1048,7 @@ void transferValue_AccessorCall(
   if (!PointerVal) {
     // Use value that may have been set by the builtin transfer function or by
     // `ensurePointerHasValue()`.
-    PointerVal = getPointerValueFromExpr(MCE, State.Env);
+    PointerVal = getRawPointerValue(MCE, State.Env);
   }
   if (PointerVal) {
     State.Env.setValue(*MCE, *PointerVal);

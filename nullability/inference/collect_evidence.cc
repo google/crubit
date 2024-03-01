@@ -223,8 +223,7 @@ void collectEvidenceFromDereference(
   if (!Target || !isSupportedPointerType(Target->getType())) return;
 
   // It is a dereference of a pointer. Now gather evidence from it.
-  dataflow::PointerValue *DereferencedValue =
-      getPointerValueFromExpr(Target, Env);
+  dataflow::PointerValue *DereferencedValue = getRawPointerValue(Target, Env);
   if (!DereferencedValue) return;
   collectMustBeNonnullEvidence(*DereferencedValue, Env, Loc, InferableSlots,
                                Evidence::UNCHECKED_DEREFERENCE, Emit);
@@ -394,7 +393,7 @@ void collectEvidenceFromArgsAndParams(
       return;
     }
 
-    dataflow::PointerValue *PV = getPointerValueFromExpr(&Iter.arg(), Env);
+    dataflow::PointerValue *PV = getRawPointerValue(&Iter.arg(), Env);
     if (!PV) continue;
 
     SourceLocation ArgLoc = Iter.arg().getExprLoc();
@@ -452,7 +451,7 @@ void collectEvidenceFromFunctionPointerCallExpr(
 
   if (InferableSlots.empty()) return;
   if (const auto *Callee = Expr.getCallee()) {
-    if (const auto *PV = getPointerValueFromExpr(Callee, Env)) {
+    if (const auto *PV = getRawPointerValue(Callee, Env)) {
       collectMustBeNonnullEvidence(*PV, Env, Expr.getExprLoc(), InferableSlots,
                                    Evidence::UNCHECKED_DEREFERENCE, Emit);
     }
@@ -470,7 +469,7 @@ void collectEvidenceFromFunctionPointerCallExpr(
         << "Unsupported argument " << I
         << " type: " << Expr.getArg(I)->getType().getAsString();
 
-    dataflow::PointerValue *PV = getPointerValueFromExpr(Expr.getArg(I), Env);
+    dataflow::PointerValue *PV = getRawPointerValue(Expr.getArg(I), Env);
     if (!PV) continue;
 
     // TODO: when we infer function pointer parameters' nullabilities, check
@@ -529,7 +528,7 @@ void collectEvidenceFromAbortIfFalseMacroCall(
   CHECK_EQ(CallExpr.getNumArgs(), 1);
   const Expr *Arg = CallExpr.getArg(0);
   if (!isSupportedRawPointerType(Arg->getType())) return;
-  const dataflow::PointerValue *PV = getPointerValueFromExpr(Arg, Env);
+  const dataflow::PointerValue *PV = getRawPointerValue(Arg, Env);
   if (!PV) return;
   collectMustBeNonnullEvidence(*PV, Env, Arg->getExprLoc(), InferableSlots,
                                Evidence::ABORT_IF_NULL, Emit);
@@ -559,13 +558,13 @@ void collectEvidenceFromAbortIfEqualMacroCall(
   if (First->isNullPointerConstant(Context,
                                    Expr::NPC_ValueDependentIsNotNull)) {
     if (!isSupportedRawPointerType(Second->getType())) return;
-    ValueComparedToNull = getPointerValueFromExpr(Second, Env);
+    ValueComparedToNull = getRawPointerValue(Second, Env);
     if (!ValueComparedToNull) return;
     EvidenceLoc = Second->getExprLoc();
   } else if (Second->isNullPointerConstant(Context,
                                            Expr::NPC_ValueDependentIsNotNull)) {
     if (!isSupportedRawPointerType(First->getType())) return;
-    ValueComparedToNull = getPointerValueFromExpr(First, Env);
+    ValueComparedToNull = getRawPointerValue(First, Env);
     if (!ValueComparedToNull) return;
     EvidenceLoc = First->getExprLoc();
   } else {
@@ -581,10 +580,9 @@ void collectEvidenceFromAbortIfEqualMacroCall(
       return;
     }
 
-    const dataflow::PointerValue *FirstPV = getPointerValueFromExpr(First, Env);
+    const dataflow::PointerValue *FirstPV = getRawPointerValue(First, Env);
     if (!FirstPV) return;
-    const dataflow::PointerValue *SecondPV =
-        getPointerValueFromExpr(Second, Env);
+    const dataflow::PointerValue *SecondPV = getRawPointerValue(Second, Env);
     if (!SecondPV) return;
     PointerNullState FirstNullState = getPointerNullState(*FirstPV);
     if (!FirstNullState.IsNull) return;
@@ -774,7 +772,7 @@ void collectEvidenceFromAssignment(
                        << VarDecl->getInit()->getType() << "\n";
           return;
         }
-        auto *PV = getPointerValueFromExpr(VarDecl->getInit(), Env);
+        auto *PV = getRawPointerValue(VarDecl->getInit(), Env);
         if (!PV) return;
         TypeNullability TypeNullability =
             getNullabilityAnnotationsFromTypeAndOverrides(VarDecl->getType(),
@@ -804,7 +802,7 @@ void collectEvidenceFromAssignment(
       llvm::errs() << "Unsupported RHS type in assignment to pointer decl: "
                    << BinaryOperator->getRHS()->getType() << "\n";
     }
-    auto *PV = getPointerValueFromExpr(BinaryOperator->getRHS(), Env);
+    auto *PV = getRawPointerValue(BinaryOperator->getRHS(), Env);
     if (!PV) return;
     TypeNullability TypeNullability;
     if (auto *DeclRefExpr =
