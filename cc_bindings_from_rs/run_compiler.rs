@@ -15,7 +15,7 @@ extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
 
-use anyhow::anyhow;
+use anyhow::bail;
 use either::Either;
 use rustc_interface::interface::Compiler;
 use rustc_interface::Queries;
@@ -91,37 +91,17 @@ where
             rustc_driver::RunCompiler::new(self.args, &mut self).run()
         });
 
-        // Flatten `Result<Result<T, ...>>` into `Result<T, ...>` (i.e. combine the
-        // result from `RunCompiler::run` and `catch_fatal_errors`).
-        use rustc_interface::interface::Result;
-        let rustc_result: Result<()> = match catch_fatal_errors_result {
-            Ok(Ok(())) => Ok(()),
-            Ok(Err(a)) => Err(a),
-            Err(_) =>
-            {
-                #[allow(deprecated)]
-                Err(rustc_span::ErrorGuaranteed::unchecked_error_guaranteed())
-            }
+        match catch_fatal_errors_result {
+            Ok(Ok(())) => {}
+            // We can ignore the `Err` payloads because the error types have only one value.
+            _ => bail!("Errors reported by Rust compiler."),
         };
 
-        // Translate `rustc_interface::interface::Result` into `anyhow::Result`.  (Can't
-        // use `?` because the trait `std::error::Error` is not implemented for
-        // `ErrorGuaranteed` which is required by the impl of
-        // `From<ErrorGuaranteed>` for `anyhow::Error`.)
-        let rustc_result: anyhow::Result<()> = rustc_result.map_err(|_err| {
-            // We can ignore `_err` because it has no payload / because this type has only
-            // one valid/possible value.
-            anyhow!("Errors reported by Rust compiler.")
-        });
-
-        // Return either `rustc_result` or `self.callback_result` or a new error.
-        rustc_result.and_then(|()| {
-            self.callback_or_result.right_or_else(|_left| {
-                // When rustc cmdline arguments (i.e. `self.args`) are empty (or contain
-                // `--help`) then the `after_analysis` callback won't be invoked.  Handle
-                // this case by emitting an explicit error at the Crubit level.
-                Err(anyhow!("The Rust compiler had no crate to compile and analyze"))
-            })
+        self.callback_or_result.right_or_else(|_left| {
+            // When rustc cmdline arguments (i.e. `self.args`) are empty (or contain
+            // `--help`) then the `after_analysis` callback won't be invoked.  Handle
+            // this case by emitting an explicit error at the Crubit level.
+            bail!("The Rust compiler had no crate to compile and analyze")
         })
     }
 }
@@ -167,6 +147,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::anyhow;
     use run_compiler_test_support::get_sysroot_for_testing;
     use tempfile::tempdir;
 
