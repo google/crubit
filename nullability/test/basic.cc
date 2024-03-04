@@ -261,6 +261,18 @@ TEST(PointerNullabilityTest, ArraySubscript) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, AssignmentToNonnull) {
+  // TODO(b/307797224): This test demonstrates that we currently allow
+  // null to be assigned to a nonnull pointer; in other words, within a
+  // function, types are flow-sensitive. It's not clear, however, whether this
+  // is the behavior we want. We should resolve this one way or the other.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int *_Nonnull nonnull) {
+      nonnull = nullptr;
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, ForwardDeclaration) {
   // Check that we handle a function with a forward declaration correctly. This
   // is a regression test for a bug where we erroneously used the `ParmVarDecl`s
