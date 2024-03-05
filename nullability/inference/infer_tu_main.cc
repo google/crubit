@@ -225,8 +225,9 @@ class Action : public SyntaxOnlyAction {
   }
 
   bool BeginSourceFileAction(clang::CompilerInstance &CI) override {
-    if (!ASTFrontendAction::BeginSourceFileAction(CI)) return false;
-    if (!!CI.getLangOpts().CPlusPlus) return true;
+    if (!ASTFrontendAction::BeginSourceFileAction(CI) ||
+        !CI.getLangOpts().CPlusPlus)
+      return false;
 
     CI.getPreprocessor().addPPCallbacks(
         std::make_unique<ReplaceMacrosCallbacks>(CI.getPreprocessor()));
