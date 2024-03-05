@@ -26,16 +26,16 @@
 // Forwarding function to allow detection of assert-like macro arguments.
 // Used for single-argument macros that abort if the argument is false.
 template <typename T>
-constexpr const T& clang_tidy_nullability_internal_abortIfFalse(const T& Arg) {
-  return Arg;
+constexpr T&& clang_tidy_nullability_internal_abortIfFalse(T&& Arg) {
+  return static_cast<T&&>(Arg);
 }
 
 // Forwarding function to allow detection of both arguments of assert-like
 // not-equal comparisons.
 template <typename First, typename Second>
-constexpr const First& clang_tidy_nullability_internal_abortIfEqual(
-    const First& FirstArg, const Second&) {
-  return FirstArg;
+constexpr First&& clang_tidy_nullability_internal_abortIfEqual(First&& FirstArg,
+                                                               Second&&) {
+  return static_cast<First&&>(FirstArg);
 }
 
 #define CHECK(x)                  \

@@ -35,6 +35,7 @@
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
+#include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/Specifiers.h"
@@ -1029,6 +1030,13 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
 
   if (CE->isCallToStdMove() || FuncDecl == nullptr) return;
 
+  // Don't treat parameters of our macro replacement argument-capture functions
+  // as output parameters.
+  if (const IdentifierInfo *FunII =
+          FuncDecl->getDeclName().getAsIdentifierInfo();
+      FunII && (FunII->isStr("clang_tidy_nullability_internal_abortIfFalse") ||
+                FunII->isStr("clang_tidy_nullability_internal_abortIfEqual")))
+    return;
   // Make output parameters (with unknown nullability) initialized to unknown.
   for (ParamAndArgIterator<CallExpr> Iter(*FuncDecl, *CE); Iter; ++Iter)
     initializeOutputParameter(&Iter.arg(), State.Env, Iter.param().getType());
