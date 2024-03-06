@@ -623,72 +623,83 @@ fn cc_struct_layout_assertion(db: &Database, record: &Record) -> Result<TokenStr
     })
 }
 
-// Returns the accessor functions for no_unique_address member variables.
+/// Returns the accessor functions for no_unique_address member variables.
 fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<TokenStream> {
     let mut fields = vec![];
     let mut types = vec![];
-    let mut zero_sized_fields = vec![];
-    let mut zero_sized_field_offsets = vec![];
-    let mut types_for_zero_sized_fields = vec![];
-    let mut zero_sized_field_doc_comments = vec![];
+    let mut field_offsets = vec![];
+    let mut doc_comments = vec![];
     for field in &record.fields {
         if field.access != AccessSpecifier::Public || !field.is_no_unique_address {
             continue;
         }
+        // `[[no_unique_address]]` cannot be applied to a bitfield.
+        // See e.g. https://en.cppreference.com/w/cpp/language/attributes/no_unique_address
+        // Indeed, this is a compilation error in Clang.
+        assert_eq!(field.offset % 8, 0, "invalid subobject: [[no_unique_address]] on a bitfield");
+
         // Can't use `get_field_rs_type_kind_for_layout` here, because we want to dig
         // into no_unique_address fields, despite laying them out as opaque
         // blobs of bytes.
         if let Ok(rs_type) = field.type_.as_ref().map(|t| t.rs_type.clone()) {
-            ({ if field.size == 0 { &mut zero_sized_fields } else { &mut fields } }).push(
-                make_rs_ident(
-                    &field
-                        .identifier
-                        .as_ref()
-                        .expect("Unnamed fields can't be annotated with [[no_unique_address]]")
-                        .identifier,
-                ),
-            );
+            fields.push(make_rs_ident(
+                &field
+                    .identifier
+                    .as_ref()
+                    .expect("Unnamed fields can't be annotated with [[no_unique_address]]")
+                    .identifier,
+            ));
             let type_ident = db.rs_type_kind(rs_type).with_context(|| {
                 format!("Failed to format type for field {:?} on record {:?}", field, record)
             })?;
-            ({ if field.size == 0 { &mut types_for_zero_sized_fields } else { &mut types } })
-                .push(type_ident);
+            types.push(type_ident);
+            field_offsets.push(Literal::usize_unsuffixed(field.offset / 8));
             if field.size == 0 {
-                zero_sized_field_offsets.push(Literal::usize_unsuffixed(field.offset));
-                let doc_comment = crate::generate_doc_comment(
+                // These fields are not generated at all, so they need to be documented here.
+                doc_comments.push(crate::generate_doc_comment(
                     field.doc_comment.as_deref(),
                     None,
                     db.generate_source_loc_doc_comment(),
-                );
-                zero_sized_field_doc_comments.push(doc_comment);
+                ));
+            } else {
+                // all other fields already have a doc-comment at the point they were defined.
+                doc_comments.push(quote! {});
             }
         }
     }
-    if fields.is_empty() && zero_sized_fields.is_empty() {
+    if fields.is_empty() {
         return Ok(quote! {});
     }
-    let field_accessors = quote! {
-      #(
-        pub fn #fields(&self) -> &#types {
-            unsafe {&* (&self.#fields as *const _ as *const #types)}
-        }
-      )*
-    };
-    let zero_sized_field_accessors = quote! {
-    #(
-      #zero_sized_field_doc_comments
-      pub fn #zero_sized_fields(&self) -> &#types_for_zero_sized_fields {
-        unsafe {
-          let ptr = (self as *const Self as *const u8).offset(#zero_sized_field_offsets);
-          &*(ptr as *const #types_for_zero_sized_fields)
-        }
-      }
-    )*};
     let ident = make_rs_ident(record.rs_name.as_ref());
+    // SAFETY: even if there is a named field in Rust for this subobject, it is not
+    // safe to just cast the pointer. A `struct S {[[no_unique_address]] A a;
+    // char b};` will be represented in Rust using a too-short field `a` (e.g.
+    // with `[MaybeUninit<u8>; 3]`, where the trailing fourth byte is actually
+    // `b`). We cannot cast this to something wider, which includes `b`, even
+    // though the `a` object does in fact include `b` in C++. This is Rust, and
+    // these are distinct object allocations. We don't have provenance.
+    //
+    // However, we can start from the pointer to **S** and perform pointer
+    // arithmetic on it to get a correctly-sized `A` reference. This is
+    // equivalent to transmuting the type to one where the potentially-overlapping
+    // subobject exists, but the fields next to it, which it overlaps, do not.
+    // As if it were `struct S {A a;};`. However, we do not use transmutes, and
+    // instead reimplement field access using pointer arithmetic.
+    //
+    // The resulting pointer is valid and correctly aligned, and does not violate
+    // provenance. It also does not result in mutable aliasing, because this
+    // borrows `self`, not just `a`.
     Ok(quote! {
         impl #ident {
-            #field_accessors
-            #zero_sized_field_accessors
+            #(
+                #doc_comments
+                pub fn #fields(&self) -> &#types {
+                    unsafe {
+                        let ptr = (self as *const Self as *const u8).offset(#field_offsets);
+                        &*(ptr as *const #types)
+                    }
+                }
+            )*
         }
     })
 }
@@ -1599,10 +1610,16 @@ mod tests {
             quote! {
                 impl Struct {
                     pub fn field1(&self) -> &crate::Field1 {
-                        unsafe {&* (&self.field1 as *const _ as *const crate::Field1)}
+                        unsafe {
+                            let ptr = (self as *const Self as *const u8).offset(0);
+                            &*(ptr as *const crate::Field1)
+                        }
                     }
                     pub fn field2(&self) -> &crate::Field2 {
-                        unsafe {&* (&self.field2 as *const _ as *const crate::Field2)}
+                        unsafe {
+                            let ptr = (self as *const Self as *const u8).offset(8);
+                            &*(ptr as *const crate::Field2)
+                        }
                     }
                 }
             }

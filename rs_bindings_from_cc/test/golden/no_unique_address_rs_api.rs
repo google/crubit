@@ -45,10 +45,16 @@ impl !Sync for Struct {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Struct"), crate::Struct);
 impl Struct {
     pub fn field1(&self) -> &::core::ffi::c_int {
-        unsafe { &*(&self.field1 as *const _ as *const ::core::ffi::c_int) }
+        unsafe {
+            let ptr = (self as *const Self as *const u8).offset(0);
+            &*(ptr as *const ::core::ffi::c_int)
+        }
     }
     pub fn field2(&self) -> &::core::ffi::c_char {
-        unsafe { &*(&self.field2 as *const _ as *const ::core::ffi::c_char) }
+        unsafe {
+            let ptr = (self as *const Self as *const u8).offset(4);
+            &*(ptr as *const ::core::ffi::c_char)
+        }
     }
 }
 
@@ -129,7 +135,10 @@ forward_declare::unsafe_define!(
 );
 impl PaddingBetweenFields {
     pub fn field2(&self) -> &::core::ffi::c_int {
-        unsafe { &*(&self.field2 as *const _ as *const ::core::ffi::c_int) }
+        unsafe {
+            let ptr = (self as *const Self as *const u8).offset(4);
+            &*(ptr as *const ::core::ffi::c_int)
+        }
     }
 }
 
@@ -296,7 +305,8 @@ forward_declare::unsafe_define!(
 impl FieldInTailPadding {
     pub fn inner_struct(&self) -> &crate::FieldInTailPadding_InnerStruct {
         unsafe {
-            &*(&self.inner_struct as *const _ as *const crate::FieldInTailPadding_InnerStruct)
+            let ptr = (self as *const Self as *const u8).offset(0);
+            &*(ptr as *const crate::FieldInTailPadding_InnerStruct)
         }
     }
 }
