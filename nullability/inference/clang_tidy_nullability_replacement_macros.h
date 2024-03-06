@@ -23,6 +23,8 @@
 #ifndef THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_CLANG_TIDY_NULLABILITY_REPLACEMENT_MACROS_H_
 #define THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_CLANG_TIDY_NULLABILITY_REPLACEMENT_MACROS_H_
 
+#ifdef __cplusplus
+
 // Forwarding function to allow detection of assert-like macro arguments.
 // Used for single-argument macros that abort if the argument is false.
 template <typename T>
@@ -81,4 +83,5 @@ constexpr First&& clang_tidy_nullability_internal_abortIfEqual(First&& FirstArg,
 // Could infer Nullable from CHECK_EQ comparisons with nullptr, but not as
 // likely to provide additional coverage as CHECK_NE leading to Nonnull.
 
+#endif  // __cplusplus
 #endif  // THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_CLANG_TIDY_NULLABILITY_REPLACEMENT_MACROS_H_
