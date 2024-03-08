@@ -305,10 +305,6 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
         #[repr(transparent)]
         #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
         pub struct #name(#underlying_type);
-
-        impl !Send for #name {}
-        impl !Sync for #name {}
-
         impl #name {
             #(#enumerators)*
         }
@@ -323,11 +319,7 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
             }
         }
     };
-    Ok(GeneratedItem {
-        item,
-        features: [make_rs_ident("negative_impls")].into_iter().collect(),
-        ..Default::default()
-    })
+    Ok(item.into())
 }
 
 fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<GeneratedItem> {
@@ -1883,8 +1875,6 @@ pub(crate) mod tests {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
                 pub struct Color(::core::ffi::c_uint);
-                impl !Send for Color {}
-                impl !Sync for Color {}
                 impl Color {
                     pub const kRed: Color = Color(5);
                     pub const kBlue: Color = Color(6);
@@ -1922,8 +1912,6 @@ pub(crate) mod tests {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
                 pub struct Color(::core::ffi::c_int);
-                impl !Send for Color {}
-                impl !Sync for Color {}
                 impl Color {
                     pub const kRed: Color = Color(-5);
                     pub const kBlue: Color = Color(-4);
@@ -1961,8 +1949,6 @@ pub(crate) mod tests {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
                 pub struct Color(::core::ffi::c_long);
-                impl !Send for Color {}
-                impl !Sync for Color {}
                 impl Color {
                     pub const kViolet: Color = Color(-9223372036854775808);
                     pub const kRed: Color = Color(-5);
@@ -2001,8 +1987,6 @@ pub(crate) mod tests {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
                 pub struct Color(::core::ffi::c_ulong);
-                impl !Send for Color {}
-                impl !Sync for Color {}
                 impl Color {
                     pub const kRed: Color = Color(0);
                     pub const kBlue: Color = Color(1);
@@ -2035,8 +2019,6 @@ pub(crate) mod tests {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
                 pub struct Color(::core::ffi::c_int);
-                impl !Send for Color {}
-                impl !Sync for Color {}
                 impl Color {
                     pub const kViolet: Color = Color(-2147483648);
                     pub const kRed: Color = Color(-5);
@@ -2069,8 +2051,6 @@ pub(crate) mod tests {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
                 pub struct Color(::core::ffi::c_uint);
-                impl !Send for Color {}
-                impl !Sync for Color {}
                 impl Color {
                     pub const kRed: Color = Color(0);
                     pub const kBlue: Color = Color(1);
@@ -2101,8 +2081,6 @@ pub(crate) mod tests {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
                 pub struct Bool(bool);
-                impl !Send for Bool {}
-                impl !Sync for Bool {}
                 impl Bool {
                     pub const kFalse: Bool = Bool(false);
                     pub const kTrue: Bool = Bool(true);
@@ -2132,8 +2110,6 @@ pub(crate) mod tests {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
                 pub struct Bool(crate::MyBool);
-                impl !Send for Bool {}
-                impl !Sync for Bool {}
                 impl Bool {
                     pub const kFalse: Bool = Bool(false);
                     pub const kTrue: Bool = Bool(true);

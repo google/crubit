@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use static_assertions::assert_not_impl_any;
+use static_assertions::{assert_impl_all, assert_not_impl_any};
 
 #[test]
 fn test_unsafe_struct() {
@@ -10,11 +10,11 @@ fn test_unsafe_struct() {
 }
 
 #[test]
-fn test_unsafe_enum() {
-    assert_not_impl_any!(thread_unsafe_types::Enum: Send, Sync);
+fn test_unsafe_union() {
+    assert_not_impl_any!(thread_unsafe_types::Union: Send, Sync);
 }
 
 #[test]
-fn test_unsafe_union() {
-    assert_not_impl_any!(thread_unsafe_types::Union: Send, Sync);
+fn test_enum() {
+    assert_impl_all!(thread_safe_types::Enum: Send, Sync);
 }

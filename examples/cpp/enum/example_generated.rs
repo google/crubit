@@ -7,7 +7,7 @@
 // Features: extern_c
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls)]
+#![feature(custom_inner_attributes)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -17,8 +17,6 @@
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct Color(::core::ffi::c_uint);
-impl !Send for Color {}
-impl !Sync for Color {}
 impl Color {
     pub const kRed: Color = Color(0);
     pub const kBlue: Color = Color(1);
