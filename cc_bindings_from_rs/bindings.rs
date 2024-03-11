@@ -3801,7 +3801,12 @@ pub mod tests {
 
     #[test]
     fn test_format_item_unsupported_type_generic_fn() {
+        // TODO(b/328014526): the #[allow(unused_imports)] below is a workaround.
+        // With recent rustc, without it, we get:
+        //   error: the item `Default` is imported redundantly
+        // Properly address this.
         let test_src = r#"
+                #[allow(unused_imports)]
                 use std::default::Default;
                 use std::fmt::Display;
                 pub fn generic_function<T: Default + Display>() {
