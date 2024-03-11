@@ -119,8 +119,10 @@ where
                 })?;
 
                 // `analysis` might succeed even if there are some lint / warning errors.
-                // Detecting these requires explicitly checking `compile_status`.
-                compiler.sess.compile_status()?;
+                // Detecting these requires explicitly checking.
+                if let Some(guar) = compiler.sess.dcx().has_errors() {
+                    return Err(guar);
+                }
 
                 // Run the provided callback.
                 Ok(query_context.enter(callback))
