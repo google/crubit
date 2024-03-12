@@ -1,6 +1,6 @@
 # Rust bindings for C++ fundamental types
 
-Crubit maps most C++ fundamental types to the obvious Rust equivalent. For
+Crubit maps most C++ fundamental types to the direct Rust equivalent. For
 example, `int32_t` becomes `i32`, `int` becomes `ffi::c_int`, `double` becomes
 `f64`, and so on.
 

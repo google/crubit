@@ -7,45 +7,44 @@ difficult to deploy to environments dissimilar to Google's monorepo. We do not
 have our tooling set up to accept external contributions at this time.
 
 Crubit is a bidirectional bindings generator for C++ and Rust, with the goal of
-integrating the C++ and Rust ecosystems. With Crubit, Rust can be used anywhere
-C++ can be, directly calling and being called by C++. Crubit does not require
-wrapping C++ or Rust libraries in "FFI-friendly", simplified APIs. Any C++
-interface can be called or implemented by Rust code.
+integrating the C++ and Rust ecosystems.
 
-**Current status:** Crubit is aiming for an initial stable "MVP" version,
-comparable to `bindgen` and `cbindgen`. This will support basic datatypes like
-integers and pointers, (rust-movable) structs/unions/enums, and `extern "C"`
-functions.
+## Status
 
-<!-- TODO(b/276366603): Link to reference doc which specifies *exactly* what is
-supported. -->
+Support for calling FFI-friendly C++ from Rust is in progress.
+
+Support for calling Rust from C++ will arrive in 2024H2.
 
 ## Example
 
 Consider the following C++ function:
 
 ```c++
-extern "C" bool IsAbsPath(std::string_view path);
+extern "C" bool IsGreater(int lhs, int rhs);
 ```
 
 This function, if present in a header file which is processed by Crubit, becomes
 callable from Rust as if it were defined as:
 
 ```rs
-pub fn IsAbsPath(path: std::string_view) -> bool {...}
+pub fn IsGreater(lhs: ffi::c_int, rhs: ffi::c_int) -> bool {...}
 ```
 
-There are some temporary restrictions on the API shape. For example, if `path`
-were a `std::string`, or a non-`extern "C"` function, it would not be callable
-from Rust directly via Crubit. (For example, `std::string` is not rust-movable.)
-These restrictions will be relaxed over time.
+Note: There are some temporary restrictions on the API shape. For example,
+functions that are not `extern "C"`, or that accept a type like `std::string`,
+can't be called from Rust directly via Crubit. These restrictions will be
+relaxed over time.
 
-For actual copy-pastable examples on getting started with Crubit, see the
-[`examples/`](http://examples) subdirectory.
-`examples/cpp` includes code which actually calls C++ via Crubit, and a snapshot
-of what the generated interface looks like.
+## Getting Started
 
-<!-- TODO(b/276366603): Link to a codelab and reference documentation.-->
+Here are some resources for getting started with Crubit:
+
+*   [Rust Bindings for C++ Libraries](https://github.com/google/crubit/tree/main/docs/cpp/)
+    is a detailed walkthrough on how to use C++ from Rust using Crubit.
+
+*   The [`examples/cpp/`](http://examples/cpp)
+    directory has copy-pastable examples of calling C++ from Rust, together with
+    snapshots of what the generated Rust interface looks like.
 
 ## Building Crubit
 

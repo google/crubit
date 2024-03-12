@@ -1,13 +1,18 @@
 # Rust bindings for C++ `enum`s
 
-C++ `enum`s are translated to a Rust `struct` with a similar API to a Rust
-`enum`.
+A C++ `enum` is mapped to a Rust `struct` with a similar API to a Rust `enum`.
 
 *   The enumerated constants are present as associated constants: `MyEnum::kFoo`
     in C++ is `MyEnum::kFoo` in Rust.
 *   The enum can be converted to and from its underlying type using `From` and
     `Into`. For example, `static_cast<int32_t>(x)` is `i32::from(x)` in Rust,
     and vice versa `static_cast<MyEnum>(x)` is `MyEnum::from(x)`.
+
+However, **a C++ enum is not a Rust enum**. Some features of Rust enums are not
+supported:
+
+*   C++ enums must be converted using `From` and `Into`, not `as`.
+*   C++ enums do not have exhaustive pattern matching.
 
 ## Example
 
@@ -36,8 +41,8 @@ Rust enums, in contrast, are exhaustive: any value not explicitly listed in the
 [undefined behavior](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)
 to attempt to create one.
 
-Since something like `static_cast<Color>(42)` is not in the list of enumerators,
-a Rust `enum` cannot be used to represent an arbitrary C++ `enum`. Instead, it
-translates to a `struct`. This `struct` is given the most natural and
+Since a value like `static_cast<Color>(42)` is not in the list of enumerators, a
+Rust `enum` cannot be used to represent an arbitrary C++ `enum`. Instead, the
+Rust bindings are a `struct`. This `struct` is given the most natural and
 `enum`-like API possible, though there are still gaps. (Casts using `as`, for
 example, will not work with a C++ enum.)
