@@ -8,6 +8,7 @@ load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_binary",
     "crubit_rust_test",
+    "crubit_sh_test",
 )
 
 package(default_applicable_licenses = ["//:license"])
@@ -80,7 +81,7 @@ crubit_rust_test(
     ],
 )
 
-sh_test(
+crubit_sh_test(
     name = "cc_bindings_from_rs_sh_test",
     srcs = ["cc_bindings_from_rs_sh_test.sh"],
     data = [
