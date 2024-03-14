@@ -93,7 +93,7 @@ where
         output_dir: None,
         file_loader: None,
         lint_caps: Default::default(),
-        parse_sess_created: None,
+        psess_created: None,
         register_lints: None,
         override_queries: None,
         make_codegen_backend: None,
