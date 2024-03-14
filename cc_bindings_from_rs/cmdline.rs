@@ -77,7 +77,10 @@ impl Cmdline {
         //
         // TODO(b/254688847): Decide whether to replace this with a `clap`-declared,
         // `--help`-exposed `--flagfile <path>`.
-        let args = rustc_driver::args::arg_expand_all(&early_error_handler, args);
+        let args = match rustc_driver::args::arg_expand_all(&early_error_handler, args) {
+            Ok(args) => args,
+            Err(_) => bail!("Error from rustc_driver::args::arg_expand_all"),
+        };
 
         // Parse `args` using the parser `derive`d by the `clap` crate.
         let mut cmdline = Self::try_parse_from(args)?;
