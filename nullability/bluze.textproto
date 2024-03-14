@@ -34,3 +34,11 @@ buildable_unit: {
     on_demand_frequency: EVERY_4_HOURS
   }
 }
+continuous_tests: {
+  name: "crubit.nullability"
+  buildable_unit_name: "crubit.nullability"
+}
+continuous_tests: {
+  name: "crubit.nullability.opt"
+  buildable_unit_name: "crubit.nullability.opt"
+}
