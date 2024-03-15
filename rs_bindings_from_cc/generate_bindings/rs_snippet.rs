@@ -9,6 +9,7 @@ use code_gen_utils::make_rs_ident;
 use code_gen_utils::NamespaceQualifier;
 use error_report::bail;
 use ir::*;
+use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 use std::collections::HashSet;
@@ -386,33 +387,59 @@ impl RsTypeKind {
         matches!(self, RsTypeKind::Pointer { .. })
     }
 
-    /// Returns the features required to use this type.
+    /// Returns the features required to use this type which are not already
+    /// enabled.
     ///
     /// If a function accepts or returns this type, or an alias refers to this
     /// type, then the function or type alias will itself also require this
     /// feature. However, in the case of fields inside compound data types,
     /// only those fields require the feature, not the entire type.
-    pub fn required_crubit_features(&self) -> Result<flagset::FlagSet<CrubitFeature>> {
+    pub fn required_crubit_features(
+        &self,
+        enabled_features: flagset::FlagSet<ir::CrubitFeature>,
+    ) -> (flagset::FlagSet<ir::CrubitFeature>, String) {
         // TODO(b/318006909): Explain why a given feature is required, don't just return
         // a FlagSet.
 
-        /// Required features, sans recursion.
-        fn required_crubit_features_flat(
-            rs_type_kind: &RsTypeKind,
-        ) -> Result<flagset::FlagSet<CrubitFeature>> {
+        let mut missing_features = <flagset::FlagSet<ir::CrubitFeature>>::default();
+        let mut reasons = <std::collections::BTreeSet<std::borrow::Cow<'static, str>>>::new();
+        let mut require_feature =
+            |required_feature: ir::CrubitFeature,
+             reason: Option<&dyn Fn() -> std::borrow::Cow<'static, str>>| {
+                let required_features =
+                    <flagset::FlagSet<ir::CrubitFeature>>::from(required_feature);
+                let missing = required_features - enabled_features;
+                if !missing.is_empty() {
+                    missing_features |= missing;
+                    if let Some(reason) = reason {
+                        reasons.insert(reason());
+                    }
+                }
+            };
+
+        for rs_type_kind in self.dfs_iter() {
             match rs_type_kind {
-                RsTypeKind::Pointer { .. } => Ok(CrubitFeature::ExternC.into()),
+                RsTypeKind::Pointer { .. } => require_feature(CrubitFeature::ExternC, None),
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
-                    Ok(CrubitFeature::Experimental.into())
+                    require_feature(
+                        CrubitFeature::Experimental,
+                        Some(&|| "references are not supported".into()),
+                    );
                 }
                 RsTypeKind::FuncPtr { abi, .. } => {
                     if &**abi == "C" {
-                        Ok(CrubitFeature::ExternC.into())
+                        require_feature(CrubitFeature::ExternC, None);
                     } else {
-                        Ok(CrubitFeature::Experimental.into())
+                        require_feature(
+                            CrubitFeature::Experimental,
+                            Some(&|| "functions must be not use a non-C calling convention".into()),
+                        );
                     }
                 }
-                RsTypeKind::IncompleteRecord { .. } => Ok(CrubitFeature::Experimental.into()),
+                RsTypeKind::IncompleteRecord { .. } => require_feature(
+                    CrubitFeature::Experimental,
+                    Some(&|| format!("{rs_type_kind} is not a complete type)").into()),
+                ),
                 // Here, we can very carefully be non-recursive into the _structure_ of the type.
                 //
                 // Whether a record type is supported in rust does _not_ depend on whether each
@@ -424,26 +451,27 @@ impl RsTypeKind {
                     // Types which aren't rust-movable, or which are template instantiations, are
                     // only supported experimentally.
                     if rs_type_kind.is_unpin() && record.defining_target.is_none() {
-                        Ok(CrubitFeature::ExternC.into())
+                        require_feature(CrubitFeature::ExternC, None)
                     } else {
-                        Ok(CrubitFeature::Experimental.into())
+                        require_feature(
+                            CrubitFeature::Experimental,
+                            Some(&|| {
+                                format!("<internal link>_relocatable_error: {rs_type_kind} is not rust-movable").into()
+                            }),
+                        )
                     }
                 }
-                RsTypeKind::Enum { .. } => Ok(CrubitFeature::ExternC.into()),
+                RsTypeKind::Enum { .. } => require_feature(CrubitFeature::ExternC, None),
                 // the alias itself is extern_c, but the overall features require depends on the
                 // aliased type, which is also visited by dfs_iter.
-                RsTypeKind::TypeAlias { .. } => Ok(CrubitFeature::ExternC.into()),
-                RsTypeKind::Primitive { .. } => Ok(CrubitFeature::ExternC.into()),
-                RsTypeKind::Option { .. } => Ok(CrubitFeature::ExternC.into()),
-                RsTypeKind::Other { .. } => Ok(CrubitFeature::Experimental.into()),
+                RsTypeKind::TypeAlias { .. } => require_feature(CrubitFeature::ExternC, None),
+                RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::ExternC, None),
+                RsTypeKind::Option { .. } => require_feature(CrubitFeature::ExternC, None),
+                // Fallback case, we can't really give a good error message here.
+                RsTypeKind::Other { .. } => require_feature(CrubitFeature::Experimental, None),
             }
         }
-
-        let mut features = flagset::FlagSet::<CrubitFeature>::default();
-        for rs_type_kind in self.dfs_iter() {
-            features |= required_crubit_features_flat(rs_type_kind)?;
-        }
-        Ok(features)
+        (missing_features, reasons.into_iter().join(", "))
     }
 
     /// Returns true if the type can be passed by value through `extern "C"` ABI
@@ -866,7 +894,6 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use itertools::Itertools;
     use token_stream_matchers::assert_rs_matches;
 
     #[test]
