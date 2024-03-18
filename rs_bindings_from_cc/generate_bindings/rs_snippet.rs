@@ -13,7 +13,6 @@ use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 use std::collections::HashSet;
-use std::iter::Iterator;
 use std::rc::Rc;
 use token_stream_printer::write_unformatted_tokens;
 

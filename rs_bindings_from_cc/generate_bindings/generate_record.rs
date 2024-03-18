@@ -14,7 +14,7 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{quote, ToTokens};
 use std::collections::BTreeSet;
-use std::iter::{self, Iterator};
+use std::iter;
 use std::rc::Rc;
 
 // TODO(jeanpierreda): Make this a method on RsTypeKind, or on Record?
