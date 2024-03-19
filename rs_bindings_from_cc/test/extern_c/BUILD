@@ -6,14 +6,14 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "has_bindings",
     hdrs = ["has_bindings.h"],
-    aspect_hints = ["//features:extern_c"],
+    aspect_hints = ["//features:supported"],
     deps = ["@absl//absl/base:core_headers"],
 )
 
 crubit_test_cc_library(
     name = "no_bindings",
     hdrs = ["no_bindings.h"],
-    aspect_hints = ["//features:extern_c"],
+    aspect_hints = ["//features:supported"],
 )
 
 crubit_rust_test(

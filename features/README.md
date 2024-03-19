@@ -51,19 +51,12 @@ processing pass. No bindings are generated.
 The `supported` feature enables generally-available C++/Rust interop
 capabilities, for libraries that specifically support FFI callers.
 
-`supported` is currently empty. No subset of Crubit is generally-available, yet.
-b/313732494 tracks the initial release of a nonempty `:supported`.
-
-<!-- TODO(b/313732494): update here when a release happens. :) -->
+See <internal link> for documentation on what this includes.
 
 ### `"//features:extern_c"` {#extern_c}
 
-The `extern_c` feature enables simple `extern "C"` functions, and simple types.
-
-`extern_c` is the next feature release of Crubit, and will become part of
-`:supported` in b/313732494.
-
-<!-- TODO(b/313732494): update here when a release happens. :) -->
+`extern_c` is the feature for the in-development version of Crubit. For calling
+C++ from Rust, use `:supported` instead.
 
 ### `"//features:experimental"` {#experimental}
 

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/function:example_lib
-// Features: extern_c
+// Features: extern_c, supported
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]

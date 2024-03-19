@@ -9,7 +9,7 @@ cc_library(
     hdrs = ["example.h"],
 
     # Opt into using Crubit.
-    aspect_hints = ["//features:extern_c"],
+    aspect_hints = ["//features:supported"],
 )
 
 rust_binary(

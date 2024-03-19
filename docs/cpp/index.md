@@ -22,8 +22,8 @@ advanced features like templates or virtual inheritance.
 The rest of this document goes over how to create a C++ library that can be
 called from Rust, and how to actually call it from Rust. The quick summary is:
 
-1.  A `cc_library` gets (nonempty) Rust bindings if it specifies
-    `aspect_hints = ["//features:extern_c"]`.
+1.  A `cc_library` gets (nonempty) Rust bindings if it specifies `aspect_hints =
+    ["//features:supported"]`.
 
 2.  Any Rust build target can depend on the bindings for a `cc_library`, by
     specifying `cc_deps=["//path/to:target"]`.
@@ -102,35 +102,37 @@ bindings it did not generate:
 // Generated from: examples/cpp/function/example.h;l=11
 // Error while generating bindings for item 'crubit_add_two_integers':
 // Can't generate bindings for crubit_add_two_integers, because of missing required features (<internal link>):
-// //examples/cpp/function:example_lib_broken needs [//features:extern_c] for crubit_add_two_integers (return type)
-// //examples/cpp/function:example_lib_broken needs [//features:extern_c] for crubit_add_two_integers (the type of x (parameter #0))
-// //examples/cpp/function:example_lib_broken needs [//features:extern_c] for crubit_add_two_integers (the type of y (parameter #1))
-// //examples/cpp/function:example_lib_broken needs [//features:extern_c] for crubit_add_two_integers (extern \"C\" function)
+// //examples/cpp/function:example_lib_broken needs [//features:supported] for crubit_add_two_integers (return type)
+// //examples/cpp/function:example_lib_broken needs [//features:supported] for crubit_add_two_integers (the type of x (parameter #0))
+// //examples/cpp/function:example_lib_broken needs [//features:supported] for crubit_add_two_integers (the type of y (parameter #1))
+// //examples/cpp/function:example_lib_broken needs [//features:supported] for crubit_add_two_integers (extern \"C\" function)
 ```
 
 This error is saying something important. It was trying to generate bindings for
 the function `crubit_add_two_integers`, but it couldn't, because four different
-things about the function require the `extern_c` feature to be enabled on the
-target. The parameter and return types require `extern_c`, as
-does the function itself in the abstract (as it is an `extern "C"` function).
+things about the function require the `supported` feature to be enabled on the
+target. The parameter and return types require `supported`, as does the function
+itself in the abstract (as it is an `extern "C"` function).
 
-`extern_c` is the name of the Crubit features related to C-like interfaces.
-Other functions and classes might require `experimental`, for experimental
-features. For example, if we had defined an `operator+`, or if the function were
-not `extern "C"`. For more on this, see <internal link>.
+`supported` indicates that a library target supports Rust callers via Crubit,
+using the stable features. (Temporarily, you may see references to `extern_c` --
+these are part of `supported`). Other functions and classes might
+require `experimental`, for experimental features of Crubit. For example, if we
+had defined an`operator+`, or if the function were not`extern "C"`. For more on
+this, see <internal link>.
 
 ### Enable Crubit on a target {#enable}
 
 To enable Crubit on a C++ target, one must pass an argument, via `aspect_hints`.
 Specifically, as mentioned in the comments, the target must enable the
-`extern_c` feature:
+`supported` feature:
 
 ```live-snippet
 cs/file:examples/cpp/function/BUILD symbol:\bexample_lib\b
 ```
 
 This tells Crubit that it can generate bindings for this target, for any part of
-the library that uses features from `extern_c`. Now, if we look at a preview of
+the library that uses features from `supported`. Now, if we look at a preview of
 the automatically generated bindings:
 
 ```sh

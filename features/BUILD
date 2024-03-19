@@ -5,6 +5,7 @@ load(
 
 _SUPPORTED_FEATURES = [
     "supported",
+    "extern_c",
 ]
 
 _EXPERIMENTAL_CLIENTS = [
@@ -17,16 +18,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# Use :supported if you're calling C++ from Rust.
 crubit_feature_hint(
     name = "extern_c",
-    crubit_features = ["extern_c"],
+    crubit_features = _SUPPORTED_FEATURES,
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 
 crubit_feature_hint(
     name = "experimental",
     crubit_features = _SUPPORTED_FEATURES + [
-        "extern_c",
         "experimental",
     ],
     visibility = _EXPERIMENTAL_CLIENTS,
