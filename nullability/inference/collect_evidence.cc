@@ -36,8 +36,8 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Analysis/FlowSensitive/AdornedCFG.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
-#include "clang/Analysis/FlowSensitive/ControlFlowContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
@@ -903,9 +903,9 @@ llvm::Error collectEvidenceFromImplementation(
         "Implementation must be a function with a body.");
   }
 
-  llvm::Expected<dataflow::ControlFlowContext> ControlFlowContext =
-      dataflow::ControlFlowContext::build(*Func);
-  if (!ControlFlowContext) return ControlFlowContext.takeError();
+  llvm::Expected<dataflow::AdornedCFG> ACFG =
+      dataflow::AdornedCFG::build(*Func);
+  if (!ACFG) return ACFG.takeError();
 
   auto OwnedSolver = std::make_unique<WatchedLiteralsSolver>(MaxSATIterations);
   const WatchedLiteralsSolver *Solver = OwnedSolver.get();
@@ -939,7 +939,7 @@ llvm::Error collectEvidenceFromImplementation(
 
   llvm::Error Error =
       dataflow::runDataflowAnalysis(
-          *ControlFlowContext, Analysis, Environment,
+          *ACFG, Analysis, Environment,
           [&](const CFGElement &Element,
               const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
                   &State) {

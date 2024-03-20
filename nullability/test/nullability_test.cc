@@ -47,8 +47,8 @@
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Analysis/FlowSensitive/AdornedCFG.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
-#include "clang/Analysis/FlowSensitive/ControlFlowContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
@@ -325,12 +325,12 @@ void runTest(const FunctionDecl &Func, Diagnoser &Diags,
   dataflow::DataflowAnalysisContext DACtx(
       std::make_unique<dataflow::WatchedLiteralsSolver>(), Opts);
   auto &Ctx = Func.getDeclContext()->getParentASTContext();
-  auto CFCtx = require(dataflow::ControlFlowContext::build(Func));
+  auto ACFG = require(dataflow::AdornedCFG::build(Func));
   dataflow::Environment Env(DACtx, Func);
   PointerNullabilityAnalysis Analysis(Ctx, Env);
   auto Symbolic = bindSymbolicNullability(Func, Analysis, DACtx.arena());
   require(
-      runDataflowAnalysis(CFCtx, Analysis, std::move(Env),
+      runDataflowAnalysis(ACFG, Analysis, std::move(Env),
                           [&](const CFGElement &Elt, AnalysisState &State) {
                             if (auto CS = Elt.getAs<CFGStmt>())
                               if (auto *CE = dyn_cast<CallExpr>(CS->getStmt()))

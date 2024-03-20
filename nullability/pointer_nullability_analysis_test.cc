@@ -13,7 +13,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/Analysis/CFG.h"
-#include "clang/Analysis/FlowSensitive/ControlFlowContext.h"
+#include "clang/Analysis/FlowSensitive/AdornedCFG.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
@@ -61,12 +61,12 @@ TEST(PointerNullabilityAnalysis, AssignNullabilityVariable) {
   dataflow::DataflowAnalysisContext DACtx(
       std::make_unique<dataflow::WatchedLiteralsSolver>(), Opts);
   auto &A = DACtx.arena();
-  auto CFCtx = dataflow::ControlFlowContext::build(*Target);
+  auto ACFG = dataflow::AdornedCFG::build(*Target);
   dataflow::Environment Env(DACtx, *Target);
   PointerNullabilityAnalysis Analysis(AST.context(), Env);
   auto PN = Analysis.assignNullabilityVariable(P, A);
   auto ExitState = std::move(
-      cantFail(dataflow::runDataflowAnalysis(*CFCtx, Analysis, std::move(Env)))
+      cantFail(dataflow::runDataflowAnalysis(*ACFG, Analysis, std::move(Env)))
           .front());
   ASSERT_TRUE(ExitState.has_value());
   // Get the nullability model of the return value.
