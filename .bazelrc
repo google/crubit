@@ -12,3 +12,6 @@ build:generic_clang --copt=-fno-rtti --host_copt=-fno-rtti
 
 build --config=generic_clang
 build --@rules_rust//rust/toolchain/channel=nightly
+
+# Directly invoke the Crubit aspects by name when running `build`, and get the generated files.
+build:crubit-genfiles --aspects=//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl%rust_bindings_from_cc_aspect,//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl%cc_bindings_from_rust_aspect --output_groups=out

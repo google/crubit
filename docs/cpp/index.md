@@ -31,10 +31,7 @@ called from Rust, and how to actually call it from Rust. The quick summary is:
 3.  The bindings can be previewed using the following command:
 
     ```sh
-    $ bazel build --aspects \
-      //rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl%rust_bindings_from_cc_aspect \
-      --output_groups=out \
-      //path/to:target
+    $ bazel build --config=crubit-genfiles //path/to:target
     ```
 
 ### Write a `cc_library` target {#cc_library}
@@ -64,15 +61,11 @@ To examine the generated C++ bindings for the target, you can run the following
 command:
 
 ```sh
-$ bazel build --aspects \
-  //rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl%rust_bindings_from_cc_aspect \
-  --output_groups=out \
-  //examples/cpp/function:example_lib_broken
+$ bazel build --config=crubit-genfiles //examples/cpp/function:example_lib_broken
 ```
 
 This is the best way to preview the generated bindings for a given C++ target
-right now. (b/319926369 will make this a bit easier in some circumstances.) You might
-end up using this a lot, so keep it in your shell history.
+right now. You might end up using this a lot, so keep it in your shell history.
 
 If you run the above command, you should see some output like the following:
 
@@ -136,10 +129,7 @@ the library that uses features from `supported`. Now, if we look at a preview of
 the automatically generated bindings:
 
 ```sh
-$ bazel build --aspects \
-  //rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl%rust_bindings_from_cc_aspect \
-  --output_groups=out \
-  //examples/cpp/function:example_lib
+$ bazel build --config=crubit-genfiles //examples/cpp/function:example_lib
 ```
 
 We can see the fully-fledged bindings for the library:

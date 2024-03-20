@@ -48,10 +48,7 @@ To specifically see what bindings Crubit generates for a bazel target, one can
 specifically invoke Crubit's aspect and inspect the generated output:
 
 ```sh
-$ bazel build --aspects \
-  //rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl%rust_bindings_from_cc_aspect \
-  --output_groups=out \
-  //some/cc/library/target:here
+$ bazel build --config=crubit-genfiles //some/cc/library/target:here
 ```
 
 The source files used for interop will be output into bazel-bin, and their paths
