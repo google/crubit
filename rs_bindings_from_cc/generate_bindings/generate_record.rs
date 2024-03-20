@@ -125,7 +125,7 @@ fn get_field_rs_type_kind_for_layout(
         Ok(t) => db.rs_type_kind(t.rs_type.clone())?,
         Err(e) => bail!("{e}"),
     };
-    // In extern_c, we replace nontrivial fields with opaque blobs.
+    // In supported, we replace nontrivial fields with opaque blobs.
     // This is because we likely don't want the `ManuallyDrop<T>` solution to be the
     // one users get.
     //
@@ -2408,7 +2408,7 @@ mod tests {
     ///
     /// This is hard to test any other way than token comparison!
     #[test]
-    fn test_extern_c_suppressed_field_types() -> Result<()> {
+    fn test_supported_suppressed_field_types() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"
             struct Nontrivial {
@@ -2422,7 +2422,7 @@ mod tests {
         "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::ExternC.into();
+            ir::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
@@ -2438,7 +2438,7 @@ mod tests {
     /// Nontrivial fields are replaced with opaque blobs, even if they're
     /// supported!
     #[test]
-    fn test_extern_c_nontrivial_field() -> Result<()> {
+    fn test_supported_nontrivial_field() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"
             struct [[clang::trivial_abi]] Inner {~Inner();};
@@ -2446,7 +2446,7 @@ mod tests {
             "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::ExternC.into();
+            ir::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         // Note: inner is a supported type, so it isn't being replaced by a blob because
         // it's unsupporter or anything.
@@ -2464,7 +2464,7 @@ mod tests {
     }
 
     #[test]
-    fn test_extern_c_no_unique_address_field() -> Result<()> {
+    fn test_supported_no_unique_address_field() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"
             struct Struct final {
@@ -2473,7 +2473,7 @@ mod tests {
         "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::ExternC.into();
+            ir::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,

@@ -825,12 +825,14 @@ fn required_crubit_features(
         Item::UnsupportedItem(..) => {}
         Item::Func(func) => {
             if func.name == UnqualifiedIdentifier::Destructor {
-                // We support destructors in extern_c even though they use some features we
+                // We support destructors in supported even though they use some features we
                 // don't generally support with that feature set, because in this
                 // particular case, it's safe.
-                require_features(&mut missing_features, ir::CrubitFeature::ExternC.into(), &|| {
-                    "destructors".into()
-                });
+                require_features(
+                    &mut missing_features,
+                    ir::CrubitFeature::Supported.into(),
+                    &|| "destructors".into(),
+                );
             } else {
                 let return_type = db.rs_type_kind(func.return_type.rs_type.clone())?;
                 require_rs_type_kind(&mut missing_features, &return_type, &|| "return type".into());
@@ -843,7 +845,7 @@ fn required_crubit_features(
                 if func.is_extern_c {
                     require_features(
                         &mut missing_features,
-                        ir::CrubitFeature::ExternC.into(),
+                        ir::CrubitFeature::Supported.into(),
                         &|| "extern \"C\" function".into(),
                     );
                 } else {
@@ -920,7 +922,7 @@ fn required_crubit_features(
             );
         }
         Item::Namespace(_) => {
-            require_features(&mut missing_features, ir::CrubitFeature::ExternC.into(), &|| {
+            require_features(&mut missing_features, ir::CrubitFeature::Supported.into(), &|| {
                 "namespace".into()
             });
         }
@@ -1081,7 +1083,7 @@ fn format_cc_ident(ident: &str) -> TokenStream {
 
 fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind> {
     if let Some(unknown_attr) = &ty.unknown_attr {
-        // In most places, we only bail for unknown attributes in extern_c. However,
+        // In most places, we only bail for unknown attributes in supported. However,
         // it's difficult and expensive to generate an RsTypeKind differently
         // depending on the translation unit for the item that contains it.
         // Rather than trying to keep going in experimental, we bail
@@ -2994,7 +2996,7 @@ pub(crate) mod tests {
     ///
     /// This is hard to test any other way than token comparison!
     #[test]
-    fn test_extern_c_unknown_attr_enumerator() -> Result<()> {
+    fn test_supported_unknown_attr_enumerator() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"
             enum Enum {
@@ -3003,19 +3005,19 @@ pub(crate) mod tests {
             "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::ExternC.into();
+            ir::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(rs_api, quote! {pub struct Enum});
         assert_rs_not_matches!(rs_api, quote! {kHidden});
         Ok(())
     }
 
-    /// Namespaces with an unknown attribute are not present in extern_c.
+    /// Namespaces with an unknown attribute are not present in supported.
     ///
     /// This is hard to test any other way than token comparison, because it's
     /// hard to test for the nonexistence of a module.
     #[test]
-    fn test_extern_c_unknown_attr_namespace() -> Result<()> {
+    fn test_supported_unknown_attr_namespace() -> Result<()> {
         for nested_notpresent in
             ["struct NotPresent {};", "struct NotPresent;", "enum NotPresent {};"]
         {
@@ -3031,7 +3033,7 @@ pub(crate) mod tests {
                 "#
             ))?;
             *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-                ir::CrubitFeature::ExternC.into();
+                ir::CrubitFeature::Supported.into();
             let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
             // The namespace, and everything in it or using it, will be missing from the
             // output.
@@ -3045,7 +3047,7 @@ pub(crate) mod tests {
     /// Namespaces with an unknown attribute are still merged with the same
     /// namespace with no unknown attribute.
     #[test]
-    fn test_extern_c_unknown_attr_namespace_merge() -> Result<()> {
+    fn test_supported_unknown_attr_namespace_merge() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"
             namespace unknown_attr_namespace {
@@ -3060,7 +3062,7 @@ pub(crate) mod tests {
             "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::ExternC.into();
+            ir::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         // The namespace, and everything in it or using it, will be missing from the
         // output.
@@ -3071,10 +3073,10 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    /// Namespaces with an unknown attribute are not present in extern_c, but
+    /// Namespaces with an unknown attribute are not present in supported, but
     /// their typedefs are.
     #[test]
-    fn test_extern_c_unknown_attr_namespace_typedef() -> Result<()> {
+    fn test_supported_unknown_attr_namespace_typedef() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"
             namespace [[deprecated]] unknown_attr_namespace {
@@ -3087,7 +3089,7 @@ pub(crate) mod tests {
             "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::ExternC.into();
+            ir::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         // The namespace, and everything in it or using it, will be missing from the
         // output.
@@ -3097,9 +3099,9 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    /// The default crubit feature set currently doesn't include extern_c.
+    /// The default crubit feature set currently doesn't include supported.
     #[test]
-    fn test_default_crubit_features_disabled_extern_c() -> Result<()> {
+    fn test_default_crubit_features_disabled_supported() -> Result<()> {
         for item in [
             "extern \"C\" void NotPresent() {}",
             "struct NotPresent {};",
@@ -3117,7 +3119,7 @@ pub(crate) mod tests {
                 // Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
                 // Error while generating bindings for item 'NotPresent':\n\
                 // Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
-                // //test:testing_target needs [//features:extern_c] for NotPresent";
+                // //test:testing_target needs [//features:supported] for NotPresent";
             assert!(contents.contains(expected), "Missing expected string: {contents}\n")
         }
         Ok(())
@@ -3141,7 +3143,7 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn test_default_crubit_features_disabled_dependency_extern_c_function_parameter() -> Result<()>
+    fn test_default_crubit_features_disabled_dependency_supported_function_parameter() -> Result<()>
     {
         for dependency in ["struct NotPresent {};"] {
             let mut ir = ir_from_cc_dependency("void Func(NotPresent);", dependency)?;
@@ -3153,7 +3155,7 @@ pub(crate) mod tests {
                 Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
                 Error while generating bindings for item 'Func':\n\
                 Failed to format type of parameter 0: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
-                //test:dependency needs [//features:extern_c] for NotPresent";
+                //test:dependency needs [//features:supported] for NotPresent";
             assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         }
         Ok(())
@@ -3178,8 +3180,8 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn test_default_crubit_features_disabled_dependency_extern_c_function_return_type() -> Result<()>
-    {
+    fn test_default_crubit_features_disabled_dependency_supported_function_return_type()
+    -> Result<()> {
         let mut ir = ir_from_cc_dependency("NotPresent Func();", "struct NotPresent {};")?;
         ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -3189,7 +3191,7 @@ pub(crate) mod tests {
             Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
             Error while generating bindings for item 'Func':\n\
             Failed to format return type: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
-            //test:dependency needs [//features:extern_c] for NotPresent";
+            //test:dependency needs [//features:supported] for NotPresent";
         assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         Ok(())
     }

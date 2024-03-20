@@ -418,7 +418,7 @@ impl RsTypeKind {
 
         for rs_type_kind in self.dfs_iter() {
             match rs_type_kind {
-                RsTypeKind::Pointer { .. } => require_feature(CrubitFeature::ExternC, None),
+                RsTypeKind::Pointer { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
                     require_feature(
                         CrubitFeature::Experimental,
@@ -427,7 +427,7 @@ impl RsTypeKind {
                 }
                 RsTypeKind::FuncPtr { abi, .. } => {
                     if &**abi == "C" {
-                        require_feature(CrubitFeature::ExternC, None);
+                        require_feature(CrubitFeature::Supported, None);
                     } else {
                         require_feature(
                             CrubitFeature::Experimental,
@@ -450,7 +450,7 @@ impl RsTypeKind {
                     // Types which aren't rust-movable, or which are template instantiations, are
                     // only supported experimentally.
                     if rs_type_kind.is_unpin() && record.defining_target.is_none() {
-                        require_feature(CrubitFeature::ExternC, None)
+                        require_feature(CrubitFeature::Supported, None)
                     } else {
                         require_feature(
                             CrubitFeature::Experimental,
@@ -460,12 +460,12 @@ impl RsTypeKind {
                         )
                     }
                 }
-                RsTypeKind::Enum { .. } => require_feature(CrubitFeature::ExternC, None),
-                // the alias itself is extern_c, but the overall features require depends on the
+                RsTypeKind::Enum { .. } => require_feature(CrubitFeature::Supported, None),
+                // the alias itself is supported, but the overall features require depends on the
                 // aliased type, which is also visited by dfs_iter.
-                RsTypeKind::TypeAlias { .. } => require_feature(CrubitFeature::ExternC, None),
-                RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::ExternC, None),
-                RsTypeKind::Option { .. } => require_feature(CrubitFeature::ExternC, None),
+                RsTypeKind::TypeAlias { .. } => require_feature(CrubitFeature::Supported, None),
+                RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::Supported, None),
+                RsTypeKind::Option { .. } => require_feature(CrubitFeature::Supported, None),
                 // Fallback case, we can't really give a good error message here.
                 RsTypeKind::Other { .. } => require_feature(CrubitFeature::Experimental, None),
             }
