@@ -42,7 +42,7 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
-#include "clang/Analysis/FlowSensitive/ControlFlowContext.h"
+#include "clang/Analysis/FlowSensitive/AdornedCFG.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
@@ -541,8 +541,8 @@ llvm::Error AnalyzeFunctionBody(
     const DiagnosticReporter& diag_reporter,
     ObjectRepository& object_repository, PointsToMap& points_to_map,
     LifetimeConstraints& constraints, std::string* cfg_dot) {
-  auto cfctx = clang::dataflow::ControlFlowContext::build(*func);
-  if (!cfctx) return cfctx.takeError();
+  auto acfg = clang::dataflow::AdornedCFG::build(*func);
+  if (!acfg) return acfg.takeError();
 
   clang::dataflow::DataflowAnalysisContext analysis_context(
       std::make_unique<clang::dataflow::WatchedLiteralsSolver>());
@@ -554,14 +554,14 @@ llvm::Error AnalyzeFunctionBody(
   llvm::Expected<std::vector<
       std::optional<clang::dataflow::DataflowAnalysisState<LifetimeLattice>>>>
       maybe_block_to_output_state =
-          clang::dataflow::runDataflowAnalysis(*cfctx, analysis, environment);
+          clang::dataflow::runDataflowAnalysis(*acfg, analysis, environment);
   if (!maybe_block_to_output_state) {
     return maybe_block_to_output_state.takeError();
   }
   auto& block_to_output_state = *maybe_block_to_output_state;
 
   const auto& exit_block_state =
-      block_to_output_state[cfctx->getCFG().getExit().getBlockID()];
+      block_to_output_state[acfg->getCFG().getExit().getBlockID()];
   if (!exit_block_state.has_value()) {
     assert(false);
     return llvm::createStringError(
@@ -611,7 +611,7 @@ llvm::Error AnalyzeFunctionBody(
   }
 
   if (cfg_dot) {
-    *cfg_dot = CreateCfgDot(cfctx->getCFG(), func->getASTContext(),
+    *cfg_dot = CreateCfgDot(acfg->getCFG(), func->getASTContext(),
                             block_to_output_state, object_repository);
   }
 
