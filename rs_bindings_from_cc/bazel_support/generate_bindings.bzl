@@ -107,10 +107,10 @@ def generate_bindings(
         cc_toolchain = cc_toolchain,
         system_include_directories = depset(
             direct = [
-                # libcxx headers.
-                cc_toolchain.built_in_include_directories[0],
+               # libcxx headers.
+               cc_toolchain.built_in_include_directories[0],
             ] + _get_include_paths_for_builtin_headers_and_compiler_rt_headers(ctx, cc_toolchain) + [
-                cc_toolchain.built_in_include_directories[2],
+               cc_toolchain.built_in_include_directories[2],
             ],
             transitive = [compilation_context.system_includes],
         ),
