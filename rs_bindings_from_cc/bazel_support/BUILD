@@ -38,9 +38,6 @@ bzl_library(
 bzl_library(
     name = "toolchain_headers_bzl",
     srcs = ["toolchain_headers.bzl"],
-    visibility = [
-        "//visibility:private",  # Only private by automation, not intent. Owner may accept CLs adding visibility. See <internal link>.
-    ],
     deps = [
         ":providers_bzl",
         ":rust_bindings_from_cc_utils_bzl",
