@@ -14,16 +14,20 @@
 #![allow(nonstandard_style)]
 #![deny(warnings)]
 
-/// Generated from: examples/cpp/function/example.h;l=11
+// Crubit only supports extern C functions right now. As a consequence, the
+// functions need a unique name. (Including the namespace name in the symbol,
+// e.g., `gshoe`, below, is one approach to this.)
+
+/// Generated from: examples/cpp/function/example.h;l=14
 #[inline(always)]
-pub fn crubit_add_two_integers(x: i32, y: i32) -> i32 {
-    unsafe { crate::detail::__rust_thunk___Z23crubit_add_two_integers(x, y) }
+pub fn gshoe_add_two_integers(x: i32, y: i32) -> i32 {
+    unsafe { crate::detail::__rust_thunk___Z22gshoe_add_two_integers(x, y) }
 }
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___Z23crubit_add_two_integers(x: i32, y: i32) -> i32;
+        pub(crate) fn __rust_thunk___Z22gshoe_add_two_integers(x: i32, y: i32) -> i32;
     }
 }
