@@ -421,9 +421,8 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassTemplate) {
     };
     using OuterNullableInner = Outer<int *_Nonnull>::Inner;
   )cpp";
-  // TODO: should be [NonNull]
   EXPECT_THAT(nullVec("Outer<int* _Nonnull>::Inner"),
-              ElementsAre(NullabilityKind::Unspecified));
+              ElementsAre(NullabilityKind::NonNull));
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassInstantiation) {
@@ -611,14 +610,12 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateParamPack) {
       using type = TupleWrapper<X _Nullable...>::Tuple;
     };
   )cpp";
-  // TODO: should be [Unspecified, Nonnull]
   EXPECT_THAT(
       nullVec("TupleWrapper<int*, int* _Nonnull>::Tuple"),
-      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::Unspecified));
-  // TODO: should be [Nullable, Nullable]
+      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::NonNull));
   EXPECT_THAT(
       nullVec("NullableTuple<int*, int* _Nonnull>::type"),
-      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::Unspecified));
+      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable));
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplateWithDefaultArg) {

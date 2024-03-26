@@ -578,10 +578,31 @@ class NullabilityWalker : public TypeVisitor<Impl> {
       ignoreUnexpectedNullability();
     }
     Visit(RT->getDecl()->getDeclContext());
+
+    // Visit template arguments of this record type.
     if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
-      // TODO: if this is an instantiation, these args lack sugar.
-      // We can try to retrieve it from the current template context.
-      for (auto &TA : CTSD->getTemplateArgs().asArray()) Visit(TA);
+      unsigned I = 0;
+
+      // If we have a sugared template context, use the sugar.
+      for (auto Ctx = CurrentTemplateContext; Ctx; Ctx = Ctx->Extends) {
+        if (Ctx->AssociatedDecl != CTSD) continue;
+        llvm::SaveAndRestore SwitchFile(File, Ctx->ArgsFile);
+        llvm::SaveAndRestore OriginalContext(CurrentTemplateContext,
+                                             Ctx->ArgContext);
+        for (unsigned N = Ctx->Args->size(); I < N; ++I) {
+          auto Arg = (*Ctx->Args)[I];
+          Visit(Arg);
+        }
+        break;
+      }
+      // If we didn't see all the declarations's arguments in the template
+      // context, either there wasn't a matching context available or there are
+      // defaulted arguments. Visit (remaining) arguments from the declaration,
+      // without sugar.
+      auto DeclArgs = CTSD->getTemplateArgs().asArray();
+      for (unsigned N = DeclArgs.size(); I < N; ++I) {
+        Visit(DeclArgs[I]);
+      }
     }
   }
 
