@@ -453,7 +453,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::HasFieldWithCustomAlignment: Clone);
     static_assertions::assert_impl_all!(crate::HasFieldWithCustomAlignment: Copy);
     static_assertions::assert_not_impl_any!(crate::HasFieldWithCustomAlignment: Drop);
-    assert!(memoffset::offset_of!(crate::HasFieldWithCustomAlignment, field) == 0);
+    assert!(::core::mem::offset_of!(crate::HasFieldWithCustomAlignment, field) == 0);
 
     assert!(::core::mem::size_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
     assert!(::core::mem::align_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);

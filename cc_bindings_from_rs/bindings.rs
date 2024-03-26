@@ -112,11 +112,6 @@ pub fn generate_bindings(input: &Input) -> Result<Output> {
         // for `char` (and possibly for other built-in types in the future).
         #![allow(improper_ctypes_definitions)] __NEWLINE__
 
-        // Workaround for b/290271595
-        //
-        // TODO(https://github.com/rust-lang/rust/issues/80384): Remove once the feature is
-        // stabilized.
-        #![feature(const_refs_to_cell)] __NEWLINE__
         __NEWLINE__
 
         #rs_body
@@ -1577,7 +1572,7 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
             .filter(|field| field.is_public)
             .map(|Field { rs_name, offset, .. }| {
                 let expected_offset = Literal::u64_unsuffixed(*offset);
-                let actual_offset = quote! { memoffset::offset_of!(#adt_rs_name, #rs_name) };
+                let actual_offset = quote! { ::core::mem::offset_of!(#adt_rs_name, #rs_name) };
                 quote! { const _: () = assert!(#actual_offset == #expected_offset); }
             })
             .collect()
@@ -2564,8 +2559,8 @@ pub mod tests {
                     // `test_format_item_struct_with_fields`.
                     const _: () = assert!(::std::mem::size_of::<::rust_out::Point>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::Point>() == 4);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::Point, x) == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::Point, y) == 4);
+                    const _: () = assert!(::core::mem::offset_of!(::rust_out::Point, x) == 0);
+                    const _: () = assert!(::core::mem::offset_of!(::rust_out::Point, y) == 4);
                 }
             );
         });
@@ -4341,8 +4336,8 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, x) == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, y) == 4);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, x) == 0);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, y) == 4);
                 }
             );
         });
@@ -4404,8 +4399,8 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::TupleStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::TupleStruct>() == 4);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::TupleStruct, 0) == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::TupleStruct, 1) == 4);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::TupleStruct, 0) == 0);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::TupleStruct, 1) == 4);
                 }
             );
         });
@@ -4466,11 +4461,11 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, field2)
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, field2)
                                            == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, field1)
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, field1)
                                            == 4);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, field3)
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, field3)
                                            == 6);
                 }
             );
@@ -4524,9 +4519,9 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 6);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 1);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, field1)
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, field1)
                                            == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, field2)
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, field2)
                                            == 2);
                 }
             );
@@ -4580,8 +4575,8 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, f2) == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, f1) == 4);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, f2) == 0);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, f1) == 4);
                 }
             );
         });
@@ -5319,9 +5314,9 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 20);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct,
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct,
                                                                  unsupported_field) == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct,
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct,
                                                                  successful_field) == 16);
                 }
             );
@@ -5944,9 +5939,9 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 4);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, successful_field) == 0);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, zst1) == 4);
-                    const _: () = assert!( memoffset::offset_of!(::rust_out::SomeStruct, zst2) == 4);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, successful_field) == 0);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, zst1) == 4);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, zst2) == 4);
 
                 }
             );

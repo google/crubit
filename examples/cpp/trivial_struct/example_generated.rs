@@ -52,6 +52,6 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::Position: Clone);
     static_assertions::assert_impl_all!(crate::Position: Copy);
     static_assertions::assert_not_impl_any!(crate::Position: Drop);
-    assert!(memoffset::offset_of!(crate::Position, x) == 0);
-    assert!(memoffset::offset_of!(crate::Position, y) == 4);
+    assert!(::core::mem::offset_of!(crate::Position, x) == 0);
+    assert!(::core::mem::offset_of!(crate::Position, y) == 4);
 };

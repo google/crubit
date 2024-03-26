@@ -2034,21 +2034,21 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::AddableConstMember: Clone);
     static_assertions::assert_impl_all!(crate::AddableConstMember: Copy);
     static_assertions::assert_not_impl_any!(crate::AddableConstMember: Drop);
-    assert!(memoffset::offset_of!(crate::AddableConstMember, field_) == 0);
+    assert!(::core::mem::offset_of!(crate::AddableConstMember, field_) == 0);
 
     assert!(::core::mem::size_of::<crate::AddableNonConstMember>() == 4);
     assert!(::core::mem::align_of::<crate::AddableNonConstMember>() == 4);
     static_assertions::assert_impl_all!(crate::AddableNonConstMember: Clone);
     static_assertions::assert_impl_all!(crate::AddableNonConstMember: Copy);
     static_assertions::assert_not_impl_any!(crate::AddableNonConstMember: Drop);
-    assert!(memoffset::offset_of!(crate::AddableNonConstMember, field_) == 0);
+    assert!(::core::mem::offset_of!(crate::AddableNonConstMember, field_) == 0);
 
     assert!(::core::mem::size_of::<crate::AddableFriend>() == 4);
     assert!(::core::mem::align_of::<crate::AddableFriend>() == 4);
     static_assertions::assert_impl_all!(crate::AddableFriend: Clone);
     static_assertions::assert_impl_all!(crate::AddableFriend: Copy);
     static_assertions::assert_not_impl_any!(crate::AddableFriend: Drop);
-    assert!(memoffset::offset_of!(crate::AddableFriend, field_) == 0);
+    assert!(::core::mem::offset_of!(crate::AddableFriend, field_) == 0);
 
     assert!(::core::mem::size_of::<crate::AddableFreeByConstRef>() == 1);
     assert!(::core::mem::align_of::<crate::AddableFreeByConstRef>() == 1);
@@ -2091,13 +2091,13 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::AddableReturnsVoid: Clone);
     static_assertions::assert_impl_all!(crate::AddableReturnsVoid: Copy);
     static_assertions::assert_not_impl_any!(crate::AddableReturnsVoid: Drop);
-    assert!(memoffset::offset_of!(crate::AddableReturnsVoid, field_) == 0);
+    assert!(::core::mem::offset_of!(crate::AddableReturnsVoid, field_) == 0);
 
     assert!(::core::mem::size_of::<crate::AddableConstMemberNonunpin>() == 4);
     assert!(::core::mem::align_of::<crate::AddableConstMemberNonunpin>() == 4);
     static_assertions::assert_not_impl_any!(crate::AddableConstMemberNonunpin: Copy);
     static_assertions::assert_impl_all!(crate::AddableConstMemberNonunpin: Drop);
-    assert!(memoffset::offset_of!(crate::AddableConstMemberNonunpin, field_) == 0);
+    assert!(::core::mem::offset_of!(crate::AddableConstMemberNonunpin, field_) == 0);
 
     assert!(::core::mem::size_of::<crate::AddAssignMemberInt>() == 1);
     assert!(::core::mem::align_of::<crate::AddAssignMemberInt>() == 1);

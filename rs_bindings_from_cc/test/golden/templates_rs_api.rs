@@ -1286,7 +1286,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE: Copy);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE: Drop);
     assert!(
-        memoffset::offset_of!(
+        ::core::mem::offset_of!(
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
             value_
         ) == 0
@@ -1306,7 +1306,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE: Copy);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE: Drop);
     assert!(
-        memoffset::offset_of!(
+        ::core::mem::offset_of!(
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
             value_
         ) == 0
@@ -1324,7 +1324,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE: Copy);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE: Drop);
     assert!(
-        memoffset::offset_of!(
+        ::core::mem::offset_of!(
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             value_
         ) == 0
@@ -1344,13 +1344,13 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE: Copy);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE: Drop);
     assert!(
-        memoffset::offset_of!(
+        ::core::mem::offset_of!(
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
             value1
         ) == 0
     );
     assert!(
-        memoffset::offset_of!(
+        ::core::mem::offset_of!(
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
             value2
         ) == 8
@@ -1370,13 +1370,13 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE: Copy);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE: Drop);
     assert!(
-        memoffset::offset_of!(
+        ::core::mem::offset_of!(
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
             value1
         ) == 0
     );
     assert!(
-        memoffset::offset_of!(
+        ::core::mem::offset_of!(
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
             value2
         ) == 4
@@ -1396,13 +1396,13 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE: Copy);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE: Drop);
     assert!(
-        memoffset::offset_of!(
+        ::core::mem::offset_of!(
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
             value1
         ) == 0
     );
     assert!(
-        memoffset::offset_of!(
+        ::core::mem::offset_of!(
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
             value2
         ) == 4
@@ -1434,7 +1434,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE: Copy);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE: Drop);
     assert!(
-        memoffset::offset_of!(
+        ::core::mem::offset_of!(
             crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
             value
         ) == 0

@@ -278,13 +278,17 @@ pub mod nested_ptr_type_mutability_qualifiers {
 ///       expansion of the macro `memoffset::offset_of` (in Nightly builds, run with -Z
 ///       macro-backtrace for more info)
 /// ```
+///
+/// When using memoffset::offset_of, the fix was feature(const_refs_to_cell).
+/// However, even that is not necessary when using the built-in
+/// `::core::mem::offset_of!` macro, now.
 pub mod interior_mutability {
     use std::cell::UnsafeCell;
 
     #[derive(Debug, Default)]
     pub struct SomeStruct {
-        /// `pub` to make sure that `assert!(memoffset::offset_of!(...) == ...)`
-        /// is generated. (Such assertions are skipped for private
+        /// `pub` to make sure that `assert!(::core::mem::offset_of!(...) ==
+        /// ...)` is generated. (Such assertions are skipped for private
         /// fields.)
         pub field: UnsafeCell<i32>,
     }

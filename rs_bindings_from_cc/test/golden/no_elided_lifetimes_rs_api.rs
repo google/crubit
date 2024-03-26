@@ -175,5 +175,5 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::WrappedValue: Clone);
     static_assertions::assert_impl_all!(crate::WrappedValue: Copy);
     static_assertions::assert_not_impl_any!(crate::WrappedValue: Drop);
-    assert!(memoffset::offset_of!(crate::WrappedValue, value_) == 0);
+    assert!(::core::mem::offset_of!(crate::WrappedValue, value_) == 0);
 };

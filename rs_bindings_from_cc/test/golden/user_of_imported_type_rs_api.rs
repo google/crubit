@@ -109,5 +109,5 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::UserOfImportedType: Clone);
     static_assertions::assert_impl_all!(crate::UserOfImportedType: Copy);
     static_assertions::assert_not_impl_any!(crate::UserOfImportedType: Drop);
-    assert!(memoffset::offset_of!(crate::UserOfImportedType, trivial) == 0);
+    assert!(::core::mem::offset_of!(crate::UserOfImportedType, trivial) == 0);
 };

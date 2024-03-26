@@ -333,35 +333,29 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let field_offset_assertions = if record.is_union() {
-        // TODO(https://github.com/Gilnaa/memoffset/issues/66): generate assertions for unions once
-        // offsetof supports them.
-        vec![]
-    } else {
-        fields_with_bounds
-            .enumerate()
-            .map(|(field_index, (field, _, _, _))| {
-                if let Some(field) = field {
-                    let field_ident = make_rs_field_ident(field, field_index);
+    let field_offset_assertions = fields_with_bounds
+        .enumerate()
+        .map(|(field_index, (field, _, _, _))| {
+            if let Some(field) = field {
+                let field_ident = make_rs_field_ident(field, field_index);
 
-                    // The assertion below reinforces that the division by 8 on the next line is
-                    // justified (because the bitfields have been coallesced / filtered out
-                    // earlier).
-                    assert_eq!(field.offset % 8, 0);
-                    let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
+                // The assertion below reinforces that the division by 8 on the next line is
+                // justified (because the bitfields have been coallesced / filtered out
+                // earlier).
+                assert_eq!(field.offset % 8, 0);
+                let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
 
-                    let actual_offset_expr = quote! {
-                        memoffset::offset_of!(#qualified_ident, #field_ident)
-                    };
-                    quote! {
-                        assert!(#actual_offset_expr == #expected_offset);
-                    }
-                } else {
-                    quote! {}
+                let actual_offset_expr = quote! {
+                    ::core::mem::offset_of!(#qualified_ident, #field_ident)
+                };
+                quote! {
+                    assert!(#actual_offset_expr == #expected_offset);
                 }
-            })
-            .collect_vec()
-    };
+            } else {
+                quote! {}
+            }
+        })
+        .collect_vec();
     let mut features = BTreeSet::new();
 
     let derives = generate_derives(record);
@@ -938,9 +932,9 @@ mod tests {
                     assert!(::core::mem::align_of::<crate::SomeStruct>() == 4);
                     static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy);
                     static_assertions::assert_impl_all!(crate::SomeStruct: Drop);
-                    assert!(memoffset::offset_of!(crate::SomeStruct, public_int) == 0);
-                    assert!(memoffset::offset_of!(crate::SomeStruct, protected_int) == 4);
-                    assert!(memoffset::offset_of!(crate::SomeStruct, private_int) == 8);
+                    assert!(::core::mem::offset_of!(crate::SomeStruct, public_int) == 0);
+                    assert!(::core::mem::offset_of!(crate::SomeStruct, protected_int) == 4);
+                    assert!(::core::mem::offset_of!(crate::SomeStruct, private_int) == 8);
                     ...
                 };
             }
@@ -1090,7 +1084,7 @@ mod tests {
                 const _: () = {
                     ...
                     assert!(
-                    memoffset::offset_of!(crate::StructWithUnsupportedField, my_field) == 0);
+                    ::core::mem::offset_of!(crate::StructWithUnsupportedField, my_field) == 0);
                     ...
                 };
             }
@@ -1165,8 +1159,8 @@ mod tests {
                 ...
                 const _: () = {
                     ...
-                    assert!(memoffset::offset_of!(crate::SomeStruct, first_field) == 0);
-                    assert!(memoffset::offset_of!(crate::SomeStruct, last_field) == 8);
+                    assert!(::core::mem::offset_of!(crate::SomeStruct, first_field) == 0);
+                    assert!(::core::mem::offset_of!(crate::SomeStruct, last_field) == 8);
                     ...
                 };
             }
@@ -1341,13 +1335,13 @@ mod tests {
                 ...
                 const _: () = {
                     ...
-                    assert!(memoffset::offset_of!(
+                    assert!(::core::mem::offset_of!(
                         crate::StructWithUnnamedMembers, first_field) == 0);
-                    assert!(memoffset::offset_of!(
+                    assert!(::core::mem::offset_of!(
                        crate::StructWithUnnamedMembers, __unnamed_field1) == 4);
-                    assert!(memoffset::offset_of!(
+                    assert!(::core::mem::offset_of!(
                        crate::StructWithUnnamedMembers, __unnamed_field2) == 12);
-                    assert!(memoffset::offset_of!(
+                    assert!(::core::mem::offset_of!(
                        crate::StructWithUnnamedMembers, last_field) == 16);
                     ...
                 };
@@ -1843,8 +1837,6 @@ mod tests {
     }
 
     #[test]
-    // TODO(https://github.com/Gilnaa/memoffset/issues/66): generate assertions for unions once
-    // offsetof supports them.
     fn test_currently_no_offset_assertions_for_unions() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1856,7 +1848,19 @@ mod tests {
         )?;
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
 
-        assert_rs_not_matches!(rs_api, quote! { offset_of! });
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                const _: () = {
+                    ...
+                    assert!(::core::mem::offset_of!(
+                        crate::SomeUnion, some_field) == 0);
+                    assert!(::core::mem::offset_of!(
+                        crate::SomeUnion, some_bigger_field) == 0);
+                    ...
+                };
+            }
+        );
         Ok(())
     }
 

@@ -137,11 +137,13 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::SomeClass: Copy);
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::SomeClass: Drop);
     assert!(
-        memoffset::offset_of!(crate::test_namespace_bindings::SomeClass, public_member_variable_)
+        ::core::mem::offset_of!(crate::test_namespace_bindings::SomeClass, public_member_variable_)
             == 0
     );
     assert!(
-        memoffset::offset_of!(crate::test_namespace_bindings::SomeClass, private_member_variable_)
-            == 4
+        ::core::mem::offset_of!(
+            crate::test_namespace_bindings::SomeClass,
+            private_member_variable_
+        ) == 4
     );
 };

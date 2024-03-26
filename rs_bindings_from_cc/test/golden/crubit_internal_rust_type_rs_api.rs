@@ -137,9 +137,9 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::TypeMapOverrideFieldTypes: Clone);
     static_assertions::assert_impl_all!(crate::TypeMapOverrideFieldTypes: Copy);
     static_assertions::assert_not_impl_any!(crate::TypeMapOverrideFieldTypes: Drop);
-    assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_struct) == 0);
-    assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_class) == 1);
-    assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_enum) == 2);
-    assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_alias) == 3);
-    assert!(memoffset::offset_of!(crate::TypeMapOverrideFieldTypes, error) == 4);
+    assert!(::core::mem::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_struct) == 0);
+    assert!(::core::mem::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_class) == 1);
+    assert!(::core::mem::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_enum) == 2);
+    assert!(::core::mem::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_alias) == 3);
+    assert!(::core::mem::offset_of!(crate::TypeMapOverrideFieldTypes, error) == 4);
 };

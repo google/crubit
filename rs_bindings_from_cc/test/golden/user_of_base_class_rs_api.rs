@@ -324,7 +324,7 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::Derived2>() == 8);
     static_assertions::assert_not_impl_any!(crate::Derived2: Copy);
     static_assertions::assert_not_impl_any!(crate::Derived2: Drop);
-    assert!(memoffset::offset_of!(crate::Derived2, derived_1) == 20);
+    assert!(::core::mem::offset_of!(crate::Derived2, derived_1) == 20);
 
     assert!(::core::mem::size_of::<crate::VirtualDerived2>() == 32);
     assert!(::core::mem::align_of::<crate::VirtualDerived2>() == 8);

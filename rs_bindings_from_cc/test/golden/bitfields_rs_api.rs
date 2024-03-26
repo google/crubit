@@ -190,9 +190,9 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::WithBitfields: Clone);
     static_assertions::assert_impl_all!(crate::WithBitfields: Copy);
     static_assertions::assert_not_impl_any!(crate::WithBitfields: Drop);
-    assert!(memoffset::offset_of!(crate::WithBitfields, f2) == 4);
-    assert!(memoffset::offset_of!(crate::WithBitfields, f5) == 20);
-    assert!(memoffset::offset_of!(crate::WithBitfields, f7) == 27);
+    assert!(::core::mem::offset_of!(crate::WithBitfields, f2) == 4);
+    assert!(::core::mem::offset_of!(crate::WithBitfields, f5) == 20);
+    assert!(::core::mem::offset_of!(crate::WithBitfields, f7) == 27);
 
     assert!(::core::mem::size_of::<crate::AlignmentRegressionTest>() == 4);
     assert!(::core::mem::align_of::<crate::AlignmentRegressionTest>() == 4);

@@ -2691,7 +2691,7 @@ pub(crate) mod tests {
                     assert!(::core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
                     assert!(::core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
                     ...
-                    assert!(memoffset::offset_of!(crate::test_namespace_bindings::S, i) == 0);
+                    assert!(::core::mem::offset_of!(crate::test_namespace_bindings::S, i) == 0);
                     ...
                 };
             }

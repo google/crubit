@@ -239,18 +239,18 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::TrivialCustomType: Clone);
     static_assertions::assert_impl_all!(crate::TrivialCustomType: Copy);
     static_assertions::assert_not_impl_any!(crate::TrivialCustomType: Drop);
-    assert!(memoffset::offset_of!(crate::TrivialCustomType, i) == 0);
+    assert!(::core::mem::offset_of!(crate::TrivialCustomType, i) == 0);
 
     assert!(::core::mem::size_of::<crate::NontrivialCustomType>() == 4);
     assert!(::core::mem::align_of::<crate::NontrivialCustomType>() == 4);
     static_assertions::assert_not_impl_any!(crate::NontrivialCustomType: Copy);
     static_assertions::assert_not_impl_any!(crate::NontrivialCustomType: Drop);
-    assert!(memoffset::offset_of!(crate::NontrivialCustomType, i) == 0);
+    assert!(::core::mem::offset_of!(crate::NontrivialCustomType, i) == 0);
 
     assert!(::core::mem::size_of::<crate::ContainingStruct>() == 1);
     assert!(::core::mem::align_of::<crate::ContainingStruct>() == 1);
     static_assertions::assert_impl_all!(crate::ContainingStruct: Clone);
     static_assertions::assert_impl_all!(crate::ContainingStruct: Copy);
     static_assertions::assert_not_impl_any!(crate::ContainingStruct: Drop);
-    assert!(memoffset::offset_of!(crate::ContainingStruct, nested_struct) == 0);
+    assert!(::core::mem::offset_of!(crate::ContainingStruct, nested_struct) == 0);
 };
