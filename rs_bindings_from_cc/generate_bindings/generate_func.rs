@@ -1550,10 +1550,12 @@ fn function_signature(
         if return_type.is_unpin() {
             quote! {#ty}
         } else {
-            // This feature seems destined for stabilization, and makes the code
-            // simpler. We don't need it for simple functions, but if the return type is
-            // used as an associated type for a trait.
-            features.insert(make_rs_ident("type_alias_impl_trait"));
+            // TODO(jeanpierreda): use `-> impl Ctor` instead of `-> Self::X` where `X = impl
+            // Ctor`. The latter requires `impl_trait_in_assoc_type`, the former
+            // was stabilized in 1.75. Directly returning an unnameable `impl
+            // Ctor` is sufficient for us, and makes traits like `CtorNew` more
+            // similar to top-level functions.)
+
             // The returned lazy FnCtor depends on all inputs.
             let extra_lifetimes = lifetimes.iter().map(|a| quote! {+ ::ctor::Captures<#a>});
             features.insert(make_rs_ident("impl_trait_in_assoc_type"));

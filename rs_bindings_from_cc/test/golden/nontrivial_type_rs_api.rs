@@ -12,8 +12,7 @@
     custom_inner_attributes,
     impl_trait_in_assoc_type,
     negative_impls,
-    register_tool,
-    type_alias_impl_trait
+    register_tool
 )]
 #![allow(stable_features)]
 #![no_std]
