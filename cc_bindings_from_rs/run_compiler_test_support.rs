@@ -26,7 +26,7 @@ use std::path::PathBuf;
 #[cfg(oss)]
 const TOOLCHAIN_ROOT: &str = "rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain/lib/rustlib/x86_64-unknown-linux-gnu";
 #[cfg(not(oss))]
-const TOOLCHAIN_ROOT: &str = "google3/nowhere/llvm/rust/main_sysroot";
+const TOOLCHAIN_ROOT: &str = env!("G3_SYSROOT_PATH");
 
 /// Returns the `rustc` sysroot that is suitable for the environment where
 /// unit tests run.
