@@ -635,7 +635,7 @@ TEST(CollectEvidenceFromImplementationTest, MultipleReturns) {
                                     functionNamed("target"))));
 }
 
-TEST(CollectEvidenceFromImplemetationTest, FunctionCallDereferenced) {
+TEST(CollectEvidenceFromImplementationTest, FunctionCallDereferenced) {
   static constexpr llvm::StringRef Src = R"cc(
     int* makePtr();
     void target() { *makePtr(); }
@@ -703,7 +703,7 @@ TEST(CollectEvidenceFromImplementationTest, FunctionCallDereferencedWithArrow) {
                         functionNamed("makePtr"))));
 }
 
-TEST(CollectEvidenceFromImplemetationTest,
+TEST(CollectEvidenceFromImplementationTest,
      AlreadyNonnullFunctionCallDereferenced) {
   static constexpr llvm::StringRef Src = R"cc(
     Nonnull<int*> makeNonnullPtr();
@@ -722,7 +722,7 @@ TEST(CollectEvidenceFromImplementationTest, FunctionPointerCall) {
                                             functionNamed("target"))));
 }
 
-TEST(CollectEvidenceFromImplemetationTest,
+TEST(CollectEvidenceFromImplementationTest,
      ConstAccessorDereferencedAfterCheck) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {

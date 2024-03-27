@@ -1,7 +1,7 @@
 # Integration tests for nullability verification.
 
-load("//nullability/test:nullability_test.bzl", "nullability_test")
 load("@bazel_tools//tools/build_defs/cc:cc_embed_data.bzl", "cc_embed_data")
+load("//nullability/test:nullability_test.bzl", "nullability_test")
 
 package(default_applicable_licenses = ["//:license"])
 
