@@ -19,6 +19,7 @@
 #include "clang/ASTMatchers/ASTMatchersMacros.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Index/USRGeneration.h"
+#include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
@@ -50,6 +51,7 @@ class InferTUTest : public ::testing::Test {
 
   void build(llvm::StringRef Code) {
     TestInputs Inputs = Code;
+    Inputs.Language = TestLanguage::Lang_CXX17;
     for (const auto &Entry :
          llvm::ArrayRef(test_headers_create(), test_headers_size()))
       Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
@@ -119,11 +121,11 @@ TEST_F(InferTUTest, Samples) {
                                     {inferredSlot(1, Inference::NONNULL)})));
   EXPECT_THAT(Results.front().slot_inference(0).sample_evidence(),
               testing::UnorderedElementsAre(
-                  EqualsProto(R"pb(location: "input.mm:2:30"
+                  EqualsProto(R"pb(location: "input.cc:2:30"
                                    kind: NONNULL_ARGUMENT)pb"),
-                  EqualsProto(R"pb(location: "input.mm:1:24"
+                  EqualsProto(R"pb(location: "input.cc:1:24"
                                    kind: UNCHECKED_DEREFERENCE)pb"),
-                  EqualsProto(R"pb(location: "input.mm:1:29"
+                  EqualsProto(R"pb(location: "input.cc:1:29"
                                    kind: UNCHECKED_DEREFERENCE)pb")));
 }
 

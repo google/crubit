@@ -20,6 +20,7 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/DenseMap.h"
@@ -68,6 +69,7 @@ testing::Matcher<const Evidence&> evidence(
 
 clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
   clang::TestInputs Inputs = Source;
+  Inputs.Language = TestLanguage::Lang_CXX17;
   for (const auto& Entry :
        llvm::ArrayRef(test_headers_create(), test_headers_size()))
     Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
@@ -183,7 +185,7 @@ TEST(CollectEvidenceFromImplementationTest, Location) {
   auto Evidence = collectEvidenceFromTargetFunction(Code);
   ASSERT_THAT(Evidence, ElementsAre(evidence(paramSlot(0),
                                              Evidence::UNCHECKED_DEREFERENCE)));
-  EXPECT_EQ("input.mm:1:23", Evidence.front().location());
+  EXPECT_EQ("input.cc:1:23", Evidence.front().location());
 }
 
 TEST(CollectEvidenceFromImplementationTest, DereferenceBeforeAssignment) {
@@ -901,7 +903,9 @@ TEST(CollectEvidenceFromImplementationTest,
   )cc";
 
   std::vector<Evidence> Results;
-  clang::TestAST AST(Src);
+  clang::TestInputs Inputs(Src);
+  Inputs.Language = TestLanguage::Lang_CXX17;
+  clang::TestAST AST(Inputs);
   USRCache UsrCache;
 
   const auto& Delegator = *selectFirst<FunctionDecl>(

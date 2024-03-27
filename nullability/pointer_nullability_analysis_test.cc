@@ -20,6 +20,7 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/Support/Error.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
@@ -41,14 +42,17 @@ std::optional<bool> evaluate(const dataflow::Formula &B,
 }
 
 TEST(PointerNullabilityAnalysis, AssignNullabilityVariable) {
-  // Annotations on p constrain nullabiilty of the return value.
+  // Annotations on p constrain nullability of the return value.
   // This tests we can compute that relationship symbolically.
-  TestAST AST(R"cpp(
+  llvm::StringRef Src = R"cpp(
     int *target(int *p) {
       int *q = p;
       return q;
     }
-  )cpp");
+  )cpp";
+  TestInputs Inputs(Src);
+  Inputs.Language = TestLanguage::Lang_CXX17;
+  TestAST AST(Inputs);
   auto *Target = cast<FunctionDecl>(
       lookup("target", *AST.context().getTranslationUnitDecl()));
   auto *P = Target->getParamDecl(0);
