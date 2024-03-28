@@ -1068,18 +1068,20 @@ void handleConstMemberCall(absl::Nonnull<const CallExpr *> CE,
                            dataflow::RecordStorageLocation *RecordLoc,
                            const MatchFinder::MatchResult &Result,
                            TransferState<PointerNullabilityLattice> &State) {
-  if (!isSupportedRawPointerType(CE->getType()) || !CE->isPRValue() ||
-      RecordLoc == nullptr) {
+  if ((!isSupportedRawPointerType(CE->getType()) &&
+       !CE->getType()->isBooleanType()) ||
+      !CE->isPRValue() || RecordLoc == nullptr) {
     // Perform default handling.
     transferValue_CallExpr(CE, Result, State);
     return;
   }
-  PointerValue *PointerVal =
+  Value *Val =
       State.Lattice.getConstMethodReturnValue(*RecordLoc, CE, State.Env);
-  if (PointerVal) {
-    State.Env.setValue(*CE, *PointerVal);
+  if (Val == nullptr) return;
+
+  State.Env.setValue(*CE, *Val);
+  if (auto *PointerVal = dyn_cast<PointerValue>(Val))
     initPointerFromTypeNullability(*PointerVal, CE, State);
-  }
 }
 
 void transferValue_ConstMemberCall(

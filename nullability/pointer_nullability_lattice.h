@@ -59,10 +59,10 @@ class PointerNullabilityLattice {
       absl::Nonnull<const Expr *> E,
       const std::function<TypeNullability()> &GetNullability);
 
-  // Gets the PointerValue associated with the RecordStorageLocation and
-  // MethodDecl of the CallExpr, creating one if it doesn't yet exist. Requires
-  // the CXXMemberCallExpr to have a supported pointer type.
-  absl::Nullable<dataflow::PointerValue *> getConstMethodReturnValue(
+  // Returns the `Value` associated with the `RecordStorageLocation` and
+  // `MethodDecl` of `CE`, creating one if it doesn't yet exist.
+  // The type of `CE` must be either a raw pointer or boolean.
+  absl::Nullable<dataflow::Value *> getConstMethodReturnValue(
       const dataflow::RecordStorageLocation &RecordLoc,
       absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env);
 
@@ -89,7 +89,7 @@ class PointerNullabilityLattice {
   // from that const method.
   using ConstMethodReturnValuesType = llvm::SmallDenseMap<
       const dataflow::RecordStorageLocation *,
-      llvm::SmallDenseMap<const FunctionDecl *, dataflow::PointerValue *>>;
+      llvm::SmallDenseMap<const FunctionDecl *, dataflow::Value *>>;
   ConstMethodReturnValuesType ConstMethodReturnValues;
 };
 

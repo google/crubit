@@ -903,6 +903,28 @@ TEST(PointerNullabilityTest, ConstMethodNoRecordForCallObject) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ConstMethodReturningBool) {
+  // This tests (indirectly) that we also model const methods returning
+  // booleans. We use `operator bool()` as the specific const method because
+  // this then also gives us coverage of this special case (which is quite
+  // common, for example in `std::function`).
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      operator bool() const;
+    };
+
+    void target(S s) {
+      int *p = nullptr;
+      int i = 0;
+      if (s) p = &i;
+      if (s)
+        // Dereference is safe because we know `operator bool()` will return the
+        // same thing both times.
+        *p;
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembers) {
   // This is a crash repro.
   EXPECT_TRUE(checkDiagnostics(R"cc(

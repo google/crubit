@@ -4,6 +4,7 @@
 
 #include "nullability/pointer_nullability_lattice.h"
 
+#include <cassert>
 #include <functional>
 #include <optional>
 
@@ -24,7 +25,7 @@ namespace clang::tidy::nullability {
 namespace {
 
 using dataflow::LatticeJoinEffect;
-using dataflow::PointerValue;
+using dataflow::Value;
 
 // Returns overridden nullability information associated with a declaration.
 // For now we only track top-level decl nullability symbolically and check for
@@ -59,18 +60,19 @@ const TypeNullability &PointerNullabilityLattice::insertExprNullabilityIfAbsent(
   return Iterator->second;
 }
 
-absl::Nullable<dataflow::PointerValue *>
+absl::Nullable<dataflow::Value *>
 PointerNullabilityLattice::getConstMethodReturnValue(
     const dataflow::RecordStorageLocation &RecordLoc,
     absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env) {
+  assert(CE->getType()->isPointerType() || CE->getType()->isBooleanType());
   auto &ObjMap = ConstMethodReturnValues[&RecordLoc];
   const FunctionDecl *DirectCallee = CE->getDirectCallee();
   if (DirectCallee == nullptr) return nullptr;
   auto it = ObjMap.find(DirectCallee);
   if (it != ObjMap.end()) return it->second;
-  auto *PV = cast<dataflow::PointerValue>(Env.createValue(CE->getType()));
-  ObjMap.insert({DirectCallee, PV});
-  return PV;
+  dataflow::Value *Val = Env.createValue(CE->getType());
+  if (Val != nullptr) ObjMap.insert({DirectCallee, Val});
+  return Val;
 }
 
 void PointerNullabilityLattice::overrideNullabilityFromDecl(
@@ -101,7 +103,7 @@ LatticeJoinEffect PointerNullabilityLattice::join(
     const auto &OtherDeclToVal = It->second;
     auto &JoinedDeclToVal = JoinedMap[Loc];
     for (auto [Func, Val] : DeclToVal) {
-      PointerValue *OtherVal = OtherDeclToVal.lookup(Func);
+      Value *OtherVal = OtherDeclToVal.lookup(Func);
       if (OtherVal == nullptr || OtherVal != Val) {
         Effect = LatticeJoinEffect::Changed;
         continue;
