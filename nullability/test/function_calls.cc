@@ -820,7 +820,7 @@ TEST(PointerNullabilityTest, ConstMethodEarlyReturn) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, ConstMethodEarlyReturnWithConditional) {
+TEST(PointerNullabilityTest, ConstMethodWithConditional) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct C {
       int *_Nullable property() const;
@@ -835,9 +835,51 @@ TEST(PointerNullabilityTest, ConstMethodEarlyReturnWithConditional) {
       } else {
         some_operation(2);
       }
-      // TODO(b/309667920): False positive below due to clearing the const
-      // method return values on join. If this is a pattern that occurs
-      // frequently in real code, we need to fix this.
+      // Verify that we still model `c.property()` as returning the same value
+      // after the join, i.e. a null check performed before control flow
+      // diverges is still valid when the paths rejoin.
+      *c.property();
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, ConstMethodNullPointerCheckOnOnlyOneBranch) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct C {
+      int *_Nullable property() const;
+    };
+    bool cond();
+    void target() {
+      C c;
+      if (cond()) {
+        if (!c.property()) return;
+      }
+      // We didn't check for null on all paths that reach this dereference, so
+      // it is unsafe.
+      *c.property();  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, ConstMethodConditionalWithSeparateNullChecks) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct C {
+      int *_Nullable property() const;
+    };
+    bool cond();
+    void target() {
+      C c;
+      if (cond()) {
+        if (!c.property()) return;
+      } else {
+        if (!c.property()) return;
+      }
+      // TODO: This is a false positive: We checked for null on all paths
+      // that reach this dereference, but the lattice doesn't join the return
+      // values we generated for `c.property()` on the two branches, so we don't
+      // see that this is safe. This pattern is likely to be rare in practice,
+      // so it doesn't seem worth making the join operation more complex to
+      // support this.
       *c.property();  // [[unsafe]]
     }
   )cc"));

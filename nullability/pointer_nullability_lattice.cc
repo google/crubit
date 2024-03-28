@@ -15,12 +15,17 @@
 #include "clang/AST/Expr.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
 
 namespace clang::tidy::nullability {
 namespace {
+
+using dataflow::LatticeJoinEffect;
+using dataflow::PointerValue;
+
 // Returns overridden nullability information associated with a declaration.
 // For now we only track top-level decl nullability symbolically and check for
 // concrete nullability override results.
@@ -76,6 +81,38 @@ void PointerNullabilityLattice::overrideNullabilityFromDecl(
   if (auto *PN = getDeclNullability(D, NFS)) {
     N.front() = *PN;
   }
+}
+
+LatticeJoinEffect PointerNullabilityLattice::join(
+    const PointerNullabilityLattice &Other) {
+  // For simplicity, we only retain values that are identical, but not ones that
+  // are non-identical but equivalent. This is likely to be sufficient in
+  // practice, and it reduces implementation complexity considerably.
+
+  ConstMethodReturnValuesType JoinedMap;
+  LatticeJoinEffect Effect = LatticeJoinEffect::Unchanged;
+
+  for (auto &[Loc, DeclToVal] : ConstMethodReturnValues) {
+    auto It = Other.ConstMethodReturnValues.find(Loc);
+    if (It == Other.ConstMethodReturnValues.end()) {
+      Effect = LatticeJoinEffect::Changed;
+      continue;
+    }
+    const auto &OtherDeclToVal = It->second;
+    auto &JoinedDeclToVal = JoinedMap[Loc];
+    for (auto [Func, Val] : DeclToVal) {
+      PointerValue *OtherVal = OtherDeclToVal.lookup(Func);
+      if (OtherVal == nullptr || OtherVal != Val) {
+        Effect = LatticeJoinEffect::Changed;
+        continue;
+      }
+      JoinedDeclToVal.insert({Func, Val});
+    }
+  }
+
+  ConstMethodReturnValues = JoinedMap;
+
+  return Effect;
 }
 
 }  // namespace clang::tidy::nullability

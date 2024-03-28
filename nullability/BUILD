@@ -32,6 +32,22 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "pointer_nullability_lattice_test",
+    srcs = ["pointer_nullability_lattice_test.cc"],
+    deps = [
+        ":pointer_nullability_lattice",
+        "@absl//absl/base:nullability",
+        "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:testing",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
 cc_library(
     name = "pointer_nullability_matchers",
     srcs = ["pointer_nullability_matchers.cc"],

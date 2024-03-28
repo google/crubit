@@ -78,18 +78,7 @@ class PointerNullabilityLattice {
 
   bool operator==(const PointerNullabilityLattice &Other) const { return true; }
 
-  dataflow::LatticeJoinEffect join(const PointerNullabilityLattice &Other) {
-    if (ConstMethodReturnValues.empty())
-      return dataflow::LatticeJoinEffect::Unchanged;
-    // Conservatively, just clear the `ConstMethodReturnValues` map entirely.
-    // This means that we can't check the return value from a const method
-    // before a join, then call the method again to use the pointer after the
-    // join -- we'll get a false positive in this case.
-    // TODO(b/309667920): Add code to actually join the maps if it turns out
-    // these types of false positives are common.
-    ConstMethodReturnValues.clear();
-    return dataflow::LatticeJoinEffect::Changed;
-  }
+  dataflow::LatticeJoinEffect join(const PointerNullabilityLattice &Other);
 
  private:
   // Owned by the PointerNullabilityAnalysis object, shared by all lattice
@@ -98,10 +87,10 @@ class PointerNullabilityLattice {
 
   // Maps a record storage location and const method to the value to return
   // from that const method.
-  llvm::SmallDenseMap<
+  using ConstMethodReturnValuesType = llvm::SmallDenseMap<
       const dataflow::RecordStorageLocation *,
-      llvm::SmallDenseMap<const FunctionDecl *, dataflow::PointerValue *>>
-      ConstMethodReturnValues;
+      llvm::SmallDenseMap<const FunctionDecl *, dataflow::PointerValue *>>;
+  ConstMethodReturnValuesType ConstMethodReturnValues;
 };
 
 inline std::ostream &operator<<(std::ostream &OS,
