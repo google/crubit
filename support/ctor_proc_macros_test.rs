@@ -13,7 +13,7 @@
 #![cfg(test)]
 // Callers are expected to enable `negative_impls`.
 // more_qualified_paths is used to make project_pin_type!() simpler to use.
-#![feature(negative_impls, more_qualified_paths)]
+#![feature(negative_impls)]
 
 // pathological shadowed names: shadow important modules that the macros use.
 mod std {}
@@ -132,6 +132,9 @@ fn test_recursively_pinned_tuple_struct() {
     let _: ::std::pin::Pin<&mut i32> = Box::pin(S(42)).as_mut().project_pin().0;
 }
 
+// TODO(b/331688163): remove this workaround.
+type Identity<T> = T;
+
 #[test]
 fn test_recursively_pinned_enum_struct() {
     #[::ctor::recursively_pinned]
@@ -139,7 +142,7 @@ fn test_recursively_pinned_enum_struct() {
         A { x: i32 },
     }
     match Box::pin(E::A { x: 42 }).as_mut().project_pin() {
-        <::ctor::project_pin_type!(E)>::A { x } => {
+        Identity::<::ctor::project_pin_type!(E)>::A { x } => {
             let _: ::std::pin::Pin<&mut i32> = x;
         }
     }
@@ -152,7 +155,7 @@ fn test_recursively_pinned_enum_tuple() {
         A(i32),
     }
     match Box::pin(E::A(42)).as_mut().project_pin() {
-        <::ctor::project_pin_type!(E)>::A(x) => {
+        Identity::<::ctor::project_pin_type!(E)>::A(x) => {
             let _: ::std::pin::Pin<&mut i32> = x;
         }
     }
