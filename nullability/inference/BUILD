@@ -133,6 +133,7 @@ cc_library(
     srcs = ["eligible_ranges.cc"],
     hdrs = ["eligible_ranges.h"],
     deps = [
+        ":inferable",
         ":inference_cc_proto",
         "//nullability:type_nullability",
         "@llvm-project//clang:ast",
@@ -150,6 +151,9 @@ cc_test(
     srcs = ["eligible_ranges_test.cc"],
     deps = [
         ":eligible_ranges",
+        ":inference_cc_proto",
+        "//nullability:type_nullability",
+        "//nullability/test:test_headers",
         "@absl//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",

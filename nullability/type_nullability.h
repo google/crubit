@@ -1,3 +1,4 @@
+#include "clang/AST/TypeLoc.h"
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -43,7 +44,6 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
-#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 
 namespace clang::tidy::nullability {
@@ -262,6 +262,23 @@ unsigned countPointersInType(absl::Nonnull<const DeclContext *> DC);
 QualType exprType(absl::Nonnull<const Expr *> E);
 
 TypeNullability unspecifiedNullability(absl::Nonnull<const Expr *> E);
+
+// Type and optionally location and nullability information for a single pointer
+// type seen within a potentially more complex type. `Slot` indicates the
+// position of this type within the nullability vector (see TypeNullability
+// documentation) of the type within which `Type` was seen.
+struct TypeNullabilityLoc {
+  unsigned Slot = 0;
+  const Type *Type = nullptr;
+  std::optional<TypeLoc> Loc;
+  std::optional<NullabilityKind> NK;
+};
+
+// Assembles TypeNullabilityLocs for each pointer type in the canonical type for
+// `Loc`, corresponding directly with the TypeNullability that would be
+// assembled for `Loc`'s type, except that reported NullabilityKinds will be
+// detected without regard to any file-level default nullability pragmas.
+std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(TypeLoc Loc);
 
 }  // namespace clang::tidy::nullability
 

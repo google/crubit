@@ -178,6 +178,7 @@ cc_library(
     ],
     deps = [
         ":pragma",
+        ":type_and_maybe_loc_visitor",
         "@absl//absl/base:nullability",
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
@@ -197,8 +198,11 @@ cc_test(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",
+        "@llvm-project//clang:lex",
         "@llvm-project//clang:testing",
+        "@llvm-project//clang:transformer",
         "@llvm-project//llvm:Support",
+        "@llvm-project//llvm:TestingAnnotations",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
@@ -243,6 +247,16 @@ cc_library(
         "@absl//absl/base:nullability",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
+    ],
+)
+
+cc_library(
+    name = "type_and_maybe_loc_visitor",
+    hdrs = ["type_and_maybe_loc_visitor.h"],
+    deps = [
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:type_nodes_gen",
+        "@llvm-project//llvm:Support",
     ],
 )
 

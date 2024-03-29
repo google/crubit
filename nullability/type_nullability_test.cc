@@ -4,25 +4,41 @@
 
 #include "nullability/type_nullability.h"
 
+#include <algorithm>
 #include <memory>
+#include <optional>
 #include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include "absl/log/check.h"
 #include "nullability/pragma.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
+#include "clang/Lex/Lexer.h"
+#include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
+#include "clang/Tooling/Transformer/SourceCode.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Testing/Annotations/Annotations.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
-using testing::ElementsAre;
+using ::llvm::Annotations;
+using ::testing::ElementsAre;
+using ::testing::FieldsAre;
+using ::testing::IsEmpty;
+using ::testing::Matcher;
+using ::testing::Optional;
 
 static test::EnableSmartPointers Enable;
 
@@ -306,409 +322,14 @@ class GetNullabilityAnnotationsFromTypeTest : public ::testing::Test {
   }
 };
 
-TEST_F(GetNullabilityAnnotationsFromTypeTest, Pointers) {
-  EXPECT_THAT(nullVec("int"), ElementsAre());
+// GetTypeNullabilityLocsTests below cover much of the same functionality as
+// GetNullabilityAnnotationsFromTypeTest could cover, as long as they both use
+// NullabilityWalker under the hood, so we only add additional
+// GetNullabilityAnnotationsFromTypesTests for differences in their coverage,
+// namely pragma consideration and Unspecified as a default nullability.
+
+TEST_F(GetNullabilityAnnotationsFromTypeTest, UnannotatedGivesDefault) {
   EXPECT_THAT(nullVec("int *"), ElementsAre(NullabilityKind::Unspecified));
-  EXPECT_THAT(nullVec("int **"), ElementsAre(NullabilityKind::Unspecified,
-                                             NullabilityKind::Unspecified));
-  EXPECT_THAT(nullVec("int *_Nullable*_Nonnull"),
-              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, Sugar) {
-  Header = "using X = int* _Nonnull;";
-
-  EXPECT_THAT(nullVec("X"), ElementsAre(NullabilityKind::NonNull));
-  EXPECT_THAT(nullVec("X*"), ElementsAre(NullabilityKind::Unspecified,
-                                         NullabilityKind::NonNull));
-
-  EXPECT_THAT(nullVec("X(*)"), ElementsAre(NullabilityKind::Unspecified,
-                                           NullabilityKind::NonNull));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, References) {
-  // Top-level references can't be expression types, but we support them anyway
-  EXPECT_THAT(nullVec("int * _Nonnull &"),
-              ElementsAre(NullabilityKind::NonNull));
-  EXPECT_THAT(nullVec("int * _Nonnull &&"),
-              ElementsAre(NullabilityKind::NonNull));
-
-  // ... and other types involving references can appear in expressions
-  EXPECT_THAT(nullVec("int * _Nullable& (* _Nonnull)()"),
-              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
-  EXPECT_THAT(nullVec("int * _Nullable&& (* _Nonnull)()"),
-              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, Arrays) {
-  EXPECT_THAT(nullVec("int * _Nonnull[][2]"),
-              ElementsAre(NullabilityKind::NonNull));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplates) {
-  Header = R"cpp(
-    template <typename T>
-    using Nullable = T _Nullable;
-    template <typename T>
-    using Nonnull = T _Nonnull;
-  )cpp";
-  EXPECT_THAT(nullVec("Nullable<int*>"),
-              ElementsAre(NullabilityKind::Nullable));
-
-  EXPECT_THAT(
-      nullVec("Nullable<Nullable<int*>*>"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable));
-
-  EXPECT_THAT(nullVec("Nullable<Nullable<Nonnull<int*>*>*>"),
-              ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable,
-                          NullabilityKind::NonNull));
-
-  Header = R"cpp(
-    template <typename T, typename U>
-    struct Pair;
-    template <typename T>
-    using Two = Pair<T, T>;
-  )cpp";
-  EXPECT_THAT(
-      nullVec("Two<int* _Nullable>"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable));
-
-  Header = R"cpp(
-    template <typename T1>
-    using A = T1 *_Nullable;
-    template <typename T2>
-    using B = A<T2> *_Nonnull;
-  )cpp";
-  EXPECT_THAT(nullVec("B<int>"),
-              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
-
-  Header = R"cpp(
-    template <typename T, typename U, typename V>
-    struct Triple;
-    template <typename A, typename... Rest>
-    using TripleAlias = Triple<A _Nonnull, Rest...>;
-  )cpp";
-  EXPECT_THAT(nullVec("TripleAlias<int *, int *_Nullable, int*>"),
-              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable,
-                          NullabilityKind::Unspecified));
-
-  Header = R"cpp(
-    template <class... Ts>
-    using First = __type_pack_element<0, Ts...>;
-  )cpp";
-  EXPECT_THAT(nullVec("First<int * _Nonnull>"),
-              ElementsAre(NullabilityKind::NonNull));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentAlias) {
-  // Simple dependent type-aliases.
-  Header = R"cpp(
-    template <class T>
-    struct Nullable {
-      using type = T _Nullable;
-    };
-  )cpp";
-  EXPECT_THAT(nullVec("Nullable<int* _Nonnull *>::type"),
-              ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassTemplate) {
-  // Simple struct inside template.
-  Header = R"cpp(
-    template <class T>
-    struct Outer {
-      struct Inner;
-    };
-    using OuterNullableInner = Outer<int *_Nonnull>::Inner;
-  )cpp";
-  EXPECT_THAT(nullVec("Outer<int* _Nonnull>::Inner"),
-              ElementsAre(NullabilityKind::NonNull));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, NestedClassInstantiation) {
-  Header = R"cpp(
-    template <class T, class U>
-    struct Pair;
-    template <class T, class U>
-    struct PairWrapper {
-      using type = Pair<T _Nullable, U>;
-    };
-  )cpp";
-
-  EXPECT_THAT(nullVec("PairWrapper<int*, int* _Nonnull>::type"),
-              ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
-  EXPECT_THAT(
-      nullVec("PairWrapper<int* _Nonnull, int*>::type"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
-
-  EXPECT_THAT(
-      nullVec("PairWrapper<PairWrapper<int*, int* _Nonnull>::type*, "
-              "            PairWrapper<int* _Nonnull, int*>::type*>::type"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable,
-                  NullabilityKind::NonNull,
-
-                  NullabilityKind::Unspecified, NullabilityKind::Nullable,
-                  NullabilityKind::Unspecified));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, ReferenceOuterTemplateParam) {
-  // Referencing type-params from indirectly-enclosing template.
-  Header = R"cpp(
-    template <class A, class B>
-    struct Pair;
-
-    template <class T>
-    struct Outer {
-      template <class U>
-      struct Inner {
-        using type = Pair<U, T>;
-      };
-    };
-  )cpp";
-  EXPECT_THAT(nullVec("Outer<int *_Nullable>::Inner<int *_Nonnull>::type"),
-              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
-  // Same where Inner is an alias template.
-  Header = R"cpp(
-    template <class A, class B>
-    struct Pair;
-
-    template <class T>
-    struct Outer {
-      template <class U>
-      using Inner = Pair<U, T>;
-    };
-  )cpp";
-  EXPECT_THAT(nullVec("Outer<int *_Nullable>::Inner<int *_Nonnull>"),
-              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, MixedQualiferChain) {
-  Header = R"cpp(
-    template <class A, class B>
-    class Pair;
-
-    struct Outer1 {
-      template <class T>
-      struct Middle {
-        template <class U>
-        struct Inner {
-          using type = Pair<T, U>;
-        };
-      };
-    };
-
-    template <class T>
-    struct Outer2 {
-      struct Middle {
-        template <class U>
-        struct Inner {
-          using type = Pair<T, U>;
-        };
-      };
-    };
-
-    template <class T>
-    struct Outer3 {
-      template <class U>
-      struct Middle {
-        struct Inner {
-          using type = Pair<T, U>;
-        };
-      };
-    };
-  )cpp";
-
-  EXPECT_THAT(
-      nullVec("Outer1::Middle<int * _Nullable>::Inner<int * _Nonnull>::type"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
-  EXPECT_THAT(
-      nullVec("Outer2<int * _Nullable>::Middle::Inner<int * _Nonnull>::type"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
-  EXPECT_THAT(
-      nullVec("Outer3<int * _Nullable>::Middle<int * _Nonnull>::Inner::type"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
-};
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, DependentlyNamedTemplate) {
-  // Instantiation of dependent-named template
-  Header = R"cpp(
-    struct Wrapper {
-      template <class T>
-      using Nullable = T _Nullable;
-    };
-
-    template <class U, class WrapT>
-    struct S {
-      using type = typename WrapT::template Nullable<U> *_Nonnull;
-    };
-  )cpp";
-  EXPECT_THAT(nullVec("S<int *, Wrapper>::type"),
-              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, PartialSpecialization) {
-  Header = R"cpp(
-    template <class>
-    struct S;
-    template <class T>
-    struct S<T *> {
-      using Alias = T;
-    };
-  )cpp";
-  EXPECT_THAT(nullVec("S<int*>::Alias"), testing::IsEmpty());
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateTemplateParams) {
-  // Template template params
-  Header = R"cpp(
-    template <class X>
-    struct Nullable {
-      using type = X _Nullable;
-    };
-    template <class X>
-    struct Nonnull {
-      using type = X _Nonnull;
-    };
-
-    template <template <class> class Nullability, class T>
-    struct Pointer {
-      using type = typename Nullability<T *>::type;
-    };
-  )cpp";
-  EXPECT_THAT(nullVec("Pointer<Nullable, int>::type"),
-              ElementsAre(NullabilityKind::Nullable));
-  EXPECT_THAT(nullVec("Pointer<Nullable, Pointer<Nonnull, int>::type>::type"),
-              ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
-  // Same thing, but with alias templates.
-  Header = R"cpp(
-    template <class X>
-    using Nullable = X _Nullable;
-    template <class X>
-    using Nonnull = X _Nonnull;
-
-    template <template <class> class Nullability, class T>
-    struct Pointer {
-      using type = Nullability<T *>;
-    };
-  )cpp";
-  EXPECT_THAT(nullVec("Pointer<Nullable, int>::type"),
-              ElementsAre(NullabilityKind::Nullable));
-  EXPECT_THAT(nullVec("Pointer<Nullable, Pointer<Nonnull, int>::type>::type"),
-              ElementsAre(NullabilityKind::Nullable, NullabilityKind::NonNull));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateParamPack) {
-  // Parameter packs
-  Header = R"cpp(
-    template <class... X>
-    struct TupleWrapper {
-      class Tuple;
-    };
-
-    template <class... X>
-    struct NullableTuple {
-      using type = TupleWrapper<X _Nullable...>::Tuple;
-    };
-  )cpp";
-  EXPECT_THAT(
-      nullVec("TupleWrapper<int*, int* _Nonnull>::Tuple"),
-      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::NonNull));
-  EXPECT_THAT(
-      nullVec("NullableTuple<int*, int* _Nonnull>::type"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Nullable));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, AliasTemplateWithDefaultArg) {
-  Header = "template <typename T1, typename T2 = T1> using AliasTemplate = T2;";
-
-  // TODO(b/281474380): This should be [Nullable], but we don't yet handle
-  // default arguments correctly.
-  EXPECT_THAT(nullVec("AliasTemplate<int * _Nullable>"),
-              ElementsAre(NullabilityKind::Unspecified));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, ClassTemplateWithDefaultArg) {
-  Header = "template <typename T1, typename T2 = T1> class ClassTemplate {};";
-
-  // TODO(b/281474380): This should be [Nullable, Nullable], but we don't yet
-  // handle default arguments correctly.
-  EXPECT_THAT(
-      nullVec("ClassTemplate<int * _Nullable>"),
-      ElementsAre(NullabilityKind::Nullable, NullabilityKind::Unspecified));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, TemplateArgsBehindAlias) {
-  Header = R"cpp(
-    template <class X>
-    struct Outer {
-      using Inner = X;
-    };
-    using OuterNullable = Outer<int *_Nullable>;
-  )cpp";
-  // TODO: should be [Nullable]
-  EXPECT_THAT(nullVec("OuterNullable::Inner"),
-              ElementsAre(NullabilityKind::Unspecified));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, AnnotateNullable) {
-  Header = R"cpp(
-    namespace custom {
-    template <class T>
-    using Nullable [[clang::annotate("Nullable")]] = T;
-    template <class T>
-    using NonNull [[clang::annotate("Nonnull")]] = T;
-    }  // namespace custom
-
-    template <class T, class U>
-    class pair;
-
-    template <class X>
-    using twice = pair<X, X>;
-  )cpp";
-  EXPECT_THAT(nullVec("custom::Nullable<int*>"),
-              ElementsAre(NullabilityKind::Nullable));
-  EXPECT_THAT(nullVec("custom::NonNull<int*>"),
-              ElementsAre(NullabilityKind::NonNull));
-  EXPECT_THAT(nullVec("pair<custom::NonNull<int*>, custom::Nullable<int*>>"),
-              ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
-  EXPECT_THAT(nullVec("twice<custom::NonNull<int*>>"),
-              ElementsAre(NullabilityKind::NonNull, NullabilityKind::NonNull));
-
-  // Should still work if aliases *do* apply _Nullable.
-  Header = R"cpp(
-    namespace custom {
-    template <class T>
-    using Nullable [[clang::annotate("Nullable")]] = T _Nullable;
-    template <class T>
-    using NonNull [[clang::annotate("Nonnull")]] = T _Nonnull;
-    }  // namespace custom
-  )cpp";
-  EXPECT_THAT(nullVec("custom::Nullable<int*>"),
-              ElementsAre(NullabilityKind::Nullable));
-  EXPECT_THAT(nullVec("custom::NonNull<int*>"),
-              ElementsAre(NullabilityKind::NonNull));
-}
-
-TEST_F(GetNullabilityAnnotationsFromTypeTest, SmartPointers) {
-  Header = R"cpp(
-    namespace std {
-    template <class T>
-    class unique_ptr {};
-    }  // namespace std
-    template <class T>
-    using Nullable [[clang::annotate("Nullable")]] = T;
-    template <class T>
-    using NonNull [[clang::annotate("Nonnull")]] = T;
-  )cpp";
-  EXPECT_THAT(nullVec("int"), ElementsAre());
-  EXPECT_THAT(nullVec("std::unique_ptr<int>"),
-              ElementsAre(NullabilityKind::Unspecified));
-  EXPECT_THAT(
-      nullVec("std::unique_ptr<std::unique_ptr<int>>"),
-      ElementsAre(NullabilityKind::Unspecified, NullabilityKind::Unspecified));
-  EXPECT_THAT(
-      nullVec("NonNull<std::unique_ptr<Nullable<std::unique_ptr<int>>>>"),
-      ElementsAre(NullabilityKind::NonNull, NullabilityKind::Nullable));
 }
 
 TEST_F(GetNullabilityAnnotationsFromTypeTest, Pragma) {
@@ -851,6 +472,768 @@ TEST_F(PrintWithNullabilityTest, Arrays) {
   )cpp";
   EXPECT_EQ(print("decltype(makeArray())", {NullabilityKind::Nullable}),
             "float * _Nullable (&)[n]");
+}
+
+using MissingLocSlots = std::vector<
+    std::pair<unsigned, Matcher<std::optional<clang::NullabilityKind>>>>;
+
+using ComparableNullabilityLoc =
+    std::tuple<unsigned, std::optional<clang::NullabilityKind>,
+               std::optional<Annotations::Range>>;
+
+std::optional<Annotations::Range> getRange(std::optional<TypeLoc> L,
+                                           TestAST &AST) {
+  if (!L) return std::nullopt;
+  const auto &SM = AST.sourceManager();
+  std::optional<CharSourceRange> ActualRange = tooling::getFileRange(
+      CharSourceRange::getTokenRange(L->getSourceRange()), AST.context(),
+      /*IncludeMacroExpansion=*/true);
+  if (!ActualRange) {
+    ADD_FAILURE() << "unable to retrieve source range for TypeLoc ";
+    return std::nullopt;
+  }
+  return Annotations::Range{SM.getFileOffset(ActualRange->getBegin()),
+                            SM.getFileOffset(ActualRange->getEnd())};
+}
+
+// Snippet should be a string of code contain a `using Target = ` typedef,
+// with the aliased type annotated with ranges representing each expected
+// TypeNullabilityLoc. Each range should have a numeric name equal to the Slot
+// number expected for that TypeNullabilityLoc.
+//
+// Require passing of Snippet into this function instead of using the test
+// fixture's snippet to make each expectation read more typically, i.e. in the
+// format EXPECT_THAT(functionOf(Input), matchesExpectations()), as opposed to
+// having Input also passed to the expectations or not passed to functionOf.
+std::vector<ComparableNullabilityLoc> getComparableNullabilityLocs(
+    llvm::StringRef Snippet, llvm::StringRef HeaderWithAttributes = "") {
+  Annotations AnnotatedInput(Snippet);
+  TestInputs Inputs(AnnotatedInput.code());
+  Inputs.Language = TestLanguage::Lang_CXX17;
+  if (!HeaderWithAttributes.empty()) {
+    Inputs.ExtraFiles["header.h"] = HeaderWithAttributes;
+    Inputs.ExtraArgs.push_back("-include");
+    Inputs.ExtraArgs.push_back("header.h");
+  }
+  TestAST AST{Inputs};
+  auto Target = AST.context().getTranslationUnitDecl()->lookup(
+      &AST.context().Idents.get("Target"));
+  CHECK(Target.isSingleResult());
+  std::vector<TypeNullabilityLoc> NullabilityLocs = getTypeNullabilityLocs(
+      Target.find_first<TypeAliasDecl>()->getTypeSourceInfo()->getTypeLoc());
+
+  std::vector<ComparableNullabilityLoc> ComparableOutputs;
+  for (const auto &Output : NullabilityLocs) {
+    ComparableOutputs.push_back(
+        {Output.Slot, Output.NK, getRange(Output.Loc, AST)});
+  }
+  return ComparableOutputs;
+}
+
+class GetTypeNullabilityLocsTest : public ::testing::Test {
+ protected:
+  // Snippet should be a string of code contain a `using Target = ` typedef,
+  // with the aliased type annotated with ranges representing each expected
+  // TypeNullabilityLoc. Each range should have a numeric name equal to the Slot
+  // number expected for that TypeNullabilityLoc.
+  std::string Snippet;
+
+  Matcher<std::vector<ComparableNullabilityLoc>> matchesRanges(
+      MissingLocSlots SlotsWithNoLocs = {}) {
+    if (Snippet.empty()) {
+      ADD_FAILURE() << "Snippet is empty. You probably need to set it before "
+                       "creating this matcher.";
+      return IsEmpty();
+    }
+    Annotations AnnotatedInput(Snippet);
+    auto Ranges = AnnotatedInput.all_ranges();
+    std::vector<std::pair<unsigned, Matcher<ComparableNullabilityLoc>>>
+        MatchersBySlotNumber;
+    for (const auto &RangesForKey : Ranges) {
+      if (RangesForKey.getValue().size() != 1) {
+        ADD_FAILURE()
+            << "Input should contain ranges named with Slot numbers, e.g. "
+               "$0[[int*]], with only one range for each name.";
+        return IsEmpty();
+      }
+      unsigned Slot;
+      if (RangesForKey.getKey().consumeInteger(10, Slot)) {
+        ADD_FAILURE()
+            << "Unable to parse Slot number from annotated range name: "
+            << RangesForKey.getKey().str();
+        return IsEmpty();
+      }
+      llvm::StringRef Payload =
+          AnnotatedInput.rangeWithPayload(RangesForKey.getKey()).second;
+      std::optional<clang::NullabilityKind> ExpectedNullabilityKind =
+          std::nullopt;
+      if (!Payload.empty()) {
+        clang::NullabilityKind KindFromPayload;
+        if (Payload == "Nullable") {
+          KindFromPayload = NullabilityKind::Nullable;
+        } else if (Payload == "NonNull") {
+          KindFromPayload = NullabilityKind::NonNull;
+        } else if (Payload == "Unspecified") {
+          KindFromPayload = NullabilityKind::Unspecified;
+        } else {
+          ADD_FAILURE()
+              << "Payload is not empty but does not match one of the expected "
+                 "values indicating a nullability kind.";
+        }
+        ExpectedNullabilityKind = KindFromPayload;
+      }
+      Annotations::Range ExpectedRange = RangesForKey.getValue().front();
+      MatchersBySlotNumber.push_back(
+          {Slot, FieldsAre(Slot, ExpectedNullabilityKind, ExpectedRange)});
+    }
+    for (auto &[Slot, NKMatcher] : SlotsWithNoLocs) {
+      MatchersBySlotNumber.push_back(
+          {Slot, FieldsAre(Slot, NKMatcher, std::nullopt)});
+    }
+    // We get much better error messages with an ordered container matcher,
+    // which means we need to first sort the Matchers by Slot number. Locs
+    // should be assembled in Slot number order anyway.
+    std::stable_sort(
+        MatchersBySlotNumber.begin(), MatchersBySlotNumber.end(),
+        [](const auto &A, const auto &B) { return A.first < B.first; });
+    std::vector<Matcher<ComparableNullabilityLoc>> SortedMatchers;
+    std::for_each(MatchersBySlotNumber.begin(), MatchersBySlotNumber.end(),
+                  [&SortedMatchers](const auto &A) {
+                    SortedMatchers.push_back(A.second);
+                  });
+    return ElementsAreArray(SortedMatchers);
+  }
+};
+
+TEST_F(GetTypeNullabilityLocsTest, Pointers) {
+  std::string Using = "using Target = ";
+  Snippet = Using + R"(int;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet = Using + R"($0[[int *]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet = Using + R"($0[[$1[[int *]]*]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet = Using + R"($0[[$1[[$2[[int *]]*]]*]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = Using + R"($0(Nullable)[[int *]] _Nullable;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet = Using + R"($0(NonNull)[[int *]] _Nonnull;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet = Using + R"($0(Unspecified)[[int *]] _Null_unspecified;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet =
+      Using + R"($0(Nullable)[[$1(NonNull)[[int *]] _Nonnull *]] _Nullable;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, Sugar) {
+  std::string Header = R"cpp(using X = int* _Nonnull;)cpp";
+  Snippet = Header + R"(
+    using Target = $0(NonNull)[[X]];
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = Header + R"(
+    using Target = $0(Nullable)[[$1(NonNull)[[X]] *]] _Nullable;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = Header + R"(
+    using Target = $0[[$1(NonNull)[[X]](*)]];
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, References) {
+  std::string Using = "using Target = ";
+  // Top-level references can't be expression types, but we support them anyway
+  Snippet = Using + R"($0(NonNull)[[int *]] _Nonnull &;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet = Using + R"($0(NonNull)[[int *]] _Nonnull &&;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  // ... and other types involving references can appear in expressions
+  Snippet =
+      Using +
+      R"($0(NonNull)[[$1(Nullable)[[int *]] _Nullable & (* _Nonnull)()]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet =
+      Using +
+      R"($0(NonNull)[[$1(Nullable)[[int *]] _Nullable && (* _Nonnull)()]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, Arrays) {
+  Snippet = R"(using Target = $0(NonNull)[[int *]] _Nonnull [][2];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, AliasTemplates) {
+  Snippet = R"(
+    template <typename T>
+    using Nullable = T _Nullable;
+    template <typename T>
+    using Nonnull = T _Nonnull;
+
+    using Target =
+    Nullable<$0(Nullable)[[Nullable<$1(Nullable)[[Nonnull<$2(NonNull)[[int*]]>*]]>*]]>;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = R"(
+    template <typename T>
+    using Alias = T;
+
+    using Target = Alias<$0(Nullable)[[int *]] _Nullable>;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = R"(
+    template <typename T, typename U>
+    struct Pair;
+    template <typename T>
+    using Two = Pair<T, T>;
+
+    using Target = Two<$0(Nullable)[[$1(Nullable)[[int *]]]] _Nullable>;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = R"(
+    template <typename T1>
+    using A = T1 * _Nullable;
+    template <typename T2>
+    using B = A<T2> * _Nonnull;
+
+    using Target = $0[[$1(NonNull)[[B<int>]] *]];
+  )";
+  EXPECT_THAT(
+      getComparableNullabilityLocs(Snippet),
+      matchesRanges(MissingLocSlots{{2, Optional(NullabilityKind::Nullable)}}));
+
+  Snippet = R"(
+    template <typename T, typename U, typename V>
+    struct Triple;
+    template <typename A, typename... Rest>
+    using TripleAlias = Triple<A _Nonnull, Rest...>;
+
+    using Target = TripleAlias<$0(NonNull)[[int *]], $1(Nullable)[[int *]]
+    _Nullable, $2[[int *]]>;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = R"(
+    template <class... Ts>
+    using First = __type_pack_element<0, Ts...>;
+
+    using Target = First<$0(NonNull)[[int *]] _Nonnull>;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, DependentAlias) {
+  // Simple dependent type-aliases.
+  Snippet = R"(
+    template <typename T>
+    struct Nullable {
+      using type = T _Nullable;
+    };
+
+    using Target = Nullable<$0(Nullable)[[$1(NonNull)[[int *]] _Nonnull *]]>::type;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, NestedClassTemplate) {
+  // Simple struct inside template.
+  Snippet = R"(
+    template <class T>
+    struct Outer {
+      struct Inner;
+    };
+
+    using Target = Outer<$0(NonNull)[[int *]] _Nonnull>::Inner;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, NestedClassInstantiation) {
+  std::string Header = R"cpp(
+    template <class T, class U>
+    struct Pair;
+    template <class T, class U>
+    struct PairWrapper {
+      using type = Pair<T _Nullable, U>;
+    };
+  )cpp";
+  Snippet = Header + R"(
+    using Target = PairWrapper<$0(Nullable)[[int *]],
+                               $1(NonNull)[[int *]] _Nonnull>::type;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = Header + R"(
+    using Target = PairWrapper<$0(Nullable)[[int *]] _Nonnull,
+                               $1[[int *]]>::type;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = Header + R"(
+    using Target = PairWrapper<$0(Nullable)[[PairWrapper<$1(Nullable)[[int *]],
+                                                         $2(NonNull)[[int *]] _Nonnull
+                                                        >::type *]], 
+                               $3[[PairWrapper<$4(Nullable)[[int *]] _Nonnull,
+                                               $5[[int *]]
+                                              >::type *]]
+                              >::type;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, ReferenceOuterTemplateParam) {
+  // Referencing type-params from indirectly-enclosing template.
+  Snippet = R"(
+    template <class A, class B>
+    struct Pair;
+
+    template <class T>
+    struct Outer {
+      template <class U>
+      struct Inner {
+        using type = Pair<U, T>;
+      };
+    };
+
+    using Target = Outer<$1(Nullable)[[int *]] _Nullable>::Inner<
+        $0(NonNull)[[int *]] _Nonnull>::type;
+   )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  // Same where Inner is an alias template.
+  Snippet = R"(
+    template <class A, class B>
+    struct Pair;
+
+    template <class T>
+    struct Outer {
+      template <class U>
+      using Inner = Pair<U, T>;
+    };
+
+    using Target = Outer<$1(Nullable)[[int *]] _Nullable>::Inner<
+        $0(NonNull)[[int *]] _Nonnull>;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, MixedQualiferChain) {
+  std::string Header = R"cpp(
+    template <class A, class B>
+    class Pair;
+
+    struct Outer1 {
+      template <class T>
+      struct Middle {
+        template <class U>
+        struct Inner {
+          using type = Pair<T, U>;
+        };
+      };
+    };
+
+    template <class T>
+    struct Outer2 {
+      struct Middle {
+        template <class U>
+        struct Inner {
+          using type = Pair<T, U>;
+        };
+      };
+    };
+
+    template <class T>
+    struct Outer3 {
+      template <class U>
+      struct Middle {
+        struct Inner {
+          using type = Pair<T, U>;
+        };
+      };
+    };
+  )cpp";
+
+  Snippet = Header + R"(
+    using Target = Outer1::Middle<$0(Nullable)[[int *]] _Nullable>::Inner<
+        $1(NonNull)[[int *]] _Nonnull>::type;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = Header + R"(
+    using Target = Outer2<$0(Nullable)[[int *]] _Nullable>::Middle::Inner<
+        $1(NonNull)[[int *]] _Nonnull>::type;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = Header + R"(
+    using Target = Outer3<$0(Nullable)[[int *]] _Nullable>::Middle<
+        $1(NonNull)[[int *]] _Nonnull>::Inner::type;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, DependentlyNamedTemplate) {
+  // Instantiation of dependent-named template
+  Snippet = R"(
+    struct Wrapper {
+      template <class T>
+      using Nullable = T _Nullable;
+    };
+
+    template <class U, class WrapT>
+    struct S {
+      using type = typename WrapT::template Nullable<U> *_Nonnull;
+    };
+    
+    using Target = $0(NonNull)[[S<$1(Nullable)[[int *]], Wrapper>::type]];
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, PartialSpecialization) {
+  Snippet = R"(
+    template <class>
+    struct S;
+    template <class T>
+    struct S<T *> {
+      using Alias = T;
+    };
+
+    using Target = S<int *>::Alias;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, TemplateTemplateParams) {
+  // Template template params
+  std::string Header = R"cpp(
+    template <class X>
+    struct Nullable {
+      using type = X _Nullable;
+    };
+    template <class X>
+    struct Nonnull {
+      using type = X _Nonnull;
+    };
+
+    template <template <class> class Nullability, class T>
+    struct Pointer {
+      using type = typename Nullability<T *>::type;
+    };
+  )cpp";
+  Snippet = Header + R"(using Target = Pointer<Nullable, int>::type;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet),
+              matchesRanges(
+                  // TODO(b/323510072) The reported PointerType is inside the
+                  // alias, and we don't collect Locs inside aliases, so
+                  // additional handling for this case is needed to at least
+                  // collect the whole `Pointer` type.
+                  MissingLocSlots{{0, Optional(NullabilityKind::Nullable)}}));
+
+  Snippet =
+      Header +
+      R"(using Target = Pointer<Nullable, Pointer<Nonnull, int>::type>::type;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet),
+              matchesRanges(
+                  // TODO(b/323510072) The reported PointerType is inside the
+                  // alias, and we don't collect Locs inside aliases, so
+                  // additional handling for this case is needed.
+                  MissingLocSlots{{0, Optional(NullabilityKind::Nullable)},
+                                  {1, Optional(NullabilityKind::NonNull)}}));
+
+  // Same thing, but with alias templates.
+  Header = R"cpp(
+    template <class X>
+    using Nullable = X _Nullable;
+    template <class X>
+    using Nonnull = X _Nonnull;
+
+    template <template <class> class Nullability, class T>
+    struct Pointer {
+      using type = Nullability<T *>;
+    };
+  )cpp";
+  Snippet = Header + R"(using Target = Pointer<Nullable, int>::type;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet),
+              matchesRanges(
+                  // TODO(b/323510072) The reported PointerType is inside the
+                  // alias, and we don't collect Locs inside aliases, so
+                  // additional handling for this case is needed.
+                  MissingLocSlots{{0, Optional(NullabilityKind::Nullable)}}));
+
+  Snippet =
+      Header +
+      R"(using Target = Pointer<Nullable, Pointer<Nonnull, int>::type>::type;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet),
+              matchesRanges(
+                  // TODO(b/323510072) The reported PointerType is inside the
+                  // alias, and we don't collect Locs inside aliases, so
+                  // additional handling for this case is needed.
+                  MissingLocSlots{{0, Optional(NullabilityKind::Nullable)},
+                                  {1, Optional(NullabilityKind::NonNull)}}));
+}
+
+TEST_F(GetTypeNullabilityLocsTest, ClassTemplateParamPack) {
+  // Parameter packs
+  std::string Header = R"cpp(
+    template <typename... X>
+    struct TupleWrapper {
+      class Tuple;
+    };
+  )cpp";
+  Snippet = Header + R"(
+    using Target = TupleWrapper<$0[[int *]],
+                                $1(NonNull)[[int *]] _Nonnull>::Tuple;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  Snippet = Header + R"(
+    template <typename... X>
+    struct NullableTuple {
+      using type = TupleWrapper<X _Nullable...>::Tuple;
+    };
+
+    using Target = NullableTuple<$0(Nullable)[[int *]],
+                                 $1(Nullable)[[int *]] _Nonnull>::type;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, AliasTemplateWithDefaultArg) {
+  // TODO(b/281474380): The NullabilityKind should be Nullable and the range
+  // should only enclose the `int *`, but we don't yet handle default argument
+  // sugar correctly.
+  Snippet = R"(
+    template <typename T1, typename T2 = T1>
+    using AliasTemplate = T2;
+
+  using Target =$0[[AliasTemplate<int * _Nullable>]];
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, ClassTemplateWithDefaultArg) {
+  // TODO(b/281474380): This should be two nullable slots with the same range,
+  // but we don't yet handle default argument sugar correctly.
+  Snippet = R"(
+    template <typename T1, typename T2 = T1>
+    class ClassTemplate {};
+
+    using Target = ClassTemplate<$0(Nullable)[[int *]] _Nullable>;
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet),
+              matchesRanges(MissingLocSlots{
+                  {1, Matcher<std::optional<NullabilityKind>>(std::nullopt)}}));
+}
+
+TEST_F(GetTypeNullabilityLocsTest, TemplateArgsBehindAlias) {
+  // TODO: NullabilityKind should be Nullable, but we don't assemble template
+  // contexts behind an alias.
+  Snippet = R"(
+    template <class X>
+    struct Outer {
+      using Inner = X;
+    };
+    using OuterNullable = Outer<int *_Nullable>;
+
+    using Target = $0[[OuterNullable::Inner]];
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, AnnotateNullable) {
+  std::string HeaderWithAttributes = R"cpp(
+    namespace custom {
+    template <class T>
+    using Nullable [[clang::annotate("Nullable")]] = T;
+    template <class T>
+    using NonNull [[clang::annotate("Nonnull")]] = T;
+    }  // namespace custom
+
+    template <class T, class U>
+    class pair;
+
+    template <class X>
+    using twice = pair<X, X>;
+  )cpp";
+  Snippet = R"(using Target = custom::Nullable<$0(Nullable)[[int *]]>;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet, HeaderWithAttributes),
+              matchesRanges());
+  Snippet = R"(using Target = custom::NonNull<$0(NonNull)[[int *]]>;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet, HeaderWithAttributes),
+              matchesRanges());
+  Snippet =
+      R"(using Target = pair<custom::NonNull<$0(NonNull)[[int *]]>, custom::Nullable<$1(Nullable)[[int *]]>>;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet, HeaderWithAttributes),
+              matchesRanges());
+  Snippet =
+      R"(using Target = twice<custom::NonNull<$0(NonNull)[[$1(NonNull)[[int *]]]]>>;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet, HeaderWithAttributes),
+              matchesRanges());
+
+  // Should still work if aliases *do* apply _Nullable.
+  HeaderWithAttributes = R"cpp(
+    namespace custom {
+    template <class T>
+    using Nullable [[clang::annotate("Nullable")]] = T _Nullable;
+    template <class T>
+    using NonNull [[clang::annotate("Nonnull")]] = T _Nonnull;
+    }  // namespace custom
+  )cpp";
+  Snippet = R"(using Target = custom::Nullable<$0(Nullable)[[int *]]>;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet, HeaderWithAttributes),
+              matchesRanges());
+  Snippet = R"(using Target = custom::NonNull<$0(NonNull)[[int *]]>;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet, HeaderWithAttributes),
+              matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, SmartPointers) {
+  std::string Header = R"cpp(
+    namespace std {
+    template <typename T>
+    class unique_ptr {};
+    }  // namespace std
+  )cpp";
+  Snippet = Header + R"(using Target = int;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet = Header + R"(using Target = $0[[std::unique_ptr<int>]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet =
+      Header +
+      R"(using Target = $0[[std::unique_ptr<$1[[std::unique_ptr<int>]]>]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+
+  std::string MoreHeaderWithAttributes = R"cpp(
+    template <typename T>
+    using Nullable [[clang::annotate("Nullable")]] = T;
+    template <typename T>
+    using NonNull [[clang::annotate("Nonnull")]] = T;
+  )cpp";
+  Snippet =
+      Header +
+      R"(using Target = NonNull<$0(NonNull)[[std::unique_ptr<Nullable<$1(Nullable)[[std::unique_ptr<int>]]>>]]>;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet, MoreHeaderWithAttributes),
+              matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest, ArrayBehindElaboratedAlias) {
+  Snippet = R"(
+    namespace ns { using T = int * _Nullable [5]; }
+    using Target = ns::T;
+  )";
+  EXPECT_THAT(
+      getComparableNullabilityLocs(Snippet),
+      matchesRanges(MissingLocSlots{{0, Optional(NullabilityKind::Nullable)}}));
+}
+
+TEST_F(GetTypeNullabilityLocsTest,
+       FunctionPrototypeBehindElaboratedAliasWithPointerReturn) {
+  Snippet = R"(
+    namespace ns { using T = int * _Nullable (* _Nonnull)(); }
+    using Target = $0(NonNull)[[ns::T]];
+  )";
+  EXPECT_THAT(
+      getComparableNullabilityLocs(Snippet),
+      matchesRanges(MissingLocSlots{{1, Optional(NullabilityKind::Nullable)}}));
+}
+
+TEST_F(GetTypeNullabilityLocsTest,
+       FunctionPrototypeBehindElaboratedAliasWithPointerParam) {
+  Snippet = R"(
+    namespace ns { using T = void (* _Nonnull)(int * _Nullable); }
+    using Target = $0(NonNull)[[ns::T]];
+  )";
+  EXPECT_THAT(
+      getComparableNullabilityLocs(Snippet),
+      matchesRanges(MissingLocSlots{{1, Optional(NullabilityKind::Nullable)}}));
+}
+
+TEST_F(GetTypeNullabilityLocsTest,
+       FunctionPrototypePointerParamAfterElaboratedNonPointerParam) {
+  Snippet = R"(
+    namespace ns {
+    using MyInt = int;
+    } //namespace ns
+
+    using Target = $0(NonNull)[[void (* _Nonnull)(ns::MyInt,
+        $1(Nullable)[[int *]] _Nullable)]];
+  )";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+}
+
+TEST_F(GetTypeNullabilityLocsTest,
+       DeclContextTemplateArgsWithElaboratedAliases) {
+  // We record the correct Locs for decl context template args when the decl
+  // context is behind an elaborated alias.
+  std::string Header = R"cpp(
+    namespace ns {
+    template <typename T>
+    struct Outer {
+      template <typename U>
+      struct InnerTemplated {};
+
+      struct Inner {};
+    };
+
+    using MyInnerTemplated = Outer<int* _Nullable>::InnerTemplated<int>;
+    using MyInner = Outer<int* _Nullable>::Inner;
+    }  // namespace ns
+  )cpp";
+  Snippet = Header + R"(using Target = ns::MyInnerTemplated;)";
+  EXPECT_THAT(
+      getComparableNullabilityLocs(Snippet),
+      matchesRanges(MissingLocSlots{{0, Optional(NullabilityKind::Nullable)}}));
+  Snippet = Header + R"(using Target = ns::MyInner;)";
+  EXPECT_THAT(
+      getComparableNullabilityLocs(Snippet),
+      matchesRanges(MissingLocSlots{{0, Optional(NullabilityKind::Nullable)}}));
+
+  // We record the correct Locs for decl context template args when we have
+  // pointer args after elaborated alias args.
+  Header = R"cpp(
+    namespace ns {
+    using MyInt = int;
+    }  // namespace ns
+
+    template <typename T, typename U, typename V, typename W = int* _Nonnull>
+    struct Outer {
+      template <typename X>
+      struct InnerTemplated {};
+
+      struct Inner {};
+    };
+  )cpp";
+  Snippet = Header + R"(
+    using Target = Outer<ns::MyInt, $0(Nullable)[[int *]] _Nullable,
+        ns::MyInt>::InnerTemplated<int>;
+  )";
+  EXPECT_THAT(
+      getComparableNullabilityLocs(Snippet),
+      matchesRanges(
+          // TODO(b/281474380) Should be NonNull, but we don't yet resugar
+          // default arguments.
+          MissingLocSlots{{1, std::optional<NullabilityKind>(std::nullopt)}}));
+  Snippet = Header + R"(
+    using Target = Outer<ns::MyInt, $0(Nullable)[[int *]] _Nullable,
+        ns::MyInt>::Inner;
+  )";
+  EXPECT_THAT(
+      getComparableNullabilityLocs(Snippet),
+      matchesRanges(
+          // TODO(b/281474380) Should be NonNull, but we don't yet resugar
+          // default arguments.
+          MissingLocSlots{{1, std::optional<NullabilityKind>(std::nullopt)}}));
 }
 
 }  // namespace

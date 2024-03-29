@@ -5,15 +5,19 @@
 #include "nullability/inference/eligible_ranges.h"
 
 #include <cassert>
-#include <cstdint>
 #include <optional>
 #include <string_view>
+#include <utility>
+#include <vector>
 
+#include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/type_nullability.h"
 #include "third_party/llvm/llvm-project/clang-tools-extra/clang-tidy/utils/LexerUtils.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/NestedNameSpecifier.h"
+#include "clang/AST/TemplateBase.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
 #include "clang/Basic/FileEntry.h"
@@ -29,6 +33,9 @@
 #include "llvm/Support/Path.h"
 
 namespace clang::tidy::nullability {
+namespace {
+using SlotNum = unsigned;
+}
 
 // TODO: incorporate the predicate used by inference to identify relevant
 // top-level slots.
@@ -58,45 +65,66 @@ static bool isEligibleTypeLoc(TypeLoc TyLoc) {
   return true;
 }
 
-// Extracts the source range of `Loc`, accounting for (nested) qualifiers.
-// Guarantees that `Loc` is eligible for editing, including that its begin and
-// end locations are in the same file.
+// Extracts the source ranges and associated slot values of each eligible type
+// within `Loc`, accounting for (nested) qualifiers. Guarantees that each source
+// range is eligible for editing, including that its begin and end locations are
+// in the same file.
 //
-// We do not consider the `const`-ness of `Loc` itself, because the edit will do
-// the correct thing implicitly: the `const` will be left out of `Loc`'s range,
-// leaving `const` outside the nullability annotation, which is the preferred
-// spelling.
-static std::optional<CharSourceRange> getRangeQualifierAware(
-    TypeLoc Loc, const ASTContext &Context) {
-  if (!isEligibleTypeLoc(Loc)) return std::nullopt;
+// For each eligible TypeLoc, we do not consider the `const`-ness of the TypeLoc
+// itself, because the edit will do the correct thing implicitly: the `const`
+// will be left out of the TypeLoc's range, leaving `const` outside the
+// nullability annotation, which is the preferred spelling.
+static std::vector<std::pair<CharSourceRange, std::optional<SlotNum>>>
+getRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
+                        const ASTContext &Context) {
+  std::vector<TypeNullabilityLoc> NullabilityLocs =
+      getTypeNullabilityLocs(WholeLoc);
+  std::vector<std::pair<CharSourceRange, std::optional<SlotNum>>> CSRsAndSlots;
+  for (auto &[SlotInLoc, T, MaybeLoc, Nullability] : NullabilityLocs) {
+    // TODO(b/323510072) Add already-annotated ranges back in but handle them
+    // better in the inference pipeline so that we get better metrics. Maybe
+    // even improve metrics by counting unannotated ranges separately in
+    // addition to all ranges.
+    if (Nullability || !MaybeLoc || !isEligibleTypeLoc(*MaybeLoc)) continue;
+    auto R = tooling::getFileRange(
+        CharSourceRange::getTokenRange(MaybeLoc->getSourceRange()), Context,
+        /*IncludeMacroExpansion=*/true);
+    if (!R) return {};
 
-  auto R = tooling::getFileRange(
-      CharSourceRange::getTokenRange(Loc.getSourceRange()), Context,
-      /*IncludeMacroExpansion=*/true);
-  if (!R) return std::nullopt;
+    const auto &SM = Context.getSourceManager();
+    const auto &LangOpts = Context.getLangOpts();
 
-  const auto &SM = Context.getSourceManager();
-  const auto &LangOpts = Context.getLangOpts();
+    // The start of the new range.
+    SourceLocation Begin = R->getBegin();
 
-  // The start of the new range.
-  SourceLocation Begin = R->getBegin();
+    // Update `Begin` as we search backwards and find qualifier tokens.
+    auto PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
+    while (PrevTok.getKind() != tok::unknown) {
+      if (!PrevTok.is(tok::raw_identifier)) break;
+      StringRef RawID = PrevTok.getRawIdentifier();
+      if (RawID != "const" && RawID != "volatile" && RawID != "restrict") break;
+      Begin = PrevTok.getLocation();
+      PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
+    }
 
-  // Update `Begin` as we search backwards and find qualifier tokens.
-  auto PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
-  while (PrevTok.getKind() != tok::unknown) {
-    if (!PrevTok.is(tok::raw_identifier)) break;
-    StringRef RawID = PrevTok.getRawIdentifier();
-    if (RawID != "const" && RawID != "volatile" && RawID != "restrict") break;
-    Begin = PrevTok.getLocation();
-    PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
+    // TODO(b/323509132) When we can infer more than just top-level pointers,
+    // synchronize these slot numbers with inference's slot numbers. For now,
+    // assign no slot to anything but a first slot in an inferable type.
+    std::optional<SlotNum> SlotInContext =
+        SlotInLoc == 0 && hasInferable(WholeLoc.getType())
+            ? std::optional(StartingSlot + SlotInLoc)
+            : std::nullopt;
+
+    CSRsAndSlots.push_back(
+        {CharSourceRange::getCharRange(Begin, R->getEnd()), SlotInContext});
   }
 
-  return CharSourceRange::getCharRange(Begin, R->getEnd());
+  return CSRsAndSlots;
 }
 
-static void initSlotRange(SlotRange &R, uint32_t Slot, unsigned Begin,
-                          unsigned End) {
-  R.set_slot(Slot);
+static void initSlotRange(SlotRange &R, std::optional<SlotNum> Slot,
+                          unsigned Begin, unsigned End) {
+  if (Slot) R.set_slot(*Slot);
   R.set_begin(Begin);
   R.set_end(End);
 }
@@ -111,25 +139,28 @@ static std::optional<TypeLocRanges> getEligibleRanges(const FunctionDecl &Fun) {
 
   FileID DeclFID = SrcMgr.getFileID(SrcMgr.getExpansionLoc(Fun.getLocation()));
 
-  if (auto CSR = getRangeQualifierAware(TyLoc.getReturnLoc(), Context)) {
-    auto [FID, Begin] = SrcMgr.getDecomposedLoc(CSR->getBegin());
+  auto CSRsAndSlots =
+      getRangesQualifierAware(TyLoc.getReturnLoc(), SLOT_RETURN_TYPE, Context);
+  for (auto &[CSR, Slot] : CSRsAndSlots) {
+    auto [FID, Begin] = SrcMgr.getDecomposedLoc(CSR.getBegin());
     // If the type comes from a different file, then don't attempt to edit -- it
     // might need manual intervention.
     if (FID == DeclFID)
-      initSlotRange(*Result.add_range(), SLOT_RETURN_TYPE, Begin,
-                    SrcMgr.getFileOffset(CSR->getEnd()));
+      initSlotRange(*Result.add_range(), Slot, Begin,
+                    SrcMgr.getFileOffset(CSR.getEnd()));
   }
 
   for (int I = 0, N = Fun.getNumParams(); I < N; ++I) {
     const ParmVarDecl *P = Fun.getParamDecl(I);
-    if (auto CSR = getRangeQualifierAware(P->getTypeSourceInfo()->getTypeLoc(),
-                                          Context)) {
-      auto [FID, Begin] = SrcMgr.getDecomposedLoc(CSR->getBegin());
+    auto CSRsAndSlots = getRangesQualifierAware(
+        P->getTypeSourceInfo()->getTypeLoc(), SLOT_PARAM + I, Context);
+    for (auto &[CSR, Slot] : CSRsAndSlots) {
+      auto [FID, Begin] = SrcMgr.getDecomposedLoc(CSR.getBegin());
       // If the type comes from a different file, then don't attempt to edit --
       // it might need manual intervention.
       if (FID == DeclFID)
-        initSlotRange(*Result.add_range(), SLOT_PARAM + I, Begin,
-                      SrcMgr.getFileOffset(CSR->getEnd()));
+        initSlotRange(*Result.add_range(), Slot, Begin,
+                      SrcMgr.getFileOffset(CSR.getEnd()));
     }
   }
 
