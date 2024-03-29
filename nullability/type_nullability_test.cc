@@ -931,25 +931,14 @@ TEST_F(GetTypeNullabilityLocsTest, TemplateTemplateParams) {
       using type = typename Nullability<T *>::type;
     };
   )cpp";
-  Snippet = Header + R"(using Target = Pointer<Nullable, int>::type;)";
-  EXPECT_THAT(getComparableNullabilityLocs(Snippet),
-              matchesRanges(
-                  // TODO(b/323510072) The reported PointerType is inside the
-                  // alias, and we don't collect Locs inside aliases, so
-                  // additional handling for this case is needed to at least
-                  // collect the whole `Pointer` type.
-                  MissingLocSlots{{0, Optional(NullabilityKind::Nullable)}}));
+  Snippet = Header +
+            R"(using Target = $0(Nullable)[[Pointer<Nullable, int>::type]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
 
-  Snippet =
-      Header +
-      R"(using Target = Pointer<Nullable, Pointer<Nonnull, int>::type>::type;)";
-  EXPECT_THAT(getComparableNullabilityLocs(Snippet),
-              matchesRanges(
-                  // TODO(b/323510072) The reported PointerType is inside the
-                  // alias, and we don't collect Locs inside aliases, so
-                  // additional handling for this case is needed.
-                  MissingLocSlots{{0, Optional(NullabilityKind::Nullable)},
-                                  {1, Optional(NullabilityKind::NonNull)}}));
+  Snippet = Header +
+            R"(using Target = $0(Nullable)[[Pointer<Nullable,
+                  $1(NonNull)[[Pointer<Nonnull, int>::type]]>::type]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
 
   // Same thing, but with alias templates.
   Header = R"cpp(
@@ -963,24 +952,14 @@ TEST_F(GetTypeNullabilityLocsTest, TemplateTemplateParams) {
       using type = Nullability<T *>;
     };
   )cpp";
-  Snippet = Header + R"(using Target = Pointer<Nullable, int>::type;)";
-  EXPECT_THAT(getComparableNullabilityLocs(Snippet),
-              matchesRanges(
-                  // TODO(b/323510072) The reported PointerType is inside the
-                  // alias, and we don't collect Locs inside aliases, so
-                  // additional handling for this case is needed.
-                  MissingLocSlots{{0, Optional(NullabilityKind::Nullable)}}));
+  Snippet = Header +
+            R"(using Target = $0(Nullable)[[Pointer<Nullable, int>::type]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
 
-  Snippet =
-      Header +
-      R"(using Target = Pointer<Nullable, Pointer<Nonnull, int>::type>::type;)";
-  EXPECT_THAT(getComparableNullabilityLocs(Snippet),
-              matchesRanges(
-                  // TODO(b/323510072) The reported PointerType is inside the
-                  // alias, and we don't collect Locs inside aliases, so
-                  // additional handling for this case is needed.
-                  MissingLocSlots{{0, Optional(NullabilityKind::Nullable)},
-                                  {1, Optional(NullabilityKind::NonNull)}}));
+  Snippet = Header +
+            R"(using Target = $0(Nullable)[[Pointer<Nullable,
+                  $1(NonNull)[[Pointer<Nonnull, int>::type]]>::type]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
 }
 
 TEST_F(GetTypeNullabilityLocsTest, ClassTemplateParamPack) {

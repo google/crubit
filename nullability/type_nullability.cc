@@ -267,20 +267,29 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   // The file whose #pragma governs the type currently being walked.
   FileID File;
 
-  // Tracks the most complete and direct TypeLoc for the type being visited.
+  // The most complete and direct TypeLoc seen so far for the type currently
+  // being visited.
+  std::optional<TypeLoc> BestLocSoFar;
+
+  // Update `BestLocSoFar` for a new TypeLoc seen.
   //
-  // `LocToRecord` should be cleared when traversing into a child type, like a
-  // template argument's type or a function's return type, for which no
-  // already-seen TypeLoc can be a more complete or direct location for the
-  // child's type than the TypeLoc being traversed into. Generally this is the
-  // case when the child's type is not an alternate representation for the
-  // current type but is a new type contained within the current type.
-  //
-  // `LocToRecord` should be set to the current TypeLoc being visited when
-  // traversing into a child element that represents a less complete or direct
-  // TypeLoc for the exact type being currently visited, e.g. when moving from
-  // an ElaboratedType into the less-elaborated named type.
-  std::optional<TypeLoc> LocToRecord;
+  // If not `OverrideElaborated`, an existing ElaboratedTypeLoc in
+  // `BestLocSoFar` will be kept instead of replacing it with `Loc`. This
+  // supports reporting of the most complete TypeLoc for a type, e.g.
+  // `std::unique_ptr<int>` instead of just `unique_ptr<int>`.
+  void recordLoc(TypeLoc Loc, bool OverrideElaborated = false) {
+    if (BestLocSoFar && BestLocSoFar->getType().getCanonicalType() !=
+                            Loc.getType().getCanonicalType()) {
+      // We've moved on to visiting a new type, so clear the Loc.
+      BestLocSoFar = std::nullopt;
+    }
+    // In most cases we want to keep the most Elaborated Loc for the type, but
+    // template arguments supersede that preference.
+    if (!BestLocSoFar || OverrideElaborated ||
+        BestLocSoFar->getTypeLocClass() != TypeLoc::Elaborated) {
+      BestLocSoFar = Loc;
+    }
+  }
 
   void sawNullability(NullabilityKind NK) {
     // If we see nullability applied twice, the outer one wins.
@@ -427,11 +436,19 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     Ctx.ArgLocs.reset();
   }
 
-  void report(const Type *T, std::optional<TypeLoc> L) {
-    if (L && !LocToRecord) LocToRecord = L;
-    derived().report(T, File, PendingNullability, LocToRecord);
+  void report(const Type *T) {
+    if (BestLocSoFar &&
+        //  We only report unqualified types, but the best Loc for such a type
+        //  is the qualified Loc (if present). So, when checking that
+        //  `BestLocSoFar` is a valid TypeLoc for `T`, compare the canonical
+        //  types of `BestLocSoFar`'s *unqualified* type and `T`.
+        BestLocSoFar->getType()->getCanonicalTypeUnqualified() !=
+            T->getCanonicalTypeInternal()) {
+      BestLocSoFar = std::nullopt;
+    }
+    derived().report(T, File, PendingNullability, BestLocSoFar);
     PendingNullability.reset();
-    LocToRecord = std::nullopt;
+    BestLocSoFar = std::nullopt;
   }
 
  public:
@@ -439,20 +456,36 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
 
   void visit(TypeLoc Loc) { visit(Loc.getType(), Loc); }
   void visit(QualType T, std::optional<TypeLoc> L = std::nullopt) {
-    Base::visit(T.getTypePtr(), L);
+    visit(T.getTypePtr(), L);
   }
   void visit(const TemplateArgument &TA,
              std::optional<TemplateArgumentLoc> TAL) {
-    if (TA.getKind() == TemplateArgument::Type) {
-      const auto *ArgTypeSourceInfo = TAL ? TAL->getTypeSourceInfo() : nullptr;
-      visit(TA.getAsType(),
-            ArgTypeSourceInfo
+    switch (TA.getKind()) {
+      case TemplateArgument::Type: {
+        const auto *ArgTypeSourceInfo =
+            TAL ? TAL->getTypeSourceInfo() : nullptr;
+        auto ArgLoc =
+            ArgTypeSourceInfo != nullptr
                 ? std::optional<TypeLoc>(ArgTypeSourceInfo->getTypeLoc())
-                : std::nullopt);
+                : std::nullopt;
+        // Always prefer a template argument Loc over a broader Loc for a type
+        // defined as equal to a template argument, e.g. for the type
+        // `std::vector<int *>::value_type`, prefer to report the Loc for the
+        // `int *` template argument rather than the entire type, since the
+        // value_type alias is equal to the template parameter.
+        if (ArgLoc) recordLoc(*ArgLoc, /*OverrideElaborated=*/true);
+        visit(TA.getAsType(), ArgLoc);
+        break;
+      }
+      case TemplateArgument::Pack: {
+        for (const auto &PackElt : TA.getPackAsArray())
+          visit(PackElt, std::nullopt);
+        break;
+      }
+      default:
+        // Don't handle non-type template arguments.
+        break;
     }
-    if (TA.getKind() == TemplateArgument::Pack)
-      for (const auto &PackElt : TA.getPackAsArray())
-        visit(PackElt, std::nullopt);
   }
   void visit(absl::Nonnull<const DeclContext *> DC) {
     // For now, only consider enclosing classes.
@@ -462,6 +495,11 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
       visit(DC->getParentASTContext().getRecordType(CRD), std::nullopt);
   }
 
+  void visit(absl::Nonnull<const Type *> T, std::optional<TypeLoc> L) {
+    if (L) recordLoc(*L);
+    Base::visit(T, L);
+  }
+
   void visitType(absl::Nonnull<const Type *> T, std::optional<TypeLoc> L) {
     // For sugar not explicitly handled below, desugar and continue.
     // (We need to walk the full structure of the canonical type.)
@@ -469,8 +507,8 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
             T->getLocallyUnqualifiedSingleStepDesugaredType().getTypePtr();
         Desugar != T) {
       // We can't arbitrarily desugar TypeLocs the way we can for types, so we
-      // lose TypeLoc tracking from this point.
-      return Base::visit(Desugar, std::nullopt);
+      // don't collect more TypeLocs from this point in.
+      return visit(Desugar, std::nullopt);
     }
 
     // We don't expect to see any nullable non-sugar types except PointerType
@@ -482,12 +520,8 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   void visitFunctionProtoType(absl::Nonnull<const FunctionProtoType *> FPT,
                               std::optional<FunctionProtoTypeLoc> L) {
     ignoreUnexpectedNullability();
-    {
-      llvm::SaveAndRestore<std::optional<TypeLoc>> ShelveLocToRecord(
-          LocToRecord, std::nullopt);
-      visit(FPT->getReturnType(),
-            L ? std::optional<TypeLoc>(L->getReturnLoc()) : std::nullopt);
-    }
+    visit(FPT->getReturnType(),
+          L ? std::optional<TypeLoc>(L->getReturnLoc()) : std::nullopt);
     if (L) {
       CHECK(FPT->getParamTypes().size() == L->getNumParams());
     }
@@ -500,8 +534,6 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
           ParamLoc = TSI->getTypeLoc();
         }
       }
-      llvm::SaveAndRestore<std::optional<TypeLoc>> ShelveLocToRecord(
-          LocToRecord, std::nullopt);
       visit(FPT->getParamType(I), ParamLoc);
     }
   }
@@ -544,7 +576,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     auto *CRD = TST->getAsCXXRecordDecl();
     CHECK(CRD) << "Expected an alias or class specialization in concrete code";
     if (isSupportedSmartPointerType(QualType(TST, 0))) {
-      report(TST, L);
+      report(TST);
     } else {
       ignoreUnexpectedNullability();
     }
@@ -554,8 +586,6 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     CHECK(!L || TSTArgs.size() == L->getNumArgs());
 
     for (unsigned I = 0; I < TSTArgs.size(); ++I) {
-      llvm::SaveAndRestore<std::optional<TypeLoc>> ShelveLocToRecord(
-          LocToRecord, std::nullopt);
       visit(TSTArgs[I], L ? std::optional<TemplateArgumentLoc>(L->getArgLoc(I))
                           : std::nullopt);
     }
@@ -568,8 +598,6 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(CRD)) {
       for (unsigned I = TSTArgs.size(); I < CTSD->getTemplateArgs().size();
            ++I) {
-        llvm::SaveAndRestore<std::optional<TypeLoc>> ShelveLocToRecord(
-            LocToRecord, std::nullopt);
         visit(CTSD->getTemplateArgs()[I], std::nullopt);
       }
     }
@@ -607,8 +635,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
         llvm::SaveAndRestore OriginalContext(
             CurrentTemplateContext, CurrentTemplateContext->ArgContext);
         llvm::SaveAndRestore SwitchFile(File, Ctx->ArgsFile);
-        llvm::SaveAndRestore<std::optional<TypeLoc>> ShelveLocToRecord(
-            LocToRecord, std::nullopt);
+
         return visit(Arg, ArgLoc);
       }
     }
@@ -677,9 +704,6 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
         BoundTemplateArgs[I].Extends = &BoundTemplateArgs[I + 1];
       Restore.emplace(CurrentTemplateContext, &BoundTemplateArgs.front());
     }
-    if (L) {
-      LocToRecord = L;
-    }
     visit(ET->getNamedType(),
           L ? std::optional<TypeLoc>(L->getNamedTypeLoc()) : std::nullopt);
   }
@@ -693,7 +717,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   void visitRecordType(absl::Nonnull<const RecordType *> RT,
                        std::optional<RecordTypeLoc> L) {
     if (isSupportedSmartPointerType(QualType(RT, 0))) {
-      report(RT, L);
+      report(RT);
     } else {
       ignoreUnexpectedNullability();
     }
@@ -715,8 +739,6 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
             ArgLoc = (*Ctx->ArgLocs)[I];
           }
           auto Arg = (*Ctx->Args)[I];
-          llvm::SaveAndRestore<std::optional<TypeLoc>> ShelveLocToRecord(
-              LocToRecord, std::nullopt);
           visit(Arg, ArgLoc);
         }
         break;
@@ -727,8 +749,6 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
       // without sugar or location.
       auto DeclArgs = CTSD->getTemplateArgs().asArray();
       for (unsigned N = DeclArgs.size(); I < N; ++I) {
-        llvm::SaveAndRestore<std::optional<TypeLoc>> ShelveLocToRecord(
-            LocToRecord, std::nullopt);
         visit(DeclArgs[I], std::nullopt);
       }
     }
@@ -746,9 +766,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
 
   void visitPointerType(absl::Nonnull<const PointerType *> PT,
                         std::optional<PointerTypeLoc> L) {
-    report(PT, L);
-    // Don't need to shelve `LocToRecord` because it will have been cleared by
-    // `report`;
+    report(PT);
     visit(PT->getPointeeType(),
           L ? std::optional<TypeLoc>(L->getPointeeLoc()) : std::nullopt);
   }
@@ -756,8 +774,6 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   void visitReferenceType(absl::Nonnull<const ReferenceType *> RT,
                           std::optional<ReferenceTypeLoc> L) {
     ignoreUnexpectedNullability();
-    llvm::SaveAndRestore<std::optional<TypeLoc>> ShelveLocToRecord(
-        LocToRecord, std::nullopt);
     visit(RT->getPointeeTypeAsWritten(),
           L ? std::optional<TypeLoc>(L->getPointeeLoc()) : std::nullopt);
   }
@@ -765,8 +781,6 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   void visitArrayType(absl::Nonnull<const ArrayType *> AT,
                       std::optional<ArrayTypeLoc> L) {
     ignoreUnexpectedNullability();
-    llvm::SaveAndRestore<std::optional<TypeLoc>> ShelveLocToRecord(
-        LocToRecord, std::nullopt);
     visit(AT->getElementType(),
           L ? std::optional<TypeLoc>(L->getElementLoc()) : std::nullopt);
   }
