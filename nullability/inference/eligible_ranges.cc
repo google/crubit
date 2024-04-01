@@ -7,8 +7,6 @@
 #include <cassert>
 #include <optional>
 #include <string_view>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 #include "nullability/inference/inferable.h"
@@ -67,6 +65,28 @@ static bool isEligibleTypeLoc(TypeLoc TyLoc) {
   return true;
 }
 
+static void initSlotRange(SlotRange &R, std::optional<SlotNum> Slot,
+                          unsigned Begin, unsigned End,
+                          std::optional<NullabilityKind> Nullability) {
+  if (Slot) R.set_slot(*Slot);
+  R.set_begin(Begin);
+  R.set_end(End);
+  if (Nullability) {
+    switch (*Nullability) {
+      case NullabilityKind::NonNull:
+        R.set_existing_annotation(Nullability::NONNULL);
+        break;
+      case NullabilityKind::Nullable:
+      case NullabilityKind::NullableResult:
+        R.set_existing_annotation(Nullability::NULLABLE);
+        break;
+      case NullabilityKind::Unspecified:
+        R.set_existing_annotation(Nullability::UNKNOWN);
+        break;
+    }
+  }
+}
+
 // Extracts the source ranges and associated slot values of each eligible type
 // within `Loc`, accounting for (nested) qualifiers. Guarantees that each source
 // range is eligible for editing, including that its begin and end locations are
@@ -76,23 +96,20 @@ static bool isEligibleTypeLoc(TypeLoc TyLoc) {
 // itself, because the edit will do the correct thing implicitly: the `const`
 // will be left out of the TypeLoc's range, leaving `const` outside the
 // nullability annotation, which is the preferred spelling.
-static std::vector<std::tuple<CharSourceRange, std::optional<SlotNum>,
-                              std::optional<NullabilityKind>>>
-getRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
-                        const ASTContext &Context) {
+static void addRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
+                                    const ASTContext &Context,
+                                    const FileID &DeclFID,
+                                    TypeLocRanges &Result) {
   std::vector<TypeNullabilityLoc> NullabilityLocs =
       getTypeNullabilityLocs(WholeLoc);
-  std::vector<std::tuple<CharSourceRange, std::optional<SlotNum>,
-                         std::optional<NullabilityKind>>>
-      RangeInfos;
+  const auto &SM = Context.getSourceManager();
   for (auto &[SlotInLoc, T, MaybeLoc, Nullability] : NullabilityLocs) {
     if (!MaybeLoc || !isEligibleTypeLoc(*MaybeLoc)) continue;
     auto R = tooling::getFileRange(
         CharSourceRange::getTokenRange(MaybeLoc->getSourceRange()), Context,
         /*IncludeMacroExpansion=*/true);
-    if (!R) return {};
+    if (!R) continue;
 
-    const auto &SM = Context.getSourceManager();
     const auto &LangOpts = Context.getLangOpts();
 
     // The start of the new range.
@@ -116,32 +133,12 @@ getRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
             ? std::optional(StartingSlot + SlotInLoc)
             : std::nullopt;
 
-    RangeInfos.push_back({CharSourceRange::getCharRange(Begin, R->getEnd()),
-                          SlotInContext, Nullability});
-  }
-
-  return RangeInfos;
-}
-
-static void initSlotRange(SlotRange &R, std::optional<SlotNum> Slot,
-                          unsigned Begin, unsigned End,
-                          std::optional<NullabilityKind> Nullability) {
-  if (Slot) R.set_slot(*Slot);
-  R.set_begin(Begin);
-  R.set_end(End);
-  if (Nullability) {
-    switch (*Nullability) {
-      case NullabilityKind::NonNull:
-        R.set_existing_annotation(Nullability::NONNULL);
-        break;
-      case NullabilityKind::Nullable:
-      case NullabilityKind::NullableResult:
-        R.set_existing_annotation(Nullability::NULLABLE);
-        break;
-      case NullabilityKind::Unspecified:
-        R.set_existing_annotation(Nullability::UNKNOWN);
-        break;
-    }
+    auto [FID, BeginOffset] = SM.getDecomposedLoc(Begin);
+    // If the type comes from a different file, then don't attempt to edit -- it
+    // might need manual intervention.
+    if (FID == DeclFID)
+      initSlotRange(*Result.add_range(), SlotInContext, BeginOffset,
+                    SM.getFileOffset(R->getEnd()), Nullability);
   }
 }
 
@@ -155,29 +152,13 @@ static std::optional<TypeLocRanges> getEligibleRanges(const FunctionDecl &Fun) {
 
   FileID DeclFID = SrcMgr.getFileID(SrcMgr.getExpansionLoc(Fun.getLocation()));
 
-  auto CSRsAndSlots =
-      getRangesQualifierAware(TyLoc.getReturnLoc(), SLOT_RETURN_TYPE, Context);
-  for (auto &[CSR, Slot, Nullability] : CSRsAndSlots) {
-    auto [FID, Begin] = SrcMgr.getDecomposedLoc(CSR.getBegin());
-    // If the type comes from a different file, then don't attempt to edit -- it
-    // might need manual intervention.
-    if (FID == DeclFID)
-      initSlotRange(*Result.add_range(), Slot, Begin,
-                    SrcMgr.getFileOffset(CSR.getEnd()), Nullability);
-  }
+  addRangesQualifierAware(TyLoc.getReturnLoc(), SLOT_RETURN_TYPE, Context,
+                          DeclFID, Result);
 
   for (int I = 0, N = Fun.getNumParams(); I < N; ++I) {
     const ParmVarDecl *P = Fun.getParamDecl(I);
-    auto CSRsAndSlots = getRangesQualifierAware(
-        P->getTypeSourceInfo()->getTypeLoc(), SLOT_PARAM + I, Context);
-    for (auto &[CSR, Slot, Nullability] : CSRsAndSlots) {
-      auto [FID, Begin] = SrcMgr.getDecomposedLoc(CSR.getBegin());
-      // If the type comes from a different file, then don't attempt to edit --
-      // it might need manual intervention.
-      if (FID == DeclFID)
-        initSlotRange(*Result.add_range(), Slot, Begin,
-                      SrcMgr.getFileOffset(CSR.getEnd()), Nullability);
-    }
+    addRangesQualifierAware(P->getTypeSourceInfo()->getTypeLoc(),
+                            SLOT_PARAM + I, Context, DeclFID, Result);
   }
 
   if (Result.range().empty()) return std::nullopt;
