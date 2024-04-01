@@ -104,7 +104,7 @@ TEST_F(InferTUTest, UncheckedDeref) {
 
   EXPECT_THAT(infer(),
               ElementsAre(inference(hasName("target"),
-                                    {inferredSlot(1, Inference::NONNULL)})));
+                                    {inferredSlot(1, Nullability::NONNULL)})));
 }
 
 TEST_F(InferTUTest, Samples) {
@@ -118,7 +118,7 @@ TEST_F(InferTUTest, Samples) {
   auto Results = infer();
   ASSERT_THAT(Results,
               ElementsAre(inference(hasName("target"),
-                                    {inferredSlot(1, Inference::NONNULL)})));
+                                    {inferredSlot(1, Nullability::NONNULL)})));
   EXPECT_THAT(Results.front().slot_inference(0).sample_evidence(),
               testing::UnorderedElementsAre(
                   EqualsProto(R"pb(location: "input.cc:2:30"
@@ -138,8 +138,8 @@ TEST_F(InferTUTest, Annotations) {
   EXPECT_THAT(infer(),
               ElementsAre(inference(hasName("target"),
                                     {
-                                        inferredSlot(0, Inference::NONNULL),
-                                        inferredSlot(2, Inference::NULLABLE),
+                                        inferredSlot(0, Nullability::NONNULL),
+                                        inferredSlot(2, Nullability::NULLABLE),
                                     })));
 }
 
@@ -151,7 +151,7 @@ TEST_F(InferTUTest, AnnotationsConflict) {
 
   EXPECT_THAT(infer(),
               ElementsAre(inference(hasName("target"),
-                                    {inferredSlot(0, Inference::UNKNOWN)})));
+                                    {inferredSlot(0, Nullability::UNKNOWN)})));
 }
 
 TEST_F(InferTUTest, ParamsFromCallSite) {
@@ -163,9 +163,9 @@ TEST_F(InferTUTest, ParamsFromCallSite) {
   ASSERT_THAT(infer(),
               Contains(inference(hasName("callee"),
                                  {
-                                     inferredSlot(1, Inference::UNKNOWN),
-                                     inferredSlot(2, Inference::NONNULL),
-                                     inferredSlot(3, Inference::NULLABLE),
+                                     inferredSlot(1, Nullability::UNKNOWN),
+                                     inferredSlot(2, Nullability::NONNULL),
+                                     inferredSlot(3, Nullability::NULLABLE),
                                  })));
 }
 
@@ -175,7 +175,7 @@ TEST_F(InferTUTest, ReturnTypeNullable) {
   )cc");
   EXPECT_THAT(infer(),
               ElementsAre(inference(hasName("target"),
-                                    {inferredSlot(0, Inference::NULLABLE)})));
+                                    {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUTest, ReturnTypeNonnull) {
@@ -185,7 +185,7 @@ TEST_F(InferTUTest, ReturnTypeNonnull) {
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
-                                 {inferredSlot(0, Inference::NONNULL)})));
+                                 {inferredSlot(0, Nullability::NONNULL)})));
 }
 
 TEST_F(InferTUTest, ReturnTypeNonnullAndUnknown) {
@@ -198,7 +198,7 @@ TEST_F(InferTUTest, ReturnTypeNonnullAndUnknown) {
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
-                                 {inferredSlot(0, Inference::UNKNOWN)})));
+                                 {inferredSlot(0, Nullability::UNKNOWN)})));
 }
 
 TEST_F(InferTUTest, ReturnTypeNonnullAndNullable) {
@@ -211,7 +211,7 @@ TEST_F(InferTUTest, ReturnTypeNonnullAndNullable) {
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
-                                 {inferredSlot(0, Inference::NULLABLE)})));
+                                 {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUTest, ReturnTypeDereferenced) {
@@ -225,7 +225,7 @@ TEST_F(InferTUTest, ReturnTypeDereferenced) {
   )cc");
   EXPECT_THAT(infer(),
               ElementsAre(inference(hasName("makePtr"),
-                                    {inferredSlot(0, Inference::NONNULL)})));
+                                    {inferredSlot(0, Nullability::NONNULL)})));
 }
 
 TEST_F(InferTUTest, PassedToNonnull) {
@@ -235,7 +235,7 @@ TEST_F(InferTUTest, PassedToNonnull) {
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
-                                 {inferredSlot(1, Inference::NONNULL)})));
+                                 {inferredSlot(1, Nullability::NONNULL)})));
 }
 
 TEST_F(InferTUTest, PassedToMutableNullableRef) {
@@ -245,7 +245,7 @@ TEST_F(InferTUTest, PassedToMutableNullableRef) {
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
-                                 {inferredSlot(1, Inference::NULLABLE)})));
+                                 {inferredSlot(1, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUTest, AssignedFromNullable) {
@@ -254,7 +254,7 @@ TEST_F(InferTUTest, AssignedFromNullable) {
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
-                                 {inferredSlot(1, Inference::NULLABLE)})));
+                                 {inferredSlot(1, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUTest, CHECKMacro) {
@@ -265,7 +265,7 @@ TEST_F(InferTUTest, CHECKMacro) {
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
-                                 {inferredSlot(1, Inference::NONNULL)})));
+                                 {inferredSlot(1, Nullability::NONNULL)})));
 }
 
 TEST_F(InferTUTest, CHECKNEMacro) {
@@ -282,10 +282,10 @@ TEST_F(InferTUTest, CHECKNEMacro) {
   )cc");
   EXPECT_THAT(infer(),
               UnorderedElementsAre(inference(
-                  hasName("target"), {inferredSlot(1, Inference::NONNULL),
-                                      inferredSlot(2, Inference::NONNULL),
-                                      inferredSlot(3, Inference::NONNULL),
-                                      inferredSlot(4, Inference::NONNULL)})));
+                  hasName("target"), {inferredSlot(1, Nullability::NONNULL),
+                                      inferredSlot(2, Nullability::NONNULL),
+                                      inferredSlot(3, Nullability::NONNULL),
+                                      inferredSlot(4, Nullability::NONNULL)})));
 }
 
 TEST_F(InferTUTest, Filter) {
@@ -315,48 +315,48 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
   EXPECT_THAT(
       inferTU(AST->context(), /*Iterations=*/1),
       UnorderedElementsAre(
-          inference(hasName("target"), {inferredSlot(0, Inference::UNKNOWN),
-                                        inferredSlot(1, Inference::NONNULL)}),
+          inference(hasName("target"), {inferredSlot(0, Nullability::UNKNOWN),
+                                        inferredSlot(1, Nullability::NONNULL)}),
           inference(hasName("returnsToBeNonnull"),
-                    {inferredSlot(0, Inference::UNKNOWN),
-                     inferredSlot(1, Inference::UNKNOWN)}),
+                    {inferredSlot(0, Nullability::UNKNOWN),
+                     inferredSlot(1, Nullability::UNKNOWN)}),
           inference(hasName("takesToBeNonnull"),
-                    {inferredSlot(1, Inference::NONNULL)})));
+                    {inferredSlot(1, Nullability::NONNULL)})));
   EXPECT_THAT(
       inferTU(AST->context(), /*Iterations=*/2),
       UnorderedElementsAre(
-          inference(hasName("target"), {inferredSlot(0, Inference::UNKNOWN),
-                                        inferredSlot(1, Inference::NONNULL),
-                                        inferredSlot(2, Inference::NONNULL)}),
+          inference(hasName("target"), {inferredSlot(0, Nullability::UNKNOWN),
+                                        inferredSlot(1, Nullability::NONNULL),
+                                        inferredSlot(2, Nullability::NONNULL)}),
           inference(hasName("returnsToBeNonnull"),
-                    {inferredSlot(0, Inference::UNKNOWN),
-                     inferredSlot(1, Inference::NONNULL)}),
+                    {inferredSlot(0, Nullability::UNKNOWN),
+                     inferredSlot(1, Nullability::NONNULL)}),
           inference(hasName("takesToBeNonnull"),
-                    {inferredSlot(1, Inference::NONNULL)})));
+                    {inferredSlot(1, Nullability::NONNULL)})));
   EXPECT_THAT(
       inferTU(AST->context(), /*Iterations=*/3),
       UnorderedElementsAre(
-          inference(hasName("target"), {inferredSlot(0, Inference::UNKNOWN),
-                                        inferredSlot(1, Inference::NONNULL),
-                                        inferredSlot(2, Inference::NONNULL),
-                                        inferredSlot(3, Inference::NONNULL)}),
+          inference(hasName("target"), {inferredSlot(0, Nullability::UNKNOWN),
+                                        inferredSlot(1, Nullability::NONNULL),
+                                        inferredSlot(2, Nullability::NONNULL),
+                                        inferredSlot(3, Nullability::NONNULL)}),
           inference(hasName("returnsToBeNonnull"),
-                    {inferredSlot(0, Inference::NONNULL),
-                     inferredSlot(1, Inference::NONNULL)}),
+                    {inferredSlot(0, Nullability::NONNULL),
+                     inferredSlot(1, Nullability::NONNULL)}),
           inference(hasName("takesToBeNonnull"),
-                    {inferredSlot(1, Inference::NONNULL)})));
+                    {inferredSlot(1, Nullability::NONNULL)})));
   EXPECT_THAT(
       inferTU(AST->context(), /*Iterations=*/4),
       UnorderedElementsAre(
-          inference(hasName("target"), {inferredSlot(0, Inference::NONNULL),
-                                        inferredSlot(1, Inference::NONNULL),
-                                        inferredSlot(2, Inference::NONNULL),
-                                        inferredSlot(3, Inference::NONNULL)}),
+          inference(hasName("target"), {inferredSlot(0, Nullability::NONNULL),
+                                        inferredSlot(1, Nullability::NONNULL),
+                                        inferredSlot(2, Nullability::NONNULL),
+                                        inferredSlot(3, Nullability::NONNULL)}),
           inference(hasName("returnsToBeNonnull"),
-                    {inferredSlot(0, Inference::NONNULL),
-                     inferredSlot(1, Inference::NONNULL)}),
+                    {inferredSlot(0, Nullability::NONNULL),
+                     inferredSlot(1, Nullability::NONNULL)}),
           inference(hasName("takesToBeNonnull"),
-                    {inferredSlot(1, Inference::NONNULL)})));
+                    {inferredSlot(1, Nullability::NONNULL)})));
 }
 
 using InferTUSmartPointerTest = InferTUTest;

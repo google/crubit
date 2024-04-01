@@ -100,8 +100,7 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
   void render(const Inference &I, const Decl &D) {
     for (const auto &Slot : I.slot_inference()) {
       Diags.Report(D.getLocation(), DiagInferHere)
-          << slotName(Slot.slot(), D)
-          << Inference::Nullability_Name(Slot.nullability());
+          << slotName(Slot.slot(), D) << Nullability_Name(Slot.nullability());
       if (PrintEvidence) {
         for (const auto &Sample : Slot.sample_evidence()) {
           if (SourceLocation Loc = parseLoc(Sample.location()); Loc.isValid())

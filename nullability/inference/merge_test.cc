@@ -185,8 +185,7 @@ class InferTest : public ::testing::Test {
  protected:
   void add(Evidence::Kind E, int N = 1) { Counts[E] += N; }
 
-  Inference::Nullability infer(bool ExpectConflict = false,
-                               bool ExpectTrivial = false) {
+  Nullability infer(bool ExpectConflict = false, bool ExpectTrivial = false) {
     auto Result = nullability::infer(Counts);
     EXPECT_EQ(ExpectConflict, Result.Conflict);
     EXPECT_EQ(ExpectTrivial, Result.Trivial);
@@ -194,79 +193,79 @@ class InferTest : public ::testing::Test {
   }
 };
 
-TEST_F(InferTest, NoEvidence) { EXPECT_EQ(Inference::UNKNOWN, infer()); }
+TEST_F(InferTest, NoEvidence) { EXPECT_EQ(Nullability::UNKNOWN, infer()); }
 
 TEST_F(InferTest, Annotated) {
   add(Evidence::ANNOTATED_NULLABLE);
-  EXPECT_EQ(Inference::NULLABLE,
+  EXPECT_EQ(Nullability::NULLABLE,
             infer(/*ExpectConflict=*/false, /*ExpectTrivial=*/true));
   add(Evidence::UNCHECKED_DEREFERENCE);  // No conflict, annotation wins.
-  EXPECT_EQ(Inference::NULLABLE,
+  EXPECT_EQ(Nullability::NULLABLE,
             infer(/*ExpectConflict=*/false, /*ExpectTrivial=*/true));
   add(Evidence::ANNOTATED_NONNULL);  // Conflicting annotations!
-  EXPECT_EQ(Inference::UNKNOWN, infer(/*ExpectConflict=*/true));
+  EXPECT_EQ(Nullability::UNKNOWN, infer(/*ExpectConflict=*/true));
 }
 
 TEST_F(InferTest, Deref) {
   add(Evidence::UNCHECKED_DEREFERENCE);
-  EXPECT_EQ(Inference::NONNULL, infer());
+  EXPECT_EQ(Nullability::NONNULL, infer());
 }
 
 TEST_F(InferTest, NullableArgumentPassed) {
   add(Evidence::NULLABLE_ARGUMENT);
-  EXPECT_EQ(Inference::NULLABLE, infer());
+  EXPECT_EQ(Nullability::NULLABLE, infer());
   add(Evidence::NONNULL_ARGUMENT);
-  EXPECT_EQ(Inference::NULLABLE, infer());
+  EXPECT_EQ(Nullability::NULLABLE, infer());
   add(Evidence::UNKNOWN_ARGUMENT);
-  EXPECT_EQ(Inference::NULLABLE, infer());
+  EXPECT_EQ(Nullability::NULLABLE, infer());
   add(Evidence::UNCHECKED_DEREFERENCE);
-  EXPECT_EQ(Inference::NONNULL, infer(/*ExpectConflict=*/true));
+  EXPECT_EQ(Nullability::NONNULL, infer(/*ExpectConflict=*/true));
 }
 
 TEST_F(InferTest, OnlyNonnullArgumentsPassed) {
   add(Evidence::NONNULL_ARGUMENT);
-  EXPECT_EQ(Inference::NONNULL, infer());
+  EXPECT_EQ(Nullability::NONNULL, infer());
 }
 
 TEST_F(InferTest, NonnullAndUnknownArgumentsPassed) {
   add(Evidence::NONNULL_ARGUMENT);
   add(Evidence::UNKNOWN_ARGUMENT);
-  EXPECT_EQ(Inference::UNKNOWN, infer());
+  EXPECT_EQ(Nullability::UNKNOWN, infer());
 }
 
 TEST_F(InferTest, AssignedFromNullable) {
   add(Evidence::ASSIGNED_FROM_NULLABLE);
-  EXPECT_EQ(Inference::NULLABLE, infer());
+  EXPECT_EQ(Nullability::NULLABLE, infer());
   add(Evidence::UNCHECKED_DEREFERENCE);
-  EXPECT_EQ(Inference::NONNULL, infer(/*ExpectConflict=*/true));
+  EXPECT_EQ(Nullability::NONNULL, infer(/*ExpectConflict=*/true));
 }
 
 TEST_F(InferTest, ReturnValues) {
   add(Evidence::NONNULL_RETURN);
-  EXPECT_EQ(Inference::NONNULL, infer());
+  EXPECT_EQ(Nullability::NONNULL, infer());
   add(Evidence::UNKNOWN_RETURN);
-  EXPECT_EQ(Inference::UNKNOWN, infer());
+  EXPECT_EQ(Nullability::UNKNOWN, infer());
   add(Evidence::NULLABLE_RETURN);
-  EXPECT_EQ(Inference::NULLABLE, infer());
+  EXPECT_EQ(Nullability::NULLABLE, infer());
 }
 
 TEST_F(InferTest, PassedToNonnull) {
   add(Evidence::BOUND_TO_NONNULL);
-  EXPECT_EQ(Inference::NONNULL, infer());
+  EXPECT_EQ(Nullability::NONNULL, infer());
 }
 
 TEST_F(InferTest, PassedToMutableNullable) {
   add(Evidence::BOUND_TO_MUTABLE_NULLABLE);
-  EXPECT_EQ(Inference::NULLABLE, infer());
+  EXPECT_EQ(Nullability::NULLABLE, infer());
   add(Evidence::BOUND_TO_NONNULL);
-  EXPECT_EQ(Inference::NONNULL, infer(/*ExpectConflict=*/true));
+  EXPECT_EQ(Nullability::NONNULL, infer(/*ExpectConflict=*/true));
 }
 
 TEST_F(InferTest, AbortIfNull) {
   add(Evidence::ABORT_IF_NULL);
-  EXPECT_EQ(Inference::NONNULL, infer());
+  EXPECT_EQ(Nullability::NONNULL, infer());
   add(Evidence::NULLABLE_ARGUMENT);
-  EXPECT_EQ(Inference::NULLABLE, infer(/*ExpectConflict=*/true));
+  EXPECT_EQ(Nullability::NULLABLE, infer(/*ExpectConflict=*/true));
 }
 
 }  // namespace

@@ -7,6 +7,7 @@
 #include <cassert>
 #include <optional>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -24,6 +25,7 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
+#include "clang/Basic/Specifiers.h"
 #include "clang/Basic/TokenKinds.h"
 #include "clang/Index/USRGeneration.h"
 #include "clang/Lex/Lexer.h"
@@ -74,18 +76,17 @@ static bool isEligibleTypeLoc(TypeLoc TyLoc) {
 // itself, because the edit will do the correct thing implicitly: the `const`
 // will be left out of the TypeLoc's range, leaving `const` outside the
 // nullability annotation, which is the preferred spelling.
-static std::vector<std::pair<CharSourceRange, std::optional<SlotNum>>>
+static std::vector<std::tuple<CharSourceRange, std::optional<SlotNum>,
+                              std::optional<NullabilityKind>>>
 getRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
                         const ASTContext &Context) {
   std::vector<TypeNullabilityLoc> NullabilityLocs =
       getTypeNullabilityLocs(WholeLoc);
-  std::vector<std::pair<CharSourceRange, std::optional<SlotNum>>> CSRsAndSlots;
+  std::vector<std::tuple<CharSourceRange, std::optional<SlotNum>,
+                         std::optional<NullabilityKind>>>
+      RangeInfos;
   for (auto &[SlotInLoc, T, MaybeLoc, Nullability] : NullabilityLocs) {
-    // TODO(b/323510072) Add already-annotated ranges back in but handle them
-    // better in the inference pipeline so that we get better metrics. Maybe
-    // even improve metrics by counting unannotated ranges separately in
-    // addition to all ranges.
-    if (Nullability || !MaybeLoc || !isEligibleTypeLoc(*MaybeLoc)) continue;
+    if (!MaybeLoc || !isEligibleTypeLoc(*MaybeLoc)) continue;
     auto R = tooling::getFileRange(
         CharSourceRange::getTokenRange(MaybeLoc->getSourceRange()), Context,
         /*IncludeMacroExpansion=*/true);
@@ -115,18 +116,33 @@ getRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
             ? std::optional(StartingSlot + SlotInLoc)
             : std::nullopt;
 
-    CSRsAndSlots.push_back(
-        {CharSourceRange::getCharRange(Begin, R->getEnd()), SlotInContext});
+    RangeInfos.push_back({CharSourceRange::getCharRange(Begin, R->getEnd()),
+                          SlotInContext, Nullability});
   }
 
-  return CSRsAndSlots;
+  return RangeInfos;
 }
 
 static void initSlotRange(SlotRange &R, std::optional<SlotNum> Slot,
-                          unsigned Begin, unsigned End) {
+                          unsigned Begin, unsigned End,
+                          std::optional<NullabilityKind> Nullability) {
   if (Slot) R.set_slot(*Slot);
   R.set_begin(Begin);
   R.set_end(End);
+  if (Nullability) {
+    switch (*Nullability) {
+      case NullabilityKind::NonNull:
+        R.set_existing_annotation(Nullability::NONNULL);
+        break;
+      case NullabilityKind::Nullable:
+      case NullabilityKind::NullableResult:
+        R.set_existing_annotation(Nullability::NULLABLE);
+        break;
+      case NullabilityKind::Unspecified:
+        R.set_existing_annotation(Nullability::UNKNOWN);
+        break;
+    }
+  }
 }
 
 static std::optional<TypeLocRanges> getEligibleRanges(const FunctionDecl &Fun) {
@@ -141,26 +157,26 @@ static std::optional<TypeLocRanges> getEligibleRanges(const FunctionDecl &Fun) {
 
   auto CSRsAndSlots =
       getRangesQualifierAware(TyLoc.getReturnLoc(), SLOT_RETURN_TYPE, Context);
-  for (auto &[CSR, Slot] : CSRsAndSlots) {
+  for (auto &[CSR, Slot, Nullability] : CSRsAndSlots) {
     auto [FID, Begin] = SrcMgr.getDecomposedLoc(CSR.getBegin());
     // If the type comes from a different file, then don't attempt to edit -- it
     // might need manual intervention.
     if (FID == DeclFID)
       initSlotRange(*Result.add_range(), Slot, Begin,
-                    SrcMgr.getFileOffset(CSR.getEnd()));
+                    SrcMgr.getFileOffset(CSR.getEnd()), Nullability);
   }
 
   for (int I = 0, N = Fun.getNumParams(); I < N; ++I) {
     const ParmVarDecl *P = Fun.getParamDecl(I);
     auto CSRsAndSlots = getRangesQualifierAware(
         P->getTypeSourceInfo()->getTypeLoc(), SLOT_PARAM + I, Context);
-    for (auto &[CSR, Slot] : CSRsAndSlots) {
+    for (auto &[CSR, Slot, Nullability] : CSRsAndSlots) {
       auto [FID, Begin] = SrcMgr.getDecomposedLoc(CSR.getBegin());
       // If the type comes from a different file, then don't attempt to edit --
       // it might need manual intervention.
       if (FID == DeclFID)
         initSlotRange(*Result.add_range(), Slot, Begin,
-                      SrcMgr.getFileOffset(CSR.getEnd()));
+                      SrcMgr.getFileOffset(CSR.getEnd()), Nullability);
     }
   }
 

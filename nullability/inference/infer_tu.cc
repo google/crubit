@@ -91,11 +91,11 @@ class InferenceManager {
         for (const auto& slot_inference : Inference.slot_inference()) {
           if (slot_inference.trivial() || slot_inference.conflict()) continue;
           switch (slot_inference.nullability()) {
-            case Inference::NULLABLE:
+            case Nullability::NULLABLE:
               NullableFromLastRound.insert(
                   fingerprint(Inference.symbol().usr(), slot_inference.slot()));
               break;
-            case Inference::NONNULL:
+            case Nullability::NONNULL:
               NonnullFromLastRound.insert(
                   fingerprint(Inference.symbol().usr(), slot_inference.slot()));
               break;

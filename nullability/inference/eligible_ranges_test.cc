@@ -122,7 +122,7 @@ TEST(GenEditsTest, PointeeConstIncluded) {
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
 TEST(GenEditsTest, NestedPointeeConstIncluded) {
@@ -149,17 +149,22 @@ TEST(GenEditsTest, FunctionAndArrayTypeIgnored) {
   EXPECT_EQ(getEligibleRanges(Input), std::nullopt);
 }
 
-TEST(GenEditsTest, AnnotatedSlotsGetNoRange) {
-  std::string Input = R"(
-  void foo(Nonnull<int *> nonnull,
-           Nullable<int *> nullable,
-           NullabilityUnknown<int *> unknown);
-  )";
-  EXPECT_EQ(getEligibleRanges(Input), std::nullopt);
+TEST(GenEditsTest, AnnotatedSlotsGetRangesForPointerTypeOnly) {
+  auto Input = Annotations(R"(
+  void foo(Nonnull<$one[[int *]]> nonnull,
+           Nullable<$two[[int *]]> nullable,
+           NullabilityUnknown<$three[[int *]]> unknown);
+  )");
+  EXPECT_THAT(getEligibleRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(SlotRange(1, Input.range("one")),
+                                       SlotRange(2, Input.range("two")),
+                                       SlotRange(3, Input.range("three"))))));
 }
 
 TEST(GenEditsTest, NamespacedAliasAnnotatedSlotsGetNoRange) {
-  std::string Input = R"(
+  auto Input = Annotations(R"(
   namespace custom {
   template <typename T>
   using CustomNonnull = Nonnull<T>;
@@ -172,16 +177,24 @@ TEST(GenEditsTest, NamespacedAliasAnnotatedSlotsGetNoRange) {
   // Note also that these custom annotations are aliases for the nullability
   // annotations, not themselves annotated. Aliases of any depth for a
   // nullability annotation are considered an annotation.
-  void foo(custom::CustomNonnull<int *> nonnull,
-           custom::CustomNullable<int *> nullable,
-           custom::CustomUnknown<int *> unknown);
-  )";
-  EXPECT_EQ(getEligibleRanges(Input), std::nullopt);
+  void foo(custom::CustomNonnull<$one[[int *]]> nonnull,
+           custom::CustomNullable<$two[[int *]]> nullable,
+           custom::CustomUnknown<$three[[int *]]> unknown);
+  )");
+  EXPECT_THAT(getEligibleRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(SlotRange(1, Input.range("one")),
+                                       SlotRange(2, Input.range("two")),
+                                       SlotRange(3, Input.range("three"))))));
 }
 
-TEST(GenEditsTest, NestedAnnotationsGetNoRange) {
-  std::string Input = R"(void foo(Nonnull<Nonnull<int *>> a);)";
-  EXPECT_EQ(getEligibleRanges(Input), std::nullopt);
+TEST(GenEditsTest, NestedAnnotationsGetOneRange) {
+  auto Input = Annotations(R"(void foo(Nonnull<Nonnull<[[int *]]>> a);)");
+  EXPECT_THAT(
+      getEligibleRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
 TEST(GenEditsTest, NestedPointersOuterAnnotated) {
@@ -191,18 +204,25 @@ TEST(GenEditsTest, NestedPointersOuterAnnotated) {
   template <typename T>
   class unique_ptr;
   }
-  
-  void foo(Nonnull<$one[[int *]]*> p, Nonnull<std::unique_ptr<$two[[int*]]>> q,
-           Nonnull<$three[[std::unique_ptr<int>]]*> r,
-           Nonnull<std::unique_ptr<$four[[std::unique_ptr<int>]]>> s);
+  void foo(
+      Nonnull<$one_o[[$one_i[[int *]]*]]> p,
+      Nonnull<$two_o[[std::unique_ptr<$two_i[[int*]]>]]> q,
+      Nonnull<$three_o[[$three_i[[std::unique_ptr<int>]]*]]> r,
+      Nonnull<$four_o[[std::unique_ptr<$four_i[[std::unique_ptr<int>]]>]]> s);
   )");
   EXPECT_THAT(getEligibleRanges(Input.code()),
               Optional(TypeLocRanges(
-                  MainFileName,
-                  UnorderedElementsAre(SlotRange(-1, Input.range("one")),
-                                       SlotRange(-1, Input.range("two")),
-                                       SlotRange(-1, Input.range("three")),
-                                       SlotRange(-1, Input.range("four"))))));
+                  MainFileName, UnorderedElementsAre(
+                                    SlotRange(1, Input.range("one_o")),
+                                    SlotRange(-1, Input.range("one_i")),
+                                    // TODO(b/330702908) When supported, Slot 2.
+                                    SlotRange(-1, Input.range("two_o")),
+                                    SlotRange(-1, Input.range("two_i")),
+                                    SlotRange(3, Input.range("three_o")),
+                                    SlotRange(-1, Input.range("three_i")),
+                                    // TODO(b/330702908) When supported, Slot 4.
+                                    SlotRange(-1, Input.range("four_o")),
+                                    SlotRange(-1, Input.range("four_i"))))));
 }
 
 TEST(GenEditsTest, NestedPointersInnerAnnotated) {
@@ -212,20 +232,26 @@ TEST(GenEditsTest, NestedPointersInnerAnnotated) {
   template <typename T>
   class unique_ptr;
   }
-  
-  void foo($one[[Nonnull<int *>*]] p, $two[[std::unique_ptr<Nonnull<int*>>]] q,
-           $three[[Nonnull<std::unique_ptr<int>>*]] r,
-           $four[[std::unique_ptr<Nonnull<std::unique_ptr<int>>>]] s);
+
+  void foo(
+      $one_o[[Nonnull<$one_i[[int *]]>*]] p,
+      $two_o[[std::unique_ptr<Nonnull<$two_i[[int*]]>>]] q,
+      $three_o[[Nonnull<$three_i[[std::unique_ptr<int>]]>*]] r,
+      $four_o[[std::unique_ptr<Nonnull<$four_i[[std::unique_ptr<int>]]>>]] s);
   )");
   EXPECT_THAT(getEligibleRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName, UnorderedElementsAre(
-                                    SlotRange(1, Input.range("one")),
+                                    SlotRange(1, Input.range("one_o")),
+                                    SlotRange(-1, Input.range("one_i")),
                                     // TODO(b/330702908) When supported, Slot 2.
-                                    SlotRange(-1, Input.range("two")),
-                                    SlotRange(3, Input.range("three")),
+                                    SlotRange(-1, Input.range("two_o")),
+                                    SlotRange(-1, Input.range("two_i")),
+                                    SlotRange(3, Input.range("three_o")),
+                                    SlotRange(-1, Input.range("three_i")),
                                     // TODO(b/330702908) When supported, Slot 4.
-                                    SlotRange(-1, Input.range("four"))))));
+                                    SlotRange(-1, Input.range("four_o")),
+                                    SlotRange(-1, Input.range("four_i"))))));
 }
 
 TEST(GenEditsTest, RefToPointer) {
@@ -239,8 +265,8 @@ TEST(GenEditsTest, RefToPointer) {
 TEST(GenEditsTest, TemplateOfPointers) {
   auto Input = Annotations(R"(
   template <typename One, typename Two>
-  struct S {};
-  
+  struct S {}; 
+
   void foo(S<$one[[int *]], $two[[$two_inner[[bool *]]*]]> p);
   )");
   EXPECT_THAT(getEligibleRanges(Input.code()),
@@ -255,9 +281,10 @@ TEST(GenEditsTest, TemplateOfConstPointers) {
   auto Input = Annotations(R"(
   template <typename One, typename Two>
   struct S {};
-  
-  void foo(S<$one[[const int *]], $two_o[[$two_i[[const int *]] const *]]> p,
-           S<$three[[int *]] const, $four_o[[$four_i[[int *]] const *]] const> q);
+
+  void foo(
+      S<$one[[const int *]], $two_o[[$two_i[[const int *]] const *]]> p,
+      S<$three[[int *]] const, $four_o[[$four_i[[int *]] const *]] const> q);
   )");
   EXPECT_THAT(getEligibleRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -278,13 +305,16 @@ TEST(GenEditsTest, UniquePtr) {
   class unique_ptr;
   }
 
-  void foo([[std::unique_ptr<int>]] std_smart,
-           Nonnull<std::unique_ptr<int>> nonnull_std_smart);
+  void foo($one[[std::unique_ptr<int>]] std_smart,
+           Nonnull<$two[[std::unique_ptr<int>]]> nonnull_std_smart);
   )");
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(-1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(
+                            // TODO(b/330702908) When supported, Slots 1 and 2.
+                            SlotRange(-1, Input.range("one")),
+                            SlotRange(-1, Input.range("two"))))));
 }
 
 TEST(GenEditsTest, UserDefinedSmartPointer) {
@@ -295,13 +325,16 @@ TEST(GenEditsTest, UserDefinedSmartPointer) {
     using pointer = int;
   };
 
-  void foo([[MySmartIntPtr]] user_defined_smart,
-           Nonnull<MySmartIntPtr> nonnull_user_defined_smart);
+  void foo($one[[MySmartIntPtr]] user_defined_smart,
+           Nonnull<$two[[MySmartIntPtr]]> nonnull_user_defined_smart);
   )");
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(-1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(
+                            // TODO(b/330702908) When supported, Slots 1 and 2.
+                            SlotRange(-1, Input.range("one")),
+                            SlotRange(-1, Input.range("two"))))));
 }
 
 TEST(GenEditsTest, UserDefinedTemplatedSmartPointer) {
@@ -312,13 +345,16 @@ TEST(GenEditsTest, UserDefinedTemplatedSmartPointer) {
     using absl_nullability_compatible = void;
   };
 
-  void foo([[MySmartPtr<int>]] user_defined_smart,
-           Nonnull<MySmartPtr<int>> nonnull_user_defined_smart);
+  void foo($one[[MySmartPtr<int>]] user_defined_smart,
+           Nonnull<$two[[MySmartPtr<int>]]> nonnull_user_defined_smart);
   )");
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(-1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(
+                            // TODO(b/330702908) When supported, Slots 1 and 2.
+                            SlotRange(-1, Input.range("one")),
+                            SlotRange(-1, Input.range("two"))))));
 }
 
 TEST(GenEditsTest, SimpleAlias) {
@@ -330,7 +366,7 @@ TEST(GenEditsTest, SimpleAlias) {
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
 TEST(GenEditsTest, InaccessibleAlias) {
@@ -353,7 +389,7 @@ TEST(GenEditsTest, NestedAlias) {
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
 TEST(GenEditsTest, AliasTemplate) {
@@ -366,7 +402,7 @@ TEST(GenEditsTest, AliasTemplate) {
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
 TEST(GenEditsTest, DependentAliasSimple) {
@@ -381,7 +417,7 @@ TEST(GenEditsTest, DependentAliasSimple) {
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
 TEST(GenEditsTest, DependentAliasAnnotated) {
@@ -391,9 +427,12 @@ TEST(GenEditsTest, DependentAliasAnnotated) {
     using type = T;
   };
 
-  void foo(S<Nullable<int *>>::type a);
+  void foo(S<Nullable<[[int *]]>>::type a);
   )");
-  EXPECT_EQ(getEligibleRanges(Input.code()), std::nullopt);
+  EXPECT_THAT(
+      getEligibleRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
 TEST(GenEditsTest, DependentAliasOfDependentAlias) {
@@ -406,13 +445,13 @@ TEST(GenEditsTest, DependentAliasOfDependentAlias) {
   struct S {
     using type = vector<T>::value_type;
   };
-  
+
   void foo(S<[[int *]]>::type a);
   )");
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
 TEST(GenEditsTest, DependentAliasTemplate) {
@@ -424,7 +463,7 @@ TEST(GenEditsTest, DependentAliasTemplate) {
     template <template<typename> typename U>
     using type = U<T>;
   };
-  
+
   void foo(S<[[int*]]>::type<vector> a);
   )");
   EXPECT_THAT(
@@ -439,7 +478,7 @@ TEST(GenEditsTest, DependentAliasNested) {
   struct vector {
     using value_type = V;
   };
-  
+
   void foo(vector<$one[[$two[[$three[[int*]]*]]*]]>::value_type a);
   )");
   EXPECT_THAT(getEligibleRanges(Input.code()),
@@ -475,8 +514,10 @@ TEST(GenEditsTest, NestedTemplatedClasses) {
       struct Inner {};
     };
   };
-  
-  void foo(Outermost<$three[[char *]]>::Outer<$two[[int *]]>::Inner<$one[[bool *]]> a);
+
+  void foo(
+      Outermost<$three[[char *]]>::Outer<$two[[int *]]>::Inner<$one[[bool *]]>
+          a);
   )");
   EXPECT_THAT(getEligibleRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -496,13 +537,13 @@ TEST(GenEditsTest, DependentAliasReferencingFurtherOutTemplateParam) {
       using Inner = S;
     };
   };
-  
+
   void foo(Outermost<[[int*]]>::Outer<bool>::Inner<char*> a);
   )");
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
 TEST(GenEditsTest, DependentAliasForwardingMultipleTemplateArguments) {
@@ -573,12 +614,12 @@ TEST(GenEditsTest, DependentAliasOfSmartPointer) {
   template <typename T>
   class unique_ptr;
   }
-  
+
   template <typename T>
   struct S {
     using type = std::unique_ptr<T>;
   };
-  
+
   void foo($unique_ptr[[S<$inner[[int*]]>::type]] a);
   )");
   EXPECT_THAT(getEligibleRanges(Input.code()),
@@ -630,7 +671,7 @@ TEST(GenEditsTest, PartialSpecialization) {
   EXPECT_THAT(
       getEligibleRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
 TEST(GenEditsTest, TypeTemplateParamPack) {
@@ -665,7 +706,7 @@ TEST(GenEditsTest, DefaultTemplateArgs) {
                   MainFileName,
                   UnorderedElementsAre(
                       SlotRange(-1, Input.range("one")),
-                      // TODO(b/323510072) Collect the template
+                      // TODO(b/281474380) Collect the template
                       // argument instead of the whole alias, when we can see
                       // through the layers of default argument redirection
                       SlotRange(2, Input.range("two"))))));
@@ -680,7 +721,7 @@ TEST(GenEditsTest, MultipleSlotsOneRange) {
   };
   template <typename T>
   using Couple = Pair<T, T>;
-  
+
   void foo(Couple<[[int *]]> c);
   )");
   EXPECT_THAT(
@@ -689,8 +730,8 @@ TEST(GenEditsTest, MultipleSlotsOneRange) {
           // Eventually, two different valid slot values for the two
           // ranges, but for now, inference looks at neither of
           // them, so both have no slot.
-          MainFileName, UnorderedElementsAre(SlotRange(-1, Input.range("")),
-                                             SlotRange(-1, Input.range(""))))));
+          MainFileName, UnorderedElementsAre(SlotRange(-1, Input.range()),
+                                             SlotRange(-1, Input.range())))));
 }
 
 }  // namespace

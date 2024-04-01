@@ -30,7 +30,7 @@ void mergePartials(Partial &LHS, const Partial &RHS);
 Inference finalize(const Partial &);
 
 struct InferResult {
-  Inference::Nullability Nullability;
+  Nullability Nullability;
   bool Conflict = false;
   bool Trivial = false;
 };

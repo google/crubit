@@ -83,6 +83,12 @@ message Evidence {
   }
 }
 
+enum Nullability {
+  UNKNOWN = 0;
+  NONNULL = 1;
+  NULLABLE = 2;
+}
+
 // A conclusion about nullability based on global analysis (e.g. all TUs).
 message Inference {
   optional Symbol symbol = 1;
@@ -101,12 +107,6 @@ message Inference {
     // separately propagated from one round of inference into the next.
     // e.g. an inference gathered from ANNOTATED_NONNULL Evidence.
     optional bool trivial = 5;
-  }
-
-  enum Nullability {
-    UNKNOWN = 0;
-    NONNULL = 1;
-    NULLABLE = 2;
   }
 }
 
@@ -133,6 +133,7 @@ message SlotRange {
   optional uint32 slot = 1;
   optional uint64 begin = 2;
   optional uint64 end = 3;
+  optional Nullability existing_annotation = 4;
 }
 
 // A set of slot ranges and their associated file.

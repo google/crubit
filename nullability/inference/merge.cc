@@ -92,7 +92,7 @@ Inference finalize(const Partial &P) {
 
 namespace {
 void update(std::optional<InferResult> &Result,
-            Inference::Nullability ImpliedNullability) {
+            Nullability ImpliedNullability) {
   if (!Result) {
     Result = {ImpliedNullability};
     return;
@@ -110,38 +110,39 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
   // an inference conflict, just an error to be caught by verification.
   if (Counts[Evidence::ANNOTATED_NONNULL] &&
       Counts[Evidence::ANNOTATED_NULLABLE]) {
-    return {Inference::UNKNOWN, /*Conflict=*/true};
+    return {Nullability::UNKNOWN, /*Conflict=*/true};
   }
   if (Counts[Evidence::ANNOTATED_NONNULL])
-    return {Inference::NONNULL, /*Conflict=*/false, /*Trivial=*/true};
+    return {Nullability::NONNULL, /*Conflict=*/false, /*Trivial=*/true};
   if (Counts[Evidence::ANNOTATED_NULLABLE])
-    return {Inference::NULLABLE, /*Conflict=*/false, /*Trivial=*/true};
+    return {Nullability::NULLABLE, /*Conflict=*/false, /*Trivial=*/true};
 
   // Mandatory inference rules, required by type-checking.
   // Ordered from most confident to least.
   std::optional<InferResult> Result;
   if (Counts[Evidence::UNCHECKED_DEREFERENCE])
-    update(Result, Inference::NONNULL);
-  if (Counts[Evidence::NULLABLE_ARGUMENT]) update(Result, Inference::NULLABLE);
+    update(Result, Nullability::NONNULL);
+  if (Counts[Evidence::NULLABLE_ARGUMENT])
+    update(Result, Nullability::NULLABLE);
   if (Counts[Evidence::ASSIGNED_FROM_NULLABLE])
-    update(Result, Inference::NULLABLE);
-  if (Counts[Evidence::NULLABLE_RETURN]) update(Result, Inference::NULLABLE);
+    update(Result, Nullability::NULLABLE);
+  if (Counts[Evidence::NULLABLE_RETURN]) update(Result, Nullability::NULLABLE);
   if (Counts[Evidence::NONNULL_RETURN] && !Counts[Evidence::NULLABLE_RETURN] &&
       !Counts[Evidence::UNKNOWN_RETURN])
-    update(Result, Inference::NONNULL);
-  if (Counts[Evidence::BOUND_TO_NONNULL]) update(Result, Inference::NONNULL);
+    update(Result, Nullability::NONNULL);
+  if (Counts[Evidence::BOUND_TO_NONNULL]) update(Result, Nullability::NONNULL);
   if (Counts[Evidence::BOUND_TO_MUTABLE_NULLABLE])
-    update(Result, Inference::NULLABLE);
-  if (Counts[Evidence::ABORT_IF_NULL]) update(Result, Inference::NONNULL);
+    update(Result, Nullability::NULLABLE);
+  if (Counts[Evidence::ABORT_IF_NULL]) update(Result, Nullability::NONNULL);
   if (Result) return *Result;
 
   // Optional "soft" inference heuristics.
   // These do not report conflicts.
   if (!Counts[Evidence::NULLABLE_ARGUMENT] &&
       !Counts[Evidence::UNKNOWN_ARGUMENT] && Counts[Evidence::NONNULL_ARGUMENT])
-    return {Inference::NONNULL};
+    return {Nullability::NONNULL};
 
-  return {Inference::UNKNOWN};
+  return {Nullability::UNKNOWN};
 }
 
 }  // namespace clang::tidy::nullability
