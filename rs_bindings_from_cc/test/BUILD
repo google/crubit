@@ -18,7 +18,5 @@ sh_test(
 bzl_library(
     name = "test_bindings",
     srcs = ["test_bindings.bzl"],
-    visibility = [
-        "//visibility:private",  # Only private by automation, not intent. Owner may accept CLs adding visibility. See <internal link>.
-    ],
+    visibility = ["//visibility:private"],
 )
