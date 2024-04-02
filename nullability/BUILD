@@ -86,6 +86,7 @@ cc_library(
         ":pointer_nullability",
         ":pointer_nullability_lattice",
         ":pointer_nullability_matchers",
+        ":pragma",
         ":type_nullability",
         "@absl//absl/base:nullability",
         "@absl//absl/log:check",
@@ -213,6 +214,10 @@ cc_library(
     name = "pragma",
     srcs = ["pragma.cc"],
     hdrs = ["pragma.h"],
+    visibility = [
+        "//nullability/inference:__pkg__",
+        "//nullability/test:__pkg__",
+    ],
     deps = [
         "@llvm-project//clang:basic",
         "@llvm-project//clang:lex",

@@ -27,6 +27,9 @@ namespace clang::tidy::nullability {
 class PointerNullabilityLattice {
  public:
   struct NonFlowSensitiveState {
+    // Nullability interpretation of types as set e.g. by per-file #pragmas.
+    TypeNullabilityDefaults Defaults;
+
     absl::flat_hash_map<const Expr *, TypeNullability> ExprToNullability;
     // Overridden symbolic nullability for pointer-typed decls.
     // These are set by PointerNullabilityAnalysis::assignNullabilityVariable,
@@ -79,6 +82,8 @@ class PointerNullabilityLattice {
   bool operator==(const PointerNullabilityLattice &Other) const { return true; }
 
   dataflow::LatticeJoinEffect join(const PointerNullabilityLattice &Other);
+
+  const TypeNullabilityDefaults &defaults() const { return NFS.Defaults; }
 
  private:
   // Owned by the PointerNullabilityAnalysis object, shared by all lattice

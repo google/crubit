@@ -15,6 +15,7 @@
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/pointer_nullability_matchers.h"
+#include "nullability/pragma.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -151,10 +152,10 @@ const TypeNullability &getNullabilityForChild(
 /// `DeclRefExpr`), it returns the nullability of the given type after applying
 /// substitutions, which in this case is [_Nullable, _Nonnull].
 TypeNullability substituteNullabilityAnnotationsInClassTemplate(
-    QualType T, const TypeNullability &BaseNullabilityAnnotations,
-    QualType BaseType) {
-  return getNullabilityAnnotationsFromType(
-      T,
+    ValueDecl *Member, const TypeNullability &BaseNullabilityAnnotations,
+    QualType BaseType, const PointerNullabilityLattice &Lattice) {
+  return getTypeNullability(
+      *Member, Lattice.defaults(),
       [&](const SubstTemplateTypeParmType *ST)
           -> std::optional<TypeNullability> {
         // The class specialization that is BaseType and owns ST.
@@ -221,9 +222,28 @@ TypeNullability substituteNullabilityAnnotationsInClassTemplate(
 /// the given type after applying substitutions, which in this case is
 /// [_Nullable, _Nonnull].
 TypeNullability substituteNullabilityAnnotationsInFunctionTemplate(
-    QualType T, absl::Nonnull<const CallExpr *> CE) {
-  return getNullabilityAnnotationsFromType(
-      T,
+    absl::Nonnull<const CallExpr *> CE,
+    TransferState<PointerNullabilityLattice> &State) {
+  auto *ReferencedFunction = CE ? CE->getDirectCallee() : nullptr;
+
+  // Indirect calls simply have the nullability of the return part of callee.
+  if (!ReferencedFunction) {
+    TypeNullability CalleeNullability =
+        getNullabilityForChild(CE->getCallee(), State);
+    ArrayRef ResultNullability = CalleeNullability;
+    if (CE->getCallee()->getType()->isPointerType())  // Callee is usually fptr.
+      ResultNullability = ResultNullability.drop_front();
+    // Return value nullability is at the front of the function type.
+    ResultNullability =
+        ResultNullability.take_front(countPointersInType(CE->getType()));
+    return ResultNullability;
+  }
+
+  // Nullability of direct function calls uses the callee decl.
+  // We can resugar the type of this decl based on its template context.
+  // We're ignoring the computed nullabilty of the callee DRE.
+  return getTypeNullability(
+      returnTypeLoc(*ReferencedFunction), State.Lattice.defaults(),
       [&](const SubstTemplateTypeParmType *ST)
           -> std::optional<TypeNullability> {
         auto *DRE = dyn_cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
@@ -234,7 +254,6 @@ TypeNullability substituteNullabilityAnnotationsInFunctionTemplate(
         // Does this refer to a parameter of the function template?
         // If not (e.g. nested templates, template specialization types in the
         // return value), we handle the desugaring elsewhere.
-        auto *ReferencedFunction = dyn_cast<FunctionDecl>(DRE->getDecl());
         if (!ReferencedFunction) return std::nullopt;
         if (ReferencedFunction->getPrimaryTemplate() != ST->getAssociatedDecl())
           return std::nullopt;
@@ -256,7 +275,7 @@ TypeNullability substituteNullabilityAnnotationsInFunctionTemplate(
         TypeSourceInfo *TSI =
             DRE->template_arguments()[ST->getIndex()].getTypeSourceInfo();
         if (TSI == nullptr) return std::nullopt;
-        return getNullabilityAnnotationsFromType(TSI->getType());
+        return getTypeNullability(TSI->getTypeLoc(), State.Lattice.defaults());
       });
 }
 
@@ -835,7 +854,8 @@ void transferValue_NullCheckImplicitCastPtrToBool(
 }
 
 void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
-                               Environment &Env, QualType ParamTy) {
+                               TransferState<PointerNullabilityLattice> &State,
+                               const VarDecl &Param) {
   // When a function has an "output parameter" - a non-const pointer or
   // reference to a pointer of unknown nullability - assume that the function
   // may set the pointer to non-null.
@@ -849,38 +869,44 @@ void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
   //   initializePointer(&p);
   //   *p; // safe
 
+  QualType ParamTy = Param.getType();
   if (ParamTy.isNull()) return;
   if (ParamTy->getPointeeType().isNull()) return;
   if (!isSupportedPointerType(ParamTy->getPointeeType())) return;
   if (ParamTy->getPointeeType().isConstQualified()) return;
 
+  // TODO: if the called function was instantiated from a template, examining
+  // the instantiated param decl may miss nullability from template params.
   // TODO(b/298200521): This should extend support to annotations that suggest
   // different in/out state
-  TypeNullability InnerNullability =
-      getNullabilityAnnotationsFromType(ParamTy->getPointeeType());
+  TypeNullability OuterNullability =
+      getTypeNullability(Param, State.Lattice.defaults());
+  auto InnerNullability = ParamTy->getAs<ReferenceType>()
+                              ? ArrayRef(OuterNullability)
+                              : ArrayRef(OuterNullability).drop_front();
   if (InnerNullability.front().concrete() != NullabilityKind::Unspecified)
     return;
 
   StorageLocation *Loc = nullptr;
   if (ParamTy->isPointerType()) {
-    if (PointerValue *OuterPointer = getRawPointerValue(Arg, Env))
+    if (PointerValue *OuterPointer = getRawPointerValue(Arg, State.Env))
       Loc = &OuterPointer->getPointeeLoc();
   } else if (ParamTy->isReferenceType()) {
-    Loc = Env.getStorageLocation(*Arg);
+    Loc = State.Env.getStorageLocation(*Arg);
   }
   if (Loc == nullptr) return;
 
   if (isSupportedRawPointerType(ParamTy->getPointeeType())) {
     auto *InnerPointer =
-        cast<PointerValue>(Env.createValue(ParamTy->getPointeeType()));
-    initPointerNullState(*InnerPointer, Env.getDataflowAnalysisContext(),
+        cast<PointerValue>(State.Env.createValue(ParamTy->getPointeeType()));
+    initPointerNullState(*InnerPointer, State.Env.getDataflowAnalysisContext(),
                          NullabilityKind::Unspecified);
 
-    Env.setValue(*Loc, *InnerPointer);
+    State.Env.setValue(*Loc, *InnerPointer);
   } else {
     auto &SmartPointerLoc = *cast<RecordStorageLocation>(Loc);
     setToPointerWithNullability(SmartPointerLoc.getSyntheticField(PtrField),
-                                NullabilityKind::Unspecified, Env);
+                                NullabilityKind::Unspecified, State.Env);
   }
 }
 
@@ -1039,7 +1065,7 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
     return;
   // Make output parameters (with unknown nullability) initialized to unknown.
   for (ParamAndArgIterator<CallExpr> Iter(*FuncDecl, *CE); Iter; ++Iter)
-    initializeOutputParameter(&Iter.arg(), State.Env, Iter.param().getType());
+    initializeOutputParameter(&Iter.arg(), State, Iter.param());
 }
 
 void transferValue_AccessorCall(
@@ -1150,7 +1176,9 @@ void transferType_DeclRefExpr(absl::Nonnull<const DeclRefExpr *> DRE,
                               const MatchFinder::MatchResult &MR,
                               TransferState<PointerNullabilityLattice> &State) {
   computeNullability(DRE, State, [&] {
-    auto Nullability = getNullabilityAnnotationsFromType(DRE->getType());
+    // TODO(b/332558689): lost sugar from DRE template args/qualifiers
+    auto Nullability =
+        getTypeNullability(*DRE->getDecl(), State.Lattice.defaults());
     State.Lattice.overrideNullabilityFromDecl(DRE->getDecl(), Nullability);
     return Nullability;
   });
@@ -1160,20 +1188,11 @@ void transferType_MemberExpr(absl::Nonnull<const MemberExpr *> ME,
                              const MatchFinder::MatchResult &MR,
                              TransferState<PointerNullabilityLattice> &State) {
   computeNullability(ME, State, [&]() {
+    // TODO(b/332558689): lost sugar from ME qualifiers
     auto BaseNullability = getNullabilityForChild(ME->getBase(), State);
-    QualType MemberType = ME->getType();
-    // When a MemberExpr is a part of a member function call
-    // (a child of CXXMemberCallExpr), the MemberExpr models a
-    // partially-applied member function, which isn't a real C++ construct.
-    // The AST does not provide rich type information for such MemberExprs.
-    // Instead, the AST specifies a placeholder type, specifically
-    // BuiltinType::BoundMember. So we have to look at the type of the member
-    // function declaration.
-    if (ME->hasPlaceholderType(BuiltinType::BoundMember)) {
-      MemberType = ME->getMemberDecl()->getType();
-    }
     auto Nullability = substituteNullabilityAnnotationsInClassTemplate(
-        MemberType, BaseNullability, ME->getBase()->getType());
+        ME->getMemberDecl(), BaseNullability, ME->getBase()->getType(),
+        State.Lattice);
     State.Lattice.overrideNullabilityFromDecl(ME->getMemberDecl(), Nullability);
     return Nullability;
   });
@@ -1277,7 +1296,14 @@ void transferType_CastExpr(absl::Nonnull<const CastExpr *> CE,
 
       // This can definitely be null!
       case CK_NullToPointer: {
-        auto Nullability = getNullabilityAnnotationsFromType(CE->getType());
+        TypeNullability Nullability;
+        // Explicit casts get the inner of the written type.
+        if (const auto *ECE = dyn_cast<ExplicitCastExpr>(CE))
+          Nullability =
+              getTypeNullability(ECE->getTypeInfoAsWritten()->getTypeLoc(),
+                                 State.Lattice.defaults());
+        else
+          Nullability = unspecifiedNullability(CE);
         // Despite the name `NullToPointer`, the destination type of the cast
         // may be `nullptr_t` (which is, itself, not a pointer type).
         if (!CE->getType()->isNullPtrType())
@@ -1358,7 +1384,7 @@ void transferType_CallExpr(absl::Nonnull<const CallExpr *> CE,
     // to the `CallExpr`'s type, we should extract nullability directly from the
     // callee `Expr .
     auto Nullability =
-        substituteNullabilityAnnotationsInFunctionTemplate(CE->getType(), CE);
+        substituteNullabilityAnnotationsInFunctionTemplate(CE, State);
     State.Lattice.overrideNullabilityFromDecl(CE->getCalleeDecl(), Nullability);
     return Nullability;
   });
@@ -1401,10 +1427,12 @@ void transferType_NewExpr(absl::Nonnull<const CXXNewExpr *> NE,
                           const MatchFinder::MatchResult &MR,
                           TransferState<PointerNullabilityLattice> &State) {
   computeNullability(NE, State, [&]() {
-    TypeNullability result = getNullabilityAnnotationsFromType(NE->getType());
-    result.front() = NE->shouldNullCheckAllocation() ? NullabilityKind::Nullable
-                                                     : NullabilityKind::NonNull;
-    return result;
+    TypeNullability ObjectNullability =
+        getTypeNullability(NE->getAllocatedTypeSourceInfo()->getTypeLoc(),
+                           State.Lattice.defaults());
+    return prepend(NE->shouldNullCheckAllocation() ? NullabilityKind::Nullable
+                                                   : NullabilityKind::NonNull,
+                   ObjectNullability);
   });
 }
 
@@ -1426,9 +1454,11 @@ void transferType_ThisExpr(absl::Nonnull<const CXXThisExpr *> TE,
                            const MatchFinder::MatchResult &MR,
                            TransferState<PointerNullabilityLattice> &State) {
   computeNullability(TE, State, [&]() {
-    TypeNullability result = getNullabilityAnnotationsFromType(TE->getType());
-    result.front() = NullabilityKind::NonNull;
-    return result;
+    // If the current class is an instantiation, we can't assume any particular
+    // nullability of its arguments.
+    TypeNullability Result = unspecifiedNullability(TE);
+    Result.front() = NullabilityKind::NonNull;
+    return Result;
   });
 }
 
@@ -1561,6 +1591,12 @@ PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext &Context,
         if (RawPointerTy.isNull()) return {};
         return {{PtrField, RawPointerTy}};
       });
+}
+
+PointerNullabilityAnalysis::PointerNullabilityAnalysis(
+    ASTContext &Context, Environment &Env, const NullabilityPragmas &Pragmas)
+    : PointerNullabilityAnalysis(Context, Env) {
+  NFS.Defaults = TypeNullabilityDefaults(Context, Pragmas);
 }
 
 PointerTypeNullability PointerNullabilityAnalysis::assignNullabilityVariable(

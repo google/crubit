@@ -1105,8 +1105,8 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate1) {
       **s.b;  // [[unsafe]]
       *s.f;
       *s.g;
-      *s.f();  // TODO: fix false negative.
-      *s.g();  // TODO: fix false negative.
+      *s.f();  // [[unsafe]]
+      *s.g();  // [[unsafe]]
     }
   )cc");
 }
@@ -1149,7 +1149,7 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate3) {
       ***d.arg;  // [[unsafe]]
       *e.arg;    // TODO: fix false negative
 
-      *e.arg();  // TODO: fix false negative.
+      *e.arg();  // [[unsafe]]
     }
   )cc");
 }

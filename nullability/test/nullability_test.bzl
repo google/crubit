@@ -17,7 +17,7 @@ def nullability_test(name, srcs):
         srcs = ["nullability_test.sh"],
         args = [
             "$(location //nullability/test:nullability_test)",
-        ] + ["$(location " + src + ")" for src in srcs] + ["--"],
+        ] + ["$(location " + src + ")" for src in srcs if not src.endswith(".h")] + ["--"],
     )
 
     # Additional target to verify that the source file builds with non-mock headers.

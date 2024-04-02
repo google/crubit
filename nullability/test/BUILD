@@ -52,6 +52,7 @@ cc_binary(
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
+        "//nullability:pragma",
         "//nullability:type_nullability",
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
@@ -338,6 +339,16 @@ cc_test(
         ":check_diagnostics",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+nullability_test(
+    name = "pragma",
+    srcs = [
+        "pragma.cc",
+        "pragma_none.h",
+        "pragma_nonnull.h",
+        "pragma_support.h",
     ],
 )
 

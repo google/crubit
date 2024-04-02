@@ -280,6 +280,10 @@ struct TypeNullabilityLoc {
 // detected without regard to any file-level default nullability pragmas.
 std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(TypeLoc Loc);
 
+// Returns the loc of a function's return type for the purposes of nullability.
+// This affects the nullability of a call to this function.
+TypeLoc returnTypeLoc(const FunctionDecl &);
+
 }  // namespace clang::tidy::nullability
 
 #endif

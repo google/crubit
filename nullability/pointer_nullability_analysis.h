@@ -10,6 +10,7 @@
 
 #include "absl/base/nullability.h"
 #include "nullability/pointer_nullability_lattice.h"
+#include "nullability/pragma.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -35,8 +36,13 @@ class PointerNullabilityAnalysis
   PointerNullabilityLattice::NonFlowSensitiveState NFS;
 
  public:
+  // TODO(b/279417950): all callers should record pragmas, and provide them.
   explicit PointerNullabilityAnalysis(ASTContext &Context,
                                       dataflow::Environment &Env);
+
+  explicit PointerNullabilityAnalysis(ASTContext &Context,
+                                      dataflow::Environment &Env,
+                                      const NullabilityPragmas &Pragmas);
 
   PointerNullabilityLattice initialElement() {
     return PointerNullabilityLattice(NFS);

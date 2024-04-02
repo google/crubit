@@ -803,6 +803,9 @@ struct CountWalker : public NullabilityWalker<CountWalker> {
 }  // namespace
 
 unsigned countPointersInType(QualType T) {
+  // Certain expressions like pseudo-destructors have no type, treat as void.
+  // (exprType() cannot fold them to void, as it doesn't have the ASTContext).
+  if (T.isNull()) return 0;
   CountWalker PointerCountWalker;
   PointerCountWalker.visit(T);
   return PointerCountWalker.Count;
@@ -1040,6 +1043,15 @@ std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(TypeLoc Loc) {
 
   LocsWalker.visit(Loc);
   return std::move(LocsWalker.TypeNullabilityLocs);
+}
+
+TypeLoc returnTypeLoc(const FunctionDecl &D) {
+  if (auto FTL = D.getFunctionTypeLoc()) return FTL.getReturnLoc();
+  SourceLocation Loc = D.isImplicit() ? SourceLocation() : D.getLocation();
+
+  return D.getASTContext()
+      .getTrivialTypeSourceInfo(D.getReturnType(), Loc)
+      ->getTypeLoc();
 }
 
 }  // namespace clang::tidy::nullability

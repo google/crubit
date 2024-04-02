@@ -35,6 +35,7 @@
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_lattice.h"
+#include "nullability/pragma.h"
 #include "nullability/test/test_headers.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTConsumer.h"
@@ -312,8 +313,8 @@ SymbolicMap bindSymbolicNullability(const FunctionDecl &Func,
 // To run a test, we simply run the nullability analysis, and then walk the
 // CFG afterwards looking for calls to our assertions - nullable() etc.
 // These each assert properties attached to the analysis state at that point.
-void runTest(const FunctionDecl &Func, Diagnoser &Diags,
-             std::unique_ptr<llvm::raw_ostream> LogStream) {
+void runTest(const FunctionDecl &Func, const NullabilityPragmas &Pragmas,
+             Diagnoser &Diags, std::unique_ptr<llvm::raw_ostream> LogStream) {
   std::unique_ptr<dataflow::Logger> Logger;
   if (LogStream)
     Logger = dataflow::Logger::html([&] {
@@ -327,7 +328,7 @@ void runTest(const FunctionDecl &Func, Diagnoser &Diags,
   auto &Ctx = Func.getDeclContext()->getParentASTContext();
   auto ACFG = require(dataflow::AdornedCFG::build(Func));
   dataflow::Environment Env(DACtx, Func);
-  PointerNullabilityAnalysis Analysis(Ctx, Env);
+  PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
   auto Symbolic = bindSymbolicNullability(Func, Analysis, DACtx.arena());
   require(
       runDataflowAnalysis(ACFG, Analysis, std::move(Env),
@@ -521,8 +522,9 @@ llvm::Expected<TestFilter> getTestFilter() {
 // AST consumer that analyzes [[clang::annotate("test")]] functions as tests.
 class Consumer : public ASTConsumer {
  public:
-  Consumer(TestOutput &Output, const TestFilter &Filter)
-      : Output(Output), Filter(Filter) {}
+  Consumer(TestOutput &Output, const TestFilter &Filter,
+           const NullabilityPragmas &Pragmas)
+      : Pragmas(Pragmas), Output(Output), Filter(Filter) {}
 
  private:
   void Initialize(ASTContext &Context) override {
@@ -554,7 +556,7 @@ class Consumer : public ASTConsumer {
       // This is a test we can run directly.
       Output.startTest(*FD);
       auto [LogPath, LogStream] = openTestLog(FD->getDeclName().getAsString());
-      runTest(*FD, *Diagnoser, std::move(LogStream));
+      runTest(*FD, Pragmas, *Diagnoser, std::move(LogStream));
       Output.endTest(LogPath);
     } else if (Test.get<Attr>() || Test.get<TypeLoc>()) {
       // Walk up to find out what decl etc this marker is attached to.
@@ -587,6 +589,7 @@ class Consumer : public ASTConsumer {
             std::make_unique<llvm::raw_fd_ostream>(FD, /*ShouldClose=*/true)};
   }
 
+  const NullabilityPragmas &Pragmas;
   TestOutput &Output;
   std::optional<Diagnoser> Diagnoser;
   const TestFilter &Filter;
@@ -600,11 +603,13 @@ int main(int argc, const char **argv) {
   struct Factory : public clang::tooling::SourceFileCallbacks {
     TestOutput Output;
     TestFilter Filter;
+    NullabilityPragmas Pragmas;
 
     std::unique_ptr<clang::ASTConsumer> newASTConsumer() {
-      return std::make_unique<Consumer>(Output, Filter);
+      return std::make_unique<Consumer>(Output, Filter, Pragmas);
     }
     bool handleBeginSource(clang::CompilerInstance &CI) override {
+      registerPragmaHandler(CI.getPreprocessor(), Pragmas);
       const auto &SM = CI.getSourceManager();
       llvm::StringRef FilenameStem =
           llvm::sys::path::stem(llvm::sys::path::filename(
