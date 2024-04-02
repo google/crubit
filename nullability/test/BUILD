@@ -266,6 +266,11 @@ cc_test(
     ],
 )
 
+nullability_test(
+    name = "resugaring",
+    srcs = ["resugaring.cc"],
+)
+
 cc_test(
     name = "return_statements",
     srcs = ["return_statements.cc"],
