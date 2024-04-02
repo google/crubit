@@ -547,7 +547,7 @@ fn format_ty_for_cc<'tcx>(
             }
         }
 
-        ty::TyKind::RawPtr(ty::TypeAndMut { ty: pointee_ty, mutbl }) => {
+        ty::TyKind::RawPtr(pointee_ty, mutbl) => {
             format_pointer_or_reference_ty_for_cc(input, *pointee_ty, *mutbl, quote! { * })
                 .with_context(|| {
                     format!("Failed to format the pointee of the pointer type `{ty}`")
@@ -671,7 +671,7 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
             ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
             FullyQualifiedName::new(tcx, adt.did()).format_for_rs()
         }
-        ty::TyKind::RawPtr(ty::TypeAndMut { ty: pointee_ty, mutbl }) => {
+        ty::TyKind::RawPtr(pointee_ty, mutbl) => {
             let qualifier = match mutbl {
                 Mutability::Mut => quote! { mut },
                 Mutability::Not => quote! { const },
