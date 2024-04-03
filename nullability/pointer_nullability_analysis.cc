@@ -144,6 +144,8 @@ struct Resugarer {
   using SubstTy = SubstTemplateTypeParmType;
   const TypeNullabilityDefaults &Defaults;
 
+  Resugarer(const TypeNullabilityDefaults &Defaults) : Defaults(Defaults) {}
+
   // The entity referenced is nested within a class template, e.g. `a.front()`
   // where a is a vector<Nonnull<int*>>.
   // We have a nullability vector [Nonnull] for the specialization vector<int*>.
