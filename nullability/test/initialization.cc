@@ -25,10 +25,17 @@ struct Copyable {
 };
 template <class X>
 Copyable(X) -> Copyable<X>;
+
+namespace std {
 template <typename T>
 T &&move(T &X) {
   return static_cast<T &&>(X);
 }
+template <typename T>
+T &&forward(T &&X) {
+  return static_cast<T &&>(X);
+}
+}  // namespace std
 
 TEST void testClassCopyMove(Copyable<Nullable<int *>> B) {
   // We want to test that type nullability is preserved when passing
@@ -42,4 +49,10 @@ TEST void testClassCopyMove(Copyable<Nullable<int *>> B) {
 
   Movable<Nullable<int *>> makeMovable(/*suppress -Wvexing-parse*/ int);
   type<Movable<Nullable<int *>>>(makeMovable(0));
+}
+
+TEST void testMoveForward(Copyable<Nullable<int *>> A,
+                          Movable<Nullable<int *>> B) {
+  type<Copyable<Nullable<int *>>>(std::forward<Copyable<int *> &>(A));
+  type<Movable<Nullable<int *>>>(std::move(B));
 }

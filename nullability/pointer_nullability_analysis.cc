@@ -37,6 +37,7 @@
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
+#include "clang/Basic/Builtins.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
@@ -1379,6 +1380,12 @@ void transferType_CallExpr(absl::Nonnull<const CallExpr *> CE,
                            const MatchFinder::MatchResult &MR,
                            TransferState<PointerNullabilityLattice> &State) {
   computeNullability(CE, State, [&]() {
+    if (auto ID = CE->getBuiltinCallee();
+        (ID == Builtin::BIforward || ID == Builtin::BImove) &&
+        CE->getNumArgs() == 1) {
+      return getNullabilityForChild(CE->getArg(0), State);
+    }
+
     TypeNullability CalleeNullability =
         getNullabilityForChild(CE->getCallee(), State);
     ArrayRef ResultNullability = CalleeNullability;
