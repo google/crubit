@@ -13,7 +13,12 @@ cc_library(
     deps = [
         ":test_headers",
         "//nullability:pointer_nullability_diagnosis",
+        "//nullability:pragma",
         "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:testing",
         "@llvm-project//clang:tooling",
         "@llvm-project//clang/unittests:dataflow_testing_support",
         "@llvm-project//llvm:Support",
@@ -97,6 +102,7 @@ cc_test(
     deps = [
         ":check_diagnostics",
         "//nullability:pointer_nullability_diagnosis",
+        "//nullability:pragma",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",
@@ -354,6 +360,16 @@ nullability_test(
         "pragma_none.h",
         "pragma_nonnull.h",
         "pragma_support.h",
+    ],
+)
+
+cc_test(
+    name = "pragma_diagnosis",
+    srcs = ["pragma_diagnosis.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
     ],
 )
 

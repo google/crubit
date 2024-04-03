@@ -6,11 +6,18 @@
 
 #include <algorithm>
 #include <iterator>
+#include <memory>
 #include <vector>
 
 #include "nullability/pointer_nullability_diagnosis.h"
+#include "nullability/pragma.h"
 #include "nullability/test/test_headers.h"
+#include "clang/AST/ASTConsumer.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Frontend/FrontendActions.h"
+#include "clang/Testing/CommandLineArgs.h"
+#include "clang/Testing/TestAST.h"
 #include "clang/Tooling/Tooling.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -21,7 +28,7 @@
 
 namespace clang::tidy::nullability {
 
-static bool checkDiagnostics(llvm::StringRef SourceCode, const char *CxxMode) {
+static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang) {
   using ast_matchers::BoundNodes;
   using ast_matchers::functionDecl;
   using ast_matchers::hasName;
@@ -29,32 +36,37 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, const char *CxxMode) {
   using ast_matchers::stmt;
 
   llvm::Annotations AnnotatedCode(SourceCode);
-  std::vector<std::string> ASTBuildArgs = {"-fsyntax-only",
-                                           CxxMode,
-                                           "-Wno-unused-value",
-                                           "-Wno-nonnull",
-                                           "-include",
-                                           "check_diagnostics_preamble.h",
-                                           "-I."};
-
-  tooling::FileContentMappings TestHeaders;
+  clang::TestInputs Inputs(AnnotatedCode.code());
+  Inputs.Language = Lang;
+  Inputs.ExtraArgs = {
+      "-fsyntax-only",
+      "-Wno-unused-value",
+      "-Wno-nonnull",
+      "-include",
+      "check_diagnostics_preamble.h",
+      "-I.",
+  };
   for (const auto &Entry :
        llvm::ArrayRef(test_headers_create(), test_headers_size()))
-    TestHeaders.emplace_back(Entry.name, Entry.data);
+    Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
+  NullabilityPragmas Pragmas;
+  Inputs.MakeAction = [&] {
+    struct Action : public SyntaxOnlyAction {
+      NullabilityPragmas &Pragmas;
+      Action(NullabilityPragmas &Pragmas) : Pragmas(Pragmas) {}
 
-  auto Unit = tooling::buildASTFromCodeWithArgs(
-      AnnotatedCode.code(), ASTBuildArgs, "input.cc", "nullability-test",
-      std::make_shared<PCHContainerOperations>(),
-      tooling::getClangStripDependencyFileAdjuster(), TestHeaders);
-  auto &Context = Unit->getASTContext();
-
-  if (Context.getDiagnostics().getClient()->getNumErrors() != 0) {
-    ADD_FAILURE() << "encountered compile errors (printed to the test log)";
-    return false;
-  }
+      std::unique_ptr<ASTConsumer> CreateASTConsumer(
+          CompilerInstance &CI, llvm::StringRef File) override {
+        registerPragmaHandler(CI.getPreprocessor(), Pragmas);
+        return SyntaxOnlyAction::CreateASTConsumer(CI, File);
+      }
+    };
+    return std::make_unique<Action>(Pragmas);
+  };
+  clang::TestAST AST(Inputs);
 
   SmallVector<BoundNodes, 1> MatchResult =
-      match(functionDecl(hasName("target")).bind("target"), Context);
+      match(functionDecl(hasName("target")).bind("target"), AST.context());
   if (MatchResult.empty()) {
     ADD_FAILURE() << "didn't find target function";
     return false;
@@ -66,12 +78,12 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, const char *CxxMode) {
 
     llvm::DenseMap<unsigned, std::string> Annotations =
         dataflow::test::buildLineToAnnotationMapping(
-            Context.getSourceManager(), Context.getLangOpts(),
+            AST.sourceManager(), AST.context().getLangOpts(),
             Target->getSourceRange(), AnnotatedCode);
 
     llvm::SmallVector<PointerNullabilityDiagnostic> Diagnostics;
     if (llvm::Error Err =
-            diagnosePointerNullability(Target).moveInto(Diagnostics)) {
+            diagnosePointerNullability(Target, Pragmas).moveInto(Diagnostics)) {
       ADD_FAILURE() << Err;
       return false;
     }
@@ -82,9 +94,9 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, const char *CxxMode) {
     for (const auto &[Line, _] : Annotations) {
       ExpectedLines.insert(Line);
     }
-    auto &SrcMgr = Context.getSourceManager();
     for (const auto &Diag : Diagnostics)
-      ActualLines.insert(SrcMgr.getPresumedLineNumber(Diag.Range.getBegin()));
+      ActualLines.insert(
+          AST.sourceManager().getPresumedLineNumber(Diag.Range.getBegin()));
     if (ActualLines != ExpectedLines) {
       Success = false;
 
@@ -126,8 +138,8 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, const char *CxxMode) {
 bool checkDiagnostics(llvm::StringRef SourceCode) {
   // Run in C++17 and C++20 mode to cover differences in the AST between modes
   // (e.g. C++20 can contain `CXXRewrittenBinaryOperator`).
-  for (const char *CxxMode : {"-std=c++17", "-std=c++20"})
-    if (!checkDiagnostics(SourceCode, CxxMode)) return false;
+  for (TestLanguage Lang : {TestLanguage::Lang_CXX17, TestLanguage::Lang_CXX20})
+    if (!checkDiagnostics(SourceCode, Lang)) return false;
   return true;
 }
 

@@ -5,13 +5,18 @@
 #include "nullability/pointer_nullability_diagnosis.h"
 
 #include <cstdint>
+#include <iterator>
+#include <memory>
 #include <optional>
+#include <utility>
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
+#include "nullability/pointer_nullability_lattice.h"
 #include "nullability/pointer_nullability_matchers.h"
+#include "nullability/pragma.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -23,15 +28,21 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Analysis/FlowSensitive/AdornedCFG.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
+#include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/Errc.h"
+#include "llvm/Support/Error.h"
 
 #define DEBUG_TYPE "nullability-diagnostic"
 
@@ -377,10 +388,10 @@ bool shouldDiagnoseExpectedNonnullDefaultArgValue(clang::ASTContext &Ctx,
 // not called at all).
 void checkParmVarDeclWithPointerDefaultArg(
     clang::ASTContext &Ctx, const clang::ParmVarDecl &Parm,
-    llvm::SmallVector<PointerNullabilityDiagnostic> &Diags) {
-  QualType ParmType = Parm.getType();
-  if (ParmType->isDependentType()) return;
-  TypeNullability DeclAnnotation = getNullabilityAnnotationsFromType(ParmType);
+    llvm::SmallVector<PointerNullabilityDiagnostic> &Diags,
+    const TypeNullabilityDefaults &Defaults) {
+  if (Parm.getType()->isDependentType()) return;
+  TypeNullability DeclAnnotation = getTypeNullability(Parm, Defaults);
   if (DeclAnnotation.empty() ||
       DeclAnnotation.front().concrete() != NullabilityKind::NonNull) {
     return;
@@ -428,35 +439,58 @@ auto pointerNullabilityDiagnoser() {
 }  // namespace
 
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
-diagnosePointerNullability(const FunctionDecl *Func) {
-  llvm::SmallVector<PointerNullabilityDiagnostic> Diags;
-
-  if (Func->isTemplated()) return Diags;
-
-  ASTContext &Ctx = Func->getASTContext();
-
-  for (const ParmVarDecl *Parm : Func->parameters())
-    checkParmVarDeclWithPointerDefaultArg(Ctx, *Parm, Diags);
-
-  // Use `doesThisDeclarationHaveABody()` rather than `hasBody()` to ensure we
-  // analyze forward-declared functions only once.
-  if (!Func->doesThisDeclarationHaveABody()) return Diags;
-
-  auto Diagnoser = pointerNullabilityDiagnoser();
+diagnosePointerNullability(const FunctionDecl *Func,
+                           const NullabilityPragmas &Pragmas) {
   // These limits are set based on empirical observations. Mostly, they are a
   // rough proxy for a line between "finite" and "effectively infinite", rather
   // than strict limits on resource use.
   constexpr std::int64_t MaxSATIterations = 2'000'000;
   constexpr std::int32_t MaxBlockVisits = 20'000;
 
-  if (auto CfgDiags = dataflow::diagnoseFunction<PointerNullabilityAnalysis,
-                                                 PointerNullabilityDiagnostic>(
-          *Func, Ctx, Diagnoser, MaxSATIterations, MaxBlockVisits)) {
-    Diags.insert(Diags.end(), CfgDiags->begin(), CfgDiags->end());
-    return Diags;
-  } else {
-    return CfgDiags.takeError();
-  }
+  llvm::SmallVector<PointerNullabilityDiagnostic> Diags;
+  if (Func->isTemplated()) return Diags;
+
+  ASTContext &Ctx = Func->getASTContext();
+  TypeNullabilityDefaults Defaults{Ctx, Pragmas};
+
+  for (const ParmVarDecl *Parm : Func->parameters())
+    checkParmVarDeclWithPointerDefaultArg(Ctx, *Parm, Diags, Defaults);
+
+  // Use `doesThisDeclarationHaveABody()` rather than `hasBody()` to ensure we
+  // analyze forward-declared functions only once.
+  if (!Func->doesThisDeclarationHaveABody()) return Diags;
+
+  // TODO(b/332565018): it would be nice to have some common pieces (limits,
+  // adorning, error-handling) reused. diagnoseFunction() is too restrictive.
+  auto CFG = dataflow::AdornedCFG::build(*Func);
+  if (!CFG) return CFG.takeError();
+
+  auto Diagnoser = pointerNullabilityDiagnoser();
+  auto OwnedSolver =
+      std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
+  const auto *Solver = OwnedSolver.get();
+  dataflow::DataflowAnalysisContext AnalysisContext(std::move(OwnedSolver));
+  Environment Env(AnalysisContext, *Func);
+
+  PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
+
+  llvm::SmallVector<PointerNullabilityDiagnostic> Diagnostics;
+  auto Result = dataflow::runDataflowAnalysis(
+      *CFG, Analysis, Env,
+      [&, Diagnoser(pointerNullabilityDiagnoser())](
+          const CFGElement &Elt,
+          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
+              &State) mutable {
+        auto EltDiagnostics = Diagnoser(Elt, Ctx, {State.Lattice, State.Env});
+        llvm::move(EltDiagnostics, std::back_inserter(Diagnostics));
+      },
+      MaxBlockVisits);
+  if (!Result) return Result.takeError();
+  if (Solver->reachedLimit())
+    return llvm::createStringError(llvm::errc::interrupted,
+                                   "SAT solver timed out");
+
+  return Diagnostics;
 }
 
 }  // namespace clang::tidy::nullability

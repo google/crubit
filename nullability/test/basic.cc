@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "nullability/pointer_nullability_diagnosis.h"
+#include "nullability/pragma.h"
 #include "nullability/test/check_diagnostics.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -298,6 +299,7 @@ TEST(PointerNullabilityTest, AnalyzeFunctionWithForwardDeclarationOnlyOnce) {
       *p;
     }
   )cc");
+  NullabilityPragmas NoPragmas;
 
   ASTContext &Context = Unit->getASTContext();
   DeclContextLookupResult Result =
@@ -308,11 +310,11 @@ TEST(PointerNullabilityTest, AnalyzeFunctionWithForwardDeclarationOnlyOnce) {
   ASSERT_EQ(Redecls.size(), 2);
 
   EXPECT_TRUE(Redecls[0]->doesThisDeclarationHaveABody());
-  EXPECT_THAT_EXPECTED(diagnosePointerNullability(Redecls[0]),
+  EXPECT_THAT_EXPECTED(diagnosePointerNullability(Redecls[0], NoPragmas),
                        llvm::HasValue(SizeIs(1)));
 
   EXPECT_FALSE(Redecls[1]->doesThisDeclarationHaveABody());
-  EXPECT_THAT_EXPECTED(diagnosePointerNullability(Redecls[1]),
+  EXPECT_THAT_EXPECTED(diagnosePointerNullability(Redecls[1], NoPragmas),
                        llvm::HasValue(IsEmpty()));
 }
 

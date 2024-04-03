@@ -11,6 +11,7 @@
 #include "third_party/benchmark/include/benchmark/benchmark.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_diagnosis.h"
+#include "nullability/pragma.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -32,8 +33,9 @@ void benchmarkAnalysisOnCode(benchmark::State &State, llvm::StringRef Code) {
   TestAST AST(Code);
   auto *Target = cast<FunctionDecl>(
       lookup("Target", *AST.context().getTranslationUnitDecl()));
+  NullabilityPragmas NoPragmas;
 
-  for (auto _ : State) (void)diagnosePointerNullability(Target);
+  for (auto _ : State) (void)diagnosePointerNullability(Target, NoPragmas);
 }
 
 void BM_PointerAnalysisCopyPointer(benchmark::State &State) {

@@ -125,6 +125,7 @@ cc_library(
         ":pointer_nullability_analysis",
         ":pointer_nullability_lattice",
         ":pointer_nullability_matchers",
+        ":pragma",
         ":type_nullability",
         "@absl//absl/base:nullability",
         "@absl//absl/log:check",
@@ -273,6 +274,7 @@ cc_test(
     deps = [
         ":pointer_nullability_analysis",
         ":pointer_nullability_diagnosis",
+        ":pragma",
         "//third_party/benchmark",
         "@absl//absl/base:nullability",
         "@absl//absl/log:check",

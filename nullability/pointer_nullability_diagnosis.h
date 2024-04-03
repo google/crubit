@@ -8,6 +8,7 @@
 #include <optional>
 #include <string>
 
+#include "nullability/pragma.h"
 #include "clang/AST/Decl.h"
 #include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/SmallVector.h"
@@ -55,7 +56,8 @@ struct PointerNullabilityDiagnostic {
 ///
 /// Returns an empty vector when no issues are found in the code.
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
-diagnosePointerNullability(const FunctionDecl *Func);
+diagnosePointerNullability(const FunctionDecl *Func,
+                           const NullabilityPragmas &Pragmas);
 
 }  // namespace nullability
 }  // namespace tidy
