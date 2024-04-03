@@ -10,7 +10,6 @@
 namespace clang::tidy::nullability {
 namespace {
 
-// TODO: Fix false negatives.
 TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
   // Class template specialization with one argument initialised as _Nullable.
   // We test types that contain both nullability that is substituted into the
@@ -261,7 +260,6 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
   )cc"));
 }
 
-// TODO: Fix false negatives.
 TEST(PointerNullabilityTest,
      ClassTemplateInstantiationWithStructsAsParameters) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
@@ -483,7 +481,6 @@ TEST(PointerNullabilityTest,
   )cc"));
 }
 
-// TODO: Fix false negatives.
 TEST(PointerNullabilityTest, MemberFunctionTemplateOfConcreteStruct) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
@@ -494,7 +491,7 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfConcreteStruct) {
     void target(S p) {
       *p.getT0<int *>();
       *p.getT0<int *_Nonnull>();
-      *p.getT0<int *_Nullable>();  // TODO: fix false negative.
+      *p.getT0<int *_Nullable>();  // [[unsafe]]
 
       *p.getT0<int const *>();
       *p.getT0<int *const>();
@@ -502,9 +499,9 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfConcreteStruct) {
       *p.getT0<int const *_Nonnull>();
       *p.getT0<int *const _Nonnull>();
       *p.getT0<int const *const _Nonnull>();
-      *p.getT0<int const *_Nullable>();        // TODO: fix false negative.
-      *p.getT0<int *const _Nullable>();        // TODO: fix false negative.
-      *p.getT0<int const *const _Nullable>();  // TODO: fix false negative.
+      *p.getT0<int const *_Nullable>();        // [[unsafe]]
+      *p.getT0<int *const _Nullable>();        // [[unsafe]]
+      *p.getT0<int const *const _Nullable>();  // [[unsafe]]
     }
   )cc"));
 
@@ -517,7 +514,7 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfConcreteStruct) {
     void target(S p) {
       *p.getT1<0, int *, 1>();
       *p.getT1<2147483647, int *_Nonnull, -2147483647>();
-      *p.getT1<4, int *_Nullable, 4>();  // TODO: fix false negative.
+      *p.getT1<4, int *_Nullable, 4>();  // [[unsafe]]
     }
   )cc"));
 }
@@ -533,7 +530,7 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfTemplateStruct) {
     void target(S<int> p) {
       *p.getTN1<int *>();
       *p.getTN1<int *_Nonnull>();
-      *p.getTN1<int *_Nullable>();  // TODO: fix false negative.
+      *p.getTN1<int *_Nullable>();  // [[unsafe]]
 
       *p.getTN1<int const *>();
       *p.getTN1<int *const>();
@@ -541,9 +538,9 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfTemplateStruct) {
       *p.getTN1<int const *_Nonnull>();
       *p.getTN1<int *const _Nonnull>();
       *p.getTN1<int const *const _Nonnull>();
-      *p.getTN1<int const *_Nullable>();        // TODO: fix false negative.
-      *p.getTN1<int *const _Nullable>();        // TODO: fix false negative.
-      *p.getTN1<int const *const _Nullable>();  // TODO: fix false negative.
+      *p.getTN1<int const *_Nullable>();        // [[unsafe]]
+      *p.getTN1<int *const _Nullable>();        // [[unsafe]]
+      *p.getTN1<int const *const _Nullable>();  // [[unsafe]]
     }
   )cc"));
 
@@ -557,7 +554,7 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfTemplateStruct) {
     void target(S<int> p) {
       *p.getTN2<0, int *, 1>();
       *p.getTN2<2147483647, int *_Nonnull, -2147483647>();
-      *p.getTN2<4, int *_Nullable, 4>();  // TODO: fix false negative.
+      *p.getTN2<4, int *_Nullable, 4>();  // [[unsafe]]
     }
   )cc"));
 }
@@ -582,9 +579,9 @@ TEST(PointerNullabilityTest,
       *p.arg0;
       *p.arg1;  // [[unsafe]]
 
-      *p.arg0->arg0;
+      *p.arg0->arg0;  // [[unsafe]]
       *p.arg0->arg1.arg0;
-      *p.arg0->arg1.arg1;
+      *p.arg0->arg1.arg1;  // [[unsafe]]
     }
   )cc"));
 
@@ -925,102 +922,95 @@ TEST(PointerNullabilityTest,
                p) {
       *p.nonnull;
       *p.nonnull->nonnull;
-      *p.nonnull->nonnull->nullable0;  // TODO: fix false negative.
-      *p.nonnull->nonnull->nullable1;  // TODO: fix false negative.
-      *p.nonnull->nullable;            // TODO: fix false negative.
-      *p.nonnull->nullable->unknown;   // TODO: fix false negative.
-      *p.nonnull->nullable->nullable;  // TODO: fix false negative.
+      *p.nonnull->nonnull->nullable0;  // [[unsafe]]
+      *p.nonnull->nonnull->nullable1;  // [[unsafe]]
+      *p.nonnull->nullable;            // [[unsafe]]
+      *p.nonnull->nullable->unknown;   // [[unsafe]]
+      *p.nonnull->nullable->nullable;  // [[unsafe]]
       *p.unknown->unknown;
       *p.unknown->unknown->unknown;
-      *p.unknown->unknown->nullable;  // TODO: fix false negative.
+      *p.unknown->unknown->nullable;  // [[unsafe]]
       *p.unknown;
-      *p.unknown->nullable;            // TODO: fix false negative.
-      *p.unknown->nullable->nullable;  // TODO: fix false negative.
-      *p.unknown->nullable->nonnull;   // TODO: fix false negative.
+      *p.unknown->nullable;            // [[unsafe]]
+      *p.unknown->nullable->nullable;  // [[unsafe]]
+      *p.unknown->nullable->nonnull;   // [[unsafe]]
 
       *p.nonnull->getNonnull();
-      *p.nonnull->getNonnull()->nullable0;  // TODO: fix false negative.
-      *p.nonnull->getNonnull()->nullable1;  // TODO: fix false negative.
-      *p.nonnull->getNullable();
-      *p.nonnull->getNullable()->unknown;   // TODO: fix false negative.
-      *p.nonnull->getNullable()->nullable;  // TODO: fix false negative.
+      *p.nonnull->getNonnull()->nullable0;  // [[unsafe]]
+      *p.nonnull->getNonnull()->nullable1;  // [[unsafe]]
+      *p.nonnull->getNullable();            // [[unsafe]]
+      *p.nonnull->getNullable()->unknown;   // [[unsafe]]
+      *p.nonnull->getNullable()->nullable;  // [[unsafe]]
       *p.unknown->getUnknown();
       *p.unknown->getUnknown()->unknown;
-      *p.unknown->getUnknown()->nullable;   // TODO: fix false negative.
-      *p.unknown->getNullable();            // TODO: fix false negative.
-      *p.unknown->getNullable()->nullable;  // TODO: fix false negative.
-      *p.unknown->getNullable()->nonnull;   // TODO: fix false negative.
+      *p.unknown->getUnknown()->nullable;   // [[unsafe]]
+      *p.unknown->getNullable();            // [[unsafe]]
+      *p.unknown->getNullable()->nullable;  // [[unsafe]]
+      *p.unknown->getNullable()->nonnull;   // [[unsafe]]
 
-      *p.nonnull->getNonnull()->getNullable0();  // TODO: fix false negative.
-      *p.nonnull->getNonnull()->getNullable1();  // TODO: fix false negative.
-      *p.nonnull->getNullable()->getUnknown();   // TODO: fix false negative.
-      *p.nonnull->getNullable()->getNullable();  // TODO: fix false negative.
+      *p.nonnull->getNonnull()->getNullable0();  // [[unsafe]]
+      *p.nonnull->getNonnull()->getNullable1();  // [[unsafe]]
+      *p.nonnull->getNullable()->getUnknown();   // [[unsafe]]
+      *p.nonnull->getNullable()->getNullable();  // [[unsafe]]
       *p.unknown->getUnknown()->getUnknown();
-      *p.unknown->getUnknown()->getNullable();   // TODO: fix false negative.
-      *p.unknown->getNullable()->getNullable();  // TODO: fix false negative.
-      *p.unknown->getNullable()->getNonnull();   // TODO: fix false negative.
+      *p.unknown->getUnknown()->getNullable();   // [[unsafe]]
+      *p.unknown->getNullable()->getNullable();  // [[unsafe]]
+      *p.unknown->getNullable()->getNonnull();   // [[unsafe]]
 
-      *p.nonnull->nonnull->getNullable0();  // TODO: fix false negative.
-      *p.nonnull->nonnull->getNullable1();  // TODO: fix false negative.
-      *p.nonnull->nullable->getUnknown();   // TODO: fix false negative.
-      *p.nonnull->nullable->getNullable();  // TODO: fix false negative.
+      *p.nonnull->nonnull->getNullable0();  // [[unsafe]]
+      *p.nonnull->nonnull->getNullable1();  // [[unsafe]]
+      *p.nonnull->nullable->getUnknown();   // [[unsafe]]
+      *p.nonnull->nullable->getNullable();  // [[unsafe]]
       *p.unknown->unknown->getUnknown();
-      *p.unknown->unknown->getNullable();   // TODO: fix false negative.
-      *p.unknown->nullable->getNullable();  // TODO: fix false negative.
-      *p.unknown->nullable->getNonnull();   // TODO: fix false negative.
+      *p.unknown->unknown->getNullable();   // [[unsafe]]
+      *p.unknown->nullable->getNullable();  // [[unsafe]]
+      *p.unknown->nullable->getNonnull();   // [[unsafe]]
 
       *p.getNonnull();
       *p.getNonnull()->nonnull;
-      *p.getNonnull()->nonnull->nullable0;  // TODO: fix false negative.
-      *p.getNonnull()->nonnull->nullable1;  // TODO: fix false negative.
-      *p.getNonnull()->nullable;            // TODO: fix false negative.
-      *p.getNonnull()->nullable->unknown;   // TODO: fix false negative.
-      *p.getNonnull()->nullable->nullable;  // TODO: fix false negative.
+      *p.getNonnull()->nonnull->nullable0;  // [[unsafe]]
+      *p.getNonnull()->nonnull->nullable1;  // [[unsafe]]
+      *p.getNonnull()->nullable;            // [[unsafe]]
+      *p.getNonnull()->nullable->unknown;   // [[unsafe]]
+      *p.getNonnull()->nullable->nullable;  // [[unsafe]]
       *p.getUnknown()->unknown;
       *p.getUnknown()->unknown->unknown;
-      *p.getUnknown()->unknown->nullable;  // TODO: fix false negative.
+      *p.getUnknown()->unknown->nullable;  // [[unsafe]]
       *p.getUnknown();
-      *p.getUnknown()->nullable;            // TODO: fix false negative.
-      *p.getUnknown()->nullable->nullable;  // TODO: fix false negative.
-      *p.getUnknown()->nullable->nonnull;   // TODO: fix false negative.
+      *p.getUnknown()->nullable;            // [[unsafe]]
+      *p.getUnknown()->nullable->nullable;  // [[unsafe]]
+      *p.getUnknown()->nullable->nonnull;   // [[unsafe]]
 
       *p.getNonnull()->getNonnull();
-      *p.getNonnull()->getNonnull()->nullable0;  // TODO: fix false negative.
-      *p.getNonnull()->getNonnull()->nullable1;  // TODO: fix false negative.
-      *p.getNonnull()->getNullable();            // TODO: fix false negative.
-      *p.getNonnull()->getNullable()->unknown;   // TODO: fix false negative.
-      *p.getNonnull()->getNullable()->nullable;  // TODO: fix false negative.
+      *p.getNonnull()->getNonnull()->nullable0;  // [[unsafe]]
+      *p.getNonnull()->getNonnull()->nullable1;  // [[unsafe]]
+      *p.getNonnull()->getNullable();            // [[unsafe]]
+      *p.getNonnull()->getNullable()->unknown;   // [[unsafe]]
+      *p.getNonnull()->getNullable()->nullable;  // [[unsafe]]
       *p.getUnknown()->getUnknown();
       *p.getUnknown()->getUnknown()->unknown;
-      *p.getUnknown()->getUnknown()->nullable;   // TODO: fix false negative.
-      *p.getUnknown()->getNullable();            // TODO: fix false negative.
-      *p.getUnknown()->getNullable()->nullable;  // TODO: fix false negative.
-      *p.getUnknown()->getNullable()->nonnull;   // TODO: fix false negative.
+      *p.getUnknown()->getUnknown()->nullable;   // [[unsafe]]
+      *p.getUnknown()->getNullable();            // [[unsafe]]
+      *p.getUnknown()->getNullable()->nullable;  // [[unsafe]]
+      *p.getUnknown()->getNullable()->nonnull;   // [[unsafe]]
 
-      *p.getNonnull()->nonnull->getNullable0();  // TODO: fix false negative.
-      *p.getNonnull()->nonnull->getNullable1();  // TODO: fix false negative.
-      *p.getNonnull()->nullable->getUnknown();   // TODO: fix false negative.
-      *p.getNonnull()->nullable->getNullable();  // TODO: fix false negative.
+      *p.getNonnull()->nonnull->getNullable0();  // [[unsafe]]
+      *p.getNonnull()->nonnull->getNullable1();  // [[unsafe]]
+      *p.getNonnull()->nullable->getUnknown();   // [[unsafe]]
+      *p.getNonnull()->nullable->getNullable();  // [[unsafe]]
       *p.getUnknown()->unknown->getUnknown();
-      *p.getUnknown()->unknown->getNullable();   // TODO: fix false negative.
-      *p.getUnknown()->nullable->getNullable();  // TODO: fix false negative.
-      *p.getUnknown()->nullable->getNonnull();   // TODO: fix false negative.
+      *p.getUnknown()->unknown->getNullable();   // [[unsafe]]
+      *p.getUnknown()->nullable->getNullable();  // [[unsafe]]
+      *p.getUnknown()->nullable->getNonnull();   // [[unsafe]]
 
-      *p.getNonnull()->getNonnull()->getNullable0();  // TODO: fix false
-                                                      // negative.
-      *p.getNonnull()->getNonnull()->getNullable1();  // TODO: fix false
-                                                      // negative.
-      *p.getNonnull()->getNullable()->getUnknown();   // TODO: fix false
-                                                      // negative.
-      *p.getNonnull()->getNullable()->getNullable();  // TODO: fix false
-                                                      // negative.
+      *p.getNonnull()->getNonnull()->getNullable0();  // [[unsafe]]
+      *p.getNonnull()->getNonnull()->getNullable1();  // [[unsafe]]
+      *p.getNonnull()->getNullable()->getUnknown();   // [[unsafe]]
+      *p.getNonnull()->getNullable()->getNullable();  // [[unsafe]]
       *p.getUnknown()->getUnknown()->getUnknown();
-      *p.getUnknown()->getUnknown()->getNullable();   // TODO: fix false
-                                                      // negative.
-      *p.getUnknown()->getNullable()->getNullable();  // TODO: fix false
-                                                      // negative.
-      *p.getUnknown()->getNullable()->getNonnull();   // TODO: fix false
-                                                      // negative.
+      *p.getUnknown()->getUnknown()->getNullable();   // [[unsafe]]
+      *p.getUnknown()->getNullable()->getNullable();  // [[unsafe]]
+      *p.getUnknown()->getNullable()->getNonnull();   // [[unsafe]]
     }
   )cc"));
 }
@@ -1144,7 +1134,7 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate3) {
                 S<int(*_Nullable)> c, S<int *(*(*_Nullable))> d,
                 S<int *_Nullable (*)()> e) {
       *a.arg;    // [[unsafe]]
-      *b->arg;   // TODO: fix false negative
+      *b->arg;   // [[unsafe]]
       *c.arg;    // [[unsafe]]
       ***d.arg;  // [[unsafe]]
       *e.arg;    // TODO: fix false negative

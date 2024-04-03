@@ -5,6 +5,7 @@
 #include "nullability/pointer_nullability_analysis.h"
 
 #include <cassert>
+#include <deque>
 #include <functional>
 #include <optional>
 #include <vector>
@@ -41,6 +42,7 @@
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/Specifiers.h"
 #include "llvm/ADT/StringMap.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -121,164 +123,114 @@ const TypeNullability &getNullabilityForChild(
   });
 }
 
-/// Compute the nullability annotation of type `T`, which contains types
-/// originally written as a class template type parameter.
-///
-/// Example:
-///
-/// \code
-///   template <typename F, typename S>
-///   struct pair {
-///     S *_Nullable getNullablePtrToSecond();
-///   };
-/// \endcode
-///
-/// Consider the following member call:
-///
-/// \code
-///   pair<int *, int *_Nonnull> x;
-///   x.getNullablePtrToSecond();
-/// \endcode
-///
-/// The class template specialization `x` has the following substitutions:
-///
-///   F=int *, whose nullability is [_Unspecified]
-///   S=int * _Nonnull, whose nullability is [_Nonnull]
-///
-/// The return type of the member call `x.getNullablePtrToSecond()` is
-/// S * _Nullable.
-///
-/// When we call `substituteNullabilityAnnotationsInClassTemplate` with the type
-/// `S * _Nullable` and the `base` node of the member call (in this case, a
-/// `DeclRefExpr`), it returns the nullability of the given type after applying
-/// substitutions, which in this case is [_Nullable, _Nonnull].
-TypeNullability substituteNullabilityAnnotationsInClassTemplate(
-    ValueDecl *Member, const TypeNullability &BaseNullabilityAnnotations,
-    QualType BaseType, const PointerNullabilityLattice &Lattice) {
-  return getTypeNullability(
-      *Member, Lattice.defaults(),
-      [&](const SubstTemplateTypeParmType *ST)
-          -> std::optional<TypeNullability> {
-        // The class specialization that is BaseType and owns ST.
-        const ClassTemplateSpecializationDecl *Specialization = nullptr;
-        if (const auto *RT = BaseType->getAs<RecordType>())
-          Specialization =
-              dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl());
-        // TODO: handle nested templates, where associated decl != base type
-        // (e.g. PointerNullabilityTest.MemberFunctionTemplateOfTemplateStruct)
-        if (!Specialization || Specialization != ST->getAssociatedDecl())
-          return std::nullopt;
-        // TODO: The code below does not deal correctly with partial
-        // specializations. We should eventually handle these, but for now, just
-        // bail out.
-        if (isa<ClassTemplatePartialSpecializationDecl>(
-                ST->getReplacedParameter()->getDeclContext()))
-          return std::nullopt;
+// The Resugarer describes the nullability of template arguments within types we
+// query using getTypeNullability().
+//
+// When the template arguments are bound within the queried type, e.g.
+//   getTypeNullability( vector<Nonnull<int*>>::value_type )
+// then getTypeNullability() will record the sugar and resolve the
+// SubstTemplateTypeParmType within `value_type` itself.
+//
+// However when the template arguments are bound elsewhere in the code, e.g.
+//   vector<Nonnull<int*>> a;
+//   getTypeNullability( a.front() )
+// then we must provide the nullability vector, via the callback passed
+// to getTypeNullability().
+//
+// This class implements that callback interface, based on the common patterns
+// where template arguments can be determined from surrounding code.
+struct Resugarer {
+  using SubstTy = SubstTemplateTypeParmType;
+  const TypeNullabilityDefaults &Defaults;
 
-        unsigned ArgIndex = ST->getIndex();
-        auto TemplateArgs = Specialization->getTemplateArgs().asArray();
+  // The entity referenced is nested within a class template, e.g. `a.front()`
+  // where a is a vector<Nonnull<int*>>.
+  // We have a nullability vector [Nonnull] for the specialization vector<int*>.
+  struct FromEnclosingClassNullability {
+    ClassTemplateSpecializationDecl *Specialization;
+    const ArrayRef<PointerTypeNullability> SpecializationNullability;
 
-        // TODO: If the type was substituted from a pack template argument,
-        // we must find the slice that pertains to this particular type.
-        // For now, just give up on resugaring this type.
-        if (ST->getPackIndex().has_value()) return std::nullopt;
+    std::optional<TypeNullability> operator()(const SubstTy *ST) const {
+      if (Specialization != ST->getAssociatedDecl()) return std::nullopt;
+      // TODO: The code below does not deal correctly with partial
+      // specializations. We should eventually handle these, but for now, just
+      // bail out.
+      if (isa<ClassTemplatePartialSpecializationDecl>(
+              ST->getReplacedParameter()->getDeclContext()))
+        return std::nullopt;
 
-        unsigned PointerCount =
-            countPointersInType(Specialization->getDeclContext());
-        for (auto TA : TemplateArgs.take_front(ArgIndex)) {
-          PointerCount += countPointersInType(TA);
-        }
+      unsigned ArgIndex = ST->getIndex();
+      auto TemplateArgs = Specialization->getTemplateArgs().asArray();
 
-        unsigned SliceSize = countPointersInType(TemplateArgs[ArgIndex]);
-        return ArrayRef(BaseNullabilityAnnotations)
-            .slice(PointerCount, SliceSize)
-            .vec();
-      });
-}
+      // TODO: If the type was substituted from a pack template argument,
+      // we must find the slice that pertains to this particular type.
+      // For now, just give up on resugaring this type.
+      if (ST->getPackIndex().has_value()) return std::nullopt;
 
-/// Compute nullability annotations of `T`, which might contain template type
-/// variable substitutions bound by the call `CE`.
-///
-/// Example:
-///
-/// \code
-///   template<typename F, typename S>
-///   std::pair<S, F> flip(std::pair<F, S> p);
-/// \endcode
-///
-/// Consider the following CallExpr:
-///
-/// \code
-///   flip<int * _Nonnull, int * _Nullable>(std::make_pair(&x, &y));
-/// \endcode
-///
-/// This CallExpr has the following substitutions:
-///   F=int * _Nonnull, whose nullability is [_Nonnull]
-///   S=int * _Nullable, whose nullability is [_Nullable]
-///
-/// The return type of this CallExpr is `std::pair<S, F>`.
-///
-/// When we call `substituteNullabilityAnnotationsInFunctionTemplate` with the
-/// type `std::pair<S, F>` and the above CallExpr, it returns the nullability
-/// the given type after applying substitutions, which in this case is
-/// [_Nullable, _Nonnull].
-TypeNullability substituteNullabilityAnnotationsInFunctionTemplate(
-    absl::Nonnull<const CallExpr *> CE,
-    TransferState<PointerNullabilityLattice> &State) {
-  auto *ReferencedFunction = CE ? CE->getDirectCallee() : nullptr;
+      unsigned PointerCount =
+          countPointersInType(Specialization->getDeclContext());
+      for (auto TA : TemplateArgs.take_front(ArgIndex)) {
+        PointerCount += countPointersInType(TA);
+      }
+      unsigned SliceSize = countPointersInType(TemplateArgs[ArgIndex]);
+      return SpecializationNullability.slice(PointerCount, SliceSize).vec();
+    }
+  };
+  llvm::SmallVector<FromEnclosingClassNullability> Enclosing;
 
-  // Indirect calls simply have the nullability of the return part of callee.
-  if (!ReferencedFunction) {
-    TypeNullability CalleeNullability =
-        getNullabilityForChild(CE->getCallee(), State);
-    ArrayRef ResultNullability = CalleeNullability;
-    if (CE->getCallee()->getType()->isPointerType())  // Callee is usually fptr.
-      ResultNullability = ResultNullability.drop_front();
-    // Return value nullability is at the front of the function type.
-    ResultNullability =
-        ResultNullability.take_front(countPointersInType(CE->getType()));
-    return ResultNullability;
+  // The entity is referenced using template arguments, e.g.
+  // `make_unique<Nonnull<int*>>`. We have the template arguments.
+  struct FromTemplateArgs {
+    TemplateDecl *Template;
+    ArrayRef<TemplateArgumentLoc> Args;
+
+    std::optional<TypeNullability> operator()(
+        const SubstTy *ST, const TypeNullabilityDefaults &Defaults) const {
+      if (Template != ST->getAssociatedDecl()) return std::nullopt;
+      // Some or all of the template arguments may be deduced, and we won't
+      // see those on the `DeclRefExpr`. If the template argument was deduced,
+      // we don't have any sugar for it.
+      // TODO(b/268348533): Can we somehow obtain it from e.g. the function
+      // param it was deduced from?
+      // TODO(b/268345783): This check, as well as the index into
+      // `template_arguments` below, may be incorrect in the presence of
+      // parameters packs.  In function templates, parameter packs may appear
+      // anywhere in the parameter list. The index may therefore refer to one
+      // of the pack arguments, but we might incorrectly interpret it as
+      // referring to an argument that follows the pack.
+      if (ST->getIndex() >= Args.size()) return std::nullopt;
+
+      TypeSourceInfo *TSI = Args[ST->getIndex()].getTypeSourceInfo();
+      if (TSI == nullptr) return std::nullopt;
+      return getTypeNullability(TSI->getTypeLoc(), Defaults);
+    }
+  };
+  llvm::SmallVector<FromTemplateArgs> Template;
+
+  // Add a FromTemplateArgs context reflecting that the specialization
+  // `ResolvedTo` was chosen using the provided template arguments.
+  void addTemplateArgs(const ValueDecl *ResolvedTo,
+                       ArrayRef<TemplateArgumentLoc> UsingArgs) {
+    if (const auto *VD = llvm::dyn_cast<VarDecl>(ResolvedTo)) {
+      Template.push_back(
+          {VD->getTemplateInstantiationPattern()->getDescribedVarTemplate(),
+           UsingArgs});
+    } else if (auto *FD = llvm::dyn_cast<FunctionDecl>(ResolvedTo)) {
+      Template.push_back(
+          {FD->getTemplateSpecializationInfo()->getTemplate(), UsingArgs});
+    }
   }
 
-  // Nullability of direct function calls uses the callee decl.
-  // We can resugar the type of this decl based on its template context.
-  // We're ignoring the computed nullabilty of the callee DRE.
-  return getTypeNullability(
-      returnTypeLoc(*ReferencedFunction), State.Lattice.defaults(),
-      [&](const SubstTemplateTypeParmType *ST)
-          -> std::optional<TypeNullability> {
-        auto *DRE = dyn_cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
-        if (DRE == nullptr) return std::nullopt;
-
-        // TODO: Handle calls that use template argument deduction.
-
-        // Does this refer to a parameter of the function template?
-        // If not (e.g. nested templates, template specialization types in the
-        // return value), we handle the desugaring elsewhere.
-        if (!ReferencedFunction) return std::nullopt;
-        if (ReferencedFunction->getPrimaryTemplate() != ST->getAssociatedDecl())
-          return std::nullopt;
-
-        // Some or all of the template arguments may be deduced, and we won't
-        // see those on the `DeclRefExpr`. If the template argument was deduced,
-        // we don't have any sugar for it.
-        // TODO(b/268348533): Can we somehow obtain it from the function param
-        // it was deduced from?
-        // TODO(b/268345783): This check, as well as the index into
-        // `template_arguments` below, may be incorrect in the presence of
-        // parameters packs.  In function templates, parameter packs may appear
-        // anywhere in the parameter list. The index may therefore refer to one
-        // of the pack arguments, but we might incorrectly interpret it as
-        // referring to an argument that follows the pack.
-        if (ST->getIndex() >= DRE->template_arguments().size())
-          return std::nullopt;
-
-        TypeSourceInfo *TSI =
-            DRE->template_arguments()[ST->getIndex()].getTypeSourceInfo();
-        if (TSI == nullptr) return std::nullopt;
-        return getTypeNullability(TSI->getTypeLoc(), State.Lattice.defaults());
-      });
-}
+  // Implement the getTypeNullability() callback interface by searching
+  // all our contexts for a match.
+  std::optional<TypeNullability> operator()(const SubstTy *ST) const {
+    for (const auto &R : Enclosing)
+      if (auto Ret = R(ST)) return Ret;
+    for (const auto &R : Template)
+      if (auto Ret = R(ST, Defaults)) return Ret;
+    return std::nullopt;
+  }
+};
 
 PointerTypeNullability getPointerTypeNullability(
     absl::Nonnull<const Expr *> E, PointerNullabilityAnalysis::Lattice &L) {
@@ -1194,9 +1146,22 @@ void transferType_DeclRefExpr(absl::Nonnull<const DeclRefExpr *> DRE,
                               const MatchFinder::MatchResult &MR,
                               TransferState<PointerNullabilityLattice> &State) {
   computeNullability(DRE, State, [&] {
-    // TODO(b/332558689): lost sugar from DRE template args/qualifiers
+    Resugarer Resugar(State.Lattice.defaults());
+
+    if (DRE->hasExplicitTemplateArgs())
+      Resugar.addTemplateArgs(DRE->getDecl(), DRE->template_arguments());
+    std::deque<TypeNullability> ScopeNullabilityStorage;
+    for (auto NNS = DRE->getQualifierLoc(); NNS; NNS = NNS.getPrefix()) {
+      if (auto *CTSD = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(
+              NNS.getNestedNameSpecifier()->getAsRecordDecl())) {
+        ScopeNullabilityStorage.push_back(
+            getTypeNullability(NNS.getTypeLoc(), State.Lattice.defaults()));
+        Resugar.Enclosing.push_back({CTSD, ScopeNullabilityStorage.back()});
+      }
+    }
+
     auto Nullability =
-        getTypeNullability(*DRE->getDecl(), State.Lattice.defaults());
+        getTypeNullability(*DRE->getDecl(), State.Lattice.defaults(), Resugar);
     State.Lattice.overrideNullabilityFromDecl(DRE->getDecl(), Nullability);
     return Nullability;
   });
@@ -1206,24 +1171,29 @@ void transferType_MemberExpr(absl::Nonnull<const MemberExpr *> ME,
                              const MatchFinder::MatchResult &MR,
                              TransferState<PointerNullabilityLattice> &State) {
   computeNullability(ME, State, [&]() {
-    // TODO(b/332558689): lost sugar from ME qualifiers
-    auto BaseNullability = getNullabilityForChild(ME->getBase(), State);
-    auto Nullability = substituteNullabilityAnnotationsInClassTemplate(
-        ME->getMemberDecl(), BaseNullability, ME->getBase()->getType(),
-        State.Lattice);
+    auto *Member = ME->getMemberDecl();
+    auto BaseType = ME->getBase()->getType();
+    auto BaseNullability =
+        ArrayRef(getNullabilityForChild(ME->getBase(), State));
+    if (ME->isArrow() && BaseType->isPointerType()) {
+      BaseType = BaseType->getPointeeType();
+      BaseNullability = BaseNullability.drop_front();
+    }
+
+    Resugarer Resugar(State.Lattice.defaults());
+    if (const auto *RT = BaseType->getAs<RecordType>()) {
+      if (auto *CTSpec =
+              dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+        Resugar.Enclosing.push_back({CTSpec, BaseNullability});
+      }
+    }
+    if (ME->hasExplicitTemplateArgs())
+      Resugar.addTemplateArgs(ME->getMemberDecl(), ME->template_arguments());
+
+    auto Nullability =
+        getTypeNullability(*Member, State.Lattice.defaults(), Resugar);
     State.Lattice.overrideNullabilityFromDecl(ME->getMemberDecl(), Nullability);
     return Nullability;
-  });
-}
-
-void transferType_MemberCallExpr(
-    absl::Nonnull<const CXXMemberCallExpr *> MCE,
-    const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
-  computeNullability(MCE, State, [&]() {
-    return ArrayRef(getNullabilityForChild(MCE->getCallee(), State))
-        .take_front(countPointersInType(MCE))
-        .vec();
   });
 }
 
@@ -1409,13 +1379,15 @@ void transferType_CallExpr(absl::Nonnull<const CallExpr *> CE,
                            const MatchFinder::MatchResult &MR,
                            TransferState<PointerNullabilityLattice> &State) {
   computeNullability(CE, State, [&]() {
-    // TODO(mboehme): Instead of relying on Clang to propagate nullability sugar
-    // to the `CallExpr`'s type, we should extract nullability directly from the
-    // callee `Expr .
-    auto Nullability =
-        substituteNullabilityAnnotationsInFunctionTemplate(CE, State);
-    State.Lattice.overrideNullabilityFromDecl(CE->getCalleeDecl(), Nullability);
-    return Nullability;
+    TypeNullability CalleeNullability =
+        getNullabilityForChild(CE->getCallee(), State);
+    ArrayRef ResultNullability = CalleeNullability;
+    if (CE->getCallee()->getType()->isPointerType())  // Callee is usually fptr.
+      ResultNullability = ResultNullability.drop_front();
+    // Return value nullability is at the front of the function type.
+    ResultNullability =
+        ResultNullability.take_front(countPointersInType(CE->getType()));
+    return ResultNullability.vec();
   });
 }
 
@@ -1517,8 +1489,6 @@ auto buildTypeTransferer() {
                                   transferType_DeclRefExpr)
       .CaseOfCFGStmt<MemberExpr>(ast_matchers::memberExpr(),
                                  transferType_MemberExpr)
-      .CaseOfCFGStmt<CXXMemberCallExpr>(ast_matchers::cxxMemberCallExpr(),
-                                        transferType_MemberCallExpr)
       .CaseOfCFGStmt<CastExpr>(ast_matchers::castExpr(), transferType_CastExpr)
       .CaseOfCFGStmt<MaterializeTemporaryExpr>(
           ast_matchers::materializeTemporaryExpr(),

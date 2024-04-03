@@ -19,8 +19,8 @@ struct Wrapper {
 };
 
 TEST void testDeclRefExpr() {
-  unknown(Instance<Nonnull<int *>>);              // TODO(b/332558689): nonnull
-  unknown(StaticWrapper<Nonnull<int *>>::Value);  // TODO(b/332558689): nonnull
+  nonnull(Instance<Nonnull<int *>>);
+  nonnull(StaticWrapper<Nonnull<int *>>::Value);
 }
 
 TEST void testMemberExpr(Wrapper<Nonnull<int *>> &W) {
@@ -35,4 +35,14 @@ TEST void testMemberExpr(Wrapper<Nonnull<int *>> &W) {
 TEST void testCXXTemporaryExpr() {
   type<Wrapper<NullabilityUnknown<int *>>>(  // TODO(b/332562229): nonnull
       Wrapper<Nonnull<int *>>{});
+}
+
+struct TemplateWrapper {
+  template <typename T>
+  T get();
+};
+TEST void testMemberTemplate(TemplateWrapper &s) {
+  unknown(s.get<int *>());
+  nonnull(s.get<int *_Nonnull>());
+  nullable(s.get<int *_Nullable>());
 }
