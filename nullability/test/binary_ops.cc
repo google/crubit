@@ -56,3 +56,10 @@ TEST void testNotBoth(Nullable<int *> X, Nullable<int *> Y) {
   nullable(X);
   nullable(Y);
 }
+
+TEST void testComma(Nonnull<int *> X, Nullable<int *> Y) {
+  int *Z = (X, Y);
+  nullable(Z);
+
+  type<Nullable<int *>>((X, Y));
+}

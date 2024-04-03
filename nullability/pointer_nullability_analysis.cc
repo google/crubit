@@ -46,6 +46,7 @@
 
 namespace clang::tidy::nullability {
 
+using ast_matchers::anyOf;
 using ast_matchers::MatchFinder;
 using dataflow::Arena;
 using dataflow::BoolValue;
@@ -1253,7 +1254,12 @@ void transferType_CastExpr(absl::Nonnull<const CastExpr *> CE,
       case CK_UncheckedDerivedToBase:
         return PreserveTopLevelPointers(unspecifiedNullability(CE));
       case CK_UserDefinedConversion:
+        return unspecifiedNullability(CE);
       case CK_ConstructorConversion:
+        if (auto *CCE = llvm::dyn_cast<CXXConstructExpr>(CE->getSubExpr())) {
+          // This node is syntactic only.
+          return getNullabilityForChild(CE->getSubExpr(), State);
+        }
         return unspecifiedNullability(CE);
 
       case CK_Dynamic: {
@@ -1374,6 +1380,14 @@ void transferType_CXXBindTemporaryExpr(
   });
 }
 
+void transferType_CopyOrMoveConstruct(
+    const CXXConstructExpr *CCE, const MatchFinder::MatchResult &MR,
+    TransferState<PointerNullabilityLattice> &State) {
+  computeNullability(CCE, State, [&]() {
+    return getNullabilityForChild(CCE->getArg(0), State);
+  });
+}
+
 void transferType_CallExpr(absl::Nonnull<const CallExpr *> CE,
                            const MatchFinder::MatchResult &MR,
                            TransferState<PointerNullabilityLattice> &State) {
@@ -1419,6 +1433,26 @@ void transferType_UnaryOperator(
       case UO_Coawait:
         // TODO: work out what to do here!
         return unspecifiedNullability(UO);
+    }
+  });
+}
+
+void transferType_BinaryOperator(
+    absl::Nonnull<const BinaryOperator *> BO,
+    const MatchFinder::MatchResult &MR,
+    TransferState<PointerNullabilityLattice> &State) {
+  computeNullability(BO, State, [&]() -> TypeNullability {
+    switch (BO->getOpcode()) {
+      case BO_PtrMemD:
+      case BO_PtrMemI:
+        // TODO: pointers-to-member should really have nullability vectors
+        return unspecifiedNullability(BO);
+      case BO_Assign:
+      case BO_Comma:
+        return getNullabilityForChild(BO->getRHS(), State);
+      default:
+        // No other built-in binary operators can be pointer-valued
+        return unspecifiedNullability(BO);
     }
   });
 }
@@ -1479,12 +1513,21 @@ auto buildTypeTransferer() {
       .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(), transferType_CallExpr)
       .CaseOfCFGStmt<UnaryOperator>(ast_matchers::unaryOperator(),
                                     transferType_UnaryOperator)
+      .CaseOfCFGStmt<BinaryOperator>(ast_matchers::binaryOperator(),
+                                     transferType_BinaryOperator)
       .CaseOfCFGStmt<CXXNewExpr>(ast_matchers::cxxNewExpr(),
                                  transferType_NewExpr)
       .CaseOfCFGStmt<ArraySubscriptExpr>(ast_matchers::arraySubscriptExpr(),
                                          transferType_ArraySubscriptExpr)
       .CaseOfCFGStmt<CXXThisExpr>(ast_matchers::cxxThisExpr(),
                                   transferType_ThisExpr)
+      .CaseOfCFGStmt<CXXConstructExpr>(
+          ast_matchers::cxxConstructExpr(
+              ast_matchers::argumentCountIs(1),
+              ast_matchers::hasDeclaration(ast_matchers::cxxConstructorDecl(
+                  anyOf(ast_matchers::isCopyConstructor(),
+                        ast_matchers::isMoveConstructor())))),
+          transferType_CopyOrMoveConstruct)
       .Build();
 }
 
