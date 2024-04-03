@@ -127,7 +127,7 @@ TEST(PointerNullabilityTest, NonPointerReturnType) {
     struct S {
       int *_Nullable p;
       int *_Nonnull &target() {
-        return p;  // TODO: Fix false negative.
+        return p;  // [[unsafe]]
       }
     };
   )cc");

@@ -1252,5 +1252,17 @@ TEST(PointerNullabilityTest, CallFunctionReturningTemplateSpecializationType) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CallInstantiatedMember) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    struct Sink {
+      void eat(T);
+    };
+    void target(Sink<Nonnull<int *>> &S) {
+      S.eat(nullptr);  // [[unsafe]]
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

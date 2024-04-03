@@ -25,20 +25,20 @@ TEST(PragmaDiagnosisTest, ReturnType) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #pragma nullability file_default nonnull
     bool cond();
-    int *target(int *_Nonnull nn, int *_Nullable n, int *u) {
+    int *target(int *_Nonnull nn, int *_Nullable n, int *q) {
       if (cond()) return nn;
-      if (cond()) return n;  // TODO(b/332569977): unsafe
-      return u;
+      if (cond()) return n;  // [[unsafe]]
+      return q;
     }
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #pragma nullability file_default nullable
     bool cond();
-    int *target(int *_Nonnull nn, int *_Nullable n, int *u) {
+    int *target(int *_Nonnull nn, int *_Nullable n, int *q) {
       if (cond()) return nn;
       if (cond()) return n;
-      return u;
+      return q;
     }
   )cc"));
 }
@@ -47,20 +47,20 @@ TEST(PragmaDiagnosisTest, Assignment) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #pragma nullability file_default nonnull
     int *v;
-    void target(int *_Nonnull nn, int *_Nullable n, int *u) {
+    void target(int *_Nonnull nn, int *_Nullable n, int *q) {
       v = nn;
-      v = n;  // TODO(b/307797224): unsafe
-      v = u;
+      v = n;  // TODO(b/332569977): unsafe
+      v = q;
     }
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #pragma nullability file_default nullable
     int *v;
-    int *target(int *_Nonnull nn, int *_Nullable n, int *u) {
+    int *target(int *_Nonnull nn, int *_Nullable n, int *q) {
       v = nn;
       v = n;
-      v = u;
+      v = q;
     }
   )cc"));
 }
@@ -69,20 +69,20 @@ TEST(PragmaDiagnosisTest, FunctionCall) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #pragma nullability file_default nonnull
     void consume(int *x);
-    void target(int *_Nonnull nn, int *_Nullable n, int *u) {
+    void target(int *_Nonnull nn, int *_Nullable n, int *q) {
       consume(nn);
-      consume(n);  // TODO(b/332569977): unsafe
-      consume(u);
+      consume(n);  // [[unsafe]]
+      consume(q);
     }
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #pragma nullability file_default nullable
     void consume(int *x);
-    void target(int *_Nonnull nn, int *_Nullable n, int *u) {
+    void target(int *_Nonnull nn, int *_Nullable n, int *q) {
       consume(nn);
       consume(n);
-      consume(u);
+      consume(q);
     }
   )cc"));
 }

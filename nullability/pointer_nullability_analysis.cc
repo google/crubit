@@ -1391,8 +1391,6 @@ void transferType_CopyOrMoveConstruct(
 void transferType_CallExpr(absl::Nonnull<const CallExpr *> CE,
                            const MatchFinder::MatchResult &MR,
                            TransferState<PointerNullabilityLattice> &State) {
-  // TODO: Check CallExpr arguments in the diagnoser against the nullability of
-  // parameters.
   computeNullability(CE, State, [&]() {
     // TODO(mboehme): Instead of relying on Clang to propagate nullability sugar
     // to the `CallExpr`'s type, we should extract nullability directly from the

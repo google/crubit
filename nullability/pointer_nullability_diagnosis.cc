@@ -81,17 +81,19 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
            CharSourceRange::getTokenRange(E->getSourceRange())}};
 }
 
-// Diagnoses whether the nullability of `E` is incompatible with the expectation
-// set by `DeclaredType`.
-SmallVector<PointerNullabilityDiagnostic> diagnoseTypeExprCompatibility(
-    QualType DeclaredType, absl::Nonnull<const Expr *> E,
-    const Environment &Env, ASTContext &Ctx,
+// Diagnoses a conceptual assignment of LHS = RHS.
+// LHS can be a variable, the return value of a function, a param etc.
+SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
+    QualType LHSType, ArrayRef<PointerTypeNullability> LHSNullability,
+    absl::Nonnull<const Expr *> RHS, const Environment &Env, ASTContext &Ctx,
     PointerNullabilityDiagnostic::Context DiagCtx,
     std::optional<std::string> ParamName = std::nullopt) {
-  CHECK(isSupportedPointerType(DeclaredType));
-  return getNullabilityAnnotationsFromType(DeclaredType).front().concrete() ==
-                 NullabilityKind::NonNull
-             ? diagnoseNonnullExpected(E, Env, DiagCtx, ParamName)
+  LHSType = LHSType.getNonReferenceType();
+  // For now, we just check whether the top-level pointer type is compatible.
+  // TODO: examine inner nullability too, considering variance.
+  if (!isSupportedPointerType(LHSType)) return {};
+  return LHSNullability.front().concrete() == NullabilityKind::NonNull
+             ? diagnoseNonnullExpected(RHS, Env, DiagCtx, ParamName)
              : SmallVector<PointerNullabilityDiagnostic>{};
 }
 
@@ -133,10 +135,12 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
 
 // Diagnoses whether any of the arguments are incompatible with the
 // corresponding type in the function prototype.
+// ParmDecls is best-effort and used only for param names in diagnostics.
 SmallVector<PointerNullabilityDiagnostic> diagnoseArgumentCompatibility(
-    const FunctionProtoType &CalleeFPT, ArrayRef<const Expr *> Args,
-    ArrayRef<const ParmVarDecl *> ParmDecls, const Environment &Env,
-    ASTContext &Ctx) {
+    const FunctionProtoType &CalleeFPT,
+    ArrayRef<PointerTypeNullability> ParamsNullability,
+    ArrayRef<const ParmVarDecl *> ParmDecls, ArrayRef<const Expr *> Args,
+    const Environment &Env, ASTContext &Ctx) {
   auto ParamTypes = CalleeFPT.getParamTypes();
   // C-style varargs cannot be annotated and therefore are unchecked.
   if (CalleeFPT.isVariadic()) {
@@ -146,16 +150,16 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArgumentCompatibility(
   CHECK_EQ(ParamTypes.size(), Args.size());
   SmallVector<PointerNullabilityDiagnostic> Diagnostics;
   for (unsigned int I = 0; I < Args.size(); ++I) {
-    auto ParamType = ParamTypes[I].getNonReferenceType();
-    if (isSupportedPointerType(ParamType)) {
-      std::string ParamName = (I < ParmDecls.size())
-                                  ? ParmDecls[I]->getDeclName().getAsString()
-                                  : "";
-      Diagnostics.append(diagnoseTypeExprCompatibility(
-          ParamType, Args[I], Env, Ctx,
-          PointerNullabilityDiagnostic::Context::FunctionArgument,
-          std::move(ParamName)));
-    }
+    unsigned Len = countPointersInType(ParamTypes[I]);
+    auto ParamNullability = ParamsNullability.take_front(Len);
+    ParamsNullability = ParamsNullability.drop_front(Len);
+
+    std::string ParamName =
+        (I < ParmDecls.size()) ? ParmDecls[I]->getDeclName().getAsString() : "";
+    Diagnostics.append(diagnoseAssignmentLike(
+        ParamTypes[I], ParamNullability, Args[I], Env, Ctx,
+        PointerNullabilityDiagnostic::Context::FunctionArgument,
+        std::move(ParamName)));
   }
   return Diagnostics;
 }
@@ -249,20 +253,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
 SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
     absl::Nonnull<const CallExpr *> CE, const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
-  // Check whether the callee is null.
-  // - Skip direct callees to avoid handling builtin functions, which don't
-  //   decay to pointer.
-  // - Skip member callees, as they are not pointers at all (rather "bound
-  //   member function type").
-  //   Note that in `(obj.*nullable_pmf)()` the deref is *before* the call.
-  if (!CE->getDirectCallee() &&
-      !CE->getCallee()->hasPlaceholderType(BuiltinType::BoundMember)) {
-    auto D =
-        diagnoseNonnullExpected(CE->getCallee(), State.Env,
-                                PointerNullabilityDiagnostic::Context::Other);
-    if (!D.empty()) return D;
-  }
-
+  // __assert_nullability is a special-case.
   if (auto *FD = CE->getDirectCallee()) {
     if (FD->getDeclName().isIdentifier() &&
         FD->getName() == "__assert_nullability") {
@@ -270,31 +261,36 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
     }
   }
 
-  auto *Callee = CE->getCalleeDecl();
-  // TODO(mboehme): Retrieve the nullability directly from the callee using
-  // `getNullabilityForChild(CE->getCallee())`, as what we have here now
-  // doesn't work for callees that don't have a decl.
-  if (!Callee) return {};
+  const Expr *Callee = CE->getCallee();
+  auto *CalleeNullabilityPtr =
+      State.Lattice.getExprNullability(CE->getCallee());
+  if (!CalleeNullabilityPtr) return {};
+  const FunctionProtoType *CalleeType;
+  ArrayRef CalleeNullability = *CalleeNullabilityPtr;  // Matches CalleeType.
 
-  auto *CalleeType = Callee->getFunctionType();
+  // Callee is typically a function pointer (not for members or builtins).
+  // Check it for null, and unwrap the pointer for the next step.
+  if (Callee->getType()->isPointerType()) {
+    auto D = diagnoseNonnullExpected(
+        Callee, State.Env, PointerNullabilityDiagnostic::Context::Other);
+    // TODO: should we continue to diagnose arguments?
+    if (!D.empty()) return D;
+
+    CalleeNullability = CalleeNullability.drop_front();
+    CalleeType =
+        Callee->getType()->getPointeeType()->getAs<FunctionProtoType>();
+  } else {
+    QualType ET = exprType(Callee);
+    // pseudo-destructor exprs are callees with null types :-(
+    CalleeType = ET.isNull() ? nullptr : ET->getAs<FunctionProtoType>();
+  }
   if (!CalleeType) return {};
+  // We should rely entirely on the callee's nullability vector, and not at all
+  // on the FunctionProtoType's sugar. Throw it away to be sure!
+  CalleeType = cast<FunctionProtoType>(
+      CalleeType->getCanonicalTypeInternal().getTypePtr());
 
-  // TODO(mboehme): We're only looking at the nullability spelled on the
-  // `FunctionProtoType`, but there could be extra information in the callee.
-  // An example (due to sammccall@):
-  //
-  // template <typename T> struct Sink {
-  //   static void eat(T) { ... }
-  // }
-  // void target(Sink<Nonnull<int*>> &S) {
-  //   S<Nonnull<int*>>::eat(nullptr); // no warning
-  //   // callee is instantiated Sink<int*>::eat(int*)
-  //   // however nullability vector of DRE S::eat should be [Nonnull]
-  //   // (not sure if it is today)
-  // }
-  auto *CalleeFPT = CalleeType->getAs<FunctionProtoType>();
-  if (!CalleeFPT) return {};
-
+  // Now check the args against the parameter types.
   ArrayRef<const Expr *> Args(CE->getArgs(), CE->getNumArgs());
   // The first argument of an member operator call expression is the implicit
   // object argument, which does not appear in the list of parameter types.
@@ -303,11 +299,13 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
       isa<CXXMethodDecl>(CE->getDirectCallee())) {
     Args = Args.drop_front();
   }
-  ArrayRef<const ParmVarDecl *> ParmDecls = {};
-  if (Callee->getAsFunction())
-    ParmDecls = Callee->getAsFunction()->parameters();
-  return diagnoseArgumentCompatibility(*CalleeFPT, Args, ParmDecls, State.Env,
-                                       *Result.Context);
+  auto ParamNullability = CalleeNullability.drop_front(
+      countPointersInType(CalleeType->getReturnType()));
+
+  ArrayRef<ParmVarDecl *> Params;
+  if (auto *DC = CE->getDirectCallee()) Params = DC->parameters();
+  return diagnoseArgumentCompatibility(*CalleeType, ParamNullability, Params,
+                                       Args, State.Env, *Result.Context);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
@@ -317,29 +315,32 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
   auto *CalleeFPT = CE->getConstructor()->getType()->getAs<FunctionProtoType>();
   if (!CalleeFPT) return {};
   ArrayRef<const Expr *> ConstructorArgs(CE->getArgs(), CE->getNumArgs());
+  // ctor's type is void(Args), so its nullability == arg nullability.
+  auto CtorNullability =
+      getTypeNullability(*CE->getConstructor(), State.Lattice.defaults());
 
   return diagnoseArgumentCompatibility(
-      *CalleeFPT, ConstructorArgs,
-      CE->getConstructor()->getAsFunction()->parameters(), State.Env,
-      *Result.Context);
+      *CalleeFPT, CtorNullability,
+      CE->getConstructor()->getAsFunction()->parameters(), ConstructorArgs,
+      State.Env, *Result.Context);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
     absl::Nonnull<const ReturnStmt *> RS,
     const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
-  auto ReturnType = cast<FunctionDecl>(State.Env.getDeclCtx())->getReturnType();
+  if (!RS->getRetValue()) return {};
 
-  // TODO: Handle non-pointer return types.
-  if (!isSupportedPointerType(ReturnType)) {
-    return {};
-  }
+  auto *Function = cast<FunctionDecl>(State.Env.getDeclCtx());
+  auto FunctionNullability =
+      getTypeNullability(*Function, State.Lattice.defaults());
+  auto ReturnTypeNullability =
+      ArrayRef(FunctionNullability)
+          .take_front(countPointersInType(Function->getReturnType()));
 
-  auto *ReturnExpr = RS->getRetValue();
-  CHECK(isSupportedPointerType(ReturnExpr->getType()));
-
-  return diagnoseTypeExprCompatibility(
-      ReturnType, ReturnExpr, State.Env, *Result.Context,
+  return diagnoseAssignmentLike(
+      Function->getReturnType(), ReturnTypeNullability, RS->getRetValue(),
+      State.Env, *Result.Context,
       PointerNullabilityDiagnostic::Context::ReturnValue);
 }
 
@@ -348,12 +349,10 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
     const MatchFinder::MatchResult &Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   CHECK(CI->isAnyMemberInitializer());
-  auto MemberType = CI->getAnyMember()->getType();
-  if (!isSupportedPointerType(MemberType)) return {};
-
-  auto *MemberInitExpr = CI->getInit();
-  return diagnoseTypeExprCompatibility(
-      MemberType, MemberInitExpr, State.Env, *Result.Context,
+  auto *Member = CI->getAnyMember();
+  return diagnoseAssignmentLike(
+      Member->getType(), getTypeNullability(*Member, State.Lattice.defaults()),
+      CI->getInit(), State.Env, *Result.Context,
       PointerNullabilityDiagnostic::Context::Initializer);
 }
 

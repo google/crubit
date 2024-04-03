@@ -363,30 +363,24 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
   )cc"));
 
   // pointer to function pointer
-  //
-  // TODO(b/233582219): Fix false negative. Implement support for retrieving
-  // parameter types from a pointer to function pointer.
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(void (**takeNonnull)(int *_Nonnull),
                 void (**takeNullable)(int *_Nullable),
                 void (**takeUnannotated)(int *)) {
-      (*takeNonnull)(nullptr);  // false-negative
+      (*takeNonnull)(nullptr);  // [[unsafe]]
       (*takeNullable)(nullptr);
       (*takeUnannotated)(nullptr);
     }
   )cc"));
 
   // function returned from function
-  //
-  // TODO(b/233582219): Fix false negative. Implement support for retrieving
-  // parameter types for functions returned by another function.
   EXPECT_TRUE(checkDiagnostics(R"cc(
     typedef void (*takeNonnullF)(int *_Nonnull);
     typedef void (*takeNullableF)(int *_Nullable);
     typedef void (*takeUnannotatedF)(int *);
     void target(takeNonnullF (*takeNonnull)(), takeNullableF (*takeNullable)(),
                 takeUnannotatedF (*takeUnannotated)()) {
-      (*takeNonnull)()(nullptr);  // false-negative
+      (*takeNonnull)()(nullptr);  // [[unsafe]]
       (*takeNullable)()(nullptr);
       (*takeUnannotated)()(nullptr);
     }
