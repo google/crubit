@@ -5,6 +5,7 @@ package(default_applicable_licenses = ["//:license"])
 
 crubit_test_cc_library(
     name = "has_bindings",
+    srcs = ["has_bindings.cc"],
     hdrs = ["has_bindings.h"],
     aspect_hints = ["//features:supported"],
     deps = ["@absl//absl/base:core_headers"],

@@ -21,13 +21,13 @@
 /// Generated from: examples/cpp/function/example.h;l=14
 #[inline(always)]
 pub fn gshoe_add_two_integers(x: i32, y: i32) -> i32 {
-    unsafe { crate::detail::__rust_thunk___Z22gshoe_add_two_integers(x, y) }
+    unsafe { crate::detail::__rust_thunk__gshoe_add_two_integers(x, y) }
 }
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___Z22gshoe_add_two_integers(x: i32, y: i32) -> i32;
+        pub(crate) fn __rust_thunk__gshoe_add_two_integers(x: i32, y: i32) -> i32;
     }
 }

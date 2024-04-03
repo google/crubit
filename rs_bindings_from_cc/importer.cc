@@ -1168,6 +1168,10 @@ std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
     return std::string(mangled_record_name);
   }
 
+  if (!mangler_->shouldMangleDeclName(named_decl)) {
+    return named_decl->getIdentifier()->getName().str();
+  }
+
   clang::GlobalDecl decl;
 
   // There are only three named decl types that don't work with the GlobalDecl

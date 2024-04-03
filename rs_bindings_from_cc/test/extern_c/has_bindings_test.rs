@@ -9,6 +9,17 @@ use static_assertions::assert_not_impl_any;
 fn test_void_function() {
     has_bindings::crubit_void_function();
 }
+
+#[test]
+fn test_non_inline_function() {
+    has_bindings::crubit_non_inline_function();
+}
+
+#[test]
+fn test_extern_c_directly_function() {
+    has_bindings::crubit_extern_c_directly_function();
+}
+
 #[test]
 fn test_void_ptr_function() {
     let value = 1;

@@ -41,6 +41,7 @@ union Union {
 };
 
 inline void crubit_void_function() {}
+void crubit_non_inline_function();
 inline const void* crubit_void_ptr_identity(const void* x) { return x; }
 inline int crubit_add(int x, int y) { return x + y; }
 inline Struct crubit_anystruct(Struct x, const StructAlias*) { return x; }
@@ -56,7 +57,9 @@ inline void crubit_invoke_callback(void (&f)(int* x), int* x) { f(x); }
 // Option<function pointer>.
 typedef void (*NullableCallback)(int* x);
 inline void crubit_invoke_nullable_callback(void (*f)(int* x), int* x) { f(x); }
-}
+}  // extern "C"
+
+extern "C" void crubit_extern_c_directly_function();
 
 struct MyDerivedStruct : Struct {
   int derived_x;
