@@ -120,34 +120,23 @@ def _generate_bindings(ctx, basename, inputs, rustc_args, rustc_env):
 
     return (h_out_file, rs_out_file)
 
-def _make_cc_info_for_h_out_file(ctx, h_out_file, linking_contexts):
+def _make_cc_info_for_h_out_file(ctx, h_out_file, cc_infos):
     """Creates and returns CcInfo for the generated ..._cc_api.h header file.
 
     Args:
       ctx: The rule context.
       h_out_file: The generated "..._cc_api.h" header file
-      linking_contexts: Linking contexts - should include both:
+      cc_infos: cc_infos for dependencies of the h_out_file - should include both:
           1) the target `crate` and
           2) the compiled Rust glue crate (`..._cc_api_impl.rs` file).
 
     Returns:
       A CcInfo provider.
     """
-    dep_cc_infos = [
+    cc_info = cc_common.merge_cc_infos(cc_infos = [
         dep[CcInfo]
         for dep in ctx.attr._cc_deps_for_bindings
-    ] + [
-        dep_bindings_info.cc_info
-        for dep_bindings_info in _get_dep_bindings_infos(ctx)
-    ]
-    cc_deps_compilation_contexts = [
-        dep_cc_info.compilation_context
-        for dep_cc_info in dep_cc_infos
-    ]
-    cc_deps_linking_contexts = [
-        dep_cc_info.linking_context
-        for dep_cc_info in dep_cc_infos
-    ]
+    ] + cc_infos)
     cc_toolchain = find_cpp_toolchain(ctx)
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
@@ -159,7 +148,7 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, linking_contexts):
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
         public_hdrs = [h_out_file],
-        compilation_contexts = cc_deps_compilation_contexts,
+        compilation_contexts = [cc_info.compilation_context],
     )
     (linking_context, _) = cc_common.create_linking_context_from_compilation_outputs(
         name = ctx.label.name,
@@ -167,11 +156,16 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, linking_contexts):
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
         compilation_outputs = compilation_outputs,
-        linking_contexts = linking_contexts + cc_deps_linking_contexts,
+        linking_contexts = [cc_info.linking_context],
     )
+    debug_context = cc_common.merge_debug_context([
+        cc_info.debug_context(),
+        cc_common.create_debug_context(compilation_outputs),
+    ])
     return CcInfo(
         compilation_context = compilation_context,
         linking_context = linking_context,
+        debug_context = debug_context,
     )
 
 def _compile_rs_out_file(ctx, rs_out_file, target):
@@ -183,7 +177,7 @@ def _compile_rs_out_file(ctx, rs_out_file, target):
       target: The target crate, e.g. as provided to `ctx.attr.crate`.
 
     Returns:
-      LinkingContext for linking in the generated "..._cc_api_impl.rs".
+      CcInfo for the generated "..._cc_api_impl.rs".
     """
     deps = [
         DepVariantInfo(
@@ -203,7 +197,7 @@ def _compile_rs_out_file(ctx, rs_out_file, target):
         crate_name = target[CrateInfo].name + "_cc_api_impl",
         include_coverage = True,
     )
-    return dep_variant_info.cc_info.linking_context
+    return dep_variant_info.cc_info
 
 def _cc_bindings_from_rust_aspect_impl(target, ctx):
     basename = target.label.name
@@ -282,14 +276,15 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         env,
     )
 
-    impl_linking_context = _compile_rs_out_file(ctx, rs_out_file, target)
+    impl_cc_info = _compile_rs_out_file(ctx, rs_out_file, target)
 
-    target_cc_info = target[CcInfo]
-    target_crate_linking_context = target_cc_info.linking_context
     cc_info = _make_cc_info_for_h_out_file(
         ctx,
         h_out_file,
-        [target_crate_linking_context, impl_linking_context],
+        cc_infos = [target[CcInfo], impl_cc_info] + [
+            dep_bindings_info.cc_info
+            for dep_bindings_info in _get_dep_bindings_infos(ctx)
+        ],
     )
     return [
         CcBindingsFromRustInfo(
