@@ -1345,6 +1345,7 @@ void transferType_CastExpr(absl::Nonnull<const CastExpr *> CE,
       case CK_ZeroToOCLOpaqueType:
       case CK_IntToOCLSampler:
       case CK_HLSLVectorTruncation:
+      case CK_HLSLArrayRValue:
         return unspecifiedNullability(CE);
 
       case CK_Dependent:
