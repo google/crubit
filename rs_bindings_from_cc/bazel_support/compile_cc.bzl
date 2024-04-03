@@ -54,7 +54,13 @@ def compile_cc(
         linking_contexts = [cc_info.linking_context],
     )
 
+    debug_context = cc_common.merge_debug_context([
+        cc_info.debug_context(),
+        cc_common.create_debug_context(compilation_outputs),
+    ])
+
     return CcInfo(
         compilation_context = compilation_context,
         linking_context = linking_context,
+        debug_context = debug_context,
     )
