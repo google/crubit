@@ -113,6 +113,8 @@ public:
   using element_type = typename remove_extent<T>::type;
 
   shared_ptr();
+  template <class OtherT>
+  shared_ptr(OtherT *);
   template <class Deleter>
   shared_ptr(nullptr_t, Deleter);
   template <class Deleter, class Alloc>

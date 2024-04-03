@@ -37,6 +37,14 @@ Alias<const Nonnull<std::unique_ptr<int>> *> returnPtrToNonnull();
 Alias<const Nullable<std::unique_ptr<int>> *> returnPtrToNullable();
 Alias<const std::unique_ptr<int> *> returnPtrToUnknown();
 
+// Provided for various tests that require a base and derived class.
+struct Base {
+  virtual ~Base();
+};
+struct Derived : public Base {
+  ~Derived() override;
+};
+
 TEST void parameterAnnotations(Nonnull<std::unique_ptr<int>> NonnullParam,
                                Nullable<std::unique_ptr<int>> NullableParam,
                                std::unique_ptr<int> UnknownParam) {
@@ -153,6 +161,14 @@ TEST void constructorTakingPointer_ArrayVersion() {
       std::unique_ptr<int[]>(makeNullableRaw(), std::default_delete<int[]>()));
   unknown(
       std::unique_ptr<int[]>(makeUnknownRaw(), std::default_delete<int[]>()));
+}
+
+TEST void constructorTakingPointer_DerivedToBaseConversion() {
+  // Test the `shared_ptr` constructor taking a pointer that can be converted
+  // to the underlying pointer type.
+  std::shared_ptr<Base> base(new Derived());
+  nonnull(base);
+  nonnull(base.get());
 }
 
 TEST void moveConstructor(Nonnull<std::unique_ptr<int>> NonnullParam,
@@ -413,17 +429,6 @@ TEST void allocateShared() {
       std::allocate_shared_for_overwrite<int[]>(std::allocator<int[]>(), 5));
 }
 
-// Tests for `shared_ptr::..._pointer_cast`. We put these in a namespace so that
-// the types we create for them don't "leak" out beyond the tests.
-namespace pointer_casts {
-
-struct Base {
-  virtual ~Base();
-};
-struct Derived : public Base {
-  ~Derived() override;
-};
-
 TEST void staticPointerCast(Nonnull<std::shared_ptr<Base>> NonnullParam,
                             Nullable<std::shared_ptr<Base>> NullableParam,
                             std::shared_ptr<Base> UnknownParam) {
@@ -499,6 +504,8 @@ TEST void constPointerCast() {
   provable(!P);
 }
 
+namespace reinterpret_pointer_cast {
+
 // `S` and `S::I` are pointer-interconvertible.
 struct S {
   int I;
@@ -535,7 +542,7 @@ TEST void reinterpretPointerCast(Nonnull<std::shared_ptr<S>> NonnullParam,
   provable(!UnknownParam);
 }
 
-}  // namespace pointer_casts
+}  // namespace reinterpret_pointer_cast
 
 TEST void operatorEqualsAndNotEquals() {
   // We perform this test on `shared_ptr` rather than `unique_ptr` because it
@@ -596,13 +603,29 @@ TEST void userDefinedSmartPointers(
 
 namespace derived_from_unique_ptr {
 
-template <typename T>
-class DerivedPtr : public std::unique_ptr<T> {};
+struct Allocator {};
+struct S {};
 
-// This is a crash repro.
+template <typename T>
+struct DerivedPtr : public std::unique_ptr<T> {
+  // Allocates a new object using the given allocator.
+  DerivedPtr(Allocator *);
+};
+
+// This is a crash repro. Make sure we can handle classes that are derived from
+// smart pointers.
 TEST void derivedFromUniquePtr(Nonnull<DerivedPtr<int>> Ptr) {
   nonnull(Ptr);
   nonnull(Ptr.get());
+}
+
+// This is a crash repro. Make sure we don't assume that `A` is the underlying
+// pointer for the smart pointer.
+TEST void constructorTakingUnrelatedPointer(Allocator *A) {
+  DerivedPtr<S> Ptr(A);
+  // This used to cause a crash because we would attempt to copy a record of
+  // type `S` to a record of type `Allocator`.
+  *Ptr = S();
 }
 
 }  // namespace derived_from_unique_ptr

@@ -393,6 +393,21 @@ bool isStdWeakPtrType(QualType Ty) {
   return ID->getName() == "weak_ptr";
 }
 
+bool isPointerTypeConvertible(QualType From, QualType To) {
+  assert(isSupportedRawPointerType(From));
+  assert(isSupportedRawPointerType(To));
+
+  if (From == To) return true;
+
+  auto *FromDecl = From->getPointeeType()->getAsCXXRecordDecl();
+  auto *ToDecl = To->getPointeeType()->getAsCXXRecordDecl();
+
+  // If these aren't pointers to records, then just assume they're convertible.
+  if (FromDecl == nullptr || ToDecl == nullptr) return true;
+
+  return FromDecl == ToDecl || FromDecl->isDerivedFrom(ToDecl);
+}
+
 void transferValue_SmartPointerConstructor(
     const CXXConstructExpr *Ctor, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -410,7 +425,9 @@ void transferValue_SmartPointerConstructor(
 
   // Construct from raw pointer.
   if (Ctor->getNumArgs() >= 1 &&
-      isSupportedRawPointerType(Ctor->getArg(0)->getType())) {
+      isSupportedRawPointerType(Ctor->getArg(0)->getType()) &&
+      isPointerTypeConvertible(Ctor->getArg(0)->getType(),
+                               Loc.getSyntheticField(PtrField).getType())) {
     setSmartPointerValue(Loc, getRawPointerValue(Ctor->getArg(0), State.Env),
                          State.Env);
     return;
