@@ -1132,12 +1132,12 @@ TEST(PointerNullabilityTest, ParenTypeInTemplate3) {
 
     void target(S<int *_Nullable>(a), S<int *_Nullable>(*(b)),
                 S<int(*_Nullable)> c, S<int *(*(*_Nullable))> d,
-                S<int *_Nullable (*)()> e) {
+                S<int *(*_Nullable)()> e) {
       *a.arg;    // [[unsafe]]
       *b->arg;   // [[unsafe]]
       *c.arg;    // [[unsafe]]
       ***d.arg;  // [[unsafe]]
-      *e.arg;    // TODO: fix false negative
+      *e.arg;    // [[unsafe]]
 
       *e.arg();  // [[unsafe]]
     }
