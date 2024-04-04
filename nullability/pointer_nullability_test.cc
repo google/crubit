@@ -40,59 +40,70 @@ class NullabilityPropertiesTest : public ::testing::Test {
   dataflow::DataflowAnalysisContext DACtx = dataflow::DataflowAnalysisContext(
       std::make_unique<dataflow::WatchedLiteralsSolver>());
   dataflow::Environment Env = dataflow::Environment(DACtx);
+  Arena &A = DACtx.arena();
 };
 
-TEST_F(NullabilityPropertiesTest, Test) {
-  auto &A = DACtx.arena();
+using IsNullableTest = NullabilityPropertiesTest;
 
+TEST_F(IsNullableTest, NullPtr) {
   EXPECT_TRUE(isNullable(makeNullPointer(), Env));
-
-  {
-    auto &NullableButNotNull = makePointer(NullabilityKind::Nullable);
-    EXPECT_TRUE(isNullable(NullableButNotNull, Env));
-    auto *IsNull = getPointerNullState(NullableButNotNull).IsNull;
-    ASSERT_NE(IsNull, nullptr);
-    Env.assume(A.makeNot(*IsNull));
-    EXPECT_FALSE(isNullable(NullableButNotNull, Env));
-  }
-
-  {
-    auto &NullableAndNull = makePointer(NullabilityKind::Nullable);
-    auto *IsNull = getPointerNullState(NullableAndNull).IsNull;
-    ASSERT_NE(IsNull, nullptr);
-    Env.assume(*IsNull);
-    EXPECT_TRUE(isNullable(NullableAndNull, Env));
-  }
-
-  {
-    auto &NonnullAndNotNull = makePointer(NullabilityKind::NonNull);
-    EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
-
-    auto *IsNull = getPointerNullState(NonnullAndNotNull).IsNull;
-    ASSERT_NE(IsNull, nullptr);
-
-    // `IsNull` should not just be provably false but an actual false literal.
-    ASSERT_EQ(IsNull, &A.makeLiteral(false));
-
-    // Assuming the pointer is non-null is a no-op, but make sure it doesn't
-    // change the result of `isNullable()`.
-    Env.assume(A.makeNot(*IsNull));
-    EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
-  }
-
-  {
-    // This is a little surprising: if a pointer comes from a non-null source
-    // but is dynamically discovered to be definitely null, we still don't
-    // consider it nullable.
-    auto &NonnullAndNull = makePointer(NullabilityKind::NonNull);
-    auto *IsNull = getPointerNullState(NonnullAndNull).IsNull;
-    ASSERT_NE(IsNull, nullptr);
-    Env.assume(*IsNull);
-    EXPECT_FALSE(isNullable(NonnullAndNull, Env));
-  }
 }
 
-TEST_F(NullabilityPropertiesTest, IsNullableAdditionalConstraints) {
+TEST_F(IsNullableTest, NullableButNotNull) {
+  auto &NullableButNotNull = makePointer(NullabilityKind::Nullable);
+  EXPECT_TRUE(isNullable(NullableButNotNull, Env));
+  auto *IsNull = getPointerNullState(NullableButNotNull).IsNull;
+  ASSERT_NE(IsNull, nullptr);
+  Env.assume(A.makeNot(*IsNull));
+  EXPECT_FALSE(isNullable(NullableButNotNull, Env));
+}
+
+TEST_F(IsNullableTest, NullableAndNull) {
+  auto &NullableAndNull = makePointer(NullabilityKind::Nullable);
+  auto *IsNull = getPointerNullState(NullableAndNull).IsNull;
+  ASSERT_NE(IsNull, nullptr);
+  Env.assume(*IsNull);
+  EXPECT_TRUE(isNullable(NullableAndNull, Env));
+}
+
+TEST_F(IsNullableTest, NonnullAndNotNull) {
+  auto &NonnullAndNotNull = makePointer(NullabilityKind::NonNull);
+  EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
+
+  auto *IsNull = getPointerNullState(NonnullAndNotNull).IsNull;
+  ASSERT_NE(IsNull, nullptr);
+
+  // `IsNull` should not just be provably false but an actual false literal.
+  ASSERT_EQ(IsNull, &A.makeLiteral(false));
+
+  // Assuming the pointer is non-null is a no-op, but make sure it doesn't
+  // change the result of `isNullable()`.
+  Env.assume(A.makeNot(*IsNull));
+  EXPECT_FALSE(isNullable(NonnullAndNotNull, Env));
+}
+
+TEST_F(IsNullableTest, NonnullAndNull) {
+  // If a pointer comes from a non-null source but is dynamically discovered to
+  // be definitely null, we don't consider it nullable, because we're in an
+  // environment with false flow conditions.
+  auto &NonnullAndNull = makePointer(NullabilityKind::NonNull);
+  auto *IsNull = getPointerNullState(NonnullAndNull).IsNull;
+  ASSERT_NE(IsNull, nullptr);
+  Env.assume(*IsNull);
+  EXPECT_FALSE(isNullable(NonnullAndNull, Env));
+}
+
+TEST_F(IsNullableTest, UnknownAndNull) {
+  // If a pointer comes from an unknown source but is dynamically discovered to
+  // be definitely null, we consider it nullable.
+  auto &UnknownAndNull = makePointer(NullabilityKind::Unspecified);
+  auto *IsNull = getPointerNullState(UnknownAndNull).IsNull;
+  ASSERT_NE(IsNull, nullptr);
+  Env.assume(*IsNull);
+  EXPECT_TRUE(isNullable(UnknownAndNull, Env));
+}
+
+TEST_F(IsNullableTest, AdditionalConstraints) {
   auto &P = makePointer(NullabilityKind::Nullable);
   EXPECT_TRUE(isNullable(P, Env));
   auto *IsNull = getPointerNullState(P).IsNull;

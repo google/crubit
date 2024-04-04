@@ -431,8 +431,6 @@ class ImplementationEvidenceCollector {
         // nullability based on InferableSlots for the caller being assigned to
         // Unknown or their previously-inferred value, to reflect the current
         // annotations and not all possible annotations for them.
-        // TODO(b/309625642) Consider treating Unknown-but-provably-null values
-        // as nullable arguments, which `getNullability` currently does not.
         NullabilityKind ArgNullability =
             getNullability(*PV, Env, &InferableSlotsConstraint);
         Emit(CalleeDecl, paramSlot(Iter.paramIdx()),
@@ -650,8 +648,6 @@ class ImplementationEvidenceCollector {
     // function is not an inference target.
     if (!isInferenceTarget(*Env.getCurrentFunc())) return;
 
-    // TODO(b/309625642) Consider treating Unknown-but-provably-null values as
-    // nullable return values, which `getNullability` currently does not.
     NullabilityKind ReturnNullability =
         getNullability(ReturnExpr, Env, &InferableSlotsConstraint);
     Evidence::Kind ReturnEvidenceKind;
@@ -689,28 +685,8 @@ class ImplementationEvidenceCollector {
                                   SourceLocation ValueLoc) {
     if (TypeNullability.empty() || !hasPointerNullState(PointerValue)) return;
     dataflow::Arena &A = Env.arena();
-    // The following arrangement of formulas specifically does consider an
-    // Unknown-but-provably-null pointer as a value which should cause the type
-    // to be Nullable, a less conservative approach than is taken in
-    // verification.
-    //
-    // TODO(b/309625642) Consider extracting this determination of nullability
-    // into a shared function, or extending `getNullability`, if we replace
-    // `getNullability` calls elsewhere in evidence collection with an approach
-    // that matches this one.
-    PointerNullState NullState = getPointerNullState(PointerValue);
-    const Formula *ValueFromNullable = NullState.FromNullable;
-    const Formula *ValueIsNull = NullState.IsNull;
-    const Formula *ValueIsNullOrNullable = &A.makeLiteral(false);
-    if (ValueFromNullable != nullptr) {
-      ValueIsNullOrNullable =
-          &A.makeOr(*ValueFromNullable, *ValueIsNullOrNullable);
-    }
-    if (ValueIsNull != nullptr) {
-      ValueIsNullOrNullable = &A.makeOr(*ValueIsNull, *ValueIsNullOrNullable);
-    }
-    if (Env.proves(
-            A.makeImplies(InferableSlotsConstraint, *ValueIsNullOrNullable))) {
+    if (getNullability(PointerValue, Env, &InferableSlotsConstraint) ==
+        NullabilityKind::Nullable) {
       const Formula &TypeIsNullable = TypeNullability[0].isNullable(A);
       if (!Env.allows(TypeIsNullable)) return;
 

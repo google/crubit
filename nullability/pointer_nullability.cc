@@ -21,7 +21,6 @@
 
 namespace clang::tidy::nullability {
 
-using dataflow::AtomicBoolValue;
 using dataflow::BoolValue;
 using dataflow::DataflowAnalysisContext;
 using dataflow::Environment;
@@ -167,18 +166,39 @@ bool isNullable(
   auto &A = Env.getDataflowAnalysisContext().arena();
   auto [FromNullable, Null] = getPointerNullState(PointerVal);
 
-  // A value is nullable if two things can be simultaneously true:
-  // - We got it from a nullable source
-  //   (values from unknown sources may be null, but are not nullable)
-  // - The value is actually null
+  // A value is nullable if either of two things is true:
+  // - The value is provably null under satisfiable flow conditions
+  //   (a value from an unknown source becomes nullable if provably null)
+  // - We got it from a nullable source and it may be actually null
   //   (if a value from a nullable source was checked, it's not nullable)
-  const Formula *ForseeablyNull = &A.makeLiteral(true);
-  if (FromNullable) ForseeablyNull = &A.makeAnd(*ForseeablyNull, *FromNullable);
-  if (Null) ForseeablyNull = &A.makeAnd(*ForseeablyNull, *Null);
-  if (AdditionalConstraints)
-    ForseeablyNull = &A.makeAnd(*ForseeablyNull, *AdditionalConstraints);
+  //
+  // Notably, a value from an unknown source that may be null, but is not
+  // provably null, is not considered nullable. Values from non-null sources are
+  // never considered nullable because being able to prove them null can only
+  // occur under unsatisfiable flow conditions.
+  if (Null) {
+    const Formula *ProvablyNull = Null;
+    if (AdditionalConstraints)
+      ProvablyNull = &A.makeImplies(*AdditionalConstraints, *ProvablyNull);
 
-  return Env.allows(*ForseeablyNull);
+    if (Env.proves(*ProvablyNull)) {
+      // If we're in an environment with false flow conditions, we can prove
+      // anything, but don't want to consider this value Nullable and end up
+      // producing diagnostics in unreachable code.
+      if (Env.proves(A.makeLiteral(false))) return false;
+      return true;
+    }
+  }
+
+  const Formula *NullableAndMaybeNull = &A.makeLiteral(true);
+  if (FromNullable)
+    NullableAndMaybeNull = &A.makeAnd(*NullableAndMaybeNull, *FromNullable);
+  if (Null) NullableAndMaybeNull = &A.makeAnd(*NullableAndMaybeNull, *Null);
+  if (AdditionalConstraints)
+    NullableAndMaybeNull =
+        &A.makeAnd(*NullableAndMaybeNull, *AdditionalConstraints);
+
+  return Env.allows(*NullableAndMaybeNull);
 }
 
 NullabilityKind getNullability(

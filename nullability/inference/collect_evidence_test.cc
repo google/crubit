@@ -496,8 +496,6 @@ TEST(CollectEvidenceFromImplementationTest, UnknownArgPassed) {
                                 functionNamed("callee"))));
 }
 
-// TODO(b/309625642) Consider treating Unknown-but-provably-null values as
-// nullable arguments.
 TEST(CollectEvidenceFromImplementationTest, UnknownButProvablyNullArgPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(int *q);
@@ -508,7 +506,7 @@ TEST(CollectEvidenceFromImplementationTest, UnknownButProvablyNullArgPassed) {
     }
   )cc";
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              Contains(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+              Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("callee"))));
 }
 
@@ -577,6 +575,21 @@ TEST(CollectEvidenceFromImplementationTest, NullableReturn) {
                                     functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest, NullableButCheckedReturn) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* target(Nullable<int*> p) {
+      if (p) return p;
+
+      // no return in this path to avoid irrelevant evidence, and this still
+      // compiles, as the lack of return in a path is only a warning.
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
+                                    functionNamed("target"))));
+}
+
 TEST(CollectEvidenceFromImplementationTest, NonnullReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(Nonnull<int*> p) {
@@ -599,8 +612,6 @@ TEST(CollectEvidenceFromImplementationTest, UnknownReturn) {
                                     functionNamed("target"))));
 }
 
-// TODO(b/309625642) Consider treating Unknown-but-provably-null values as
-// nullable return values.
 TEST(CollectEvidenceFromImplementationTest, UnknownButProvablyNullReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(int* p) {
@@ -613,7 +624,7 @@ TEST(CollectEvidenceFromImplementationTest, UnknownButProvablyNullReturn) {
   )cc";
   EXPECT_THAT(
       collectEvidenceFromTargetFunction(Src),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN,
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                                     functionNamed("target"))));
 }
 

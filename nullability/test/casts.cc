@@ -79,7 +79,7 @@ TEST(PointerNullabilityTest, UnknownPtrImplicitCastToBool) {
       if (x) {
         *x;
       } else {
-        *x;  // false-negative
+        *x;  // [[unsafe]]
       }
       *x;  // false-negative
     }
@@ -90,7 +90,7 @@ TEST(PointerNullabilityTest, UnknownPtrImplicitCastToBool) {
     void target(int *x) {
       *x;  // false-negative
       if (!x) {
-        *x;  // false-negative
+        *x;  // [[unsafe]]
       } else {
         *x;
       }

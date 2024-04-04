@@ -277,11 +277,11 @@ TEST void unknownNotEqualsNullable(Nullable<int *> X, int *Y) {
 
 // unknown vs nullptr
 // TODO(b/233582219): The pointer is compared to nullptr,
-// hence the unnannotated pointer should be considered nullable.
+// hence the unannotated pointer should be considered nullable.
 TEST void unknownEqualsNullptr(int *X) {
   unknown(X);  // TODO: nullable
   if (X == nullptr) {
-    unknown(X);  // TODO: nullable
+    nullable(X);
   } else {
     nonnull(X);
   }
@@ -290,7 +290,7 @@ TEST void unknownEqualsNullptr(int *X) {
 TEST void nullptrEqualsUnknown(int *X) {
   unknown(X);  // TODO: nullable
   if (nullptr == X) {
-    unknown(X);  // TODO: nullable
+    nullable(X);
   } else {
     nonnull(X);
   }
@@ -301,7 +301,7 @@ TEST void unknownNotEqualsNullptr(int *X) {
   if (X != nullptr) {
     nonnull(X);
   } else {
-    unknown(X);  // TODO: nullable
+    nullable(X);
   }
   unknown(X);  // TODO: nullable
 }
@@ -310,7 +310,7 @@ TEST void nullptrNotEqualsUnknown(int *X) {
   if (nullptr != X) {
     nonnull(X);
   } else {
-    unknown(X);  // TODO: nullable
+    nullable(X);
   }
   unknown(X);  // TODO: nullable
 }

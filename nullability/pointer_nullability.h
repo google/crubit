@@ -142,14 +142,16 @@ void initNullPointer(dataflow::PointerValue &PointerVal,
 dataflow::PointerValue &createNullPointer(QualType PointeeType,
                                           dataflow::Environment &Env);
 
-/// Returns true if there is evidence that `PointerVal` may hold a nullptr.
+/// Returns true if `PointerVal` is known to be null or is from a nullable
+/// source and may be null.
 bool isNullable(
     const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
     absl::Nullable<const dataflow::Formula *> AdditionalConstraints = nullptr);
 
 /// Returns the strongest provable assertion we can make about `PointerVal`.
 /// If PointerVal may not be null, returns Nonnull.
-/// If PointerVal may be both null and known-nullability, returns Nullable.
+/// If PointerVal is known to be null or is from a nullable source and may be
+/// null, returns Nullable.
 /// Otherwise, returns Unspecified.
 clang::NullabilityKind getNullability(
     const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
