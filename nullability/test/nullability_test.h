@@ -48,6 +48,8 @@ struct require_same<T, T> {
 
 // Asserts the exact static type and nullability of an expression.
 // e.g. type<Nonnull<int*>(&i);
+//
+// Types written inside type<...> do not respect nullability pragmas!
 template <
     typename Expected, typename Actual,
     // Statically verify that the canonical types are the same.

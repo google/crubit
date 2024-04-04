@@ -251,7 +251,7 @@ QualType rebuildWithNullability(QualType, const TypeNullability &,
 
 /// Computes the number of pointer slots within a type.
 /// Each of these could conceptually be nullable, so this is the length of
-/// the nullability vector computed by getNullabilityAnnotationsFromType().
+/// the nullability vector computed by getTypeNullability().
 unsigned countPointersInType(QualType T);
 unsigned countPointersInType(absl::Nonnull<const Expr *> E);
 unsigned countPointersInType(const TemplateArgument &TA);

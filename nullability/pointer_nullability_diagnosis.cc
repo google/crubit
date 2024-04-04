@@ -356,20 +356,22 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
       PointerNullabilityDiagnostic::Context::Initializer);
 }
 
-bool shouldDiagnoseExpectedNonnullDefaultArgValue(clang::ASTContext &Ctx,
-                                                  const Expr &DefaultArg) {
-  if (DefaultArg.isNullPointerConstant(Ctx,
-                                       Expr::NPC_ValueDependentIsNotNull)) {
+bool shouldDiagnoseExpectedNonnullDefaultArgValue(
+    clang::ASTContext &Ctx, const ParmVarDecl &Param,
+    const TypeNullabilityDefaults &Defaults) {
+  const Expr *Init = Param.getInit();
+  if (!Init) return false;
+  if (Init->isNullPointerConstant(Ctx, Expr::NPC_ValueDependentIsNotNull))
     return true;
-  } else if (isSupportedPointerType(DefaultArg.getType()) &&
-             !DefaultArg.getType()->isDependentType()) {
-    if (TypeNullability DefaultValueAnnotation =
-            getNullabilityAnnotationsFromType(DefaultArg.getType());
-        !DefaultValueAnnotation.empty() &&
-        DefaultValueAnnotation.front().concrete() ==
-            NullabilityKind::Nullable) {
-      return true;
-    }
+  QualType InitTy = Init->getType();
+  if (InitTy->isDependentType() || !isSupportedPointerType(InitTy))
+    return false;
+  if (TypeNullability DefaultValueAnnotation = getTypeNullability(
+          exprType(Init), Ctx.getSourceManager().getFileID(Param.getLocation()),
+          Defaults);
+      !DefaultValueAnnotation.empty() &&
+      DefaultValueAnnotation.front().concrete() == NullabilityKind::Nullable) {
+    return true;
   }
   return false;
 }
@@ -398,7 +400,7 @@ void checkParmVarDeclWithPointerDefaultArg(
 
   const Expr *DefaultVal = Parm.getInit();
   if (!DefaultVal ||
-      !shouldDiagnoseExpectedNonnullDefaultArgValue(Ctx, *DefaultVal))
+      !shouldDiagnoseExpectedNonnullDefaultArgValue(Ctx, Parm, Defaults))
     return;
 
   Diags.push_back({PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,

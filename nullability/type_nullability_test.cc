@@ -283,20 +283,19 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
       underlyingRawPointerType(underlying("IndirectRecursive2", AST)).isNull());
 }
 
-class GetNullabilityAnnotationsFromTypeTest : public ::testing::Test {
+class GetTypeNullabilityTest : public ::testing::Test {
  protected:
   // C++ declarations prepended before parsing type in nullVec().
   TestInputs Inputs;
   std::string &Header;
   std::string Preamble;
 
-  GetNullabilityAnnotationsFromTypeTest()
-      : Header(Inputs.ExtraFiles["header.h"]) {
+  GetTypeNullabilityTest() : Header(Inputs.ExtraFiles["header.h"]) {
     Inputs.ExtraArgs.push_back("-include");
     Inputs.ExtraArgs.push_back("header.h");
   }
 
-  // Parses `Type` and returns getNullabilityAnnotationsFromType().
+  // Parses `Type` and returns getTypeNullability().
   TypeNullability nullVec(llvm::StringRef Type) {
     NullabilityPragmas Pragmas;
     Inputs.Code = (Preamble + "\nusing Target = " + Type + ";").str();
@@ -323,16 +322,16 @@ class GetNullabilityAnnotationsFromTypeTest : public ::testing::Test {
 };
 
 // GetTypeNullabilityLocsTests below cover much of the same functionality as
-// GetNullabilityAnnotationsFromTypeTest could cover, as long as they both use
+// GetTypeNullabilityTest could cover, as long as they both use
 // NullabilityWalker under the hood, so we only add additional
-// GetNullabilityAnnotationsFromTypesTests for differences in their coverage,
+// GetTypeNullabilityTests for differences in their coverage,
 // namely pragma consideration and Unspecified as a default nullability.
 
-TEST_F(GetNullabilityAnnotationsFromTypeTest, UnannotatedGivesDefault) {
+TEST_F(GetTypeNullabilityTest, UnannotatedGivesDefault) {
   EXPECT_THAT(nullVec("int *"), ElementsAre(NullabilityKind::Unspecified));
 }
 
-TEST_F(GetNullabilityAnnotationsFromTypeTest, Pragma) {
+TEST_F(GetTypeNullabilityTest, Pragma) {
   EXPECT_THAT(nullVec("int*"), ElementsAre(NullabilityKind::Unspecified));
   Preamble = "#pragma nullability file_default nonnull";
   EXPECT_THAT(nullVec("int*"), ElementsAre(NullabilityKind::NonNull));
@@ -341,7 +340,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, Pragma) {
   Preamble = "#pragma nullability file_default unspecified";
 }
 
-TEST_F(GetNullabilityAnnotationsFromTypeTest, PragmaTypedef) {
+TEST_F(GetTypeNullabilityTest, PragmaTypedef) {
   Inputs.ExtraFiles["p.h"] = R"cpp(
 #pragma nullability file_default nullable
     typedef int *P;
@@ -356,7 +355,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, PragmaTypedef) {
                           NullabilityKind::NonNull, NullabilityKind::Nullable));
 }
 
-TEST_F(GetNullabilityAnnotationsFromTypeTest, PragmaMacroUsesExpansionLoc) {
+TEST_F(GetTypeNullabilityTest, PragmaMacroUsesExpansionLoc) {
   Header = R"cpp(
 #pragma nullability file_default nonnull
 #define P int*
@@ -371,7 +370,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, PragmaMacroUsesExpansionLoc) {
                                                 NullabilityKind::Nullable));
 }
 
-TEST_F(GetNullabilityAnnotationsFromTypeTest, PragmaTemplate) {
+TEST_F(GetTypeNullabilityTest, PragmaTemplate) {
   Header = R"cpp(
 #pragma nullability file_default nonnull
 
@@ -390,7 +389,7 @@ TEST_F(GetNullabilityAnnotationsFromTypeTest, PragmaTemplate) {
                                                  NullabilityKind::Unspecified));
 }
 
-TEST_F(GetNullabilityAnnotationsFromTypeTest, LostSugarCausesWrongType) {
+TEST_F(GetTypeNullabilityTest, LostSugarCausesWrongType) {
   Preamble = "#pragma nullability file_default nonnull";
   Header = R"cpp(
 #pragma nullability file_default nullable

@@ -233,8 +233,11 @@ std::optional<StringRef> getSymbolicID(TemplateDecl *TD) {
 // We've seen a type<T>(expr) assertion, extract the nullability vector for T.
 TypeNullability getAssertedTypeNullability(QualType T, SymbolicMap &Symbolic,
                                            dataflow::Arena &A) {
-  return getNullabilityAnnotationsFromType(
-      T,
+  // As a special case, we do not respect pragmas to interpret types within a
+  // type<...> assertion. Doing so would on balance make tests less clear.
+  TypeNullabilityDefaults EmptyDefaults;
+  return getTypeNullability(
+      T, FileID(), EmptyDefaults,
       // Given type< Nonnull<symbolic::X<Nullable<int*>*>*> >(...)
       // usual vector: [Nonnull, Unspecified, Nullable]
       //      we want: [Nonnull, Symbolic, Nullable].

@@ -87,5 +87,13 @@ TEST(PragmaDiagnosisTest, FunctionCall) {
   )cc"));
 }
 
+TEST(PragmaDiagnosisTest, DefaultArgs) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#pragma nullability file_default nonnull
+
+    void target(int *x = nullptr /* [[unsafe]] */);
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
