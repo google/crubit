@@ -733,6 +733,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
         llvm::SaveAndRestore SwitchFile(File, Ctx->ArgsFile);
         llvm::SaveAndRestore OriginalContext(CurrentTemplateContext,
                                              Ctx->ArgContext);
+        if (!Ctx->Args) break;
         for (unsigned N = Ctx->Args->size(); I < N; ++I) {
           std::optional<TemplateArgumentLoc> ArgLoc;
           if (Ctx->ArgLocs) {
