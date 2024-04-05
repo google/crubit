@@ -91,6 +91,9 @@ PointerNullState getPointerNullState(const PointerValue &PointerVal) {
   Value *FromNullableProp = PointerVal.getProperty(kFromNullable);
   Value *NullProp = PointerVal.getProperty(kNull);
 
+  assert(FromNullableProp != nullptr && NullProp != nullptr &&
+         "PointerVal is missing null state!");
+
   return {
       isa<TopBoolValue>(FromNullableProp)
           ? nullptr

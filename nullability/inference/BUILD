@@ -249,6 +249,7 @@ cc_library(
     name = "replace_macros",
     srcs = ["replace_macros.cc"],
     hdrs = ["replace_macros.h"],
+    visibility = ["//nullability:__pkg__"],
     deps = [
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",

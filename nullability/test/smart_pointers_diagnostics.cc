@@ -250,5 +250,26 @@ TEST(SmartPointerTest, SimpleIfFpRepro) {
   )cc"));
 }
 
+TEST(SmartPointerTest, NestedPointersArrowOperatorOnInner) {
+  // This is a crash repro.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+
+    struct S {
+      int i;
+    };
+
+    void target() {
+      // The `const` is important because, without it, the AST for the arrow
+      // access contains an `ImplicitCastExpr` that adds a `const` and is seen
+      // as a smart pointer expression that initializes null state for the inner
+      // smart pointer.
+      std::unique_ptr<const std::unique_ptr<S>> p = nullptr;
+
+      (void)(*p)->i;  // [[unsafe]]
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

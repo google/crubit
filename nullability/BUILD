@@ -88,6 +88,7 @@ cc_library(
         ":pointer_nullability_matchers",
         ":pragma",
         ":type_nullability",
+        "//nullability/inference:replace_macros",
         "@absl//absl/base:nullability",
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",

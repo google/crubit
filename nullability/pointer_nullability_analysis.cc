@@ -13,6 +13,7 @@
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "nullability/ast_helpers.h"
+#include "nullability/inference/replace_macros.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/pointer_nullability_matchers.h"
@@ -521,6 +522,17 @@ void transferValue_SmartPointerBoolConversionCall(
   }
 }
 
+void transferValue_SmartPointer(
+    const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  initSmartPointerForExpr(PointerExpr, State);
+
+  auto *SmartPtrLoc = State.Env.get<RecordStorageLocation>(*PointerExpr);
+  if (SmartPtrLoc == nullptr) return;
+  StorageLocation &PtrLoc = SmartPtrLoc->getSyntheticField(PtrField);
+  unpackPointerValue(PtrLoc, State.Env);
+}
+
 void transferValue_SmartPointerOperatorStar(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -532,7 +544,25 @@ void transferValue_SmartPointerOperatorStar(
 void transferValue_SmartPointerOperatorArrow(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
+  const Expr *SmartPointerExpr = OpCall->getArg(0);
+  if (SmartPointerExpr == nullptr) return;
+  PointerValue *Val = getSmartPointerValue(SmartPointerExpr, State.Env);
+
+  // If we haven't yet initialized the smart pointer and the null state for the
+  // underlying raw pointer, do that first. Arrow accesses can occur without us
+  // having seen a glvalue for the smart pointer, and so
+  // `transferValue_SmartPointer` may not have initialized these yet.
+  if (!Val) {
+    initSmartPointerForExpr(SmartPointerExpr, State);
+
+    auto *SmartPtrLoc = State.Env.get<RecordStorageLocation>(*SmartPointerExpr);
+    if (SmartPtrLoc == nullptr) return;
+    StorageLocation &PtrLoc = SmartPtrLoc->getSyntheticField(PtrField);
+    unpackPointerValue(PtrLoc, State.Env);
+    Val = getSmartPointerValue(SmartPointerExpr, State.Env);
+  }
+
+  if (Val) {
     State.Env.setValue(*OpCall, *Val);
   }
 }
@@ -672,17 +702,6 @@ void transferValue_WeakPtrLockCall(
   StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
 
   setToPointerWithNullability(PtrLoc, NullabilityKind::Nullable, State.Env);
-}
-
-void transferValue_SmartPointer(
-    const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  initSmartPointerForExpr(PointerExpr, State);
-
-  auto *SmartPtrLoc = State.Env.get<RecordStorageLocation>(*PointerExpr);
-  if (SmartPtrLoc == nullptr) return;
-  StorageLocation &PtrLoc = SmartPtrLoc->getSyntheticField(PtrField);
-  unpackPointerValue(PtrLoc, State.Env);
 }
 
 void transferValue_SmartPointerArrowMemberExpr(
@@ -1036,8 +1055,8 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
   // as output parameters.
   if (const IdentifierInfo *FunII =
           FuncDecl->getDeclName().getAsIdentifierInfo();
-      FunII && (FunII->isStr("clang_tidy_nullability_internal_abortIfFalse") ||
-                FunII->isStr("clang_tidy_nullability_internal_abortIfEqual")))
+      FunII && (FunII->isStr(ArgCaptureAbortIfFalse) ||
+                FunII->isStr(ArgCaptureAbortIfEqual)))
     return;
   // Make output parameters (with unknown nullability) initialized to unknown.
   for (ParamAndArgIterator<CallExpr> Iter(*FuncDecl, *CE); Iter; ++Iter)
