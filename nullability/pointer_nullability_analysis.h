@@ -112,7 +112,7 @@ class PointerNullabilityAnalysis
   dataflow::StorageLocation &getTopStorageLocation(
       dataflow::DataflowAnalysisContext &DACtx, QualType Ty);
 
-  // FIXME: replace with new implementation that fully uses the new API.
+  // TODO: replace with new implementation that fully uses the new API.
   dataflow::Value *legacyWiden(QualType Type, dataflow::Value &Prev,
                                const dataflow::Environment &PrevEnv,
                                dataflow::Value &Current,
