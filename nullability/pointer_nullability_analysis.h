@@ -97,7 +97,7 @@ class PointerNullabilityAnalysis
       const dataflow::Environment &Env1, const dataflow::Value &Val2,
       const dataflow::Environment &Env2) override;
 
-  absl::Nullable<dataflow::Value *> widen(
+  std::optional<dataflow::WidenResult> widen(
       QualType Type, dataflow::Value &Prev,
       const dataflow::Environment &PrevEnv, dataflow::Value &Current,
       dataflow::Environment &CurrentEnv) override;
@@ -111,6 +111,12 @@ class PointerNullabilityAnalysis
   // want to move the concept of "top" storage locations to the framework.
   dataflow::StorageLocation &getTopStorageLocation(
       dataflow::DataflowAnalysisContext &DACtx, QualType Ty);
+
+  // FIXME: replace with new implementation that fully uses the new API.
+  dataflow::Value *legacyWiden(QualType Type, dataflow::Value &Prev,
+                               const dataflow::Environment &PrevEnv,
+                               dataflow::Value &Current,
+                               dataflow::Environment &CurrentEnv);
 
   // Transfers (non-flow-sensitive) type properties through statements.
   dataflow::CFGMatchSwitch<dataflow::TransferState<PointerNullabilityLattice>>

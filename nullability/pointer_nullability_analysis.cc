@@ -34,6 +34,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
@@ -58,11 +59,13 @@ using dataflow::ComparisonResult;
 using dataflow::DataflowAnalysisContext;
 using dataflow::Environment;
 using dataflow::Formula;
+using dataflow::LatticeEffect;
 using dataflow::PointerValue;
 using dataflow::RecordStorageLocation;
 using dataflow::StorageLocation;
 using dataflow::TransferState;
 using dataflow::Value;
+using dataflow::WidenResult;
 
 #define DEBUG_TYPE "pointer_nullability_analysis.cc"
 
@@ -1823,7 +1826,7 @@ static void maybeAssumeNullabilityProperty(WidenedProperty W,
   }
 }
 
-absl::Nullable<Value *> PointerNullabilityAnalysis::widen(
+absl::Nullable<Value *> PointerNullabilityAnalysis::legacyWiden(
     QualType Type, Value &Prev, const Environment &PrevEnv, Value &Current,
     Environment &CurrentEnv) {
   // Widen pointers to a pointer with a "top" storage location.
@@ -1883,6 +1886,15 @@ absl::Nullable<Value *> PointerNullabilityAnalysis::widen(
   }
 
   return nullptr;
+}
+
+std::optional<WidenResult> PointerNullabilityAnalysis::widen(
+    QualType Type, Value &Prev, const Environment &PrevEnv, Value &Current,
+    Environment &CurrentEnv) {
+  if (auto *W = legacyWiden(Type, Prev, PrevEnv, Current, CurrentEnv))
+    return WidenResult{
+        W, (W == &Prev) ? LatticeEffect::Unchanged : LatticeEffect::Changed};
+  return std::nullopt;
 }
 
 StorageLocation &PointerNullabilityAnalysis::getTopStorageLocation(
