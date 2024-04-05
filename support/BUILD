@@ -24,14 +24,7 @@ rust_proc_macro(
 
 crubit_rust_test(
     name = "ctor_proc_macros_test",
-    crate = ":ctor_proc_macros",
-    # TODO(b/324398297): Reenable once cl/619591730 has landed. The crate tested should be
-    # renamed to ":ctor_proc_macros_proc_macro_internal"
-    tags = [
-        "manual",
-        "nobuild",
-        "notap",
-    ],
+    crate = ":ctor_proc_macros_proc_macro_internal",
     deps = [
         "//common:token_stream_matchers",
     ],
