@@ -22,12 +22,22 @@ clang_builtin_isystem="third_party/llvm/llvm-project/clang/lib/Headers"
 grte_isystem="third_party/grte/v5_.*/release/usr/grte/v5/include"
 
 function fail () {
-    cat > "${path_to_test_executable}" <<EOF
+    cat >> "${path_to_test_executable}" <<EOF
 echo "$1"
 exit 1
 EOF
     exit 0
 }
+
+echo "echo 'Relevant arguments:'" > "${path_to_test_executable}"
+is_isystem=false
+for p in "$@"; do
+    if $is_isystem; then
+        echo "echo ' -isystem $p'" >> "${path_to_test_executable}"
+        is_isystem=false
+    fi
+    if [[ "$p" = "-isystem" ]]; then is_isystem=true; fi
+done
 
 while [[ $# -gt 0 ]]; do
     if [[ "$1" = "-isystem" ]]; then
@@ -65,7 +75,7 @@ elif [[ "$has_grte_isystem" = 0 ]]; then
     fail "Failed to send GRTE -isystem directives to the command line"
 fi
 
-cat > "${path_to_test_executable}" <<EOF
+cat >> "${path_to_test_executable}" <<EOF
 echo "Success!"
 exit 0
 EOF
