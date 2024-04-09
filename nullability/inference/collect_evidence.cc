@@ -263,28 +263,35 @@ class ImplementationEvidenceCollector {
     auto *IsNull = getPointerNullState(Value).IsNull;
     // If `IsNull` is top, we can't infer anything about it.
     if (IsNull == nullptr) return;
-    // If the flow conditions already imply that Value is not null, then we
-    // don't have any new evidence of a necessary annotation.
-    if (!Env.allows(*IsNull)) return;
-
     auto &A = Env.arena();
-    // Otherwise, if an inferable slot being annotated Nonnull would imply that
-    // `Value` is not null, then we have evidence suggesting that slot should be
-    // annotated. For now, we simply choose the first such slot, sidestepping
-    // complexities around the possibility of multiple such slots, any one of
-    // which would be sufficient if annotated Nonnull.
+    mustBeTrue(A.makeNot(*IsNull), Loc, EvidenceKind);
+  }
+
+  // Records evidence for Nonnull-ness derived from the necessity that
+  // `MustBeTrue` must be true.
+  //
+  // Does not consider the possibility that the formula can only be proven true
+  // by marking a slot Nullable, as this is is not a pattern we have yet seen in
+  // practice. This function could easily be extended to do so, though.
+  void mustBeTrue(const Formula &MustBeTrue, SourceLocation Loc,
+                  Evidence::Kind EvidenceKind) {
+    auto &A = Env.arena();
+    // If `Value` is already proven true or false (or both, which indicates
+    // unsatisfiable flow conditions), collect no evidence.
+    if (Env.proves(MustBeTrue) || Env.proves(A.makeNot(MustBeTrue))) return;
+
     for (auto &IS : InferableSlots) {
       auto &SlotNonnull = IS.getSymbolicNullability().isNonnull(A);
-      auto &SlotNonnullImpliesValueNonnull =
-          A.makeImplies(SlotNonnull, A.makeNot(*IsNull));
+      auto &SlotNonnullImpliesFormulaTrue =
+          A.makeImplies(SlotNonnull, MustBeTrue);
       // Don't collect evidence if the implication is true by virtue of
       // `SlotNonnull` being false.
       //
       // In practice, `SlotNonnull` can be made false by a flow condition, and
       // marking the slot Nonnull would make that conditioned block dead code.
-      // Technically, this does make the dereference "safe", but we'd prefer to
-      // mark a different slot Nonnull that has a more direct relationship with
-      // the nullability of `Value`.
+      // Technically, this does make a dereference, etc. "safe", but we'd prefer
+      // to mark a different slot Nonnull that has a more direct relationship
+      // with `MustBeTrue`.
       //
       // e.g. We'd prefer to mark `q` Nonnull rather than `p` in the following:
       // ```
@@ -295,7 +302,7 @@ class ImplementationEvidenceCollector {
       // }
       // ```
       if (Env.allows(SlotNonnull) &&
-          Env.proves(SlotNonnullImpliesValueNonnull)) {
+          Env.proves(SlotNonnullImpliesFormulaTrue)) {
         Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
         return;
       }
@@ -531,10 +538,17 @@ class ImplementationEvidenceCollector {
   void fromAbortIfFalseMacroCall(const CallExpr &CallExpr) {
     CHECK_EQ(CallExpr.getNumArgs(), 1);
     const Expr *Arg = CallExpr.getArg(0);
-    if (!isSupportedRawPointerType(Arg->getType())) return;
-    const dataflow::PointerValue *PV = getRawPointerValue(Arg, Env);
-    if (!PV) return;
-    mustBeNonnull(*PV, Arg->getExprLoc(), Evidence::ABORT_IF_NULL);
+    if (!Arg) return;
+    QualType ArgType = Arg->getType();
+    if (isSupportedRawPointerType(ArgType)) {
+      const dataflow::PointerValue *PV = getRawPointerValue(Arg, Env);
+      if (!PV) return;
+      mustBeNonnull(*PV, Arg->getExprLoc(), Evidence::ABORT_IF_NULL);
+    } else if (ArgType->isBooleanType()) {
+      const dataflow::BoolValue *BV = Env.get<dataflow::BoolValue>(*Arg);
+      if (!BV || BV->getKind() == dataflow::BoolValue::Kind::TopBool) return;
+      mustBeTrue(BV->formula(), Arg->getExprLoc(), Evidence::ABORT_IF_NULL);
+    }
   }
 
   // Given a `CallExpr` for a call to our special macro two-argument capture

@@ -426,11 +426,36 @@ TEST(CollectEvidenceFromImplementationTest, CheckMacro) {
 #define CHECK(x) \
       if (!x) __builtin_abort();
 
-    void target(int* p) { CHECK(p); }
+    void target(int* p, int* q, int* r, int* s, int* t, int* u, int* v) {
+      // should collect evidence for params from these calls
+      CHECK(p);
+      CHECK(q != nullptr);
+      int* a = nullptr;
+      CHECK(r != a);
+      CHECK(a != s)
+      bool b = t != nullptr;
+      CHECK(b);
+
+      // should not crash when analyzing these calls
+      CHECK(u == v);
+      CHECK(u != v);
+      CHECK(1);
+      struct S {
+        operator bool() const { return true; }
+      };
+      CHECK(S());
+      CHECK(true);
+      CHECK(false);  // must come last because it's detected as causing the rest
+                     // of the function to be dead.
+    }
   )cc";
   EXPECT_THAT(
       collectEvidenceFromTargetFunction(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL)));
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
+                           evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
+                           evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
+                           evidence(paramSlot(3), Evidence::ABORT_IF_NULL),
+                           evidence(paramSlot(4), Evidence::ABORT_IF_NULL)));
 }
 
 TEST(CollectEvidenceFromImplementationTest, CheckNEMacro) {
