@@ -1083,6 +1083,19 @@ TEST(CollectEvidenceFromImplementationTest,
                                     functionNamed("callee"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest,
+     PassedToNonnullInFunctionReferenceParam) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, void (&callee)(Nonnull<int*> i)) {
+      callee(p);
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target"))));
+}
+
 TEST(CollectEvidenceFromImplementationTest, FunctionCallPassedToNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nonnull<int*> i);

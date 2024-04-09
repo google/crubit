@@ -446,6 +446,37 @@ class ImplementationEvidenceCollector {
     }
   }
 
+  // Collects evidence from the binding of function arguments to the types of
+  // the corresponding parameter, used when we have a FunctionProtoType but no
+  // FunctionDecl.
+  // TODO: When we collect evidence for more complex slots than just top-level
+  // pointers, emit evidence of the function parameter's nullability as a slot
+  // in the appropriate declaration.
+  void fromFunctionProtoTypeCall(const FunctionProtoType &CalleeType,
+                                 const CallExpr &Expr) {
+    // For each pointer parameter of the function, ...
+    for (unsigned I = 0; I < CalleeType.getNumParams(); ++I) {
+      const auto ParamType = CalleeType.getParamType(I);
+      if (!isSupportedRawPointerType(ParamType.getNonReferenceType())) continue;
+      // the corresponding argument should also be a pointer.
+      CHECK(isSupportedRawPointerType(Expr.getArg(I)->getType()))
+          << "Unsupported argument " << I
+          << " type: " << Expr.getArg(I)->getType().getAsString();
+
+      dataflow::PointerValue *PV = getRawPointerValue(Expr.getArg(I), Env);
+      if (!PV) continue;
+
+      // TODO: when we infer function pointer/reference parameters'
+      // nullabilities, check for overrides from previous inference iterations.
+      auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
+
+      // Collect evidence from the binding of the argument to the parameter's
+      // nullability, if known.
+      fromBindingToType(ParamType, ParamNullability, *PV,
+                        Expr.getArg(I)->getExprLoc());
+    }
+  }
+
   // Similar to collectEvidenceFromArgsAndParams, but handles the case of a call
   // to a function pointer that is provided as a parameter or another decl, e.g.
   // a field or local variable.
@@ -463,11 +494,6 @@ class ImplementationEvidenceCollector {
   // cases, distinct handling is needed.
   void fromFunctionPointerCallExpr(const Decl &CalleeDecl,
                                    const CallExpr &Expr) {
-    // TODO: When we collect evidence for more complex slots than just top-level
-    // pointers, emit evidence of the  function-pointer parameter's nullability
-    // as a slot in the appropriate declaration, i.e. of `j` in the example in
-    // the function comment above.
-
     if (InferableSlots.empty()) return;
     if (const auto *Callee = Expr.getCallee()) {
       if (const auto *PV = getRawPointerValue(Callee, Env)) {
@@ -477,28 +503,7 @@ class ImplementationEvidenceCollector {
 
     auto *CalleeType = CalleeDecl.getFunctionType()->getAs<FunctionProtoType>();
     CHECK(CalleeType);
-
-    // For each pointer parameter of the function pointer, ...
-    for (unsigned I = 0; I < CalleeType->getNumParams(); ++I) {
-      const auto ParamType = CalleeType->getParamType(I);
-      if (!isSupportedRawPointerType(ParamType.getNonReferenceType())) continue;
-      // the corresponding argument should also be a pointer.
-      CHECK(isSupportedRawPointerType(Expr.getArg(I)->getType()))
-          << "Unsupported argument " << I
-          << " type: " << Expr.getArg(I)->getType().getAsString();
-
-      dataflow::PointerValue *PV = getRawPointerValue(Expr.getArg(I), Env);
-      if (!PV) continue;
-
-      // TODO: when we infer function pointer parameters' nullabilities, check
-      // for overrides from previous inference iterations.
-      auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
-
-      // Collect evidence from the binding of the argument to the parameter's
-      // nullability, if known.
-      fromBindingToType(ParamType, ParamNullability, *PV,
-                        Expr.getArg(I)->getExprLoc());
-    }
+    fromFunctionProtoTypeCall(*CalleeType, Expr);
   }
 
   void fromCallExprWithoutFunctionCalleeDecl(const Decl &CalleeDecl,
@@ -517,6 +522,15 @@ class ImplementationEvidenceCollector {
          BinaryOpCallee->getOpcode() ==
              clang::BinaryOperatorKind::BO_PtrMemI)) {
       return;
+    }
+
+    // Function references are a rare case, but similar to function pointers, we
+    // can collect evidence from arguments bound to parameter types.
+    if (auto *FuncType = CalleeDecl.getFunctionType()) {
+      if (auto *FuncProtoType = FuncType->getAs<FunctionProtoType>()) {
+        fromFunctionProtoTypeCall(*FuncProtoType, Expr);
+        return;
+      }
     }
 
     // If we run into other cases meeting this criterion, skip them, but log
