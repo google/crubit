@@ -147,7 +147,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::anyhow;
     use run_compiler_test_support::get_sysroot_for_testing;
     use tempfile::tempdir;
 
