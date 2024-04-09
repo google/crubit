@@ -522,17 +522,6 @@ void transferValue_SmartPointerBoolConversionCall(
   }
 }
 
-void transferValue_SmartPointer(
-    const Expr *PointerExpr, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  initSmartPointerForExpr(PointerExpr, State);
-
-  auto *SmartPtrLoc = State.Env.get<RecordStorageLocation>(*PointerExpr);
-  if (SmartPtrLoc == nullptr) return;
-  StorageLocation &PtrLoc = SmartPtrLoc->getSyntheticField(PtrField);
-  unpackPointerValue(PtrLoc, State.Env);
-}
-
 void transferValue_SmartPointerOperatorStar(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
@@ -544,25 +533,7 @@ void transferValue_SmartPointerOperatorStar(
 void transferValue_SmartPointerOperatorArrow(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  const Expr *SmartPointerExpr = OpCall->getArg(0);
-  if (SmartPointerExpr == nullptr) return;
-  PointerValue *Val = getSmartPointerValue(SmartPointerExpr, State.Env);
-
-  // If we haven't yet initialized the smart pointer and the null state for the
-  // underlying raw pointer, do that first. Arrow accesses can occur without us
-  // having seen a glvalue for the smart pointer, and so
-  // `transferValue_SmartPointer` may not have initialized these yet.
-  if (!Val) {
-    initSmartPointerForExpr(SmartPointerExpr, State);
-
-    auto *SmartPtrLoc = State.Env.get<RecordStorageLocation>(*SmartPointerExpr);
-    if (SmartPtrLoc == nullptr) return;
-    StorageLocation &PtrLoc = SmartPtrLoc->getSyntheticField(PtrField);
-    unpackPointerValue(PtrLoc, State.Env);
-    Val = getSmartPointerValue(SmartPointerExpr, State.Env);
-  }
-
-  if (Val) {
+  if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
     State.Env.setValue(*OpCall, *Val);
   }
 }
@@ -1045,8 +1016,6 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
       // `Loc` is set iff `CE` is a glvalue, so we know here that it must
       // be a prvalue.
       State.Env.setValue(*CE, *PointerVal);
-  } else if (isSupportedSmartPointerType(CE->getType())) {
-    initSmartPointerForExpr(CE, State);
   }
 
   if (CE->isCallToStdMove() || FuncDecl == nullptr) return;
@@ -1608,7 +1577,6 @@ auto buildValueTransferer() {
           isNonConstMemberOperatorCall(),
           transferValue_NonConstMemberOperatorCall)
       .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(), transferValue_CallExpr)
-      .CaseOfCFGStmt<Expr>(isSmartPointerGlValue(), transferValue_SmartPointer)
       .CaseOfCFGStmt<MemberExpr>(isSmartPointerArrowMemberExpr(),
                                  transferValue_SmartPointerArrowMemberExpr)
       .CaseOfCFGStmt<Expr>(isPointerExpr(), transferValue_Pointer)
@@ -1621,7 +1589,7 @@ auto buildValueTransferer() {
       .Build();
 }
 
-// Ensure all prvalue expressions of pointer type have a `PointerValue`
+// Ensure all prvalue expressions of raw pointer type have a `PointerValue`
 // associated with them so we can track nullability through them.
 void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
   auto S = Elt.getAs<CFGStmt>();
@@ -1635,6 +1603,26 @@ void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
   if (Env.getValue(*E) == nullptr)
     // `createValue()` always produces a value for pointer types.
     Env.setValue(*E, *Env.createValue(E->getType()));
+}
+
+// Ensure that all glvalue expressions of smart pointer type have an underlying
+// raw pointer initialized from the type nullability.
+void ensureSmartPointerInitialized(
+    const CFGElement &Elt, TransferState<PointerNullabilityLattice> &State) {
+  auto S = Elt.getAs<CFGStmt>();
+  if (!S) return;
+
+  auto *E = dyn_cast<Expr>(S->getStmt());
+  if (E == nullptr || !E->isGLValue() ||
+      !isSupportedSmartPointerType(E->getType()))
+    return;
+
+  initSmartPointerForExpr(E, State);
+
+  auto *SmartPtrLoc = State.Env.get<RecordStorageLocation>(*E);
+  if (SmartPtrLoc == nullptr) return;
+  StorageLocation &PtrLoc = SmartPtrLoc->getSyntheticField(PtrField);
+  unpackPointerValue(PtrLoc, State.Env);
 }
 
 }  // namespace
@@ -1674,6 +1662,7 @@ void PointerNullabilityAnalysis::transfer(const CFGElement &Elt,
   ensurePointerHasValue(Elt, Env);
   TypeTransferer(Elt, getASTContext(), State);
   ValueTransferer(Elt, getASTContext(), State);
+  ensureSmartPointerInitialized(Elt, State);
 }
 
 static absl::Nullable<const Formula *> mergeFormulas(
