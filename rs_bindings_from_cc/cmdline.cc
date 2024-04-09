@@ -272,7 +272,7 @@ void ExpandParamfiles(int& argc, char**& argv) {
     if (next_paramfile == end) break;
     new_argv.insert(new_argv.end(), begin, next_paramfile);
     begin = next_paramfile + 1;
-    absl::string_view paramfile = *next_paramfile + 1;
+    const char* paramfile = *next_paramfile + 1;
     std::ifstream in(paramfile);
     std::stringstream ss;
     ss << in.rdbuf();
