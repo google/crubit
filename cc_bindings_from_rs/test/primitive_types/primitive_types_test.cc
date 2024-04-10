@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <stdint.h>
+
 #include <string>
 #include <type_traits>
 
@@ -41,5 +43,86 @@ TEST(PrimitiveTypesTest, CVoidPtr) {
                                                  identity_mut_c_void_ptr)>));
 }
 
+TEST(PrimitiveTypesTest, ReturnTypes) {
+  namespace types = primitive_types::return_types;
+
+  static_assert(std::is_same_v<decltype(types::c_void()), void>);
+  static_assert(std::is_same_v<decltype(types::c_void_mut_ptr()), void*>);
+  EXPECT_EQ(types::c_void_mut_ptr(), nullptr);
+
+  static_assert(
+      std::is_same_v<decltype(types::c_void_const_ptr()), const void*>);
+  EXPECT_EQ(types::c_void_const_ptr(), nullptr);
+  static_assert(std::is_same_v<decltype(types::c_float()), float>);
+  EXPECT_EQ(types::c_float(), 0);
+
+  static_assert(std::is_same_v<decltype(types::c_double()), double>);
+  EXPECT_EQ(types::c_double(), 0);
+
+  static_assert(std::is_same_v<decltype(types::i8()), int8_t>);
+  EXPECT_EQ(types::i8(), 0);
+
+  static_assert(std::is_same_v<decltype(types::u8()), uint8_t>);
+  EXPECT_EQ(types::u8(), 0);
+
+  static_assert(std::is_same_v<decltype(types::i16()), int16_t>);
+  EXPECT_EQ(types::i16(), 0);
+
+  static_assert(std::is_same_v<decltype(types::u16()), uint16_t>);
+  EXPECT_EQ(types::u16(), 0);
+
+  static_assert(std::is_same_v<decltype(types::i32()), int32_t>);
+  EXPECT_EQ(types::i32(), 0);
+
+  static_assert(std::is_same_v<decltype(types::u32()), uint32_t>);
+  EXPECT_EQ(types::u32(), 0);
+
+  static_assert(std::is_same_v<decltype(types::i64()), int64_t>);
+  EXPECT_EQ(types::i64(), 0);
+
+  static_assert(std::is_same_v<decltype(types::u64()), uint64_t>);
+  EXPECT_EQ(types::u64(), 0);
+
+  static_assert(std::is_same_v<decltype(types::isize()), int64_t>);
+  EXPECT_EQ(types::isize(), 0);
+
+  static_assert(std::is_same_v<decltype(types::usize()), uint64_t>);
+  EXPECT_EQ(types::usize(), 0);
+
+  static_assert(std::is_same_v<decltype(types::f32()), float>);
+  EXPECT_EQ(types::f32(), 0);
+
+  static_assert(std::is_same_v<decltype(types::f64()), double>);
+  EXPECT_EQ(types::f64(), 0);
+
+  static_assert(std::is_same_v<decltype(types::i8_func()),
+                               std::type_identity_t<void(int8_t)>&>);
+}
+
+TEST(PrimitiveTypesTest, FieldTypes) {
+  using primitive_types::field_types::Types;
+
+  static_assert(std::is_same_v<decltype(Types::c_void_mut_ptr), void*>);
+  static_assert(std::is_same_v<decltype(Types::c_void_const_ptr), const void*>);
+
+  static_assert(std::is_same_v<decltype(Types::c_float), float>);
+  static_assert(std::is_same_v<decltype(Types::c_double), double>);
+
+  static_assert(std::is_same_v<decltype(Types::i8), int8_t>);
+  static_assert(std::is_same_v<decltype(Types::u8), uint8_t>);
+  static_assert(std::is_same_v<decltype(Types::i16), int16_t>);
+  static_assert(std::is_same_v<decltype(Types::u16), uint16_t>);
+  static_assert(std::is_same_v<decltype(Types::i32), int32_t>);
+  static_assert(std::is_same_v<decltype(Types::u32), uint32_t>);
+  static_assert(std::is_same_v<decltype(Types::i64), int64_t>);
+  static_assert(std::is_same_v<decltype(Types::u64), uint64_t>);
+  static_assert(std::is_same_v<decltype(Types::isize), int64_t>);
+  static_assert(std::is_same_v<decltype(Types::usize), uint64_t>);
+  static_assert(std::is_same_v<decltype(Types::f32), float>);
+  static_assert(std::is_same_v<decltype(Types::f64), double>);
+
+  static_assert(std::is_same_v<decltype(Types::i8_func),
+                               std::type_identity_t<void(int8_t)>*>);
+}
 }  // namespace
 }  // namespace crubit
