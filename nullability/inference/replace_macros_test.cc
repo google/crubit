@@ -9,6 +9,7 @@
 #include <string_view>
 
 #include "nullability/inference/ctn_replacement_macros.h"
+#include "nullability/macro_arg_capture.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"

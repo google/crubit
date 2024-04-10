@@ -12,9 +12,9 @@ cc_library(
     deps = [
         ":inferable",
         ":inference_cc_proto",
-        ":replace_macros",
         ":slot_fingerprint",
         "//nullability:ast_helpers",
+        "//nullability:macro_arg_capture",
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
@@ -249,7 +249,6 @@ cc_library(
     name = "replace_macros",
     srcs = ["replace_macros.cc"],
     hdrs = ["replace_macros.h"],
-    visibility = ["//nullability:__pkg__"],
     deps = [
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
@@ -265,6 +264,7 @@ cc_test(
     deps = [
         ":clang_tidy_nullability_replacement_macros",
         ":replace_macros",
+        "//nullability:macro_arg_capture",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:testing",

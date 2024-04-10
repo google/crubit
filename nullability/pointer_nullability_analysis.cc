@@ -13,7 +13,7 @@
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "nullability/ast_helpers.h"
-#include "nullability/inference/replace_macros.h"
+#include "nullability/macro_arg_capture.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/pointer_nullability_matchers.h"

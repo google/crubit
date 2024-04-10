@@ -83,12 +83,12 @@ cc_library(
     ],
     deps = [
         ":ast_helpers",
+        ":macro_arg_capture",
         ":pointer_nullability",
         ":pointer_nullability_lattice",
         ":pointer_nullability_matchers",
         ":pragma",
         ":type_nullability",
-        "//nullability/inference:replace_macros",
         "@absl//absl/base:nullability",
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
@@ -265,6 +265,13 @@ cc_library(
         "@llvm-project//clang:type_nodes_gen",
         "@llvm-project//llvm:Support",
     ],
+)
+
+cc_library(
+    name = "macro_arg_capture",
+    hdrs = ["macro_arg_capture.h"],
+    visibility = ["//nullability/inference:__pkg__"],
+    deps = ["@llvm-project//llvm:Support"],
 )
 
 cc_test(

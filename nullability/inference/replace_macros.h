@@ -27,12 +27,6 @@ namespace clang::tidy::nullability {
 constexpr llvm::StringRef ReplacementMacrosHeaderFileName =
     "clang_tidy_nullability_replacement_macros.h";
 
-constexpr llvm::StringRef ArgCaptureAbortIfFalse =
-    "clang_tidy_nullability_internal_abortIfFalse";
-
-constexpr llvm::StringRef ArgCaptureAbortIfEqual =
-    "clang_tidy_nullability_internal_abortIfEqual";
-
 class ReplaceMacrosCallbacks : public clang::PPCallbacks {
  public:
   explicit ReplaceMacrosCallbacks(clang::Preprocessor &PP) : PP(PP) {}
