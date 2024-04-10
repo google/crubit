@@ -271,5 +271,26 @@ TEST(SmartPointerTest, NestedPointersArrowOperatorOnInner) {
   )cc"));
 }
 
+TEST(SmartPointerTest, ConstructSmartPointerFromTemporarySmartPointer) {
+  // This is a crash repro.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct OtherS {
+      using pointer = char *;
+      using absl_nullability_compatible = void;
+    };
+
+    struct S {
+      using pointer = bool *;
+      using absl_nullability_compatible = void;
+
+      // S needs to be constructed by value from another smart pointer,
+      // otherwise, didn't crash.
+      explicit S(OtherS) {}
+    };
+
+    void target() { S{OtherS()}; }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

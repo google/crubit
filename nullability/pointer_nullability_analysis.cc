@@ -395,7 +395,9 @@ void transferValue_SmartPointerConstructor(
   // Copy or move from an existing smart pointer.
   if (Ctor->getNumArgs() >= 1 &&
       isSupportedSmartPointerType(Ctor->getArg(0)->getType())) {
-    auto *SrcLoc = State.Env.get<RecordStorageLocation>(*Ctor->getArg(0));
+    auto *SrcLoc = Ctor->getArg(0)->isGLValue()
+                       ? State.Env.get<RecordStorageLocation>(*Ctor->getArg(0))
+                       : &State.Env.getResultObjectLocation(*Ctor->getArg(0));
     if (Ctor->getNumArgs() == 2 &&
         isSupportedRawPointerType(Ctor->getArg(1)->getType())) {
       // `shared_ptr` aliasing constructor.
