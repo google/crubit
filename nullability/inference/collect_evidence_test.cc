@@ -1437,6 +1437,34 @@ TEST(CollectEvidenceFromImplementationTest, IrrelevantAssignments) {
                                     functionNamed("S"))));
 }
 
+TEST(CollectEvidenceFromImplementationTest, Arithmetic) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* a, int* b, int* c, int* d, int* e, int* f, int* g,
+                int* h) {
+      a += 1;
+      b -= 2;
+      c + 3;
+      d - 4;
+      e++;
+      ++f;
+      g--;
+      --h;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::ARITHMETIC, functionNamed("target")),
+          evidence(paramSlot(1), Evidence::ARITHMETIC, functionNamed("target")),
+          evidence(paramSlot(2), Evidence::ARITHMETIC, functionNamed("target")),
+          evidence(paramSlot(3), Evidence::ARITHMETIC, functionNamed("target")),
+          evidence(paramSlot(4), Evidence::ARITHMETIC, functionNamed("target")),
+          evidence(paramSlot(5), Evidence::ARITHMETIC, functionNamed("target")),
+          evidence(paramSlot(6), Evidence::ARITHMETIC, functionNamed("target")),
+          evidence(paramSlot(7), Evidence::ARITHMETIC,
+                   functionNamed("target"))));
+}
+
 TEST(CollectEvidenceFromImplementationTest, FunctionCallInLoop) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* p) {

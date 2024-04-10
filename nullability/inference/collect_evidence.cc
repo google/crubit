@@ -237,6 +237,7 @@ class ImplementationEvidenceCollector {
     Collector.fromConstructExpr();
     Collector.fromReturn();
     Collector.fromAssignment();
+    Collector.fromArithmetic();
   }
 
  private:
@@ -797,6 +798,58 @@ class ImplementationEvidenceCollector {
 
       fromAssignmentFromNullable(TypeNullability, *PV,
                                  BinaryOperator->getRHS()->getExprLoc());
+    }
+  }
+
+  void fromArithmeticArg(const Expr *Arg, SourceLocation Loc) {
+    if (!Arg || !isSupportedRawPointerType(Arg->getType())) return;
+    if (auto *PV = getPointerValue(Arg, Env))
+      mustBeNonnull(*PV, Loc, Evidence::ARITHMETIC);
+  }
+
+  void fromArithmetic() {
+    // A nullptr can be added to 0 and nullptr can be subtracted from nullptr
+    // without hitting UB. But for now, we skip handling these special cases and
+    // assume all pointers involved in these operations must be nonnull.
+    switch (Stmt.getStmtClass()) {
+      default:
+        return;
+      case Stmt::CompoundAssignOperatorClass: {
+        auto *Op = cast<clang::CompoundAssignOperator>(&Stmt);
+        switch (Op->getOpcode()) {
+          default:
+            return;
+          case BO_AddAssign:
+          case BO_SubAssign:
+            fromArithmeticArg(Op->getLHS(), Op->getExprLoc());
+        }
+        break;
+      }
+      case Stmt::BinaryOperatorClass: {
+        auto *Op = cast<clang::BinaryOperator>(&Stmt);
+        switch (Op->getOpcode()) {
+          default:
+            return;
+          case BO_Add:
+          case BO_Sub:
+            fromArithmeticArg(Op->getLHS(), Op->getExprLoc());
+            fromArithmeticArg(Op->getRHS(), Op->getExprLoc());
+        }
+        break;
+      }
+      case Stmt::UnaryOperatorClass: {
+        auto *Op = cast<clang::UnaryOperator>(&Stmt);
+        switch (Op->getOpcode()) {
+          default:
+            return;
+          case UO_PostInc:
+          case UO_PreInc:
+          case UO_PostDec:
+          case UO_PreDec:
+            fromArithmeticArg(Op->getSubExpr(), Op->getExprLoc());
+        }
+        break;
+      }
     }
   }
 

@@ -80,6 +80,9 @@ message Evidence {
     ABORT_IF_NULL = 12;
     // A nullable value was assigned.
     ASSIGNED_FROM_NULLABLE = 13;
+    // A pointer was used with an arithmetic operator without being checked for
+    // null first.
+    ARITHMETIC = 14;
   }
 }
 
