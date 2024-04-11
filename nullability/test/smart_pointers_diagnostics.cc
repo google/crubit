@@ -300,7 +300,7 @@ TEST(SmartPointerTest, ConditionalSmartPointer) {
     void takesNonnull(Nonnull<std::unique_ptr<int>> a);
 
     void target(bool b) {
-      takesNonnull(b ? nullptr  // TODO(b/283100473): False negative
+      takesNonnull(b ? nullptr  // [[unsafe]]
                      : std::make_unique<int>());
     }
   )cc"));
