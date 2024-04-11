@@ -82,7 +82,7 @@ fn main() -> anyhow::Result<()> {
     // Unicode.  This seems okay.
     let args = std::env::args().collect_vec();
 
-    // Replace `"${pwd}"` in the `OUT_DIR` environment variable.
+    // Replace `"${pwd}"` in environment variables.
     //
     // Concurrent access to the environment variables may not be 100% safe
     // (see https://doc.rust-lang.org/std/env/fn.set_var.html) but it should be okay
@@ -97,16 +97,17 @@ fn main() -> anyhow::Result<()> {
     // possible for `OsStr`, stop panicking when working with non-Unicode paths.
     {
         use std::env::{self, VarError};
-        const OUT_DIR: &str = "OUT_DIR";
-        match env::var(OUT_DIR) {
-            Err(VarError::NotPresent) => (), // nothing to do
-            Err(VarError::NotUnicode { .. }) => panic!("{OUT_DIR} is not unicode"),
-            Ok(value) => {
-                let value = value.replace(
-                    "${pwd}",
-                    env::current_dir()?.to_str().expect("Current directory is not unicode"),
-                );
-                env::set_var(OUT_DIR, value);
+        for var in ["OUT_DIR", "CARGO_MANIFEST_DIR"] {
+            match env::var(var) {
+                Err(VarError::NotPresent) => (), // nothing to do
+                Err(VarError::NotUnicode { .. }) => panic!("{var} is not unicode"),
+                Ok(value) => {
+                    let value = value.replace(
+                        "${pwd}",
+                        env::current_dir()?.to_str().expect("Current directory is not unicode"),
+                    );
+                    env::set_var(var, value);
+                }
             }
         }
     }
