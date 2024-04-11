@@ -1607,7 +1607,7 @@ void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
     Env.setValue(*E, *Env.createValue(E->getType()));
 }
 
-// Ensure that all glvalue expressions of smart pointer type have an underlying
+// Ensure that all expressions of smart pointer type have an underlying
 // raw pointer initialized from the type nullability.
 void ensureSmartPointerInitialized(
     const CFGElement &Elt, TransferState<PointerNullabilityLattice> &State) {
@@ -1615,13 +1615,12 @@ void ensureSmartPointerInitialized(
   if (!S) return;
 
   auto *E = dyn_cast<Expr>(S->getStmt());
-  if (E == nullptr || !E->isGLValue() ||
-      !isSupportedSmartPointerType(E->getType()))
-    return;
+  if (E == nullptr || !isSupportedSmartPointerType(E->getType())) return;
 
   initSmartPointerForExpr(E, State);
 
-  auto *SmartPtrLoc = State.Env.get<RecordStorageLocation>(*E);
+  auto *SmartPtrLoc = E->isGLValue() ? State.Env.get<RecordStorageLocation>(*E)
+                                     : &State.Env.getResultObjectLocation(*E);
   if (SmartPtrLoc == nullptr) return;
   StorageLocation &PtrLoc = SmartPtrLoc->getSyntheticField(PtrField);
   unpackPointerValue(PtrLoc, State.Env);

@@ -292,5 +292,19 @@ TEST(SmartPointerTest, ConstructSmartPointerFromTemporarySmartPointer) {
   )cc"));
 }
 
+TEST(SmartPointerTest, ConditionalSmartPointer) {
+  // This is a crash repro.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+
+    void takesNonnull(Nonnull<std::unique_ptr<int>> a);
+
+    void target(bool b) {
+      takesNonnull(b ? nullptr  // TODO(b/283100473): False negative
+                     : std::make_unique<int>());
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
