@@ -1163,12 +1163,16 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         } else {
             quote! {}
         };
+        let mut attributes = vec![];
+        if tcx.get_attr(def_id, rustc_span::symbol::sym::must_use).is_some() {
+            attributes.push(quote! {[[nodiscard]]})
+        }
         CcSnippet {
             prereqs,
             tokens: quote! {
                 __NEWLINE__
                 #doc_comment
-                #static_ #extern_c
+                #extern_c #(#attributes)* #static_
                     #main_api_ret_type #main_api_fn_name (
                         #( #main_api_params ),*
                     ) #method_qualifiers;
@@ -6894,6 +6898,27 @@ pub mod tests {
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         });
+    }
+
+    #[test]
+    fn test_must_use_attr_for_fn() {
+        let test_src = r#"
+        #[must_use]
+        pub fn add(x: i32, y: i32) -> i32 {
+            x + y
+        }"#;
+
+        test_format_item(test_src, "add", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    [[nodiscard]] std::int32_t add(std::int32_t x, std::int32_t y);
+                }
+            )
+        })
     }
 
     fn test_ty<TestFn, Expectation>(
