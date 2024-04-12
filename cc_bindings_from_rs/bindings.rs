@@ -1164,8 +1164,14 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
             quote! {}
         };
         let mut attributes = vec![];
-        if tcx.get_attr(def_id, rustc_span::symbol::sym::must_use).is_some() {
-            attributes.push(quote! {[[nodiscard]]})
+        if let Some(must_use_attr) = tcx.get_attr(def_id, rustc_span::symbol::sym::must_use) {
+            match must_use_attr.value_str() {
+                None => attributes.push(quote! {[[nodiscard]]}),
+                Some(symbol) => {
+                    let message = symbol.as_str();
+                    attributes.push(quote! {[[nodiscard(#message)]]});
+                }
+            };
         }
         CcSnippet {
             prereqs,
@@ -6904,7 +6910,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_must_use_attr_for_fn() {
+    fn test_must_use_attr_for_fn_no_msg() {
         let test_src = r#"
         #[must_use]
         pub fn add(x: i32, y: i32) -> i32 {
@@ -6919,6 +6925,27 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     [[nodiscard]] std::int32_t add(std::int32_t x, std::int32_t y);
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_must_use_attr_for_fn_msg() {
+        let test_src = r#"
+        #[must_use = "hello!"]
+        pub fn add(x: i32, y: i32) -> i32 {
+            x + y
+        }"#;
+
+        test_format_item(test_src, "add", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    [[nodiscard("hello!")]] std::int32_t add(std::int32_t x, std::int32_t y);
                 }
             )
         })
