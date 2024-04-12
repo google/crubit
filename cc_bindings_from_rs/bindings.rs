@@ -2166,6 +2166,9 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         {
             attributes.push(quote! { __attribute__((packed)) })
         }
+        if tcx.get_attr(core.def_id, rustc_span::symbol::sym::must_use).is_some() {
+            attributes.push(quote! {[[nodiscard]]})
+        }
 
         let doc_comment = format_doc_comment(tcx, core.def_id.expect_local());
         let keyword = &core.keyword;
@@ -6916,6 +6919,81 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     [[nodiscard]] std::int32_t add(std::int32_t x, std::int32_t y);
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_must_use_attr_for_struct() {
+        let test_src = r#"
+        #[must_use]
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... [[nodiscard]] ... SomeStruct final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_must_use_attr_for_enum() {
+        let test_src = r#"
+        #[must_use]
+        pub enum SomeEnum {
+            A(i32),
+            B(u32),
+        }"#;
+
+        test_format_item(test_src, "SomeEnum", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... [[nodiscard]] ... SomeEnum final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_must_use_attr_for_union() {
+        let test_src = r#"
+        #[must_use]
+        pub union SomeUnion {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeUnion", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    union ... [[nodiscard]] ... SomeUnion final {
+                        ...
+                    };
                 }
             )
         })
