@@ -111,11 +111,14 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
   }
 
   std::string slotName(unsigned S, const Decl &D) {
+    if (const auto *Field = dyn_cast<FieldDecl>(&D))
+      return Field->getName().str();
+    if (const auto *Var = dyn_cast<VarDecl>(&D)) return Var->getName().str();
     if (S == SLOT_RETURN_TYPE) return "return type";
     unsigned ParamIdx = S - SLOT_PARAM;
     llvm::StringRef ParamName;
-    if (const auto *FD = dyn_cast<FunctionDecl>(&D)) {
-      const ParmVarDecl *Param = FD->getParamDecl(ParamIdx);
+    if (const auto *Func = dyn_cast<FunctionDecl>(&D)) {
+      const ParmVarDecl *Param = Func->getParamDecl(ParamIdx);
       if (Param->getDeclName().isIdentifier()) ParamName = Param->getName();
     }
     llvm::Twine Name = "parameter " + llvm::Twine(ParamIdx);
