@@ -371,8 +371,6 @@ void transferValue_SmartPointerConstructor(
     const CXXConstructExpr *Ctor, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*Ctor);
-  // Create a `RecordValue`, associate it with the `Loc` and the expression.
-  State.Env.setValue(*Ctor, refreshRecordValue(Loc, State.Env));
 
   // Default and `nullptr_t` constructor.
   if (Ctor->getConstructor()->isDefaultConstructor() ||
@@ -544,8 +542,6 @@ void transferValue_SmartPointerFactoryCall(
     const CallExpr *CE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*CE);
-  // Create a `RecordValue`, associate it with the `Loc` and the expression.
-  State.Env.setValue(*CE, refreshRecordValue(Loc, State.Env));
   StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
 
   setToPointerWithNullability(PtrLoc, NullabilityKind::NonNull, State.Env);
@@ -609,8 +605,6 @@ void transferValue_SharedPtrCastCall(
   if (SrcPtrVal == nullptr) return;
 
   RecordStorageLocation &DestLoc = Env.getResultObjectLocation(*CE);
-  // Create a `RecordValue`, associate it with the `DestLoc` and the expression.
-  Env.setValue(*CE, refreshRecordValue(DestLoc, Env));
   StorageLocation &DestPtrLoc = DestLoc.getSyntheticField(PtrField);
 
   if (Callee->getName() == "const_pointer_cast") {
@@ -670,8 +664,6 @@ void transferValue_WeakPtrLockCall(
   if (!smartPointersEnabled()) return;
 
   RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*MCE);
-  // Create a `RecordValue`, associate it with the `Loc` and the expression.
-  State.Env.setValue(*MCE, refreshRecordValue(Loc, State.Env));
   StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
 
   setToPointerWithNullability(PtrLoc, NullabilityKind::Nullable, State.Env);
