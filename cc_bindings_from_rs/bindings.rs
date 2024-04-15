@@ -2172,8 +2172,15 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         {
             attributes.push(quote! { __attribute__((packed)) })
         }
-        if tcx.get_attr(core.def_id, rustc_span::symbol::sym::must_use).is_some() {
-            attributes.push(quote! {[[nodiscard]]})
+
+        if let Some(must_use_attr) = tcx.get_attr(core.def_id, rustc_span::symbol::sym::must_use) {
+            match must_use_attr.value_str() {
+                None => attributes.push(quote! {[[nodiscard]]}),
+                Some(symbol) => {
+                    let message = symbol.as_str();
+                    attributes.push(quote! {[[nodiscard(#message)]]});
+                }
+            }
         }
 
         let doc_comment = format_doc_comment(tcx, core.def_id.expect_local());
@@ -6952,7 +6959,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_must_use_attr_for_struct() {
+    fn test_must_use_attr_for_struct_no_msg() {
         let test_src = r#"
         #[must_use]
         pub struct SomeStruct {
@@ -6977,7 +6984,32 @@ pub mod tests {
     }
 
     #[test]
-    fn test_must_use_attr_for_enum() {
+    fn test_must_use_attr_for_struct_msg() {
+        let test_src = r#"
+        #[must_use = "foo"]
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... [[nodiscard("foo")]] ... SomeStruct final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_must_use_attr_for_enum_no_msg() {
         let test_src = r#"
         #[must_use]
         pub enum SomeEnum {
@@ -7002,7 +7034,32 @@ pub mod tests {
     }
 
     #[test]
-    fn test_must_use_attr_for_union() {
+    fn test_must_use_attr_for_enum_msg() {
+        let test_src = r#"
+        #[must_use = "foo"]
+        pub enum SomeEnum {
+            A(i32),
+            B(u32),
+        }"#;
+
+        test_format_item(test_src, "SomeEnum", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... [[nodiscard("foo")]] ... SomeEnum final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_must_use_attr_for_union_no_msg() {
         let test_src = r#"
         #[must_use]
         pub union SomeUnion {
@@ -7019,6 +7076,30 @@ pub mod tests {
                 quote! {
                     ...
                     union ... [[nodiscard]] ... SomeUnion final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+    #[test]
+    fn test_must_use_attr_for_union_msg() {
+        let test_src = r#"
+        #[must_use = "foo"]
+        pub union SomeUnion {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeUnion", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    union ... [[nodiscard("foo")]] ... SomeUnion final {
                         ...
                     };
                 }
