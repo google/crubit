@@ -7,7 +7,6 @@ included in the generated Rust crate."""
 
 load("@bazel_skylib//lib:collections.bzl", "collections")
 
-# The feature is OK for general use.
 visibility([
     "//rs_bindings_from_cc/...",
 ])
