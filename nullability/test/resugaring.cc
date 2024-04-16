@@ -46,3 +46,26 @@ TEST void testMemberTemplate(TemplateWrapper &s) {
   nonnull(s.get<int *_Nonnull>());
   nullable(s.get<int *_Nullable>());
 }
+
+namespace variable_template {
+
+template <class T>
+T VarTempl = {};
+TEST void testVariableTemplate() {
+  type<Nullable<int *>>(VarTempl<Nullable<int *>>);
+}
+
+}  // namespace variable_template
+
+namespace variable_template_explicit_specialization {
+
+template <class T>
+bool VarTempl = true;
+template <>
+int *VarTempl<int *> = nullptr;
+TEST void testVariableTemplateExplicitSpecialization() {
+  type<NullabilityUnknown<int *>>(
+      VarTempl<Nullable<int *>>);  // TODO: Should be Nullable
+}
+
+}  // namespace variable_template_explicit_specialization

@@ -220,7 +220,7 @@ struct Resugarer {
                        ArrayRef<TemplateArgumentLoc> UsingArgs) {
     if (const auto *VD = llvm::dyn_cast<VarDecl>(ResolvedTo)) {
       Template.push_back(
-          {VD->getTemplateInstantiationPattern()->getDescribedVarTemplate(),
+          {cast<VarTemplateSpecializationDecl>(VD)->getSpecializedTemplate(),
            UsingArgs});
     } else if (auto *FD = llvm::dyn_cast<FunctionDecl>(ResolvedTo)) {
       Template.push_back(
