@@ -64,8 +64,9 @@ bool VarTempl = true;
 template <>
 int *VarTempl<int *> = nullptr;
 TEST void testVariableTemplateExplicitSpecialization() {
-  type<NullabilityUnknown<int *>>(
-      VarTempl<Nullable<int *>>);  // TODO: Should be Nullable
+  // The type of the specialized variable is unrelated to the template argument
+  // type, so the type of the expression has unknown nullability.
+  type<NullabilityUnknown<int *>>(VarTempl<Nullable<int *>>);
 }
 
 }  // namespace variable_template_explicit_specialization
