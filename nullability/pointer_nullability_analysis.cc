@@ -831,7 +831,7 @@ void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
 
   QualType ParamTy = Param.getType();
   if (ParamTy.isNull()) return;
-  if (ParamTy->getPointeeType().isNull()) return;
+  if (!ParamTy->isPointerType() && !ParamTy->isReferenceType()) return;
   if (!isSupportedPointerType(ParamTy->getPointeeType())) return;
   if (ParamTy->getPointeeType().isConstQualified()) return;
 

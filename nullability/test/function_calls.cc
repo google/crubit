@@ -159,6 +159,20 @@ TEST(PointerNullabilityTest, OutputParameterReferencePointerToPointer) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, OutputParameterMemberPointerToPointer) {
+  // This is a crash repro. We don't yet support pointers-to-members -- we just
+  // care that this doesn't cause the analysis to crash.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      int *p;
+    };
+
+    void callee(int *S::*);
+
+    void target(int *S::*ptr_to_member_ptr) { callee(ptr_to_member_ptr); }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, OutputParameterConst) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void pointerNotModified(int* const* p);
