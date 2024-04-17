@@ -77,6 +77,24 @@ TEST(StructsTest, ThunklessStructFloat) {
   EXPECT_EQ(111.0 * 222.0, test::thunkless_inspect(std::move(product)));
 }
 
+extern "C" {
+
+structs::struct_by_float_passing_with_no_thunk::StructFloat
+struct_by_float_passing_with_no_thunk__thunkless_create(float);
+
+float struct_by_float_passing_with_no_thunk__thunkless_inspect(
+    structs::struct_by_float_passing_with_no_thunk::StructFloat);
+
+}  // extern "C"
+
+TEST(StructsTest, DirectFfiThunklessStructFloat) {
+  namespace test = structs::struct_by_float_passing_with_no_thunk;
+  test::StructFloat x =
+      struct_by_float_passing_with_no_thunk__thunkless_create(111.0);
+  EXPECT_EQ(111.0, struct_by_float_passing_with_no_thunk__thunkless_inspect(
+                       std::move(x)));
+}
+
 // This is a regression test for b/286876315 - it verifies that the mutability
 // qualifiers of nested pointers / pointees are correctly propagated.
 TEST(StructsTest, NestedPtrTypeMutabilityQualifiers) {

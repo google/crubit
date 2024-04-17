@@ -209,6 +209,13 @@ pub mod struct_by_float_passing_with_no_thunk {
         // In Q1 2023 the bindings include explicit padding here - the presence of the padding
         // changes the ABI classification of the struct.
     );
+    // A Clone impl can cause the ABI to change in C++, unless it's
+    // [[clang::trivial_abi]]
+    impl Clone for StructFloat {
+        fn clone(&self) -> Self {
+            StructFloat(self.0, self.1)
+        }
+    }
 
     #[export_name = "struct_by_float_passing_with_no_thunk__thunkless_create"]
     pub extern "C" fn thunkless_create(f: f32) -> StructFloat {

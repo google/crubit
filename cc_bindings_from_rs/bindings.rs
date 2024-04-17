@@ -2163,8 +2163,11 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
     let main_api = {
         let rs_type = core.rs_fully_qualified_name.to_string();
-        let mut attributes =
-            vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}, quote! {alignas(#alignment)}];
+        let mut attributes = vec![
+            quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)},
+            quote! {alignas(#alignment)},
+            quote! {[[clang::trivial_abi]]},
+        ];
         if tcx
             .get_attrs(core.def_id, rustc_span::symbol::sym::repr)
             .flat_map(|attr| rustc_attr::parse_repr_attr(tcx.sess(), attr))
@@ -2556,7 +2559,7 @@ pub mod tests {
                 quote! {
                     namespace rust_out {
                         ...
-                        struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Point") alignas(4) Point final {
+                        struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Point") alignas(4) [[clang::trivial_abi]] Point final {
                             // No point replicating test coverage of
                             // `test_format_item_struct_with_fields`.
                             ...
@@ -2682,11 +2685,11 @@ pub mod tests {
                 quote! {
                     namespace rust_out {
                     ...
-                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) Inner final {
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) [[clang::trivial_abi]] Inner final {
                           ... union { ... bool __field0; }; ...
                         };
                     ...
-                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) Outer final {
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) [[clang::trivial_abi]] Outer final {
                           ... union { ... ::rust_out::Inner __field0; }; ...
                         };
                     ...
@@ -2722,7 +2725,7 @@ pub mod tests {
                         ...
                         void f(::rust_out::S const* __param_0);
                         ...
-                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S final { ... }
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S final { ... }
                         ...
                         inline void f(::rust_out::S const* __param_0) { ... }
                         ...
@@ -2764,7 +2767,7 @@ pub mod tests {
                         // include `S` as a `fwd_decls` edge, rather than as a `defs` edge.
                         bool f(::rust_out::S s);
                         ...
-                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S final { ... }
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S final { ... }
                         ...
                     }  // namespace rust_out
                 }
@@ -2850,11 +2853,11 @@ pub mod tests {
                         void f3 ...
 
                         namespace a { ...
-                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S1 final { ... } ...
-                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S2 final { ... } ...
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S1 final { ... } ...
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S2 final { ... } ...
                         } ...
                         namespace b { ...
-                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) S3 final { ... } ...
+                        struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S3 final { ... } ...
                         } ...
                     }  // namespace rust_out
                 }
@@ -4307,7 +4310,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) SomeStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeStruct final {
                         public:
                             __COMMENT__ "`SomeStruct` doesn't implement the `Default` trait"
                             SomeStruct() = delete;
@@ -4370,7 +4373,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) TupleStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] TupleStruct final {
                         public:
                             __COMMENT__ "`TupleStruct` doesn't implement the `Default` trait"
                             TupleStruct() = delete;
@@ -4438,7 +4441,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) SomeStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeStruct final {
                         ...
                         // The particular order below is not guaranteed,
                         // so we may need to adjust this test assertion
@@ -4501,7 +4504,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) __attribute__((packed)) SomeStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) [[clang::trivial_abi]] __attribute__((packed)) SomeStruct final {
                         ...
                         public: union { ... std::uint16_t field1; };
                         public: union { ... std::uint32_t field2; };
@@ -4556,7 +4559,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) SomeStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeStruct final {
                         ...
                         public: union { ... std::uint32_t f2; };
                         public: union { ... std::uint8_t f1; };
@@ -6040,7 +6043,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) SomeEnum final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) [[clang::trivial_abi]] SomeEnum final {
                         public:
                             __COMMENT__ "`SomeEnum` doesn't implement the `Default` trait"
                             SomeEnum() = delete;
@@ -6101,7 +6104,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) Point final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] Point final {
                         public:
                             __COMMENT__ "`Point` doesn't implement the `Default` trait"
                             Point() = delete;
@@ -6175,7 +6178,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(8) SomeUnion final {
+                    union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(8) [[clang::trivial_abi]] SomeUnion final {
                         public:
                             __COMMENT__ "`SomeUnion` doesn't implement the `Default` trait"
                             SomeUnion() = delete;
@@ -6434,7 +6437,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) SomeStruct final {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeStruct final {
                         ...
                         __COMMENT__ #unsupported_msg
                         ...
