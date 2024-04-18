@@ -7,6 +7,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
@@ -25,16 +26,47 @@ const T &lookup(llvm::StringRef Name, const DeclContext &DC) {
   return *Result;
 }
 
-TEST(InferableTest, IsInferenceTarget) {
+TEST(IsInferenceTargetTest, GlobalVariables) {
   TestAST AST(R"cc(
     int* Pointer;
+    int NotPointer;
+  )cc");
+
+  auto &TU = *AST.context().getTranslationUnitDecl();
+  EXPECT_FALSE(isInferenceTarget(lookup("Pointer", TU)));
+  EXPECT_FALSE(isInferenceTarget(lookup("NotPointer", TU)));
+}
+
+TEST(IsInferenceTargetTest, Functions) {
+  TestAST AST(R"cc(
     int* func(int*, int**);
     void empty() {}
+  )cc");
 
-    class Cls {
+  auto &TU = *AST.context().getTranslationUnitDecl();
+  EXPECT_TRUE(isInferenceTarget(lookup("func", TU)));
+  EXPECT_TRUE(isInferenceTarget(lookup("empty", TU)));
+}
+
+TEST(IsInferenceTargetTest, ClassAndMembers) {
+  TestAST AST(R"cc(
+    class C {
       void method();
+      int NonPtrField;
+      int* PtrField;
     };
+  )cc");
 
+  auto &TU = *AST.context().getTranslationUnitDecl();
+  auto &Class = lookup<CXXRecordDecl>("C", TU);
+  EXPECT_FALSE(isInferenceTarget(Class));
+  EXPECT_TRUE(isInferenceTarget(lookup("method", Class)));
+  EXPECT_TRUE(isInferenceTarget(lookup("PtrField", Class)));
+  EXPECT_FALSE(isInferenceTarget(lookup("NonPtrField", Class)));
+}
+
+TEST(IsInferenceTargetTest, FunctionTemplate) {
+  TestAST AST(R"cc(
     template <int X>
     void funcTmpl(int*) {}
 
@@ -42,14 +74,6 @@ TEST(InferableTest, IsInferenceTarget) {
   )cc");
 
   auto &TU = *AST.context().getTranslationUnitDecl();
-  EXPECT_FALSE(isInferenceTarget(lookup("Pointer", TU)));
-  EXPECT_TRUE(isInferenceTarget(lookup("func", TU)));
-  EXPECT_TRUE(isInferenceTarget(lookup("empty", TU)));
-
-  auto &Cls = lookup<CXXRecordDecl>("Cls", TU);
-  EXPECT_FALSE(isInferenceTarget(Cls));
-  EXPECT_TRUE(isInferenceTarget(lookup("method", Cls)));
-
   // A function template is not an inference target.
   const FunctionTemplateDecl &FuncTmpl =
       lookup<FunctionTemplateDecl>("funcTmpl", TU);
@@ -61,6 +85,41 @@ TEST(InferableTest, IsInferenceTarget) {
   const ValueDecl &FuncTmpl2 =
       *cast<DeclRefExpr>(FuncTmplSpec.getInit()->IgnoreImplicit())->getDecl();
   EXPECT_FALSE(isInferenceTarget(FuncTmpl2));
+}
+
+TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {
+      T NonPtrField;
+      T* PtrField;
+    };
+
+    ClassTemplate<int> I;
+    int A = I.NonPtrField;
+    int* B = I.PtrField;
+  )cc");
+
+  auto &TU = *AST.context().getTranslationUnitDecl();
+  // Class templates and their fields are not inference targets.
+  auto &ClassTemplate = lookup<ClassTemplateDecl>("ClassTemplate", TU);
+  EXPECT_FALSE(isInferenceTarget(ClassTemplate));
+  EXPECT_FALSE(isInferenceTarget(*ClassTemplate.getTemplatedDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("NonPtrField", *ClassTemplate.getTemplatedDecl())));
+  EXPECT_FALSE(
+      isInferenceTarget(lookup("PtrField", *ClassTemplate.getTemplatedDecl())));
+
+  // Class template specializations and their fields are also not inference
+  // targets.
+  EXPECT_FALSE(isInferenceTarget(
+      *lookup<VarDecl>("I", TU).getType()->getAsRecordDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(lookup<VarDecl>("A", TU).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(lookup<VarDecl>("B", TU).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
 }
 
 TEST(InferableTest, CountInferableSlots) {

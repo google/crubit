@@ -288,6 +288,25 @@ TEST_F(InferTUTest, CHECKNEMacro) {
                                       inferredSlot(4, Nullability::NONNULL)})));
 }
 
+TEST_F(InferTUTest, Field) {
+  build(R"cc(
+    struct S {
+      int *I;
+      bool *B;
+    };
+    void target() {
+      S S;
+      S.I = nullptr;
+      *S.B;
+    }
+  )cc");
+  EXPECT_THAT(
+      infer(),
+      UnorderedElementsAre(
+          inference(hasName("I"), {inferredSlot(0, Nullability::NULLABLE)}),
+          inference(hasName("B"), {inferredSlot(0, Nullability::NONNULL)})));
+}
+
 TEST_F(InferTUTest, Filter) {
   build(R"cc(
     int* target1() { return nullptr; }

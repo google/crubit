@@ -61,6 +61,15 @@ MATCHER_P(functionNamed, Name, "") {
       ("@" + llvm::StringRef(Name) + "#").str());
 }
 
+// Expects `TypeQualifiedFieldName` to be of the form "S::field", but it should
+// be qualified only by the enclosing type, not any namespaces.
+MATCHER_P(fieldNamed, TypeQualifiedFieldName, "") {
+  const auto [Type, FieldName] =
+      llvm::StringRef(TypeQualifiedFieldName).split("::");
+  return llvm::StringRef(arg.usr()).ends_with(
+      ("@" + Type + "@FI@" + FieldName).str());
+}
+
 testing::Matcher<const Evidence&> evidence(
     testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
     testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target")) {
@@ -1057,7 +1066,7 @@ TEST(CollectEvidenceFromImplementationTest,
      PassedToNonnullInFunctionPointerField) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
-      void (*callee)(Nonnull<int*> i);
+      void (*callee)(Nonnull<int*>);
     };
 
     void target(int* p) { S().callee(p); }
@@ -1065,7 +1074,9 @@ TEST(CollectEvidenceFromImplementationTest,
   EXPECT_THAT(
       collectEvidenceFromTargetFunction(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
-                                    functionNamed("target"))));
+                                    functionNamed("target")),
+                           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    fieldNamed("S::callee"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest,
@@ -1463,6 +1474,55 @@ TEST(CollectEvidenceFromImplementationTest, Arithmetic) {
           evidence(paramSlot(6), Evidence::ARITHMETIC, functionNamed("target")),
           evidence(paramSlot(7), Evidence::ARITHMETIC,
                    functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromImplementationTest, Fields) {
+  static constexpr llvm::StringRef Src = R"cc(
+    // Body must reference the first param so that args are in the AST, but
+    // otherwise doesn't matter.
+#define CHECK(x) x
+#define CHECK_NE(a, b) a, b
+    void takesNonnull(Nonnull<int*>);
+    void takesMutableNullable(Nullable<int*>&);
+    struct S {
+      int* Deref;
+      int* BoundToNonnull;
+      int* BoundToMutableNullable;
+      int* AbortIfNull;
+      int* AbortIfNullBool;
+      int* AbortIfNullNE;
+      int* AssignedFromNullable;
+      int* Arithmetic;
+    };
+    void target(S AnS) {
+      *AnS.Deref;
+      takesNonnull(AnS.BoundToNonnull);
+      takesMutableNullable(AnS.BoundToMutableNullable);
+      CHECK(AnS.AbortIfNull);
+      CHECK(AnS.AbortIfNullBool != nullptr);
+      CHECK_NE(AnS.AbortIfNullNE, nullptr);
+      AnS.AssignedFromNullable = nullptr;
+      AnS.Arithmetic += 4;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      IsSupersetOf({evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                             fieldNamed("S::Deref")),
+                    evidence(Slot(0), Evidence::BOUND_TO_NONNULL,
+                             fieldNamed("S::BoundToNonnull")),
+                    evidence(Slot(0), Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                             fieldNamed("S::BoundToMutableNullable")),
+                    evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                             fieldNamed("S::AbortIfNull")),
+                    evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                             fieldNamed("S::AbortIfNullBool")),
+                    evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                             fieldNamed("S::AbortIfNullNE")),
+                    evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                             fieldNamed("S::AssignedFromNullable")),
+                    evidence(Slot(0), Evidence::ARITHMETIC,
+                             fieldNamed("S::Arithmetic"))}));
 }
 
 TEST(CollectEvidenceFromImplementationTest, FunctionCallInLoop) {

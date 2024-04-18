@@ -36,6 +36,7 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Analysis/FlowSensitive/ASTOps.h"
 #include "clang/Analysis/FlowSensitive/AdornedCFG.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
@@ -772,32 +773,32 @@ class ImplementationEvidenceCollector {
     if (auto *BinaryOperator = dyn_cast<clang::BinaryOperator>(&Stmt);
         BinaryOperator &&
         BinaryOperator->getOpcode() == clang::BinaryOperatorKind::BO_Assign) {
-      bool LhsSupported =
-          isSupportedRawPointerType(BinaryOperator->getLHS()->getType());
-      bool RhsSupported =
-          isSupportedRawPointerType(BinaryOperator->getRHS()->getType());
-      if (!LhsSupported) return;
-      if (!RhsSupported) {
+      const Expr *LHS = BinaryOperator->getLHS();
+      const Expr *RHS = BinaryOperator->getRHS();
+      const QualType LHSType = LHS->getType();
+      if (!isSupportedRawPointerType(LHSType)) return;
+      const QualType RHSType = RHS->getType();
+      if (!isSupportedRawPointerType(RHSType)) {
         llvm::errs() << "Unsupported RHS type in assignment to pointer decl: "
-                     << BinaryOperator->getRHS()->getType() << "\n";
+                     << RHSType << "\n";
       }
-      auto *PV = getRawPointerValue(BinaryOperator->getRHS(), Env);
-      if (!PV) return;
-      TypeNullability TypeNullability;
-      if (auto *DeclRefExpr =
-              dyn_cast_or_null<clang::DeclRefExpr>(BinaryOperator->getLHS())) {
-        TypeNullability = getNullabilityAnnotationsFromTypeAndOverrides(
-            BinaryOperator->getLHS()->getType(), DeclRefExpr->getDecl(),
-            Lattice);
-      } else {
-        TypeNullability = getNullabilityAnnotationsFromType(
-            BinaryOperator->getLHS()->getType());
-      }
-      fromBindingToType(BinaryOperator->getLHS()->getType(), TypeNullability,
-                        *PV, BinaryOperator->getRHS()->getExprLoc());
 
-      fromAssignmentFromNullable(TypeNullability, *PV,
-                                 BinaryOperator->getRHS()->getExprLoc());
+      auto *PV = getRawPointerValue(RHS, Env);
+      if (!PV) return;
+
+      TypeNullability TypeNullability;
+      if (auto *DeclRefExpr = dyn_cast_or_null<clang::DeclRefExpr>(LHS)) {
+        TypeNullability = getNullabilityAnnotationsFromTypeAndOverrides(
+            LHSType, DeclRefExpr->getDecl(), Lattice);
+      } else if (auto *MemberExpr = dyn_cast_or_null<clang::MemberExpr>(LHS)) {
+        TypeNullability = getNullabilityAnnotationsFromTypeAndOverrides(
+            LHSType, MemberExpr->getMemberDecl(), Lattice);
+      } else {
+        TypeNullability = getNullabilityAnnotationsFromType(LHSType);
+      }
+
+      fromBindingToType(LHSType, TypeNullability, *PV, RHS->getExprLoc());
+      fromAssignmentFromNullable(TypeNullability, *PV, RHS->getExprLoc());
     }
   }
 
@@ -984,6 +985,19 @@ llvm::Error collectEvidenceFromImplementation(
   }
   addInferableSlotsForCalledFunctions(*Func, InferableSlots, Analysis,
                                       AnalysisContext.arena());
+
+  // TODO(b/323509665) consider replacing addInferableSlotsForCalledFunctions
+  // with ReferencedDecls.Functions.
+  dataflow::ReferencedDecls Decls = dataflow::getReferencedDecls(*Func);
+  for (const FieldDecl *Field : Decls.Fields) {
+    if (isInferenceTarget(*Field) &&
+        !evidenceKindFromDeclaredType(Field->getType())) {
+      InferableSlots.emplace_back(
+          Analysis.assignNullabilityVariable(Field, AnalysisContext.arena()),
+          Slot(0), *Field);
+    }
+  }
+
   const auto &InferableSlotsConstraint =
       getInferableSlotsAsInferredOrUnknownConstraint(InferableSlots, USRCache,
                                                      PreviousInferences,

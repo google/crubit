@@ -26,12 +26,12 @@ message Symbol {
 }
 
 // A "slot" identifies a position in a symbol's type that may have nullability.
-// For now, the symbols in question are assumed to be functions, and we only
-// support describing direct nullability of pointer params and return values.
 //
 // We use uint32 rather than the Slot type to represent slot numbers in protos.
 // (A symbol may have any number of slots, and proto2 enums are closed).
-// The Slot enum just defines well-known slot values.
+// The Slot enum only defines well-known slot values for functions. Fields and
+// global variables use Slot numbers aligned with the indices of their
+// nullability vectors.
 enum Slot {
   // The slot number for a function's return type.
   SLOT_RETURN_TYPE = 0;

@@ -7,6 +7,7 @@
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/LLVM.h"
 
@@ -27,29 +28,35 @@ int countInferableSlots(const Decl& D) {
 }
 
 bool isInferenceTarget(const Decl& D) {
-  // For now, only support inferring nullability of functions.
-  const auto* FD = dyn_cast<FunctionDecl>(&D);
-  if (!FD) return false;
-  return
-      // Function templates are in principle inferable.
-      // However since we don't analyze their bodies, and other implementations
-      // cannot interact with them directly, we can't perform any nontrivial
-      // inference, just propagate annotations across redecls.
-      // For now, we don't do this as some infra (NullabilityWalker) doesn't
-      // work on dependent code.
-      !FD->isDependentContext() &&
-      // Inferring properties of template instantiations isn't useful in
-      // itself. We can't record them anywhere unless they apply to the
-      // template in general.
-      // TODO: work out in what circumstances that would be safe.
-      !FD->getTemplateInstantiationPattern() &&
-      // builtins can't be annotated and are irregular in their type checking
-      // and in other ways, leading to violations of otherwise sound
-      // assumptions.
-      // If we find that their nullability is unexpectedly leaking into
-      // programs under analysis in significant ways, we can hardcode this small
-      // set of functions.
-      FD->getBuiltinID() == 0;
+  if (const auto* Func = dyn_cast<FunctionDecl>(&D)) {
+    return
+        // Function templates are in principle inferable.
+        // However since we don't analyze their bodies, and other
+        // implementations cannot interact with them directly, we can't perform
+        // any nontrivial inference, just propagate annotations across redecls.
+        // For now, we don't do this as some infra (NullabilityWalker) doesn't
+        // work on dependent code.
+        !Func->isDependentContext() &&
+        // Inferring properties of template instantiations isn't useful in
+        // itself. We can't record them anywhere unless they apply to the
+        // template in general.
+        // TODO: work out in what circumstances that would be safe.
+        !Func->getTemplateInstantiationPattern() &&
+        // builtins can't be annotated and are irregular in their type checking
+        // and in other ways, leading to violations of otherwise sound
+        // assumptions.
+        // If we find that their nullability is unexpectedly leaking into
+        // programs under analysis in significant ways, we can hardcode this
+        // small set of functions.
+        Func->getBuiltinID() == 0;
+  }
+  if (const auto* Field = dyn_cast<FieldDecl>(&D)) {
+    return hasInferable(Field->getType()) &&
+           // See comments above regarding dependent contexts and templates.
+           !Field->getDeclContext()->isDependentContext() &&
+           !dyn_cast<ClassTemplateSpecializationDecl>(Field->getParent());
+  }
+  return false;
 }
 
 }  // namespace clang::tidy::nullability
