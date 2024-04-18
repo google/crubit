@@ -70,6 +70,10 @@ MATCHER_P(fieldNamed, TypeQualifiedFieldName, "") {
       ("@" + Type + "@FI@" + FieldName).str());
 }
 
+MATCHER_P(globalVarNamed, Name, "") {
+  return arg.usr() == ("c:@" + llvm::StringRef(Name)).str();
+}
+
 testing::Matcher<const Evidence&> evidence(
     testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
     testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target")) {
@@ -1523,6 +1527,62 @@ TEST(CollectEvidenceFromImplementationTest, Fields) {
                              fieldNamed("S::AssignedFromNullable")),
                     evidence(Slot(0), Evidence::ARITHMETIC,
                              fieldNamed("S::Arithmetic"))}));
+}
+
+TEST(CollectEvidenceFromImplementationTest, Globals) {
+  static constexpr llvm::StringRef Src = R"cc(
+    // Body must reference the first param so that args are in the AST, but
+    // otherwise doesn't matter.
+#define CHECK(x) x
+#define CHECK_NE(a, b) a, b
+    void takesNonnull(Nonnull<int*>);
+    void takesMutableNullable(Nullable<int*>&);
+    int* Deref;
+    int* BoundToNonnull;
+    int* BoundToMutableNullable;
+    int* AbortIfNull;
+    int* AbortIfNullBool;
+    int* AbortIfNullNE;
+    int* AssignedFromNullable;
+    int* Arithmetic;
+    void target() {
+      *Deref;
+      takesNonnull(BoundToNonnull);
+      takesMutableNullable(BoundToMutableNullable);
+      CHECK(AbortIfNull);
+      CHECK(AbortIfNullBool != nullptr);
+      CHECK_NE(AbortIfNullNE, nullptr);
+      AssignedFromNullable = nullptr;
+      Arithmetic += 4;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src),
+      IsSupersetOf({evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                             globalVarNamed("Deref")),
+                    evidence(Slot(0), Evidence::BOUND_TO_NONNULL,
+                             globalVarNamed("BoundToNonnull")),
+                    evidence(Slot(0), Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                             globalVarNamed("BoundToMutableNullable")),
+                    evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                             globalVarNamed("AbortIfNull")),
+                    evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                             globalVarNamed("AbortIfNullBool")),
+                    evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                             globalVarNamed("AbortIfNullNE")),
+                    evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                             globalVarNamed("AssignedFromNullable")),
+                    evidence(Slot(0), Evidence::ARITHMETIC,
+                             globalVarNamed("Arithmetic"))}));
+}
+
+TEST(CollectEvidenceFromImplementationTest, NoEvidenceForLocals) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target() {
+      int* p = nullptr;
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromImplementationTest, FunctionCallInLoop) {

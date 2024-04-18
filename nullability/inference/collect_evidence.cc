@@ -997,6 +997,13 @@ llvm::Error collectEvidenceFromImplementation(
           Slot(0), *Field);
     }
   }
+  for (const VarDecl *Global : Decls.Globals) {
+    if (isInferenceTarget(*Global)) {
+      InferableSlots.emplace_back(
+          Analysis.assignNullabilityVariable(Global, AnalysisContext.arena()),
+          Slot(0), *Global);
+    }
+  }
 
   const auto &InferableSlotsConstraint =
       getInferableSlotsAsInferredOrUnknownConstraint(InferableSlots, USRCache,

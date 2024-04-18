@@ -33,7 +33,7 @@ TEST(IsInferenceTargetTest, GlobalVariables) {
   )cc");
 
   auto &TU = *AST.context().getTranslationUnitDecl();
-  EXPECT_FALSE(isInferenceTarget(lookup("Pointer", TU)));
+  EXPECT_TRUE(isInferenceTarget(lookup("Pointer", TU)));
   EXPECT_FALSE(isInferenceTarget(lookup("NotPointer", TU)));
 }
 

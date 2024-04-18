@@ -307,6 +307,23 @@ TEST_F(InferTUTest, Field) {
           inference(hasName("B"), {inferredSlot(0, Nullability::NONNULL)})));
 }
 
+TEST_F(InferTUTest, Globals) {
+  build(R"cc(
+    int* I;
+    bool* B;
+
+    void target() {
+      I = nullptr;
+      *B;
+    }
+  )cc");
+  EXPECT_THAT(
+      infer(),
+      UnorderedElementsAre(
+          inference(hasName("I"), {inferredSlot(0, Nullability::NULLABLE)}),
+          inference(hasName("B"), {inferredSlot(0, Nullability::NONNULL)})));
+}
+
 TEST_F(InferTUTest, Filter) {
   build(R"cc(
     int* target1() { return nullptr; }

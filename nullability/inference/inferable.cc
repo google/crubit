@@ -56,6 +56,8 @@ bool isInferenceTarget(const Decl& D) {
            !Field->getDeclContext()->isDependentContext() &&
            !dyn_cast<ClassTemplateSpecializationDecl>(Field->getParent());
   }
+  if (const auto* Var = dyn_cast<VarDecl>(&D))
+    return hasInferable(Var->getType());
   return false;
 }
 
