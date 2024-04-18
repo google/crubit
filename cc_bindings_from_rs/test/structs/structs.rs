@@ -206,8 +206,9 @@ pub mod struct_by_float_passing_with_no_thunk {
     pub struct StructFloat(
         f64,
         f32,
-        // In Q1 2023 the bindings include explicit padding here - the presence of the padding
-        // changes the ABI classification of the struct.
+        // Note that this has 32 bits of tail padding here.
+        // The tail padding _must_ be implicit, or else the struct cannot be passed by value over
+        // FFI.
     );
     // A Clone impl can cause the ABI to change in C++, unless it's
     // [[clang::trivial_abi]]

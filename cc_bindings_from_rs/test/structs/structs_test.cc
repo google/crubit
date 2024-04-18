@@ -82,6 +82,11 @@ extern "C" {
 structs::struct_by_float_passing_with_no_thunk::StructFloat
 struct_by_float_passing_with_no_thunk__thunkless_create(float);
 
+structs::struct_by_float_passing_with_no_thunk::StructFloat
+    struct_by_float_passing_with_no_thunk__thunkless_multiply(
+        structs::struct_by_float_passing_with_no_thunk::StructFloat,
+        structs::struct_by_float_passing_with_no_thunk::StructFloat);
+
 float struct_by_float_passing_with_no_thunk__thunkless_inspect(
     structs::struct_by_float_passing_with_no_thunk::StructFloat);
 
@@ -91,8 +96,14 @@ TEST(StructsTest, DirectFfiThunklessStructFloat) {
   namespace test = structs::struct_by_float_passing_with_no_thunk;
   test::StructFloat x =
       struct_by_float_passing_with_no_thunk__thunkless_create(111.0);
-  EXPECT_EQ(111.0, struct_by_float_passing_with_no_thunk__thunkless_inspect(
-                       std::move(x)));
+  test::StructFloat y =
+      struct_by_float_passing_with_no_thunk__thunkless_create(222.0);
+  test::StructFloat product =
+      struct_by_float_passing_with_no_thunk__thunkless_multiply(std::move(x),
+                                                                std::move(y));
+  EXPECT_EQ(111.0 * 222.0,
+            struct_by_float_passing_with_no_thunk__thunkless_inspect(
+                std::move(product)));
 }
 
 // This is a regression test for b/286876315 - it verifies that the mutability

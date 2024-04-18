@@ -1291,6 +1291,9 @@ struct AdtCoreBindings<'tcx> {
     /// DefId of the ADT.
     def_id: DefId,
 
+    /// The repr attributes, e.g. `repr(C)`.
+    repr_attrs: Vec<rustc_attr::ReprAttr>,
+
     /// C++ tag - e.g. `struct`, `class`, `enum`, or `union`.  This isn't always
     /// a direct mapping from Rust (e.g. a Rust `enum` might end up being
     /// represented as an opaque C++ `struct`).
@@ -1409,6 +1412,10 @@ fn format_adt_core(tcx: TyCtxt<'_>, def_id: DefId) -> Result<AdtCoreBindings<'_>
 
     Ok(AdtCoreBindings {
         def_id,
+        repr_attrs: tcx
+            .get_attrs(def_id, sym::repr)
+            .flat_map(|attr| rustc_attr::parse_repr_attr(tcx.sess(), attr))
+            .collect(),
         keyword,
         cc_short_name,
         rs_fully_qualified_name,
@@ -1596,6 +1603,18 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
             quote! { private: static void __crubit_field_offset_assertions(); }
         };
 
+        // If all fields are known, and the type is repr(C), then we don't need padding
+        // fields, and can instead use the natural padding from alignment.
+        //
+        // Note: it does need to be repr(C) to be guaranteed, since the compiler might
+        // reasonably place a field later than it has to for layout
+        // randomization purposes. For example, in `#[repr(align(4))] struct
+        // Foo(i8);` there are four different places the `i8` could be.
+        // If it was placed in the second byte, for any reason, then we would need
+        // explicit padding bytes.
+        let always_omit_padding = core.repr_attrs.contains(&rustc_attr::ReprC)
+            && fields.iter().all(|field| field.type_info.is_ok());
+
         let mut prereqs = CcPrerequisites::default();
         let fields: TokenStream = fields
             .into_iter()
@@ -1627,7 +1646,12 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                     Ok(FieldTypeInfo { cc_type, size }) => {
                         assert!((field.offset + size) <= field.offset_of_next_field);
                         let padding = field.offset_of_next_field - field.offset - size;
-                        let padding = if padding == 0 {
+                        // Omit explicit padding if:
+                        //   1. The type is repr(C) and has known types for all fields, so we can
+                        //      reuse the natural repr(C) padding.
+                        //   2. There is no padding
+                        // TODO(jeanpierreda): also omit padding for the final field?
+                        let padding = if always_omit_padding || padding == 0 {
                             quote! {}
                         } else {
                             let padding = Literal::u64_unsuffixed(padding);
@@ -2168,11 +2192,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
             quote! {alignas(#alignment)},
             quote! {[[clang::trivial_abi]]},
         ];
-        if tcx
-            .get_attrs(core.def_id, rustc_span::symbol::sym::repr)
-            .flat_map(|attr| rustc_attr::parse_repr_attr(tcx.sess(), attr))
-            .any(|repr| matches!(repr, rustc_attr::ReprPacked { .. }))
-        {
+        if core.repr_attrs.iter().any(|repr| matches!(repr, rustc_attr::ReprPacked { .. })) {
             attributes.push(quote! { __attribute__((packed)) })
         }
 
