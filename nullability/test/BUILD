@@ -206,8 +206,8 @@ nullability_test(
 )
 
 cc_test(
-    name = "initialization_diagnostics",
-    srcs = ["initialization_diagnostics.cc"],
+    name = "initialization_diagnosis",
+    srcs = ["initialization_diagnosis.cc"],
     deps = [
         ":check_diagnostics",
         "@llvm-project//third-party/unittest:gtest",
@@ -216,8 +216,8 @@ cc_test(
 )
 
 cc_test(
-    name = "merge",
-    srcs = ["merge.cc"],
+    name = "join_diagnosis",
+    srcs = ["join_diagnosis.cc"],
     deps = [
         ":check_diagnostics",
         "//nullability:pointer_nullability_analysis",
@@ -293,8 +293,8 @@ nullability_test(
 )
 
 cc_test(
-    name = "smart_pointers_diagnostics",
-    srcs = ["smart_pointers_diagnostics.cc"],
+    name = "smart_pointers_diagnosis",
+    srcs = ["smart_pointers_diagnosis.cc"],
     deps = [
         ":check_diagnostics",
         "//nullability:type_nullability",

@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Tests for merging different nullability types.
+// Tests for joining different nullability types.
 
 #include <memory>
 #include <string>
@@ -19,10 +19,20 @@
 #include "llvm/Testing/Support/Error.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
+// TODO: The tests in this file test two different things that should be tested
+// separately:
+// a) That the analysis correctly joins pointers with different nullability.
+//    These tests should be preserved, but they should be converted to
+//    `nullability_test` tests (as they test the behavior of the analysis, not
+//    diagnosis).
+// b) That the nullability state of a pointer is correctly "entangled" with a
+//    boolean condition. These checks should be replaced with equivalent tests
+//    in path_sensitive.cc (to the extent that those don't exist already).
+
 namespace clang::tidy::nullability {
 namespace {
 
-TEST(PointerNullabilityTest, MergeNullAndNonNull) {
+TEST(PointerNullabilityTest, JoinNullAndNonNull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull y, bool b) {
       int *x = nullptr;
@@ -42,7 +52,7 @@ TEST(PointerNullabilityTest, MergeNullAndNonNull) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeNullAndNullable) {
+TEST(PointerNullabilityTest, JoinNullAndNullable) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable y, bool b) {
       int *x = nullptr;
@@ -62,7 +72,7 @@ TEST(PointerNullabilityTest, MergeNullAndNullable) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeNullAndUnknown) {
+TEST(PointerNullabilityTest, JoinNullAndUnknown) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *y, bool b) {
       int *x = nullptr;
@@ -82,7 +92,7 @@ TEST(PointerNullabilityTest, MergeNullAndUnknown) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeNonNullAndNull) {
+TEST(PointerNullabilityTest, JoinNonNullAndNull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull y, bool b) {
       int *x = y;
@@ -102,7 +112,7 @@ TEST(PointerNullabilityTest, MergeNonNullAndNull) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeNonNullAndNonNull) {
+TEST(PointerNullabilityTest, JoinNonNullAndNonNull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull y, int *_Nonnull z, bool b) {
       int *x = y;
@@ -122,7 +132,7 @@ TEST(PointerNullabilityTest, MergeNonNullAndNonNull) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeNonNullAndNullable) {
+TEST(PointerNullabilityTest, JoinNonNullAndNullable) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull y, int *_Nullable z, bool b) {
       int *x = y;
@@ -142,7 +152,7 @@ TEST(PointerNullabilityTest, MergeNonNullAndNullable) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeNonNullAndUnknown) {
+TEST(PointerNullabilityTest, JoinNonNullAndUnknown) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull y, int *z, bool b) {
       int *x = y;
@@ -162,7 +172,7 @@ TEST(PointerNullabilityTest, MergeNonNullAndUnknown) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeNullableAndNull) {
+TEST(PointerNullabilityTest, JoinNullableAndNull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable y, bool b) {
       int *x = y;
@@ -182,7 +192,7 @@ TEST(PointerNullabilityTest, MergeNullableAndNull) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeNullableAndNonNull) {
+TEST(PointerNullabilityTest, JoinNullableAndNonNull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable y, int *_Nonnull z, bool b) {
       int *x = y;
@@ -202,7 +212,7 @@ TEST(PointerNullabilityTest, MergeNullableAndNonNull) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeNullableAndNullable) {
+TEST(PointerNullabilityTest, JoinNullableAndNullable) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable y, int *_Nullable z, bool b) {
       int *x = y;
@@ -222,7 +232,7 @@ TEST(PointerNullabilityTest, MergeNullableAndNullable) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeNullableAndUnknown) {
+TEST(PointerNullabilityTest, JoinNullableAndUnknown) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable y, int *z, bool b) {
       int *x = y;
@@ -242,7 +252,7 @@ TEST(PointerNullabilityTest, MergeNullableAndUnknown) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeUnknownAndNull) {
+TEST(PointerNullabilityTest, JoinUnknownAndNull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *y, bool b) {
       int *x = y;
@@ -262,7 +272,7 @@ TEST(PointerNullabilityTest, MergeUnknownAndNull) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeUnknownAndNonNull) {
+TEST(PointerNullabilityTest, JoinUnknownAndNonNull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *y, int *_Nonnull z, bool b) {
       int *x = y;
@@ -282,7 +292,7 @@ TEST(PointerNullabilityTest, MergeUnknownAndNonNull) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeUnknownAndNullable) {
+TEST(PointerNullabilityTest, JoinUnknownAndNullable) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *y, int *_Nullable z, bool b) {
       int *x = y;
@@ -302,7 +312,7 @@ TEST(PointerNullabilityTest, MergeUnknownAndNullable) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergeUnknownAndUnknown) {
+TEST(PointerNullabilityTest, JoinUnknownAndUnknown) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *y, int *z, bool b) {
       int *x = y;
@@ -321,7 +331,7 @@ TEST(PointerNullabilityTest, MergeUnknownAndUnknown) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MergePointerLValues) {
+TEST(PointerNullabilityTest, JoinPointerLValues) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Node {
       Node* next;
@@ -329,20 +339,20 @@ TEST(PointerNullabilityTest, MergePointerLValues) {
     bool b();
     void target(Node* first) {
       for (Node* cur = first; cur; cur = cur->next) {
-        // We used to crash here: `PointerAnalysis::merge()` assumed `Value`s
-        // of pointer type were always `PointerValue`.
+        // We used to crash here: `PointerNullabilityAnalysis::join()` assumed
+        // `Value`s of pointer type were always `PointerValue`.
         //
         // Here the `MemberExpr` is a glvalue and produces a `ReferenceValue`
         // of type `Node *`.
-        // When we merge the first and second loop iteration,
-        // `Environment::join()` calls `PointerAnalysis::merge()` to combine
-        // the two `ReferenceValue`s.
+        // When we join the first and second loop iteration,
+        // `Environment::join()` calls `PointerNullabilityAnalysis::join()` to
+        // combine the two `ReferenceValue`s.
         cur->next;
 
         // The rest of this function exists to actually trigger a situation
-        // where we perform a merge and the two `ReferenceValue`s to be merged
+        // where we perform a join and the two `ReferenceValue`s to be joined
         // are actually different. (Otherwise, we will never call through to
-        // `PointerNullabilityAnalysis::merge()` in the first place.)
+        // `PointerNullabilityAnalysis::join()` in the first place.)
         // This code is unfortunately pretty arbitrary, because it relies on the
         // specific order in which the framework processes blocks in the CFG.
         // This is unsatisfactory, but will be moot when `ReferenceValue` is
@@ -352,7 +362,7 @@ TEST(PointerNullabilityTest, MergePointerLValues) {
         if (b())
           ;
         else {
-          // The merge that used to trigger the crash happens at the top of this
+          // The join that used to trigger the crash happens at the top of this
           // loop where the edge that comes from outside the loop joins the edge
           // that comes from the bottom of the loop.
           for (int i = 0; i < 10; ++i) {
