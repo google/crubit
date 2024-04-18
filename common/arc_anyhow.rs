@@ -48,6 +48,16 @@ impl Error {
         std_error.into()
     }
 
+    /// Gets the lowest level cause of this error.
+    ///
+    /// Similar to [`anyhow::Error::root_cause`].
+    pub fn root_cause(&self) -> &(dyn std::error::Error + 'static) {
+        // This crate's `StdError` type is private, so recurse into it to get an
+        // error the caller might expect to find.
+        let e = self.0.root_cause();
+        if let Some(e) = e.downcast_ref::<StdError>() { e.0.root_cause() } else { e }
+    }
+
     pub fn context<C>(self, context: C) -> Self
     where
         C: Display + Send + Sync + 'static,

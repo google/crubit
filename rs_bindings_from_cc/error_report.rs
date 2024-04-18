@@ -148,7 +148,8 @@ impl ErrorReport {
 
 impl ErrorReporting for ErrorReport {
     fn insert(&self, error: &arc_anyhow::Error) {
-        if let Some(error) = error.downcast_ref::<AttributedError>() {
+        let root_cause = error.root_cause();
+        if let Some(error) = root_cause.downcast_ref::<AttributedError>() {
             let sample_message = if error.message != error.fmt { &*error.message } else { "" };
             self.map
                 .borrow_mut()
@@ -188,7 +189,6 @@ impl ErrorReportEntry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::borrow::Cow;
 
     #[test]
     fn anyhow_1arg_static_plain() {
@@ -349,6 +349,29 @@ mod tests {
         report.insert(&anyhow!("no parameters"));
         report.insert(&anyhow!("no parameters"));
         report.insert(&anyhow::Error::msg("not attributed").into());
+        report.insert(&anyhow!("has context from arc_anyhow::context()").context("the context"));
+        report.insert(
+            &arc_anyhow::Context::context(
+                Result::<(), _>::Err(anyhow!("has context from arc_anyhow::Context::context()")),
+                "the context",
+            )
+            .unwrap_err(),
+        );
+        report.insert(
+            &arc_anyhow::Context::with_context(
+                Result::<(), _>::Err(anyhow!(
+                    "has context from arc_anyhow::Context::with_context()"
+                )),
+                || "the context",
+            )
+            .unwrap_err(),
+        );
+        report.insert(
+            &anyhow!("has three layers of context")
+                .context("context 1")
+                .context("context 2")
+                .context("context 3"),
+        );
 
         assert_eq!(
             serde_json::to_string_pretty(&*report.map.borrow()).unwrap(),
@@ -360,6 +383,18 @@ mod tests {
   "error code: {}": {
     "count": 1,
     "sample_message": "error code: 65535"
+  },
+  "has context from arc_anyhow::Context::context()": {
+    "count": 1
+  },
+  "has context from arc_anyhow::Context::with_context()": {
+    "count": 1
+  },
+  "has context from arc_anyhow::context()": {
+    "count": 1
+  },
+  "has three layers of context": {
+    "count": 1
   },
   "no parameters": {
     "count": 3
