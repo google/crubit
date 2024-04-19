@@ -765,15 +765,7 @@ fn liberate_and_deanonymize_late_bound_regions<'tcx>(
         });
         ty::Region::new_late_param(tcx, fn_def_id, *new_kind)
     };
-    // TODO(b/312686032): clean up after this commit reaches stable.
-    #[cfg(not(google3_internal_rustc_contains_commit_40b154e53c0e04ff4cfd40d43d8e2b86b143b763))]
-    {
-        tcx.replace_late_bound_regions_uncached(sig, region_f)
-    }
-    #[cfg(google3_internal_rustc_contains_commit_40b154e53c0e04ff4cfd40d43d8e2b86b143b763)]
-    {
-        tcx.instantiate_bound_regions_uncached(sig, region_f)
-    }
+    tcx.instantiate_bound_regions_uncached(sig, region_f)
 }
 
 fn get_fn_sig(tcx: TyCtxt, fn_def_id: LocalDefId) -> ty::FnSig {
