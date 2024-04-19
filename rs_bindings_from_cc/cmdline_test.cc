@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "gmock/gmock.h"
-#include "testing/base/public/googletest.h"
 #include "gtest/gtest.h"
 #include "absl/flags/flag.h"
 #include "absl/status/status.h"
@@ -422,7 +421,7 @@ TEST(PreprocessTargetArgsTest, TargetToArg) {
 
 std::string Paramfile(absl::string_view contents) {
   std::string path = absl::StrCat(
-      FLAGS_test_tmpdir, "/",
+      testing::TempDir(), "/",
       testing::UnitTest::GetInstance()->current_test_info()->name(), ".param");
   std::ofstream f(path);
   f << contents;
