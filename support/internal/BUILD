@@ -21,7 +21,7 @@ cc_library(
     # Crubit users have a version of Abseil that is relatively recent (although
     # we can't rely on an exact version and/or exact absl/base/options.h).
     deps = [
-        "@absl//absl/base:core_headers",
+        "@abseil-cpp//absl/base:core_headers",
     ],
 )
 
@@ -48,7 +48,7 @@ crubit_cc_test(
     srcs = ["return_value_slot_test.cc"],
     deps = [
         ":bindings_support",
-        "@absl//absl/log:check",
+        "@abseil-cpp//absl/log:check",
         "@com_google_googletest//:gtest_main",
     ],
 )

@@ -59,7 +59,7 @@ cc_binary(
         "//nullability:pointer_nullability_lattice",
         "//nullability:pragma",
         "//nullability:type_nullability",
-        "@absl//absl/log:check",
+        "@abseil-cpp//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
@@ -184,7 +184,7 @@ cc_test(
     srcs = ["function_calls.cc"],
     deps = [
         ":check_diagnostics",
-        "@absl//absl/strings",
+        "@abseil-cpp//absl/strings",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],

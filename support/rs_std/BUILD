@@ -20,7 +20,7 @@ cc_library(
     # exact version and/or exact absl/base/options.h).
     deps = [
         "//support/internal:bindings_support",
-        "@absl//absl/base:core_headers",
+        "@abseil-cpp//absl/base:core_headers",
     ],
 )
 

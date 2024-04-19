@@ -8,7 +8,7 @@ crubit_test_cc_library(
     srcs = ["has_bindings.cc"],
     hdrs = ["has_bindings.h"],
     aspect_hints = ["//features:supported"],
-    deps = ["@absl//absl/base:core_headers"],
+    deps = ["@abseil-cpp//absl/base:core_headers"],
 )
 
 crubit_test_cc_library(

@@ -10,7 +10,7 @@ cc_library(
 
     # Opt into using Crubit.
     aspect_hints = ["//features:supported"],
-    deps = ["@absl//absl/base:core_headers"],
+    deps = ["@abseil-cpp//absl/base:core_headers"],
 )
 
 rust_binary(

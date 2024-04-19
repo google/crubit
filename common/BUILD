@@ -57,9 +57,9 @@ cc_library(
     srcs = ["file_io.cc"],
     hdrs = ["file_io.h"],
     deps = [
-        "@absl//absl/status",
-        "@absl//absl/status:statusor",
-        "@absl//absl/strings",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -71,7 +71,7 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":ffi_types",  # buildcleaner: keep
-        "@absl//absl/strings",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -131,15 +131,15 @@ crubit_rust_test(
 cc_library(
     name = "strong_int",
     hdrs = ["strong_int.h"],
-    deps = ["@absl//absl/hash"],
+    deps = ["@abseil-cpp//absl/hash"],
 )
 
 cc_library(
     name = "string_type",
     hdrs = ["string_type.h"],
     deps = [
-        "@absl//absl/flags:marshalling",
-        "@absl//absl/strings",
+        "@abseil-cpp//absl/flags:marshalling",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -147,9 +147,9 @@ cc_library(
     name = "status_macros",
     hdrs = ["status_macros.h"],
     deps = [
-        "@absl//absl/base:core_headers",
-        "@absl//absl/status",
-        "@absl//absl/status:statusor",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
     ],
 )
 
@@ -207,8 +207,8 @@ cc_library(
     hdrs = ["test_utils.h"],
     deps = [
         ":file_io",
-        "@absl//absl/log:check",
-        "@absl//absl/strings",
+        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/strings",
         "@com_google_googletest//:gtest",
         "@llvm-project//llvm:Support",
     ],
@@ -219,8 +219,8 @@ cc_library(
     testonly = True,
     hdrs = ["status_test_matchers.h"],
     deps = [
-        "@absl//absl/status",
-        "@absl//absl/status:statusor",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@com_google_googletest//:gtest",
     ],
 )

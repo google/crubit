@@ -7,5 +7,5 @@ package(default_applicable_licenses = ["//:license"])
 crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
-    cc_deps = ["@absl//absl/time"],
+    cc_deps = ["@abseil-cpp//absl/time"],
 )

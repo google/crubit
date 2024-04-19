@@ -1,3 +1,6 @@
+# use `MODULE.bazel` and `WORKSPACE.bzlmod`, not `WORKSPACE`.
+common --enable_bzlmod
+
 # generic_clang from @llvm-raw//utils/bazel, but c++17 to match Google
 build:generic_clang --repo_env=CC=clang
 build:generic_clang --cxxopt=-std=c++17 --host_cxxopt=-std=c++17 --repo_env=BAZEL_CXXOPTS=-std=c++17
