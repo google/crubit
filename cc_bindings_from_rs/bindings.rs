@@ -1074,7 +1074,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         names
             .enumerate()
             .zip(sig.inputs().iter())
-            .zip(cc_types.into_iter())
+            .zip(cc_types)
             .map(|(((i, name), &ty), cc_type)| {
                 let cc_name = format_cc_ident(name.as_str())
                     .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{i}")).unwrap());
@@ -1094,7 +1094,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
 
     let method_kind = match tcx.hir_node_by_def_id(local_def_id) {
         Node::Item(_) => FunctionKind::Free,
-        Node::ImplItem(_) => match tcx.fn_arg_names(def_id).get(0) {
+        Node::ImplItem(_) => match tcx.fn_arg_names(def_id).first() {
             Some(arg_name) if arg_name.name == kw::SelfLower => {
                 let self_ty = self_ty.expect("ImplItem => non-None `self_ty`");
                 if params[0].ty == self_ty {
@@ -2449,7 +2449,7 @@ fn format_crate(input: &Input) -> Result<Output> {
 
         let ordered_cc: Vec<(NamespaceQualifier, TokenStream)> = fwd_decls
             .into_iter()
-            .chain(ordered_main_apis.into_iter())
+            .chain(ordered_main_apis)
             .chain(cc_details.into_iter())
             .map(|(local_def_id, tokens)| {
                 let mod_path = FullyQualifiedName::new(tcx, local_def_id.to_def_id()).mod_path;
