@@ -775,6 +775,12 @@ impl GenericItem for TypeAlias {
     }
 }
 
+impl Display for TypeAlias {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} ({}, {})", self.identifier, self.owning_target, self.source_loc)
+    }
+}
+
 /// A wrapper type that does not contribute to equality or hashing. All
 /// instances are equal.
 #[derive(Clone, Copy, Default)]

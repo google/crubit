@@ -331,7 +331,7 @@ fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<Generate
     );
     let underlying_type = db
         .rs_type_kind(type_alias.underlying_type.rs_type.clone())
-        .with_context(|| format!("Failed to format underlying type for {:?}", type_alias))?;
+        .with_context(|| format!("Failed to format underlying type for {}", type_alias))?;
     Ok(quote! {
         #doc_comment
         pub type #ident = #underlying_type;
