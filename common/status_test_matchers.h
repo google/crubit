@@ -187,6 +187,7 @@ testing::PolymorphicMatcher<detail::StatusIsMatcher> StatusIs(
       code, testing::MatcherCast<const std::string&>(message)));
 }
 
+#define EXPECT_OK(expression) EXPECT_THAT(expression, ::crubit::IsOk())
 #define ASSERT_OK(expression) ASSERT_THAT(expression, ::crubit::IsOk())
 
 #define PASTE_INNER(X, Y) X##Y
