@@ -123,5 +123,17 @@ TEST(UnsafeFnTest, UnsafeFunction) {
   EXPECT_EQ(12 + 34, tests::unsafe_add(12, 34));
 }
 
+// Right now, these tests really just verify existence.
+// TODO(b/335837488): Verify compilation failure when you discard
+TEST(NoDiscardTest, WithoutMessageWorks) {
+  namespace tests = functions::fn_must_use_tests;
+  EXPECT_EQ(5, tests::no_msg_add(2, 3));
+}
+
+TEST(NoDiscardTest, WithMessageWorks) {
+  namespace tests = functions::fn_must_use_tests;
+  EXPECT_EQ(5, tests::msg_add(2, 3));
+}
+
 }  // namespace
 }  // namespace crubit

@@ -128,3 +128,16 @@ pub mod unsafe_fn_tests {
         x + y
     }
 }
+
+// Tests the use of the #[must_use] attribute
+pub mod fn_must_use_tests {
+    #[must_use]
+    pub fn no_msg_add(x: i32, y: i32) -> i32 {
+        x + y
+    }
+
+    #[must_use = "woohoo"]
+    pub fn msg_add(x: i32, y: i32) -> i32 {
+        x + y
+    }
+}
