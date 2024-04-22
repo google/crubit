@@ -65,8 +65,8 @@ void RecordingDiagnosticConsumer::HandleDiagnostic(
   info.FormatDiagnostic(diagnostic);
   auto source_loc = info.getLocation();
   auto presumed_source_loc = info.getSourceManager().getPresumedLoc(source_loc);
-  diagnostics_.emplace_back(info.getID(), diagnostic_level, presumed_source_loc,
-                            std::move(diagnostic));
+  diagnostics_.push_back({info.getID(), diagnostic_level, presumed_source_loc,
+                          std::move(diagnostic)});
 }
 
 void RecordingDiagnosticConsumer::clear() {
