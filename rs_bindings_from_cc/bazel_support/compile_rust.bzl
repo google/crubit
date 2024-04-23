@@ -14,6 +14,7 @@ load(
     "ExtraRustcFlagsInfo",
     "rustc_compile_action",
 )
+load("@bazel_skylib//lib:structs.bzl", "structs")
 
 def _get_crate_info(providers):
     for provider in providers:
@@ -69,9 +70,13 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage)
     lib = ctx.actions.declare_file(lib_name)
     rmeta = ctx.actions.declare_file(rmeta_name)
 
+    # TODO(b/336367148): We should inherit almost nothing from `attr`, but for now, at least, we
+    # should omit the rustc_flags.
+    attr_args = structs.to_dict(attr)
+    attr_args["rustc_flags"] = []
     providers = rustc_compile_action(
         ctx = ctx,
-        attr = attr,
+        attr = struct(**attr_args),
         toolchain = toolchain,
         crate_info_dict = dict(
             name = crate_name,
