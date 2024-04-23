@@ -215,6 +215,11 @@ cc_test(
     ],
 )
 
+nullability_test(
+    name = "join",
+    srcs = ["join.cc"],
+)
+
 cc_test(
     name = "join_diagnosis",
     srcs = ["join_diagnosis.cc"],
