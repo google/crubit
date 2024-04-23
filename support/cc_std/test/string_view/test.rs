@@ -14,9 +14,14 @@ unsafe fn to_str(sv: std::string_view) -> &'static str {
     core::str::from_utf8(bytes).unwrap()
 }
 
+/// An empty slice round trips, but the pointer value may change.
 #[test]
 fn test_round_trip_empty_slice() {
-    let original: &'static [u8] = &[];
+    // we need to create an empty slice somewhere specific in memory in order to
+    // test the pointer-value-discarding behavior, so let's create an array on
+    // the stack.
+    let stack_array: [u8; 1] = [42];
+    let original = &stack_array[0..0];
     let sv: std::string_view = original.into();
     let raw_round_tripped = <*const [u8]>::from(sv);
     assert_ne!(raw_round_tripped, original as *const _); // dangling -> null -> new dangling
