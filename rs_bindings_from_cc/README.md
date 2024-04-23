@@ -8,7 +8,7 @@
 ## Architecture
 
 At a high level, Crubit parses C++ headers using Clang (with the
-[same configuration](../docs/bindings/overview/reproducible_builds.md) as when
+[same configuration](../docs/overview/reproducible_builds.md) as when
 used to compile C++). A distilled intermediate representation is passed to Rust,
 which generates actual Rust and C++ source code for the bindings.
 
