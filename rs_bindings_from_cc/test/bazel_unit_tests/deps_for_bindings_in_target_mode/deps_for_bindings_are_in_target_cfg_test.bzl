@@ -22,14 +22,14 @@ def _deps_for_bindings_in_target_cfg_impl(ctx):
     env = analysistest.begin(ctx)
     tut = analysistest.target_under_test(env)
 
-    # The compiled binding implicitly depends on a version of the memoffset crate.
+    # The compiled binding implicitly depends on a version of the static_assertions crate.
     # Here we check that the -Ldependency and -Lextern arguments for this crate point to a
     # non exec path, aka target configuration.
 
     action = [a for a in tut[ActionsInfo].actions if a.mnemonic == "Rustc"][0]
-    memoffset_args = _filter_by_substring(action.argv, "third_party/rust/memoffset")
-    exec_cfg_args = _filter_by_substring(memoffset_args, "-exec-")
-    target_cfg_args = _negative_filter_by_substring(memoffset_args, "-exec-")
+    implicit_dep_args = _filter_by_substring(action.argv, "third_party/rust/static_assertions")
+    exec_cfg_args = _filter_by_substring(implicit_dep_args, "-exec-")
+    target_cfg_args = _negative_filter_by_substring(implicit_dep_args, "-exec-")
 
     asserts.equals(env, 0, len(exec_cfg_args))
     asserts.true(env, len(target_cfg_args) > 0)

@@ -23,7 +23,6 @@ def _fission_test_impl(ctx):
         "rust_library_1_cc_api_impl_fission",  # the generated bindings for C++
         "rust_library_2_fission",
         "rust_library_2_cc_api_impl_fission",  # the generated bindings for C++
-        "memoffset_fission",  # a library implicitly depended on by all dependencies.
     ])
     actual = sorted([
         f.basename

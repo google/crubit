@@ -51,9 +51,6 @@ deps_for_bindings(
         "//support/internal:bindings_support",
     ],
     deps_for_generated_rs_file = [
-        # Required for struct layout assertions added to the generated
-        # Rust code.
-        "@crate_index//:memoffset",
         "//support:ctor",
         "//support:forward_declare",
         "//support:oops",
