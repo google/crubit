@@ -119,6 +119,13 @@ pub mod other_fn_param_tests {
     }
 }
 
+pub mod fn_attribute_tests {
+    #[deprecated(since = "1.2.3", note = "★ Deprecated note for add_i32 ★")]
+    pub fn add_i32(x: i32, y: i32) -> i32 {
+        x + y
+    }
+}
+
 pub mod unsafe_fn_tests {
     /// # Safety
     ///

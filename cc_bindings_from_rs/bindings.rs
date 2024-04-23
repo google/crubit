@@ -21,6 +21,7 @@ use code_gen_utils::{
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
+use rustc_attr::find_deprecation;
 use rustc_hir::{AssocItemKind, Item, ItemKind, Node, Unsafety};
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::dep_graph::DepContext;
@@ -36,6 +37,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::ops::AddAssign;
 use std::rc::Rc;
+use std::slice;
 
 pub struct Input<'tcx> {
     /// Compilation context for the crate that the bindings should be generated
@@ -1155,7 +1157,9 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         } else {
             quote! {}
         };
+
         let mut attributes = vec![];
+        // Attribute: must_use
         if let Some(must_use_attr) = tcx.get_attr(def_id, rustc_span::symbol::sym::must_use) {
             match must_use_attr.value_str() {
                 None => attributes.push(quote! {[[nodiscard]]}),
@@ -1165,6 +1169,22 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
                 }
             };
         }
+        // Attribute: deprecated
+        if let Some(deprecated_attr) = tcx.get_attr(def_id, rustc_span::symbol::sym::deprecated) {
+            if let Some((deprecation, _span)) =
+                find_deprecation(tcx.sess(), tcx.features(), slice::from_ref(deprecated_attr))
+            {
+                let cpp_deprecation_tag = match deprecation.note {
+                    None => quote! {[[deprecated]]},
+                    Some(note_symbol) => {
+                        let note = note_symbol.as_str();
+                        quote! {[[deprecated(#note)]]}
+                    }
+                };
+                attributes.push(cpp_deprecation_tag);
+            }
+        }
+
         CcSnippet {
             prereqs,
             tokens: quote! {
@@ -7117,6 +7137,69 @@ pub mod tests {
                     union ... [[nodiscard("foo")]] ... SomeUnion final {
                         ...
                     };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_fn_no_args() {
+        let test_src = r#"
+        #[deprecated]
+        pub fn add(x: i32, y: i32) -> i32 {
+            x + y
+        }"#;
+
+        test_format_item(test_src, "add", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    [[deprecated]] std::int32_t add(std::int32_t x, std::int32_t y);
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_fn_with_message() {
+        let test_src = r#"
+        #[deprecated = "Use add_i32 instead"]
+        pub fn add(x: i32, y: i32) -> i32 {
+            x + y
+        }"#;
+
+        test_format_item(test_src, "add", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    [[deprecated("Use add_i32 instead")]] std::int32_t add(std::int32_t x, std::int32_t y);
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_fn_with_all_args() {
+        let test_src = r#"
+        #[deprecated(since = "3.14", note = "Use add_i32 instead")]
+        pub fn add(x: i32, y: i32) -> i32 {
+            x + y
+        }"#;
+
+        test_format_item(test_src, "add", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    [[deprecated("Use add_i32 instead")]] std::int32_t add(std::int32_t x, std::int32_t y);
                 }
             )
         })

@@ -118,6 +118,13 @@ TEST(OtherFnTest, DuplicatedParamNames) {
                          12, 34, 56, 78));
 }
 
+// TODO(jeanpierreda): Investigate if there is a way to test that the generated
+// function is actually deprecated.
+TEST(FnAttributeTest, DeprecatedAttribute) {
+  namespace tests = functions::fn_attribute_tests;
+  EXPECT_EQ(12 + 34, tests::add_i32(12, 34));
+}
+
 TEST(UnsafeFnTest, UnsafeFunction) {
   namespace tests = functions::unsafe_fn_tests;
   EXPECT_EQ(12 + 34, tests::unsafe_add(12, 34));
