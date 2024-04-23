@@ -86,11 +86,19 @@ LIBC_HEADERS = []
 _CPU = {
     "arm": "//third_party/bazel_platforms/cpu:aarch64",
     "x86": "//third_party/bazel_platforms/cpu:x86_64",
+    "diorite_acc": "//buildenv/platforms/settings:diorite_acc",
+    "diorite_imc": "//buildenv/platforms/settings:diorite_imc",
 }
 
 _GRTE = {
     "v4": "//third_party/grte:grte_v4",
     "v5": "//third_party/grte:grte_v5",
+}
+
+_CPU_GRTE_VERSIONS = {
+    # diorite is v5-only.
+    "diorite_acc": ["v5"],
+    "diorite_imc": ["v5"],
 }
 
 [
@@ -106,6 +114,10 @@ _GRTE = {
     )
     for (cpu_name, cpu_config_setting) in _CPU.items()
     for (grte_name, grte_config_setting) in _GRTE.items()
+    if grte_name in _CPU_GRTE_VERSIONS.get(
+        cpu_name,
+        [grte_name],
+    )
 ]
 
 alias(
@@ -120,6 +132,10 @@ alias(
         )
         for cpu in _CPU.keys()
         for grte in _GRTE.keys()
+        if grte in _CPU_GRTE_VERSIONS.get(
+            cpu,
+            [grte],
+        )
     }),
 )
 
