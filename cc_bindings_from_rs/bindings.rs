@@ -1034,7 +1034,10 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
 
     let sig = get_fn_sig(tcx, local_def_id);
     check_fn_sig(&sig)?;
-    let needs_thunk = is_thunk_required(&sig).is_err();
+    // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.
+    let needs_thunk = is_thunk_required(&sig).is_err()
+        || (tcx.get_attr(def_id, rustc_span::symbol::sym::no_mangle).is_none()
+            && tcx.get_attr(def_id, rustc_span::symbol::sym::export_name).is_none());
     let thunk_name = {
         let symbol_name = {
             // Call to `mono` is ok - `generics_of` have been checked above.
@@ -3284,7 +3287,8 @@ pub mod tests {
                     double public_function(double x, double y);
                 }
             );
-            assert!(result.rs_details.is_empty());
+            // TODO(b/262904507): omit the thunk and uncomment the next line.
+            // assert!(result.rs_details.is_empty());
             assert!(result.cc_details.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc_details.tokens,
