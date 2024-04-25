@@ -27,4 +27,6 @@ fn main() {
     )
     .unwrap();
     println!("cargo:rerun-if-changed=build.rs");
+
+    println!("cargo:rustc-cfg=feature=\"cfg_set_by_build_rs\"");
 }

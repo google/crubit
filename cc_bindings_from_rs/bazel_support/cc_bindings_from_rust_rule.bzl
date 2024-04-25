@@ -71,14 +71,14 @@ def _get_dep_bindings_infos(ctx):
         if CcBindingsFromRustInfo in dep
     ]
 
-def _generate_bindings(ctx, basename, inputs, rustc_args, rustc_env):
+def _generate_bindings(ctx, basename, inputs, args, rustc_env):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
     Args:
       ctx: The rule context.
       basename: The basename for the generated files
       inputs: `cc_bindings_from_rs` inputs specific to the target `crate`
-      rustc_args: `rustc` flags to pass to `cc_bindings_from_rs`
+      args: `rustc` and `process_wrapper` arguments from construct_arguments.
       rustc_env: `rustc` environment to use when running `cc_bindings_from_rs`
 
     Returns:
@@ -111,11 +111,22 @@ def _generate_bindings(ctx, basename, inputs, rustc_args, rustc_env):
             transitive = [inputs],
         ),
         env = rustc_env,
-        executable = ctx.executable._cc_bindings_from_rs_tool,
+        tools = [ctx.executable._cc_bindings_from_rs_tool],
+        executable = ctx.executable._process_wrapper,
         mnemonic = "CcBindingsFromRust",
         progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
+        # We don't use `args.all` here, because we want to do a couple of things:
+        #
+        # 1. specifically separate the crubit_args from the rustc_args, via `--`, putting crubit
+        #    args first.
+        # 2. change the rustc path to instead point to crubit.
+        #
+        # That said, if we passed arguments to crubit via environment variables or via flags that
+        # can be interleaved with rustc flags in any order, and if we used _cc_bindings_from_rs_tool
+        # as the tool_path for construct_arguments, then this could be `args.all` instead.
+
         # TODO(b/254049425): We shouldn't override the panic arg, and instead work fine in any case.
-        arguments = [crubit_args, "--", rustc_args, "-Cpanic=abort"],
+        arguments = [args.process_wrapper_flags, "--", ctx.executable._cc_bindings_from_rs_tool.path, crubit_args, "--", args.rustc_flags, "-Cpanic=abort"],
     )
 
     return (h_out_file, rs_out_file)
@@ -272,7 +283,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         ctx,
         basename,
         compile_inputs,
-        args.rustc_flags,
+        args,
         env,
     )
 

@@ -9,3 +9,15 @@
 //! motivation of the test.
 
 include!(concat!(env!("OUT_DIR"), "/include_me.rs"));
+
+/// This function should always exist, because the
+/// cfg(feature="cfg_set_by_build_rs") is set unconditionally in build.rs. If it
+/// seems not to be defined, it's because something isn't correctly ingesting
+/// the build script.
+#[cfg(feature = "cfg_set_by_build_rs")]
+fn function_guarded_by_cfg() {}
+
+pub fn cfg_set_by_build_rs() -> bool {
+    function_guarded_by_cfg();
+    cfg!(feature = "cfg_set_by_build_rs")
+}
