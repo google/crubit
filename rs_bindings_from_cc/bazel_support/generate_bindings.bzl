@@ -102,6 +102,13 @@ def generate_bindings(
             "--error_report_out",
             error_report_output.path,
         ]
+
+    # TODO(b/324159705): Remove this workaround and fix
+    # built_in_include_directories logic once we switch to libc++ runtimes on
+    # demand by default.
+    libcxx_include_path = ("include/c++/v1" in cc_toolchain.built_in_include_directories[0]) or \
+                          ("fake_path" in cc_toolchain.built_in_include_directories[0])
+
     variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
