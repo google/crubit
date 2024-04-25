@@ -781,6 +781,7 @@ class ImplementationEvidenceCollector {
       if (!isSupportedRawPointerType(RHSType)) {
         llvm::errs() << "Unsupported RHS type in assignment to pointer decl: "
                      << RHSType << "\n";
+        return;
       }
 
       auto *PV = getRawPointerValue(RHS, Env);
