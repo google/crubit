@@ -628,6 +628,22 @@ TEST void constructorTakingUnrelatedPointer(Allocator *A) {
   *Ptr = S();
 }
 
+template <typename T>
+struct PrivatelyDerivedPtr : private std::unique_ptr<T> {
+  PrivatelyDerivedPtr();
+
+  using std::unique_ptr<T>::operator=;
+};
+
+// This is a crash repro. Make sure we can handle classes that are privately
+// derived from smart pointers. We don't consider such a class itself to be a
+// supported smart pointer type, but we need to model the pointer field because
+// copy and assignment operations may copy to it.
+TEST void privatelyDerivedFromUniquePtr(Nonnull<std::unique_ptr<int>> Ptr) {
+  PrivatelyDerivedPtr<int> Dest;
+  Dest = std::move(Ptr);
+}
+
 }  // namespace derived_from_unique_ptr
 
 namespace underlying_type_is_not_raw_pointer {

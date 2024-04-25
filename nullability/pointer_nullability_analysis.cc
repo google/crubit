@@ -1628,7 +1628,7 @@ PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext &Context,
       ValueTransferer(buildValueTransferer()) {
   Env.getDataflowAnalysisContext().setSyntheticFieldCallback(
       [](QualType Ty) -> llvm::StringMap<QualType> {
-        QualType RawPointerTy = underlyingRawPointerType(Ty);
+        QualType RawPointerTy = underlyingRawPointerType(Ty, AS_private);
         if (RawPointerTy.isNull()) return {};
         return {{PtrField, RawPointerTy}};
       });

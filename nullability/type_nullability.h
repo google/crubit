@@ -91,7 +91,16 @@ bool isSupportedSmartPointerType(QualType);
 /// If the smart pointer type is not instantiated, falls back to determining
 /// the raw pointer type from the first template argument, rather than from the
 /// `pointer` or `element_type` type aliases.
-QualType underlyingRawPointerType(QualType);
+/// `BaseAccess` is the most restrictive base class access specifier to accept
+/// when checking whether the type is derived from a smart pointer type. We
+/// need to make a distinction here as follows:
+/// - A type derived from a smart pointer type is only itself considerd to be a
+///   supported smart pointer type if the inheritance is public.
+/// - However, if the inheritance is protected or private, we still need to
+///   model the underlying pointer field because the implementation may perform
+///   a copy or move from a supported smart pointer type.
+QualType underlyingRawPointerType(QualType,
+                                  AccessSpecifier BaseAccess = AS_public);
 
 /// Describes the nullability contract of a pointer "slot" within a type.
 ///

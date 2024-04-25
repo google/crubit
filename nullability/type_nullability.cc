@@ -84,7 +84,8 @@ static bool hasAbslNullabilityCompatibleTag(const CXXRecordDecl *RD) {
 
 static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
     absl::Nullable<const CXXRecordDecl *> RD,
-    llvm::SmallPtrSet<const CXXRecordDecl *, 2> &Seen) {
+    llvm::SmallPtrSet<const CXXRecordDecl *, 2> &Seen,
+    AccessSpecifier BaseAccess) {
   if (RD == nullptr) return nullptr;
 
   if (isStandardSmartPointerDecl(RD) || hasAbslNullabilityCompatibleTag(RD))
@@ -92,7 +93,7 @@ static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
 
   if (RD->hasDefinition())
     for (const CXXBaseSpecifier &Base : RD->bases())
-      if (Base.getAccessSpecifier() == AS_public) {
+      if (Base.getAccessSpecifier() <= BaseAccess) {
         const CXXRecordDecl *BaseClass = Base.getType()->getAsCXXRecordDecl();
 
         // If we didn't get a `CXXRecordDecl` above, this could be something
@@ -120,22 +121,23 @@ static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
         }
 
         if (const CXXRecordDecl *Result =
-                getSmartPointerBaseClass(BaseClass, Seen))
+                getSmartPointerBaseClass(BaseClass, Seen, BaseAccess))
           return Result;
       }
 
   return nullptr;
 }
 
-/// If `RD` or one of its public bases is a smart pointer class, returns that
-/// smart pointer class; otherwise, returns null.
+/// If `RD` or one of its bases (with access at most as restrictive as
+/// `BaseAccess`) is a smart pointer class, returns that smart
+/// pointer class; otherwise, returns null.
 static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
-    absl::Nullable<const CXXRecordDecl *> RD) {
+    absl::Nullable<const CXXRecordDecl *> RD, AccessSpecifier BaseAccess) {
   llvm::SmallPtrSet<const CXXRecordDecl *, 2> Seen;
-  return getSmartPointerBaseClass(RD, Seen);
+  return getSmartPointerBaseClass(RD, Seen, BaseAccess);
 }
 
-QualType underlyingRawPointerType(QualType T) {
+QualType underlyingRawPointerType(QualType T, AccessSpecifier BaseAccess) {
   if (!SmartPointersEnabled) return QualType();
 
   const CXXRecordDecl *RD = T.getCanonicalType()->getAsCXXRecordDecl();
@@ -156,7 +158,8 @@ QualType underlyingRawPointerType(QualType T) {
   if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD);
       CTSD && !CTSD->hasDefinition()) {
     if (getSmartPointerBaseClass(
-            CTSD->getSpecializedTemplate()->getTemplatedDecl()) == nullptr)
+            CTSD->getSpecializedTemplate()->getTemplatedDecl(), BaseAccess) ==
+        nullptr)
       return QualType();
 
     if (CTSD->getTemplateArgs().size() == 0) return QualType();
@@ -167,7 +170,7 @@ QualType underlyingRawPointerType(QualType T) {
     return ASTCtx.getPointerType(ASTCtx.getBaseElementType(TemplateArg));
   }
 
-  const CXXRecordDecl *SmartPtrDecl = getSmartPointerBaseClass(RD);
+  const CXXRecordDecl *SmartPtrDecl = getSmartPointerBaseClass(RD, BaseAccess);
   if (SmartPtrDecl == nullptr) return QualType();
 
   const auto &Idents = ASTCtx.Idents;

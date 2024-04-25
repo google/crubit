@@ -167,6 +167,8 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
 
     template <typename T>
     struct PublicDerived : public std::unique_ptr<T> {};
+    template <typename T>
+    struct PrivateDerived : private std::unique_ptr<T> {};
 
     template <typename T>
     struct UserDefinedSmartPointer {
@@ -191,6 +193,7 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     using UniquePointer = std::unique_ptr<int>;
     using SharedPointer = std::shared_ptr<int>;
     using PublicDerivedPointer = PublicDerived<int>;
+    using PrivateDerivedPointer = PrivateDerived<int>;
     using UserDefined = UserDefinedSmartPointer<int>;
     using Recursive2 = Recursive<2>;
     using IndirectRecursive2 = IndirectRecursive<2>;
@@ -201,6 +204,7 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     template class std::unique_ptr<int>;
     template class std::shared_ptr<int>;
     template class PublicDerived<int>;
+    template class PrivateDerived<int>;
     template class UserDefinedSmartPointer<int>;
     template class Recursive<2>;
     template class IndirectRecursive<2>;
@@ -212,6 +216,11 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
   EXPECT_EQ(underlyingRawPointerType(underlying("SharedPointer", AST)),
             PointerToCharTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("PublicDerivedPointer", AST)),
+            PointerToCharTy);
+  EXPECT_TRUE(underlyingRawPointerType(underlying("PrivateDerivedPointer", AST))
+                  .isNull());
+  EXPECT_EQ(underlyingRawPointerType(underlying("PrivateDerivedPointer", AST),
+                                     AS_private),
             PointerToCharTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("UserDefined", AST)),
             PointerToCharTy);
@@ -240,6 +249,10 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
     template <typename T>
     struct PublicDerived : public std::unique_ptr<T> {};
     using PublicDerivedPointer = PublicDerived<int>;
+
+    template <typename T>
+    struct PrivateDerived : private std::unique_ptr<T> {};
+    using PrivateDerivedPointer = PrivateDerived<int>;
 
     template <typename T>
     using Nullable [[clang::annotate("Nullable")]] = T;
@@ -273,6 +286,12 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
             PointerToIntTy);
 
   EXPECT_EQ(underlyingRawPointerType(underlying("PublicDerivedPointer", AST)),
+            PointerToIntTy);
+
+  EXPECT_TRUE(underlyingRawPointerType(underlying("PrivateDerivedPointer", AST))
+                  .isNull());
+  EXPECT_EQ(underlyingRawPointerType(underlying("PrivateDerivedPointer", AST),
+                                     AS_private),
             PointerToIntTy);
 
   EXPECT_EQ(underlyingRawPointerType(underlying("NullableUniquePointer", AST)),
