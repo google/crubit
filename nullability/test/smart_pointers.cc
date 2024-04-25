@@ -629,3 +629,26 @@ TEST void constructorTakingUnrelatedPointer(Allocator *A) {
 }
 
 }  // namespace derived_from_unique_ptr
+
+namespace underlying_type_is_not_raw_pointer {
+
+struct Deleter {
+  // Use a `shared_ptr` as the underlying pointer type. This wouldn't make a lot
+  // of sense in production code, but we use it in the test because we already
+  // have it available.
+  using pointer = std::shared_ptr<int>;
+  void operator()(pointer);
+};
+
+// This is a crash repro. Make sure we don't crash on a `unique_ptr` whose
+// underlying `pointer` type is not a raw pointer.
+// For the time being, we don't check these but silently ignore them; this seems
+// acceptable, as this case is rare.
+TEST Deleter::pointer underlyingTypeIsNotRawPointer() {
+  std::unique_ptr<int, Deleter> Ptr;
+  // TODO: Should be nullable, but we don't model this case.
+  unknown(Ptr.get());
+  return Ptr.get();
+}
+
+}  // namespace underlying_type_is_not_raw_pointer

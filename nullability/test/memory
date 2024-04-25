@@ -26,10 +26,26 @@ struct remove_extent<T[N]> { using type = T; };
 template <class T> struct default_delete{};
 template <class T> struct allocator{};
 
+template< class... >
+using void_t = void;
+
+template <class T, class Deleter, class = void>
+struct __underlying_ptr_type {
+  using type = T *;
+};
+
+template <class T, class Deleter>
+// The standard says we should apply `std::remove_reference` to `Deleter`,
+// but we don't need this for our tests, so we omit it for simplicity.
+struct __underlying_ptr_type<T, Deleter,
+                             std::void_t<typename Deleter::pointer>> {
+  using type = typename Deleter::pointer;
+};
+
 template <class T, class Deleter = default_delete<T>>
 class unique_ptr {
 public:
-  using pointer = T*;
+  using pointer = __underlying_ptr_type<T, Deleter>::type;
 
   unique_ptr();
   unique_ptr(nullptr_t);

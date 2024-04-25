@@ -173,8 +173,16 @@ QualType underlyingRawPointerType(QualType T) {
   const auto &Idents = ASTCtx.Idents;
   if (auto PointerIt = Idents.find("pointer"); PointerIt != Idents.end()) {
     if (auto *TND = SmartPtrDecl->lookup(PointerIt->getValue())
-                        .find_first<TypedefNameDecl>())
-      return TND->getUnderlyingType();
+                        .find_first<TypedefNameDecl>()) {
+      // It's possible for a `unique_ptr` to have an underlying `pointer` type
+      // that is not a raw pointer if there is a custom deleter that specifies
+      // such a type. (The only requirement is the the underlying pointer type
+      // is a NullablePointer.) This case is rare, so we simply ignore such
+      // pointers.
+      if (isSupportedRawPointerType(TND->getUnderlyingType()))
+        return TND->getUnderlyingType();
+      return QualType();
+    }
   }
   if (auto PointerIt = Idents.find("element_type"); PointerIt != Idents.end()) {
     if (auto *TND = SmartPtrDecl->lookup(PointerIt->getValue())

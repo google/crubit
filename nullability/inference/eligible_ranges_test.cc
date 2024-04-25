@@ -322,7 +322,7 @@ TEST(GenEditsTest, UserDefinedSmartPointer) {
   auto Input = Annotations(R"(
   struct MySmartIntPtr {
     using absl_nullability_compatible = void;
-    using pointer = int;
+    using pointer = int *;
   };
 
   void foo($one[[MySmartIntPtr]] user_defined_smart,
