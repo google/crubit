@@ -33,8 +33,6 @@
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
-#include "clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/ASTOps.h"
 #include "clang/Analysis/FlowSensitive/AdornedCFG.h"
@@ -58,12 +56,6 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
-using ::clang::ast_matchers::callee;
-using ::clang::ast_matchers::callExpr;
-using ::clang::ast_matchers::forEachDescendant;
-using ::clang::ast_matchers::functionDecl;
-using ::clang::ast_matchers::qualType;
-using ::clang::ast_matchers::returns;
 using ::clang::dataflow::DataflowAnalysisContext;
 using ::clang::dataflow::Environment;
 using ::clang::dataflow::Formula;
@@ -920,37 +912,6 @@ static auto getConcreteNullabilityOverrideFromPreviousInferences(
   };
 }
 
-// Adds InferableSlots for the return types of functions called by
-// `CurrentFunction`. If a called function's return value is dereferenced,
-// this enables us to collect evidence that the return type should be Nonnull.
-static void addInferableSlotsForCalledFunctions(
-    const FunctionDecl &CurrentFunction,
-    std::vector<InferableSlot> &InferableSlots,
-    PointerNullabilityAnalysis &Analysis, dataflow::Arena &Arena) {
-  static constexpr std::string_view ReturnTypeNodeId = "ReturnType";
-  static constexpr std::string_view FunctionDeclNodeId = "FunctionDecl";
-
-  llvm::DenseSet<const FunctionDecl *> Functions;
-  for (const auto &Match : clang::ast_matchers::match(
-           functionDecl(forEachDescendant(callExpr(
-               callee(functionDecl(returns(qualType().bind(ReturnTypeNodeId)))
-                          .bind(FunctionDeclNodeId))))),
-           CurrentFunction, CurrentFunction.getASTContext())) {
-    auto *ReturnType = Match.getNodeAs<QualType>(ReturnTypeNodeId);
-    if (!ReturnType || !hasInferable(*ReturnType) ||
-        evidenceKindFromDeclaredType(*ReturnType))
-      continue;
-    auto *CalledFunction = Match.getNodeAs<FunctionDecl>(FunctionDeclNodeId);
-    if (!CalledFunction || !isInferenceTarget(*CalledFunction)) continue;
-    auto [it, inserted] = Functions.insert(CalledFunction);
-    if (inserted) {
-      InferableSlots.emplace_back(
-          Analysis.assignNullabilityVariable(CalledFunction, Arena),
-          SLOT_RETURN_TYPE, *CalledFunction);
-    }
-  }
-}
-
 llvm::Error collectEvidenceFromImplementation(
     const Decl &ImplementationDecl, llvm::function_ref<EvidenceEmitter> Emit,
     USRCache &USRCache, const PreviousInferences PreviousInferences,
@@ -984,11 +945,7 @@ llvm::Error collectEvidenceFromImplementation(
       }
     }
   }
-  addInferableSlotsForCalledFunctions(*Func, InferableSlots, Analysis,
-                                      AnalysisContext.arena());
 
-  // TODO(b/323509665) consider replacing addInferableSlotsForCalledFunctions
-  // with ReferencedDecls.Functions.
   dataflow::ReferencedDecls Decls = dataflow::getReferencedDecls(*Func);
   for (const FieldDecl *Field : Decls.Fields) {
     if (isInferenceTarget(*Field) &&
@@ -1003,6 +960,15 @@ llvm::Error collectEvidenceFromImplementation(
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Global, AnalysisContext.arena()),
           Slot(0), *Global);
+    }
+  }
+  for (const FunctionDecl *Function : Decls.Functions) {
+    if (isInferenceTarget(*Function) &&
+        hasInferable(Function->getReturnType()) &&
+        !evidenceKindFromDeclaredType(Function->getReturnType())) {
+      InferableSlots.emplace_back(
+          Analysis.assignNullabilityVariable(Function, AnalysisContext.arena()),
+          SLOT_RETURN_TYPE, *Function);
     }
   }
 
