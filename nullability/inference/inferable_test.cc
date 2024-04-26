@@ -9,6 +9,8 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
+#include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/StringRef.h"
@@ -16,14 +18,34 @@
 
 namespace clang::tidy::nullability {
 namespace {
+using ::clang::ast_matchers::anything;
+using ::clang::ast_matchers::equalsNode;
+using ::clang::ast_matchers::hasDeclContext;
+using ::clang::ast_matchers::hasName;
+using ::clang::ast_matchers::isImplicit;
+using ::clang::ast_matchers::match;
+using ::clang::ast_matchers::namedDecl;
+using ::clang::ast_matchers::unless;
 
 template <class T = NamedDecl>
-const T &lookup(llvm::StringRef Name, const DeclContext &DC) {
-  auto L = DC.lookup(&DC.getParentASTContext().Idents.get(Name));
-  EXPECT_TRUE(L.isSingleResult()) << Name;
-  auto *Result = L.find_first<T>();
-  EXPECT_NE(Result, nullptr) << Name;
-  return *Result;
+const T &lookup(llvm::StringRef Name, ASTContext &Ctx,
+                const Decl *DeclContext = nullptr) {
+  const auto &ContextMatcher =
+      DeclContext ? hasDeclContext(equalsNode(DeclContext)) : anything();
+  const auto &BoundNodes =
+      match(namedDecl(hasName(Name), ContextMatcher, unless(isImplicit()))
+                .bind("decl"),
+            Ctx);
+  const T *Match = nullptr;
+  for (const auto &N : BoundNodes) {
+    if (const auto *NAsT = N.getNodeAs<T>("decl")) {
+      if (Match)
+        ADD_FAILURE() << "Found more than one matching node for " << Name;
+      Match = NAsT;
+    }
+  }
+  EXPECT_NE(Match, nullptr) << Name;
+  return *Match;
 }
 
 TEST(IsInferenceTargetTest, GlobalVariables) {
@@ -32,9 +54,9 @@ TEST(IsInferenceTargetTest, GlobalVariables) {
     int NotPointer;
   )cc");
 
-  auto &TU = *AST.context().getTranslationUnitDecl();
-  EXPECT_TRUE(isInferenceTarget(lookup("Pointer", TU)));
-  EXPECT_FALSE(isInferenceTarget(lookup("NotPointer", TU)));
+  auto &Ctx = AST.context();
+  EXPECT_TRUE(isInferenceTarget(lookup("Pointer", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("NotPointer", Ctx)));
 }
 
 TEST(IsInferenceTargetTest, Functions) {
@@ -43,9 +65,9 @@ TEST(IsInferenceTargetTest, Functions) {
     void empty() {}
   )cc");
 
-  auto &TU = *AST.context().getTranslationUnitDecl();
-  EXPECT_TRUE(isInferenceTarget(lookup("func", TU)));
-  EXPECT_TRUE(isInferenceTarget(lookup("empty", TU)));
+  auto &Ctx = AST.context();
+  EXPECT_TRUE(isInferenceTarget(lookup("func", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("empty", Ctx)));
 }
 
 TEST(IsInferenceTargetTest, ClassAndMembers) {
@@ -57,12 +79,11 @@ TEST(IsInferenceTargetTest, ClassAndMembers) {
     };
   )cc");
 
-  auto &TU = *AST.context().getTranslationUnitDecl();
-  auto &Class = lookup<CXXRecordDecl>("C", TU);
-  EXPECT_FALSE(isInferenceTarget(Class));
-  EXPECT_TRUE(isInferenceTarget(lookup("method", Class)));
-  EXPECT_TRUE(isInferenceTarget(lookup("PtrField", Class)));
-  EXPECT_FALSE(isInferenceTarget(lookup("NonPtrField", Class)));
+  auto &Ctx = AST.context();
+  EXPECT_FALSE(isInferenceTarget(lookup<CXXRecordDecl>("C", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("method", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("PtrField", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("NonPtrField", Ctx)));
 }
 
 TEST(IsInferenceTargetTest, FunctionTemplate) {
@@ -73,14 +94,14 @@ TEST(IsInferenceTargetTest, FunctionTemplate) {
     auto& FuncTmplSpec = funcTmpl<2>;
   )cc");
 
-  auto &TU = *AST.context().getTranslationUnitDecl();
+  auto &Ctx = AST.context();
   // A function template is not an inference target.
   const FunctionTemplateDecl &FuncTmpl =
-      lookup<FunctionTemplateDecl>("funcTmpl", TU);
+      lookup<FunctionTemplateDecl>("funcTmpl", Ctx);
   EXPECT_FALSE(isInferenceTarget(FuncTmpl));
   EXPECT_FALSE(isInferenceTarget(*FuncTmpl.getTemplatedDecl()));
-  // The template specialization is *also* not an inference target.
-  const VarDecl &FuncTmplSpec = lookup<VarDecl>("FuncTmplSpec", TU);
+  // The function template specialization is *also* not an inference target.
+  const VarDecl &FuncTmplSpec = lookup<VarDecl>("FuncTmplSpec", Ctx);
   EXPECT_FALSE(isInferenceTarget(FuncTmplSpec));
   const ValueDecl &FuncTmpl2 =
       *cast<DeclRefExpr>(FuncTmplSpec.getInit()->IgnoreImplicit())->getDecl();
@@ -100,25 +121,25 @@ TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
     int* B = I.PtrField;
   )cc");
 
-  auto &TU = *AST.context().getTranslationUnitDecl();
+  auto &Ctx = AST.context();
   // Class templates and their fields are not inference targets.
-  auto &ClassTemplate = lookup<ClassTemplateDecl>("ClassTemplate", TU);
+  auto &ClassTemplate = lookup<ClassTemplateDecl>("ClassTemplate", Ctx);
   EXPECT_FALSE(isInferenceTarget(ClassTemplate));
   EXPECT_FALSE(isInferenceTarget(*ClassTemplate.getTemplatedDecl()));
   EXPECT_FALSE(isInferenceTarget(
-      lookup("NonPtrField", *ClassTemplate.getTemplatedDecl())));
-  EXPECT_FALSE(
-      isInferenceTarget(lookup("PtrField", *ClassTemplate.getTemplatedDecl())));
+      lookup("NonPtrField", Ctx, ClassTemplate.getTemplatedDecl())));
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("PtrField", Ctx, ClassTemplate.getTemplatedDecl())));
 
   // Class template specializations and their fields are also not inference
   // targets.
   EXPECT_FALSE(isInferenceTarget(
-      *lookup<VarDecl>("I", TU).getType()->getAsRecordDecl()));
+      *lookup<VarDecl>("I", Ctx).getType()->getAsRecordDecl()));
   EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(lookup<VarDecl>("A", TU).getInit()->IgnoreImplicit())
+      *cast<MemberExpr>(lookup<VarDecl>("A", Ctx).getInit()->IgnoreImplicit())
            ->getMemberDecl()));
   EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(lookup<VarDecl>("B", TU).getInit()->IgnoreImplicit())
+      *cast<MemberExpr>(lookup<VarDecl>("B", Ctx).getInit()->IgnoreImplicit())
            ->getMemberDecl()));
 }
 
@@ -143,24 +164,24 @@ TEST(InferableTest, CountInferableSlots) {
     void h2(int T::*);      // pointer to data member
     void h3(int (T::*)());  // pointer to member function
   )cc");
-  auto &TU = *AST.context().getTranslationUnitDecl();
+  auto &Ctx = AST.context();
 
   // All the 'f's have a single pointer arg.
-  EXPECT_EQ(1, countInferableSlots(lookup("f1", TU)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f2", TU)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f3", TU)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f4", TU)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f5", TU)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f6", TU)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f1", Ctx)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f2", Ctx)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f3", Ctx)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f4", Ctx)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f5", Ctx)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f6", Ctx)));
 
   // All the 'g's have a pointer return.
-  EXPECT_EQ(1, countInferableSlots(lookup("g1", TU)));
-  EXPECT_EQ(1, countInferableSlots(lookup("g2", TU)));
+  EXPECT_EQ(1, countInferableSlots(lookup("g1", Ctx)));
+  EXPECT_EQ(1, countInferableSlots(lookup("g2", Ctx)));
 
   // The 'h's have types that aren't really pointers.
-  EXPECT_EQ(0, countInferableSlots(lookup("h1", TU)));
-  EXPECT_EQ(0, countInferableSlots(lookup("h2", TU)));
-  EXPECT_EQ(0, countInferableSlots(lookup("h3", TU)));
+  EXPECT_EQ(0, countInferableSlots(lookup("h1", Ctx)));
+  EXPECT_EQ(0, countInferableSlots(lookup("h2", Ctx)));
+  EXPECT_EQ(0, countInferableSlots(lookup("h3", Ctx)));
 }
 
 }  // namespace

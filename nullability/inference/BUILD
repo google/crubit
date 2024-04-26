@@ -98,6 +98,7 @@ cc_test(
     deps = [
         ":inferable",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:testing",
         "@llvm-project//llvm:Support",
