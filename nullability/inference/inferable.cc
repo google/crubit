@@ -54,10 +54,18 @@ bool isInferenceTarget(const Decl& D) {
     return hasInferable(Field->getType()) &&
            // See comments above regarding dependent contexts and templates.
            !Field->getDeclContext()->isDependentContext() &&
-           !dyn_cast<ClassTemplateSpecializationDecl>(Field->getParent());
+           !isa<ClassTemplateSpecializationDecl>(Field->getParent());
   }
-  if (const auto* Var = dyn_cast<VarDecl>(&D))
-    return hasInferable(Var->getType());
+  if (const auto* Var = dyn_cast<VarDecl>(&D)) {
+    // Include static member variables and global variables, but not static
+    // local variables. Local variables often do not need annotation in order to
+    // be verified.
+    return hasInferable(Var->getType()) && Var->hasGlobalStorage() &&
+           !Var->isStaticLocal() &&
+           // See comments above regarding dependent contexts and templates.
+           !Var->getDeclContext()->isDependentContext() &&
+           !isa<ClassTemplateSpecializationDecl>(Var->getDeclContext());
+  }
   return false;
 }
 

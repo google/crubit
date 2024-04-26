@@ -1112,6 +1112,16 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
 
       return true;
     }
+
+    bool VisitFieldDecl(absl::Nonnull<const FieldDecl *> FD) {
+      if (isInferenceTarget(*FD)) Out.Declarations.push_back(FD);
+      return true;
+    }
+
+    bool VisitVarDecl(absl::Nonnull<const VarDecl *> VD) {
+      if (isInferenceTarget(*VD)) Out.Declarations.push_back(VD);
+      return true;
+    }
   };
 
   Walker W;

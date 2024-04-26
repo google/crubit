@@ -51,6 +51,13 @@ using ::testing::ResultOf;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 
+constexpr llvm::StringRef CheckMacroDefinitions = R"cc(
+  // Bodies must reference the first param so that args are in the AST, but
+  // otherwise don't matter.
+#define CHECK(x) (x)
+#define CHECK_NE(a, b) (a, b)
+)cc";
+
 MATCHER_P3(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher, "") {
   return SlotMatcher.Matches(static_cast<Slot>(arg.slot())) &&
          KindMatcher.Matches(arg.kind()) && SymbolMatcher.Matches(arg.symbol());
@@ -61,13 +68,22 @@ MATCHER_P(functionNamed, Name, "") {
       ("@" + llvm::StringRef(Name) + "#").str());
 }
 
-// Expects `TypeQualifiedFieldName` to be of the form "S::field", but it should
-// be qualified only by the enclosing type, not any namespaces.
+/// Matches a non-static field with the given name.
+/// The name should be of the form "MyStruct::field", but it should be qualified
+/// only by the enclosing type, not any namespaces.
 MATCHER_P(fieldNamed, TypeQualifiedFieldName, "") {
-  const auto [Type, FieldName] =
+  const auto [TypeName, FieldName] =
       llvm::StringRef(TypeQualifiedFieldName).split("::");
-  return llvm::StringRef(arg.usr()).ends_with(
-      ("@" + Type + "@FI@" + FieldName).str());
+  return arg.usr().ends_with(("@S@" + TypeName + "@FI@" + FieldName).str());
+}
+
+/// Matches a static field with the given name.
+/// The name should be of the form "MyStruct::field" (see also comment for
+/// `fieldNamed()`).
+MATCHER_P(staticFieldNamed, TypeQualifiedFieldName, "") {
+  const auto [TypeName, FieldName] =
+      llvm::StringRef(TypeQualifiedFieldName).split("::");
+  return arg.usr().ends_with(("@S@" + TypeName + "@" + FieldName).str());
 }
 
 MATCHER_P(globalVarNamed, Name, "") {
@@ -434,18 +450,14 @@ TEST(CollectEvidenceFromImplementationTest, PointerToMemberMethod) {
 }
 
 TEST(CollectEvidenceFromImplementationTest, CheckMacro) {
-  static constexpr llvm::StringRef Src = R"cc(
-    // macro must use the parameter, but otherwise body doesn't matter
-#define CHECK(x) \
-      if (!x) __builtin_abort();
-
+  llvm::Twine Src = CheckMacroDefinitions + R"cc(
     void target(int* p, int* q, int* r, int* s, int* t, int* u, int* v) {
       // should collect evidence for params from these calls
       CHECK(p);
       CHECK(q != nullptr);
       int* a = nullptr;
       CHECK(r != a);
-      CHECK(a != s)
+      CHECK(a != s);
       bool b = t != nullptr;
       CHECK(b);
 
@@ -463,7 +475,7 @@ TEST(CollectEvidenceFromImplementationTest, CheckMacro) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectEvidenceFromTargetFunction(Src.str()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
@@ -472,17 +484,14 @@ TEST(CollectEvidenceFromImplementationTest, CheckMacro) {
 }
 
 TEST(CollectEvidenceFromImplementationTest, CheckNEMacro) {
-  static constexpr llvm::StringRef Src = R"cc(
-    // macro must use the first parameter, but otherwise body doesn't matter
-#define CHECK_NE(x, y) \
-      if (x == y) __builtin_abort();
+  llvm::Twine Src = CheckMacroDefinitions + R"cc(
     void target(int* p, int* q, int* r, int* s) {
       // should collect evidence for params from these calls
       CHECK_NE(p, nullptr);
       CHECK_NE(nullptr, q);
       int* a = nullptr;
       CHECK_NE(a, r);
-      CHECK_NE(s, a)
+      CHECK_NE(s, a);
 
       // should not crash when analyzing these calls
       CHECK_NE(a, 0);
@@ -497,7 +506,7 @@ TEST(CollectEvidenceFromImplementationTest, CheckNEMacro) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectEvidenceFromTargetFunction(Src.str()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
@@ -1069,18 +1078,18 @@ TEST(CollectEvidenceFromImplementationTest,
 TEST(CollectEvidenceFromImplementationTest,
      PassedToNonnullInFunctionPointerField) {
   static constexpr llvm::StringRef Src = R"cc(
-    struct S {
+    struct MyStruct {
       void (*callee)(Nonnull<int*>);
     };
 
-    void target(int* p) { S().callee(p); }
+    void target(int* p) { MyStruct().callee(p); }
   )cc";
   EXPECT_THAT(
       collectEvidenceFromTargetFunction(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                                    fieldNamed("S::callee"))));
+                                    fieldNamed("MyStruct::callee"))));
 }
 
 TEST(CollectEvidenceFromImplementationTest,
@@ -1481,11 +1490,7 @@ TEST(CollectEvidenceFromImplementationTest, Arithmetic) {
 }
 
 TEST(CollectEvidenceFromImplementationTest, Fields) {
-  static constexpr llvm::StringRef Src = R"cc(
-    // Body must reference the first param so that args are in the AST, but
-    // otherwise doesn't matter.
-#define CHECK(x) x
-#define CHECK_NE(a, b) a, b
+  llvm::Twine Src = CheckMacroDefinitions + R"cc(
     void takesNonnull(Nonnull<int*>);
     void takesMutableNullable(Nullable<int*>&);
     struct S {
@@ -1510,7 +1515,7 @@ TEST(CollectEvidenceFromImplementationTest, Fields) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectEvidenceFromTargetFunction(Src.str()),
       IsSupersetOf({evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                              fieldNamed("S::Deref")),
                     evidence(Slot(0), Evidence::BOUND_TO_NONNULL,
@@ -1529,12 +1534,54 @@ TEST(CollectEvidenceFromImplementationTest, Fields) {
                              fieldNamed("S::Arithmetic"))}));
 }
 
+TEST(CollectEvidenceFromImplementationTest, StaticMemberVariables) {
+  llvm::Twine Src = CheckMacroDefinitions + R"cc(
+    void takesNonnull(Nonnull<int*>);
+    void takesMutableNullable(Nullable<int*>&);
+    struct MyStruct {
+      static int* Deref;
+      static int* BoundToNonnull;
+      static int* BoundToMutableNullable;
+      static int* AbortIfNull;
+      static int* AbortIfNullBool;
+      static int* AbortIfNullNE;
+      static int* AssignedFromNullable;
+      static int* Arithmetic;
+    };
+    void target() {
+      *MyStruct::Deref;
+      takesNonnull(MyStruct::BoundToNonnull);
+      takesMutableNullable(MyStruct::BoundToMutableNullable);
+      CHECK(MyStruct::AbortIfNull);
+      CHECK(MyStruct::AbortIfNullBool != nullptr);
+      CHECK_NE(MyStruct::AbortIfNullNE, nullptr);
+      MyStruct::AssignedFromNullable = nullptr;
+      MyStruct::Arithmetic += 4;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromTargetFunction(Src.str()),
+      IsSupersetOf(
+          {evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                    staticFieldNamed("MyStruct::Deref")),
+           evidence(Slot(0), Evidence::BOUND_TO_NONNULL,
+                    staticFieldNamed("MyStruct::BoundToNonnull")),
+           evidence(Slot(0), Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                    staticFieldNamed("MyStruct::BoundToMutableNullable")),
+           evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                    staticFieldNamed("MyStruct::AbortIfNull")),
+           evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                    staticFieldNamed("MyStruct::AbortIfNullBool")),
+           evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                    staticFieldNamed("MyStruct::AbortIfNullNE")),
+           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                    staticFieldNamed("MyStruct::AssignedFromNullable")),
+           evidence(Slot(0), Evidence::ARITHMETIC,
+                    staticFieldNamed("MyStruct::Arithmetic"))}));
+}
+
 TEST(CollectEvidenceFromImplementationTest, Globals) {
-  static constexpr llvm::StringRef Src = R"cc(
-    // Body must reference the first param so that args are in the AST, but
-    // otherwise doesn't matter.
-#define CHECK(x) x
-#define CHECK_NE(a, b) a, b
+  llvm::Twine Src = CheckMacroDefinitions + R"cc(
     void takesNonnull(Nonnull<int*>);
     void takesMutableNullable(Nullable<int*>&);
     int* Deref;
@@ -1557,7 +1604,7 @@ TEST(CollectEvidenceFromImplementationTest, Globals) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectEvidenceFromTargetFunction(Src.str()),
       IsSupersetOf({evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                              globalVarNamed("Deref")),
                     evidence(Slot(0), Evidence::BOUND_TO_NONNULL,
@@ -2072,18 +2119,61 @@ TEST(EvidenceSitesTest, Functions) {
                           declNamed("S::member")));
 }
 
-TEST(EvidenceSitesTest, Variables) {
+TEST(EvidenceSitesTest, GlobalVariables) {
   TestAST AST(R"cc(
     int* x = true ? nullptr : nullptr;
+    int* y;
+  )cc");
+
+  auto Sites = EvidenceSites::discover(AST.context());
+  EXPECT_THAT(Sites.Declarations,
+              UnorderedElementsAre(declNamed("x"), declNamed("y")));
+  EXPECT_THAT(Sites.Implementations, IsEmpty());
+}
+
+TEST(EvidenceSitesTest, StaticMemberVariables) {
+  TestAST AST(R"cc(
     struct S {
-      int* s;
+      inline static int* a = nullptr;
+      static int* b;
+      static int* c;
+    };
+
+    int* S::c = nullptr;
+  )cc");
+  auto Sites = EvidenceSites::discover(AST.context());
+  EXPECT_THAT(
+      Sites.Declarations,
+      UnorderedElementsAre(
+          declNamed("S::a"), declNamed("S::b"),
+          // one for in-class declaration and one for out-of-class definition
+          declNamed("S::c"), declNamed("S::c")));
+  EXPECT_THAT(Sites.Implementations, IsEmpty());
+}
+
+TEST(EvidenceSitesTest, NonStaticMemberVariables) {
+  TestAST AST(R"cc(
+    struct S {
+      int* a = nullptr;
+      int* b;
     };
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
-  // For now, variables are not inferable.
-  EXPECT_THAT(Sites.Declarations, IsEmpty());
-  // For now, we don't examine variable initializers.
+  EXPECT_THAT(Sites.Declarations,
+              UnorderedElementsAre(declNamed("S::a"), declNamed("S::b")));
   EXPECT_THAT(Sites.Implementations, IsEmpty());
+}
+
+TEST(EvidenceSitesTest, LocalVariablesNotIncluded) {
+  TestAST AST(R"cc(
+    void foo() {
+      int* p = nullptr;
+      static int* q = nullptr;
+    }
+  )cc");
+  auto Sites = EvidenceSites::discover(AST.context());
+  EXPECT_THAT(Sites.Declarations, UnorderedElementsAre(declNamed("foo")));
+  EXPECT_THAT(Sites.Implementations, UnorderedElementsAre(declNamed("foo")));
 }
 
 TEST(EvidenceSitesTest, Templates) {
@@ -2133,7 +2223,7 @@ TEST(EvidenceEmitterTest, NotInferenceTarget) {
   ASSERT_NE(TargetDecl, nullptr);
 
   USRCache USRCache;
-  EXPECT_DEATH(evidenceEmitter([](const Evidence& e) {}, USRCache)(
+  EXPECT_DEATH(evidenceEmitter([](const Evidence& E) {}, USRCache)(
                    *TargetDecl, Slot{}, Evidence::ANNOTATED_UNKNOWN,
                    TargetDecl->getLocation()),
                "not an inference target");

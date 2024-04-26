@@ -307,7 +307,7 @@ TEST_F(InferTUTest, Field) {
           inference(hasName("B"), {inferredSlot(0, Nullability::NONNULL)})));
 }
 
-TEST_F(InferTUTest, Globals) {
+TEST_F(InferTUTest, GlobalVariables) {
   build(R"cc(
     int* I;
     bool* B;
@@ -322,6 +322,25 @@ TEST_F(InferTUTest, Globals) {
       UnorderedElementsAre(
           inference(hasName("I"), {inferredSlot(0, Nullability::NULLABLE)}),
           inference(hasName("B"), {inferredSlot(0, Nullability::NONNULL)})));
+}
+
+TEST_F(InferTUTest, StaticMemberVariables) {
+  build(R"cc(
+    struct S {
+      static int* SI;
+      static bool* SB;
+    };
+
+    void target() {
+      *S::SI;
+      S::SB = nullptr;
+    }
+  )cc");
+  EXPECT_THAT(
+      infer(),
+      UnorderedElementsAre(
+          inference(hasName("SI"), {inferredSlot(0, Nullability::NONNULL)}),
+          inference(hasName("SB"), {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUTest, Filter) {

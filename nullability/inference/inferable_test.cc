@@ -61,12 +61,17 @@ TEST(IsInferenceTargetTest, GlobalVariables) {
 
 TEST(IsInferenceTargetTest, Functions) {
   TestAST AST(R"cc(
-    int* func(int*, int**);
+    int* func(int*, int**) {
+      int* Local;
+      static int* StaticLocal;
+    }
     void empty() {}
   )cc");
 
   auto &Ctx = AST.context();
   EXPECT_TRUE(isInferenceTarget(lookup("func", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("Local", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("StaticLocal", Ctx)));
   EXPECT_TRUE(isInferenceTarget(lookup("empty", Ctx)));
 }
 
@@ -76,14 +81,16 @@ TEST(IsInferenceTargetTest, ClassAndMembers) {
       void method();
       int NonPtrField;
       int* PtrField;
+      static int* StaticField;
     };
   )cc");
 
   auto &Ctx = AST.context();
   EXPECT_FALSE(isInferenceTarget(lookup<CXXRecordDecl>("C", Ctx)));
   EXPECT_TRUE(isInferenceTarget(lookup("method", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("PtrField", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("NonPtrField", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("PtrField", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("StaticField", Ctx)));
 }
 
 TEST(IsInferenceTargetTest, FunctionTemplate) {
@@ -114,11 +121,13 @@ TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
     struct ClassTemplate {
       T NonPtrField;
       T* PtrField;
+      static T* StaticField;
     };
 
     ClassTemplate<int> I;
     int A = I.NonPtrField;
     int* B = I.PtrField;
+    int* C = I.StaticField;
   )cc");
 
   auto &Ctx = AST.context();
@@ -130,6 +139,8 @@ TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
       lookup("NonPtrField", Ctx, ClassTemplate.getTemplatedDecl())));
   EXPECT_FALSE(isInferenceTarget(
       lookup("PtrField", Ctx, ClassTemplate.getTemplatedDecl())));
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("StaticField", Ctx, ClassTemplate.getTemplatedDecl())));
 
   // Class template specializations and their fields are also not inference
   // targets.
@@ -140,6 +151,9 @@ TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
            ->getMemberDecl()));
   EXPECT_FALSE(isInferenceTarget(
       *cast<MemberExpr>(lookup<VarDecl>("B", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(lookup<VarDecl>("C", Ctx).getInit()->IgnoreImplicit())
            ->getMemberDecl()));
 }
 
