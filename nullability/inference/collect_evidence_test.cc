@@ -1985,13 +1985,41 @@ TEST(CollectEvidenceFromImplementationTest, SolverLimitReached) {
   EXPECT_THAT(Results, SizeIs(1));
 }
 
-TEST(CollectEvidenceFromDeclarationTest, VariableDeclIgnored) {
-  llvm::StringLiteral Src = R"cc(Nullable<int *> target;)cc";
-  EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
+TEST(CollectEvidenceFromDeclarationTest, GlobalVariable) {
+  llvm::StringLiteral Src = R"cc(
+    Nullable<int *> target;
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetDecl(Src),
+              ElementsAre(evidence(Slot(0), Evidence::ANNOTATED_NULLABLE,
+                                   globalVarNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDeclarationTest, StaticMemberVariable) {
+  llvm::StringLiteral Src = R"cc(
+    struct S {
+      static Nonnull<int*> target;
+    };
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetDecl(Src),
+              ElementsAre(evidence(Slot(0), Evidence::ANNOTATED_NONNULL,
+                                   staticFieldNamed("S::target"))));
+}
+
+TEST(CollectEvidenceFromDeclarationTest, Field) {
+  llvm::StringLiteral Src = R"cc(
+    struct S {
+      Nonnull<int*> target;
+    };
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetDecl(Src),
+              ElementsAre(evidence(Slot(0), Evidence::ANNOTATED_NONNULL,
+                                   fieldNamed("S::target"))));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, FunctionDeclReturnType) {
-  llvm::StringLiteral Src = R"cc(Nonnull<int *> target();)cc";
+  llvm::StringLiteral Src = R"cc(
+    Nonnull<int *> target();
+  )cc";
   EXPECT_THAT(
       collectEvidenceFromTargetDecl(Src),
       ElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::ANNOTATED_NONNULL,
@@ -1999,15 +2027,18 @@ TEST(CollectEvidenceFromDeclarationTest, FunctionDeclReturnType) {
 }
 
 TEST(CollectEvidenceFromDeclarationTest, FunctionDeclParams) {
-  llvm::StringLiteral Src =
-      R"cc(void target(Nullable<int*>, int*, Nonnull<int*>);)cc";
+  llvm::StringLiteral Src = R"cc(
+    void target(Nullable<int*>, int*, Nonnull<int*>);
+  )cc";
   EXPECT_THAT(collectEvidenceFromTargetDecl(Src),
               ElementsAre(evidence(paramSlot(0), Evidence::ANNOTATED_NULLABLE),
                           evidence(paramSlot(2), Evidence::ANNOTATED_NONNULL)));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, FunctionDeclNonTopLevel) {
-  llvm::StringLiteral Src = R"cc(Nonnull<int*>** target(Nullable<int*>*);)cc";
+  llvm::StringLiteral Src = R"cc(
+    Nonnull<int*>** target(Nullable<int*>*);
+  )cc";
   EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
 }
 

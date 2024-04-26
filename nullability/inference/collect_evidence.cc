@@ -1076,19 +1076,26 @@ static void collectEvidenceFromDefaultArgument(
 
 void collectEvidenceFromTargetDeclaration(
     const clang::Decl &D, llvm::function_ref<EvidenceEmitter> Emit) {
-  // For now, we can only describe the nullability of functions.
-  const auto *Fn = dyn_cast<clang::FunctionDecl>(&D);
-  if (!Fn) return;
+  if (const auto *Fn = dyn_cast<clang::FunctionDecl>(&D)) {
+    if (auto K = evidenceKindFromDeclaredType(Fn->getReturnType()))
+      Emit(*Fn, SLOT_RETURN_TYPE, *K,
+           Fn->getReturnTypeSourceRange().getBegin());
+    for (unsigned I = 0; I < Fn->param_size(); ++I) {
+      auto *ParamDecl = Fn->getParamDecl(I);
+      if (auto K = evidenceKindFromDeclaredType(ParamDecl->getType())) {
+        Emit(*Fn, paramSlot(I), *K, ParamDecl->getTypeSpecStartLoc());
+      }
 
-  if (auto K = evidenceKindFromDeclaredType(Fn->getReturnType()))
-    Emit(*Fn, SLOT_RETURN_TYPE, *K, Fn->getReturnTypeSourceRange().getBegin());
-  for (unsigned I = 0; I < Fn->param_size(); ++I) {
-    auto *ParamDecl = Fn->getParamDecl(I);
-    if (auto K = evidenceKindFromDeclaredType(ParamDecl->getType())) {
-      Emit(*Fn, paramSlot(I), *K, ParamDecl->getTypeSpecStartLoc());
+      collectEvidenceFromDefaultArgument(*Fn, *ParamDecl, paramSlot(I), Emit);
     }
-
-    collectEvidenceFromDefaultArgument(*Fn, *ParamDecl, paramSlot(I), Emit);
+  } else if (const auto *Field = dyn_cast<clang::FieldDecl>(&D)) {
+    if (auto K = evidenceKindFromDeclaredType(Field->getType())) {
+      Emit(*Field, Slot(0), *K, Field->getTypeSpecStartLoc());
+    }
+  } else if (const auto *Var = dyn_cast<clang::VarDecl>(&D)) {
+    if (auto K = evidenceKindFromDeclaredType(Var->getType())) {
+      Emit(*Var, Slot(0), *K, Var->getTypeSpecStartLoc());
+    }
   }
 }
 
