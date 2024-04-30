@@ -43,10 +43,10 @@ class InferenceManager {
       if (Filter && !Filter(*Decl)) continue;
       collectEvidenceFromTargetDeclaration(*Decl, Emitter);
     }
-    for (const auto* Impl : Sites.Implementations) {
+    for (const auto* Impl : Sites.Definitions) {
       if (Filter && !Filter(*Impl)) continue;
-      if (auto Err = collectEvidenceFromImplementation(
-              *Impl, Emitter, USRCache, InferencesFromLastRound)) {
+      if (auto Err = collectEvidenceFromDefinition(*Impl, Emitter, USRCache,
+                                                   InferencesFromLastRound)) {
         llvm::errs() << "Error in evidence collection: "
                      << toString(std::move(Err)) << "\n";
       }

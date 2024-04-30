@@ -27,6 +27,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclGroup.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/OperationKinds.h"
@@ -139,7 +140,7 @@ class InferableSlot {
 };
 }  // namespace
 
-// If Stmt is a dereference, returns its target and location.
+/// If Stmt is a dereference, returns its target and location.
 static std::pair<Expr *, SourceLocation> describeDereference(const Stmt &Stmt) {
   if (auto *Op = dyn_cast<UnaryOperator>(&Stmt);
       Op && Op->getOpcode() == UO_Deref) {
@@ -158,11 +159,11 @@ static std::pair<Expr *, SourceLocation> describeDereference(const Stmt &Stmt) {
   return {nullptr, SourceLocation()};
 }
 
-// Inferable slots are nullability slots not explicitly annotated in source
-// code that we are currently capable of handling. This returns a boolean
-// constraint representing these slots having a) the nullability inferred from
-// the previous round for this slot or b) Unknown nullability if no inference
-// was made in the previous round or there was no previous round.
+/// Inferable slots are nullability slots not explicitly annotated in source
+/// code that we are currently capable of handling. This returns a boolean
+/// constraint representing these slots having a) the nullability inferred from
+/// the previous round for this slot or b) Unknown nullability if no inference
+/// was made in the previous round or there was no previous round.
 static const Formula &getInferableSlotsAsInferredOrUnknownConstraint(
     const std::vector<InferableSlot> &InferableSlots, USRCache &USRCache,
     const PreviousInferences &PreviousInferences, dataflow::Arena &A) {
@@ -213,7 +214,7 @@ static Evidence::Kind getArgEvidenceKindFromNullability(
 }
 
 namespace {
-class ImplementationEvidenceCollector {
+class DefinitionEvidenceCollector {
  public:
   // Instantiate the class only in this static function, to restrict the
   // lifetime of the object, which holds reference parameters.
@@ -223,7 +224,7 @@ class ImplementationEvidenceCollector {
                       const Stmt &Stmt,
                       const PointerNullabilityLattice &Lattice,
                       const Environment &Env) {
-    ImplementationEvidenceCollector Collector(
+    DefinitionEvidenceCollector Collector(
         InferableSlots, InferableSlotsConstraint, Emit, Stmt, Lattice, Env);
     Collector.fromDereference();
     Collector.fromCallExpr();
@@ -234,12 +235,12 @@ class ImplementationEvidenceCollector {
   }
 
  private:
-  ImplementationEvidenceCollector(std::vector<InferableSlot> &InferableSlots,
-                                  const Formula &InferableSlotsConstraint,
-                                  llvm::function_ref<EvidenceEmitter> Emit,
-                                  const Stmt &Stmt,
-                                  const PointerNullabilityLattice &Lattice,
-                                  const Environment &Env)
+  DefinitionEvidenceCollector(std::vector<InferableSlot> &InferableSlots,
+                              const Formula &InferableSlotsConstraint,
+                              llvm::function_ref<EvidenceEmitter> Emit,
+                              const Stmt &Stmt,
+                              const PointerNullabilityLattice &Lattice,
+                              const Environment &Env)
       : InferableSlots(InferableSlots),
         InferableSlotsConstraint(InferableSlotsConstraint),
         Emit(Emit),
@@ -247,8 +248,9 @@ class ImplementationEvidenceCollector {
         Lattice(Lattice),
         Env(Env) {}
 
-  // Records evidence derived from the necessity that `Value` is nonnull.
-  // It may be dereferenced, passed as a nonnull param, etc, per `EvidenceKind`.
+  /// Records evidence derived from the necessity that `Value` is nonnull.
+  /// It may be dereferenced, passed as a nonnull param, etc, per
+  /// `EvidenceKind`.
   void mustBeNonnull(const dataflow::PointerValue &Value, SourceLocation Loc,
                      Evidence::Kind EvidenceKind) {
     CHECK(hasPointerNullState(Value))
@@ -261,12 +263,12 @@ class ImplementationEvidenceCollector {
     mustBeTrue(A.makeNot(*IsNull), Loc, EvidenceKind);
   }
 
-  // Records evidence for Nonnull-ness derived from the necessity that
-  // `MustBeTrue` must be true.
-  //
-  // Does not consider the possibility that the formula can only be proven true
-  // by marking a slot Nullable, as this is is not a pattern we have yet seen in
-  // practice. This function could easily be extended to do so, though.
+  /// Records evidence for Nonnull-ness derived from the necessity that
+  /// `MustBeTrue` must be true.
+  ///
+  /// Does not consider the possibility that the formula can only be proven true
+  /// by marking a slot Nullable, as this is is not a pattern we have yet seen
+  /// in practice. This function could easily be extended to do so, though.
   void mustBeTrue(const Formula &MustBeTrue, SourceLocation Loc,
                   Evidence::Kind EvidenceKind) {
     auto &A = Env.arena();
@@ -313,14 +315,14 @@ class ImplementationEvidenceCollector {
     mustBeNonnull(*DereferencedValue, Loc, Evidence::UNCHECKED_DEREFERENCE);
   }
 
-  // Collect evidence for each of `InferableSlots` if that slot being marked
-  // Nullable would imply `Value`'s FromNullable property.
-  //
-  // This function is called when we have reason to believe that `Value` must be
-  // Nullable. As we can't directly retrieve the combination of Decl and Slot
-  // that corresponds to `Value`'s nullability, we consider each inferable slot
-  // and emit evidence for all inferable slots that, if marked Nullable, cause
-  // `Value` to be considered explicitly Nullable.
+  /// Collect evidence for each of `InferableSlots` if that slot being marked
+  /// Nullable would imply `Value`'s FromNullable property.
+  ///
+  /// This function is called when we have reason to believe that `Value` must
+  /// be Nullable. As we can't directly retrieve the combination of Decl and
+  /// Slot that corresponds to `Value`'s nullability, we consider each inferable
+  /// slot and emit evidence for all inferable slots that, if marked Nullable,
+  /// cause `Value` to be considered explicitly Nullable.
   void mustBeMarkedNullable(const dataflow::PointerValue &Value,
                             SourceLocation Loc, Evidence::Kind EvidenceKind) {
     CHECK(hasPointerNullState(Value))
@@ -440,12 +442,12 @@ class ImplementationEvidenceCollector {
     }
   }
 
-  // Collects evidence from the binding of function arguments to the types of
-  // the corresponding parameter, used when we have a FunctionProtoType but no
-  // FunctionDecl.
-  // TODO: When we collect evidence for more complex slots than just top-level
-  // pointers, emit evidence of the function parameter's nullability as a slot
-  // in the appropriate declaration.
+  /// Collects evidence from the binding of function arguments to the types of
+  /// the corresponding parameter, used when we have a FunctionProtoType but no
+  /// FunctionDecl.
+  /// TODO: When we collect evidence for more complex slots than just top-level
+  /// pointers, emit evidence of the function parameter's nullability as a slot
+  /// in the appropriate declaration.
   void fromFunctionProtoTypeCall(const FunctionProtoType &CalleeType,
                                  const CallExpr &Expr) {
     // For each pointer parameter of the function, ...
@@ -471,21 +473,21 @@ class ImplementationEvidenceCollector {
     }
   }
 
-  // Similar to collectEvidenceFromArgsAndParams, but handles the case of a call
-  // to a function pointer that is provided as a parameter or another decl, e.g.
-  // a field or local variable.
-  //
-  // e.g. We can collect evidence for the nullability of `p` and (when we handle
-  // more than top-level pointer slots) `j` in the following, based on the call
-  // to `callee`:
-  // ```
-  //  void target(int* p, void (*callee)(Nonnull<int*> i, int* j)) {
-  //    callee(p, nullptr);
-  //  }
-  // ```
-  //
-  // With `CalleeDecl` in this case not being a FunctionDecl as in most CallExpr
-  // cases, distinct handling is needed.
+  /// Similar to collectEvidenceFromArgsAndParams, but handles the case of a
+  /// call to a function pointer that is provided as a parameter or another
+  /// decl, e.g. a field or local variable.
+  ///
+  /// e.g. We can collect evidence for the nullability of `p` and (when we
+  /// handle more than top-level pointer slots) `j` in the following, based on
+  /// the call to `callee`:
+  /// ```
+  ///  void target(int* p, void (*callee)(Nonnull<int*> i, int* j)) {
+  ///    callee(p, nullptr);
+  ///  }
+  /// ```
+  ///
+  /// With `CalleeDecl` in this case not being a FunctionDecl as in most
+  /// CallExpr cases, distinct handling is needed.
   void fromFunctionPointerCallExpr(const Decl &CalleeDecl,
                                    const CallExpr &Expr) {
     if (InferableSlots.empty()) return;
@@ -537,12 +539,12 @@ class ImplementationEvidenceCollector {
     CalleeDecl.dump();
   }
 
-  // Given a `CallExpr` for a call to our special macro single-argument capture
-  // function, collect evidence for a slot that can prevent the abort condition
-  // from being true if it is annotated Nonnull.
-  //
-  // e.g. From `CHECK(x)`, we collect evidence for a slot that can cause `x` to
-  // not be null.
+  /// Given a `CallExpr` for a call to our special macro single-argument capture
+  /// function, collect evidence for a slot that can prevent the abort condition
+  /// from being true if it is annotated Nonnull.
+  ///
+  /// e.g. From `CHECK(x)`, we collect evidence for a slot that can cause `x` to
+  /// not be null.
   void fromAbortIfFalseMacroCall(const CallExpr &CallExpr) {
     CHECK_EQ(CallExpr.getNumArgs(), 1);
     const Expr *Arg = CallExpr.getArg(0);
@@ -559,13 +561,13 @@ class ImplementationEvidenceCollector {
     }
   }
 
-  // Given a `CallExpr` for a call to our special macro two-argument capture
-  // function for not-equal checks, if one of the arguments is a nullptr
-  // constant or provably null, collect evidence for a slot that can prevent the
-  // other argument from being null.
-  //
-  // e.g. From `CHECK_NE(x, nullptr)`, we collect evidence for a slot that can
-  // cause `x` to not be null.
+  /// Given a `CallExpr` for a call to our special macro two-argument capture
+  /// function for not-equal checks, if one of the arguments is a nullptr
+  /// constant or provably null, collect evidence for a slot that can prevent
+  /// the other argument from being null.
+  ///
+  /// e.g. From `CHECK_NE(x, nullptr)`, we collect evidence for a slot that can
+  /// cause `x` to not be null.
   void fromAbortIfEqualMacroCall(const CallExpr &CallExpr) {
     CHECK_EQ(CallExpr.getNumArgs(), 2);
     const Expr *First = CallExpr.getArg(0);
@@ -687,21 +689,21 @@ class ImplementationEvidenceCollector {
          ReturnExpr->getExprLoc());
   }
 
-  // Checks whether PointerValue is null or nullable and if so, collects
-  // evidence for a slot that would, if marked Nullable, cause TypeNullability's
-  // first-layer nullability to be Nullable.
-  //
-  // e.g. This is used for example to collect from the following:
-  // ```
-  // void target(int* p, int* q, NullabilityUnknown<int*> r) {
-  //   p = nullptr;
-  //   if (!r) {
-  //     q = r;
-  //   }
-  // }
-  // ```
-  // evidence for each of the assignments of `p` and `q` that they were
-  // ASSIGNED_FROM_NULLABLE.
+  /// Checks whether PointerValue is null or nullable and if so, collects
+  /// evidence for a slot that would, if marked Nullable, cause
+  /// TypeNullability's first-layer nullability to be Nullable.
+  ///
+  /// e.g. This is used for example to collect from the following:
+  /// ```
+  /// void target(int* p, int* q, NullabilityUnknown<int*> r) {
+  ///   p = nullptr;
+  ///   if (!r) {
+  ///     q = r;
+  ///   }
+  /// }
+  /// ```
+  /// evidence for each of the assignments of `p` and `q` that they were
+  /// ASSIGNED_FROM_NULLABLE.
   void fromAssignmentFromNullable(TypeNullability &TypeNullability,
                                   dataflow::PointerValue &PointerValue,
                                   SourceLocation ValueLoc) {
@@ -715,7 +717,7 @@ class ImplementationEvidenceCollector {
       for (auto &IS : InferableSlots) {
         auto &Implication = A.makeImplies(
             IS.getSymbolicNullability().isNullable(A), TypeIsNullable);
-        // It's not expected that a slot's Nullable atom could be proven
+        // It's not expected that a slot's isNullable formula could be proven
         // false by the environment alone (without the
         // InferableSlotsConstraint), but SAT calls are relatively expensive, so
         // only DCHECK.
@@ -735,7 +737,7 @@ class ImplementationEvidenceCollector {
     // Initialization of new decl.
     if (auto *DeclStmt = dyn_cast<clang::DeclStmt>(&Stmt)) {
       for (auto *Decl : DeclStmt->decls()) {
-        if (auto *VarDecl = dyn_cast_or_null<clang::VarDecl>(Decl);
+        if (auto *VarDecl = dyn_cast<clang::VarDecl>(Decl);
             VarDecl && VarDecl->hasInit()) {
           bool DeclTypeSupported = isSupportedRawPointerType(
               VarDecl->getType().getNonReferenceType());
@@ -869,15 +871,15 @@ static std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
   }
 }
 
-// Returns a function that the analysis can use to override Decl nullability
-// values from the source code being analyzed with previously inferred
-// nullabilities.
-//
-// In practice, this should only override the default nullability for Decls that
-// do not spell out a nullability in source code, because we only pass in
-// inferences from the previous round which are non-trivial and annotations
-// "inferred" by reading an annotation from source code in the previous round
-// were marked trivial.
+/// Returns a function that the analysis can use to override Decl nullability
+/// values from the source code being analyzed with previously inferred
+/// nullabilities.
+///
+/// In practice, this should only override the default nullability for Decls
+/// that do not spell out a nullability in source code, because we only pass in
+/// inferences from the previous round which are non-trivial and annotations
+/// "inferred" by reading an annotation from source code in the previous round
+/// were marked trivial.
 static auto getConcreteNullabilityOverrideFromPreviousInferences(
     ConcreteNullabilityCache &Cache, USRCache &USRCache,
     const PreviousInferences &PreviousInferences) {
@@ -912,42 +914,72 @@ static auto getConcreteNullabilityOverrideFromPreviousInferences(
   };
 }
 
-llvm::Error collectEvidenceFromImplementation(
-    const Decl &ImplementationDecl, llvm::function_ref<EvidenceEmitter> Emit,
+llvm::Error collectEvidenceFromDefinition(
+    const Decl &Definition, llvm::function_ref<EvidenceEmitter> Emit,
     USRCache &USRCache, const PreviousInferences PreviousInferences,
     unsigned MaxSATIterations) {
-  const auto *Func = dyn_cast<FunctionDecl>(&ImplementationDecl);
-  if (!Func || !Func->doesThisDeclarationHaveABody()) {
-    return llvm::createStringError(
-        llvm::inconvertibleErrorCode(),
-        "Implementation must be a function with a body.");
+  ASTContext &Ctx = Definition.getASTContext();
+  dataflow::ReferencedDecls ReferencedDecls;
+  Stmt *TargetStmt = nullptr;
+  std::optional<DeclStmt> DeclStmtForVarDecl;
+  const auto *TargetAsFunc = dyn_cast<FunctionDecl>(&Definition);
+  if (TargetAsFunc != nullptr) {
+    if (!TargetAsFunc->doesThisDeclarationHaveABody()) {
+      return llvm::createStringError(llvm::inconvertibleErrorCode(),
+                                     "Function definitions must have a body.");
+    }
+    TargetStmt = TargetAsFunc->getBody();
+    ReferencedDecls = dataflow::getReferencedDecls(*TargetAsFunc);
+  } else if (auto *Var = dyn_cast<VarDecl>(&Definition)) {
+    if (!Var->hasInit()) {
+      return llvm::createStringError(
+          llvm::inconvertibleErrorCode(),
+          "Variable definitions must have an initializer.");
+    }
+    // Synthesize a temporary DeclStmt for the assignment of the variable to its
+    // initializing expression. This is an unusual pattern that does not
+    // perfectly reflect the CFG or AST for declaration or assignment of a
+    // global variable, and it is possible that this may cause unexpected
+    // behavior in clang tools/utilities.
+    TargetStmt =
+        &DeclStmtForVarDecl.emplace(DeclGroupRef(const_cast<VarDecl *>(Var)),
+                                    Var->getBeginLoc(), Var->getEndLoc());
+    ReferencedDecls = dataflow::getReferencedDecls(*TargetStmt);
+  } else {
+    std::string Msg =
+        "Unable to find a valid target definition from Definition:\n";
+    llvm::raw_string_ostream Stream(Msg);
+    Definition.dump(Stream);
+    return llvm::createStringError(llvm::inconvertibleErrorCode(), Msg);
   }
 
+  CHECK(TargetStmt) << "TargetStmt should have been assigned a non-null value.";
+
   llvm::Expected<dataflow::AdornedCFG> ACFG =
-      dataflow::AdornedCFG::build(*Func);
+      dataflow::AdornedCFG::build(Definition, *TargetStmt, Ctx);
   if (!ACFG) return ACFG.takeError();
 
   auto OwnedSolver = std::make_unique<WatchedLiteralsSolver>(MaxSATIterations);
   const WatchedLiteralsSolver *Solver = OwnedSolver.get();
   DataflowAnalysisContext AnalysisContext(std::move(OwnedSolver));
-  Environment Environment(AnalysisContext, *Func);
-  PointerNullabilityAnalysis Analysis(
-      Func->getDeclContext()->getParentASTContext(), Environment);
+  Environment Env = TargetAsFunc ? Environment(AnalysisContext, *TargetAsFunc)
+                                 : Environment(AnalysisContext);
+  PointerNullabilityAnalysis Analysis(Ctx, Env);
+
   std::vector<InferableSlot> InferableSlots;
-  if (isInferenceTarget(*Func)) {
-    auto Parameters = Func->parameters();
+  if (TargetAsFunc && isInferenceTarget(*TargetAsFunc)) {
+    auto Parameters = TargetAsFunc->parameters();
     for (auto I = 0; I < Parameters.size(); ++I) {
       auto T = Parameters[I]->getType().getNonReferenceType();
       if (isSupportedRawPointerType(T) && !evidenceKindFromDeclaredType(T)) {
         InferableSlots.emplace_back(Analysis.assignNullabilityVariable(
                                         Parameters[I], AnalysisContext.arena()),
-                                    paramSlot(I), *Func);
+                                    paramSlot(I), *TargetAsFunc);
       }
     }
   }
 
-  dataflow::ReferencedDecls Decls = dataflow::getReferencedDecls(*Func);
-  for (const FieldDecl *Field : Decls.Fields) {
+  for (const FieldDecl *Field : ReferencedDecls.Fields) {
     if (isInferenceTarget(*Field) &&
         !evidenceKindFromDeclaredType(Field->getType())) {
       InferableSlots.emplace_back(
@@ -955,14 +987,15 @@ llvm::Error collectEvidenceFromImplementation(
           Slot(0), *Field);
     }
   }
-  for (const VarDecl *Global : Decls.Globals) {
-    if (isInferenceTarget(*Global)) {
+  for (const VarDecl *Global : ReferencedDecls.Globals) {
+    if (isInferenceTarget(*Global) &&
+        !evidenceKindFromDeclaredType(Global->getType())) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Global, AnalysisContext.arena()),
           Slot(0), *Global);
     }
   }
-  for (const FunctionDecl *Function : Decls.Functions) {
+  for (const FunctionDecl *Function : ReferencedDecls.Functions) {
     if (isInferenceTarget(*Function) &&
         hasInferable(Function->getReturnType()) &&
         !evidenceKindFromDeclaredType(Function->getReturnType())) {
@@ -984,7 +1017,7 @@ llvm::Error collectEvidenceFromImplementation(
 
   llvm::Error Error =
       dataflow::runDataflowAnalysis(
-          *ACFG, Analysis, Environment,
+          *ACFG, Analysis, Env,
           [&](const CFGElement &Element,
               const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
                   &State) {
@@ -992,7 +1025,7 @@ llvm::Error collectEvidenceFromImplementation(
             if (!CFGStmt) return;
             auto *Stmt = CFGStmt->getStmt();
             if (!Stmt) return;
-            ImplementationEvidenceCollector::collect(
+            DefinitionEvidenceCollector::collect(
                 InferableSlots, InferableSlotsConstraint, Emit, *Stmt,
                 State.Lattice, State.Env);
           })
@@ -1077,11 +1110,10 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
 
       // Visiting template instantiations is fine, these are valid functions!
       // But we'll be limited in what we can infer.
-      bool IsUsefulImplementation =
-          FD->doesThisDeclarationHaveABody() &&
-          // We will not get anywhere with dependent code.
-          !FD->isDependentContext();
-      if (IsUsefulImplementation) Out.Implementations.push_back(FD);
+      bool IsUsefulDefinition = FD->doesThisDeclarationHaveABody() &&
+                                // We will not get anywhere with dependent code.
+                                !FD->isDependentContext();
+      if (IsUsefulDefinition) Out.Definitions.push_back(FD);
 
       return true;
     }
@@ -1092,7 +1124,10 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
     }
 
     bool VisitVarDecl(absl::Nonnull<const VarDecl *> VD) {
-      if (isInferenceTarget(*VD)) Out.Declarations.push_back(VD);
+      if (isInferenceTarget(*VD)) {
+        Out.Declarations.push_back(VD);
+        if (VD->hasInit()) Out.Definitions.push_back(VD);
+      }
       return true;
     }
   };
