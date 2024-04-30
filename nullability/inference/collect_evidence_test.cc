@@ -117,7 +117,7 @@ clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
   return Inputs;
 }
 
-std::vector<Evidence> collectEvidenceFromDefinitionNamed(
+std::vector<Evidence> collectFromDefinitionNamed(
     llvm::StringRef TargetName, llvm::StringRef Source,
     PreviousInferences PreviousInferences = {}) {
   std::vector<Evidence> Results;
@@ -138,13 +138,12 @@ std::vector<Evidence> collectEvidenceFromDefinitionNamed(
 /// Provides a default function-name-cased value for TargetName in
 /// collectEvidenceFromDefinitionNamed, which puts TargetName first for
 /// readability.
-std::vector<Evidence> collectEvidenceFromTargetFunction(
+std::vector<Evidence> collectFromTargetFuncDefinition(
     llvm::StringRef Source, PreviousInferences PreviousInferences = {}) {
-  return collectEvidenceFromDefinitionNamed("target", Source,
-                                            PreviousInferences);
+  return collectFromDefinitionNamed("target", Source, PreviousInferences);
 }
 
-std::vector<Evidence> collectEvidenceFromTargetDecl(llvm::StringRef Source) {
+std::vector<Evidence> collectFromTargetDecl(llvm::StringRef Source) {
   std::vector<Evidence> Results;
   clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
   USRCache USRCache;
@@ -159,14 +158,14 @@ TEST(CollectEvidenceFromDefinitionTest, NoParams) {
   static constexpr llvm::StringRef Src = R"cc(
     void target() {}
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, OneParamUnused) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *p0) {}
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, OneParamUsedWithoutRestriction) {
@@ -175,7 +174,7 @@ TEST(CollectEvidenceFromDefinitionTest, OneParamUsedWithoutRestriction) {
 
     void target(int *p0) { takesUnknown(p0); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -188,7 +187,7 @@ TEST(CollectEvidenceFromDefinitionTest, Deref) {
       }
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -204,7 +203,7 @@ TEST(CollectEvidenceFromDefinitionTest, DerefArrow) {
       b->y();
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
@@ -216,7 +215,7 @@ TEST(CollectEvidenceFromDefinitionTest, DerefOfNonnull) {
       *p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, Location) {
@@ -224,7 +223,7 @@ TEST(CollectEvidenceFromDefinitionTest, Location) {
   //                      12345678901234567890123456
   //                      0        1         2
 
-  auto Evidence = collectEvidenceFromTargetFunction(Code);
+  auto Evidence = collectFromTargetFuncDefinition(Code);
   ASSERT_THAT(Evidence, ElementsAre(evidence(paramSlot(0),
                                              Evidence::UNCHECKED_DEREFERENCE)));
   EXPECT_EQ("input.cc:1:23", Evidence.front().location());
@@ -238,7 +237,7 @@ TEST(CollectEvidenceFromDefinitionTest, DereferenceBeforeAssignment) {
       p = &i;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -251,7 +250,7 @@ TEST(CollectEvidenceFromDefinitionTest, DereferenceAfterAssignment) {
       *p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, DereferenceAfterAssignmentFromReturn) {
@@ -265,7 +264,7 @@ TEST(CollectEvidenceFromDefinitionTest, DereferenceAfterAssignmentFromReturn) {
       *p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -278,7 +277,7 @@ TEST(CollectEvidenceFromDefinitionTest, DerefOfPtrRef) {
       }
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -295,7 +294,7 @@ TEST(CollectEvidenceFromDefinitionTest, UnrelatedCondition) {
       }
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE),
@@ -315,7 +314,7 @@ TEST(CollectEvidenceFromDefinitionTest, LaterDeref) {
       int a = *p0;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -329,7 +328,7 @@ TEST(CollectEvidenceFromDefinitionTest, DerefBeforeGuardedDeref) {
       }
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -348,7 +347,7 @@ TEST(CollectEvidenceFromDefinitionTest, DerefAndOrCheckOfCopiedPtr) {
       }
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -369,7 +368,7 @@ TEST(CollectEvidenceFromDefinitionTest, FirstSufficientSlotOnly) {
       *a;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -385,7 +384,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       }
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -399,7 +398,7 @@ TEST(CollectEvidenceFromDefinitionTest, EarlyReturn) {
       int a = *p0;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, UnreachableCode) {
@@ -419,7 +418,7 @@ TEST(CollectEvidenceFromDefinitionTest, UnreachableCode) {
       int a = *p3;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -437,7 +436,7 @@ TEST(CollectEvidenceFromDefinitionTest, PointerToMemberField) {
   // Pointers to members are not supported pointer types, so no evidence is
   // collected. If they become a supported pointer type, this test should start
   // failing.
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PointerToMemberMethod) {
@@ -454,7 +453,7 @@ TEST(CollectEvidenceFromDefinitionTest, PointerToMemberMethod) {
   // Pointers to members are not supported pointer types, so no evidence is
   // collected. If they become a supported pointer type, this test should start
   // failing.
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PointerToMemberMethodArgs) {
@@ -473,7 +472,7 @@ TEST(CollectEvidenceFromDefinitionTest, PointerToMemberMethodArgs) {
   // test should start failing.
   // TODO(b/309625642) We should still collect evidence for the use of `q` as an
   // argument for param `i`.
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, CheckMacro) {
@@ -502,7 +501,7 @@ TEST(CollectEvidenceFromDefinitionTest, CheckMacro) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src.str()),
+      collectFromTargetFuncDefinition(Src.str()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
@@ -533,7 +532,7 @@ TEST(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src.str()),
+      collectFromTargetFuncDefinition(Src.str()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
@@ -545,7 +544,7 @@ TEST(CollectEvidenceFromDefinitionTest, NullableArgPassed) {
     void callee(int *q);
     void target(Nullable<int *> p) { callee(p); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("callee"))));
 }
@@ -555,7 +554,7 @@ TEST(CollectEvidenceFromDefinitionTest, NonnullArgPassed) {
     void callee(int *q);
     void target(Nonnull<int *> p) { callee(p); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                                 functionNamed("callee"))));
 }
@@ -565,7 +564,7 @@ TEST(CollectEvidenceFromDefinitionTest, UnknownArgPassed) {
     void callee(int *q);
     void target(int *p) { callee(p); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                 functionNamed("callee"))));
 }
@@ -579,7 +578,7 @@ TEST(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullArgPassed) {
       }
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("callee"))));
 }
@@ -591,7 +590,7 @@ TEST(CollectEvidenceFromDefinitionTest, CheckedArgPassed) {
       if (p) callee(p);
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                                 functionNamed("callee"))));
 }
@@ -606,7 +605,7 @@ TEST(CollectEvidenceFromDefinitionTest, NullptrPassed) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("callee")),
                            evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
@@ -618,7 +617,7 @@ TEST(CollectEvidenceFromDefinitionTest, NonPtrArgPassed) {
     void callee(int q);
     void target(int p) { callee(p); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -636,7 +635,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       hasDefaultExpressionOfVariable();
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, NullableReturn) {
@@ -644,7 +643,7 @@ TEST(CollectEvidenceFromDefinitionTest, NullableReturn) {
     int* target() { return nullptr; }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                                     functionNamed("target"))));
 }
@@ -659,7 +658,7 @@ TEST(CollectEvidenceFromDefinitionTest, NullableButCheckedReturn) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
                                     functionNamed("target"))));
 }
@@ -671,7 +670,7 @@ TEST(CollectEvidenceFromDefinitionTest, NonnullReturn) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
                                     functionNamed("target"))));
 }
@@ -681,7 +680,7 @@ TEST(CollectEvidenceFromDefinitionTest, UnknownReturn) {
     int* target(int* p) { return p; }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN,
                                     functionNamed("target"))));
 }
@@ -697,7 +696,7 @@ TEST(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullReturn) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                                     functionNamed("target"))));
 }
@@ -711,7 +710,7 @@ TEST(CollectEvidenceFromDefinitionTest, MultipleReturns) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                                     functionNamed("target")),
                            evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
@@ -726,7 +725,7 @@ TEST(CollectEvidenceFromDefinitionTest, FunctionCallDereferenced) {
     void target() { *makePtr(); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
@@ -741,7 +740,7 @@ TEST(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
@@ -755,7 +754,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       if (p) *p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -768,7 +767,7 @@ TEST(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
@@ -783,7 +782,7 @@ TEST(CollectEvidenceFromDefinitionTest, FunctionCallDereferencedWithArrow) {
     void target() { makePtr()->member(); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
@@ -794,14 +793,14 @@ TEST(CollectEvidenceFromDefinitionTest,
     Nonnull<int*> makeNonnullPtr();
     void target() { *makeNonnullPtr(); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FunctionPointerCall) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(void (*f)()) { f(); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::UNCHECKED_DEREFERENCE,
                                             functionNamed("target"))));
@@ -820,7 +819,7 @@ TEST(CollectEvidenceFromDefinitionTest, ConstAccessorDereferencedAfterCheck) {
       }
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 // Special modeling of accessors is not implemented for accessors returning
@@ -839,7 +838,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       }
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::UNCHECKED_DEREFERENCE,
                                             functionNamed("accessor"))));
@@ -861,7 +860,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       }
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::UNCHECKED_DEREFERENCE,
                                             functionNamed("accessor"))));
@@ -878,7 +877,7 @@ TEST(CollectEvidenceFromDefinitionTest, MemberCallOperatorReturnDereferenced) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("operator()"))));
 }
@@ -890,7 +889,7 @@ TEST(CollectEvidenceFromDefinitionTest, MemberOperatorCall) {
     };
     void target() { S{} + nullptr; }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("operator+"))));
 }
@@ -901,7 +900,7 @@ TEST(CollectEvidenceFromDefinitionTest, NonMemberOperatorCall) {
     bool operator+(const S&, int*);
     void target() { S{} + nullptr; }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("operator+"))));
 }
@@ -912,7 +911,7 @@ TEST(CollectEvidenceFromDefinitionTest, VarArgs) {
     void target() { callee(nullptr, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("callee"))));
 }
@@ -925,7 +924,7 @@ TEST(CollectEvidenceFromDefinitionTest, MemberOperatorCallVarArgs) {
     void target() { S{}(nullptr, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("operator()"))));
 }
@@ -938,7 +937,7 @@ TEST(CollectEvidenceFromDefinitionTest, ConstructorCall) {
     void target(int* p) { S s(p); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
@@ -956,7 +955,7 @@ TEST(CollectEvidenceFromDefinitionTest, NonTargetConstructorCall) {
     void target(int* p) { S s(p); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target"))));
 }
@@ -970,7 +969,7 @@ TEST(CollectEvidenceFromDefinitionTest, ConstructorWithBaseInitializer) {
       target(int *i) : TakeNonnull(i) {}
     };
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                 functionNamed("target"))));
 }
@@ -1014,7 +1013,7 @@ TEST(CollectEvidenceFromDefinitionTest, VariadicConstructorCall) {
     void target(int* p, int* q) { S s(p, q); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
@@ -1029,7 +1028,7 @@ TEST(CollectEvidenceFromDefinitionTest, FieldInitializerFromBindingToType) {
     };
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromDefinitionNamed("Target", Src),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("Target"))));
 }
@@ -1045,7 +1044,7 @@ TEST(CollectEvidenceFromDefinitionTest,
     };
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromDefinitionNamed("Target", Src),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("Target"))));
 }
@@ -1091,7 +1090,7 @@ TEST(CollectEvidenceFromDefinitionTest, FieldInitializedWithNullable) {
     };
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromDefinitionNamed("Target", Src),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("Target::I"))));
 }
@@ -1104,7 +1103,7 @@ TEST(CollectEvidenceFromDefinitionTest, FieldInitializerCallsFunction) {
       Nonnull<int*> I;
     };
   )cc";
-  EXPECT_THAT(collectEvidenceFromDefinitionNamed("Target", Src),
+  EXPECT_THAT(collectFromDefinitionNamed("Target", Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
                            functionNamed("getIntPtr")),
@@ -1152,7 +1151,7 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNonnull) {
     void target(int* p) { callee(p); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
@@ -1166,7 +1165,7 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullRef) {
     void target(int* p) { callee(p); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
@@ -1185,7 +1184,7 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullInMemberFunction) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
@@ -1198,7 +1197,7 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullInFunctionPointerParam) {
       callee(p);
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                            functionNamed("target")),
@@ -1215,7 +1214,7 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullInFunctionPointerField) {
     void target(int* p) { MyStruct().callee(p); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
@@ -1230,7 +1229,7 @@ TEST(CollectEvidenceFromDefinitionTest,
     void target(int* p) { (&callee)(p); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
@@ -1245,7 +1244,7 @@ TEST(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target"))));
 }
@@ -1257,7 +1256,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       callee(p);
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                            functionNamed("target")),
@@ -1272,7 +1271,7 @@ TEST(CollectEvidenceFromDefinitionTest, FunctionCallPassedToNonnull) {
 
     void target() { callee(makeIntPtr()); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
                            functionNamed("makeIntPtr")),
@@ -1287,7 +1286,7 @@ TEST(CollectEvidenceFromDefinitionTest,
 
     void target(void (*callee)(Nonnull<int*> i)) { callee(makeIntPtr()); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
                            functionNamed("makeIntPtr")),
@@ -1342,7 +1341,7 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNullable) {
 
     void target(int* p) { callee(p); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -1352,7 +1351,7 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNullableRef) {
 
     void target(int* p) { callee(p); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::BOUND_TO_MUTABLE_NULLABLE,
                            functionNamed("target")),
@@ -1372,7 +1371,7 @@ TEST(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_MUTABLE_NULLABLE,
                    functionNamed("producer")),
@@ -1388,7 +1387,7 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNullableRefFromFunctionCall) {
     void target() { callee(producer()); }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_MUTABLE_NULLABLE,
                    functionNamed("producer")),
@@ -1404,7 +1403,7 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedToNonnull) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(paramSlot(1), Evidence::BOUND_TO_NONNULL,
@@ -1420,7 +1419,7 @@ TEST(CollectEvidenceFromDefinitionTest, RefAssignedToNonnullRef) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target"))));
 }
@@ -1472,7 +1471,7 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableOrUnknown) {
       q = r;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableRef) {
@@ -1481,7 +1480,7 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableRef) {
       Nullable<int*>& a = p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::BOUND_TO_MUTABLE_NULLABLE,
                                             functionNamed("target"))));
@@ -1493,7 +1492,7 @@ TEST(CollectEvidenceFromDefinitionTest, RefAssignedToNullableRef) {
       Nullable<int*>& a = p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::BOUND_TO_MUTABLE_NULLABLE,
                                             functionNamed("target"))));
@@ -1510,7 +1509,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       Nullable<int*>& x = b ? p : q;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::BOUND_TO_MUTABLE_NULLABLE,
                            functionNamed("target")),
@@ -1524,7 +1523,7 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullptr) {
       q = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(paramSlot(1),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("target"))));
@@ -1537,7 +1536,7 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullptrIndirect) {
       p = a;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("target"))));
@@ -1549,7 +1548,7 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromZero) {
       q = 0;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(paramSlot(1),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("target"))));
@@ -1560,7 +1559,7 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullable) {
     Nullable<int*> getNullable();
     void target(int* p) { p = getNullable(); }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("target"))));
@@ -1573,7 +1572,7 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromLocalNullable) {
       p = a;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("target"))));
@@ -1600,7 +1599,7 @@ TEST(CollectEvidenceFromDefinitionTest, IrrelevantAssignments) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       // From the constructor call constructing an S; no evidence from
       // assignments.
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
@@ -1622,7 +1621,7 @@ TEST(CollectEvidenceFromDefinitionTest, Arithmetic) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ARITHMETIC, functionNamed("target")),
           evidence(paramSlot(1), Evidence::ARITHMETIC, functionNamed("target")),
@@ -1661,7 +1660,7 @@ TEST(CollectEvidenceFromDefinitionTest, Fields) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src.str()),
+      collectFromTargetFuncDefinition(Src.str()),
       IsSupersetOf({evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                              fieldNamed("S::Deref")),
                     evidence(Slot(0), Evidence::BOUND_TO_NONNULL,
@@ -1706,7 +1705,7 @@ TEST(CollectEvidenceFromDefinitionTest, StaticMemberVariables) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src.str()),
+      collectFromTargetFuncDefinition(Src.str()),
       IsSupersetOf(
           {evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                     staticFieldNamed("MyStruct::Deref")),
@@ -1750,7 +1749,7 @@ TEST(CollectEvidenceFromDefinitionTest, Globals) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src.str()),
+      collectFromTargetFuncDefinition(Src.str()),
       IsSupersetOf({evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                              globalVarNamed("Deref")),
                     evidence(Slot(0), Evidence::BOUND_TO_NONNULL,
@@ -1776,7 +1775,7 @@ TEST(CollectEvidenceFromDefinitionTest, GlobalInit) {
     int* Target = static_cast<int*>(getNullableFromNonnull(getPtr()));
   )cc";
 
-  EXPECT_THAT(collectEvidenceFromDefinitionNamed("Target", Src),
+  EXPECT_THAT(collectFromDefinitionNamed("Target", Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                            functionNamed("getNullableFromNonnull")),
@@ -1792,7 +1791,7 @@ TEST(CollectEvidenceFromDefinitionTest, GlobalInitFromGlobalAnnotation) {
     Nonnull<int*> Target = foo();
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromDefinitionNamed("Target", Src),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(
           SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL, functionNamed("foo"))));
 }
@@ -1804,7 +1803,7 @@ TEST(CollectEvidenceFromDefinitionTest, StaticInitInClass) {
     };
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromDefinitionNamed("Target", Src),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     staticFieldNamed("MyStruct::Target"))));
 }
@@ -1842,7 +1841,7 @@ TEST(CollectEvidenceFromDefinitionTest, NoEvidenceForLocals) {
       int* p = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FunctionCallInLoop) {
@@ -1860,7 +1859,7 @@ TEST(CollectEvidenceFromDefinitionTest, FunctionCallInLoop) {
     }
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(Src),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("target")),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
@@ -1877,7 +1876,7 @@ TEST(CollectEvidenceFromDefinitionTest, OutputParameterPointerToPointer) {
       *p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -1889,7 +1888,7 @@ TEST(CollectEvidenceFromDefinitionTest, OutputParameterReferenceToPointer) {
       *p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -1902,7 +1901,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       *p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                                 functionNamed("target"))));
 }
@@ -1917,7 +1916,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       **p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -1929,7 +1928,7 @@ TEST(CollectEvidenceFromDefinitionTest, OutputParameterPointerToConstPointer) {
       *p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                                 functionNamed("target"))));
 }
@@ -1944,7 +1943,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       *p;
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -1959,7 +1958,7 @@ TEST(CollectEvidenceFromDefinitionTest, PassAsOutputParameterOrDereference) {
       }
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                                 functionNamed("target"))));
 }
@@ -1975,7 +1974,7 @@ TEST(CollectEvidenceFromDefinitionTest,
            // dereference safe, so we do not collect evidence for p.
     }
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -1986,7 +1985,7 @@ TEST(CollectEvidenceFromDefinitionTest, FromGlobalLabmdaBodyForGlobal) {
   )cc";
 
   EXPECT_THAT(
-      collectEvidenceFromDefinitionNamed("operator()", Src),
+      collectFromDefinitionNamed("operator()", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     globalVarNamed("p"))));
 }
@@ -2000,7 +1999,7 @@ TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaForCapturedParam) {
     }
   )cc";
 
-  EXPECT_THAT(collectEvidenceFromDefinitionNamed("operator()", Src), IsEmpty());
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaForCalledFunction) {
@@ -2011,7 +2010,7 @@ TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaForCalledFunction) {
     }
   )cc";
 
-  EXPECT_THAT(collectEvidenceFromDefinitionNamed("operator()", Src),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::UNCHECKED_DEREFERENCE,
                                             functionNamed("bar"))));
@@ -2028,7 +2027,7 @@ TEST(CollectEvidenceFromDefinitionTest, NoneForLambdaParamOrReturn) {
     };
   )cc";
 
-  EXPECT_THAT(collectEvidenceFromDefinitionNamed("operator()", Src), IsEmpty());
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
@@ -2064,9 +2063,9 @@ TEST(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("MyStruct::B")));
 
-  EXPECT_THAT(collectEvidenceFromTargetFunction(BracesAggInit.str()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(BracesAggInit.str()),
               ExpectedEvidenceMatcher);
-  EXPECT_THAT(collectEvidenceFromTargetFunction(ParensAggInit.str()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(ParensAggInit.str()),
               ExpectedEvidenceMatcher);
 }
 
@@ -2143,13 +2142,13 @@ TEST(CollectEvidenceFromDefinitionTest, PropagatesPreviousInferences) {
   // results contain the evidence needed to produce our expected inferences and
   // do not contain the evidence only found from propagating inferences from the
   // first round.
-  auto FirstRoundResults = collectEvidenceFromTargetFunction(Src);
+  auto FirstRoundResults = collectFromTargetFuncDefinition(Src);
   ASSERT_THAT(FirstRoundResults, IsSupersetOf(ExpectedBothRoundResults));
   for (const auto& E : ExpectedSecondRoundResults) {
     ASSERT_THAT(FirstRoundResults, Not(Contains(E)));
   }
 
-  EXPECT_THAT(collectEvidenceFromTargetFunction(
+  EXPECT_THAT(collectFromTargetFuncDefinition(
                   Src, {/*Nullable=*/{fingerprint(TargetUsr, paramSlot(0))},
                         /*Nonnull=*/{fingerprint(TargetUsr, paramSlot(1))}}),
               AllOf(IsSupersetOf(ExpectedBothRoundResults),
@@ -2199,14 +2198,14 @@ TEST(CollectEvidenceFromDefinitionTest,
 
   // Assert first round results because they don't rely on previous inference
   // propagation at all and in this case are test setup and preconditions.
-  auto FirstRoundResults = collectEvidenceFromTargetFunction(Src);
+  auto FirstRoundResults = collectFromTargetFuncDefinition(Src);
   ASSERT_THAT(FirstRoundResults,
               IsSupersetOf(ExpectedNewResultsPerRound.at(0)));
   for (const auto& E : ExpectedNewResultsPerRound.at(1)) {
     ASSERT_THAT(FirstRoundResults, Not(Contains(E)));
   }
 
-  auto SecondRoundResults = collectEvidenceFromTargetFunction(
+  auto SecondRoundResults = collectFromTargetFuncDefinition(
       Src, {.Nonnull = {fingerprint(TargetUsr, paramSlot(0))}});
   EXPECT_THAT(SecondRoundResults,
               AllOf(IsSupersetOf(ExpectedNewResultsPerRound.at(0)),
@@ -2215,7 +2214,7 @@ TEST(CollectEvidenceFromDefinitionTest,
     ASSERT_THAT(SecondRoundResults, Not(Contains(E)));
   }
 
-  auto ThirdRoundResults = collectEvidenceFromTargetFunction(
+  auto ThirdRoundResults = collectFromTargetFuncDefinition(
       Src, {.Nonnull = {fingerprint(TargetUsr, paramSlot(0)),
                         fingerprint(ReturnsToBeNonnullUsr, paramSlot(0))}});
   EXPECT_THAT(ThirdRoundResults,
@@ -2226,7 +2225,7 @@ TEST(CollectEvidenceFromDefinitionTest,
     ASSERT_THAT(ThirdRoundResults, Not(Contains(E)));
   }
 
-  auto FourthRoundResults = collectEvidenceFromTargetFunction(
+  auto FourthRoundResults = collectFromTargetFuncDefinition(
       Src, {.Nonnull = {
                 fingerprint(TargetUsr, paramSlot(0)),
                 fingerprint(ReturnsToBeNonnullUsr, paramSlot(0)),
@@ -2259,7 +2258,7 @@ TEST(CollectEvidenceFromDefinitionTest,
   // This test confirms that we use that information when collecting from
   // target's definition.
   EXPECT_THAT(
-      collectEvidenceFromTargetFunction(
+      collectFromTargetFuncDefinition(
           Src, {.Nonnull = {fingerprint(TakesToBeNonnullUsr, paramSlot(0))}}),
       Contains(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                         functionNamed("target"))));
@@ -2292,7 +2291,7 @@ TEST(CollectEvidenceFromDeclarationTest, GlobalVariable) {
   llvm::StringLiteral Src = R"cc(
     Nullable<int *> target;
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetDecl(Src),
+  EXPECT_THAT(collectFromTargetDecl(Src),
               ElementsAre(evidence(Slot(0), Evidence::ANNOTATED_NULLABLE,
                                    globalVarNamed("target"))));
 }
@@ -2303,7 +2302,7 @@ TEST(CollectEvidenceFromDeclarationTest, StaticMemberVariable) {
       static Nonnull<int*> target;
     };
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetDecl(Src),
+  EXPECT_THAT(collectFromTargetDecl(Src),
               ElementsAre(evidence(Slot(0), Evidence::ANNOTATED_NONNULL,
                                    staticFieldNamed("S::target"))));
 }
@@ -2314,7 +2313,7 @@ TEST(CollectEvidenceFromDeclarationTest, Field) {
       Nonnull<int*> target;
     };
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetDecl(Src),
+  EXPECT_THAT(collectFromTargetDecl(Src),
               ElementsAre(evidence(Slot(0), Evidence::ANNOTATED_NONNULL,
                                    fieldNamed("S::target"))));
 }
@@ -2324,7 +2323,7 @@ TEST(CollectEvidenceFromDeclarationTest, FunctionDeclReturnType) {
     Nonnull<int *> target();
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetDecl(Src),
+      collectFromTargetDecl(Src),
       ElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::ANNOTATED_NONNULL,
                            functionNamed("target"))));
 }
@@ -2333,7 +2332,7 @@ TEST(CollectEvidenceFromDeclarationTest, FunctionDeclParams) {
   llvm::StringLiteral Src = R"cc(
     void target(Nullable<int*>, int*, Nonnull<int*>);
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetDecl(Src),
+  EXPECT_THAT(collectFromTargetDecl(Src),
               ElementsAre(evidence(paramSlot(0), Evidence::ANNOTATED_NULLABLE),
                           evidence(paramSlot(2), Evidence::ANNOTATED_NONNULL)));
 }
@@ -2342,7 +2341,7 @@ TEST(CollectEvidenceFromDeclarationTest, FunctionDeclNonTopLevel) {
   llvm::StringLiteral Src = R"cc(
     Nonnull<int*>** target(Nullable<int*>*);
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetDecl(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDeclarationTest, FunctionTemplateIgnored) {
@@ -2354,7 +2353,7 @@ TEST(CollectEvidenceFromDeclarationTest, FunctionTemplateIgnored) {
       static void target(const S<B>&) {}
     };
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetDecl(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetDecl(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDeclarationTest, DefaultArgumentNullptrLiteral) {
@@ -2362,7 +2361,7 @@ TEST(CollectEvidenceFromDeclarationTest, DefaultArgumentNullptrLiteral) {
     void target(int* = nullptr);
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetDecl(Src),
+      collectFromTargetDecl(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("target"))));
 }
@@ -2373,7 +2372,7 @@ TEST(CollectEvidenceFromDeclarationTest, DefaultArgumentZeroLiteral) {
     void target(int* = 0);
       )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetDecl(Src),
+      collectFromTargetDecl(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("target"))));
 }
@@ -2384,7 +2383,7 @@ TEST(CollectEvidenceFromDeclarationTest, DefaultArgumentAnnotatedVariable) {
     void target(int* = q);
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetDecl(Src),
+      collectFromTargetDecl(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                                     functionNamed("target"))));
 }
@@ -2396,7 +2395,7 @@ TEST(CollectEvidenceFromDeclarationTest,
     void target(int* = getDefault());
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetDecl(Src),
+      collectFromTargetDecl(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("target"))));
 }
@@ -2410,7 +2409,7 @@ TEST(CollectEvidenceFromDeclarationTest,
     void target(int* = getDefault(), int* = q, int* = &i);
   )cc";
   EXPECT_THAT(
-      collectEvidenceFromTargetDecl(Src),
+      collectFromTargetDecl(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                     functionNamed("target")),
                            evidence(paramSlot(1), Evidence::UNKNOWN_ARGUMENT,
