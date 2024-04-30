@@ -480,11 +480,28 @@ class DefinitionEvidenceCollector {
     }
   }
 
-  /// Similar to collectEvidenceFromArgsAndParams, but handles the case of a
-  /// call to a function pointer that is provided as a parameter or another
-  /// decl, e.g. a field or local variable.
+  /// Collect evidence that the function pointer was dereferenced and from the
+  /// matching up of parameter/argument nullabilities.
+  void fromFunctionPointerCallExpr(const Type &CalleeFunctionType,
+                                   const CallExpr &Expr) {
+    if (InferableSlots.empty()) return;
+    if (const auto *Callee = Expr.getCallee()) {
+      if (const auto *PV = getRawPointerValue(Callee, Env)) {
+        mustBeNonnull(*PV, Expr.getExprLoc(), Evidence::UNCHECKED_DEREFERENCE);
+      }
+    }
+
+    auto *CalleeFunctionProtoType =
+        CalleeFunctionType.getAs<FunctionProtoType>();
+    CHECK(CalleeFunctionProtoType);
+    fromFunctionProtoTypeCall(*CalleeFunctionProtoType, Expr);
+  }
+
+  /// Handles the case of a call to a function without a FunctionDecl, e.g. that
+  /// is provided as a parameter or another decl, e.g. a field or local
+  /// variable.
   ///
-  /// e.g. We can collect evidence for the nullability of `p` and (when we
+  /// Example: We can collect evidence for the nullability of `p` and (when we
   /// handle more than top-level pointer slots) `j` in the following, based on
   /// the call to `callee`:
   /// ```
@@ -495,29 +512,18 @@ class DefinitionEvidenceCollector {
   ///
   /// With `CalleeDecl` in this case not being a FunctionDecl as in most
   /// CallExpr cases, distinct handling is needed.
-  void fromFunctionPointerCallExpr(const Decl &CalleeDecl,
-                                   const CallExpr &Expr) {
-    if (InferableSlots.empty()) return;
-    if (const auto *Callee = Expr.getCallee()) {
-      if (const auto *PV = getRawPointerValue(Callee, Env)) {
-        mustBeNonnull(*PV, Expr.getExprLoc(), Evidence::UNCHECKED_DEREFERENCE);
-      }
-    }
-
-    auto *CalleeType = CalleeDecl.getFunctionType()->getAs<FunctionProtoType>();
-    CHECK(CalleeType);
-    fromFunctionProtoTypeCall(*CalleeType, Expr);
-  }
-
   void fromCallExprWithoutFunctionCalleeDecl(const Decl &CalleeDecl,
                                              const CallExpr &Expr) {
     if (CalleeDecl.isFunctionPointerType()) {
-      fromFunctionPointerCallExpr(CalleeDecl, Expr);
+      fromFunctionPointerCallExpr(*CalleeDecl.getFunctionType(), Expr);
       return;
     }
 
-    // Ignore calls of pointers to members. These are handled as dereferences at
-    // the BinaryOperator node, which additionally captures pointers to fields.
+    // Ignore calls of pointers to members. The dereferencing of the pointer is
+    // handled as a dereference at the BinaryOperator node, which additionally
+    // captures pointers to fields.
+    // TODO(b/309625642) Consider collecting evidence for the arguments being
+    // passed as parameters to the pointed-to member.
     if (const auto *BinaryOpCallee = dyn_cast_or_null<BinaryOperator>(
             Expr.getCallee()->IgnoreParenImpCasts());
         BinaryOpCallee &&
@@ -533,6 +539,17 @@ class DefinitionEvidenceCollector {
       if (auto *FuncProtoType = FuncType->getAs<FunctionProtoType>()) {
         fromFunctionProtoTypeCall(*FuncProtoType, Expr);
         return;
+      }
+    }
+
+    // A reference to a function pointer is another rare case, but we can
+    // collect the same evidence we would for a function pointer.
+    if (const auto *CalleeAsValueDecl =
+            dyn_cast<clang::ValueDecl>(&CalleeDecl)) {
+      if (QualType CalleeType = CalleeAsValueDecl->getType();
+          CalleeType.getNonReferenceType()->isFunctionPointerType()) {
+        fromFunctionPointerCallExpr(
+            *(CalleeType.getNonReferenceType()->getPointeeType()), Expr);
       }
     }
 

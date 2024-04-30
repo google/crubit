@@ -431,9 +431,7 @@ TEST(CollectEvidenceFromDefinitionTest, PointerToMemberField) {
     void target(int S::*p) {
       S s;
       s.*p;
-
-      S s2;
-      (&s2)->*p;
+      (&s)->*p;
     }
   )cc";
   // Pointers to members are not supported pointer types, so no evidence is
@@ -449,15 +447,32 @@ TEST(CollectEvidenceFromDefinitionTest, PointerToMemberMethod) {
     void target(void (S::*p)()) {
       S s;
       (s.*p)();
-
-      S s2;
-      ((&s2)->*p)();
+      ((&s)->*p)();
     }
   )cc";
 
   // Pointers to members are not supported pointer types, so no evidence is
   // collected. If they become a supported pointer type, this test should start
   // failing.
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromDefinitionTest, PointerToMemberMethodArgs) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {};
+
+    void target(void (S::*p)(Nonnull<int*> i, int* j), int* q) {
+      S s;
+      (s.*p)(q, nullptr);
+      ((&s)->*p)(q, nullptr);
+    }
+  )cc";
+
+  // Pointers to members are not supported pointer types, so no evidence is
+  // collected for `p` or `j`. If they become a supported pointer type, this
+  // test should start failing.
+  // TODO(b/309625642) We should still collect evidence for the use of `q` as an
+  // argument for param `i`.
   EXPECT_THAT(collectEvidenceFromTargetFunction(Src), IsEmpty());
 }
 
@@ -1233,6 +1248,21 @@ TEST(CollectEvidenceFromDefinitionTest,
       collectEvidenceFromTargetFunction(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
                                     functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     PassedToNonnullInFunctionPointerReferenceParam) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, void (*&callee)(Nonnull<int*> i)) {
+      callee(p);
+    }
+  )cc";
+  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                           functionNamed("target")),
+                  evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FunctionCallPassedToNonnull) {
