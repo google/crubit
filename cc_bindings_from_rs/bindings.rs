@@ -2211,6 +2211,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
             attributes.push(quote! { __attribute__((packed)) })
         }
 
+        // Attribute: must_use
         if let Some(must_use_attr) = tcx.get_attr(core.def_id, rustc_span::symbol::sym::must_use) {
             match must_use_attr.value_str() {
                 None => attributes.push(quote! {[[nodiscard]]}),
@@ -2218,6 +2219,27 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
                     let message = symbol.as_str();
                     attributes.push(quote! {[[nodiscard(#message)]]});
                 }
+            }
+        }
+
+        // Attribute: deprecated
+        //
+        // TODO(codyheiner): After adding code to support all deprecation types, extract
+        // common functionality to a helper function.
+        if let Some(deprecated_attr) =
+            tcx.get_attr(core.def_id, rustc_span::symbol::sym::deprecated)
+        {
+            if let Some((deprecation, _span)) =
+                find_deprecation(tcx.sess(), tcx.features(), slice::from_ref(deprecated_attr))
+            {
+                let cpp_deprecation_tag = match deprecation.note {
+                    None => quote! {[[deprecated]]},
+                    Some(note_symbol) => {
+                        let note = note_symbol.as_str();
+                        quote! {[[deprecated(#note)]]}
+                    }
+                };
+                attributes.push(cpp_deprecation_tag);
             }
         }
 
@@ -2465,7 +2487,7 @@ fn format_crate(input: &Input) -> Result<Output> {
         let ordered_cc: Vec<(NamespaceQualifier, TokenStream)> = fwd_decls
             .into_iter()
             .chain(ordered_main_apis)
-            .chain(cc_details.into_iter())
+            .chain(cc_details)
             .map(|(local_def_id, tokens)| {
                 let mod_path = FullyQualifiedName::new(tcx, local_def_id.to_def_id()).mod_path;
                 (mod_path, tokens)
@@ -7189,7 +7211,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_deprecated_attr_for_fn_with_all_args() {
+    fn test_deprecated_attr_for_fn_with_named_args() {
         let test_src = r#"
         #[deprecated(since = "3.14", note = "Use add_i32 instead")]
         pub fn add(x: i32, y: i32) -> i32 {
@@ -7204,6 +7226,149 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     [[deprecated("Use add_i32 instead")]] std::int32_t add(std::int32_t x, std::int32_t y);
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_struct_no_args() {
+        let test_src = r#"
+        #[deprecated]
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... [[deprecated]] ... SomeStruct final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_struct_with_message() {
+        let test_src = r#"
+        #[deprecated = "Use AnotherStruct instead"]
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... [[deprecated("Use AnotherStruct instead")]] ... SomeStruct final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_struct_with_named_args() {
+        let test_src = r#"
+        #[deprecated(since = "3.14", note = "Use AnotherStruct instead")]
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... [[deprecated("Use AnotherStruct instead")]] ... SomeStruct final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_union_with_named_args() {
+        let test_src = r#"
+        #[deprecated(since = "3.14", note = "Use AnotherUnion instead")]
+        pub struct SomeUnion {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeUnion", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... [[deprecated("Use AnotherUnion instead")]] ... SomeUnion final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_enum_with_named_args() {
+        let test_src = r#"
+        #[deprecated(since = "3.14", note = "Use AnotherEnum instead")]
+        pub enum SomeEnum {
+            Integer(i32),
+            FloatingPoint(f64),
+        }"#;
+
+        test_format_item(test_src, "SomeEnum", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... [[deprecated("Use AnotherEnum instead")]] ... SomeEnum final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_multiple_attributes() {
+        let test_src = r#"
+        #[must_use = "Must use"]
+        #[deprecated = "Deprecated"]
+        pub fn add(x: i32, y: i32) -> i32 {
+            x + y
+        }"#;
+
+        test_format_item(test_src, "add", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    [[nodiscard("Must use")]] [[deprecated("Deprecated")]] std::int32_t add(std::int32_t x, std::int32_t y);
+                        ...
                 }
             )
         })
