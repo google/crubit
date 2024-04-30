@@ -32,6 +32,7 @@ using ast_matchers::hasName;
 using testing::_;
 using testing::ElementsAre;
 using testing::IsEmpty;
+using testing::IsSupersetOf;
 using testing::UnorderedElementsAre;
 
 MATCHER_P2(inferredSlot, I, Nullability, "") {
@@ -305,6 +306,47 @@ TEST_F(InferTUTest, Field) {
       UnorderedElementsAre(
           inference(hasName("I"), {inferredSlot(0, Nullability::NULLABLE)}),
           inference(hasName("B"), {inferredSlot(0, Nullability::NONNULL)})));
+}
+
+TEST_F(InferTUTest, FieldImplicitlyDeclaredConstructorNeverUsed) {
+  build(R"cc(
+    Nullable<bool *> getNullable();
+    struct S {
+      int *I = nullptr;
+      bool *B = getNullable();
+      char *C = static_cast<char *>(nullptr);
+    };
+
+    void foo(S s);
+  )cc");
+  // Because the implicitly-declared default constructor is never used, it is
+  // not present in the AST and we never analyze it. So, we collect no evidence
+  // from default member initializers.
+  EXPECT_THAT(infer(),
+              AllOf(AllOf(Not(Contains(inference(hasName("I"), {_}))),
+                          Not(Contains(inference(hasName("B"), {_}))),
+                          Not(Contains(inference(hasName("C"), {_}))))));
+}
+
+TEST_F(InferTUTest, FieldImplicitlyDeclaredConstructorUsed) {
+  build(R"cc(
+    Nullable<bool *> getNullable();
+    struct S {
+      int *I = nullptr;
+      bool *B = getNullable();
+      char *C = static_cast<char *>(nullptr);
+    };
+    // A use of the implicitly-declared default constructor, so it is generated
+    // and included in the AST for us to analyze, allowing us to infer from
+    // default member initializers.
+    void foo() { S s; }
+  )cc");
+  EXPECT_THAT(
+      infer(),
+      IsSupersetOf(
+          {inference(hasName("I"), {inferredSlot(0, Nullability::NULLABLE)}),
+           inference(hasName("B"), {inferredSlot(0, Nullability::NULLABLE)}),
+           inference(hasName("C"), {inferredSlot(0, Nullability::NULLABLE)})}));
 }
 
 TEST_F(InferTUTest, GlobalVariables) {

@@ -5,6 +5,7 @@
 #include "nullability/inference/inferable.h"
 
 #include "nullability/type_nullability.h"
+#include "clang/AST/ASTLambda.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
@@ -48,7 +49,11 @@ bool isInferenceTarget(const Decl& D) {
         // If we find that their nullability is unexpectedly leaking into
         // programs under analysis in significant ways, we can hardcode this
         // small set of functions.
-        Func->getBuiltinID() == 0;
+        Func->getBuiltinID() == 0 &&
+        // Implicit functions cannot be annotated.
+        !Func->isImplicit() &&
+        // TODO(b/315967535) We don't infer for lambda decls.
+        !isLambdaCallOperator(Func);
   }
   if (const auto* Field = dyn_cast<FieldDecl>(&D)) {
     return hasInferable(Field->getType()) &&

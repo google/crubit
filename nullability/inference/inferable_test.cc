@@ -66,6 +66,7 @@ TEST(IsInferenceTargetTest, Functions) {
       static int* StaticLocal;
     }
     void empty() {}
+    auto Lambda = []() {};
   )cc");
 
   auto &Ctx = AST.context();
@@ -73,6 +74,8 @@ TEST(IsInferenceTargetTest, Functions) {
   EXPECT_FALSE(isInferenceTarget(lookup("Local", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("StaticLocal", Ctx)));
   EXPECT_TRUE(isInferenceTarget(lookup("empty", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("Lambda", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("operator()", Ctx)));
 }
 
 TEST(IsInferenceTargetTest, ClassAndMembers) {

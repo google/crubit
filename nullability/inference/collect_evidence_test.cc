@@ -33,8 +33,10 @@
 
 namespace clang::tidy::nullability {
 namespace {
+using ::clang::ast_matchers::cxxConstructorDecl;
 using ::clang::ast_matchers::functionDecl;
 using ::clang::ast_matchers::hasName;
+using ::clang::ast_matchers::isDefaultConstructor;
 using ::clang::ast_matchers::isTemplateInstantiation;
 using ::clang::ast_matchers::match;
 using ::clang::ast_matchers::parameterCountIs;
@@ -1036,16 +1038,31 @@ TEST(CollectEvidenceFromDefinitionTest,
 TEST(CollectEvidenceFromDefinitionTest, IndirectFieldDefaultFieldInitializer) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Target {
-      // TODO(b/323509665) Collect from implicitly defaulted constructors. For
-      // now, the constructor must have a user-provided body for evidence to be
-      // collected from its definition.
       Target() {}
       struct {
         int* I = nullptr;
       };
     };
+
+    // Use the implicitly-declared default constructor, so that it will be
+    // generated.
+    void foo() { Target t; }
   )cc";
-  EXPECT_THAT(collectEvidenceFromDefinitionNamed("Target", Src),
+  std::vector<Evidence> Results;
+  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
+  USRCache UsrCache;
+  ASSERT_THAT_ERROR(
+      collectEvidenceFromDefinition(
+          *selectFirst<FunctionDecl>(
+              "d", match(cxxConstructorDecl(isDefaultConstructor(),
+                                            hasName("Target"))
+                             .bind("d"),
+                         AST.context())),
+          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
+                          UsrCache),
+          UsrCache),
+      llvm::Succeeded());
+  EXPECT_THAT(Results,
               UnorderedElementsAre(evidence(
                   Slot(0), Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER,
                   fieldNamed("Target@Sa::I"))));
@@ -1084,14 +1101,28 @@ TEST(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerCallsFunction) {
   static constexpr llvm::StringRef Src = R"cc(
     int* getIntPtr(int*);
     struct Target {
-      // TODO(b/323509665) Collect from implicitly defaulted constructors. For
-      // now, the constructor must have a user-provided body for evidence to be
-      // collected from its definition.
-      Target() {};
+      Target() = default;
       Nonnull<int*> I = getIntPtr(nullptr);
     };
+
+    // Use the explicitly-declared but still implicitly-defined default
+    // constructor, so that it will be generated.
+    void foo() { Target t; }
   )cc";
-  EXPECT_THAT(collectEvidenceFromDefinitionNamed("Target", Src),
+
+  std::vector<Evidence> Results;
+  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
+  USRCache UsrCache;
+  ASSERT_THAT_ERROR(
+      collectEvidenceFromDefinition(
+          *selectFirst<FunctionDecl>(
+              "d", match(cxxConstructorDecl(isDefaultConstructor()).bind("d"),
+                         AST.context())),
+          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
+                          UsrCache),
+          UsrCache),
+      llvm::Succeeded());
+  EXPECT_THAT(Results,
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
                            functionNamed("getIntPtr")),
@@ -1918,6 +1949,58 @@ TEST(CollectEvidenceFromDefinitionTest,
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, FromGlobalLabmdaBodyForGlobal) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* p;
+    auto Lambda = []() { *p; };
+  )cc";
+
+  EXPECT_THAT(
+      collectEvidenceFromDefinitionNamed("operator()", Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    globalVarNamed("p"))));
+}
+
+// TODO(b/315967534) Collect for captured function parameters, specifically from
+// the unchecked dereference of `foo`'s parameter.
+TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaForCapturedParam) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void foo(int* p) {
+      auto Lambda = [&p]() { *p; };
+    }
+  )cc";
+
+  EXPECT_THAT(collectEvidenceFromDefinitionNamed("operator()", Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaForCalledFunction) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* bar();
+    void foo() {
+      auto Lambda = []() { *bar(); };
+    }
+  )cc";
+
+  EXPECT_THAT(collectEvidenceFromDefinitionNamed("operator()", Src),
+              UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
+                                            Evidence::UNCHECKED_DEREFERENCE,
+                                            functionNamed("bar"))));
+}
+
+// TODO(b/315967535) If we collect evidence for lambda declarations, collect
+// from the unchecked dereference of the lambda's parameter and/or the null
+// return.
+TEST(CollectEvidenceFromDefinitionTest, NoneForLambdaParamOrReturn) {
+  static constexpr llvm::StringRef Src = R"cc(
+    auto Lambda = [](int* p) {
+      *p;
+      return nullptr;
+    };
+  )cc";
+
+  EXPECT_THAT(collectEvidenceFromDefinitionNamed("operator()", Src), IsEmpty());
+}
+
 TEST(CollectEvidenceFromDefinitionTest, NotInferenceTarget) {
   static constexpr llvm::StringRef Src = R"cc(
     void isATarget(Nonnull<int*> a);
@@ -2283,7 +2366,6 @@ TEST(EvidenceSitesTest, Functions) {
     void bar();
     void bar() {}
     void baz() {}
-    auto Lambda = []() {};  // Not analyzed yet.
 
     struct S {
       S() {}
@@ -2299,6 +2381,18 @@ TEST(EvidenceSitesTest, Functions) {
   EXPECT_THAT(Sites.Definitions,
               ElementsAre(declNamed("bar"), declNamed("baz"), declNamed("S::S"),
                           declNamed("S::member")));
+}
+
+TEST(EvidenceSitesTest, Lambdas) {
+  TestAST AST(R"cc(
+    auto Lambda = []() {};
+  )cc");
+  auto Sites = EvidenceSites::discover(AST.context());
+  // TODO(b/315967535) If we collect for lambda declarations, add them to
+  // `Sites.Declarations`.
+  EXPECT_THAT(Sites.Declarations, IsEmpty());
+  EXPECT_THAT(Sites.Definitions,
+              ElementsAre(declNamed("(anonymous class)::operator()")));
 }
 
 TEST(EvidenceSitesTest, GlobalVariables) {

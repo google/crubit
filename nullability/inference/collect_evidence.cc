@@ -1149,14 +1149,28 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
     // We do want to see concrete code, including function instantiations.
     bool shouldVisitTemplateInstantiations() const { return true; }
 
+    // In order to collect from more default member initializers, we do want to
+    // see defaulted default constructors, which are implicitly-defined
+    // functions whether the declaration is implicit or explicit. We also want
+    // to see lambda bodies in the form of operator() definitions that are not
+    // themselves implicit but show up in an implicit context.
+    bool shouldVisitImplicitCode() const { return true; }
+
     bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
       if (isInferenceTarget(*FD)) Out.Declarations.push_back(FD);
 
       // Visiting template instantiations is fine, these are valid functions!
       // But we'll be limited in what we can infer.
-      bool IsUsefulDefinition = FD->doesThisDeclarationHaveABody() &&
-                                // We will not get anywhere with dependent code.
-                                !FD->isDependentContext();
+      bool IsUsefulDefinition =
+          FD->doesThisDeclarationHaveABody() &&
+          // We will not get anywhere with dependent code.
+          !FD->isDependentContext() &&
+          // Defaulted (aka implicitly-defined) default constructors give us a
+          // chance to analyze default member initializers more thoroughly, but
+          // otherwise implicit functions are not generally useful.
+          (!FD->isImplicit() ||
+           (isa<CXXConstructorDecl>(FD) &&
+            cast<CXXConstructorDecl>(FD)->isDefaultConstructor()));
       if (IsUsefulDefinition) Out.Definitions.push_back(FD);
 
       return true;
