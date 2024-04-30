@@ -61,6 +61,7 @@ namespace clang::tidy::nullability {
 using ::clang::dataflow::DataflowAnalysisContext;
 using ::clang::dataflow::Environment;
 using ::clang::dataflow::Formula;
+using ::clang::dataflow::RecordInitListHelper;
 using ::clang::dataflow::WatchedLiteralsSolver;
 
 using ConcreteNullabilityCache =
@@ -236,6 +237,7 @@ class DefinitionEvidenceCollector {
       Collector.fromReturn(*S);
       Collector.fromAssignment(*S);
       Collector.fromArithmetic(*S);
+      Collector.fromAggregateInitialization(*S);
     } else if (auto CFGInit = CFGElem.getAs<clang::CFGInitializer>()) {
       Collector.fromCFGInitializer(*CFGInit);
     }
@@ -896,6 +898,40 @@ class DefinitionEvidenceCollector {
         TypeNullability, *PV, Loc,
         IsDefaultInitializer ? Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER
                              : Evidence::ASSIGNED_FROM_NULLABLE);
+  }
+
+  void fromFieldInits(const RecordInitListHelper &Helper) {
+    // Any initialization of base classes/fields will be collected from the
+    // InitListExpr for the base initialization, so we only need to collect here
+    // from the field inits.
+    for (auto [Field, InitExpr] : Helper.field_inits()) {
+      if (!isSupportedRawPointerType(Field->getType())) return;
+      if (!isSupportedRawPointerType(InitExpr->getType())) {
+        llvm::errs() << "Unsupported type for initializer expression in "
+                        "aggregate initialization for supported pointer field: "
+                     << InitExpr->getType() << "\n";
+        return;
+      }
+
+      auto *PV = getRawPointerValue(InitExpr, Env);
+      if (!PV) return;
+      TypeNullability TypeNullability =
+          getNullabilityAnnotationsFromTypeAndOverrides(Field->getType(), Field,
+                                                        Lattice);
+      fromBindingToType(Field->getType(), TypeNullability, *PV,
+                        InitExpr->getExprLoc());
+      fromAssignmentFromNullable(TypeNullability, *PV, InitExpr->getExprLoc(),
+                                 Evidence::ASSIGNED_FROM_NULLABLE);
+    }
+  }
+
+  void fromAggregateInitialization(const Stmt &S) {
+    if (auto *InitList = dyn_cast<clang::InitListExpr>(&S)) {
+      fromFieldInits(RecordInitListHelper(InitList));
+      return;
+    }
+    if (auto *ParenListInit = dyn_cast<clang::CXXParenListInitExpr>(&S))
+      fromFieldInits(RecordInitListHelper(ParenListInit));
   }
 
   const std::vector<InferableSlot> &InferableSlots;

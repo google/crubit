@@ -100,7 +100,7 @@ testing::Matcher<const Evidence&> evidence(
 
 clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
   clang::TestInputs Inputs = Source;
-  Inputs.Language = TestLanguage::Lang_CXX17;
+  Inputs.Language = TestLanguage::Lang_CXX20;
   for (const auto& Entry :
        llvm::ArrayRef(test_headers_create(), test_headers_size()))
     Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
@@ -1999,6 +1999,45 @@ TEST(CollectEvidenceFromDefinitionTest, NoneForLambdaParamOrReturn) {
   )cc";
 
   EXPECT_THAT(collectEvidenceFromDefinitionNamed("operator()", Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
+  static constexpr llvm::StringRef Header = R"cc(
+    struct Base {
+      bool* BaseB;
+      Nonnull<char*> BaseC;
+    };
+    struct MyStruct : public Base {
+      int* I;
+      bool* B;
+    };
+  )cc";
+  const llvm::Twine BracesAggInit = Header + R"cc(
+    void target(Nullable<bool*> Bool, char* Char) {
+      MyStruct{Bool, Char, nullptr, Bool};
+    }
+  )cc";
+  // New aggregate initialization syntax in C++20
+  const llvm::Twine ParensAggInit = Header + R"cc(
+    void target(Nullable<bool*> Bool, char* Char) {
+      MyStruct(Base(Bool, Char), nullptr, Bool);
+    }
+  )cc";
+
+  auto ExpectedEvidenceMatcher =
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("Base::BaseB")),
+                           evidence(paramSlot(1), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("MyStruct::I")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("MyStruct::B")));
+
+  EXPECT_THAT(collectEvidenceFromTargetFunction(BracesAggInit.str()),
+              ExpectedEvidenceMatcher);
+  EXPECT_THAT(collectEvidenceFromTargetFunction(ParensAggInit.str()),
+              ExpectedEvidenceMatcher);
 }
 
 TEST(CollectEvidenceFromDefinitionTest, NotInferenceTarget) {
