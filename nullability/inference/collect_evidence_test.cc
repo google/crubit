@@ -117,30 +117,47 @@ clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
   return Inputs;
 }
 
-std::vector<Evidence> collectFromDefinitionNamed(
-    llvm::StringRef TargetName, llvm::StringRef Source,
-    PreviousInferences PreviousInferences = {}) {
+std::vector<Evidence> collectFromDefinition(
+    clang::TestAST& AST, const Decl& Definition,
+    PreviousInferences InputInferences = {}) {
   std::vector<Evidence> Results;
-
-  clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
   USRCache UsrCache;
   // Can't assert from within a non-void helper function, so only EXPECT.
   EXPECT_THAT_ERROR(
       collectEvidenceFromDefinition(
-          *dataflow::test::findValueDecl(AST.context(), TargetName),
+          Definition,
           evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
                           UsrCache),
-          UsrCache, PreviousInferences),
+          UsrCache, InputInferences),
       llvm::Succeeded());
   return Results;
+}
+
+std::vector<Evidence> collectFromDefinitionNamed(
+    llvm::StringRef TargetName, llvm::StringRef Source,
+    PreviousInferences InputInferences = {}) {
+  clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
+  const Decl& Definition =
+      *dataflow::test::findValueDecl(AST.context(), TargetName);
+  return collectFromDefinition(AST, Definition, InputInferences);
 }
 
 /// Provides a default function-name-cased value for TargetName in
 /// collectEvidenceFromDefinitionNamed, which puts TargetName first for
 /// readability.
 std::vector<Evidence> collectFromTargetFuncDefinition(
-    llvm::StringRef Source, PreviousInferences PreviousInferences = {}) {
-  return collectFromDefinitionNamed("target", Source, PreviousInferences);
+    llvm::StringRef Source, PreviousInferences InputInferences = {}) {
+  return collectFromDefinitionNamed("target", Source, InputInferences);
+}
+
+template <typename MatcherT>
+std::vector<Evidence> collectFromDefinitionMatching(
+    MatcherT Matcher, llvm::StringRef Source,
+    PreviousInferences InputInferences = {}) {
+  clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
+  const Decl& Definition =
+      *selectFirst<Decl>("d", match(Matcher.bind("d"), AST.context()));
+  return collectFromDefinition(AST, Definition, InputInferences);
 }
 
 std::vector<Evidence> collectFromTargetDecl(llvm::StringRef Source) {
@@ -982,25 +999,8 @@ TEST(CollectEvidenceFromDefinitionTest, ConstructorWithDelegatingConstructor) {
     };
   )cc";
 
-  std::vector<Evidence> Results;
-  clang::TestInputs Inputs(Src);
-  Inputs.Language = TestLanguage::Lang_CXX17;
-  clang::TestAST AST(Inputs);
-  USRCache UsrCache;
-
-  const auto& Delegator = *selectFirst<FunctionDecl>(
-      "d", match(functionDecl(hasName("target"), parameterCountIs(0)).bind("d"),
-                 AST.context()));
-
-  ASSERT_THAT_ERROR(
-      collectEvidenceFromDefinition(
-          Delegator,
-          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          UsrCache),
-          UsrCache),
-      llvm::Succeeded());
-
-  EXPECT_THAT(Results,
+  EXPECT_THAT(collectFromDefinitionMatching(
+                  functionDecl(hasName("target"), parameterCountIs(0)), Src),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("target"))));
 }
@@ -1062,24 +1062,12 @@ TEST(CollectEvidenceFromDefinitionTest, IndirectFieldDefaultFieldInitializer) {
     // generated.
     void foo() { Target t; }
   )cc";
-  std::vector<Evidence> Results;
-  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
-  USRCache UsrCache;
-  ASSERT_THAT_ERROR(
-      collectEvidenceFromDefinition(
-          *selectFirst<FunctionDecl>(
-              "d", match(cxxConstructorDecl(isDefaultConstructor(),
-                                            hasName("Target"))
-                             .bind("d"),
-                         AST.context())),
-          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          UsrCache),
-          UsrCache),
-      llvm::Succeeded());
-  EXPECT_THAT(Results,
-              UnorderedElementsAre(evidence(
-                  Slot(0), Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER,
-                  fieldNamed("Target@Sa::I"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(isDefaultConstructor(), hasName("Target")), Src),
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER,
+                   fieldNamed("Target@Sa::I"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FieldInitializedWithNullable) {
@@ -1123,20 +1111,8 @@ TEST(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerCallsFunction) {
     // constructor, so that it will be generated.
     void foo() { Target t; }
   )cc";
-
-  std::vector<Evidence> Results;
-  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
-  USRCache UsrCache;
-  ASSERT_THAT_ERROR(
-      collectEvidenceFromDefinition(
-          *selectFirst<FunctionDecl>(
-              "d", match(cxxConstructorDecl(isDefaultConstructor()).bind("d"),
-                         AST.context())),
-          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          UsrCache),
-          UsrCache),
-      llvm::Succeeded());
-  EXPECT_THAT(Results,
+  EXPECT_THAT(collectFromDefinitionMatching(
+                  cxxConstructorDecl(isDefaultConstructor()), Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
                            functionNamed("getIntPtr")),
@@ -1309,30 +1285,14 @@ TEST(CollectEvidenceFromDefinitionTest,
       target<int>([](Nonnull<int*> i) {}, nullptr);
     }
   )cc";
-
-  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
-  auto TargetInstantiationNodes = match(
-      functionDecl(hasName("target"), isTemplateInstantiation()).bind("target"),
-      AST.context());
-  ASSERT_THAT(TargetInstantiationNodes, SizeIs(1));
-  auto* const InstantiationDecl = ast_matchers::selectFirst<FunctionDecl>(
-      "target", TargetInstantiationNodes);
-  ASSERT_NE(InstantiationDecl, nullptr);
-
-  USRCache USRCache;
-  std::vector<Evidence> Results;
-  ASSERT_THAT_ERROR(
-      collectEvidenceFromDefinition(
-          *InstantiationDecl,
-          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          USRCache),
-          USRCache),
-      llvm::Succeeded());
   // Doesn't collect any evidence for target from target's body, only collects
   // some for makeIntPtr.
-  EXPECT_THAT(Results, UnorderedElementsAre(evidence(
-                           SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
-                           functionNamed("makeIntPtr"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          functionDecl(hasName("target"), isTemplateInstantiation()), Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
+                                    Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("makeIntPtr"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNullable) {
@@ -1437,29 +1397,14 @@ TEST(CollectEvidenceFromDefinitionTest,
     void instantiate() { target<int>(); }
   )cc";
 
-  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
-  auto TargetInstantiationNodes = match(
-      functionDecl(hasName("target"), isTemplateInstantiation()).bind("target"),
-      AST.context());
-  ASSERT_THAT(TargetInstantiationNodes, SizeIs(1));
-  auto* const InstantiationDecl = ast_matchers::selectFirst<FunctionDecl>(
-      "target", TargetInstantiationNodes);
-  ASSERT_NE(InstantiationDecl, nullptr);
-
-  USRCache USRCache;
-  std::vector<Evidence> Results;
-  ASSERT_THAT_ERROR(
-      collectEvidenceFromDefinition(
-          *InstantiationDecl,
-          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          USRCache),
-          USRCache),
-      llvm::Succeeded());
   // Doesn't collect any evidence for target from target's body, only collects
   // some for makeIntPtr.
-  EXPECT_THAT(Results, UnorderedElementsAre(evidence(
-                           SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
-                           functionNamed("makeIntPtr"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          functionDecl(hasName("target"), isTemplateInstantiation()), Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
+                                    Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("makeIntPtr"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableOrUnknown) {
@@ -1817,22 +1762,11 @@ TEST(CollectEvidenceFromDefinitionTest, StaticInitOutOfClass) {
     };
     int* MyStruct::Target = nullptr;
   )cc";
-  std::vector<Evidence> Results;
-  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
-  USRCache UsrCache;
+  EXPECT_THAT(collectFromDefinitionMatching(varDecl(hasInit()), Src),
+              UnorderedElementsAre(
 
-  ASSERT_THAT_ERROR(
-      collectEvidenceFromDefinition(
-          *selectFirst<VarDecl>(
-              "d", match(varDecl(hasInit()).bind("d"), AST.context())),
-          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          UsrCache),
-          UsrCache),
-      llvm::Succeeded());
-  EXPECT_THAT(Results, UnorderedElementsAre(
-
-                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                                    staticFieldNamed("MyStruct::Target"))));
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           staticFieldNamed("MyStruct::Target"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, NoEvidenceForLocals) {
@@ -2084,30 +2018,12 @@ TEST(CollectEvidenceFromDefinitionTest, NotInferenceTarget) {
 
     void instantiate() { target<int>(nullptr); }
   )cc";
-
-  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
-  auto TargetInstantiationNodes = match(
-      functionDecl(hasName("target"), isTemplateInstantiation()).bind("target"),
-      AST.context());
-  ASSERT_THAT(TargetInstantiationNodes, SizeIs(1));
-  auto* const InstantiationDecl = ast_matchers::selectFirst<FunctionDecl>(
-      "target", TargetInstantiationNodes);
-  ASSERT_NE(InstantiationDecl, nullptr);
-
-  USRCache USRCache;
-  std::vector<Evidence> Results;
-  ASSERT_THAT_ERROR(
-      collectEvidenceFromDefinition(
-          *InstantiationDecl,
-          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          USRCache),
-          USRCache),
-      llvm::Succeeded());
-
   // Doesn't collect any evidence for target from target's body, only collects
   // some for isATarget.
-  EXPECT_THAT(Results, UnorderedElementsAre(
-                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          functionDecl(hasName("target"), isTemplateInstantiation()), Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                     functionNamed("isATarget"))));
 }
 
