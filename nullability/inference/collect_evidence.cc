@@ -4,6 +4,7 @@
 
 #include "nullability/inference/collect_evidence.h"
 
+#include <cassert>
 #include <memory>
 #include <optional>
 #include <string>
@@ -221,30 +222,34 @@ class DefinitionEvidenceCollector {
   static void collect(std::vector<InferableSlot> &InferableSlots,
                       const Formula &InferableSlotsConstraint,
                       llvm::function_ref<EvidenceEmitter> Emit,
-                      const Stmt &Stmt,
+                      const CFGElement &CFGElem,
                       const PointerNullabilityLattice &Lattice,
                       const Environment &Env) {
     DefinitionEvidenceCollector Collector(
-        InferableSlots, InferableSlotsConstraint, Emit, Stmt, Lattice, Env);
-    Collector.fromDereference();
-    Collector.fromCallExpr();
-    Collector.fromConstructExpr();
-    Collector.fromReturn();
-    Collector.fromAssignment();
-    Collector.fromArithmetic();
+        InferableSlots, InferableSlotsConstraint, Emit, Lattice, Env);
+    if (auto CFGStmt = CFGElem.getAs<clang::CFGStmt>()) {
+      const Stmt *S = CFGStmt->getStmt();
+      if (!S) return;
+      Collector.fromDereference(*S);
+      Collector.fromCallExpr(*S);
+      Collector.fromConstructExpr(*S);
+      Collector.fromReturn(*S);
+      Collector.fromAssignment(*S);
+      Collector.fromArithmetic(*S);
+    } else if (auto CFGInit = CFGElem.getAs<clang::CFGInitializer>()) {
+      Collector.fromCFGInitializer(*CFGInit);
+    }
   }
 
  private:
   DefinitionEvidenceCollector(std::vector<InferableSlot> &InferableSlots,
                               const Formula &InferableSlotsConstraint,
                               llvm::function_ref<EvidenceEmitter> Emit,
-                              const Stmt &Stmt,
                               const PointerNullabilityLattice &Lattice,
                               const Environment &Env)
       : InferableSlots(InferableSlots),
         InferableSlotsConstraint(InferableSlotsConstraint),
         Emit(Emit),
-        Stmt(Stmt),
         Lattice(Lattice),
         Env(Env) {}
 
@@ -305,8 +310,8 @@ class DefinitionEvidenceCollector {
     }
   }
 
-  void fromDereference() {
-    auto [Target, Loc] = describeDereference(Stmt);
+  void fromDereference(const Stmt &S) {
+    auto [Target, Loc] = describeDereference(S);
     if (!Target || !isSupportedPointerType(Target->getType())) return;
 
     // It is a dereference of a pointer. Now gather evidence from it.
@@ -627,8 +632,8 @@ class DefinitionEvidenceCollector {
     mustBeNonnull(*ValueComparedToNull, EvidenceLoc, Evidence::ABORT_IF_NULL);
   }
 
-  void fromCallExpr() {
-    auto *CallExpr = dyn_cast<clang::CallExpr>(&Stmt);
+  void fromCallExpr(const Stmt &S) {
+    auto *CallExpr = dyn_cast<clang::CallExpr>(&S);
     if (!CallExpr) return;
     auto *CalleeDecl = CallExpr->getCalleeDecl();
     if (!CalleeDecl) return;
@@ -650,8 +655,8 @@ class DefinitionEvidenceCollector {
     }
   }
 
-  void fromConstructExpr() {
-    auto *ConstructExpr = dyn_cast<clang::CXXConstructExpr>(&Stmt);
+  void fromConstructExpr(const Stmt &S) {
+    auto *ConstructExpr = dyn_cast<clang::CXXConstructExpr>(&S);
     if (!ConstructExpr) return;
     auto *ConstructorDecl = dyn_cast_or_null<clang::CXXConstructorDecl>(
         ConstructExpr->getConstructor());
@@ -660,9 +665,9 @@ class DefinitionEvidenceCollector {
     fromArgsAndParams(*ConstructorDecl, *ConstructExpr);
   }
 
-  void fromReturn() {
+  void fromReturn(const Stmt &S) {
     // Is this CFGElement a return statement?
-    auto *ReturnStmt = dyn_cast<clang::ReturnStmt>(&Stmt);
+    auto *ReturnStmt = dyn_cast<clang::ReturnStmt>(&S);
     if (!ReturnStmt) return;
     auto *ReturnExpr = ReturnStmt->getRetValue();
     if (!ReturnExpr || !isSupportedRawPointerType(ReturnExpr->getType()))
@@ -704,9 +709,10 @@ class DefinitionEvidenceCollector {
   /// ```
   /// evidence for each of the assignments of `p` and `q` that they were
   /// ASSIGNED_FROM_NULLABLE.
-  void fromAssignmentFromNullable(TypeNullability &TypeNullability,
-                                  dataflow::PointerValue &PointerValue,
-                                  SourceLocation ValueLoc) {
+  void fromAssignmentFromNullable(
+      TypeNullability &TypeNullability, dataflow::PointerValue &PointerValue,
+      SourceLocation ValueLoc,
+      Evidence::Kind EvidenceKind = Evidence::ASSIGNED_FROM_NULLABLE) {
     if (TypeNullability.empty() || !hasPointerNullState(PointerValue)) return;
     dataflow::Arena &A = Env.arena();
     if (getNullability(PointerValue, Env, &InferableSlotsConstraint) ==
@@ -723,19 +729,19 @@ class DefinitionEvidenceCollector {
         // only DCHECK.
         DCHECK(Env.allows(IS.getSymbolicNullability().isNullable(A)));
         if (Env.proves(Implication)) {
-          Emit(IS.getInferenceTarget(), IS.getTargetSlot(),
-               Evidence::ASSIGNED_FROM_NULLABLE, ValueLoc);
+          Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind,
+               ValueLoc);
           return;
         }
       }
     }
   }
 
-  void fromAssignment() {
+  void fromAssignment(const Stmt &S) {
     if (InferableSlots.empty()) return;
 
     // Initialization of new decl.
-    if (auto *DeclStmt = dyn_cast<clang::DeclStmt>(&Stmt)) {
+    if (auto *DeclStmt = dyn_cast<clang::DeclStmt>(&S)) {
       for (auto *Decl : DeclStmt->decls()) {
         if (auto *VarDecl = dyn_cast<clang::VarDecl>(Decl);
             VarDecl && VarDecl->hasInit()) {
@@ -764,7 +770,7 @@ class DefinitionEvidenceCollector {
     }
 
     // Assignment to existing decl.
-    if (auto *BinaryOperator = dyn_cast<clang::BinaryOperator>(&Stmt);
+    if (auto *BinaryOperator = dyn_cast<clang::BinaryOperator>(&S);
         BinaryOperator &&
         BinaryOperator->getOpcode() == clang::BinaryOperatorKind::BO_Assign) {
       const Expr *LHS = BinaryOperator->getLHS();
@@ -803,15 +809,15 @@ class DefinitionEvidenceCollector {
       mustBeNonnull(*PV, Loc, Evidence::ARITHMETIC);
   }
 
-  void fromArithmetic() {
+  void fromArithmetic(const Stmt &S) {
     // A nullptr can be added to 0 and nullptr can be subtracted from nullptr
     // without hitting UB. But for now, we skip handling these special cases and
     // assume all pointers involved in these operations must be nonnull.
-    switch (Stmt.getStmtClass()) {
+    switch (S.getStmtClass()) {
       default:
         return;
       case Stmt::CompoundAssignOperatorClass: {
-        auto *Op = cast<clang::CompoundAssignOperator>(&Stmt);
+        auto *Op = cast<clang::CompoundAssignOperator>(&S);
         switch (Op->getOpcode()) {
           default:
             return;
@@ -822,7 +828,7 @@ class DefinitionEvidenceCollector {
         break;
       }
       case Stmt::BinaryOperatorClass: {
-        auto *Op = cast<clang::BinaryOperator>(&Stmt);
+        auto *Op = cast<clang::BinaryOperator>(&S);
         switch (Op->getOpcode()) {
           default:
             return;
@@ -834,7 +840,7 @@ class DefinitionEvidenceCollector {
         break;
       }
       case Stmt::UnaryOperatorClass: {
-        auto *Op = cast<clang::UnaryOperator>(&Stmt);
+        auto *Op = cast<clang::UnaryOperator>(&S);
         switch (Op->getOpcode()) {
           default:
             return;
@@ -849,10 +855,52 @@ class DefinitionEvidenceCollector {
     }
   }
 
+  void fromCFGInitializer(const CFGInitializer &CFGInit) {
+    const CXXCtorInitializer *Initializer = CFGInit.getInitializer();
+    if (!Initializer) {
+      // We expect this not to be the case, but not to a production-crash-worthy
+      // level, so assert instead of CHECK.
+      llvm::errs() << "CFGInitializer with null CXXCtorInitializer.\n";
+      CFGInit.dump();
+      assert(Initializer);
+    }
+
+    // Base and delegating initializers are collected from when we see the
+    // underlying CXXConstructExpr, so we don't need to handle those, only the
+    // member initializers.
+    const FieldDecl *Field = Initializer->getAnyMember();
+    if (Field == nullptr) return;
+    if (InferableSlots.empty()) return;
+    bool IsDefaultInitializer = Initializer->isInClassMemberInitializer();
+    const Expr *InitExpr = Initializer->getInit();
+    SourceLocation Loc = IsDefaultInitializer
+                             ? Field->getInClassInitializer()->getExprLoc()
+                             : InitExpr->getExprLoc();
+
+    if (!isSupportedRawPointerType(Field->getType())) return;
+    if (!isSupportedRawPointerType(InitExpr->getType())) {
+      llvm::errs() << "Unsupported type for initializer expression in "
+                      "constructor initializer for supported pointer field: "
+                   << InitExpr->getType() << "\n";
+      return;
+    }
+
+    auto *PV = getRawPointerValue(InitExpr, Env);
+    if (!PV) return;
+    TypeNullability TypeNullability =
+        getNullabilityAnnotationsFromTypeAndOverrides(Field->getType(), Field,
+                                                      Lattice);
+    fromBindingToType(Field->getType(), TypeNullability, *PV, Loc);
+
+    fromAssignmentFromNullable(
+        TypeNullability, *PV, Loc,
+        IsDefaultInitializer ? Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER
+                             : Evidence::ASSIGNED_FROM_NULLABLE);
+  }
+
   const std::vector<InferableSlot> &InferableSlots;
   const Formula &InferableSlotsConstraint;
   llvm::function_ref<EvidenceEmitter> Emit;
-  const Stmt &Stmt;
   const PointerNullabilityLattice &Lattice;
   const Environment &Env;
 };
@@ -1021,12 +1069,8 @@ llvm::Error collectEvidenceFromDefinition(
           [&](const CFGElement &Element,
               const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
                   &State) {
-            auto CFGStmt = Element.getAs<clang::CFGStmt>();
-            if (!CFGStmt) return;
-            auto *Stmt = CFGStmt->getStmt();
-            if (!Stmt) return;
             DefinitionEvidenceCollector::collect(
-                InferableSlots, InferableSlotsConstraint, Emit, *Stmt,
+                InferableSlots, InferableSlotsConstraint, Emit, Element,
                 State.Lattice, State.Env);
           })
           .takeError();

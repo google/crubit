@@ -944,7 +944,7 @@ TEST(CollectEvidenceFromDefinitionTest, NonTargetConstructorCall) {
                                     functionNamed("target"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, ConstructorCallWithBaseInitializer) {
+TEST(CollectEvidenceFromDefinitionTest, ConstructorWithBaseInitializer) {
   static constexpr llvm::StringRef Src = R"cc(
     struct TakeNonnull {
       explicit TakeNonnull(Nonnull<int *>);
@@ -958,8 +958,7 @@ TEST(CollectEvidenceFromDefinitionTest, ConstructorCallWithBaseInitializer) {
                                 functionNamed("target"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest,
-     ConstructorCallWithDelegatingConstructor) {
+TEST(CollectEvidenceFromDefinitionTest, ConstructorWithDelegatingConstructor) {
   static constexpr llvm::StringRef Src = R"cc(
     struct target {
       target(int* i);
@@ -1005,20 +1004,99 @@ TEST(CollectEvidenceFromDefinitionTest, VariadicConstructorCall) {
                                     functionNamed("S"))));
 }
 
-// Not yet supported: Needs special handling for CXXCtorInitializer, but is
-// not likely to produce many inference results as long as we are not
-// inferring annotations for fields.
-TEST(DISABLED_CollectEvidenceFromDefinitionTest,
-     ConstructorCallWithFieldInitializer) {
+TEST(CollectEvidenceFromDefinitionTest, FieldInitializerFromBindingToType) {
   static constexpr llvm::StringRef Src = R"cc(
-    struct target {
-      target(int *i) : i_(i) {}
-      Nonnull<int *> i_;
+    struct Target {
+      Target(int *Input) : I(Input) {}
+      Nonnull<int *> I;
     };
   )cc";
-  EXPECT_THAT(collectEvidenceFromTargetFunction(Src),
-              Contains(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
-                                functionNamed("target"))));
+  EXPECT_THAT(
+      collectEvidenceFromDefinitionNamed("Target", Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("Target"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     IndirectFieldInitializerFromBindingToType) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Target {
+      Target(int *Input) : I(Input) {}
+      struct {
+        Nonnull<int *> I;
+      };
+    };
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromDefinitionNamed("Target", Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("Target"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, IndirectFieldDefaultFieldInitializer) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Target {
+      // TODO(b/323509665) Collect from implicitly defaulted constructors. For
+      // now, the constructor must have a user-provided body for evidence to be
+      // collected from its definition.
+      Target() {}
+      struct {
+        int* I = nullptr;
+      };
+    };
+  )cc";
+  EXPECT_THAT(collectEvidenceFromDefinitionNamed("Target", Src),
+              UnorderedElementsAre(evidence(
+                  Slot(0), Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER,
+                  fieldNamed("Target@Sa::I"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FieldInitializedWithNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Target {
+      Target(Nullable<int *> Input) : I(Input) {}
+      int *I;
+    };
+  )cc";
+  EXPECT_THAT(
+      collectEvidenceFromDefinitionNamed("Target", Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("Target::I"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FieldInitializerCallsFunction) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* getIntPtr(int*);
+    struct Target {
+      Target() : I(getIntPtr(nullptr)) {}
+      Nonnull<int*> I;
+    };
+  )cc";
+  EXPECT_THAT(collectEvidenceFromDefinitionNamed("Target", Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
+                           functionNamed("getIntPtr")),
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                           functionNamed("getIntPtr"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerCallsFunction) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* getIntPtr(int*);
+    struct Target {
+      // TODO(b/323509665) Collect from implicitly defaulted constructors. For
+      // now, the constructor must have a user-provided body for evidence to be
+      // collected from its definition.
+      Target() {};
+      Nonnull<int*> I = getIntPtr(nullptr);
+    };
+  )cc";
+  EXPECT_THAT(collectEvidenceFromDefinitionNamed("Target", Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL,
+                           functionNamed("getIntPtr")),
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                           functionNamed("getIntPtr"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNonnull) {

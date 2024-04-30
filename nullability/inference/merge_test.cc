@@ -275,5 +275,12 @@ TEST_F(InferTest, Arithmetic) {
   EXPECT_EQ(Nullability::NULLABLE, infer(/*ExpectConflict=*/true));
 }
 
+TEST_F(InferTest, NullableDefaultMemberInitializer) {
+  add(Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER);
+  EXPECT_EQ(Nullability::NULLABLE, infer());
+  add(Evidence::UNCHECKED_DEREFERENCE);
+  EXPECT_EQ(Nullability::NONNULL, infer());
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

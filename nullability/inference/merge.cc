@@ -142,6 +142,8 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
   if (!Counts[Evidence::NULLABLE_ARGUMENT] &&
       !Counts[Evidence::UNKNOWN_ARGUMENT] && Counts[Evidence::NONNULL_ARGUMENT])
     return {Nullability::NONNULL};
+  if (Counts[Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER])
+    return {Nullability::NULLABLE};
 
   return {Nullability::UNKNOWN};
 }
