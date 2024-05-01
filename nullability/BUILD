@@ -5,10 +5,7 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "ast_helpers",
     hdrs = ["ast_helpers.h"],
-    visibility = [
-        "//nullability/inference:__pkg__",
-        "//nullability/test:__pkg__",
-    ],
+    visibility = ["//nullability/inference:__pkg__"],
     deps = ["@llvm-project//clang:ast"],
 )
 
