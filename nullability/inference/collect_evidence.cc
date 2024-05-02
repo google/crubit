@@ -728,10 +728,10 @@ class DefinitionEvidenceCollector {
   /// ```
   /// evidence for each of the assignments of `p` and `q` that they were
   /// ASSIGNED_FROM_NULLABLE.
-  void fromAssignmentFromNullable(
-      TypeNullability &TypeNullability, dataflow::PointerValue &PointerValue,
-      SourceLocation ValueLoc,
-      Evidence::Kind EvidenceKind = Evidence::ASSIGNED_FROM_NULLABLE) {
+  void fromAssignmentFromNullable(TypeNullability &TypeNullability,
+                                  const dataflow::PointerValue &PointerValue,
+                                  SourceLocation ValueLoc,
+                                  Evidence::Kind EvidenceKind) {
     if (TypeNullability.empty() || !hasPointerNullState(PointerValue)) return;
     dataflow::Arena &A = Env.arena();
     if (getNullability(PointerValue, Env, &InferableSlotsConstraint) ==
@@ -756,6 +756,24 @@ class DefinitionEvidenceCollector {
     }
   }
 
+  /// Collects evidence based on an assignment of RHS to LHS, through a
+  /// direct assignment statement, aggregate initialization, etc.
+  void fromAssignmentLike(const ValueDecl &LHS, const Expr &RHS,
+                          Evidence::Kind EvidenceKindForAssignmentFromNullable =
+                              Evidence::ASSIGNED_FROM_NULLABLE) {
+    dataflow::PointerValue *PV = getRawPointerValue(&RHS, Env);
+    if (!PV) return;
+    TypeNullability TypeNullability =
+        getNullabilityAnnotationsFromTypeAndOverrides(LHS.getType(), &LHS,
+                                                      Lattice);
+    fromBindingToType(LHS.getType(), TypeNullability, *PV, RHS.getExprLoc());
+    fromAssignmentFromNullable(TypeNullability, *PV, RHS.getExprLoc(),
+                               EvidenceKindForAssignmentFromNullable);
+  }
+
+  /// Collects evidence from direct assignment statements, e.g. `p = nullptr`,
+  /// whether initializing a new declaration or re-assigning to an existing
+  /// declaration.
   void fromAssignment(const Stmt &S) {
     if (InferableSlots.empty()) return;
 
@@ -774,16 +792,7 @@ class DefinitionEvidenceCollector {
                          << VarDecl->getInit()->getType() << "\n";
             return;
           }
-          auto *PV = getRawPointerValue(VarDecl->getInit(), Env);
-          if (!PV) return;
-          TypeNullability TypeNullability =
-              getNullabilityAnnotationsFromTypeAndOverrides(VarDecl->getType(),
-                                                            VarDecl, Lattice);
-          fromBindingToType(VarDecl->getType(), TypeNullability, *PV,
-                            VarDecl->getInit()->getExprLoc());
-
-          fromAssignmentFromNullable(TypeNullability, *PV,
-                                     VarDecl->getInit()->getExprLoc());
+          fromAssignmentLike(*VarDecl, *VarDecl->getInit());
         }
       }
     }
@@ -803,22 +812,19 @@ class DefinitionEvidenceCollector {
         return;
       }
 
-      auto *PV = getRawPointerValue(RHS, Env);
-      if (!PV) return;
-
-      TypeNullability TypeNullability;
+      const ValueDecl *LHSDecl = nullptr;
       if (auto *DeclRefExpr = dyn_cast_or_null<clang::DeclRefExpr>(LHS)) {
-        TypeNullability = getNullabilityAnnotationsFromTypeAndOverrides(
-            LHSType, DeclRefExpr->getDecl(), Lattice);
+        LHSDecl = DeclRefExpr->getDecl();
       } else if (auto *MemberExpr = dyn_cast_or_null<clang::MemberExpr>(LHS)) {
-        TypeNullability = getNullabilityAnnotationsFromTypeAndOverrides(
-            LHSType, MemberExpr->getMemberDecl(), Lattice);
+        LHSDecl = MemberExpr->getMemberDecl();
       } else {
-        TypeNullability = getNullabilityAnnotationsFromType(LHSType);
+        llvm::errs()
+            << "Unsupported LHS Decl type in assignment to existing decl: ";
+        LHS->dump();
+        return;
       }
 
-      fromBindingToType(LHSType, TypeNullability, *PV, RHS->getExprLoc());
-      fromAssignmentFromNullable(TypeNullability, *PV, RHS->getExprLoc());
+      fromAssignmentLike(*LHSDecl, *RHS);
     }
   }
 
@@ -891,10 +897,8 @@ class DefinitionEvidenceCollector {
     if (Field == nullptr) return;
     if (InferableSlots.empty()) return;
     bool IsDefaultInitializer = Initializer->isInClassMemberInitializer();
-    const Expr *InitExpr = Initializer->getInit();
-    SourceLocation Loc = IsDefaultInitializer
-                             ? Field->getInClassInitializer()->getExprLoc()
-                             : InitExpr->getExprLoc();
+    const Expr *InitExpr = IsDefaultInitializer ? Field->getInClassInitializer()
+                                                : Initializer->getInit();
 
     if (!isSupportedRawPointerType(Field->getType())) return;
     if (!isSupportedRawPointerType(InitExpr->getType())) {
@@ -904,17 +908,10 @@ class DefinitionEvidenceCollector {
       return;
     }
 
-    auto *PV = getRawPointerValue(InitExpr, Env);
-    if (!PV) return;
-    TypeNullability TypeNullability =
-        getNullabilityAnnotationsFromTypeAndOverrides(Field->getType(), Field,
-                                                      Lattice);
-    fromBindingToType(Field->getType(), TypeNullability, *PV, Loc);
-
-    fromAssignmentFromNullable(
-        TypeNullability, *PV, Loc,
-        IsDefaultInitializer ? Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER
-                             : Evidence::ASSIGNED_FROM_NULLABLE);
+    fromAssignmentLike(*Field, *InitExpr,
+                       IsDefaultInitializer
+                           ? Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER
+                           : Evidence::ASSIGNED_FROM_NULLABLE);
   }
 
   void fromFieldInits(const RecordInitListHelper &Helper) {
@@ -930,15 +927,7 @@ class DefinitionEvidenceCollector {
         return;
       }
 
-      auto *PV = getRawPointerValue(InitExpr, Env);
-      if (!PV) return;
-      TypeNullability TypeNullability =
-          getNullabilityAnnotationsFromTypeAndOverrides(Field->getType(), Field,
-                                                        Lattice);
-      fromBindingToType(Field->getType(), TypeNullability, *PV,
-                        InitExpr->getExprLoc());
-      fromAssignmentFromNullable(TypeNullability, *PV, InitExpr->getExprLoc(),
-                                 Evidence::ASSIGNED_FROM_NULLABLE);
+      fromAssignmentLike(*Field, *InitExpr);
     }
   }
 
