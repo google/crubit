@@ -365,9 +365,9 @@ class DefinitionEvidenceCollector {
     }
   }
 
-  void fromBindingToType(QualType Type, TypeNullability &TypeNullability,
-                         const dataflow::PointerValue &PointerValue,
-                         SourceLocation ValueLoc) {
+  void fromAssignmentToType(QualType Type, TypeNullability &TypeNullability,
+                            const dataflow::PointerValue &PointerValue,
+                            SourceLocation ValueLoc) {
     //  TODO: Account for variance and each layer of nullability when we handle
     //  more than top-level pointers.
     if (TypeNullability.empty()) return;
@@ -430,10 +430,10 @@ class DefinitionEvidenceCollector {
         auto ParamNullability = getNullabilityAnnotationsFromTypeAndOverrides(
             ParamType, &Iter.param(), Lattice);
 
-        // Collect evidence from the binding of the argument to the parameter's
-        // nullability, if known.
-        fromBindingToType(Iter.param().getType(), ParamNullability, *PV,
-                          ArgLoc);
+        // Collect evidence from constraints that the parameter's nullability
+        // places on the argument's nullability.
+        fromAssignmentToType(Iter.param().getType(), ParamNullability, *PV,
+                             ArgLoc);
       }
 
       if (CollectEvidenceForCallee) {
@@ -449,9 +449,9 @@ class DefinitionEvidenceCollector {
     }
   }
 
-  /// Collects evidence from the binding of function arguments to the types of
-  /// the corresponding parameter, used when we have a FunctionProtoType but no
-  /// FunctionDecl.
+  /// Collects evidence from the assignment of function arguments to the types
+  /// of the corresponding parameter, used when we have a FunctionProtoType but
+  /// no FunctionDecl.
   /// TODO: When we collect evidence for more complex slots than just top-level
   /// pointers, emit evidence of the function parameter's nullability as a slot
   /// in the appropriate declaration.
@@ -473,10 +473,10 @@ class DefinitionEvidenceCollector {
       // nullabilities, check for overrides from previous inference iterations.
       auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
 
-      // Collect evidence from the binding of the argument to the parameter's
-      // nullability, if known.
-      fromBindingToType(ParamType, ParamNullability, *PV,
-                        Expr.getArg(I)->getExprLoc());
+      // Collect evidence from constraints that the parameter's nullability
+      // places on the argument's nullability.
+      fromAssignmentToType(ParamType, ParamNullability, *PV,
+                           Expr.getArg(I)->getExprLoc());
     }
   }
 
@@ -766,7 +766,7 @@ class DefinitionEvidenceCollector {
     TypeNullability TypeNullability =
         getNullabilityAnnotationsFromTypeAndOverrides(LHS.getType(), &LHS,
                                                       Lattice);
-    fromBindingToType(LHS.getType(), TypeNullability, *PV, RHS.getExprLoc());
+    fromAssignmentToType(LHS.getType(), TypeNullability, *PV, RHS.getExprLoc());
     fromAssignmentFromNullable(TypeNullability, *PV, RHS.getExprLoc(),
                                EvidenceKindForAssignmentFromNullable);
   }

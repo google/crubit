@@ -1020,7 +1020,7 @@ TEST(CollectEvidenceFromDefinitionTest, VariadicConstructorCall) {
                                     functionNamed("S"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, FieldInitializerFromBindingToType) {
+TEST(CollectEvidenceFromDefinitionTest, FieldInitializerFromAssignmentToType) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Target {
       Target(int *Input) : I(Input) {}
@@ -1034,7 +1034,7 @@ TEST(CollectEvidenceFromDefinitionTest, FieldInitializerFromBindingToType) {
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
-     IndirectFieldInitializerFromBindingToType) {
+     IndirectFieldInitializerFromAssignmentToType) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Target {
       Target(int *Input) : I(Input) {}
