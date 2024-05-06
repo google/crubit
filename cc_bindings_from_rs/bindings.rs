@@ -1471,12 +1471,15 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
 
     let layout = get_layout(tcx, core.self_ty)
         .expect("Layout should be already verified by `format_adt_core`");
-    let fields: Vec<Field> = if core.self_ty.is_enum() || core.self_ty.is_union() {
+    let adt_def = core.self_ty.ty_adt_def().expect("`core.def_id` needs to identify an ADT");
+    let fields: Vec<Field> = if core.self_ty.is_enum()
+        || (core.self_ty.is_union() && !core.repr_attrs.contains(&rustc_attr::ReprC))
+    {
         // Note that `#[repr(Rust)]` unions don't guarantee that all their fields
         // have offset 0.
         vec![Field {
             type_info: Err(anyhow!(
-                "No support for bindings of individual fields of \
+                "No support for bindings of individual fields of non-#[repr(C))] \
                                     `union` (b/272801632) or `enum`"
             )),
             cc_name: quote! { __opaque_blob_of_bytes },
@@ -1540,11 +1543,14 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                 }
             })
             .collect_vec();
+
+        // Determine the memory layout
         match layout.fields() {
             FieldsShape::Arbitrary { offsets, .. } => {
                 for (index, offset) in offsets.iter().enumerate() {
-                    // Documentation of `FieldsShape::Arbitrary says that the offsets are "ordered
-                    // to match the source definition order".  We can coorelate them with elements
+                    // Documentation of `FieldsShape::Arbitrary says that the offsets are
+                    // "ordered to match the source definition order".
+                    // We can coorelate them with elements
                     // of the `fields` vector because we've explicitly `sorted_by_key` using
                     // `def_span`.
                     fields[index].offset = offset.bytes();
@@ -1556,19 +1562,20 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                     let field_size = field.type_info.as_ref().map(|info| info.size).unwrap_or(0);
                     (field.offset, field_size, field.index)
                 });
-                let next_offsets = fields
-                    .iter()
-                    .map(|Field { offset, .. }| *offset)
-                    .skip(1)
-                    .chain(once(core.size_in_bytes))
-                    .collect_vec();
-                for (field, next_offset) in fields.iter_mut().zip(next_offsets) {
-                    field.offset_of_next_field = next_offset;
-                }
-                fields
             }
+            FieldsShape::Union(_) => {} // No need to compute offsets or sort fields
             unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
         }
+        let next_offsets = fields
+            .iter()
+            .map(|Field { offset, .. }| *offset)
+            .skip(1)
+            .chain(once(core.size_in_bytes))
+            .collect_vec();
+        for (field, next_offset) in fields.iter_mut().zip(next_offsets) {
+            field.offset_of_next_field = next_offset;
+        }
+        fields
     };
 
     let cc_details = if fields.is_empty() {
@@ -1659,8 +1666,16 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                         }
                     }
                     Ok(FieldTypeInfo { cc_type, size }) => {
-                        assert!((field.offset + size) <= field.offset_of_next_field);
-                        let padding = field.offset_of_next_field - field.offset - size;
+                        // Only structs require no overlaps.
+                        let padding = match adt_def.adt_kind() {
+                            ty::AdtKind::Struct => {
+                                assert!((field.offset + size) <= field.offset_of_next_field);
+                                field.offset_of_next_field - field.offset - size
+                            }
+                            ty::AdtKind::Union => 0,
+                            ty::AdtKind::Enum => todo!(),
+                        };
+
                         // Omit explicit padding if:
                         //   1. The type is repr(C) and has known types for all fields, so we can
                         //      reuse the natural repr(C) padding.
@@ -1680,16 +1695,25 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                         };
                         let cc_type = cc_type.into_tokens(&mut prereqs);
                         let doc_comment = field.doc_comment;
-                        quote! {
-                            #visibility __NEWLINE__
-                                // The anonymous union gives more control over when exactly
-                                // the field constructors and destructors run.  See also
-                                // b/288138612.
-                                union {  __NEWLINE__
-                                    #doc_comment
-                                    #cc_type #cc_name;
-                                };
-                            #padding
+
+                        match adt_def.adt_kind() {
+                            ty::AdtKind::Struct => quote! {
+                                #visibility __NEWLINE__
+                                    // The anonymous union gives more control over when exactly
+                                    // the field constructors and destructors run.  See also
+                                    // b/288138612.
+                                    union {  __NEWLINE__
+                                        #doc_comment
+                                        #cc_type #cc_name;
+                                    };
+                                #padding
+                            },
+                            ty::AdtKind::Union => quote! {
+                                __NEWLINE__
+                                #doc_comment
+                                #cc_type #cc_name;
+                            },
+                            ty::AdtKind::Enum => todo!(),
                         }
                     }
                 }
@@ -2276,10 +2300,10 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
                 __NEWLINE__
                 static_assert(
                     sizeof(#adt_cc_name) == #size,
-                    "Verify that struct layout didn't change since this header got generated");
+                    "Verify that ADT layout didn't change since this header got generated");
                 static_assert(
                     alignof(#adt_cc_name) == #alignment,
-                    "Verify that struct layout didn't change since this header got generated");
+                    "Verify that ADT layout didn't change since this header got generated");
                 __NEWLINE__
                 #public_functions_cc_details
                 #fields_cc_details
@@ -6096,7 +6120,7 @@ pub mod tests {
             let main_api = &result.main_api;
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
-                                 `union` (b/272801632) or `enum`";
+                                 non-#[repr(C))] `union` (b/272801632) or `enum`";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -6157,7 +6181,7 @@ pub mod tests {
             let main_api = &result.main_api;
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
-                                 `union` (b/272801632) or `enum`";
+                                 non-#[repr(C))] `union` (b/272801632) or `enum`";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -6231,7 +6255,7 @@ pub mod tests {
             let main_api = &result.main_api;
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
                                  No support for bindings of individual fields of \
-                                 `union` (b/272801632) or `enum`";
+                                 non-#[repr(C))] `union` (b/272801632) or `enum`";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -7371,6 +7395,249 @@ pub mod tests {
                         ...
                 }
             )
+        })
+    }
+
+    #[test]
+    fn test_repr_c_union_fields() {
+        let test_src = r#"
+        #[repr(C)]
+        pub union SomeUnion {
+            pub x: u16,
+            pub y: u32,
+        }
+
+        const _: () = assert!(std::mem::size_of::<SomeUnion>() == 4);
+        const _: () = assert!(std::mem::align_of::<SomeUnion>() == 4);
+        "#;
+
+        test_format_item(test_src, "SomeUnion", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeUnion final {
+                        public:
+                            ...
+                            __COMMENT__ "`SomeUnion` doesn't implement the `Default` trait"
+                            SomeUnion() = delete;
+                            ...
+                            __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+                            ~SomeUnion() = default;
+                            SomeUnion(SomeUnion&&) = default;
+                            SomeUnion& operator=(SomeUnion&&) = default;
+
+                            __COMMENT__ "`SomeUnion` doesn't implement the `Clone` trait"
+                            SomeUnion(const SomeUnion&) = delete;
+                            SomeUnion& operator=(const SomeUnion&) = delete;
+                            ...
+                            std::uint16_t x;
+                            ...
+                            std::uint32_t y;
+
+                        private:
+                            static void __crubit_field_offset_assertions();
+                    };
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    static_assert(sizeof(SomeUnion) == 4, ...);
+                    static_assert(alignof(SomeUnion) == 4, ...);
+                    static_assert(std::is_trivially_destructible_v<SomeUnion>);
+                    static_assert(std::is_trivially_move_constructible_v<SomeUnion>);
+                    static_assert(std::is_trivially_move_assignable_v<SomeUnion>);
+                    inline void SomeUnion::__crubit_field_offset_assertions() {
+                      static_assert(0 == offsetof(SomeUnion, x));
+                      static_assert(0 == offsetof(SomeUnion, y));
+                    }
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 4);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 4);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeUnion, x) == 0);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeUnion, y) == 0);
+                }
+            );
+        })
+    }
+
+    #[test]
+    fn test_repr_c_union_unknown_fields() {
+        let test_src = r#"
+        #[repr(C)]
+        pub union SomeUnion {
+            pub z: std::mem::ManuallyDrop<i64>,
+        }
+
+        const _: () = assert!(std::mem::size_of::<SomeUnion>() == 8);
+        const _: () = assert!(std::mem::align_of::<SomeUnion>() == 8);
+        "#;
+
+        test_format_item(test_src, "SomeUnion", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(8) [[clang::trivial_abi]] SomeUnion final {
+                        public:
+                            ...
+                        private:
+                            __COMMENT__ "Field type has been replaced with a blob of bytes: Generic types are not supported yet (b/259749095)"
+                            unsigned char z[8];
+                        ...
+                    };
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    static_assert(sizeof(SomeUnion) == 8, ...);
+                    static_assert(alignof(SomeUnion) == 8, ...);
+                    ...
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 8);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 8);
+                    const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeUnion, z) == 0);
+                }
+            );
+        })
+    }
+
+    #[test]
+    fn test_repr_c_union_fields_impl_clone() {
+        let test_src = r#"
+        #[repr(C)]
+        pub union SomeUnion {
+            pub x: u32,
+        }
+
+        impl Clone for SomeUnion {
+            fn clone(&self) -> SomeUnion {
+                return SomeUnion {x: 1}
+            }
+        }
+
+        const _: () = assert!(std::mem::size_of::<SomeUnion>() == 4);
+        const _: () = assert!(std::mem::align_of::<SomeUnion>() == 4);
+        "#;
+
+        test_format_item(test_src, "SomeUnion", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeUnion final {
+                        public:
+                            ...
+                            __COMMENT__ "Clone::clone"
+                            SomeUnion(const SomeUnion&);
+
+                            __COMMENT__ "Clone::clone_from"
+                            SomeUnion& operator=(const SomeUnion&);
+                        ...
+                    };
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    ...
+                    static_assert(std::is_trivially_destructible_v<SomeUnion>);
+                    static_assert(std::is_trivially_move_constructible_v<SomeUnion>);
+                    static_assert(std::is_trivially_move_assignable_v<SomeUnion>);
+                    ...
+                    inline SomeUnion::SomeUnion(const SomeUnion& other) {...}
+                    inline SomeUnion& SomeUnion::operator=(const SomeUnion& other) {...}
+                    ...
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    ...
+                    extern "C" fn ... (...) -> () {...(<::rust_out::SomeUnion as ::core::clone::Clone>::clone(__self...))...}
+                    ...
+                    extern "C" fn ... (...) -> () {...<::rust_out::SomeUnion as ::core::clone::Clone>::clone_from(__self, source)...}
+                    ...
+                }
+            );
+        })
+    }
+
+    #[test]
+    fn test_repr_c_union_fields_impl_drop() {
+        let test_src = r#"
+        #[repr(C)]
+        pub union SomeUnion {
+            pub x: u32,
+        }
+
+        impl Drop for SomeUnion {
+            fn drop(&mut self) {
+                println!(":)")
+            }
+        }
+
+        const _: () = assert!(std::mem::size_of::<SomeUnion>() == 4);
+        const _: () = assert!(std::mem::align_of::<SomeUnion>() == 4);
+        "#;
+
+        test_format_item(test_src, "SomeUnion", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeUnion final {
+                        public:
+                            ...
+                            __COMMENT__ "Drop::drop"
+                            ~SomeUnion();
+
+                            ...
+                            SomeUnion(SomeUnion&&) = delete;
+                            SomeUnion& operator=(SomeUnion&&) = delete;
+                            ...
+                        ...
+                    };
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    ...
+                    inline SomeUnion::~SomeUnion() {...}
+                    ...
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    ...
+                    extern "C" fn ... (__self: &mut ::core::mem::MaybeUninit<::rust_out::SomeUnion>...) { unsafe { __self.assume_init_drop() }; }
+                    ...
+                }
+            );
         })
     }
 
