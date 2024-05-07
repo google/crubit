@@ -215,6 +215,19 @@ static Evidence::Kind getArgEvidenceKindFromNullability(
   }
 }
 
+static std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
+  if (!isSupportedRawPointerType(T.getNonReferenceType())) return std::nullopt;
+  auto Nullability = getNullabilityAnnotationsFromType(T);
+  switch (Nullability.front().concrete()) {
+    default:
+      return std::nullopt;
+    case NullabilityKind::NonNull:
+      return Evidence::ANNOTATED_NONNULL;
+    case NullabilityKind::Nullable:
+      return Evidence::ANNOTATED_NULLABLE;
+  }
+}
+
 namespace {
 class DefinitionEvidenceCollector {
  public:
@@ -691,26 +704,42 @@ class DefinitionEvidenceCollector {
     auto *ReturnExpr = ReturnStmt->getRetValue();
     if (!ReturnExpr || !isSupportedRawPointerType(ReturnExpr->getType()))
       return;
+    const FunctionDecl *CurrentFunc = Env.getCurrentFunc();
+    CHECK(CurrentFunc) << "A return statement outside of a function?";
 
-    // Skip gathering evidence about the current function if the current
-    // function is not an inference target.
-    if (!isInferenceTarget(*Env.getCurrentFunc())) return;
-
-    NullabilityKind ReturnNullability =
-        getNullability(ReturnExpr, Env, &InferableSlotsConstraint);
-    Evidence::Kind ReturnEvidenceKind;
-    switch (ReturnNullability) {
-      case NullabilityKind::Nullable:
-        ReturnEvidenceKind = Evidence::NULLABLE_RETURN;
-        break;
-      case NullabilityKind::NonNull:
-        ReturnEvidenceKind = Evidence::NONNULL_RETURN;
-        break;
-      default:
-        ReturnEvidenceKind = Evidence::UNKNOWN_RETURN;
+    // Skip gathering evidence about the current function's return type if
+    // the current function is not an inference target or the return type
+    // already includes an annotation.
+    if (isInferenceTarget(*CurrentFunc) &&
+        !evidenceKindFromDeclaredType(CurrentFunc->getReturnType())) {
+      NullabilityKind ReturnNullability =
+          getNullability(ReturnExpr, Env, &InferableSlotsConstraint);
+      Evidence::Kind ReturnEvidenceKind;
+      switch (ReturnNullability) {
+        case NullabilityKind::Nullable:
+          ReturnEvidenceKind = Evidence::NULLABLE_RETURN;
+          break;
+        case NullabilityKind::NonNull:
+          ReturnEvidenceKind = Evidence::NONNULL_RETURN;
+          break;
+        default:
+          ReturnEvidenceKind = Evidence::UNKNOWN_RETURN;
+      }
+      Emit(*Env.getCurrentFunc(), SLOT_RETURN_TYPE, ReturnEvidenceKind,
+           ReturnExpr->getExprLoc());
     }
-    Emit(*Env.getCurrentFunc(), SLOT_RETURN_TYPE, ReturnEvidenceKind,
-         ReturnExpr->getExprLoc());
+
+    const dataflow::PointerValue *PV = getPointerValue(ReturnExpr, Env);
+    if (!PV) return;
+    TypeNullability ReturnTypeNullability =
+        getNullabilityAnnotationsFromTypeAndOverrides(
+            CurrentFunc->getReturnType(),
+            // The FunctionDecl is the key used for overrides for the return
+            // type. To look up overrides for parameters, we would pass a
+            // ParmVarDecl.
+            CurrentFunc, Lattice);
+    fromAssignmentToType(Env.getCurrentFunc()->getReturnType(),
+                         ReturnTypeNullability, *PV, ReturnExpr->getExprLoc());
   }
 
   /// Checks whether PointerValue is null or nullable and if so, collects
@@ -947,19 +976,6 @@ class DefinitionEvidenceCollector {
   const Environment &Env;
 };
 }  // namespace
-
-static std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
-  if (!isSupportedRawPointerType(T.getNonReferenceType())) return std::nullopt;
-  auto Nullability = getNullabilityAnnotationsFromType(T);
-  switch (Nullability.front().concrete()) {
-    default:
-      return std::nullopt;
-    case NullabilityKind::NonNull:
-      return Evidence::ANNOTATED_NONNULL;
-    case NullabilityKind::Nullable:
-      return Evidence::ANNOTATED_NULLABLE;
-  }
-}
 
 /// Returns a function that the analysis can use to override Decl nullability
 /// values from the source code being analyzed with previously inferred

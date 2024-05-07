@@ -736,6 +736,36 @@ TEST(CollectEvidenceFromDefinitionTest, MultipleReturns) {
                                     functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
+  static constexpr llvm::StringRef Src = R"cc(
+    Nonnull<int*> target(int* a) {
+      return a;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     FromPreviouslyInferredReturnAnnotation) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* target(int* a) { return a; }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(
+          Src, {.Nonnull = {fingerprint("c:@F@target#*I#", 0)}}),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                   functionNamed("target")),
+          // We still collect evidence for the return type in case iteration
+          // turns up new evidence to contradict a previous inference. Only
+          // nullabilities written in source code are considered unchangeable.
+          evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN,
+                   functionNamed("target"))));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, FunctionCallDereferenced) {
   static constexpr llvm::StringRef Src = R"cc(
     int* makePtr();
