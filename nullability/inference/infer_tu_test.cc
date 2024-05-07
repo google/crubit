@@ -38,6 +38,10 @@ using testing::UnorderedElementsAre;
 MATCHER_P2(inferredSlot, I, Nullability, "") {
   return arg.slot() == I && arg.nullability() == Nullability;
 }
+MATCHER_P3(inferredSlot, I, Nullability, Conflict, "") {
+  return arg.slot() == I && arg.nullability() == Nullability &&
+         arg.conflict() == Conflict;
+}
 MATCHER_P2(inferenceMatcher, USR, SlotsMatcher, "") {
   if (arg.symbol().usr() != USR) return false;
   return testing::ExplainMatchResult(SlotsMatcher, arg.slot_inference(),
@@ -289,30 +293,65 @@ TEST_F(InferTUTest, CHECKNEMacro) {
                                       inferredSlot(4, Nullability::NONNULL)})));
 }
 
-TEST_F(InferTUTest, Field) {
+TEST_F(InferTUTest, Fields) {
   build(R"cc(
-    int *getIntPtr();
+    int* getIntPtr();
     struct S {
-      int *I;
-      bool *B;
+      int* unchecked_deref;
+      int* default_null_and_unchecked_deref = nullptr;
+      int* uninitialized;
       int NotATarget = *getIntPtr();
+
+      void method() {
+        *unchecked_deref;
+        *default_null_and_unchecked_deref;
+      }
     };
-    void target() {
-      S S;
-      S.I = nullptr;
-      *S.B;
+
+    void foo() {
+      // Use the implicitly-declared default constructor so that it will be
+      // generated.
+      S s;
     }
+
+    class C {
+     public:
+      C() : null_constructor_init(nullptr) {
+        null_in_constructor_and_unchecked_deref = nullptr;
+        null_in_constructor = nullptr;
+      }
+
+      void method() { *null_in_constructor_and_unchecked_deref; }
+
+     private:
+      int* null_in_constructor_and_unchecked_deref;
+      int* null_constructor_init;
+      int* null_in_constructor;
+    };
   )cc");
   EXPECT_THAT(
       infer(),
       UnorderedElementsAre(
-          inference(hasName("I"), {inferredSlot(0, Nullability::NULLABLE)}),
-          inference(hasName("B"), {inferredSlot(0, Nullability::NONNULL)}),
+          inference(hasName("unchecked_deref"),
+                    {inferredSlot(0, Nullability::NONNULL)}),
+          // Unchecked deref is strong evidence and a default null
+          // member initializer is weak.
+          inference(hasName("default_null_and_unchecked_deref"),
+                    {inferredSlot(0, Nullability::NONNULL)}),
+          // No inference for uninitialized.,
           inference(hasName("getIntPtr"),
-                    {inferredSlot(0, Nullability::NONNULL)})));
+                    {inferredSlot(0, Nullability::NONNULL)}),
+          // Initialization to null in the constructor or another
+          // function body is strong, producing a conflict.
+          inference(hasName("null_in_constructor_and_unchecked_deref"),
+                    {inferredSlot(0, Nullability::NONNULL, /*Conflict*/ true)}),
+          inference(hasName("null_constructor_init"),
+                    {inferredSlot(0, Nullability::NULLABLE)}),
+          inference(hasName("null_in_constructor"),
+                    {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUTest, FieldImplicitlyDeclaredConstructorNeverUsed) {
+TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorNeverUsed) {
   build(R"cc(
     Nullable<bool *> getNullable();
     struct S {
@@ -332,7 +371,7 @@ TEST_F(InferTUTest, FieldImplicitlyDeclaredConstructorNeverUsed) {
                           Not(Contains(inference(hasName("C"), {_}))))));
 }
 
-TEST_F(InferTUTest, FieldImplicitlyDeclaredConstructorUsed) {
+TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorUsed) {
   build(R"cc(
     Nullable<bool *> getNullable();
     struct S {

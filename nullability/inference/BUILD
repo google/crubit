@@ -159,6 +159,7 @@ cc_test(
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:testing",
+        "@llvm-project//llvm:Support",
         "@llvm-project//llvm:TestingAnnotations",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",

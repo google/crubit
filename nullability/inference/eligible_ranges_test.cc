@@ -6,26 +6,29 @@
 
 #include <optional>
 #include <string>
-#include <utility>
 
 #include "absl/log/check.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/test/test_headers.h"
 #include "nullability/type_nullability.h"
-#include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Testing/Annotations/Annotations.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"  // IWYU pragma: keep
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
+using ::clang::ast_matchers::fieldDecl;
 using ::clang::ast_matchers::functionDecl;
+using ::clang::ast_matchers::match;
+using ::clang::ast_matchers::selectFirst;
+using ::clang::ast_matchers::varDecl;
 using ::llvm::Annotations;
 using ::testing::ExplainMatchResult;
 using ::testing::Optional;
@@ -46,8 +49,7 @@ MATCHER_P2(TypeLocRanges, Path, Ranges, "") {
          ExplainMatchResult(Ranges, arg.range(), result_listener);
 }
 
-std::optional<clang::tidy::nullability::TypeLocRanges> getEligibleRanges(
-    llvm::StringRef Input) {
+TestInputs getInputs(llvm::StringRef Input) {
   auto Inputs = TestInputs(Input);
   for (const auto &Entry :
        llvm::ArrayRef(test_headers_create(), test_headers_size()))
@@ -57,44 +59,64 @@ std::optional<clang::tidy::nullability::TypeLocRanges> getEligibleRanges(
   Inputs.ExtraArgs.push_back("-I.");
   Inputs.Language = TestLanguage::Lang_CXX17;
   Inputs.FileName = std::string(MainFileName);
-  auto TU = TestAST(std::move(Inputs));
-  ASTContext &Context = TU.context();
-  const auto *FunDecl = ast_matchers::selectFirst<FunctionDecl>(
-      "fun", ast_matchers::match(functionDecl().bind("fun"), Context));
-  CHECK(FunDecl != nullptr);
-  return clang::tidy::nullability::getEligibleRanges(*FunDecl);
+  return Inputs;
 }
 
-TEST(GenEditsTest, ReturnAndOneParameterIdentified) {
+template <typename DeclT, typename MatcherT>
+std::optional<clang::tidy::nullability::TypeLocRanges> getRanges(
+    llvm::StringRef Input, MatcherT Matcher) {
+  TestAST TU(getInputs(Input));
+  const auto *D =
+      selectFirst<DeclT>("d", match(Matcher.bind("d"), TU.context()));
+  CHECK(D != nullptr);
+  return clang::tidy::nullability::getEligibleRanges(*D);
+}
+
+std::optional<clang::tidy::nullability::TypeLocRanges> getFunctionRanges(
+    llvm::StringRef Input) {
+  return getRanges<FunctionDecl>(Input, functionDecl());
+}
+
+std::optional<clang::tidy::nullability::TypeLocRanges> getFieldRanges(
+    llvm::StringRef Input) {
+  return getRanges<FieldDecl>(Input, fieldDecl());
+}
+
+std::optional<clang::tidy::nullability::TypeLocRanges> getVarRanges(
+    llvm::StringRef Input) {
+  return getRanges<VarDecl>(Input, varDecl());
+}
+
+TEST(EligibleRangesTest, ReturnAndOneParameterIdentified) {
   auto Input = Annotations("$r[[int *]]foo($p[[int *]]p) { return p; }");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(0, Input.range("r")),
                                              SlotRange(1, Input.range("p"))))));
 }
 
-TEST(GenEditsTest, OnlyFirstParameterIdentified) {
+TEST(EligibleRangesTest, OnlyFirstParameterIdentified) {
   auto Input = Annotations("void foo([[int *]]p1, int p2) { return; }");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
 // Checks that a function decl without a body is handled correctly.
-TEST(GenEditsTest, DeclHandled) {
+TEST(EligibleRangesTest, DeclHandled) {
   auto Input = Annotations("void foo([[int *]]p1, int p2);");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, AllNestedPointersEligible) {
+TEST(EligibleRangesTest, AllNestedPointersEligible) {
   auto Input =
       Annotations("void foo($three[[$two[[$one[[int *]]*]]*]]p1, int p2);");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(-1, Input.range("one")),
@@ -102,12 +124,12 @@ TEST(GenEditsTest, AllNestedPointersEligible) {
                                        SlotRange(1, Input.range("three"))))));
 }
 
-TEST(GenEditsTest, DeclConstExcluded) {
+TEST(EligibleRangesTest, DeclConstExcluded) {
   auto Input = Annotations(R"(
   void foo($one[[int *]] const p1,
            $two_o[[$two_i[[int *]] const *]] const p2);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(1, Input.range("one")),
@@ -115,47 +137,47 @@ TEST(GenEditsTest, DeclConstExcluded) {
                                        SlotRange(-1, Input.range("two_i"))))));
 }
 
-TEST(GenEditsTest, PointeeConstIncluded) {
+TEST(EligibleRangesTest, PointeeConstIncluded) {
   auto Input = Annotations(R"(
   void foo([[const int *]]p);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, NestedPointeeConstIncluded) {
+TEST(EligibleRangesTest, NestedPointeeConstIncluded) {
   auto Input = Annotations("void foo($o[[$i[[const int *]] const *]]p);");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(1, Input.range("o")),
                                        SlotRange(-1, Input.range("i"))))));
 }
 
-TEST(GenEditsTest, FunctionPointerTypeIgnored) {
+TEST(EligibleRangesTest, FunctionPointerTypeIgnored) {
   std::string Input = "void foo(int (*p)(int));";
-  EXPECT_EQ(getEligibleRanges(Input), std::nullopt);
+  EXPECT_EQ(getFunctionRanges(Input), std::nullopt);
 }
 
-TEST(GenEditsTest, ArrayTypeIgnored) {
+TEST(EligibleRangesTest, ArrayTypeIgnored) {
   std::string Input = "void foo(int p[]);";
-  EXPECT_EQ(getEligibleRanges(Input), std::nullopt);
+  EXPECT_EQ(getFunctionRanges(Input), std::nullopt);
 }
 
-TEST(GenEditsTest, FunctionAndArrayTypeIgnored) {
+TEST(EligibleRangesTest, FunctionAndArrayTypeIgnored) {
   std::string Input = "void foo(int (*z[3])(float));";
-  EXPECT_EQ(getEligibleRanges(Input), std::nullopt);
+  EXPECT_EQ(getFunctionRanges(Input), std::nullopt);
 }
 
-TEST(GenEditsTest, AnnotatedSlotsGetRangesForPointerTypeOnly) {
+TEST(EligibleRangesTest, AnnotatedSlotsGetRangesForPointerTypeOnly) {
   auto Input = Annotations(R"(
   void foo(Nonnull<$one[[int *]]> nonnull,
            Nullable<$two[[int *]]> nullable,
            NullabilityUnknown<$three[[int *]]> unknown);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(1, Input.range("one")),
@@ -163,7 +185,7 @@ TEST(GenEditsTest, AnnotatedSlotsGetRangesForPointerTypeOnly) {
                                        SlotRange(3, Input.range("three"))))));
 }
 
-TEST(GenEditsTest, NamespacedAliasAnnotatedSlotsGetNoRange) {
+TEST(EligibleRangesTest, NamespacedAliasAnnotatedSlotsGetNoRange) {
   auto Input = Annotations(R"(
   namespace custom {
   template <typename T>
@@ -181,7 +203,7 @@ TEST(GenEditsTest, NamespacedAliasAnnotatedSlotsGetNoRange) {
            custom::CustomNullable<$two[[int *]]> nullable,
            custom::CustomUnknown<$three[[int *]]> unknown);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(1, Input.range("one")),
@@ -189,15 +211,15 @@ TEST(GenEditsTest, NamespacedAliasAnnotatedSlotsGetNoRange) {
                                        SlotRange(3, Input.range("three"))))));
 }
 
-TEST(GenEditsTest, NestedAnnotationsGetOneRange) {
+TEST(EligibleRangesTest, NestedAnnotationsGetOneRange) {
   auto Input = Annotations(R"(void foo(Nonnull<Nonnull<[[int *]]>> a);)");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, NestedPointersOuterAnnotated) {
+TEST(EligibleRangesTest, NestedPointersOuterAnnotated) {
   test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   namespace std {
@@ -210,7 +232,7 @@ TEST(GenEditsTest, NestedPointersOuterAnnotated) {
       Nonnull<$three_o[[$three_i[[std::unique_ptr<int>]]*]]> r,
       Nonnull<$four_o[[std::unique_ptr<$four_i[[std::unique_ptr<int>]]>]]> s);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName, UnorderedElementsAre(
                                     SlotRange(1, Input.range("one_o")),
@@ -225,7 +247,7 @@ TEST(GenEditsTest, NestedPointersOuterAnnotated) {
                                     SlotRange(-1, Input.range("four_i"))))));
 }
 
-TEST(GenEditsTest, NestedPointersInnerAnnotated) {
+TEST(EligibleRangesTest, NestedPointersInnerAnnotated) {
   test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   namespace std {
@@ -239,7 +261,7 @@ TEST(GenEditsTest, NestedPointersInnerAnnotated) {
       $three_o[[Nonnull<$three_i[[std::unique_ptr<int>]]>*]] r,
       $four_o[[std::unique_ptr<Nonnull<$four_i[[std::unique_ptr<int>]]>>]] s);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName, UnorderedElementsAre(
                                     SlotRange(1, Input.range("one_o")),
@@ -254,22 +276,22 @@ TEST(GenEditsTest, NestedPointersInnerAnnotated) {
                                     SlotRange(-1, Input.range("four_i"))))));
 }
 
-TEST(GenEditsTest, RefToPointer) {
+TEST(EligibleRangesTest, RefToPointer) {
   auto Input = Annotations("void foo([[int *]]&p);");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, TemplateOfPointers) {
+TEST(EligibleRangesTest, TemplateOfPointers) {
   auto Input = Annotations(R"(
   template <typename One, typename Two>
   struct S {}; 
 
   void foo(S<$one[[int *]], $two[[$two_inner[[bool *]]*]]> p);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName, UnorderedElementsAre(
                                     SlotRange(-1, Input.range("one")),
@@ -277,7 +299,7 @@ TEST(GenEditsTest, TemplateOfPointers) {
                                     SlotRange(-1, Input.range("two_inner"))))));
 }
 
-TEST(GenEditsTest, TemplateOfConstPointers) {
+TEST(EligibleRangesTest, TemplateOfConstPointers) {
   auto Input = Annotations(R"(
   template <typename One, typename Two>
   struct S {};
@@ -286,7 +308,7 @@ TEST(GenEditsTest, TemplateOfConstPointers) {
       S<$one[[const int *]], $two_o[[$two_i[[const int *]] const *]]> p,
       S<$three[[int *]] const, $four_o[[$four_i[[int *]] const *]] const> q);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(-1, Input.range("one")),
@@ -297,7 +319,7 @@ TEST(GenEditsTest, TemplateOfConstPointers) {
                                        SlotRange(-1, Input.range("four_i"))))));
 }
 
-TEST(GenEditsTest, UniquePtr) {
+TEST(EligibleRangesTest, UniquePtr) {
   test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   namespace std {
@@ -309,7 +331,7 @@ TEST(GenEditsTest, UniquePtr) {
            Nonnull<$two[[std::unique_ptr<int>]]> nonnull_std_smart);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(
                             // TODO(b/330702908) When supported, Slots 1 and 2.
@@ -317,7 +339,7 @@ TEST(GenEditsTest, UniquePtr) {
                             SlotRange(-1, Input.range("two"))))));
 }
 
-TEST(GenEditsTest, UserDefinedSmartPointer) {
+TEST(EligibleRangesTest, UserDefinedSmartPointer) {
   test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   struct MySmartIntPtr {
@@ -329,7 +351,7 @@ TEST(GenEditsTest, UserDefinedSmartPointer) {
            Nonnull<$two[[MySmartIntPtr]]> nonnull_user_defined_smart);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(
                             // TODO(b/330702908) When supported, Slots 1 and 2.
@@ -337,7 +359,7 @@ TEST(GenEditsTest, UserDefinedSmartPointer) {
                             SlotRange(-1, Input.range("two"))))));
 }
 
-TEST(GenEditsTest, UserDefinedTemplatedSmartPointer) {
+TEST(EligibleRangesTest, UserDefinedTemplatedSmartPointer) {
   test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   template <typename T>
@@ -349,7 +371,7 @@ TEST(GenEditsTest, UserDefinedTemplatedSmartPointer) {
            Nonnull<$two[[MySmartPtr<int>]]> nonnull_user_defined_smart);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(
                             // TODO(b/330702908) When supported, Slots 1 and 2.
@@ -357,19 +379,19 @@ TEST(GenEditsTest, UserDefinedTemplatedSmartPointer) {
                             SlotRange(-1, Input.range("two"))))));
 }
 
-TEST(GenEditsTest, SimpleAlias) {
+TEST(EligibleRangesTest, SimpleAlias) {
   auto Input = Annotations(R"(
   using IntPtr = int *;
 
   void foo([[IntPtr]] a);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, InaccessibleAlias) {
+TEST(EligibleRangesTest, InaccessibleAlias) {
   auto Input = Annotations(R"(
   template <typename T>
   class TemplateClass {};
@@ -377,22 +399,22 @@ TEST(GenEditsTest, InaccessibleAlias) {
 
   void foo(Inaccessible a);
   )");
-  EXPECT_EQ(getEligibleRanges(Input.code()), std::nullopt);
+  EXPECT_EQ(getFunctionRanges(Input.code()), std::nullopt);
 }
 
-TEST(GenEditsTest, NestedAlias) {
+TEST(EligibleRangesTest, NestedAlias) {
   auto Input = Annotations(R"(
   using Nested = int **;
 
   void foo($[[Nested]] a);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, AliasTemplate) {
+TEST(EligibleRangesTest, AliasTemplate) {
   auto Input = Annotations(R"(
   template <typename T>
   using AliasTemplate = T;
@@ -400,12 +422,12 @@ TEST(GenEditsTest, AliasTemplate) {
   void foo(AliasTemplate<[[int*]]> a, AliasTemplate<int> b);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, DependentAliasSimple) {
+TEST(EligibleRangesTest, DependentAliasSimple) {
   auto Input = Annotations(R"(
   template <typename T>
   struct S {
@@ -415,12 +437,12 @@ TEST(GenEditsTest, DependentAliasSimple) {
   void foo(S<[[int *]]>::type a, S<int>::type b);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, DependentAliasAnnotated) {
+TEST(EligibleRangesTest, DependentAliasAnnotated) {
   auto Input = Annotations(R"(
   template <typename T>
   struct S {
@@ -430,12 +452,12 @@ TEST(GenEditsTest, DependentAliasAnnotated) {
   void foo(S<Nullable<[[int *]]>>::type a);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, DependentAliasOfDependentAlias) {
+TEST(EligibleRangesTest, DependentAliasOfDependentAlias) {
   auto Input = Annotations(R"(
   template <typename T>
   struct vector {
@@ -449,12 +471,12 @@ TEST(GenEditsTest, DependentAliasOfDependentAlias) {
   void foo(S<[[int *]]>::type a);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, DependentAliasTemplate) {
+TEST(EligibleRangesTest, DependentAliasTemplate) {
   auto Input = Annotations(R"(
   template <typename V>
   struct vector {};
@@ -467,12 +489,12 @@ TEST(GenEditsTest, DependentAliasTemplate) {
   void foo(S<[[int*]]>::type<vector> a);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(-1, Input.range())))));
 }
 
-TEST(GenEditsTest, DependentAliasNested) {
+TEST(EligibleRangesTest, DependentAliasNested) {
   auto Input = Annotations(R"(
   template <typename V>
   struct vector {
@@ -481,7 +503,7 @@ TEST(GenEditsTest, DependentAliasNested) {
 
   void foo(vector<$one[[$two[[$three[[int*]]*]]*]]>::value_type a);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(1, Input.range("one")),
@@ -489,7 +511,7 @@ TEST(GenEditsTest, DependentAliasNested) {
                                        SlotRange(-1, Input.range("three"))))));
 }
 
-TEST(GenEditsTest, TemplatedClassContext) {
+TEST(EligibleRangesTest, TemplatedClassContext) {
   auto Input = Annotations(R"(
   template <typename T>
   struct Outer {
@@ -499,12 +521,12 @@ TEST(GenEditsTest, TemplatedClassContext) {
   void foo(Outer<[[int *]]>::Inner a);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(-1, Input.range())))));
 }
 
-TEST(GenEditsTest, NestedTemplatedClasses) {
+TEST(EligibleRangesTest, NestedTemplatedClasses) {
   auto Input = Annotations(R"(
   template <typename S>
   struct Outermost {
@@ -519,7 +541,7 @@ TEST(GenEditsTest, NestedTemplatedClasses) {
       Outermost<$three[[char *]]>::Outer<$two[[int *]]>::Inner<$one[[bool *]]>
           a);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(-1, Input.range("one")),
@@ -527,7 +549,7 @@ TEST(GenEditsTest, NestedTemplatedClasses) {
                                        SlotRange(-1, Input.range("three"))))));
 }
 
-TEST(GenEditsTest, DependentAliasReferencingFurtherOutTemplateParam) {
+TEST(EligibleRangesTest, DependentAliasReferencingFurtherOutTemplateParam) {
   auto Input = Annotations(R"(
   template <typename S>
   struct Outermost {
@@ -541,12 +563,12 @@ TEST(GenEditsTest, DependentAliasReferencingFurtherOutTemplateParam) {
   void foo(Outermost<[[int*]]>::Outer<bool>::Inner<char*> a);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, DependentAliasForwardingMultipleTemplateArguments) {
+TEST(EligibleRangesTest, DependentAliasForwardingMultipleTemplateArguments) {
   auto Input = Annotations(R"(
   template <typename T, class U>
   struct Pair;
@@ -557,14 +579,14 @@ TEST(GenEditsTest, DependentAliasForwardingMultipleTemplateArguments) {
 
   void foo(PairWrapper<$one[[int *]], $two[[bool *]]>::type a);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(-1, Input.range("one")),
                                        SlotRange(-1, Input.range("two"))))));
 }
 
-TEST(GenEditsTest, DependentAliasInMultipleNestedClassContexts) {
+TEST(EligibleRangesTest, DependentAliasInMultipleNestedClassContexts) {
   auto Input = Annotations(R"(
   template <typename A, class B>
   struct Pair;
@@ -579,14 +601,14 @@ TEST(GenEditsTest, DependentAliasInMultipleNestedClassContexts) {
 
   void foo(Outer<$one[[int *]]>::Inner<$two[[bool *]]>::type a);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(-1, Input.range("one")),
                                        SlotRange(-1, Input.range("two"))))));
 }
 
-TEST(GenEditsTest, AliasTemplateInNestedClassContext) {
+TEST(EligibleRangesTest, AliasTemplateInNestedClassContext) {
   auto Input = Annotations(R"(
   template <typename A, class B>
   struct Pair;
@@ -600,14 +622,14 @@ TEST(GenEditsTest, AliasTemplateInNestedClassContext) {
   void foo(Outer<$one[[int *]]>::Inner<$two[[bool *]]> a);
   )");
 
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(-1, Input.range("one")),
                                        SlotRange(-1, Input.range("two"))))));
 }
 
-TEST(GenEditsTest, DependentAliasOfSmartPointer) {
+TEST(EligibleRangesTest, DependentAliasOfSmartPointer) {
   test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   namespace std {
@@ -622,14 +644,14 @@ TEST(GenEditsTest, DependentAliasOfSmartPointer) {
 
   void foo($unique_ptr[[S<$inner[[int*]]>::type]] a);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(-1, Input.range("unique_ptr")),
                                        SlotRange(-1, Input.range("inner"))))));
 }
 
-TEST(GenEditsTest, DependentlyNamedTemplate) {
+TEST(EligibleRangesTest, DependentlyNamedTemplate) {
   auto Input = Annotations(R"(
   struct Wrapper {
     template <typename T>
@@ -645,14 +667,14 @@ TEST(GenEditsTest, DependentlyNamedTemplate) {
   // and the inner pointer's range is the first template argument to S.
   void foo($outer[[S<$inner[[int *]], Wrapper>::type]] a);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(1, Input.range("outer")),
                                        SlotRange(-1, Input.range("inner"))))));
 }
 
-TEST(GenEditsTest, PartialSpecialization) {
+TEST(EligibleRangesTest, PartialSpecialization) {
   auto Input = Annotations(R"(
   template <typename T>
   struct S {
@@ -669,12 +691,12 @@ TEST(GenEditsTest, PartialSpecialization) {
   void foo([[S<int **>::Alias]] a);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName, UnorderedElementsAre(SlotRange(1, Input.range())))));
 }
 
-TEST(GenEditsTest, TypeTemplateParamPack) {
+TEST(EligibleRangesTest, TypeTemplateParamPack) {
   auto Input = Annotations(R"(
   template <typename... T>
   struct Tuple {
@@ -684,7 +706,7 @@ TEST(GenEditsTest, TypeTemplateParamPack) {
   void foo(Tuple<$one[[int *]], $two[[$three[[int *]]*]]> a,
            Tuple<int *, int **>::type b);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(SlotRange(-1, Input.range("one")),
@@ -692,7 +714,7 @@ TEST(GenEditsTest, TypeTemplateParamPack) {
                                        SlotRange(-1, Input.range("three"))))));
 }
 
-TEST(GenEditsTest, DefaultTemplateArgs) {
+TEST(EligibleRangesTest, DefaultTemplateArgs) {
   auto Input = Annotations(R"(
   template <typename T1, typename T2 = int*>
   struct S {};
@@ -701,7 +723,7 @@ TEST(GenEditsTest, DefaultTemplateArgs) {
 
   void foo(S<$one[[int *]]> a, $two[[Alias<int *>]] b);
   )");
-  EXPECT_THAT(getEligibleRanges(Input.code()),
+  EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(
@@ -712,7 +734,7 @@ TEST(GenEditsTest, DefaultTemplateArgs) {
                       SlotRange(2, Input.range("two"))))));
 }
 
-TEST(GenEditsTest, MultipleSlotsOneRange) {
+TEST(EligibleRangesTest, MultipleSlotsOneRange) {
   auto Input = Annotations(R"(
   template <typename T1, typename T2>
   struct Pair {
@@ -725,13 +747,50 @@ TEST(GenEditsTest, MultipleSlotsOneRange) {
   void foo(Couple<[[int *]]> c);
   )");
   EXPECT_THAT(
-      getEligibleRanges(Input.code()),
+      getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           // Eventually, two different valid slot values for the two
           // ranges, but for now, inference looks at neither of
           // them, so both have no slot.
           MainFileName, UnorderedElementsAre(SlotRange(-1, Input.range()),
                                              SlotRange(-1, Input.range())))));
+}
+
+TEST(EligibleRangesTest, Field) {
+  auto Input = Annotations(R"(
+  struct S {
+    $zero[[$one[[int *]]*]] i;
+  };
+  )");
+  EXPECT_THAT(getFieldRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(SlotRange(0, Input.range("zero")),
+                                       SlotRange(-1, Input.range("one"))))));
+}
+
+TEST(EligibleRangesTest, StaticFieldAkaGlobal) {
+  auto Input = Annotations(R"(
+  struct S {
+    static $zero[[$one[[int *]]*]] i;
+  };
+  )");
+  EXPECT_THAT(getVarRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(SlotRange(0, Input.range("zero")),
+                                       SlotRange(-1, Input.range("one"))))));
+}
+
+TEST(EligibleRangesTest, GlobalVariable) {
+  auto Input = Annotations(R"(
+    $zero[[$one[[int *]]*]] i;
+  )");
+  EXPECT_THAT(getVarRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(SlotRange(0, Input.range("zero")),
+                                       SlotRange(-1, Input.range("one"))))));
 }
 
 }  // namespace

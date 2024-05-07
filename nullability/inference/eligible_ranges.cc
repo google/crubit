@@ -142,6 +142,15 @@ static void addRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
   }
 }
 
+static bool trySetPath(FileID FID, const SourceManager &SrcMgr,
+                       TypeLocRanges &Ranges) {
+  const clang::OptionalFileEntryRef Entry = SrcMgr.getFileEntryRefForID(FID);
+  if (!Entry) return false;
+  Ranges.set_path(std::string_view(
+      llvm::sys::path::remove_leading_dotslash(Entry->getName())));
+  return true;
+}
+
 static std::optional<TypeLocRanges> getEligibleRanges(const FunctionDecl &Fun) {
   FunctionTypeLoc TyLoc = Fun.getFunctionTypeLoc();
   if (TyLoc.isNull()) return std::nullopt;
@@ -151,6 +160,7 @@ static std::optional<TypeLocRanges> getEligibleRanges(const FunctionDecl &Fun) {
   TypeLocRanges Result;
 
   FileID DeclFID = SrcMgr.getFileID(SrcMgr.getExpansionLoc(Fun.getLocation()));
+  if (!trySetPath(DeclFID, SrcMgr, Result)) return std::nullopt;
 
   addRangesQualifierAware(TyLoc.getReturnLoc(), SLOT_RETURN_TYPE, Context,
                           DeclFID, Result);
@@ -162,19 +172,35 @@ static std::optional<TypeLocRanges> getEligibleRanges(const FunctionDecl &Fun) {
   }
 
   if (Result.range().empty()) return std::nullopt;
-  // Extract the path in which `Fun` is located.
-  const clang::OptionalFileEntryRef Entry =
-      Context.getSourceManager().getFileEntryRefForID(DeclFID);
-  if (!Entry) return std::nullopt;
-  Result.set_path(std::string_view(
-      llvm::sys::path::remove_leading_dotslash(Entry->getName())));
+
+  return Result;
+}
+
+static std::optional<TypeLocRanges> getEligibleRanges(const DeclaratorDecl &D) {
+  TypeLoc TyLoc = D.getTypeSourceInfo()->getTypeLoc();
+  if (TyLoc.isNull()) return std::nullopt;
+
+  const clang::ASTContext &Context = D.getASTContext();
+  const SourceManager &SrcMgr = Context.getSourceManager();
+  TypeLocRanges Result;
+
+  FileID DeclFID = SrcMgr.getFileID(SrcMgr.getExpansionLoc(D.getLocation()));
+  if (!trySetPath(DeclFID, SrcMgr, Result)) return std::nullopt;
+
+  addRangesQualifierAware(TyLoc, Slot(0), Context, DeclFID, Result);
+  if (Result.range().empty()) return std::nullopt;
+
   return Result;
 }
 
 std::optional<TypeLocRanges> getEligibleRanges(const Decl &D) {
-  // Only functions are currently supported.
+  if (!isInferenceTarget(D)) return std::nullopt;
   if (const auto *Fun = clang::dyn_cast<FunctionDecl>(&D))
     return getEligibleRanges(*Fun);
+  if (const auto *Field = clang::dyn_cast<FieldDecl>(&D))
+    return getEligibleRanges(*Field);
+  if (const auto *Var = clang::dyn_cast<VarDecl>(&D))
+    return getEligibleRanges(*Var);
   return std::nullopt;
 }
 

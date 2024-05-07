@@ -19,13 +19,20 @@ bool hasInferable(QualType T) {
 }
 
 int countInferableSlots(const Decl& D) {
-  const clang::FunctionDecl* Func = dyn_cast<clang::FunctionDecl>(&D);
-  if (!Func) return 0;
-  int Slots = 0;
-  if (hasInferable(Func->getReturnType())) ++Slots;
-  for (auto* P : Func->parameters())
-    if (hasInferable(P->getType())) ++Slots;
-  return Slots;
+  if (const auto* Func = dyn_cast<FunctionDecl>(&D)) {
+    int Slots = 0;
+    if (hasInferable(Func->getReturnType())) ++Slots;
+    for (auto* P : Func->parameters())
+      if (hasInferable(P->getType())) ++Slots;
+    return Slots;
+  }
+  if (const auto* Field = dyn_cast<FieldDecl>(&D)) {
+    return isInferenceTarget(*Field) ? 1 : 0;
+  }
+  if (const auto* Var = dyn_cast<VarDecl>(&D)) {
+    return isInferenceTarget(*Var) ? 1 : 0;
+  }
+  return 0;
 }
 
 bool isInferenceTarget(const Decl& D) {
