@@ -4,6 +4,7 @@
 
 #include "nullability/inference/collect_evidence.h"
 
+#include <algorithm>
 #include <cassert>
 #include <memory>
 #include <optional>
@@ -1020,6 +1021,18 @@ static auto getConcreteNullabilityOverrideFromPreviousInferences(
   };
 }
 
+template <typename ContainerT>
+static bool hasAnyInferenceTargets(const ContainerT &Decls) {
+  return std::any_of(Decls.begin(), Decls.end(),
+                     [](const Decl *D) { return D && isInferenceTarget(*D); });
+}
+
+static bool hasAnyInferenceTargets(dataflow::ReferencedDecls &RD) {
+  return hasAnyInferenceTargets(RD.Fields) ||
+         hasAnyInferenceTargets(RD.Globals) ||
+         hasAnyInferenceTargets(RD.Functions);
+}
+
 llvm::Error collectEvidenceFromDefinition(
     const Decl &Definition, llvm::function_ref<EvidenceEmitter> Emit,
     USRCache &USRCache, const PreviousInferences PreviousInferences,
@@ -1042,8 +1055,8 @@ llvm::Error collectEvidenceFromDefinition(
           llvm::inconvertibleErrorCode(),
           "Variable definitions must have an initializer.");
     }
-    // Synthesize a temporary DeclStmt for the assignment of the variable to its
-    // initializing expression. This is an unusual pattern that does not
+    // Synthesize a temporary DeclStmt for the assignment of the variable to
+    // its initializing expression. This is an unusual pattern that does not
     // perfectly reflect the CFG or AST for declaration or assignment of a
     // global variable, and it is possible that this may cause unexpected
     // behavior in clang tools/utilities.
@@ -1051,6 +1064,12 @@ llvm::Error collectEvidenceFromDefinition(
         &DeclStmtForVarDecl.emplace(DeclGroupRef(const_cast<VarDecl *>(Var)),
                                     Var->getBeginLoc(), Var->getEndLoc());
     ReferencedDecls = dataflow::getReferencedDecls(*TargetStmt);
+    if (!isInferenceTarget(*Var) && !hasAnyInferenceTargets(ReferencedDecls)) {
+      // If this variable is not an inference target and the initializer does
+      // not reference any inference targets, we won't be able to collect any
+      // useful evidence from the initializer.
+      return llvm::Error::success();
+    }
   } else {
     std::string Msg =
         "Unable to find a valid target definition from Definition:\n";
@@ -1242,8 +1261,12 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
     bool VisitVarDecl(absl::Nonnull<const VarDecl *> VD) {
       if (isInferenceTarget(*VD)) {
         Out.Declarations.push_back(VD);
-        if (VD->hasInit()) Out.Definitions.push_back(VD);
       }
+      // Variable initializers outside of function bodies may contain evidence
+      // we won't otherwise see, even if the variable is not an inference
+      // target.
+      if (VD->hasInit() && !VD->getDeclContext()->isFunctionOrMethod())
+        Out.Definitions.push_back(VD);
       return true;
     }
   };

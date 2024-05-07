@@ -291,9 +291,11 @@ TEST_F(InferTUTest, CHECKNEMacro) {
 
 TEST_F(InferTUTest, Field) {
   build(R"cc(
+    int *getIntPtr();
     struct S {
       int *I;
       bool *B;
+      int NotATarget = *getIntPtr();
     };
     void target() {
       S S;
@@ -305,7 +307,9 @@ TEST_F(InferTUTest, Field) {
       infer(),
       UnorderedElementsAre(
           inference(hasName("I"), {inferredSlot(0, Nullability::NULLABLE)}),
-          inference(hasName("B"), {inferredSlot(0, Nullability::NONNULL)})));
+          inference(hasName("B"), {inferredSlot(0, Nullability::NONNULL)}),
+          inference(hasName("getIntPtr"),
+                    {inferredSlot(0, Nullability::NONNULL)})));
 }
 
 TEST_F(InferTUTest, FieldImplicitlyDeclaredConstructorNeverUsed) {
@@ -351,8 +355,11 @@ TEST_F(InferTUTest, FieldImplicitlyDeclaredConstructorUsed) {
 
 TEST_F(InferTUTest, GlobalVariables) {
   build(R"cc(
+    int* getIntPtr();
+
     int* I;
     bool* B;
+    int NotATarget = *getIntPtr();
 
     void target() {
       I = nullptr;
@@ -363,7 +370,9 @@ TEST_F(InferTUTest, GlobalVariables) {
       infer(),
       UnorderedElementsAre(
           inference(hasName("I"), {inferredSlot(0, Nullability::NULLABLE)}),
-          inference(hasName("B"), {inferredSlot(0, Nullability::NONNULL)})));
+          inference(hasName("B"), {inferredSlot(0, Nullability::NONNULL)}),
+          inference(hasName("getIntPtr"),
+                    {inferredSlot(0, Nullability::NONNULL)})));
 }
 
 TEST_F(InferTUTest, StaticMemberVariables) {

@@ -2406,19 +2406,23 @@ TEST(EvidenceSitesTest, Lambdas) {
   // `Sites.Declarations`.
   EXPECT_THAT(Sites.Declarations, IsEmpty());
   EXPECT_THAT(Sites.Definitions,
-              ElementsAre(declNamed("(anonymous class)::operator()")));
+              UnorderedElementsAre(declNamed("(anonymous class)::operator()"),
+                                   declNamed("Lambda")));
 }
 
 TEST(EvidenceSitesTest, GlobalVariables) {
   TestAST AST(R"cc(
     int* x = true ? nullptr : nullptr;
     int* y;
+    int a;
+    int b = *y;
   )cc");
 
   auto Sites = EvidenceSites::discover(AST.context());
   EXPECT_THAT(Sites.Declarations,
               UnorderedElementsAre(declNamed("x"), declNamed("y")));
-  EXPECT_THAT(Sites.Definitions, UnorderedElementsAre(declNamed("x")));
+  EXPECT_THAT(Sites.Definitions,
+              UnorderedElementsAre(declNamed("x"), declNamed("b")));
 }
 
 TEST(EvidenceSitesTest, StaticMemberVariables) {
@@ -2490,16 +2494,17 @@ TEST(EvidenceSitesTest, Templates) {
       int f() { return I; }
     };
 
-    auto Unused = f<0>() + f<1>() + S{}.f<0>() + T<0>{}.f();
+    int Unused = f<0>() + f<1>() + S{}.f<0>() + T<0>{}.f();
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
 
   // Relevant declarations are the written ones that are not templates.
   EXPECT_THAT(Sites.Declarations, ElementsAre(declNamed("f<1>")));
-  // Instantiations are relevant inference targets.
-  EXPECT_THAT(Sites.Definitions,
-              ElementsAre(declNamed("f<0>"), declNamed("f<1>"),
-                          declNamed("S::f<0>"), declNamed("T<0>::f")));
+  // Instantiations are relevant definitions, as is the global variable.
+  EXPECT_THAT(
+      Sites.Definitions,
+      ElementsAre(declNamed("f<0>"), declNamed("f<1>"), declNamed("S::f<0>"),
+                  declNamed("T<0>::f"), declNamed("Unused")));
 }
 
 TEST(EvidenceEmitterTest, NotInferenceTarget) {
