@@ -34,6 +34,8 @@ using ::testing::ExplainMatchResult;
 using ::testing::Optional;
 using ::testing::UnorderedElementsAre;
 
+test::EnableSmartPointers Enable;
+
 constexpr char MainFileName[] = "main.cpp";
 
 MATCHER_P2(SlotRange, SlotID, Range,
@@ -220,7 +222,6 @@ TEST(EligibleRangesTest, NestedAnnotationsGetOneRange) {
 }
 
 TEST(EligibleRangesTest, NestedPointersOuterAnnotated) {
-  test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   namespace std {
   template <typename T>
@@ -248,7 +249,6 @@ TEST(EligibleRangesTest, NestedPointersOuterAnnotated) {
 }
 
 TEST(EligibleRangesTest, NestedPointersInnerAnnotated) {
-  test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   namespace std {
   template <typename T>
@@ -320,7 +320,6 @@ TEST(EligibleRangesTest, TemplateOfConstPointers) {
 }
 
 TEST(EligibleRangesTest, UniquePtr) {
-  test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   namespace std {
   template <typename T>
@@ -340,7 +339,6 @@ TEST(EligibleRangesTest, UniquePtr) {
 }
 
 TEST(EligibleRangesTest, UserDefinedSmartPointer) {
-  test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   struct MySmartIntPtr {
     using absl_nullability_compatible = void;
@@ -360,7 +358,6 @@ TEST(EligibleRangesTest, UserDefinedSmartPointer) {
 }
 
 TEST(EligibleRangesTest, UserDefinedTemplatedSmartPointer) {
-  test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   template <typename T>
   struct MySmartPtr {
@@ -630,7 +627,6 @@ TEST(EligibleRangesTest, AliasTemplateInNestedClassContext) {
 }
 
 TEST(EligibleRangesTest, DependentAliasOfSmartPointer) {
-  test::EnableSmartPointers Enable;
   auto Input = Annotations(R"(
   namespace std {
   template <typename T>

@@ -39,6 +39,7 @@ cc_test(
         ":inference_cc_proto",
         ":replace_macros",
         ":slot_fingerprint",
+        "//nullability:type_nullability",
         "//nullability/test:test_headers",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
@@ -96,6 +97,7 @@ cc_test(
     srcs = ["inferable_test.cc"],
     deps = [
         ":inferable",
+        "//nullability:type_nullability",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
@@ -186,6 +188,7 @@ cc_test(
         ":inference_cc_proto",
         ":replace_macros",
         "//nullability:proto_matchers",
+        "//nullability:type_nullability",
         "//nullability/test:test_headers",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",

@@ -4,6 +4,7 @@
 
 #include "nullability/inference/inferable.h"
 
+#include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
@@ -26,6 +27,8 @@ using ::clang::ast_matchers::isImplicit;
 using ::clang::ast_matchers::match;
 using ::clang::ast_matchers::namedDecl;
 using ::clang::ast_matchers::unless;
+
+test::EnableSmartPointers Enable;
 
 template <class T = NamedDecl>
 const T &lookup(llvm::StringRef Name, ASTContext &Ctx,

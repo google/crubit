@@ -14,6 +14,7 @@
 #include "nullability/inference/replace_macros.h"
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/test/test_headers.h"
+#include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -52,6 +53,8 @@ using ::testing::Not;
 using ::testing::ResultOf;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
+
+test::EnableSmartPointers Enable;
 
 constexpr llvm::StringRef CheckMacroDefinitions = R"cc(
   // Bodies must reference the first param so that args are in the AST, but
@@ -2031,6 +2034,19 @@ TEST(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
               ExpectedEvidenceMatcher);
   EXPECT_THAT(collectFromTargetFuncDefinition(ParensAggInit.str()),
               ExpectedEvidenceMatcher);
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     SmartPointerAnalysisProvidesEvidenceForRawPointer) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+
+    void foo(int*);
+    void target(Nullable<std::unique_ptr<int>> p) { foo(p.get()); }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                functionNamed("foo"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, NotInferenceTarget) {
