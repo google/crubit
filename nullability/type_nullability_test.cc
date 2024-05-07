@@ -124,6 +124,11 @@ TEST_F(PointerTypeTest, IsSupportedSmartPointerType) {
     };
     using UserDefined = UserDefinedSmartPointer<NotPointer>;
 
+    template <typename T>
+    struct _Nullable UserDefinedSmartPointerWithAttribute{};
+    using UserDefinedWithAttribute =
+        UserDefinedSmartPointerWithAttribute<NotPointer>;
+
     template <class>
     struct Container;
     using ContainsPointers = Container<std::unique_ptr<int>>;
@@ -137,6 +142,8 @@ TEST_F(PointerTypeTest, IsSupportedSmartPointerType) {
       underlying("UniquePointerWrongNamespace", AST)));
   EXPECT_TRUE(isSupportedSmartPointerType(underlying("SugaredPointer", AST)));
   EXPECT_TRUE(isSupportedSmartPointerType(underlying("UserDefined", AST)));
+  EXPECT_TRUE(
+      isSupportedSmartPointerType(underlying("UserDefinedWithAttribute", AST)));
   EXPECT_TRUE(
       isSupportedSmartPointerType(underlying("PublicDerivedPointer", AST)));
   EXPECT_FALSE(
@@ -176,6 +183,11 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
       using pointer = char *;
     };
 
+    template <typename T>
+    struct _Nullable UserDefinedSmartPointerWithAttribute {
+      using pointer = char *;
+    };
+
     template <int i>
     struct Recursive : public Recursive<i - 1> {};
     template <>
@@ -195,6 +207,7 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     using PublicDerivedPointer = PublicDerived<int>;
     using PrivateDerivedPointer = PrivateDerived<int>;
     using UserDefined = UserDefinedSmartPointer<int>;
+    using UserDefinedWithAttribute = UserDefinedSmartPointerWithAttribute<int>;
     using Recursive2 = Recursive<2>;
     using IndirectRecursive2 = IndirectRecursive<2>;
     // Force the compiler to instantiate the templates. Otherwise, the
@@ -206,6 +219,7 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     template class PublicDerived<int>;
     template class PrivateDerived<int>;
     template class UserDefinedSmartPointer<int>;
+    template class UserDefinedSmartPointerWithAttribute<int>;
     template class Recursive<2>;
     template class IndirectRecursive<2>;
   )cpp");
@@ -224,6 +238,9 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
             PointerToCharTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("UserDefined", AST)),
             PointerToCharTy);
+  EXPECT_EQ(
+      underlyingRawPointerType(underlying("UserDefinedWithAttribute", AST)),
+      PointerToCharTy);
   EXPECT_TRUE(underlyingRawPointerType(underlying("Recursive2", AST)).isNull());
   EXPECT_TRUE(
       underlyingRawPointerType(underlying("IndirectRecursive2", AST)).isNull());
@@ -253,6 +270,10 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
     template <typename T>
     struct PrivateDerived : private std::unique_ptr<T> {};
     using PrivateDerivedPointer = PrivateDerived<int>;
+
+    template <typename T>
+    struct _Nullable UserDefinedSmartPointerWithAttribute;
+    using UserDefinedWithAttribute = UserDefinedSmartPointerWithAttribute<int>;
 
     template <typename T>
     using Nullable [[clang::annotate("Nullable")]] = T;
@@ -293,6 +314,10 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
   EXPECT_EQ(underlyingRawPointerType(underlying("PrivateDerivedPointer", AST),
                                      AS_private),
             PointerToIntTy);
+
+  EXPECT_EQ(
+      underlyingRawPointerType(underlying("UserDefinedWithAttribute", AST)),
+      PointerToIntTy);
 
   EXPECT_EQ(underlyingRawPointerType(underlying("NullableUniquePointer", AST)),
             PointerToIntTy);

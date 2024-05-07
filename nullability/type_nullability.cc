@@ -69,13 +69,16 @@ static bool isStandardSmartPointerDecl(const CXXRecordDecl *RD) {
   return Name == "unique_ptr" || Name == "shared_ptr";
 }
 
-static bool hasAbslNullabilityCompatibleTag(const CXXRecordDecl *RD) {
+static bool isAnnotatedNullabilityCompatible(const CXXRecordDecl *RD) {
   // If the specialization hasn't been instantiated -- for example because it
   // is only used as a function parameter type -- then the specialization won't
   // contain the `absl_nullability_compatible` tag. Therefore, we look at the
   // template rather than the specialization.
   if (const auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD))
     RD = CTSD->getSpecializedTemplate()->getTemplatedDecl();
+
+  if (RD->hasAttr<TypeNullableAttr>()) return true;
+
   const auto &Idents = RD->getASTContext().Idents;
   auto It = Idents.find("absl_nullability_compatible");
   if (It == Idents.end()) return false;
@@ -88,7 +91,7 @@ static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
     AccessSpecifier BaseAccess) {
   if (RD == nullptr) return nullptr;
 
-  if (isStandardSmartPointerDecl(RD) || hasAbslNullabilityCompatibleTag(RD))
+  if (isStandardSmartPointerDecl(RD) || isAnnotatedNullabilityCompatible(RD))
     return RD;
 
   if (RD->hasDefinition())
