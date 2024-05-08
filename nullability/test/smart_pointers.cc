@@ -599,6 +599,26 @@ TEST void userDefinedSmartPointers(
   unknown(UnknownParam.get());
 }
 
+template <typename T>
+struct _Nullable UserDefinedSmartPointerWithAttribute {
+  using pointer = T *;
+
+  pointer get() const;
+};
+
+TEST void userDefinedSmartPointersWithAttribute(
+    UserDefinedSmartPointerWithAttribute<int> _Nonnull NonnullParam,
+    UserDefinedSmartPointerWithAttribute<int> _Nullable NullableParam,
+    UserDefinedSmartPointerWithAttribute<int> _Null_unspecified UnknownParam) {
+  // All that we really want to test here is that we can put nullability
+  // attributes on a smart pointer class that has the `_Nullable` attribute.
+  // But let's also spot-check that the nullability is set correctly.
+
+  nonnull(NonnullParam);
+  nullable(NullableParam);
+  unknown(UnknownParam);
+}
+
 }  // namespace user_defined_smart_pointers
 
 namespace derived_from_unique_ptr {
