@@ -105,7 +105,7 @@ pub fn escape_non_identifier_chars(symbol: &str) -> String {
 /// Representation of `foo::bar::baz` where each component is either the name
 /// of a C++ namespace, or the name of a Rust module.
 #[derive(Debug, PartialEq, Eq, Clone, Hash, PartialOrd, Ord)]
-pub struct NamespaceQualifier(Vec<Rc<str>>);
+pub struct NamespaceQualifier(pub Vec<Rc<str>>);
 
 impl NamespaceQualifier {
     /// Constructs a new `NamespaceQualifier` from a sequence of names.
@@ -131,7 +131,7 @@ impl NamespaceQualifier {
         Ok(quote! { #(#namespace_cc_idents::)* })
     }
 
-    fn format_with_cc_body(&self, body: TokenStream) -> Result<TokenStream> {
+    pub fn format_with_cc_body(&self, body: TokenStream) -> Result<TokenStream> {
         if self.0.is_empty() {
             Ok(body)
         } else {
@@ -144,70 +144,9 @@ impl NamespaceQualifier {
         }
     }
 
-    fn cc_idents(&self) -> Result<Vec<TokenStream>> {
+    pub fn cc_idents(&self) -> Result<Vec<TokenStream>> {
         self.0.iter().map(|ns| format_cc_ident(ns)).collect()
     }
-}
-
-/// `format_namespace_bound_cc_tokens` formats a sequence of namespace-bound
-/// snippets.  For example, `[(ns, tokens)]` will be formatted as:
-///
-///     ```
-///     namespace ns {
-///     #tokens
-///     }
-///     ```
-///
-/// `format_namespace_bound_cc_tokens` tries to give a nice-looking output - for
-/// example it combines consecutive items that belong to the same namespace,
-/// when given `[(ns, tokens1), (ns, tokens2)]` as input:
-///
-///     ```
-///     namespace ns {
-///     #tokens1
-///     #tokens2
-///     }
-///     ```
-///
-/// `format_namespace_bound_cc_tokens` also knows that top-level items (e.g.
-/// ones where `NamespaceQualifier` doesn't contain any namespace names) should
-/// be emitted at the top-level (not nesting them under a `namespace` keyword).
-/// For example, `[(toplevel_ns, tokens)]` will be formatted as just:
-///
-///     ```
-///     #tokens
-///     ```
-pub fn format_namespace_bound_cc_tokens(
-    iter: impl IntoIterator<Item = (NamespaceQualifier, TokenStream)>,
-) -> TokenStream {
-    let iter = iter
-        .into_iter()
-        .coalesce(|(ns1, mut tokens1), (ns2, tokens2)| {
-            // Coallesce tokens if subsequent items belong to the same namespace.
-            if ns1 == ns2 {
-                tokens1.extend(tokens2);
-                Ok((ns1, tokens1))
-            } else {
-                Err(((ns1, tokens1), (ns2, tokens2)))
-            }
-        })
-        .map(|(ns, tokens)| {
-            ns.format_with_cc_body(tokens).unwrap_or_else(|err| {
-                let name = ns.0.iter().join("::");
-                let err = format!("Failed to format namespace name `{name}`: {err}");
-                quote! { __COMMENT__ #err }
-            })
-        });
-
-    // Using fully-qualified syntax to avoid the warning that `intersperse`
-    // may be added to the standard library in the future.
-    //
-    // TODO(https://github.com/rust-lang/rust/issues/79524): Use `.intersperse(...)` syntax once
-    // 1) this stdlib feature gets stabilized and
-    // 2) the method with conflicting name gets removed from `itertools`.
-    let iter = itertools::Itertools::intersperse(iter, quote! { __NEWLINE__ __NEWLINE__ });
-
-    iter.collect()
 }
 
 /// `CcInclude` represents a single `#include ...` directive in C++.
@@ -667,89 +606,6 @@ pub mod tests {
                 namespace foo::bar::baz {
                     cc body goes here
                 }  // namespace foo::bar::baz
-            },
-        );
-    }
-
-    #[test]
-    fn test_format_namespace_bound_cc_tokens() {
-        let top_level = NamespaceQualifier::new::<&str>([]);
-        let m1 = NamespaceQualifier::new(["m1"]);
-        let m2 = NamespaceQualifier::new(["m2"]);
-        let input = [
-            (top_level.clone(), quote! { void f0a(); }),
-            (m1.clone(), quote! { void f1a(); }),
-            (m1.clone(), quote! { void f1b(); }),
-            (top_level.clone(), quote! { void f0b(); }),
-            (top_level.clone(), quote! { void f0c(); }),
-            (m2.clone(), quote! { void f2a(); }),
-            (m1.clone(), quote! { void f1c(); }),
-            (m1.clone(), quote! { void f1d(); }),
-        ];
-        assert_cc_matches!(
-            format_namespace_bound_cc_tokens(input),
-            quote! {
-                void f0a();
-
-                namespace m1 {
-                void f1a();
-                void f1b();
-                }  // namespace m1
-
-                void f0b();
-                void f0c();
-
-                namespace m2 {
-                void f2a();
-                }
-
-                namespace m1 {
-                void f1c();
-                void f1d();
-                }  // namespace m1
-            },
-        );
-    }
-
-    #[test]
-    fn test_format_namespace_bound_cc_tokens_with_reserved_cpp_keywords() {
-        let working_module = NamespaceQualifier::new(["foo", "working_module", "bar"]);
-        let broken_module = NamespaceQualifier::new(["foo", "reinterpret_cast", "bar"]);
-        let input = vec![
-            (broken_module.clone(), quote! { void broken_module_f1(); }),
-            (broken_module.clone(), quote! { void broken_module_f2(); }),
-            (working_module.clone(), quote! { void working_module_f3(); }),
-            (working_module.clone(), quote! { void working_module_f4(); }),
-            (broken_module.clone(), quote! { void broken_module_f5(); }),
-            (broken_module.clone(), quote! { void broken_module_f6(); }),
-            (working_module.clone(), quote! { void working_module_f7(); }),
-            (working_module.clone(), quote! { void working_module_f8(); }),
-        ];
-        let broken_module_msg = "Failed to format namespace name `foo::reinterpret_cast::bar`: \
-                                 `reinterpret_cast` is a C++ reserved keyword \
-                                 and can't be used as a C++ identifier";
-        assert_cc_matches!(
-            format_namespace_bound_cc_tokens(input),
-            quote! {
-                __COMMENT__ #broken_module_msg
-
-                namespace foo::working_module::bar {
-                void working_module_f3();
-                void working_module_f4();
-                }  // namespace foo::working_module::bar
-
-                // TODO(lukasza): Repeating the error message below seems somewhat undesirable.
-                // OTOH fixing this seems low priority, given that errors when formatting namespace
-                // names should be fairly rare.  And fixing this requires extra work and effort,
-                // especially if we want to:
-                // 1) coallesce the 2 chunks of the `working_module`
-                // 2) avoid reordering where the `broken_module` error comment appears.
-                __COMMENT__ #broken_module_msg
-
-                namespace foo::working_module::bar {
-                void working_module_f7();
-                void working_module_f8();
-                }  // namespace foo::working_module::bar
             },
         );
     }
