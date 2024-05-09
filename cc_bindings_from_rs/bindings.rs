@@ -1018,6 +1018,30 @@ impl FunctionKind {
     }
 }
 
+/// Checks if the item associated with the given def_id has a deprecated
+/// attribute. If so, returns the corresponding C++ deprecated tag.
+///
+/// TODO(codyheiner): consider adding a more general version of this function
+/// that builds a Vec<TokenStream> containing all the attributes of a given
+/// item.
+fn format_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
+    if let Some(deprecated_attr) = tcx.get_attr(def_id, rustc_span::symbol::sym::deprecated) {
+        if let Some((deprecation, _span)) =
+            find_deprecation(tcx.sess(), tcx.features(), slice::from_ref(deprecated_attr))
+        {
+            let cc_deprecated_tag = match deprecation.note {
+                None => quote! {[[deprecated]]},
+                Some(note_symbol) => {
+                    let note = note_symbol.as_str();
+                    quote! {[[deprecated(#note)]]}
+                }
+            };
+            return Some(cc_deprecated_tag);
+        }
+    }
+    None
+}
+
 /// Formats a function with the given `local_def_id`.
 ///
 /// Will panic if `local_def_id`
@@ -1173,19 +1197,8 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
             };
         }
         // Attribute: deprecated
-        if let Some(deprecated_attr) = tcx.get_attr(def_id, rustc_span::symbol::sym::deprecated) {
-            if let Some((deprecation, _span)) =
-                find_deprecation(tcx.sess(), tcx.features(), slice::from_ref(deprecated_attr))
-            {
-                let cpp_deprecation_tag = match deprecation.note {
-                    None => quote! {[[deprecated]]},
-                    Some(note_symbol) => {
-                        let note = note_symbol.as_str();
-                        quote! {[[deprecated(#note)]]}
-                    }
-                };
-                attributes.push(cpp_deprecation_tag);
-            }
+        if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, def_id) {
+            attributes.push(cc_deprecated_tag);
         }
 
         CcSnippet {
@@ -2247,24 +2260,8 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         }
 
         // Attribute: deprecated
-        //
-        // TODO(codyheiner): After adding code to support all deprecation types, extract
-        // common functionality to a helper function.
-        if let Some(deprecated_attr) =
-            tcx.get_attr(core.def_id, rustc_span::symbol::sym::deprecated)
-        {
-            if let Some((deprecation, _span)) =
-                find_deprecation(tcx.sess(), tcx.features(), slice::from_ref(deprecated_attr))
-            {
-                let cpp_deprecation_tag = match deprecation.note {
-                    None => quote! {[[deprecated]]},
-                    Some(note_symbol) => {
-                        let note = note_symbol.as_str();
-                        quote! {[[deprecated(#note)]]}
-                    }
-                };
-                attributes.push(cpp_deprecation_tag);
-            }
+        if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, core.def_id) {
+            attributes.push(cc_deprecated_tag);
         }
 
         let doc_comment = format_doc_comment(tcx, core.def_id.expect_local());
