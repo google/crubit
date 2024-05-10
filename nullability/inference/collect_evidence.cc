@@ -962,11 +962,13 @@ class DefinitionEvidenceCollector {
   }
 
   void fromAggregateInitialization(const Stmt &S) {
-    if (auto *InitList = dyn_cast<clang::InitListExpr>(&S)) {
+    if (auto *InitList = dyn_cast<clang::InitListExpr>(&S);
+        InitList && InitList->getType()->isRecordType()) {
       fromFieldInits(RecordInitListHelper(InitList));
       return;
     }
-    if (auto *ParenListInit = dyn_cast<clang::CXXParenListInitExpr>(&S))
+    if (auto *ParenListInit = dyn_cast<clang::CXXParenListInitExpr>(&S);
+        ParenListInit && ParenListInit->getType()->isRecordType())
       fromFieldInits(RecordInitListHelper(ParenListInit));
   }
 

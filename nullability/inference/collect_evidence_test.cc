@@ -2036,6 +2036,14 @@ TEST(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
               ExpectedEvidenceMatcher);
 }
 
+// This is a crash repro related to aggregate initialization.
+TEST(CollectEvidenceFromDefinitionTest, NonRecordInitListExpr) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target() { int a[3] = {}; }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
+}
+
 TEST(CollectEvidenceFromDefinitionTest,
      SmartPointerAnalysisProvidesEvidenceForRawPointer) {
   static constexpr llvm::StringRef Src = R"cc(
