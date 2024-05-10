@@ -331,7 +331,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
     const TransferStateForDiagnostics<PointerNullabilityLattice> &State) {
   if (!RS->getRetValue()) return {};
 
-  auto *Function = cast<FunctionDecl>(State.Env.getDeclCtx());
+  auto *Function = State.Env.getCurrentFunc();
+  CHECK(Function);
   auto FunctionNullability =
       getTypeNullability(*Function, State.Lattice.defaults());
   auto ReturnTypeNullability =
