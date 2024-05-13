@@ -18,6 +18,8 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
+#include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -33,6 +35,10 @@
 
 namespace clang::tidy::nullability {
 namespace {
+using ::clang::ast_matchers::hasName;
+using ::clang::ast_matchers::match;
+using ::clang::ast_matchers::selectFirst;
+using ::clang::ast_matchers::typeAliasDecl;
 using ::llvm::Annotations;
 using ::testing::ElementsAre;
 using ::testing::FieldsAre;
@@ -325,6 +331,22 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
   EXPECT_TRUE(underlyingRawPointerType(underlying("Recursive2", AST)).isNull());
   EXPECT_TRUE(
       underlyingRawPointerType(underlying("IndirectRecursive2", AST)).isNull());
+}
+
+TEST_F(UnderlyingRawPointerTest, BaseClassIsTemplateTemplateParameter) {
+  // This is a crash repro for b/339236507.
+  TestAST AST(R"cc(
+    struct Other {};
+
+    template <template <typename> typename Base>
+    struct Derived : public Base<Other> {
+      using Target = Derived;
+    };
+  )cc");
+
+  const auto *Target = selectFirst<TypeAliasDecl>(
+      "T", match(typeAliasDecl(hasName("Target")).bind("T"), AST.context()));
+  EXPECT_EQ(underlyingRawPointerType(Target->getUnderlyingType()), QualType());
 }
 
 class GetTypeNullabilityTest : public ::testing::Test {

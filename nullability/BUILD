@@ -196,6 +196,7 @@ cc_test(
         ":type_nullability",
         "@abseil-cpp//absl/log:check",
         "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",
         "@llvm-project//clang:lex",

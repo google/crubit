@@ -106,7 +106,10 @@ static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
         if (BaseClass == nullptr) {
           if (const auto *TST =
                   Base.getType()->getAs<TemplateSpecializationType>()) {
-            BaseClass = dyn_cast<CXXRecordDecl>(
+            // If the base class is a template template parameter, we can
+            // retrieve the template decl, but not the templated decl, so don't
+            // assert presence during the cast.
+            BaseClass = dyn_cast_if_present<CXXRecordDecl>(
                 TST->getTemplateName().getAsTemplateDecl()->getTemplatedDecl());
 
             // We need to be careful here: Once we start looking at underlying
