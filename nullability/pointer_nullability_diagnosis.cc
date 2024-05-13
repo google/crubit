@@ -33,6 +33,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
@@ -440,13 +441,21 @@ auto pointerNullabilityDiagnoser() {
 
 }  // namespace
 
+std::unique_ptr<dataflow::Solver> makeDefaultSolver() {
+  // This limit is set based on empirical observations. Mostly, it is a rough
+  // proxy for a line between "finite" and "effectively infinite", rather than a
+  // strict limit on resource use.
+  constexpr std::int64_t MaxSATIterations = 2'000'000;
+  return std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
+}
+
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
 diagnosePointerNullability(const FunctionDecl *Func,
-                           const NullabilityPragmas &Pragmas) {
-  // These limits are set based on empirical observations. Mostly, they are a
-  // rough proxy for a line between "finite" and "effectively infinite", rather
-  // than strict limits on resource use.
-  constexpr std::int64_t MaxSATIterations = 2'000'000;
+                           const NullabilityPragmas &Pragmas,
+                           dataflow::Solver &Solver) {
+  // This limit is set based on empirical observations. Mostly, it is a rough
+  // proxy for a line between "finite" and "effectively infinite", rather than a
+  // strict limit on resource use.
   constexpr std::int32_t MaxBlockVisits = 20'000;
 
   llvm::SmallVector<PointerNullabilityDiagnostic> Diags;
@@ -468,10 +477,7 @@ diagnosePointerNullability(const FunctionDecl *Func,
   if (!CFG) return CFG.takeError();
 
   auto Diagnoser = pointerNullabilityDiagnoser();
-  auto OwnedSolver =
-      std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
-  const auto *Solver = OwnedSolver.get();
-  dataflow::DataflowAnalysisContext AnalysisContext(std::move(OwnedSolver));
+  dataflow::DataflowAnalysisContext AnalysisContext(Solver);
   Environment Env(AnalysisContext, *Func);
 
   PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
@@ -488,7 +494,7 @@ diagnosePointerNullability(const FunctionDecl *Func,
       },
       MaxBlockVisits);
   if (!Result) return Result.takeError();
-  if (Solver->reachedLimit())
+  if (Solver.reachedLimit())
     return llvm::createStringError(llvm::errc::interrupted,
                                    "SAT solver timed out");
 

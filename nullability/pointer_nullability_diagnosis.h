@@ -5,11 +5,13 @@
 #ifndef CRUBIT_NULLABILITY_POINTER_NULLABILITY_DIAGNOSIS_H_
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_DIAGNOSIS_H_
 
+#include <memory>
 #include <optional>
 #include <string>
 
 #include "nullability/pragma.h"
 #include "clang/AST/Decl.h"
+#include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/SmallVector.h"
 
@@ -47,6 +49,10 @@ struct PointerNullabilityDiagnostic {
   std::optional<std::string> ParamName;
 };
 
+/// Creates a solver with default parameters that is suitable for passing to
+/// `diagnosePointerNullability()`.
+std::unique_ptr<dataflow::Solver> makeDefaultSolver();
+
 /// Checks that nullable pointers are used safely, using nullability information
 /// that is collected by `PointerNullabilityAnalysis`.
 ///
@@ -57,7 +63,8 @@ struct PointerNullabilityDiagnostic {
 /// Returns an empty vector when no issues are found in the code.
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
 diagnosePointerNullability(const FunctionDecl *Func,
-                           const NullabilityPragmas &Pragmas);
+                           const NullabilityPragmas &Pragmas,
+                           dataflow::Solver &Solver);
 
 }  // namespace nullability
 }  // namespace tidy

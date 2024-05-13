@@ -15,6 +15,7 @@
 #include "clang/AST/ASTConsumer.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
@@ -72,6 +73,8 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang) {
     return false;
   }
 
+  std::unique_ptr<dataflow::Solver> Solver = makeDefaultSolver();
+
   bool Success = true;
   for (const ast_matchers::BoundNodes &BN : MatchResult) {
     const FunctionDecl *Target = BN.getNodeAs<FunctionDecl>("target");
@@ -82,8 +85,8 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang) {
             Target->getSourceRange(), AnnotatedCode);
 
     llvm::SmallVector<PointerNullabilityDiagnostic> Diagnostics;
-    if (llvm::Error Err =
-            diagnosePointerNullability(Target, Pragmas).moveInto(Diagnostics)) {
+    if (llvm::Error Err = diagnosePointerNullability(Target, Pragmas, *Solver)
+                              .moveInto(Diagnostics)) {
       ADD_FAILURE() << Err;
       return false;
     }
