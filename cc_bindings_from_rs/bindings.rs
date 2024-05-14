@@ -1485,16 +1485,9 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
     let layout = get_layout(tcx, core.self_ty)
         .expect("Layout should be already verified by `format_adt_core`");
     let adt_def = core.self_ty.ty_adt_def().expect("`core.def_id` needs to identify an ADT");
-    let fields: Vec<Field> = if core.self_ty.is_enum()
-        || (core.self_ty.is_union() && !core.repr_attrs.contains(&rustc_attr::ReprC))
-    {
-        // Note that `#[repr(Rust)]` unions don't guarantee that all their fields
-        // have offset 0.
+    let fields: Vec<Field> = if core.self_ty.is_enum() {
         vec![Field {
-            type_info: Err(anyhow!(
-                "No support for bindings of individual fields of non-#[repr(C))] \
-                                    `union` (b/272801632) or `enum`"
-            )),
+            type_info: Err(anyhow!("No support for bindings of individual `enum` fields")),
             cc_name: quote! { __opaque_blob_of_bytes },
             rs_name: quote! { __opaque_blob_of_bytes },
             is_public: false,
@@ -1576,9 +1569,15 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                     (field.offset, field_size, field.index)
                 });
             }
-            FieldsShape::Union(_) => {} // No need to compute offsets or sort fields
+            FieldsShape::Union(num_fields) => {
+                // Compute the offset of each field
+                for index in 0..num_fields.get() {
+                    fields[index].offset = layout.fields().offset(index).bytes();
+                }
+            }
             unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
         }
+
         let next_offsets = fields
             .iter()
             .map(|Field { offset, .. }| *offset)
@@ -1685,7 +1684,7 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                                 assert!((field.offset + size) <= field.offset_of_next_field);
                                 field.offset_of_next_field - field.offset - size
                             }
-                            ty::AdtKind::Union => 0,
+                            ty::AdtKind::Union => field.offset,
                             ty::AdtKind::Enum => todo!(),
                         };
 
@@ -1721,11 +1720,30 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                                     };
                                 #padding
                             },
-                            ty::AdtKind::Union => quote! {
-                                __NEWLINE__
-                                #doc_comment
-                                #cc_type #cc_name;
-                            },
+                            ty::AdtKind::Union => {
+                                if core.repr_attrs.contains(&rustc_attr::ReprC) {
+                                    quote! {
+                                        __NEWLINE__
+                                        #doc_comment
+                                        #cc_type #cc_name;
+                                    }
+                                } else {
+                                     let internal_padding = if field.offset == 0 {
+                                         quote! {}
+                                        } else {
+                                         let internal_padding_size = Literal::u64_unsuffixed(field.offset);
+                                         quote! {char __crubit_internal_padding[#internal_padding_size]}
+                                    };
+                                    quote! {
+                                        __NEWLINE__
+                                        #doc_comment
+                                        struct {
+                                            #internal_padding
+                                            #cc_type value;
+                                        } #cc_name;
+                                    }
+                                }
+                            }
                             ty::AdtKind::Enum => todo!(),
                         }
                     }
@@ -6177,8 +6195,7 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
-                                 No support for bindings of individual fields of \
-                                 non-#[repr(C))] `union` (b/272801632) or `enum`";
+                                 No support for bindings of individual `enum` fields";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -6238,8 +6255,7 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
-                                 No support for bindings of individual fields of \
-                                 non-#[repr(C))] `union` (b/272801632) or `enum`";
+                                 No support for bindings of individual `enum` fields";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -6311,9 +6327,6 @@ pub mod tests {
         test_format_item(test_src, "SomeUnion", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
-            let no_fields_msg = "Field type has been replaced with a blob of bytes: \
-                                 No support for bindings of individual fields of \
-                                 non-#[repr(C))] `union` (b/272801632) or `enum`";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -6331,9 +6344,16 @@ pub mod tests {
                             __COMMENT__ "`SomeUnion` doesn't implement the `Clone` trait"
                             SomeUnion(const SomeUnion&) = delete;
                             SomeUnion& operator=(const SomeUnion&) = delete;
-                        private:
-                            __COMMENT__ #no_fields_msg
-                            unsigned char __opaque_blob_of_bytes[8];
+                        ...
+                        struct {
+                            ...
+                            std::int32_t value;
+                        } i;
+                        ...
+                        struct {
+                            ...
+                            double value;
+                        } f;
                         private:
                             static void __crubit_field_offset_assertions();
                     };
@@ -7605,6 +7625,82 @@ pub mod tests {
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 4);
                     const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeUnion, x) == 0);
                     const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeUnion, y) == 0);
+                }
+            );
+        })
+    }
+
+    #[test]
+    fn test_union_fields() {
+        let test_src = r#"
+        pub union SomeUnion {
+            pub x: u16,
+            pub y: u32,
+        }
+
+        const _: () = assert!(std::mem::size_of::<SomeUnion>() == 4);
+        const _: () = assert!(std::mem::align_of::<SomeUnion>() == 4);
+        "#;
+
+        test_format_item(test_src, "SomeUnion", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeUnion final {
+                        public:
+                            ...
+                            __COMMENT__ "`SomeUnion` doesn't implement the `Default` trait"
+                            SomeUnion() = delete;
+                            ...
+                            __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+                            ~SomeUnion() = default;
+                            SomeUnion(SomeUnion&&) = default;
+                            SomeUnion& operator=(SomeUnion&&) = default;
+
+                            __COMMENT__ "`SomeUnion` doesn't implement the `Clone` trait"
+                            SomeUnion(const SomeUnion&) = delete;
+                            SomeUnion& operator=(const SomeUnion&) = delete;
+                            ...
+                            struct {
+                                ...
+                                std::uint16_t value;
+                            } x;
+                            ...
+                            struct {
+                                ...
+                                std::uint32_t value;
+                            } y;
+                        private:
+                            static void __crubit_field_offset_assertions();
+                    };
+                }
+            );
+
+            // Note: we don't check for offsets here, because we don't know necessarily know
+            // what the offset will be.
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    static_assert(sizeof(SomeUnion) == 4, ...);
+                    static_assert(alignof(SomeUnion) == 4, ...);
+                    static_assert(std::is_trivially_destructible_v<SomeUnion>);
+                    static_assert(std::is_trivially_move_constructible_v<SomeUnion>);
+                    static_assert(std::is_trivially_move_assignable_v<SomeUnion>);
+                    inline void SomeUnion::__crubit_field_offset_assertions() {
+                      ...
+                    }
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 4);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 4);
+                    ...
                 }
             );
         })
