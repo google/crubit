@@ -21,7 +21,7 @@ function delete_all_test_outputs() {
 
 readonly CC_BINDINGS_FROM_RS_PATH="${RUNFILES}/cc_bindings_from_rs/cc_bindings_from_rs"
 readonly SYSROOT_PATH="${RUNFILES}/${G3_SYSROOT_PATH}"
-readonly RUSTFMT_PATH="nowhere/llvm/rust/main_sysroot/bin/rustfmt"
+readonly RUSTFMT_PATH="third_party/crosstool/rust/unstable/main_sysroot/bin/rustfmt"
 readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${RUNFILES}/google3/third_party/crosstool/google3_users/clang-format"
 
 # This tests a simple happy, errors-free code path.

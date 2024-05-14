@@ -30,7 +30,7 @@ using ::testing::Pair;
 using ::testing::StrEq;
 
 constexpr absl::string_view kDefaultRustfmtExePath =
-    "nowhere/llvm/rust/main_sysroot/bin/rustfmt";
+    "third_party/crosstool/rust/unstable/main_sysroot/bin/rustfmt";
 
 constexpr absl::string_view kDefaultClangFormatExePath =
     "third_party/crosstool/google3_users/clang-format";

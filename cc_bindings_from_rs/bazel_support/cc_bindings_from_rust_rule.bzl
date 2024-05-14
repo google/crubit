@@ -344,7 +344,7 @@ cc_bindings_from_rust_aspect = aspect(
             default = [],
         ),
         "_rustfmt": attr.label(
-            default = "//nowhere/llvm/rust:genrustfmt_for_crubit_aspects",
+            default = "//third_party/crosstool/rust/unstable:genrustfmt_for_crubit_aspects",
             executable = True,
             allow_single_file = True,
             cfg = "exec",
