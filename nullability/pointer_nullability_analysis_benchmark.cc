@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <cstdint>
-#include <memory>
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
@@ -17,7 +16,6 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
-#include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
 
@@ -36,10 +34,8 @@ void benchmarkAnalysisOnCode(benchmark::State &State, llvm::StringRef Code) {
   auto *Target = cast<FunctionDecl>(
       lookup("Target", *AST.context().getTranslationUnitDecl()));
   NullabilityPragmas NoPragmas;
-  std::unique_ptr<dataflow::Solver> Solver = makeDefaultSolver();
 
-  for (auto _ : State)
-    (void)diagnosePointerNullability(Target, NoPragmas, *Solver);
+  for (auto _ : State) (void)diagnosePointerNullability(Target, NoPragmas);
 }
 
 void BM_PointerAnalysisCopyPointer(benchmark::State &State) {

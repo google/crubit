@@ -103,7 +103,6 @@ cc_test(
         ":check_diagnostics",
         "//nullability:pointer_nullability_diagnosis",
         "//nullability:pragma",
-        "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",

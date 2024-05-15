@@ -12,7 +12,6 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
-#include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Frontend/ASTUnit.h"
 #include "clang/Tooling/Tooling.h"
@@ -310,17 +309,13 @@ TEST(PointerNullabilityTest, AnalyzeFunctionWithForwardDeclarationOnlyOnce) {
   SmallVector<FunctionDecl *> Redecls(Target->redecls());
   ASSERT_EQ(Redecls.size(), 2);
 
-  std::unique_ptr<dataflow::Solver> Solver = makeDefaultSolver();
-
   EXPECT_TRUE(Redecls[0]->doesThisDeclarationHaveABody());
-  EXPECT_THAT_EXPECTED(
-      diagnosePointerNullability(Redecls[0], NoPragmas, *Solver),
-      llvm::HasValue(SizeIs(1)));
+  EXPECT_THAT_EXPECTED(diagnosePointerNullability(Redecls[0], NoPragmas),
+                       llvm::HasValue(SizeIs(1)));
 
   EXPECT_FALSE(Redecls[1]->doesThisDeclarationHaveABody());
-  EXPECT_THAT_EXPECTED(
-      diagnosePointerNullability(Redecls[1], NoPragmas, *Solver),
-      llvm::HasValue(IsEmpty()));
+  EXPECT_THAT_EXPECTED(diagnosePointerNullability(Redecls[1], NoPragmas),
+                       llvm::HasValue(IsEmpty()));
 }
 
 TEST(PointerNullabilityTest, CheckMacro) {
