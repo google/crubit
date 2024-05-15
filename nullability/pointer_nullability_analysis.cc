@@ -8,6 +8,7 @@
 #include <deque>
 #include <functional>
 #include <optional>
+#include <utility>
 #include <vector>
 
 #include "absl/base/nullability.h"
@@ -1756,146 +1757,86 @@ ComparisonResult PointerNullabilityAnalysis::compare(QualType Type,
   return ComparisonResult::Unknown;
 }
 
-namespace {
-enum class WidenedProperty {
-  Identical,
-  False,
-  True,
-  Top,
-};
-}  // namespace
-
 // Returns the result of widening a nullability property.
 // `Prev` is the formula in the previous iteration, `Cur` is the formula in the
 // current iteration.
-// Returns `Identical`, if `Prev == Cur`, Otherwise, if they are
-// (only) equivalent, returns `True` or `False`, depending on the formulas'
-// (common) truth value. Otherwise, returns `Top`, indicating the lack of common
-// truth value.
-static WidenedProperty widenNullabilityProperty(
-    absl::Nullable<const Formula *> Prev, const Environment &PrevEnv,
-    absl::Nullable<const Formula *> Cur, Environment &CurEnv) {
-  if (Prev == Cur) return WidenedProperty::Identical;
-  if (Prev == nullptr || Cur == nullptr) return WidenedProperty::Top;
+// Returns `nullptr` (Top), if `Prev` is already Top or `Prev` and `Cur` cannot
+// be proven equivalent. Otherwise, (`Prev` and `Cur` are provably equivalent),
+// returns `Cur`. Returns `Cur`, if `Prev` is equivalent to `Cur`. Otherwise,
+// returns `Top`.
+static std::pair<absl::Nullable<const Formula *>, LatticeEffect>
+widenNullabilityProperty(absl::Nullable<const Formula *> Prev,
+                         const Environment &PrevEnv,
+                         absl::Nullable<const Formula *> Cur,
+                         Environment &CurEnv) {
+  if (Prev == Cur) return {Cur, LatticeEffect::Unchanged};
+  if (Prev == nullptr) return {nullptr, LatticeEffect::Unchanged};
+  if (Cur == nullptr) return {nullptr, LatticeEffect::Changed};
 
   Arena &A = CurEnv.arena();
 
-  if (PrevEnv.proves(*Prev)) {
-    // Check for a dead-code environment, which would allow `Prev`, no matter
-    // its value. As an optimization, we skip the check when `Prev` is the true
-    // literal, because, in that case, the environment is irrelevant.
-    //
-    // We only need to consider `PrevEnv`, because it is queried
-    // first. If `PrevEnv` is not dead and `CurEnv` is dead, we'll implicitly
-    // use the state in `PrevEnv`, which is the desired outcome. Note: we do not
-    // know of a scenario in which this can occur, but the logic holds
-    // regardless.
-    auto &True = A.makeLiteral(true);
-    if (Prev != &True && !PrevEnv.allows(True)) {
-      // TODO: Ideally, we'd just preserve `Cur`, rather than trying to
-      // determine its truth value. There's no reason for further processing
-      // except to meet the constraints of the API.
-      if (CurEnv.proves(A.makeNot(*Cur))) return WidenedProperty::False;
-    }
-    if (CurEnv.proves(*Cur)) return WidenedProperty::True;
-  } else if (PrevEnv.proves(A.makeNot(*Prev)) &&
-             CurEnv.proves(A.makeNot(*Cur))) {
-    return WidenedProperty::False;
-  }
+  // Note that either of `PrevEnv` or `CurEnv` may be self-contradictory
+  // (unsatisfiable). So, we're careful to check only that both are consistent
+  // in their conclusions. We do not draw conclusions from them independently.
+  // For example, if PrevEnv => Prev`, we do *not* conclude that
+  // `PrevEnv => !Prev` is false, and use that to optimize the branches below.
+  if ((PrevEnv.proves(*Prev) && CurEnv.proves(*Cur)) ||
+      (PrevEnv.proves(A.makeNot(*Prev)) && CurEnv.proves(A.makeNot(*Cur))))
+    return {Cur, LatticeEffect::Unchanged};
 
-  return WidenedProperty::Top;
-}
-
-// Assumes `Prev` or its negation in `Env`, based on `W`. `W` may not be `Top`.
-static void maybeAssumeNullabilityProperty(WidenedProperty W,
-                                           const Formula &Prev,
-                                           Environment &Env) {
-  switch (W) {
-    case WidenedProperty::Identical:
-      // No action needs to be taken because `Prev` is identical to the current
-      // property (and therefore sufficiently valid in `Env` already).
-      break;
-    case WidenedProperty::False:
-      Env.assume(Env.arena().makeNot(Prev));
-      break;
-    case WidenedProperty::True:
-      Env.assume(Prev);
-      break;
-    case WidenedProperty::Top:
-      assert(false);
-      break;
-  }
-}
-
-absl::Nullable<Value *> PointerNullabilityAnalysis::legacyWiden(
-    QualType Type, Value &Prev, const Environment &PrevEnv, Value &Current,
-    Environment &CurrentEnv) {
-  // Widen pointers to a pointer with a "top" storage location.
-  if (auto *PrevPtr = dyn_cast<PointerValue>(&Prev)) {
-    auto &CurPtr = cast<PointerValue>(Current);
-
-    DataflowAnalysisContext &DACtx = CurrentEnv.getDataflowAnalysisContext();
-    assert(&PrevEnv.getDataflowAnalysisContext() == &DACtx);
-
-    if (!hasPointerNullState(*PrevPtr) || !hasPointerNullState(CurPtr))
-      return nullptr;
-
-    auto [FromNullablePrev, NullPrev] = getPointerNullState(*PrevPtr);
-    auto [FromNullableCur, NullCur] = getPointerNullState(CurPtr);
-
-    WidenedProperty FromNullableWidened = widenNullabilityProperty(
-        FromNullablePrev, PrevEnv, FromNullableCur, CurrentEnv);
-    WidenedProperty NullWidened =
-        widenNullabilityProperty(NullPrev, PrevEnv, NullCur, CurrentEnv);
-
-    // Is `PrevPtr` already equivalent to either of the current pointer or the
-    // widened pointer we are about to produce? If so, return `PrevPtr` to
-    // signal this.
-    if ((&PrevPtr->getPointeeLoc() == &CurPtr.getPointeeLoc() ||
-         &PrevPtr->getPointeeLoc() ==
-             &getTopStorageLocation(DACtx,
-                                    PrevPtr->getPointeeLoc().getType())) &&
-        // Check whether
-        // - the previous nullability property is equivalent to the current
-        //   property (in which case the widened property is non-Top), or
-        // - the previous nullability property is already "top" (i.e. null)
-        (FromNullableWidened != WidenedProperty::Top ||
-         FromNullablePrev == nullptr) &&
-        (NullWidened != WidenedProperty::Top || NullPrev == nullptr)) {
-      // The formulas of the nullability properties in `Prev` may only be valid
-      // in `PrevEnv`. So, we need to re-assert them in the current environment
-      // to keep `PrevPtr` valid.
-      if (FromNullablePrev != nullptr)
-        maybeAssumeNullabilityProperty(FromNullableWidened, *FromNullablePrev,
-                                       CurrentEnv);
-      if (NullPrev != nullptr)
-        maybeAssumeNullabilityProperty(NullWidened, *NullPrev, CurrentEnv);
-
-      return PrevPtr;
-    }
-
-    // Widen the nullability properties.
-    auto &WidenedPtr = CurrentEnv.create<PointerValue>(
-        getTopStorageLocation(DACtx, CurPtr.getPointeeLoc().getType()));
-    initPointerNullState(
-        WidenedPtr, CurrentEnv.getDataflowAnalysisContext(),
-        {FromNullableWidened == WidenedProperty::Top ? nullptr
-                                                     : FromNullableCur,
-         NullWidened == WidenedProperty::Top ? nullptr : NullCur});
-
-    return &WidenedPtr;
-  }
-
-  return nullptr;
+  return {nullptr, LatticeEffect::Changed};
 }
 
 std::optional<WidenResult> PointerNullabilityAnalysis::widen(
     QualType Type, Value &Prev, const Environment &PrevEnv, Value &Current,
     Environment &CurrentEnv) {
-  if (auto *W = legacyWiden(Type, Prev, PrevEnv, Current, CurrentEnv))
-    return WidenResult{
-        W, (W == &Prev) ? LatticeEffect::Unchanged : LatticeEffect::Changed};
-  return std::nullopt;
+  auto *PrevPtr = dyn_cast<PointerValue>(&Prev);
+  if (PrevPtr == nullptr) return std::nullopt;
+
+  // Widen pointers (when different) to a pointer with a "top" storage location.
+  auto &CurPtr = cast<PointerValue>(Current);
+
+  DataflowAnalysisContext &DACtx = CurrentEnv.getDataflowAnalysisContext();
+  assert(&PrevEnv.getDataflowAnalysisContext() == &DACtx);
+
+  bool LocUnchanged = &PrevPtr->getPointeeLoc() == &CurPtr.getPointeeLoc();
+
+  // If either `PrevPtr` or `CurPtr` lack null state, we consider the modeled
+  // value to be outside the scope. TODO: we should consider all pointers in
+  // scope and handle this case accordingly. We will widen the pointer location,
+  // but (always) return a pointer value with no null state.
+  if (!hasPointerNullState(*PrevPtr) || !hasPointerNullState(CurPtr))
+    return std::nullopt;
+
+  auto [FromNullablePrev, NullPrev] = getPointerNullState(*PrevPtr);
+  auto [FromNullableCur, NullCur] = getPointerNullState(CurPtr);
+
+  auto [FromNullableWidened, FNWEffect] = widenNullabilityProperty(
+      FromNullablePrev, PrevEnv, FromNullableCur, CurrentEnv);
+  auto [NullWidened, NWEffect] =
+      widenNullabilityProperty(NullPrev, PrevEnv, NullCur, CurrentEnv);
+
+  if (LocUnchanged && FNWEffect == LatticeEffect::Unchanged &&
+      NWEffect == LatticeEffect::Unchanged)
+    return WidenResult{&CurPtr, LatticeEffect::Unchanged};
+
+  // Widen the loc if needed.
+  StorageLocation *WidenedLoc =
+      LocUnchanged
+          ? &CurPtr.getPointeeLoc()
+          : &getTopStorageLocation(DACtx, CurPtr.getPointeeLoc().getType());
+
+  // Construct the new, widened value.
+  auto &WidenedPtr = CurrentEnv.create<PointerValue>(*WidenedLoc);
+  initPointerNullState(WidenedPtr, CurrentEnv.getDataflowAnalysisContext(),
+                       {FromNullableWidened, NullWidened});
+
+  LatticeEffect Effect = (WidenedLoc == &PrevPtr->getPointeeLoc() &&
+                          FNWEffect == LatticeEffect::Unchanged &&
+                          NWEffect == LatticeEffect::Unchanged)
+                             ? LatticeEffect::Unchanged
+                             : LatticeEffect::Changed;
+  return WidenResult{&WidenedPtr, Effect};
 }
 
 StorageLocation &PointerNullabilityAnalysis::getTopStorageLocation(

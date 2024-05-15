@@ -112,12 +112,6 @@ class PointerNullabilityAnalysis
   dataflow::StorageLocation &getTopStorageLocation(
       dataflow::DataflowAnalysisContext &DACtx, QualType Ty);
 
-  // TODO: replace with new implementation that fully uses the new API.
-  dataflow::Value *legacyWiden(QualType Type, dataflow::Value &Prev,
-                               const dataflow::Environment &PrevEnv,
-                               dataflow::Value &Current,
-                               dataflow::Environment &CurrentEnv);
-
   // Transfers (non-flow-sensitive) type properties through statements.
   dataflow::CFGMatchSwitch<dataflow::TransferState<PointerNullabilityLattice>>
       TypeTransferer;
