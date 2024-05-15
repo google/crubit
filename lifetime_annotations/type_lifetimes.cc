@@ -680,6 +680,20 @@ llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> GetTemplateArgs(
 }
 
 std::optional<llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>>>
+GetTemplateArgs(llvm::ArrayRef<clang::TemplateArgumentLoc> template_arg_locs) {
+  llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> args;
+  args.push_back({});
+  for (const auto &loc: template_arg_locs) {
+    if (auto* source_info = loc.getTypeSourceInfo()) {
+      args.back().push_back(source_info->getTypeLoc());
+    } else {
+      args.back().push_back(clang::TypeLoc());
+    }
+  }
+  return args;
+}
+
+std::optional<llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>>>
 GetTemplateArgs(clang::TypeLoc type_loc) {
   assert(type_loc);
 
@@ -745,9 +759,9 @@ GetTemplateArgs(clang::TypeLoc type_loc) {
     if (auto specialization_decl =
             clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
                 record_type_loc.getDecl())) {
-      if (specialization_decl->getTypeAsWritten()) {
+      if (specialization_decl->getTemplateArgsAsWritten()) {
         return GetTemplateArgs(
-            specialization_decl->getTypeAsWritten()->getTypeLoc());
+            specialization_decl->getTemplateArgsAsWritten()->arguments());
       }
       return std::nullopt;
     }
