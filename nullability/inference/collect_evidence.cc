@@ -1090,7 +1090,7 @@ llvm::Error collectEvidenceFromDefinition(
   const WatchedLiteralsSolver *Solver = OwnedSolver.get();
   DataflowAnalysisContext AnalysisContext(std::move(OwnedSolver));
   Environment Env = TargetAsFunc ? Environment(AnalysisContext, *TargetAsFunc)
-                                 : Environment(AnalysisContext);
+                                 : Environment(AnalysisContext, *TargetStmt);
   PointerNullabilityAnalysis Analysis(Ctx, Env);
 
   std::vector<InferableSlot> InferableSlots;
