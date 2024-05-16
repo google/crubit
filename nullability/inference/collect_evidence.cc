@@ -564,6 +564,7 @@ class DefinitionEvidenceCollector {
           CalleeType.getNonReferenceType()->isFunctionPointerType()) {
         fromFunctionPointerCallExpr(
             *(CalleeType.getNonReferenceType()->getPointeeType()), Expr);
+        return;
       }
     }
 
