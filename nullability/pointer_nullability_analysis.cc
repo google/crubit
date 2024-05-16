@@ -871,8 +871,8 @@ void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
   }
 }
 
-// `D` is declared somewhere in `absl`, either directly or nested.
-bool isDeclaredInAbseil(const Decl &D) {
+// `D` is declared somewhere in `absl` or `util`, either directly or nested.
+bool isDeclaredInAbseilOrUtil(const Decl &D) {
   const auto *DC = D.getDeclContext();
   if (DC == nullptr || DC->isTranslationUnit()) return false;
 
@@ -886,11 +886,12 @@ bool isDeclaredInAbseil(const Decl &D) {
   // Check if it is the `absl` namespace.
   const auto *NS = dyn_cast_or_null<NamespaceDecl>(DC);
   return NS != nullptr && NS->getDeclName().isIdentifier() &&
-         NS->getName() == "absl";
+         (NS->getName() == "absl" || NS->getName() == "util");
 }
 
-// Models the Abseil logging `GetReferenceableValue` function.
-void modelAbseilGetReferenceableValue(const CallExpr &CE, Environment &Env) {
+// Models the `GetReferenceableValue` functions used in Abseil logging and
+// elsewhere.
+void modelGetReferenceableValue(const CallExpr &CE, Environment &Env) {
   // We only model the `GetReferenceableValue` overload that takes and returns a
   // reference.
   if (!CE.isGLValue()) return;
@@ -900,9 +901,9 @@ void modelAbseilGetReferenceableValue(const CallExpr &CE, Environment &Env) {
     Env.setStorageLocation(CE, *Loc);
 }
 
-// Models the Abseil logging `CheckNE_Impl` function. Essentially, associates
+// Models the Abseil-logging `CheckNE_Impl` function. Essentially, associates
 // the `IsNull` of the call result with the comparison `arg0 != arg1`.
-void modelAbseilCheckNE(const CallExpr &CE, Environment &Env) {
+void modelCheckNE(const CallExpr &CE, Environment &Env) {
   assert(isSupportedRawPointerType(CE.getType()));
   auto *PointerVal = getRawPointerValue(&CE, Env);
   if (!PointerVal)
@@ -969,12 +970,12 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
 
       // This is part of the implementation of `CHECK_NE`.
       if (FunII->isStr("GetReferenceableValue") &&
-          isDeclaredInAbseil(*FuncDecl)) {
-        modelAbseilGetReferenceableValue(*CE, State.Env);
+          isDeclaredInAbseilOrUtil(*FuncDecl)) {
+        modelGetReferenceableValue(*CE, State.Env);
         return;
       }
-      if (FunII->isStr("Check_NEImpl") && isDeclaredInAbseil(*FuncDecl)) {
-        modelAbseilCheckNE(*CE, State.Env);
+      if (FunII->isStr("Check_NEImpl") && isDeclaredInAbseilOrUtil(*FuncDecl)) {
+        modelCheckNE(*CE, State.Env);
         return;
       }
     }

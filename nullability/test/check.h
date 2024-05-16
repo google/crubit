@@ -2,8 +2,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// The definitions below model assorted definitions in Abseil's logging library.
 struct string;
+
+// The definitions below model assorted definitions in Abseil's logging library.
 
 // `something` is chosen to indicate that we don't want to depend on the details
 // of which particular namespace the real implementations reside in. They need
