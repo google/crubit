@@ -21,6 +21,7 @@
 #include "nullability/inference/infer_tu.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/replace_macros.h"
+#include "nullability/type_nullability.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclarationName.h"
@@ -250,6 +251,8 @@ int main(int argc, absl::Nonnull<const char **> argv) {
       ctn_replacement_macros_create()[0].data;
   (*Exec)->mapVirtualFile(ReplacementMacrosHeaderFileName,
                           MacroReplacementText);
+
+  clang::tidy::nullability::enableSmartPointers(true);
 
   auto Err = (*Exec)->execute(
       newFrontendActionFactory<clang::tidy::nullability::Action>(),

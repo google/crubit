@@ -210,6 +210,7 @@ cc_binary(
         ":infer_tu",
         ":inference_cc_proto",
         ":replace_macros",
+        "//nullability:type_nullability",
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/strings",
