@@ -793,18 +793,19 @@ class DefinitionEvidenceCollector {
     }
   }
 
-  /// Collects evidence based on an assignment of RHS to LHS, through a
+  /// Collects evidence based on an assignment of Expr to LHSDecl, through a
   /// direct assignment statement, aggregate initialization, etc.
-  void fromAssignmentLike(const ValueDecl &LHS, const Expr &RHS,
+  void fromAssignmentLike(const ValueDecl &LHSDecl, const Expr &Expr,
+                          SourceLocation Loc,
                           Evidence::Kind EvidenceKindForAssignmentFromNullable =
                               Evidence::ASSIGNED_FROM_NULLABLE) {
-    dataflow::PointerValue *PV = getPointerValue(&RHS, Env);
+    const dataflow::PointerValue *PV = getPointerValue(&Expr, Env);
     if (!PV) return;
     TypeNullability TypeNullability =
-        getNullabilityAnnotationsFromTypeAndOverrides(LHS.getType(), &LHS,
-                                                      Lattice);
-    fromAssignmentToType(LHS.getType(), TypeNullability, *PV, RHS.getExprLoc());
-    fromAssignmentFromNullable(TypeNullability, *PV, RHS.getExprLoc(),
+        getNullabilityAnnotationsFromTypeAndOverrides(LHSDecl.getType(),
+                                                      &LHSDecl, Lattice);
+    fromAssignmentToType(LHSDecl.getType(), TypeNullability, *PV, Loc);
+    fromAssignmentFromNullable(TypeNullability, *PV, Loc,
                                EvidenceKindForAssignmentFromNullable);
   }
 
@@ -829,7 +830,8 @@ class DefinitionEvidenceCollector {
                          << VarDecl->getInit()->getType() << "\n";
             return;
           }
-          fromAssignmentLike(*VarDecl, *VarDecl->getInit());
+          fromAssignmentLike(*VarDecl, *VarDecl->getInit(),
+                             VarDecl->getInit()->getExprLoc());
         }
       }
     }
@@ -839,15 +841,8 @@ class DefinitionEvidenceCollector {
         BinaryOperator &&
         BinaryOperator->getOpcode() == clang::BinaryOperatorKind::BO_Assign) {
       const Expr *LHS = BinaryOperator->getLHS();
-      const Expr *RHS = BinaryOperator->getRHS();
       const QualType LHSType = LHS->getType();
       if (!isSupportedRawPointerType(LHSType)) return;
-      const QualType RHSType = RHS->getType();
-      if (!isSupportedRawPointerType(RHSType)) {
-        llvm::errs() << "Unsupported RHS type in assignment to pointer decl:\n"
-                     << RHSType << "\n";
-        return;
-      }
 
       const ValueDecl *LHSDecl = nullptr;
       if (auto *DeclRefExpr = dyn_cast_or_null<clang::DeclRefExpr>(LHS)) {
@@ -889,13 +884,19 @@ class DefinitionEvidenceCollector {
         // TODO(b/323509132) Handle these assignments.
         return;
       } else {
-        llvm::errs()
-            << "Unsupported LHS Decl type in assignment to existing decl:\n";
+        llvm::errs() << "Unsupported LHS expression type in assignment to "
+                        "existing decl:\n";
         LHS->dump();
         return;
       }
 
-      fromAssignmentLike(*LHSDecl, *RHS);
+      // Use the LHS as the Expr being assigned to LHSDecl because transfer
+      // functions have already run, setting the Environment's value for the LHS
+      // Expr to the result of the assignment. In cases where the RHS has been
+      // modified, such as in `a = std::move(b)`, the Environment's value for
+      // the RHS will no longer be an accurate representation of what was
+      // assigned.
+      fromAssignmentLike(*LHSDecl, *LHS, BinaryOperator->getOperatorLoc());
     }
   }
 
@@ -974,12 +975,6 @@ class DefinitionEvidenceCollector {
                                                 : Initializer->getInit();
 
     if (!isSupportedPointerType(Field->getType())) return;
-    if (!isSupportedPointerType(InitExpr->getType())) {
-      llvm::errs() << "Unsupported type for initializer expression in "
-                      "constructor initializer for supported pointer field: "
-                   << InitExpr->getType() << "\n";
-      return;
-    }
 
     if (isSupportedSmartPointerType(Field->getType()) &&
         !IsDefaultInitializer && !Initializer->isWritten()) {
@@ -991,7 +986,7 @@ class DefinitionEvidenceCollector {
       return;
     }
 
-    fromAssignmentLike(*Field, *InitExpr,
+    fromAssignmentLike(*Field, *InitExpr, InitExpr->getExprLoc(),
                        IsDefaultInitializer
                            ? Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER
                            : Evidence::ASSIGNED_FROM_NULLABLE);
@@ -1003,14 +998,8 @@ class DefinitionEvidenceCollector {
     // from the field inits.
     for (auto [Field, InitExpr] : Helper.field_inits()) {
       if (!isSupportedPointerType(Field->getType())) return;
-      if (!isSupportedPointerType(InitExpr->getType())) {
-        llvm::errs() << "Unsupported type for initializer expression in "
-                        "aggregate initialization for supported pointer field: "
-                     << InitExpr->getType() << "\n";
-        return;
-      }
 
-      fromAssignmentLike(*Field, *InitExpr);
+      fromAssignmentLike(*Field, *InitExpr, InitExpr->getExprLoc());
     }
   }
 
