@@ -509,6 +509,25 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
 
 using InferTUSmartPointerTest = InferTUTest;
 
+TEST_F(InferTUSmartPointerTest, Annotations) {
+  build(R"cc(
+#include <memory>
+    Nonnull<std::unique_ptr<int>> target(std::unique_ptr<int> a,
+                                         std::unique_ptr<int> b);
+    Nonnull<std::unique_ptr<int>> target(std::unique_ptr<int> a,
+                                         Nullable<std::unique_ptr<int>> p) {
+      *p;
+    }
+  )cc");
+
+  EXPECT_THAT(infer(),
+              ElementsAre(inference(hasName("target"),
+                                    {
+                                        inferredSlot(0, Nullability::NONNULL),
+                                        inferredSlot(2, Nullability::NULLABLE),
+                                    })));
+}
+
 TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
   build(R"cc(
 #include <memory>
@@ -521,10 +540,17 @@ TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
     }
   )cc");
 
-  // TODO(b/304963199): Currently not inferring anything because we don't
-  // collect evidence for smart pointers. The expected result is the same as for
-  // the `ParamsFromCallSite` test.
-  ASSERT_THAT(infer(), IsEmpty());
+  // TODO(b/330702908): Not yet inferring call-based evidence for smart
+  // pointers, though we do collect evidence from the annotations, so `IsEmpty`
+  // would fail here. The expected result is the same as for the corresponding
+  // `InferTUTest` test, essentially just removing the `Not` matcher.
+  EXPECT_THAT(infer(),
+              Not(Contains(inference(hasName("callee"),
+                                     {
+                                         inferredSlot(1, Nullability::UNKNOWN),
+                                         inferredSlot(2, Nullability::NONNULL),
+                                         inferredSlot(3, Nullability::NULLABLE),
+                                     }))));
 }
 
 TEST_F(InferTUSmartPointerTest, ReturnTypeNullable) {
@@ -532,8 +558,8 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNullable) {
 #include <memory>
     std::unique_ptr<int> target() { return std::unique_ptr<int>(); }
   )cc");
-  // TODO(b/304963199): Currently not inferring anything because we don't
-  // collect evidence for smart pointers. The expected result is a nullable
+  // TODO(b/330702908): Currently not inferring anything because we don't
+  // collect this evidence for smart pointers. The expected result is a nullable
   // return type.
   EXPECT_THAT(infer(), IsEmpty());
 }
@@ -544,7 +570,7 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNonnull) {
     std::unique_ptr<int> target() { return std::make_unique<int>(0); }
   )cc");
   // TODO(b/304963199): Currently not inferring anything because we don't
-  // collect evidence for smart pointers. The expected result is a nonnull
+  // collect this evidence for smart pointers. The expected result is a nonnull
   // return type.
   EXPECT_THAT(infer(), IsEmpty());
 }

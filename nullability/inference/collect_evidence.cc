@@ -217,7 +217,7 @@ static Evidence::Kind getArgEvidenceKindFromNullability(
 }
 
 static std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
-  if (!isSupportedRawPointerType(T.getNonReferenceType())) return std::nullopt;
+  if (!isSupportedPointerType(T.getNonReferenceType())) return std::nullopt;
   auto Nullability = getNullabilityAnnotationsFromType(T);
   switch (Nullability.front().concrete()) {
     default:

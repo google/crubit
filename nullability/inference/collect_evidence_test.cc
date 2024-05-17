@@ -2266,6 +2266,16 @@ TEST(CollectEvidenceFromDeclarationTest, GlobalVariable) {
                                    globalVarNamed("target"))));
 }
 
+TEST(CollectEvidenceFromDeclarationTest, GlobalVariableSmart) {
+  llvm::StringLiteral Src = R"cc(
+#include <memory>
+    Nullable<std::unique_ptr<int>> target;
+  )cc";
+  EXPECT_THAT(collectFromTargetDecl(Src),
+              ElementsAre(evidence(Slot(0), Evidence::ANNOTATED_NULLABLE,
+                                   globalVarNamed("target"))));
+}
+
 TEST(CollectEvidenceFromDeclarationTest, StaticMemberVariable) {
   llvm::StringLiteral Src = R"cc(
     struct S {
@@ -2281,6 +2291,18 @@ TEST(CollectEvidenceFromDeclarationTest, Field) {
   llvm::StringLiteral Src = R"cc(
     struct S {
       Nonnull<int*> target;
+    };
+  )cc";
+  EXPECT_THAT(collectFromTargetDecl(Src),
+              ElementsAre(evidence(Slot(0), Evidence::ANNOTATED_NONNULL,
+                                   fieldNamed("S::target"))));
+}
+
+TEST(CollectEvidenceFromDeclarationTest, FieldSmart) {
+  llvm::StringLiteral Src = R"cc(
+#include <memory>
+    struct S {
+      Nonnull<std::unique_ptr<int>> target;
     };
   )cc";
   EXPECT_THAT(collectFromTargetDecl(Src),
@@ -2312,6 +2334,19 @@ TEST(CollectEvidenceFromDeclarationTest, FunctionDeclNonTopLevel) {
     Nonnull<int*>** target(Nullable<int*>*);
   )cc";
   EXPECT_THAT(collectFromTargetDecl(Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromDeclarationTest, FunctionDeclSmart) {
+  llvm::StringLiteral Src = R"cc(
+#include <memory>
+    Nullable<std::unique_ptr<int>> target(Nonnull<std::unique_ptr<int>>,
+                                          Nullable<std::unique_ptr<int>>);
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetDecl(Src),
+      ElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::ANNOTATED_NULLABLE),
+                  evidence(paramSlot(0), Evidence::ANNOTATED_NONNULL),
+                  evidence(paramSlot(1), Evidence::ANNOTATED_NULLABLE)));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, FunctionTemplateIgnored) {
