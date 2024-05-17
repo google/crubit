@@ -418,8 +418,8 @@ class DefinitionEvidenceCollector {
     for (ParamAndArgIterator<CallOrConstructExpr> Iter(CalleeDecl, Expr); Iter;
          ++Iter) {
       const auto ParamType = Iter.param().getType().getNonReferenceType();
-      if (!isSupportedRawPointerType(ParamType)) continue;
-      if (!isSupportedRawPointerType(Iter.arg().getType())) {
+      if (!isSupportedPointerType(ParamType)) continue;
+      if (!isSupportedPointerType(Iter.arg().getType())) {
         // These builtins are declared with pointer type parameters even when
         // given a valid argument of type uintptr_t. In this case, there's
         // nothing to infer, but also nothing unexpected to crash over.
@@ -431,7 +431,7 @@ class DefinitionEvidenceCollector {
         }
       }
       // the corresponding argument should also be a pointer.
-      CHECK(isSupportedRawPointerType(Iter.arg().getType()))
+      CHECK(isSupportedPointerType(Iter.arg().getType()))
           << "Unsupported argument " << Iter.argIdx()
           << " type: " << Iter.arg().getType().getAsString();
 
@@ -442,7 +442,7 @@ class DefinitionEvidenceCollector {
         return;
       }
 
-      dataflow::PointerValue *PV = getRawPointerValue(&Iter.arg(), Env);
+      dataflow::PointerValue *PV = getPointerValue(&Iter.arg(), Env);
       if (!PV) continue;
 
       SourceLocation ArgLoc = Iter.arg().getExprLoc();

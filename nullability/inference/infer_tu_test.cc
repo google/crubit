@@ -540,17 +540,13 @@ TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
     }
   )cc");
 
-  // TODO(b/330702908): Not yet inferring call-based evidence for smart
-  // pointers, though we do collect evidence from the annotations, so `IsEmpty`
-  // would fail here. The expected result is the same as for the corresponding
-  // `InferTUTest` test, essentially just removing the `Not` matcher.
   EXPECT_THAT(infer(),
-              Not(Contains(inference(hasName("callee"),
-                                     {
-                                         inferredSlot(1, Nullability::UNKNOWN),
-                                         inferredSlot(2, Nullability::NONNULL),
-                                         inferredSlot(3, Nullability::NULLABLE),
-                                     }))));
+              Contains(inference(hasName("callee"),
+                                 {
+                                     inferredSlot(1, Nullability::UNKNOWN),
+                                     inferredSlot(2, Nullability::NONNULL),
+                                     inferredSlot(3, Nullability::NULLABLE),
+                                 })));
 }
 
 TEST_F(InferTUSmartPointerTest, ReturnTypeNullable) {

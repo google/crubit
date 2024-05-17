@@ -671,6 +671,31 @@ TEST(CollectEvidenceFromDefinitionTest, NonPtrArgPassed) {
   EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
+TEST(CollectEvidenceFromDefinitionTest, ArgsAndParamsSmart) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+#include <utility>
+    void callee(std::unique_ptr<int> p, Nonnull<std::unique_ptr<int>> q,
+                Nullable<std::unique_ptr<int>>& r);
+    void target(Nullable<std::unique_ptr<int>> a, std::unique_ptr<int> b,
+                std::unique_ptr<int> c) {
+      callee(std::move(a), std::move(b), c);
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                           functionNamed("callee")),
+                  evidence(paramSlot(1), Evidence::BOUND_TO_NONNULL,
+                           functionNamed("target")),
+                  evidence(paramSlot(2), Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                           functionNamed("target")),
+                  evidence(paramSlot(1), Evidence::UNKNOWN_ARGUMENT,
+                           functionNamed("callee")),
+                  evidence(paramSlot(2), Evidence::UNKNOWN_ARGUMENT,
+                           functionNamed("callee"))));
+}
+
 TEST(CollectEvidenceFromDefinitionTest,
      DefaultArgumentsProduceNoEvidenceFromDefinition) {
   static constexpr llvm::StringRef Src = R"cc(
