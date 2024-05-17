@@ -973,11 +973,21 @@ class DefinitionEvidenceCollector {
     const Expr *InitExpr = IsDefaultInitializer ? Field->getInClassInitializer()
                                                 : Initializer->getInit();
 
-    if (!isSupportedRawPointerType(Field->getType())) return;
-    if (!isSupportedRawPointerType(InitExpr->getType())) {
+    if (!isSupportedPointerType(Field->getType())) return;
+    if (!isSupportedPointerType(InitExpr->getType())) {
       llvm::errs() << "Unsupported type for initializer expression in "
                       "constructor initializer for supported pointer field: "
                    << InitExpr->getType() << "\n";
+      return;
+    }
+
+    if (isSupportedSmartPointerType(Field->getType()) &&
+        !IsDefaultInitializer && !Initializer->isWritten()) {
+      // We skip unwritten non-default member initializers for smart pointer
+      // fields because we check the end block of the constructor for the
+      // fields' nullability later. This allows us to avoid inferring Nullable
+      // for smart pointers that are always assigned to a Nonnull value in
+      // constructor bodies.
       return;
     }
 
@@ -1196,6 +1206,11 @@ llvm::Error collectEvidenceFromDefinition(
                 State.Lattice, State.Env);
           })
           .takeError();
+
+  // TODO(b/330702908) For constructor declarations, collect
+  // ASSIGNED_FROM_NULLABLE evidence for smart pointer fields left uninitialized
+  // in the final block of the constructor body.
+
   if (!Error && Solver->reachedLimit()) {
     return llvm::createStringError(llvm::errc::interrupted,
                                    "SAT solver reached iteration limit");

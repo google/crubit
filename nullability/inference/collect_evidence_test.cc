@@ -38,10 +38,12 @@ using ::clang::ast_matchers::cxxConstructorDecl;
 using ::clang::ast_matchers::functionDecl;
 using ::clang::ast_matchers::hasName;
 using ::clang::ast_matchers::isDefaultConstructor;
+using ::clang::ast_matchers::isImplicit;
 using ::clang::ast_matchers::isTemplateInstantiation;
 using ::clang::ast_matchers::match;
 using ::clang::ast_matchers::parameterCountIs;
 using ::clang::ast_matchers::selectFirst;
+using ::clang::ast_matchers::unless;
 using ::clang::ast_matchers::varDecl;
 using ::testing::_;
 using ::testing::AllOf;
@@ -185,7 +187,7 @@ TEST(CollectEvidenceFromDefinitionTest, Location) {
   EXPECT_EQ("input.cc:1:23", Evidence.front().location());
 }
 
-TEST(CollectEvidenceFromDefinitionTest, LocationSmart) {
+TEST(SmartPointerCollectEvidenceFromDefinitionTest, Location) {
   llvm::StringRef Code =
       "#include <memory>\nvoid target(std::unique_ptr<int> p) { *p; }";
   //                      123456789012345678901234567890123456789012
@@ -252,7 +254,7 @@ TEST(CollectEvidenceFromDefinitionTest, DerefArrow) {
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, DerefSmart) {
+TEST(SmartPointerCollectEvidenceFromDefinitionTest, Deref) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     struct S {
@@ -561,7 +563,7 @@ TEST(CollectEvidenceFromDefinitionTest, CheckMacro) {
                            evidence(paramSlot(4), Evidence::ABORT_IF_NULL)));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, CheckMacroSmart) {
+TEST(SmartPointerCollectEvidenceFromDefinitionTest, CheckMacro) {
   llvm::Twine Src = CheckMacroDefinitions + R"cc(
 #include <memory>
     void target(std::unique_ptr<int> p, std::unique_ptr<int> q,
@@ -608,7 +610,7 @@ TEST(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
                            evidence(paramSlot(3), Evidence::ABORT_IF_NULL)));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, CheckNEMacroSmart) {
+TEST(SmartPointerCollectEvidenceFromDefinitionTest, CheckNEMacro) {
   llvm::Twine Src = CheckMacroDefinitions + R"cc(
 #include <memory>
     void target(std::unique_ptr<int> p, std::unique_ptr<int> q,
@@ -708,7 +710,7 @@ TEST(CollectEvidenceFromDefinitionTest, NonPtrArgPassed) {
   EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST(CollectEvidenceFromDefinitionTest, ArgsAndParamsSmart) {
+TEST(SmartPointerCollectEvidenceFromDefinitionTest, ArgsAndParams) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
 #include <utility>
@@ -862,7 +864,7 @@ TEST(CollectEvidenceFromDefinitionTest,
                    functionNamed("target"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, MultipleReturnsSmart) {
+TEST(SmartPointerCollectEvidenceFromDefinitionTest, MultipleReturns) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     std::unique_ptr<int> target(Nonnull<std::unique_ptr<int>> p,
@@ -883,7 +885,7 @@ TEST(CollectEvidenceFromDefinitionTest, MultipleReturnsSmart) {
                   evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN)));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, FromReturnAnnotationSmart) {
+TEST(SmartPointerCollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     Nonnull<std::unique_ptr<int>> target(std::unique_ptr<int> a) {
@@ -1219,7 +1221,7 @@ TEST(CollectEvidenceFromDefinitionTest, IndirectFieldDefaultFieldInitializer) {
 
     // Use the implicitly-declared default constructor, so that it will be
     // generated.
-    void foo() { Target t; }
+    Target T;
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(
@@ -1268,7 +1270,7 @@ TEST(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerCallsFunction) {
 
     // Use the explicitly-declared but still implicitly-defined default
     // constructor, so that it will be generated.
-    void foo() { Target t; }
+    Target T;
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
                   cxxConstructorDecl(isDefaultConstructor()), Src),
@@ -1277,6 +1279,100 @@ TEST(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerCallsFunction) {
                            functionNamed("getIntPtr")),
                   evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                            functionNamed("getIntPtr"))));
+}
+
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     FieldInitializerFromAssignmentToType) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+#include <utility>
+    struct Target {
+      Target(std::unique_ptr<int> Input) : I(std::move(Input)) {}
+      Nonnull<std::unique_ptr<int>> I;
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("Target"))));
+}
+
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     FieldInitializedFromNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+#include <utility>
+    struct Target {
+      Target(Nullable<std::unique_ptr<int>> Input) : I(std::move(Input)) {}
+      std::unique_ptr<int> I;
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("Target::I"))));
+}
+
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     DefaultFieldInitializerNullptr) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+#include <utility>
+    struct Target {
+      std::unique_ptr<int> I = nullptr;
+    };
+
+    // Use the implicitly-declared default constructor, so that it will be
+    // generated.
+    Target T;
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(isDefaultConstructor(), hasName("Target")), Src),
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER,
+                   fieldNamed("Target::I"))));
+}
+
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     DefaultFieldInitializerAbsentOnlyImplicitConstructor) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+#include <utility>
+    struct Target {
+      std::unique_ptr<int> I;
+    };
+
+    // Use the implicitly-declared default constructor, so that it will be
+    // generated.
+    Target T;
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(isDefaultConstructor(), hasName("Target")), Src),
+      // TODO(b/330702908) Should be ASSIGNED_FROM_NULLABLE for Target::I.
+      IsEmpty());
+}
+
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     DefaultFieldInitializerAbsentInitializedInConstructor) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+#include <utility>
+    struct Target {
+      Target(int Input) { I = std::make_unique<int>(Input); }
+      std::unique_ptr<int> I;
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
+      // No evidence collected from constructor body, which assigns a Nonnull
+      // value, and no evidence collected from *implicit* member initializer
+      // which default constructs to null.
+      IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNonnull) {
@@ -1340,8 +1436,8 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullInFunctionPointerParam) {
                            functionNamed("target"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest,
-     PassedToNonnullInFunctionPointerParamSmart) {
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     PassedToNonnullInFunctionPointerParam) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
 #include <utility>
@@ -1608,7 +1704,7 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableRef) {
                                             functionNamed("target"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableRefSmart) {
+TEST(SmartPointerCollectEvidenceFromDefinitionTest, AssignedToNullableRef) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     void target(std::unique_ptr<int> p) {
@@ -2475,7 +2571,7 @@ TEST(CollectEvidenceFromDeclarationTest, GlobalVariable) {
                                    globalVarNamed("target"))));
 }
 
-TEST(CollectEvidenceFromDeclarationTest, GlobalVariableSmart) {
+TEST(SmartPointerCollectEvidenceFromDeclarationTest, GlobalVariable) {
   llvm::StringLiteral Src = R"cc(
 #include <memory>
     Nullable<std::unique_ptr<int>> target;
@@ -2507,7 +2603,7 @@ TEST(CollectEvidenceFromDeclarationTest, Field) {
                                    fieldNamed("S::target"))));
 }
 
-TEST(CollectEvidenceFromDeclarationTest, FieldSmart) {
+TEST(SmartPointerCollectEvidenceFromDeclarationTest, Field) {
   llvm::StringLiteral Src = R"cc(
 #include <memory>
     struct S {
@@ -2545,7 +2641,7 @@ TEST(CollectEvidenceFromDeclarationTest, FunctionDeclNonTopLevel) {
   EXPECT_THAT(collectFromTargetDecl(Src), IsEmpty());
 }
 
-TEST(CollectEvidenceFromDeclarationTest, FunctionDeclSmart) {
+TEST(SmartPointerCollectEvidenceFromDeclarationTest, FunctionDecl) {
   llvm::StringLiteral Src = R"cc(
 #include <memory>
     Nullable<std::unique_ptr<int>> target(Nonnull<std::unique_ptr<int>>,
