@@ -174,6 +174,28 @@ std::vector<Evidence> collectFromTargetDecl(llvm::StringRef Source) {
   return Results;
 }
 
+TEST(CollectEvidenceFromDefinitionTest, Location) {
+  llvm::StringRef Code = "void target(int *p) { *p; }";
+  //                      12345678901234567890123456
+  //                      0        1         2
+
+  auto Evidence = collectFromTargetFuncDefinition(Code);
+  ASSERT_THAT(Evidence, ElementsAre(evidence(paramSlot(0),
+                                             Evidence::UNCHECKED_DEREFERENCE)));
+  EXPECT_EQ("input.cc:1:23", Evidence.front().location());
+}
+TEST(CollectEvidenceFromDefinitionTest, LocationSmart) {
+  llvm::StringRef Code =
+      "#include <memory>\nvoid target(std::unique_ptr<int> p) { *p; }";
+  //                      123456789012345678901234567890123456789012
+  //                      0        1         2         3         4
+
+  auto Evidence = collectFromTargetFuncDefinition(Code);
+  ASSERT_THAT(Evidence, ElementsAre(evidence(paramSlot(0),
+                                             Evidence::UNCHECKED_DEREFERENCE)));
+  EXPECT_EQ("input.cc:2:39", Evidence.front().location());
+}
+
 TEST(CollectEvidenceFromDefinitionTest, NoParams) {
   static constexpr llvm::StringRef Src = R"cc(
     void target() {}
@@ -229,6 +251,26 @@ TEST(CollectEvidenceFromDefinitionTest, DerefArrow) {
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, DerefSmart) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    struct S {
+      int x;
+      int y();
+    };
+    void target(std::unique_ptr<S> p) {
+      *p;
+      p->x;
+      p->y();
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, DerefOfNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(Nonnull<int *> p) {
@@ -236,17 +278,6 @@ TEST(CollectEvidenceFromDefinitionTest, DerefOfNonnull) {
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
-}
-
-TEST(CollectEvidenceFromDefinitionTest, Location) {
-  llvm::StringRef Code = "void target(int *p) { *p; }";
-  //                      12345678901234567890123456
-  //                      0        1         2
-
-  auto Evidence = collectFromTargetFuncDefinition(Code);
-  ASSERT_THAT(Evidence, ElementsAre(evidence(paramSlot(0),
-                                             Evidence::UNCHECKED_DEREFERENCE)));
-  EXPECT_EQ("input.cc:1:23", Evidence.front().location());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, DereferenceBeforeAssignment) {
@@ -1614,6 +1645,7 @@ TEST(CollectEvidenceFromDefinitionTest, Arithmetic) {
 
 TEST(CollectEvidenceFromDefinitionTest, Fields) {
   llvm::Twine Src = CheckMacroDefinitions + R"cc(
+#include <memory>
     void takesNonnull(Nonnull<int*>);
     void takesMutableNullable(Nullable<int*>&);
     struct S {
@@ -1625,6 +1657,7 @@ TEST(CollectEvidenceFromDefinitionTest, Fields) {
       int* AbortIfNullNE;
       int* AssignedFromNullable;
       int* Arithmetic;
+      std::unique_ptr<int> SmartDeref;
     };
     void target(S AnS) {
       *AnS.Deref;
@@ -1635,30 +1668,34 @@ TEST(CollectEvidenceFromDefinitionTest, Fields) {
       CHECK_NE(AnS.AbortIfNullNE, nullptr);
       AnS.AssignedFromNullable = nullptr;
       AnS.Arithmetic += 4;
+      *AnS.SmartDeref;
     }
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(Src.str()),
-      IsSupersetOf({evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                             fieldNamed("S::Deref")),
-                    evidence(Slot(0), Evidence::BOUND_TO_NONNULL,
-                             fieldNamed("S::BoundToNonnull")),
-                    evidence(Slot(0), Evidence::BOUND_TO_MUTABLE_NULLABLE,
-                             fieldNamed("S::BoundToMutableNullable")),
-                    evidence(Slot(0), Evidence::ABORT_IF_NULL,
-                             fieldNamed("S::AbortIfNull")),
-                    evidence(Slot(0), Evidence::ABORT_IF_NULL,
-                             fieldNamed("S::AbortIfNullBool")),
-                    evidence(Slot(0), Evidence::ABORT_IF_NULL,
-                             fieldNamed("S::AbortIfNullNE")),
-                    evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                             fieldNamed("S::AssignedFromNullable")),
-                    evidence(Slot(0), Evidence::ARITHMETIC,
-                             fieldNamed("S::Arithmetic"))}));
+      IsSupersetOf(
+          {evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                    fieldNamed("S::Deref")),
+           evidence(Slot(0), Evidence::BOUND_TO_NONNULL,
+                    fieldNamed("S::BoundToNonnull")),
+           evidence(Slot(0), Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                    fieldNamed("S::BoundToMutableNullable")),
+           evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                    fieldNamed("S::AbortIfNull")),
+           evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                    fieldNamed("S::AbortIfNullBool")),
+           evidence(Slot(0), Evidence::ABORT_IF_NULL,
+                    fieldNamed("S::AbortIfNullNE")),
+           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                    fieldNamed("S::AssignedFromNullable")),
+           evidence(Slot(0), Evidence::ARITHMETIC, fieldNamed("S::Arithmetic")),
+           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                    fieldNamed("S::SmartDeref"))}));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, StaticMemberVariables) {
   llvm::Twine Src = CheckMacroDefinitions + R"cc(
+#include <memory>
     void takesNonnull(Nonnull<int*>);
     void takesMutableNullable(Nullable<int*>&);
     struct MyStruct {
@@ -1670,6 +1707,7 @@ TEST(CollectEvidenceFromDefinitionTest, StaticMemberVariables) {
       static int* AbortIfNullNE;
       static int* AssignedFromNullable;
       static int* Arithmetic;
+      static std::unique_ptr<int> SmartDeref;
     };
     void target() {
       *MyStruct::Deref;
@@ -1680,6 +1718,7 @@ TEST(CollectEvidenceFromDefinitionTest, StaticMemberVariables) {
       CHECK_NE(MyStruct::AbortIfNullNE, nullptr);
       MyStruct::AssignedFromNullable = nullptr;
       MyStruct::Arithmetic += 4;
+      *MyStruct::SmartDeref;
     }
   )cc";
   EXPECT_THAT(
@@ -1700,11 +1739,14 @@ TEST(CollectEvidenceFromDefinitionTest, StaticMemberVariables) {
            evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                     staticFieldNamed("MyStruct::AssignedFromNullable")),
            evidence(Slot(0), Evidence::ARITHMETIC,
-                    staticFieldNamed("MyStruct::Arithmetic"))}));
+                    staticFieldNamed("MyStruct::Arithmetic")),
+           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                    staticFieldNamed("MyStruct::SmartDeref"))}));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, Globals) {
   llvm::Twine Src = CheckMacroDefinitions + R"cc(
+#include <memory>
     void takesNonnull(Nonnull<int*>);
     void takesMutableNullable(Nullable<int*>&);
     int* Deref;
@@ -1715,6 +1757,7 @@ TEST(CollectEvidenceFromDefinitionTest, Globals) {
     int* AbortIfNullNE;
     int* AssignedFromNullable;
     int* Arithmetic;
+    std::unique_ptr<int> SmartDeref;
     void target() {
       *Deref;
       takesNonnull(BoundToNonnull);
@@ -1724,6 +1767,7 @@ TEST(CollectEvidenceFromDefinitionTest, Globals) {
       CHECK_NE(AbortIfNullNE, nullptr);
       AssignedFromNullable = nullptr;
       Arithmetic += 4;
+      *SmartDeref;
     }
   )cc";
   EXPECT_THAT(
@@ -1743,7 +1787,9 @@ TEST(CollectEvidenceFromDefinitionTest, Globals) {
                     evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                              globalVarNamed("AssignedFromNullable")),
                     evidence(Slot(0), Evidence::ARITHMETIC,
-                             globalVarNamed("Arithmetic"))}));
+                             globalVarNamed("Arithmetic")),
+                    evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                             globalVarNamed("SmartDeref"))}));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, GlobalInit) {

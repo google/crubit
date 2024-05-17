@@ -48,6 +48,7 @@
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Index/USRGeneration.h"
@@ -144,7 +145,8 @@ class InferableSlot {
 }  // namespace
 
 /// If Stmt is a dereference, returns its target and location.
-static std::pair<Expr *, SourceLocation> describeDereference(const Stmt &Stmt) {
+static std::pair<const Expr *, SourceLocation> describeDereference(
+    const Stmt &Stmt) {
   if (auto *Op = dyn_cast<UnaryOperator>(&Stmt);
       Op && Op->getOpcode() == UO_Deref) {
     return {Op->getSubExpr(), Op->getOperatorLoc()};
@@ -158,6 +160,11 @@ static std::pair<Expr *, SourceLocation> describeDereference(const Stmt &Stmt) {
       BO && (BO->getOpcode() == clang::BinaryOperatorKind::BO_PtrMemD ||
              BO->getOpcode() == clang::BinaryOperatorKind::BO_PtrMemI)) {
     return {BO->getRHS(), BO->getOperatorLoc()};
+  }
+  if (const auto *OCE = dyn_cast<CXXOperatorCallExpr>(&Stmt);
+      OCE && OCE->getOperator() == clang::OO_Star &&
+      isSupportedSmartPointerType(OCE->getArg(0)->getType())) {
+    return {OCE->getArg(0), OCE->getOperatorLoc()};
   }
   return {nullptr, SourceLocation()};
 }
@@ -331,7 +338,7 @@ class DefinitionEvidenceCollector {
     if (!Target || !isSupportedPointerType(Target->getType())) return;
 
     // It is a dereference of a pointer. Now gather evidence from it.
-    dataflow::PointerValue *DereferencedValue = getRawPointerValue(Target, Env);
+    dataflow::PointerValue *DereferencedValue = getPointerValue(Target, Env);
     if (!DereferencedValue) return;
     mustBeNonnull(*DereferencedValue, Loc, Evidence::UNCHECKED_DEREFERENCE);
   }
@@ -1099,7 +1106,7 @@ llvm::Error collectEvidenceFromDefinition(
     auto Parameters = TargetAsFunc->parameters();
     for (auto I = 0; I < Parameters.size(); ++I) {
       auto T = Parameters[I]->getType().getNonReferenceType();
-      if (isSupportedRawPointerType(T) && !evidenceKindFromDeclaredType(T)) {
+      if (hasInferable(T) && !evidenceKindFromDeclaredType(T)) {
         InferableSlots.emplace_back(Analysis.assignNullabilityVariable(
                                         Parameters[I], AnalysisContext.arena()),
                                     paramSlot(I), *TargetAsFunc);
