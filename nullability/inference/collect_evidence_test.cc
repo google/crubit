@@ -560,6 +560,23 @@ TEST(CollectEvidenceFromDefinitionTest, CheckMacro) {
                            evidence(paramSlot(4), Evidence::ABORT_IF_NULL)));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, CheckMacroSmart) {
+  llvm::Twine Src = CheckMacroDefinitions + R"cc(
+#include <memory>
+    void target(std::unique_ptr<int> p, std::unique_ptr<int> q,
+                std::unique_ptr<int> r) {
+      CHECK(p);
+      CHECK(!!q);
+      CHECK(r.get());
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src.str()),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
+                           evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
+                           evidence(paramSlot(2), Evidence::ABORT_IF_NULL)));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
   llvm::Twine Src = CheckMacroDefinitions + R"cc(
     void target(int* p, int* q, int* r, int* s) {
@@ -587,6 +604,25 @@ TEST(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
+                           evidence(paramSlot(3), Evidence::ABORT_IF_NULL)));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, CheckNEMacroSmart) {
+  llvm::Twine Src = CheckMacroDefinitions + R"cc(
+#include <memory>
+    void target(std::unique_ptr<int> p, std::unique_ptr<int> q,
+                std::unique_ptr<int> r, std::unique_ptr<int> s) {
+      CHECK_NE(p, nullptr);
+      CHECK_NE(nullptr, q);
+      if (!r) {
+        CHECK_NE(s, r);
+      }
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src.str()),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
+                           evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(3), Evidence::ABORT_IF_NULL)));
 }
 

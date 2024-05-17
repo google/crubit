@@ -596,8 +596,8 @@ class DefinitionEvidenceCollector {
     const Expr *Arg = CallExpr.getArg(0);
     if (!Arg) return;
     QualType ArgType = Arg->getType();
-    if (isSupportedRawPointerType(ArgType)) {
-      const dataflow::PointerValue *PV = getRawPointerValue(Arg, Env);
+    if (isSupportedPointerType(ArgType)) {
+      const dataflow::PointerValue *PV = getPointerValue(Arg, Env);
       if (!PV) return;
       mustBeNonnull(*PV, Arg->getExprLoc(), Evidence::ABORT_IF_NULL);
     } else if (ArgType->isBooleanType()) {
@@ -618,8 +618,8 @@ class DefinitionEvidenceCollector {
     CHECK_EQ(CallExpr.getNumArgs(), 2);
     const Expr *First = CallExpr.getArg(0);
     const Expr *Second = CallExpr.getArg(1);
-    bool FirstSupported = isSupportedRawPointerType(First->getType());
-    bool SecondSupported = isSupportedRawPointerType(Second->getType());
+    bool FirstSupported = isSupportedPointerType(First->getType());
+    bool SecondSupported = isSupportedPointerType(Second->getType());
     if (!FirstSupported && !SecondSupported) return;
 
     ASTContext &Context = CallExpr.getCalleeDecl()->getASTContext();
@@ -627,32 +627,31 @@ class DefinitionEvidenceCollector {
     SourceLocation EvidenceLoc;
     if (First->isNullPointerConstant(Context,
                                      Expr::NPC_ValueDependentIsNotNull)) {
-      if (!isSupportedRawPointerType(Second->getType())) return;
-      ValueComparedToNull = getRawPointerValue(Second, Env);
+      if (!isSupportedPointerType(Second->getType())) return;
+      ValueComparedToNull = getPointerValue(Second, Env);
       if (!ValueComparedToNull) return;
       EvidenceLoc = Second->getExprLoc();
     } else if (Second->isNullPointerConstant(
                    Context, Expr::NPC_ValueDependentIsNotNull)) {
-      if (!isSupportedRawPointerType(First->getType())) return;
-      ValueComparedToNull = getRawPointerValue(First, Env);
+      if (!isSupportedPointerType(First->getType())) return;
+      ValueComparedToNull = getPointerValue(First, Env);
       if (!ValueComparedToNull) return;
       EvidenceLoc = First->getExprLoc();
     } else {
       if (!FirstSupported || !SecondSupported) {
         // If this happens outside of the nullptr literal case, we'd like to
         // know about it.
-        llvm::errs()
-            << "Value of a supported raw pointer type compared to a value "
-               "of a type that is not a supported raw pointer type.: \n";
+        llvm::errs() << "Value of a supported pointer type compared to a value "
+                        "of a type that is not a supported pointer type.: \n";
         CallExpr.dump();
         CallExpr.getExprLoc().dump(
             CallExpr.getCalleeDecl()->getASTContext().getSourceManager());
         return;
       }
 
-      const dataflow::PointerValue *FirstPV = getRawPointerValue(First, Env);
+      const dataflow::PointerValue *FirstPV = getPointerValue(First, Env);
       if (!FirstPV) return;
-      const dataflow::PointerValue *SecondPV = getRawPointerValue(Second, Env);
+      const dataflow::PointerValue *SecondPV = getPointerValue(Second, Env);
       if (!SecondPV) return;
       PointerNullState FirstNullState = getPointerNullState(*FirstPV);
       if (!FirstNullState.IsNull) return;
