@@ -1307,6 +1307,24 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullInFunctionPointerParam) {
                            functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest,
+     PassedToNonnullInFunctionPointerParamSmart) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+#include <utility>
+    void target(std::unique_ptr<int*> p,
+                void (*callee)(Nonnull<std::unique_ptr<int*>> i)) {
+      callee(std::move(p));
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL,
+                           functionNamed("target")),
+                  evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("target"))));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullInFunctionPointerField) {
   static constexpr llvm::StringRef Src = R"cc(
     struct MyStruct {

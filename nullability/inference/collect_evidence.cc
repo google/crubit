@@ -481,13 +481,13 @@ class DefinitionEvidenceCollector {
     // For each pointer parameter of the function, ...
     for (unsigned I = 0; I < CalleeType.getNumParams(); ++I) {
       const auto ParamType = CalleeType.getParamType(I);
-      if (!isSupportedRawPointerType(ParamType.getNonReferenceType())) continue;
+      if (!isSupportedPointerType(ParamType.getNonReferenceType())) continue;
       // the corresponding argument should also be a pointer.
-      CHECK(isSupportedRawPointerType(Expr.getArg(I)->getType()))
+      CHECK(isSupportedPointerType(Expr.getArg(I)->getType()))
           << "Unsupported argument " << I
           << " type: " << Expr.getArg(I)->getType().getAsString();
 
-      dataflow::PointerValue *PV = getRawPointerValue(Expr.getArg(I), Env);
+      dataflow::PointerValue *PV = getPointerValue(Expr.getArg(I), Env);
       if (!PV) continue;
 
       // TODO: when we infer function pointer/reference parameters'
@@ -507,6 +507,7 @@ class DefinitionEvidenceCollector {
                                    const CallExpr &Expr) {
     if (InferableSlots.empty()) return;
     if (const auto *Callee = Expr.getCallee()) {
+      // Function pointers are only ever raw pointers.
       if (const auto *PV = getRawPointerValue(Callee, Env)) {
         mustBeNonnull(*PV, Expr.getExprLoc(), Evidence::UNCHECKED_DEREFERENCE);
       }
@@ -900,6 +901,8 @@ class DefinitionEvidenceCollector {
   }
 
   void fromArithmeticArg(const Expr *Arg, SourceLocation Loc) {
+    // No support needed for smart pointers, which do not support arithmetic
+    // operations.
     if (!Arg || !isSupportedRawPointerType(Arg->getType())) return;
     if (auto *PV = getPointerValue(Arg, Env))
       mustBeNonnull(*PV, Loc, Evidence::ARITHMETIC);
