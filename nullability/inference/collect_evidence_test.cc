@@ -1495,6 +1495,19 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableRef) {
                                             functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableRefSmart) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    void target(std::unique_ptr<int> p) {
+      Nullable<std::unique_ptr<int>>& a = p;
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(evidence(paramSlot(0),
+                                            Evidence::BOUND_TO_MUTABLE_NULLABLE,
+                                            functionNamed("target"))));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, RefAssignedToNullableRef) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int*& p) {
@@ -1818,6 +1831,29 @@ TEST(CollectEvidenceFromDefinitionTest, GlobalInitFromGlobalAnnotation) {
       collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(
           SLOT_RETURN_TYPE, Evidence::BOUND_TO_NONNULL, functionNamed("foo"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, GlobalSmartImplicitInit) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    // This has an implicit init because of default construction.
+    std::unique_ptr<int> Target;
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Target", Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    globalVarNamed("Target"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, GlobalSmartExplicitInit) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    std::unique_ptr<int> Target = nullptr;
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Target", Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    globalVarNamed("Target"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, StaticInitInClass) {

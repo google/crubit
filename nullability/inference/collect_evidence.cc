@@ -799,7 +799,7 @@ class DefinitionEvidenceCollector {
   void fromAssignmentLike(const ValueDecl &LHS, const Expr &RHS,
                           Evidence::Kind EvidenceKindForAssignmentFromNullable =
                               Evidence::ASSIGNED_FROM_NULLABLE) {
-    dataflow::PointerValue *PV = getRawPointerValue(&RHS, Env);
+    dataflow::PointerValue *PV = getPointerValue(&RHS, Env);
     if (!PV) return;
     TypeNullability TypeNullability =
         getNullabilityAnnotationsFromTypeAndOverrides(LHS.getType(), &LHS,
@@ -820,8 +820,8 @@ class DefinitionEvidenceCollector {
       for (auto *Decl : DeclStmt->decls()) {
         if (auto *VarDecl = dyn_cast<clang::VarDecl>(Decl);
             VarDecl && VarDecl->hasInit()) {
-          bool DeclTypeSupported = isSupportedRawPointerType(
-              VarDecl->getType().getNonReferenceType());
+          bool DeclTypeSupported =
+              isSupportedPointerType(VarDecl->getType().getNonReferenceType());
           bool InitTypeSupported = isSupportedPointerType(
               VarDecl->getInit()->getType().getNonReferenceType());
           if (!DeclTypeSupported) return;
