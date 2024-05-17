@@ -32,7 +32,6 @@ namespace {
 using ast_matchers::hasName;
 using testing::_;
 using testing::ElementsAre;
-using testing::IsEmpty;
 using testing::IsSupersetOf;
 using testing::UnorderedElementsAre;
 
@@ -554,10 +553,9 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNullable) {
 #include <memory>
     std::unique_ptr<int> target() { return std::unique_ptr<int>(); }
   )cc");
-  // TODO(b/330702908): Currently not inferring anything because we don't
-  // collect this evidence for smart pointers. The expected result is a nullable
-  // return type.
-  EXPECT_THAT(infer(), IsEmpty());
+  EXPECT_THAT(infer(),
+              ElementsAre(inference(hasName("target"),
+                                    {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUSmartPointerTest, ReturnTypeNonnull) {
@@ -565,10 +563,9 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNonnull) {
 #include <memory>
     std::unique_ptr<int> target() { return std::make_unique<int>(0); }
   )cc");
-  // TODO(b/304963199): Currently not inferring anything because we don't
-  // collect this evidence for smart pointers. The expected result is a nonnull
-  // return type.
-  EXPECT_THAT(infer(), IsEmpty());
+  EXPECT_THAT(infer(),
+              ElementsAre(inference(hasName("target"),
+                                    {inferredSlot(0, Nullability::NONNULL)})));
 }
 
 }  // namespace

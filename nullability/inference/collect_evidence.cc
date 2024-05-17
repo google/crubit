@@ -711,8 +711,7 @@ class DefinitionEvidenceCollector {
     auto *ReturnStmt = dyn_cast<clang::ReturnStmt>(&S);
     if (!ReturnStmt) return;
     auto *ReturnExpr = ReturnStmt->getRetValue();
-    if (!ReturnExpr || !isSupportedRawPointerType(ReturnExpr->getType()))
-      return;
+    if (!ReturnExpr || !isSupportedPointerType(ReturnExpr->getType())) return;
     const FunctionDecl *CurrentFunc = Env.getCurrentFunc();
     CHECK(CurrentFunc) << "A return statement outside of a function?";
 

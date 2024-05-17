@@ -862,6 +862,39 @@ TEST(CollectEvidenceFromDefinitionTest,
                    functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, MultipleReturnsSmart) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    std::unique_ptr<int> target(Nonnull<std::unique_ptr<int>> p,
+                                Nullable<std::unique_ptr<int>> q,
+                                std::unique_ptr<int> r, bool a, bool b,
+                                bool c) {
+      if (a) return nullptr;
+      if (b) return p;
+      if (c) return q;
+      return r;
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
+                  evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN),
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
+                  evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN)));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FromReturnAnnotationSmart) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    Nonnull<std::unique_ptr<int>> target(std::unique_ptr<int> a) {
+      return a;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL)));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, FunctionCallDereferenced) {
   static constexpr llvm::StringRef Src = R"cc(
     int* makePtr();
