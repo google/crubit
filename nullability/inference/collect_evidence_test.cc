@@ -2728,6 +2728,45 @@ TEST(CollectEvidenceFromDeclarationTest,
                                     functionNamed("target"))));
 }
 
+TEST(SmartPointerCollectEvidenceFromDeclarationTest,
+     DefaultArgumentNullptrLiteral) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    void target(std::unique_ptr<int> = nullptr);
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetDecl(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("target"))));
+}
+
+TEST(SmartPointerCollectEvidenceFromDeclarationTest,
+     DefaultArgumentMakeUniqueTooComplex) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    void target(std::unique_ptr<int> = std::make_unique<int>(1));
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetDecl(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("target"))));
+}
+
+TEST(SmartPointerCollectEvidenceFromDeclarationTest,
+     DefaultArgumentReferenceTypesNullptrLiteral) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    void target(const std::unique_ptr<int>& pl = nullptr,
+                std::unique_ptr<int>&& pr = nullptr);
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetDecl(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("target")),
+                           evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("target"))));
+}
+
 MATCHER_P(declNamed, Name, "") {
   std::string Actual;
   llvm::raw_string_ostream OS(Actual);

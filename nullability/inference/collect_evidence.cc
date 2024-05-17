@@ -1218,6 +1218,25 @@ llvm::Error collectEvidenceFromDefinition(
   return Error;
 }
 
+static bool isOrIsConstructedFromNullPointerConstant(
+    absl::Nonnull<const Expr *> E, ASTContext &Ctx) {
+  if (E->isNullPointerConstant(Ctx, Expr::NPC_ValueDependentIsNotNull) !=
+      Expr::NPCK_NotNull) {
+    return true;
+  }
+  const Expr *SubExpr = &dataflow::ignoreCFGOmittedNodes(*E);
+  if (auto *MaterializeTempExpr = dyn_cast<MaterializeTemporaryExpr>(SubExpr)) {
+    SubExpr = MaterializeTempExpr->getSubExpr();
+  }
+  auto *BindTemp = dyn_cast<CXXBindTemporaryExpr>(SubExpr);
+  if (BindTemp == nullptr) return false;
+  auto *CE =
+      dyn_cast<CXXConstructExpr>(BindTemp->getSubExpr()->IgnoreImpCasts());
+  return CE != nullptr && CE->getNumArgs() == 1 &&
+         CE->getArg(0)->isNullPointerConstant(
+             Ctx, Expr::NPC_ValueDependentIsNotNull) != Expr::NPCK_NotNull;
+}
+
 static void collectEvidenceFromDefaultArgument(
     const clang::FunctionDecl &Fn, const clang::ParmVarDecl &ParamDecl,
     Slot ParamSlot, llvm::function_ref<EvidenceEmitter> Emit) {
@@ -1229,7 +1248,7 @@ static void collectEvidenceFromDefaultArgument(
   // and expressions whose types already include an annotation, which we can
   // handle just from declarations instead of call sites and should handle the
   // majority of cases.
-  if (!isSupportedRawPointerType(ParamDecl.getType().getNonReferenceType()))
+  if (!isSupportedPointerType(ParamDecl.getType().getNonReferenceType()))
     return;
   if (!ParamDecl.hasDefaultArg()) return;
   if (ParamDecl.hasUnparsedDefaultArg() ||
@@ -1240,8 +1259,8 @@ static void collectEvidenceFromDefaultArgument(
   const Expr *DefaultArg = ParamDecl.getDefaultArg();
   CHECK(DefaultArg);
 
-  if (DefaultArg->isNullPointerConstant(Fn.getASTContext(),
-                                        Expr::NPC_ValueDependentIsNotNull)) {
+  if (isOrIsConstructedFromNullPointerConstant(DefaultArg,
+                                               Fn.getASTContext())) {
     Emit(Fn, ParamSlot, Evidence::NULLABLE_ARGUMENT, DefaultArg->getExprLoc());
   } else {
     auto Nullability = getNullabilityAnnotationsFromType(DefaultArg->getType());
