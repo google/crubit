@@ -15,7 +15,7 @@
 namespace clang::tidy::nullability {
 
 bool hasInferable(QualType T) {
-  return isSupportedRawPointerType(T.getNonReferenceType());
+  return isSupportedPointerType(T.getNonReferenceType());
 }
 
 int countInferableSlots(const Decl& D) {

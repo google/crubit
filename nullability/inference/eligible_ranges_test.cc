@@ -235,17 +235,15 @@ TEST(EligibleRangesTest, NestedPointersOuterAnnotated) {
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
-                  MainFileName, UnorderedElementsAre(
-                                    SlotRange(1, Input.range("one_o")),
-                                    SlotRange(-1, Input.range("one_i")),
-                                    // TODO(b/330702908) When supported, Slot 2.
-                                    SlotRange(-1, Input.range("two_o")),
-                                    SlotRange(-1, Input.range("two_i")),
-                                    SlotRange(3, Input.range("three_o")),
-                                    SlotRange(-1, Input.range("three_i")),
-                                    // TODO(b/330702908) When supported, Slot 4.
-                                    SlotRange(-1, Input.range("four_o")),
-                                    SlotRange(-1, Input.range("four_i"))))));
+                  MainFileName,
+                  UnorderedElementsAre(SlotRange(1, Input.range("one_o")),
+                                       SlotRange(-1, Input.range("one_i")),
+                                       SlotRange(2, Input.range("two_o")),
+                                       SlotRange(-1, Input.range("two_i")),
+                                       SlotRange(3, Input.range("three_o")),
+                                       SlotRange(-1, Input.range("three_i")),
+                                       SlotRange(4, Input.range("four_o")),
+                                       SlotRange(-1, Input.range("four_i"))))));
 }
 
 TEST(EligibleRangesTest, NestedPointersInnerAnnotated) {
@@ -263,17 +261,15 @@ TEST(EligibleRangesTest, NestedPointersInnerAnnotated) {
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
-                  MainFileName, UnorderedElementsAre(
-                                    SlotRange(1, Input.range("one_o")),
-                                    SlotRange(-1, Input.range("one_i")),
-                                    // TODO(b/330702908) When supported, Slot 2.
-                                    SlotRange(-1, Input.range("two_o")),
-                                    SlotRange(-1, Input.range("two_i")),
-                                    SlotRange(3, Input.range("three_o")),
-                                    SlotRange(-1, Input.range("three_i")),
-                                    // TODO(b/330702908) When supported, Slot 4.
-                                    SlotRange(-1, Input.range("four_o")),
-                                    SlotRange(-1, Input.range("four_i"))))));
+                  MainFileName,
+                  UnorderedElementsAre(SlotRange(1, Input.range("one_o")),
+                                       SlotRange(-1, Input.range("one_i")),
+                                       SlotRange(2, Input.range("two_o")),
+                                       SlotRange(-1, Input.range("two_i")),
+                                       SlotRange(3, Input.range("three_o")),
+                                       SlotRange(-1, Input.range("three_i")),
+                                       SlotRange(4, Input.range("four_o")),
+                                       SlotRange(-1, Input.range("four_i"))))));
 }
 
 TEST(EligibleRangesTest, RefToPointer) {
@@ -329,13 +325,11 @@ TEST(EligibleRangesTest, UniquePtr) {
   void foo($one[[std::unique_ptr<int>]] std_smart,
            Nonnull<$two[[std::unique_ptr<int>]]> nonnull_std_smart);
   )");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(
-                            // TODO(b/330702908) When supported, Slots 1 and 2.
-                            SlotRange(-1, Input.range("one")),
-                            SlotRange(-1, Input.range("two"))))));
+  EXPECT_THAT(getFunctionRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(SlotRange(1, Input.range("one")),
+                                       SlotRange(2, Input.range("two"))))));
 }
 
 TEST(EligibleRangesTest, UserDefinedSmartPointer) {
@@ -348,13 +342,11 @@ TEST(EligibleRangesTest, UserDefinedSmartPointer) {
   void foo($one[[MySmartIntPtr]] user_defined_smart,
            Nonnull<$two[[MySmartIntPtr]]> nonnull_user_defined_smart);
   )");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(
-                            // TODO(b/330702908) When supported, Slots 1 and 2.
-                            SlotRange(-1, Input.range("one")),
-                            SlotRange(-1, Input.range("two"))))));
+  EXPECT_THAT(getFunctionRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(SlotRange(1, Input.range("one")),
+                                       SlotRange(2, Input.range("two"))))));
 }
 
 TEST(EligibleRangesTest, UserDefinedTemplatedSmartPointer) {
@@ -367,13 +359,11 @@ TEST(EligibleRangesTest, UserDefinedTemplatedSmartPointer) {
   void foo($one[[MySmartPtr<int>]] user_defined_smart,
            Nonnull<$two[[MySmartPtr<int>]]> nonnull_user_defined_smart);
   )");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(
-                            // TODO(b/330702908) When supported, Slots 1 and 2.
-                            SlotRange(-1, Input.range("one")),
-                            SlotRange(-1, Input.range("two"))))));
+  EXPECT_THAT(getFunctionRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(SlotRange(1, Input.range("one")),
+                                       SlotRange(2, Input.range("two"))))));
 }
 
 TEST(EligibleRangesTest, SimpleAlias) {
@@ -643,7 +633,7 @@ TEST(EligibleRangesTest, DependentAliasOfSmartPointer) {
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
-                  UnorderedElementsAre(SlotRange(-1, Input.range("unique_ptr")),
+                  UnorderedElementsAre(SlotRange(1, Input.range("unique_ptr")),
                                        SlotRange(-1, Input.range("inner"))))));
 }
 

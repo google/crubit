@@ -73,8 +73,8 @@ bool smartPointersEnabled();
 /// Is this exactly a pointer type that we track outer nullability for?
 /// This unwraps sugar, i.e. it looks at the canonical type.
 ///
-/// (For now, only regular `PointerType`s, in future we should consider
-/// supporting pointer-to-member, ObjC pointers, `unique_ptr`, etc).
+/// (For now, only regular `PointerType`s and smart pointers, in future we
+/// should consider supporting pointer-to-member, ObjC pointers, etc).
 bool isSupportedPointerType(QualType);
 
 /// Is this exactly a raw (non-smart) pointer type that we track outer

@@ -51,45 +51,74 @@ const T &lookup(llvm::StringRef Name, ASTContext &Ctx,
   return *Match;
 }
 
+constexpr llvm::StringRef SmartPointerHeader = R"cc(
+  namespace std {
+  template <typename T>
+  struct unique_ptr {
+    using pointer = T*;
+  };
+  }  // namespace std
+
+  template <typename T>
+  struct custom_smart_ptr {
+    using absl_nullability_compatible = void;
+    using pointer = T*;
+  };
+)cc";
+
 TEST(IsInferenceTargetTest, GlobalVariables) {
-  TestAST AST(R"cc(
-    int* Pointer;
-    int NotPointer;
-  )cc");
+  TestAST AST((SmartPointerHeader + R"cc(
+                int* Pointer;
+                std::unique_ptr<int> StdSmartPointer;
+                custom_smart_ptr<int> CustomSmartPointer;
+                int NotPointer;
+              )cc")
+                  .str());
 
   auto &Ctx = AST.context();
   EXPECT_TRUE(isInferenceTarget(lookup("Pointer", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("StdSmartPointer", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartPointer", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("NotPointer", Ctx)));
 }
 
 TEST(IsInferenceTargetTest, Functions) {
-  TestAST AST(R"cc(
-    int* func(int*, int**) {
-      int* Local;
-      static int* StaticLocal;
-    }
-    void empty() {}
-    auto Lambda = []() {};
-  )cc");
+  TestAST AST((SmartPointerHeader + R"cc(
+                int* func(int*, int**, std::unique_ptr<int>,
+                          custom_smart_ptr<int>) {
+                  int* Local;
+                  static int* StaticLocal;
+                  std::unique_ptr<int> StdSmartLocal;
+                  custom_smart_ptr<int> CustomSmartLocal;
+                }
+                void empty() {}
+                auto Lambda = []() {};
+              )cc")
+                  .str());
 
   auto &Ctx = AST.context();
   EXPECT_TRUE(isInferenceTarget(lookup("func", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("Local", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("StaticLocal", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("StdSmartLocal", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("CustomSmartLocal", Ctx)));
   EXPECT_TRUE(isInferenceTarget(lookup("empty", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("Lambda", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("operator()", Ctx)));
 }
 
 TEST(IsInferenceTargetTest, ClassAndMembers) {
-  TestAST AST(R"cc(
-    class C {
-      void method();
-      int NonPtrField;
-      int* PtrField;
-      static int* StaticField;
-    };
-  )cc");
+  TestAST AST((SmartPointerHeader + R"cc(
+                class C {
+                  void method();
+                  int NonPtrField;
+                  int* PtrField;
+                  static int* StaticField;
+                  std::unique_ptr<int> StdSmartField;
+                  custom_smart_ptr<int> CustomSmartField;
+                };
+              )cc")
+                  .str());
 
   auto &Ctx = AST.context();
   EXPECT_FALSE(isInferenceTarget(lookup<CXXRecordDecl>("C", Ctx)));
@@ -97,6 +126,8 @@ TEST(IsInferenceTargetTest, ClassAndMembers) {
   EXPECT_FALSE(isInferenceTarget(lookup("NonPtrField", Ctx)));
   EXPECT_TRUE(isInferenceTarget(lookup("PtrField", Ctx)));
   EXPECT_TRUE(isInferenceTarget(lookup("StaticField", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("StdSmartField", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartField", Ctx)));
 }
 
 TEST(IsInferenceTargetTest, FunctionTemplate) {
@@ -164,26 +195,31 @@ TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
 }
 
 TEST(InferableTest, CountInferableSlots) {
-  TestAST AST(R"cc(
-    using Pointer = int *;
-    template <class T>
-    struct S;
-    struct T;
+  TestAST AST((SmartPointerHeader + R"cc(
+                using Pointer = int *;
+                template <class T>
+                struct S;
+                struct T;
 
-    void f1(int *);
-    void f2(Pointer);
-    void f3(int **);
-    void f4(Pointer *);
-    void f5(int *&);
-    void f6(int (*)());  // function pointer
+                void f1(int *);
+                void f2(Pointer);
+                void f3(int **);
+                void f4(Pointer *);
+                void f5(int *&);
+                void f6(int (*)());  // function pointer
+                void f7(std::unique_ptr<int>);
+                void f8(custom_smart_ptr<int>);
 
-    int *g1(int);
-    Pointer g2(int);
+                int *g1(int);
+                Pointer g2(int);
+                std::unique_ptr<int> g3(int);
+                custom_smart_ptr<int> g4(int);
 
-    void h1(S<int *>);
-    void h2(int T::*);      // pointer to data member
-    void h3(int (T::*)());  // pointer to member function
-  )cc");
+                void h1(S<int *>);
+                void h2(int T::*);      // pointer to data member
+                void h3(int (T::*)());  // pointer to member function
+              )cc")
+                  .str());
   auto &Ctx = AST.context();
 
   // All the 'f's have a single pointer arg.
@@ -193,10 +229,14 @@ TEST(InferableTest, CountInferableSlots) {
   EXPECT_EQ(1, countInferableSlots(lookup("f4", Ctx)));
   EXPECT_EQ(1, countInferableSlots(lookup("f5", Ctx)));
   EXPECT_EQ(1, countInferableSlots(lookup("f6", Ctx)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f7", Ctx)));
+  EXPECT_EQ(1, countInferableSlots(lookup("f8", Ctx)));
 
   // All the 'g's have a pointer return.
   EXPECT_EQ(1, countInferableSlots(lookup("g1", Ctx)));
   EXPECT_EQ(1, countInferableSlots(lookup("g2", Ctx)));
+  EXPECT_EQ(1, countInferableSlots(lookup("g3", Ctx)));
+  EXPECT_EQ(1, countInferableSlots(lookup("g4", Ctx)));
 
   // The 'h's have types that aren't really pointers.
   EXPECT_EQ(0, countInferableSlots(lookup("h1", Ctx)));

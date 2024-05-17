@@ -522,8 +522,8 @@ TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
   )cc");
 
   // TODO(b/304963199): Currently not inferring anything because we don't
-  // support smart pointers. The expected result is the same as for the
-  // `ParamsFromCallSite` test.
+  // collect evidence for smart pointers. The expected result is the same as for
+  // the `ParamsFromCallSite` test.
   ASSERT_THAT(infer(), IsEmpty());
 }
 
@@ -533,7 +533,8 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNullable) {
     std::unique_ptr<int> target() { return std::unique_ptr<int>(); }
   )cc");
   // TODO(b/304963199): Currently not inferring anything because we don't
-  // support smart pointers. The expected result is a nullable return type.
+  // collect evidence for smart pointers. The expected result is a nullable
+  // return type.
   EXPECT_THAT(infer(), IsEmpty());
 }
 
@@ -543,7 +544,8 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNonnull) {
     std::unique_ptr<int> target() { return std::make_unique<int>(0); }
   )cc");
   // TODO(b/304963199): Currently not inferring anything because we don't
-  // support smart pointers. The expected result is a nonnull return type.
+  // collect evidence for smart pointers. The expected result is a nonnull
+  // return type.
   EXPECT_THAT(infer(), IsEmpty());
 }
 

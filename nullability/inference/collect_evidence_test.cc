@@ -2435,18 +2435,26 @@ TEST(EvidenceSitesTest, Lambdas) {
 }
 
 TEST(EvidenceSitesTest, GlobalVariables) {
-  TestAST AST(R"cc(
+  TestAST AST = getInputsWithAnnotationDefinitions(R"cc(
+#include <memory>
     int* x = true ? nullptr : nullptr;
     int* y;
     int a;
     int b = *y;
+    std::unique_ptr<int> p;
+    std::unique_ptr<int> q = nullptr;
   )cc");
 
   auto Sites = EvidenceSites::discover(AST.context());
   EXPECT_THAT(Sites.Declarations,
-              UnorderedElementsAre(declNamed("x"), declNamed("y")));
-  EXPECT_THAT(Sites.Definitions,
-              UnorderedElementsAre(declNamed("x"), declNamed("b")));
+              UnorderedElementsAre(declNamed("x"), declNamed("y"),
+                                   declNamed("p"), declNamed("q")));
+  EXPECT_THAT(
+      Sites.Definitions,
+      UnorderedElementsAre(
+          declNamed("x"), declNamed("b"),
+          // unique_ptr p has an initializer because of default construction.
+          declNamed("p"), declNamed("q")));
 }
 
 TEST(EvidenceSitesTest, StaticMemberVariables) {
@@ -2471,15 +2479,19 @@ TEST(EvidenceSitesTest, StaticMemberVariables) {
 }
 
 TEST(EvidenceSitesTest, NonStaticMemberVariables) {
-  TestAST AST(R"cc(
+  TestAST AST = getInputsWithAnnotationDefinitions(R"cc(
+#include <memory>
     struct S {
       int* a = nullptr;
       int* b;
+      std::unique_ptr<int> p = nullptr;
+      std::unique_ptr<int> q;
     };
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
   EXPECT_THAT(Sites.Declarations,
-              UnorderedElementsAre(declNamed("S::a"), declNamed("S::b")));
+              UnorderedElementsAre(declNamed("S::a"), declNamed("S::b"),
+                                   declNamed("S::p"), declNamed("S::q")));
   EXPECT_THAT(Sites.Definitions, IsEmpty());
 }
 
