@@ -1002,8 +1002,8 @@ class DefinitionEvidenceCollector {
     // InitListExpr for the base initialization, so we only need to collect here
     // from the field inits.
     for (auto [Field, InitExpr] : Helper.field_inits()) {
-      if (!isSupportedRawPointerType(Field->getType())) return;
-      if (!isSupportedRawPointerType(InitExpr->getType())) {
+      if (!isSupportedPointerType(Field->getType())) return;
+      if (!isSupportedPointerType(InitExpr->getType())) {
         llvm::errs() << "Unsupported type for initializer expression in "
                         "aggregate initialization for supported pointer field: "
                      << InitExpr->getType() << "\n";

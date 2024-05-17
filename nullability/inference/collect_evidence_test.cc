@@ -2341,6 +2341,30 @@ TEST(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
               ExpectedEvidenceMatcher);
 }
 
+TEST(SmartPointerCollectEvidenceFromDefinitionTest, AggregateInitialization) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+#include <utility>
+    struct MyStruct {
+      std::unique_ptr<int> p;
+      Nonnull<std::unique_ptr<int>> q;
+      std::unique_ptr<int> r;
+    };
+
+    void target(Nullable<std::unique_ptr<int>> a, std::unique_ptr<int> b) {
+      MyStruct{std::move(a), std::move(b), nullptr};
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("MyStruct::p")),
+                           evidence(paramSlot(1), Evidence::BOUND_TO_NONNULL,
+                                    functionNamed("target")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("MyStruct::r"))));
+}
+
 // This is a crash repro related to aggregate initialization.
 TEST(CollectEvidenceFromDefinitionTest, NonRecordInitListExpr) {
   static constexpr llvm::StringRef Src = R"cc(
