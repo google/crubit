@@ -184,6 +184,7 @@ TEST(CollectEvidenceFromDefinitionTest, Location) {
                                              Evidence::UNCHECKED_DEREFERENCE)));
   EXPECT_EQ("input.cc:1:23", Evidence.front().location());
 }
+
 TEST(CollectEvidenceFromDefinitionTest, LocationSmart) {
   llvm::StringRef Code =
       "#include <memory>\nvoid target(std::unique_ptr<int> p) { *p; }";
@@ -1659,6 +1660,20 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromLocalNullable) {
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullableMemberCallExpr) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      int*& getPtrRef();
+    };
+
+    void target(S AnS) { AnS.getPtrRef() = nullptr; }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
+                                            Evidence::ASSIGNED_FROM_NULLABLE,
+                                            functionNamed("getPtrRef"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, IrrelevantAssignments) {

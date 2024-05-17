@@ -844,7 +844,7 @@ class DefinitionEvidenceCollector {
       if (!isSupportedRawPointerType(LHSType)) return;
       const QualType RHSType = RHS->getType();
       if (!isSupportedRawPointerType(RHSType)) {
-        llvm::errs() << "Unsupported RHS type in assignment to pointer decl: "
+        llvm::errs() << "Unsupported RHS type in assignment to pointer decl:\n"
                      << RHSType << "\n";
         return;
       }
@@ -854,9 +854,43 @@ class DefinitionEvidenceCollector {
         LHSDecl = DeclRefExpr->getDecl();
       } else if (auto *MemberExpr = dyn_cast_or_null<clang::MemberExpr>(LHS)) {
         LHSDecl = MemberExpr->getMemberDecl();
+      } else if (auto *MemberCallExpr =
+                     dyn_cast_or_null<clang::CXXMemberCallExpr>(LHS)) {
+        LHSDecl = MemberCallExpr->getMethodDecl();
+      } else if (auto *UnaryOp = dyn_cast_or_null<clang::UnaryOperator>(LHS)) {
+        switch (UnaryOp->getOpcode()) {
+          case UO_Deref:
+            // An assignment like `*pp = nullptr`, where `pp` is a `T**`. We
+            // don't do anything with these yet.
+            // TODO(b/323509132) Handle these assignments.
+            return;
+          case UO_PreInc:
+          case UO_PreDec:
+            // An assignment like `++p = nullptr`, where `p` is a `T*`. This is
+            // very rare, if used at all, but is for our purposes here the same
+            // as `p = nullptr`.
+            // TODO(b/309625642) Handle these assignments, possibly by
+            // extracting this if/else block and recursing into the operand of
+            // the arithmetic.
+            return;
+          default:
+            // We don't expect to see any other unary operators here, but not to
+            // a production-crash-worthy level, so assert instead of CHECK.
+            llvm::errs() << "Unsupported LHS unary operator in assignment to "
+                            "existing decl:\n";
+            LHS->dump();
+            assert(false);
+            return;
+        }
+      } else if (auto *ArraySubscript =
+                     dyn_cast_or_null<clang::ArraySubscriptExpr>(LHS)) {
+        // An assignment like `a[0] = nullptr`, where `a` is an array of
+        // pointers. We don't do anything with these yet.
+        // TODO(b/323509132) Handle these assignments.
+        return;
       } else {
         llvm::errs()
-            << "Unsupported LHS Decl type in assignment to existing decl: ";
+            << "Unsupported LHS Decl type in assignment to existing decl:\n";
         LHS->dump();
         return;
       }
