@@ -1645,6 +1645,33 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedToNonnull) {
                                     functionNamed("target"))));
 }
 
+TEST(SmartPointerCollectEvidenceFromDefinitionTest, AssignedToNonnull) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+#include <utility>
+    struct S {
+      Nonnull<std::unique_ptr<int>> a;
+      Nonnull<std::unique_ptr<int>>& getRef();
+    };
+
+    void target(std::unique_ptr<int> p, Nonnull<std::unique_ptr<int>> q,
+                std::unique_ptr<int> r, std::unique_ptr<int> s,
+                std::unique_ptr<int> t) {
+      q = std::move(p);
+      S AnS;
+      AnS.a = std::move(r);
+      AnS.getRef() = std::move(s);
+      Nonnull<std::unique_ptr<int>> nonnull = std::move(t);
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::BOUND_TO_NONNULL),
+                           evidence(paramSlot(2), Evidence::BOUND_TO_NONNULL),
+                           evidence(paramSlot(3), Evidence::BOUND_TO_NONNULL),
+                           evidence(paramSlot(4), Evidence::BOUND_TO_NONNULL)));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, RefAssignedToNonnullRef) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int*& p) {

@@ -834,15 +834,29 @@ class DefinitionEvidenceCollector {
                              VarDecl->getInit()->getExprLoc());
         }
       }
+      return;
     }
 
     // Assignment to existing decl.
-    if (auto *BinaryOperator = dyn_cast<clang::BinaryOperator>(&S);
-        BinaryOperator &&
-        BinaryOperator->getOpcode() == clang::BinaryOperatorKind::BO_Assign) {
-      const Expr *LHS = BinaryOperator->getLHS();
+    const Expr *LHS = nullptr;
+    std::optional<SourceLocation> Loc = std::nullopt;
+    // Raw pointers.
+    if (auto *BinaryOp = dyn_cast<clang::BinaryOperator>(&S);
+        BinaryOp &&
+        BinaryOp->getOpcode() == clang::BinaryOperatorKind::BO_Assign) {
+      LHS = BinaryOp->getLHS();
+      Loc = BinaryOp->getOperatorLoc();
+    } else if (
+        // Smart pointers.
+        auto *CXXOpCall = dyn_cast<clang::CXXOperatorCallExpr>(&S);
+        CXXOpCall && CXXOpCall->getOperator() == clang::OO_Equal) {
+      LHS = CXXOpCall->getArg(0);
+      Loc = CXXOpCall->getOperatorLoc();
+    } else {
+      return;
+    }
       const QualType LHSType = LHS->getType();
-      if (!isSupportedRawPointerType(LHSType)) return;
+      if (!isSupportedPointerType(LHSType)) return;
 
       const ValueDecl *LHSDecl = nullptr;
       if (auto *DeclRefExpr = dyn_cast_or_null<clang::DeclRefExpr>(LHS)) {
@@ -896,8 +910,7 @@ class DefinitionEvidenceCollector {
       // modified, such as in `a = std::move(b)`, the Environment's value for
       // the RHS will no longer be an accurate representation of what was
       // assigned.
-      fromAssignmentLike(*LHSDecl, *LHS, BinaryOperator->getOperatorLoc());
-    }
+      fromAssignmentLike(*LHSDecl, *LHS, *Loc);
   }
 
   void fromArithmeticArg(const Expr *Arg, SourceLocation Loc) {
