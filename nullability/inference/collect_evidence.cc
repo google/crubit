@@ -400,14 +400,14 @@ class DefinitionEvidenceCollector {
         (TopLevel.isSymbolic() &&
          Env.proves(
              A.makeImplies(InferableSlotsConstraint, TopLevel.isNonnull(A))))) {
-      mustBeNonnull(PointerValue, ValueLoc, Evidence::BOUND_TO_NONNULL);
+      mustBeNonnull(PointerValue, ValueLoc, Evidence::ASSIGNED_TO_NONNULL);
     } else if (!Type.isConstQualified() && Type->isReferenceType() &&
                (TopLevel.concrete() == NullabilityKind::Nullable ||
                 (TopLevel.isSymbolic() &&
                  Env.proves(A.makeImplies(InferableSlotsConstraint,
                                           TopLevel.isNullable(A)))))) {
       mustBeMarkedNullable(PointerValue, ValueLoc,
-                           Evidence::BOUND_TO_MUTABLE_NULLABLE);
+                           Evidence::ASSIGNED_TO_MUTABLE_NULLABLE);
     }
   }
 
@@ -558,7 +558,7 @@ class DefinitionEvidenceCollector {
     }
 
     // Function references are a rare case, but similar to function pointers, we
-    // can collect evidence from arguments bound to parameter types.
+    // can collect evidence from arguments assigned to parameter types.
     if (auto *FuncType = CalleeDecl.getFunctionType()) {
       if (auto *FuncProtoType = FuncType->getAs<FunctionProtoType>()) {
         fromFunctionProtoTypeCall(*FuncProtoType, Expr);

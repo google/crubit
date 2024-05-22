@@ -72,10 +72,10 @@ message Evidence {
     NONNULL_RETURN = 8;
     // A value with Unknown nullability was returned.
     UNKNOWN_RETURN = 9;
-    // A value was bound to a Nonnull declaration.
-    BOUND_TO_NONNULL = 10;
-    // A value was bound to a mutable Nullable declaration.
-    BOUND_TO_MUTABLE_NULLABLE = 11;
+    // A value was assigned to a Nonnull declaration.
+    ASSIGNED_TO_NONNULL = 10;
+    // A value was assigned to a mutable Nullable declaration.
+    ASSIGNED_TO_MUTABLE_NULLABLE = 11;
     // The program aborts if a value is null.
     ABORT_IF_NULL = 12;
     // A nullable value was assigned.

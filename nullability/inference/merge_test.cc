@@ -250,14 +250,14 @@ TEST_F(InferTest, ReturnValues) {
 }
 
 TEST_F(InferTest, PassedToNonnull) {
-  add(Evidence::BOUND_TO_NONNULL);
+  add(Evidence::ASSIGNED_TO_NONNULL);
   EXPECT_EQ(Nullability::NONNULL, infer());
 }
 
 TEST_F(InferTest, PassedToMutableNullable) {
-  add(Evidence::BOUND_TO_MUTABLE_NULLABLE);
+  add(Evidence::ASSIGNED_TO_MUTABLE_NULLABLE);
   EXPECT_EQ(Nullability::NULLABLE, infer());
-  add(Evidence::BOUND_TO_NONNULL);
+  add(Evidence::ASSIGNED_TO_NONNULL);
   EXPECT_EQ(Nullability::NONNULL, infer(/*ExpectConflict=*/true));
 }
 
