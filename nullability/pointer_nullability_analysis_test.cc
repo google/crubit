@@ -10,6 +10,7 @@
 
 #include "absl/base/nullability.h"
 #include "nullability/pointer_nullability.h"
+#include "nullability/pragma.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/Analysis/CFG.h"
@@ -67,7 +68,8 @@ TEST(PointerNullabilityAnalysis, AssignNullabilityVariable) {
   auto &A = DACtx.arena();
   auto ACFG = dataflow::AdornedCFG::build(*Target);
   dataflow::Environment Env(DACtx, *Target);
-  PointerNullabilityAnalysis Analysis(AST.context(), Env);
+  NullabilityPragmas NoPragmas;
+  PointerNullabilityAnalysis Analysis(AST.context(), Env, NoPragmas);
   auto PN = Analysis.assignNullabilityVariable(P, A);
   auto ExitState = std::move(
       cantFail(dataflow::runDataflowAnalysis(*ACFG, Analysis, std::move(Env)))

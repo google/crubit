@@ -25,6 +25,7 @@
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_lattice.h"
+#include "nullability/pragma.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -1190,7 +1191,9 @@ llvm::Error collectEvidenceFromDefinition(
   DataflowAnalysisContext AnalysisContext(*Solver);
   Environment Env = TargetAsFunc ? Environment(AnalysisContext, *TargetAsFunc)
                                  : Environment(AnalysisContext, *TargetStmt);
-  PointerNullabilityAnalysis Analysis(Ctx, Env);
+  // TODO(b/332695332) Get the actual pragmas written in source.
+  NullabilityPragmas NoPragmas;
+  PointerNullabilityAnalysis Analysis(Ctx, Env, NoPragmas);
 
   std::vector<InferableSlot> InferableSlots;
   if (TargetAsFunc && isInferenceTarget(*TargetAsFunc)) {

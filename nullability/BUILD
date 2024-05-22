@@ -102,6 +102,7 @@ cc_test(
     deps = [
         ":pointer_nullability",
         ":pointer_nullability_analysis",
+        ":pragma",
         "@abseil-cpp//absl/base:nullability",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",

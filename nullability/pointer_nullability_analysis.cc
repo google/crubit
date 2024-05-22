@@ -1622,8 +1622,8 @@ void ensureSmartPointerInitialized(
 
 }  // namespace
 
-PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext &Context,
-                                                       Environment &Env)
+PointerNullabilityAnalysis::PointerNullabilityAnalysis(
+    ASTContext &Context, Environment &Env, const NullabilityPragmas &Pragmas)
     : DataflowAnalysis<PointerNullabilityAnalysis, PointerNullabilityLattice>(
           Context),
       TypeTransferer(buildTypeTransferer()),
@@ -1634,11 +1634,6 @@ PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext &Context,
         if (RawPointerTy.isNull()) return {};
         return {{PtrField, RawPointerTy}};
       });
-}
-
-PointerNullabilityAnalysis::PointerNullabilityAnalysis(
-    ASTContext &Context, Environment &Env, const NullabilityPragmas &Pragmas)
-    : PointerNullabilityAnalysis(Context, Env) {
   NFS.Defaults = TypeNullabilityDefaults(Context, Pragmas);
 }
 

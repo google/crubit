@@ -18,6 +18,7 @@ cc_library(
         "//nullability:pointer_nullability",
         "//nullability:pointer_nullability_analysis",
         "//nullability:pointer_nullability_lattice",
+        "//nullability:pragma",
         "//nullability:type_nullability",
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/container:flat_hash_map",
