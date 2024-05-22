@@ -1654,7 +1654,8 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNullableRefFromFunctionCall) {
                    functionNamed("callee"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, AssignedToNonnull) {
+TEST(CollectEvidenceFromDefinitionTest,
+     InitializationOfAndAssignmentToNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* p, int* q, int* r) {
       Nonnull<int*> a = p, b = q;
@@ -1671,7 +1672,8 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedToNonnull) {
                                     functionNamed("target"))));
 }
 
-TEST(SmartPointerCollectEvidenceFromDefinitionTest, AssignedToNonnull) {
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     InitializationOfAndAssignmentToNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
 #include <utility>
@@ -1698,7 +1700,7 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, AssignedToNonnull) {
                   evidence(paramSlot(4), Evidence::ASSIGNED_TO_NONNULL)));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, RefAssignedToNonnullRef) {
+TEST(CollectEvidenceFromDefinitionTest, InitializationOfNonnullRefFromRef) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int*& p) {
       Nonnull<int*>& a = p;
@@ -1711,7 +1713,7 @@ TEST(CollectEvidenceFromDefinitionTest, RefAssignedToNonnullRef) {
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
-     FunctionCallAssignedToNonnullTargetNotAnInferenceTarget) {
+     NonnullNonTargetInitializedFromFunctionCall) {
   static constexpr llvm::StringRef Src = R"cc(
     int* makeIntPtr();
 
@@ -1733,7 +1735,8 @@ TEST(CollectEvidenceFromDefinitionTest,
                                     functionNamed("makeIntPtr"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableOrUnknown) {
+TEST(CollectEvidenceFromDefinitionTest,
+     InitializationOfAndAssignmentToNullableOrUnknown) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* p, int* q, int* r) {
       Nullable<int*> a = p;
@@ -1745,7 +1748,7 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableOrUnknown) {
   EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableRef) {
+TEST(CollectEvidenceFromDefinitionTest, InitializationOfNullableRef) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* p) {
       Nullable<int*>& a = p;
@@ -1757,7 +1760,8 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedToNullableRef) {
                            functionNamed("target"))));
 }
 
-TEST(SmartPointerCollectEvidenceFromDefinitionTest, AssignedToNullableRef) {
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     InitializationOfNullableRef) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     void target(std::unique_ptr<int> p) {
@@ -1770,7 +1774,7 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, AssignedToNullableRef) {
                            functionNamed("target"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, RefAssignedToNullableRef) {
+TEST(CollectEvidenceFromDefinitionTest, InitializationOfNullableRefFromRef) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int*& p) {
       Nullable<int*>& a = p;
@@ -1787,7 +1791,7 @@ TEST(CollectEvidenceFromDefinitionTest, RefAssignedToNullableRef) {
 //
 // DISABLED until ternary expressions are handle.
 TEST(CollectEvidenceFromDefinitionTest,
-     DISABLED_AssignedToNullableRefAllConnectedDecls) {
+     DISABLED_InitializationOfNullableRefAllConnectedDecls) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* p, int* q, bool b) {
       Nullable<int*>& x = b ? p : q;
@@ -1876,7 +1880,8 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullableMemberCallExpr) {
                                             functionNamed("getPtrRef"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, IrrelevantAssignments) {
+TEST(CollectEvidenceFromDefinitionTest,
+     IrrelevantAssignmentsAndInitializations) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
       S(int* i);
@@ -1899,7 +1904,7 @@ TEST(CollectEvidenceFromDefinitionTest, IrrelevantAssignments) {
   EXPECT_THAT(
       collectFromTargetFuncDefinition(Src),
       // From the constructor call constructing an S; no evidence from
-      // assignments.
+      // assignments or initializations.
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                     functionNamed("S"))));
 }
