@@ -411,6 +411,27 @@ void checkParmVarDeclWithPointerDefaultArg(
                    Parm.getNameAsString()});
 }
 
+void checkAnnotationsConsistent(
+    absl::Nonnull<const ValueDecl *> VD,
+    llvm::SmallVector<PointerNullabilityDiagnostic> &Diags,
+    const TypeNullabilityDefaults &Defaults) {
+  auto *CanonicalDecl = cast<ValueDecl>(VD->getCanonicalDecl());
+
+  // We check against the annotation on the canonical decl, so if this is the
+  // canonical decl, there is nothing to do.
+  if (VD == CanonicalDecl) return;
+
+  TypeNullability Canonical = getTypeNullability(*CanonicalDecl, Defaults);
+  TypeNullability Cur = getTypeNullability(*VD, Defaults);
+  if (Cur != Canonical) {
+    Diags.push_back(
+        {PointerNullabilityDiagnostic::ErrorCode::InconsistentAnnotations,
+         PointerNullabilityDiagnostic::Context::Other,
+         CharSourceRange::getTokenRange(VD->getSourceRange()), std::nullopt,
+         CharSourceRange::getTokenRange(CanonicalDecl->getSourceRange())});
+  }
+}
+
 auto pointerNullabilityDiagnoser() {
   return CFGMatchSwitchBuilder<const dataflow::TransferStateForDiagnostics<
                                    PointerNullabilityLattice>,
@@ -450,7 +471,7 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForDiagnosis() {
 }
 
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
-diagnosePointerNullability(const FunctionDecl *Func,
+diagnosePointerNullability(const ValueDecl *VD,
                            const NullabilityPragmas &Pragmas,
                            const SolverFactory &MakeSolver) {
   // This limit is set based on empirical observations. Mostly, it is a rough
@@ -459,10 +480,15 @@ diagnosePointerNullability(const FunctionDecl *Func,
   constexpr std::int32_t MaxBlockVisits = 20'000;
 
   llvm::SmallVector<PointerNullabilityDiagnostic> Diags;
-  if (Func->isTemplated()) return Diags;
+  if (VD->isTemplated()) return Diags;
 
-  ASTContext &Ctx = Func->getASTContext();
+  ASTContext &Ctx = VD->getASTContext();
   TypeNullabilityDefaults Defaults{Ctx, Pragmas};
+
+  checkAnnotationsConsistent(VD, Diags, Defaults);
+
+  const auto *Func = dyn_cast<FunctionDecl>(VD);
+  if (Func == nullptr) return Diags;
 
   for (const ParmVarDecl *Parm : Func->parameters())
     checkParmVarDeclWithPointerDefaultArg(Ctx, *Parm, Diags, Defaults);
@@ -483,7 +509,6 @@ diagnosePointerNullability(const FunctionDecl *Func,
 
   PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
 
-  llvm::SmallVector<PointerNullabilityDiagnostic> Diagnostics;
   auto Result = dataflow::runDataflowAnalysis(
       *CFG, Analysis, Env,
       [&, Diagnoser(pointerNullabilityDiagnoser())](
@@ -491,7 +516,7 @@ diagnosePointerNullability(const FunctionDecl *Func,
           const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
               &State) mutable {
         auto EltDiagnostics = Diagnoser(Elt, Ctx, {State.Lattice, State.Env});
-        llvm::move(EltDiagnostics, std::back_inserter(Diagnostics));
+        llvm::move(EltDiagnostics, std::back_inserter(Diags));
       },
       MaxBlockVisits);
   if (!Result) return Result.takeError();
@@ -499,7 +524,7 @@ diagnosePointerNullability(const FunctionDecl *Func,
     return llvm::createStringError(llvm::errc::interrupted,
                                    "SAT solver timed out");
 
-  return Diagnostics;
+  return Diags;
 }
 
 }  // namespace clang::tidy::nullability

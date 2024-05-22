@@ -25,6 +25,9 @@ struct PointerNullabilityDiagnostic {
   enum class ErrorCode {
     /// A nullable pointer was used where a nonnull pointer was expected.
     ExpectedNonnull,
+    /// Nullability annotations are inconsistent with a previous declaration.
+    /// `NoteRange` refers to the location of the previous declaration.
+    InconsistentAnnotations,
     /// A pointer-typed expression was encountered with no corresponding model.
     Untracked,
     /// A nullability assertion was violated.
@@ -48,6 +51,9 @@ struct PointerNullabilityDiagnostic {
   /// Populated only if `Ctx` is `FunctionArgument` and the parameter name is
   /// known.
   std::optional<std::string> ParamName;
+  /// Source range of a note to be emitted alongside the diagnostic.
+  /// The exact semantics of the note depend on `Code` and `Ctx`.
+  CharSourceRange NoteRange;
 };
 
 /// Creates a solver with default parameters that is suitable for passing to
@@ -61,10 +67,13 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForDiagnosis();
 /// without null checks, and assignments between pointers of incompatible
 /// nullability.
 ///
+/// If `VD` is not a function, this merely checks that the annotations on `VD`
+/// are consistent with the annotations on its canonical declaration.
+///
 /// Returns an empty vector when no issues are found in the code.
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
 diagnosePointerNullability(
-    const FunctionDecl *Func, const NullabilityPragmas &Pragmas,
+    const ValueDecl *VD, const NullabilityPragmas &Pragmas,
     const SolverFactory &MakeSolver = makeDefaultSolverForDiagnosis);
 
 }  // namespace nullability

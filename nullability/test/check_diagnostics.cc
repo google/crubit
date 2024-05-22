@@ -13,6 +13,7 @@
 #include "nullability/pragma.h"
 #include "nullability/test/test_headers.h"
 #include "clang/AST/ASTConsumer.h"
+#include "clang/AST/Decl.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Frontend/FrontendActions.h"
@@ -30,10 +31,10 @@ namespace clang::tidy::nullability {
 
 static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang) {
   using ast_matchers::BoundNodes;
-  using ast_matchers::functionDecl;
   using ast_matchers::hasName;
   using ast_matchers::match;
   using ast_matchers::stmt;
+  using ast_matchers::valueDecl;
 
   llvm::Annotations AnnotatedCode(SourceCode);
   clang::TestInputs Inputs(AnnotatedCode.code());
@@ -66,15 +67,15 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang) {
   clang::TestAST AST(Inputs);
 
   SmallVector<BoundNodes, 1> MatchResult =
-      match(functionDecl(hasName("target")).bind("target"), AST.context());
+      match(valueDecl(hasName("target")).bind("target"), AST.context());
   if (MatchResult.empty()) {
-    ADD_FAILURE() << "didn't find target function";
+    ADD_FAILURE() << "didn't find target declaration";
     return false;
   }
 
   bool Success = true;
   for (const ast_matchers::BoundNodes &BN : MatchResult) {
-    const FunctionDecl *Target = BN.getNodeAs<FunctionDecl>("target");
+    const auto *Target = BN.getNodeAs<ValueDecl>("target");
 
     llvm::DenseMap<unsigned, std::string> Annotations =
         dataflow::test::buildLineToAnnotationMapping(

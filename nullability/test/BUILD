@@ -397,3 +397,14 @@ cc_embed_data(
     embedopts = ["--namespace=clang::tidy::nullability"],
     visibility = ["//nullability:__subpackages__"],
 )
+
+cc_test(
+    name = "consistent_annotations",
+    srcs = ["consistent_annotations.cc"],
+    deps = [
+        ":check_diagnostics",
+        "//nullability:type_nullability",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
