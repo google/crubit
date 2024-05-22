@@ -1353,8 +1353,10 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinitionMatching(
           cxxConstructorDecl(isDefaultConstructor(), hasName("Target")), Src),
-      // TODO(b/330702908) Should be ASSIGNED_FROM_NULLABLE for Target::I.
-      IsEmpty());
+      // By the end of the constructor body, the field is still only
+      // default-initialized, which for smart pointers means it is null.
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("Target::I"))));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,
@@ -1374,6 +1376,29 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
       // value, and no evidence collected from *implicit* member initializer
       // which default constructs to null.
       IsEmpty());
+}
+
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     DefaultFieldInitializerAbsentConditionalAssignmentInConstructor) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+#include <utility>
+    struct Target {
+      Target(int Input) {
+        if (Input != 0) {
+          I = std::make_unique<int>(Input);
+        }
+      }
+      std::unique_ptr<int> I;
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
+      // By the end of the constructor body, the field is still potentially
+      // default-initialized, which for smart pointers means it may be null.
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("Target::I"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNonnull) {
