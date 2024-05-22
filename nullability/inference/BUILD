@@ -41,6 +41,7 @@ cc_test(
         ":slot_fingerprint",
         "//nullability:type_nullability",
         "//nullability/test:test_headers",
+        "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",

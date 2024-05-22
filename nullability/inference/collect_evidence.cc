@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -44,6 +45,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
+#include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/Builtins.h"
@@ -1090,10 +1092,15 @@ static bool hasAnyInferenceTargets(dataflow::ReferencedDecls &RD) {
          hasAnyInferenceTargets(RD.Functions);
 }
 
+std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference() {
+  constexpr std::int64_t MaxSATIterations = 200'000;
+  return std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
+}
+
 llvm::Error collectEvidenceFromDefinition(
     const Decl &Definition, llvm::function_ref<EvidenceEmitter> Emit,
     USRCache &USRCache, const PreviousInferences PreviousInferences,
-    unsigned MaxSATIterations) {
+    const SolverFactory &MakeSolver) {
   ASTContext &Ctx = Definition.getASTContext();
   dataflow::ReferencedDecls ReferencedDecls;
   Stmt *TargetStmt = nullptr;
@@ -1141,9 +1148,8 @@ llvm::Error collectEvidenceFromDefinition(
       dataflow::AdornedCFG::build(Definition, *TargetStmt, Ctx);
   if (!ACFG) return ACFG.takeError();
 
-  auto OwnedSolver = std::make_unique<WatchedLiteralsSolver>(MaxSATIterations);
-  const WatchedLiteralsSolver *Solver = OwnedSolver.get();
-  DataflowAnalysisContext AnalysisContext(std::move(OwnedSolver));
+  std::unique_ptr<dataflow::Solver> Solver = MakeSolver();
+  DataflowAnalysisContext AnalysisContext(*Solver);
   Environment Env = TargetAsFunc ? Environment(AnalysisContext, *TargetAsFunc)
                                  : Environment(AnalysisContext, *TargetStmt);
   PointerNullabilityAnalysis Analysis(Ctx, Env);

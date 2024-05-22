@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 
+#include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pragma.h"
 #include "clang/AST/Decl.h"
 #include "clang/Analysis/FlowSensitive/Solver.h"
@@ -51,10 +52,7 @@ struct PointerNullabilityDiagnostic {
 
 /// Creates a solver with default parameters that is suitable for passing to
 /// `diagnosePointerNullability()`.
-std::unique_ptr<dataflow::Solver> makeDefaultSolver();
-
-/// Factory function for creating a solver implementation.
-using SolverFactory = std::function<std::unique_ptr<dataflow::Solver>()>;
+std::unique_ptr<dataflow::Solver> makeDefaultSolverForDiagnosis();
 
 /// Checks that nullable pointers are used safely, using nullability information
 /// that is collected by `PointerNullabilityAnalysis`.
@@ -65,9 +63,9 @@ using SolverFactory = std::function<std::unique_ptr<dataflow::Solver>()>;
 ///
 /// Returns an empty vector when no issues are found in the code.
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
-diagnosePointerNullability(const FunctionDecl *Func,
-                           const NullabilityPragmas &Pragmas,
-                           const SolverFactory &MakeSolver = makeDefaultSolver);
+diagnosePointerNullability(
+    const FunctionDecl *Func, const NullabilityPragmas &Pragmas,
+    const SolverFactory &MakeSolver = makeDefaultSolverForDiagnosis);
 
 }  // namespace nullability
 }  // namespace tidy

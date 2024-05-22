@@ -441,7 +441,7 @@ auto pointerNullabilityDiagnoser() {
 
 }  // namespace
 
-std::unique_ptr<dataflow::Solver> makeDefaultSolver() {
+std::unique_ptr<dataflow::Solver> makeDefaultSolverForDiagnosis() {
   // This limit is set based on empirical observations. Mostly, it is a rough
   // proxy for a line between "finite" and "effectively infinite", rather than a
   // strict limit on resource use.

@@ -20,6 +20,7 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchersMacros.h"
+#include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
@@ -2608,7 +2609,10 @@ TEST(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
                           UsrCache),
           UsrCache, /*PreviousInferences=*/{},
           // Enough iterations to collect one piece of evidence but not both.
-          /*MaxSATIterations=*/100),
+          []() {
+            return std::make_unique<dataflow::WatchedLiteralsSolver>(
+                /*MaxSATIterations=*/100);
+          }),
       llvm::FailedWithMessage("SAT solver reached iteration limit"));
   EXPECT_THAT(Results, SizeIs(1));
 }

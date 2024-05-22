@@ -11,7 +11,9 @@
 
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
+#include "nullability/pointer_nullability_analysis.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
@@ -38,6 +40,10 @@ struct PreviousInferences {
   const llvm::DenseSet<SlotFingerprint> &Nonnull = {};
 };
 
+/// Creates a solver with default parameters that is suitable for passing to
+/// `collectEvidenceFromDefinition()`.
+std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference();
+
 /// Analyze code (such as a function body or variable initializer) to infer
 /// nullability.
 ///
@@ -50,7 +56,7 @@ struct PreviousInferences {
 llvm::Error collectEvidenceFromDefinition(
     const Decl &, llvm::function_ref<EvidenceEmitter>, USRCache &USRCache,
     PreviousInferences PreviousInferences = {},
-    unsigned MaxSATIterations = 200'000);
+    const SolverFactory &MakeSolver = makeDefaultSolverForInference);
 
 /// Gathers evidence of a symbol's nullability from a declaration of it.
 ///

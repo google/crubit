@@ -27,6 +27,9 @@ namespace clang {
 namespace tidy {
 namespace nullability {
 
+/// Factory function for creating a solver implementation.
+using SolverFactory = std::function<std::unique_ptr<dataflow::Solver>()>;
+
 /// Analyses constructs in the source code to collect nullability information
 /// about pointers at each program point.
 class PointerNullabilityAnalysis
