@@ -997,8 +997,8 @@ class DefinitionEvidenceCollector {
       // We skip unwritten non-default member initializers for smart pointer
       // fields because we check the end block of the constructor for the
       // fields' nullability later. This allows us to avoid inferring Nullable
-      // for smart pointers without default initializers that are only ever (and
-      // always) assigned to a Nonnull value in constructor bodies.
+      // for smart pointers that are always assigned to a Nonnull value in
+      // constructor bodies.
       return;
     }
 
@@ -1096,44 +1096,6 @@ static bool hasAnyInferenceTargets(dataflow::ReferencedDecls &RD) {
 std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference() {
   constexpr std::int64_t MaxSATIterations = 200'000;
   return std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
-}
-
-// If D is a constructor definition, collect ASSIGNED_FROM_NULLABLE evidence for
-// smart pointer fields implicitly default-initialized and left nullable in the
-// exit block of the constructor body.
-static void collectEvidenceFromConstructorExitBlock(
-    const clang::Decl &MaybeConstructor, const Environment &ExitEnv,
-    llvm::function_ref<EvidenceEmitter> Emit) {
-  auto *Ctor = dyn_cast<CXXConstructorDecl>(&MaybeConstructor);
-  if (!Ctor) return;
-  for (auto *Initializer : Ctor->inits()) {
-    if (Initializer->isWritten() || Initializer->isInClassMemberInitializer()) {
-      // We collect evidence from explicitly-written member initializers and
-      // default member initializers elsewhere, when analyzing the
-      // constructor's CFGInitializers.
-      continue;
-    }
-    const FieldDecl *Field = Initializer->getAnyMember();
-    if (Field == nullptr) continue;
-    if (!isSupportedSmartPointerType(Field->getType())) continue;
-    // `Field` is a smart pointer field that was not explicitly
-    // initialized in the constructor member initializer list and does not
-    // have a default member initializer, so it was default constructed
-    // (and null) at the beginning of the constructor body.
-
-    // If it is still nullable in the constructor's exit block
-    // environment, we collect evidence that it was assigned from a
-    // nullable value.
-    const dataflow::PointerValue *PV = getPointerValueFromSmartPointer(
-        cast<dataflow::RecordStorageLocation>(
-            ExitEnv.getThisPointeeStorageLocation()->getChild(*Field)),
-        ExitEnv);
-    if (PV == nullptr) continue;
-    if (isNullable(*PV, ExitEnv)) {
-      Emit(*Field, Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-           Ctor->isImplicit() ? Field->getBeginLoc() : Ctor->getBeginLoc());
-    }
-  }
 }
 
 llvm::Error collectEvidenceFromDefinition(
@@ -1244,34 +1206,27 @@ llvm::Error collectEvidenceFromDefinition(
       getConcreteNullabilityOverrideFromPreviousInferences(
           ConcreteNullabilityCache, USRCache, PreviousInferences));
 
-  std::vector<
-      std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>>
-      Results;
-  if (llvm::Error Error = dataflow::runDataflowAnalysis(
-                              *ACFG, Analysis, Env,
-                              [&](const CFGElement &Element,
-                                  const dataflow::DataflowAnalysisState<
-                                      PointerNullabilityLattice> &State) {
-                                DefinitionEvidenceCollector::collect(
-                                    InferableSlots, InferableSlotsConstraint,
-                                    Emit, Element, State.Lattice, State.Env);
-                              })
-                              .moveInto(Results))
-    return Error;
+  llvm::Error Error =
+      dataflow::runDataflowAnalysis(
+          *ACFG, Analysis, Env,
+          [&](const CFGElement &Element,
+              const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
+                  &State) {
+            DefinitionEvidenceCollector::collect(
+                InferableSlots, InferableSlotsConstraint, Emit, Element,
+                State.Lattice, State.Env);
+          })
+          .takeError();
 
-  if (Solver->reachedLimit()) {
+  // TODO(b/330702908) For constructor declarations, collect
+  // ASSIGNED_FROM_NULLABLE evidence for smart pointer fields left uninitialized
+  // in the final block of the constructor body.
+
+  if (!Error && Solver->reachedLimit()) {
     return llvm::createStringError(llvm::errc::interrupted,
                                    "SAT solver reached iteration limit");
   }
-
-  if (Results.empty()) return llvm::Error::success();
-  if (std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>
-          &ExitBlockResult = Results[ACFG->getCFG().getExit().getBlockID()]) {
-    collectEvidenceFromConstructorExitBlock(Definition, ExitBlockResult->Env,
-                                            Emit);
-  }
-
-  return llvm::Error::success();
+  return Error;
 }
 
 static bool isOrIsConstructedFromNullPointerConstant(
