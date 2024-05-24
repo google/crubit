@@ -1585,20 +1585,25 @@ auto buildValueTransferer() {
       .Build();
 }
 
-// Ensure all prvalue expressions of raw pointer type have a `PointerValue`
+// Ensure that all expressions of raw pointer type have a `PointerValue`
 // associated with them so we can track nullability through them.
 void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
   auto S = Elt.getAs<CFGStmt>();
   if (!S) return;
 
   auto *E = dyn_cast<Expr>(S->getStmt());
-  if (E == nullptr || !E->isPRValue() ||
-      !isSupportedRawPointerType(E->getType()))
-    return;
+  if (E == nullptr || !isSupportedRawPointerType(E->getType())) return;
 
-  if (Env.getValue(*E) == nullptr)
-    // `createValue()` always produces a value for pointer types.
-    Env.setValue(*E, *Env.createValue(E->getType()));
+  if (E->isPRValue()) {
+    if (Env.getValue(*E) == nullptr)
+      // `createValue()` always produces a value for pointer types.
+      Env.setValue(*E, *Env.createValue(E->getType()));
+  } else {
+    StorageLocation *Loc = Env.getStorageLocation(*E);
+    if (Loc == nullptr) Loc = &Env.createStorageLocation(*E);
+    if (Env.getValue(*Loc) == nullptr)
+      Env.setValue(*Loc, *Env.createValue(E->getType()));
+  }
 }
 
 // Ensure that all expressions of smart pointer type have an underlying

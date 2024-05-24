@@ -123,5 +123,26 @@ TEST(PointerNullabilityTest, MergePointersWithoutNullState) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, CreatesConsistentPointerValueForField) {
+  // This is a repro for a false positive.
+  // The call to `some_func()` clears the value of `p_`.
+  // Our logic for creating new pointer values used to work only on prvalues,
+  // so it would create two independent pointer values for the two accesses of
+  // `p_`, and hence we would not be able to conclude that `p_` was null in the
+  // `p_->target()` call.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      Nullable<S*> const p_;
+      void target() {
+        some_func();
+
+        if (p_ != nullptr)
+          p_->target();  // p_ needs to be a member variable to repro.
+      }
+      void some_func();
+    };
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
