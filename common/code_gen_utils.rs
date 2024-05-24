@@ -131,13 +131,17 @@ impl NamespaceQualifier {
         Ok(quote! { #(#namespace_cc_idents::)* })
     }
 
-    pub fn format_with_cc_body(&self, body: TokenStream) -> Result<TokenStream> {
+    pub fn format_with_cc_body(
+        &self,
+        body: TokenStream,
+        attributes: Vec<TokenStream>,
+    ) -> Result<TokenStream> {
         if self.0.is_empty() {
             Ok(body)
         } else {
             let namespace_cc_idents = self.cc_idents()?;
             Ok(quote! {
-                __NEWLINE__ namespace #(#namespace_cc_idents)::* { __NEWLINE__
+                __NEWLINE__ #(#attributes)* namespace #(#namespace_cc_idents)::* { __NEWLINE__
                     #body
                 __NEWLINE__ }  __NEWLINE__
             })
@@ -592,7 +596,7 @@ pub mod tests {
     fn test_namespace_qualifier_format_with_cc_body_top_level_namespace() {
         let ns = NamespaceQualifier::new::<&str>([]);
         assert_cc_matches!(
-            ns.format_with_cc_body(quote! { cc body goes here }).unwrap(),
+            ns.format_with_cc_body(quote! { cc body goes here }, vec![]).unwrap(),
             quote! { cc body goes here },
         );
     }
@@ -601,7 +605,7 @@ pub mod tests {
     fn test_namespace_qualifier_format_with_cc_body_nested_namespace() {
         let ns = NamespaceQualifier::new(["foo", "bar", "baz"]);
         assert_cc_matches!(
-            ns.format_with_cc_body(quote! { cc body goes here }).unwrap(),
+            ns.format_with_cc_body(quote! { cc body goes here }, vec![]).unwrap(),
             quote! {
                 namespace foo::bar::baz {
                     cc body goes here
