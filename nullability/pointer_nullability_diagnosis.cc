@@ -58,6 +58,13 @@ using ::llvm::SmallVector;
 
 namespace {
 
+SmallVector<PointerNullabilityDiagnostic> untrackedError(
+    const Expr *E, PointerNullabilityDiagnostic::Context DiagCtx =
+                       PointerNullabilityDiagnostic::Context::Other) {
+  return {{PointerNullabilityDiagnostic::ErrorCode::Untracked, DiagCtx,
+           CharSourceRange::getTokenRange(E->getSourceRange())}};
+}
+
 // Diagnoses whether `E` violates the expectation that it is nonnull.
 SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
     absl::Nonnull<const Expr *> E, const Environment &Env,
@@ -78,8 +85,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
            "unsafe:\n";
     E->dump();
   });
-  return {{PointerNullabilityDiagnostic::ErrorCode::Untracked, DiagCtx,
-           CharSourceRange::getTokenRange(E->getSourceRange())}};
+  return untrackedError(E, DiagCtx);
 }
 
 // Diagnoses a conceptual assignment of LHS = RHS.
@@ -226,10 +232,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
   const Expr *GivenExpr = CE->getArg(0);
   const TypeNullability *MaybeComputed =
       State.Lattice.getExprNullability(GivenExpr);
-  if (MaybeComputed == nullptr)
-    return {{PointerNullabilityDiagnostic::ErrorCode::Untracked,
-             PointerNullabilityDiagnostic::Context::Other,
-             CharSourceRange::getTokenRange(CE->getSourceRange())}};
+  if (MaybeComputed == nullptr) return untrackedError(CE);
 
   if (*MaybeComputed == Expected) return {};
 
