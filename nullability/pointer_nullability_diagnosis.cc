@@ -505,7 +505,6 @@ diagnosePointerNullability(const ValueDecl *VD,
   auto CFG = dataflow::AdornedCFG::build(*Func);
   if (!CFG) return CFG.takeError();
 
-  auto Diagnoser = pointerNullabilityDiagnoser();
   std::unique_ptr<dataflow::Solver> Solver = MakeSolver();
   dataflow::DataflowAnalysisContext AnalysisContext(*Solver);
   Environment Env(AnalysisContext, *Func);
