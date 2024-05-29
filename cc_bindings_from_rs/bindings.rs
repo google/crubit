@@ -1817,7 +1817,7 @@ fn format_trait_thunks<'tcx>(
     for method in methods {
         let substs = {
             let generics = tcx.generics_of(method.def_id);
-            if generics.params.iter().any(|p| p.kind.is_ty_or_const()) {
+            if generics.own_params.iter().any(|p| p.kind.is_ty_or_const()) {
                 // Note that lifetime-generic methods are ok:
                 // * they are handled by `format_thunk_decl` and `format_thunk_impl`
                 // * the lifetimes are erased by `ty::Instance::mono` and *seem* to be erased by
