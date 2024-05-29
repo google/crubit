@@ -22,6 +22,7 @@ bzl_library(
         ":providers_bzl",
         ":rust_bindings_from_cc_cli_flag_aspect_hint",
         ":rust_bindings_from_cc_utils_bzl",
+        "//third_party/protobuf/bazel/common:proto_info_bzl",
     ],
 )
 

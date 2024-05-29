@@ -1,7 +1,6 @@
 # Part of the Crubit project, under the Apache License v2.0 with LLVM
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-
 """
 The tool creates Rust source code with the C++ API projection as well as implementation of the API
 projection. See <internal link> and <internal link> for
@@ -31,6 +30,7 @@ load(
     "bindings_attrs",
     "generate_and_compile_bindings",
 )
+load("//third_party/protobuf/bazel/common:proto_info.bzl", "ProtoInfo")
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
 # `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
