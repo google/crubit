@@ -9,11 +9,9 @@
 #include <string>
 #include <vector>
 
-#include "nullability/inference/ctn_replacement_macros.h"
+#include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
-#include "nullability/inference/replace_macros.h"
 #include "nullability/inference/slot_fingerprint.h"
-#include "nullability/test/test_headers.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -22,7 +20,6 @@
 #include "clang/ASTMatchers/ASTMatchersMacros.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
-#include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/DenseMap.h"
@@ -104,25 +101,6 @@ testing::Matcher<const Evidence&> evidence(
   return isEvidenceMatcher(S, Kind, SymbolMatcher);
 }
 
-clang::TestInputs getInputsWithAnnotationDefinitions(llvm::StringRef Source) {
-  clang::TestInputs Inputs = Source;
-  Inputs.Language = TestLanguage::Lang_CXX20;
-  for (const auto& Entry :
-       llvm::ArrayRef(test_headers_create(), test_headers_size()))
-    Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
-  for (const auto& Entry : llvm::ArrayRef(ctn_replacement_macros_create(),
-                                          ctn_replacement_macros_size()))
-    Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
-  Inputs.ExtraArgs.push_back("-I.");
-  Inputs.ExtraArgs.push_back("-include");
-  Inputs.ExtraArgs.push_back("nullability_annotations.h");
-  Inputs.ExtraArgs.push_back("-include");
-  Inputs.ExtraArgs.push_back(std::string(ReplacementMacrosHeaderFileName));
-
-  Inputs.MakeAction = [&]() { return std::make_unique<ReplaceMacrosAction>(); };
-  return Inputs;
-}
-
 std::vector<Evidence> collectFromDefinition(
     clang::TestAST& AST, const Decl& Definition,
     PreviousInferences InputInferences = {}) {
@@ -142,7 +120,7 @@ std::vector<Evidence> collectFromDefinition(
 std::vector<Evidence> collectFromDefinitionNamed(
     llvm::StringRef TargetName, llvm::StringRef Source,
     PreviousInferences InputInferences = {}) {
-  clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
+  clang::TestAST AST(getAugmentedTestInputs(Source));
   const Decl& Definition =
       *dataflow::test::findValueDecl(AST.context(), TargetName);
   return collectFromDefinition(AST, Definition, InputInferences);
@@ -160,7 +138,7 @@ template <typename MatcherT>
 std::vector<Evidence> collectFromDefinitionMatching(
     MatcherT Matcher, llvm::StringRef Source,
     PreviousInferences InputInferences = {}) {
-  clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
+  clang::TestAST AST(getAugmentedTestInputs(Source));
   const Decl& Definition =
       *selectFirst<Decl>("d", match(Matcher.bind("d"), AST.context()));
   return collectFromDefinition(AST, Definition, InputInferences);
@@ -168,7 +146,7 @@ std::vector<Evidence> collectFromDefinitionMatching(
 
 std::vector<Evidence> collectFromTargetDecl(llvm::StringRef Source) {
   std::vector<Evidence> Results;
-  clang::TestAST AST(getInputsWithAnnotationDefinitions(Source));
+  clang::TestAST AST(getAugmentedTestInputs(Source));
   USRCache USRCache;
   collectEvidenceFromTargetDeclaration(
       *dataflow::test::findValueDecl(AST.context(), "target"),
@@ -2603,7 +2581,7 @@ TEST(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
       *q;
     }
   )cc";
-  clang::TestAST AST(getInputsWithAnnotationDefinitions(Src));
+  clang::TestAST AST(getAugmentedTestInputs(Src));
   std::vector<Evidence> Results;
   USRCache UsrCache;
   EXPECT_THAT_ERROR(
@@ -2874,7 +2852,7 @@ TEST(EvidenceSitesTest, Lambdas) {
 }
 
 TEST(EvidenceSitesTest, GlobalVariables) {
-  TestAST AST = getInputsWithAnnotationDefinitions(R"cc(
+  TestAST AST = getAugmentedTestInputs(R"cc(
 #include <memory>
     int* x = true ? nullptr : nullptr;
     int* y;
@@ -2918,7 +2896,7 @@ TEST(EvidenceSitesTest, StaticMemberVariables) {
 }
 
 TEST(EvidenceSitesTest, NonStaticMemberVariables) {
-  TestAST AST = getInputsWithAnnotationDefinitions(R"cc(
+  TestAST AST = getAugmentedTestInputs(R"cc(
 #include <memory>
     struct S {
       int* a = nullptr;

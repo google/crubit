@@ -35,13 +35,11 @@ cc_test(
     name = "collect_evidence_test",
     srcs = ["collect_evidence_test.cc"],
     deps = [
-        ":clang_tidy_nullability_replacement_macros",
+        ":augmented_test_inputs",
         ":collect_evidence",
         ":inference_cc_proto",
-        ":replace_macros",
         ":slot_fingerprint",
         "//nullability:type_nullability",
-        "//nullability/test:test_headers",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
@@ -154,6 +152,7 @@ cc_test(
     name = "eligible_ranges_test",
     srcs = ["eligible_ranges_test.cc"],
     deps = [
+        ":augmented_test_inputs",
         ":eligible_ranges",
         ":inference_cc_proto",
         "//nullability:type_nullability",
@@ -185,13 +184,11 @@ cc_test(
     name = "infer_tu_test",
     srcs = ["infer_tu_test.cc"],
     deps = [
-        ":clang_tidy_nullability_replacement_macros",
+        ":augmented_test_inputs",
         ":infer_tu",
         ":inference_cc_proto",
-        ":replace_macros",
         "//nullability:proto_matchers",
         "//nullability:type_nullability",
-        "//nullability/test:test_headers",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
@@ -261,6 +258,20 @@ cc_library(
         "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",
         "@llvm-project//clang:lex",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "augmented_test_inputs",
+    testonly = True,
+    srcs = ["augmented_test_inputs.cc"],
+    hdrs = ["augmented_test_inputs.h"],
+    deps = [
+        ":clang_tidy_nullability_replacement_macros",
+        ":replace_macros",
+        "//nullability/test:test_headers",
+        "@llvm-project//clang:testing",
         "@llvm-project//llvm:Support",
     ],
 )

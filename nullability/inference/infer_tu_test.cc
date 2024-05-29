@@ -5,14 +5,11 @@
 #include "nullability/inference/infer_tu.h"
 
 #include <optional>
-#include <string>
 #include <vector>
 
-#include "nullability/inference/ctn_replacement_macros.h"
+#include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
-#include "nullability/inference/replace_macros.h"
 #include "nullability/proto_matchers.h"
-#include "nullability/test/test_headers.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -20,7 +17,6 @@
 #include "clang/ASTMatchers/ASTMatchersMacros.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Index/USRGeneration.h"
-#include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
@@ -57,24 +53,7 @@ class InferTUTest : public ::testing::Test {
   std::optional<TestAST> AST;
 
   void build(llvm::StringRef Code) {
-    TestInputs Inputs = Code;
-    Inputs.Language = TestLanguage::Lang_CXX17;
-    for (const auto &Entry :
-         llvm::ArrayRef(test_headers_create(), test_headers_size()))
-      Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
-    for (const auto &Entry : llvm::ArrayRef(ctn_replacement_macros_create(),
-                                            ctn_replacement_macros_size()))
-      Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
-    Inputs.ExtraArgs.push_back("-include");
-    Inputs.ExtraArgs.push_back("nullability_annotations.h");
-    Inputs.ExtraArgs.push_back("-include");
-    Inputs.ExtraArgs.push_back(std::string(ReplacementMacrosHeaderFileName));
-    Inputs.ExtraArgs.push_back("-I.");
-
-    Inputs.MakeAction = [&]() {
-      return std::make_unique<ReplaceMacrosAction>();
-    };
-    AST.emplace(Inputs);
+    AST.emplace(getAugmentedTestInputs(Code));
   }
 
   auto infer() { return inferTU(AST->context()); }
