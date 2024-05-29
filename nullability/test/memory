@@ -119,6 +119,16 @@ unique_ptr<T> make_unique_for_overwrite(size_t);
 template <class T, class Deleter>
 void swap(unique_ptr<T, Deleter> &, unique_ptr<T, Deleter> &);
 
+template <class T>
+bool operator==(const unique_ptr<T> &, std::nullptr_t);
+
+// C++20 and later do not define the following overloads because they are
+// provided by rewritten candidates instead.
+#if __cplusplus < 202002L
+template <class T>
+bool operator==(std::nullptr_t, const unique_ptr<T> &);
+#endif  // __cplusplus < 202002L
+
 template <class T> class weak_ptr;
 
 // This definition of `shared_ptr` only introduces the members that are used in

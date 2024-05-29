@@ -28,6 +28,8 @@ struct PointerNullabilityDiagnostic {
     /// Nullability annotations are inconsistent with a previous declaration.
     /// `NoteRange` refers to the location of the previous declaration.
     InconsistentAnnotations,
+    /// A moved-from nonnull pointer was accessed.
+    AccessingMovedFromNonnullPointer,
     /// A pointer-typed expression was encountered with no corresponding model.
     Untracked,
     /// A nullability assertion was violated.

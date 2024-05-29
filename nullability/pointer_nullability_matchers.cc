@@ -69,12 +69,6 @@ using ast_matchers::unaryOperator;
 using ast_matchers::unless;
 using ast_matchers::internal::Matcher;
 
-namespace {
-
-AST_MATCHER(QualType, isNullPtrType) { return Node->isNullPtrType(); }
-
-}  // namespace
-
 Matcher<Stmt> isPointerExpr() { return expr(hasType(isSupportedRawPointer())); }
 Matcher<Stmt> isNullPointerLiteral() {
   return implicitCastExpr(anyOf(hasCastKind(CK_NullToPointer),

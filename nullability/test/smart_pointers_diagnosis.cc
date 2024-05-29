@@ -306,5 +306,62 @@ TEST(SmartPointerTest, ConditionalSmartPointer) {
   )cc"));
 }
 
+TEST(SmartPointerTest, MovedFromNonnullSmartPointer) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+#include <utility>
+    struct S {
+      int i;
+    };
+    void target(Nonnull<std::unique_ptr<S>> NonnullPtr) {
+      // Moving from a nonnull smart pointer is legal.
+      std::unique_ptr<S> Local = std::move(NonnullPtr);
+
+      // Moving from a moved-from nonnull smart pointer is not legal.
+      // This also serves as a more general test that passing a moved-from
+      // nonnull smart pointer as an argument is always disallowed, even if
+      // the parameter is not annotated nonnull.
+      Local = std::move(NonnullPtr);  // [[unsafe]]
+
+      // Calling any member function or operator on a moved-from nonnull
+      // smart pointer is not legal, with two exceptions:
+      // - operator=
+      // - reset() (non-`nullptr_t` overload)
+      // We don't test all member functions and operators exhaustively, but we
+      // test a few to satisfy ourselves that we have the necessary generality.
+      NonnullPtr.get();  // [[unsafe]]
+      // Do a test with a pointer receiver.
+      (&NonnullPtr)->get();       // [[unsafe]]
+      NonnullPtr.release();       // [[unsafe]]
+      NonnullPtr.reset(nullptr);  // [[unsafe]]
+      *NonnullPtr;                // [[unsafe]]
+      NonnullPtr->i;              // [[unsafe]]
+      NonnullPtr == nullptr;      // [[unsafe]]
+      nullptr == NonnullPtr;      // [[unsafe]]
+      // Test `operator bool`.
+      if (NonnullPtr)  // [[unsafe]]
+        ;
+
+      // Assigning to a moved-from nonnull smart pointer is legal.
+      // Make sure that we also allow this if the left-hand side contains
+      // additional nodes such as parentheses or casts.
+      NonnullPtr = std::make_unique<S>();
+      Local = std::move(NonnullPtr);
+      (NonnullPtr) = std::make_unique<S>();
+      Local = std::move(NonnullPtr);
+      static_cast<std::unique_ptr<S> &>(NonnullPtr) = std::make_unique<S>();
+
+      // Calling non-nullptr reset() on a moved-from nonnull smart pointer is
+      // legal.
+      Local = std::move(NonnullPtr);
+      NonnullPtr.reset(new S());
+      Local = std::move(NonnullPtr);
+      (NonnullPtr).reset(new S());
+      Local = std::move(NonnullPtr);
+      static_cast<std::unique_ptr<S> &>(NonnullPtr).reset(new S());
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

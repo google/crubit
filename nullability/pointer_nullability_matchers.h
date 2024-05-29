@@ -34,6 +34,8 @@ AST_MATCHER(Stmt, isRawPointerValueInit) {
          isSupportedRawPointerType(ValueInit->getType());
 }
 
+AST_MATCHER(QualType, isNullPtrType) { return Node->isNullPtrType(); }
+
 ast_matchers::internal::Matcher<Stmt> isPointerExpr();
 ast_matchers::internal::Matcher<Stmt> isMemberOfPointerType();
 ast_matchers::internal::Matcher<Stmt> isPointerArrow();
