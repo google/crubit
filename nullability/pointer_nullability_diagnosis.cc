@@ -28,6 +28,7 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
+#include "clang/Analysis/FlowSensitive/ASTOps.h"
 #include "clang/Analysis/FlowSensitive/AdornedCFG.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
@@ -62,6 +63,7 @@ using ast_matchers::expr;
 using ast_matchers::findAll;
 using ast_matchers::hasArgument;
 using ast_matchers::hasType;
+using ast_matchers::initListExpr;
 using ast_matchers::match;
 using ast_matchers::MatchFinder;
 using ast_matchers::onImplicitObjectArgument;
@@ -69,6 +71,7 @@ using ast_matchers::unless;
 using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
 using dataflow::PointerValue;
+using dataflow::RecordInitListHelper;
 using dataflow::RecordStorageLocation;
 using ::llvm::SmallVector;
 
@@ -375,6 +378,25 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
       PointerNullabilityDiagnostic::Context::Initializer);
 }
 
+SmallVector<PointerNullabilityDiagnostic> diagnoseInitListExpr(
+    absl::Nonnull<const InitListExpr *> ILE,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  if (!ILE->getType()->isRecordType()) return {};
+
+  if (ILE->isSemanticForm() && ILE->isTransparent()) return {};
+
+  RecordInitListHelper InitListHelper(ILE);
+  SmallVector<PointerNullabilityDiagnostic> Diagnostics;
+  for (auto [Field, Init] : InitListHelper.field_inits()) {
+    Diagnostics.append(diagnoseAssignmentLike(
+        Field->getType(), getTypeNullability(*Field, State.Lattice.defaults()),
+        Init, State.Env, *Result.Context,
+        PointerNullabilityDiagnostic::Context::Initializer));
+  }
+
+  return Diagnostics;
+}
+
 SmallVector<PointerNullabilityDiagnostic> diagnoseMovedFromNonnullSmartPointer(
     absl::Nonnull<const Expr *> E, const MatchFinder::MatchResult &,
     const DiagTransferState &State) {
@@ -532,6 +554,8 @@ DiagTransferFunc pointerNullabilityDiagnoser(
           // Check compatibility of member initializers.
           .CaseOfCFGInit<CXXCtorInitializer>(isCtorMemberInitializer(),
                                              diagnoseMemberInitializer)
+          // Check compatibility of initializer lists.
+          .CaseOfCFGStmt<InitListExpr>(initListExpr(), diagnoseInitListExpr)
           .Build();
 
   // We need a second transfer function to diagnose moved-from nonnull smart

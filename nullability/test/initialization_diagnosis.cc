@@ -38,5 +38,21 @@ TEST(PointerNullabilityTest, TransitiveNullCheck) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, InitializerList) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      int* _Nonnull p;
+    };
+
+    void target() {
+      S{nullptr};       // [[unsafe]]
+      S{.p = nullptr};  // [[unsafe]]
+
+      S{new int};
+      S{.p = new int};
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
