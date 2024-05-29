@@ -16,6 +16,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "bindings",
     srcs = ["bindings.rs"],
+    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
     deps = [
         ":crubit_attr",
         ":run_compiler",
@@ -33,6 +34,7 @@ rust_library(
 crubit_rust_test(
     name = "bindings_test",
     crate = ":bindings",
+    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
     deps = [
         ":run_compiler_test_support",
         "//common:token_stream_matchers",
@@ -44,6 +46,7 @@ crubit_rust_binary(
     name = "cc_bindings_from_rs",
     srcs = ["cc_bindings_from_rs.rs"],
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
+    rustc_flags = ["-Zallow-features=never_type,rustc_private"],
     visibility = [
         "//visibility:public",
     ],
@@ -62,6 +65,7 @@ crubit_rust_binary(
 crubit_rust_test(
     name = "cc_bindings_from_rs_test",
     crate = ":cc_bindings_from_rs",
+    rustc_flags = ["-Zallow-features=never_type,rustc_private"],
     deps = [
         ":run_compiler_test_support",
         "@crate_index//:regex",
@@ -86,6 +90,7 @@ rust_library(
     srcs = [
         "cmdline.rs",
     ],
+    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         "@crate_index//:anyhow",
         "@crate_index//:clap",
@@ -95,6 +100,7 @@ rust_library(
 crubit_rust_test(
     name = "cmdline_test",
     crate = ":cmdline",
+    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         ":run_compiler_test_support",
         "@crate_index//:itertools",
@@ -105,6 +111,7 @@ crubit_rust_test(
 rust_library(
     name = "crubit_attr",
     srcs = ["crubit_attr.rs"],
+    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         "@crate_index//:anyhow",
         "@crate_index//:once_cell",
@@ -114,6 +121,7 @@ rust_library(
 crubit_rust_test(
     name = "crubit_attr_test",
     crate = ":crubit_attr",
+    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [":run_compiler_test_support"],
 )
 
@@ -122,6 +130,7 @@ rust_library(
     srcs = [
         "run_compiler.rs",
     ],
+    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         "@crate_index//:anyhow",
         "@crate_index//:either",
@@ -132,6 +141,7 @@ rust_library(
 crubit_rust_test(
     name = "run_compiler_test",
     crate = ":run_compiler",
+    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         ":run_compiler_test_support",
         "@crate_index//:tempfile",
@@ -157,6 +167,7 @@ rust_library(
 crubit_rust_test(
     name = "run_compiler_test_support_test",
     crate = ":run_compiler_test_support",
+    rustc_flags = ["-Zallow-features=negative_impls,rustc_private"],
     rustc_flags = ["--cfg=oss"],
 )
 

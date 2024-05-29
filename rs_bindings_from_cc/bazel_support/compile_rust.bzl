@@ -95,7 +95,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage)
             compile_data_targets = depset([]),
             owner = ctx.label,
         ),
-        rust_flags = ctx.attr._extra_rustc_flags[ExtraRustcFlagsInfo].extra_rustc_flags,
+        rust_flags = ctx.attr._extra_rustc_flags[ExtraRustcFlagsInfo].extra_rustc_flags + ["-Zallow-features=custom_inner_attributes,impl_trait_in_assoc_type,register_tool,negative_impls,vec_into_raw_parts,extern_types,arbitrary_self_types"],
         output_hash = output_hash,
         force_all_deps_direct = True,
         include_coverage = include_coverage,
