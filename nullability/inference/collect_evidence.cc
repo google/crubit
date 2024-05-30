@@ -777,7 +777,9 @@ class DefinitionEvidenceCollector {
     if (getNullability(PointerValue, Env, &InferableSlotsConstraint) ==
         NullabilityKind::Nullable) {
       const Formula &TypeIsNullable = TypeNullability[0].isNullable(A);
-      if (!Env.allows(TypeIsNullable)) return;
+      // If the flow conditions already imply that the type is nullable, or
+      // that the type is not nullable, we can skip collecting evidence.
+      if (Env.proves(TypeIsNullable) || !Env.allows(TypeIsNullable)) return;
 
       for (auto &IS : InferableSlots) {
         auto &Implication = A.makeImplies(
