@@ -268,8 +268,8 @@ cc_test(
 )
 
 cc_test(
-    name = "pointer_arithmetic",
-    srcs = ["pointer_arithmetic.cc"],
+    name = "pointer_arithmetic_diagnosis",
+    srcs = ["pointer_arithmetic_diagnosis.cc"],
     deps = [
         ":check_diagnostics",
         "@llvm-project//third-party/unittest:gtest",
