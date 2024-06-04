@@ -47,6 +47,71 @@ TEST(SmartPointerTest, Subscript) {
   )cc"));
 }
 
+TEST(SmartPointerTest, Assignment) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    void target(Nonnull<std::unique_ptr<int>> NonnullPtr,
+                Nullable<std::unique_ptr<int>> NullablePtr,
+                std::unique_ptr<int> UnannotatedPtr) {
+      NonnullPtr = std::make_unique<int>();
+      NonnullPtr = nullptr;  // [[unsafe]]
+      NullablePtr = nullptr;
+      UnannotatedPtr = nullptr;
+    }
+  )cc"));
+}
+
+TEST(SmartPointerTest, ResetUniquePtr) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    void target(Nonnull<std::unique_ptr<int>> NonnullPtr,
+                Nullable<std::unique_ptr<int>> NullablePtr,
+                std::unique_ptr<int> UnannotatedPtr) {
+      NonnullPtr.reset();  // [[unsafe]]
+      NullablePtr.reset();
+      UnannotatedPtr.reset();
+
+      (&NonnullPtr)->reset();  // [[unsafe]]
+      (&NullablePtr)->reset();
+      (&UnannotatedPtr)->reset();
+
+      NonnullPtr.reset(nullptr);  // [[unsafe]]
+      NullablePtr.reset(nullptr);
+      UnannotatedPtr.reset(nullptr);
+
+      NonnullPtr.reset(new int);
+    }
+  )cc"));
+}
+
+TEST(SmartPointerTest, ResetSharedPtr) {
+  // `shared_ptr` has different `reset()` overloads than `unique_ptr`, so test
+  // it too.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    void target(Nonnull<std::shared_ptr<int>> NonnullPtr,
+                Nullable<std::shared_ptr<int>> NullablePtr,
+                std::shared_ptr<int> UnannotatedPtr) {
+      NonnullPtr.reset();  // [[unsafe]]
+      NullablePtr.reset();
+      UnannotatedPtr.reset();
+
+      (&NonnullPtr)->reset();  // [[unsafe]]
+      (&NullablePtr)->reset();
+      (&UnannotatedPtr)->reset();
+
+      // Cannot pass `nullptr` directly to `shared_ptr::reset()` because it is
+      // not a pointer type.
+      int *NullIntPtr = nullptr;
+      NonnullPtr.reset(NullIntPtr);  // [[unsafe]]
+      NullablePtr.reset(NullIntPtr);
+      UnannotatedPtr.reset(NullIntPtr);
+
+      NonnullPtr.reset(new int);
+    }
+  )cc"));
+}
+
 TEST(SmartPointerTest, FunctionParameters) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>

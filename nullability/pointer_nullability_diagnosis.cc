@@ -176,6 +176,49 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssignment(
       *Result.Context, PointerNullabilityDiagnostic::Context::Assignment);
 }
 
+SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerAssignment(
+    absl::Nonnull<const CXXOperatorCallExpr *> Op,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  const TypeNullability *LHSNullability =
+      State.Lattice.getExprNullability(Op->getArg(0));
+  if (!LHSNullability) return {};
+
+  return diagnoseAssignmentLike(
+      Op->getArg(0)->getType(), *LHSNullability,
+      // Because `State` reflects the state after the assignment has already
+      // happened, we need to get the assigned value from the LHS, i.e.
+      // `Op->getArg(0)`. Using `Op->getArg(1)` doesn't work, because it is null
+      // after a move-assignment.
+      Op->getArg(0), State.Env, *Result.Context,
+      PointerNullabilityDiagnostic::Context::Assignment);
+}
+
+SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerReset(
+    absl::Nonnull<const CXXMemberCallExpr *> MCE,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  const TypeNullability *ObjArgNullability =
+      State.Lattice.getExprNullability(MCE->getImplicitObjectArgument());
+  if (!ObjArgNullability) return {};
+
+  ArrayRef<PointerTypeNullability> ReceiverNullability = *ObjArgNullability;
+  if (MCE->getImplicitObjectArgument()->getType()->isPointerType())
+    ReceiverNullability = ReceiverNullability.drop_front();
+
+  if (MCE->getNumArgs() == 0 ||
+      (MCE->getNumArgs() == 1 && MCE->getArg(0)->getType()->isNullPtrType()) ||
+      (MCE->getNumArgs() == 1 && MCE->getArg(0)->isDefaultArgument())) {
+    if (ReceiverNullability.front().concrete() == NullabilityKind::NonNull)
+      return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
+               PointerNullabilityDiagnostic::Context::Assignment,
+               CharSourceRange::getTokenRange(MCE->getSourceRange())}};
+    return {};
+  }
+
+  return diagnoseAssignmentLike(
+      MCE->getObjectType(), ReceiverNullability, MCE->getArg(0), State.Env,
+      *Result.Context, PointerNullabilityDiagnostic::Context::Assignment);
+}
+
 // Diagnoses whether any of the arguments are incompatible with the
 // corresponding type in the function prototype.
 // ParmDecls is best-effort and used only for param names in diagnostics.
@@ -561,10 +604,14 @@ DiagTransferFunc pointerNullabilityDiagnoser(
           .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
           .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("->"),
                                               diagnoseSmartPointerDereference)
-          // (=)
+          // (=) / `reset()`
           .CaseOfCFGStmt<BinaryOperator>(
               binaryOperator(hasOperatorName("="), hasLHS(isPointerExpr())),
               diagnoseAssignment)
+          .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("="),
+                                              diagnoseSmartPointerAssignment)
+          .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("reset"),
+                                            diagnoseSmartPointerReset)
           // Check compatibility of parameter assignments and return values.
           .CaseOfCFGStmt<CallExpr>(callExpr(), diagnoseCallExpr)
           .CaseOfCFGStmt<CXXConstructExpr>(cxxConstructExpr(),

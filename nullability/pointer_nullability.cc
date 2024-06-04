@@ -60,7 +60,8 @@ absl::Nullable<PointerValue *> getSmartPointerValue(
 
 absl::Nullable<dataflow::PointerValue *> getPointerValue(
     absl::Nonnull<const Expr *> PointerExpr, const Environment &Env) {
-  if (isSupportedRawPointerType(PointerExpr->getType()))
+  QualType Ty = PointerExpr->getType();
+  if (Ty->isNullPtrType() || isSupportedRawPointerType(Ty))
     return getRawPointerValue(PointerExpr, Env);
   return getSmartPointerValue(PointerExpr, Env);
 }
