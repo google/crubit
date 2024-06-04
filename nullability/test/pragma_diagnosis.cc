@@ -49,7 +49,7 @@ TEST(PragmaDiagnosisTest, Assignment) {
     int *v;
     void target(int *_Nonnull nn, int *_Nullable n, int *q) {
       v = nn;
-      v = n;  // TODO(b/332569977): unsafe
+      v = n;  // [[unsafe]]
       v = q;
     }
   )cc"));

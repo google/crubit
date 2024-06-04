@@ -46,8 +46,9 @@ TEST(PointerNullabilityTest, AssignFromNoThrowNewMakesNonnullNullable) {
     void target() {
       int i = 0;
       int *_Nonnull p = &i;
-      p = new (std::nothrow) int;
-      *p;  // [[unsafe]]
+      // The assignment itself is unsafe because the type of `p` is nonnull.
+      p = new (std::nothrow) int;  // [[unsafe]]
+      *p;                          // [[unsafe]]
     }
   )cc"));
 }

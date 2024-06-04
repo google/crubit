@@ -54,6 +54,7 @@
 namespace clang::tidy::nullability {
 
 using ast_matchers::anyOf;
+using ast_matchers::binaryOperator;
 using ast_matchers::BoundNodes;
 using ast_matchers::callExpr;
 using ast_matchers::cxxConstructExpr;
@@ -62,6 +63,8 @@ using ast_matchers::cxxOperatorCallExpr;
 using ast_matchers::expr;
 using ast_matchers::findAll;
 using ast_matchers::hasArgument;
+using ast_matchers::hasLHS;
+using ast_matchers::hasOperatorName;
 using ast_matchers::hasType;
 using ast_matchers::initListExpr;
 using ast_matchers::match;
@@ -159,6 +162,18 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
   return diagnoseNonnullExpected(
       MemberExpr->getBase(), State.Env,
       PointerNullabilityDiagnostic::Context::NullableDereference);
+}
+
+SmallVector<PointerNullabilityDiagnostic> diagnoseAssignment(
+    absl::Nonnull<const BinaryOperator *> Op,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  const TypeNullability *LHSNullability =
+      State.Lattice.getExprNullability(Op->getLHS());
+  if (!LHSNullability) return {};
+
+  return diagnoseAssignmentLike(
+      Op->getLHS()->getType(), *LHSNullability, Op->getRHS(), State.Env,
+      *Result.Context, PointerNullabilityDiagnostic::Context::Assignment);
 }
 
 // Diagnoses whether any of the arguments are incompatible with the
@@ -546,6 +561,10 @@ DiagTransferFunc pointerNullabilityDiagnoser(
           .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
           .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("->"),
                                               diagnoseSmartPointerDereference)
+          // (=)
+          .CaseOfCFGStmt<BinaryOperator>(
+              binaryOperator(hasOperatorName("="), hasLHS(isPointerExpr())),
+              diagnoseAssignment)
           // Check compatibility of parameter assignments and return values.
           .CaseOfCFGStmt<CallExpr>(callExpr(), diagnoseCallExpr)
           .CaseOfCFGStmt<CXXConstructExpr>(cxxConstructExpr(),

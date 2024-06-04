@@ -262,14 +262,21 @@ TEST(PointerNullabilityTest, ArraySubscript) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, AssignmentToNonnull) {
-  // TODO(b/307797224): This test demonstrates that we currently allow
-  // null to be assigned to a nonnull pointer; in other words, within a
-  // function, types are flow-sensitive. It's not clear, however, whether this
-  // is the behavior we want. We should resolve this one way or the other.
+TEST(PointerNullabilityTest, Assignment) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nonnull nonnull) {
-      nonnull = nullptr;
+    void target(int *_Nonnull nonnull, int *_Nullable nullable, int *unknown) {
+      nonnull = new int;
+      nonnull = nullptr;  // [[unsafe]]
+
+      nullable = new int;
+      nullable = nullptr;
+
+      unknown = new int;
+      unknown = nullptr;
+
+      // Check that we can handle cases where there isn't just a simple
+      // `DeclRefExpr` on the left-hand side.
+      *(&nonnull) = nullptr;  // [[unsafe]]
     }
   )cc"));
 }

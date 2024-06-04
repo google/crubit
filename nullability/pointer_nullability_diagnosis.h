@@ -42,6 +42,8 @@ struct PointerNullabilityDiagnostic {
     NullableDereference,
     /// Initializing a variable.
     Initializer,
+    /// Assigning to a pointer.
+    Assignment,
     /// Value of a return statement.
     ReturnValue,
     /// Function argument.
