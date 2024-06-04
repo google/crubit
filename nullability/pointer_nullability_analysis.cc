@@ -247,10 +247,10 @@ PointerTypeNullability getPointerTypeNullability(
       FromClang && *FromClang != NullabilityKind::Unspecified)
     return *FromClang;
 
-  if (const auto *NonFlowSensitive = L.getExprNullability(E)) {
-    if (!NonFlowSensitive->empty())
+  if (const auto *TyNullability = L.getTypeNullability(E)) {
+    if (!TyNullability->empty())
       // Return the nullability of the topmost pointer in the type.
-      return NonFlowSensitive->front();
+      return TyNullability->front();
   }
 
   return NullabilityKind::Unspecified;
@@ -697,9 +697,9 @@ void transferValue_SmartPointerArrowMemberExpr(
   }
 
   PointerTypeNullability Nullability = NullabilityKind::Unspecified;
-  if (const auto *ExprNullability =
-          State.Lattice.getExprNullability(ME->getBase())) {
-    if (ExprNullability->size() >= 2) Nullability = (*ExprNullability)[1];
+  if (const auto *TyNullability =
+          State.Lattice.getTypeNullability(ME->getBase())) {
+    if (TyNullability->size() >= 2) Nullability = (*TyNullability)[1];
   }
 
   initPointerNullState(*PtrVal, State.Env.getDataflowAnalysisContext(),

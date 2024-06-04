@@ -168,7 +168,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssignment(
     absl::Nonnull<const BinaryOperator *> Op,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   const TypeNullability *LHSNullability =
-      State.Lattice.getExprNullability(Op->getLHS());
+      State.Lattice.getTypeNullability(Op->getLHS());
   if (!LHSNullability) return {};
 
   return diagnoseAssignmentLike(
@@ -180,7 +180,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerAssignment(
     absl::Nonnull<const CXXOperatorCallExpr *> Op,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   const TypeNullability *LHSNullability =
-      State.Lattice.getExprNullability(Op->getArg(0));
+      State.Lattice.getTypeNullability(Op->getArg(0));
   if (!LHSNullability) return {};
 
   return diagnoseAssignmentLike(
@@ -197,7 +197,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerReset(
     absl::Nonnull<const CXXMemberCallExpr *> MCE,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   const TypeNullability *ObjArgNullability =
-      State.Lattice.getExprNullability(MCE->getImplicitObjectArgument());
+      State.Lattice.getTypeNullability(MCE->getImplicitObjectArgument());
   if (!ObjArgNullability) return {};
 
   ArrayRef<PointerTypeNullability> ReceiverNullability = *ObjArgNullability;
@@ -309,7 +309,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
   // expected one.
   const Expr *GivenExpr = CE->getArg(0);
   const TypeNullability *MaybeComputed =
-      State.Lattice.getExprNullability(GivenExpr);
+      State.Lattice.getTypeNullability(GivenExpr);
   if (MaybeComputed == nullptr) return untrackedError(CE);
 
   if (*MaybeComputed == Expected) return {};
@@ -345,7 +345,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
 
   const Expr *Callee = CE->getCallee();
   auto *CalleeNullabilityPtr =
-      State.Lattice.getExprNullability(CE->getCallee());
+      State.Lattice.getTypeNullability(CE->getCallee());
   if (!CalleeNullabilityPtr) return {};
   const FunctionProtoType *CalleeType;
   ArrayRef CalleeNullability = *CalleeNullabilityPtr;  // Matches CalleeType.
@@ -458,7 +458,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseInitListExpr(
 SmallVector<PointerNullabilityDiagnostic> diagnoseMovedFromNonnullSmartPointer(
     absl::Nonnull<const Expr *> E, const MatchFinder::MatchResult &,
     const DiagTransferState &State) {
-  const TypeNullability *Nullability = State.Lattice.getExprNullability(E);
+  const TypeNullability *Nullability = State.Lattice.getTypeNullability(E);
   if (Nullability == nullptr) return untrackedError(E);
 
   if (Nullability->front().concrete() != NullabilityKind::NonNull) return {};

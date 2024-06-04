@@ -279,7 +279,7 @@ void diagnoseCall(const CallExpr &CE, const ASTContext &Ctx, Diagnoser &Diags,
     auto WantNulls = getAssertedTypeNullability(
         *Want, Symbolic, State.Env.getDataflowAnalysisContext().arena());
     TypeNullability GotNulls = unspecifiedNullability(&Got);
-    if (const auto *GN = State.Lattice.getExprNullability(&Got)) GotNulls = *GN;
+    if (const auto *GN = State.Lattice.getTypeNullability(&Got)) GotNulls = *GN;
     Diags.diagnoseType(CE.getBeginLoc(), Got.getSourceRange(), WantCanon,
                        GotCanon, WantNulls, GotNulls);
   }

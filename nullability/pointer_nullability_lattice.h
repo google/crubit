@@ -48,7 +48,7 @@ class PointerNullabilityLattice {
 
   PointerNullabilityLattice(NonFlowSensitiveState &NFS) : NFS(NFS) {}
 
-  absl::Nullable<const TypeNullability *> getExprNullability(
+  absl::Nullable<const TypeNullability *> getTypeNullability(
       absl::Nonnull<const Expr *> E) const {
     auto I = NFS.ExprToNullability.find(&dataflow::ignoreCFGOmittedNodes(*E));
     return I == NFS.ExprToNullability.end() ? nullptr : &I->second;
