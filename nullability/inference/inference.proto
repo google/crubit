@@ -90,7 +90,8 @@ message Evidence {
     // differentiate the evidence.
     NULLABLE_DEFAULT_MEMBER_INITIALIZER = 15;
     // __attribute((nonnull[(optional_param_indices)])) was applied to a
-    // function or parameter declaration.
+    // function or parameter declaration or __attribute((returns_nonnull)) was
+    // applied to a function declaration.
     GCC_NONNULL_ATTRIBUTE = 16;
   }
 }

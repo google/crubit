@@ -1275,6 +1275,15 @@ void collectEvidenceFromTargetDeclaration(
     if (auto K = evidenceKindFromDeclaredType(Fn->getReturnType()))
       Emit(*Fn, SLOT_RETURN_TYPE, *K,
            Fn->getReturnTypeSourceRange().getBegin());
+    if (const auto *RNNA = Fn->getAttr<ReturnsNonNullAttr>()) {
+      // The attribute does not apply to references-to-pointers or nested
+      // pointers or smart pointers.
+      if (isSupportedRawPointerType(Fn->getReturnType())) {
+        Emit(*Fn, SLOT_RETURN_TYPE, Evidence::GCC_NONNULL_ATTRIBUTE,
+             RNNA->getLocation());
+      }
+    }
+
     for (unsigned I = 0; I < Fn->param_size(); ++I) {
       const ParmVarDecl *ParamDecl = Fn->getParamDecl(I);
       if (auto K = evidenceKindFromDeclaredType(ParamDecl->getType())) {

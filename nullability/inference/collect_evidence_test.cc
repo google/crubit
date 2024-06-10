@@ -2924,6 +2924,33 @@ TEST(SmartPointerCollectEvidenceFromDeclarationTest,
       ElementsAre(evidence(paramSlot(1), Evidence::GCC_NONNULL_ATTRIBUTE)));
 }
 
+TEST(CollectEvidenceFromDeclarationTest, ReturnsNonnullAttribute) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int** target() __attribute__((returns_nonnull));
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetDecl(Src),
+      // Affects the top-level pointer.
+      ElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::GCC_NONNULL_ATTRIBUTE)));
+}
+
+TEST(CollectEvidenceFromDeclarationTest, ReturnsNonnullAttributeReference) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int*& target() __attribute__((returns_nonnull));
+  )cc";
+  // No effect on reference types.
+  EXPECT_THAT(collectFromTargetDecl(Src), IsEmpty());
+}
+
+TEST(SmartPointerCollectEvidenceFromDeclarationTest, ReturnsNonnullAttribute) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    std::unique_ptr<int> target() __attribute__((returns_nonnull));
+  )cc";
+  // No effect on smart pointers.
+  EXPECT_THAT(collectFromTargetDecl(Src), IsEmpty());
+}
+
 MATCHER_P(declNamed, Name, "") {
   std::string Actual;
   llvm::raw_string_ostream OS(Actual);
