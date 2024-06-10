@@ -1063,13 +1063,4 @@ std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(TypeLoc Loc) {
   return std::move(LocsWalker.TypeNullabilityLocs);
 }
 
-TypeLoc returnTypeLoc(const FunctionDecl &D) {
-  if (auto FTL = D.getFunctionTypeLoc()) return FTL.getReturnLoc();
-  SourceLocation Loc = D.isImplicit() ? SourceLocation() : D.getLocation();
-
-  return D.getASTContext()
-      .getTrivialTypeSourceInfo(D.getReturnType(), Loc)
-      ->getTypeLoc();
-}
-
 }  // namespace clang::tidy::nullability
