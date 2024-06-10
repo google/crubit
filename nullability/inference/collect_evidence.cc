@@ -1173,6 +1173,9 @@ llvm::Error collectEvidenceFromDefinition(
   }
 
   for (const FieldDecl *Field : ReferencedDecls.Fields) {
+    // TODO(b/345453948): Remove the following line once `getReferencedDecls`
+    // has been fixed so that it doesn't return null pointers here.
+    if (Field == nullptr) continue;
     if (isInferenceTarget(*Field) &&
         !evidenceKindFromDeclaredType(Field->getType())) {
       InferableSlots.emplace_back(

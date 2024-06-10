@@ -79,7 +79,8 @@ MATCHER_P(functionNamed, Name, "") {
 MATCHER_P(fieldNamed, TypeQualifiedFieldName, "") {
   const auto [TypeName, FieldName] =
       llvm::StringRef(TypeQualifiedFieldName).split("::");
-  return arg.usr().ends_with(("@S@" + TypeName + "@FI@" + FieldName).str());
+  return arg.usr().ends_with(("@S@" + TypeName + "@FI@" + FieldName).str()) ||
+         arg.usr().ends_with(("@U@" + TypeName + "@FI@" + FieldName).str());
 }
 
 /// Matches a static field with the given name.
@@ -1221,6 +1222,24 @@ TEST(CollectEvidenceFromDefinitionTest, FieldInitializedWithNullable) {
       collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("Target::I"))));
+}
+
+TEST(EvidenceEmitterTest, UnionFieldInitializedWithNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Target {
+      Target() : Field{nullptr} {};
+
+      union UnionType {
+        int* I;
+        bool* B;
+      } Field;
+    };
+  )cc";
+
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Target", Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("UnionType::I"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FieldInitializerCallsFunction) {
