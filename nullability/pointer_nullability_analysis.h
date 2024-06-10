@@ -30,8 +30,12 @@ namespace nullability {
 /// Factory function for creating a solver implementation.
 using SolverFactory = std::function<std::unique_ptr<dataflow::Solver>()>;
 
-/// Analyses constructs in the source code to collect nullability information
-/// about pointers at each program point.
+/// Analyzes constructs in the source code to collect nullability information
+/// about pointers at each program point. This analysis and the corresponding
+/// lattice were based on the gradual analysis in 'Estep, Sam, Jenna Wise,
+/// Jonathan Aldrich, Éric Tanter, Johannes Bader, and Joshua Sunshine. "Gradual
+/// Program Analysis for Null Pointers." In 35th European Conference on
+/// Object-Oriented Programming (ECOOP). 2021.'
 class PointerNullabilityAnalysis
     : public dataflow::DataflowAnalysis<PointerNullabilityAnalysis,
                                         PointerNullabilityLattice> {
