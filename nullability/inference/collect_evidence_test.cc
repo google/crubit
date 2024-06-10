@@ -12,6 +12,7 @@
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
+#include "nullability/pragma.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -104,6 +105,7 @@ testing::Matcher<const Evidence&> evidence(
 
 std::vector<Evidence> collectFromDefinition(
     clang::TestAST& AST, const Decl& Definition,
+    const NullabilityPragmas& Pragmas,
     PreviousInferences InputInferences = {}) {
   std::vector<Evidence> Results;
   USRCache UsrCache;
@@ -113,7 +115,7 @@ std::vector<Evidence> collectFromDefinition(
           Definition,
           evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
                           UsrCache),
-          UsrCache, InputInferences),
+          UsrCache, Pragmas, InputInferences),
       llvm::Succeeded());
   return Results;
 }
@@ -121,10 +123,11 @@ std::vector<Evidence> collectFromDefinition(
 std::vector<Evidence> collectFromDefinitionNamed(
     llvm::StringRef TargetName, llvm::StringRef Source,
     PreviousInferences InputInferences = {}) {
-  clang::TestAST AST(getAugmentedTestInputs(Source));
+  NullabilityPragmas Pragmas;
+  clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
   const Decl& Definition =
       *dataflow::test::findValueDecl(AST.context(), TargetName);
-  return collectFromDefinition(AST, Definition, InputInferences);
+  return collectFromDefinition(AST, Definition, Pragmas, InputInferences);
 }
 
 /// Provides a default function-name-cased value for TargetName in
@@ -139,20 +142,23 @@ template <typename MatcherT>
 std::vector<Evidence> collectFromDefinitionMatching(
     MatcherT Matcher, llvm::StringRef Source,
     PreviousInferences InputInferences = {}) {
-  clang::TestAST AST(getAugmentedTestInputs(Source));
+  NullabilityPragmas Pragmas;
+  clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
   const Decl& Definition =
       *selectFirst<Decl>("d", match(Matcher.bind("d"), AST.context()));
-  return collectFromDefinition(AST, Definition, InputInferences);
+  return collectFromDefinition(AST, Definition, Pragmas, InputInferences);
 }
 
 std::vector<Evidence> collectFromTargetDecl(llvm::StringRef Source) {
   std::vector<Evidence> Results;
-  clang::TestAST AST(getAugmentedTestInputs(Source));
+  NullabilityPragmas Pragmas;
+  clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
   USRCache USRCache;
   collectEvidenceFromTargetDeclaration(
       *dataflow::test::findValueDecl(AST.context(), "target"),
       evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                      USRCache));
+                      USRCache),
+      Pragmas);
   return Results;
 }
 
@@ -842,6 +848,37 @@ TEST(CollectEvidenceFromDefinitionTest,
           // nullabilities written in source code are considered unchangeable.
           evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN,
                    functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FromAutoReturnAnnotationByPragma) {
+  static constexpr llvm::StringRef Src = R"cc(
+#pragma nullability file_default nonnull
+    int* getNonnull();
+
+    // The pragma applies to the int* deduced for the `auto` return type,
+    // making the return type Nonnull<int*>.
+    auto target(NullabilityUnknown<int*> a, bool b) {
+      if (b) return a;
+      return getNonnull();
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                    functionNamed("target"))));
+}
+
+// This is a crash repro related to functions with AttributedTypeLocs.
+TEST(CollectEvidenceFromDefinitionTest, FromReturnInAttributedFunction) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct AStruct {
+      const char* target() [[clang::lifetimebound]] { return nullptr; }
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                    functionNamed("target"))));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest, MultipleReturns) {
@@ -2667,6 +2704,45 @@ TEST(CollectEvidenceFromDefinitionTest,
                         functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, Pragma) {
+  static constexpr llvm::StringRef Src = R"cc(
+#pragma nullability file_default nonnull
+    int* target(NullabilityUnknown<int*> p) {
+      return p;
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, PragmaLocalTopLevelPointer) {
+  static constexpr llvm::StringRef Src = R"cc(
+#pragma nullability file_default nonnull
+    void target(NullabilityUnknown<int*> p) {
+      int* local_top_level_pointer = p;
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
+}
+
+// Just confirming that the test setup to run both FrontendActions is working.
+TEST(CollectEvidenceFromDefinitionTest, PragmaAndMacroReplace) {
+  llvm::Twine Src = CheckMacroDefinitions + R"cc(
+#pragma nullability file_default nonnull
+    int* target(NullabilityUnknown<int*> p) {
+      CHECK(p);
+      return p;
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src.str()),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
+                  evidence(paramSlot(0), Evidence::ABORT_IF_NULL)));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* p, int* q) {
@@ -2674,7 +2750,8 @@ TEST(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
       *q;
     }
   )cc";
-  clang::TestAST AST(getAugmentedTestInputs(Src));
+  NullabilityPragmas Pragmas;
+  clang::TestAST AST(getAugmentedTestInputs(Src, Pragmas));
   std::vector<Evidence> Results;
   USRCache UsrCache;
   EXPECT_THAT_ERROR(
@@ -2683,7 +2760,7 @@ TEST(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
               dataflow::test::findValueDecl(AST.context(), "target")),
           evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
                           UsrCache),
-          UsrCache, /*PreviousInferences=*/{},
+          UsrCache, Pragmas, /*PreviousInferences=*/{},
           // Enough iterations to collect one piece of evidence but not both.
           []() {
             return std::make_unique<dataflow::WatchedLiteralsSolver>(
@@ -2997,6 +3074,16 @@ TEST(SmartPointerCollectEvidenceFromDeclarationTest, ReturnsNonnullAttribute) {
   EXPECT_THAT(collectFromTargetDecl(Src), IsEmpty());
 }
 
+TEST(CollectEvidenceFromDeclarationTest, Pragma) {
+  static constexpr llvm::StringRef Src = R"cc(
+#pragma nullability file_default nonnull
+    void target(int* p);
+  )cc";
+  EXPECT_THAT(collectFromTargetDecl(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ANNOTATED_NONNULL)));
+}
+
 MATCHER_P(declNamed, Name, "") {
   std::string Actual;
   llvm::raw_string_ostream OS(Actual);
@@ -3045,15 +3132,18 @@ TEST(EvidenceSitesTest, Lambdas) {
 }
 
 TEST(EvidenceSitesTest, GlobalVariables) {
-  TestAST AST = getAugmentedTestInputs(R"cc(
+  NullabilityPragmas Pragmas;
+  TestAST AST = getAugmentedTestInputs(
+      R"cc(
 #include <memory>
-    int* x = true ? nullptr : nullptr;
-    int* y;
-    int a;
-    int b = *y;
-    std::unique_ptr<int> p;
-    std::unique_ptr<int> q = nullptr;
-  )cc");
+        int* x = true ? nullptr : nullptr;
+        int* y;
+        int a;
+        int b = *y;
+        std::unique_ptr<int> p;
+        std::unique_ptr<int> q = nullptr;
+      )cc",
+      Pragmas);
 
   auto Sites = EvidenceSites::discover(AST.context());
   EXPECT_THAT(Sites.Declarations,
@@ -3089,15 +3179,18 @@ TEST(EvidenceSitesTest, StaticMemberVariables) {
 }
 
 TEST(EvidenceSitesTest, NonStaticMemberVariables) {
-  TestAST AST = getAugmentedTestInputs(R"cc(
+  NullabilityPragmas Pragmas;
+  TestAST AST = getAugmentedTestInputs(
+      R"cc(
 #include <memory>
-    struct S {
-      int* a = nullptr;
-      int* b;
-      std::unique_ptr<int> p = nullptr;
-      std::unique_ptr<int> q;
-    };
-  )cc");
+        struct S {
+          int* a = nullptr;
+          int* b;
+          std::unique_ptr<int> p = nullptr;
+          std::unique_ptr<int> q;
+        };
+      )cc",
+      Pragmas);
   auto Sites = EvidenceSites::discover(AST.context());
   EXPECT_THAT(Sites.Declarations,
               UnorderedElementsAre(declNamed("S::a"), declNamed("S::b"),

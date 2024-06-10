@@ -21,6 +21,7 @@
 #include "nullability/inference/infer_tu.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/replace_macros.h"
+#include "nullability/pragma.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Decl.h"
@@ -204,13 +205,20 @@ struct DeclFilter {
 };
 
 class Action : public SyntaxOnlyAction {
+  NullabilityPragmas Pragmas;
+
   absl::Nonnull<std::unique_ptr<ASTConsumer>> CreateASTConsumer(
       CompilerInstance &, llvm::StringRef) override {
     class Consumer : public ASTConsumer {
+     public:
+      NullabilityPragmas &Pragmas;
+      Consumer(NullabilityPragmas &Pragmas) : Pragmas(Pragmas) {}
+
+     private:
       void HandleTranslationUnit(ASTContext &Ctx) override {
         llvm::errs() << "Running inference...\n";
 
-        auto Results = inferTU(Ctx, Iterations, DeclFilter());
+        auto Results = inferTU(Ctx, Pragmas, Iterations, DeclFilter());
         if (!IncludeTrivial)
           llvm::erase_if(Results, [](Inference &I) {
             llvm::erase_if(
@@ -224,7 +232,7 @@ class Action : public SyntaxOnlyAction {
           DiagnosticPrinter(Results, Ctx.getDiagnostics()).TraverseAST(Ctx);
       }
     };
-    return std::make_unique<Consumer>();
+    return std::make_unique<Consumer>(Pragmas);
   }
 
   bool BeginSourceFileAction(clang::CompilerInstance &CI) override {
@@ -232,6 +240,7 @@ class Action : public SyntaxOnlyAction {
         !CI.getLangOpts().CPlusPlus)
       return false;
 
+    registerPragmaHandler(CI.getPreprocessor(), Pragmas);
     CI.getPreprocessor().addPPCallbacks(
         std::make_unique<ReplaceMacrosCallbacks>(CI.getPreprocessor()));
     return true;
@@ -256,7 +265,6 @@ int main(int argc, absl::Nonnull<const char **> argv) {
 
   auto Err = (*Exec)->execute(
       newFrontendActionFactory<clang::tidy::nullability::Action>(),
-
       getInsertArgumentAdjuster(
           {// Disable warnings, test cases are full of unused expressions etc.
            "-w",

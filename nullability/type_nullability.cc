@@ -248,7 +248,6 @@ std::optional<NullabilityKind> getAliasNullability(const TemplateName &TN) {
   return std::nullopt;
 }
 
-namespace {
 FileID getGoverningFile(absl::Nullable<const Decl *> D) {
   if (!D) return FileID();
   return D->getASTContext()
@@ -257,6 +256,7 @@ FileID getGoverningFile(absl::Nullable<const Decl *> D) {
       .first;
 }
 
+namespace {
 // Traverses a Type to find the points where it might be nullable.
 // This will visit the contained PointerType in the correct order to produce
 // the TypeNullability vector.

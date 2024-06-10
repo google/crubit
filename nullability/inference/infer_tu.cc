@@ -11,6 +11,7 @@
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/merge.h"
 #include "nullability/inference/slot_fingerprint.h"
+#include "nullability/pragma.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/Basic/SourceManager.h"
@@ -27,8 +28,9 @@ namespace {
 class InferenceManager {
  public:
   InferenceManager(ASTContext& Ctx, unsigned Iterations,
-                   llvm::function_ref<bool(const Decl&)> Filter)
-      : Ctx(Ctx), Iterations(Iterations), Filter(Filter) {}
+                   llvm::function_ref<bool(const Decl&)> Filter,
+                   const NullabilityPragmas& Pragmas)
+      : Ctx(Ctx), Iterations(Iterations), Filter(Filter), Pragmas(Pragmas) {}
 
   std::vector<Inference> inferenceRound(
       EvidenceSites Sites, USRCache USRCache,
@@ -41,12 +43,12 @@ class InferenceManager {
         evidenceEmitter([&](auto& E) { AllEvidence.push_back(E); }, USRCache);
     for (const auto* Decl : Sites.Declarations) {
       if (Filter && !Filter(*Decl)) continue;
-      collectEvidenceFromTargetDeclaration(*Decl, Emitter);
+      collectEvidenceFromTargetDeclaration(*Decl, Emitter, Pragmas);
     }
     for (const auto* Impl : Sites.Definitions) {
       if (Filter && !Filter(*Impl)) continue;
-      if (auto Err = collectEvidenceFromDefinition(*Impl, Emitter, USRCache,
-                                                   InferencesFromLastRound)) {
+      if (auto Err = collectEvidenceFromDefinition(
+              *Impl, Emitter, USRCache, Pragmas, InferencesFromLastRound)) {
         llvm::errs() << "Error in evidence collection: "
                      << toString(std::move(Err)) << "\n";
       }
@@ -88,16 +90,16 @@ class InferenceManager {
       llvm::DenseSet<SlotFingerprint> NonnullFromLastRound;
 
       for (const auto& Inference : AllInference) {
-        for (const auto& slot_inference : Inference.slot_inference()) {
-          if (slot_inference.trivial() || slot_inference.conflict()) continue;
-          switch (slot_inference.nullability()) {
+        for (const auto& SlotInference : Inference.slot_inference()) {
+          if (SlotInference.trivial() || SlotInference.conflict()) continue;
+          switch (SlotInference.nullability()) {
             case Nullability::NULLABLE:
               NullableFromLastRound.insert(
-                  fingerprint(Inference.symbol().usr(), slot_inference.slot()));
+                  fingerprint(Inference.symbol().usr(), SlotInference.slot()));
               break;
             case Nullability::NONNULL:
               NonnullFromLastRound.insert(
-                  fingerprint(Inference.symbol().usr(), slot_inference.slot()));
+                  fingerprint(Inference.symbol().usr(), SlotInference.slot()));
               break;
             default:
               break;
@@ -115,12 +117,15 @@ class InferenceManager {
   ASTContext& Ctx;
   unsigned Iterations;
   llvm::function_ref<bool(const Decl&)> Filter;
+  const NullabilityPragmas& Pragmas;
 };
 }  // namespace
 
-std::vector<Inference> inferTU(ASTContext& Ctx, unsigned Iterations,
+std::vector<Inference> inferTU(ASTContext& Ctx,
+                               const NullabilityPragmas& Pragmas,
+                               unsigned Iterations,
                                llvm::function_ref<bool(const Decl&)> Filter) {
-  return InferenceManager(Ctx, Iterations, Filter).iterativelyInfer();
+  return InferenceManager(Ctx, Iterations, Filter, Pragmas).iterativelyInfer();
 }
 
 }  // namespace clang::tidy::nullability

@@ -11,6 +11,7 @@
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/pointer_nullability_analysis.h"
+#include "nullability/pragma.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Basic/SourceLocation.h"
@@ -54,6 +55,7 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference();
 /// (function has a body, is not dependent, etc).
 llvm::Error collectEvidenceFromDefinition(
     const Decl &, llvm::function_ref<EvidenceEmitter>, USRCache &USRCache,
+    const NullabilityPragmas &Pragmas,
     PreviousInferences PreviousInferences = {},
     const SolverFactory &MakeSolver = makeDefaultSolverForInference);
 
@@ -65,7 +67,8 @@ llvm::Error collectEvidenceFromDefinition(
 ///
 /// It is the caller's responsibility to ensure that the symbol is inferable.
 void collectEvidenceFromTargetDeclaration(const clang::Decl &,
-                                          llvm::function_ref<EvidenceEmitter>);
+                                          llvm::function_ref<EvidenceEmitter>,
+                                          const NullabilityPragmas &Pragmas);
 
 /// Describes locations within an AST that provide evidence for use in
 /// inference.

@@ -9,6 +9,7 @@
 
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
+#include "nullability/pragma.h"
 #include "nullability/proto_matchers.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
@@ -51,12 +52,13 @@ AST_MATCHER(Decl, isCanonical) { return Node.isCanonicalDecl(); }
 class InferTUTest : public ::testing::Test {
  protected:
   std::optional<TestAST> AST;
+  NullabilityPragmas Pragmas;
 
   void build(llvm::StringRef Code) {
-    AST.emplace(getAugmentedTestInputs(Code));
+    AST.emplace(getAugmentedTestInputs(Code, Pragmas));
   }
 
-  auto infer() { return inferTU(AST->context()); }
+  auto infer() { return inferTU(AST->context(), Pragmas); }
 
   // Returns a matcher for an Inference.
   // The DeclMatcher should uniquely identify the symbol being described.
@@ -419,7 +421,7 @@ TEST_F(InferTUTest, Filter) {
     int* target1() { return nullptr; }
     int* target2() { return nullptr; }
   )cc");
-  EXPECT_THAT(inferTU(AST->context(), /*Iterations=*/1,
+  EXPECT_THAT(inferTU(AST->context(), Pragmas, /*Iterations=*/1,
                       [&](const Decl &D) {
                         return cast<NamedDecl>(D).getNameAsString() !=
                                "target2";
@@ -439,7 +441,7 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
     }
   )cc");
   EXPECT_THAT(
-      inferTU(AST->context(), /*Iterations=*/1),
+      inferTU(AST->context(), Pragmas, /*Iterations=*/1),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Nullability::UNKNOWN),
                                         inferredSlot(1, Nullability::NONNULL)}),
@@ -449,7 +451,7 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
           inference(hasName("takesToBeNonnull"),
                     {inferredSlot(1, Nullability::NONNULL)})));
   EXPECT_THAT(
-      inferTU(AST->context(), /*Iterations=*/2),
+      inferTU(AST->context(), Pragmas, /*Iterations=*/2),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Nullability::UNKNOWN),
                                         inferredSlot(1, Nullability::NONNULL),
@@ -460,7 +462,7 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
           inference(hasName("takesToBeNonnull"),
                     {inferredSlot(1, Nullability::NONNULL)})));
   EXPECT_THAT(
-      inferTU(AST->context(), /*Iterations=*/3),
+      inferTU(AST->context(), Pragmas, /*Iterations=*/3),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Nullability::UNKNOWN),
                                         inferredSlot(1, Nullability::NONNULL),
@@ -472,7 +474,7 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
           inference(hasName("takesToBeNonnull"),
                     {inferredSlot(1, Nullability::NONNULL)})));
   EXPECT_THAT(
-      inferTU(AST->context(), /*Iterations=*/4),
+      inferTU(AST->context(), Pragmas, /*Iterations=*/4),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Nullability::NONNULL),
                                         inferredSlot(1, Nullability::NONNULL),
@@ -483,6 +485,38 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
                      inferredSlot(1, Nullability::NONNULL)}),
           inference(hasName("takesToBeNonnull"),
                     {inferredSlot(1, Nullability::NONNULL)})));
+}
+
+TEST_F(InferTUTest, Pragma) {
+  build(R"cc(
+#pragma nullability file_default nonnull
+    void target(int* default_nonnull, NullabilityUnknown<int*> inferred_nonnull,
+                Nullable<int*> nullable,
+                NullabilityUnknown<int*> inferred_nullable,
+                NullabilityUnknown<int*> unknown) {
+      default_nonnull = inferred_nonnull;
+      default_nonnull = nullptr;
+      inferred_nullable = nullable;
+    }
+  )cc");
+  EXPECT_THAT(infer(),
+              UnorderedElementsAre(inference(
+                  hasName("target"),
+                  {
+                      // annotation by pragma beats assignment from null, so
+                      // default_nonnull should still be inferred NONNULL
+                      inferredSlot(1, Nullability::NONNULL),
+                      // an explicit unknown does not override a Nonnull
+                      // inference, even if it overrides the pragma
+                      inferredSlot(2, Nullability::NONNULL),
+                      // an explicit nullable overrides pragma default
+                      inferredSlot(3, Nullability::NULLABLE),
+                      // an explicit unknown does not override a Nullable
+                      // inference, which does override the pragma
+                      inferredSlot(4, Nullability::NULLABLE)
+                      // an explicit unknown overrides the pragma, but produces
+                      // no inference, so nothing for slot 5.
+                  })));
 }
 
 using InferTUSmartPointerTest = InferTUTest;

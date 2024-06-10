@@ -236,6 +236,9 @@ TypeNullability getTypeNullability(
     const TypeDecl &, const TypeNullabilityDefaults &,
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam = nullptr);
 
+/// Returns the `FileID` of the file that governs the nullability of `D`.
+FileID getGoverningFile(absl::Nullable<const Decl *> D);
+
 /// Legacy getTypeNullability variant; treats unannotated pointers as Unknown.
 /// Per-file pragmas are ignored.
 /// TODO(sammccall): clean up all callers and remove this.

@@ -40,6 +40,7 @@
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/ASTOps.h"
 #include "clang/Analysis/FlowSensitive/AdornedCFG.h"
@@ -199,21 +200,54 @@ static const Formula &getInferableSlotsAsInferredOrUnknownConstraint(
   return *Constraint;
 }
 
-static auto getNullabilityAnnotationsFromTypeAndOverrides(
-    QualType Type, absl::Nonnull<const Decl *> D,
-    const PointerNullabilityLattice &Lattice) {
-  auto N = getNullabilityAnnotationsFromType(Type);
+static void overrideNullability(const ValueDecl &D,
+                                const PointerNullabilityLattice &Lattice,
+                                TypeNullability &N) {
   if (N.empty()) {
     // We expect this not to be the case, but not to a crash-worthy level, so
     // just log if it is.
-    llvm::errs() << "Nullability for type " << Type.getAsString();
-    if (auto *ND = dyn_cast_or_null<clang::NamedDecl>(D)) {
-      llvm::errs() << "for Decl named " << ND->getName();
+    llvm::errs() << "Nullability for type " << D.getType().getAsString();
+    if (auto *ND = dyn_cast<clang::NamedDecl>(&D)) {
+      llvm::errs() << " for Decl named " << ND->getQualifiedNameAsString();
     }
     llvm::errs() << " requested with overrides, but is an empty vector.\n";
   } else {
-    Lattice.overrideNullabilityFromDecl(D, N);
+    Lattice.overrideNullabilityFromDecl(&D, N);
   }
+}
+
+static TypeNullability getNullabilityAnnotationsFromDeclAndOverrides(
+    const ValueDecl &D, const PointerNullabilityLattice &Lattice) {
+  TypeNullability N = getTypeNullability(D, Lattice.defaults());
+  overrideNullability(D, Lattice, N);
+  return N;
+}
+
+static TypeNullability getReturnTypeNullabilityAnnotations(
+    const FunctionDecl &D, const TypeNullabilityDefaults &Defaults) {
+  // Use the QualType, FileID overload of getTypeNullability for return types,
+  // because of complexity around the following cases:
+  //
+  // The return TypeLoc for `auto`-returning functions contains an undeduced
+  // `auto` type, even if the `auto` has been deduced. See
+  // https://github.com/llvm/llvm-project/issues/42259 for more.
+  //
+  // FunctionDecls with top-level TypeLocs that are not simple
+  // FunctionTypeLoc, such as those with attributes, would need excavation of
+  // the function's FunctionTypeLoc before being able to retrieve the return
+  // TypeLoc.
+  return getTypeNullability(D.getReturnType(), getGoverningFile(&D), Defaults);
+}
+
+static TypeNullability getReturnTypeNullabilityAnnotationsWithOverrides(
+    const FunctionDecl &D, const PointerNullabilityLattice &Lattice) {
+  TypeNullability N =
+      getReturnTypeNullabilityAnnotations(D, Lattice.defaults());
+
+  // The FunctionDecl is the key used for overrides for the return
+  // type. To look up overrides for parameters, we would pass a
+  // ParmVarDecl to `overrideNullability`.
+  overrideNullability(D, Lattice, N);
   return N;
 }
 
@@ -229,9 +263,8 @@ static Evidence::Kind getArgEvidenceKindFromNullability(
   }
 }
 
-static std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
-  if (!isSupportedPointerType(T.getNonReferenceType())) return std::nullopt;
-  auto Nullability = getNullabilityAnnotationsFromType(T);
+static std::optional<Evidence::Kind> evidenceKindFromDeclaredNullability(
+    const TypeNullability &Nullability) {
   switch (Nullability.front().concrete()) {
     default:
       return std::nullopt;
@@ -240,6 +273,22 @@ static std::optional<Evidence::Kind> evidenceKindFromDeclaredType(QualType T) {
     case NullabilityKind::Nullable:
       return Evidence::ANNOTATED_NULLABLE;
   }
+}
+
+static std::optional<Evidence::Kind> evidenceKindFromDeclaredTypeLoc(
+    TypeLoc Loc, const TypeNullabilityDefaults &Defaults) {
+  if (!isSupportedPointerType(Loc.getType().getNonReferenceType()))
+    return std::nullopt;
+  auto Nullability = getTypeNullability(Loc, Defaults);
+  return evidenceKindFromDeclaredNullability(Nullability);
+}
+
+static std::optional<Evidence::Kind> evidenceKindFromDeclaredReturnType(
+    const FunctionDecl &D, const TypeNullabilityDefaults &Defaults) {
+  if (!isSupportedPointerType(D.getReturnType().getNonReferenceType()))
+    return std::nullopt;
+  return evidenceKindFromDeclaredNullability(
+      getReturnTypeNullabilityAnnotations(D, Defaults));
 }
 
 namespace {
@@ -455,8 +504,8 @@ class DefinitionEvidenceCollector {
       SourceLocation ArgLoc = Iter.arg().getExprLoc();
 
       if (CollectEvidenceForCaller) {
-        auto ParamNullability = getNullabilityAnnotationsFromTypeAndOverrides(
-            ParamType, &Iter.param(), Lattice);
+        auto ParamNullability = getNullabilityAnnotationsFromDeclAndOverrides(
+            Iter.param(), Lattice);
 
         // Collect evidence from constraints that the parameter's nullability
         // places on the argument's nullability.
@@ -726,7 +775,7 @@ class DefinitionEvidenceCollector {
     // the current function is not an inference target or the return type
     // already includes an annotation.
     if (isInferenceTarget(*CurrentFunc) &&
-        !evidenceKindFromDeclaredType(CurrentFunc->getReturnType())) {
+        !evidenceKindFromDeclaredReturnType(*CurrentFunc, Lattice.defaults())) {
       NullabilityKind ReturnNullability =
           getNullability(ReturnExpr, Env, &InferableSlotsConstraint);
       Evidence::Kind ReturnEvidenceKind;
@@ -740,19 +789,14 @@ class DefinitionEvidenceCollector {
         default:
           ReturnEvidenceKind = Evidence::UNKNOWN_RETURN;
       }
-      Emit(*Env.getCurrentFunc(), SLOT_RETURN_TYPE, ReturnEvidenceKind,
+      Emit(*CurrentFunc, SLOT_RETURN_TYPE, ReturnEvidenceKind,
            ReturnExpr->getExprLoc());
     }
 
     const dataflow::PointerValue *PV = getPointerValue(ReturnExpr, Env);
     if (!PV) return;
     TypeNullability ReturnTypeNullability =
-        getNullabilityAnnotationsFromTypeAndOverrides(
-            CurrentFunc->getReturnType(),
-            // The FunctionDecl is the key used for overrides for the return
-            // type. To look up overrides for parameters, we would pass a
-            // ParmVarDecl.
-            CurrentFunc, Lattice);
+        getReturnTypeNullabilityAnnotationsWithOverrides(*CurrentFunc, Lattice);
     fromAssignmentToType(Env.getCurrentFunc()->getReturnType(),
                          ReturnTypeNullability, *PV, ReturnExpr->getExprLoc());
   }
@@ -808,10 +852,10 @@ class DefinitionEvidenceCollector {
                           SourceLocation Loc,
                           Evidence::Kind EvidenceKindForAssignmentFromNullable =
                               Evidence::ASSIGNED_FROM_NULLABLE) {
-    fromAssignmentLike(LHSDecl.getType(),
-                       getNullabilityAnnotationsFromTypeAndOverrides(
-                           LHSDecl.getType(), &LHSDecl, Lattice),
-                       RHS, Loc, EvidenceKindForAssignmentFromNullable);
+    fromAssignmentLike(
+        LHSDecl.getType(),
+        getNullabilityAnnotationsFromDeclAndOverrides(LHSDecl, Lattice), RHS,
+        Loc, EvidenceKindForAssignmentFromNullable);
   }
 
   /// Collects evidence based on an assignment of RHS to an expression with type
@@ -1125,7 +1169,8 @@ static void collectEvidenceFromConstructorExitBlock(
 
 llvm::Error collectEvidenceFromDefinition(
     const Decl &Definition, llvm::function_ref<EvidenceEmitter> Emit,
-    USRCache &USRCache, const PreviousInferences PreviousInferences,
+    USRCache &USRCache, const NullabilityPragmas &Pragmas,
+    const PreviousInferences PreviousInferences,
     const SolverFactory &MakeSolver) {
   ASTContext &Ctx = Definition.getASTContext();
   dataflow::ReferencedDecls ReferencedDecls;
@@ -1178,16 +1223,17 @@ llvm::Error collectEvidenceFromDefinition(
   DataflowAnalysisContext AnalysisContext(*Solver);
   Environment Env = TargetAsFunc ? Environment(AnalysisContext, *TargetAsFunc)
                                  : Environment(AnalysisContext, *TargetStmt);
-  // TODO(b/332695332) Get the actual pragmas written in source.
-  NullabilityPragmas NoPragmas;
-  PointerNullabilityAnalysis Analysis(Ctx, Env, NoPragmas);
+  PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
+
+  TypeNullabilityDefaults Defaults = TypeNullabilityDefaults(Ctx, Pragmas);
 
   std::vector<InferableSlot> InferableSlots;
   if (TargetAsFunc && isInferenceTarget(*TargetAsFunc)) {
     auto Parameters = TargetAsFunc->parameters();
     for (auto I = 0; I < Parameters.size(); ++I) {
-      auto T = Parameters[I]->getType().getNonReferenceType();
-      if (hasInferable(T) && !evidenceKindFromDeclaredType(T)) {
+      if (hasInferable(Parameters[I]->getType().getNonReferenceType()) &&
+          !evidenceKindFromDeclaredTypeLoc(
+              Parameters[I]->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
         InferableSlots.emplace_back(Analysis.assignNullabilityVariable(
                                         Parameters[I], AnalysisContext.arena()),
                                     paramSlot(I), *TargetAsFunc);
@@ -1200,7 +1246,8 @@ llvm::Error collectEvidenceFromDefinition(
     // has been fixed so that it doesn't return null pointers here.
     if (Field == nullptr) continue;
     if (isInferenceTarget(*Field) &&
-        !evidenceKindFromDeclaredType(Field->getType())) {
+        !evidenceKindFromDeclaredTypeLoc(
+            Field->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Field, AnalysisContext.arena()),
           Slot(0), *Field);
@@ -1208,7 +1255,8 @@ llvm::Error collectEvidenceFromDefinition(
   }
   for (const VarDecl *Global : ReferencedDecls.Globals) {
     if (isInferenceTarget(*Global) &&
-        !evidenceKindFromDeclaredType(Global->getType())) {
+        !evidenceKindFromDeclaredTypeLoc(
+            Global->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Global, AnalysisContext.arena()),
           Slot(0), *Global);
@@ -1217,7 +1265,7 @@ llvm::Error collectEvidenceFromDefinition(
   for (const FunctionDecl *Function : ReferencedDecls.Functions) {
     if (isInferenceTarget(*Function) &&
         hasInferable(Function->getReturnType()) &&
-        !evidenceKindFromDeclaredType(Function->getReturnType())) {
+        !evidenceKindFromDeclaredReturnType(*Function, Defaults)) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Function, AnalysisContext.arena()),
           SLOT_RETURN_TYPE, *Function);
@@ -1331,9 +1379,11 @@ void collectNonnullAttributeEvidence(const clang::FunctionDecl &Fn,
 }
 
 void collectEvidenceFromTargetDeclaration(
-    const clang::Decl &D, llvm::function_ref<EvidenceEmitter> Emit) {
+    const clang::Decl &D, llvm::function_ref<EvidenceEmitter> Emit,
+    const NullabilityPragmas &Pragmas) {
+  TypeNullabilityDefaults Defaults(D.getASTContext(), Pragmas);
   if (const auto *Fn = dyn_cast<clang::FunctionDecl>(&D)) {
-    if (auto K = evidenceKindFromDeclaredType(Fn->getReturnType()))
+    if (auto K = evidenceKindFromDeclaredReturnType(*Fn, Defaults))
       Emit(*Fn, SLOT_RETURN_TYPE, *K,
            Fn->getReturnTypeSourceRange().getBegin());
     if (const auto *RNNA = Fn->getAttr<ReturnsNonNullAttr>()) {
@@ -1347,7 +1397,8 @@ void collectEvidenceFromTargetDeclaration(
 
     for (unsigned I = 0; I < Fn->param_size(); ++I) {
       const ParmVarDecl *ParamDecl = Fn->getParamDecl(I);
-      if (auto K = evidenceKindFromDeclaredType(ParamDecl->getType())) {
+      if (auto K = evidenceKindFromDeclaredTypeLoc(
+              ParamDecl->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
         Emit(*Fn, paramSlot(I), *K, ParamDecl->getTypeSpecStartLoc());
       }
 
@@ -1376,11 +1427,13 @@ void collectEvidenceFromTargetDeclaration(
       }
     }
   } else if (const auto *Field = dyn_cast<clang::FieldDecl>(&D)) {
-    if (auto K = evidenceKindFromDeclaredType(Field->getType())) {
+    if (auto K = evidenceKindFromDeclaredTypeLoc(
+            Field->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
       Emit(*Field, Slot(0), *K, Field->getTypeSpecStartLoc());
     }
   } else if (const auto *Var = dyn_cast<clang::VarDecl>(&D)) {
-    if (auto K = evidenceKindFromDeclaredType(Var->getType())) {
+    if (auto K = evidenceKindFromDeclaredTypeLoc(
+            Var->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
       Emit(*Var, Slot(0), *K, Var->getTypeSpecStartLoc());
     }
   }

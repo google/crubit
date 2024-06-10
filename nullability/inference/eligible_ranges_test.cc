@@ -10,6 +10,7 @@
 #include "absl/log/check.h"
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
+#include "nullability/pragma.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -54,7 +55,8 @@ MATCHER_P2(TypeLocRanges, Path, Ranges, "") {
 template <typename DeclT, typename MatcherT>
 std::optional<clang::tidy::nullability::TypeLocRanges> getRanges(
     llvm::StringRef Input, MatcherT Matcher) {
-  TestAST TU(getAugmentedTestInputs(Input));
+  NullabilityPragmas UnusedPragmas;
+  TestAST TU(getAugmentedTestInputs(Input, UnusedPragmas));
   const auto *D =
       selectFirst<DeclT>("d", match(Matcher.bind("d"), TU.context()));
   CHECK(D != nullptr);

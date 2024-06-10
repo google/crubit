@@ -5,17 +5,22 @@
 #include "nullability/inference/augmented_test_inputs.h"
 
 #include <memory>
+#include <utility>
 
 #include "nullability/inference/ctn_replacement_macros.h"
 #include "nullability/inference/replace_macros.h"
+#include "nullability/pragma.h"
 #include "nullability/test/test_headers.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendAction.h"
 #include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
-TestInputs getAugmentedTestInputs(llvm::StringRef Source) {
+TestInputs getAugmentedTestInputs(llvm::StringRef Source,
+                                  NullabilityPragmas& Pragmas) {
   TestInputs Inputs = Source;
   Inputs.Language = TestLanguage::Lang_CXX20;
   for (const auto& Entry :
@@ -30,7 +35,23 @@ TestInputs getAugmentedTestInputs(llvm::StringRef Source) {
   Inputs.ExtraArgs.push_back("-include");
   Inputs.ExtraArgs.emplace_back(ReplacementMacrosHeaderFileName);
 
-  Inputs.MakeAction = [&]() { return std::make_unique<ReplaceMacrosAction>(); };
+  Inputs.MakeAction = [&]() {
+    struct RegisterPragmasWrapperAction : public WrapperFrontendAction {
+      NullabilityPragmas& Pragmas;
+      RegisterPragmasWrapperAction(std::unique_ptr<FrontendAction> Wrapped,
+                                   NullabilityPragmas& Pragmas)
+          : WrapperFrontendAction(std::move(Wrapped)), Pragmas(Pragmas) {}
+
+      bool BeginSourceFileAction(clang::CompilerInstance& CI) override {
+        if (!WrapperFrontendAction::BeginSourceFileAction(CI)) return false;
+        registerPragmaHandler(CI.getPreprocessor(), Pragmas);
+        return true;
+      }
+    };
+
+    return std::make_unique<RegisterPragmasWrapperAction>(
+        std::make_unique<ReplaceMacrosAction>(), Pragmas);
+  };
   return Inputs;
 }
 }  // namespace clang::tidy::nullability
