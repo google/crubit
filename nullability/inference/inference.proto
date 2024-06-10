@@ -89,6 +89,9 @@ message Evidence {
     // quieter uninitialized memory errors in favor of loud segfaults, so we
     // differentiate the evidence.
     NULLABLE_DEFAULT_MEMBER_INITIALIZER = 15;
+    // __attribute((nonnull[(optional_param_indices)])) was applied to a
+    // function or parameter declaration.
+    GCC_NONNULL_ATTRIBUTE = 16;
   }
 }
 

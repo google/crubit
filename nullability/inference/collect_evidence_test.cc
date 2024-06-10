@@ -2852,6 +2852,78 @@ TEST(SmartPointerCollectEvidenceFromDeclarationTest,
                                     functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromDeclarationTest, NonnullAttributeOnFunction) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* target(int* p, int** q, int*& r, bool b) __attribute__((nonnull));
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetDecl(Src),
+      // attribute applies to top-level non-reference raw pointer
+      // parameter types only, not return type or other params.
+      ElementsAre(evidence(paramSlot(0), Evidence::GCC_NONNULL_ATTRIBUTE),
+                  evidence(paramSlot(1), Evidence::GCC_NONNULL_ATTRIBUTE)));
+}
+
+TEST(CollectEvidenceFromDeclarationTest, NonnullAttributeOnFunctionWithArgs) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* target(int* p, int** q, int*& r, bool b, int* not_indicated)
+        __attribute__((nonnull(1, 2, 3, 4)));
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetDecl(Src),
+      // attribute applies to the indicated and eligible parameters only.
+      ElementsAre(evidence(paramSlot(0), Evidence::GCC_NONNULL_ATTRIBUTE),
+                  evidence(paramSlot(1), Evidence::GCC_NONNULL_ATTRIBUTE)));
+}
+
+TEST(CollectEvidenceFromDeclarationTest, NonnullAttributeOnMethodWithArgs) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct T {
+      // Index 1 on a non-static method is for the implicit `this` parameter.
+      int* target(int* p, int* not_indicated) __attribute__((nonnull(2)));
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetDecl(Src),
+      ElementsAre(evidence(paramSlot(0), Evidence::GCC_NONNULL_ATTRIBUTE)));
+}
+
+TEST(CollectEvidenceFromDeclarationTest,
+     NonnullAttributeOnStaticMethodWithArgs) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct T {
+      // no implicit `this` parameter for static methods.
+      static int* target(int* p, int* q) __attribute__((nonnull(2)));
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetDecl(Src),
+      ElementsAre(evidence(paramSlot(1), Evidence::GCC_NONNULL_ATTRIBUTE)));
+}
+
+TEST(CollectEvidenceFromDeclarationTest, NonnullAttributeOnParam) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* target(int* p __attribute__((nonnull())), int* not_indicated);
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetDecl(Src),
+      ElementsAre(evidence(paramSlot(0), Evidence::GCC_NONNULL_ATTRIBUTE)));
+}
+
+TEST(SmartPointerCollectEvidenceFromDeclarationTest,
+     NonnullAttributeOnFunction) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    void target(std::unique_ptr<int> p, std::unique_ptr<int>* q,
+                std::unique_ptr<int*> r) __attribute__((nonnull));
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetDecl(Src),
+      // attribute applies to top-level non-reference *raw* pointer
+      // parameter types only.
+      ElementsAre(evidence(paramSlot(1), Evidence::GCC_NONNULL_ATTRIBUTE)));
+}
+
 MATCHER_P(declNamed, Name, "") {
   std::string Actual;
   llvm::raw_string_ostream OS(Actual);

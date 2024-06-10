@@ -137,6 +137,7 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
 
   // Optional "soft" inference heuristics.
   // These do not report conflicts.
+  if (Counts[Evidence::GCC_NONNULL_ATTRIBUTE]) return {Nullability::NONNULL};
   if (!Counts[Evidence::NULLABLE_RETURN] && !Counts[Evidence::UNKNOWN_RETURN] &&
       Counts[Evidence::NONNULL_RETURN])
     return {Nullability::NONNULL};

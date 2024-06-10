@@ -28,6 +28,8 @@
 #include "nullability/pragma.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Attr.h"
+#include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
@@ -1256,6 +1258,17 @@ static void collectEvidenceFromDefaultArgument(
   }
 }
 
+void collectNonnullAttributeEvidence(const clang::FunctionDecl &Fn,
+                                     unsigned ParamIndex, SourceLocation Loc,
+                                     llvm::function_ref<EvidenceEmitter> Emit) {
+  const ParmVarDecl *ParamDecl = Fn.getParamDecl(ParamIndex);
+  // The attribute does not apply to references-to-pointers or nested pointers
+  // or smart pointers.
+  if (isSupportedRawPointerType(ParamDecl->getType())) {
+    Emit(Fn, paramSlot(ParamIndex), Evidence::GCC_NONNULL_ATTRIBUTE, Loc);
+  }
+}
+
 void collectEvidenceFromTargetDeclaration(
     const clang::Decl &D, llvm::function_ref<EvidenceEmitter> Emit) {
   if (const auto *Fn = dyn_cast<clang::FunctionDecl>(&D)) {
@@ -1263,12 +1276,34 @@ void collectEvidenceFromTargetDeclaration(
       Emit(*Fn, SLOT_RETURN_TYPE, *K,
            Fn->getReturnTypeSourceRange().getBegin());
     for (unsigned I = 0; I < Fn->param_size(); ++I) {
-      auto *ParamDecl = Fn->getParamDecl(I);
+      const ParmVarDecl *ParamDecl = Fn->getParamDecl(I);
       if (auto K = evidenceKindFromDeclaredType(ParamDecl->getType())) {
         Emit(*Fn, paramSlot(I), *K, ParamDecl->getTypeSpecStartLoc());
       }
 
       collectEvidenceFromDefaultArgument(*Fn, *ParamDecl, paramSlot(I), Emit);
+
+      if (const auto *NNA = ParamDecl->getAttr<NonNullAttr>())
+        collectNonnullAttributeEvidence(*Fn, I, NNA->getLocation(), Emit);
+    }
+
+    if (const auto *NNA = Fn->getAttr<NonNullAttr>()) {
+      // The attribute may have arguments indicating one or more parameters
+      // that are nonnull. If no arguments are present, all top-level,
+      // non-reference, raw pointer parameter types are nonnull. Return types
+      // are not affected.
+      if (NNA->args_size() > 0) {
+        for (const clang::ParamIdx &P : NNA->args()) {
+          // getASTIndex starts with 0 and does not count any implicit `this`
+          // parameter, matching FunctionDecl::getParamDecl indexing.
+          unsigned I = P.getASTIndex();
+          collectNonnullAttributeEvidence(*Fn, I, NNA->getLocation(), Emit);
+        }
+      } else {
+        for (unsigned I = 0; I < Fn->param_size(); ++I) {
+          collectNonnullAttributeEvidence(*Fn, I, NNA->getLocation(), Emit);
+        }
+      }
     }
   } else if (const auto *Field = dyn_cast<clang::FieldDecl>(&D)) {
     if (auto K = evidenceKindFromDeclaredType(Field->getType())) {
