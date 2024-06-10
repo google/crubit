@@ -1401,7 +1401,7 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
     bool shouldVisitImplicitCode() const { return true; }
 
     bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
-      if (isInferenceTarget(*FD)) Out.Declarations.push_back(FD);
+      if (isInferenceTarget(*FD)) Out.Declarations.insert(FD);
 
       // Visiting template instantiations is fine, these are valid functions!
       // But we'll be limited in what we can infer.
@@ -1415,25 +1415,26 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
           (!FD->isImplicit() ||
            (isa<CXXConstructorDecl>(FD) &&
             cast<CXXConstructorDecl>(FD)->isDefaultConstructor()));
-      if (IsUsefulDefinition) Out.Definitions.push_back(FD);
+      if (IsUsefulDefinition) Out.Definitions.insert(FD);
 
       return true;
     }
 
     bool VisitFieldDecl(absl::Nonnull<const FieldDecl *> FD) {
-      if (isInferenceTarget(*FD)) Out.Declarations.push_back(FD);
+      if (isInferenceTarget(*FD)) Out.Declarations.insert(FD);
       return true;
     }
 
     bool VisitVarDecl(absl::Nonnull<const VarDecl *> VD) {
       if (isInferenceTarget(*VD)) {
-        Out.Declarations.push_back(VD);
+        Out.Declarations.insert(VD);
       }
       // Variable initializers outside of function bodies may contain evidence
       // we won't otherwise see, even if the variable is not an inference
       // target.
-      if (VD->hasInit() && !VD->getDeclContext()->isFunctionOrMethod())
-        Out.Definitions.push_back(VD);
+      if (VD->hasInit() && !VD->getDeclContext()->isFunctionOrMethod() &&
+          !VD->isTemplated())
+        Out.Definitions.insert(VD);
       return true;
     }
   };

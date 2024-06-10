@@ -7,7 +7,6 @@
 
 #include <string>
 #include <string_view>
-#include <vector>
 
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
@@ -72,12 +71,12 @@ void collectEvidenceFromTargetDeclaration(const clang::Decl &,
 /// inference.
 struct EvidenceSites {
   /// Declarations of inferable symbols.
-  std::vector<const Decl *> Declarations;
+  llvm::DenseSet<const Decl *> Declarations;
   /// Definitions (e.g. function body, variable initializer) that can be
   /// analyzed.
   /// This will always be concrete code, not a template pattern. These may be
   /// passed to collectEvidenceFromDefinition().
-  std::vector<const Decl *> Definitions;
+  llvm::DenseSet<const Decl *> Definitions;
 
   /// Find the evidence sites within the provided AST.
   static EvidenceSites discover(ASTContext &);
