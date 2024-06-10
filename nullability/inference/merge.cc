@@ -127,9 +127,6 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
   if (Counts[Evidence::ASSIGNED_FROM_NULLABLE])
     update(Result, Nullability::NULLABLE);
   if (Counts[Evidence::NULLABLE_RETURN]) update(Result, Nullability::NULLABLE);
-  if (Counts[Evidence::NONNULL_RETURN] && !Counts[Evidence::NULLABLE_RETURN] &&
-      !Counts[Evidence::UNKNOWN_RETURN])
-    update(Result, Nullability::NONNULL);
   if (Counts[Evidence::ASSIGNED_TO_NONNULL])
     update(Result, Nullability::NONNULL);
   if (Counts[Evidence::ASSIGNED_TO_MUTABLE_NULLABLE])
@@ -140,6 +137,9 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
 
   // Optional "soft" inference heuristics.
   // These do not report conflicts.
+  if (!Counts[Evidence::NULLABLE_RETURN] && !Counts[Evidence::UNKNOWN_RETURN] &&
+      Counts[Evidence::NONNULL_RETURN])
+    return {Nullability::NONNULL};
   if (!Counts[Evidence::NULLABLE_ARGUMENT] &&
       !Counts[Evidence::UNKNOWN_ARGUMENT] && Counts[Evidence::NONNULL_ARGUMENT])
     return {Nullability::NONNULL};
