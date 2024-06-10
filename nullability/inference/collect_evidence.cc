@@ -389,13 +389,14 @@ class DefinitionEvidenceCollector {
     }
   }
 
-  void fromAssignmentToType(QualType Type, TypeNullability &TypeNullability,
+  void fromAssignmentToType(QualType Type,
+                            const TypeNullability &TypeNullability,
                             const dataflow::PointerValue &PointerValue,
                             SourceLocation ValueLoc) {
     //  TODO: Account for variance and each layer of nullability when we handle
     //  more than top-level pointers.
     if (TypeNullability.empty()) return;
-    PointerTypeNullability &TopLevel = TypeNullability[0];
+    const PointerTypeNullability &TopLevel = TypeNullability[0];
     dataflow::Arena &A = Env.arena();
     if (TopLevel.concrete() == NullabilityKind::NonNull ||
         (TopLevel.isSymbolic() &&
@@ -768,7 +769,7 @@ class DefinitionEvidenceCollector {
   /// ```
   /// evidence for each of the assignments of `p` and `q` that they were
   /// ASSIGNED_FROM_NULLABLE.
-  void fromAssignmentFromNullable(TypeNullability &TypeNullability,
+  void fromAssignmentFromNullable(const TypeNullability &TypeNullability,
                                   const dataflow::PointerValue &PointerValue,
                                   SourceLocation ValueLoc,
                                   Evidence::Kind EvidenceKind) {
@@ -798,19 +799,30 @@ class DefinitionEvidenceCollector {
     }
   }
 
-  /// Collects evidence based on an assignment of Expr to LHSDecl, through a
+  /// Collects evidence based on an assignment of RHS to LHSDecl, through a
   /// direct assignment statement, aggregate initialization, etc.
-  void fromAssignmentLike(const ValueDecl &LHSDecl, const Expr &Expr,
+  void fromAssignmentLike(const ValueDecl &LHSDecl, const Expr &RHS,
                           SourceLocation Loc,
                           Evidence::Kind EvidenceKindForAssignmentFromNullable =
                               Evidence::ASSIGNED_FROM_NULLABLE) {
-    const dataflow::PointerValue *PV = getPointerValue(&Expr, Env);
+    fromAssignmentLike(LHSDecl.getType(),
+                       getNullabilityAnnotationsFromTypeAndOverrides(
+                           LHSDecl.getType(), &LHSDecl, Lattice),
+                       RHS, Loc, EvidenceKindForAssignmentFromNullable);
+  }
+
+  /// Collects evidence based on an assignment of RHS to an expression with type
+  /// LHSType and nullability LHSNullability, through a direct assignment
+  /// statement, aggregate initialization, etc.
+  void fromAssignmentLike(QualType LHSType,
+                          const TypeNullability &LHSNullability,
+                          const Expr &RHS, SourceLocation Loc,
+                          Evidence::Kind EvidenceKindForAssignmentFromNullable =
+                              Evidence::ASSIGNED_FROM_NULLABLE) {
+    const dataflow::PointerValue *PV = getPointerValue(&RHS, Env);
     if (!PV) return;
-    TypeNullability TypeNullability =
-        getNullabilityAnnotationsFromTypeAndOverrides(LHSDecl.getType(),
-                                                      &LHSDecl, Lattice);
-    fromAssignmentToType(LHSDecl.getType(), TypeNullability, *PV, Loc);
-    fromAssignmentFromNullable(TypeNullability, *PV, Loc,
+    fromAssignmentToType(LHSType, LHSNullability, *PV, Loc);
+    fromAssignmentFromNullable(LHSNullability, *PV, Loc,
                                EvidenceKindForAssignmentFromNullable);
   }
 
@@ -860,62 +872,17 @@ class DefinitionEvidenceCollector {
     } else {
       return;
     }
-      const QualType LHSType = LHS->getType();
-      if (!isSupportedPointerType(LHSType)) return;
+    const QualType LHSType = LHS->getType();
+    if (!isSupportedPointerType(LHSType)) return;
 
-      const ValueDecl *LHSDecl = nullptr;
-      if (auto *DeclRefExpr = dyn_cast_or_null<clang::DeclRefExpr>(LHS)) {
-        LHSDecl = DeclRefExpr->getDecl();
-      } else if (auto *MemberExpr = dyn_cast_or_null<clang::MemberExpr>(LHS)) {
-        LHSDecl = MemberExpr->getMemberDecl();
-      } else if (auto *MemberCallExpr =
-                     dyn_cast_or_null<clang::CXXMemberCallExpr>(LHS)) {
-        LHSDecl = MemberCallExpr->getMethodDecl();
-      } else if (auto *UnaryOp = dyn_cast_or_null<clang::UnaryOperator>(LHS)) {
-        switch (UnaryOp->getOpcode()) {
-          case UO_Deref:
-            // An assignment like `*pp = nullptr`, where `pp` is a `T**`. We
-            // don't do anything with these yet.
-            // TODO(b/323509132) Handle these assignments.
-            return;
-          case UO_PreInc:
-          case UO_PreDec:
-            // An assignment like `++p = nullptr`, where `p` is a `T*`. This is
-            // very rare, if used at all, but is for our purposes here the same
-            // as `p = nullptr`.
-            // TODO(b/309625642) Handle these assignments, possibly by
-            // extracting this if/else block and recursing into the operand of
-            // the arithmetic.
-            return;
-          default:
-            // We don't expect to see any other unary operators here, but not to
-            // a production-crash-worthy level, so assert instead of CHECK.
-            llvm::errs() << "Unsupported LHS unary operator in assignment to "
-                            "existing decl:\n";
-            LHS->dump();
-            assert(false);
-            return;
-        }
-      } else if (auto *ArraySubscript =
-                     dyn_cast_or_null<clang::ArraySubscriptExpr>(LHS)) {
-        // An assignment like `a[0] = nullptr`, where `a` is an array of
-        // pointers. We don't do anything with these yet.
-        // TODO(b/323509132) Handle these assignments.
-        return;
-      } else {
-        llvm::errs() << "Unsupported LHS expression type in assignment to "
-                        "existing decl:\n";
-        LHS->dump();
-        return;
-      }
-
-      // Use the LHS as the Expr being assigned to LHSDecl because transfer
-      // functions have already run, setting the Environment's value for the LHS
-      // Expr to the result of the assignment. In cases where the RHS has been
-      // modified, such as in `a = std::move(b)`, the Environment's value for
-      // the RHS will no longer be an accurate representation of what was
-      // assigned.
-      fromAssignmentLike(*LHSDecl, *LHS, *Loc);
+    const TypeNullability *TypeNullability = Lattice.getTypeNullability(LHS);
+    CHECK(TypeNullability);
+    // Use the LHS as both left- and right-hand sides because transfer functions
+    // have already run, setting the Environment's value for the LHS Expr to the
+    // result of the assignment. In cases where the RHS has been modified, such
+    // as in `a = std::move(b)`, the Environment's value for the RHS will no
+    // longer be an accurate representation of what was assigned.
+    fromAssignmentLike(LHSType, *TypeNullability, *LHS, *Loc);
   }
 
   void fromArithmeticArg(const Expr *Arg, SourceLocation Loc) {

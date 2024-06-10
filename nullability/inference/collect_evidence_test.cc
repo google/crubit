@@ -1852,6 +1852,18 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullableMemberCallExpr) {
                                             functionNamed("getPtrRef"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullptrMultipleOperators) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p) {
+      *&p = nullptr;
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(evidence(paramSlot(0),
+                                            Evidence::ASSIGNED_FROM_NULLABLE,
+                                            functionNamed("target"))));
+}
+
 // This is a regression test for a bug where we collected ASSIGNED_FROM_NULLABLE
 // evidence for the return type of `foo`, because the LHS type of the assignment
 // was already nullable, and so any formula does imply that the LHS type of the
