@@ -47,6 +47,15 @@ MATCHER_P2(SlotRange, SlotID, Range,
          Range.Begin == arg.begin() && Range.End == arg.end();
 }
 
+MATCHER_P3(SlotRange, SlotID, Range, ExistingAnnotation,
+           absl::StrCat("is a SlotRange with ID ", SlotID,
+                        " and range equivalent to [", Range.Begin, ",",
+                        Range.End, ")")) {
+  return ExplainMatchResult(SlotRange(SlotID, Range), arg, result_listener) &&
+         arg.has_existing_annotation() &&
+         arg.existing_annotation() == ExistingAnnotation;
+}
+
 MATCHER_P2(TypeLocRanges, Path, Ranges, "") {
   return ExplainMatchResult(Path, arg.path(), result_listener) &&
          ExplainMatchResult(Ranges, arg.range(), result_listener);
@@ -55,12 +64,13 @@ MATCHER_P2(TypeLocRanges, Path, Ranges, "") {
 template <typename DeclT, typename MatcherT>
 std::optional<clang::tidy::nullability::TypeLocRanges> getRanges(
     llvm::StringRef Input, MatcherT Matcher) {
-  NullabilityPragmas UnusedPragmas;
-  TestAST TU(getAugmentedTestInputs(Input, UnusedPragmas));
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
   const auto *D =
       selectFirst<DeclT>("d", match(Matcher.bind("d"), TU.context()));
   CHECK(D != nullptr);
-  return clang::tidy::nullability::getEligibleRanges(*D);
+  return clang::tidy::nullability::getEligibleRanges(
+      *D, TypeNullabilityDefaults(TU.context(), Pragmas));
 }
 
 std::optional<clang::tidy::nullability::TypeLocRanges> getFunctionRanges(
@@ -766,6 +776,23 @@ TEST(EligibleRangesTest, GlobalVariable) {
                   MainFileName,
                   UnorderedElementsAre(SlotRange(0, Input.range("zero")),
                                        SlotRange(-1, Input.range("one"))))));
+}
+
+TEST(EligibleRangesTest, Pragma) {
+  auto Input = Annotations(R"(
+  #pragma nullability file_default nonnull
+
+  $zero[[$one[[int *]]*]] target($param_one[[int *]], $param_two[[int *]]);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName,
+          UnorderedElementsAre(
+              SlotRange(0, Input.range("zero"), Nullability::NONNULL),
+              SlotRange(-1, Input.range("one"), Nullability::NONNULL),
+              SlotRange(1, Input.range("param_one"), Nullability::NONNULL),
+              SlotRange(2, Input.range("param_two"), Nullability::NONNULL)))));
 }
 
 }  // namespace

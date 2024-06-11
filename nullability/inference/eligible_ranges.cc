@@ -99,9 +99,10 @@ static void initSlotRange(SlotRange &R, std::optional<SlotNum> Slot,
 static void addRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
                                     const ASTContext &Context,
                                     const FileID &DeclFID,
+                                    const TypeNullabilityDefaults &Defaults,
                                     TypeLocRanges &Result) {
   std::vector<TypeNullabilityLoc> NullabilityLocs =
-      getTypeNullabilityLocs(WholeLoc);
+      getTypeNullabilityLocs(WholeLoc, Defaults);
   const auto &SM = Context.getSourceManager();
   for (auto &[SlotInLoc, T, MaybeLoc, Nullability] : NullabilityLocs) {
     if (!MaybeLoc || !isEligibleTypeLoc(*MaybeLoc)) continue;
@@ -151,7 +152,8 @@ static bool trySetPath(FileID FID, const SourceManager &SrcMgr,
   return true;
 }
 
-static std::optional<TypeLocRanges> getEligibleRanges(const FunctionDecl &Fun) {
+static std::optional<TypeLocRanges> getEligibleRanges(
+    const FunctionDecl &Fun, const TypeNullabilityDefaults &Defaults) {
   FunctionTypeLoc TyLoc = Fun.getFunctionTypeLoc();
   if (TyLoc.isNull()) return std::nullopt;
 
@@ -163,12 +165,12 @@ static std::optional<TypeLocRanges> getEligibleRanges(const FunctionDecl &Fun) {
   if (!trySetPath(DeclFID, SrcMgr, Result)) return std::nullopt;
 
   addRangesQualifierAware(TyLoc.getReturnLoc(), SLOT_RETURN_TYPE, Context,
-                          DeclFID, Result);
+                          DeclFID, Defaults, Result);
 
   for (int I = 0, N = Fun.getNumParams(); I < N; ++I) {
     const ParmVarDecl *P = Fun.getParamDecl(I);
     addRangesQualifierAware(P->getTypeSourceInfo()->getTypeLoc(),
-                            SLOT_PARAM + I, Context, DeclFID, Result);
+                            SLOT_PARAM + I, Context, DeclFID, Defaults, Result);
   }
 
   if (Result.range().empty()) return std::nullopt;
@@ -176,7 +178,8 @@ static std::optional<TypeLocRanges> getEligibleRanges(const FunctionDecl &Fun) {
   return Result;
 }
 
-static std::optional<TypeLocRanges> getEligibleRanges(const DeclaratorDecl &D) {
+static std::optional<TypeLocRanges> getEligibleRanges(
+    const DeclaratorDecl &D, const TypeNullabilityDefaults &Defaults) {
   TypeLoc TyLoc = D.getTypeSourceInfo()->getTypeLoc();
   if (TyLoc.isNull()) return std::nullopt;
 
@@ -187,20 +190,21 @@ static std::optional<TypeLocRanges> getEligibleRanges(const DeclaratorDecl &D) {
   FileID DeclFID = SrcMgr.getFileID(SrcMgr.getExpansionLoc(D.getLocation()));
   if (!trySetPath(DeclFID, SrcMgr, Result)) return std::nullopt;
 
-  addRangesQualifierAware(TyLoc, Slot(0), Context, DeclFID, Result);
+  addRangesQualifierAware(TyLoc, Slot(0), Context, DeclFID, Defaults, Result);
   if (Result.range().empty()) return std::nullopt;
 
   return Result;
 }
 
-std::optional<TypeLocRanges> getEligibleRanges(const Decl &D) {
+std::optional<TypeLocRanges> getEligibleRanges(
+    const Decl &D, const TypeNullabilityDefaults &Defaults) {
   if (!isInferenceTarget(D)) return std::nullopt;
   if (const auto *Fun = clang::dyn_cast<FunctionDecl>(&D))
-    return getEligibleRanges(*Fun);
+    return getEligibleRanges(*Fun, Defaults);
   if (const auto *Field = clang::dyn_cast<FieldDecl>(&D))
-    return getEligibleRanges(*Field);
+    return getEligibleRanges(*Field, Defaults);
   if (const auto *Var = clang::dyn_cast<VarDecl>(&D))
-    return getEligibleRanges(*Var);
+    return getEligibleRanges(*Var, Defaults);
   return std::nullopt;
 }
 

@@ -288,9 +288,9 @@ struct TypeNullabilityLoc {
 
 // Assembles TypeNullabilityLocs for each pointer type in the canonical type for
 // `Loc`, corresponding directly with the TypeNullability that would be
-// assembled for `Loc`'s type, except that reported NullabilityKinds will be
-// detected without regard to any file-level default nullability pragmas.
-std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(TypeLoc Loc);
+// assembled for `Loc`'s type.
+std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(
+    TypeLoc Loc, const TypeNullabilityDefaults &);
 
 }  // namespace clang::tidy::nullability
 

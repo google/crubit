@@ -8,6 +8,7 @@
 #include <optional>
 
 #include "nullability/inference/inference.proto.h"
+#include "nullability/type_nullability.h"
 #include "clang/AST/DeclBase.h"
 
 namespace clang::tidy::nullability {
@@ -15,7 +16,11 @@ namespace clang::tidy::nullability {
 // Collects the ranges of types written in the given function declaration that
 // are eligible for nullability annotations. Essentially, all pointer types.  If
 // the return value is populated, none of its fields will be empty.
-std::optional<TypeLocRanges> getEligibleRanges(const Decl& D);
+//
+// Fields in the return value account for the existing nullability annotations
+// including modification by file-level defaults as provided by `Defaults`.
+std::optional<TypeLocRanges> getEligibleRanges(
+    const Decl& D, const TypeNullabilityDefaults& Defaults);
 
 }  // namespace clang::tidy::nullability
 

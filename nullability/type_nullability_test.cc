@@ -5,6 +5,7 @@
 #include "nullability/type_nullability.h"
 
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -23,6 +24,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendAction.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Lex/Lexer.h"
 #include "clang/Testing/CommandLineArgs.h"
@@ -349,6 +351,23 @@ TEST_F(UnderlyingRawPointerTest, BaseClassIsTemplateTemplateParameter) {
   EXPECT_EQ(underlyingRawPointerType(Target->getUnderlyingType()), QualType());
 }
 
+std::function<std::unique_ptr<FrontendAction>()> makeRegisterPragmasAction(
+    NullabilityPragmas &Pragmas) {
+  return [&Pragmas]() {
+    struct Action : public SyntaxOnlyAction {
+      NullabilityPragmas &Pragmas;
+      Action(NullabilityPragmas &Pragmas) : Pragmas(Pragmas) {}
+
+      std::unique_ptr<ASTConsumer> CreateASTConsumer(
+          CompilerInstance &CI, llvm::StringRef File) override {
+        registerPragmaHandler(CI.getPreprocessor(), Pragmas);
+        return SyntaxOnlyAction::CreateASTConsumer(CI, File);
+      }
+    };
+    return std::make_unique<Action>(Pragmas);
+  };
+}
+
 class GetTypeNullabilityTest : public ::testing::Test {
  protected:
   // C++ declarations prepended before parsing type in nullVec().
@@ -365,19 +384,7 @@ class GetTypeNullabilityTest : public ::testing::Test {
   TypeNullability nullVec(llvm::StringRef Type) {
     NullabilityPragmas Pragmas;
     Inputs.Code = (Preamble + "\nusing Target = " + Type + ";").str();
-    Inputs.MakeAction = [&] {
-      struct Action : public SyntaxOnlyAction {
-        NullabilityPragmas &Pragmas;
-        Action(NullabilityPragmas &Pragmas) : Pragmas(Pragmas) {}
-
-        std::unique_ptr<ASTConsumer> CreateASTConsumer(
-            CompilerInstance &CI, llvm::StringRef File) override {
-          registerPragmaHandler(CI.getPreprocessor(), Pragmas);
-          return SyntaxOnlyAction::CreateASTConsumer(CI, File);
-        }
-      };
-      return std::make_unique<Action>(Pragmas);
-    };
+    Inputs.MakeAction = makeRegisterPragmasAction(Pragmas);
     TestAST AST(Inputs);
     auto Target = AST.context().getTranslationUnitDecl()->lookup(
         &AST.context().Idents.get("Target"));
@@ -573,7 +580,9 @@ std::optional<Annotations::Range> getRange(std::optional<TypeLoc> L,
 std::vector<ComparableNullabilityLoc> getComparableNullabilityLocs(
     llvm::StringRef Snippet, llvm::StringRef HeaderWithAttributes = "") {
   Annotations AnnotatedInput(Snippet);
+  NullabilityPragmas Pragmas;
   TestInputs Inputs(AnnotatedInput.code());
+  Inputs.MakeAction = makeRegisterPragmasAction(Pragmas);
   Inputs.Language = TestLanguage::Lang_CXX17;
   if (!HeaderWithAttributes.empty()) {
     Inputs.ExtraFiles["header.h"] = HeaderWithAttributes;
@@ -585,7 +594,8 @@ std::vector<ComparableNullabilityLoc> getComparableNullabilityLocs(
       &AST.context().Idents.get("Target"));
   CHECK(Target.isSingleResult());
   std::vector<TypeNullabilityLoc> NullabilityLocs = getTypeNullabilityLocs(
-      Target.find_first<TypeAliasDecl>()->getTypeSourceInfo()->getTypeLoc());
+      Target.find_first<TypeAliasDecl>()->getTypeSourceInfo()->getTypeLoc(),
+      TypeNullabilityDefaults(AST.context(), Pragmas));
 
   std::vector<ComparableNullabilityLoc> ComparableOutputs;
   for (const auto &Output : NullabilityLocs) {

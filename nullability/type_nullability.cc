@@ -1044,20 +1044,37 @@ std::string printWithNullability(QualType T, const TypeNullability &Nullability,
       .getAsString(Ctx.getPrintingPolicy());
 }
 
-std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(TypeLoc Loc) {
+std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(
+    TypeLoc Loc, const TypeNullabilityDefaults &Defaults) {
   struct Walker : NullabilityWalker<Walker> {
     std::vector<TypeNullabilityLoc> TypeNullabilityLocs;
     unsigned Slot = 0;
+    const TypeNullabilityDefaults &Defaults;
 
     // Ignores any default nullability pragmas.
-    Walker() : NullabilityWalker(FileID()) {}
+    Walker(FileID File, const TypeNullabilityDefaults &Defaults)
+        : NullabilityWalker(File), Defaults(Defaults) {}
 
-    void report(absl::Nonnull<const Type *> T, FileID,
+    void report(absl::Nonnull<const Type *> T, FileID File,
                 std::optional<NullabilityKind> NK, std::optional<TypeLoc> Loc) {
+      if (!NK) {
+        // If the file has a specified default nullability, report that as an
+        // existing annotation. Don't use Defaults.get(File) in order to avoid
+        // treating a lack of pragma as an annotation of
+        // Defaults.DefaultNullability.
+        if (Defaults.FileNullability && File.isValid()) {
+          if (auto It = Defaults.FileNullability->find(File);
+              It != Defaults.FileNullability->end())
+            NK = It->second;
+        }
+      }
       TypeNullabilityLocs.push_back({Slot, T, Loc, NK});
       ++Slot;
     }
-  } LocsWalker;
+  } LocsWalker(Defaults.Ctx ? Defaults.Ctx->getSourceManager().getFileID(
+                                  Loc.getLocalSourceRange().getBegin())
+                            : FileID(),
+               Defaults);
 
   LocsWalker.visit(Loc);
   return std::move(LocsWalker.TypeNullabilityLocs);
