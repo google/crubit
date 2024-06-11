@@ -22,7 +22,7 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use rustc_attr::find_deprecation;
-use rustc_hir::{AssocItemKind, Item, ItemKind, Node, Unsafety};
+use rustc_hir::{AssocItemKind, Item, ItemKind, Node, Safety};
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
@@ -889,7 +889,7 @@ fn format_thunk_impl<'tcx>(
     };
     // Wrap the call in an unsafe block, for the sake of RFC #2585
     // `unsafe_block_in_unsafe_fn`.
-    if sig.unsafety == Unsafety::Unsafe {
+    if let Safety::Unsafe = sig.safety {
         // Note: This causes unsafe {... unsafe {...} ...}, which seems not ideal.
         // Either the inner unsafe should be moved out, or just elided when
         // there's an outer unsafe.
@@ -936,7 +936,7 @@ fn format_thunk_impl<'tcx>(
     };
 
     let thunk_name = make_rs_ident(thunk_name);
-    let unsafe_qualifier = if sig.unsafety == Unsafety::Unsafe {
+    let unsafe_qualifier = if let Safety::Unsafe = sig.safety {
         quote! {unsafe}
     } else {
         quote! {}
