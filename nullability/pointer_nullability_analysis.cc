@@ -1644,7 +1644,8 @@ PointerNullabilityAnalysis::PointerNullabilityAnalysis(
 
 PointerTypeNullability PointerNullabilityAnalysis::assignNullabilityVariable(
     absl::Nonnull<const ValueDecl *> D, dataflow::Arena &A) {
-  auto [It, Inserted] = NFS.DeclTopLevelNullability.try_emplace(D);
+  auto [It, Inserted] = NFS.DeclTopLevelNullability.try_emplace(
+      cast<ValueDecl>(D->getCanonicalDecl()));
   if (Inserted) It->second = PointerTypeNullability::createSymbolic(A);
   return It->second;
 }

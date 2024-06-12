@@ -34,12 +34,12 @@ absl::Nullable<const PointerTypeNullability *> getDeclNullability(
     absl::Nullable<const Decl *> D,
     const PointerNullabilityLattice::NonFlowSensitiveState &NFS) {
   if (!D) return nullptr;
-  if (const auto *VD = dyn_cast_or_null<ValueDecl>(D)) {
+  if (const auto *VD = dyn_cast_or_null<ValueDecl>(D->getCanonicalDecl())) {
     auto It = NFS.DeclTopLevelNullability.find(VD);
     if (It != NFS.DeclTopLevelNullability.end()) return &It->second;
   }
   if (const std::optional<const PointerTypeNullability *> N =
-          NFS.ConcreteNullabilityOverride(*D))
+          NFS.ConcreteNullabilityOverride(*D->getCanonicalDecl()))
     return *N;
   return nullptr;
 }
