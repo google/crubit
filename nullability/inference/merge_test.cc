@@ -276,7 +276,7 @@ TEST_F(InferTest, Arithmetic) {
 }
 
 TEST_F(InferTest, NullableDefaultMemberInitializer) {
-  add(Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER);
+  add(Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER);
   EXPECT_EQ(Nullability::NULLABLE, infer());
   add(Evidence::UNCHECKED_DEREFERENCE);
   EXPECT_EQ(Nullability::NONNULL, infer());

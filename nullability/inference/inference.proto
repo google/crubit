@@ -83,12 +83,16 @@ message Evidence {
     // A pointer was used with an arithmetic operator without being checked for
     // null first.
     ARITHMETIC = 14;
-    // A non-static member variable has a default initializer that is nullable.
-    // This is considered to be a weaker signal than other assignments to
-    // nullable, due to the common use of nullptr as a default value to avoid
-    // quieter uninitialized memory errors in favor of loud segfaults, so we
-    // differentiate the evidence.
-    NULLABLE_DEFAULT_MEMBER_INITIALIZER = 15;
+    // A non-static member variable has a default initializer that is a literal
+    // nullptr or is simply constructed from a literal nullptr. This is
+    // considered to be a weaker signal than other assignments to nullable, due
+    // to the common use of nullptr as a default value to avoid quieter
+    // uninitialized memory errors in favor of loud segfaults, so we
+    // differentiate the evidence. Default initializers that are nullable but
+    // not using literal nullptrs use the stronger evidence
+    // ASSIGNED_TO_NULLABLE, as they likely indicate more explicit Nullable
+    // intent.
+    NULLPTR_DEFAULT_MEMBER_INITIALIZER = 15;
     // __attribute((nonnull[(optional_param_indices)])) was applied to a
     // function or parameter declaration or __attribute((returns_nonnull)) was
     // applied to a function declaration.

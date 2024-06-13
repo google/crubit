@@ -1211,6 +1211,35 @@ TEST(CollectEvidenceFromDefinitionTest, FieldInitializerFromAssignmentToType) {
                                     functionNamed("Target"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerNullptr) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Target {
+      Target() {};
+      int* I = nullptr;
+    };
+  )cc";
+  EXPECT_THAT(collectFromDefinitionMatching(
+                  cxxConstructorDecl(isDefaultConstructor()), Src),
+              UnorderedElementsAre(evidence(
+                  Slot(0), Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER,
+                  fieldNamed("Target::I"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    Nullable<int*> G;
+    struct Target {
+      Target() {};
+      int* I = G;
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(cxxConstructorDecl(isDefaultConstructor()),
+                                    Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("Target::I"))));
+}
+
 TEST(CollectEvidenceFromDefinitionTest,
      IndirectFieldInitializerFromAssignmentToType) {
   static constexpr llvm::StringRef Src = R"cc(
@@ -1244,7 +1273,7 @@ TEST(CollectEvidenceFromDefinitionTest, IndirectFieldDefaultFieldInitializer) {
       collectFromDefinitionMatching(
           cxxConstructorDecl(isDefaultConstructor(), hasName("Target")), Src),
       UnorderedElementsAre(
-          evidence(Slot(0), Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER,
+          evidence(Slot(0), Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER,
                    fieldNamed("Target@Sa::I"))));
 }
 
@@ -1367,7 +1396,7 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
       collectFromDefinitionMatching(
           cxxConstructorDecl(isDefaultConstructor(), hasName("Target")), Src),
       UnorderedElementsAre(
-          evidence(Slot(0), Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER,
+          evidence(Slot(0), Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER,
                    fieldNamed("Target::I"))));
 }
 

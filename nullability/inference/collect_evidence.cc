@@ -291,6 +291,26 @@ static std::optional<Evidence::Kind> evidenceKindFromDeclaredReturnType(
       getReturnTypeNullabilityAnnotations(D, Defaults));
 }
 
+static bool isOrIsConstructedFromNullPointerConstant(
+    absl::Nonnull<const Expr *> E, ASTContext &Ctx) {
+  if (E->isNullPointerConstant(Ctx, Expr::NPC_ValueDependentIsNotNull) !=
+      Expr::NPCK_NotNull) {
+    return true;
+  }
+  const Expr *SubExpr = &dataflow::ignoreCFGOmittedNodes(*E);
+  if (auto *MaterializeTempExpr = dyn_cast<MaterializeTemporaryExpr>(SubExpr)) {
+    SubExpr = MaterializeTempExpr->getSubExpr();
+  }
+  if (auto *BindTemp = dyn_cast<CXXBindTemporaryExpr>(SubExpr)) {
+    SubExpr = BindTemp->getSubExpr();
+  }
+  auto *CE = dyn_cast<CXXConstructExpr>(SubExpr->IgnoreImpCasts());
+  if (!CE) return false;
+  return CE != nullptr && CE->getNumArgs() == 1 &&
+         CE->getArg(0)->isNullPointerConstant(
+             Ctx, Expr::NPC_ValueDependentIsNotNull) != Expr::NPCK_NotNull;
+}
+
 namespace {
 class DefinitionEvidenceCollector {
  public:
@@ -1018,9 +1038,13 @@ class DefinitionEvidenceCollector {
       return;
     }
 
+    bool NullptrDefaultInit =
+        IsDefaultInitializer && isOrIsConstructedFromNullPointerConstant(
+                                    InitExpr, Field->getASTContext());
+
     fromAssignmentLike(*Field, *InitExpr, InitExpr->getExprLoc(),
-                       IsDefaultInitializer
-                           ? Evidence::NULLABLE_DEFAULT_MEMBER_INITIALIZER
+                       NullptrDefaultInit
+                           ? Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER
                            : Evidence::ASSIGNED_FROM_NULLABLE);
   }
 
@@ -1307,25 +1331,6 @@ llvm::Error collectEvidenceFromDefinition(
   }
 
   return llvm::Error::success();
-}
-
-static bool isOrIsConstructedFromNullPointerConstant(
-    absl::Nonnull<const Expr *> E, ASTContext &Ctx) {
-  if (E->isNullPointerConstant(Ctx, Expr::NPC_ValueDependentIsNotNull) !=
-      Expr::NPCK_NotNull) {
-    return true;
-  }
-  const Expr *SubExpr = &dataflow::ignoreCFGOmittedNodes(*E);
-  if (auto *MaterializeTempExpr = dyn_cast<MaterializeTemporaryExpr>(SubExpr)) {
-    SubExpr = MaterializeTempExpr->getSubExpr();
-  }
-  auto *BindTemp = dyn_cast<CXXBindTemporaryExpr>(SubExpr);
-  if (BindTemp == nullptr) return false;
-  auto *CE =
-      dyn_cast<CXXConstructExpr>(BindTemp->getSubExpr()->IgnoreImpCasts());
-  return CE != nullptr && CE->getNumArgs() == 1 &&
-         CE->getArg(0)->isNullPointerConstant(
-             Ctx, Expr::NPC_ValueDependentIsNotNull) != Expr::NPCK_NotNull;
 }
 
 static void collectEvidenceFromDefaultArgument(
