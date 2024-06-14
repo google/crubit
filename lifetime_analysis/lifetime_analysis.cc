@@ -598,7 +598,7 @@ std::optional<std::string> TransferStmtVisitor::VisitArraySubscriptExpr(
   // For our purposes here, a subscripting operation is equivalent to a
   // dereference on its base - we don't make a distinction between different
   // lifetimes in an array. This effectively merges the points-to sets of all
-  // elements in the array. See [/docs/lifetimes_static_analysis.md](/docs/lifetimes_static_analysis.md) for why we
+  // elements in the array. See [/docs/design/lifetimes_static_analysis.md](/docs/design/lifetimes_static_analysis.md) for why we
   // don't track individual array elements.
 
   ObjectSet sub_points_to =
