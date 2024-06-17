@@ -198,7 +198,6 @@ static std::optional<TypeLocRanges> getEligibleRanges(
 
 std::optional<TypeLocRanges> getEligibleRanges(
     const Decl &D, const TypeNullabilityDefaults &Defaults) {
-  if (!isInferenceTarget(D)) return std::nullopt;
   if (const auto *Fun = clang::dyn_cast<FunctionDecl>(&D))
     return getEligibleRanges(*Fun, Defaults);
   if (const auto *Field = clang::dyn_cast<FieldDecl>(&D))
@@ -206,6 +205,12 @@ std::optional<TypeLocRanges> getEligibleRanges(
   if (const auto *Var = clang::dyn_cast<VarDecl>(&D))
     return getEligibleRanges(*Var, Defaults);
   return std::nullopt;
+}
+
+std::optional<TypeLocRanges> getInferenceRanges(
+    const Decl &D, const TypeNullabilityDefaults &Defaults) {
+  if (!isInferenceTarget(D)) return std::nullopt;
+  return getEligibleRanges(D, Defaults);
 }
 
 }  // namespace clang::tidy::nullability

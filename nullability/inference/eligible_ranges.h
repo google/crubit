@@ -13,13 +13,19 @@
 
 namespace clang::tidy::nullability {
 
-// Collects the ranges of types written in the given function declaration that
-// are eligible for nullability annotations. Essentially, all pointer types.  If
-// the return value is populated, none of its fields will be empty.
-//
-// Fields in the return value account for the existing nullability annotations
-// including modification by file-level defaults as provided by `Defaults`.
+/// Collects the ranges of types written in the given declaration that are
+/// eligible for nullability annotations. Essentially, all pointer types. If the
+/// return value is populated, none of its fields will be empty.
+///
+/// Fields in the return value account for the existing nullability annotations
+/// including modification by file-level defaults as provided by `Defaults`.
 std::optional<TypeLocRanges> getEligibleRanges(
+    const Decl& D, const TypeNullabilityDefaults& Defaults);
+
+/// Collect the ranges of types written in the given declaration that are
+/// eligible for nullability annotations, if the given declaration is an
+/// inference target.
+std::optional<TypeLocRanges> getInferenceRanges(
     const Decl& D, const TypeNullabilityDefaults& Defaults);
 
 }  // namespace clang::tidy::nullability
