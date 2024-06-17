@@ -45,6 +45,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/Format.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -64,6 +65,11 @@ llvm::cl::opt<bool> Diagnostics{
 llvm::cl::opt<bool> PrintEvidence{
     "evidence",
     llvm::cl::desc("Print sample evidence as notes (requires -diagnostics)"),
+    llvm::cl::init(true),
+};
+llvm::cl::opt<bool> PrintMetrics{
+    "metrics",
+    llvm::cl::desc("Print inference metrics"),
     llvm::cl::init(true),
 };
 llvm::cl::opt<bool> IncludeTrivial{
@@ -228,6 +234,42 @@ class Action : public SyntaxOnlyAction {
           });
         if (PrintProtos)
           for (const auto &I : Results) llvm::outs() << absl::StrCat(I) << "\n";
+        if (PrintMetrics) {
+          unsigned Nonnull = 0;
+          unsigned Nullable = 0;
+          unsigned Unknown = 0;
+          unsigned Conflict = 0;
+          for (const auto &I : Results) {
+            for (const auto &Slot : I.slot_inference()) {
+              if (Slot.conflict()) {
+                ++Conflict;
+                continue;
+              }
+              switch (Slot.nullability()) {
+                case Nullability::NULLABLE:
+                  ++Nullable;
+                  break;
+                case Nullability::NONNULL:
+                  ++Nonnull;
+                  break;
+                case Nullability::UNKNOWN:
+                  ++Unknown;
+                  break;
+              }
+            }
+          }
+          llvm::outs() << "Inferred " << Nonnull + Nullable + Unknown + Conflict
+                       << " symbols\n";
+          llvm::outs() << "Nonnull: " << Nonnull << "\n";
+          llvm::outs() << "Nullable: " << Nullable << "\n";
+          llvm::outs() << "Unknown: " << Unknown << "\n";
+          llvm::outs() << "Conflicts: " << Conflict << "\n";
+          llvm::outs() << "Percent not Unknown and not Conflict: "
+                       << llvm::format("%0.2f", 100.0 * (Nonnull + Nullable) /
+                                                    (Nonnull + Nullable +
+                                                     Unknown + Conflict))
+                       << "%\n";
+        }
         if (Diagnostics)
           DiagnosticPrinter(Results, Ctx.getDiagnostics()).TraverseAST(Ctx);
       }
