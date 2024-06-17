@@ -1200,6 +1200,14 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, def_id) {
             attributes.push(cc_deprecated_tag);
         }
+        // Also check the impl block to which this function belongs (if there is one).
+        // Note: parent_def_id can be Some(...) even if the function is not inside an
+        // impl block.
+        if let Some(parent_def_id) = tcx.opt_parent(def_id) {
+            if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, parent_def_id) {
+                attributes.push(cc_deprecated_tag);
+            }
+        }
 
         CcSnippet {
             prereqs,
@@ -7619,6 +7627,44 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     struct ... [[deprecated("Use AnotherEnum instead")]] ... SomeEnum final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_impl_block() {
+        let test_src = r#"
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }
+
+        #[deprecated = "Use AnotherStruct instead"]
+        impl SomeStruct {
+            pub fn sum(&self) -> u32 {
+                self.x + self.y
+            }
+
+            pub fn product(&self) -> u32 {
+                self.x * self.y
+            }
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... SomeStruct final {
+                        ...
+                        ... [[deprecated("Use AnotherStruct instead")]] std::uint32_t sum() const ...
+                        ...
+                        ... [[deprecated("Use AnotherStruct instead")]] std::uint32_t product() const ...
                         ...
                     };
                 }
