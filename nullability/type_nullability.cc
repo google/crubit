@@ -4,6 +4,7 @@
 
 #include "nullability/type_nullability.h"
 
+#include <cassert>
 #include <optional>
 #include <string>
 #include <utility>
@@ -18,6 +19,7 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/TemplateName.h"
@@ -32,6 +34,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/SaveAndRestore.h"
 #include "llvm/Support/ScopedPrinter.h"
 
@@ -229,6 +232,15 @@ std::string nullabilityToString(const TypeNullability &Nullability) {
   return Result;
 }
 
+FileID getGoverningFile(absl::Nullable<const Decl *> D) {
+  if (!D) return FileID();
+  return D->getASTContext()
+      .getSourceManager()
+      .getDecomposedExpansionLoc(D->getLocation())
+      .first;
+}
+
+namespace {
 // Recognize aliases e.g. Nonnull<T> as equivalent to T _Nonnull, etc.
 // These aliases should be annotated with [[clang::annotate("Nullable")]] etc.
 //
@@ -248,15 +260,86 @@ std::optional<NullabilityKind> getAliasNullability(const TemplateName &TN) {
   return std::nullopt;
 }
 
-FileID getGoverningFile(absl::Nullable<const Decl *> D) {
-  if (!D) return FileID();
-  return D->getASTContext()
-      .getSourceManager()
-      .getDecomposedExpansionLoc(D->getLocation())
-      .first;
+QualType ignoreTrivialSugar(QualType T) {
+  while (!T.hasLocalQualifiers() && isa<ParenType, ElaboratedType>(T))
+    T = T->getLocallyUnqualifiedSingleStepDesugaredType();
+  return T;
 }
 
-namespace {
+// True if T is Foo<args...> which is an alias for exactly Bar<args...>.
+// We treat such aliases as "transparent" (equivalent to a using decl).
+// The governing pragma is where Foo is used, not where it is defined.
+bool isTransparentAlias(QualType T) {
+  // Unpack T, and check it's a template alias pointing to another template.
+  if (T.hasLocalQualifiers()) return false;
+  // Foo<arg0, arg1>
+  const auto *FooUse = dyn_cast<TemplateSpecializationType>(T);
+  if (!FooUse || !FooUse->isTypeAlias()) return false;
+  // template <param0, param1> using Foo = ...;
+  auto *FooDecl = FooUse->getTemplateName().getAsTemplateDecl();
+  if (!FooDecl || !FooDecl->getTemplatedDecl()) return false;
+  // Bar<param0, param1>
+  auto *BarUse = dyn_cast<TemplateSpecializationType>(ignoreTrivialSugar(
+      cast<TypeAliasDecl>(FooDecl->getTemplatedDecl())->getUnderlyingType()));
+  if (!BarUse) return false;
+
+  // No funny business where the forwarded-to template is a template param.
+  if (!isa_and_present<ClassTemplateDecl, TypeAliasTemplateDecl>(
+          BarUse->getTemplateName().getAsTemplateDecl()))
+    return false;
+
+  // Now verify Foo is exactly forwarding its params to Bar.
+  for (int I = 0; I < BarUse->template_arguments().size(); ++I) {
+    auto &Arg = BarUse->template_arguments()[I];
+    switch (Arg.getKind()) {
+      case TemplateArgument::Type:
+        if (auto *Parm = dyn_cast<TemplateTypeParmType>(Arg.getAsType());
+            Parm && Parm->getDepth() == FooDecl->getTemplateDepth() &&
+            Parm->getIndex() == I)
+          continue;
+        return false;
+      case TemplateArgument::Expression:
+        if (auto *DRE = dyn_cast<DeclRefExpr>(Arg.getAsExpr())) {
+          if (auto *Parm = dyn_cast<NonTypeTemplateParmDecl>(DRE->getDecl());
+              Parm && Parm->getDepth() == Parm->getTemplateDepth() &&
+              Parm->getIndex() == I)
+            continue;
+        }
+        return false;
+      // TODO: we could recognize pack forwarding.
+      default:
+        return false;
+    }
+  }
+  // Foo may have extra params, Bar may have extra (defaulted) params.
+  return true;
+}
+
+// If T is Foo<U> which expands to U, return U.
+std::optional<QualType> unwrapAlias(QualType T) {
+  // Validate that T is exactly Alias<args...>
+  if (T.hasLocalQualifiers()) return std::nullopt;
+  const auto *TST = dyn_cast<TemplateSpecializationType>(T);
+  if (!TST || !TST->isTypeAlias() || TST->template_arguments().empty() ||
+      TST->template_arguments().front().getKind() != TemplateArgument::Type)
+    return std::nullopt;
+  auto *TD = TST->getTemplateName().getAsTemplateDecl();
+  if (!TD) return std::nullopt;
+
+  // Now desugar T to check if it expands to arg0 of the original alias.
+  while (true) {
+    QualType Next = T->getLocallyUnqualifiedSingleStepDesugaredType();
+    if (Next.hasLocalQualifiers()) return std::nullopt;
+    if (Next.getTypePtr() == T.getTypePtr()) return std::nullopt;  // not sugar
+    if (auto *Subst = dyn_cast<SubstTemplateTypeParmType>(T);
+        Subst && Subst->getAssociatedDecl() == TD && Subst->getIndex() == 0) {
+      // Use the sugared form of the argument.
+      return TST->template_arguments().front().getAsType();
+    }
+    T = Next;
+  }
+}
+
 // Traverses a Type to find the points where it might be nullable.
 // This will visit the contained PointerType in the correct order to produce
 // the TypeNullability vector.
@@ -310,6 +393,8 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
 
   void sawNullability(NullabilityKind NK) {
     // If we see nullability applied twice, the outer one wins.
+    assert(PendingNullability != NullabilityKind::Unspecified &&
+           "Unknown around nullability sugar should have been ignored!");
     if (!PendingNullability.has_value()) PendingNullability = NK;
   }
 
@@ -559,8 +644,12 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
       absl::Nonnull<const TemplateSpecializationType *> TST,
       std::optional<TemplateSpecializationTypeLoc> L) {
     if (TST->isTypeAlias()) {
-      if (auto NK = getAliasNullability(TST->getTemplateName()))
-        sawNullability(*NK);
+      auto NK = getAliasNullability(TST->getTemplateName());
+      if (NK == NullabilityKind::Unspecified) {
+        auto Inner = unwrapAlias(QualType(TST, 0));
+        if (!Inner || !isUnknownValidOn(*Inner)) NK = std::nullopt;
+      }
+      if (NK) sawNullability(*NK);
 
       // Aliases are sugar, visit the underlying type.
       // Record template args so we can resugar substituted params.
@@ -582,10 +671,12 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
           Ctx.ArgLocs->push_back(L->getArgLoc(I));
         }
       }
+      TemplateDecl *TD = TST->getTemplateName().getAsTemplateDecl();
       llvm::SaveAndRestore<const TemplateContext *> UseAlias(
           CurrentTemplateContext, &Ctx);
-      llvm::SaveAndRestore SwitchFile(
-          File, getGoverningFile(TST->getTemplateName().getAsTemplateDecl()));
+      llvm::SaveAndRestore SwitchFile(File, isTransparentAlias(QualType(TST, 0))
+                                                ? File
+                                                : getGoverningFile(TD));
       visitType(TST, L);
       return;
     }
@@ -774,7 +865,11 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
 
   void visitAttributedType(absl::Nonnull<const AttributedType *> AT,
                            std::optional<AttributedTypeLoc> L) {
-    if (auto NK = AT->getImmediateNullability()) sawNullability(*NK);
+    auto NK = AT->getImmediateNullability();
+    if (NK == NullabilityKind::Unspecified) {
+      if (!isUnknownValidOn(AT->getModifiedType())) NK = std::nullopt;
+    }
+    if (NK) sawNullability(*NK);
     visit(AT->getModifiedType(),
           L ? std::optional<TypeLoc>(L->getModifiedLoc()) : std::nullopt);
     CHECK(!PendingNullability.has_value())
@@ -818,7 +913,32 @@ struct CountWalker : public NullabilityWalker<CountWalker> {
     ++Count;
   }
 };
+
+// T is *lexically* a pointer type if its sugar chain contains no aliases.
+// For the purposes of Unknown, we also don't want nullability attributes.
+static bool isLexicalPointerTypeWithoutNullability(QualType T) {
+  if (!isSupportedPointerType(T)) return false;
+  while (true) {
+    if (T->isTypedefNameType()) return false;
+    if (const auto *AT = dyn_cast<AttributedType>(T))
+      if (AT->getImmediateNullability().has_value()) return false;
+    auto Next = T->getLocallyUnqualifiedSingleStepDesugaredType();
+    if (Next.getTypePtr() == T.getTypePtr()) return true;
+    T = Next;
+  }
+}
+
 }  // namespace
+
+bool isUnknownValidOn(QualType T) {
+  // Unwrap transparent aliases and trivial sugar to get the "real" type.
+  T = ignoreTrivialSugar(T);
+  while (isTransparentAlias(T))
+    T = ignoreTrivialSugar(T->getLocallyUnqualifiedSingleStepDesugaredType());
+
+  if (!isSupportedPointerType(T)) return false;
+  return isLexicalPointerTypeWithoutNullability(T);
+}
 
 unsigned countPointersInType(QualType T) {
   // Certain expressions like pseudo-destructors have no type, treat as void.
@@ -852,9 +972,10 @@ unsigned countPointersInType(absl::Nonnull<const Expr *> E) {
 }
 
 NullabilityKind TypeNullabilityDefaults::get(FileID File) const {
-  if (FileNullability && File.isValid())
+  if (FileNullability && File.isValid()) {
     if (auto It = FileNullability->find(File); It != FileNullability->end())
       return It->second;
+  }
   return DefaultNullability;
 }
 

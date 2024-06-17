@@ -368,6 +368,19 @@ std::function<std::unique_ptr<FrontendAction>()> makeRegisterPragmasAction(
   };
 }
 
+// Returns the RHS of the typedef named "Target"
+QualType getTypedefTarget(TestAST &AST) {
+  auto Target = AST.context().getTranslationUnitDecl()->lookup(
+      &AST.context().Idents.get("Target"));
+  if (!Target.isSingleResult()) {
+    ADD_FAILURE() << "Expected single typedef named 'Target'\n"
+                  << AST.sourceManager().getBufferData(
+                         AST.sourceManager().getMainFileID());
+    return QualType();
+  }
+  return Target.find_first<TypeAliasDecl>()->getUnderlyingType();
+}
+
 class GetTypeNullabilityTest : public ::testing::Test {
  protected:
   // C++ declarations prepended before parsing type in nullVec().
@@ -377,7 +390,17 @@ class GetTypeNullabilityTest : public ::testing::Test {
 
   GetTypeNullabilityTest() : Header(Inputs.ExtraFiles["header.h"]) {
     Inputs.ExtraArgs.push_back("-include");
+    Inputs.ExtraArgs.push_back("nullability.h");
+    Inputs.ExtraArgs.push_back("-include");
     Inputs.ExtraArgs.push_back("header.h");
+    Inputs.ExtraFiles["nullability.h"] = R"cpp(
+      template <class X>
+      using Nullable [[clang::annotate("Nullable")]] = X;
+      template <class X>
+      using Nonnull [[clang::annotate("Nonnull")]] = X;
+      template <class X>
+      using Unknown [[clang::annotate("Nullability_Unspecified")]] = X;
+    )cpp";
   }
 
   // Parses `Type` and returns getTypeNullability().
@@ -386,10 +409,8 @@ class GetTypeNullabilityTest : public ::testing::Test {
     Inputs.Code = (Preamble + "\nusing Target = " + Type + ";").str();
     Inputs.MakeAction = makeRegisterPragmasAction(Pragmas);
     TestAST AST(Inputs);
-    auto Target = AST.context().getTranslationUnitDecl()->lookup(
-        &AST.context().Idents.get("Target"));
-    CHECK(Target.isSingleResult());
-    return getTypeNullability(*Target.find_first<TypeAliasDecl>(),
+    return getTypeNullability(getTypedefTarget(AST),
+                              AST.sourceManager().getMainFileID(),
                               TypeNullabilityDefaults(AST.context(), Pragmas));
   }
 };
@@ -476,6 +497,171 @@ TEST_F(GetTypeNullabilityTest, LostSugarCausesWrongType) {
               ElementsAre(NullabilityKind::NonNull));
 }
 
+TEST_F(GetTypeNullabilityTest, UnknownOptsOutOfPragma) {
+  Preamble = R"cpp(
+#pragma nullability file_default nonnull
+    using Ptr = int*;
+    using UPtr = Unknown<int*>;
+    using UPtr2 = int* _Null_unspecified;
+    template <class T>
+    using PtrTmpl = T*;
+    template <class T>
+    using UPtrTmpl = Unknown<T*>;
+    template <class T>
+    using UPtrTmpl2 = T* _Null_unspecified;
+  )cpp";
+  EXPECT_THAT(nullVec("Ptr"), ElementsAre(NullabilityKind::NonNull));
+  EXPECT_THAT(nullVec("PtrTmpl<int>"), ElementsAre(NullabilityKind::NonNull));
+  EXPECT_THAT(nullVec("UPtr"), ElementsAre(NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("UPtrTmpl<int>"),
+              ElementsAre(NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("UPtr2"), ElementsAre(NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("UPtrTmpl2<int>"),
+              ElementsAre(NullabilityKind::Unspecified));
+}
+
+TEST_F(GetTypeNullabilityTest, Overrides) {
+  EXPECT_THAT(nullVec("Nullable<Unknown<int*>>"),
+              ElementsAre(NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("Unknown<Nullable<int*>>"),
+              ElementsAre(NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("Nullable<int* _Null_unspecified>"),
+              ElementsAre(NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("Unknown<Nullable<int*>>"),
+              ElementsAre(NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("Nullable<int*> _Null_unspecified"),
+              ElementsAre(NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("Nonnull<Nullable<int*>>"),
+              ElementsAre(NullabilityKind::NonNull));
+
+  Header = R"cpp(
+#pragma nullability file_default nullable
+    using IntPtr = int*;  // nullable
+  )cpp";
+  EXPECT_THAT(nullVec("Unknown<IntPtr>"),
+              ElementsAre(NullabilityKind::Nullable));
+}
+
+TEST_F(GetTypeNullabilityTest, PragmaSmartPointers) {
+  Inputs.ExtraFiles["smart.h"] = R"cpp(
+    namespace std {
+    template <class T>
+    class unique_ptr {};
+    };  // namespace std
+  )cpp";
+
+  Header = R"cpp(
+#include "smart.h"
+#pragma nullability file_default nullable
+
+    namespace directive {
+    using namespace std;
+    }
+    namespace declaration {
+    using std::unique_ptr;
+    }
+    namespace transparent {
+    template <typename T>
+    using unique_ptr = std::unique_ptr<T>;
+    }
+    namespace opaque {
+    template <typename T>
+    using unique_ptr =
+        std::unique_ptr<T> [[clang::annotate_type("hello_world")]];
+    }
+  )cpp";
+
+  Preamble = R"cpp(
+#pragma nullability file_default nonnull
+  )cpp";
+
+  EXPECT_THAT(nullVec("std::unique_ptr<int>"),
+              ElementsAre(NullabilityKind::NonNull));
+  EXPECT_THAT(nullVec("Unknown<std::unique_ptr<int>>"),
+              ElementsAre(NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("directive::unique_ptr<int>"),
+              ElementsAre(NullabilityKind::NonNull));
+  EXPECT_THAT(nullVec("Unknown<directive::unique_ptr<int>>"),
+              ElementsAre(NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("declaration::unique_ptr<int>"),
+              ElementsAre(NullabilityKind::NonNull));
+  EXPECT_THAT(nullVec("Unknown<declaration::unique_ptr<int>>"),
+              ElementsAre(NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("transparent::unique_ptr<int>"),
+              ElementsAre(NullabilityKind::NonNull));
+  EXPECT_THAT(nullVec("Unknown<transparent::unique_ptr<int>>"),
+              ElementsAre(NullabilityKind::Unspecified));
+  EXPECT_THAT(nullVec("opaque::unique_ptr<int>"),
+              ElementsAre(NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("Unknown<opaque::unique_ptr<int>>"),
+              ElementsAre(NullabilityKind::Nullable));
+}
+
+TEST(IsUnknownValidOnTest, All) {
+  std::string Preamble = R"cpp(
+    namespace std {
+    template <class T, class Deleter = void>
+    class unique_ptr {};
+    template <class T, int N = 5>
+    class shared_ptr {};
+    }  // namespace std
+    using Int = int;
+    using IntPtr = int*;
+    namespace using_decl {
+    using Int = int;
+    using std::unique_ptr;
+    }  // namespace using_decl
+    namespace using_directive {
+    using namespace std;
+    }
+    namespace template_aliases {
+    template <class A, class B>
+    using up_transparent = std::unique_ptr<A, B>;
+    template <class A>
+    using up_withdefault = std::unique_ptr<A>;
+    template <class A, class B, class = void>
+    using up_withsfinae = std::unique_ptr<A, B>;
+    template <class A, class B>
+    using up_reversed = std::unique_ptr<B, A>;
+    template <class A, class B>
+    using up_twolayers = up_transparent<A, B>;
+    template <class A>
+    using up_withsugar = std::unique_ptr<A> [[clang::annotate_type("hi")]];
+    template <class A, int N>
+    using sp_withnttp = std::shared_ptr<A, N>;
+    }  // namespace template_aliases
+  )cpp";
+
+  for (std::string Valid : {
+           "int*",
+           "Int*",
+           "std::unique_ptr<int>",
+           "std::shared_ptr<int>",
+           "using_decl::unique_ptr<int>",
+           "using_directive::unique_ptr<int>",
+           "template_aliases::up_transparent<int, void>",
+           "template_aliases::up_withdefault<int>",
+           "template_aliases::up_withsfinae<int, void>",
+           "template_aliases::up_twolayers<int, void>",
+           "template_aliases::sp_withnttp<int, 4>",
+       }) {
+    TestAST AST(Preamble + "\nusing Target=" + Valid + ";");
+    EXPECT_TRUE(isUnknownValidOn(getTypedefTarget(AST))) << Valid;
+  }
+  for (std::string Invalid : {
+           "int",
+           "int * _Nonnull",
+           "std::unique_ptr<int> _Nonnull",
+           "IntPtr",
+           "using_decl::Int",
+           "template_aliases::up_reversed<int, void>",
+           "template_aliases::up_withsugar<int>",
+       }) {
+    TestAST AST(Preamble + "\nusing Target=" + Invalid + ";");
+    EXPECT_FALSE(isUnknownValidOn(getTypedefTarget(AST))) << Invalid;
+  }
+}
+
 class PrintWithNullabilityTest : public ::testing::Test {
  protected:
   // C++ declarations prepended before parsing type in nullVec().
@@ -484,12 +670,7 @@ class PrintWithNullabilityTest : public ::testing::Test {
   // Parses `Type`, augments it with Nulls, and prints the result.
   std::string print(llvm::StringRef Type, const TypeNullability &Nulls) {
     clang::TestAST AST((Preamble + "\n using Target = " + Type + ";").str());
-    auto Target = AST.context().getTranslationUnitDecl()->lookup(
-        &AST.context().Idents.get("Target"));
-    CHECK(Target.isSingleResult());
-    QualType TargetType =
-        AST.context().getTypedefType(Target.find_first<TypeAliasDecl>());
-    return printWithNullability(TargetType, Nulls, AST.context());
+    return printWithNullability(getTypedefTarget(AST), Nulls, AST.context());
   }
 };
 
@@ -600,7 +781,7 @@ std::vector<ComparableNullabilityLoc> getComparableNullabilityLocs(
   std::vector<ComparableNullabilityLoc> ComparableOutputs;
   for (const auto &Output : NullabilityLocs) {
     ComparableOutputs.push_back(
-        {Output.Slot, Output.NK, getRange(Output.Loc, AST)});
+        {Output.Slot, Output.ExistingAnnotation, getRange(Output.Loc, AST)});
   }
   return ComparableOutputs;
 }

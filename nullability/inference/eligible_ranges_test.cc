@@ -47,10 +47,16 @@ MATCHER_P2(SlotRange, SlotID, Range,
          Range.Begin == arg.begin() && Range.End == arg.end();
 }
 
+MATCHER_P2(SlotRangeWithNoExistingAnnotation, SlotID, Range, "") {
+  return !arg.has_existing_annotation() &&
+         ExplainMatchResult(SlotRange(SlotID, Range), arg, result_listener);
+}
+
 MATCHER_P3(SlotRange, SlotID, Range, ExistingAnnotation,
            absl::StrCat("is a SlotRange with ID ", SlotID,
                         " and range equivalent to [", Range.Begin, ",",
-                        Range.End, ")")) {
+                        Range.End, ") and existing annotation ",
+                        ExistingAnnotation)) {
   return ExplainMatchResult(SlotRange(SlotID, Range), arg, result_listener) &&
          arg.has_existing_annotation() &&
          arg.existing_annotation() == ExistingAnnotation;
@@ -93,8 +99,10 @@ TEST(EligibleRangesTest, ReturnAndOneParameterIdentified) {
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(SlotRange(0, Input.range("r")),
-                                             SlotRange(1, Input.range("p"))))));
+          MainFileName,
+          UnorderedElementsAre(
+              SlotRangeWithNoExistingAnnotation(0, Input.range("r")),
+              SlotRangeWithNoExistingAnnotation(1, Input.range("p"))))));
 }
 
 TEST(EligibleRangesTest, OnlyFirstParameterIdentified) {
@@ -178,12 +186,14 @@ TEST(EligibleRangesTest, AnnotatedSlotsGetRangesForPointerTypeOnly) {
            Nullable<$two[[int *]]> nullable,
            NullabilityUnknown<$three[[int *]]> unknown);
   )");
-  EXPECT_THAT(getFunctionRanges(Input.code()),
-              Optional(TypeLocRanges(
-                  MainFileName,
-                  UnorderedElementsAre(SlotRange(1, Input.range("one")),
-                                       SlotRange(2, Input.range("two")),
-                                       SlotRange(3, Input.range("three"))))));
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName,
+          UnorderedElementsAre(
+              SlotRange(1, Input.range("one"), Nullability::NONNULL),
+              SlotRange(2, Input.range("two"), Nullability::NULLABLE),
+              SlotRange(3, Input.range("three"), Nullability::UNKNOWN)))));
 }
 
 TEST(EligibleRangesTest, NamespacedAliasAnnotatedSlotsGetNoRange) {

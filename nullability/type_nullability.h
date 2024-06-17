@@ -86,6 +86,12 @@ bool isSupportedRawPointerType(QualType);
 /// This unwraps sugar, i.e. it looks at the canonical type.
 bool isSupportedSmartPointerType(QualType);
 
+/// The Unknown annotation should only be applied directly to pointer types.
+/// Typedefs are not valid, except for certain "transparent aliases" of smart
+/// pointer templates (conceptually, those that just give them a new name).
+/// When applied to other types, Unknown is ignored.
+bool isUnknownValidOn(QualType);
+
 /// Returns the raw pointer type underlying a smart pointer type.
 /// If this isn't a supported smart pointer type, returns a null type.
 /// If the smart pointer type is not instantiated, falls back to determining
@@ -283,14 +289,21 @@ struct TypeNullabilityLoc {
   unsigned Slot = 0;
   const Type *Type = nullptr;
   std::optional<TypeLoc> Loc;
-  std::optional<NullabilityKind> NK;
+  // If either explicitly annotated (with any supported syntax) or subject to a
+  // file-level pragma, this is the existing nullability annotation governing
+  // the TypeLoc. Otherwise, this is empty and
+  // TypeNullabilityDefaults.DefaultNullability should be used if the
+  // nullability is needed.
+  std::optional<NullabilityKind> ExistingAnnotation;
 };
 
 // Assembles TypeNullabilityLocs for each pointer type in the canonical type for
 // `Loc`, corresponding directly with the TypeNullability that would be
-// assembled for `Loc`'s type.
+// assembled for `Loc`'s type, except that the ExistingAnnotations in the
+// results do not fall back to Defaults.DefaultNullability and instead report an
+// empty ExistingAnnotation in those cases.
 std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(
-    TypeLoc Loc, const TypeNullabilityDefaults &);
+    TypeLoc Loc, const TypeNullabilityDefaults &Defaults);
 
 }  // namespace clang::tidy::nullability
 
