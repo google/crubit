@@ -76,6 +76,7 @@ bool isInferenceTarget(const Decl& D) {
            !Var->isStaticLocal() &&
            // See comments above regarding dependent contexts and templates.
            !Var->getDeclContext()->isDependentContext() &&
+           !Var->isTemplated() &&
            !isa<ClassTemplateSpecializationDecl>(Var->getDeclContext());
   }
   return false;
