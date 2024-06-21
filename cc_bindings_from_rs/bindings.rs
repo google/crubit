@@ -13,7 +13,7 @@ extern crate rustc_target;
 extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use arc_anyhow::{anyhow, bail, ensure, Context, Error, Result};
 use code_gen_utils::{
     escape_non_identifier_chars, format_cc_ident, format_cc_includes, make_rs_ident, CcInclude,
     NamespaceQualifier,
@@ -34,40 +34,70 @@ use rustc_target::spec::PanicStrategy;
 use rustc_trait_selection::infer::InferCtxtExt;
 use rustc_type_ir::RegionKind;
 use std::collections::{BTreeSet, HashMap, HashSet};
+use std::hash::{Hash, Hasher};
 use std::iter::once;
 use std::ops::AddAssign;
 use std::rc::Rc;
 use std::slice;
 
-pub struct Input<'tcx> {
-    /// Compilation context for the crate that the bindings should be generated
-    /// for.
-    pub tcx: TyCtxt<'tcx>,
+memoized::query_group! {
+    trait BindingsGenerator<'tcx> {
+        /// Compilation context for the crate that the bindings should be generated
+        /// for.
+        #[input]
+        fn tcx(&self) -> TyCtxt<'tcx>;
 
-    /// Format specifier for `#include` Crubit C++ support library headers,
-    /// using `{header}` as the place holder.  Example:
-    /// `<crubit/support/{header}>` results in `#include
-    /// <crubit/support/hdr.h>`.
-    pub crubit_support_path_format: Rc<str>,
+        /// Format specifier for `#include` Crubit C++ support library headers,
+        /// using `{header}` as the place holder.  Example:
+        /// `<crubit/support/{header}>` results in `#include
+        /// <crubit/support/hdr.h>`.
+        #[input]
+        fn crubit_support_path_format(&self) -> Rc<str>;
 
-    /// A map from a crate name to the include paths of the corresponding C++
-    /// headers This is used when formatting a type exported from another
-    /// crate.
-    // TODO(b/271857814): A crate name might not be globally unique - the key needs to also cover
-    // a "hash" of the crate version and compilation flags.
-    pub crate_name_to_include_paths: HashMap<Rc<str>, Vec<CcInclude>>,
+        /// A map from a crate name to the include paths of the corresponding C++
+        /// headers This is used when formatting a type exported from another
+        /// crate.
+        // TODO(b/271857814): A crate name might not be globally unique - the key needs to also cover
+        // a "hash" of the crate version and compilation flags.
+        #[input]
+        fn crate_name_to_include_paths(&self) -> Rc<HashMap<Rc<str>, Vec<CcInclude>>>;
 
-    // TODO(b/262878759): Provide a set of enabled/disabled Crubit features.
-    pub _features: (),
+        // TODO(b/262878759): Provide a set of enabled/disabled Crubit features.
+        #[input]
+        fn _features(&self) -> ();
+
+        fn support_header(&self, suffix: &'tcx str) -> CcInclude;
+
+        fn repr_attrs(&self, did: DefId) -> Rc<[rustc_attr::ReprAttr]>;
+
+        fn format_ty_for_cc(
+            &self,
+            ty: Ty<'tcx>,
+            location: TypeLocation,
+        ) -> Result<CcSnippet>;
+
+        fn format_default_ctor(
+            &self,
+            core: Rc<AdtCoreBindings<'tcx>>,
+        ) -> Result<ApiSnippets, ApiSnippets>;
+        fn format_copy_ctor_and_assignment_operator(
+            &self,
+            core: Rc<AdtCoreBindings<'tcx>>,
+        ) -> Result<ApiSnippets, ApiSnippets>;
+        fn format_move_ctor_and_assignment_operator(
+            &self,
+            core: Rc<AdtCoreBindings<'tcx>>,
+        ) -> Result<ApiSnippets, ApiSnippets>;
+
+        fn format_item(&self, def_id: LocalDefId) -> Result<Option<ApiSnippets>>;
+        fn format_fn(&self, local_def_id: LocalDefId) -> Result<ApiSnippets>;
+        fn format_adt_core(&self, def_id: DefId) -> Result<Rc<AdtCoreBindings<'tcx>>>;
+    }
+    pub struct Database;
 }
 
-impl<'tcx> Input<'tcx> {
-    // TODO(b/259724276): This function's results should be memoized.  It may be
-    // easier if separate functions are provided for each support header - e.g.
-    // `rs_char()`, `return_value_slot()`, etc.
-    fn support_header(&self, suffix: &str) -> CcInclude {
-        CcInclude::support_lib_header(self.crubit_support_path_format.clone(), suffix.into())
-    }
+fn support_header<'tcx>(db: &dyn BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcInclude {
+    CcInclude::support_lib_header(db.crubit_support_path_format(), suffix.into())
 }
 
 pub struct Output {
@@ -75,14 +105,15 @@ pub struct Output {
     pub rs_body: TokenStream,
 }
 
-pub fn generate_bindings(input: &Input) -> Result<Output> {
-    match input.tcx.sess().panic_strategy() {
+pub fn generate_bindings(db: &Database) -> Result<Output> {
+    let tcx = db.tcx();
+    match tcx.sess().panic_strategy() {
         PanicStrategy::Unwind => bail!("No support for panic=unwind strategy (b/254049425)"),
         PanicStrategy::Abort => (),
     };
 
     let top_comment = {
-        let crate_name = input.tcx.crate_name(LOCAL_CRATE);
+        let crate_name = tcx.crate_name(LOCAL_CRATE);
         let txt = format!(
             "Automatically @generated C++ bindings for the following Rust crate:\n\
              {crate_name}"
@@ -90,7 +121,7 @@ pub fn generate_bindings(input: &Input) -> Result<Output> {
         quote! { __COMMENT__ #txt __NEWLINE__ }
     };
 
-    let Output { h_body, rs_body } = format_crate(input).unwrap_or_else(|err| {
+    let Output { h_body, rs_body } = format_crate(db).unwrap_or_else(|err| {
         let txt = format!("Failed to generate bindings for the crate: {err}");
         let src = quote! { __COMMENT__ #txt };
         Output { h_body: src.clone(), rs_body: src }
@@ -184,7 +215,7 @@ impl AddAssign for CcPrerequisites {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 struct CcSnippet {
     tokens: TokenStream,
     prereqs: CcPrerequisites,
@@ -355,6 +386,7 @@ fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
 }
 
 /// Location where a type is used.
+#[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
 enum TypeLocation {
     /// The top-level return type.
     ///
@@ -380,32 +412,32 @@ enum TypeLocation {
 }
 
 fn format_pointer_or_reference_ty_for_cc<'tcx>(
-    input: &Input<'tcx>,
+    db: &dyn BindingsGenerator<'tcx>,
     pointee: Ty<'tcx>,
     mutability: rustc_middle::mir::Mutability,
     pointer_sigil: TokenStream,
 ) -> Result<CcSnippet> {
+    let tcx = db.tcx();
     let const_qualifier = match mutability {
         Mutability::Mut => quote! {},
         Mutability::Not => quote! { const },
     };
-    if pointee.is_c_void(input.tcx) {
+    if pointee.is_c_void(tcx) {
         return Ok(CcSnippet { tokens: quote! { #const_qualifier void* }, ..Default::default() });
     }
-    let CcSnippet { tokens, mut prereqs } = format_ty_for_cc(input, pointee, TypeLocation::Other)?;
+    let CcSnippet { tokens, mut prereqs } = db.format_ty_for_cc(pointee, TypeLocation::Other)?;
     prereqs.move_defs_to_fwd_decls();
     Ok(CcSnippet { prereqs, tokens: quote! { #tokens #const_qualifier #pointer_sigil } })
 }
 
 /// Formats `ty` into a `CcSnippet` that represents how the type should be
 /// spelled in a C++ declaration of a function parameter or field.
-//
-// TODO(b/259724276): This function's results should be memoized.
 fn format_ty_for_cc<'tcx>(
-    input: &Input<'tcx>,
+    db: &dyn BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
     location: TypeLocation,
 ) -> Result<CcSnippet> {
+    let tcx = db.tcx();
     fn cstdint(tokens: TokenStream) -> CcSnippet {
         CcSnippet::with_include(tokens, CcInclude::cstdint())
     }
@@ -457,8 +489,7 @@ fn format_ty_for_cc<'tcx>(
             // Asserting that the target architecture meets the assumption from Crubit's
             // `rust_builtin_type_abi_assumptions.md` - we assume that Rust's `char` has the
             // same ABI as `u32`.
-            let layout = input
-                .tcx
+            let layout = tcx
                 .layout_of(ty::ParamEnv::empty().and(ty))
                 .expect("`layout_of` is expected to succeed for the builtin `char` type")
                 .layout;
@@ -474,7 +505,7 @@ fn format_ty_for_cc<'tcx>(
 
             CcSnippet::with_include(
                 quote! { rs_std::rs_char },
-                input.support_header("rs_std/rs_char.h"),
+                db.support_header("rs_std/rs_char.h"),
             )
         }
 
@@ -516,7 +547,7 @@ fn format_ty_for_cc<'tcx>(
         ty::TyKind::Adt(adt, substs) => {
             ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
             ensure!(
-                is_directly_public(input.tcx, adt.did()),
+                is_directly_public(tcx, adt.did()),
                 "Not directly public type (re-exports are not supported yet - b/262052635)"
             );
 
@@ -525,9 +556,9 @@ fn format_ty_for_cc<'tcx>(
             if def_id.krate == LOCAL_CRATE {
                 prereqs.defs.insert(def_id.expect_local());
             } else {
-                let other_crate_name = input.tcx.crate_name(def_id.krate);
-                let includes = input
-                    .crate_name_to_include_paths
+                let other_crate_name = tcx.crate_name(def_id.krate);
+                let crate_name_to_include_paths = db.crate_name_to_include_paths();
+                let includes = crate_name_to_include_paths
                     .get(other_crate_name.as_str())
                     .ok_or_else(|| {
                         anyhow!(
@@ -539,18 +570,15 @@ fn format_ty_for_cc<'tcx>(
             }
 
             // Verify if definition of `ty` can be succesfully imported and bail otherwise.
-            format_adt_core(input.tcx, def_id).with_context(|| {
+            db.format_adt_core(def_id).with_context(|| {
                 format!("Failed to generate bindings for the definition of `{ty}`")
             })?;
 
-            CcSnippet {
-                tokens: FullyQualifiedName::new(input.tcx, def_id).format_for_cc()?,
-                prereqs,
-            }
+            CcSnippet { tokens: FullyQualifiedName::new(tcx, def_id).format_for_cc()?, prereqs }
         }
 
         ty::TyKind::RawPtr(pointee_ty, mutbl) => {
-            format_pointer_or_reference_ty_for_cc(input, *pointee_ty, *mutbl, quote! { * })
+            format_pointer_or_reference_ty_for_cc(db, *pointee_ty, *mutbl, quote! { * })
                 .with_context(|| {
                     format!("Failed to format the pointee of the pointer type `{ty}`")
                 })?
@@ -566,7 +594,7 @@ fn format_ty_for_cc<'tcx>(
             };
             let lifetime = format_region_as_cc_lifetime(region);
             format_pointer_or_reference_ty_for_cc(
-                input,
+                db,
                 *referent_ty,
                 *mutability,
                 quote! { & #lifetime },
@@ -600,9 +628,9 @@ fn format_ty_for_cc<'tcx>(
             };
 
             let mut prereqs = CcPrerequisites::default();
-            prereqs.includes.insert(input.support_header("internal/cxx20_backports.h"));
-            let ret_type = format_ret_ty_for_cc(input, &sig)?.into_tokens(&mut prereqs);
-            let param_types = format_param_types_for_cc(input, &sig)?
+            prereqs.includes.insert(db.support_header("internal/cxx20_backports.h"));
+            let ret_type = format_ret_ty_for_cc(db, &sig)?.into_tokens(&mut prereqs);
+            let param_types = format_param_types_for_cc(db, &sig)?
                 .into_iter()
                 .map(|snippet| snippet.into_tokens(&mut prereqs));
             let tokens = quote! {
@@ -623,20 +651,23 @@ fn format_ty_for_cc<'tcx>(
     })
 }
 
-fn format_ret_ty_for_cc<'tcx>(input: &Input<'tcx>, sig: &ty::FnSig<'tcx>) -> Result<CcSnippet> {
-    format_ty_for_cc(input, sig.output(), TypeLocation::FnReturn)
+fn format_ret_ty_for_cc<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    sig: &ty::FnSig<'tcx>,
+) -> Result<CcSnippet> {
+    db.format_ty_for_cc(sig.output(), TypeLocation::FnReturn)
         .context("Error formatting function return type")
 }
 
 fn format_param_types_for_cc<'tcx>(
-    input: &Input<'tcx>,
+    db: &dyn BindingsGenerator<'tcx>,
     sig: &ty::FnSig<'tcx>,
 ) -> Result<Vec<CcSnippet>> {
     sig.inputs()
         .iter()
         .enumerate()
         .map(|(i, &ty)| {
-            format_ty_for_cc(input, ty, TypeLocation::FnParam)
+            db.format_ty_for_cc(ty, TypeLocation::FnParam)
                 .with_context(|| format!("Error handling parameter #{i}"))
         })
         .collect()
@@ -717,7 +748,7 @@ fn format_region_as_rs_lifetime(region: &ty::Region) -> TokenStream {
     quote! { #lifetime }
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 struct ApiSnippets {
     /// Main API - for example:
     /// - A C++ declaration of a function (with a doc comment),
@@ -780,18 +811,18 @@ fn get_fn_sig(tcx: TyCtxt, fn_def_id: LocalDefId) -> ty::FnSig {
 /// identified by `fn_def_id`.  `format_thunk_impl` may panic if `fn_def_id`
 /// doesn't identify a function.
 fn format_thunk_decl<'tcx>(
-    input: &Input<'tcx>,
+    db: &dyn BindingsGenerator<'tcx>,
     fn_def_id: DefId,
     sig: &ty::FnSig<'tcx>,
     thunk_name: &TokenStream,
 ) -> Result<CcSnippet> {
-    let tcx = input.tcx;
+    let tcx = db.tcx();
 
     let mut prereqs = CcPrerequisites::default();
-    let main_api_ret_type = format_ret_ty_for_cc(input, sig)?.into_tokens(&mut prereqs);
+    let main_api_ret_type = format_ret_ty_for_cc(db, sig)?.into_tokens(&mut prereqs);
 
     let mut thunk_params = {
-        let cc_types = format_param_types_for_cc(input, sig)?;
+        let cc_types = format_param_types_for_cc(db, sig)?;
         sig.inputs()
             .iter()
             .zip(cc_types.into_iter())
@@ -1047,8 +1078,8 @@ fn format_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
 /// Will panic if `local_def_id`
 /// - is invalid
 /// - doesn't identify a function,
-fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
-    let tcx = input.tcx;
+fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result<ApiSnippets> {
+    let tcx = db.tcx();
     let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
 
     ensure!(
@@ -1082,7 +1113,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
         format_cc_ident(short_fn_name.as_str()).context("Error formatting function name")?;
 
     let mut main_api_prereqs = CcPrerequisites::default();
-    let main_api_ret_type = format_ret_ty_for_cc(input, &sig)?.into_tokens(&mut main_api_prereqs);
+    let main_api_ret_type = format_ret_ty_for_cc(db, &sig)?.into_tokens(&mut main_api_prereqs);
 
     struct Param<'tcx> {
         cc_name: TokenStream,
@@ -1091,7 +1122,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     }
     let params = {
         let names = tcx.fn_arg_names(def_id).iter();
-        let cc_types = format_param_types_for_cc(input, &sig)?;
+        let cc_types = format_param_types_for_cc(db, &sig)?;
         names
             .enumerate()
             .zip(sig.inputs().iter())
@@ -1238,7 +1269,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
 
         let mut prereqs = main_api_prereqs;
         let thunk_decl =
-            format_thunk_decl(input, def_id, &sig, &thunk_name)?.into_tokens(&mut prereqs);
+            format_thunk_decl(db, def_id, &sig, &thunk_name)?.into_tokens(&mut prereqs);
 
         let mut thunk_args = params
             .iter()
@@ -1264,8 +1295,8 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
             };
         } else {
             if let Some(adt_def) = sig.output().ty_adt_def() {
-                let core = format_adt_core(tcx, adt_def.did())?;
-                format_move_ctor_and_assignment_operator(input, &core).map_err(|_| {
+                let core = db.format_adt_core(adt_def.did())?;
+                db.format_move_ctor_and_assignment_operator(core).map_err(|_| {
                     anyhow!("Can't pass the return type by value without a move constructor")
                 })?;
             }
@@ -1276,7 +1307,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
                 return std::move(__ret_slot).AssumeInitAndTakeValue();
             };
             prereqs.includes.insert(CcInclude::utility()); // for `std::move`
-            prereqs.includes.insert(input.support_header("internal/return_value_slot.h"));
+            prereqs.includes.insert(db.support_header("internal/return_value_slot.h"));
         };
         CcSnippet {
             prereqs,
@@ -1323,12 +1354,10 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<ApiSnippets> {
 ///
 /// `keyword`, `name` are stored separately, to support formatting them as a
 /// forward declaration - e.g. `struct SomeStruct`.
+#[derive(Clone)]
 struct AdtCoreBindings<'tcx> {
     /// DefId of the ADT.
     def_id: DefId,
-
-    /// The repr attributes, e.g. `repr(C)`.
-    repr_attrs: Vec<rustc_attr::ReprAttr>,
 
     /// C++ tag - e.g. `struct`, `class`, `enum`, or `union`.  This isn't always
     /// a direct mapping from Rust (e.g. a Rust `enum` might end up being
@@ -1350,6 +1379,20 @@ struct AdtCoreBindings<'tcx> {
     self_ty: Ty<'tcx>,
     alignment_in_bytes: u64,
     size_in_bytes: u64,
+}
+
+// AdtCoreBindings are a pure (and memoized...) function of the def_id.
+impl<'tcx> PartialEq for AdtCoreBindings<'tcx> {
+    fn eq(&self, other: &Self) -> bool {
+        self.def_id == other.def_id
+    }
+}
+
+impl<'tcx> Eq for AdtCoreBindings<'tcx> {}
+impl<'tcx> Hash for AdtCoreBindings<'tcx> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.def_id.hash(state);
+    }
 }
 
 impl<'tcx> AdtCoreBindings<'tcx> {
@@ -1405,9 +1448,11 @@ fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
 /// and 2) check if formatting would have succeeded (e.g. when called from
 /// `format_ty`).  The 2nd case is needed for ADTs defined in any crate - this
 /// is why the `def_id` parameter is a DefId rather than LocalDefId.
-//
-// TODO(b/259724276): This function's results should be memoized.
-fn format_adt_core(tcx: TyCtxt<'_>, def_id: DefId) -> Result<AdtCoreBindings<'_>> {
+fn format_adt_core<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    def_id: DefId,
+) -> Result<Rc<AdtCoreBindings<'tcx>>> {
+    let tcx = db.tcx();
     let self_ty = tcx.type_of(def_id).instantiate_identity();
     assert!(self_ty.is_adt());
     assert!(is_directly_public(tcx, def_id), "Caller should verify");
@@ -1446,23 +1491,31 @@ fn format_adt_core(tcx: TyCtxt<'_>, def_id: DefId) -> Result<AdtCoreBindings<'_>
     let size_in_bytes = layout.size().bytes();
     ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
 
-    Ok(AdtCoreBindings {
+    Ok(Rc::new(AdtCoreBindings {
         def_id,
-        repr_attrs: tcx
-            .get_attrs(def_id, sym::repr)
-            .flat_map(|attr| rustc_attr::parse_repr_attr(tcx.sess(), attr))
-            .collect(),
         keyword,
         cc_short_name,
         rs_fully_qualified_name,
         self_ty,
         alignment_in_bytes,
         size_in_bytes,
-    })
+    }))
 }
 
-fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSnippets {
-    let tcx = input.tcx;
+fn repr_attrs(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Rc<[rustc_attr::ReprAttr]> {
+    let tcx = db.tcx();
+    let attrs: Vec<_> = tcx
+        .get_attrs(def_id, sym::repr)
+        .flat_map(|attr| rustc_attr::parse_repr_attr(tcx.sess(), attr))
+        .collect();
+    attrs.into()
+}
+
+fn format_fields<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+) -> ApiSnippets {
+    let tcx = db.tcx();
 
     // TODO(b/259749095): Support non-empty set of generic parameters.
     let substs_ref = ty::List::empty();
@@ -1518,7 +1571,7 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                 let type_info = size.and_then(|size| {
                     Ok(FieldTypeInfo {
                         size,
-                        cc_type: format_ty_for_cc(input, field_ty, TypeLocation::Other)?,
+                        cc_type: db.format_ty_for_cc(field_ty, TypeLocation::Other)?,
                     })
                 });
                 let name = field_def.ident(tcx);
@@ -1654,7 +1707,8 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
         // Foo(i8);` there are four different places the `i8` could be.
         // If it was placed in the second byte, for any reason, then we would need
         // explicit padding bytes.
-        let always_omit_padding = core.repr_attrs.contains(&rustc_attr::ReprC)
+        let repr_attrs = db.repr_attrs(core.def_id);
+        let always_omit_padding = repr_attrs.contains(&rustc_attr::ReprC)
             && fields.iter().all(|field| field.type_info.is_ok());
 
         let mut prereqs = CcPrerequisites::default();
@@ -1729,7 +1783,7 @@ fn format_fields<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> Api
                                 #padding
                             },
                             ty::AdtKind::Union => {
-                                if core.repr_attrs.contains(&rustc_attr::ReprC) {
+                                if repr_attrs.contains(&rustc_attr::ReprC) {
                                     quote! {
                                         __NEWLINE__
                                         #doc_comment
@@ -1796,11 +1850,11 @@ struct TraitThunks {
 }
 
 fn format_trait_thunks<'tcx>(
-    input: &Input<'tcx>,
+    db: &dyn BindingsGenerator<'tcx>,
     trait_id: DefId,
     adt: &AdtCoreBindings<'tcx>,
 ) -> Result<TraitThunks> {
-    let tcx = input.tcx;
+    let tcx = db.tcx();
     assert!(tcx.is_trait(trait_id));
 
     let self_ty = adt.self_ty;
@@ -1851,7 +1905,7 @@ fn format_trait_thunks<'tcx>(
 
         cc_thunk_decls.add_assign({
             let thunk_name = format_cc_ident(&thunk_name)?;
-            format_thunk_decl(input, method.def_id, &sig, &thunk_name)?
+            format_thunk_decl(db, method.def_id, &sig, &thunk_name)?
         });
 
         rs_thunk_impls.extend({
@@ -1887,17 +1941,15 @@ fn format_trait_thunks<'tcx>(
 /// trait is implemented for the ADT).  Returns an error otherwise (e.g. if
 /// there is no `Default` impl, then the default constructor will be
 /// `=delete`d in the returned snippet).
-//
-// TODO(b/259724276): This function's results should be memoized.
 fn format_default_ctor<'tcx>(
-    input: &Input<'tcx>,
-    core: &AdtCoreBindings<'tcx>,
+    db: &dyn BindingsGenerator<'tcx>,
+    core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Result<ApiSnippets, ApiSnippets> {
     fn fallible_format_default_ctor<'tcx>(
-        input: &Input<'tcx>,
-        core: &AdtCoreBindings<'tcx>,
+        db: &dyn BindingsGenerator<'tcx>,
+        core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets> {
-        let tcx = input.tcx;
+        let tcx = db.tcx();
         let trait_id = tcx
             .get_diagnostic_item(sym::Default)
             .ok_or(anyhow!("Couldn't find `core::default::Default`"))?;
@@ -1905,7 +1957,7 @@ fn format_default_ctor<'tcx>(
             method_name_to_cc_thunk_name,
             cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = format_trait_thunks(input, trait_id, core)?;
+        } = format_trait_thunks(db, trait_id, &core)?;
 
         let cc_struct_name = &core.cc_short_name;
         let main_api = CcSnippet::new(quote! {
@@ -1931,7 +1983,7 @@ fn format_default_ctor<'tcx>(
         };
         Ok(ApiSnippets { main_api, cc_details, rs_details })
     }
-    fallible_format_default_ctor(input, core).map_err(|err| {
+    fallible_format_default_ctor(db, core.clone()).map_err(|err| {
         let msg = format!("{err:#}");
         let adt_cc_name = &core.cc_short_name;
         ApiSnippets {
@@ -1948,17 +2000,15 @@ fn format_default_ctor<'tcx>(
 /// possible (i.e. if the `Clone` trait is implemented for the ADT).  Returns an
 /// error otherwise (e.g. if there is no `Clone` impl, then the copy constructor
 /// and assignment operator will be `=delete`d in the returned snippet).
-//
-// TODO(b/259724276): This function's results should be memoized.
 fn format_copy_ctor_and_assignment_operator<'tcx>(
-    input: &Input<'tcx>,
-    core: &AdtCoreBindings<'tcx>,
+    db: &dyn BindingsGenerator<'tcx>,
+    core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Result<ApiSnippets, ApiSnippets> {
     fn fallible_format_copy_ctor_and_assignment_operator<'tcx>(
-        input: &Input<'tcx>,
-        core: &AdtCoreBindings<'tcx>,
+        db: &dyn BindingsGenerator<'tcx>,
+        core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets> {
-        let tcx = input.tcx;
+        let tcx = db.tcx();
         let cc_struct_name = &core.cc_short_name;
 
         let is_copy = {
@@ -1994,7 +2044,7 @@ fn format_copy_ctor_and_assignment_operator<'tcx>(
             method_name_to_cc_thunk_name,
             cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = format_trait_thunks(input, trait_id, core)?;
+        } = format_trait_thunks(db, trait_id, &core)?;
         let main_api = CcSnippet::new(quote! {
             __NEWLINE__ __COMMENT__ "Clone::clone"
             #cc_struct_name(const #cc_struct_name&); __NEWLINE__
@@ -2025,7 +2075,7 @@ fn format_copy_ctor_and_assignment_operator<'tcx>(
         };
         Ok(ApiSnippets { main_api, cc_details, rs_details })
     }
-    fallible_format_copy_ctor_and_assignment_operator(input, core).map_err(|err| {
+    fallible_format_copy_ctor_and_assignment_operator(db, core.clone()).map_err(|err| {
         let msg = format!("{err:#}");
         let adt_cc_name = &core.cc_short_name;
         ApiSnippets {
@@ -2043,20 +2093,18 @@ fn format_copy_ctor_and_assignment_operator<'tcx>(
 /// possible (it depends on various factors like `needs_drop`, `is_unpin` and
 /// implementations of `Default` and/or `Clone` traits).  Returns an error
 /// otherwise (the error's `ApiSnippets` contain a `=delete`d declaration).
-//
-// TODO(b/259724276): This function's results should be memoized.
 fn format_move_ctor_and_assignment_operator<'tcx>(
-    input: &Input<'tcx>,
-    core: &AdtCoreBindings<'tcx>,
+    db: &dyn BindingsGenerator<'tcx>,
+    core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Result<ApiSnippets, ApiSnippets> {
     fn fallible_format_move_ctor_and_assignment_operator<'tcx>(
-        input: &Input<'tcx>,
-        core: &AdtCoreBindings<'tcx>,
+        db: &dyn BindingsGenerator<'tcx>,
+        core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets> {
-        let tcx = input.tcx;
+        let tcx = db.tcx();
         let adt_cc_name = &core.cc_short_name;
         if core.needs_drop(tcx) {
-            let has_default_ctor = format_default_ctor(input, core).is_ok();
+            let has_default_ctor = db.format_default_ctor(core.clone()).is_ok();
             let is_unpin = core.self_ty.is_unpin(tcx, tcx.param_env(core.def_id));
             if has_default_ctor && is_unpin {
                 let main_api = CcSnippet::new(quote! {
@@ -2064,7 +2112,7 @@ fn format_move_ctor_and_assignment_operator<'tcx>(
                     #adt_cc_name& operator=(#adt_cc_name&&); __NEWLINE__
                 });
                 let mut prereqs = CcPrerequisites::default();
-                prereqs.includes.insert(input.support_header("internal/memswap.h"));
+                prereqs.includes.insert(db.support_header("internal/memswap.h"));
                 prereqs.includes.insert(CcInclude::utility()); // for `std::move`
                 let tokens = quote! {
                     inline #adt_cc_name::#adt_cc_name(#adt_cc_name&& other)
@@ -2078,7 +2126,7 @@ fn format_move_ctor_and_assignment_operator<'tcx>(
                 };
                 let cc_details = CcSnippet { tokens, prereqs };
                 Ok(ApiSnippets { main_api, cc_details, ..Default::default() })
-            } else if format_copy_ctor_and_assignment_operator(input, core).is_ok() {
+            } else if db.format_copy_ctor_and_assignment_operator(core).is_ok() {
                 // The class will have a custom copy constructor and copy assignment operator
                 // and *no* move constructor nor move assignment operator. This
                 // way, when a move is requested, a copy is performed instead
@@ -2140,7 +2188,7 @@ fn format_move_ctor_and_assignment_operator<'tcx>(
             Ok(ApiSnippets { main_api, cc_details, ..Default::default() })
         }
     }
-    fallible_format_move_ctor_and_assignment_operator(input, core).map_err(|err| {
+    fallible_format_move_ctor_and_assignment_operator(db, core.clone()).map_err(|err| {
         let msg = format!("{err:#}");
         let adt_cc_name = &core.cc_short_name;
         ApiSnippets {
@@ -2158,14 +2206,17 @@ fn format_move_ctor_and_assignment_operator<'tcx>(
 /// represented by `core`.  This function is infallible - after
 /// `format_adt_core` returns success we have committed to emitting C++ bindings
 /// for the ADT.
-fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSnippets {
-    let tcx = input.tcx;
+fn format_adt<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    core: Rc<AdtCoreBindings<'tcx>>,
+) -> ApiSnippets {
+    let tcx = db.tcx();
     let adt_cc_name = &core.cc_short_name;
 
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
 
-    let default_ctor_snippets = format_default_ctor(input, core).unwrap_or_else(|err| err);
+    let default_ctor_snippets = db.format_default_ctor(core.clone()).unwrap_or_else(|err| err);
 
     let destructor_snippets = if core.needs_drop(tcx) {
         let drop_trait_id =
@@ -2174,7 +2225,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
             method_name_to_cc_thunk_name,
             cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = format_trait_thunks(input, drop_trait_id, core)
+        } = format_trait_thunks(db, drop_trait_id, &core)
             .expect("`format_adt_core` should have already validated `Drop` support");
         let drop_thunk_name = method_name_to_cc_thunk_name
             .into_values()
@@ -2210,10 +2261,10 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
     };
 
     let copy_ctor_and_assignment_snippets =
-        format_copy_ctor_and_assignment_operator(input, core).unwrap_or_else(|err| err);
+        db.format_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
 
     let move_ctor_and_assignment_snippets =
-        format_move_ctor_and_assignment_operator(input, core).unwrap_or_else(|err| err);
+        db.format_move_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
 
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
@@ -2234,7 +2285,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
                 return None;
             }
             let result = match impl_item_ref.kind {
-                AssocItemKind::Fn { .. } => format_fn(input, def_id).map(Some),
+                AssocItemKind::Fn { .. } => db.format_fn(def_id).map(Some),
                 other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
             };
             result.unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
@@ -2259,7 +2310,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         main_api: fields_main_api,
         cc_details: fields_cc_details,
         rs_details: fields_rs_details,
-    } = format_fields(input, core);
+    } = format_fields(db, &core);
 
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
@@ -2270,7 +2321,11 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
             quote! {alignas(#alignment)},
             quote! {[[clang::trivial_abi]]},
         ];
-        if core.repr_attrs.iter().any(|repr| matches!(repr, rustc_attr::ReprPacked { .. })) {
+        if db
+            .repr_attrs(core.def_id)
+            .iter()
+            .any(|repr| matches!(repr, rustc_attr::ReprPacked { .. }))
+        {
             attributes.push(quote! { __attribute__((packed)) })
         }
 
@@ -2294,7 +2349,7 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
         let keyword = &core.keyword;
 
         let mut prereqs = CcPrerequisites::default();
-        prereqs.includes.insert(input.support_header("internal/attribute_macros.h"));
+        prereqs.includes.insert(db.support_header("internal/attribute_macros.h"));
         let public_functions_main_api = public_functions_main_api.into_tokens(&mut prereqs);
         let fields_main_api = fields_main_api.into_tokens(&mut prereqs);
         prereqs.fwd_decls.remove(&local_def_id);
@@ -2351,14 +2406,16 @@ fn format_adt<'tcx>(input: &Input<'tcx>, core: &AdtCoreBindings<'tcx>) -> ApiSni
 ///
 /// Will panic if `def_id` doesn't identify an ADT that can be successfully
 /// handled by `format_adt_core`.
-fn format_fwd_decl(tcx: TyCtxt, def_id: LocalDefId) -> TokenStream {
+fn format_fwd_decl(db: &Database<'_>, def_id: LocalDefId) -> TokenStream {
     let def_id = def_id.to_def_id(); // LocalDefId -> DefId conversion.
 
     // `format_fwd_decl` should only be called for items from
     // `CcPrerequisites::fwd_decls` and `fwd_decls` should only contain ADTs
     // that `format_adt_core` succeeds for.
-    let AdtCoreBindings { keyword, cc_short_name, .. } = format_adt_core(tcx, def_id)
+    let core_bindings = db
+        .format_adt_core(def_id)
         .expect("`format_fwd_decl` should only be called if `format_adt_core` succeeded");
+    let AdtCoreBindings { keyword, cc_short_name, .. } = &*core_bindings;
 
     quote! { #keyword #cc_short_name; }
 }
@@ -2401,28 +2458,29 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
 /// can be ignored. Returns an `Err` if the definition couldn't be formatted.
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
-fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<ApiSnippets>> {
+fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Option<ApiSnippets>> {
+    let tcx = db.tcx();
     // TODO(b/262052635): When adding support for re-exports we may need to change
     // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is
     // undesirable, because it would mean exposing items from a private module.
     // Exposing a private module is undesirable, because it would mean that
     // changes of private implementation details of the crate could become
     // breaking changes for users of the generated C++ bindings.)
-    if !input.tcx.effective_visibilities(()).is_directly_public(def_id) {
+    if !tcx.effective_visibilities(()).is_directly_public(def_id) {
         return Ok(None);
     }
 
-    match input.tcx.hir().expect_item(def_id) {
+    match tcx.hir().expect_item(def_id) {
         Item { kind: ItemKind::Struct(_, generics) |
                      ItemKind::Enum(_, generics) |
                      ItemKind::Union(_, generics),
                .. } if !generics.params.is_empty() => {
             bail!("Generic types are not supported yet (b/259749095)");
         },
-        Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id).map(Some),
+        Item { kind: ItemKind::Fn(..), .. } => db.format_fn(def_id).map(Some),
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
-            format_adt_core(input.tcx, def_id.to_def_id())
-                .map(|core| Some(format_adt(input, &core))),
+            db.format_adt_core(def_id.to_def_id())
+                .map(|core| Some(format_adt(db, core))),
         Item { kind: ItemKind::Impl(_), .. } |  // Handled by `format_adt`
         Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
             Ok(None),
@@ -2432,11 +2490,7 @@ fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<ApiSnippets>>
 
 /// Formats a C++ comment explaining why no bindings have been generated for
 /// `local_def_id`.
-fn format_unsupported_def(
-    tcx: TyCtxt,
-    local_def_id: LocalDefId,
-    err: anyhow::Error,
-) -> ApiSnippets {
+fn format_unsupported_def(tcx: TyCtxt, local_def_id: LocalDefId, err: Error) -> ApiSnippets {
     let source_loc = format_source_location(tcx, local_def_id);
     let name = tcx.def_path_str(local_def_id.to_def_id());
 
@@ -2522,8 +2576,8 @@ pub fn format_namespace_bound_cc_tokens(
 }
 
 /// Formats all public items from the Rust crate being compiled.
-fn format_crate(input: &Input) -> Result<Output> {
-    let tcx = input.tcx;
+fn format_crate(db: &Database) -> Result<Output> {
+    let tcx = db.tcx();
     let mut cc_details_prereqs = CcPrerequisites::default();
     let mut cc_details: Vec<(LocalDefId, TokenStream)> = vec![];
     let mut rs_body = TokenStream::default();
@@ -2533,7 +2587,7 @@ fn format_crate(input: &Input) -> Result<Output> {
         .items()
         .filter_map(|item_id| {
             let def_id: LocalDefId = item_id.owner_id.def_id;
-            format_item(input, def_id)
+            db.format_item(def_id)
                 .unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
                 .map(|api_snippets| (def_id, api_snippets))
         })
@@ -2602,7 +2656,7 @@ fn format_crate(input: &Input) -> Result<Output> {
         let fwd_decls = fwd_decls
             .into_iter()
             .sorted_by_key(|def_id| tcx.def_span(*def_id))
-            .map(|local_def_id| (local_def_id, format_fwd_decl(tcx, local_def_id)));
+            .map(|local_def_id| (local_def_id, format_fwd_decl(db, local_def_id)));
 
         // The first item of the tuple here is the DefId of the namespace.
         let ordered_cc: Vec<(Option<DefId>, NamespaceQualifier, TokenStream)> = fwd_decls
@@ -6722,8 +6776,8 @@ pub mod tests {
         ];
         test_ty(TypeLocation::FnReturn, &testcases, quote! {}, |desc, tcx, ty, expected| {
             let actual = {
-                let input = bindings_input_for_tests(tcx);
-                let cc_snippet = format_ty_for_cc(&input, ty, TypeLocation::FnReturn).unwrap();
+                let db = bindings_db_for_tests(tcx);
+                let cc_snippet = format_ty_for_cc(&db, ty, TypeLocation::FnReturn).unwrap();
                 cc_snippet.tokens.to_string()
             };
             let expected = expected.parse::<TokenStream>().unwrap().to_string();
@@ -6860,8 +6914,8 @@ pub mod tests {
             |desc, tcx, ty,
              (expected_tokens, expected_include, expected_prereq_def, expected_prereq_fwd_decl)| {
                 let (actual_tokens, actual_prereqs) = {
-                    let input = bindings_input_for_tests(tcx);
-                    let s = format_ty_for_cc(&input, ty, TypeLocation::FnParam).unwrap();
+                    let db = bindings_db_for_tests(tcx);
+                    let s = format_ty_for_cc(&db, ty, TypeLocation::FnParam).unwrap();
                     (s.tokens.to_string(), s.prereqs)
                 };
                 let (actual_includes, actual_prereq_defs, actual_prereq_fwd_decls) =
@@ -7059,8 +7113,8 @@ pub mod tests {
                 as PublicReexportOfStruct;
         };
         test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_msg| {
-            let input = bindings_input_for_tests(tcx);
-            let anyhow_err = format_ty_for_cc(&input, ty, TypeLocation::FnParam)
+            let db = bindings_db_for_tests(tcx);
+            let anyhow_err = format_ty_for_cc(&db, ty, TypeLocation::FnParam)
                 .expect_err(&format!("Expecting error for: {desc}"));
             let actual_msg = format!("{anyhow_err:#}");
             assert_eq!(&actual_msg, *expected_msg, "{desc}");
@@ -8070,7 +8124,7 @@ pub mod tests {
     {
         run_compiler_for_testing(source, |tcx| {
             let def_id = find_def_id_by_name(tcx, name);
-            let result = format_item(&bindings_input_for_tests(tcx), def_id);
+            let result = bindings_db_for_tests(tcx).format_item(def_id);
 
             // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
             // To print causes as well [...], use the alternate selector “{:#}”.
@@ -8080,13 +8134,13 @@ pub mod tests {
         })
     }
 
-    fn bindings_input_for_tests(tcx: TyCtxt) -> Input {
-        Input {
+    fn bindings_db_for_tests(tcx: TyCtxt) -> Database {
+        Database::new(
             tcx,
-            crubit_support_path_format: "<crubit/support/for/tests/{header}>".into(),
-            crate_name_to_include_paths: Default::default(),
-            _features: (),
-        }
+            /* crubit_support_path_format= */ "<crubit/support/for/tests/{header}>".into(),
+            /* crate_name_to_include_paths= */ Default::default(),
+            /* _features= */ (),
+        )
     }
 
     /// Tests invoking `generate_bindings` on the given Rust `source`.
@@ -8099,7 +8153,7 @@ pub mod tests {
         T: Send,
     {
         run_compiler_for_testing(source, |tcx| {
-            test_function(generate_bindings(&bindings_input_for_tests(tcx)))
+            test_function(generate_bindings(&bindings_db_for_tests(tcx)))
         })
     }
 }

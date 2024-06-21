@@ -8,14 +8,14 @@
 
 extern crate rustc_middle;
 
-use anyhow::Context;
+use arc_anyhow::{Context, Result};
 use itertools::Itertools;
 use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
 use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 
-use bindings::Input;
+use bindings::Database;
 use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
 use run_compiler::run_compiler;
@@ -23,12 +23,12 @@ use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
 };
 
-fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
+fn write_file(path: &Path, content: &str) -> Result<()> {
     std::fs::write(path, content)
         .with_context(|| format!("Error when writing to {}", path.display()))
 }
 
-fn new_input<'tcx>(cmdline: &Cmdline, tcx: TyCtxt<'tcx>) -> Input<'tcx> {
+fn new_db<'tcx>(cmdline: &Cmdline, tcx: TyCtxt<'tcx>) -> Database<'tcx> {
     let crubit_support_path_format = cmdline.crubit_support_path_format.as_str().into();
 
     let mut crate_name_to_include_paths = <HashMap<Rc<str>, Vec<CcInclude>>>::new();
@@ -37,14 +37,19 @@ fn new_input<'tcx>(cmdline: &Cmdline, tcx: TyCtxt<'tcx>) -> Input<'tcx> {
         paths.push(CcInclude::user_header(include_path.as_str().into()));
     }
 
-    Input { tcx, crubit_support_path_format, crate_name_to_include_paths, _features: () }
+    Database::new(
+        tcx,
+        crubit_support_path_format,
+        crate_name_to_include_paths.into(),
+        /* _features= */ (),
+    )
 }
 
-fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
+fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
     use bindings::{generate_bindings, Output};
     let Output { h_body, rs_body } = {
-        let input = new_input(cmdline, tcx);
-        generate_bindings(&input)?
+        let db = new_db(cmdline, tcx);
+        generate_bindings(&db)?
     };
 
     {
@@ -65,12 +70,12 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
 /// Main entrypoint that (unlike `main`) doesn't do any intitializations that
 /// should only happen once for the binary (e.g. it doesn't call
 /// `init_env_logger`) and therefore can be used from the tests module below.
-fn run_with_cmdline_args(args: &[String]) -> anyhow::Result<()> {
+fn run_with_cmdline_args(args: &[String]) -> Result<()> {
     let cmdline = Cmdline::new(args)?;
     run_compiler(&cmdline.rustc_args, |tcx| run_with_tcx(&cmdline, tcx))
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<()> {
     // TODO: Investigate if we should install a signal handler here.  See also how
     // compiler/rustc_driver/src/lib.rs calls `signal_handler::install()`.
 
@@ -82,22 +87,22 @@ fn main() -> anyhow::Result<()> {
     // Unicode.  This seems okay.
     let args = std::env::args().collect_vec();
 
-    run_with_cmdline_args(&args).map_err(|anyhow_err| match anyhow_err.downcast::<clap::Error>() {
+    run_with_cmdline_args(&args).map_err(|err| match err.downcast_ref::<clap::Error>() {
         // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output and
         // 2) it uses a zero exit code for specific "errors" (e.g. for `--help` output).
-        Ok(clap_err) => {
+        Some(clap_err) => {
             let _: ! = clap_err.exit();
         }
 
-        // Return `other_err` from `main`.  This will print the error message (no color codes
+        // Return `err` from `main`.  This will print the error message (no color codes
         // though) and terminate the process with a non-zero exit code.
-        Err(other_err) => other_err,
+        None => err,
     })
 }
 
 #[cfg(test)]
 mod tests {
-    use super::run_with_cmdline_args;
+    use super::*;
 
     use itertools::Itertools;
     use regex::{Regex, RegexBuilder};
@@ -130,7 +135,7 @@ mod tests {
     }
 
     impl TestArgs {
-        fn default_args() -> anyhow::Result<Self> {
+        fn default_args() -> Result<Self> {
             Ok(Self {
                 h_path: None,
                 extra_crubit_args: vec![],
@@ -174,7 +179,7 @@ mod tests {
         ///
         /// Returns the path to the `h_out` file.  The file's lifetime is the
         /// same as `&self`.
-        fn run(&self) -> anyhow::Result<TestResult> {
+        fn run(&self) -> Result<TestResult> {
             let h_path = match self.h_path.as_ref() {
                 None => self.tempdir.path().join("test_crate_cc_api.h"),
                 Some(s) => PathBuf::from(s),
@@ -264,7 +269,7 @@ mod tests {
     }
 
     #[test]
-    fn test_happy_path() -> anyhow::Result<()> {
+    fn test_happy_path() -> Result<()> {
         let test_args = TestArgs::default_args()?;
         let test_result = test_args.run().expect("Default args should succeed");
 
@@ -328,7 +333,7 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
     /// get propagated. More detailed test coverage of various specific
     /// error types can be found in tests in `cmdline.rs`.
     #[test]
-    fn test_cmdline_error_propagation() -> anyhow::Result<()> {
+    fn test_cmdline_error_propagation() -> Result<()> {
         let err = TestArgs::default_args()?
             .with_extra_crubit_args(&["--unrecognized-crubit-flag"])
             .run()
@@ -344,7 +349,7 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
     /// various specific error types can be found in tests in `run_compiler.
     /// rs`.
     #[test]
-    fn test_run_compiler_error_propagation() -> anyhow::Result<()> {
+    fn test_run_compiler_error_propagation() -> Result<()> {
         let err = TestArgs::default_args()?
             .with_extra_rustc_args(&["--unrecognized-rustc-flag"])
             .run()
@@ -362,7 +367,7 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
     /// `bindings.rs` level, because `run_compiler_test_support` doesn't
     /// support specifying a custom panic mechanism.
     #[test]
-    fn test_rustc_unsupported_panic_mechanism() -> anyhow::Result<()> {
+    fn test_rustc_unsupported_panic_mechanism() -> Result<()> {
         let err = TestArgs::default_args()?
             .with_panic_mechanism("unwind")
             .run()
@@ -377,7 +382,7 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
     /// invalid `--h-out` argument, but also tests that errors from
     /// `run_with_tcx` are propagated.
     #[test]
-    fn test_invalid_h_out_path() -> anyhow::Result<()> {
+    fn test_invalid_h_out_path() -> Result<()> {
         let err = TestArgs::default_args()?
             .with_h_path("../..")
             .run()

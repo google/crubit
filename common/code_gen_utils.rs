@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::{anyhow, ensure, Result};
+use arc_anyhow::{anyhow, ensure, Result};
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 use proc_macro2::{Ident, TokenStream};

@@ -15,7 +15,7 @@ extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
 
-use anyhow::bail;
+use arc_anyhow::{anyhow, bail, Result};
 use either::Either;
 use rustc_interface::interface::Compiler;
 use rustc_interface::Queries;
@@ -32,9 +32,9 @@ use rustc_session::EarlyDiagCtxt;
 /// - Returns the combined results from the Rust compiler *and* the `callback`.
 /// - Is safe to run from unit tests (which may run in parallel / on multiple
 ///   threads).
-pub fn run_compiler<F, R>(rustc_args: &[String], callback: F) -> anyhow::Result<R>
+pub fn run_compiler<F, R>(rustc_args: &[String], callback: F) -> Result<R>
 where
-    F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
+    F: FnOnce(TyCtxt) -> Result<R> + Send,
     R: Send,
 {
     // Calling `init_logger` 1) here and 2) via `sync::Lazy` helps to ensure
@@ -60,16 +60,16 @@ where
 
 struct AfterAnalysisCallback<'a, F, R>
 where
-    F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
+    F: FnOnce(TyCtxt) -> Result<R> + Send,
     R: Send,
 {
     args: &'a [String],
-    callback_or_result: Either<F, anyhow::Result<R>>,
+    callback_or_result: Either<F, Result<R>>,
 }
 
 impl<'a, F, R> AfterAnalysisCallback<'a, F, R>
 where
-    F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
+    F: FnOnce(TyCtxt) -> Result<R> + Send,
     R: Send,
 {
     fn new(args: &'a [String], callback: F) -> Self {
@@ -80,7 +80,7 @@ where
     /// `TyCtxt` of the parsed+analyzed Rust crate as the callback's
     /// argument), and then finally returns the combined results
     /// from Rust compiler *and* the callback.
-    fn run(mut self) -> anyhow::Result<R> {
+    fn run(mut self) -> Result<R> {
         // Rust compiler unwinds with a special sentinel value to abort compilation on
         // fatal errors. We use `catch_fatal_errors` to 1) catch such panics and
         // translate them into a Result, and 2) resume and propagate other panics.
@@ -108,7 +108,7 @@ where
 
 impl<'a, F, R> rustc_driver::Callbacks for AfterAnalysisCallback<'a, F, R>
 where
-    F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
+    F: FnOnce(TyCtxt) -> Result<R> + Send,
     R: Send,
 {
     /// Configures how `rustc` internals work when invoked via `run_compiler`.
@@ -133,7 +133,7 @@ where
             .expect("Expecting no compile errors inside `after_analysis` callback.");
         query_context.enter(|tcx| {
             let callback = {
-                let temporary_placeholder = Either::Right(Err(anyhow::anyhow!("unused")));
+                let temporary_placeholder = Either::Right(Err(anyhow!("unused")));
                 std::mem::replace(&mut self.callback_or_result, temporary_placeholder)
                     .left_or_else(|_| panic!("`after_analysis` should only run once"))
             };
@@ -160,7 +160,7 @@ mod tests {
             "#;
 
     #[test]
-    fn test_run_compiler_rustc_error_propagation() -> anyhow::Result<()> {
+    fn test_run_compiler_rustc_error_propagation() -> Result<()> {
         let rustc_args = vec![
             "run_compiler_unittest_executable".to_string(),
             "--unrecognized-rustc-flag".to_string(),
@@ -177,7 +177,7 @@ mod tests {
     /// where `rustc` doesn't compile anything (e.g. when there are no
     /// cmdline args).
     #[test]
-    fn test_run_compiler_no_args_except_argv0() -> anyhow::Result<()> {
+    fn test_run_compiler_no_args_except_argv0() -> Result<()> {
         let rustc_args = vec!["run_compiler_unittest_executable".to_string()];
         let err = run_compiler(&rustc_args, |_tcx| Ok(()))
             .expect_err("Empty `rustc_args` should trigger an error");
@@ -190,7 +190,7 @@ mod tests {
     /// `test_run_compiler_help` tests that we gracefully handle scenarios where
     /// `rustc` doesn't compile anything (e.g. when passing `--help`).
     #[test]
-    fn test_run_compiler_help() -> anyhow::Result<()> {
+    fn test_run_compiler_help() -> Result<()> {
         let rustc_args = vec!["run_compiler_unittest_executable".to_string(), "--help".to_string()];
         let err = run_compiler(&rustc_args, |_tcx| Ok(()))
             .expect_err("--help passed to rustc should trigger an error");
@@ -203,7 +203,7 @@ mod tests {
     /// `test_run_compiler_no_output_file` tests that we stop the compilation
     /// midway (i.e. that we return `Stop` from `after_analysis`).
     #[test]
-    fn test_run_compiler_no_output_file() -> anyhow::Result<()> {
+    fn test_run_compiler_no_output_file() -> Result<()> {
         let tmpdir = tempdir()?;
 
         let rs_path = tmpdir.path().join("input_crate.rs");
