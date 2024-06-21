@@ -7,6 +7,7 @@
 #include <cassert>
 #include <optional>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "nullability/inference/inferable.h"
@@ -67,7 +68,9 @@ static bool isEligibleTypeLoc(TypeLoc TyLoc) {
 
 static void initSlotRange(SlotRange &R, std::optional<SlotNum> Slot,
                           unsigned Begin, unsigned End,
-                          std::optional<NullabilityKind> Nullability) {
+                          std::optional<NullabilityKind> Nullability,
+                          std::optional<int> AnnotationPreRangeLength,
+                          std::optional<int> AnnotationPostRangeLength) {
   if (Slot) R.set_slot(*Slot);
   R.set_begin(Begin);
   R.set_end(End);
@@ -84,7 +87,91 @@ static void initSlotRange(SlotRange &R, std::optional<SlotNum> Slot,
         R.set_existing_annotation(Nullability::UNKNOWN);
         break;
     }
+
+    if (AnnotationPreRangeLength)
+      R.set_existing_annotation_pre_range_length(*AnnotationPreRangeLength);
+    if (AnnotationPostRangeLength)
+      R.set_existing_annotation_post_range_length(*AnnotationPostRangeLength);
   }
+}
+
+/// If the tokens immediately before `Begin` are an absl::NullabilityUnknown<
+/// annotation start, returns the start location of the absl token. Else,
+/// returns std::nullopt.
+static std::pair<std::optional<unsigned>, std::optional<unsigned>>
+getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
+                                               SourceLocation End,
+                                               const SourceManager &SM,
+                                               const LangOptions &LangOpts,
+                                               const FileID &DeclFID) {
+  // absl::NullabilityUnknown< is 4 tokens, one for the `<`, one for the `::`,
+  // and one for each identifier.
+  Token PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
+  if (!PrevTok.is(tok::TokenKind::less)) return {};
+  if (PrevTok =
+          utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
+      !PrevTok.is(tok::TokenKind::raw_identifier))
+    return {};
+  if (PrevTok.getRawIdentifier() != "NullabilityUnknown") return {};
+  if (PrevTok =
+          utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
+      PrevTok.isNot(tok::TokenKind::coloncolon))
+    return {};
+  if (PrevTok =
+          utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
+      !PrevTok.is(tok::TokenKind::raw_identifier))
+    return {};
+  if (PrevTok.getRawIdentifier() != "absl") return {};
+
+  auto [PrevTokFID, PrevTokOffset] = SM.getDecomposedLoc(PrevTok.getLocation());
+  if (PrevTokFID != DeclFID) return {};
+
+  Token NextTok;
+  // If the token immediately at `End` is a `>`, use the end location of that
+  // token. Otherwise, look for the next non-comment token, which should be a
+  // `>`.
+  if (bool Failed = Lexer::getRawToken(End, NextTok, SM, LangOpts,
+                                       /*IgnoreWhiteSpace=*/true))
+    return {};
+  if (!NextTok.is(tok::TokenKind::greater) &&
+      !NextTok.is(tok::TokenKind::greatergreater)) {
+    std::optional<Token> MaybeNextTok =
+        utils::lexer::findNextTokenSkippingComments(End, SM, LangOpts);
+    if (!MaybeNextTok || (!MaybeNextTok->is(tok::TokenKind::greater) &&
+                          !MaybeNextTok->is(tok::TokenKind::greatergreater)))
+      return {};
+    NextTok = *MaybeNextTok;
+  }
+
+  auto [NextTokFID, NextTokOffset] = SM.getDecomposedLoc(NextTok.getEndLoc());
+  if (NextTokFID != DeclFID) return {};
+  if (NextTok.is(tok::TokenKind::greatergreater)) {
+    // We need to step back one character.
+    --NextTokOffset;
+  }
+
+  return {PrevTokOffset, NextTokOffset};
+}
+
+/// If the token immediately after `End` is a clang _Null_unspecified attribute,
+/// returns the end location of the attribute. Else, returns std::nullopt.
+static std::optional<unsigned> getEndOffsetOfImmediateClangAttribute(
+    SourceLocation End, const SourceManager &SM, const LangOptions &LangOpts,
+    const FileID &DeclFID) {
+  // We can simply use `findNextTokenSkippingComments` because the attribute
+  // must come at least one space or comment after the type, so it will come
+  // after `End`, not at `End`.
+  std::optional<Token> NextTok =
+      utils::lexer::findNextTokenSkippingComments(End, SM, LangOpts);
+  if (!NextTok) return std::nullopt;
+  if (!NextTok->is(tok::TokenKind::raw_identifier) ||
+      NextTok->getRawIdentifier() != "_Null_unspecified")
+    return std::nullopt;
+
+  auto [FID, Offset] = SM.getDecomposedLoc(NextTok->getEndLoc());
+  if (FID != DeclFID) return std::nullopt;
+
+  return Offset;
 }
 
 // Extracts the source ranges and associated slot values of each eligible type
@@ -137,9 +224,33 @@ static void addRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
     auto [FID, BeginOffset] = SM.getDecomposedLoc(Begin);
     // If the type comes from a different file, then don't attempt to edit -- it
     // might need manual intervention.
-    if (FID == DeclFID)
-      initSlotRange(*Result.add_range(), SlotInContext, BeginOffset,
-                    SM.getFileOffset(R->getEnd()), Nullability);
+    if (FID != DeclFID) continue;
+
+    unsigned int EndOffset = SM.getFileOffset(R->getEnd());
+
+    // If the type is immediately wrapped in an absl nullability annotation or
+    // immediately followed by a clang nullability attribute, collect the
+    // pre- and post-range lengths for that annotation/attribute.
+    std::optional<int> AnnotationPreRangeLength;
+    std::optional<int> AnnotationPostRangeLength;
+    if (Nullability && *Nullability == NullabilityKind::Unspecified) {
+      auto [AnnotationStartOffset, AnnotationEndOffset] =
+          getStartAndEndOffsetsOfImmediateAbslAnnotation(Begin, R->getEnd(), SM,
+                                                         LangOpts, DeclFID);
+      if (AnnotationStartOffset && AnnotationEndOffset) {
+        AnnotationPreRangeLength = BeginOffset - *AnnotationStartOffset;
+        AnnotationPostRangeLength = *AnnotationEndOffset - EndOffset;
+      } else if (std::optional<unsigned> AttributeEndOffset =
+                     getEndOffsetOfImmediateClangAttribute(R->getEnd(), SM,
+                                                           LangOpts, DeclFID)) {
+        AnnotationPreRangeLength = 0;
+        AnnotationPostRangeLength = *AttributeEndOffset - EndOffset;
+      }
+    }
+
+    initSlotRange(*Result.add_range(), SlotInContext, BeginOffset, EndOffset,
+                  Nullability, AnnotationPreRangeLength,
+                  AnnotationPostRangeLength);
   }
 }
 

@@ -31,6 +31,7 @@ using ::clang::ast_matchers::match;
 using ::clang::ast_matchers::selectFirst;
 using ::clang::ast_matchers::varDecl;
 using ::llvm::Annotations;
+using ::testing::AllOf;
 using ::testing::ExplainMatchResult;
 using ::testing::Optional;
 using ::testing::UnorderedElementsAre;
@@ -803,6 +804,133 @@ TEST(EligibleRangesTest, Pragma) {
               SlotRange(-1, Input.range("one"), Nullability::NONNULL),
               SlotRange(1, Input.range("param_one"), Nullability::NONNULL),
               SlotRange(2, Input.range("param_two"), Nullability::NONNULL)))));
+}
+
+MATCHER(NoPreRangeLength, "") {
+  return !arg.has_existing_annotation_pre_range_length();
+}
+
+MATCHER(NoPostRangeLength, "") {
+  return !arg.has_existing_annotation_post_range_length();
+}
+
+MATCHER_P(PreRangeLength, Length, "") {
+  return arg.has_existing_annotation_pre_range_length() &&
+         arg.existing_annotation_pre_range_length() == Length;
+}
+
+MATCHER_P(PostRangeLength, Length, "") {
+  return arg.has_existing_annotation_post_range_length() &&
+         arg.existing_annotation_post_range_length() == Length;
+}
+
+TEST(ExistingAnnotationLengthTest, AbslTemplate) {
+  auto Input = Annotations(R"(
+  namespace absl {
+  template <typename T>
+  using NullabilityUnknown = ::NullabilityUnknown<T>;
+  }
+  void target($no[[int*]] p, absl::NullabilityUnknown<$yes[[int*]]> q,
+  absl::/* a comment*/NullabilityUnknown< /* a comment */ $with_comments[[int*]]
+  /* a comment */  > r);
+    )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(
+                            AllOf(SlotRange(1, Input.range("no")),
+                                  NoPreRangeLength(), NoPostRangeLength()),
+                            AllOf(SlotRange(2, Input.range("yes")),
+                                  PreRangeLength(25), PostRangeLength(1)),
+                            AllOf(SlotRange(3, Input.range("with_comments")),
+                                  PreRangeLength(56), PostRangeLength(21))))));
+}
+
+TEST(ExistingAnnotationLengthTest, AnnotationInMacro) {
+  auto Input = Annotations(R"(
+  namespace absl {
+  template <typename T>
+  using NullabilityUnknown = ::NullabilityUnknown<T>;
+  }
+
+  #define UNKNOWN(T) absl::NullabilityUnknown<T>
+
+  void target(UNKNOWN([[int *]]) x);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(AllOf(
+                            SlotRange(1, Input.range("")),
+                            // The token checks looking for annotations are done
+                            // without expansion of macros, so we see a left
+                            // paren as the preceding token and report no
+                            // existing pre-range/post-range annotation.
+                            NoPreRangeLength(), NoPostRangeLength())))));
+}
+
+TEST(ExistingAnnotationLengthTest, UniquePtr) {
+  auto Input = Annotations(R"(
+  namespace std {
+  template <typename T>
+  class unique_ptr;
+  }
+  namespace absl {
+  template <typename T>
+  using NullabilityUnknown = ::NullabilityUnknown<T>;
+  }
+  
+  void target(absl::NullabilityUnknown<[[std::unique_ptr<int>]]> x);
+  )");
+  EXPECT_THAT(getFunctionRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName, UnorderedElementsAre(AllOf(
+                                    SlotRange(1, Input.range("")),
+                                    PreRangeLength(25), PostRangeLength(1))))));
+}
+
+TEST(ExistingAnnotationLengthTest, DoubleClosingAngleBrackets) {
+  auto Input = Annotations(R"(
+  namespace absl {
+  template <typename T>
+  using NullabilityUnknown = ::NullabilityUnknown<T>;
+  }
+  
+  template <typename T>
+  using MyTemplateAlias = T;
+  
+  void target(MyTemplateAlias<absl::NullabilityUnknown<$nothing[[int *]]>> x,
+  MyTemplateAlias<absl::NullabilityUnknown<$comment[[int *]]>/* a comment */> y,
+  MyTemplateAlias<absl::NullabilityUnknown<$whitespace[[int *]]>
+  > z);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(
+                            AllOf(SlotRange(1, Input.range("nothing")),
+                                  PreRangeLength(25), PostRangeLength(1)),
+                            AllOf(SlotRange(2, Input.range("comment")),
+                                  PreRangeLength(25), PostRangeLength(1)),
+                            AllOf(SlotRange(3, Input.range("whitespace")),
+                                  PreRangeLength(25), PostRangeLength(1))))));
+}
+
+TEST(ExistingAnnotationLengthTest, ClangAttribute) {
+  auto Input = Annotations(R"(
+  void target($no[[int*]] p, $yes[[int*]] _Null_unspecified q,
+  $with_comment[[int*]]/* a comment */_Null_unspecified r);
+    )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(
+                            AllOf(SlotRange(1, Input.range("no")),
+                                  NoPreRangeLength(), NoPostRangeLength()),
+                            AllOf(SlotRange(2, Input.range("yes")),
+                                  PreRangeLength(0), PostRangeLength(18)),
+                            AllOf(SlotRange(3, Input.range("with_comment")),
+                                  PreRangeLength(0), PostRangeLength(32))))));
 }
 
 }  // namespace

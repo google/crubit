@@ -151,6 +151,16 @@ message SlotRange {
   optional uint64 begin = 2;
   optional uint64 end = 3;
   optional Nullability existing_annotation = 4;
+  // The length of the source range before the slot that is part of an existing
+  // annotation to be potentially removed, e.g. the length of
+  // "absl::NullabilityUnknown<" or 0 if the existing annotation is a
+  // non-template representation, such as clang's "_Null_unspecified".
+  optional uint32 existing_annotation_pre_range_length = 5;
+  // The length of the source range after the slot that is part of an existing
+  // annotation to be potentially removed, e.g. 1 for ">" or longer for a
+  // non-template representation of annotations, such as clang's
+  // "_Null_unspecified".
+  optional uint32 existing_annotation_post_range_length = 6;
 }
 
 // A set of slot ranges and their associated file.
