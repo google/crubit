@@ -68,6 +68,18 @@ MATCHER_P2(TypeLocRanges, Path, Ranges, "") {
          ExplainMatchResult(Ranges, arg.range(), result_listener);
 }
 
+MATCHER_P2(TypeLocRangesWithNoPragmaNullability, Path, Ranges, "") {
+  return !arg.has_pragma_nullability() &&
+         ExplainMatchResult(TypeLocRanges(Path, Ranges), arg, result_listener);
+}
+
+MATCHER_P3(TypeLocRanges, Path, Ranges, PragmaNullability, "") {
+  return ExplainMatchResult(Path, arg.path(), result_listener) &&
+         ExplainMatchResult(Ranges, arg.range(), result_listener) &&
+         ExplainMatchResult(PragmaNullability, arg.pragma_nullability(),
+                            result_listener);
+}
+
 template <typename DeclT, typename MatcherT>
 std::optional<clang::tidy::nullability::TypeLocRanges> getRanges(
     llvm::StringRef Input, MatcherT Matcher) {
@@ -803,7 +815,28 @@ TEST(EligibleRangesTest, Pragma) {
               SlotRange(0, Input.range("zero"), Nullability::NONNULL),
               SlotRange(-1, Input.range("one"), Nullability::NONNULL),
               SlotRange(1, Input.range("param_one"), Nullability::NONNULL),
-              SlotRange(2, Input.range("param_two"), Nullability::NONNULL)))));
+              SlotRange(2, Input.range("param_two"), Nullability::NONNULL)),
+          Nullability::NONNULL)));
+
+  Input = Annotations(R"(
+  #pragma nullability file_default nullable
+  [[int*]] target;
+  )");
+  EXPECT_THAT(
+      getVarRanges(Input.code()),
+      Optional(TypeLocRanges(MainFileName,
+                             UnorderedElementsAre(SlotRange(
+                                 0, Input.range(), Nullability::NULLABLE)),
+                             Nullability::NULLABLE)));
+
+  Input = Annotations(R"(
+  [[int*]] target;
+  )");
+  EXPECT_THAT(
+      getVarRanges(Input.code()),
+      Optional(TypeLocRangesWithNoPragmaNullability(
+          MainFileName, UnorderedElementsAre(SlotRangeWithNoExistingAnnotation(
+                            0, Input.range())))));
 }
 
 MATCHER(NoPreRangeLength, "") {

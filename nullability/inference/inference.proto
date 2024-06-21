@@ -169,4 +169,6 @@ message TypeLocRanges {
   optional string path = 2;
   // Source ranges of type locations (written types) in `path`.
   repeated SlotRange range = 3;
+  // The nullability default set by the pragma affecting `path`, if one exists.
+  optional Nullability pragma_nullability = 4;
 }

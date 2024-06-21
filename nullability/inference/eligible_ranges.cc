@@ -66,6 +66,19 @@ static bool isEligibleTypeLoc(TypeLoc TyLoc) {
   return true;
 }
 
+static Nullability toProtoNullability(NullabilityKind Kind) {
+  switch (Kind) {
+    case NullabilityKind::NonNull:
+      return Nullability::NONNULL;
+    case NullabilityKind::Nullable:
+    case NullabilityKind::NullableResult:
+      return Nullability::NULLABLE;
+    case NullabilityKind::Unspecified:
+      return Nullability::UNKNOWN;
+  }
+  llvm_unreachable("Unhandled NullabilityKind");
+}
+
 static void initSlotRange(SlotRange &R, std::optional<SlotNum> Slot,
                           unsigned Begin, unsigned End,
                           std::optional<NullabilityKind> Nullability,
@@ -75,18 +88,7 @@ static void initSlotRange(SlotRange &R, std::optional<SlotNum> Slot,
   R.set_begin(Begin);
   R.set_end(End);
   if (Nullability) {
-    switch (*Nullability) {
-      case NullabilityKind::NonNull:
-        R.set_existing_annotation(Nullability::NONNULL);
-        break;
-      case NullabilityKind::Nullable:
-      case NullabilityKind::NullableResult:
-        R.set_existing_annotation(Nullability::NULLABLE);
-        break;
-      case NullabilityKind::Unspecified:
-        R.set_existing_annotation(Nullability::UNKNOWN);
-        break;
-    }
+    R.set_existing_annotation(toProtoNullability(*Nullability));
 
     if (AnnotationPreRangeLength)
       R.set_existing_annotation_pre_range_length(*AnnotationPreRangeLength);
@@ -263,17 +265,30 @@ static bool trySetPath(FileID FID, const SourceManager &SrcMgr,
   return true;
 }
 
+static void setPragmaNullability(FileID FID,
+                                 const TypeNullabilityDefaults &Defaults,
+                                 TypeLocRanges &Ranges) {
+  // Don't use Defaults.get(File) in order to avoid treating a lack of pragma as
+  // a pragma setting of Defaults.DefaultNullability.
+  if (!Defaults.FileNullability) return;
+  if (auto It = Defaults.FileNullability->find(FID);
+      It != Defaults.FileNullability->end()) {
+    Ranges.set_pragma_nullability(toProtoNullability(It->second));
+  }
+}
+
 static std::optional<TypeLocRanges> getEligibleRanges(
     const FunctionDecl &Fun, const TypeNullabilityDefaults &Defaults) {
   FunctionTypeLoc TyLoc = Fun.getFunctionTypeLoc();
   if (TyLoc.isNull()) return std::nullopt;
-
   const clang::ASTContext &Context = Fun.getParentASTContext();
   const SourceManager &SrcMgr = Context.getSourceManager();
-  TypeLocRanges Result;
-
   FileID DeclFID = SrcMgr.getFileID(SrcMgr.getExpansionLoc(Fun.getLocation()));
+  if (!DeclFID.isValid()) return std::nullopt;
+
+  TypeLocRanges Result;
   if (!trySetPath(DeclFID, SrcMgr, Result)) return std::nullopt;
+  setPragmaNullability(DeclFID, Defaults, Result);
 
   addRangesQualifierAware(TyLoc.getReturnLoc(), SLOT_RETURN_TYPE, Context,
                           DeclFID, Defaults, Result);
@@ -293,13 +308,14 @@ static std::optional<TypeLocRanges> getEligibleRanges(
     const DeclaratorDecl &D, const TypeNullabilityDefaults &Defaults) {
   TypeLoc TyLoc = D.getTypeSourceInfo()->getTypeLoc();
   if (TyLoc.isNull()) return std::nullopt;
-
   const clang::ASTContext &Context = D.getASTContext();
   const SourceManager &SrcMgr = Context.getSourceManager();
-  TypeLocRanges Result;
-
   FileID DeclFID = SrcMgr.getFileID(SrcMgr.getExpansionLoc(D.getLocation()));
+  if (!DeclFID.isValid()) return std::nullopt;
+
+  TypeLocRanges Result;
   if (!trySetPath(DeclFID, SrcMgr, Result)) return std::nullopt;
+  setPragmaNullability(DeclFID, Defaults, Result);
 
   addRangesQualifierAware(TyLoc, Slot(0), Context, DeclFID, Defaults, Result);
   if (Result.range().empty()) return std::nullopt;
