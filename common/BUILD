@@ -75,6 +75,16 @@ cc_library(
     ],
 )
 
+rust_library(
+    name = "memoized",
+    srcs = ["memoized.rs"],
+)
+
+crubit_rust_test(
+    name = "memoized_test",
+    crate = ":memoized",
+)
+
 bzl_library(
     name = "multiplatform_testing_bzl",
     srcs = ["multiplatform_testing.bzl"],

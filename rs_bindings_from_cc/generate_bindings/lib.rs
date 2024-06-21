@@ -109,37 +109,31 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     .unwrap_or_else(|_| process::abort())
 }
 
-#[salsa::query_group(BindingsGeneratorStorage)]
-trait BindingsGenerator {
-    #[salsa::input]
-    fn ir(&self) -> Rc<IR>;
-    #[salsa::input]
-    fn generate_source_loc_doc_comment(&self) -> SourceLocationDocComment;
-    #[salsa::input]
-    fn errors(&self) -> Rc<dyn ErrorReporting>;
+memoized::query_group! {
+    trait BindingsGenerator {
+        #[input]
+        fn ir(&self) -> Rc<IR>;
+        #[input]
+        fn errors(&self) -> Rc<dyn ErrorReporting>;
+        #[input]
+        fn generate_source_loc_doc_comment(&self) -> SourceLocationDocComment;
 
-    fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
+        fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
 
-    fn generate_func(&self, func: Rc<Func>) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>>;
+        fn generate_func(&self, func: Rc<Func>) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>>;
 
-    fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
+        fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
 
-    fn is_record_clonable(&self, record: Rc<Record>) -> bool;
+        fn is_record_clonable(&self, record: Rc<Record>) -> bool;
 
-    fn get_binding(
-        &self,
-        expected_function_name: UnqualifiedIdentifier,
-        expected_param_types: Vec<RsTypeKind>,
-    ) -> Option<(Ident, ImplKind)>;
+        fn get_binding(
+            &self,
+            expected_function_name: UnqualifiedIdentifier,
+            expected_param_types: Vec<RsTypeKind>,
+        ) -> Option<(Ident, ImplKind)>;
+    }
+    struct Database;
 }
-
-#[salsa::database(BindingsGeneratorStorage)]
-#[derive(Default)]
-struct Database {
-    storage: salsa::Storage<Self>,
-}
-
-impl salsa::Database for Database {}
 
 /// Source code for generated bindings.
 struct Bindings {
@@ -465,40 +459,6 @@ struct GeneratedItem {
 impl From<TokenStream> for GeneratedItem {
     fn from(item: TokenStream) -> Self {
         GeneratedItem { item, ..Default::default() }
-    }
-}
-
-impl Eq for GeneratedItem {}
-
-impl PartialEq for GeneratedItem {
-    fn eq(&self, other: &Self) -> bool {
-        fn to_comparable_tuple(
-            _x: &GeneratedItem,
-        ) -> (&BTreeSet<Ident>, String, String, String, String) {
-            // TokenStream doesn't implement `PartialEq`, so we convert to an equivalent
-            // `String`. This is a bit expensive, but should be okay (especially
-            // given that this code doesn't execute at this point).  Having a
-            // working `impl PartialEq` helps `salsa` reuse unchanged memoized
-            // results of previous computations (although this is a bit
-            // theoretical, since right now we don't re-set `salsa`'s inputs  - we only call
-            // `set_ir` once).
-            //
-            // TODO(lukasza): If incremental `salsa` computations are ever used in the
-            // future, we may end up hitting the `panic!` below.  At that point
-            // it should be okay to just remove the `panic!`, but we should also
-            // 1) think about improving performance of comparing `TokenStream`
-            // for equality and 2) add unit tests covering this `PartialEq` `impl`.
-            panic!("This code is not expected to execute in practice");
-            #[allow(unreachable_code)]
-            (
-                &_x.features,
-                _x.item.to_string(),
-                _x.thunks.to_string(),
-                _x.thunk_impls.to_string(),
-                _x.assertions.to_string(),
-            )
-        }
-        to_comparable_tuple(self) == to_comparable_tuple(other)
     }
 }
 
@@ -953,14 +913,11 @@ fn generate_bindings_tokens(
     errors: Rc<dyn ErrorReporting>,
     generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<BindingsTokens> {
-    let mut db = Database::default();
-    db.set_ir(ir.clone());
-    db.set_generate_source_loc_doc_comment(generate_source_loc_doc_comment);
-    db.set_errors(errors);
+    let db = Database::new(ir.clone(), errors, generate_source_loc_doc_comment);
     let mut items = vec![];
     let mut thunks = vec![];
     let mut thunk_impls = vec![
-        generate_rs_api_impl_includes(&mut db, crubit_support_path_format)?,
+        generate_rs_api_impl_includes(&db, crubit_support_path_format)?,
         quote! {
             __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
             // Disable Clang thread-safety-analysis warnings that would otherwise
@@ -1424,7 +1381,7 @@ pub(crate) fn crate_root_path_tokens(ir: &IR) -> TokenStream {
 }
 
 fn generate_rs_api_impl_includes(
-    db: &mut Database,
+    db: &Database,
     crubit_support_path_format: &str,
 ) -> Result<TokenStream> {
     let ir = db.ir();
@@ -1496,9 +1453,11 @@ pub(crate) mod tests {
     }
 
     pub fn db_from_cc(cc_src: &str) -> Result<Database> {
-        let mut db = Database::default();
-        db.set_ir(Rc::new(ir_from_cc(cc_src)?));
-        Ok(db)
+        Ok(Database::new(
+            Rc::new(ir_from_cc(cc_src)?),
+            Rc::new(ErrorReport::new()),
+            SourceLocationDocComment::Enabled,
+        ))
     }
 
     #[test]
@@ -2937,13 +2896,15 @@ pub(crate) mod tests {
 
     #[test]
     fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
-        let mut db = Database::default();
-        db.set_errors(Rc::new(ErrorReport::new()));
-        db.set_generate_source_loc_doc_comment(SourceLocationDocComment::Enabled);
+        let db = Database::new(
+            Rc::new(make_ir_from_items([])),
+            Rc::new(ErrorReport::new()),
+            SourceLocationDocComment::Enabled,
+        );
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_message(
-                &make_ir_from_items([]),
+                &db.ir(),
                 &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
                 "unsupported_message",
             ),
@@ -2958,13 +2919,15 @@ pub(crate) mod tests {
     /// For these, we omit the mention of the location.
     #[test]
     fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
-        let mut db = Database::default();
-        db.set_errors(Rc::new(ErrorReport::new()));
-        db.set_generate_source_loc_doc_comment(SourceLocationDocComment::Enabled);
+        let db = Database::new(
+            Rc::new(make_ir_from_items([])),
+            Rc::new(ErrorReport::new()),
+            SourceLocationDocComment::Enabled,
+        );
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_message(
-                &make_ir_from_items([]),
+                &db.ir(),
                 &TestItem { source_loc: None },
                 "unsupported_message",
             ),
@@ -2976,13 +2939,15 @@ pub(crate) mod tests {
 
     #[test]
     fn test_generate_unsupported_item_with_source_loc_disabled() -> Result<()> {
-        let mut db = Database::default();
-        db.set_errors(Rc::new(ErrorReport::new()));
-        db.set_generate_source_loc_doc_comment(SourceLocationDocComment::Disabled);
+        let db = Database::new(
+            Rc::new(make_ir_from_items([])),
+            Rc::new(ErrorReport::new()),
+            SourceLocationDocComment::Disabled,
+        );
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_message(
-                &make_ir_from_items([]),
+                &db.ir(),
                 &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
                 "unsupported_message",
             ),
