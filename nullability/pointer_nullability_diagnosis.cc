@@ -184,13 +184,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerAssignment(
   if (!LHSNullability) return {};
 
   return diagnoseAssignmentLike(
-      Op->getArg(0)->getType(), *LHSNullability,
-      // Because `State` reflects the state after the assignment has already
-      // happened, we need to get the assigned value from the LHS, i.e.
-      // `Op->getArg(0)`. Using `Op->getArg(1)` doesn't work, because it is null
-      // after a move-assignment.
-      Op->getArg(0), State.Env, *Result.Context,
-      PointerNullabilityDiagnostic::Context::Assignment);
+      Op->getArg(0)->getType(), *LHSNullability, Op->getArg(1), State.Env,
+      *Result.Context, PointerNullabilityDiagnostic::Context::Assignment);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerReset(
@@ -585,74 +580,64 @@ void checkAnnotationsConsistent(
   }
 }
 
-DiagTransferFunc pointerNullabilityDiagnoser(
+DiagTransferFunc pointerNullabilityDiagnoserBefore() {
+  // Almost all diagnosis callbacks should be run before the transfer function
+  // has been applied because we want to check preconditions for the operation
+  // performed by the `CFGElement`.
+  return CFGMatchSwitchBuilder<const DiagTransferState,
+                               SmallVector<PointerNullabilityDiagnostic>>()
+      // (*)
+      .CaseOfCFGStmt<UnaryOperator>(isPointerDereference(), diagnoseDereference)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("*"),
+                                          diagnoseSmartPointerDereference)
+      // ([])
+      .CaseOfCFGStmt<ArraySubscriptExpr>(isPointerSubscript(),
+                                         diagnoseSubscript)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("[]"),
+                                          diagnoseSmartPointerDereference)
+      // (->)
+      .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("->"),
+                                          diagnoseSmartPointerDereference)
+      // (=) / `reset()`
+      .CaseOfCFGStmt<BinaryOperator>(
+          binaryOperator(hasOperatorName("="), hasLHS(isPointerExpr())),
+          diagnoseAssignment)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("="),
+                                          diagnoseSmartPointerAssignment)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("reset"),
+                                        diagnoseSmartPointerReset)
+      // Check compatibility of parameter assignments and return values.
+      .CaseOfCFGStmt<CallExpr>(callExpr(), diagnoseCallExpr)
+      .CaseOfCFGStmt<CXXConstructExpr>(cxxConstructExpr(),
+                                       diagnoseConstructExpr)
+      .CaseOfCFGStmt<ReturnStmt>(isPointerReturn(), diagnoseReturn)
+      // Check compatibility of member initializers.
+      .CaseOfCFGInit<CXXCtorInitializer>(isCtorMemberInitializer(),
+                                         diagnoseMemberInitializer)
+      // Check compatibility of initializer lists.
+      .CaseOfCFGStmt<InitListExpr>(initListExpr(), diagnoseInitListExpr)
+      .Build();
+}
+
+DiagTransferFunc pointerNullabilityDiagnoserAfter(
     const AllowedMovedFromNonnullSmartPointerExprs &AllowedMovedFromNonnull) {
-  DiagTransferFunc MainDiagnoser =
-      CFGMatchSwitchBuilder<const DiagTransferState,
-                            SmallVector<PointerNullabilityDiagnostic>>()
-          // (*)
-          .CaseOfCFGStmt<UnaryOperator>(isPointerDereference(),
-                                        diagnoseDereference)
-          .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("*"),
-                                              diagnoseSmartPointerDereference)
-          // ([])
-          .CaseOfCFGStmt<ArraySubscriptExpr>(isPointerSubscript(),
-                                             diagnoseSubscript)
-          .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("[]"),
-                                              diagnoseSmartPointerDereference)
-          // (->)
-          .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
-          .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("->"),
-                                              diagnoseSmartPointerDereference)
-          // (=) / `reset()`
-          .CaseOfCFGStmt<BinaryOperator>(
-              binaryOperator(hasOperatorName("="), hasLHS(isPointerExpr())),
-              diagnoseAssignment)
-          .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("="),
-                                              diagnoseSmartPointerAssignment)
-          .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("reset"),
-                                            diagnoseSmartPointerReset)
-          // Check compatibility of parameter assignments and return values.
-          .CaseOfCFGStmt<CallExpr>(callExpr(), diagnoseCallExpr)
-          .CaseOfCFGStmt<CXXConstructExpr>(cxxConstructExpr(),
-                                           diagnoseConstructExpr)
-          .CaseOfCFGStmt<ReturnStmt>(isPointerReturn(), diagnoseReturn)
-          // Check compatibility of member initializers.
-          .CaseOfCFGInit<CXXCtorInitializer>(isCtorMemberInitializer(),
-                                             diagnoseMemberInitializer)
-          // Check compatibility of initializer lists.
-          .CaseOfCFGStmt<InitListExpr>(initListExpr(), diagnoseInitListExpr)
-          .Build();
-
-  // We need a second transfer function to diagnose moved-from nonnull smart
-  // pointers because it needs to look at all expressions of smart pointer type.
-  // We can't do this in the existing transfer function because some of the
-  // existing cases may have smart pointer type, and only one of the cases is
-  // ever run.
-  DiagTransferFunc MovedFromNonnullPointerDiagnoser =
-      CFGMatchSwitchBuilder<const DiagTransferState,
-                            SmallVector<PointerNullabilityDiagnostic>>()
-          .CaseOfCFGStmt<Expr>(
-              expr(hasType(isSupportedSmartPointer()), isGLValue()),
-              [&AllowedMovedFromNonnull](absl::Nonnull<const Expr *> E,
-                                         const MatchFinder::MatchResult &Result,
-                                         const DiagTransferState &State)
-                  -> SmallVector<PointerNullabilityDiagnostic> {
-                if (AllowedMovedFromNonnull.allowed(E)) return {};
-                return diagnoseMovedFromNonnullSmartPointer(E, Result, State);
-              })
-          .Build();
-
-  return [MainDiagnoser = std::move(MainDiagnoser),
-          MovedFromNonnullPointerDiagnoser =
-              std::move(MovedFromNonnullPointerDiagnoser)](
-             const CFGElement &Elt, ASTContext &ASTCtx,
-             const DiagTransferState &State) {
-    SmallVector<PointerNullabilityDiagnostic> Diags =
-        MainDiagnoser(Elt, ASTCtx, State);
-    Diags.append(MovedFromNonnullPointerDiagnoser(Elt, ASTCtx, State));
-    return Diags;
-  };
+  return CFGMatchSwitchBuilder<const DiagTransferState,
+                               SmallVector<PointerNullabilityDiagnostic>>()
+      // `diagnoseMovedFromNonnullSmartPointer` needs to be run after the
+      // transfer function has been applied so that the pointer and its
+      // nullability properties are guaranteed be initialized (through
+      // `ensureSmartPointerInitialized()`).
+      .CaseOfCFGStmt<Expr>(
+          expr(hasType(isSupportedSmartPointer()), isGLValue()),
+          [&AllowedMovedFromNonnull](absl::Nonnull<const Expr *> E,
+                                     const MatchFinder::MatchResult &Result,
+                                     const DiagTransferState &State)
+              -> SmallVector<PointerNullabilityDiagnostic> {
+            if (AllowedMovedFromNonnull.allowed(E)) return {};
+            return diagnoseMovedFromNonnullSmartPointer(E, Result, State);
+          })
+      .Build();
 }
 
 }  // namespace
@@ -705,16 +690,26 @@ diagnosePointerNullability(const ValueDecl *VD,
 
   PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
 
-  auto Result = dataflow::runDataflowAnalysis(
-      *CFG, Analysis, Env,
-      [&, Diagnoser(pointerNullabilityDiagnoser(AllowedMovedFromNonnull))](
+  dataflow::CFGEltCallbacks<PointerNullabilityAnalysis> PostAnalysisCallbacks;
+  PostAnalysisCallbacks.Before =
+      [&, Diagnoser = pointerNullabilityDiagnoserBefore()](
           const CFGElement &Elt,
           const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
               &State) mutable {
         auto EltDiagnostics = Diagnoser(Elt, Ctx, {State.Lattice, State.Env});
         llvm::move(EltDiagnostics, std::back_inserter(Diags));
-      },
-      MaxBlockVisits);
+      };
+  PostAnalysisCallbacks.After =
+      [&,
+       Diagnoser = pointerNullabilityDiagnoserAfter(AllowedMovedFromNonnull)](
+          const CFGElement &Elt,
+          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
+              &State) mutable {
+        auto EltDiagnostics = Diagnoser(Elt, Ctx, {State.Lattice, State.Env});
+        llvm::move(EltDiagnostics, std::back_inserter(Diags));
+      };
+  auto Result = dataflow::runDataflowAnalysis(
+      *CFG, Analysis, Env, PostAnalysisCallbacks, MaxBlockVisits);
   if (!Result) return Result.takeError();
   if (Solver->reachedLimit())
     return llvm::createStringError(llvm::errc::interrupted,
