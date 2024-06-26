@@ -910,6 +910,9 @@ fn format_thunk_impl<'tcx>(
         let fn_args = param_names_and_types.iter().map(|(rs_name, ty)| {
             if is_c_abi_compatible_by_value(*ty) {
                 quote! { #rs_name }
+            } else if let Safety::Unsafe = sig.safety {
+                // The whole call will be wrapped in `unsafe` below.
+                quote! { #rs_name.assume_init_read() }
             } else {
                 quote! { unsafe { #rs_name.assume_init_read() } }
             }
@@ -921,9 +924,6 @@ fn format_thunk_impl<'tcx>(
     // Wrap the call in an unsafe block, for the sake of RFC #2585
     // `unsafe_block_in_unsafe_fn`.
     if let Safety::Unsafe = sig.safety {
-        // Note: This causes unsafe {... unsafe {...} ...}, which seems not ideal.
-        // Either the inner unsafe should be moved out, or just elided when
-        // there's an outer unsafe.
         thunk_body = quote! {unsafe {#thunk_body}};
     }
     if !is_c_abi_compatible_by_value(sig.output()) {
@@ -4260,6 +4260,43 @@ pub mod tests {
                     extern "C"
                     fn ...(x: f64, y: f64) -> f64 {
                         ::rust_out::add(x, y)
+                    }
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_fn_rust_abi_with_param_taking_struct_by_value22() {
+        let test_src = r#"
+                use std::slice;
+                pub struct S(i32);
+                pub unsafe fn transmute_slice(
+                    slice_ptr: *const u8,
+                    slice_len: usize,
+                    element_size: usize,
+                    s: S,
+                ) -> i32 {
+                    let len_in_bytes = slice_len * element_size;
+                    let b = slice::from_raw_parts(slice_ptr as *const u8, len_in_bytes);
+                    if b.len() == len_in_bytes {
+                        s.0
+                    } else {
+                        0
+                    }
+                }
+            "#;
+        test_format_item(test_src, "transmute_slice", |result| {
+            let result = result.unwrap().unwrap();
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    #[no_mangle]
+                    unsafe extern "C"
+                    fn ...(...) -> i32 {
+                        unsafe {
+                            ::rust_out::transmute_slice(..., ..., ..., s.assume_init_read() )
+                        }
                     }
                 }
             );
