@@ -114,7 +114,7 @@ std::vector<Evidence> collectFromDefinition(
       collectEvidenceFromDefinition(
           Definition,
           evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          UsrCache),
+                          UsrCache, AST.context()),
           UsrCache, Pragmas, InputInferences),
       llvm::Succeeded());
   return Results;
@@ -157,7 +157,7 @@ std::vector<Evidence> collectFromTargetDecl(llvm::StringRef Source) {
   collectEvidenceFromTargetDeclaration(
       *dataflow::test::findValueDecl(AST.context(), "target"),
       evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                      USRCache),
+                      USRCache, AST.context()),
       Pragmas);
   return Results;
 }
@@ -2556,6 +2556,282 @@ TEST(CollectEvidenceFromDefinitionTest,
                                 functionNamed("foo"))));
 }
 
+// Evidence for return type nonnull-ness should flow only from derived to base,
+// so we collect evidence for the base but not the derived.
+TEST(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNonnull) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Base {
+      virtual int* foo();
+    };
+
+    struct Derived : public Base {
+      int* foo() override {
+        static int i;
+        return &i;
+      }
+    };
+
+    void target() {
+      Derived D;
+      *D.foo();
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Derived::foo", Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
+                                    functionNamed("Derived@F@foo"))));
+
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
+                                            Evidence::UNCHECKED_DEREFERENCE,
+                                            functionNamed("Derived@F@foo"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Base {
+      virtual int* foo();
+    };
+
+    struct Derived : public Base {
+      int* foo() override { return nullptr; }
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Derived::foo", Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                    functionNamed("Derived@F@foo")),
+                           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                    functionNamed("Base@F@foo"))));
+
+  // We don't currently have any evidence kinds that can force a non-reference
+  // top-level pointer return type to be nullable from its usage, so no other
+  // expectation.
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNonnull) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Base {
+      virtual void foo(int* p);
+    };
+
+    struct Derived : public Base {
+      void foo(int* p) override { *p; }
+    };
+
+    void target() {
+      int i;
+      Derived D;
+      D.foo(&i);
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
+                                    functionNamed("Derived@F@foo")),
+                           evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
+                                    functionNamed("Base@F@foo"))));
+
+  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("Derived@F@foo")),
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("Base@F@foo"))));
+}
+
+// Evidence for parameter nullable-ness should flow only from base to derived,
+// so we collect evidence for the derived but not the base.
+TEST(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Base {
+      virtual void foo(int* p);
+    };
+
+    struct Derived : public Base {
+      void foo(int* p) override { p = nullptr; }
+    };
+
+    void target() {
+      Derived D;
+      D.foo(nullptr);
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("Derived@F@foo"))));
+
+  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src),
+              UnorderedElementsAre(evidence(paramSlot(0),
+                                            Evidence::ASSIGNED_FROM_NULLABLE,
+                                            functionNamed("Derived@F@foo"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNonnull) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Base {
+      virtual int* foo() {
+        static int i;
+        return &i;
+      }
+    };
+
+    struct Derived : public Base {
+      int* foo() override;
+    };
+
+    void target() {
+      Base B;
+      *B.foo();
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Base::foo", Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
+                                    functionNamed("Base@F@foo")),
+                           evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
+                                    functionNamed("Derived@F@foo"))));
+
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("Base@F@foo")),
+                  evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("Derived@F@foo"))));
+}
+
+// Evidence for return type nullable-ness should flow only from derived to base,
+// so we collect evidence for the base but not the derived.
+TEST(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Base {
+      virtual int* foo() { return nullptr; }
+    };
+
+    struct Derived : public Base {
+      int* foo() override;
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Base::foo", Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                    functionNamed("Base@F@foo"))));
+
+  // We don't currently have any evidence kinds that can force a non-reference
+  // top-level pointer return type to be nullable from its usage, so no other
+  // expectation.
+}
+
+// Evidence for parameter nonnull-ness should flow only from derived to base, so
+// we collect evidence for the base but not the derived.
+TEST(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNonnull) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Base {
+      virtual void foo(int* p) { *p; }
+    };
+
+    struct Derived : public Base {
+      void foo(int* p) override;
+    };
+
+    void target() {
+      int i;
+      Base B;
+      B.foo(&i);
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
+                                    functionNamed("Base@F@foo"))));
+
+  EXPECT_THAT(collectFromDefinitionNamed("Base::foo", Src),
+              UnorderedElementsAre(evidence(paramSlot(0),
+                                            Evidence::UNCHECKED_DEREFERENCE,
+                                            functionNamed("Base@F@foo"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Base {
+      virtual void foo(int* p) { p = nullptr; }
+    };
+
+    struct Derived : public Base {
+      void foo(int* p) override;
+    };
+
+    void target() {
+      Base B;
+      B.foo(nullptr);
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("Base@F@foo")),
+                           evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("Derived@F@foo"))));
+
+  EXPECT_THAT(collectFromDefinitionNamed("Base::foo", Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           functionNamed("Base@F@foo")),
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           functionNamed("Derived@F@foo"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FromVirtualDerivedMultipleLayers) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Base {
+      virtual int* foo();
+    };
+
+    struct Derived : public Base {
+      virtual int* foo();
+    };
+
+    struct DerivedDerived : public Derived {
+      int* foo() override { return nullptr; };
+    };
+  )cc";
+
+  EXPECT_THAT(
+      collectFromDefinitionNamed("DerivedDerived::foo", Src),
+      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                    functionNamed("DerivedDerived@F@foo")),
+                           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                    functionNamed("Derived@F@foo")),
+                           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                    functionNamed("Base@F@foo"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FromVirtualBaseMultipleLayers) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Base {
+      virtual void foo(int* p) { p = nullptr; }
+    };
+
+    struct Derived : public Base {
+      virtual void foo(int*);
+    };
+
+    struct DerivedDerived : public Derived {
+      void foo(int*) override;
+    };
+  )cc";
+
+  EXPECT_THAT(collectFromDefinitionNamed("Base::foo", Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           functionNamed("DerivedDerived@F@foo")),
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           functionNamed("Derived@F@foo")),
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           functionNamed("Base@F@foo"))));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, NotInferenceTarget) {
   static constexpr llvm::StringRef Src = R"cc(
     void isATarget(Nonnull<int*> a);
@@ -2788,7 +3064,7 @@ TEST(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
           *cast<FunctionDecl>(
               dataflow::test::findValueDecl(AST.context(), "target")),
           evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          UsrCache),
+                          UsrCache, AST.context()),
           UsrCache, Pragmas, /*PreviousInferences=*/{},
           // Enough iterations to collect one piece of evidence but not both.
           []() {
@@ -3300,10 +3576,11 @@ TEST(EvidenceEmitterTest, NotInferenceTarget) {
   ASSERT_NE(TargetDecl, nullptr);
 
   USRCache USRCache;
-  EXPECT_DEATH(evidenceEmitter([](const Evidence& E) {}, USRCache)(
-                   *TargetDecl, Slot{}, Evidence::ANNOTATED_UNKNOWN,
-                   TargetDecl->getLocation()),
-               "not an inference target");
+  EXPECT_DEATH(
+      evidenceEmitter([](const Evidence& E) {}, USRCache, AST.context())(
+          *TargetDecl, Slot{}, Evidence::ANNOTATED_UNKNOWN,
+          TargetDecl->getLocation()),
+      "not an inference target");
 }
 
 }  // namespace

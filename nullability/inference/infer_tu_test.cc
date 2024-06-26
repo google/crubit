@@ -581,5 +581,165 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNonnull) {
                                     {inferredSlot(0, Nullability::NONNULL)})));
 }
 
+using InferTUVirtualMethodsTest = InferTUTest;
+
+TEST_F(InferTUVirtualMethodsTest, SafeVarianceNoConflicts) {
+  build(R"cc(
+    struct Base {
+      virtual int* foo(int* p) {
+        *p;
+        return nullptr;
+      }
+    };
+
+    struct Derived : public Base {
+      int* foo(int* p) override {
+        static int i = 0;
+        p = nullptr;
+        return &i;
+      }
+    };
+  )cc");
+
+  EXPECT_THAT(infer(),
+              UnorderedElementsAre(
+                  inference(hasName("Base::foo"),
+                            {inferredSlot(0, Nullability::NULLABLE),
+                             inferredSlot(1, Nullability::NONNULL)}),
+                  inference(hasName("Derived::foo"),
+                            {inferredSlot(0, Nullability::NONNULL),
+                             inferredSlot(1, Nullability::NULLABLE)})));
+}
+
+TEST_F(InferTUVirtualMethodsTest, BaseConstrainsDerived) {
+  build(R"cc(
+    struct Base {
+      virtual Nonnull<int*> foo(int* p) {
+        static int i = 0;
+        p = nullptr;
+        return &i;
+      }
+    };
+
+    struct Derived : public Base {
+      int* foo(int* p) override;
+    };
+  )cc");
+
+  EXPECT_THAT(infer(),
+              UnorderedElementsAre(
+                  inference(hasName("Base::foo"),
+                            {inferredSlot(0, Nullability::NONNULL),
+                             inferredSlot(1, Nullability::NULLABLE)}),
+                  inference(hasName("Derived::foo"),
+                            {inferredSlot(0, Nullability::NONNULL),
+                             inferredSlot(1, Nullability::NULLABLE)})));
+}
+
+TEST_F(InferTUVirtualMethodsTest, DerivedConstrainsBase) {
+  build(R"cc(
+    struct Base {
+      virtual int* foo(int* p);
+    };
+
+    struct Derived : public Base {
+      int* foo(int* p) override {
+        *p;
+        return nullptr;
+      }
+    };
+  )cc");
+
+  EXPECT_THAT(infer(), UnorderedElementsAre(
+                           inference(hasName("Base::foo"),
+                                     {inferredSlot(0, Nullability::NULLABLE),
+                                      inferredSlot(1, Nullability::NONNULL)}),
+                           inference(hasName("Derived::foo"),
+                                     {inferredSlot(0, Nullability::NULLABLE),
+                                      inferredSlot(1, Nullability::NONNULL)})));
+}
+
+TEST_F(InferTUVirtualMethodsTest, Conflict) {
+  build(R"cc(
+    struct Base {
+      virtual int* foo(int* p);
+    };
+
+    struct Derived : public Base {
+      int* foo(int* p) override {
+        *p;
+        return nullptr;
+      }
+    };
+
+    void usage() {
+      Base B;
+      // Conflict-producing nonnull return type evidence is only possible
+      // from a usage site. Since we need a usage, produce the parameter
+      // evidence here as well.
+      *B.foo(nullptr);
+    }
+  )cc");
+
+  EXPECT_THAT(
+      infer(),
+      UnorderedElementsAre(
+          inference(hasName("Base::foo"),
+                    {inferredSlot(0, Nullability::NONNULL, /*Conflict*/ true),
+                     inferredSlot(1, Nullability::NONNULL, /*Conflict*/ true)}),
+          inference(
+              hasName("Derived::foo"),
+              {inferredSlot(0, Nullability::NONNULL, /*Conflict*/ true),
+               inferredSlot(1, Nullability::NONNULL, /*Conflict*/ true)})));
+}
+
+TEST_F(InferTUVirtualMethodsTest, MultipleDerived) {
+  build(R"cc(
+    struct Base {
+      virtual void foo(int* p) { p = nullptr; }
+    };
+
+    struct DerivedA : public Base {
+      void foo(int* p) override;
+    };
+
+    struct DerivedB : public Base {
+      void foo(int* p) override;
+    };
+  )cc");
+  EXPECT_THAT(infer(),
+              UnorderedElementsAre(
+                  inference(hasName("Base::foo"),
+                            {inferredSlot(1, Nullability::NULLABLE)}),
+                  inference(hasName("DerivedA::foo"),
+                            {inferredSlot(1, Nullability::NULLABLE)}),
+                  inference(hasName("DerivedB::foo"),
+                            {inferredSlot(1, Nullability::NULLABLE)})));
+}
+
+TEST_F(InferTUVirtualMethodsTest, MultipleBase) {
+  build(R"cc(
+    struct BaseA {
+      virtual void foo(int* p);
+    };
+
+    struct BaseB {
+      virtual void foo(int* p);
+    };
+
+    struct Derived : public BaseA, public BaseB {
+      void foo(int* p) override { *p; }
+    };
+  )cc");
+
+  EXPECT_THAT(infer(), UnorderedElementsAre(
+                           inference(hasName("BaseA::foo"),
+                                     {inferredSlot(1, Nullability::NONNULL)}),
+                           inference(hasName("BaseB::foo"),
+                                     {inferredSlot(1, Nullability::NONNULL)}),
+                           inference(hasName("Derived::foo"),
+                                     {inferredSlot(1, Nullability::NONNULL)})));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

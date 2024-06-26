@@ -5,6 +5,7 @@
 #ifndef CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_H_
 #define CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_H_
 
+#include <memory>
 #include <string>
 #include <string_view>
 
@@ -12,7 +13,9 @@
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pragma.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/DenseMap.h"
@@ -33,7 +36,8 @@ using EvidenceEmitter = void(const Decl &Target, Slot, Evidence::Kind,
 /// Creates an EvidenceEmitter that serializes the evidence as Evidence protos.
 /// This emitter caches USR generation, and should be reused for the whole AST.
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(
-    llvm::unique_function<void(const Evidence &) const>, USRCache &USRCache);
+    llvm::unique_function<void(const Evidence &) const>, USRCache &USRCache,
+    ASTContext &Ctx);
 
 struct PreviousInferences {
   const llvm::DenseSet<SlotFingerprint> &Nullable = {};

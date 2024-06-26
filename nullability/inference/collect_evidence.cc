@@ -64,6 +64,7 @@
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
@@ -86,15 +87,123 @@ std::string_view getOrGenerateUSR(USRCache &Cache, const Decl &Decl) {
   return It->second;
 }
 
+static llvm::DenseSet<const CXXMethodDecl *> getOverridden(
+    const CXXMethodDecl *Derived) {
+  llvm::DenseSet<const CXXMethodDecl *> Overridden;
+  for (const CXXMethodDecl *Base : Derived->overridden_methods()) {
+    Overridden.insert(Base);
+    for (const CXXMethodDecl *BaseOverridden : getOverridden(Base)) {
+      Overridden.insert(BaseOverridden);
+    }
+  }
+  return Overridden;
+}
+
+/// Shared base class for visitors that walk the AST for evidence collection
+/// purposes, to ensure they see the same nodes.
+template <typename Derived>
+struct EvidenceLocationsWalker : public RecursiveASTVisitor<Derived> {
+  // We do want to see concrete code, including function instantiations.
+  bool shouldVisitTemplateInstantiations() const { return true; }
+
+  // In order to collect from more default member initializers, we do want to
+  // see defaulted default constructors, which are implicitly-defined
+  // functions whether the declaration is implicit or explicit. We also want
+  // to see lambda bodies in the form of operator() definitions that are not
+  // themselves implicit but show up in an implicit context.
+  bool shouldVisitImplicitCode() const { return true; }
+};
+
+using VirtualMethodOverridesMap =
+    absl::flat_hash_map<const CXXMethodDecl *,
+                        llvm::DenseSet<const CXXMethodDecl *>>;
+
+/// Collect a map from virtual methods to a set of their overrides.
+static VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx) {
+  struct Walker : public EvidenceLocationsWalker<Walker> {
+    VirtualMethodOverridesMap Out;
+
+    bool VisitCXXMethodDecl(const CXXMethodDecl *MD) {
+      if (MD->isVirtual()) {
+        for (const auto *O : getOverridden(MD)) {
+          Out[O].insert(MD);
+        }
+      }
+      return true;
+    }
+  };
+
+  Walker W;
+  W.TraverseAST(Ctx);
+  return std::move(W.Out);
+}
+
+namespace {
+enum VirtualMethodEvidenceFlowDirection {
+  kFromBaseToDerived,
+  kFromDerivedToBase,
+  // Bidirectional evidence or new evidence kinds that create bidirectional
+  // information could be used for low-priority heuristics, e.g. Nonnull returns
+  // in all derived => Nonnull return for the base. These are not currently
+  // supported, though.
+};
+}  // namespace
+
+static VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
+                                                           bool ForReturnSlot) {
+  switch (Kind) {
+    case Evidence::ANNOTATED_NONNULL:
+    case Evidence::UNCHECKED_DEREFERENCE:
+    case Evidence::NONNULL_ARGUMENT:
+    case Evidence::NONNULL_RETURN:
+    case Evidence::ASSIGNED_TO_NONNULL:
+    case Evidence::ABORT_IF_NULL:
+    case Evidence::ARITHMETIC:
+    case Evidence::GCC_NONNULL_ATTRIBUTE:
+      // Evidence pointing toward Unknown is only used to prevent Nonnull
+      // inferences; it cannot override Nullable. So propagate it in the same
+      // direction we do for Nonnull-pointing evidence.
+    case Evidence::ANNOTATED_UNKNOWN:
+    case Evidence::UNKNOWN_ARGUMENT:
+    case Evidence::UNKNOWN_RETURN:
+      return ForReturnSlot ? kFromBaseToDerived : kFromDerivedToBase;
+    case Evidence::ANNOTATED_NULLABLE:
+    case Evidence::NULLABLE_ARGUMENT:
+    case Evidence::NULLABLE_RETURN:
+    case Evidence::ASSIGNED_TO_MUTABLE_NULLABLE:
+    case Evidence::ASSIGNED_FROM_NULLABLE:
+    case Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER:
+      return ForReturnSlot ? kFromDerivedToBase : kFromBaseToDerived;
+  }
+}
+
+static llvm::DenseSet<const CXXMethodDecl *>
+getAdditionalTargetsForVirtualMethod(
+    const CXXMethodDecl *MD, Evidence::Kind Kind, bool ForReturnSlot,
+    const VirtualMethodOverridesMap &OverridesMap) {
+  VirtualMethodEvidenceFlowDirection FlowDirection =
+      getFlowDirection(Kind, ForReturnSlot);
+  switch (FlowDirection) {
+    case kFromBaseToDerived:
+      if (auto It = OverridesMap.find(MD); It != OverridesMap.end())
+        return It->second;
+      return {};
+    case kFromDerivedToBase:
+      return getOverridden(MD);
+  }
+}
+
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(
     llvm::unique_function<void(const Evidence &) const> Emit,
-    nullability::USRCache &USRCache) {
+    USRCache &USRCache, ASTContext &Ctx) {
   class EvidenceEmitterImpl {
    public:
     EvidenceEmitterImpl(
         llvm::unique_function<void(const Evidence &) const> Emit,
-        nullability::USRCache &USRCache)
-        : Emit(std::move(Emit)), USRCache(USRCache) {}
+        nullability::USRCache &USRCache, ASTContext &Ctx)
+        : Emit(std::move(Emit)),
+          USRCache(USRCache),
+          OverridesMap(getVirtualMethodOverrides(Ctx)) {}
 
     void operator()(const Decl &Target, Slot S, Evidence::Kind Kind,
                     SourceLocation Loc) const {
@@ -121,13 +230,28 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
         E.set_location(Loc.printToString(SM));
 
       Emit(E);
+
+      // Virtual methods and their overrides constrain each other's
+      // nullabilities, so propagate evidence in the appropriate direction based
+      // on the evidence kind and whether the evidence is for the return type or
+      // a parameter type.
+      if (auto *MD = dyn_cast<CXXMethodDecl>(&Target); MD && MD->isVirtual()) {
+        for (const auto *O : getAdditionalTargetsForVirtualMethod(
+                 MD, Kind, S == SLOT_RETURN_TYPE, OverridesMap)) {
+          USR = getOrGenerateUSR(USRCache, *O);
+          if (USR.empty()) return;  // Can't emit without a USR
+          E.mutable_symbol()->set_usr(USR);
+          Emit(E);
+        }
+      }
     }
 
    private:
     llvm::unique_function<void(const Evidence &) const> Emit;
     nullability::USRCache &USRCache;
+    const VirtualMethodOverridesMap OverridesMap;
   };
-  return EvidenceEmitterImpl(std::move(Emit), USRCache);
+  return EvidenceEmitterImpl(std::move(Emit), USRCache, Ctx);
 }
 
 namespace {
@@ -1369,9 +1493,9 @@ static void collectEvidenceFromDefaultArgument(
   }
 }
 
-void collectNonnullAttributeEvidence(const clang::FunctionDecl &Fn,
-                                     unsigned ParamIndex, SourceLocation Loc,
-                                     llvm::function_ref<EvidenceEmitter> Emit) {
+static void collectNonnullAttributeEvidence(
+    const clang::FunctionDecl &Fn, unsigned ParamIndex, SourceLocation Loc,
+    llvm::function_ref<EvidenceEmitter> Emit) {
   const ParmVarDecl *ParamDecl = Fn.getParamDecl(ParamIndex);
   // The attribute does not apply to references-to-pointers or nested pointers
   // or smart pointers.
@@ -1442,18 +1566,8 @@ void collectEvidenceFromTargetDeclaration(
 }
 
 EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
-  struct Walker : public RecursiveASTVisitor<Walker> {
+  struct Walker : public EvidenceLocationsWalker<Walker> {
     EvidenceSites Out;
-
-    // We do want to see concrete code, including function instantiations.
-    bool shouldVisitTemplateInstantiations() const { return true; }
-
-    // In order to collect from more default member initializers, we do want to
-    // see defaulted default constructors, which are implicitly-defined
-    // functions whether the declaration is implicit or explicit. We also want
-    // to see lambda bodies in the form of operator() definitions that are not
-    // themselves implicit but show up in an implicit context.
-    bool shouldVisitImplicitCode() const { return true; }
 
     bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
       if (isInferenceTarget(*FD)) Out.Declarations.insert(FD);
