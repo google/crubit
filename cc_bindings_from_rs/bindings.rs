@@ -1533,6 +1533,7 @@ fn format_fields<'tcx>(
         offset: u64,
         offset_of_next_field: u64,
         doc_comment: TokenStream,
+        attributes: Vec<TokenStream>,
     }
     impl Field {
         fn size(&self) -> u64 {
@@ -1556,6 +1557,7 @@ fn format_fields<'tcx>(
             offset: 0,
             offset_of_next_field: core.size_in_bytes,
             doc_comment: quote! {},
+            attributes: vec![],
         }]
     } else {
         let mut fields = core
@@ -1598,6 +1600,12 @@ fn format_fields<'tcx>(
                 let offset = 0;
                 let offset_of_next_field = 0;
 
+                // Populate attributes.
+                let mut attributes = vec![];
+                if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, field_def.did) {
+                    attributes.push(cc_deprecated_tag);
+                }
+
                 Field {
                     type_info,
                     cc_name,
@@ -1607,6 +1615,7 @@ fn format_fields<'tcx>(
                     offset,
                     offset_of_next_field,
                     doc_comment: format_doc_comment(tcx, field_def.did.expect_local()),
+                    attributes,
                 }
             })
             .collect_vec();
@@ -1769,6 +1778,7 @@ fn format_fields<'tcx>(
                         };
                         let cc_type = cc_type.into_tokens(&mut prereqs);
                         let doc_comment = field.doc_comment;
+                        let attributes = field.attributes;
 
                         match adt_def.adt_kind() {
                             ty::AdtKind::Struct => quote! {
@@ -1778,6 +1788,7 @@ fn format_fields<'tcx>(
                                     // b/288138612.
                                     union {  __NEWLINE__
                                         #doc_comment
+                                        #(#attributes)*
                                         #cc_type #cc_name;
                                     };
                                 #padding
@@ -7681,6 +7692,41 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     struct ... [[deprecated("Use AnotherEnum instead")]] ... SomeEnum final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_struct_fields() {
+        let test_src = r#"
+        pub struct SomeStruct {
+            #[deprecated = "Use `y` instead"]
+            pub x: u32,
+
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... SomeStruct final {
+                        ...
+                        union {
+                            ...
+                            [[deprecated("Use `y` instead")]] std::uint32_t x;
+                        }
+                        ...
+                        union {
+                            ...
+                            std::uint32_t y;
+                        }
                         ...
                     };
                 }
