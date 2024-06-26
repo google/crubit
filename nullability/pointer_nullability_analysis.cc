@@ -79,6 +79,43 @@ TypeNullability prepend(NullabilityKind Head, const TypeNullability &Tail) {
   return Result;
 }
 
+// If `E` is already associated with a `PointerValue`, returns it.
+// Otherwise, associates a newly created `PointerValue` with `E` and returns it.
+// Returns null iff `E` is not a raw pointer expression.
+absl::Nullable<PointerValue *> ensureRawPointerHasValue(
+    absl::Nonnull<const Expr *> E, Environment &Env) {
+  if (!isSupportedRawPointerType(E->getType())) return nullptr;
+
+  if (E->isPRValue()) {
+    if (auto *Val = Env.get<PointerValue>(*E)) return Val;
+    auto *Val = cast<PointerValue>(Env.createValue(E->getType()));
+    Env.setValue(*E, *Val);
+    return Val;
+  }
+
+  StorageLocation *Loc = Env.getStorageLocation(*E);
+  if (Loc == nullptr) {
+    Loc = &Env.createStorageLocation(*E);
+    Env.setStorageLocation(*E, *Loc);
+  }
+  if (auto *Val = Env.get<PointerValue>(*Loc)) return Val;
+  auto *Val = cast<PointerValue>(Env.createValue(E->getType()));
+  Env.setValue(*Loc, *Val);
+  return Val;
+}
+
+// If `Elt` is an expression of raw pointer type, ensures that it has a
+// `PointerValue` associated with it.
+void ensureRawPointerHasValue(const CFGElement &Elt, Environment &Env) {
+  auto S = Elt.getAs<CFGStmt>();
+  if (!S) return;
+
+  const Expr *E = dyn_cast<Expr>(S->getStmt());
+  if (!E) return;
+
+  ensureRawPointerHasValue(E, Env);
+}
+
 void computeNullability(absl::Nonnull<const Expr *> E,
                         TransferState<PointerNullabilityLattice> &State,
                         std::function<TypeNullability()> Compute) {
@@ -326,7 +363,7 @@ void initSmartPointerForExpr(const Expr *E,
 void transferValue_NullPointer(
     absl::Nonnull<const Expr *> NullPointer, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
-  if (auto *PointerVal = getRawPointerValue(NullPointer, State.Env)) {
+  if (auto *PointerVal = ensureRawPointerHasValue(NullPointer, State.Env)) {
     initNullPointer(*PointerVal, State.Env.getDataflowAnalysisContext());
   }
 }
@@ -335,7 +372,7 @@ void transferValue_NotNullPointer(
     absl::Nonnull<const Expr *> NotNullPointer,
     const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
-  if (auto *PointerVal = getRawPointerValue(NotNullPointer, State.Env)) {
+  if (auto *PointerVal = ensureRawPointerHasValue(NotNullPointer, State.Env)) {
     initPointerNullState(*PointerVal, State.Env.getDataflowAnalysisContext(),
                          NullabilityKind::NonNull);
   }
@@ -709,7 +746,7 @@ void transferValue_SmartPointerArrowMemberExpr(
 void transferValue_Pointer(absl::Nonnull<const Expr *> PointerExpr,
                            const MatchFinder::MatchResult &Result,
                            TransferState<PointerNullabilityLattice> &State) {
-  auto *PointerVal = getRawPointerValue(PointerExpr, State.Env);
+  auto *PointerVal = ensureRawPointerHasValue(PointerExpr, State.Env);
   if (!PointerVal) return;
 
   initPointerFromTypeNullability(*PointerVal, PointerExpr, State);
@@ -1040,9 +1077,7 @@ void transferValue_AccessorCall(
     PointerVal = dyn_cast_or_null<PointerValue>(State.Env.getValue(*Loc));
   }
   if (!PointerVal) {
-    // Use value that may have been set by the builtin transfer function or by
-    // `ensurePointerHasValue()`.
-    PointerVal = getRawPointerValue(MCE, State.Env);
+    PointerVal = ensureRawPointerHasValue(MCE, State.Env);
   }
   if (PointerVal) {
     State.Env.setValue(*MCE, *PointerVal);
@@ -1585,27 +1620,6 @@ auto buildValueTransferer() {
       .Build();
 }
 
-// Ensure that all expressions of raw pointer type have a `PointerValue`
-// associated with them so we can track nullability through them.
-void ensurePointerHasValue(const CFGElement &Elt, Environment &Env) {
-  auto S = Elt.getAs<CFGStmt>();
-  if (!S) return;
-
-  auto *E = dyn_cast<Expr>(S->getStmt());
-  if (E == nullptr || !isSupportedRawPointerType(E->getType())) return;
-
-  if (E->isPRValue()) {
-    if (Env.getValue(*E) == nullptr)
-      // `createValue()` always produces a value for pointer types.
-      Env.setValue(*E, *Env.createValue(E->getType()));
-  } else {
-    StorageLocation *Loc = Env.getStorageLocation(*E);
-    if (Loc == nullptr) Loc = &Env.createStorageLocation(*E);
-    if (Env.getValue(*Loc) == nullptr)
-      Env.setValue(*Loc, *Env.createValue(E->getType()));
-  }
-}
-
 // Ensure that all expressions of smart pointer type have an underlying
 // raw pointer initialized from the type nullability.
 void ensureSmartPointerInitialized(
@@ -1655,9 +1669,9 @@ void PointerNullabilityAnalysis::transfer(const CFGElement &Elt,
                                           Environment &Env) {
   TransferState<PointerNullabilityLattice> State(Lattice, Env);
 
-  ensurePointerHasValue(Elt, Env);
   TypeTransferer(Elt, getASTContext(), State);
   ValueTransferer(Elt, getASTContext(), State);
+  ensureRawPointerHasValue(Elt, Env);
   ensureSmartPointerInitialized(Elt, State);
 }
 
