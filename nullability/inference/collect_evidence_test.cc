@@ -696,6 +696,33 @@ TEST(CollectEvidenceFromDefinitionTest, NonPtrArgPassed) {
   EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
+TEST(CollectEvidenceFromDefinitionTest, ReferenceArgsPassed) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void constCallee(int* const& a, int* const& b, int* const& c);
+    void mutableCallee(int*& a, int*& b, int*& c);
+    void target(Nullable<int*> p, Nonnull<int*> q, int* r) {
+      constCallee(p, q, r);
+      mutableCallee(p, q, r);
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::NULLABLE_REFERENCE_ARGUMENT,
+                           functionNamed("constCallee")),
+                  evidence(paramSlot(1), Evidence::NONNULL_REFERENCE_ARGUMENT,
+                           functionNamed("constCallee")),
+                  evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                           functionNamed("constCallee")),
+                  // TODO(b/344872191) Should be NULLABLE_REFERENCE_ARGUMENT.
+                  evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                           functionNamed("mutableCallee")),
+                  // TODO(b/344872191) Should be NONNULL_REFERENCE_ARGUMENT.
+                  evidence(paramSlot(1), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                           functionNamed("mutableCallee")),
+                  evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                           functionNamed("mutableCallee"))));
+}
+
 TEST(SmartPointerCollectEvidenceFromDefinitionTest, ArgsAndParams) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -717,7 +744,7 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, ArgsAndParams) {
                            functionNamed("target")),
                   evidence(paramSlot(1), Evidence::UNKNOWN_ARGUMENT,
                            functionNamed("callee")),
-                  evidence(paramSlot(2), Evidence::UNKNOWN_ARGUMENT,
+                  evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
                            functionNamed("callee"))));
 }
 
@@ -818,6 +845,22 @@ TEST(CollectEvidenceFromDefinitionTest, MultipleReturns) {
                                     functionNamed("target")),
                            evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
                                     functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, ReferenceReturns) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int*& target(Nonnull<int*>& p, Nullable<int*>& q, int*& r, bool a, bool b) {
+      if (a) return p;
+      if (b) return q;
+      return r;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_REFERENCE_RETURN),
+          evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_REFERENCE_RETURN),
+          evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_REFERENCE_RETURN)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
@@ -1505,12 +1548,12 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullRef) {
 
     void target(int* p) { callee(p); }
   )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("target")),
-                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
-                                    functionNamed("callee"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
+                           functionNamed("target")),
+                  evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                           functionNamed("callee"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullInMemberFunction) {
@@ -1698,7 +1741,7 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNullableRef) {
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
                            functionNamed("target")),
-                  evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                  evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
                            functionNamed("callee"))));
 }
 
@@ -1718,7 +1761,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
                    functionNamed("producer")),
-          evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+          evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
                    functionNamed("callee"))));
 }
 
@@ -1734,7 +1777,7 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNullableRefFromFunctionCall) {
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
                    functionNamed("producer")),
-          evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+          evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
                    functionNamed("callee"))));
 }
 

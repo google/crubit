@@ -124,9 +124,17 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
     update(Result, Nullability::NONNULL);
   if (Counts[Evidence::NULLABLE_ARGUMENT])
     update(Result, Nullability::NULLABLE);
+  if (Counts[Evidence::NULLABLE_REFERENCE_ARGUMENT])
+    update(Result, Nullability::NULLABLE);
+  if (Counts[Evidence::NONNULL_REFERENCE_ARGUMENT])
+    update(Result, Nullability::NONNULL);
   if (Counts[Evidence::ASSIGNED_FROM_NULLABLE])
     update(Result, Nullability::NULLABLE);
   if (Counts[Evidence::NULLABLE_RETURN]) update(Result, Nullability::NULLABLE);
+  if (Counts[Evidence::NULLABLE_REFERENCE_RETURN])
+    update(Result, Nullability::NULLABLE);
+  if (Counts[Evidence::NONNULL_REFERENCE_RETURN])
+    update(Result, Nullability::NONNULL);
   if (Counts[Evidence::ASSIGNED_TO_NONNULL])
     update(Result, Nullability::NONNULL);
   if (Counts[Evidence::ASSIGNED_TO_MUTABLE_NULLABLE])

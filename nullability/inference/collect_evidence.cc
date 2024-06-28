@@ -142,10 +142,7 @@ namespace {
 enum VirtualMethodEvidenceFlowDirection {
   kFromBaseToDerived,
   kFromDerivedToBase,
-  // Bidirectional evidence or new evidence kinds that create bidirectional
-  // information could be used for low-priority heuristics, e.g. Nonnull returns
-  // in all derived => Nonnull return for the base. These are not currently
-  // supported, though.
+  kBoth,
 };
 }  // namespace
 
@@ -174,6 +171,13 @@ static VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
     case Evidence::ASSIGNED_FROM_NULLABLE:
     case Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER:
       return ForReturnSlot ? kFromDerivedToBase : kFromBaseToDerived;
+    case Evidence::NULLABLE_REFERENCE_RETURN:
+    case Evidence::NONNULL_REFERENCE_RETURN:
+    case Evidence::UNKNOWN_REFERENCE_RETURN:
+    case Evidence::NULLABLE_REFERENCE_ARGUMENT:
+    case Evidence::NONNULL_REFERENCE_ARGUMENT:
+    case Evidence::UNKNOWN_REFERENCE_ARGUMENT:
+      return kBoth;
   }
 }
 
@@ -190,6 +194,11 @@ getAdditionalTargetsForVirtualMethod(
       return {};
     case kFromDerivedToBase:
       return getOverridden(MD);
+    case kBoth:
+      llvm::DenseSet<const CXXMethodDecl *> Results = getOverridden(MD);
+      if (auto It = OverridesMap.find(MD); It != OverridesMap.end())
+        Results.insert(It->second.begin(), It->second.end());
+      return Results;
   }
 }
 
@@ -376,14 +385,17 @@ static TypeNullability getReturnTypeNullabilityAnnotationsWithOverrides(
 }
 
 static Evidence::Kind getArgEvidenceKindFromNullability(
-    NullabilityKind Nullability) {
+    NullabilityKind Nullability, bool IsReference) {
   switch (Nullability) {
     case NullabilityKind::Nullable:
-      return Evidence::NULLABLE_ARGUMENT;
+      return IsReference ? Evidence::NULLABLE_REFERENCE_ARGUMENT
+                         : Evidence::NULLABLE_ARGUMENT;
     case NullabilityKind::NonNull:
-      return Evidence::NONNULL_ARGUMENT;
+      return IsReference ? Evidence::NONNULL_REFERENCE_ARGUMENT
+                         : Evidence::NONNULL_ARGUMENT;
     default:
-      return Evidence::UNKNOWN_ARGUMENT;
+      return IsReference ? Evidence::UNKNOWN_REFERENCE_ARGUMENT
+                         : Evidence::UNKNOWN_ARGUMENT;
   }
 }
 
@@ -665,7 +677,9 @@ class DefinitionEvidenceCollector {
         NullabilityKind ArgNullability =
             getNullability(*PV, Env, &InferableSlotsConstraint);
         Emit(CalleeDecl, paramSlot(Iter.paramIdx()),
-             getArgEvidenceKindFromNullability(ArgNullability), ArgLoc);
+             getArgEvidenceKindFromNullability(
+                 ArgNullability, Iter.param().getType()->isReferenceType()),
+             ArgLoc);
       }
     }
   }
@@ -922,16 +936,24 @@ class DefinitionEvidenceCollector {
         !evidenceKindFromDeclaredReturnType(*CurrentFunc, Lattice.defaults())) {
       NullabilityKind ReturnNullability =
           getNullability(ReturnExpr, Env, &InferableSlotsConstraint);
+      bool ReturnTypeIsReference =
+          CurrentFunc->getReturnType()->isReferenceType();
       Evidence::Kind ReturnEvidenceKind;
       switch (ReturnNullability) {
         case NullabilityKind::Nullable:
-          ReturnEvidenceKind = Evidence::NULLABLE_RETURN;
+          ReturnEvidenceKind = ReturnTypeIsReference
+                                   ? Evidence::NULLABLE_REFERENCE_RETURN
+                                   : Evidence::NULLABLE_RETURN;
           break;
         case NullabilityKind::NonNull:
-          ReturnEvidenceKind = Evidence::NONNULL_RETURN;
+          ReturnEvidenceKind = ReturnTypeIsReference
+                                   ? Evidence::NONNULL_REFERENCE_RETURN
+                                   : Evidence::NONNULL_RETURN;
           break;
         default:
-          ReturnEvidenceKind = Evidence::UNKNOWN_RETURN;
+          ReturnEvidenceKind = ReturnTypeIsReference
+                                   ? Evidence::UNKNOWN_REFERENCE_RETURN
+                                   : Evidence::UNKNOWN_RETURN;
       }
       Emit(*CurrentFunc, SLOT_RETURN_TYPE, ReturnEvidenceKind,
            ReturnExpr->getExprLoc());
@@ -1484,8 +1506,9 @@ static void collectEvidenceFromDefaultArgument(
     Emit(Fn, ParamSlot, Evidence::NULLABLE_ARGUMENT, DefaultArg->getExprLoc());
   } else {
     auto Nullability = getNullabilityAnnotationsFromType(DefaultArg->getType());
-    if (auto K =
-            getArgEvidenceKindFromNullability(Nullability.front().concrete())) {
+    if (auto K = getArgEvidenceKindFromNullability(
+            Nullability.front().concrete(),
+            ParamDecl.getType()->isReferenceType())) {
       Emit(Fn, ParamSlot, K, DefaultArg->getExprLoc());
     } else {
       Emit(Fn, ParamSlot, Evidence::UNKNOWN_ARGUMENT, DefaultArg->getExprLoc());

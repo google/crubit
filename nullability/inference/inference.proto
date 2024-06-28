@@ -97,6 +97,18 @@ message Evidence {
     // function or parameter declaration or __attribute((returns_nonnull)) was
     // applied to a function declaration.
     GCC_NONNULL_ATTRIBUTE = 16;
+    // A Nullable value was returned as a reference.
+    NULLABLE_REFERENCE_RETURN = 17;
+    // A Nonnull value was returned as a reference.
+    NONNULL_REFERENCE_RETURN = 18;
+    // A value with Unknown nullability was returned as a reference.
+    UNKNOWN_REFERENCE_RETURN = 19;
+    // A Nullable value was passed as a reference argument.
+    NULLABLE_REFERENCE_ARGUMENT = 20;
+    // A Nonnull value was passed as a reference argument.
+    NONNULL_REFERENCE_ARGUMENT = 21;
+    // A value with Unknown nullability was passed as a reference argument.
+    UNKNOWN_REFERENCE_ARGUMENT = 22;
   }
 }
 
