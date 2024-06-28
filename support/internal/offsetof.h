@@ -46,12 +46,12 @@ struct OffsetOfHelper<void(T)> {
 }  // namespace crubit::details
 
 // CRUBIT_OFFSET_OF is a wrapper around the standard `offsetof` macro [1] that
-// adds support for using a type name (i.e. `T...`) that contains commas (e.g.
+// adds support for using a type name (i.e. `...`) that contains commas (e.g.
 // `ClassTemplateWithTwoTemplateParameters<int, int>`).
 //
 // CRUBIT_OFFSET_OF doesn't require wrapping the type name in an extra set of
 // parens.  This aspect is achieved by making CRUBIT_OFFSET_OF a variadic macro
-// (i.e. accepting 2 *or more* arguments) and by making `T...` the last
+// (i.e. accepting 2 *or more* arguments) and by making `...` the last
 // parameter (i.e. using a different order of macro parameters than the standard
 // `offsetof`).
 //
@@ -60,7 +60,7 @@ struct OffsetOfHelper<void(T)> {
 // `offsetof` macro.
 //
 // [1] https://en.cppreference.com/w/cpp/types/offsetof
-#define CRUBIT_OFFSET_OF(member, T...) \
-  offsetof(::crubit::details::OffsetOfHelper<void(T)>::Type, member)
+#define CRUBIT_OFFSET_OF(member, ...) \
+  offsetof(::crubit::details::OffsetOfHelper<void(__VA_ARGS__)>::Type, member)
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_OFFSETOF_H_
