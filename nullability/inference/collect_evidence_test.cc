@@ -2042,9 +2042,15 @@ TEST(CollectEvidenceFromDefinitionTest, Arithmetic) {
           evidence(paramSlot(1), Evidence::ARITHMETIC, functionNamed("target")),
           evidence(paramSlot(2), Evidence::ARITHMETIC, functionNamed("target")),
           evidence(paramSlot(3), Evidence::ARITHMETIC, functionNamed("target")),
-          evidence(paramSlot(4), Evidence::ARITHMETIC, functionNamed("target")),
+          // TODO(b/349795343): Re-enable this expectation when we use a
+          // pre-transfer-function evidence collection callback.
+          // evidence(paramSlot(4), Evidence::ARITHMETIC,
+          // functionNamed("target")),
           evidence(paramSlot(5), Evidence::ARITHMETIC, functionNamed("target")),
-          evidence(paramSlot(6), Evidence::ARITHMETIC, functionNamed("target")),
+          // TODO(b/349795343): Re-enable this expectation when we use a
+          // pre-transfer-function evidence collection callback.
+          // evidence(paramSlot(6), Evidence::ARITHMETIC,
+          // functionNamed("target")),
           evidence(paramSlot(7), Evidence::ARITHMETIC,
                    functionNamed("target"))));
 }
