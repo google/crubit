@@ -2507,18 +2507,20 @@ TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaForCalledFunction) {
                                             functionNamed("bar"))));
 }
 
-// TODO(b/315967535) If we collect evidence for lambda declarations, collect
-// from the unchecked dereference of the lambda's parameter and/or the null
-// return.
-TEST(CollectEvidenceFromDefinitionTest, NoneForLambdaParamOrReturn) {
+TEST(CollectEvidenceFromDefinitionTest, ForLambdaParamOrReturn) {
   static constexpr llvm::StringRef Src = R"cc(
-    auto Lambda = [](int* p) {
+    auto Lambda = [](int* p) -> int* {
       *p;
       return nullptr;
     };
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src), IsEmpty());
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                           functionNamed("operator()")),
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("operator()"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
@@ -3477,9 +3479,8 @@ TEST(EvidenceSitesTest, Lambdas) {
     auto Lambda = []() {};
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
-  // TODO(b/315967535) If we collect for lambda declarations, add them to
-  // `Sites.Declarations`.
-  EXPECT_THAT(Sites.Declarations, IsEmpty());
+  EXPECT_THAT(Sites.Declarations,
+              UnorderedElementsAre(declNamed("(anonymous class)::operator()")));
   EXPECT_THAT(Sites.Definitions,
               UnorderedElementsAre(declNamed("(anonymous class)::operator()"),
                                    declNamed("Lambda")));

@@ -104,7 +104,7 @@ TEST(IsInferenceTargetTest, Functions) {
   EXPECT_FALSE(isInferenceTarget(lookup("CustomSmartLocal", Ctx)));
   EXPECT_TRUE(isInferenceTarget(lookup("empty", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("Lambda", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("operator()", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("operator()", Ctx)));
 }
 
 TEST(IsInferenceTargetTest, ClassAndMembers) {

@@ -801,6 +801,18 @@ TEST(EligibleRangesTest, GlobalVariable) {
                                        SlotRange(-1, Input.range("one"))))));
 }
 
+TEST(EligibleRangesTest, Lambda) {
+  auto Input = Annotations(R"(
+  auto lambda = []($one[[int *]]) -> $zero[[int *]] {};
+  )");
+  EXPECT_THAT(getFunctionRanges(Input.code(), "operator()"),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(SlotRange(0, Input.range("zero")),
+                                       SlotRange(1, Input.range("one"))),
+                  Nullability::UNKNOWN)));
+}
+
 TEST(EligibleRangesTest, Pragma) {
   auto Input = Annotations(R"(
   #pragma nullability file_default nonnull
