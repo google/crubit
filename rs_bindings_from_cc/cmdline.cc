@@ -60,8 +60,7 @@ ABSL_FLAG(std::string, rustfmt_config_path, "",
 ABSL_FLAG(std::vector<std::string>, public_headers, std::vector<std::string>(),
           "public headers of the cc_library this tool should generate bindings "
           "for, in a format suitable for usage in google3-relative quote "
-          "include (#include \"\"). Note that this can be different than the "
-          "headers attributed to the target via target_args.");
+          "include (#include \"\").");
 ABSL_FLAG(std::string, target, "", "The target to generate bindings for.");
 ABSL_FLAG(std::string, target_args, "",
           "Per-target Crubit arguments, encoded as a JSON array. This contains "

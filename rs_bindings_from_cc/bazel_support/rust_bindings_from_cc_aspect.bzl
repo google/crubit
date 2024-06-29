@@ -43,16 +43,8 @@ def _is_hdr(input):
 def _filter_hdrs(input_list):
     return [hdr for hdr in input_list if _is_hdr(hdr)]
 
-# Targets which do not receive rust bindings at all. Most significantly, the header is not
-# attributed to belonging to this target. So, the main use for this list is to resolve
-# ambiguously-owned headers by disabling one of the targets.
+# Targets which do not receive rust bindings at all.
 targets_to_remove = [
-]
-
-# If a target starts with any of these strings, Crubit will not parse the bindings.
-disabled_prefixes = [
-    "//third_party/grpc/",
-    "//net/grpc/",
 ]
 
 # Specific headers, in specific targets, which do not receive Rust bindings.
@@ -63,21 +55,7 @@ public_headers_to_remove = {
 private_headers_to_remove = {
 }
 
-def _enabled(target, ctx):
-    """Returns True if Crubit is enabled, False if Crubit should not generate bindings for it."""
-
-    # Targets/packages with -parse_headers cannot work with Crubit, which parses headers.
-    # We maintain the target ownership (the target_args), but we do not actually generate bindings
-    # for the headers, by pretending the headers were private.
-    if "parse_headers" in ctx.disabled_features:
-        return False
-    label = str(target.label)
-    for prefix in disabled_prefixes:
-        if label.startswith(prefix):
-            return False
-    return True
-
-def _collect_hdrs(target, ctx):
+def _collect_hdrs(ctx):
     public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
     private_hdrs = _filter_hdrs(ctx.rule.files.srcs) if hasattr(ctx.rule.attr, "srcs") else []
     label = str(ctx.label)
@@ -93,9 +71,6 @@ def _collect_hdrs(target, ctx):
     ]
 
     all_standalone_hdrs = depset(public_hdrs + private_hdrs).to_list()
-
-    if not _enabled(target, ctx):
-        public_hdrs = []
     return public_hdrs, all_standalone_hdrs
 
 def _is_proto_library(target):
@@ -139,7 +114,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     public_hdrs = []
     all_standalone_hdrs = []
     if hasattr(ctx.rule.attr, "hdrs"):
-        public_hdrs, all_standalone_hdrs = _collect_hdrs(target, ctx)
+        public_hdrs, all_standalone_hdrs = _collect_hdrs(ctx)
     elif _is_proto_library(target):
         #TODO(b/232199093): Ideally we would get this information from a proto-specific provider,
         # but ProtoCcFilesProvider is private currently. Use it once public.
