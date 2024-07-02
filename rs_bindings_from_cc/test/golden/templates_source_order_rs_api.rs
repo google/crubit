@@ -93,6 +93,9 @@ pub mod test_namespace_bindings {
 
 // namespace test_namespace_bindings
 
+/// Part of the Crubit project, under the Apache License v2.0 with LLVM
+/// Exceptions. See /LICENSE for license information.
+/// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "MyTemplate < TopLevel >")]
@@ -131,6 +134,9 @@ impl __CcTemplateInst10MyTemplateI8TopLevelE {
     }
 }
 
+/// Part of the Crubit project, under the Apache License v2.0 with LLVM
+/// Exceptions. See /LICENSE for license information.
+/// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "MyTemplate < test_namespace_bindings :: Inner >")]
@@ -169,6 +175,9 @@ impl __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     }
 }
 
+/// Part of the Crubit project, under the Apache License v2.0 with LLVM
+/// Exceptions. See /LICENSE for license information.
+/// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "MyTemplate < MyTemplate < TopLevel >>")]
@@ -210,6 +219,9 @@ impl __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     }
 }
 
+/// Part of the Crubit project, under the Apache License v2.0 with LLVM
+/// Exceptions. See /LICENSE for license information.
+/// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "MyTemplate < MyTemplate < test_namespace_bindings :: Inner >>")]
@@ -251,6 +263,9 @@ impl __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     }
 }
 
+/// Part of the Crubit project, under the Apache License v2.0 with LLVM
+/// Exceptions. See /LICENSE for license information.
+/// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "MyTemplate < bool >")]
@@ -289,6 +304,9 @@ impl __CcTemplateInst10MyTemplateIbE {
     }
 }
 
+/// Part of the Crubit project, under the Apache License v2.0 with LLVM
+/// Exceptions. See /LICENSE for license information.
+/// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cc_type = "MyTemplate < char >")]
@@ -327,6 +345,9 @@ impl __CcTemplateInst10MyTemplateIcE {
     }
 }
 
+/// Part of the Crubit project, under the Apache License v2.0 with LLVM
+/// Exceptions. See /LICENSE for license information.
+/// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
 #[__crubit::annotate(cc_type = "MyTemplate < double >")]
@@ -365,6 +386,9 @@ impl __CcTemplateInst10MyTemplateIdE {
     }
 }
 
+/// Part of the Crubit project, under the Apache License v2.0 with LLVM
+/// Exceptions. See /LICENSE for license information.
+/// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 #[__crubit::annotate(cc_type = "MyTemplate < float >")]
@@ -403,6 +427,9 @@ impl __CcTemplateInst10MyTemplateIfE {
     }
 }
 
+/// Part of the Crubit project, under the Apache License v2.0 with LLVM
+/// Exceptions. See /LICENSE for license information.
+/// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 #[__crubit::annotate(cc_type = "MyTemplate < int >")]

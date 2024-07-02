@@ -14,6 +14,9 @@
 #![allow(nonstandard_style)]
 #![deny(warnings)]
 
+/// Part of the Crubit project, under the Apache License v2.0 with LLVM
+/// Exceptions. See /LICENSE for license information.
+/// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #[inline(always)]
 pub fn AddHook(__param_0: Option<extern "C" fn()>) {
     unsafe { crate::detail::__rust_thunk___Z7AddHookPFvvE(__param_0) }
