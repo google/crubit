@@ -1107,10 +1107,13 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
     };
 
     let fully_qualified_fn_name = FullyQualifiedName::new(tcx, def_id);
-    let short_fn_name =
+    let unqualified_rust_fn_name =
         fully_qualified_fn_name.name.expect("Functions are assumed to always have a name");
-    let main_api_fn_name =
-        format_cc_ident(short_fn_name.as_str()).context("Error formatting function name")?;
+    let attribute = crubit_attr::get(tcx, def_id).unwrap();
+    let cpp_name = attribute.cpp_name;
+    // The generated C++ function name.
+    let main_api_fn_name = format_cc_ident(cpp_name.unwrap_or(unqualified_rust_fn_name).as_str())
+        .context("Error formatting function name")?;
 
     let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_ret_type = format_ret_ty_for_cc(db, &sig)?.into_tokens(&mut main_api_prereqs);
@@ -1190,7 +1193,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         },
         None => None,
     };
-    let needs_definition = short_fn_name.as_str() != thunk_name;
+    let needs_definition = unqualified_rust_fn_name.as_str() != thunk_name;
     let main_api_params = params
         .iter()
         .skip(if method_kind.has_self_param() { 1 } else { 0 })
@@ -1329,7 +1332,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         let fully_qualified_fn_name = match struct_name.as_ref() {
             None => fully_qualified_fn_name.format_for_rs(),
             Some(struct_name) => {
-                let fn_name = make_rs_ident(short_fn_name.as_str());
+                let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
                 let struct_name = struct_name.format_for_rs();
                 quote! { #struct_name :: #fn_name }
             }
@@ -3672,6 +3675,52 @@ pub mod tests {
                     #[no_mangle]
                     unsafe extern "C" fn __crubit_thunk_foo() -> () {
                         unsafe { ::rust_out::foo() }
+                    }
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_fn_cpp_name() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+
+                #[no_mangle]
+                #[__crubit::annotate(cpp_name="Create")]
+                pub fn foo() {}
+            "#;
+        test_format_item(test_src, "foo", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(main_api.prereqs.is_empty());
+
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn __crubit_thunk_foo() -> () {
+                         ::rust_out::foo()
+                    }
+                }
+            );
+
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    void Create();
+                }
+            );
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                        extern "C" void __crubit_thunk_foo();
+                    }
+                    ...
+                    inline void Create() {
+                        return __crubit_internal::__crubit_thunk_foo();
                     }
                 }
             );

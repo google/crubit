@@ -29,6 +29,18 @@ pub struct CrubitAttr {
     /// For instance,
     /// `#[__crubit::annotate(internal_cc_type="std::basic_string<char>")]`
     pub cc_type: Option<Symbol>,
+    // The C++ name of the item. This allows us to rename Rust function names that are
+    // not C++-compatible like `new`.
+    //
+    // For instance,
+    //
+    // ```
+    // #[__crubit::annotate(cpp_name="Create")]
+    // pub fn new() -> i32 {...}
+    // ```
+    //
+    // will rename `new` in Rust to `Create` in C++.
+    pub cpp_name: Option<Symbol>,
 }
 
 /// Gets the `#[__crubit::annotate(...)]` attribute(s) applied to a definition.
@@ -40,6 +52,7 @@ pub fn get(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttr> {
     // reset in tests. The resulting test failures are very difficult.
     let crubit_annotate = &[Symbol::intern("__crubit"), Symbol::intern("annotate")];
     let cc_type = Symbol::intern("cc_type");
+    let cpp_name = Symbol::intern("cpp_name");
 
     let mut crubit_attr = CrubitAttr::default();
     // A quick note: the parsing logic is unfortunate, but such is life. We don't
@@ -75,6 +88,20 @@ pub fn get(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttr> {
                     "Unexpected duplicate #[__crubit::annotate(cc_type=...)]"
                 );
                 crubit_attr.cc_type = Some(s)
+            } else if arg.path == cpp_name {
+                let MetaItemKind::NameValue(value) = &arg.kind else {
+                    bail!("Invalid #[__crubit::annotate(cpp_name=...)] attribute (expected =...)");
+                };
+                let LitKind::Str(s, _raw) = value.kind else {
+                    bail!(
+                        "Invalid #[__crubit::annotate(cpp_name=...)] attribute (expected =\"...\")"
+                    );
+                };
+                ensure!(
+                    crubit_attr.cpp_name.is_none(),
+                    "Unexpected duplicate #[__crubit::annotate(cpp_name=...)]"
+                );
+                crubit_attr.cpp_name = Some(s);
             }
         }
     }
@@ -122,6 +149,34 @@ pub mod tests {
         run_compiler_for_testing(test_src, |tcx| {
             let attr = get(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
             assert_eq!(attr.cc_type.unwrap(), Symbol::intern("A C++ Type"));
+        });
+    }
+
+    #[test]
+    fn test_cpp_name() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+                #[__crubit::annotate(cpp_name = "Create")]
+                pub fn new() -> i32 { 0 }
+            "#;
+        run_compiler_for_testing(test_src, |tcx| {
+            let attr = get(tcx, find_def_id_by_name(tcx, "new")).unwrap();
+            assert_eq!(attr.cpp_name.unwrap(), Symbol::intern("Create"));
+        });
+    }
+
+    #[test]
+    fn test_cpp_name_duplicated() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+                #[__crubit::annotate(cpp_name = "Create", cpp_name = "Create2")]
+                pub fn new() -> i32 { 0 }
+            "#;
+        run_compiler_for_testing(test_src, |tcx| {
+            let attr = get(tcx, find_def_id_by_name(tcx, "new"));
+            assert!(attr.is_err());
         });
     }
 
