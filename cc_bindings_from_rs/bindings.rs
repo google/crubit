@@ -5167,10 +5167,12 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
+                    ...
                     #[no_mangle]
                     extern "C" fn ...(__self: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>) -> f32 {
                         ::rust_out::SomeStruct::into_f32(unsafe { __self.assume_init_read() })
                     }
+                    ...
                 },
             );
         });
@@ -5179,7 +5181,7 @@ pub mod tests {
     #[test]
     fn test_format_item_method_taking_self_by_value_implicit_type() {
         let test_src = r#"
-                pub struct SomeStruct(f32);
+                pub struct SomeStruct(pub f32);
 
                 impl SomeStruct {
                     pub fn into_f32(self) -> f32 {
@@ -5197,7 +5199,7 @@ pub mod tests {
     #[test]
     fn test_format_item_method_taking_self_by_value_explicit_type() {
         let test_src = r#"
-                pub struct SomeStruct(f32);
+                pub struct SomeStruct(pub f32);
 
                 impl SomeStruct {
                     pub fn into_f32(self: SomeStruct) -> f32 {
@@ -5245,6 +5247,7 @@ pub mod tests {
                     extern "C" fn ...<'__anon1>(__self: &'__anon1 ::rust_out::SomeStruct) -> f32 {
                         ::rust_out::SomeStruct::get_f32(__self)
                     }
+                    ...
                 },
             );
         });
@@ -5253,7 +5256,7 @@ pub mod tests {
     #[test]
     fn test_format_item_method_taking_self_by_const_ref_implicit_type() {
         let test_src = r#"
-                pub struct SomeStruct(f32);
+                pub struct SomeStruct(pub f32);
 
                 impl SomeStruct {
                     pub fn get_f32(&self) -> f32 {
@@ -5267,7 +5270,7 @@ pub mod tests {
     #[test]
     fn test_format_item_method_taking_self_by_const_ref_explicit_type() {
         let test_src = r#"
-                pub struct SomeStruct(f32);
+                pub struct SomeStruct(pub f32);
 
                 impl SomeStruct {
                     pub fn get_f32(self: &SomeStruct) -> f32 {
@@ -5319,6 +5322,7 @@ pub mod tests {
                     ) -> () {
                         ::rust_out::SomeStruct::set_f32(__self, new_value)
                     }
+                    ...
                 },
             );
         });
@@ -5327,7 +5331,7 @@ pub mod tests {
     #[test]
     fn test_format_item_method_taking_self_by_mutable_ref_implicit_type() {
         let test_src = r#"
-                pub struct SomeStruct(f32);
+                pub struct SomeStruct(pub f32);
 
                 impl SomeStruct {
                     pub fn set_f32(&mut self, new_value: f32) {
@@ -5341,7 +5345,7 @@ pub mod tests {
     #[test]
     fn test_format_item_method_taking_self_by_mutable_ref_explicit_type() {
         let test_src = r#"
-                pub struct SomeStruct(f32);
+                pub struct SomeStruct(pub f32);
 
                 impl SomeStruct {
                     pub fn set_f32(self: &mut SomeStruct, new_value: f32) {
@@ -5357,7 +5361,7 @@ pub mod tests {
         let test_src = r#"
                 use std::sync::Arc;
 
-                pub struct SomeStruct(f32);
+                pub struct SomeStruct(pub f32);
 
                 impl SomeStruct {
                     pub fn get_f32(self: Arc<Self>) -> f32 {
@@ -6318,6 +6322,7 @@ pub mod tests {
     #[test]
     fn test_format_item_struct_with_dynamically_sized_field() {
         let test_src = r#"
+                #![allow(dead_code)]
                 pub struct DynamicallySizedStruct {
                     /// Having a non-ZST field avoids hitting the following error:
                     /// "Zero-sized types (ZSTs) are not supported (b/258259459)"

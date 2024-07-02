@@ -71,7 +71,6 @@ where
         lint_opts: vec![
             ("warnings".to_string(), rustc_lint_defs::Level::Deny),
             ("stable_features".to_string(), rustc_lint_defs::Level::Allow),
-            ("dead_code".to_string(), rustc_lint_defs::Level::Allow),
         ],
         cg: CodegenOptions {
             // As pointed out in `panics_and_exceptions.md` the tool only supports `-C
