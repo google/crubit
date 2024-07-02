@@ -2847,7 +2847,6 @@ pub mod tests {
                 impl SomeStruct {
                     pub fn public_static_method() -> i32 { 123 }
 
-                    #[allow(dead_code)]
                     fn private_static_method() -> i32 { 123 }
                 }
             "#;
