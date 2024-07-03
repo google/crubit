@@ -15,10 +15,6 @@
 #![allow(nonstandard_style)]
 #![deny(warnings)]
 
-/// Part of the Crubit project, under the Apache License v2.0 with LLVM
-/// Exceptions. See /LICENSE for license information.
-/// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-///
 /// Generated from: examples/cpp/trivial_struct/example.h;l=8
 #[derive(Clone, Copy)]
 #[repr(C)]
