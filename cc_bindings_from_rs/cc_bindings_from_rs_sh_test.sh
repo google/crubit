@@ -37,7 +37,8 @@ function test::happy_path() {
   "
 
   delete_all_test_outputs
-    EXPECT_SUCCEED \
+
+  EXPECT_SUCCEED \
     "\"$CC_BINDINGS_FROM_RS_PATH\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         \"--h-out=${H_OUT_PATH}\" \
         \"--rs-out=${RS_OUT_PATH}\" \
