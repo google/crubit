@@ -174,6 +174,7 @@ rust_library(
         ":token_stream_printer",
         "@crate_index//:anyhow",
         "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
     ],
 )
 
