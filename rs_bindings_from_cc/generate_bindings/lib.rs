@@ -731,20 +731,20 @@ fn required_crubit_features(
 
     let ir = &db.ir();
 
-    let require_features =
+    let require_any_feature =
         |missing_features: &mut Vec<RequiredCrubitFeature>,
-         required_features: flagset::FlagSet<ir::CrubitFeature>,
+         alternative_required_features: flagset::FlagSet<ir::CrubitFeature>,
          capability_description: &dyn Fn() -> Rc<str>| {
             // We refuse to generate bindings if either the definition of an item, or
-            // instantiation (if it is a template) an item are in a translation unit which
-            // doesn't have the required Crubit features.
+            // instantiation (if it is a template) of an item are in a translation unit
+            // which doesn't have the required Crubit features.
             for target in item.defining_target().into_iter().chain(item.owning_target()) {
-                let missing = required_features - ir.target_crubit_features(target);
-                if !missing.is_empty() {
+                let enabled_features = ir.target_crubit_features(target);
+                if (alternative_required_features & enabled_features).is_empty() {
                     missing_features.push(RequiredCrubitFeature {
                         target: target.clone(),
                         item: item.debug_name(ir),
-                        missing_features: missing,
+                        missing_features: alternative_required_features,
                         capability_description: capability_description(),
                     });
                 }
@@ -777,7 +777,7 @@ fn required_crubit_features(
     };
 
     if let Some(unknown_attr) = item.unknown_attr() {
-        require_features(&mut missing_features, ir::CrubitFeature::Experimental.into(), &|| {
+        require_any_feature(&mut missing_features, ir::CrubitFeature::Experimental.into(), &|| {
             format!("unknown attribute(s): {unknown_attr}").into()
         });
     }
@@ -788,7 +788,7 @@ fn required_crubit_features(
                 // We support destructors in supported even though they use some features we
                 // don't generally support with that feature set, because in this
                 // particular case, it's safe.
-                require_features(
+                require_any_feature(
                     &mut missing_features,
                     ir::CrubitFeature::Supported.into(),
                     &|| "destructors".into(),
@@ -803,41 +803,41 @@ fn required_crubit_features(
                     });
                 }
                 if func.is_extern_c {
-                    require_features(
+                    require_any_feature(
                         &mut missing_features,
                         ir::CrubitFeature::Supported.into(),
                         &|| "extern \"C\" function".into(),
                     );
                 } else {
-                    require_features(
+                    require_any_feature(
                         &mut missing_features,
-                        ir::CrubitFeature::Experimental.into(),
+                        ir::CrubitFeature::NonExternCFunctions | ir::CrubitFeature::Experimental,
                         &|| "non-extern \"C\" function".into(),
                     );
                 }
                 if !func.has_c_calling_convention {
-                    require_features(
+                    require_any_feature(
                         &mut missing_features,
                         ir::CrubitFeature::Experimental.into(),
                         &|| "non-C calling convention".into(),
                     );
                 }
                 if func.is_noreturn {
-                    require_features(
+                    require_any_feature(
                         &mut missing_features,
                         ir::CrubitFeature::Experimental.into(),
                         &|| "[[noreturn]] attribute".into(),
                     );
                 }
                 if func.nodiscard.is_some() {
-                    require_features(
+                    require_any_feature(
                         &mut missing_features,
                         ir::CrubitFeature::Experimental.into(),
                         &|| "[[nodiscard]] attribute".into(),
                     );
                 }
                 if func.deprecated.is_some() {
-                    require_features(
+                    require_any_feature(
                         &mut missing_features,
                         ir::CrubitFeature::Experimental.into(),
                         &|| "[[deprecated]] attribute".into(),
@@ -845,7 +845,7 @@ fn required_crubit_features(
                 }
                 for param in &func.params {
                     if let Some(unknown_attr) = &param.unknown_attr {
-                        require_features(
+                        require_any_feature(
                             &mut missing_features,
                             ir::CrubitFeature::Experimental.into(),
                             &|| {
@@ -882,12 +882,14 @@ fn required_crubit_features(
             );
         }
         Item::Namespace(_) => {
-            require_features(&mut missing_features, ir::CrubitFeature::Supported.into(), &|| {
-                "namespace".into()
-            });
+            require_any_feature(
+                &mut missing_features,
+                ir::CrubitFeature::Supported.into(),
+                &|| "namespace".into(),
+            );
         }
         Item::IncompleteRecord(_) => {
-            require_features(
+            require_any_feature(
                 &mut missing_features,
                 ir::CrubitFeature::Experimental.into(),
                 &|| "incomplete type".into(),
@@ -895,7 +897,7 @@ fn required_crubit_features(
         }
         Item::Comment { .. } | Item::UseMod { .. } => {}
         Item::TypeMapOverride { .. } => {
-            require_features(
+            require_any_feature(
                 &mut missing_features,
                 ir::CrubitFeature::Experimental.into(),
                 &|| "type map override".into(),

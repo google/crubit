@@ -26,6 +26,14 @@ crubit_feature_hint(
 )
 
 crubit_feature_hint(
+    name = "non_extern_c_functions",
+    crubit_features = _SUPPORTED_FEATURES + [
+        "non_extern_c_functions",
+    ],
+    visibility = _EXPERIMENTAL_CLIENTS,
+)
+
+crubit_feature_hint(
     name = "experimental",
     crubit_features = _SUPPORTED_FEATURES + [
         "experimental",

@@ -1152,6 +1152,7 @@ flagset::flags! {
     pub enum CrubitFeature : u8 {
         Supported,
         ExternC,
+        NonExternCFunctions,
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
         Experimental,
@@ -1163,8 +1164,9 @@ impl CrubitFeature {
     pub fn short_name(&self) -> &'static str {
         match self {
             Self::Supported => "supported",
-            Self::Experimental => "experimental",
             Self::ExternC => "extern_c",
+            Self::NonExternCFunctions => "non_extern_c_functions",
+            Self::Experimental => "experimental",
         }
     }
 
@@ -1172,8 +1174,9 @@ impl CrubitFeature {
     pub fn aspect_hint(&self) -> &'static str {
         match self {
             Self::Supported => "//features:supported",
-            Self::Experimental => "//features:experimental",
             Self::ExternC => "//features:extern_c",
+            Self::NonExternCFunctions => "//features:non_extern_c_functions",
+            Self::Experimental => "//features:experimental",
         }
     }
 }
@@ -1191,9 +1194,10 @@ impl<'de> serde::Deserialize<'de> for CrubitFeaturesIR {
         let mut features = flagset::FlagSet::<CrubitFeature>::default();
         for feature in <Vec<String> as serde::Deserialize<'de>>::deserialize(deserializer)? {
             features |= match &*feature {
-                "experimental" => CrubitFeature::Experimental,
                 "supported" => CrubitFeature::Supported,
                 "extern_c" => CrubitFeature::ExternC,
+                "non_extern_c_functions" => CrubitFeature::NonExternCFunctions,
+                "experimental" => CrubitFeature::Experimental,
                 other => {
                     return Err(<D::Error as serde::de::Error>::custom(format!(
                         "Unexpected Crubit feature: {other}"
