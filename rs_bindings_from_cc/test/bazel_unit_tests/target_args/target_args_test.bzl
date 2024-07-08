@@ -331,7 +331,7 @@ def _target_features_nonempty_test_impl(ctx):
     )
     asserts.equals(
         env,
-        ["experimental", "extern_c", "supported"],
+        ["experimental", "supported"],
         target_args[1]["f"],
     )
 
@@ -341,8 +341,8 @@ target_features_nonempty_test = crubit_make_analysis_test(_target_features_nonem
 
 def _test_target_features_nonempty():
     native.cc_library(name = "mylib_nonempty_features", hdrs = ["lib.h"], aspect_hints = [
-        "//features:supported",
-        "//features:experimental",  # merged in as well
+        "//features:internal_testonly_supported",
+        "//features:internal_testonly_experimental",  # merged in as well
     ])
     attach_aspect(name = "mylib_nonempty_features_with_aspect", dep = ":mylib_nonempty_features")
 
