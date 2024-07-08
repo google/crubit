@@ -5,7 +5,6 @@ load(
 
 _SUPPORTED_FEATURES = [
     "supported",
-    "extern_c",
 ]
 
 _EXPERIMENTAL_CLIENTS = [

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/golden:user_of_unsupported_cc
-// Features: experimental, extern_c, supported
+// Features: experimental, supported
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, impl_trait_in_assoc_type)]

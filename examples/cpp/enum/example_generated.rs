@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/enum:example_lib
-// Features: extern_c, supported
+// Features: supported
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]

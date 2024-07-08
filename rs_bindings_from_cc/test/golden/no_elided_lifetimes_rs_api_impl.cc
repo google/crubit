@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/golden:no_elided_lifetimes_cc
-// Features: experimental, extern_c, supported
+// Features: experimental, supported
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
