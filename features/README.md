@@ -53,11 +53,6 @@ capabilities, for libraries that specifically support FFI callers.
 
 See <internal link> for documentation on what this includes.
 
-### `"//features:extern_c"` {#extern_c}
-
-`extern_c` is the feature for the in-development version of Crubit. For calling
-C++ from Rust, use `:supported` instead.
-
 ### `"//features:experimental"` {#experimental}
 
 The `experimental` feature enables internal-only experimental capabilities. This

@@ -17,13 +17,6 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-# Use :supported if you're calling C++ from Rust.
-crubit_feature_hint(
-    name = "extern_c",
-    crubit_features = _SUPPORTED_FEATURES,
-    visibility = _EXPERIMENTAL_CLIENTS,
-)
-
 crubit_feature_hint(
     name = "non_extern_c_functions",
     crubit_features = _SUPPORTED_FEATURES + [
