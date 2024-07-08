@@ -33,9 +33,8 @@ pub fn with_lifetime_macros(source: &str) -> String {
 
 /// Name of the current target used by `ir_from_cc` and `ir_from_cc_dependency`.
 pub const TESTING_TARGET: &str = "//test:testing_target";
-static TESTING_FEATURES: Lazy<flagset::FlagSet<ir::CrubitFeature>> = Lazy::new(|| {
-    ir::CrubitFeature::Experimental | ir::CrubitFeature::ExternC | ir::CrubitFeature::Supported
-});
+static TESTING_FEATURES: Lazy<flagset::FlagSet<ir::CrubitFeature>> =
+    Lazy::new(|| ir::CrubitFeature::Experimental | ir::CrubitFeature::Supported);
 
 /// Update the IR to have common test-only items.
 ///
@@ -159,7 +158,7 @@ mod tests {
             quote! {
                 crubit_features: hash_map!{
                     ...
-                    BazelLabel("//test:testing_target"): CrubitFeaturesIR(FlagSet(Supported|ExternC|Experimental))
+                    BazelLabel("//test:testing_target"): CrubitFeaturesIR(FlagSet(Supported|Experimental))
                     ...
                 }
             }
@@ -173,7 +172,7 @@ mod tests {
             quote! {
                 crubit_features: hash_map!{
                     ...
-                    BazelLabel("//test:testing_target"): CrubitFeaturesIR(FlagSet(Supported|ExternC|Experimental))
+                    BazelLabel("//test:testing_target"): CrubitFeaturesIR(FlagSet(Supported|Experimental))
                     ...
                 }
             }
