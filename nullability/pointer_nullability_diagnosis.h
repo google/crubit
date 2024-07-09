@@ -9,10 +9,12 @@
 #include <optional>
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pragma.h"
 #include "clang/AST/Decl.h"
 #include "clang/Analysis/FlowSensitive/Solver.h"
+#include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/SmallVector.h"
 
@@ -51,13 +53,13 @@ struct PointerNullabilityDiagnostic {
     Other
   } Ctx = Context::Other;
   CharSourceRange Range;
-  /// Name of the function where the argument is being passed to.
+  /// The function where the argument is being passed to.
   /// Populated only if `Ctx` is `FunctionArgument`.
-  std::optional<std::string> FunctionName;
+  absl::Nullable<const clang::NamedDecl *> Callee = nullptr;
   /// Name of the parameter that the argument is being passed to.
   /// Populated only if `Ctx` is `FunctionArgument` and the parameter name is
   /// known.
-  std::optional<std::string> ParamName;
+  absl::Nullable<const clang::IdentifierInfo *> ParamName = nullptr;
   /// Source range of a note to be emitted alongside the diagnostic.
   /// The exact semantics of the note depend on `Code` and `Ctx`.
   CharSourceRange NoteRange;

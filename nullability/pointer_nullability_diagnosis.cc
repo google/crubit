@@ -98,13 +98,13 @@ SmallVector<PointerNullabilityDiagnostic> untrackedError(
 SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
     absl::Nonnull<const Expr *> E, const Environment &Env,
     PointerNullabilityDiagnostic::Context DiagCtx,
-    std::optional<std::string> FunctionName = std::nullopt,
-    std::optional<std::string> ParamName = std::nullopt) {
+    absl::Nullable<const clang::NamedDecl *> Callee = nullptr,
+    absl::Nullable<const clang::IdentifierInfo *> ParamName = nullptr) {
   if (PointerValue *ActualVal = getPointerValue(E, Env)) {
     if (isNullable(*ActualVal, Env))
       return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
                DiagCtx, CharSourceRange::getTokenRange(E->getSourceRange()),
-               std::move(FunctionName), std::move(ParamName)}};
+               Callee, ParamName}};
     return {};
   }
 
@@ -124,15 +124,14 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
     QualType LHSType, ArrayRef<PointerTypeNullability> LHSNullability,
     absl::Nonnull<const Expr *> RHS, const Environment &Env, ASTContext &Ctx,
     PointerNullabilityDiagnostic::Context DiagCtx,
-    std::optional<std::string> FunctionName = std::nullopt,
-    std::optional<std::string> ParamName = std::nullopt) {
+    absl::Nullable<const clang::NamedDecl *> Callee = nullptr,
+    absl::Nullable<const clang::IdentifierInfo *> ParamName = nullptr) {
   LHSType = LHSType.getNonReferenceType();
   // For now, we just check whether the top-level pointer type is compatible.
   // TODO: examine inner nullability too, considering variance.
   if (!isSupportedPointerType(LHSType)) return {};
   return LHSNullability.front().concrete() == NullabilityKind::NonNull
-             ? diagnoseNonnullExpected(RHS, Env, DiagCtx, FunctionName,
-                                       ParamName)
+             ? diagnoseNonnullExpected(RHS, Env, DiagCtx, Callee, ParamName)
              : SmallVector<PointerNullabilityDiagnostic>{};
 }
 
@@ -225,7 +224,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArgumentCompatibility(
     const FunctionProtoType &CalleeFPT,
     ArrayRef<PointerTypeNullability> ParamsNullability,
     ArrayRef<const ParmVarDecl *> ParmDecls, ArrayRef<const Expr *> Args,
-    std::optional<std::string> FunctionName, const Environment &Env,
+    absl::Nullable<const clang::NamedDecl *> Callee, const Environment &Env,
     ASTContext &Ctx) {
   auto ParamTypes = CalleeFPT.getParamTypes();
   // C-style varargs cannot be annotated and therefore are unchecked.
@@ -240,12 +239,12 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArgumentCompatibility(
     auto ParamNullability = ParamsNullability.take_front(Len);
     ParamsNullability = ParamsNullability.drop_front(Len);
 
-    std::string ParamName =
-        (I < ParmDecls.size()) ? ParmDecls[I]->getDeclName().getAsString() : "";
+    const clang::IdentifierInfo *ParamName =
+        (I < ParmDecls.size()) ? ParmDecls[I]->getIdentifier() : nullptr;
     Diagnostics.append(diagnoseAssignmentLike(
         ParamTypes[I], ParamNullability, Args[I], Env, Ctx,
-        PointerNullabilityDiagnostic::Context::FunctionArgument, FunctionName,
-        std::move(ParamName)));
+        PointerNullabilityDiagnostic::Context::FunctionArgument, Callee,
+        ParamName));
   }
   return Diagnostics;
 }
@@ -387,14 +386,10 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
   ArrayRef<ParmVarDecl *> Params;
   if (auto *DC = CE->getDirectCallee()) Params = DC->parameters();
 
-  std::optional<std::string> FunctionName;
-  if (auto *FD = dyn_cast_or_null<FunctionDecl>(CE->getCalleeDecl())) {
-    FunctionName = FD->getNameAsString();
-  }
-
-  return diagnoseArgumentCompatibility(*CalleeType, ParamNullability, Params,
-                                       Args, FunctionName, State.Env,
-                                       *Result.Context);
+  return diagnoseArgumentCompatibility(
+      *CalleeType, ParamNullability, Params, Args,
+      dyn_cast_or_null<FunctionDecl>(CE->getCalleeDecl()), State.Env,
+      *Result.Context);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
@@ -407,15 +402,10 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
   auto CtorNullability =
       getTypeNullability(*CE->getConstructor(), State.Lattice.defaults());
 
-  std::optional<std::string> FunctionName;
-  if (auto *FD = CE->getConstructor()) {
-    FunctionName = FD->getNameAsString();
-  }
-
   return diagnoseArgumentCompatibility(
       *CalleeFPT, CtorNullability,
       CE->getConstructor()->getAsFunction()->parameters(), ConstructorArgs,
-      FunctionName, State.Env, *Result.Context);
+      CE->getConstructor(), State.Env, *Result.Context);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
@@ -557,7 +547,8 @@ bool shouldDiagnoseExpectedNonnullDefaultArgValue(
 void checkParmVarDeclWithPointerDefaultArg(
     clang::ASTContext &Ctx, const clang::ParmVarDecl &Parm,
     llvm::SmallVector<PointerNullabilityDiagnostic> &Diags,
-    const TypeNullabilityDefaults &Defaults) {
+    const TypeNullabilityDefaults &Defaults,
+    absl::Nullable<const clang::NamedDecl *> Callee = nullptr) {
   if (Parm.getType()->isDependentType()) return;
   TypeNullability DeclAnnotation = getTypeNullability(Parm, Defaults);
   if (DeclAnnotation.empty() ||
@@ -573,7 +564,7 @@ void checkParmVarDeclWithPointerDefaultArg(
   Diags.push_back({PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
                    PointerNullabilityDiagnostic::Context::Initializer,
                    CharSourceRange::getTokenRange(DefaultVal->getSourceRange()),
-                   Parm.getNameAsString()});
+                   Callee, Parm.getIdentifier()});
 }
 
 void checkAnnotationsConsistent(
@@ -592,8 +583,7 @@ void checkAnnotationsConsistent(
     Diags.push_back(
         {PointerNullabilityDiagnostic::ErrorCode::InconsistentAnnotations,
          PointerNullabilityDiagnostic::Context::Other,
-         CharSourceRange::getTokenRange(VD->getSourceRange()), std::nullopt,
-         std::nullopt,
+         CharSourceRange::getTokenRange(VD->getSourceRange()), nullptr, nullptr,
          CharSourceRange::getTokenRange(CanonicalDecl->getSourceRange())});
   }
 }
@@ -689,7 +679,7 @@ diagnosePointerNullability(const ValueDecl *VD,
   if (Func == nullptr) return Diags;
 
   for (const ParmVarDecl *Parm : Func->parameters())
-    checkParmVarDeclWithPointerDefaultArg(Ctx, *Parm, Diags, Defaults);
+    checkParmVarDeclWithPointerDefaultArg(Ctx, *Parm, Diags, Defaults, Func);
 
   // Use `doesThisDeclarationHaveABody()` rather than `hasBody()` to ensure we
   // analyze forward-declared functions only once.
