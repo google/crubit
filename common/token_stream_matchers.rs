@@ -99,7 +99,6 @@ pub mod internal {
     use anyhow::{anyhow, Result};
     pub use proc_macro2::TokenStream;
     use proc_macro2::TokenTree;
-    use quote::quote;
     use std::iter;
     pub use token_stream_printer::{
         cc_tokens_to_formatted_string_for_tests, rs_tokens_to_formatted_string,
@@ -165,16 +164,11 @@ pub mod internal {
 
         let iter = input.clone().into_iter();
         let mut best_mismatch = Mismatch::for_no_partial_match();
-        let preprocessed_pattern = if !format!("{}", pattern).ends_with("...") {
-            quote! { #pattern ... }
-        } else {
-            pattern.clone()
-        };
 
         let mut stack = vec![iter];
         while let Some(mut iter) = stack.pop() {
             loop {
-                match match_prefix(iter.clone(), preprocessed_pattern.clone()) {
+                match match_prefix(iter.clone(), pattern.clone(), false) {
                     MatchInfo::Match { input_suffix: _ } => return Ok(()),
                     MatchInfo::Mismatch(mismatch) => {
                         if best_mismatch.match_length < mismatch.match_length {
@@ -230,6 +224,7 @@ pub mod internal {
     fn match_prefix(
         input: impl Iterator<Item = TokenTree> + Clone,
         pattern: TokenStream,
+        match_inside_group: bool,
     ) -> MatchInfo {
         let mut input_iter = input.clone();
         let mut pattern_iter = pattern.clone().into_iter().peekable();
@@ -251,6 +246,7 @@ pub mod internal {
                     reinsert_token(input_iter.clone(), actual_token).into_iter(),
                     input.clone(),
                     skip_wildcard(pattern_iter.clone()),
+                    match_inside_group,
                 ) {
                     MatchInfo::Mismatch(mut mismatch) => {
                         mismatch.match_length += match_counter;
@@ -275,10 +271,14 @@ pub mod internal {
                     mismatch.match_length += match_counter;
                     return MatchInfo::Mismatch(mismatch);
                 }
-            } else {
+                match_counter += 1;
+            } else if match_inside_group {
                 return MatchInfo::Match { input_suffix: reinsert_token(input_iter, actual_token) };
+            } else {
+                // If we are not inside a group, seeing the end of the pattern means that we
+                // have matched the entire pattern.
+                return MatchInfo::Match { input_suffix: TokenStream::new() };
             }
-            match_counter += 1;
         }
 
         if pattern_iter.peek().is_none() {
@@ -300,8 +300,9 @@ pub mod internal {
         input_iter: impl Iterator<Item = TokenTree> + Clone,
         input: impl Iterator<Item = TokenTree> + Clone,
         pattern: TokenStream,
+        match_inside_group: bool,
     ) -> MatchInfo {
-        match match_prefix(input_iter.clone(), pattern.clone()) {
+        match match_prefix(input_iter.clone(), pattern.clone(), match_inside_group) {
             MatchInfo::Match { input_suffix } if input_suffix.is_empty() => {
                 MatchInfo::Match { input_suffix }
             }
@@ -363,7 +364,7 @@ pub mod internal {
                     });
                 }
                 let match_info =
-                    match_prefix(actual_group.stream().into_iter(), pattern_group.stream());
+                    match_prefix(actual_group.stream().into_iter(), pattern_group.stream(), true);
                 match match_info {
                     MatchInfo::Match { input_suffix } => {
                         if input_suffix
@@ -510,7 +511,7 @@ fn foo() {}
             r#"expected 'B' but got 'A'
 
 Caused by:
-    0: expected 'struct B ...' got 'struct A { int a ; int b ; } ;'
+    0: expected 'struct B' got 'struct A { int a ; int b ; } ;'
     1: input:
        
        ```
@@ -537,7 +538,7 @@ Caused by:
             "expected 'B' but got 'A'
 
 Caused by:
-    0: expected 'struct B ...' got 'struct A { a : i64 , b : i64 }'
+    0: expected 'struct B' got 'struct A { a : i64 , b : i64 }'
     1: input:\n       \n       ```
        struct A {
            a: i64,
@@ -558,7 +559,7 @@ Caused by:
                 )
                 .expect_err("unexpected match")
             ),
-            r#"expected 'struct X { } ...' but the input already ended: expected 'fn foo () { } struct X { } ...' got 'fn foo () { }': input:
+            r#"expected 'struct X { }' but the input already ended: expected 'fn foo () { } struct X { }' got 'fn foo () { }': input:
 
 ```
 fn foo() {}
@@ -579,7 +580,7 @@ fn foo() {}
                 )
                 .expect_err("unexpected match")
             ),
-            r#"expected delimiter Parenthesis for group '()' but got Brace for group '{ }': expected 'fn foo () () ...' got 'fn foo () { }': input:
+            r#"expected delimiter Parenthesis for group '()' but got Brace for group '{ }': expected 'fn foo () ()' got 'fn foo () { }': input:
 
 ```
 fn foo() {}
@@ -602,7 +603,7 @@ fn foo() {}
             ),
             "expected 'c' but got 'b': \
              expected 'let a = 1 ; let c = 2 ;' got 'let a = 1 ; let b = 2 ;': \
-             expected 'fn foo () { let a = 1 ; let c = 2 ; } ...' \
+             expected 'fn foo () { let a = 1 ; let c = 2 ; }' \
              got 'fn foo () { let a = 1 ; let b = 2 ; }': \
              input:\n\n```\nfn foo() {\n    let a = 1;\n    let b = 2;\n}\n\n```"
         );
@@ -646,7 +647,7 @@ fn foo() {}
                 )
                 .expect_err("unexpected match")
             ),
-            r#"matched the entire pattern but the input still contained 'drop_impl () ;': expected 'fn drop (& mut self) { } ...' got 'fn drop (& mut self) { drop_impl () ; }': input:
+            r#"matched the entire pattern but the input still contained 'drop_impl () ;': expected 'fn drop (& mut self) { }' got 'fn drop (& mut self) { drop_impl () ; }': input:
 
 ```
 impl Drop {
@@ -667,7 +668,7 @@ impl Drop {
                 )
                 .expect_err("unexpected match")
             ),
-            r#"matched the entire pattern but the input still contained 'drop_impl2 () ;': expected 'fn drop (& mut self) { drop_impl1 () ; } ...' got 'fn drop (& mut self) { drop_impl1 () ; drop_impl2 () ; }': input:
+            r#"matched the entire pattern but the input still contained 'drop_impl2 () ;': expected 'fn drop (& mut self) { drop_impl1 () ; }' got 'fn drop (& mut self) { drop_impl1 () ; drop_impl2 () ; }': input:
 
 ```
 impl Drop {
@@ -741,7 +742,7 @@ impl Drop {
             // the error message shows "longer match" with more tokens consumed by the wildcard
             "expected 'c' but got 'b': \
             expected 'c' got 'b b': \
-            expected '[a ... c] ...' got '[a b b]': \
+            expected '[a ... c]' got '[a b b]': \
             input:\n\n```\n[a b b]\n```"
         );
         assert_eq!(
@@ -757,7 +758,7 @@ impl Drop {
             // the error message shows "longer match" with branching off the wildcard earlier
             "expected 'c' but got 'b': \
             expected 'b c' got 'b b': \
-            expected '[a ... b c] ...' got '[a b b]': \
+            expected '[a ... b c]' got '[a b b]': \
             input:\n\n```\n[a b b]\n```"
         );
     }
@@ -799,6 +800,19 @@ impl Drop {
             },
             quote! {
                 fn ...() -> f32 {}
+            }
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_assert_rs_matches_no_trailing_wildcard_inside_group() {
+        assert_rs_matches!(
+            quote! {
+                fn f() -> f32 { return 1.0; }
+            },
+            quote! {
+                fn f() -> f32 {}
             }
         );
     }
