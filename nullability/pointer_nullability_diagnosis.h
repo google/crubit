@@ -51,6 +51,9 @@ struct PointerNullabilityDiagnostic {
     Other
   } Ctx = Context::Other;
   CharSourceRange Range;
+  /// Name of the function where the argument is being passed to.
+  /// Populated only if `Ctx` is `FunctionArgument`.
+  std::optional<std::string> FunctionName;
   /// Name of the parameter that the argument is being passed to.
   /// Populated only if `Ctx` is `FunctionArgument` and the parameter name is
   /// known.
