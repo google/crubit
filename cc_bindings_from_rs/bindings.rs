@@ -1073,6 +1073,31 @@ fn format_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
     None
 }
 
+fn format_type_alias(
+    db: &dyn BindingsGenerator<'_>,
+    local_def_id: LocalDefId,
+) -> Result<ApiSnippets> {
+    let tcx = db.tcx();
+    let def_id: DefId = local_def_id.to_def_id();
+    let alias_type = tcx.type_of(def_id).instantiate_identity();
+    let alias_name = format_cc_ident(tcx.item_name(def_id).as_str())
+        .context("Error formatting type alias name")?;
+    let cc_bindings = format_ty_for_cc(db, alias_type, TypeLocation::Other)?;
+    let mut main_api_prereqs = CcPrerequisites::default();
+    let actual_type_name = cc_bindings.into_tokens(&mut main_api_prereqs);
+
+    Ok(ApiSnippets {
+        main_api: CcSnippet {
+            prereqs: main_api_prereqs,
+            tokens: quote! {
+                using #alias_name = #actual_type_name;
+            },
+        },
+        cc_details: CcSnippet::default(),
+        rs_details: quote! {},
+    })
+}
+
 /// Formats a function with the given `local_def_id`.
 ///
 /// Will panic if `local_def_id`
@@ -2495,6 +2520,7 @@ fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Opt
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
             db.format_adt_core(def_id.to_def_id())
                 .map(|core| Some(format_adt(db, core))),
+        Item { kind: ItemKind::TyAlias(..), ..} => format_type_alias(db, def_id).map(Some),
         Item { kind: ItemKind::Impl(_), .. } |  // Handled by `format_adt`
         Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
             Ok(None),
@@ -6813,14 +6839,99 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_item_unsupported_type_alias() {
+    fn test_format_item_type_alias() {
         let test_src = r#"
                 pub type TypeAlias = i32;
             "#;
         test_format_item(test_src, "TypeAlias", |result| {
-            // TODO(b/254096006): Add support for type alias definitions.
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    using TypeAlias = std::int32_t;
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_type_alias_should_give_underlying_type() {
+        let test_src = r#"
+                pub type TypeAlias1 = i32;
+                pub type TypeAlias2 = TypeAlias1;
+            "#;
+        test_format_item(test_src, "TypeAlias2", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    using TypeAlias2 = std::int32_t;
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_private_type_alias_wont_generate_bindings() {
+        let test_src = r#"
+            #[allow(dead_code)]
+            type TypeAlias = i32;
+            "#;
+        test_format_item(test_src, "TypeAlias", |result| {
+            let result = result.unwrap();
+            assert!(result.is_none());
+        });
+    }
+
+    #[test]
+    fn test_format_item_pub_type_alias_on_private_type_wont_generate_bindings() {
+        let test_src = r#"
+            #![allow(private_interfaces)]
+            struct SomeStruct;
+            pub type TypeAlias = SomeStruct;
+            "#;
+        test_format_item(test_src, "TypeAlias", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: type alias");
+            assert_eq!(
+                err,
+                "Not directly public type (re-exports are not supported yet - b/262052635)"
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_unsupported_generic_type_alias() {
+        let test_src = r#"
+            pub type TypeAlias<T> = T;
+            "#;
+        test_format_item(test_src, "TypeAlias", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(err, "The following Rust type is not supported yet: T");
+        });
+    }
+
+    #[test]
+    fn test_format_item_unsupported_type_without_direct_existence() {
+        let test_src = r#"
+            pub trait Evil {
+                type Type;
+            }
+
+            const _ : () = {
+                pub struct NamelessType;
+                impl Evil for i64 {
+                    type Type = NamelessType;
+                }
+            };
+            pub type EvilAlias = <i64 as Evil>::Type;
+            "#;
+        test_format_item(test_src, "EvilAlias", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(err, "The following Rust type is not supported yet: <i64 as Evil>::Type");
         });
     }
 
@@ -6852,6 +6963,34 @@ pub mod tests {
                         ...
                     };
                     ...
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_generate_bindings_for_top_level_type_alias() {
+        let test_src = r#"
+            #![feature(inherent_associated_types)]
+            #![allow(incomplete_features)]
+            #![allow(dead_code)]
+            pub struct Evil {
+                dumb: i32,
+            }
+
+            impl Evil {
+                pub type Type = i64;
+            }
+            pub type EvilAlias = Evil::Type;
+        "#;
+        test_format_item(test_src, "Evil", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_not_matches!(
+                main_api.tokens,
+                quote! {
+                    std::int64_t
                 }
             );
         });
