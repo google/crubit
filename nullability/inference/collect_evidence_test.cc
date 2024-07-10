@@ -2607,6 +2607,19 @@ TEST(CollectEvidenceFromDefinitionTest,
                                 functionNamed("foo"))));
 }
 
+// This is a crash repro related to non-aggregate initialization using an
+// InitListExpr.
+TEST(CollectEvidenceFromDefinitionTest, TransparentInitListExpr) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {};
+    void foo(S p) {}
+    S get();
+
+    void target() { foo({get()}); }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
+}
+
 // Evidence for return type nonnull-ness should flow only from derived to base,
 // so we collect evidence for the base but not the derived.
 TEST(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNonnull) {
