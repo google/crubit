@@ -43,7 +43,9 @@ def _is_hdr(input):
 def _filter_hdrs(input_list):
     return [hdr for hdr in input_list if _is_hdr(hdr)]
 
-# Targets which do not receive rust bindings at all.
+# Targets which do not receive rust bindings at all. Most significantly, the header is not
+# attributed to belonging to this target. So, the main use for this list is to resolve
+# ambiguously-owned headers by disabling one of the targets.
 targets_to_remove = [
 ]
 
@@ -55,7 +57,7 @@ public_headers_to_remove = {
 private_headers_to_remove = {
 }
 
-def _collect_hdrs(ctx):
+def _collect_hdrs(ctx, crubit_features):
     public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
     private_hdrs = _filter_hdrs(ctx.rule.files.srcs) if hasattr(ctx.rule.attr, "srcs") else []
     label = str(ctx.label)
@@ -71,6 +73,23 @@ def _collect_hdrs(ctx):
     ]
 
     all_standalone_hdrs = depset(public_hdrs + private_hdrs).to_list()
+
+    # If Crubit is not enabled for this target, then disable header parsing by removing all headers
+    # from the list of public headers. This allows Crubit to work on target A, even if it
+    # transitively depends on a target B which would cause Crubit to crash (e.g. because the headers
+    # are unparseable).
+    #
+    # Note: We cannot e.g. check `if "parse_headers" in ctx.disabled_features:`, because some build
+    # configurations (like AddressSanitizer) set `-parse_headers`, even if the headers are
+    # parseable, just to save work. So if we want to avoid attempting to parse unparseable headers,
+    # we must for now make the worst-case assumption that anything which does not explicitly support
+    # Crubit cannot work with Crubit.
+    #
+    # In principle, we can modify bazel someday to allow us to detect when parse_headers is disabled
+    # for a target in all build configurations, instead of as part of a build configuration like
+    # AddressSanitizer.
+    if not crubit_features:
+        public_hdrs = []
     return public_hdrs, all_standalone_hdrs
 
 def _is_proto_library(target):
@@ -113,8 +132,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     extra_rule_specific_deps = []
     public_hdrs = []
     all_standalone_hdrs = []
+    features = find_crubit_features(target, ctx)
     if hasattr(ctx.rule.attr, "hdrs"):
-        public_hdrs, all_standalone_hdrs = _collect_hdrs(ctx)
+        public_hdrs, all_standalone_hdrs = _collect_hdrs(ctx, features)
     elif _is_proto_library(target):
         #TODO(b/232199093): Ideally we would get this information from a proto-specific provider,
         # but ProtoCcFilesProvider is private currently. Use it once public.
@@ -136,7 +156,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             "// File intentionally left empty, its purpose is to satisfy rules_rust APIs.",
         )
         public_hdrs = [empty_header_file]
-        all_standalone_hdrs = public_hdrs
+        all_standalone_hdrs = all_standalone_hdrs + public_hdrs
         extra_cc_compilation_action_inputs = public_hdrs
 
     all_deps = getattr(ctx.rule.attr, "deps", []) + extra_rule_specific_deps + [
@@ -152,7 +172,6 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # 2. instead of json string, we use a struct that will be expanded to flags at execution time.
     #    This requires changes to Bazel.
     direct_target_args = {}
-    features = find_crubit_features(target, ctx)
     if all_standalone_hdrs:
         direct_target_args["h"] = [h.path for h in all_standalone_hdrs]
     if features:

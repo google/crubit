@@ -90,6 +90,7 @@ cc_library(
     hdrs = ["namespaces_json.h"],
     aspect_hints = [
         ":disable_source_location_in_doc_comment",
+        "//features:experimental",
     ],
     copts = ["-Wno-google3-inline-namespace"],
 )

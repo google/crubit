@@ -98,7 +98,11 @@ def _targets_and_headers_test_impl(ctx):
 targets_and_headers_test = crubit_make_analysis_test(_targets_and_headers_test_impl)
 
 def _test_targets_and_headers():
-    native.cc_library(name = "mylib", hdrs = ["lib.h"])
+    native.cc_library(
+        name = "mylib",
+        hdrs = ["lib.h"],
+        aspect_hints = ["//features:internal_testonly_experimental"],
+    )
     attach_aspect(name = "mylib_with_aspect", dep = ":mylib")
 
     targets_and_headers_test(
@@ -158,9 +162,9 @@ targets_and_headers_propagate_with_cc_info_test = crubit_make_analysis_test(
 )
 
 def _test_targets_and_headers_propagate_with_cc_infos():
-    native.cc_library(name = "bottom", hdrs = ["lib.h"])
-    native.cc_library(name = "middle", deps = [":bottom"])
-    native.cc_library(name = "top", hdrs = ["top.h"], deps = [":middle"])
+    native.cc_library(name = "bottom", hdrs = ["lib.h"], aspect_hints = ["//features:internal_testonly_experimental"])
+    native.cc_library(name = "middle", deps = [":bottom"], aspect_hints = ["//features:internal_testonly_experimental"])
+    native.cc_library(name = "top", hdrs = ["top.h"], deps = [":middle"], aspect_hints = ["//features:internal_testonly_experimental"])
     attach_aspect(name = "top_with_aspect", dep = ":top")
 
     targets_and_headers_propagate_with_cc_info_test(
@@ -225,6 +229,7 @@ def _test_textual_hdrs_not_in_targets_and_hdrs():
             "textual_in_hdrs.inc",
         ],
         srcs = ["textual_in_srcs.inc"],
+        aspect_hints = ["//features:internal_testonly_experimental"],
         textual_hdrs = ["textual1.inc", "textual2.h"],
     )
     attach_aspect(name = "textual_with_aspect", dep = ":textual")
@@ -238,6 +243,7 @@ def _test_toolchain_headers_in_header_analysis_action():
     native.cc_library(
         name = "somelib",
         hdrs = ["someheader.h"],
+        aspect_hints = ["//features:internal_testonly_experimental"],
     )
     attach_aspect(name = "somelib_with_aspect", dep = ":somelib")
 
@@ -280,6 +286,7 @@ def _test_generated_headers_specified_with_full_path():
         hdrs = [
             "generated.h",
         ],
+        aspect_hints = ["//features:internal_testonly_experimental"],
     )
     attach_aspect(name = "generated_header_with_aspect", dep = ":use_generated")
 
