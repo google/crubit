@@ -3466,37 +3466,51 @@ MATCHER_P(declNamed, Name, "") {
 TEST(EvidenceSitesTest, Functions) {
   TestAST AST(R"cc(
     void foo();
-    void bar();
-    void bar() {}
-    void baz() {}
+    int* bar();
+    int* bar() {}
+    void baz(int*) {}
+    void def() {}
 
     struct S {
       S() {}
-      void member();
+      S(int*) {}
+      void member(int*);
     };
-    void S::member() {}
+    void S::member(int*) {}
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
   EXPECT_THAT(
       Sites.Declarations,
-      UnorderedElementsAre(declNamed("foo"), declNamed("bar"), declNamed("bar"),
-                           declNamed("baz"), declNamed("S::S"),
-                           declNamed("S::member"), declNamed("S::member")));
+      UnorderedElementsAre(declNamed("bar"), declNamed("bar"), declNamed("baz"),
+                           declNamed("S::S"), declNamed("S::member"),
+                           declNamed("S::member")));
   EXPECT_THAT(Sites.Definitions,
               UnorderedElementsAre(declNamed("bar"), declNamed("baz"),
+                                   declNamed("def"), declNamed("S::S"),
                                    declNamed("S::S"), declNamed("S::member")));
 }
 
-TEST(EvidenceSitesTest, Lambdas) {
+TEST(EvidenceSitesTest, LambdaNoPtr) {
   TestAST AST(R"cc(
-    auto Lambda = []() {};
+    auto NoPtrs = []() {};
+  )cc");
+  auto Sites = EvidenceSites::discover(AST.context());
+  EXPECT_THAT(Sites.Declarations, IsEmpty());
+  EXPECT_THAT(Sites.Definitions,
+              UnorderedElementsAre(declNamed("(anonymous class)::operator()"),
+                                   declNamed("NoPtrs")));
+}
+
+TEST(EvidenceSitesTest, LambdaWithPtr) {
+  TestAST AST(R"cc(
+    auto Ptr = [](int*) {};
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
   EXPECT_THAT(Sites.Declarations,
               UnorderedElementsAre(declNamed("(anonymous class)::operator()")));
   EXPECT_THAT(Sites.Definitions,
               UnorderedElementsAre(declNamed("(anonymous class)::operator()"),
-                                   declNamed("Lambda")));
+                                   declNamed("Ptr")));
 }
 
 TEST(EvidenceSitesTest, GlobalVariables) {
@@ -3571,60 +3585,56 @@ TEST(EvidenceSitesTest, LocalVariablesNotIncluded) {
     void foo() {
       int* p = nullptr;
       static int* q = nullptr;
+      static int* r;
     }
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
-  EXPECT_THAT(Sites.Declarations, UnorderedElementsAre(declNamed("foo")));
+  EXPECT_THAT(Sites.Declarations, IsEmpty());
   EXPECT_THAT(Sites.Definitions, UnorderedElementsAre(declNamed("foo")));
 }
 
 TEST(EvidenceSitesTest, Templates) {
   TestAST AST(R"cc(
     template <int I>
-    int f() {
+    int f(int*) {
       return I;
     }
     template <>
-    int f<1>() {
+    int f<1>(int*) {
       return 1;
     }
 
     struct S {
       template <int I>
-      int f() {
+      int f(int*) {
         return I;
       }
     };
 
     template <int I>
     struct T {
-      int f() { return I; }
+      int f(int*) { return I; }
     };
 
     template <int I>
-    int v = 1;
+    int* v = nullptr;
 
-    int Unused = f<0>() + f<1>() + S{}.f<0>() + T<0>{}.f() + v<0>;
+    template <>
+    int* v<1> = nullptr;
+
+    int Unused = f<0>(v<0>) + f<1>(v<1>) + S{}.f<0>(nullptr) + T<0>{}.f(nullptr);
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
 
   // Relevant declarations are the written ones that are not templates.
-  EXPECT_THAT(Sites.Declarations, UnorderedElementsAre(declNamed("f<1>")));
+  EXPECT_THAT(Sites.Declarations,
+              UnorderedElementsAre(declNamed("f<1>"), declNamed("v<1>")));
   // Instantiations are relevant definitions, as is the global variable Unused.
   EXPECT_THAT(Sites.Definitions,
-              UnorderedElementsAre(declNamed("f<0>"), declNamed("f<1>"),
+              UnorderedElementsAre(declNamed("f<0>"), declNamed("v<0>"),
+                                   declNamed("f<1>"), declNamed("v<1>"),
                                    declNamed("S::f<0>"), declNamed("T<0>::f"),
-                                   declNamed("v<0>"), declNamed("Unused")));
-
-  for (auto* Def : Sites.Definitions) {
-    std::string Actual;
-    llvm::raw_string_ostream OS(Actual);
-    if (auto* ND = dyn_cast<NamedDecl>(Def))
-      ND->getNameForDiagnostic(
-          OS, Def->getDeclContext()->getParentASTContext().getPrintingPolicy(),
-          /*Qualified=*/true);
-    llvm::errs() << "Actual: " << Actual << "\n";
-  }
+                                   declNamed("Unused")));
 }
 
 TEST(EvidenceEmitterTest, NotInferenceTarget) {

@@ -26,10 +26,10 @@ int countInferableSlots(const Decl& D) {
     return Slots;
   }
   if (const auto* Field = dyn_cast<FieldDecl>(&D)) {
-    return isInferenceTarget(*Field) ? 1 : 0;
+    return hasInferable(Field->getType()) ? 1 : 0;
   }
   if (const auto* Var = dyn_cast<VarDecl>(&D)) {
-    return isInferenceTarget(*Var) ? 1 : 0;
+    return hasInferable(Var->getType()) ? 1 : 0;
   }
   return 0;
 }
@@ -57,24 +57,28 @@ bool isInferenceTarget(const Decl& D) {
         // small set of functions.
         Func->getBuiltinID() == 0 &&
         // Implicit functions cannot be annotated.
-        !Func->isImplicit();
+        !Func->isImplicit() &&
+        // Do the most expensive check last.
+        countPointersInType(Func->getType()) > 0;
   }
   if (const auto* Field = dyn_cast<FieldDecl>(&D)) {
-    return hasInferable(Field->getType()) &&
-           // See comments above regarding dependent contexts and templates.
-           !Field->getDeclContext()->isDependentContext() &&
-           !isa<ClassTemplateSpecializationDecl>(Field->getParent());
+    return
+        // See comments above regarding dependent contexts and templates.
+        !Field->getDeclContext()->isDependentContext() &&
+        !isa<ClassTemplateSpecializationDecl>(Field->getParent()) &&
+        // Do the most expensive check last.
+        countPointersInType(Field->getType()) > 0;
   }
   if (const auto* Var = dyn_cast<VarDecl>(&D)) {
     // Include static member variables and global variables, but not static
     // local variables. Local variables often do not need annotation in order to
     // be verified.
-    return hasInferable(Var->getType()) && Var->hasGlobalStorage() &&
-           !Var->isStaticLocal() &&
+    return Var->hasGlobalStorage() && !Var->isStaticLocal() &&
            // See comments above regarding dependent contexts and templates.
            !Var->getDeclContext()->isDependentContext() &&
-           !Var->isTemplated() &&
-           !isa<ClassTemplateSpecializationDecl>(Var->getDeclContext());
+           !Var->isTemplated() && !Var->getTemplateInstantiationPattern() &&
+           // Do the most expensive check last.
+           countPointersInType(Var->getType()) > 0;
   }
   return false;
 }

@@ -10,6 +10,7 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Basic/LLVM.h"
@@ -93,6 +94,7 @@ TEST(IsInferenceTargetTest, Functions) {
                 }
                 void empty() {}
                 auto Lambda = []() {};
+                auto LambdaWithPtr = [](int*) {};
               )cc")
                   .str());
 
@@ -102,15 +104,23 @@ TEST(IsInferenceTargetTest, Functions) {
   EXPECT_FALSE(isInferenceTarget(lookup("StaticLocal", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("StdSmartLocal", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("CustomSmartLocal", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("empty", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("Lambda", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("operator()", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("empty", Ctx)));
+  auto &Lambda = lookup<VarDecl>("Lambda", Ctx);
+  auto *LambdaCtx = cast<LambdaExpr>(Lambda.getInit())->getLambdaClass();
+  EXPECT_FALSE(isInferenceTarget(Lambda));
+  EXPECT_FALSE(isInferenceTarget(lookup("operator()", Ctx, LambdaCtx)));
+  auto &LambdaWithPtr = lookup<VarDecl>("LambdaWithPtr", Ctx);
+  auto *LambdaWithPtrCtx =
+      cast<LambdaExpr>(LambdaWithPtr.getInit())->getLambdaClass();
+  EXPECT_FALSE(isInferenceTarget(LambdaWithPtr));
+  EXPECT_TRUE(isInferenceTarget(lookup("operator()", Ctx, LambdaWithPtrCtx)));
 }
 
 TEST(IsInferenceTargetTest, ClassAndMembers) {
   TestAST AST((SmartPointerHeader + R"cc(
                 class C {
                   void method();
+                  int* methodWithPtr();
                   int NonPtrField;
                   int* PtrField;
                   static int* StaticField;
@@ -122,7 +132,8 @@ TEST(IsInferenceTargetTest, ClassAndMembers) {
 
   auto &Ctx = AST.context();
   EXPECT_FALSE(isInferenceTarget(lookup<CXXRecordDecl>("C", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("method", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("method", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("methodWithPtr", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("NonPtrField", Ctx)));
   EXPECT_TRUE(isInferenceTarget(lookup("PtrField", Ctx)));
   EXPECT_TRUE(isInferenceTarget(lookup("StaticField", Ctx)));
@@ -145,11 +156,11 @@ TEST(IsInferenceTargetTest, FunctionTemplate) {
   EXPECT_FALSE(isInferenceTarget(FuncTmpl));
   EXPECT_FALSE(isInferenceTarget(*FuncTmpl.getTemplatedDecl()));
   // The function template specialization is *also* not an inference target.
-  const VarDecl &FuncTmplSpec = lookup<VarDecl>("FuncTmplSpec", Ctx);
-  EXPECT_FALSE(isInferenceTarget(FuncTmplSpec));
-  const ValueDecl &FuncTmpl2 =
-      *cast<DeclRefExpr>(FuncTmplSpec.getInit()->IgnoreImplicit())->getDecl();
-  EXPECT_FALSE(isInferenceTarget(FuncTmpl2));
+  const ValueDecl &Specialization =
+      *cast<DeclRefExpr>(
+           lookup<VarDecl>("FuncTmplSpec", Ctx).getInit()->IgnoreImplicit())
+           ->getDecl();
+  EXPECT_FALSE(isInferenceTarget(Specialization));
 }
 
 TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
