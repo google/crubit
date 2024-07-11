@@ -4,12 +4,15 @@
 
 #include "nullability/inference/eligible_ranges.h"
 
+#include <algorithm>
 #include <cassert>
 #include <optional>
 #include <string_view>
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
+#include "absl/log/check.h"
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/type_nullability.h"
@@ -20,8 +23,10 @@
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
+#include "clang/AST/TypeLocVisitor.h"
 #include "clang/Basic/FileEntry.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/LangOptions.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/Specifiers.h"
@@ -36,34 +41,6 @@
 namespace clang::tidy::nullability {
 namespace {
 using SlotNum = unsigned;
-}
-
-// TODO: incorporate the predicate used by inference to identify relevant
-// top-level slots.
-static bool isEligibleTypeLoc(TypeLoc TyLoc) {
-  QualType Ty = TyLoc.getType();
-  if (!isSupportedPointerType(Ty)) return false;
-  // Excludes function-pointer types and other corner cases that use declarator
-  // suffix syntax.
-  // TODO(sammccall): In general, a declaration looks like BEGIN * MIDDLE NAME
-  // END e.g. `int * const (*a) []`.  We need to rewrite as `Nullable<BEGIN *
-  // MIDDLE END> NAME, e.g. `Nullable<int * const (*) []> a`. But, if we're not
-  // careful, we'll instead rewrite as `Nullable<BEGIN * MIDDLE NAME END>`
-  // e.g. `Nullable<int * const (*a) []`.
-  //
-  // The two are equivalent if either NAME or END is empty. The former is just
-  // "is the param unnamed" and the latter is "is PointerTypeLoc.getEndLoc() >
-  // Decl.getLocation()?".
-  if (const auto *PT = Ty.getNonReferenceType()->getAs<PointerType>()) {
-    // TODO: Allow function-pointer types and other corner cases that are
-    // currently excluded, because they use declarator suffix syntax. These
-    // aren't inherently bad, just tricky to edit correctly. This change will
-    // require generalizing this function to take more than just a `TypeLoc`,
-    // the declarator may be needed as well.
-    QualType PointeeTy = PT->getPointeeType();
-    if (PointeeTy->isFunctionType() || PointeeTy->isArrayType()) return false;
-  }
-  return true;
 }
 
 static Nullability toProtoNullability(NullabilityKind Kind) {
@@ -81,19 +58,12 @@ static Nullability toProtoNullability(NullabilityKind Kind) {
 
 static void initSlotRange(SlotRange &R, std::optional<SlotNum> Slot,
                           unsigned Begin, unsigned End,
-                          std::optional<NullabilityKind> Nullability,
-                          std::optional<int> AnnotationPreRangeLength,
-                          std::optional<int> AnnotationPostRangeLength) {
+                          std::optional<NullabilityKind> Nullability) {
   if (Slot) R.set_slot(*Slot);
   R.set_begin(Begin);
   R.set_end(End);
   if (Nullability) {
     R.set_existing_annotation(toProtoNullability(*Nullability));
-
-    if (AnnotationPreRangeLength)
-      R.set_existing_annotation_pre_range_length(*AnnotationPreRangeLength);
-    if (AnnotationPostRangeLength)
-      R.set_existing_annotation_post_range_length(*AnnotationPostRangeLength);
   }
 }
 
@@ -109,19 +79,19 @@ getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
   // absl::NullabilityUnknown< is 4 tokens, one for the `<`, one for the `::`,
   // and one for each identifier.
   Token PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
-  if (!PrevTok.is(tok::TokenKind::less)) return {};
+  if (!PrevTok.is(tok::less)) return {};
   if (PrevTok =
           utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
-      !PrevTok.is(tok::TokenKind::raw_identifier))
+      !PrevTok.is(tok::raw_identifier))
     return {};
   if (PrevTok.getRawIdentifier() != "NullabilityUnknown") return {};
   if (PrevTok =
           utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
-      PrevTok.isNot(tok::TokenKind::coloncolon))
+      PrevTok.isNot(tok::coloncolon))
     return {};
   if (PrevTok =
           utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
-      !PrevTok.is(tok::TokenKind::raw_identifier))
+      !PrevTok.is(tok::raw_identifier))
     return {};
   if (PrevTok.getRawIdentifier() != "absl") return {};
 
@@ -135,19 +105,18 @@ getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
   if (bool Failed = Lexer::getRawToken(End, NextTok, SM, LangOpts,
                                        /*IgnoreWhiteSpace=*/true))
     return {};
-  if (!NextTok.is(tok::TokenKind::greater) &&
-      !NextTok.is(tok::TokenKind::greatergreater)) {
+  if (!NextTok.is(tok::greater) && !NextTok.is(tok::greatergreater)) {
     std::optional<Token> MaybeNextTok =
         utils::lexer::findNextTokenSkippingComments(End, SM, LangOpts);
-    if (!MaybeNextTok || (!MaybeNextTok->is(tok::TokenKind::greater) &&
-                          !MaybeNextTok->is(tok::TokenKind::greatergreater)))
+    if (!MaybeNextTok || (!MaybeNextTok->is(tok::greater) &&
+                          !MaybeNextTok->is(tok::greatergreater)))
       return {};
     NextTok = *MaybeNextTok;
   }
 
   auto [NextTokFID, NextTokOffset] = SM.getDecomposedLoc(NextTok.getEndLoc());
   if (NextTokFID != DeclFID) return {};
-  if (NextTok.is(tok::TokenKind::greatergreater)) {
+  if (NextTok.is(tok::greatergreater)) {
     // We need to step back one character.
     --NextTokOffset;
   }
@@ -166,7 +135,7 @@ static std::optional<unsigned> getEndOffsetOfImmediateClangAttribute(
   std::optional<Token> NextTok =
       utils::lexer::findNextTokenSkippingComments(End, SM, LangOpts);
   if (!NextTok) return std::nullopt;
-  if (!NextTok->is(tok::TokenKind::raw_identifier) ||
+  if (!NextTok->is(tok::raw_identifier) ||
       NextTok->getRawIdentifier() != "_Null_unspecified")
     return std::nullopt;
 
@@ -174,6 +143,187 @@ static std::optional<unsigned> getEndOffsetOfImmediateClangAttribute(
   if (FID != DeclFID) return std::nullopt;
 
   return Offset;
+}
+
+/// If the range specified by `Begin` and `End` is immediately wrapped in an
+/// absl nullability annotation or immediately followed by a clang nullability
+/// attribute, set the pre- and post-range lengths for that
+/// annotation/attribute.
+static void addAnnotationPreAndPostRangeLength(
+    SourceLocation Begin, SourceLocation End, unsigned BeginOffset,
+    unsigned EndOffset, const FileID &DeclFID, const SourceManager &SM,
+    const LangOptions &LangOpts, SlotRange &Range) {
+  auto [AnnotationStartOffset, AnnotationEndOffset] =
+      getStartAndEndOffsetsOfImmediateAbslAnnotation(Begin, End, SM, LangOpts,
+                                                     DeclFID);
+  if (AnnotationStartOffset && AnnotationEndOffset) {
+    Range.set_existing_annotation_pre_range_length(BeginOffset -
+                                                   *AnnotationStartOffset);
+    Range.set_existing_annotation_post_range_length(*AnnotationEndOffset -
+                                                    EndOffset);
+  } else if (std::optional<unsigned> AttributeEndOffset =
+                 getEndOffsetOfImmediateClangAttribute(End, SM, LangOpts,
+                                                       DeclFID)) {
+    Range.set_existing_annotation_pre_range_length(0);
+    Range.set_existing_annotation_post_range_length(*AttributeEndOffset -
+                                                    EndOffset);
+  }
+}
+
+/// Declarations involving combinations of pointers, arrays, and functions can
+/// require re-arrangement of the type to add or remove nullability annotations.
+///
+/// The known relevant types are (potentially nested) raw pointers to arrays or
+/// functions and (potentially nested) arrays of raw pointers.
+///
+/// e.g. a length-3 array of length-2 arrays of pointers to length-1 arrays of
+/// int* with the name `p` would start as `int* (*p[3][2])[1]` and if we need to
+/// mark the type of the pointers to the length-1 arrays Nullable, we would need
+/// to re-write this is as `Nullable<int* (*)[1]> p[3][2]`.
+///
+/// Similarly, a function pointer with the name `f` with a single int*
+/// parameter named `a` might start as `void(*f)(int* a)`. If we need to mark
+/// the function pointer as Nullable, we would need to re-write this as
+/// `Nullable<void(*)(int* a)> f`.
+///
+/// If Decl and its TypeLoc TL are such a declaration, returns a vector of
+/// optional ComplexDeclaratorRanges, indexed by nullability slot in TL, to be
+/// added to the corresponding SlotRange.
+///
+/// e.g. For `f` above, returns [{"f", [{7, 8}]}, std::nullopt]. For `p` above,
+/// returns [{"p", [{8, 15}]}, std::nullopt]. And for `void (*(*(f))[])(int)`,
+/// returns [{"(f)", [{10, 13}]}, {"(*)[]", [{8, 10}, {13, 16}]}].
+///
+/// The ranges are produced under the assumption that all slots will receive an
+/// annotation. The types would need to be modified differently if e.g. some
+/// inner slots are annotated but outer slots are not.
+///
+/// Template parameters are not considered, nor are smart pointers, so types
+/// containing these may not have the correct number of results returned and the
+/// results should not be used.
+static std::vector<std::optional<ComplexDeclaratorRanges>>
+getComplexDeclaratorRanges(const DeclaratorDecl &Decl, TypeLoc TL) {
+  class Walker : public TypeLocVisitor<Walker> {
+   public:
+    std::vector<std::optional<ComplexDeclaratorRanges>> Results;
+
+    Walker(const DeclaratorDecl &Decl)
+        : SM(Decl.getASTContext().getSourceManager()), LO(Decl.getLangOpts()) {
+      // Include any name for Decl in the range for the first slot.
+      StartForSlot = Decl.getLocation();
+      if (Decl.getDeclName().isEmpty()) {
+        EndForSlot = StartForSlot;
+      } else {
+        std::optional<Token> NextTok =
+            utils::lexer::findNextTokenSkippingComments(StartForSlot, SM, LO);
+        if (NextTok) {
+          EndForSlot = NextTok->getLocation();
+        } else {
+          EndForSlot = StartForSlot;
+        }
+      }
+    }
+
+    void Visit(TypeLoc TL) {
+      // If the type ends before the start of the name, then Decl is not a
+      // complex declarator.
+      if (TL.getEndLoc() <= StartForSlot) {
+        unsigned PointersInTL = countPointersInType(TL.getType());
+        Results.reserve(PointersInTL);
+        for (int I = 0; I < PointersInTL; ++I) Results.push_back(std::nullopt);
+      } else {
+        TypeLocVisitor::Visit(TL);
+      }
+    }
+
+    void VisitTypeLoc(TypeLoc TL) {
+      if (TL.getNextTypeLoc()) TypeLocVisitor::Visit(TL.getNextTypeLoc());
+    }
+
+    void VisitArrayTypeLoc(ArrayTypeLoc ArrayTL) {
+      // Move the end marker to the right to include the array brackets,
+      // including any size expression.
+      EndForSlot = ArrayTL.getRBracketLoc().getLocWithOffset(1);
+      Visit(ArrayTL.getElementLoc());
+    }
+
+    void VisitParenTypeLoc(ParenTypeLoc ParenTL) {
+      StartForSlot = ParenTL.getLParenLoc();
+      EndForSlot = ParenTL.getRParenLoc().getLocWithOffset(1);
+      Visit(ParenTL.getInnerLoc());
+    }
+
+    void VisitPointerTypeLoc(PointerTypeLoc PointerTL) {
+      if (StartForSlot == EndForSlot) {
+        Results.push_back(std::nullopt);
+      } else {
+        // Save the result for the current slot.
+        auto &Result = Results.emplace_back(ComplexDeclaratorRanges());
+        if (StartForPreviousSlot && EndForPreviousSlot) {
+          Result->set_following_annotation(
+              (Lexer::getSourceText(clang::CharSourceRange::getCharRange(
+                                        StartForSlot, *StartForPreviousSlot),
+                                    SM, LO) +
+               Lexer::getSourceText(clang::CharSourceRange::getCharRange(
+                                        *EndForPreviousSlot, EndForSlot),
+                                    SM, LO))
+                  .str());
+
+          if (StartForPreviousSlot != StartForSlot) {
+            auto *Removal = Result->add_removal();
+            Removal->set_begin(SM.getFileOffset(StartForSlot));
+            Removal->set_end(SM.getFileOffset(*StartForPreviousSlot));
+          }
+          if (EndForPreviousSlot != EndForSlot) {
+            auto *Removal = Result->add_removal();
+            Removal->set_begin(SM.getFileOffset(*EndForPreviousSlot));
+            Removal->set_end(SM.getFileOffset(EndForSlot));
+          }
+        } else {
+          Result->set_following_annotation(Lexer::getSourceText(
+              clang::CharSourceRange::getCharRange(StartForSlot, EndForSlot),
+              SM, LO));
+          auto &Removal = *Result->add_removal();
+          Removal.set_begin(SM.getFileOffset(StartForSlot));
+          Removal.set_end(SM.getFileOffset(EndForSlot));
+        }
+      }
+
+      // Prepare for the next slot.
+      StartForPreviousSlot = StartForSlot;
+      EndForPreviousSlot = EndForSlot;
+
+      // Move the begin marker to include the star to prepare for the next slot.
+      StartForSlot = PointerTL.getStarLoc();
+
+      Visit(PointerTL.getPointeeLoc());
+    }
+
+    void VisitFunctionProtoTypeLoc(FunctionProtoTypeLoc FuncTL) {
+      Visit(FuncTL.getReturnLoc());
+      for (const auto &ParamDecl : FuncTL.getParams()) {
+        if (auto *TSI = ParamDecl->getTypeSourceInfo()) {
+          Walker Recurse(*ParamDecl);
+          Recurse.Visit(TSI->getTypeLoc());
+          for (const auto &Result : Recurse.Results) {
+            Results.push_back(std::move(Result));
+          }
+        }
+      }
+    }
+
+   private:
+    const SourceManager &SM;
+    const LangOptions &LO;
+    SourceLocation StartForSlot;
+    SourceLocation EndForSlot;
+    std::optional<SourceLocation> StartForPreviousSlot;
+    std::optional<SourceLocation> EndForPreviousSlot;
+  };
+
+  Walker W(Decl);
+  W.Visit(TL);
+  return std::move(W.Results);
 }
 
 // Extracts the source ranges and associated slot values of each eligible type
@@ -185,22 +335,27 @@ static std::optional<unsigned> getEndOffsetOfImmediateClangAttribute(
 // itself, because the edit will do the correct thing implicitly: the `const`
 // will be left out of the TypeLoc's range, leaving `const` outside the
 // nullability annotation, which is the preferred spelling.
-static void addRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
+static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
+                                    TypeLoc WholeLoc, SlotNum StartingSlot,
                                     const ASTContext &Context,
                                     const FileID &DeclFID,
                                     const TypeNullabilityDefaults &Defaults,
                                     TypeLocRanges &Result) {
   std::vector<TypeNullabilityLoc> NullabilityLocs =
       getTypeNullabilityLocs(WholeLoc, Defaults);
+  std::vector<std::optional<ComplexDeclaratorRanges>>
+      AllComplexDeclaratorRanges;
+  if (Decl) {
+    AllComplexDeclaratorRanges = getComplexDeclaratorRanges(*Decl, WholeLoc);
+  }
   const auto &SM = Context.getSourceManager();
+  const auto &LangOpts = Context.getLangOpts();
   for (auto &[SlotInLoc, T, MaybeLoc, Nullability] : NullabilityLocs) {
-    if (!MaybeLoc || !isEligibleTypeLoc(*MaybeLoc)) continue;
+    if (!MaybeLoc || !isSupportedPointerType(MaybeLoc->getType())) continue;
     auto R = tooling::getFileRange(
         CharSourceRange::getTokenRange(MaybeLoc->getSourceRange()), Context,
         /*IncludeMacroExpansion=*/true);
     if (!R) continue;
-
-    const auto &LangOpts = Context.getLangOpts();
 
     // The start of the new range.
     SourceLocation Begin = R->getBegin();
@@ -215,6 +370,13 @@ static void addRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
       PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
     }
 
+    auto [FID, BeginOffset] = SM.getDecomposedLoc(Begin);
+    // If the type comes from a different file, then don't attempt to edit -- it
+    // might need manual intervention.
+    if (FID != DeclFID) continue;
+
+    unsigned EndOffset = SM.getFileOffset(R->getEnd());
+
     // TODO(b/323509132) When we can infer more than just top-level pointers,
     // synchronize these slot numbers with inference's slot numbers. For now,
     // assign no slot to anything but a first slot in an inferable type.
@@ -223,36 +385,31 @@ static void addRangesQualifierAware(TypeLoc WholeLoc, SlotNum StartingSlot,
             ? std::optional(StartingSlot + SlotInLoc)
             : std::nullopt;
 
-    auto [FID, BeginOffset] = SM.getDecomposedLoc(Begin);
-    // If the type comes from a different file, then don't attempt to edit -- it
-    // might need manual intervention.
-    if (FID != DeclFID) continue;
+    SlotRange *Range = Result.add_range();
+    initSlotRange(*Range, SlotInContext, BeginOffset, EndOffset, Nullability);
+    if (Nullability && Nullability == NullabilityKind::Unspecified)
+      addAnnotationPreAndPostRangeLength(Begin, R->getEnd(), BeginOffset,
+                                         EndOffset, DeclFID, SM, LangOpts,
+                                         *Range);
 
-    unsigned int EndOffset = SM.getFileOffset(R->getEnd());
-
-    // If the type is immediately wrapped in an absl nullability annotation or
-    // immediately followed by a clang nullability attribute, collect the
-    // pre- and post-range lengths for that annotation/attribute.
-    std::optional<int> AnnotationPreRangeLength;
-    std::optional<int> AnnotationPostRangeLength;
-    if (Nullability && *Nullability == NullabilityKind::Unspecified) {
-      auto [AnnotationStartOffset, AnnotationEndOffset] =
-          getStartAndEndOffsetsOfImmediateAbslAnnotation(Begin, R->getEnd(), SM,
-                                                         LangOpts, DeclFID);
-      if (AnnotationStartOffset && AnnotationEndOffset) {
-        AnnotationPreRangeLength = BeginOffset - *AnnotationStartOffset;
-        AnnotationPostRangeLength = *AnnotationEndOffset - EndOffset;
-      } else if (std::optional<unsigned> AttributeEndOffset =
-                     getEndOffsetOfImmediateClangAttribute(R->getEnd(), SM,
-                                                           LangOpts, DeclFID)) {
-        AnnotationPreRangeLength = 0;
-        AnnotationPostRangeLength = *AttributeEndOffset - EndOffset;
+    // If we don't have a std::nullopt or ComplexDeclaratorRange for every slot,
+    // don't add any ComplexDeclaratorRanges. The Decl is a complex declarator
+    // but contains at least one unsupported slot syntax, such as slots in
+    // template parameters or smart pointers.
+    if (Decl && AllComplexDeclaratorRanges.size() == NullabilityLocs.size()) {
+      CHECK(AllComplexDeclaratorRanges.size() > SlotInLoc);
+      std::optional<ComplexDeclaratorRanges> &CDR =
+          AllComplexDeclaratorRanges[SlotInLoc];
+      // If all removal ranges are after the end of the range to enclose in the
+      // annotation, then we don't need to add any ComplexDeclaratorRanges and
+      // can leave the text where it is.
+      if (CDR && std::any_of(CDR->removal().begin(), CDR->removal().end(),
+                             [EndOffset](const RemovalRange &Removal) {
+                               return Removal.begin() < EndOffset;
+                             })) {
+        *Range->mutable_complex_declarator_ranges() = std::move(*CDR);
       }
     }
-
-    initSlotRange(*Result.add_range(), SlotInContext, BeginOffset, EndOffset,
-                  Nullability, AnnotationPreRangeLength,
-                  AnnotationPostRangeLength);
   }
 }
 
@@ -290,12 +447,12 @@ static std::optional<TypeLocRanges> getEligibleRanges(
   if (!trySetPath(DeclFID, SrcMgr, Result)) return std::nullopt;
   setPragmaNullability(DeclFID, Defaults, Result);
 
-  addRangesQualifierAware(TyLoc.getReturnLoc(), SLOT_RETURN_TYPE, Context,
-                          DeclFID, Defaults, Result);
+  addRangesQualifierAware(nullptr, TyLoc.getReturnLoc(), SLOT_RETURN_TYPE,
+                          Context, DeclFID, Defaults, Result);
 
   for (int I = 0, N = Fun.getNumParams(); I < N; ++I) {
     const ParmVarDecl *P = Fun.getParamDecl(I);
-    addRangesQualifierAware(P->getTypeSourceInfo()->getTypeLoc(),
+    addRangesQualifierAware(P, P->getTypeSourceInfo()->getTypeLoc(),
                             SLOT_PARAM + I, Context, DeclFID, Defaults, Result);
   }
 
@@ -317,7 +474,8 @@ static std::optional<TypeLocRanges> getEligibleRanges(
   if (!trySetPath(DeclFID, SrcMgr, Result)) return std::nullopt;
   setPragmaNullability(DeclFID, Defaults, Result);
 
-  addRangesQualifierAware(TyLoc, Slot(0), Context, DeclFID, Defaults, Result);
+  addRangesQualifierAware(&D, TyLoc, Slot(0), Context, DeclFID, Defaults,
+                          Result);
   if (Result.range().empty()) return std::nullopt;
 
   return Result;

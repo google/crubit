@@ -157,6 +157,23 @@ message Partial {
   }
 }
 
+// The half-open source range of text to remove: [begin, end).
+message RemovalRange {
+  optional uint32 begin = 1;
+  optional uint32 end = 2;
+}
+
+// Information relevant for complex declarator cases, like function pointer
+// types and some array types.
+message ComplexDeclaratorRanges {
+  // The text to move from within the type to after the annotation. This may
+  // include the name of the declarator, array brackets/sizes, and/or pointer
+  // stars in types with multiple pointer sub-types.
+  optional string following_annotation = 1;
+  // A range of text to remove from the type.
+  repeated RemovalRange removal = 2;
+}
+
 // The half-open source range of a slot: [begin, end).
 message SlotRange {
   optional uint32 slot = 1;
@@ -173,13 +190,18 @@ message SlotRange {
   // non-template representation of annotations, such as clang's
   // "_Null_unspecified".
   optional uint32 existing_annotation_post_range_length = 6;
+
+  optional ComplexDeclaratorRanges complex_declarator_ranges = 7;
 }
 
 // A set of slot ranges and their associated file.
 message TypeLocRanges {
   // Path of the file to which the ranges refer.
   optional string path = 2;
-  // Source ranges of type locations (written types) in `path`.
+  // Source ranges of type locations (written types) in `path`. These should be
+  // ordered by slot number to enable predictable edits that may insert multiple
+  // annotations in the same locations, e.g. for applying annotations to nested
+  // pointers.
   repeated SlotRange range = 3;
   // The nullability default set by the pragma affecting `path`, if one exists.
   optional Nullability pragma_nullability = 4;

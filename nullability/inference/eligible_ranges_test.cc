@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "absl/log/check.h"
 #include "nullability/inference/augmented_test_inputs.h"
@@ -34,6 +35,7 @@ using ::llvm::Annotations;
 using ::testing::AllOf;
 using ::testing::ExplainMatchResult;
 using ::testing::Optional;
+using ::testing::Pointwise;
 using ::testing::UnorderedElementsAre;
 
 test::EnableSmartPointers Enable;
@@ -176,21 +178,6 @@ TEST(EligibleRangesTest, NestedPointeeConstIncluded) {
                   MainFileName,
                   UnorderedElementsAre(SlotRange(1, Input.range("o")),
                                        SlotRange(-1, Input.range("i"))))));
-}
-
-TEST(EligibleRangesTest, FunctionPointerTypeIgnored) {
-  std::string Input = "void target(int (*p)(int));";
-  EXPECT_EQ(getFunctionRanges(Input), std::nullopt);
-}
-
-TEST(EligibleRangesTest, ArrayTypeIgnored) {
-  std::string Input = "void target(int p[]);";
-  EXPECT_EQ(getFunctionRanges(Input), std::nullopt);
-}
-
-TEST(EligibleRangesTest, FunctionAndArrayTypeIgnored) {
-  std::string Input = "void target(int (*z[3])(float));";
-  EXPECT_EQ(getFunctionRanges(Input), std::nullopt);
 }
 
 TEST(EligibleRangesTest, AnnotatedSlotsGetRangesForPointerTypeOnly) {
@@ -976,6 +963,196 @@ TEST(ExistingAnnotationLengthTest, ClangAttribute) {
                                   PreRangeLength(0), PostRangeLength(18)),
                             AllOf(SlotRange(3, Input.range("with_comment")),
                                   PreRangeLength(0), PostRangeLength(32))))));
+}
+
+MATCHER(EquivalentRanges, "") {
+  return std::get<0>(arg).begin() == std::get<1>(arg).Begin &&
+         std::get<0>(arg).end() == std::get<1>(arg).End;
+}
+
+MATCHER_P2(ComplexDeclaratorImpl, FollowingAnnotation, Ranges, "") {
+  if (!arg.has_complex_declarator_ranges()) {
+    *result_listener << "no complex declarator ranges present";
+    return false;
+  }
+  ComplexDeclaratorRanges ArgRanges = arg.complex_declarator_ranges();
+  return ExplainMatchResult(FollowingAnnotation,
+                            ArgRanges.following_annotation(),
+                            result_listener) &&
+         ExplainMatchResult(Pointwise(EquivalentRanges(), Ranges),
+                            ArgRanges.removal(), result_listener);
+}
+
+auto ComplexDeclarator(llvm::StringRef FollowingAnnotation,
+                       std::vector<Annotations::Range> Ranges) {
+  return ComplexDeclaratorImpl(FollowingAnnotation, Ranges);
+}
+
+MATCHER(NoComplexDeclarator, "") {
+  return !arg.has_complex_declarator_ranges();
+}
+
+TEST(ComplexDeclaratorTest, FunctionPointer) {
+  auto Input = Annotations(R"(
+  void target($func_pointer[[int (*$remove_from_type[[p]])(int, $pointer_param[[int*]])]]);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName,
+          UnorderedElementsAre(
+              AllOf(SlotRange(1, Input.range("func_pointer")),
+                    ComplexDeclarator("p", {Input.range("remove_from_type")})),
+              AllOf(SlotRange(-1, Input.range("pointer_param")),
+                    NoComplexDeclarator())))));
+
+  Input = Annotations("void target($unnamed[[int (*)(int)]]);");
+  EXPECT_THAT(getFunctionRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName, UnorderedElementsAre(
+                                    AllOf(SlotRange(1, Input.range("unnamed")),
+                                          NoComplexDeclarator())))));
+}
+
+TEST(ComplexDeclaratorTest, ArrayOfNonPointersHasNoRanges) {
+  std::string Input = "void target(int p[]);";
+  EXPECT_EQ(getFunctionRanges(Input), std::nullopt);
+}
+
+TEST(ComplexDeclaratorTest, ArrayOfSimplePointers) {
+  auto Input = Annotations("void target([[int*]] p[]);");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(AllOf(SlotRange(-1, Input.range()),
+                                                   NoComplexDeclarator())))));
+}
+
+TEST(ComplexDeclaratorTest, ArrayOfFunctionPointers) {
+  // Can't use ranges marked by [[...]] around arrays because of the adjacent
+  // closing square bracket at the end of the array length and the unfortunate
+  // syntax of Annotations, so use individual points.
+  auto Input = Annotations("void target([[int (*$1^p[3]$2^)(float)]]);");
+  EXPECT_THAT(getFunctionRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(AllOf(
+                      SlotRange(-1, Input.range()),
+                      ComplexDeclarator(
+                          "p[3]", {Annotations::Range(Input.point("1"),
+                                                      Input.point("2"))}))))));
+
+  // An unnamed array of function pointers. The array brackets are still moved.
+  Input = Annotations("void target([[void(*$1^[]$2^)(int)]]);");
+  EXPECT_THAT(getFunctionRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(AllOf(
+                      SlotRange(-1, Input.range()),
+                      ComplexDeclarator(
+                          "[]", {Annotations::Range(Input.point("1"),
+                                                    Input.point("2"))}))))));
+}
+
+TEST(ComplexDeclaratorTest, ArrayOfArrayOfPointersToArray) {
+  // Can't use ranges marked by [[...]] around arrays because of the adjacent
+  // closing square bracket at the end of the array length and the unfortunate
+  // syntax of Annotations, so use individual points.
+  auto Input = Annotations(R"(
+  void target($1^$range[[int*]] (*$3^p[3][2]$4^)[1]$2^);)");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName,
+          UnorderedElementsAre(
+              AllOf(SlotRange(-1, Input.range("range")), NoComplexDeclarator()),
+              AllOf(SlotRange(-1, Annotations::Range(Input.point("1"),
+                                                     Input.point("2"))),
+                    ComplexDeclarator(
+                        "p[3][2]", {Annotations::Range(Input.point("3"),
+                                                       Input.point("4"))}))))));
+}
+
+TEST(ComplexDeclaratorTest, PointerToArray) {
+  // Can't use ranges marked by [[...]] around arrays because of the adjacent
+  // closing square bracket at the end of the array length and the unfortunate
+  // syntax of Annotations, so use individual points.
+  auto Input =
+      Annotations(R"(void target($1^int (*$remove_from_type[[p]])[]$2^);)");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName,
+          UnorderedElementsAre(AllOf(
+              SlotRange(1,
+                        Annotations::Range(Input.point("1"), Input.point("2"))),
+              ComplexDeclarator("p", {Input.range("remove_from_type")}))))));
+
+  // An unnamed pointer to an array. There's nothing to move.
+  Input = Annotations(R"(void target($1^int (*)[]$2^);)");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(AllOf(
+                            SlotRange(1, Annotations::Range(Input.point("1"),
+                                                            Input.point("2"))),
+                            NoComplexDeclarator())))));
+}
+
+TEST(ComplexDeclaratorTest,
+     ArrayOfPointersWithExtraParensAroundNameAndInSizeBrackets) {
+  // Can't use ranges marked by [[...]] around arrays because of the adjacent
+  // closing square bracket at the end of the array length and the unfortunate
+  // syntax of Annotations, so use individual points.
+  auto Input = Annotations(R"(void target([[int (*$3^((p))[(1 + 2)]$4^)]]);)");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName,
+          UnorderedElementsAre(AllOf(
+              SlotRange(-1, Input.range()),
+              ComplexDeclarator("((p))[(1 + 2)]",
+                                {Annotations::Range(Input.point("3"),
+                                                    Input.point("4"))}))))));
+}
+
+TEST(ComplexDeclaratorTest, PointerToPointerToArray) {
+  // Can't use ranges marked by [[...]] around arrays because of the adjacent
+  // closing square bracket at the end of the array length and the unfortunate
+  // syntax of Annotations, so use individual points.
+  auto Input =
+      Annotations(R"(void target($1^int (*$star[[*]]$q[[q]])[1]$2^);)");
+  EXPECT_THAT(getFunctionRanges(Input.code()),
+              Optional(TypeLocRanges(
+                  MainFileName,
+                  UnorderedElementsAre(
+                      AllOf(SlotRange(1, Annotations::Range(Input.point("1"),
+                                                            Input.point("2"))),
+                            ComplexDeclarator("q", {Input.range("q")})),
+                      AllOf(SlotRange(-1, Annotations::Range(Input.point("1"),
+                                                             Input.point("2"))),
+                            ComplexDeclarator("*", {Input.range("star")}))))));
+}
+
+TEST(ComplexDeclaratorTest, PointerToArrayOfFunctionPointers) {
+  // Can't use ranges marked by [[...]] around arrays because of the adjacent
+  // closing square bracket at the end of the array length and the unfortunate
+  // syntax of Annotations, so use individual points.
+  auto Input = Annotations(
+      R"(void target($whole[[void (*$1^(*$f[[(f)]])[]$2^)(int)]]);)");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName,
+          UnorderedElementsAre(
+              AllOf(SlotRange(1, Input.range("whole")),
+                    ComplexDeclarator("(f)", {Input.range("f")})),
+              AllOf(SlotRange(-1, Input.range("whole")),
+                    ComplexDeclarator(
+                        "(*)[]", {Annotations::Range(Input.point("1"),
+                                                     Input.range("f").Begin),
+                                  Annotations::Range(Input.range("f").End,
+                                                     Input.point("2"))}))))));
 }
 
 }  // namespace
