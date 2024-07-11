@@ -107,6 +107,20 @@ fn test_function() {
 }
 
 #[test]
+fn test_function_with_asm_label() {
+    let ir = ir_from_cc("int f(int a, int b) asm(\"foo\");").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                name: "f", ...
+                mangled_name: "foo", ...
+            }
+        }
+    );
+}
+
+#[test]
 fn test_function_with_unnamed_parameters() {
     let ir = ir_from_cc("int f(int, int);").unwrap();
     assert_ir_matches!(
