@@ -16,13 +16,24 @@ readonly STDOUT_PATH="${TEST_TMPDIR}/stdout.txt"
 readonly H_OUT_PATH="${TEST_TMPDIR}/cc_api.h"
 readonly RS_OUT_PATH="${TEST_TMPDIR}/cc_api_impl.rs"
 function delete_all_test_outputs() {
-  rm -rf "$STDERR_PATH" "$STDOUT_PATH" "$H_OUT_PATH" "$RS_OUT_PATH"
+  rm -rf "$STDERR_PATH" "$STDOUT_PATH" "$H_OUT_PATH" "$RS_OUT_PATH" "$TARGET_JSON_PATH"
 }
 
 readonly CC_BINDINGS_FROM_RS_PATH="${RUNFILES}/cc_bindings_from_rs/cc_bindings_from_rs"
 readonly SYSROOT_PATH="${RUNFILES}/${G3_SYSROOT_PATH}"
 readonly RUSTFMT_PATH="third_party/crosstool/rust/unstable/main_sysroot/bin/rustfmt"
 readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${RUNFILES}/google3/third_party/crosstool/google3_users/clang-format"
+
+# When using a rustc --target json, copy it (dereferencing symlinks) to an
+# arbitrary location using a consistent filename.
+# See cs/GOOGLE3_RUSTC_TARGET_JSON for code related to this.
+readonly TARGET_JSON_PATH="${TEST_TMPDIR}/google3_rustc_target.json"
+function rustc_target_arg() {
+  if [[ ! -z "${RUSTC_TARGET_PATH}" ]]; then
+    cp -L "${RUSTC_TARGET_PATH}" "${TARGET_JSON_PATH}"
+    echo "--target=${TARGET_JSON_PATH}"
+  fi
+}
 
 # This tests a simple happy, errors-free code path.
 function test::happy_path() {
@@ -49,6 +60,7 @@ function test::happy_path() {
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
         --sysroot=$SYSROOT_PATH \
+        $(rustc_target_arg) \
         --codegen=panic=abort" \
         "Expecting that this invocation of cc_bindings_from_rs will succeed"
 
@@ -102,7 +114,7 @@ function test::unrecognized_crubit_flag() {
   delete_all_test_outputs
   EXPECT_FAIL \
     "\"$CC_BINDINGS_FROM_RS_PATH\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
-        --no-such-crubit-flag" \
+      --no-such-crubit-flag $(rustc_target_arg)" \
     "Unrecognized cmdline flag should result in non-0 exit code"
 
   EXPECT_STR_EMPTY "$(cat $STDOUT_PATH)"
@@ -134,6 +146,7 @@ function test::invalid_h_out() {
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
         --sysroot=$SYSROOT_PATH \
+        $(rustc_target_arg) \
         --codegen=panic=abort" \
     "Invalid --h-out path should result in non-0 exit code"
 
@@ -178,6 +191,7 @@ function test::rustc_warnings_are_silenced() {
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
+        $(rustc_target_arg) \
         --sysroot=$SYSROOT_PATH \
         --codegen=panic=abort" \
     "Expecting that this invocation of cc_bindings_from_rs will succeed"

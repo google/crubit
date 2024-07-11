@@ -148,6 +148,7 @@ where
 mod tests {
     use super::*;
     use run_compiler_test_support::get_sysroot_for_testing;
+    use run_compiler_test_support::setup_rustc_target_for_testing;
     use tempfile::tempdir;
 
     const DEFAULT_RUST_SOURCE_FOR_TESTING: &'static str = r#" pub mod public_module {
@@ -210,8 +211,7 @@ mod tests {
         std::fs::write(&rs_path, DEFAULT_RUST_SOURCE_FOR_TESTING)?;
 
         let out_path = tmpdir.path().join("unexpected_output.o");
-
-        let rustc_args = vec![
+        let mut rustc_args = vec![
             // Default parameters.
             "run_compiler_unittest_executable".to_string(),
             "--crate-type=lib".to_string(),
@@ -221,6 +221,9 @@ mod tests {
             "-o".to_string(),
             out_path.display().to_string(),
         ];
+        if let Some(target_arg) = setup_rustc_target_for_testing(tmpdir.path()) {
+            rustc_args.push(format!("--target={}", target_arg));
+        }
 
         run_compiler(&rustc_args, |_tcx| Ok(()))?;
 

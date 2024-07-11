@@ -107,6 +107,7 @@ mod tests {
     use itertools::Itertools;
     use regex::{Regex, RegexBuilder};
     use run_compiler_test_support::get_sysroot_for_testing;
+    use run_compiler_test_support::setup_rustc_target_for_testing;
     use std::path::PathBuf;
     use tempfile::{tempdir, TempDir};
     use token_stream_printer::{CLANG_FORMAT_EXE_PATH_FOR_TESTING, RUSTFMT_EXE_PATH_FOR_TESTING};
@@ -215,6 +216,11 @@ mod tests {
                 format!("--sysroot={}", get_sysroot_for_testing().display()),
                 rs_input_path.display().to_string(),
             ]);
+
+            if let Some(target) = &setup_rustc_target_for_testing(self.tempdir.path()) {
+                args.push(format!("--target={}", target));
+            }
+
             args.extend(self.extra_rustc_args.iter().cloned());
 
             run_with_cmdline_args(&args)?;
