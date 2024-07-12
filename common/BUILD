@@ -240,3 +240,23 @@ cc_library(
     srcs = ["rust_allocator_shims.c"],
     visibility = ["@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:__subpackages__"],
 )
+
+rust_library(
+    name = "error_report",
+    srcs = ["error_report.rs"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":arc_anyhow",
+        "@crate_index//:anyhow",
+        "@crate_index//:serde",
+        "@crate_index//:serde_json",
+    ],
+)
+
+crubit_rust_test(
+    name = "error_report_test",
+    crate = ":error_report",
+    deps = [
+        "@crate_index//:serde_json",
+    ],
+)

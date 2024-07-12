@@ -19,10 +19,10 @@ rust_library(
     deps = [
         "//common:arc_anyhow",
         "//common:code_gen_utils",
+        "//common:error_report",
         "//common:ffi_types",
         "//common:memoized",
         "//common:token_stream_printer",
-        "//rs_bindings_from_cc:error_report",
         "//rs_bindings_from_cc:ir",
         "@crate_index//:flagset",
         "@crate_index//:itertools",

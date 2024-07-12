@@ -458,26 +458,6 @@ cc_library(
     ],
 )
 
-rust_library(
-    name = "error_report",
-    srcs = ["error_report.rs"],
-    visibility = ["//rs_bindings_from_cc/generate_bindings:__subpackages__"],
-    deps = [
-        "//common:arc_anyhow",
-        "@crate_index//:anyhow",
-        "@crate_index//:serde",
-        "@crate_index//:serde_json",
-    ],
-)
-
-crubit_rust_test(
-    name = "error_report_test",
-    crate = ":error_report",
-    deps = [
-        "@crate_index//:serde_json",
-    ],
-)
-
 cc_library(
     name = "ast_convert",
     srcs = ["ast_convert.cc"],
