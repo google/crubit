@@ -23,6 +23,7 @@ rust_library(
         ":toposort",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
+        "//common:error_report",
         "//common:memoized",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",

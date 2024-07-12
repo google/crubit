@@ -13,11 +13,12 @@ extern crate rustc_target;
 extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 
-use arc_anyhow::{anyhow, bail, ensure, Context, Error, Result};
+use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{
     escape_non_identifier_chars, format_cc_ident, format_cc_includes, make_rs_ident, CcInclude,
     NamespaceQualifier,
 };
+use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
