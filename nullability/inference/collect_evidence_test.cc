@@ -713,11 +713,9 @@ TEST(CollectEvidenceFromDefinitionTest, ReferenceArgsPassed) {
                            functionNamed("constCallee")),
                   evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
                            functionNamed("constCallee")),
-                  // TODO(b/344872191) Should be NULLABLE_REFERENCE_ARGUMENT.
-                  evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                  evidence(paramSlot(0), Evidence::NULLABLE_REFERENCE_ARGUMENT,
                            functionNamed("mutableCallee")),
-                  // TODO(b/344872191) Should be NONNULL_REFERENCE_ARGUMENT.
-                  evidence(paramSlot(1), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                  evidence(paramSlot(1), Evidence::NONNULL_REFERENCE_ARGUMENT,
                            functionNamed("mutableCallee")),
                   evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
                            functionNamed("mutableCallee"))));
@@ -2085,15 +2083,9 @@ TEST(CollectEvidenceFromDefinitionTest, Arithmetic) {
           evidence(paramSlot(1), Evidence::ARITHMETIC, functionNamed("target")),
           evidence(paramSlot(2), Evidence::ARITHMETIC, functionNamed("target")),
           evidence(paramSlot(3), Evidence::ARITHMETIC, functionNamed("target")),
-          // TODO(b/349795343): Re-enable this expectation when we use a
-          // pre-transfer-function evidence collection callback.
-          // evidence(paramSlot(4), Evidence::ARITHMETIC,
-          // functionNamed("target")),
+          evidence(paramSlot(4), Evidence::ARITHMETIC, functionNamed("target")),
           evidence(paramSlot(5), Evidence::ARITHMETIC, functionNamed("target")),
-          // TODO(b/349795343): Re-enable this expectation when we use a
-          // pre-transfer-function evidence collection callback.
-          // evidence(paramSlot(6), Evidence::ARITHMETIC,
-          // functionNamed("target")),
+          evidence(paramSlot(6), Evidence::ARITHMETIC, functionNamed("target")),
           evidence(paramSlot(7), Evidence::ARITHMETIC,
                    functionNamed("target"))));
 }

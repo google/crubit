@@ -1069,33 +1069,32 @@ class DefinitionEvidenceCollector {
 
     // Assignment to existing decl.
     const Expr *LHS = nullptr;
+    const Expr *RHS = nullptr;
     std::optional<SourceLocation> Loc = std::nullopt;
     // Raw pointers.
     if (auto *BinaryOp = dyn_cast<clang::BinaryOperator>(&S);
         BinaryOp &&
         BinaryOp->getOpcode() == clang::BinaryOperatorKind::BO_Assign) {
       LHS = BinaryOp->getLHS();
+      RHS = BinaryOp->getRHS();
       Loc = BinaryOp->getOperatorLoc();
     } else if (
         // Smart pointers.
         auto *CXXOpCall = dyn_cast<clang::CXXOperatorCallExpr>(&S);
         CXXOpCall && CXXOpCall->getOperator() == clang::OO_Equal) {
       LHS = CXXOpCall->getArg(0);
+      RHS = CXXOpCall->getArg(1);
       Loc = CXXOpCall->getOperatorLoc();
     } else {
       return;
     }
     const QualType LHSType = LHS->getType();
     if (!isSupportedPointerType(LHSType)) return;
+    if (!isSupportedPointerType(RHS->getType())) return;
 
     const TypeNullability *TypeNullability = Lattice.getTypeNullability(LHS);
     CHECK(TypeNullability);
-    // Use the LHS as both left- and right-hand sides because transfer functions
-    // have already run, setting the Environment's value for the LHS Expr to the
-    // result of the assignment. In cases where the RHS has been modified, such
-    // as in `a = std::move(b)`, the Environment's value for the RHS will no
-    // longer be an accurate representation of what was assigned.
-    fromAssignmentLike(LHSType, *TypeNullability, *LHS, *Loc);
+    fromAssignmentLike(LHSType, *TypeNullability, *RHS, *Loc);
   }
 
   void fromArithmeticArg(const Expr *Arg, SourceLocation Loc) {
@@ -1454,15 +1453,17 @@ llvm::Error collectEvidenceFromDefinition(
   std::vector<
       std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>>
       Results;
-  if (llvm::Error Error = dataflow::runDataflowAnalysis(
-                              *ACFG, Analysis, Env,
-                              [&](const CFGElement &Element,
-                                  const dataflow::DataflowAnalysisState<
-                                      PointerNullabilityLattice> &State) {
-                                DefinitionEvidenceCollector::collect(
-                                    InferableSlots, InferableSlotsConstraint,
-                                    Emit, Element, State.Lattice, State.Env);
-                              })
+  dataflow::CFGEltCallbacks<PointerNullabilityAnalysis> PostAnalysisCallbacks;
+  PostAnalysisCallbacks.Before =
+      [&](const CFGElement &Element,
+          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
+              &State) {
+        DefinitionEvidenceCollector::collect(InferableSlots,
+                                             InferableSlotsConstraint, Emit,
+                                             Element, State.Lattice, State.Env);
+      };
+  if (llvm::Error Error = dataflow::runDataflowAnalysis(*ACFG, Analysis, Env,
+                                                        PostAnalysisCallbacks)
                               .moveInto(Results))
     return Error;
 
