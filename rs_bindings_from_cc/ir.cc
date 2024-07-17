@@ -532,17 +532,15 @@ llvm::json::Value FormattedError::ToJson() const {
 }
 
 llvm::json::Value UnsupportedItem::ToJson() const {
-  std::string message;
+  std::vector<llvm::json::Value> json_errors;
+  json_errors.reserve(errors.size());
   for (const auto& error : errors) {
-    if (!message.empty()) {
-      message += "\n\n";
-    }
-    message += error.message;
+    json_errors.push_back(error.ToJson());
   }
 
   llvm::json::Object unsupported{
       {"name", name},
-      {"message", message},
+      {"errors", json_errors},
       {"source_loc", source_loc},
       {"id", id},
   };

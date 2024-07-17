@@ -346,6 +346,7 @@ rust_library(
     deps = [
         "//common:arc_anyhow",
         "//common:code_gen_utils",
+        "//common:error_report",
         "@crate_index//:flagset",
         "@crate_index//:itertools",
         "@crate_index//:once_cell",

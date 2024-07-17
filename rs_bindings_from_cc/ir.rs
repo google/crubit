@@ -804,11 +804,28 @@ impl<T> Hash for IgnoredField<T> {
     fn hash<H: Hasher>(&self, _state: &mut H) {}
 }
 
+#[derive(Debug, PartialEq, Eq, Hash, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FormattedError {
+    pub fmt: Rc<str>,
+    pub message: Rc<str>,
+}
+
+impl FormattedError {
+    pub fn to_error(&self) -> Error {
+        error_report::FormattedError {
+            fmt: self.fmt.to_string().into(),
+            message: self.message.to_string().into(),
+        }
+        .into()
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct UnsupportedItem {
     pub name: Rc<str>,
-    message: Rc<str>,
+    pub errors: Vec<Rc<FormattedError>>,
     pub source_loc: Option<Rc<str>>,
     pub id: ItemId,
     #[serde(skip)]
@@ -834,7 +851,7 @@ impl UnsupportedItem {
     fn new(ir: &IR, item: &impl GenericItem, message: Rc<str>, cause: Option<Error>) -> Self {
         Self {
             name: item.debug_name(ir),
-            message,
+            errors: vec![Rc::new(FormattedError { fmt: "{}".into(), message })],
             source_loc: item.source_loc(),
             id: item.id(),
             cause: IgnoredField(cause.map(OnceCell::from).unwrap_or_default()),
@@ -846,14 +863,6 @@ impl UnsupportedItem {
     }
     pub fn new_with_cause(ir: &IR, item: &impl GenericItem, cause: Error) -> Self {
         Self::new(ir, item, format!("{cause:#}").into(), Some(cause))
-    }
-
-    pub fn message(&self) -> &str {
-        self.message.as_ref()
-    }
-
-    pub fn cause(&self) -> &Error {
-        self.cause.0.get_or_init(|| anyhow!(self.message.as_ref().to_owned()))
     }
 }
 

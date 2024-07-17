@@ -335,7 +335,9 @@ fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<Generate
 
 /// Generates Rust source code for a given `UnsupportedItem`.
 fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<GeneratedItem> {
-    db.errors().insert(item.cause());
+    for error in &item.errors {
+        db.errors().insert(&error.to_error());
+    }
 
     let source_loc = item.source_loc();
     let source_loc = match &source_loc {
@@ -345,12 +347,14 @@ fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<Generat
         _ => "",
     };
 
-    let message = format!(
-        "{source_loc}{}Error while generating bindings for item '{}':\n{}",
+    let mut message = format!(
+        "{source_loc}{}Error while generating bindings for item '{}':\n",
         if source_loc.is_empty() { "" } else { "\n" },
         item.name.as_ref(),
-        item.message()
     );
+    for (index, error) in item.errors.iter().enumerate() {
+        message = format!("{message}{}{}", if index == 0 { "" } else { "\n\n" }, error.message,);
+    }
     Ok(GeneratedItem { item: quote! { __COMMENT__ #message }, ..Default::default() })
 }
 

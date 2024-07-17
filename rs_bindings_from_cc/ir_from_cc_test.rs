@@ -172,9 +172,10 @@ fn test_unescapable_rust_keywords_in_struct_name() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "Self", ...
-          message: "Record name is not supported: Unescapable identifier: Self"
-          ...
+            name: "Self", ...
+            errors: [FormattedError {
+                ... message: "Record name is not supported: Unescapable identifier: Self", ...
+            }], ...
         }}
     );
 }
@@ -185,9 +186,10 @@ fn test_unescapable_rust_keywords_in_enum_name() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "Self", ...
-          message: "Enum name is not supported: Unescapable identifier: Self"
-          ...
+            name: "Self", ...
+            errors: [FormattedError {
+                ... message: "Enum name is not supported: Unescapable identifier: Self", ...
+            }], ...
         }}
     );
 }
@@ -198,9 +200,10 @@ fn test_unescapable_rust_keywords_in_enumerator_name() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "SomeEnum", ...
-          message: "Enumerator name is not supported: Unescapable identifier: self"
-          ...
+            name: "SomeEnum", ...
+            errors: [FormattedError {
+                ..., message: "Enumerator name is not supported: Unescapable identifier: self", ...
+            }], ...
         }}
     );
 }
@@ -211,9 +214,10 @@ fn test_unescapable_rust_keywords_in_anonymous_struct_type_alias() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "Self", ...
-          message: "Record name is not supported: Unescapable identifier: Self"
-          ...
+            name: "Self", ...
+            errors: [FormattedError {
+                ..., message: "Record name is not supported: Unescapable identifier: Self", ...
+            }], ...
         }}
     );
 }
@@ -243,9 +247,10 @@ fn test_unescapable_rust_keywords_in_namespace_name() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "self", ...
-          message: "Namespace name is not supported: Unescapable identifier: self"
-          ...
+            name: "self", ...
+            errors: [FormattedError {
+                ..., message: "Namespace name is not supported: Unescapable identifier: self", ...
+            }], ...
         }}
     );
 }
@@ -256,9 +261,10 @@ fn test_unescapable_rust_keywords_in_function_name() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "self", ...
-          message: "Function name is not supported: Unescapable identifier: self"
-          ...
+            name: "self", ...
+            errors: [FormattedError {
+                ..., message: "Function name is not supported: Unescapable identifier: self", ...
+            }], ...
         }}
     );
 }
@@ -269,9 +275,10 @@ fn test_unescapable_rust_keywords_in_type_alias_name() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "Self", ...
-          message: "Type alias name is not supported: Unescapable identifier: Self"
-          ...
+            name: "Self", ...
+            errors: [FormattedError {
+                ..., message: "Type alias name is not supported: Unescapable identifier: Self", ...
+            }], ...
         }}
     );
 }
@@ -321,8 +328,10 @@ fn test_explicit_class_template_instantiation_declaration_not_supported_yet() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "MyTemplate",
-          message: "Class templates are not supported yet" ...
+            name: "MyTemplate",
+            errors: [FormattedError {
+                ..., message: "Class templates are not supported yet", ...
+            }], ...
         }}
     );
 }
@@ -333,8 +342,10 @@ fn test_function_template_not_supported_yet() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "SomeFunctionTemplate",
-          message: "Function templates are not supported yet" ...
+            name: "SomeFunctionTemplate",
+            errors: [FormattedError {
+                ..., message: "Function templates are not supported yet", ...
+            }], ...
         }}
     );
 }
@@ -482,9 +493,10 @@ fn test_struct_with_packed_attribute() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "PackedStruct", ...
-          message: "Records with packed layout are not supported"
-          ...
+            name: "PackedStruct", ...
+            errors: [FormattedError {
+                ..., message: "Records with packed layout are not supported", ...
+            }], ...
         }}
     );
 }
@@ -504,9 +516,10 @@ fn test_struct_with_packed_field() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "PackedStruct", ...
-          message: "Records with packed layout are not supported"
-          ...
+            name: "PackedStruct", ...
+            errors: [FormattedError {
+                ..., message: "Records with packed layout are not supported", ...
+            }], ...
         }}
     );
 }
@@ -2323,8 +2336,10 @@ fn test_records_nested_in_records_not_supported_yet() {
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "SomeStruct::NestedStruct",
-          message: "Nested classes are not supported yet" ...
+            name: "SomeStruct::NestedStruct",
+            errors: [FormattedError {
+                ..., message: "Nested classes are not supported yet", ...
+            }], ...
         }}
     );
 }
@@ -2378,8 +2393,9 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
         quote! {
             UnsupportedItem {
                 name: "StructWithUnsupportedField::NestedStruct",
-                message: "Nested classes are not supported yet",
-                ...
+                errors: [FormattedError {
+                    ..., message: "Nested classes are not supported yet", ...
+                }], ...
             }
         }
     );
@@ -2443,9 +2459,10 @@ fn test_record_with_unsupported_base() -> Result<()> {
         ir,
         quote! {
            UnsupportedItem {
-               name: "OuterStruct::NestedStruct",
-               message: "Nested classes are not supported yet",
-               ...
+                name: "OuterStruct::NestedStruct",
+                errors: [FormattedError {
+                    ..., message: "Nested classes are not supported yet", ...
+                }], ...
            }
         }
     );
@@ -2504,8 +2521,10 @@ fn test_dont_import_injected_class_name() {
     assert_ir_not_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "SomeStruct::SomeStruct",
-          message: "Nested classes are not supported yet" ...
+            name: "SomeStruct::SomeStruct",
+            errors: [FormattedError {
+                ..., message: "Nested classes are not supported yet", ...
+            }], ...
         }}
     );
 }
@@ -3179,7 +3198,10 @@ fn test_c_style_struct_with_typedef_and_aligned_attr() {
 #[test]
 fn test_volatile_is_unsupported() {
     let ir = ir_from_cc("volatile int* foo();").unwrap();
-    let f = ir.unsupported_items().find(|i| i.message().contains("volatile")).unwrap();
+    let f = ir
+        .unsupported_items()
+        .find(|i| i.errors.iter().any(|e| e.message.contains("volatile")))
+        .unwrap();
     assert_eq!("foo", f.name.as_ref());
 }
 
@@ -3191,7 +3213,9 @@ fn test_unnamed_enum_unsupported() {
         quote! {
             UnsupportedItem {
                 name: "(unnamed enum at ./ir_from_cc_virtual_header.h:3:1)",
-                message: "Unnamed enums are not supported yet" ...
+                errors: [FormattedError {
+                    ..., message: "Unnamed enums are not supported yet", ...
+                }], ...
             }
         }
     );
@@ -3211,8 +3235,9 @@ fn test_literal_operator_unsupported() {
         quote! {
             UnsupportedItem {
                 name: "operator\"\"_foobar",
-                message: "Function name is not supported: Unsupported name: operator\"\"_foobar"
-                ...
+                errors: [FormattedError {
+                    ..., message: "Function name is not supported: Unsupported name: operator\"\"_foobar", ...
+                }], ...
             }
         }
     );
@@ -3364,7 +3389,9 @@ fn test_record_items() {
             quote! {
               ... UnsupportedItem {
                   name: "TopLevelStruct::operator int",
-                  message: "Function name is not supported: Unsupported name: operator int",
+                  errors: [FormattedError {
+                    ..., message: "Function name is not supported: Unsupported name: operator int",
+                  }],
                   ...
               }
             },
