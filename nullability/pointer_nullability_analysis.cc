@@ -261,6 +261,19 @@ struct Resugarer {
           {cast<VarTemplateSpecializationDecl>(VD)->getSpecializedTemplate(),
            UsingArgs});
     } else if (auto *FD = llvm::dyn_cast<FunctionDecl>(ResolvedTo)) {
+      // TODO(b/268345783): We don't currently handle template arguments for
+      // function templates with template parameter packs correctly when looking
+      // up arguments later. For function templates, other template parameters
+      // can follow a template parameter pack and we may report incorrect
+      // information for those, so we go out of our way here to avoid that and
+      // skip resugaring any arguments for function template specializations
+      // with template parameter packs followed by other template parameters.
+      auto TemplateArgs = FD->getTemplateSpecializationArgs()->asArray();
+      bool SeenPack = false;
+      for (const auto &TA : TemplateArgs) {
+        if (SeenPack) return;
+        if (TA.getKind() == TemplateArgument::Pack) SeenPack = true;
+      }
       Template.push_back(
           {FD->getTemplateSpecializationInfo()->getTemplate(), UsingArgs});
     }
