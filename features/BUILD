@@ -24,6 +24,7 @@ crubit_feature_hint(
     ],
     visibility = _EXPERIMENTAL_CLIENTS + [
         "//base/rust:__subpackages__",
+        "//file/base/rust:__subpackages__",
     ],
 )
 
