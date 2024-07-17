@@ -83,6 +83,14 @@ class ImportContext {
   virtual void ImportDeclsFromDeclContext(
       const clang::DeclContext* decl_context) = 0;
 
+  // Imports an unsupported item with a single formatted error message.
+  virtual IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                         FormattedError error) = 0;
+
+  // Imports an unsupported item with a vector of formatted error messages.
+  virtual IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                         std::vector<FormattedError> error) = 0;
+
   // Imports an unsupported item with a single error message.
   virtual IR::Item ImportUnsupportedItem(const clang::Decl* decl,
                                          std::string error) = 0;

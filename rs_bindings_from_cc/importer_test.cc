@@ -25,6 +25,7 @@ using ::testing::AnyOf;
 using ::testing::Contains;
 using ::testing::Each;
 using ::testing::ElementsAre;
+using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::Pointee;
@@ -923,15 +924,17 @@ TEST(ImporterTest, FailedClassTemplateMethod) {
     }
   }
   ASSERT_TRUE(unsupported_method != nullptr);
-  EXPECT_TRUE(absl::StrContains(
-      unsupported_method->message,
-      // clang-format off
+  EXPECT_THAT(
+      unsupported_method->errors,
+      Contains(testing::Field(
+          "message", &FormattedError::message,
+          HasSubstr(
+              // clang-format off
 R"(Diagnostics emitted:
 ir_from_cc_virtual_header.h:5:12: note: in instantiation of member function 'A<NoMethod>::CallMethod' requested here
 ir_from_cc_virtual_header.h:5:39: error: no member named 'method' in 'NoMethod')")
-              // clang-format on
-              )
-      << unsupported_method->message;
+          // clang-format on
+          )));
 }
 
 TEST(ImporterTest, CrashRepro_FunctionTypeAlias) {

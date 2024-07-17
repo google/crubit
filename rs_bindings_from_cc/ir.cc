@@ -524,7 +524,22 @@ llvm::json::Value TypeAlias::ToJson() const {
   };
 }
 
+llvm::json::Value FormattedError::ToJson() const {
+  return llvm::json::Object{
+      {"fmt", fmt},
+      {"message", message},
+  };
+}
+
 llvm::json::Value UnsupportedItem::ToJson() const {
+  std::string message;
+  for (const auto& error : errors) {
+    if (!message.empty()) {
+      message += "\n\n";
+    }
+    message += error.message;
+  }
+
   llvm::json::Object unsupported{
       {"name", name},
       {"message", message},

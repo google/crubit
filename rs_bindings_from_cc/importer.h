@@ -71,9 +71,13 @@ class Importer final : public ImportContext {
   void ImportDeclsFromDeclContext(
       const clang::DeclContext* decl_context) override;
   IR::Item ImportUnsupportedItem(const clang::Decl* decl,
-                                 std::string error) override;
+                                 FormattedError error) override;
   IR::Item ImportUnsupportedItem(const clang::Decl* decl,
-                                 std::set<std::string> errors) override;
+                                 std::vector<FormattedError> error) override;
+  IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                 std::string message) override;
+  IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                 std::set<std::string> messages) override;
   std::optional<IR::Item> ImportDecl(clang::Decl* decl) override;
   std::optional<IR::Item> GetImportedItem(
       const clang::Decl* decl) const override;

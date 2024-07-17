@@ -73,7 +73,12 @@ absl::Status CheckImportStatus(const std::optional<IR::Item>& item) {
     return absl::InvalidArgumentError("The import has been skipped");
   }
   if (auto* unsupported = std::get_if<UnsupportedItem>(&*item)) {
-    return absl::InvalidArgumentError(unsupported->message);
+    std::vector<absl::string_view> messages;
+    messages.reserve(unsupported->errors.size());
+    for (const auto& error : unsupported->errors) {
+      messages.push_back(error.message);
+    }
+    return absl::InvalidArgumentError(absl::StrJoin(messages, "\n\n"));
   }
   return absl::OkStatus();
 }
@@ -730,21 +735,44 @@ bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
 }
 
 IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
-                                         std::string error) {
+                                         FormattedError error) {
   std::string name = "unnamed";
   if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
   std::string source_loc = ConvertSourceLocation(decl->getBeginLoc());
   return UnsupportedItem{.name = name,
-                         .message = error,
+                         .errors = {error},
                          .source_loc = source_loc,
                          .id = GenerateItemId(decl)};
 }
 
 IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
-                                         std::set<std::string> errors) {
-  return ImportUnsupportedItem(decl, absl::StrJoin(errors, "\n\n"));
+                                         std::vector<FormattedError> errors) {
+  std::string name = "unnamed";
+  if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
+    name = named_decl->getQualifiedNameAsString();
+  }
+  std::string source_loc = ConvertSourceLocation(decl->getBeginLoc());
+  return UnsupportedItem{.name = name,
+                         .errors = std::move(errors),
+                         .source_loc = source_loc,
+                         .id = GenerateItemId(decl)};
+}
+
+IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
+                                         std::string message) {
+  return ImportUnsupportedItem(decl, FormattedError{.message = message});
+}
+
+IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
+                                         std::set<std::string> messages) {
+  std::vector<FormattedError> errors;
+  errors.reserve(messages.size());
+  for (std::string message : messages) {
+    errors.push_back(FormattedError{.message = std::move(message)});
+  }
+  return ImportUnsupportedItem(decl, errors);
 }
 
 static bool ShouldKeepCommentLine(absl::string_view line) {

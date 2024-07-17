@@ -689,6 +689,17 @@ inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
   return o << std::string(llvm::formatv("{0:2}", t.ToJson()));
 }
 
+// An error that stores its format string as well as the formatted message.
+struct FormattedError {
+  llvm::json::Value ToJson() const;
+
+  // The format string that produced the error message, if available. This is
+  // used as an aggregation key for error reports.
+  std::string fmt;
+  // Explanation of why we couldn't generate bindings.
+  std::string message;
+};
+
 // A placeholder for an item that we can't generate bindings for (yet)
 struct UnsupportedItem {
   llvm::json::Value ToJson() const;
@@ -699,9 +710,7 @@ struct UnsupportedItem {
   // Qualified name of the item for which we couldn't generate bindings
   std::string name;
 
-  // Explanation of why we couldn't generate bindings
-  // TODO(forster): We should support multiple reasons per unsupported item.
-  std::string message;
+  std::vector<FormattedError> errors;
   std::string source_loc;
   ItemId id;
 };
