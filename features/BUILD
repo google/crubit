@@ -22,7 +22,9 @@ crubit_feature_hint(
     crubit_features = _SUPPORTED_FEATURES + [
         "non_extern_c_functions",
     ],
-    visibility = _EXPERIMENTAL_CLIENTS,
+    visibility = _EXPERIMENTAL_CLIENTS + [
+        "//base/rust:__subpackages__",
+    ],
 )
 
 crubit_feature_hint(
