@@ -5,58 +5,55 @@
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::fmt::{self, Arguments, Display, Formatter};
 
 use serde::Serialize;
 
 #[doc(hidden)]
 pub mod macro_internal {
-    use std::borrow::Cow;
-    use std::fmt::{self, Arguments, Display, Formatter};
 
     pub use anyhow;
     pub use arc_anyhow;
     pub use std::format_args;
-
-    /// An error that stores its format string as well as the formatted message.
-    #[derive(Debug, Clone)]
-    pub struct AttributedError {
-        pub fmt: Cow<'static, str>,
-        pub message: Cow<'static, str>,
-    }
-
-    impl AttributedError {
-        pub fn new_static(fmt: &'static str, args: Arguments) -> arc_anyhow::Error {
-            arc_anyhow::Error::from(anyhow::Error::from(match args.as_str() {
-                // This format string has no parameters to format at runtime.
-                // Note: The compiler can perform optimizations to return `Some`, when even when
-                // `fmt` contains placeholders, so we store `fmt` instead of `s` for `fmt` field.
-                Some(s) => Self { fmt: Cow::Borrowed(fmt), message: Cow::Borrowed(s) },
-                // This format string has parameters and must be formatted.
-                None => Self { fmt: Cow::Borrowed(fmt), message: Cow::Owned(fmt::format(args)) },
-            }))
-        }
-
-        pub fn new_dynamic(err: impl Display) -> arc_anyhow::Error {
-            // Use the whole error as the format string. This is preferable to
-            // grouping all dynamic errors under the "{}" format string.
-            let message = format!("{}", err);
-            arc_anyhow::Error::from(anyhow::Error::from(Self {
-                fmt: Cow::Owned(message.clone()),
-                message: Cow::Owned(message),
-            }))
-        }
-    }
-
-    impl Display for AttributedError {
-        fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-            write!(f, "{}", self.message)
-        }
-    }
-
-    impl std::error::Error for AttributedError {}
 }
 
-use crate::macro_internal::AttributedError;
+/// An error that stores its format string as well as the formatted message.
+#[derive(Debug, Clone)]
+pub struct FormattedError {
+    pub fmt: Cow<'static, str>,
+    pub message: Cow<'static, str>,
+}
+
+impl FormattedError {
+    pub fn new_static(fmt: &'static str, args: Arguments) -> arc_anyhow::Error {
+        arc_anyhow::Error::from(anyhow::Error::from(match args.as_str() {
+            // This format string has no parameters to format at runtime.
+            // Note: The compiler can perform optimizations to return `Some`, when even when
+            // `fmt` contains placeholders, so we store `fmt` instead of `s` for `fmt` field.
+            Some(s) => Self { fmt: Cow::Borrowed(fmt), message: Cow::Borrowed(s) },
+            // This format string has parameters and must be formatted.
+            None => Self { fmt: Cow::Borrowed(fmt), message: Cow::Owned(fmt::format(args)) },
+        }))
+    }
+
+    pub fn new_dynamic(err: impl Display) -> arc_anyhow::Error {
+        // Use the whole error as the format string. This is preferable to
+        // grouping all dynamic errors under the "{}" format string.
+        let message = format!("{}", err);
+        arc_anyhow::Error::from(anyhow::Error::from(Self {
+            fmt: Cow::Owned(message.clone()),
+            message: Cow::Owned(message),
+        }))
+    }
+}
+
+impl Display for FormattedError {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for FormattedError {}
 
 /// Evaluates to an [`arc_anyhow::Error`].
 ///
@@ -64,16 +61,16 @@ use crate::macro_internal::AttributedError;
 #[macro_export]
 macro_rules! anyhow {
     ($fmt:literal $(,)?) => {
-        $crate::macro_internal::AttributedError::new_static(
+        $crate::FormattedError::new_static(
             $fmt,
             $crate::macro_internal::format_args!($fmt),
         )
     };
     ($err:expr $(,)?) => {
-        $crate::macro_internal::AttributedError::new_dynamic($err)
+        $crate::FormattedError::new_dynamic($err)
     };
     ($fmt:expr, $($arg:tt)*) => {
-        $crate::macro_internal::AttributedError::new_static(
+        $crate::FormattedError::new_static(
             $fmt,
             $crate::macro_internal::format_args!($fmt, $($arg)*),
         )
@@ -149,7 +146,7 @@ impl ErrorReport {
 impl ErrorReporting for ErrorReport {
     fn insert(&self, error: &arc_anyhow::Error) {
         let root_cause = error.root_cause();
-        if let Some(error) = root_cause.downcast_ref::<AttributedError>() {
+        if let Some(error) = root_cause.downcast_ref::<FormattedError>() {
             let sample_message = if error.message != error.fmt { &*error.message } else { "" };
             self.map
                 .borrow_mut()
@@ -193,7 +190,7 @@ mod tests {
     #[test]
     fn anyhow_1arg_static_plain() {
         let arc_err = anyhow!("abc");
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc");
         assert!(matches!(err.message, Cow::Borrowed(_)));
@@ -204,7 +201,7 @@ mod tests {
     fn anyhow_1arg_static_fmt() {
         let some_var = "def";
         let arc_err = anyhow!("abc{some_var}");
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{some_var}");
         assert!(matches!(err.message, Cow::Owned(_)));
@@ -214,7 +211,7 @@ mod tests {
     #[test]
     fn anyhow_1arg_dynamic() {
         let arc_err = anyhow!(format!("abc{}", "def"));
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Owned(_)));
         assert_eq!(err.fmt, "abcdef");
         assert!(matches!(err.message, Cow::Owned(_)));
@@ -224,7 +221,7 @@ mod tests {
     #[test]
     fn anyhow_2arg() {
         let arc_err = anyhow!("abc{}", "def");
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{}");
         assert!(matches!(err.message, Cow::Borrowed(_)));
@@ -234,7 +231,7 @@ mod tests {
     #[test]
     fn bail_1arg_static_plain() {
         let arc_err = (|| -> arc_anyhow::Result<()> { bail!("abc") })().unwrap_err();
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc");
         assert!(matches!(err.message, Cow::Borrowed(_)));
@@ -245,7 +242,7 @@ mod tests {
     fn bail_1arg_static_fmt() {
         let some_var = "def";
         let arc_err = (|| -> arc_anyhow::Result<()> { bail!("abc{some_var}") })().unwrap_err();
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{some_var}");
         assert!(matches!(err.message, Cow::Owned(_)));
@@ -256,7 +253,7 @@ mod tests {
     fn bail_1arg_dynamic() {
         let arc_err =
             (|| -> arc_anyhow::Result<()> { bail!(format!("abc{}", "def")) })().unwrap_err();
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Owned(_)));
         assert_eq!(err.fmt, "abcdef");
         assert!(matches!(err.message, Cow::Owned(_)));
@@ -266,7 +263,7 @@ mod tests {
     #[test]
     fn bail_2arg() {
         let arc_err = (|| -> arc_anyhow::Result<()> { bail!("abc{}", "def") })().unwrap_err();
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{}");
         assert!(matches!(err.message, Cow::Borrowed(_)));
@@ -289,7 +286,7 @@ mod tests {
             Ok(())
         })()
         .unwrap_err();
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc");
         assert!(matches!(err.message, Cow::Borrowed(_)));
@@ -304,7 +301,7 @@ mod tests {
             Ok(())
         })()
         .unwrap_err();
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{some_var}");
         assert!(matches!(err.message, Cow::Owned(_)));
@@ -318,7 +315,7 @@ mod tests {
             Ok(())
         })()
         .unwrap_err();
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Owned(_)));
         assert_eq!(err.fmt, "abcdef");
         assert!(matches!(err.message, Cow::Owned(_)));
@@ -332,7 +329,7 @@ mod tests {
             Ok(())
         })()
         .unwrap_err();
-        let err: &AttributedError = arc_err.downcast_ref().unwrap();
+        let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{}");
         assert!(matches!(err.message, Cow::Borrowed(_)));
