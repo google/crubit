@@ -102,6 +102,39 @@ where
     }
 }
 
+/// Upcast a raw pointer from derived class to base class.
+/// This operation can fail at runtime.
+///
+/// ## Safety
+///
+/// `self` must be `*const T` or `*mut T`
+pub unsafe trait UnsafeUpcast<Target> {
+    /// # Safety
+    ///
+    /// `self` must be a valid pointer, e.g. a pointer to a live derived object.
+    unsafe fn unsafe_upcast(self) -> Target;
+}
+
+/// Upcast `*const` -> `*const`.
+unsafe impl<Derived, Base> UnsafeUpcast<*const Base> for *const Derived
+where
+    Derived: Inherits<Base>,
+{
+    unsafe fn unsafe_upcast(self: *const Derived) -> *const Base {
+        Derived::upcast_ptr(self)
+    }
+}
+
+/// Upcast `*mut` -> `*mut`.
+unsafe impl<Derived, Base> UnsafeUpcast<*mut Base> for *mut Derived
+where
+    Derived: Inherits<Base>,
+{
+    unsafe fn unsafe_upcast(self: *mut Derived) -> *mut Base {
+        Derived::upcast_ptr_mut(self)
+    }
+}
+
 /// Unsafely upcast a raw pointer. `Derived : Inherits<Base>` means that
 /// `Derived` can be upcast to `Base`.
 ///
@@ -198,6 +231,8 @@ mod test {
 
         let _: *const Base = unsafe { Derived::upcast_ptr(&derived) };
         let _: *mut Base = unsafe { Derived::upcast_ptr_mut(&mut derived) };
+        let _: *const Base = unsafe { (&derived as *const Derived).unsafe_upcast() };
+        let _: *mut Base = unsafe { (&mut derived as *mut Derived).unsafe_upcast() };
         let _: &mut Base = (&mut derived).upcast();
         let _: Pin<&mut Base> = (&mut derived).upcast();
         let _: Pin<&mut Base> = Pin::new(&mut derived).upcast();
