@@ -18,7 +18,7 @@ use code_gen_utils::{
     escape_non_identifier_chars, format_cc_ident, format_cc_includes, make_rs_ident, CcInclude,
     NamespaceQualifier,
 };
-use error_report::{anyhow, bail, ensure};
+use error_report::{anyhow, bail, ensure, ErrorReporting};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
@@ -62,6 +62,10 @@ memoized::query_group! {
         // a "hash" of the crate version and compilation flags.
         #[input]
         fn crate_name_to_include_paths(&self) -> Rc<HashMap<Rc<str>, Vec<CcInclude>>>;
+
+        /// Error collector for generating reports of errors encountered during the generation of bindings.
+        #[input]
+        fn errors(&self) -> Rc<dyn ErrorReporting>;
 
         // TODO(b/262878759): Provide a set of enabled/disabled Crubit features.
         #[input]
@@ -2328,7 +2332,7 @@ fn format_adt<'tcx>(
                 AssocItemKind::Fn { .. } => db.format_fn(def_id).map(Some),
                 other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
             };
-            result.unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
+            result.unwrap_or_else(|err| Some(format_unsupported_def(db, def_id, err)))
         })
         .collect();
 
@@ -2531,7 +2535,13 @@ fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Opt
 
 /// Formats a C++ comment explaining why no bindings have been generated for
 /// `local_def_id`.
-fn format_unsupported_def(tcx: TyCtxt, local_def_id: LocalDefId, err: Error) -> ApiSnippets {
+fn format_unsupported_def(
+    db: &dyn BindingsGenerator<'_>,
+    local_def_id: LocalDefId,
+    err: Error,
+) -> ApiSnippets {
+    let tcx = db.tcx();
+    db.errors().insert(&err);
     let source_loc = format_source_location(tcx, local_def_id);
     let name = tcx.def_path_str(local_def_id.to_def_id());
 
@@ -2629,7 +2639,7 @@ fn format_crate(db: &Database) -> Result<Output> {
         .filter_map(|item_id| {
             let def_id: LocalDefId = item_id.owner_id.def_id;
             db.format_item(def_id)
-                .unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
+                .unwrap_or_else(|err| Some(format_unsupported_def(db, def_id, err)))
                 .map(|api_snippets| (def_id, api_snippets))
         })
         .sorted_by_key(|(def_id, _)| tcx.def_span(*def_id));
@@ -2744,6 +2754,7 @@ pub mod tests {
 
     use quote::quote;
 
+    use error_report::IgnoreErrors;
     use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
@@ -8415,6 +8426,7 @@ pub mod tests {
             tcx,
             /* crubit_support_path_format= */ "<crubit/support/for/tests/{header}>".into(),
             /* crate_name_to_include_paths= */ Default::default(),
+            /* errors = */ Rc::new(IgnoreErrors),
             /* _features= */ (),
         )
     }

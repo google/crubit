@@ -18,6 +18,7 @@ use std::rc::Rc;
 use bindings::Database;
 use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
+use error_report::{ErrorReport, ErrorReporting, IgnoreErrors};
 use run_compiler::run_compiler;
 use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
@@ -28,7 +29,11 @@ fn write_file(path: &Path, content: &str) -> Result<()> {
         .with_context(|| format!("Error when writing to {}", path.display()))
 }
 
-fn new_db<'tcx>(cmdline: &Cmdline, tcx: TyCtxt<'tcx>) -> Database<'tcx> {
+fn new_db<'tcx>(
+    cmdline: &Cmdline,
+    tcx: TyCtxt<'tcx>,
+    errors: Rc<dyn ErrorReporting>,
+) -> Database<'tcx> {
     let crubit_support_path_format = cmdline.crubit_support_path_format.as_str().into();
 
     let mut crate_name_to_include_paths = <HashMap<Rc<str>, Vec<CcInclude>>>::new();
@@ -41,14 +46,22 @@ fn new_db<'tcx>(cmdline: &Cmdline, tcx: TyCtxt<'tcx>) -> Database<'tcx> {
         tcx,
         crubit_support_path_format,
         crate_name_to_include_paths.into(),
+        errors,
         /* _features= */ (),
     )
 }
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
     use bindings::{generate_bindings, Output};
+
+    let errors: Rc<dyn ErrorReporting> = if cmdline.error_report_out.is_some() {
+        Rc::new(ErrorReport::new())
+    } else {
+        Rc::new(IgnoreErrors)
+    };
+
     let Output { h_body, rs_body } = {
-        let db = new_db(cmdline, tcx);
+        let db = new_db(cmdline, tcx, errors.clone());
         generate_bindings(&db)?
     };
 
@@ -62,6 +75,10 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
             RustfmtConfig::new(&cmdline.rustfmt_exe_path, cmdline.rustfmt_config_path.as_deref());
         let rs_body = rs_tokens_to_formatted_string(rs_body, &rustfmt_config)?;
         write_file(&cmdline.rs_out, &rs_body)?;
+    }
+
+    if let Some(error_report_out) = &cmdline.error_report_out {
+        write_file(error_report_out, &errors.serialize_to_string().unwrap())?;
     }
 
     Ok(())
@@ -115,7 +132,9 @@ mod tests {
     /// Test data builder (see also
     /// https://testing.googleblog.com/2018/02/testing-on-toilet-cleanly-create-test.html).
     struct TestArgs {
+        rs_input: Option<String>,
         h_path: Option<String>,
+        error_report_out: Option<String>,
         extra_crubit_args: Vec<String>,
 
         /// Arg for the following `rustc` flag: `--codegen=panic=<arg>`.
@@ -133,12 +152,15 @@ mod tests {
     struct TestResult {
         h_path: PathBuf,
         rs_path: PathBuf,
+        error_report_out_path: Option<PathBuf>,
     }
 
     impl TestArgs {
         fn default_args() -> Result<Self> {
             Ok(Self {
+                rs_input: None,
                 h_path: None,
+                error_report_out: None,
                 extra_crubit_args: vec![],
                 panic_mechanism: "abort".to_string(),
                 extra_rustc_args: vec![],
@@ -150,6 +172,18 @@ mod tests {
         /// `self`-managed temporary directory.
         fn with_h_path(mut self, h_path: &str) -> Self {
             self.h_path = Some(h_path.to_string());
+            self
+        }
+
+        /// Specify the path to the error report output file.
+        fn with_error_report_out(mut self, error_report_out: &str) -> Self {
+            self.error_report_out = Some(error_report_out.to_string());
+            self
+        }
+
+        /// Specify the test Rust input.
+        fn with_rs_input(mut self, rs_input: &str) -> Self {
+            self.rs_input = Some(rs_input.to_string());
             self
         }
 
@@ -185,11 +219,13 @@ mod tests {
                 None => self.tempdir.path().join("test_crate_cc_api.h"),
                 Some(s) => PathBuf::from(s),
             };
+
             let rs_path = self.tempdir.path().join("test_crate_cc_api_impl.rs");
 
             let rs_input_path = self.tempdir.path().join("test_crate.rs");
-            std::fs::write(
-                &rs_input_path,
+            let rs_input = if let Some(rs_input) = &self.rs_input {
+                rs_input
+            } else {
                 r#" pub mod public_module {
                         pub fn public_function() {
                             private_function()
@@ -197,8 +233,9 @@ mod tests {
 
                         fn private_function() {}
                     }
-                "#,
-            )?;
+                "#
+            };
+            std::fs::write(&rs_input_path, rs_input)?;
 
             let mut args = vec![
                 "cc_bindings_from_rs_unittest_executable".to_string(),
@@ -208,6 +245,15 @@ mod tests {
                 format!("--clang-format-exe-path={CLANG_FORMAT_EXE_PATH_FOR_TESTING}"),
                 format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH_FOR_TESTING}"),
             ];
+
+            let mut error_report_out_path = None;
+            if let Some(error_report_out) = self.error_report_out.as_ref() {
+                error_report_out_path = Some(self.tempdir.path().join(error_report_out));
+                args.push(format!(
+                    "--error-report-out={}",
+                    error_report_out_path.as_ref().unwrap().display()
+                ));
+            }
             args.extend(self.extra_crubit_args.iter().cloned());
             args.extend([
                 "--".to_string(),
@@ -225,7 +271,7 @@ mod tests {
 
             run_with_cmdline_args(&args)?;
 
-            Ok(TestResult { h_path, rs_path })
+            Ok(TestResult { h_path, rs_path, error_report_out_path })
         }
     }
 
@@ -272,6 +318,31 @@ mod tests {
                     {marked_pattern}"
             );
         }
+    }
+
+    #[test]
+    fn test_error_reporting_generation() -> Result<()> {
+        let test_args =
+            TestArgs::default_args()?.with_error_report_out("error_report.json").with_rs_input(
+                r#"
+                pub use std::collections;
+                pub use std::path;
+                "#,
+            );
+
+        let test_result = test_args.run().expect("Error report generation should succeed");
+        assert!(test_result.error_report_out_path.is_some());
+        let error_report_out_path = test_result.error_report_out_path.as_ref().unwrap();
+        assert!(error_report_out_path.exists());
+        let error_report = std::fs::read_to_string(&error_report_out_path)?;
+        let expected_error_report = r#"{
+  "Unsupported rustc_hir::hir::ItemKind: {}": {
+    "count": 2,
+    "sample_message": "Unsupported rustc_hir::hir::ItemKind: `use` import"
+  }
+}"#;
+        assert_eq!(expected_error_report, error_report);
+        Ok(())
     }
 
     #[test]

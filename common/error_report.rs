@@ -115,6 +115,7 @@ pub trait ErrorReporting: std::fmt::Debug {
     /// shared freely.
     fn insert(&self, error: &arc_anyhow::Error);
     fn serialize_to_vec(&self) -> anyhow::Result<Vec<u8>>;
+    fn serialize_to_string(&self) -> anyhow::Result<String>;
 }
 
 /// A null [`ErrorReporting`] strategy.
@@ -126,6 +127,10 @@ impl ErrorReporting for IgnoreErrors {
 
     fn serialize_to_vec(&self) -> anyhow::Result<Vec<u8>> {
         Ok(vec![])
+    }
+
+    fn serialize_to_string(&self) -> anyhow::Result<String> {
+        Ok(String::new())
     }
 }
 
@@ -164,6 +169,10 @@ impl ErrorReporting for ErrorReport {
 
     fn serialize_to_vec(&self) -> anyhow::Result<Vec<u8>> {
         Ok(serde_json::to_vec(&*self.map.borrow())?)
+    }
+
+    fn serialize_to_string(&self) -> anyhow::Result<String> {
+        Ok(serde_json::to_string_pretty(&*self.map.borrow())?)
     }
 }
 
@@ -371,7 +380,7 @@ mod tests {
         );
 
         assert_eq!(
-            serde_json::to_string_pretty(&*report.map.borrow()).unwrap(),
+            report.serialize_to_string().unwrap(),
             r#"{
   "abc{}": {
     "count": 2,

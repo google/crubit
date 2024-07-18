@@ -58,6 +58,7 @@ crubit_rust_binary(
         ":run_compiler",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
+        "//common:error_report",
         "//common:token_stream_printer",
         "@crate_index//:clap",
         "@crate_index//:itertools",
