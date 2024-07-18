@@ -23,7 +23,8 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use rustc_attr::find_deprecation;
-use rustc_hir::{AssocItemKind, Item, ItemKind, Node, Safety};
+use rustc_hir::def::{DefKind, Res};
+use rustc_hir::{AssocItemKind, Item, ItemKind, Node, Safety, UseKind, UsePath};
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
@@ -1078,6 +1079,91 @@ fn format_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
     None
 }
 
+fn format_use(
+    db: &dyn BindingsGenerator<'_>,
+    using_name: &str,
+    use_path: &UsePath,
+    use_kind: &UseKind,
+) -> Result<ApiSnippets> {
+    let tcx = db.tcx();
+
+    // TODO(b/350772554): Support multiple items with the same name in `use`
+    // statements.`
+    if use_path.res.len() != 1 {
+        bail!(
+            "use statements which resolve to multiple items with the same name are not supported yet"
+        );
+    }
+
+    match use_kind {
+        UseKind::Single => {}
+        // TODO(b/350772554): Implement `pub use foo::{x,y}` and `pub use foo::*`
+        UseKind::Glob | UseKind::ListStem => {
+            bail!("Unsupported use kind: {use_kind:?}");
+        }
+    };
+    let (def_kind, def_id) = match use_path.res[0] {
+        // TODO(b/350772554): Support PrimTy.
+        Res::Def(def_kind, def_id) => (def_kind, def_id),
+        _ => {
+            bail!(
+                "Unsupported use statement that refers to this type of the entity: {:#?}",
+                use_path.res[0]
+            );
+        }
+    };
+    ensure!(
+        is_directly_public(tcx, def_id),
+        "Not directly public type (re-exports are not supported yet - b/262052635)"
+    );
+
+    match def_kind {
+        DefKind::Fn => {
+            let mut prereqs;
+            // TODO(b/350772554): Support exporting private functions.
+            if let Some(local_id) = def_id.as_local() {
+                if let Ok(snippet) = db.format_fn(local_id) {
+                    prereqs = snippet.main_api.prereqs;
+                } else {
+                    bail!("Ignoring the use because the bindings for the target is not generated");
+                }
+            } else {
+                bail!("Unsupported checking for external function");
+            }
+            let fully_qualified_fn_name = FullyQualifiedName::new(tcx, def_id);
+            let unqualified_rust_fn_name =
+                fully_qualified_fn_name.name.expect("Functions are assumed to always have a name");
+            let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc()?;
+            let cpp_name = crubit_attr::get(tcx, def_id).unwrap().cpp_name;
+            let main_api_fn_name =
+                format_cc_ident(cpp_name.unwrap_or(unqualified_rust_fn_name).as_str())
+                    .context("Error formatting function name")?;
+            let using_name = format_cc_ident(using_name).context("Error formatting using name")?;
+
+            prereqs.defs.insert(def_id.expect_local());
+            let tokens = if format!("{}", using_name) == format!("{}", main_api_fn_name) {
+                quote! {using #formatted_fully_qualified_fn_name;}
+            } else {
+                // TODO(b/350772554): Support function alias.
+                bail!("Unsupported function alias");
+            };
+            Ok(ApiSnippets {
+                main_api: CcSnippet { prereqs, tokens },
+                cc_details: CcSnippet::default(),
+                rs_details: quote! {},
+            })
+        }
+        DefKind::Struct | DefKind::Enum => {
+            let use_type = tcx.type_of(def_id).instantiate_identity();
+            create_type_alias(db, using_name, use_type)
+        }
+        _ => bail!(
+            "Unsupported use statement that refers to this type of the entity: {:#?}",
+            use_path.res
+        ),
+    }
+}
+
 fn format_type_alias(
     db: &dyn BindingsGenerator<'_>,
     local_def_id: LocalDefId,
@@ -1085,19 +1171,23 @@ fn format_type_alias(
     let tcx = db.tcx();
     let def_id: DefId = local_def_id.to_def_id();
     let alias_type = tcx.type_of(def_id).instantiate_identity();
-    let alias_name = format_cc_ident(tcx.item_name(def_id).as_str())
-        .context("Error formatting type alias name")?;
+    create_type_alias(db, tcx.item_name(def_id).as_str(), alias_type)
+}
+
+fn create_type_alias<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    alias_name: &str,
+    alias_type: Ty<'tcx>,
+) -> Result<ApiSnippets> {
     let cc_bindings = format_ty_for_cc(db, alias_type, TypeLocation::Other)?;
     let mut main_api_prereqs = CcPrerequisites::default();
     let actual_type_name = cc_bindings.into_tokens(&mut main_api_prereqs);
 
+    let alias_name = format_cc_ident(alias_name).context("Error formatting type alias name")?;
+    let tokens = quote! {using #alias_name = #actual_type_name;};
+
     Ok(ApiSnippets {
-        main_api: CcSnippet {
-            prereqs: main_api_prereqs,
-            tokens: quote! {
-                using #alias_name = #actual_type_name;
-            },
-        },
+        main_api: CcSnippet { prereqs: main_api_prereqs, tokens },
         cc_details: CcSnippet::default(),
         rs_details: quote! {},
     })
@@ -2526,6 +2616,9 @@ fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Opt
             db.format_adt_core(def_id.to_def_id())
                 .map(|core| Some(format_adt(db, core))),
         Item { kind: ItemKind::TyAlias(..), ..} => format_type_alias(db, def_id).map(Some),
+        Item { ident, kind: ItemKind::Use(use_path, use_kind), ..} => {
+            format_use(db, ident.as_str(), use_path, use_kind).map(Some)
+        },
         Item { kind: ItemKind::Impl(_), .. } |  // Handled by `format_adt`
         Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
             Ok(None),
@@ -3420,12 +3513,12 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
 
-            let failures = vec![(1, 15), (3, 21), (4, 24)];
+            let failures = vec![(1, 15), (3, 21)];
             for (use_number, line_number) in failures.into_iter() {
                 let expected_comment_txt = format!(
                     "Error generating bindings for `{{use#{use_number}}}` defined at \
                      <crubit_unittests.rs>;l={line_number}: \
-                     Unsupported rustc_hir::hir::ItemKind: `use` import"
+                     Not directly public type (re-exports are not supported yet - b/262052635)"
                 );
                 assert_cc_matches!(
                     bindings.h_body,
@@ -6847,6 +6940,30 @@ pub mod tests {
         test_format_item(test_src, "CONST_VALUE", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: constant item");
+        });
+    }
+
+    #[test]
+    fn test_format_item_use_normal_type() {
+        let test_src = r#"
+            pub mod test_mod {
+                pub struct S{
+                    pub field: i32
+                }
+            }
+
+            pub use test_mod::S as G;
+            "#;
+        test_format_item(test_src, "G", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    using G = ::rust_out::test_mod::S;
+                }
+            );
         });
     }
 
