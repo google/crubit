@@ -1424,7 +1424,6 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
      DefaultFieldInitializerNullptr) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
-#include <utility>
     struct Target {
       std::unique_ptr<int> I = nullptr;
     };
@@ -1445,7 +1444,6 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
      DefaultFieldInitializerAbsentOnlyImplicitConstructor) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
-#include <utility>
     struct Target {
       std::unique_ptr<int> I;
     };
@@ -1467,7 +1465,6 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
      DefaultFieldInitializerAbsentInitializedInConstructor) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
-#include <utility>
     struct Target {
       Target(int Input) { I = std::make_unique<int>(Input); }
       std::unique_ptr<int> I;
@@ -1486,7 +1483,6 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
      DefaultFieldInitializerAbsentConditionalAssignmentInConstructor) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
-#include <utility>
     struct Target {
       Target(int Input) {
         if (Input != 0) {
@@ -1510,7 +1506,6 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
      ConstructorExitingWithUnmodeledField) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
-#include <utility>
     struct Target {
       // other.Field is not modeled and has no null state attached. Its value is
       // coped into this.Field, leaving it without null state at the end of the
