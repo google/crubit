@@ -31,6 +31,7 @@ load(
     "@rules_rust//rust/private:utils.bzl",
     "find_toolchain",
 )
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load(
     "//cc_bindings_from_rs/bazel_support:providers.bzl",
     "CcBindingsFromRustInfo",
@@ -104,8 +105,17 @@ def _generate_bindings(ctx, basename, inputs, args, rustc_env):
             arg = dep_bindings_info.crate_key + "=" + header.short_path
             crubit_args.add("--bindings-from-dependency", arg)
 
+    outputs = [h_out_file, rs_out_file]
+    if ctx.attr._generate_error_report[BuildSettingInfo].value:
+        error_report_output = ctx.actions.declare_file(basename + "_cc_api_error_report.json")
+        crubit_args.add(
+            "--error-report-out",
+            error_report_output.path,
+        )
+        outputs.append(error_report_output)
+
     ctx.actions.run(
-        outputs = [h_out_file, rs_out_file],
+        outputs = outputs,
         inputs = depset(
             [ctx.file._clang_format, ctx.file._rustfmt, ctx.file._rustfmt_cfg],
             transitive = [inputs],
@@ -359,6 +369,9 @@ cc_bindings_from_rust_aspect = aspect(
         ),
         "_extra_rustc_flag": attr.label(
             default = Label("@rules_rust//:extra_rustc_flag"),
+        ),
+        "_generate_error_report": attr.label(
+            default = "//cc_bindings_from_rs/bazel_support:generate_error_report",
         ),
     },
     toolchains = [
