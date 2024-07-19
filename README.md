@@ -52,7 +52,7 @@ Here are some resources for getting started with Crubit:
 $ apt install clang lld bazel
 $ git clone git@github.com:google/crubit.git
 $ cd crubit
-$ bazel build --linkopt=-fuse-ld=/usr/bin/ld.lld //rs_bindings_from_cc:rs_bindings_from_cc_impl
+$ bazel build --linkopt=-fuse-ld=/usr/bin/ld.lld //rs_bindings_from_cc:rs_bindings_from_cc_main
 ```
 
 ### Using a prebuilt LLVM tree
@@ -65,5 +65,5 @@ $ cmake --build build -j
 $ # wait...
 $ cmake --install build
 $ cd ../crubit
-$ LLVM_INSTALL_PATH=../llvm-project/install bazel build //rs_bindings_from_cc:rs_bindings_from_cc_impl
+$ LLVM_INSTALL_PATH=../llvm-project/install bazel build //rs_bindings_from_cc:rs_bindings_from_cc_main
 ```
