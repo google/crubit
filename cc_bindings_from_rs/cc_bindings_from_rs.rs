@@ -341,7 +341,6 @@ mod tests {
     "sample_message": "Unsupported use statement that refers to this type of the entity: [\n    Def(\n        Mod,\n        DefId(1:728 ~ std[56d5]::collections),\n    ),\n]"
   }
 }"#;
-        println!("error_report: {}", error_report);
         assert_eq!(expected_error_report, error_report);
         Ok(())
     }
