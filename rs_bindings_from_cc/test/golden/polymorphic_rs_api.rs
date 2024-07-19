@@ -17,7 +17,7 @@
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "PolymorphicBase")]
+#[__crubit::annotate(cpp_type = "PolymorphicBase")]
 pub struct PolymorphicBase {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 8],
 }
@@ -89,7 +89,7 @@ impl ::ctor::PinnedDrop for PolymorphicBase {
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "PolymorphicBase2")]
+#[__crubit::annotate(cpp_type = "PolymorphicBase2")]
 pub struct PolymorphicBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 8],
 }
@@ -168,7 +168,7 @@ impl ::ctor::PinnedDrop for PolymorphicBase2 {
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "PolymorphicDerived")]
+#[__crubit::annotate(cpp_type = "PolymorphicDerived")]
 pub struct PolymorphicDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
 }

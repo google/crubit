@@ -91,20 +91,20 @@ MappedType PointerOrReferenceTo(
     if (has_lifetime) {
       if (ref_qualifier_kind.has_value() &&
           ref_qualifier_kind.value() == clang::RefQualifierKind::RQ_RValue) {
-        rs_name = pointee_type.cc_type.is_const ? internal::kRustRvalueRefConst
-                                                : internal::kRustRvalueRefMut;
+        rs_name = pointee_type.cpp_type.is_const ? internal::kRustRvalueRefConst
+                                                 : internal::kRustRvalueRefMut;
       } else {
-        rs_name = pointee_type.cc_type.is_const ? internal::kRustRefConst
-                                                : internal::kRustRefMut;
+        rs_name = pointee_type.cpp_type.is_const ? internal::kRustRefConst
+                                                 : internal::kRustRefMut;
       }
     } else {
-      rs_name = pointee_type.cc_type.is_const ? internal::kRustPtrConst
-                                              : internal::kRustPtrMut;
+      rs_name = pointee_type.cpp_type.is_const ? internal::kRustPtrConst
+                                               : internal::kRustPtrMut;
     }
   } else {
     CHECK(has_lifetime);
-    rs_name = pointee_type.cc_type.is_const ? internal::kRustRvalueRefConst
-                                            : internal::kRustRvalueRefMut;
+    rs_name = pointee_type.cpp_type.is_const ? internal::kRustRvalueRefConst
+                                             : internal::kRustRvalueRefMut;
   }
   auto pointer_type =
       MappedType::Simple(std::string(rs_name), std::string(cc_ptr_name));
@@ -116,7 +116,7 @@ MappedType PointerOrReferenceTo(
     pointer_type.rs_type =
         RsType{.name = "Option", .type_args = {pointer_type.rs_type}};
   }
-  pointer_type.cc_type.type_args.push_back(std::move(pointee_type.cc_type));
+  pointer_type.cpp_type.type_args.push_back(std::move(pointee_type.cpp_type));
   return pointer_type;
 }
 }  // namespace
@@ -153,8 +153,8 @@ MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
   MappedType result = FuncRef(cc_call_conv, rs_abi, lifetime,
                               std::move(return_type), std::move(param_types));
 
-  CHECK_EQ(result.cc_type.name, internal::kCcLValueRef);
-  result.cc_type.name = std::string(internal::kCcPtr);
+  CHECK_EQ(result.cpp_type.name, internal::kCcLValueRef);
+  result.cpp_type.name = std::string(internal::kCcPtr);
 
   RsType rs_func_ptr_type = std::move(result.rs_type);
   CHECK(rs_func_ptr_type.name.substr(0, internal::kRustFuncPtr.length()) ==
@@ -173,18 +173,18 @@ MappedType MappedType::FuncRef(absl::string_view cc_call_conv,
   std::vector<MappedType> type_args = std::move(param_types);
   type_args.push_back(std::move(return_type));
 
-  std::vector<CcType> cc_type_args;
+  std::vector<CcType> cpp_type_args;
   std::vector<RsType> rs_type_args;
-  cc_type_args.reserve(type_args.size());
+  cpp_type_args.reserve(type_args.size());
   rs_type_args.reserve(type_args.size());
   for (MappedType& type_arg : type_args) {
-    cc_type_args.push_back(std::move(type_arg.cc_type));
+    cpp_type_args.push_back(std::move(type_arg.cpp_type));
     rs_type_args.push_back(std::move(type_arg.rs_type));
   }
 
   CcType cc_func_value_type = CcType{
       .name = absl::StrCat(internal::kCcFuncValue, " ", cc_call_conv),
-      .type_args = std::move(cc_type_args),
+      .type_args = std::move(cpp_type_args),
   };
   CcType cc_func_ref_type = CcType{.name = std::string(internal::kCcLValueRef),
                                    .type_args = {cc_func_value_type}};
@@ -199,14 +199,14 @@ MappedType MappedType::FuncRef(absl::string_view cc_call_conv,
 
   return MappedType{
       .rs_type = std::move(rs_func_ptr_type),
-      .cc_type = std::move(cc_func_ref_type),
+      .cpp_type = std::move(cc_func_ref_type),
   };
 }
 
 llvm::json::Value MappedType::ToJson() const {
   return llvm::json::Object{
       {"rs_type", rs_type},
-      {"cc_type", cc_type},
+      {"cpp_type", cpp_type},
   };
 }
 

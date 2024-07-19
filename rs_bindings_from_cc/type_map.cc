@@ -17,7 +17,7 @@ namespace crubit {
 namespace {
 // A mapping of C++ standard types to their equivalent Rust types.
 std::optional<absl::string_view> MapKnownCcTypeToRsType(
-    absl::string_view cc_type) {
+    absl::string_view cpp_type) {
   static const auto* const kWellKnownTypes =
       new absl::flat_hash_map<absl::string_view, absl::string_view>({
           // TODO(lukasza): Try to deduplicate the entries below - for example:
@@ -55,15 +55,15 @@ std::optional<absl::string_view> MapKnownCcTypeToRsType(
           {"std::uint32_t", "u32"},
           {"std::uint64_t", "u64"},
       });
-  auto it = kWellKnownTypes->find(cc_type);
+  auto it = kWellKnownTypes->find(cpp_type);
   if (it == kWellKnownTypes->end()) return std::nullopt;
   return it->second;
 }
 
 }  // namespace
 
-std::optional<MappedType> GetTypeMapOverride(const clang::Type& cc_type) {
-  std::string type_string = clang::QualType(&cc_type, 0).getAsString();
+std::optional<MappedType> GetTypeMapOverride(const clang::Type& cpp_type) {
+  std::string type_string = clang::QualType(&cpp_type, 0).getAsString();
   std::optional<absl::string_view> rust_type =
       MapKnownCcTypeToRsType(type_string);
   if (rust_type.has_value()) {

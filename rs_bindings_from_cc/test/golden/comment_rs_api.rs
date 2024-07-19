@@ -24,7 +24,7 @@
 /// Foo
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "Foo")]
+#[__crubit::annotate(cpp_type = "Foo")]
 pub struct Foo {
     /// A field
     pub i: ::core::ffi::c_int,
@@ -99,7 +99,7 @@ pub fn foo() {
 /// Bar
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "Bar")]
+#[__crubit::annotate(cpp_type = "Bar")]
 pub struct Bar {
     pub i: ::core::ffi::c_int,
 }
@@ -150,7 +150,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Bar {
 /// d
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "HasNoComments")]
+#[__crubit::annotate(cpp_type = "HasNoComments")]
 pub struct HasNoComments {
     pub i: ::core::ffi::c_int,
 }

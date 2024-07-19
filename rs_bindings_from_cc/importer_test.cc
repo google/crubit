@@ -161,7 +161,7 @@ MATCHER(IsConst, "") { return arg.is_const; }
 // Matches a MappedType with a CcType that matches all given matchers.
 template <typename... Args>
 auto CcTypeIs(const Args&... matchers) {
-  return testing::Field("cc_type", &MappedType::cc_type, AllOf(matchers...));
+  return testing::Field("cpp_type", &MappedType::cpp_type, AllOf(matchers...));
 }
 
 // Matches a MappedType with a RsType that matches all given matchers.

@@ -17,7 +17,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "FirstStruct")]
+#[__crubit::annotate(cpp_type = "FirstStruct")]
 pub struct FirstStruct {
     pub field: ::core::ffi::c_int,
 }
@@ -72,7 +72,7 @@ pub fn first_func() -> ::core::ffi::c_int {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "SecondStruct")]
+#[__crubit::annotate(cpp_type = "SecondStruct")]
 pub struct SecondStruct {
     pub field: ::core::ffi::c_int,
 }

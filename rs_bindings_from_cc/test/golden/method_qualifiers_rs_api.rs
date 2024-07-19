@@ -17,7 +17,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "Noninline")]
+#[__crubit::annotate(cpp_type = "Noninline")]
 pub struct Noninline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -77,7 +77,7 @@ impl Noninline {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "Inline")]
+#[__crubit::annotate(cpp_type = "Inline")]
 pub struct Inline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

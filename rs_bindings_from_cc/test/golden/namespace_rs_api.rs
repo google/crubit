@@ -18,7 +18,7 @@
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy)]
     #[repr(C)]
-    #[__crubit::annotate(cc_type = "test_namespace_bindings :: S")]
+    #[__crubit::annotate(cpp_type = "test_namespace_bindings :: S")]
     pub struct S {
         pub i: ::core::ffi::c_int,
     }
@@ -117,7 +117,7 @@ pub mod test_namespace_bindings_reopened_0 {
     pub mod inner_0 {
         #[derive(Clone, Copy)]
         #[repr(C)]
-        #[__crubit::annotate(cc_type = "test_namespace_bindings_reopened :: inner :: S")]
+        #[__crubit::annotate(cpp_type = "test_namespace_bindings_reopened :: inner :: S")]
         pub struct S {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -209,7 +209,7 @@ pub mod test_namespace_bindings_inline {
         #[derive(Clone, Copy)]
         #[repr(C)]
         #[__crubit::annotate(
-            cc_type = "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
+            cpp_type = "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
         )]
         pub struct StructInInlineNamespace {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],

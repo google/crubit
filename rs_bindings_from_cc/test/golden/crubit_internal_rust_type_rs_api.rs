@@ -40,7 +40,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "TypeMapOverrideFieldTypes")]
+#[__crubit::annotate(cpp_type = "TypeMapOverrideFieldTypes")]
 pub struct TypeMapOverrideFieldTypes {
     pub my_i8_struct: i8,
     pub my_i8_class: i8,

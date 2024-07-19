@@ -22,7 +22,7 @@
 /// TODO(b/216195042): Correctly namespace base classes in generated Rust code.
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "Derived2")]
+#[__crubit::annotate(cpp_type = "Derived2")]
 pub struct Derived2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 20],
     pub derived_1: ::core::ffi::c_char,
@@ -139,7 +139,7 @@ unsafe impl oops::Inherits<inheritance_cc::Base2> for crate::Derived2 {
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "VirtualDerived2")]
+#[__crubit::annotate(cpp_type = "VirtualDerived2")]
 pub struct VirtualDerived2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 32],
 }

@@ -27,8 +27,8 @@ use rustc_span::symbol::Symbol;
 pub struct CrubitAttr {
     /// The C++ type of this is spelled as so.
     /// For instance,
-    /// `#[__crubit::annotate(internal_cc_type="std::basic_string<char>")]`
-    pub cc_type: Option<Symbol>,
+    /// `#[__crubit::annotate(internal_cpp_type="std::basic_string<char>")]`
+    pub cpp_type: Option<Symbol>,
     // The C++ name of the item. This allows us to rename Rust function names that are
     // not C++-compatible like `new`.
     //
@@ -51,7 +51,7 @@ pub fn get(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttr> {
     // NB: do not make these lazy globals, symbols are per-session and sessions are
     // reset in tests. The resulting test failures are very difficult.
     let crubit_annotate = &[Symbol::intern("__crubit"), Symbol::intern("annotate")];
-    let cc_type = Symbol::intern("cc_type");
+    let cpp_type = Symbol::intern("cpp_type");
     let cpp_name = Symbol::intern("cpp_name");
 
     let mut crubit_attr = CrubitAttr::default();
@@ -74,20 +74,20 @@ pub fn get(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttr> {
                     "Invalid #[__crubit::annotate(...)] attribute (expected nested meta item, not a literal)"
                 );
             };
-            if arg.path == cc_type {
+            if arg.path == cpp_type {
                 let MetaItemKind::NameValue(value) = &arg.kind else {
-                    bail!("Invalid #[__crubit::annotate(cc_type=...)] attribute (expected =...)");
+                    bail!("Invalid #[__crubit::annotate(cpp_type=...)] attribute (expected =...)");
                 };
                 let LitKind::Str(s, _raw) = value.kind else {
                     bail!(
-                        "Invalid #[__crubit::annotate(cc_type=...)] attribute (expected =\"...\")"
+                        "Invalid #[__crubit::annotate(cpp_type=...)] attribute (expected =\"...\")"
                     );
                 };
                 ensure!(
-                    crubit_attr.cc_type.is_none(),
-                    "Unexpected duplicate #[__crubit::annotate(cc_type=...)]"
+                    crubit_attr.cpp_type.is_none(),
+                    "Unexpected duplicate #[__crubit::annotate(cpp_type=...)]"
                 );
-                crubit_attr.cc_type = Some(s)
+                crubit_attr.cpp_type = Some(s)
             } else if arg.path == cpp_name {
                 let MetaItemKind::NameValue(value) = &arg.kind else {
                     bail!("Invalid #[__crubit::annotate(cpp_name=...)] attribute (expected =...)");
@@ -139,16 +139,16 @@ pub mod tests {
     }
 
     #[test]
-    fn test_cc_type() {
+    fn test_cpp_type() {
         let test_src = r#"
                 #![feature(register_tool)]
                 #![register_tool(__crubit)]
-                #[__crubit::annotate(cc_type = "A C++ Type")]
+                #[__crubit::annotate(cpp_type = "A C++ Type")]
                 pub struct SomeStruct;
             "#;
         run_compiler_for_testing(test_src, |tcx| {
             let attr = get(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
-            assert_eq!(attr.cc_type.unwrap(), Symbol::intern("A C++ Type"));
+            assert_eq!(attr.cpp_type.unwrap(), Symbol::intern("A C++ Type"));
         });
     }
 
@@ -181,11 +181,11 @@ pub mod tests {
     }
 
     #[test]
-    fn test_cc_type_multi() {
+    fn test_cpp_type_multi() {
         let test_src = r#"
                 #![feature(register_tool)]
                 #![register_tool(__crubit)]
-                #[__crubit::annotate(cc_type = "X", cc_type = "X")]
+                #[__crubit::annotate(cpp_type = "X", cpp_type = "X")]
                 pub struct SomeStruct;
             "#;
         run_compiler_for_testing(test_src, |tcx| {

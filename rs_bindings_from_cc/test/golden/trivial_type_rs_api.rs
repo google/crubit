@@ -20,7 +20,7 @@ pub mod ns {
     /// only trivial members.
     #[derive(Clone, Copy)]
     #[repr(C)]
-    #[__crubit::annotate(cc_type = "ns :: Trivial")]
+    #[__crubit::annotate(cpp_type = "ns :: Trivial")]
     pub struct Trivial {
         pub trivial_field: ::core::ffi::c_int,
     }
@@ -118,7 +118,7 @@ pub mod ns {
     /// not safe to pass by reference as it is not final.
     #[derive(Clone, Copy)]
     #[repr(C)]
-    #[__crubit::annotate(cc_type = "ns :: TrivialNonfinal")]
+    #[__crubit::annotate(cpp_type = "ns :: TrivialNonfinal")]
     pub struct TrivialNonfinal {
         pub trivial_field: ::core::ffi::c_int,
     }

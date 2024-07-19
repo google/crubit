@@ -17,7 +17,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "TrivialCustomType")]
+#[__crubit::annotate(cpp_type = "TrivialCustomType")]
 pub struct TrivialCustomType {
     pub i: ::core::ffi::c_int,
 }
@@ -76,7 +76,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialCusto
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "NontrivialCustomType")]
+#[__crubit::annotate(cpp_type = "NontrivialCustomType")]
 pub struct NontrivialCustomType {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub i: ::core::ffi::c_int,
@@ -127,7 +127,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialCus
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "ContainingStruct")]
+#[__crubit::annotate(cpp_type = "ContainingStruct")]
 pub struct ContainingStruct {
     /// Doc comment for an unsupported field.
     ///

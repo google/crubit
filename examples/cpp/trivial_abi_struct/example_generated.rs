@@ -21,7 +21,7 @@
 /// Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
 #[derive(Clone)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "Position")]
+#[__crubit::annotate(cpp_type = "Position")]
 pub struct Position {
     pub x: ::core::ffi::c_int,
     pub y: ::core::ffi::c_int,

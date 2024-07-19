@@ -130,17 +130,17 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
 
   clang::ASTContext& context = type_decl->getASTContext();
   clang::QualType cc_qualtype = context.getTypeDeclType(type_decl);
-  const clang::Type* cc_type = cc_qualtype.getTypePtr();
-  if (cc_type == nullptr) return std::nullopt;
+  const clang::Type* cpp_type = cc_qualtype.getTypePtr();
+  if (cpp_type == nullptr) return std::nullopt;
   std::string cc_name = cc_qualtype.getAsString();
 
   ictx_.MarkAsSuccessfullyImported(type_decl);
 
   std::optional<SizeAlign> size_align;
-  if (!cc_type->isIncompleteType()) {
+  if (!cpp_type->isIncompleteType()) {
     size_align = SizeAlign{
-        .size = context.getTypeSizeInChars(cc_type).getQuantity(),
-        .alignment = context.getTypeAlignInChars(cc_type).getQuantity(),
+        .size = context.getTypeSizeInChars(cpp_type).getQuantity(),
+        .alignment = context.getTypeAlignInChars(cpp_type).getQuantity(),
     };
   }
   return TypeMapOverride{

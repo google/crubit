@@ -1794,7 +1794,7 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
         .params
         .iter()
         .map(|p| {
-            let formatted = crate::format_cc_type(&p.type_.cc_type, &ir)?;
+            let formatted = crate::format_cpp_type(&p.type_.cpp_type, &ir)?;
             if !db.rs_type_kind(p.type_.rs_type.clone())?.is_c_abi_compatible_by_value() {
                 // non-Unpin types are wrapped by a pointer in the thunk.
                 Ok(quote! {#formatted *})
@@ -1809,7 +1809,7 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
         .iter()
         .map(|p| {
             let ident = crate::format_cc_ident(&p.identifier.identifier);
-            match p.type_.cc_type.name.as_deref() {
+            match p.type_.cpp_type.name.as_deref() {
                 Some("&") => Ok(quote! { * #ident }),
                 Some("&&") => Ok(quote! { std::move(* #ident) }),
                 _ => {
@@ -1834,13 +1834,13 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
     let return_type_name = if !is_return_value_c_abi_compatible {
         param_idents.insert(0, crate::format_cc_ident("__return"));
         // In order to be modified, the return type can't be const.
-        let mut cc_return_type = func.return_type.cc_type.clone();
+        let mut cc_return_type = func.return_type.cpp_type.clone();
         cc_return_type.is_const = false;
-        let return_type_name = crate::format_cc_type(&cc_return_type, &ir)?;
+        let return_type_name = crate::format_cpp_type(&cc_return_type, &ir)?;
         param_types.insert(0, quote! {#return_type_name *});
         quote! {void}
     } else {
-        crate::format_cc_type(&func.return_type.cc_type, &ir)?
+        crate::format_cpp_type(&func.return_type.cpp_type, &ir)?
     };
 
     let this_ref_qualification =
@@ -1879,19 +1879,19 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
         let out_param = &param_idents[0];
         quote! {new(#out_param) auto(#return_expr)}
     } else {
-        match func.return_type.cc_type.name.as_deref() {
+        match func.return_type.cpp_type.name.as_deref() {
             Some("void") => return_expr,
             Some("&") => quote! { return & #return_expr },
             Some("&&") => {
-                // The code below replicates bits of `format_cc_type`, but formats an rvalue
-                // reference (which `format_cc_type` would format as a pointer).
-                // `const_fragment` from `format_cc_type` is ignored - it is not applicable for
+                // The code below replicates bits of `format_cpp_type`, but formats an rvalue
+                // reference (which `format_cpp_type` would format as a pointer).
+                // `const_fragment` from `format_cpp_type` is ignored - it is not applicable for
                 // references.
-                let ty = &func.return_type.cc_type;
+                let ty = &func.return_type.cpp_type;
                 if ty.type_args.len() != 1 {
                     bail!("Invalid reference type (need exactly 1 type argument): {:?}", ty);
                 }
-                let nested_type = crate::format_cc_type(&ty.type_args[0], &ir)?;
+                let nested_type = crate::format_cpp_type(&ty.type_args[0], &ir)?;
                 quote! {
                     #nested_type && lvalue = #return_expr;
                     return &lvalue
@@ -2203,7 +2203,7 @@ mod tests {
     #[test]
     fn test_func_ptr_thunk() -> Result<()> {
         // Using an `inline` keyword forces generation of a C++ thunk in
-        // `rs_api_impl` (i.e. exercises `format_cc_type` and similar code).
+        // `rs_api_impl` (i.e. exercises `format_cpp_type` and similar code).
         let ir = ir_from_cc(
             r#"
             int multiply(int x, int y);

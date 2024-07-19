@@ -216,7 +216,7 @@ inline std::ostream& operator<<(std::ostream& o, const RsType& type) {
   return o << std::string(llvm::formatv("{0:2}", type.ToJson()));
 }
 
-// A type involved in the bindings. The rs_type and cc_type will be treated
+// A type involved in the bindings. The rs_type and cpp_type will be treated
 // as interchangeable during bindings, and so should share the same layout.
 //
 // For example: a C++ pointer may be a usize in Rust, rather than a pointer, but
@@ -268,7 +268,7 @@ struct MappedType {
   llvm::json::Value ToJson() const;
 
   RsType rs_type;
-  CcType cc_type;
+  CcType cpp_type;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const MappedType& type) {

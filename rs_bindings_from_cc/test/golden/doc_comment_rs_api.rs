@@ -20,7 +20,7 @@
 ///  * with three slashes
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "DocCommentSlashes")]
+#[__crubit::annotate(cpp_type = "DocCommentSlashes")]
 pub struct DocCommentSlashes {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// A field.
@@ -119,7 +119,7 @@ impl DocCommentSlashes {
 ///  * with slashes and bang
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "DocCommentBang")]
+#[__crubit::annotate(cpp_type = "DocCommentBang")]
 pub struct DocCommentBang {
     /// A field
     pub i: ::core::ffi::c_int,
@@ -173,7 +173,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for DocCommentBa
 ///  with two stars
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MultilineCommentTwoStars")]
+#[__crubit::annotate(cpp_type = "MultilineCommentTwoStars")]
 pub struct MultilineCommentTwoStars {
     /// A field
     pub i: ::core::ffi::c_int,
@@ -230,7 +230,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for MultilineCom
 ///  * with two slashes
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "LineComment")]
+#[__crubit::annotate(cpp_type = "LineComment")]
 pub struct LineComment {
     /// A field
     pub i: ::core::ffi::c_int,
@@ -284,7 +284,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for LineComment 
 ///  with one star
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MultilineOneStar")]
+#[__crubit::annotate(cpp_type = "MultilineOneStar")]
 pub struct MultilineOneStar {
     /// A field
     pub i: ::core::ffi::c_int,
@@ -369,7 +369,7 @@ pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
 /// Class template.
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MyTemplate < int >")]
+#[__crubit::annotate(cpp_type = "MyTemplate < int >")]
 pub struct __CcTemplateInst10MyTemplateIiE {
     /// Data member.
     pub value: ::core::ffi::c_int,
@@ -438,7 +438,7 @@ impl __CcTemplateInst10MyTemplateIiE {
 /// Class template specialization.
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MyTemplate < float >")]
+#[__crubit::annotate(cpp_type = "MyTemplate < float >")]
 pub struct __CcTemplateInst10MyTemplateIfE {
     /// Data member in a specialization.
     pub value: f32,

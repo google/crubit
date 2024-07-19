@@ -20,7 +20,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "Outer")]
+#[__crubit::annotate(cpp_type = "Outer")]
 pub struct Outer {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

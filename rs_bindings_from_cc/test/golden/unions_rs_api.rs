@@ -17,7 +17,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "EmptyUnion")]
+#[__crubit::annotate(cpp_type = "EmptyUnion")]
 pub union EmptyUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -67,7 +67,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "Nontrivial")]
+#[__crubit::annotate(cpp_type = "Nontrivial")]
 pub struct Nontrivial {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field: ::core::ffi::c_int,
@@ -121,7 +121,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Nontrivial {
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "TriviallyCopyableButNontriviallyDestructible")]
+#[__crubit::annotate(cpp_type = "TriviallyCopyableButNontriviallyDestructible")]
 pub struct TriviallyCopyableButNontriviallyDestructible {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -175,7 +175,7 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "NonEmptyUnion")]
+#[__crubit::annotate(cpp_type = "NonEmptyUnion")]
 pub union NonEmptyUnion {
     pub bool_field: bool,
     pub char_field: ::core::ffi::c_char,
@@ -228,7 +228,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for NonEmptyUnio
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "NonCopyUnion")]
+#[__crubit::annotate(cpp_type = "NonCopyUnion")]
 pub union NonCopyUnion {
     pub trivial_member: bool,
     pub nontrivial_member: ::core::mem::ManuallyDrop<crate::Nontrivial>,
@@ -238,7 +238,7 @@ impl !Sync for NonCopyUnion {}
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion"), crate::NonCopyUnion);
 
 #[repr(C)]
-#[__crubit::annotate(cc_type = "NonCopyUnion2")]
+#[__crubit::annotate(cpp_type = "NonCopyUnion2")]
 pub union NonCopyUnion2 {
     pub trivial_member: bool,
     pub nontrivial_member:
@@ -274,7 +274,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for NonCopyUnion
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "UnionWithOpaqueField")]
+#[__crubit::annotate(cpp_type = "UnionWithOpaqueField")]
 pub union UnionWithOpaqueField {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
@@ -329,7 +329,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UnionWithOpa
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "TrivialButInheritable")]
+#[__crubit::annotate(cpp_type = "TrivialButInheritable")]
 pub struct TrivialButInheritable {
     pub x: ::core::ffi::c_int,
 }
@@ -382,7 +382,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialButIn
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "UnionWithInheritable")]
+#[__crubit::annotate(cpp_type = "UnionWithInheritable")]
 pub union UnionWithInheritable {
     pub t: crate::TrivialButInheritable,
 }
@@ -435,7 +435,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UnionWithInh
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "TypedefUnion")]
+#[__crubit::annotate(cpp_type = "TypedefUnion")]
 pub union TypedefUnion {
     pub trivial_member: bool,
 }
@@ -485,7 +485,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TypedefUnion
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "TypedefUnionWithInheritable")]
+#[__crubit::annotate(cpp_type = "TypedefUnionWithInheritable")]
 pub union TypedefUnionWithInheritable {
     pub t: crate::TrivialButInheritable,
 }

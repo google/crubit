@@ -531,9 +531,9 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
             // (This shouldn't fail, since we replace with known Rust types via a string.)
             let rs_type = RsTypeKind::new_type_map_override(type_override);
             let disable_comment = format!(
-                "Type bindings for {cc_type} suppressed due to being mapped to \
+                "Type bindings for {cpp_type} suppressed due to being mapped to \
                     an existing Rust type ({rs_type})",
-                cc_type = type_override.debug_name(&ir),
+                cpp_type = type_override.debug_name(&ir),
             );
             let assertions = if let Some(size_align) = &type_override.size_align {
                 generate_record::rs_size_align_assertions(rs_type, size_align)
@@ -1222,7 +1222,7 @@ fn new_type_alias(db: &dyn BindingsGenerator, type_alias: Rc<TypeAlias>) -> Resu
     Ok(RsTypeKind::TypeAlias { type_alias: type_alias, crate_path, underlying_type })
 }
 
-fn cc_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
+fn cpp_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
     let tagless = cc_tagless_type_name_for_record(record, ir)?;
     let tag_kind = cc_tag_kind(record);
     Ok(quote! { #tag_kind #tagless })
@@ -1234,7 +1234,7 @@ fn cc_tagless_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStre
     Ok(quote! { #namespace_qualifier #ident })
 }
 
-fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
+fn cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
     match item {
         Item::IncompleteRecord(incomplete_record) => {
             let ident = crate::format_cc_ident(incomplete_record.cc_name.as_ref());
@@ -1242,7 +1242,7 @@ fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
             let tag_kind = incomplete_record.record_type;
             Ok(quote! { #tag_kind #namespace_qualifier #ident })
         }
-        Item::Record(record) => cc_type_name_for_record(record, ir),
+        Item::Record(record) => cpp_type_name_for_record(record, ir),
         Item::Enum(enum_) => {
             let ident = crate::format_cc_ident(&enum_.identifier.identifier);
             let qualifier = cc_qualified_path_prefix(item, ir)?;
@@ -1303,15 +1303,15 @@ fn format_cc_call_conv_as_clang_attribute(rs_abi: &str) -> Result<TokenStream> {
     }
 }
 
-pub(crate) fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
+pub(crate) fn format_cpp_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
     // Formatting *both* pointers *and* references as pointers, because:
     // - Pointers and references have the same representation in the ABI.
     // - Clang's `-Wreturn-type-c-linkage` warns when using references in C++
     //   function thunks declared as `extern "C"` (see b/238681766).
-    format_cc_type_inner(ty, ir, /* references_ok= */ false)
+    format_cpp_type_inner(ty, ir, /* references_ok= */ false)
 }
 
-fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result<TokenStream> {
+fn format_cpp_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result<TokenStream> {
     let const_fragment = if ty.is_const {
         quote! {const}
     } else {
@@ -1323,7 +1323,7 @@ fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result
                 if ty.type_args.len() != 1 {
                     bail!("Invalid pointer type (need exactly 1 type argument): {:?}", ty);
                 }
-                let nested_type = format_cc_type_inner(&ty.type_args[0], ir, references_ok)?;
+                let nested_type = format_cpp_type_inner(&ty.type_args[0], ir, references_ok)?;
                 if !references_ok {
                     name = "*";
                 }
@@ -1335,15 +1335,15 @@ fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result
                 };
                 Ok(quote! {#nested_type #ptr #const_fragment})
             }
-            cc_type_name => match cc_type_name.strip_prefix("#funcValue ") {
+            cpp_type_name => match cpp_type_name.strip_prefix("#funcValue ") {
                 None => {
                     if !ty.type_args.is_empty() {
                         bail!("Type not yet supported: {:?}", ty);
                     }
                     // Not using `code_gen_utils::format_cc_ident`, because
-                    // `cc_type_name` may be a C++ reserved keyword (e.g.
+                    // `cpp_type_name` may be a C++ reserved keyword (e.g.
                     // `int`).
-                    let cc_ident: TokenStream = cc_type_name.parse().unwrap();
+                    let cc_ident: TokenStream = cpp_type_name.parse().unwrap();
                     Ok(quote! { #cc_ident #const_fragment })
                 }
                 Some(abi) => match ty.type_args.split_last() {
@@ -1353,10 +1353,10 @@ fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result
                         // `-Wreturn-type-c-linkage` does. So we can just re-enable references now
                         // so that the function type is exactly correct.
                         let ret_type =
-                            format_cc_type_inner(ret_type, ir, /* references_ok= */ true)?;
+                            format_cpp_type_inner(ret_type, ir, /* references_ok= */ true)?;
                         let param_types = param_types
                             .iter()
-                            .map(|t| format_cc_type_inner(t, ir, /* references_ok= */ true))
+                            .map(|t| format_cpp_type_inner(t, ir, /* references_ok= */ true))
                             .collect::<Result<Vec<_>>>()?;
                         let attr = format_cc_call_conv_as_clang_attribute(abi)?;
                         // `type_identity_t` is used below to avoid having to
@@ -1374,7 +1374,7 @@ fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result
         }
     } else {
         let item = ir.item_for_type(ty)?;
-        let type_name = cc_type_name_for_item(item, ir)?;
+        let type_name = cpp_type_name_for_item(item, ir)?;
         Ok(quote! {#const_fragment #type_name})
     }
 }
@@ -1685,7 +1685,7 @@ pub(crate) mod tests {
                                 name: Some("Option"), ...
                                 type_args: [RsType { name: Some("#funcPtr vectorcall"), ... }], ...
                             },
-                            cc_type: CcType {
+                            cpp_type: CcType {
                                 name: Some("*"), ...
                                 type_args: [CcType { name: Some("#funcValue vectorcall"), ... }], ...
                             },
@@ -1735,7 +1735,7 @@ pub(crate) mod tests {
                 return Ok(());
             }
             // Using an `inline` keyword forces generation of a C++ thunk in
-            // `rs_api_impl` (i.e. exercises `format_cc_type`,
+            // `rs_api_impl` (i.e. exercises `format_cpp_type`,
             // `format_cc_call_conv_as_clang_attribute` and similar code).
             let ir = ir_from_cc(
                 r#"
@@ -1756,7 +1756,7 @@ pub(crate) mod tests {
                                 name: Some("Option"), ...
                                 type_args: [RsType { name: Some("#funcPtr vectorcall"), ... }], ...
                             },
-                            cc_type: CcType {
+                            cpp_type: CcType {
                                 name: Some("*"), ...
                                 type_args: [CcType { name: Some("#funcValue vectorcall"), ... }], ...
                             },

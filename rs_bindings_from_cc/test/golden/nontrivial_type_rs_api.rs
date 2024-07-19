@@ -28,7 +28,7 @@
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "Nontrivial")]
+#[__crubit::annotate(cpp_type = "Nontrivial")]
 pub struct Nontrivial {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field: ::core::ffi::c_int,
@@ -305,7 +305,7 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::Nontrivial> for &'a crate::Nontrivial {
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "NontrivialInline")]
+#[__crubit::annotate(cpp_type = "NontrivialInline")]
 pub struct NontrivialInline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field: ::core::ffi::c_int,
@@ -482,7 +482,7 @@ impl NontrivialInline {
 /// each field.
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "NontrivialMembers")]
+#[__crubit::annotate(cpp_type = "NontrivialMembers")]
 pub struct NontrivialMembers {
     pub nontrivial_member: ::core::mem::ManuallyDrop<crate::Nontrivial>,
 }
@@ -592,7 +592,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialMembers
 
 /// Nontrivial, but trivially relocatable and final (and therefore Unpin).
 #[repr(C)]
-#[__crubit::annotate(cc_type = "NontrivialUnpin")]
+#[__crubit::annotate(cpp_type = "NontrivialUnpin")]
 pub struct NontrivialUnpin {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field: ::core::ffi::c_int,
@@ -816,7 +816,7 @@ pub fn TakesUnpinByConstRvalueReference<'a>(
 /// Finally, testing for strange by-value APIs.
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "NontrivialByValue")]
+#[__crubit::annotate(cpp_type = "NontrivialByValue")]
 pub struct NontrivialByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -878,7 +878,7 @@ impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivi
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "Nonmovable")]
+#[__crubit::annotate(cpp_type = "Nonmovable")]
 pub struct Nonmovable {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

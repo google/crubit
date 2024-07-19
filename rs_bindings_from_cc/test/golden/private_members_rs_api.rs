@@ -18,7 +18,7 @@
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy)]
     #[repr(C, align(4))]
-    #[__crubit::annotate(cc_type = "test_namespace_bindings :: SomeClass")]
+    #[__crubit::annotate(cpp_type = "test_namespace_bindings :: SomeClass")]
     pub struct SomeClass {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         pub public_member_variable_: ::core::ffi::c_int,

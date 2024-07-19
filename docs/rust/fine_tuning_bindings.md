@@ -30,6 +30,6 @@ std::int32_t Create(); // named `Create` instead of `new`.
 
 Currently this attribute works on functions only (See b/349070421).
 
-## `cc_type`
+## `cpp_type`
 
 TODO(b/315382130): Rename this attribute to `cpp_type` and add the doc.

@@ -23,7 +23,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "SomeStruct")]
+#[__crubit::annotate(cpp_type = "SomeStruct")]
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -75,7 +75,7 @@ forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::s
 
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "FieldTypeTestStruct")]
+#[__crubit::annotate(cpp_type = "FieldTypeTestStruct")]
 pub struct FieldTypeTestStruct {
     pub bool_field: bool,
     pub char_field: ::core::ffi::c_char,

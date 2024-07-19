@@ -17,7 +17,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "type")]
+#[__crubit::annotate(cpp_type = "type")]
 pub struct r#type {
     pub r#dyn: ::core::ffi::c_int,
 }

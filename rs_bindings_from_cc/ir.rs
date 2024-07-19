@@ -225,7 +225,7 @@ impl TypeWithDeclId for CcType {
 #[serde(deny_unknown_fields)]
 pub struct MappedType {
     pub rs_type: RsType,
-    pub cc_type: CcType,
+    pub cpp_type: CcType,
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]

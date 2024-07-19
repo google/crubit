@@ -26,7 +26,7 @@ pub fn UsesImportedType(mut t: trivial_type_cc::ns::Trivial) -> trivial_type_cc:
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "UserOfImportedType")]
+#[__crubit::annotate(cpp_type = "UserOfImportedType")]
 pub struct UserOfImportedType {
     pub trivial: *mut trivial_type_cc::ns::Trivial,
 }

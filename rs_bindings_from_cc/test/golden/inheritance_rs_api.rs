@@ -20,7 +20,7 @@
 /// objects, even if the POD type is potentially-overlapping.
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "Base0")]
+#[__crubit::annotate(cpp_type = "Base0")]
 pub struct Base0 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -70,7 +70,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Base0 {
 
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "Base1")]
+#[__crubit::annotate(cpp_type = "Base1")]
 pub struct Base1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -126,7 +126,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Base1 {
 
 #[derive(Clone, Copy)]
 #[repr(C, align(2))]
-#[__crubit::annotate(cc_type = "Base2")]
+#[__crubit::annotate(cpp_type = "Base2")]
 pub struct Base2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -179,7 +179,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Base2 {
 
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "Derived")]
+#[__crubit::annotate(cpp_type = "Derived")]
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 12],
     pub derived_1: ::core::ffi::c_char,
@@ -246,7 +246,7 @@ unsafe impl oops::Inherits<crate::Base2> for crate::Derived {
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "VirtualBase1")]
+#[__crubit::annotate(cpp_type = "VirtualBase1")]
 pub struct VirtualBase1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 24],
 }
@@ -352,7 +352,7 @@ unsafe impl oops::Inherits<crate::Base1> for crate::VirtualBase1 {
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "VirtualBase2")]
+#[__crubit::annotate(cpp_type = "VirtualBase2")]
 pub struct VirtualBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 24],
 }
@@ -458,7 +458,7 @@ unsafe impl oops::Inherits<crate::Base1> for crate::VirtualBase2 {
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "VirtualDerived")]
+#[__crubit::annotate(cpp_type = "VirtualDerived")]
 pub struct VirtualDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 32],
 }
@@ -574,7 +574,7 @@ unsafe impl oops::Inherits<crate::VirtualBase2> for crate::VirtualDerived {
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "MyAbstractClass")]
+#[__crubit::annotate(cpp_type = "MyAbstractClass")]
 pub struct MyAbstractClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 8],
 }
@@ -603,7 +603,7 @@ impl<'b> ::ctor::Assign<&'b Self> for MyAbstractClass {
 /// Method inheritance
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MethodBase1")]
+#[__crubit::annotate(cpp_type = "MethodBase1")]
 pub struct MethodBase1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -674,7 +674,7 @@ impl MethodBase1 {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MethodBase2")]
+#[__crubit::annotate(cpp_type = "MethodBase2")]
 pub struct MethodBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -738,7 +738,7 @@ impl MethodBase2 {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MethodDerived")]
+#[__crubit::annotate(cpp_type = "MethodDerived")]
 pub struct MethodDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

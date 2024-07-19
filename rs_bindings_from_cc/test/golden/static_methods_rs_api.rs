@@ -17,7 +17,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
-#[__crubit::annotate(cc_type = "SomeClass")]
+#[__crubit::annotate(cpp_type = "SomeClass")]
 pub struct SomeClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

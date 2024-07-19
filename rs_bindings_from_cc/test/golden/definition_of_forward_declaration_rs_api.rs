@@ -17,7 +17,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "ForwardDeclaredStruct")]
+#[__crubit::annotate(cpp_type = "ForwardDeclaredStruct")]
 pub struct ForwardDeclaredStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

@@ -37,8 +37,8 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
                                 enum_name.status().message()));
   }
 
-  clang::QualType cc_type = enum_decl->getIntegerType();
-  if (cc_type.isNull()) {
+  clang::QualType cpp_type = enum_decl->getIntegerType();
+  if (cpp_type.isNull()) {
     // According to https://clang.llvm.org/doxygen/classclang_1_1EnumDecl.html,
     // getIntegerType "returns a null QualType for an enum forward definition
     // with no fixed underlying type." The same page implies that this can't
@@ -50,7 +50,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   }
   const clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
   absl::StatusOr<MappedType> type =
-      ictx_.ConvertQualType(cc_type, no_lifetimes, std::nullopt);
+      ictx_.ConvertQualType(cpp_type, no_lifetimes, std::nullopt);
   if (!type.ok()) {
     return ictx_.ImportUnsupportedItem(enum_decl, type.status().ToString());
   }

@@ -17,7 +17,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
-#[__crubit::annotate(cc_type = "HasCustomAlignment")]
+#[__crubit::annotate(cpp_type = "HasCustomAlignment")]
 pub struct HasCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -70,7 +70,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasCustomAli
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "HasFieldWithCustomAlignment")]
+#[__crubit::annotate(cpp_type = "HasFieldWithCustomAlignment")]
 pub struct HasFieldWithCustomAlignment {
     pub field: crate::HasCustomAlignment,
 }
@@ -125,7 +125,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasFieldWith
 
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
-#[__crubit::annotate(cc_type = "InheritsFromBaseWithCustomAlignment")]
+#[__crubit::annotate(cpp_type = "InheritsFromBaseWithCustomAlignment")]
 pub struct InheritsFromBaseWithCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -194,7 +194,7 @@ unsafe impl oops::Inherits<crate::HasCustomAlignment>
 
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
-#[__crubit::annotate(cc_type = "HasCustomAlignmentWithGnuAttr")]
+#[__crubit::annotate(cpp_type = "HasCustomAlignmentWithGnuAttr")]
 pub struct HasCustomAlignmentWithGnuAttr {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -267,7 +267,7 @@ pub mod template_with_preferred_name {
 /// forward declaration of `basic_string_view` class template.
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "template_with_preferred_name :: SomeTemplate < int >")]
+#[__crubit::annotate(cpp_type = "template_with_preferred_name :: SomeTemplate < int >")]
 pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

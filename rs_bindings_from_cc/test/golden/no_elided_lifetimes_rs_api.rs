@@ -22,7 +22,7 @@ pub unsafe fn free_function(p1: *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "S")]
+#[__crubit::annotate(cpp_type = "S")]
 pub struct S {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -69,7 +69,7 @@ impl S {
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "TriviallyCopyableButNontriviallyDestructible")]
+#[__crubit::annotate(cpp_type = "TriviallyCopyableButNontriviallyDestructible")]
 pub struct TriviallyCopyableButNontriviallyDestructible {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -100,7 +100,7 @@ pub unsafe fn take_pointer(p: *mut ::core::ffi::c_int) {
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
-#[__crubit::annotate(cc_type = "WrappedValue")]
+#[__crubit::annotate(cpp_type = "WrappedValue")]
 pub struct WrappedValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

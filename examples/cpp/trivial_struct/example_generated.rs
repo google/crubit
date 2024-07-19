@@ -18,7 +18,7 @@
 /// Generated from: examples/cpp/trivial_struct/example.h;l=8
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "Position")]
+#[__crubit::annotate(cpp_type = "Position")]
 pub struct Position {
     pub x: ::core::ffi::c_int,
     pub y: ::core::ffi::c_int,

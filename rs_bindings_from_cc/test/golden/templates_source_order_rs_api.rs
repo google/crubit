@@ -20,7 +20,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "TopLevel")]
+#[__crubit::annotate(cpp_type = "TopLevel")]
 pub struct TopLevel {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -58,7 +58,7 @@ pub type Alias6 = crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE;
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy)]
     #[repr(C)]
-    #[__crubit::annotate(cc_type = "test_namespace_bindings :: Inner")]
+    #[__crubit::annotate(cpp_type = "test_namespace_bindings :: Inner")]
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -95,7 +95,7 @@ pub mod test_namespace_bindings {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MyTemplate < TopLevel >")]
+#[__crubit::annotate(cpp_type = "MyTemplate < TopLevel >")]
 pub struct __CcTemplateInst10MyTemplateI8TopLevelE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -133,7 +133,7 @@ impl __CcTemplateInst10MyTemplateI8TopLevelE {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MyTemplate < test_namespace_bindings :: Inner >")]
+#[__crubit::annotate(cpp_type = "MyTemplate < test_namespace_bindings :: Inner >")]
 pub struct __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -171,7 +171,7 @@ impl __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MyTemplate < MyTemplate < TopLevel >>")]
+#[__crubit::annotate(cpp_type = "MyTemplate < MyTemplate < TopLevel >>")]
 pub struct __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -212,7 +212,7 @@ impl __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MyTemplate < MyTemplate < test_namespace_bindings :: Inner >>")]
+#[__crubit::annotate(cpp_type = "MyTemplate < MyTemplate < test_namespace_bindings :: Inner >>")]
 pub struct __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -253,7 +253,7 @@ impl __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MyTemplate < bool >")]
+#[__crubit::annotate(cpp_type = "MyTemplate < bool >")]
 pub struct __CcTemplateInst10MyTemplateIbE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -291,7 +291,7 @@ impl __CcTemplateInst10MyTemplateIbE {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cc_type = "MyTemplate < char >")]
+#[__crubit::annotate(cpp_type = "MyTemplate < char >")]
 pub struct __CcTemplateInst10MyTemplateIcE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -329,7 +329,7 @@ impl __CcTemplateInst10MyTemplateIcE {
 
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
-#[__crubit::annotate(cc_type = "MyTemplate < double >")]
+#[__crubit::annotate(cpp_type = "MyTemplate < double >")]
 pub struct __CcTemplateInst10MyTemplateIdE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -367,7 +367,7 @@ impl __CcTemplateInst10MyTemplateIdE {
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
-#[__crubit::annotate(cc_type = "MyTemplate < float >")]
+#[__crubit::annotate(cpp_type = "MyTemplate < float >")]
 pub struct __CcTemplateInst10MyTemplateIfE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -405,7 +405,7 @@ impl __CcTemplateInst10MyTemplateIfE {
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
-#[__crubit::annotate(cc_type = "MyTemplate < int >")]
+#[__crubit::annotate(cpp_type = "MyTemplate < int >")]
 pub struct __CcTemplateInst10MyTemplateIiE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

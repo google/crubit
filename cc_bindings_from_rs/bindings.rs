@@ -276,9 +276,9 @@ struct FullyQualifiedName {
     /// The fully-qualified C++ type to use for this, if this was originally a
     /// C++ type.
     ///
-    /// For example, if a type has `#[__crubit::annotate(cc_type="x::y")]`, then
-    /// cc_type will be `Some(x::y)`.
-    cc_type: Option<Symbol>,
+    /// For example, if a type has `#[__crubit::annotate(cpp_type="x::y")]`,
+    /// then cpp_type will be `Some(x::y)`.
+    cpp_type: Option<Symbol>,
 }
 
 impl FullyQualifiedName {
@@ -291,7 +291,7 @@ impl FullyQualifiedName {
 
         // Crash OK: these attributes are introduced by crubit itself, and "should
         // never" be malformed.
-        let cc_type = crubit_attr::get(tcx, def_id).unwrap().cc_type;
+        let cpp_type = crubit_attr::get(tcx, def_id).unwrap().cpp_type;
 
         let mut full_path = tcx.def_path(def_id).data; // mod_path + name
         let name = full_path.pop().expect("At least the item's name should be present");
@@ -304,11 +304,11 @@ impl FullyQualifiedName {
                 .map(|s| Rc::<str>::from(s.as_str())),
         );
 
-        Self { krate, mod_path, name, cc_type }
+        Self { krate, mod_path, name, cpp_type }
     }
 
     fn format_for_cc(&self) -> Result<TokenStream> {
-        if let Some(path) = self.cc_type {
+        if let Some(path) = self.cpp_type {
             let path = format_cc_ident(path.as_str())?;
             return Ok(quote! {#path});
         }
@@ -828,14 +828,14 @@ fn format_thunk_decl<'tcx>(
     let main_api_ret_type = format_ret_ty_for_cc(db, sig)?.into_tokens(&mut prereqs);
 
     let mut thunk_params = {
-        let cc_types = format_param_types_for_cc(db, sig)?;
+        let cpp_types = format_param_types_for_cc(db, sig)?;
         sig.inputs()
             .iter()
-            .zip(cc_types.into_iter())
-            .map(|(&ty, cc_type)| -> Result<TokenStream> {
-                let cc_type = cc_type.into_tokens(&mut prereqs);
+            .zip(cpp_types.into_iter())
+            .map(|(&ty, cpp_type)| -> Result<TokenStream> {
+                let cpp_type = cpp_type.into_tokens(&mut prereqs);
                 if is_c_abi_compatible_by_value(ty) {
-                    Ok(quote! { #cc_type })
+                    Ok(quote! { #cpp_type })
                 } else {
                     // Rust thunk will move a value via memcpy - we need to `ensure` that
                     // invoking the C++ destructor (on the moved-away value) is safe.
@@ -844,7 +844,7 @@ fn format_thunk_decl<'tcx>(
                         "Only trivially-movable and trivially-destructible types \
                               may be passed by value over the FFI boundary"
                     );
-                    Ok(quote! { #cc_type* })
+                    Ok(quote! { #cpp_type* })
                 }
             })
             .collect::<Result<Vec<_>>>()?
@@ -1240,21 +1240,21 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
 
     struct Param<'tcx> {
         cc_name: TokenStream,
-        cc_type: TokenStream,
+        cpp_type: TokenStream,
         ty: Ty<'tcx>,
     }
     let params = {
         let names = tcx.fn_arg_names(def_id).iter();
-        let cc_types = format_param_types_for_cc(db, &sig)?;
+        let cpp_types = format_param_types_for_cc(db, &sig)?;
         names
             .enumerate()
             .zip(sig.inputs().iter())
-            .zip(cc_types)
-            .map(|(((i, name), &ty), cc_type)| {
+            .zip(cpp_types)
+            .map(|(((i, name), &ty), cpp_type)| {
                 let cc_name = format_cc_ident(name.as_str())
                     .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{i}")).unwrap());
-                let cc_type = cc_type.into_tokens(&mut main_api_prereqs);
-                Param { cc_name, cc_type, ty }
+                let cpp_type = cpp_type.into_tokens(&mut main_api_prereqs);
+                Param { cc_name, cpp_type, ty }
             })
             .collect_vec()
     };
@@ -1317,7 +1317,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
     let main_api_params = params
         .iter()
         .skip(if method_kind.has_self_param() { 1 } else { 0 })
-        .map(|Param { cc_name, cc_type, .. }| quote! { #cc_type #cc_name })
+        .map(|Param { cc_name, cpp_type, .. }| quote! { #cpp_type #cc_name })
         .collect_vec();
     let main_api = {
         let doc_comment = {
@@ -1645,7 +1645,7 @@ fn format_fields<'tcx>(
 
     struct FieldTypeInfo {
         size: u64,
-        cc_type: CcSnippet,
+        cpp_type: CcSnippet,
     }
     struct Field {
         type_info: Result<FieldTypeInfo>,
@@ -1696,7 +1696,7 @@ fn format_fields<'tcx>(
                 let type_info = size.and_then(|size| {
                     Ok(FieldTypeInfo {
                         size,
-                        cc_type: db.format_ty_for_cc(field_ty, TypeLocation::Other)?,
+                        cpp_type: db.format_ty_for_cc(field_ty, TypeLocation::Other)?,
                     })
                 });
                 let name = field_def.ident(tcx);
@@ -1871,7 +1871,7 @@ fn format_fields<'tcx>(
                             quote! {__NEWLINE__ __COMMENT__ #msg}
                         }
                     }
-                    Ok(FieldTypeInfo { cc_type, size }) => {
+                    Ok(FieldTypeInfo { cpp_type, size }) => {
                         // Only structs require no overlaps.
                         let padding = match adt_def.adt_kind() {
                             ty::AdtKind::Struct => {
@@ -1899,7 +1899,7 @@ fn format_fields<'tcx>(
                         } else {
                             quote! { private: }
                         };
-                        let cc_type = cc_type.into_tokens(&mut prereqs);
+                        let cpp_type = cpp_type.into_tokens(&mut prereqs);
                         let doc_comment = field.doc_comment;
                         let attributes = field.attributes;
 
@@ -1912,7 +1912,7 @@ fn format_fields<'tcx>(
                                     union {  __NEWLINE__
                                         #doc_comment
                                         #(#attributes)*
-                                        #cc_type #cc_name;
+                                        #cpp_type #cc_name;
                                     };
                                 #padding
                             },
@@ -1921,7 +1921,7 @@ fn format_fields<'tcx>(
                                     quote! {
                                         __NEWLINE__
                                         #doc_comment
-                                        #cc_type #cc_name;
+                                        #cpp_type #cc_name;
                                     }
                                 } else {
                                      let internal_padding = if field.offset == 0 {
@@ -1935,7 +1935,7 @@ fn format_fields<'tcx>(
                                         #doc_comment
                                         struct {
                                             #internal_padding
-                                            #cc_type value;
+                                            #cpp_type value;
                                         } #cc_name;
                                     }
                                 }
@@ -7271,7 +7271,7 @@ pub mod tests {
                 pub y: i32,
             }
 
-            #[__crubit::annotate(cc_type = "cc_namespace::CcStruct")]
+            #[__crubit::annotate(cpp_type = "cc_namespace::CcStruct")]
             pub struct OriginallyCcStruct {
                 pub x: i32
             }

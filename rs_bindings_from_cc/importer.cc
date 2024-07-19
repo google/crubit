@@ -1160,7 +1160,7 @@ absl::StatusOr<MappedType> Importer::ConvertQualType(
   }
 
   // Handle cv-qualification.
-  type->cc_type.is_const = qual_type.isConstQualified();
+  type->cpp_type.is_const = qual_type.isConstQualified();
   if (qual_type.isVolatileQualified()) {
     return absl::UnimplementedError(
         absl::StrCat("Unsupported `volatile` qualifier: ", type_string));
