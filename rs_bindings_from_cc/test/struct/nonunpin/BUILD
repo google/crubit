@@ -15,5 +15,6 @@ crubit_rust_test(
     name = "nonunpin_test",
     srcs = ["nonunpin_test.rs"],
     cc_deps = [":nonunpin"],
+    rustc_flags = ["-Zallow-features=negative_impls"],
     deps = ["//support:ctor"],
 )
