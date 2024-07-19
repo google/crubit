@@ -1042,6 +1042,29 @@ TEST(CollectEvidenceFromDefinitionTest, FunctionPointerCall) {
                                             functionNamed("target"))));
 }
 
+// This is a crash repro; see b/352043668.
+TEST(CollectEvidenceFromDefinitionTest, FunctionPointerCallThroughBindingDecl) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename A, typename B>
+    struct Pair {
+      Pair();
+
+      A a;
+      B b;
+    };
+
+    void target(int *i) {
+      Pair<void (*)(Nonnull<int *>), bool> p;
+      auto [fp, b] = p;
+      fp(i);
+    }
+  )cc";
+  // Ideally, we would see the Nonnull from `p`'s template parameter and collect
+  // ASSIGNED_TO_NONNULL evidence for `i`, but the sugar doesn't carry through
+  // the BindingDecl's `auto` type.
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
+}
+
 TEST(CollectEvidenceFromDefinitionTest, ConstAccessorDereferencedAfterCheck) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {

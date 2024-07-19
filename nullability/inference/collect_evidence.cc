@@ -754,7 +754,17 @@ class DefinitionEvidenceCollector {
   void fromCallExprWithoutFunctionCalleeDecl(const Decl &CalleeDecl,
                                              const CallExpr &Expr) {
     if (CalleeDecl.isFunctionPointerType()) {
-      fromFunctionPointerCallExpr(*CalleeDecl.getFunctionType(), Expr);
+      if (auto *FuncType = CalleeDecl.getFunctionType()) {
+        fromFunctionPointerCallExpr(*FuncType, Expr);
+      } else if (const auto *BD = dyn_cast<BindingDecl>(&CalleeDecl)) {
+        // TODO(b/352043668): This is a workaround for the unexplained returning
+        // of nullptr from `getFunctionType()` for BindingDecls.
+        fromFunctionPointerCallExpr(*BD->getType()->getPointeeType(), Expr);
+      } else {
+        llvm::errs() << "Unsupported case of a function pointer type, for "
+                        "which we aren't retrieving a valid FunctionType. \n";
+        CalleeDecl.dump();
+      }
       return;
     }
 
