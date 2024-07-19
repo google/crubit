@@ -433,6 +433,9 @@ static bool isOrIsConstructedFromNullPointerConstant(
       Expr::NPCK_NotNull) {
     return true;
   }
+  if (auto *DefaultInit = dyn_cast<CXXDefaultInitExpr>(E)) {
+    E = DefaultInit->getExpr();
+  }
   const Expr *SubExpr = &dataflow::ignoreCFGOmittedNodes(*E);
   if (auto *MaterializeTempExpr = dyn_cast<MaterializeTemporaryExpr>(SubExpr)) {
     SubExpr = MaterializeTempExpr->getSubExpr();
@@ -1165,14 +1168,11 @@ class DefinitionEvidenceCollector {
     // underlying CXXConstructExpr, so we don't need to handle those, only the
     // member initializers.
     const FieldDecl *Field = Initializer->getAnyMember();
-    if (Field == nullptr) return;
-    if (InferableSlots.empty()) return;
+    if (Field == nullptr || InferableSlots.empty() ||
+        !isSupportedPointerType(Field->getType()))
+      return;
+
     bool IsDefaultInitializer = Initializer->isInClassMemberInitializer();
-    const Expr *InitExpr = IsDefaultInitializer ? Field->getInClassInitializer()
-                                                : Initializer->getInit();
-
-    if (!isSupportedPointerType(Field->getType())) return;
-
     if (isSupportedSmartPointerType(Field->getType()) &&
         !IsDefaultInitializer && !Initializer->isWritten()) {
       // We skip unwritten non-default member initializers for smart pointer
@@ -1183,6 +1183,7 @@ class DefinitionEvidenceCollector {
       return;
     }
 
+    const Expr *InitExpr = Initializer->getInit();
     bool NullptrDefaultInit =
         IsDefaultInitializer && isOrIsConstructedFromNullPointerConstant(
                                     InitExpr, Field->getASTContext());
