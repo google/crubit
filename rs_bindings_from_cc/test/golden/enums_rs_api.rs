@@ -7,15 +7,17 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes)]
+#![feature(custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
+#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![deny(warnings)]
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "Color")]
 pub struct Color(::core::ffi::c_uint);
 impl Color {
     pub const kRed: Color = Color(0);
@@ -35,6 +37,7 @@ impl From<Color> for ::core::ffi::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "Empty")]
 pub struct Empty(::core::ffi::c_uint);
 impl Empty {}
 impl From<::core::ffi::c_uint> for Empty {
@@ -50,6 +53,7 @@ impl From<Empty> for ::core::ffi::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "EmptyBool")]
 pub struct EmptyBool(bool);
 impl EmptyBool {}
 impl From<bool> for EmptyBool {
@@ -65,6 +69,7 @@ impl From<EmptyBool> for bool {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "EmptyInt")]
 pub struct EmptyInt(::core::ffi::c_uint);
 impl EmptyInt {}
 impl From<::core::ffi::c_uint> for EmptyInt {
@@ -80,6 +85,7 @@ impl From<EmptyInt> for ::core::ffi::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "EmptyChar")]
 pub struct EmptyChar(::core::ffi::c_char);
 impl EmptyChar {}
 impl From<::core::ffi::c_char> for EmptyChar {
@@ -95,6 +101,7 @@ impl From<EmptyChar> for ::core::ffi::c_char {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "NonEmptyBool")]
 pub struct NonEmptyBool(bool);
 impl NonEmptyBool {
     pub const kBool1: NonEmptyBool = NonEmptyBool(false);
@@ -113,6 +120,7 @@ impl From<NonEmptyBool> for bool {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "NonEmptyInt")]
 pub struct NonEmptyInt(::core::ffi::c_uint);
 impl NonEmptyInt {
     pub const kInt1: NonEmptyInt = NonEmptyInt(0);
@@ -131,6 +139,7 @@ impl From<NonEmptyInt> for ::core::ffi::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "NonEmptyChar")]
 pub struct NonEmptyChar(::core::ffi::c_char);
 impl NonEmptyChar {
     pub const kChar1: NonEmptyChar = NonEmptyChar(0);
@@ -149,6 +158,7 @@ impl From<NonEmptyChar> for ::core::ffi::c_char {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "EmptyClass")]
 pub struct EmptyClass(::core::ffi::c_int);
 impl EmptyClass {}
 impl From<::core::ffi::c_int> for EmptyClass {
@@ -164,6 +174,7 @@ impl From<EmptyClass> for ::core::ffi::c_int {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "EmptyBoolClass")]
 pub struct EmptyBoolClass(bool);
 impl EmptyBoolClass {}
 impl From<bool> for EmptyBoolClass {
@@ -179,6 +190,7 @@ impl From<EmptyBoolClass> for bool {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "EmptyIntClass")]
 pub struct EmptyIntClass(::core::ffi::c_int);
 impl EmptyIntClass {}
 impl From<::core::ffi::c_int> for EmptyIntClass {
@@ -194,6 +206,7 @@ impl From<EmptyIntClass> for ::core::ffi::c_int {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "EmptyCharClass")]
 pub struct EmptyCharClass(::core::ffi::c_char);
 impl EmptyCharClass {}
 impl From<::core::ffi::c_char> for EmptyCharClass {
@@ -209,6 +222,7 @@ impl From<EmptyCharClass> for ::core::ffi::c_char {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "NonEmptyBoolClass")]
 pub struct NonEmptyBoolClass(bool);
 impl NonEmptyBoolClass {
     pub const k1: NonEmptyBoolClass = NonEmptyBoolClass(false);
@@ -227,6 +241,7 @@ impl From<NonEmptyBoolClass> for bool {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "NonEmptyIntClass")]
 pub struct NonEmptyIntClass(::core::ffi::c_uint);
 impl NonEmptyIntClass {
     pub const k1: NonEmptyIntClass = NonEmptyIntClass(0);
@@ -245,6 +260,7 @@ impl From<NonEmptyIntClass> for ::core::ffi::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "NonEmptyCharClass")]
 pub struct NonEmptyCharClass(::core::ffi::c_char);
 impl NonEmptyCharClass {
     pub const k1: NonEmptyCharClass = NonEmptyCharClass(0);

@@ -256,6 +256,9 @@ fn generate_doc_comment(
 }
 
 fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
+    let ident = crate::format_cc_ident(&enum_.identifier.identifier);
+    let namespace_qualifier = db.ir().namespace_qualifier(enum_)?.format_for_cc()?;
+    let fully_qualified_cc_name = quote! { #namespace_qualifier #ident }.to_string();
     let name = make_rs_ident(&enum_.identifier.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.rs_type.clone())?;
     let Some(enumerators) = &enum_.enumerators else {
@@ -298,6 +301,7 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
     let item = quote! {
         #[repr(transparent)]
         #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+        #[__crubit::annotate(cpp_type=#fully_qualified_cc_name)]
         pub struct #name(#underlying_type);
         impl #name {
             #(#enumerators)*
@@ -313,7 +317,11 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
             }
         }
     };
-    Ok(item.into())
+    Ok(GeneratedItem {
+        item,
+        features: BTreeSet::from([make_rs_ident("register_tool")]),
+        ..Default::default()
+    })
 }
 
 fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<GeneratedItem> {
@@ -1888,6 +1896,7 @@ pub(crate) mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                #[__crubit::annotate(cpp_type = "Color")]
                 pub struct Color(::core::ffi::c_uint);
                 impl Color {
                     pub const kRed: Color = Color(5);
@@ -1925,6 +1934,7 @@ pub(crate) mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                #[__crubit::annotate(cpp_type = "Color")]
                 pub struct Color(::core::ffi::c_int);
                 impl Color {
                     pub const kRed: Color = Color(-5);
@@ -1962,6 +1972,7 @@ pub(crate) mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                #[__crubit::annotate(cpp_type = "Color")]
                 pub struct Color(::core::ffi::c_long);
                 impl Color {
                     pub const kViolet: Color = Color(-9223372036854775808);
@@ -2000,6 +2011,7 @@ pub(crate) mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                #[__crubit::annotate(cpp_type = "Color")]
                 pub struct Color(::core::ffi::c_ulong);
                 impl Color {
                     pub const kRed: Color = Color(0);
@@ -2032,6 +2044,7 @@ pub(crate) mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                #[__crubit::annotate(cpp_type = "Color")]
                 pub struct Color(::core::ffi::c_int);
                 impl Color {
                     pub const kViolet: Color = Color(-2147483648);
@@ -2064,6 +2077,7 @@ pub(crate) mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                #[__crubit::annotate(cpp_type = "Color")]
                 pub struct Color(::core::ffi::c_uint);
                 impl Color {
                     pub const kRed: Color = Color(0);
@@ -2094,6 +2108,7 @@ pub(crate) mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                #[__crubit::annotate(cpp_type = "Bool")]
                 pub struct Bool(bool);
                 impl Bool {
                     pub const kFalse: Bool = Bool(false);
@@ -2123,6 +2138,7 @@ pub(crate) mod tests {
             quote! {
                 #[repr(transparent)]
                 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                #[__crubit::annotate(cpp_type = "Bool")]
                 pub struct Bool(crate::MyBool);
                 impl Bool {
                     pub const kFalse: Bool = Bool(false);
