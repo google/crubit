@@ -394,27 +394,30 @@ ItemId Importer::GenerateItemId(const clang::RawComment* comment) const {
 
 absl::StatusOr<std::optional<ItemId>> Importer::GetEnclosingItemId(
     clang::Decl* decl) {
-  clang::DeclContext* decl_context = decl->getDeclContext();
-
-  // Class template specializations are always emitted in the top-level
-  // namespace.  See also Importer::GetOrderedItemIdsOfTemplateInstantiations.
-  if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl))
-    return std::nullopt;
-
-  if (decl_context->isFunctionOrMethod()) {
-    return std::nullopt;
-  }
-  if (auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl_context)) {
-    if (!EnsureSuccessfullyImported(record_decl)) {
-      return absl::InvalidArgumentError("Couldn't import the parent");
+  for (clang::DeclContext* decl_context = decl->getDeclContext();;
+       decl_context = decl_context->getParent()) {
+    if (decl_context->isTranslationUnit()) {
+      return std::nullopt;
     }
-    return GenerateItemId(record_decl);
-  }
-  auto enclosing_namespace = decl_context->getEnclosingNamespaceContext();
-  if (enclosing_namespace->isTranslationUnit()) return std::nullopt;
+    // Class template specializations are always emitted in the top-level
+    // namespace.  See also Importer::GetOrderedItemIdsOfTemplateInstantiations.
+    if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl))
+      return std::nullopt;
 
-  auto namespace_decl = clang::cast<clang::NamespaceDecl>(enclosing_namespace);
-  return GenerateItemId(namespace_decl);
+    if (decl_context->isFunctionOrMethod()) {
+      return std::nullopt;
+    }
+    if (auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl_context)) {
+      if (!EnsureSuccessfullyImported(record_decl)) {
+        return absl::InvalidArgumentError("Couldn't import the parent");
+      }
+      return GenerateItemId(record_decl);
+    }
+    if (auto* namespace_decl =
+            clang::dyn_cast<clang::NamespaceDecl>(decl_context)) {
+      return GenerateItemId(namespace_decl);
+    }
+  }
 }
 
 std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
