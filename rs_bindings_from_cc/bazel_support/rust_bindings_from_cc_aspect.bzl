@@ -30,7 +30,6 @@ load(
     "bindings_attrs",
     "generate_and_compile_bindings",
 )
-load("//third_party/protobuf/bazel/common:proto_info.bzl", "ProtoInfo")
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
 # `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
@@ -92,9 +91,6 @@ def _collect_hdrs(ctx, crubit_features):
         public_hdrs = []
     return public_hdrs, all_standalone_hdrs
 
-def _is_proto_library(target):
-    return ProtoInfo in target
-
 def _is_cc_proto_library(rule):
     return rule.kind == "cc_proto_library"
 
@@ -135,12 +131,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     features = find_crubit_features(target, ctx)
     if hasattr(ctx.rule.attr, "hdrs"):
         public_hdrs, all_standalone_hdrs = _collect_hdrs(ctx, features)
-    elif _is_proto_library(target):
-        #TODO(b/232199093): Ideally we would get this information from a proto-specific provider,
-        # but ProtoCcFilesProvider is private currently. Use it once public.
-        public_hdrs = retain_proto_dot_h_headers(target[CcInfo].compilation_context.direct_headers)
-        all_standalone_hdrs = public_hdrs
-        extra_rule_specific_deps = [ctx.rule.attr._cc_lib]
+
     elif ctx.rule.kind == "cc_embed_data" or ctx.rule.kind == "upb_proto_library":
         public_hdrs = target[CcInfo].compilation_context.direct_public_headers
         all_standalone_hdrs = target[CcInfo].compilation_context.direct_headers
