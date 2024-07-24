@@ -17,5 +17,13 @@ TEST(BidirectionalDepsTest, RoundTrip) {
   ASSERT_EQ(Unwrap(value_from_rs), 2);
 }
 
+TEST(BidirectionalDepsTest, EnumRoundTrip) {
+  LeafCcEnum value_from_cc = WrapEnum(2);
+  ASSERT_EQ(middle_rs_lib::unwrap_enum(value_from_cc), 2);
+
+  LeafCcEnum value_from_rs = middle_rs_lib::wrap_enum(1);
+  ASSERT_EQ(UnwrapEnum(value_from_rs), 1);
+}
+
 }  // namespace
 }  // namespace crubit

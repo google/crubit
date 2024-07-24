@@ -10,3 +10,10 @@ pub fn wrap(x: u8) -> LeafCcType {
 pub fn unwrap(x: LeafCcType) -> u8 {
     Unwrap(x)
 }
+
+pub fn wrap_enum(x: u8) -> LeafCcEnum {
+    WrapEnum(x)
+}
+pub fn unwrap_enum(x: LeafCcEnum) -> u8 {
+    UnwrapEnum(x)
+}

@@ -16,6 +16,16 @@ struct LeafCcType final {
 inline LeafCcType Wrap(unsigned char x) { return LeafCcType{x}; }
 
 inline unsigned char Unwrap(LeafCcType x) { return x.field; }
+
+enum class LeafCcEnum { kUnknown, kValue1, kValue2, kValue3 };
+
+inline LeafCcEnum WrapEnum(unsigned char x) {
+  return static_cast<LeafCcEnum>(x);
+}
+
+inline unsigned char UnwrapEnum(LeafCcEnum x) {
+  return static_cast<unsigned char>(x);
+}
 }  // namespace crubit
 
 #endif  // CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_CC_LIB_H_
