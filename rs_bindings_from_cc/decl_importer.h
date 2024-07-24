@@ -113,6 +113,8 @@ class ImportContext {
 
   virtual ItemId GenerateItemId(const clang::Decl* decl) const = 0;
   virtual ItemId GenerateItemId(const clang::RawComment* comment) const = 0;
+  // Checks if the given item is unsupported and not from the current target.
+  virtual bool IsUnsupportedAndAlien(ItemId item_id) const = 0;
   // Returns the ID of the parent record or namespace, if it exists, and
   // `std::nullopt` for top level decls. We use this function to assign a parent
   // item to all the IR items.

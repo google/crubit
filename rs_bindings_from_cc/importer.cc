@@ -388,6 +388,13 @@ ItemId Importer::GenerateItemId(const clang::Decl* decl) const {
   return ItemId(reinterpret_cast<uintptr_t>(canonicalized));
 }
 
+bool Importer::IsUnsupportedAndAlien(ItemId item_id) const {
+  auto it = import_cache_.find(reinterpret_cast<clang::Decl*>(item_id.value()));
+  return it != import_cache_.end() && it->second.has_value() &&
+         std::holds_alternative<UnsupportedItem>(*it->second) &&
+         !IsFromCurrentTarget(it->first);
+}
+
 ItemId Importer::GenerateItemId(const clang::RawComment* comment) const {
   return ItemId(reinterpret_cast<uintptr_t>(comment));
 }
@@ -535,13 +542,10 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
 
   ImportDeclsFromDeclContext(translation_unit_decl);
   for (const auto& [decl, item] : import_cache_) {
-    if (item.has_value()) {
-      if (std::holds_alternative<UnsupportedItem>(*item) &&
-          !IsFromCurrentTarget(decl)) {
-        continue;
-      }
-      ordered_items.push_back({GetSourceOrderKey(decl), *item});
+    if (!item.has_value() || IsUnsupportedAndAlien(GenerateItemId(decl))) {
+      continue;
     }
+    ordered_items.push_back({GetSourceOrderKey(decl), *item});
   }
 
   llvm::sort(ordered_items, SourceLocationComparator(sm));

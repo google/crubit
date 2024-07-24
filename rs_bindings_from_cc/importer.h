@@ -84,6 +84,7 @@ class Importer final : public ImportContext {
 
   ItemId GenerateItemId(const clang::Decl* decl) const override;
   ItemId GenerateItemId(const clang::RawComment* comment) const override;
+  bool IsUnsupportedAndAlien(ItemId item_id) const override;
   absl::StatusOr<std::optional<ItemId>> GetEnclosingItemId(
       clang::Decl* decl) override;
 
