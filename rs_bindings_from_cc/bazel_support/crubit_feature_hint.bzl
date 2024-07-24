@@ -8,6 +8,8 @@ This is never used directly; only specific instances of the hint are used, and t
 visibility-restricted.
 """
 
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
+
 visibility(["//..."])
 
 # Omitted from providers.bzl: this is used internally and in tests only.
@@ -48,7 +50,7 @@ def find_crubit_features(target, aspect_ctx):
     Returns:
         A list of feature strings.
     """
-    features = []
+    features = list(aspect_ctx.attr._globally_enabled_features[BuildSettingInfo].value)
     _add_features(features, target)
     for hint in aspect_ctx.rule.attr.aspect_hints:
         _add_features(features, hint)

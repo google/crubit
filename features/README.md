@@ -22,6 +22,8 @@ Features are used for gradual rollouts of new capabilities, and to allow for
 separate build modes for un-annotated code, code which opts into C++/Rust
 interop, and internal test code.
 
+## Using Features
+
 To use a feature, add it to your target:
 
 ```python
@@ -35,6 +37,18 @@ cc_library(
 
 This causes the generated bindings for that target to use all the Crubit
 capabilities in `:supported`.
+
+## Testing Features
+
+Crubit developers may want to temporarily enable features without respect to
+visibility restrictions or level of support. The build flag:
+
+`--//rs_bindings_from_cc/bazel_support:globally_enabled_features`
+
+accepts a comma-separated list of unstable internal feature names (like
+`supported`, `non_extern_c_functions`, or `experimental`) and overrides the
+baseline feature set for all targets for the duration of the build. The flag's
+default value is the empty list.
 
 ## Features
 

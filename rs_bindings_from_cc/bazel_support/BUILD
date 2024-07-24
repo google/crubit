@@ -2,6 +2,7 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "@bazel_skylib//rules:common_settings.bzl",
     "bool_flag",
+    "string_list_flag",
 )
 load(
     "//rs_bindings_from_cc/bazel_support:deps_for_bindings.bzl",
@@ -191,5 +192,11 @@ alias(
         ":use_fake_bindings_generator_setting": ":fake_rust_bindings_from_cc",
         "//conditions:default": "//rs_bindings_from_cc:rs_bindings_from_cc",
     }),
+    visibility = ["//visibility:public"],
+)
+
+string_list_flag(
+    name = "globally_enabled_features",
+    build_setting_default = [],
     visibility = ["//visibility:public"],
 )
