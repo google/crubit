@@ -170,7 +170,6 @@ rust_library(
 crubit_rust_test(
     name = "run_compiler_test_support_test",
     crate = ":run_compiler_test_support",
-    rustc_flags = ["-Zallow-features=negative_impls,rustc_private"],
     rustc_flags = ["--cfg=oss"],
 )
 
