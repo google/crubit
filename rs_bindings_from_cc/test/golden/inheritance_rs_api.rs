@@ -660,6 +660,13 @@ impl MethodBase1 {
 
 impl MethodBase1 {
     #[inline(always)]
+    pub fn Equals<'a, 'b>(&'a mut self, __param_0: Option<&'b Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(self, __param_0) }
+    }
+}
+
+impl MethodBase1 {
+    #[inline(always)]
     pub fn Colliding1<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(self) }
     }
@@ -782,6 +789,29 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for MethodDerive
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN13MethodDerivedaSEOS_(self, __param_0);
+        }
+    }
+}
+
+impl MethodDerived {
+    #[inline(always)]
+    pub fn Equals<'a, 'b>(&'a mut self, __param_0: Option<&'b crate::MethodBase1>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS__MethodDerived(
+                oops::Upcast::<_>::upcast(self),
+                __param_0,
+            )
+        }
+    }
+}
+
+impl MethodDerived {
+    #[inline(always)]
+    pub fn Public<'a>(&'a mut self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11MethodBase16PublicEv_MethodDerived(
+                oops::Upcast::<_>::upcast(self),
+            )
         }
     }
 }
@@ -956,6 +986,11 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN11MethodBase16PublicEv<'a>(
             __this: &'a mut crate::MethodBase1,
         );
+        #[link_name = "_ZN11MethodBase16EqualsEPKS_"]
+        pub(crate) fn __rust_thunk___ZN11MethodBase16EqualsEPKS_<'a, 'b>(
+            __this: &'a mut crate::MethodBase1,
+            __param_0: Option<&'b crate::MethodBase1>,
+        );
         #[link_name = "_ZN11MethodBase110Colliding1Ev"]
         pub(crate) fn __rust_thunk___ZN11MethodBase110Colliding1Ev<'a>(
             __this: &'a mut crate::MethodBase1,
@@ -1002,6 +1037,15 @@ mod detail {
             __this: &'a mut crate::MethodDerived,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodDerived>,
         ) -> &'a mut crate::MethodDerived;
+        #[link_name = "_ZN11MethodBase16EqualsEPKS_"]
+        pub(crate) fn __rust_thunk___ZN11MethodBase16EqualsEPKS__MethodDerived<'a, 'b>(
+            __this: &'a mut crate::MethodBase1,
+            __param_0: Option<&'b crate::MethodBase1>,
+        );
+        #[link_name = "_ZN11MethodBase16PublicEv"]
+        pub(crate) fn __rust_thunk___ZN11MethodBase16PublicEv_MethodDerived<'a>(
+            __this: &'a mut crate::MethodBase1,
+        );
     }
 }
 

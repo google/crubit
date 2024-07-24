@@ -10,7 +10,9 @@ mod rs_snippet;
 use generate_func::{
     generate_func, get_binding, is_record_clonable, overloaded_funcs, FunctionId, ImplKind,
 };
-use generate_record::{generate_incomplete_record, generate_record};
+use generate_record::{
+    collect_unqualified_member_functions, generate_incomplete_record, generate_record,
+};
 
 use crate::rs_snippet::{CratePath, Lifetime, Mutability, PrimitiveType, RsTypeKind};
 use arc_anyhow::{Context, Error, Result};
@@ -120,7 +122,7 @@ memoized::query_group! {
 
         fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
 
-        fn generate_func(&self, func: Rc<Func>) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>>;
+        fn generate_func(&self, func: Rc<Func>, record_overwrite: Option<Rc<Record>>) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>>;
 
         fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
 
@@ -131,6 +133,11 @@ memoized::query_group! {
             expected_function_name: UnqualifiedIdentifier,
             expected_param_types: Vec<RsTypeKind>,
         ) -> Option<(Ident, ImplKind)>;
+
+        fn collect_unqualified_member_functions(
+            &self,
+            record: Rc<Record>,
+        ) -> Rc<[Rc<Func>]>;
     }
     struct Database;
 }
@@ -503,7 +510,7 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
     }
     let overloaded_funcs = db.overloaded_funcs();
     let generated_item = match item {
-        Item::Func(func) => match db.generate_func(func.clone())? {
+        Item::Func(func) => match db.generate_func(func.clone(), None)? {
             None => GeneratedItem::default(),
             Some((item, function_id)) => {
                 if overloaded_funcs.contains(&function_id) {

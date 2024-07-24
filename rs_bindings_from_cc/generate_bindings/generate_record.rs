@@ -13,7 +13,7 @@ use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{quote, ToTokens};
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 use std::iter;
 use std::rc::Rc;
 
@@ -147,6 +147,89 @@ fn get_field_rs_type_kind_for_layout(
 fn bit_padding(padding_size_in_bits: usize) -> TokenStream {
     let padding_size = Literal::usize_unsuffixed((padding_size_in_bits + 7) / 8);
     quote! { [::core::mem::MaybeUninit<u8>; #padding_size] }
+}
+
+fn collect_unqualified_member_functions_from_all_bases(
+    db: &dyn BindingsGenerator,
+    record: &Record,
+) -> Rc<[Rc<Func>]> {
+    let ir = db.ir();
+    record
+        .unambiguous_public_bases
+        .iter()
+        .flat_map(|base_class| {
+            let Ok(item) = ir.find_decl::<Item>(base_class.base_record_id) else {
+                return vec![];
+            };
+
+            match item {
+                Item::Record(base_record) => {
+                    db.collect_unqualified_member_functions(base_record.clone()).to_vec()
+                }
+                _ => vec![],
+            }
+        })
+        .collect()
+}
+
+pub fn collect_unqualified_member_functions(
+    db: &dyn BindingsGenerator,
+    record: Rc<Record>,
+) -> Rc<[Rc<Func>]> {
+    let ir = db.ir();
+    record
+        .child_item_ids
+        .iter()
+        .filter_map(|id| {
+            let Ok(child_item) = ir.find_decl::<Item>(*id) else {
+                return None;
+            };
+
+            if let Item::Func(member_function) = child_item {
+                if let UnqualifiedIdentifier::Identifier(_) = &member_function.name {
+                    return Some(member_function.clone());
+                }
+            }
+
+            None
+        })
+        .collect()
+}
+
+/// Removes functions that are ambiguous from the list of inherited functions.
+///
+/// Ambiguous functions are functions that have the same name as a function in
+/// the base class.
+fn filter_out_ambiguous_member_functions(
+    db: &dyn BindingsGenerator,
+    derived_record: Rc<Record>,
+    inherited_functions: Rc<[Rc<Func>]>,
+) -> Rc<[Rc<Func>]> {
+    let derived_member_functions = db
+        .collect_unqualified_member_functions(derived_record.clone())
+        .iter()
+        .map(|func| (func.name.clone(), func.clone()))
+        .collect::<HashMap<_, _>>();
+    let mut func_counter = HashMap::<_, (&Rc<Func>, u32)>::new();
+    for func in inherited_functions.iter() {
+        let Ok(Some(_)) = db.generate_func(func.clone(), None) else {
+            continue;
+        };
+        let unqualified_name = &func.name;
+        if derived_member_functions.contains_key(unqualified_name) {
+            continue;
+        }
+        func_counter
+            .entry(unqualified_name.clone())
+            .and_modify(|pair| pair.1 += 1)
+            .or_insert((func, 1));
+    }
+    func_counter
+        .values()
+        .filter_map(|(func, count)| if *count == 1 { Some((*func).clone()) } else { None })
+        // Sort by name to make the output deterministic.
+        .sorted_by_key(|func| func.name.identifier_as_str().unwrap().to_string())
+        .collect()
 }
 
 /// Generates Rust source code for a given `Record` and associated assertions as
@@ -427,12 +510,35 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
         .child_item_ids
         .iter()
         .map(|id| {
-            let item = ir.find_decl(*id).with_context(|| {
+            let item: &Item = ir.find_decl(*id).with_context(|| {
                 format!("Failed to look up `record.child_item_ids` for {:?}", record)
             })?;
             crate::generate_item(db, item)
         })
         .collect::<Result<Vec<_>>>()?;
+
+    let generated_inherited_functions = filter_out_ambiguous_member_functions(
+        db,
+        record.clone(),
+        collect_unqualified_member_functions_from_all_bases(db, record),
+    )
+    .iter()
+    .map(|unambiguous_base_class_member_function| {
+        let item: Result<&Item> = ir.find_decl(unambiguous_base_class_member_function.id);
+        if item.is_err() {
+            return Ok(GeneratedItem::default());
+        }
+
+        match item.clone().unwrap() {
+            Item::Func(func) => match db.generate_func(func.clone(), Some(record.clone()))? {
+                None => Ok(GeneratedItem::default()),
+                Some((item, _)) => Ok((*item).clone()),
+            },
+            _ => panic!("Unexpected item type: {:?}", item),
+        }
+    })
+    .collect::<Result<Vec<_>>>()?;
+    record_generated_items.extend(generated_inherited_functions);
 
     // Both the template definition and its instantiation should enable experimental
     // features.
@@ -2371,6 +2477,84 @@ mod tests {
                 ...
                 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
                     pub value_: ::core::ffi::c_int,
+                }
+                ...
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_derived_class_inherits_unambiguous_public_functions_bases() -> Result<()> {
+        let rs_api = generate_bindings_tokens(ir_from_cc(
+            r#"
+            namespace test{
+            class Base1 {
+              public:
+                void NonColliding();
+                void Colliding();
+            };
+
+            class Base2 {
+              public:
+                void Colliding();
+              private:
+                void PrivateFunc();
+            };
+
+            class Derived : public Base1, public Base2 {
+            };
+            }
+            "#,
+        )?)?
+        .rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                ...
+                impl Derived {
+                    ...
+                    #[inline(always)]
+                    pub unsafe fn NonColliding(__this: *mut Self) {
+                        crate::detail::__rust_thunk___ZN4test5Base112NonCollidingEv_Derived(oops::UnsafeUpcast::<_>::unsafe_upcast(__this))
+                    }
+                }
+                ...
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_member_in_derived_class_overwrites_inherited_ones() -> Result<()> {
+        let rs_api = generate_bindings_tokens(ir_from_cc(
+            r#"
+            namespace test{
+            class Base1 {
+              public:
+                void Colliding();
+            };
+
+            class Derived : public Base1 {
+              public:
+                void Colliding();
+            };
+            }
+            "#,
+        )?)?
+        .rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                ...
+                impl Derived {
+                    ...
+                    #[inline(always)]
+                    pub unsafe fn Colliding(__this: *mut Self) {
+                        crate::detail::__rust_thunk___ZN4test7Derived9CollidingEv(__this)
+                    }
                 }
                 ...
             }

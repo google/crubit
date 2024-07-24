@@ -128,7 +128,7 @@ pub struct FunctionId {
     // Fully qualified path of the function. For functions in impl blocks, this
     // includes the name of the type or trait on which the function is being
     // implemented, e.g. `Default::default`.
-    function_path: syn::Path,
+    pub function_path: syn::Path,
 }
 
 /// The name of a one-function trait, with extra entries for
@@ -916,7 +916,7 @@ pub fn get_binding(
 ) -> Option<(Ident, ImplKind)> {
     db.ir()
         .get_functions_by_name(&expected_function_name)
-        .filter(|function| generate_func(db, (*function).clone()).ok().flatten().is_some())
+        .filter(|function| generate_func(db, (*function).clone(), None).ok().flatten().is_some())
         .find_map(|function| {
             let mut function_param_types = function
                 .params
@@ -996,6 +996,9 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
 }
 
 /// Generates Rust source code for a given `Func`.
+/// `derived_record` is a derived class type which re-exports `func` as a
+/// method on this record.`func` must be a method on a base class of
+/// `derived_record`.
 ///
 /// Returns:
 ///
@@ -1007,6 +1010,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
 pub fn generate_func(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
+    derived_record: Option<Rc<Record>>,
 ) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>> {
     let ir = db.ir();
     let crate_root_path = crate::crate_root_path_tokens(&ir);
@@ -1035,7 +1039,14 @@ pub fn generate_func(
     return_type.check_by_value()?;
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
-    let thunk = generate_func_thunk(db, &func, &param_idents, &param_types, &return_type)?;
+    let thunk = generate_func_thunk(
+        db,
+        &func,
+        &param_idents,
+        &param_types,
+        &return_type,
+        derived_record.clone(),
+    )?;
 
     // If the Rust trait require a function to take the params by const reference
     // and the thunk takes some of its params by value then we should add a const
@@ -1095,10 +1106,16 @@ pub fn generate_func(
         &param_idents,
         &mut param_types,
         &mut return_type,
+        derived_record.clone(),
     )?;
 
     let api_func_def = {
-        let thunk_ident = thunk_ident(&func);
+        let thunk_ident = if let Some(ref derived_record) = derived_record {
+            thunk_ident_for_derived_member_function(&func, derived_record.clone())
+        } else {
+            thunk_ident(&func)
+        };
+
         let func_body = match &impl_kind {
             ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. } => {
                 // SAFETY: A user-defined constructor is not guaranteed to
@@ -1274,7 +1291,13 @@ pub fn generate_func(
             };
         }
         ImplKind::Struct { record, .. } => {
-            let record_name = make_rs_ident(record.rs_name.as_ref());
+            let record_name;
+            if let Some(ref derived_record) = derived_record {
+                // Generate the bindings for the derived record.
+                record_name = make_rs_ident(derived_record.rs_name.as_ref());
+            } else {
+                record_name = make_rs_ident(record.rs_name.as_ref());
+            };
             api_func = quote! { impl #record_name { #doc_comment #api_func_def } };
             function_id = FunctionId {
                 self_type: None,
@@ -1382,11 +1405,19 @@ pub fn generate_func(
         }
     }
 
+    // If we are generating bindings for a derived record, we reuse the base
+    // record's thunks, so we don't need to generate thunks.
+    let thunk_impls = if derived_record.is_some() {
+        quote! {}
+    } else {
+        generate_func_thunk_impl(db, &func)?
+    };
+
     let generated_item = GeneratedItem {
         item: api_func,
         thunks: thunk,
         features,
-        thunk_impls: generate_func_thunk_impl(db, &func)?,
+        thunk_impls,
         ..Default::default()
     };
     Ok(Some((Rc::new(generated_item), Rc::new(function_id))))
@@ -1422,7 +1453,8 @@ struct BindingsSignature {
 ///
 /// For example:
 ///
-/// * Use the `self` keyword for the this pointer.
+/// * Use the `self` keyword for the this pointer. Upcast to base classed as
+///   needed.
 /// * Use `Self` for the return value of constructor traits.
 /// * For C++ constructors, remove `self` from the Rust side (as it becomes the
 ///   return value), retaining it on the C++ side / thunk args.
@@ -1434,6 +1466,7 @@ fn function_signature(
     param_idents: &[Ident],
     param_types: &mut Vec<RsTypeKind>,
     return_type: &mut RsTypeKind,
+    derived_record: Option<Rc<Record>>,
 ) -> Result<BindingsSignature> {
     let mut api_params = Vec::with_capacity(func.params.len());
     let mut thunk_args = Vec::with_capacity(func.params.len());
@@ -1445,6 +1478,11 @@ fn function_signature(
         _ => None,
     };
     for (i, (ident, type_)) in param_idents.iter().zip(param_types.iter()).enumerate() {
+        // If we are generating bindings for a derived record, parameter types should be
+        // kept the same because `Self` will refer to the derived record type.
+        // One exception is the first parameter, as it points to the derived
+        // record.
+        let should_replace_by_self = derived_record.is_none() || i == 0;
         type_.check_by_value()?;
         if !type_.is_unpin() {
             // `impl Ctor` will fail to compile in a trait.
@@ -1460,7 +1498,11 @@ fn function_signature(
                 bail!("Non-movable, non-trivial_abi type '{type}' is not supported by value as parameter #{i}", type=quote!{#type_});
             }
             let quoted_type_or_self = if let Some(impl_record) = impl_kind_record {
-                type_.to_token_stream_replacing_by_self(Some(impl_record))
+                if should_replace_by_self {
+                    type_.to_token_stream_replacing_by_self(Some(impl_record))
+                } else {
+                    quote! {#type_}
+                }
             } else {
                 quote! {#type_}
             };
@@ -1470,7 +1512,11 @@ fn function_signature(
                 .push(quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
         } else {
             let quoted_type_or_self = if let Some(impl_record) = impl_kind_record {
-                type_.to_token_stream_replacing_by_self(Some(impl_record))
+                if should_replace_by_self {
+                    type_.to_token_stream_replacing_by_self(Some(impl_record))
+                } else {
+                    quote! {#type_}
+                }
             } else {
                 quote! {#type_}
             };
@@ -1580,10 +1626,18 @@ fn function_signature(
                     let rs_snippet = first_api_param.format_as_self_param()?;
                     api_params[0] = rs_snippet.tokens;
                     features.extend(rs_snippet.features.into_iter());
-                    thunk_args[0] = quote! { self };
+                    if derived_record.is_some() {
+                        thunk_args[0] = quote! { oops::Upcast::<_>::upcast(self) };
+                    } else {
+                        thunk_args[0] = quote! { self };
+                    }
                 } else {
                     api_params[0] = quote! { mut self };
-                    thunk_args[0] = quote! { &mut self };
+                    if derived_record.is_some() {
+                        thunk_args[0] = quote! { oops::Upcast::<_>::upcast(&mut self) };
+                    } else {
+                        thunk_args[0] = quote! { &mut self };
+                    }
                 }
             }
             ImplKind::Trait { impl_for: ImplFor::RefT, .. } => {
@@ -1591,9 +1645,19 @@ fn function_signature(
                 // referring to T (`&T`, `&mut T`, or `Pin<&mut T>` so a bare `self` parameter
                 // has that type and can be passed to a thunk via the expression `self`.
                 api_params[0] = quote! { self };
-                thunk_args[0] = quote! { self };
+                if derived_record.is_some() {
+                    thunk_args[0] = quote! { oops::Upcast::<_>::upcast(self) };
+                } else {
+                    thunk_args[0] = quote! { self };
+                }
             }
         }
+    } else if derived_record.is_some()
+        && !thunk_args.is_empty()
+        && thunk_args[0].to_string() == "__this"
+    {
+        let arg_this = thunk_args[0].clone();
+        thunk_args[0] = quote! { oops::UnsafeUpcast::<_>::unsafe_upcast(#arg_this) };
     }
 
     Ok(BindingsSignature {
@@ -1611,6 +1675,7 @@ fn generate_func_thunk(
     param_idents: &[Ident],
     param_types: &[RsTypeKind],
     return_type: &RsTypeKind,
+    derived_record: Option<Rc<Record>>,
 ) -> Result<TokenStream> {
     let thunk_attr = if can_skip_cc_thunk(db, func) {
         let mangled_name = func.mangled_name.as_ref();
@@ -1648,7 +1713,11 @@ fn generate_func_thunk(
         return_type_fragment = quote! {};
     }
 
-    let thunk_ident = thunk_ident(func);
+    let thunk_ident = if let Some(derived_record) = derived_record {
+        thunk_ident_for_derived_member_function(func, derived_record)
+    } else {
+        thunk_ident(func)
+    };
 
     let generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
     let param_idents = out_param_ident.as_ref().into_iter().chain(param_idents);
@@ -1715,7 +1784,7 @@ pub fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>
     let mut seen_funcs = HashSet::new();
     let mut overloaded_funcs = HashSet::new();
     for func in db.ir().functions() {
-        if let Ok(Some(f)) = db.generate_func(func.clone()) {
+        if let Ok(Some(f)) = db.generate_func(func.clone(), None) {
             let (.., function_id) = &f;
             if !seen_funcs.insert(function_id.clone()) {
                 overloaded_funcs.insert(function_id.clone());
@@ -1742,6 +1811,19 @@ fn thunk_ident(func: &Func) -> Ident {
         String::new()
     };
     format_ident!("__rust_thunk__{}{odr_suffix}", func.mangled_name.as_ref())
+}
+
+fn thunk_ident_for_derived_member_function(func: &Func, derived_record: Rc<Record>) -> Ident {
+    let odr_suffix = if func.is_member_or_descendant_of_class_template {
+        func.owning_target.convert_to_cc_identifier()
+    } else {
+        String::new()
+    };
+    format_ident!(
+        "__rust_thunk__{}{odr_suffix}_{}",
+        func.mangled_name.as_ref(),
+        derived_record.rs_name.as_ref()
+    )
 }
 
 fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<TokenStream> {

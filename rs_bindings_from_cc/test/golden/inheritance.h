@@ -40,6 +40,7 @@ class MyAbstractClass {
 class MethodBase1 {
  public:
   void Public();
+  void Equals(const MethodBase1*);
   void Colliding1();
   void Colliding2();
 
