@@ -71,5 +71,18 @@ TEST(PointerNullabilityTest, ComplexLoopCondition) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, OnePointerGuaranteedNonnull) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int *_Nullable p1, int *_Nullable p2) {
+      if (!p1 && !p2) return;
+      if (p1)
+        *p1;
+      else
+        // `p2` must be nonnull or we would have returned above.
+        *p2;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
