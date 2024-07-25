@@ -6,6 +6,11 @@ use has_bindings::crubit::has_bindings;
 use static_assertions::assert_not_impl_any;
 
 #[test]
+fn test_void_function_non_extern_c() {
+    has_bindings::crubit_void_function_non_extern_c();
+}
+
+#[test]
 fn test_void_function() {
     has_bindings::crubit_void_function();
 }

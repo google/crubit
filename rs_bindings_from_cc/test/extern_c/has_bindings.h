@@ -7,6 +7,9 @@
 
 #include "absl/base/attributes.h"
 namespace crubit::has_bindings {
+
+inline void crubit_void_function_non_extern_c() {}
+
 extern "C" {
 
 struct Struct {

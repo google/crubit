@@ -6,11 +6,6 @@ use item_exists::{type_exists, value_exists};
 use no_bindings::crubit::no_bindings;
 
 #[test]
-fn test_non_extern_c() {
-    assert!(!value_exists!(no_bindings::crubit_non_extern_c));
-}
-
-#[test]
 fn test_nontrivial_type() {
     assert!(!type_exists!(no_bindings::Nontrivial));
 }

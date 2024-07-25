@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/trivial_abi_struct:example_lib
-// Features: supported
+// Features: non_extern_c_functions, supported
 
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls, register_tool)]

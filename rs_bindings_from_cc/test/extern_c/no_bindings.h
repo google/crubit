@@ -10,8 +10,6 @@
 
 namespace crubit::no_bindings {
 
-inline void crubit_non_extern_c() {}
-
 struct Nontrivial {
   ~Nontrivial() {}  // NOLINT(modernize-use-equals-default)
 };
