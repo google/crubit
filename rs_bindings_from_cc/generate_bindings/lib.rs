@@ -830,7 +830,7 @@ fn required_crubit_features(
                 } else {
                     require_any_feature(
                         &mut missing_features,
-                        ir::CrubitFeature::NonExternCFunctions | ir::CrubitFeature::Experimental,
+                        ir::CrubitFeature::Supported.into(),
                         &|| "non-extern \"C\" function".into(),
                     );
                 }
