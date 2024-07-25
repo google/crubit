@@ -9,7 +9,7 @@ crubit_test_cc_library(
     name = "simple_functions",
     srcs = ["simple_functions.cc"],
     hdrs = ["simple_functions.h"],
-    aspect_hints = ["//features:non_extern_c_functions"],
+    aspect_hints = ["//features:supported"],
 )
 
 crubit_rust_test(
