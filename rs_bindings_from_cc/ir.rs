@@ -1200,9 +1200,10 @@ impl<'de> serde::Deserialize<'de> for CrubitFeaturesIR {
         let mut features = flagset::FlagSet::<CrubitFeature>::default();
         for feature in <Vec<String> as serde::Deserialize<'de>>::deserialize(deserializer)? {
             features |= match &*feature {
-                "supported" => CrubitFeature::Supported,
-                "non_extern_c_functions" => CrubitFeature::NonExternCFunctions,
-                "experimental" => CrubitFeature::Experimental,
+                "all" => flagset::FlagSet::<CrubitFeature>::full(),
+                "supported" => CrubitFeature::Supported.into(),
+                "non_extern_c_functions" => CrubitFeature::NonExternCFunctions.into(),
+                "experimental" => CrubitFeature::Experimental.into(),
                 other => {
                     return Err(<D::Error as serde::de::Error>::custom(format!(
                         "Unexpected Crubit feature: {other}"
