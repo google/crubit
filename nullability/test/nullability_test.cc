@@ -333,13 +333,15 @@ void runTest(const FunctionDecl &Func, const NullabilityPragmas &Pragmas,
   dataflow::Environment Env(DACtx, Func);
   PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
   auto Symbolic = bindSymbolicNullability(Func, Analysis, DACtx.arena());
-  require(
-      runDataflowAnalysis(ACFG, Analysis, std::move(Env),
-                          [&](const CFGElement &Elt, AnalysisState &State) {
-                            if (auto CS = Elt.getAs<CFGStmt>())
-                              if (auto *CE = dyn_cast<CallExpr>(CS->getStmt()))
-                                diagnoseCall(*CE, Ctx, Diags, State, Symbolic);
-                          }));
+  dataflow::CFGEltCallbacks<PointerNullabilityAnalysis> PostAnalysisCallbacks;
+  PostAnalysisCallbacks.After = [&](const CFGElement &Elt,
+                                    AnalysisState &State) {
+    if (auto CS = Elt.getAs<CFGStmt>())
+      if (auto *CE = dyn_cast<CallExpr>(CS->getStmt()))
+        diagnoseCall(*CE, Ctx, Diags, State, Symbolic);
+  };
+  require(runDataflowAnalysis(ACFG, Analysis, std::move(Env),
+                              PostAnalysisCallbacks));
 }
 
 // Absorbs test start/end events and diagnostics.
