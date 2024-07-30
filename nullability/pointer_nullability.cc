@@ -218,8 +218,9 @@ NullabilityKind getNullability(
              : NullabilityKind::Unspecified;
 }
 
-NullabilityKind getNullability(const Expr *E, const dataflow::Environment &Env,
-                               const dataflow::Formula *AdditionalConstraints) {
+NullabilityKind getNullability(
+    absl::Nonnull<const Expr *> E, const dataflow::Environment &Env,
+    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
   if (dataflow::PointerValue *P = getPointerValue(E, Env))
     return getNullability(*P, Env, AdditionalConstraints);
   return clang::NullabilityKind::Unspecified;
