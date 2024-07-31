@@ -5,6 +5,7 @@
 // Tests for function calls.
 
 #include "nullability/test/check_diagnostics.h"
+#include "nullability/type_nullability.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
@@ -929,6 +930,56 @@ TEST(PointerNullabilityTest, ConstMethodReturningBool) {
         // Dereference is safe because we know `operator bool()` will return the
         // same thing both times.
         *p;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, ConstMethodReturningSmartPointer) {
+  test::EnableSmartPointers Enable;
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct S {
+      Nullable<std::shared_ptr<int>> property() const;
+    };
+    void target() {
+      S s;
+      if (s.property() != nullptr) {
+        *(s.property());
+      }
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, ConstMethodReturningSmartPointerByReference) {
+  test::EnableSmartPointers Enable;
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct S {
+      const Nullable<std::shared_ptr<int>> &property() const;
+    };
+    void target() {
+      S s;
+      if (s.property() != nullptr) {
+        *(s.property());
+      }
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, NonConstMethodInvalidatesSmartPointer) {
+  test::EnableSmartPointers Enable;
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct S {
+      Nullable<std::shared_ptr<int>> property() const;
+      void writer();
+    };
+    void target() {
+      S s;
+      if (s.property() != nullptr) {
+        s.writer();
+        *(s.property());  // [[unsafe]]
+      }
     }
   )cc"));
 }

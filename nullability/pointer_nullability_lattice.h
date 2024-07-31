@@ -69,9 +69,22 @@ class PointerNullabilityLattice {
       const dataflow::RecordStorageLocation &RecordLoc,
       absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env);
 
+  // Returns the `RecordStorageLocation` associated with the
+  // `RecordStorageLocation` and `MethodDecl` of `CE`, creating one if it
+  // doesn't yet exist. The type of `CE` must be a smart pointer.
+  absl::Nullable<dataflow::StorageLocation *>
+  getConstMethodReturnStorageLocation(
+      const dataflow::RecordStorageLocation &RecordLoc,
+      absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env);
+
   void clearConstMethodReturnValues(
       const dataflow::RecordStorageLocation &RecordLoc) {
     ConstMethodReturnValues.erase(&RecordLoc);
+  }
+
+  void clearConstMethodReturnStorageLocations(
+      const dataflow::RecordStorageLocation &RecordLoc) {
+    ConstMethodReturnStorageLocations.erase(&RecordLoc);
   }
 
   // If nullability for the decl D has been overridden, patch N to reflect it.
@@ -96,6 +109,13 @@ class PointerNullabilityLattice {
       const dataflow::RecordStorageLocation *,
       llvm::SmallDenseMap<const FunctionDecl *, dataflow::Value *>>;
   ConstMethodReturnValuesType ConstMethodReturnValues;
+
+  // Maps a record storage location and const method to the record storage
+  // location to return from that const method.
+  using ConstMethodReturnStorageLocationsType = llvm::SmallDenseMap<
+      const dataflow::RecordStorageLocation *,
+      llvm::SmallDenseMap<const FunctionDecl *, dataflow::StorageLocation *>>;
+  ConstMethodReturnStorageLocationsType ConstMethodReturnStorageLocations;
 };
 
 inline std::ostream &operator<<(std::ostream &OS,

@@ -38,6 +38,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
+#include "clang/Analysis/FlowSensitive/RecordOps.h"
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/Builtins.h"
@@ -1098,24 +1099,52 @@ void transferValue_AccessorCall(
   }
 }
 
-void handleConstMemberCall(absl::Nonnull<const CallExpr *> CE,
-                           dataflow::RecordStorageLocation *RecordLoc,
-                           const MatchFinder::MatchResult &Result,
-                           TransferState<PointerNullabilityLattice> &State) {
-  if ((!isSupportedRawPointerType(CE->getType()) &&
-       !CE->getType()->isBooleanType()) ||
-      !CE->isPRValue() || RecordLoc == nullptr) {
-    // Perform default handling.
-    transferValue_CallExpr(CE, Result, State);
+void handleConstMemberCall(
+    absl::Nonnull<const CallExpr *> CE,
+    absl::Nullable<dataflow::RecordStorageLocation *> RecordLoc,
+    const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  // If the const method returns a smart pointer, handle it separately.
+  // Smart pointers are represented as RecordStorangeLocations, so their
+  // treatment is different from booleans or raw pointers, which are
+  // represented as Values.
+  if (RecordLoc != nullptr && isSupportedSmartPointerType(CE->getType())) {
+    StorageLocation *Loc = State.Lattice.getConstMethodReturnStorageLocation(
+        *RecordLoc, CE, State.Env);
+    if (Loc == nullptr) return;
+
+    if (CE->isGLValue()) {
+      // If the call to the const method returns a reference to a smart pointer,
+      // we can use link the call expression to the smart pointer via
+      // setStorageLocation.
+      State.Env.setStorageLocation(*CE, *Loc);
+    } else {
+      // If the call to the const method returns a smart pointer by value, we
+      // need to use CopyRecord to link the smart pointer to the result object
+      // of the call expression.
+      copyRecord(*cast<RecordStorageLocation>(Loc),
+                 State.Env.getResultObjectLocation(*CE), State.Env);
+    }
     return;
   }
-  Value *Val =
-      State.Lattice.getConstMethodReturnValue(*RecordLoc, CE, State.Env);
-  if (Val == nullptr) return;
 
-  State.Env.setValue(*CE, *Val);
-  if (auto *PointerVal = dyn_cast<PointerValue>(Val))
-    initPointerFromTypeNullability(*PointerVal, CE, State);
+  // If the const method returns a raw pointer or boolean (represented as
+  // Values) handle them appropriately.
+  if (RecordLoc != nullptr && CE->isPRValue() &&
+      (isSupportedRawPointerType(CE->getType()) ||
+       CE->getType()->isBooleanType())) {
+    Value *Val =
+        State.Lattice.getConstMethodReturnValue(*RecordLoc, CE, State.Env);
+    if (Val == nullptr) return;
+
+    State.Env.setValue(*CE, *Val);
+    if (auto *PointerVal = dyn_cast<PointerValue>(Val))
+      initPointerFromTypeNullability(*PointerVal, CE, State);
+    return;
+  }
+
+  // Perform default handling for remaining return types
+  transferValue_CallExpr(CE, Result, State);
 }
 
 void transferValue_ConstMemberCall(
@@ -1157,6 +1186,7 @@ void handleNonConstMemberCall(absl::Nonnull<const CallExpr *> CE,
         State.Env.clearValue(*FieldLoc);
     }
     State.Lattice.clearConstMethodReturnValues(*RecordLoc);
+    State.Lattice.clearConstMethodReturnStorageLocations(*RecordLoc);
   }
 
   // Perform default handling.

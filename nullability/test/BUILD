@@ -184,6 +184,7 @@ cc_test(
     srcs = ["function_calls.cc"],
     deps = [
         ":check_diagnostics",
+        "//nullability:type_nullability",
         "@abseil-cpp//absl/strings",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",

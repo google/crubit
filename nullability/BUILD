@@ -18,6 +18,7 @@ cc_library(
         "//nullability/test:__pkg__",
     ],
     deps = [
+        ":pointer_nullability",
         ":type_nullability",
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/container:flat_hash_map",
