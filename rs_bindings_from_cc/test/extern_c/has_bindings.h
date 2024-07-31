@@ -14,7 +14,7 @@ extern "C" {
 
 struct Struct {
   int* x;
-  float y;
+  char y;
   Struct* z;
 };
 
@@ -46,7 +46,7 @@ union Union {
 inline void crubit_void_function() {}
 void crubit_non_inline_function();
 inline const void* crubit_void_ptr_identity(const void* x) { return x; }
-inline int crubit_add(int x, int y) { return x + y; }
+inline int crubit_add(int x, char y) { return x + y; }
 inline Struct crubit_anystruct(Struct x, const StructAlias*) { return x; }
 inline Enum crubit_enum_function(Enum x) { return x; }
 inline Union crubit_union_function(Union x) { return x; }

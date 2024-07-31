@@ -37,9 +37,14 @@ fn test_void_ptr_function() {
 #[test]
 fn test_user_struct() {
     let mut i: core::ffi::c_int = 123;
-    let s = has_bindings::Struct { x: &mut i, y: 3.4, z: 0 as *mut _ };
+    let s = has_bindings::Struct { x: &mut i, y: 123, z: 0 as *mut _ };
     let s2 = unsafe { has_bindings::crubit_anystruct(s, &s) };
     assert_eq!(s2.x, &mut i as *mut core::ffi::c_int);
+
+    use std::any::Any;
+    assert_eq!(s.x.type_id(), std::any::TypeId::of::<*mut core::ffi::c_int>());
+    assert_eq!(s.y.type_id(), std::any::TypeId::of::<core::ffi::c_char>());
+    assert_eq!(s.z.type_id(), std::any::TypeId::of::<*mut has_bindings::Struct>());
 }
 
 #[test]

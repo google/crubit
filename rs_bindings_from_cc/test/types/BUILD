@@ -7,6 +7,8 @@ crubit_test_cc_library(
     name = "types_nonptr",
     hdrs = ["types_nonptr.h"],
     deps = ["//support/internal:bindings_support"],
+    # TODO(b/356479163): use aspect_hints = ["//features:supported"],
+    # This is blocked on static methods, or else redesigning the test.
 )
 
 crubit_test_cc_library(
