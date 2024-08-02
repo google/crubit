@@ -19,6 +19,7 @@
 #![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
+#![allow(dead_code)]
 #![deny(warnings)]
 
 /// Nontrivial due to (declared, but not yet defined) user-specified constructor

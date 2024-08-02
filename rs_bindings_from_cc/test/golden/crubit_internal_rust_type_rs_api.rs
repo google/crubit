@@ -13,6 +13,7 @@
 #![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
+#![allow(dead_code)]
 #![deny(warnings)]
 
 // Type bindings for struct MyI8Struct suppressed due to being mapped to an existing Rust type (i8)

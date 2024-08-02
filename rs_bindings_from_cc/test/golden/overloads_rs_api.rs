@@ -12,6 +12,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
+#![allow(dead_code)]
 #![deny(warnings)]
 
 // Error while generating bindings for item 'Overload':

@@ -13,6 +13,7 @@
 #![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
+#![allow(dead_code)]
 #![deny(warnings)]
 
 /// Generated from: examples/cpp/trivial_struct/example.h;l=8

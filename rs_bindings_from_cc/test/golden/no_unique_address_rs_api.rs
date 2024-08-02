@@ -13,6 +13,7 @@
 #![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
+#![allow(dead_code)]
 #![deny(warnings)]
 
 /// The no_unique_address.h header is present both in

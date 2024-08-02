@@ -1042,6 +1042,10 @@ fn generate_bindings_tokens(
             // C++ names don't follow Rust guidelines:
             #![allow(nonstandard_style)] __NEWLINE__
 
+            // Parts of our generated code are sometimes considered dead
+            // (b/349776381).
+            #![allow(dead_code)] __NEWLINE__
+
             #![deny(warnings)] __NEWLINE__ __NEWLINE__
 
             #( #items __NEWLINE__ __NEWLINE__ )*
