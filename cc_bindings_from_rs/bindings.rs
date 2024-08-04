@@ -279,6 +279,16 @@ struct FullyQualifiedName {
     /// For example, if a type has `#[__crubit::annotate(cpp_type="x::y")]`,
     /// then cpp_type will be `Some(x::y)`.
     cpp_type: Option<Symbol>,
+
+    /// The C++ name to use for the symbol.
+    ///
+    /// For example, the following struct
+    /// ```
+    /// #[__crubit::annotate(cpp_name="Bar")]
+    /// struct Foo { ... }
+    /// ```
+    /// will be generated as a C++ struct named `Bar` instead of `Foo`.
+    cpp_name: Option<Symbol>,
 }
 
 impl FullyQualifiedName {
@@ -291,11 +301,13 @@ impl FullyQualifiedName {
 
         // Crash OK: these attributes are introduced by crubit itself, and "should
         // never" be malformed.
-        let cpp_type = crubit_attr::get(tcx, def_id).unwrap().cpp_type;
+        let attributes = crubit_attr::get(tcx, def_id).unwrap();
+        let cpp_type = attributes.cpp_type;
 
         let mut full_path = tcx.def_path(def_id).data; // mod_path + name
         let name = full_path.pop().expect("At least the item's name should be present");
         let name = name.data.get_opt_name();
+        let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).or(name);
 
         let mod_path = NamespaceQualifier::new(
             full_path
@@ -304,7 +316,7 @@ impl FullyQualifiedName {
                 .map(|s| Rc::<str>::from(s.as_str())),
         );
 
-        Self { krate, mod_path, name, cpp_type }
+        Self { krate, mod_path, name, cpp_type, cpp_name }
     }
 
     fn format_for_cc(&self) -> Result<TokenStream> {
@@ -313,8 +325,9 @@ impl FullyQualifiedName {
             return Ok(quote! {#path});
         }
 
-        let name =
-            self.name.as_ref().expect("`format_for_cc` can't be called on name-less item kinds");
+        let name = self.cpp_name.as_ref().unwrap_or_else(|| {
+            self.name.as_ref().expect("`format_for_cc` can't be called on name-less item kinds")
+        });
 
         let top_level_ns = format_cc_ident(self.krate.as_str())?;
         let ns_path = self.mod_path.format_for_cc()?;
@@ -1383,7 +1396,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         let struct_name = match struct_name.as_ref() {
             None => quote! {},
             Some(fully_qualified_name) => {
-                let name = fully_qualified_name.name.expect("Structs always have a name");
+                let name = fully_qualified_name.cpp_name.expect("Structs always have a name");
                 let name = format_cc_ident(name.as_str())
                     .expect("Caller of format_fn should verify struct via format_adt_core");
                 quote! { #name :: }
@@ -1580,7 +1593,9 @@ fn format_adt_core<'tcx>(
     assert!(self_ty.is_adt());
     assert!(is_directly_public(tcx, def_id), "Caller should verify");
 
-    let item_name = tcx.item_name(def_id);
+    let attribute = crubit_attr::get(tcx, def_id).unwrap();
+
+    let item_name = attribute.cpp_name.unwrap_or_else(|| tcx.item_name(def_id));
     let rs_fully_qualified_name = format_ty_for_rs(tcx, self_ty)?;
     let cc_short_name =
         format_cc_ident(item_name.as_str()).context("Error formatting item name")?;
@@ -3853,6 +3868,41 @@ pub mod tests {
                     inline void Create() {
                         return __crubit_internal::__crubit_thunk_foo();
                     }
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_struct_cpp_name() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+
+                #[__crubit::annotate(cpp_name="Bar")]
+                pub struct Foo {
+                    pub x: i32,
+                }
+            "#;
+        test_format_item(test_src, "Foo", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::Foo>() == 4);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::Foo>() == 4);
+                    const _: () = assert!(::core::mem::offset_of!(::rust_out::Foo, x) == 0);
+                }
+            );
+
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Foo") alignas(4)
+                    [[clang::trivial_abi]] Bar final
                 }
             );
         });

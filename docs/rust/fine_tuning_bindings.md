@@ -28,7 +28,7 @@ Will generate the following C++ bindings:
 std::int32_t Create(); // named `Create` instead of `new`.
 ```
 
-Currently this attribute works on functions only (See b/349070421).
+Currently this attribute works on functions and structs (See b/349070421).
 
 ## `cpp_type`
 
