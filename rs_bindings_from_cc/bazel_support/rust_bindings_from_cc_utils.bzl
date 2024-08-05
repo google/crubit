@@ -183,6 +183,9 @@ bindings_attrs = {
     "_error_format": attr.label(
         default = "@rules_rust//:error_format",
     ),
+    "_extra_rustc_flag": attr.label(
+        default = "@rules_rust//:extra_rustc_flag",
+    ),
     "_extra_rustc_flags": attr.label(
         default = "@rules_rust//:extra_rustc_flags",
     ),
