@@ -11,7 +11,6 @@ load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
 # buildifier: disable=bzl-visibility
 load(
     "@rules_rust//rust/private:rustc.bzl",
-    "ExtraRustcFlagsInfo",
     "rustc_compile_action",
 )
 load("@bazel_skylib//lib:structs.bzl", "structs")
@@ -95,7 +94,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage)
             compile_data_targets = depset([]),
             owner = ctx.label,
         ),
-        rust_flags = ctx.attr._extra_rustc_flags[ExtraRustcFlagsInfo].extra_rustc_flags + ["-Zallow-features=custom_inner_attributes,impl_trait_in_assoc_type,register_tool,negative_impls,vec_into_raw_parts,extern_types,arbitrary_self_types"] +
+        rust_flags = ["-Zallow-features=custom_inner_attributes,impl_trait_in_assoc_type,register_tool,negative_impls,vec_into_raw_parts,extern_types,arbitrary_self_types"] +
                      # TODO(b/349776381): remove.
                      ["-Adead_code"],
         output_hash = output_hash,
