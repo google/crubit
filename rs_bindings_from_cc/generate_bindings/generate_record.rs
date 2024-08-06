@@ -113,9 +113,9 @@ fn get_field_rs_type_kind_for_layout(
         // Both the template definition and its instantiation should enable experimental
         // features.
         for target in record.defining_target.iter().chain([&record.owning_target]) {
-            let required_features = db.ir().target_crubit_features(target);
+            let enabled_features = db.ir().target_crubit_features(target);
             ensure!(
-                required_features.contains(ir::CrubitFeature::Experimental),
+                enabled_features.contains(ir::CrubitFeature::Experimental),
                 "unknown field attributes are only supported with experimental features \
                 enabled on {target}\nUnknown attribute: {unknown_attr}`"
             );
@@ -125,6 +125,17 @@ fn get_field_rs_type_kind_for_layout(
         Ok(t) => db.rs_type_kind(t.rs_type.clone())?,
         Err(e) => bail!("{e}"),
     };
+
+    for target in record.defining_target.iter().chain([&record.owning_target]) {
+        let enabled_features = db.ir().target_crubit_features(target);
+        let (missing_features, reason) = type_kind.required_crubit_features(enabled_features);
+        ensure!(
+            missing_features.is_empty(),
+            "missing features: [{missing_features}]: {reason}",
+            missing_features = missing_features.into_iter().map(|f| f.aspect_hint()).join(", ")
+        );
+    }
+
     // In supported, we replace nontrivial fields with opaque blobs.
     // This is because we likely don't want the `ManuallyDrop<T>` solution to be the
     // one users get.
@@ -132,9 +143,9 @@ fn get_field_rs_type_kind_for_layout(
     // Users can still work around this with accessor functions.
     if should_implement_drop(record) && !record.is_union() && needs_manually_drop(&type_kind) {
         for target in record.defining_target.iter().chain([&record.owning_target]) {
-            let required_features = db.ir().target_crubit_features(target);
+            let enabled_features = db.ir().target_crubit_features(target);
             ensure!(
-                required_features.contains(ir::CrubitFeature::Experimental),
+                enabled_features.contains(ir::CrubitFeature::Experimental),
                 "nontrivial fields would be destroyed in the wrong order"
             );
         }
@@ -2597,6 +2608,13 @@ mod tests {
     /// This is hard to test any other way than token comparison!
     #[test]
     fn test_supported_suppressed_field_types() -> Result<()> {
+        // Ideally we'd use a cross-platform test, but it's hard to craft an unsupported
+        // type that is still returned successfully by db.rs_type_kind(), and so
+        // results in a secondary failure when we check afterwards for the
+        // required features for the type.
+        if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
+            return Ok(()); // vectorcall only exists on x86_64, not e.g. aarch64
+        }
         let mut ir = ir_from_cc(
             r#"
             struct Nontrivial {
@@ -2605,6 +2623,9 @@ mod tests {
 
             struct Trivial {
                 Nontrivial* hidden_field;
+                // An example of a field which has a type that is not supported,
+                // but _is_ successfully retrieved by db.rs_type_kind().
+                void(*hidden_field_2)() [[clang::vectorcall]];
             };
         
         "#,
@@ -2618,6 +2639,9 @@ mod tests {
             struct Trivial {
                 ...
                 pub(crate) hidden_field: [::core::mem::MaybeUninit<u8>; 8],
+                ...
+                pub(crate) hidden_field_2: [::core::mem::MaybeUninit<u8>; 8],
+                ...
             }}
         );
         Ok(())

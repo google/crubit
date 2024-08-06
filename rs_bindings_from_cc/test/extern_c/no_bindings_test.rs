@@ -103,3 +103,8 @@ fn test_type_attributes() {
     assert!(!type_exists!(no_bindings::UnknownTypeAttribute));
     assert!(!value_exists!(no_bindings::crubit_unknown_type_attribute));
 }
+
+#[test]
+fn test_incomplete_type() {
+    assert!(!value_exists!(no_bindings::crubit_incomplete_type));
+}
