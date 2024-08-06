@@ -396,6 +396,13 @@ impl RsTypeKind {
     /// type, then the function or type alias will itself also require this
     /// feature. However, in the case of fields inside compound data types,
     /// only those fields require the feature, not the entire type.
+    ///
+    /// This isn't inlined into `db.rs_type_kind()` because `db.rs_type_kind()`
+    /// does not know which target is requesting the type, and it's a bit
+    /// tricky. Consider that a templated item needs to perform this check
+    /// for both the template definition and its instantiation, and so both
+    /// would need to be passed in to rs_type_kind() in order to be able to
+    /// merge these two functions.
     pub fn required_crubit_features(
         &self,
         enabled_features: flagset::FlagSet<ir::CrubitFeature>,
