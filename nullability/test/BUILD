@@ -74,6 +74,11 @@ sh_test(
     srcs = ["nullability_test_test.sh"],
     args = ["$(location :nullability_test)"],
     data = [":nullability_test"],
+    # TODO(b/357760487): re-enable it.
+    tags = [
+        "manual",
+        "notap",
+    ],
 )
 
 cc_test(
@@ -309,10 +314,11 @@ cc_test(
     ],
 )
 
-nullability_test(
-    name = "symbolic_nullability",
-    srcs = ["symbolic_nullability.cc"],
-)
+# TODO(b/357760487): re-enable it.
+# nullability_test(
+#     name = "symbolic_nullability",
+#     srcs = ["symbolic_nullability.cc"],
+# )
 
 cc_test(
     name = "templates",

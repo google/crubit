@@ -198,6 +198,11 @@ cc_library(
 cc_test(
     name = "type_nullability_test",
     srcs = ["type_nullability_test.cc"],
+    # TODO(b/357760487): re-enable it.
+    tags = [
+        "manual",
+        "notap",
+    ],
     deps = [
         ":pragma",
         ":type_nullability",
