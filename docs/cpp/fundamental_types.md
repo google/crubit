@@ -13,36 +13,22 @@ The following map is bidirectional. If you call a C++ interface from Rust using
 Crubit, then `int32_t` in C++ becomes `i32` in Rust. Vice versa, if you call a
 Rust interface from C++ using Crubit, `i32` in Rust becomes `int32_t` in C++.
 
-C++         | Rust
------------ | -------------------------------------------------------
-`void`      | `()` as a return type, `::core::ffi::c_void` otherwise.
-`int8_t`    | `i8`
-`int16_t`   | `i16`
-`int32_t`   | `i32`
-`int64_t`   | `i64`
-`intptr_t`  | `isize`
-`uint8_t`   | `u8`
-`uint16_t`  | `u16`
-`uint32_t`  | `u32`
-`uint64_t`  | `u64`
-`uintptr_t` | `usize`
-`bool`      | `bool`
-`double`    | `f64`
-`float`     | `f32`
-
-## One-way map of C++ into Rust types
-
-The C++ types below are mapped one-way into the corresponding Rust types. For
-example `size_t` maps to `usize`, but `usize` maps to `uintptr_t`.
-
-TODO(b/283258442): `::core::ffi::*` should eventually be a bidirectional mapping
-
 C++                  | Rust
--------------------- | -----------------------------
-`ptrdiff_t`          | `isize`
-`size_t`             | `usize`
-`char16_t`           | `u16`
-`char32_t`           | `u32` [^char32_t]
+-------------------- | -------------------------------------------------------
+`void`               | `()` as a return type, `::core::ffi::c_void` otherwise.
+`int8_t`             | `i8`
+`int16_t`            | `i16`
+`int32_t`            | `i32`
+`int64_t`            | `i64`
+`intptr_t`           | `isize`
+`uint8_t`            | `u8`
+`uint16_t`           | `u16`
+`uint32_t`           | `u32`
+`uint64_t`           | `u64`
+`uintptr_t`          | `usize`
+`bool`               | `bool`
+`double`             | `f64`
+`float`              | `f32`
 `char`               | `::core::ffi::c_char` [^char]
 `signed char`        | `::core::ffi::c_schar`
 `unsigned char`      | `::core::ffi::c_uchar`
@@ -54,6 +40,18 @@ C++                  | Rust
 `unsigned long`      | `::core::ffi::c_ulong`
 `long long`          | `::core::ffi::c_longlong`
 `unsigned long long` | `::core::ffi::c_ulonglong`
+
+## One-way map of C++ into Rust types
+
+The C++ types below are mapped one-way into the corresponding Rust types. For
+example `size_t` maps to `usize`, but `usize` maps to `uintptr_t`.
+
+C++         | Rust
+----------- | -----------------
+`ptrdiff_t` | `isize`
+`size_t`    | `usize`
+`char16_t`  | `u16`
+`char32_t`  | `u32` [^char32_t]
 
 ## Unsupported types
 

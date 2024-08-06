@@ -29,6 +29,7 @@ pub mod test_c_void_ptr {
 }
 
 extern "C" fn i8_func(_: i8) {}
+extern "C" fn c_char_func(_: core::ffi::c_char) {}
 
 pub mod return_types {
     use core::ffi;
@@ -41,6 +42,39 @@ pub mod return_types {
         core::ptr::null()
     }
 
+    pub fn c_char() -> ffi::c_char {
+        0
+    }
+    pub fn c_schar() -> ffi::c_schar {
+        0
+    }
+    pub fn c_uchar() -> ffi::c_uchar {
+        0
+    }
+    pub fn c_short() -> ffi::c_short {
+        0
+    }
+    pub fn c_ushort() -> ffi::c_ushort {
+        0
+    }
+    pub fn c_int() -> ffi::c_int {
+        0
+    }
+    pub fn c_uint() -> ffi::c_uint {
+        0
+    }
+    pub fn c_long() -> ffi::c_long {
+        0
+    }
+    pub fn c_ulong() -> ffi::c_ulong {
+        0
+    }
+    pub fn c_longlong() -> ffi::c_longlong {
+        0
+    }
+    pub fn c_ulonglong() -> ffi::c_ulonglong {
+        0
+    }
     pub fn c_float() -> ffi::c_float {
         0.0
     }
@@ -88,6 +122,10 @@ pub mod return_types {
     pub fn i8_func() -> extern "C" fn(i8) {
         crate::i8_func
     }
+
+    pub fn c_char_func() -> extern "C" fn(ffi::c_char) {
+        crate::c_char_func
+    }
 }
 
 pub mod field_types {
@@ -96,6 +134,17 @@ pub mod field_types {
         pub c_void_mut_ptr: *mut ffi::c_void,
         pub c_void_const_ptr: *const ffi::c_void,
 
+        pub c_char: ffi::c_char,
+        pub c_schar: ffi::c_schar,
+        pub c_uchar: ffi::c_uchar,
+        pub c_short: ffi::c_short,
+        pub c_ushort: ffi::c_ushort,
+        pub c_int: ffi::c_int,
+        pub c_uint: ffi::c_uint,
+        pub c_long: ffi::c_long,
+        pub c_ulong: ffi::c_ulong,
+        pub c_longlong: ffi::c_longlong,
+        pub c_ulonglong: ffi::c_ulonglong,
         pub c_float: ffi::c_float,
         pub c_double: ffi::c_double,
 
@@ -113,5 +162,6 @@ pub mod field_types {
         pub f64: f64,
 
         pub i8_func: extern "C" fn(i8),
+        pub c_char_func: extern "C" fn(ffi::c_char),
     }
 }

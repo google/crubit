@@ -24,7 +24,7 @@ use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use rustc_attr::find_deprecation;
 use rustc_hir::def::{DefKind, Res};
-use rustc_hir::{AssocItemKind, Item, ItemKind, Node, Safety, UseKind, UsePath};
+use rustc_hir::{AssocItemKind, HirId, Item, ItemKind, Node, Safety, UseKind, UsePath};
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
@@ -78,7 +78,7 @@ memoized::query_group! {
 
         fn format_ty_for_cc(
             &self,
-            ty: Ty<'tcx>,
+            ty: SugaredTy<'tcx>,
             location: TypeLocation,
         ) -> Result<CcSnippet>;
 
@@ -346,6 +346,51 @@ impl FullyQualifiedName {
     }
 }
 
+mod sugared_ty {
+    use super::*;
+    /// A Ty, optionally attached to its `hir::Ty` counterpart, if any.
+    ///
+    /// The rustc_hir::Ty is used only for detecting type aliases (or other
+    /// optional sugar), unrelated to the actual concrete type. It
+    /// necessarily disappears if, for instance, the type is plugged in from
+    /// a generic. There's no way to tell, in the bindings for
+    /// Vec<c_char>::len(), that `T` came from the type alias
+    /// `c_char`, instead of a plain `i8` or `u8`.
+    #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+    pub(super) struct SugaredTy<'tcx> {
+        mid: Ty<'tcx>,
+        /// The HirId of the corresponding HirTy. We store it as a HirId so that
+        /// it's hashable.
+        hir_id: Option<HirId>,
+    }
+
+    impl<'tcx> std::fmt::Display for SugaredTy<'tcx> {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+            std::fmt::Display::fmt(&self.mid, f)
+        }
+    }
+
+    impl<'tcx> SugaredTy<'tcx> {
+        pub fn new(mid: Ty<'tcx>, hir: Option<&rustc_hir::Ty<'tcx>>) -> Self {
+            Self { mid, hir_id: hir.map(|hir| hir.hir_id) }
+        }
+
+        /// Returns the rustc_middle::Ty this represents.
+        pub fn mid(&self) -> Ty<'tcx> {
+            self.mid
+        }
+
+        /// Returns the rustc_hir::Ty this represents, if any.
+        pub fn hir(&self, db: &dyn BindingsGenerator<'tcx>) -> Option<&'tcx rustc_hir::Ty<'tcx>> {
+            let hir_id = self.hir_id?;
+            let hir_ty = db.tcx().hir_node(hir_id).expect_ty();
+            debug_assert_eq!(hir_ty.hir_id, hir_id);
+            Some(hir_ty)
+        }
+    }
+}
+use sugared_ty::SugaredTy;
+
 /// Whether functions using `extern "C"` ABI can safely handle values of type
 /// `ty` (e.g. when passing by value arguments or return values of such type).
 fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
@@ -432,7 +477,7 @@ enum TypeLocation {
 
 fn format_pointer_or_reference_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    pointee: Ty<'tcx>,
+    pointee: SugaredTy<'tcx>,
     mutability: rustc_middle::mir::Mutability,
     pointer_sigil: TokenStream,
 ) -> Result<CcSnippet> {
@@ -441,7 +486,7 @@ fn format_pointer_or_reference_ty_for_cc<'tcx>(
         Mutability::Mut => quote! {},
         Mutability::Not => quote! { const },
     };
-    if pointee.is_c_void(tcx) {
+    if pointee.mid().is_c_void(tcx) {
         return Ok(CcSnippet { tokens: quote! { #const_qualifier void* }, ..Default::default() });
     }
     let CcSnippet { tokens, mut prereqs } = db.format_ty_for_cc(pointee, TypeLocation::Other)?;
@@ -453,7 +498,7 @@ fn format_pointer_or_reference_ty_for_cc<'tcx>(
 /// spelled in a C++ declaration of a function parameter or field.
 fn format_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    ty: Ty<'tcx>,
+    ty: SugaredTy<'tcx>,
     location: TypeLocation,
 ) -> Result<CcSnippet> {
     let tcx = db.tcx();
@@ -463,7 +508,12 @@ fn format_ty_for_cc<'tcx>(
     fn keyword(tokens: TokenStream) -> CcSnippet {
         CcSnippet::new(tokens)
     }
-    Ok(match ty.kind() {
+
+    if let Some(alias) = format_core_alias_for_cc(db, ty) {
+        return Ok(alias);
+    }
+
+    Ok(match ty.mid().kind() {
         ty::TyKind::Never => match location {
             TypeLocation::FnReturn => keyword(quote! { void }),
             _ => {
@@ -509,7 +559,7 @@ fn format_ty_for_cc<'tcx>(
             // `rust_builtin_type_abi_assumptions.md` - we assume that Rust's `char` has the
             // same ABI as `u32`.
             let layout = tcx
-                .layout_of(ty::ParamEnv::empty().and(ty))
+                .layout_of(ty::ParamEnv::empty().and(ty.mid()))
                 .expect("`layout_of` is expected to succeed for the builtin `char` type")
                 .layout;
             assert_eq!(4, layout.align().abi.bytes());
@@ -596,14 +646,27 @@ fn format_ty_for_cc<'tcx>(
             CcSnippet { tokens: FullyQualifiedName::new(tcx, def_id).format_for_cc()?, prereqs }
         }
 
-        ty::TyKind::RawPtr(pointee_ty, mutbl) => {
-            format_pointer_or_reference_ty_for_cc(db, *pointee_ty, *mutbl, quote! { * })
-                .with_context(|| {
-                    format!("Failed to format the pointee of the pointer type `{ty}`")
-                })?
+        ty::TyKind::RawPtr(pointee_mid, mutbl) => {
+            let mut pointee_hir = None;
+            if let Some(hir) = ty.hir(db) {
+                if let rustc_hir::TyKind::Ptr(mut_p) = hir.kind {
+                    pointee_hir = Some(mut_p.ty);
+                }
+            }
+            let pointee = SugaredTy::new(*pointee_mid, pointee_hir);
+            format_pointer_or_reference_ty_for_cc(db, pointee, *mutbl, quote! { * }).with_context(
+                || format!("Failed to format the pointee of the pointer type `{ty}`"),
+            )?
         }
 
-        ty::TyKind::Ref(region, referent_ty, mutability) => {
+        ty::TyKind::Ref(region, referent_mid, mutability) => {
+            let mut referent_hir = None;
+            if let Some(hir) = ty.hir(db) {
+                if let rustc_hir::TyKind::Ref(_, mut_p, ..) = &hir.kind {
+                    referent_hir = Some(mut_p.ty);
+                }
+            }
+            let referent = SugaredTy::new(*referent_mid, referent_hir);
             match location {
                 TypeLocation::FnReturn | TypeLocation::FnParam => (),
                 TypeLocation::Other => bail!(
@@ -612,15 +675,10 @@ fn format_ty_for_cc<'tcx>(
                 ),
             };
             let lifetime = format_region_as_cc_lifetime(region);
-            format_pointer_or_reference_ty_for_cc(
-                db,
-                *referent_ty,
-                *mutability,
-                quote! { & #lifetime },
-            )
-            .with_context(|| {
-                format!("Failed to format the referent of the reference type `{ty}`")
-            })?
+            format_pointer_or_reference_ty_for_cc(db, referent, *mutability, quote! { & #lifetime })
+                .with_context(|| {
+                    format!("Failed to format the referent of the reference type `{ty}`")
+                })?
         }
 
         ty::TyKind::FnPtr(sig) => {
@@ -648,8 +706,15 @@ fn format_ty_for_cc<'tcx>(
 
             let mut prereqs = CcPrerequisites::default();
             prereqs.includes.insert(db.support_header("internal/cxx20_backports.h"));
-            let ret_type = format_ret_ty_for_cc(db, &sig)?.into_tokens(&mut prereqs);
-            let param_types = format_param_types_for_cc(db, &sig)?
+
+            let mut sig_hir = None;
+            if let Some(hir) = ty.hir(db) {
+                if let rustc_hir::TyKind::BareFn(bare_fn) = &hir.kind {
+                    sig_hir = Some(bare_fn.decl);
+                }
+            }
+            let ret_type = format_ret_ty_for_cc(db, &sig, sig_hir)?.into_tokens(&mut prereqs);
+            let param_types = format_param_types_for_cc(db, &sig, sig_hir)?
                 .into_iter()
                 .map(|snippet| snippet.into_tokens(&mut prereqs));
             let tokens = quote! {
@@ -670,23 +735,95 @@ fn format_ty_for_cc<'tcx>(
     })
 }
 
+/// Returns `Some(CcSnippet)` if `ty` is a special-cased alias type from
+/// `core::ffi` (AKA `std::ffi`).
+///
+/// TODO(b/283258442): Also handle `libc` aliases.
+fn format_core_alias_for_cc<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    ty: SugaredTy<'tcx>,
+) -> Option<CcSnippet> {
+    let tcx = db.tcx();
+    let hir_ty = ty.hir(db)?;
+    let rustc_hir::TyKind::Path(rustc_hir::QPath::Resolved(None, path)) = &hir_ty.kind else {
+        return None;
+    };
+    let rustc_hir::def::Res::Def(rustc_hir::def::DefKind::TyAlias, alias_def_id) = &path.res else {
+        return None;
+    };
+    let def_path = tcx.def_path(*alias_def_id);
+
+    // Note: the `std::ffi` aliases are still originally defined in `core::ffi`, so
+    // we only need to check for a crate name of `core` here.
+    if tcx.crate_name(def_path.krate) != sym::core {
+        return None;
+    };
+    let [module, item] = def_path.data.as_slice() else {
+        return None;
+    };
+    if module.data != rustc_hir::definitions::DefPathData::TypeNs(sym::ffi) {
+        return None;
+    };
+    let rustc_hir::definitions::DefPathData::TypeNs(item) = item.data else {
+        return None;
+    };
+    let cpp_type = match item.as_str() {
+        "c_char" => quote! { char},
+        "c_schar" => quote! { signed char},
+        "c_uchar" => quote! { unsigned char},
+        "c_short" => quote! { short},
+        "c_ushort" => quote! { unsigned short},
+        "c_int" => quote! { int},
+        "c_uint" => quote! { unsigned int},
+        "c_long" => quote! { long},
+        "c_ulong" => quote! { unsigned long},
+        "c_longlong" => quote! { long long},
+        "c_ulonglong" => quote! { unsigned long long},
+        _ => return None,
+    };
+    Some(CcSnippet::new(cpp_type))
+}
+
+/// Returns the C++ return type.
+///
+/// `sig_hir` is the optional HIR `FnDecl`, if available. This is used to
+/// retrieve alias information.
 fn format_ret_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    sig: &ty::FnSig<'tcx>,
+    sig_mid: &ty::FnSig<'tcx>,
+    sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
 ) -> Result<CcSnippet> {
-    db.format_ty_for_cc(sig.output(), TypeLocation::FnReturn)
+    let hir = sig_hir.and_then(|sig_hir| match sig_hir.output {
+        rustc_hir::FnRetTy::Return(hir_ty) => Some(hir_ty),
+        _ => None,
+    });
+    db.format_ty_for_cc(SugaredTy::new(sig_mid.output(), hir), TypeLocation::FnReturn)
         .context("Error formatting function return type")
 }
 
+/// Returns the C++ parameter types.
+///
+/// `sig_hir` is the optional HIR FnSig, if available. This is used to retrieve
+/// alias information.
 fn format_param_types_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    sig: &ty::FnSig<'tcx>,
+    sig_mid: &ty::FnSig<'tcx>,
+    sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
 ) -> Result<Vec<CcSnippet>> {
-    sig.inputs()
+    if let Some(sig_hir) = sig_hir {
+        assert_eq!(
+            sig_mid.inputs().len(),
+            sig_hir.inputs.len(),
+            "internal error: MIR and HIR function signatures do not line up"
+        );
+    }
+    sig_mid
+        .inputs()
         .iter()
         .enumerate()
-        .map(|(i, &ty)| {
-            db.format_ty_for_cc(ty, TypeLocation::FnParam)
+        .map(|(i, &mid)| {
+            let hir = sig_hir.map(|sig_hir| &sig_hir.inputs[i]);
+            db.format_ty_for_cc(SugaredTy::new(mid, hir), TypeLocation::FnParam)
                 .with_context(|| format!("Error handling parameter #{i}"))
         })
         .collect()
@@ -820,10 +957,22 @@ fn liberate_and_deanonymize_late_bound_regions<'tcx>(
     tcx.instantiate_bound_regions_uncached(sig, region_f)
 }
 
-fn get_fn_sig(tcx: TyCtxt, fn_def_id: LocalDefId) -> ty::FnSig {
-    let fn_def_id = fn_def_id.to_def_id(); // LocalDefId => DefId
-    let sig = tcx.fn_sig(fn_def_id).instantiate_identity();
-    liberate_and_deanonymize_late_bound_regions(tcx, sig, fn_def_id)
+/// Returns the rustc_middle and rustc_hir function signatures.
+///
+/// In the case of rustc_hir, this returns the `FnDecl`, not the
+/// `rustc_hir::FnSig`, because the `FnDecl` type is used for both function
+/// pointers and actual functions. This makes it a more useful vocabulary type.
+/// `FnDecl` does drop information, but that information is already on the
+/// rustc_middle `FnSig`, so there is no loss.
+fn get_fn_sig(tcx: TyCtxt, local_def_id: LocalDefId) -> (ty::FnSig, &rustc_hir::FnDecl) {
+    let def_id = local_def_id.to_def_id();
+    let sig_mid = liberate_and_deanonymize_late_bound_regions(
+        tcx,
+        tcx.fn_sig(def_id).instantiate_identity(),
+        def_id,
+    );
+    let sig_hir = tcx.hir_node_by_def_id(local_def_id).fn_sig().unwrap();
+    (sig_mid, sig_hir.decl)
 }
 
 /// Formats a C++ function declaration of a thunk that wraps a Rust function
@@ -832,17 +981,19 @@ fn get_fn_sig(tcx: TyCtxt, fn_def_id: LocalDefId) -> ty::FnSig {
 fn format_thunk_decl<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     fn_def_id: DefId,
-    sig: &ty::FnSig<'tcx>,
+    sig_mid: &ty::FnSig<'tcx>,
+    sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
     thunk_name: &TokenStream,
 ) -> Result<CcSnippet> {
     let tcx = db.tcx();
 
     let mut prereqs = CcPrerequisites::default();
-    let main_api_ret_type = format_ret_ty_for_cc(db, sig)?.into_tokens(&mut prereqs);
+    let main_api_ret_type = format_ret_ty_for_cc(db, sig_mid, sig_hir)?.into_tokens(&mut prereqs);
 
     let mut thunk_params = {
-        let cpp_types = format_param_types_for_cc(db, sig)?;
-        sig.inputs()
+        let cpp_types = format_param_types_for_cc(db, sig_mid, sig_hir)?;
+        sig_mid
+            .inputs()
             .iter()
             .zip(cpp_types.into_iter())
             .map(|(&ty, cpp_type)| -> Result<TokenStream> {
@@ -864,7 +1015,7 @@ fn format_thunk_decl<'tcx>(
     };
 
     let thunk_ret_type: TokenStream;
-    if is_c_abi_compatible_by_value(sig.output()) {
+    if is_c_abi_compatible_by_value(sig_mid.output()) {
         thunk_ret_type = main_api_ret_type;
     } else {
         thunk_ret_type = quote! { void };
@@ -1167,7 +1318,9 @@ fn format_use(
             })
         }
         DefKind::Struct | DefKind::Enum => {
-            let use_type = tcx.type_of(def_id).instantiate_identity();
+            // This points directly to a type definition, not an alias or compound data
+            // type, so we can drop the hir type.
+            let use_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), None);
             create_type_alias(db, using_name, use_type)
         }
         _ => bail!(
@@ -1183,14 +1336,18 @@ fn format_type_alias(
 ) -> Result<ApiSnippets> {
     let tcx = db.tcx();
     let def_id: DefId = local_def_id.to_def_id();
-    let alias_type = tcx.type_of(def_id).instantiate_identity();
+    let Item { kind: ItemKind::TyAlias(hir_ty, ..), .. } = tcx.hir().expect_item(local_def_id)
+    else {
+        panic!("called format_type_alias on a non-type-alias");
+    };
+    let alias_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), Some(*hir_ty));
     create_type_alias(db, tcx.item_name(def_id).as_str(), alias_type)
 }
 
 fn create_type_alias<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     alias_name: &str,
-    alias_type: Ty<'tcx>,
+    alias_type: SugaredTy<'tcx>,
 ) -> Result<ApiSnippets> {
     let cc_bindings = format_ty_for_cc(db, alias_type, TypeLocation::Other)?;
     let mut main_api_prereqs = CcPrerequisites::default();
@@ -1220,10 +1377,10 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         "Generic functions are not supported yet (b/259749023)"
     );
 
-    let sig = get_fn_sig(tcx, local_def_id);
-    check_fn_sig(&sig)?;
+    let (sig_mid, sig_hir) = get_fn_sig(tcx, local_def_id);
+    check_fn_sig(&sig_mid)?;
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.
-    let needs_thunk = is_thunk_required(&sig).is_err()
+    let needs_thunk = is_thunk_required(&sig_mid).is_err()
         || (tcx.get_attr(def_id, rustc_span::symbol::sym::no_mangle).is_none()
             && tcx.get_attr(def_id, rustc_span::symbol::sym::export_name).is_none());
     let thunk_name = {
@@ -1249,7 +1406,8 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         .context("Error formatting function name")?;
 
     let mut main_api_prereqs = CcPrerequisites::default();
-    let main_api_ret_type = format_ret_ty_for_cc(db, &sig)?.into_tokens(&mut main_api_prereqs);
+    let main_api_ret_type =
+        format_ret_ty_for_cc(db, &sig_mid, Some(sig_hir))?.into_tokens(&mut main_api_prereqs);
 
     struct Param<'tcx> {
         cc_name: TokenStream,
@@ -1258,10 +1416,10 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
     }
     let params = {
         let names = tcx.fn_arg_names(def_id).iter();
-        let cpp_types = format_param_types_for_cc(db, &sig)?;
+        let cpp_types = format_param_types_for_cc(db, &sig_mid, Some(sig_hir))?;
         names
             .enumerate()
-            .zip(sig.inputs().iter())
+            .zip(sig_mid.inputs().iter())
             .zip(cpp_types)
             .map(|(((i, name), &ty), cpp_type)| {
                 let cc_name = format_cc_ident(name.as_str())
@@ -1404,8 +1562,8 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         };
 
         let mut prereqs = main_api_prereqs;
-        let thunk_decl =
-            format_thunk_decl(db, def_id, &sig, &thunk_name)?.into_tokens(&mut prereqs);
+        let thunk_decl = format_thunk_decl(db, def_id, &sig_mid, Some(sig_hir), &thunk_name)?
+            .into_tokens(&mut prereqs);
 
         let mut thunk_args = params
             .iter()
@@ -1425,12 +1583,12 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
             })
             .collect_vec();
         let impl_body: TokenStream;
-        if is_c_abi_compatible_by_value(sig.output()) {
+        if is_c_abi_compatible_by_value(sig_mid.output()) {
             impl_body = quote! {
                 return __crubit_internal :: #thunk_name( #( #thunk_args ),* );
             };
         } else {
-            if let Some(adt_def) = sig.output().ty_adt_def() {
+            if let Some(adt_def) = sig_mid.output().ty_adt_def() {
                 let core = db.format_adt_core(adt_def.did())?;
                 db.format_move_ctor_and_assignment_operator(core).map_err(|_| {
                     anyhow!("Can't pass the return type by value without a move constructor")
@@ -1470,7 +1628,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
                 quote! { #struct_name :: #fn_name }
             }
         };
-        format_thunk_impl(tcx, def_id, &sig, &thunk_name, fully_qualified_fn_name)?
+        format_thunk_impl(tcx, def_id, &sig_mid, &thunk_name, fully_qualified_fn_name)?
     };
     Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
@@ -1698,6 +1856,18 @@ fn format_fields<'tcx>(
             attributes: vec![],
         }]
     } else {
+        let rustc_hir::Node::Item(item) = tcx.hir_node_by_def_id(core.def_id.expect_local()) else {
+            panic!("internal error: def_id referring to an ADT was not a HIR Item.");
+        };
+        let variants = match item.kind {
+            rustc_hir::ItemKind::Struct(variants, _) => variants,
+            rustc_hir::ItemKind::Union(variants, _) => variants,
+            _ => panic!(
+                "internal error: def_id referring to a non-enum ADT was not a struct or union."
+            ),
+        };
+        let hir_fields: Vec<_> = variants.fields().iter().sorted_by_key(|f| f.span).collect();
+
         let mut fields = core
             .self_ty
             .ty_adt_def()
@@ -1706,12 +1876,16 @@ fn format_fields<'tcx>(
             .sorted_by_key(|f| tcx.def_span(f.did))
             .enumerate()
             .map(|(index, field_def)| {
-                let field_ty = field_def.ty(tcx, substs_ref);
-                let size = get_layout(tcx, field_ty).map(|layout| layout.size().bytes());
+                // *Not* using zip, in order to crash on length mismatch.
+                let hir_field =
+                    hir_fields.get(index).expect("HIR ADT had fewer fields than rustc_middle");
+                assert!(field_def.did == hir_field.def_id.to_def_id());
+                let ty = SugaredTy::new(field_def.ty(tcx, substs_ref), Some(hir_field.ty));
+                let size = get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
                 let type_info = size.and_then(|size| {
                     Ok(FieldTypeInfo {
                         size,
-                        cpp_type: db.format_ty_for_cc(field_ty, TypeLocation::Other)?,
+                        cpp_type: db.format_ty_for_cc(ty, TypeLocation::Other)?,
                     })
                 });
                 let name = field_def.ident(tcx);
@@ -2049,12 +2223,19 @@ fn format_trait_thunks<'tcx>(
         };
         method_name_to_cc_thunk_name.insert(method.name, format_cc_ident(&thunk_name)?);
 
-        let sig = tcx.fn_sig(method.def_id).instantiate(tcx, substs);
-        let sig = liberate_and_deanonymize_late_bound_regions(tcx, sig, method.def_id);
+        let sig_mid = liberate_and_deanonymize_late_bound_regions(
+            tcx,
+            tcx.fn_sig(method.def_id).instantiate(tcx, substs),
+            method.def_id,
+        );
+        // TODO(b/254096006): Preserve the HIR here, if possible?
+        // Cannot in general (e.g. blanket impl from another crate), but should be able
+        // to for traits defined or implemented in the current crate.
+        let sig_hir = None;
 
         cc_thunk_decls.add_assign({
             let thunk_name = format_cc_ident(&thunk_name)?;
-            format_thunk_decl(db, method.def_id, &sig, &thunk_name)?
+            format_thunk_decl(db, method.def_id, &sig_mid, sig_hir, &thunk_name)?
         });
 
         rs_thunk_impls.extend({
@@ -2078,7 +2259,13 @@ fn format_trait_thunks<'tcx>(
                     let method_name = make_rs_ident(method.name.as_str());
                     quote! { <#struct_name as #fully_qualified_trait_name>::#method_name }
                 };
-                format_thunk_impl(tcx, method.def_id, &sig, &thunk_name, fully_qualified_fn_name)?
+                format_thunk_impl(
+                    tcx,
+                    method.def_id,
+                    &sig_mid,
+                    &thunk_name,
+                    fully_qualified_fn_name,
+                )?
             }
         });
     }
@@ -7224,6 +7411,28 @@ pub mod tests {
             ("bool", ("bool", "", "", "")),
             ("f32", ("float", "", "", "")),
             ("f64", ("double", "", "", "")),
+            // The ffi aliases are special-cased to refer to the C++ fundamental integer types,
+            // if the type alias information is not lost (e.g. from generics).
+            ("std::ffi::c_char", ("char", "", "", "")),
+            ("::std::ffi::c_char", ("char", "", "", "")),
+            ("core::ffi::c_char", ("char", "", "", "")),
+            ("::core::ffi::c_char", ("char", "", "", "")),
+            ("std::ffi::c_uchar", ("unsigned char", "", "", "")),
+            ("std::ffi::c_longlong", ("long long", "", "", "")),
+            ("c_char", ("char", "", "", "")),
+            // Simple pointers/references do not lose the type alias information.
+            ("*const std::ffi::c_uchar", ("unsigned char const *", "", "", "")),
+            (
+                "&'static std::ffi::c_uchar",
+                (
+                    "unsigned char const & [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
+                    "",
+                    "",
+                    "",
+                ),
+            ),
+            // Generics lose type alias information.
+            ("Identity<std::ffi::c_longlong>", ("std::int64_t", "<cstdint>", "", "")),
             ("i8", ("std::int8_t", "<cstdint>", "", "")),
             ("i16", ("std::int16_t", "<cstdint>", "", "")),
             ("i32", ("std::int32_t", "<cstdint>", "", "")),
@@ -7325,6 +7534,13 @@ pub mod tests {
             pub struct OriginallyCcStruct {
                 pub x: i32
             }
+
+            #[allow(unused)]
+            type Identity<T> = T;
+
+            pub use core::ffi::c_char;
+            // TODO(b/283258442): Correctly handle something like this:
+            // pub type MyChar = core::ffi::c_char;
         };
         test_ty(
             TypeLocation::FnParam,
@@ -7598,7 +7814,7 @@ pub mod tests {
             }
         };
         test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_tokens| {
-            let actual_tokens = format_ty_for_rs(tcx, ty).unwrap().to_string();
+            let actual_tokens = format_ty_for_rs(tcx, ty.mid()).unwrap().to_string();
             let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(actual_tokens, expected_tokens, "{desc}");
         });
@@ -7640,7 +7856,7 @@ pub mod tests {
         let preamble = quote! {};
         test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_err| {
             let anyhow_err =
-                format_ty_for_rs(tcx, ty).expect_err(&format!("Expecting error for: {desc}"));
+                format_ty_for_rs(tcx, ty.mid()).expect_err(&format!("Expecting error for: {desc}"));
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         });
@@ -8531,7 +8747,7 @@ pub mod tests {
         TestFn: for<'tcx> Fn(
                 /* testcase_description: */ &str,
                 TyCtxt<'tcx>,
-                Ty<'tcx>,
+                SugaredTy<'tcx>,
                 &Expectation,
             ) + Sync,
         Expectation: Sync,
@@ -8554,11 +8770,20 @@ pub mod tests {
                 input.to_string()
             };
             run_compiler_for_testing(input, |tcx| {
-                let def_id = find_def_id_by_name(tcx, "test_function");
-                let sig = get_fn_sig(tcx, def_id);
+                let (sig_mid, sig_hir) = get_fn_sig(tcx, find_def_id_by_name(tcx, "test_function"));
                 let ty = match type_location {
-                    TypeLocation::FnReturn => sig.output(),
-                    TypeLocation::FnParam => sig.inputs()[0],
+                    TypeLocation::FnReturn => {
+                        let rustc_hir::FnRetTy::Return(ty_hir) = sig_hir.output else {
+                            unreachable!(
+                                "HIR return type should be fully specified, got: {:?}",
+                                sig_hir.output
+                            );
+                        };
+                        SugaredTy::new(sig_mid.output(), Some(ty_hir))
+                    }
+                    TypeLocation::FnParam => {
+                        SugaredTy::new(sig_mid.inputs()[0], Some(&sig_hir.inputs[0]))
+                    }
                     TypeLocation::Other => unimplemented!(),
                 };
                 test_fn(&desc, tcx, ty, expected);

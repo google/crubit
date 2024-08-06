@@ -53,6 +53,41 @@ TEST(PrimitiveTypesTest, ReturnTypes) {
   static_assert(
       std::is_same_v<decltype(types::c_void_const_ptr()), const void*>);
   EXPECT_EQ(types::c_void_const_ptr(), nullptr);
+
+  static_assert(std::is_same_v<decltype(types::c_char()), char>);
+  EXPECT_EQ(types::c_char(), 0);
+
+  static_assert(std::is_same_v<decltype(types::c_schar()), signed char>);
+  EXPECT_EQ(types::c_schar(), 0);
+
+  static_assert(std::is_same_v<decltype(types::c_uchar()), unsigned char>);
+  EXPECT_EQ(types::c_uchar(), 0);
+
+  static_assert(std::is_same_v<decltype(types::c_short()), short>);
+  EXPECT_EQ(types::c_short(), 0);
+
+  static_assert(std::is_same_v<decltype(types::c_ushort()), unsigned short>);
+  EXPECT_EQ(types::c_ushort(), 0);
+
+  static_assert(std::is_same_v<decltype(types::c_int()), int>);
+  EXPECT_EQ(types::c_int(), 0);
+
+  static_assert(std::is_same_v<decltype(types::c_uint()), unsigned int>);
+  EXPECT_EQ(types::c_uint(), 0);
+
+  static_assert(std::is_same_v<decltype(types::c_long()), long>);
+  EXPECT_EQ(types::c_long(), 0);
+
+  static_assert(std::is_same_v<decltype(types::c_ulong()), unsigned long>);
+  EXPECT_EQ(types::c_ulong(), 0);
+
+  static_assert(std::is_same_v<decltype(types::c_longlong()), long long>);
+  EXPECT_EQ(types::c_longlong(), 0);
+
+  static_assert(
+      std::is_same_v<decltype(types::c_ulonglong()), unsigned long long>);
+  EXPECT_EQ(types::c_ulonglong(), 0);
+
   static_assert(std::is_same_v<decltype(types::c_float()), float>);
   EXPECT_EQ(types::c_float(), 0);
 
@@ -97,6 +132,8 @@ TEST(PrimitiveTypesTest, ReturnTypes) {
 
   static_assert(std::is_same_v<decltype(types::i8_func()),
                                std::type_identity_t<void(int8_t)>&>);
+  static_assert(std::is_same_v<decltype(types::c_char_func()),
+                               std::type_identity_t<void(char)>&>);
 }
 
 TEST(PrimitiveTypesTest, FieldTypes) {
@@ -105,6 +142,18 @@ TEST(PrimitiveTypesTest, FieldTypes) {
   static_assert(std::is_same_v<decltype(Types::c_void_mut_ptr), void*>);
   static_assert(std::is_same_v<decltype(Types::c_void_const_ptr), const void*>);
 
+  static_assert(std::is_same_v<decltype(Types::c_char), char>);
+  static_assert(std::is_same_v<decltype(Types::c_schar), signed char>);
+  static_assert(std::is_same_v<decltype(Types::c_uchar), unsigned char>);
+  static_assert(std::is_same_v<decltype(Types::c_short), short>);
+  static_assert(std::is_same_v<decltype(Types::c_ushort), unsigned short>);
+  static_assert(std::is_same_v<decltype(Types::c_int), int>);
+  static_assert(std::is_same_v<decltype(Types::c_uint), unsigned int>);
+  static_assert(std::is_same_v<decltype(Types::c_long), long>);
+  static_assert(std::is_same_v<decltype(Types::c_ulong), unsigned long>);
+  static_assert(std::is_same_v<decltype(Types::c_longlong), long long>);
+  static_assert(
+      std::is_same_v<decltype(Types::c_ulonglong), unsigned long long>);
   static_assert(std::is_same_v<decltype(Types::c_float), float>);
   static_assert(std::is_same_v<decltype(Types::c_double), double>);
 
@@ -123,6 +172,9 @@ TEST(PrimitiveTypesTest, FieldTypes) {
 
   static_assert(std::is_same_v<decltype(Types::i8_func),
                                std::type_identity_t<void(int8_t)>*>);
+
+  static_assert(std::is_same_v<decltype(Types::c_char_func),
+                               std::type_identity_t<void(char)>*>);
 }
 }  // namespace
 }  // namespace crubit
