@@ -1035,4 +1035,39 @@ mod tests {
         assert_eq!(result.features, [make_rs_ident("arbitrary_self_types")].into_iter().collect());
         Ok(())
     }
+
+    /// Basic unit test of required_crubit_features on a compound data type.
+    ///
+    /// If a nested type within it requires a feature, then the whole feature
+    /// does. This is done automatically via dfs_iter().
+    #[test]
+    fn test_required_crubit_features() {
+        let no_types: &[RsTypeKind] = &[];
+        let int = RsTypeKind::Primitive(PrimitiveType::i32);
+        let reference = RsTypeKind::Reference {
+            referent: Rc::new(int.clone()),
+            mutability: Mutability::Const,
+            lifetime: Lifetime::new("_"),
+        };
+        for func_ptr in [
+            RsTypeKind::FuncPtr {
+                abi: "C".into(),
+                return_type: Rc::new(reference.clone()),
+                param_types: no_types.into(),
+            },
+            RsTypeKind::FuncPtr {
+                abi: "C".into(),
+                return_type: Rc::new(int),
+                param_types: Rc::from([reference]),
+            },
+        ] {
+            let (missing_features, reason) =
+                func_ptr.required_crubit_features(<flagset::FlagSet<ir::CrubitFeature>>::default());
+            assert_eq!(
+                missing_features,
+                ir::CrubitFeature::Experimental | ir::CrubitFeature::Supported
+            );
+            assert_eq!(reason, "references are not supported");
+        }
+    }
 }
