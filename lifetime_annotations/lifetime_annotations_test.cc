@@ -391,6 +391,31 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_PointerAlias) {
               IsOkAndHolds(LifetimesAre({{"f", "(a, b)"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_AliasTemplate) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        template <class T>
+        using Alias = T;
+        void f(Alias<int *>);
+  )"),
+              // TODO(b/357835254): Should be "a" rather than "b".
+              IsOkAndHolds(LifetimesAre({{"f", "b"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_AliasTemplate2) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        template <class T>
+        using PtrToT = T*;
+        void f(PtrToT<int *>);
+  )"),
+              // TODO(b/357835254): Should be "(a, b)" rather than "(b, c)".
+              // TODO(b/290574080): Also, there's a question of whether we
+              // want elision to "see into" the type alias? If not, this should
+              // simply be "a" rather than "(a, b)".See bug for details.
+              IsOkAndHolds(LifetimesAre({{"f", "(b, c)"}})));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_FunctionAlias) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
     #pragma clang lifetime_elision
