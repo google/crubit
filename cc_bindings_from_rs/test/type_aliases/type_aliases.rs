@@ -10,3 +10,8 @@ pub mod test_type_aliases {
         0
     }
 }
+
+pub mod test_deprecated_type_alias {
+    #[deprecated = "Use `OtherTypeAlias` instead"]
+    pub type TypeAlias = i32;
+}

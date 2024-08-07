@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <cstdint>
 #include <type_traits>
-#include <utility>
 
 #include "gtest/gtest.h"
 #include "cc_bindings_from_rs/test/type_aliases/type_aliases_cc_api.h"
@@ -25,6 +25,14 @@ TEST(TypeAliasesTest, TypeAliasUsage) {
   EXPECT_TRUE((std::is_same_v<
                std::int32_t,
                decltype(type_aliases::test_type_aliases::func_using_alias())>));
+}
+
+// Note: this test verifies that the generated code compiles and gives the
+// correct type, but doesn't check that the C++ type is actually deprecated.
+TEST(TypeAliasesTest, DeprecatedTypeAlias) {
+  EXPECT_TRUE(
+      (std::is_same_v<std::int32_t,
+                      type_aliases::test_deprecated_type_alias::TypeAlias>));
 }
 
 }  // namespace

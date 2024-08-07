@@ -1219,12 +1219,8 @@ impl FunctionKind {
     }
 }
 
-/// Checks if the item associated with the given def_id has a deprecated
-/// attribute. If so, returns the corresponding C++ deprecated tag.
-///
-/// TODO(codyheiner): consider adding a more general version of this function
-/// that builds a Vec<TokenStream> containing all the attributes of a given
-/// item.
+/// Returns the C++ deprecated tag for the item identified by `def_id`, if it is
+/// deprecated. Otherwise, returns None.
 fn format_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
     if let Some(deprecated_attr) = tcx.get_attr(def_id, rustc_span::symbol::sym::deprecated) {
         if let Some((deprecation, _span)) =
@@ -1321,7 +1317,7 @@ fn format_use(
             // This points directly to a type definition, not an alias or compound data
             // type, so we can drop the hir type.
             let use_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), None);
-            create_type_alias(db, using_name, use_type)
+            create_type_alias(db, def_id, using_name, use_type)
         }
         _ => bail!(
             "Unsupported use statement that refers to this type of the entity: {:#?}",
@@ -1341,11 +1337,12 @@ fn format_type_alias(
         panic!("called format_type_alias on a non-type-alias");
     };
     let alias_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), Some(*hir_ty));
-    create_type_alias(db, tcx.item_name(def_id).as_str(), alias_type)
+    create_type_alias(db, def_id, tcx.item_name(def_id).as_str(), alias_type)
 }
 
 fn create_type_alias<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
+    def_id: DefId,
     alias_name: &str,
     alias_type: SugaredTy<'tcx>,
 ) -> Result<ApiSnippets> {
@@ -1354,7 +1351,13 @@ fn create_type_alias<'tcx>(
     let actual_type_name = cc_bindings.into_tokens(&mut main_api_prereqs);
 
     let alias_name = format_cc_ident(alias_name).context("Error formatting type alias name")?;
-    let tokens = quote! {using #alias_name = #actual_type_name;};
+
+    let mut attributes = vec![];
+    if let Some(cc_deprecated_tag) = format_deprecated_tag(db.tcx(), def_id) {
+        attributes.push(cc_deprecated_tag);
+    }
+
+    let tokens = quote! {using #alias_name #(#attributes)* = #actual_type_name;};
 
     Ok(ApiSnippets {
         main_api: CcSnippet { prereqs: main_api_prereqs, tokens },
@@ -7298,6 +7301,25 @@ pub mod tests {
         test_format_item(test_src, "EvilAlias", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "The following Rust type is not supported yet: <i64 as Evil>::Type");
+        });
+    }
+
+    #[test]
+    fn test_format_item_type_alias_deprecated() {
+        let test_src = r#"
+                #[deprecated = "Use `OtherTypeAlias` instead"]
+                pub type TypeAlias = i32;
+            "#;
+        test_format_item(test_src, "TypeAlias", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    using TypeAlias [[deprecated("Use `OtherTypeAlias` instead")]] = std::int32_t;
+                }
+            );
         });
     }
 
