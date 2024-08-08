@@ -625,6 +625,13 @@ pub struct SizeAlign {
     pub size: usize,
     pub alignment: usize,
 }
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BridgingTypeInfo {
+    pub bridging_type: Rc<str>,
+    pub rust_to_cpp_converter: Rc<str>,
+    pub cpp_to_rust_converter: Rc<str>,
+}
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -644,6 +651,7 @@ pub struct Record {
     /// default-closed and do not expose functions with unknown attributes.
     pub unknown_attr: Option<Rc<str>>,
     pub doc_comment: Option<Rc<str>>,
+    pub bridging_type_info: Option<BridgingTypeInfo>,
     pub source_loc: Rc<str>,
     pub unambiguous_public_bases: Vec<BaseClass>,
     pub fields: Vec<Field>,

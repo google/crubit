@@ -553,6 +553,34 @@ fn test_struct_with_unnamed_bitfield_member() {
 }
 
 #[test]
+fn test_struct_with_bridging_type_annotation() {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_bridging_type", "SomeBridgingType"),
+                 clang::annotate("crubit_bridging_type_rust_to_cpp_converter", "cpp_to_rust_converter"),
+                 clang::annotate("crubit_bridging_type_cpp_to_rust_converter", "rust_to_cpp_converter")]]
+                RecordWithBridgingType {
+            int foo;
+        };"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "RecordWithBridgingType", ...
+                bridging_type_info: Some(BridgingTypeInfo {
+                  bridging_type: "SomeBridgingType",
+                  rust_to_cpp_converter: "cpp_to_rust_converter",
+                  cpp_to_rust_converter: "rust_to_cpp_converter",
+                }), ...
+            }
+        }
+    );
+}
+
+#[test]
 fn test_struct_with_unnamed_struct_and_union_members() {
     // This test input causes `field_decl->getName()` to return an empty string.
     // See also:
@@ -2436,6 +2464,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
               defining_target: None,
               unknown_attr: None,
               doc_comment: Some(...),
+              bridging_type_info: None,
               source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=15",
               unambiguous_public_bases: [],
               fields: [Field {

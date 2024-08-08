@@ -21,6 +21,20 @@ rust_library(
     ],
 )
 
+cc_library(
+    name = "annotation_reader",
+    srcs = ["annotation_reader.cc"],
+    hdrs = ["annotation_reader.h"],
+    deps = [
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
 crubit_rust_test(
     name = "arc_anyhow_test",
     crate = ":arc_anyhow",

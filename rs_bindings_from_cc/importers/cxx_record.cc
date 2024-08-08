@@ -20,6 +20,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "common/annotation_reader.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "rs_bindings_from_cc/ast_util.h"
@@ -119,6 +120,40 @@ absl::StatusOr<RecordType> TranslateRecordType(
   }
 
   llvm::report_fatal_error("Unrecognized clang::TagKind");
+}
+
+std::optional<BridgingTypeInfo> GetBridgingTypeInfo(
+    const clang::RecordDecl* record_decl) {
+  constexpr absl::string_view kBridgingTypeTag = "crubit_bridging_type";
+  constexpr absl::string_view kBridgingTypeRustToCppConverterTag =
+      "crubit_bridging_type_rust_to_cpp_converter";
+  constexpr absl::string_view kBridgingTypeCppToRustConverterTag =
+      "crubit_bridging_type_cpp_to_rust_converter";
+  CHECK_OK(RequireSingleStringArgIfExists(record_decl, kBridgingTypeTag));
+  CHECK_OK(RequireSingleStringArgIfExists(record_decl,
+                                          kBridgingTypeRustToCppConverterTag));
+  CHECK_OK(RequireSingleStringArgIfExists(record_decl,
+                                          kBridgingTypeCppToRustConverterTag));
+  auto bridging_type =
+      GetAnnotateArgAsStringByAttribute(record_decl, kBridgingTypeTag);
+  auto bridging_type_rust_to_cpp_converter = GetAnnotateArgAsStringByAttribute(
+      record_decl, kBridgingTypeRustToCppConverterTag);
+  auto bridging_type_cpp_to_rust_converter = GetAnnotateArgAsStringByAttribute(
+      record_decl, kBridgingTypeCppToRustConverterTag);
+
+  if (bridging_type.has_value()) {
+    CHECK(bridging_type_rust_to_cpp_converter.has_value())
+        << "Missing " << kBridgingTypeRustToCppConverterTag << " for "
+        << kBridgingTypeTag << " " << *bridging_type;
+    CHECK(bridging_type_cpp_to_rust_converter.has_value())
+        << "Missing " << kBridgingTypeCppToRustConverterTag << " for "
+        << kBridgingTypeTag << " " << *bridging_type;
+    return BridgingTypeInfo{
+        .bridging_type = *bridging_type,
+        .rust_to_cpp_converter = *bridging_type_rust_to_cpp_converter,
+        .cpp_to_rust_converter = *bridging_type_cpp_to_rust_converter};
+  }
+  return std::nullopt;
 }
 
 }  // namespace
@@ -329,6 +364,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                  item_ids.end());
   const clang::TypedefNameDecl* anon_typedef =
       record_decl->getTypedefNameForAnonDecl();
+
   auto record = Record{
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
@@ -338,6 +374,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .defining_target = std::move(defining_target),
       .unknown_attr = std::move(unknown_attr),
       .doc_comment = std::move(doc_comment),
+      .bridging_type_info = GetBridgingTypeInfo(record_decl),
       .source_loc = ictx_.ConvertSourceLocation(source_loc),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = ImportFields(record_decl),

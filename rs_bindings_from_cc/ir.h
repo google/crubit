@@ -477,8 +477,8 @@ struct Field {
   std::optional<std::string> doc_comment;
   absl::StatusOr<MappedType> type;
   AccessSpecifier access;
-  uint64_t offset;            // Field offset in bits.
-  uint64_t size;              // Field size in bits.
+  uint64_t offset;  // Field offset in bits.
+  uint64_t size;    // Field size in bits.
   std::optional<std::string> unknown_attr;
   bool is_no_unique_address;  // True if the field is [[no_unique_address]].
   bool is_bitfield;           // True if the field is a bitfield.
@@ -551,6 +551,14 @@ struct SizeAlign {
   int64_t alignment;
 };
 
+struct BridgingTypeInfo {
+  llvm::json::Value ToJson() const;
+
+  std::string bridging_type;
+  std::string rust_to_cpp_converter;
+  std::string cpp_to_rust_converter;
+};
+
 // A record (struct, class, union).
 struct Record {
   llvm::json::Value ToJson() const;
@@ -567,6 +575,7 @@ struct Record {
   std::optional<BazelLabel> defining_target;
   std::optional<std::string> unknown_attr;
   std::optional<std::string> doc_comment;
+  std::optional<BridgingTypeInfo> bridging_type_info;
   std::string source_loc;
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;

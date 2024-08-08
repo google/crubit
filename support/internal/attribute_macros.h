@@ -71,4 +71,51 @@
 #define CRUBIT_INTERNAL_SAME_ABI \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_same_abi")
 
+#define CRUBIT_INTERNAL_BRIDGING_TYPE(t) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_bridging_type", t)
+
+#define CRUBIT_INTERNAL_BRIDGING_TYPE_RUST_TO_CPP_CONVERTER(t) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_bridging_type_rust_to_cpp_converter", t)
+
+#define CRUBIT_INTERNAL_BRIDGING_TYPE_CPP_TO_RUST_CONVERTER(t) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_bridging_type_cpp_to_rust_converter", t)
+
+// Declare a Rust type as the bridging type for binding generation.
+//
+// This can be applied to a struct, class, or enum.
+//
+// For example, We have the following C++ struct and its Rust bridging
+// counterpart:
+//
+// ```c++
+// struct
+//   CRUBIT_INTERNAL_BRIDGING_SUPPORT("MyRustStruct", "rust_to_cpp",
+//   "cpp_to_rust") MyCppStruct {
+//     std::string name;
+// };
+// ```
+//
+// ```rust
+// pub struct MyRustStruct {
+//   name: String,
+// }
+// ```
+// Then the following C++ api will be translated to Rust:
+//
+// ```c++
+// MyCppStruct foo();
+// ```
+//
+// ```rust
+// pub fn foo() -> MyRustStruct;
+// ```
+//
+// SAFETY:
+//   `ty` must be a fully-qualified valid Rust type name.
+//   `rust_to_cpp` and `cpp_to_rust` must be valid function names.
+#define CRUBIT_INTERNAL_BRIDGING_SUPPORT(ty, rust_to_cpp, cpp_to_rust) \
+  CRUBIT_INTERNAL_BRIDGING_TYPE(ty)                                    \
+  CRUBIT_INTERNAL_BRIDGING_TYPE_RUST_TO_CPP_CONVERTER(rust_to_cpp)     \
+  CRUBIT_INTERNAL_BRIDGING_TYPE_CPP_TO_RUST_CONVERTER(cpp_to_rust)
+
 #endif  // CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_

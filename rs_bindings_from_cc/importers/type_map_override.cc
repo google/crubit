@@ -12,6 +12,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "common/annotation_reader.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
@@ -26,69 +27,19 @@
 namespace crubit {
 namespace {
 
-// Copied from lifetime_annotations/type_lifetimes.cc, which is expected to move
-// into ClangTidy. See:
-// https://discourse.llvm.org/t/rfc-lifetime-annotations-for-c/61377
-absl::StatusOr<absl::string_view> EvaluateAsStringLiteral(
-    const clang::Expr& expr, const clang::ASTContext& ast_context) {
-  auto error = []() {
-    return absl::InvalidArgumentError(
-        "cannot evaluate argument as a string literal");
-  };
-
-  clang::Expr::EvalResult eval_result;
-  if (!expr.EvaluateAsConstantExpr(eval_result, ast_context) ||
-      !eval_result.Val.isLValue()) {
-    return error();
-  }
-
-  const auto* eval_result_expr =
-      eval_result.Val.getLValueBase().dyn_cast<const clang::Expr*>();
-  if (!eval_result_expr) {
-    return error();
-  }
-
-  const auto* string_literal =
-      clang::dyn_cast<clang::StringLiteral>(eval_result_expr);
-  if (!string_literal) {
-    return error();
-  }
-
-  return {string_literal->getString()};
-}
-
-// Gets the requested attribute for `decl`.
-// `decl` must not be null.
-absl::StatusOr<const clang::AnnotateAttr*> GetAnnotateAttr(
-    const clang::Decl* decl, absl::string_view attribute) {
-  const clang::AnnotateAttr* found_attr = nullptr;
-  for (clang::AnnotateAttr* attr :
-       decl->specific_attrs<clang::AnnotateAttr>()) {
-    if (attr->getAnnotation() != llvm::StringRef(attribute)) continue;
-
-    if (found_attr != nullptr)
-      return absl::InvalidArgumentError(
-          absl::StrCat("Only one `", attribute,
-                       "` attribute may be placed on a declaration."));
-    found_attr = attr;
-  }
-  return found_attr;
-}
-
 // Gets the crubit_internal_rust_type attribute for `decl`.
 // `decl` must not be null.
 absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
     const clang::Decl* decl) {
   CRUBIT_ASSIGN_OR_RETURN(const clang::AnnotateAttr* attr,
-                          GetAnnotateAttr(decl, "crubit_internal_rust_type"));
+                          GetAnnotateAttr(*decl, "crubit_internal_rust_type"));
   if (attr == nullptr) return std::nullopt;
   if (attr->args_size() != 1)
     return absl::InvalidArgumentError(
         "The `crubit_internal_rust_type` attribute requires a single "
         "string literal "
         "argument, the Rust type.");
-  const clang::Expr& arg = **attr->args_begin();
-  return EvaluateAsStringLiteral(arg, decl->getASTContext());
+  return GetAnnotateArgAsStringLiteral(*attr, decl->getASTContext());
 }
 
 // Gets the crubit_internal_same_abi attribute for `decl`.
@@ -98,7 +49,7 @@ absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
 // `decl` must not be null.
 absl::StatusOr<bool> GetIsSameAbiAttribute(const clang::Decl* decl) {
   CRUBIT_ASSIGN_OR_RETURN(const clang::AnnotateAttr* attr,
-                          GetAnnotateAttr(decl, "crubit_internal_same_abi"));
+                          GetAnnotateAttr(*decl, "crubit_internal_same_abi"));
   if (attr != nullptr && attr->args_size() != 0)
     return absl::InvalidArgumentError(
         "The `crubit_internal_same_abi` attribute takes no arguments.");

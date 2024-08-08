@@ -23,6 +23,7 @@ cc_library(
     srcs = ["cxx_record.cc"],
     hdrs = ["cxx_record.h"],
     deps = [
+        "//common:annotation_reader",
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc:ast_convert",
         "//rs_bindings_from_cc:ast_util",
@@ -144,6 +145,7 @@ cc_library(
     srcs = ["type_map_override.cc"],
     hdrs = ["type_map_override.h"],
     deps = [
+        "//common:annotation_reader",
         "//common:status_macros",
         "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
