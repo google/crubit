@@ -38,6 +38,12 @@
 //
 // Some tests only test one style of annotation where testing the other style
 // does not make sense for the particular test.
+//
+// In addition, this file contains tests for lifetime elision (which can be
+// considered an implicit form of lifetime annotation). Lifetime elision tests
+// fail if the lifetimes do not have exactly the expected names, even if the
+// lifetimes are equivalent up to a renaming. The intent of this is to catch
+// cases where additional lifetimes are produced but not used.
 
 namespace clang {
 namespace tidy {
@@ -399,6 +405,20 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_AliasTemplate) {
         void f(Alias<int *>);
   )"),
               // TODO(b/357835254): Should be "a" rather than "b".
+              // The issue is that `ValueLifetimes::Create()` creates a lifetime
+              // for the `int *` twice: Once for its occurrence as the template
+              // argument (adding it to `template_argument_lifetimes_`), and
+              // once for its occurrence as the type alias's canonical type
+              // (adding it to `pointee_lifetimes_`). This violates the
+              // `ValueLifetimes` invariant that only one of
+              // `template_argument_lifetimes_` or `pointee_lifetimes_` should
+              // be populated.
+              // We still end up with only one lifetime in the result because
+              // `ValueLifetimes::DebugString()` bails out after the
+              // `!PointeeType(Type()).isNull()` case and therefore ignores the
+              // lifetimes in `template_argument_lifetimes_`. Because the
+              // lifetime in `pointee_lifetimes_` is the second one to be
+              // produced, we end up with "b" rather than "a".
               IsOkAndHolds(LifetimesAre({{"f", "b"}})));
 }
 

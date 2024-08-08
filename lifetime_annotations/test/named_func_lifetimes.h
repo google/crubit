@@ -84,6 +84,8 @@ class NamedFuncLifetimes {
 };
 
 // Returns a matcher that matches a NamedFuncLifetimes equal to `expected`.
+// Lifetimes are considered equal only if they have exactly the same names;
+// if they are equivalent up to a renaming, they are considered different.
 testing::Matcher<NamedFuncLifetimes> LifetimesAre(NamedFuncLifetimes expected);
 
 // Returns a matcher that matches a NamedFuncLifetimes containing all oentries
