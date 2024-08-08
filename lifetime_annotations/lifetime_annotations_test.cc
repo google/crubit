@@ -436,6 +436,17 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_AliasTemplate2) {
               IsOkAndHolds(LifetimesAre({{"f", "(b, c)"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_NullabilityAliasTemplate) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        template <class T>
+        using Nullable = T _Nullable;
+        void f(Nullable<int *>);
+  )"),
+              // TODO(b/357835254): Should be "a" rather than "b".
+              IsOkAndHolds(LifetimesAre({{"f", "b"}})));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_FunctionAlias) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
     #pragma clang lifetime_elision

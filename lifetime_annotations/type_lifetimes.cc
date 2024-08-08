@@ -46,9 +46,14 @@ namespace lifetimes {
 
 clang::QualType StripAttributes(clang::QualType type) {
   while (true) {
-    if (auto macro_qualified_type = type->getAs<clang::MacroQualifiedType>()) {
+    // Use `dyn_cast<>` (instead of `getAs<>`) so we don't look through sugar.
+    // If `type` is an alias template, for example, we want to preserve it so
+    // that we can extract the template arguments.
+    if (auto macro_qualified_type =
+            dyn_cast<clang::MacroQualifiedType>(type.getTypePtr())) {
       type = macro_qualified_type->getUnderlyingType();
-    } else if (auto attr_type = type->getAs<clang::AttributedType>()) {
+    } else if (auto attr_type =
+                   dyn_cast<clang::AttributedType>(type.getTypePtr())) {
       type = attr_type->getModifiedType();
     } else {
       return type;
@@ -59,6 +64,10 @@ clang::QualType StripAttributes(clang::QualType type) {
 clang::TypeLoc StripAttributes(clang::TypeLoc type_loc,
                                llvm::SmallVector<const clang::Attr*>& attrs) {
   while (true) {
+    // Use `getAs<>` (instead of `getAsAdjusted<>`) so we don't look through
+    // sugar, just like the `QualType` overload above.
+    // (Confusingly, `TypeLoc::getAs<>` doesn't look through sugar, unlike
+    // `Type::getAx<>`, which does.)
     if (auto macro_qualified_type_loc =
             type_loc.getAs<clang::MacroQualifiedTypeLoc>()) {
       type_loc = macro_qualified_type_loc.getInnerLoc();
