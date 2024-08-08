@@ -1,0 +1,16 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "error_report"
+edition = "2021"
+
+[lib]
+path = "../../error_report.rs"
+
+[dependencies]
+anyhow = "1"
+serde = { version = "1", features = [ "derive", "rc" ] }
+serde_json = "1"
+arc_anyhow = { path = "../../../common/cargo/arc_anyhow" }

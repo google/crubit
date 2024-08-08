@@ -12,6 +12,7 @@ load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_cc_binary",
     "crubit_cc_test",
+    "crubit_rust_binary",
     "crubit_rust_test",
 )
 load(
@@ -41,7 +42,7 @@ with_cc_toolchain_flags(
 
 rust_bindings_from_cc_binary(
     name = "rs_bindings_from_cc",
-    binary = ":rs_bindings_from_cc_impl",
+    binary = ":rs_bindings_from_cc_main",
     visibility = ["//:__subpackages__"],
 )
 
@@ -61,10 +62,26 @@ deps_for_bindings(
     visibility = ["//:__subpackages__"],
 )
 
-crubit_cc_binary(
-    name = "rs_bindings_from_cc_impl",
+crubit_rust_binary(
+    name = "rs_bindings_from_cc_main",
     srcs = ["rs_bindings_from_cc.cc"],
     visibility = ["//visibility:public"],
+    deps = [
+        ":rs_bindings_from_cc_sys",
+    ],
+)
+
+rust_library(
+    name = "rs_bindings_from_cc_sys",
+    srcs = ["rs_bindings_from_cc_sys.rs"],
+    deps = [
+        ":rs_bindings_from_cc_impl",
+    ],
+)
+
+cc_library(
+    name = "rs_bindings_from_cc_impl",
+    srcs = ["rs_bindings_from_cc.cc"],
     deps = [
         ":cc_ir",
         ":cmdline",

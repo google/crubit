@@ -1,0 +1,17 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "collect_instantiations"
+edition = "2021"
+
+[lib]
+path = "../../collect_instantiations.rs"
+
+[dependencies]
+proc-macro2 = "1"
+serde_json = "1"
+syn = "2"
+arc_anyhow = { path = "../../../common/cargo/arc_anyhow" }
+ffi_types = { path = "../../../common/cargo/ffi_types" }

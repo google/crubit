@@ -1,0 +1,14 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "ffi_types"
+edition = "2021"
+
+[lib]
+path = "../../ffi_types.rs"
+
+[dependencies]
+serde = { version = "1", features = [ "derive", "rc" ] }
+arc_anyhow = { path = "../../../common/cargo/arc_anyhow" }

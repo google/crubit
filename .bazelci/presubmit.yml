@@ -6,7 +6,7 @@
 default_linux_targets: &default_linux_targets
   # TODO(b/234804076): Make the whole repo buildable/testable with //...
   # Target below is only a rudimentary smoke test.
-  - "//rs_bindings_from_cc:rs_bindings_from_cc_impl"
+  - "//rs_bindings_from_cc:rs_bindings_from_cc_main"
   - "//rs_bindings_from_cc:importer_test"
   - "//rs_bindings_from_cc:cc_collect_instantiations_test"
   - "//rs_bindings_from_cc:collect_instantiations_test"

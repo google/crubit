@@ -1,2 +1,3 @@
 # avoid trailing `/` because these are symlinks
 /bazel-*
+/target

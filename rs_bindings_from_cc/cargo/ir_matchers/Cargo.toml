@@ -1,0 +1,19 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "ir_matchers"
+edition = "2021"
+
+[lib]
+path = "../../ir_matchers.rs"
+
+[dependencies]
+anyhow = "1"
+itertools = "0.13"
+proc-macro2 = "1"
+quote = "1"
+ir = { path = "../../../rs_bindings_from_cc/cargo/ir" }
+token_stream_printer = { path = "../../../common/cargo/token_stream_printer" }
+token_stream_matchers = { path = "../../../common/cargo/token_stream_matchers" }

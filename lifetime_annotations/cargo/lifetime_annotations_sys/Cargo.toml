@@ -1,0 +1,15 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "lifetime_annotations_sys"
+edition = "2021"
+
+build = "build.rs"
+
+[lib]
+path = "lib.rs"
+
+[build-dependencies]
+crubit_build = { path = "../../../build" }
