@@ -32,7 +32,7 @@ and ABI as `uint32_t` (and therefore the same ABI as `rs_std::rs_char` from
 `crubit/support/rs_std/rs_char.h`).
 
 The assumptions are verified by assertions that verify the properties of the
-target achitecture when `cc_bindings_from_rs` runs (`layout.align()`,
+target architecture when `cc_bindings_from_rs` runs (`layout.align()`,
 `layout.size()`, and `layout.abi()` assertions in `format_ty_for_cc` in
 `cc_bindings_from_rs/bindings.rs`). Similar assertions are verified on C++ side
 in `support/rs_std/rs_char_test.cc`. These assertions seem unlikely to fail, but
@@ -51,10 +51,14 @@ references are “represented as a pointer and a length”.
 
 Rust does *not* document the ABI of slice references (i.e. if the pointer comes
 before or after the length in memory). `cc_bindings_from_rs` assumes that `&[T]`
-has the same ABI as (future) `rs_std::slice<T>` - a C++ struct with 2 fields: a
-`T*` pointer, and the `size_t` number of slice elements. TODO: Add runtime
-assertions to `bindings.rs` to further verify these assumptions. TODO: Specify a
-plan of action when the assertions fail.
+has the same layout as `rs_std::slice<T>` - a C++ struct with 2 fields: a `T*`
+pointer, and the `size_t` number of slice elements. `check_slice_layout` inside
+`crubit/cc_bindings_from_rs/bindings.rs` verifies the assumptions on the Rust
+slice each time a reference or a pointer to a slice is processed by
+`format_ty_for_cc`. Similar assertions are verified on C++ side in
+`support/rs_std/slice_ref_test.cc`. The response to the unlikely failure of
+these assertions can be changing the types from which `rs_std::SliceRef` is
+built to match the Rust side again.
 
 `cc_bindings_from_rs` does *not* assume that `&[T]` and `rs_std::slice<T>` have
 the same ABI as

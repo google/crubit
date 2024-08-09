@@ -31,7 +31,9 @@ use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
-use rustc_target::abi::{Abi, FieldsShape, Integer, Layout, Primitive, Scalar};
+use rustc_target::abi::{
+    Abi, AddressSpace, FieldsShape, Integer, Layout, Pointer, Primitive, Scalar,
+};
 use rustc_target::spec::PanicStrategy;
 use rustc_trait_selection::infer::InferCtxtExt;
 use rustc_type_ir::RegionKind;
@@ -494,6 +496,28 @@ fn format_pointer_or_reference_ty_for_cc<'tcx>(
     Ok(CcSnippet { prereqs, tokens: quote! { #tokens #const_qualifier #pointer_sigil } })
 }
 
+/// Checks that `ty` has the same ABI as `rs_std::SliceRef`.
+fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
+    // Check the assumption from `rust_builtin_type_abi_assumptions.md` that Rust's
+    // slice has the same ABI as `rs_std::SliceRef`.
+    let layout = tcx
+        .layout_of(ty::ParamEnv::empty().and(ty))
+        .expect("`layout_of` is expected to succeed for `{ty}` type")
+        .layout;
+    assert_eq!(8, layout.align().abi.bytes());
+    assert_eq!(16, layout.size().bytes());
+    assert!(matches!(
+        layout.abi(),
+        Abi::ScalarPair(
+            Scalar::Initialized { value: Pointer(AddressSpace(_)), .. },
+            Scalar::Initialized {
+                value: Primitive::Int(Integer::I64, /* signedness = */ false),
+                ..
+            }
+        )
+    ));
+}
+
 /// Formats `ty` into a `CcSnippet` that represents how the type should be
 /// spelled in a C++ declaration of a function parameter or field.
 fn format_ty_for_cc<'tcx>(
@@ -647,6 +671,9 @@ fn format_ty_for_cc<'tcx>(
         }
 
         ty::TyKind::RawPtr(pointee_mid, mutbl) => {
+            if let ty::TyKind::Slice(_) = pointee_mid.kind() {
+                check_slice_layout(db.tcx(), ty.mid());
+            }
             let mut pointee_hir = None;
             if let Some(hir) = ty.hir(db) {
                 if let rustc_hir::TyKind::Ptr(mut_p) = hir.kind {
@@ -660,6 +687,9 @@ fn format_ty_for_cc<'tcx>(
         }
 
         ty::TyKind::Ref(region, referent_mid, mutability) => {
+            if let ty::TyKind::Slice(_) = referent_mid.kind() {
+                check_slice_layout(db.tcx(), ty.mid());
+            }
             let mut referent_hir = None;
             if let Some(hir) = ty.hir(db) {
                 if let rustc_hir::TyKind::Ref(_, mut_p, ..) = &hir.kind {
@@ -7673,6 +7703,8 @@ pub mod tests {
                 "The following Rust type is not supported yet: [i32; 42]",
             ),
             (
+                // Check that the failure for slices is about not being supported and not failed
+                // asserts about ABI and layout.
                 "&'static [i32]", // TyKind::Slice (nested underneath TyKind::Ref)
                 "Failed to format the referent of the reference type `&'static [i32]`: \
                  The following Rust type is not supported yet: [i32]",
