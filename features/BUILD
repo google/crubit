@@ -3,6 +3,11 @@ load(
     "crubit_feature_hint",
 )
 
+package(
+    default_applicable_licenses = ["//:license"],
+    default_visibility = ["//visibility:private"],
+)
+
 _SUPPORTED_FEATURES = [
     "supported",
     "non_extern_c_functions",

@@ -11,6 +11,11 @@ load(
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
+package(
+    default_applicable_licenses = ["//:license"],
+    default_visibility = ["//visibility:private"],
+)
+
 rust_library(
     name = "impls",
     testonly = 1,
