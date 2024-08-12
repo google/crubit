@@ -46,9 +46,9 @@ visibility restrictions or level of support. The build flag:
 `--//rs_bindings_from_cc/bazel_support:globally_enabled_features`
 
 accepts a comma-separated list of unstable internal feature names (like
-`supported`, `non_extern_c_functions`, `experimental`, or the special alias
-`all`) and overrides the baseline feature set for all targets for the duration
-of the build. The flag's default value is the empty list.
+`supported`, `experimental`, or the special alias `all`) and overrides the
+baseline feature set for all targets for the duration of the build. The flag's
+default value is the empty list.
 
 ## Features
 

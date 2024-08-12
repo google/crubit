@@ -1168,7 +1168,6 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Namespace> {
 flagset::flags! {
     pub enum CrubitFeature : u8 {
         Supported,
-        NonExternCFunctions,
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
         Experimental,
@@ -1180,7 +1179,6 @@ impl CrubitFeature {
     pub fn short_name(&self) -> &'static str {
         match self {
             Self::Supported => "supported",
-            Self::NonExternCFunctions => "non_extern_c_functions",
             Self::Experimental => "experimental",
         }
     }
@@ -1189,7 +1187,6 @@ impl CrubitFeature {
     pub fn aspect_hint(&self) -> &'static str {
         match self {
             Self::Supported => "//features:supported",
-            Self::NonExternCFunctions => "//features:non_extern_c_functions",
             Self::Experimental => "//features:experimental",
         }
     }
@@ -1210,7 +1207,6 @@ impl<'de> serde::Deserialize<'de> for CrubitFeaturesIR {
             features |= match &*feature {
                 "all" => flagset::FlagSet::<CrubitFeature>::full(),
                 "supported" => CrubitFeature::Supported.into(),
-                "non_extern_c_functions" => CrubitFeature::NonExternCFunctions.into(),
                 "experimental" => CrubitFeature::Experimental.into(),
                 other => {
                     return Err(<D::Error as serde::de::Error>::custom(format!(
