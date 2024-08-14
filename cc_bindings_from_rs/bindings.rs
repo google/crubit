@@ -7455,6 +7455,43 @@ pub mod tests {
     /// bindings.
     #[test]
     fn test_format_ty_for_cc_successes() {
+        #[allow(dead_code)]
+        struct FormatCcExpectation {
+            expected_tokens: &'static str,
+            expected_includes: Vec<&'static str>,
+            expected_prereq_def: Option<&'static str>,
+            expected_prereq_fwd_decl: Option<&'static str>,
+        }
+
+        // Helper macro to create a `FormatCcExpectation`s. Handles all a variation of
+        // relevant fields (e.g. expected includes or forward decls).
+        #[allow(unused_macros)]
+        macro_rules! case {
+            (rs: $input_rust_ty:expr, cc: $expected_cc_ty:expr, includes: [$($includes:expr),*], prereq_def: $expected_prereq_def:expr, prereq_fwd_decl: $expected_prereq_fwd_decl:expr) => {
+                (
+                    $input_rust_ty,
+                    FormatCcExpectation {
+                        expected_tokens: $expected_cc_ty,
+                        expected_includes: Vec::<&'static str>::from([$($includes),*]),
+                        expected_prereq_def: $expected_prereq_def,
+                        expected_prereq_fwd_decl: $expected_prereq_fwd_decl,
+                    }
+            )
+            };
+            (rs: $input_rust_ty:expr, cc: $expected_cc_ty:expr) => {
+                case!(rs: $input_rust_ty, cc: $expected_cc_ty, includes: [], prereq_def: None, prereq_fwd_decl: None)
+            };
+            (rs: $input_rust_ty:expr, cc: $expected_cc_ty:expr, includes: [$($includes:expr),*]) => {
+                case!(rs: $input_rust_ty, cc: $expected_cc_ty, includes: [$($includes),*], prereq_def: None, prereq_fwd_decl: None)
+            };
+            (rs: $input_rust_ty:expr, cc: $expected_cc_ty:expr, includes: [$($includes:expr),*], prereq_def: $expected_prereq_def:expr) => {
+                case!(rs: $input_rust_ty, cc: $expected_cc_ty, includes: [$($includes),*], prereq_def: Some($expected_prereq_def), prereq_fwd_decl: None)
+            };
+            (rs: $input_rust_ty:expr, cc: $expected_cc_ty:expr, includes: [$($includes:expr),*], prereq_fwd_decl: $expected_prereq_fwd_decl:expr) => {
+                case!(rs: $input_rust_ty, cc: $expected_cc_ty, includes: [$($includes),*], prereq_def: None, prereq_fwd_decl: Some($expected_prereq_fwd_decl))
+            };
+        }
+
         let testcases = [
             // ( <Rust type>, (<expected C++ type>,
             //                 <expected #include>,
