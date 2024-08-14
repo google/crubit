@@ -5,11 +5,14 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_SLICEREF_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_SLICEREF_H_
 
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <span>  // NOLINT(build/c++20); <internal link>
+#include <type_traits>
 
 #include "absl/base/attributes.h"
+#include "absl/base/casts.h"
 #include "absl/types/span.h"
 #include "support/internal/attribute_macros.h"
 
@@ -39,6 +42,24 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]")
       : ptr_(span.empty() ? alignof(T)
                           : reinterpret_cast<uintptr_t>(span.data())),
         size_(span.size()) {}
+
+  // Re-use implicit conversions to `absl::Span`. Prevent a delegation circle
+  // by excluding `absl::Span<T>` as the converted type.
+  template <typename Container>
+    requires(std::convertible_to<Container &&, absl::Span<T>> &&
+             !std::is_same_v<Container, absl::Span<T>>)
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  SliceRef(Container&& container) noexcept
+      : SliceRef(absl::implicit_cast<absl::Span<T>>(
+            std::forward<Container>(container))) {}
+
+  // Also mirror explicit conversions from `absl::Span`.
+  template <typename Container>
+    requires(std::constructible_from<absl::Span<T>, Container &&> &&
+             !std::convertible_to<Container &&, absl::Span<T>> &&
+             !std::is_same_v<Container, absl::Span<T>>)
+  explicit SliceRef(Container&& container) noexcept
+      : SliceRef(absl::Span<T>(std::forward<Container>(container))) {}
 
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr operator std::span<T>() const {
