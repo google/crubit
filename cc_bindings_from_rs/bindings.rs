@@ -7455,7 +7455,6 @@ pub mod tests {
     /// bindings.
     #[test]
     fn test_format_ty_for_cc_successes() {
-        #[allow(dead_code)]
         struct FormatCcExpectation {
             expected_tokens: &'static str,
             expected_includes: Vec<&'static str>,
@@ -7465,7 +7464,6 @@ pub mod tests {
 
         // Helper macro to create a `FormatCcExpectation`s. Handles all a variation of
         // relevant fields (e.g. expected includes or forward decls).
-        #[allow(unused_macros)]
         macro_rules! case {
             (rs: $input_rust_ty:expr, cc: $expected_cc_ty:expr, includes: [$($includes:expr),*], prereq_def: $expected_prereq_def:expr, prereq_fwd_decl: $expected_prereq_fwd_decl:expr) => {
                 (
@@ -7493,113 +7491,103 @@ pub mod tests {
         }
 
         let testcases = [
-            // ( <Rust type>, (<expected C++ type>,
-            //                 <expected #include>,
-            //                 <expected prereq def>,
-            //                 <expected prereq fwd decl>) )
-            ("bool", ("bool", "", "", "")),
-            ("f32", ("float", "", "", "")),
-            ("f64", ("double", "", "", "")),
+            case!(rs: "bool", cc:  "bool"),
+            case!(rs: "f32", cc: "float"),
+            case!(rs: "f64", cc: "double"),
             // The ffi aliases are special-cased to refer to the C++ fundamental integer types,
             // if the type alias information is not lost (e.g. from generics).
-            ("std::ffi::c_char", ("char", "", "", "")),
-            ("::std::ffi::c_char", ("char", "", "", "")),
-            ("core::ffi::c_char", ("char", "", "", "")),
-            ("::core::ffi::c_char", ("char", "", "", "")),
-            ("std::ffi::c_uchar", ("unsigned char", "", "", "")),
-            ("std::ffi::c_longlong", ("long long", "", "", "")),
-            ("c_char", ("char", "", "", "")),
+            case!(rs: "std::ffi::c_char", cc:  "char"),
+            case!(rs: "::std::ffi::c_char", cc:  "char"),
+            case!(rs: "core::ffi::c_char", cc:  "char"),
+            case!(rs: "::core::ffi::c_char", cc:  "char"),
+            case!(rs: "std::ffi::c_uchar", cc: "unsigned char"),
+            case!(rs: "std::ffi::c_longlong", cc: "long long"),
+            case!(rs: "c_char", cc:  "char"),
             // Simple pointers/references do not lose the type alias information.
-            ("*const std::ffi::c_uchar", ("unsigned char const *", "", "", "")),
-            (
-                "&'static std::ffi::c_uchar",
-                (
-                    "unsigned char const & [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
-                    "",
-                    "",
-                    "",
-                ),
+            case!(rs: "*const std::ffi::c_uchar", cc: "unsigned char const *"),
+            case!(
+                rs: "&'static std::ffi::c_uchar",
+                cc: "unsigned char const & [[clang :: annotate_type (\"lifetime\" , \"static\")]]"
             ),
             // Generics lose type alias information.
-            ("Identity<std::ffi::c_longlong>", ("std::int64_t", "<cstdint>", "", "")),
-            ("i8", ("std::int8_t", "<cstdint>", "", "")),
-            ("i16", ("std::int16_t", "<cstdint>", "", "")),
-            ("i32", ("std::int32_t", "<cstdint>", "", "")),
-            ("i64", ("std::int64_t", "<cstdint>", "", "")),
-            ("isize", ("std::intptr_t", "<cstdint>", "", "")),
-            ("u8", ("std::uint8_t", "<cstdint>", "", "")),
-            ("u16", ("std::uint16_t", "<cstdint>", "", "")),
-            ("u32", ("std::uint32_t", "<cstdint>", "", "")),
-            ("u64", ("std::uint64_t", "<cstdint>", "", "")),
-            ("usize", ("std::uintptr_t", "<cstdint>", "", "")),
-            ("char", ("rs_std::rs_char", "<crubit/support/for/tests/rs_std/rs_char.h>", "", "")),
-            ("SomeStruct", ("::rust_out::SomeStruct", "", "SomeStruct", "")),
-            ("SomeEnum", ("::rust_out::SomeEnum", "", "SomeEnum", "")),
-            ("SomeUnion", ("::rust_out::SomeUnion", "", "SomeUnion", "")),
-            ("OriginallyCcStruct", ("cc_namespace :: CcStruct", "", "OriginallyCcStruct", "")),
-            ("*const i32", ("std :: int32_t const *", "<cstdint>", "", "")),
-            ("*mut i32", ("std::int32_t*", "<cstdint>", "", "")),
-            (
-                "&'static i32",
-                (
-                    "std :: int32_t const & [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
-                    "<cstdint>",
-                    "",
-                    "",
-                ),
+            case!(rs: "Identity<std::ffi::c_longlong>", cc: "std::int64_t", includes: ["<cstdint>"]),
+            case!(rs: "i8", cc: "std::int8_t", includes: ["<cstdint>"]),
+            case!(rs: "i16", cc:  "std::int16_t", includes: ["<cstdint>"]),
+            case!(rs: "i32", cc:  "std::int32_t", includes: ["<cstdint>"]),
+            case!(rs: "i64", cc:  "std::int64_t", includes: ["<cstdint>"]),
+            case!(rs: "isize", cc: "std::intptr_t", includes: ["<cstdint>"]),
+            case!(rs: "u8", cc: "std::uint8_t", includes: ["<cstdint>"]),
+            case!(rs: "u16", cc: "std::uint16_t", includes: ["<cstdint>"]),
+            case!(rs: "u32", cc: "std::uint32_t", includes: ["<cstdint>"]),
+            case!(rs: "u64", cc: "std::uint64_t", includes: ["<cstdint>"]),
+            case!(rs: "usize", cc: "std::uintptr_t", includes: ["<cstdint>"]),
+            case!(
+                rs: "char",
+                cc: "rs_std::rs_char",
+                includes: ["<crubit/support/for/tests/rs_std/rs_char.h>"]
             ),
-            (
-                "&'static mut i32",
-                (
-                    "std :: int32_t & [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
-                    "<cstdint>",
-                    "",
-                    "",
-                ),
+            case!(rs: "SomeStruct", cc: "::rust_out::SomeStruct", includes: [],  prereq_def: "SomeStruct"),
+            case!(rs: "SomeEnum", cc: "::rust_out::SomeEnum", includes: [], prereq_def: "SomeEnum"),
+            case!(rs: "SomeUnion", cc: "::rust_out::SomeUnion", includes: [], prereq_def: "SomeUnion"),
+            case!(
+                rs: "OriginallyCcStruct",
+                cc: "cc_namespace :: CcStruct",
+                includes: [],
+                prereq_def: "OriginallyCcStruct"
+            ),
+            case!(rs: "*const i32", cc: "std :: int32_t const *", includes: ["<cstdint>"]),
+            case!(rs: "*mut i32", cc: "std :: int32_t *", includes: ["<cstdint>"]),
+            case!(
+                rs: "&'static i32",
+                cc: "std :: int32_t const & [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
+                includes: ["<cstdint>"]
+            ),
+            case!(
+                rs: "&'static mut i32",
+                cc: "std :: int32_t & [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
+                includes: ["<cstdint>"]
             ),
             // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
-            ("*mut SomeStruct", ("::rust_out::SomeStruct*", "", "", "SomeStruct")),
+            case!(
+                rs: "*mut SomeStruct",
+                cc: "::rust_out::SomeStruct*",
+                includes: [],
+                prereq_fwd_decl: "SomeStruct"
+            ),
             // Testing propagation of deeper/nested `fwd_decls`:
-            ("*mut *mut SomeStruct", (":: rust_out :: SomeStruct * *", "", "", "SomeStruct")),
+            case!(
+                rs: "*mut *mut SomeStruct",
+                cc: ":: rust_out :: SomeStruct * *",
+                includes: [],
+                prereq_fwd_decl: "SomeStruct"
+            ),
             // Testing propagation of `const` / `mut` qualifiers:
-            ("*mut *const f32", ("float const * *", "", "", "")),
-            ("*const *mut f32", ("float * const *", "", "", "")),
-            (
-                // Rust function pointers are non-nullable, so when function pointers are used as a
-                // parameter type (i.e. in `TypeLocation::FnParam`) then we can translate to
-                // generate a C++ function *reference*, rather than a C++ function *pointer*.
-                "extern \"C\" fn (f32, f32) -> f32",
-                (
-                    "crubit :: type_identity_t < float (float , float) > &",
-                    "<crubit/support/for/tests/internal/cxx20_backports.h>",
-                    "",
-                    "",
-                ),
+            case!(rs: "*mut *const f32", cc: "float const * *"),
+            case!(rs: "*const *mut f32", cc: "float * const *"),
+            // Rust function pointers are non-nullable, so when function pointers are used as a
+            // parameter type (i.e. in `TypeLocation::FnParam`) then we can translate to
+            // generate a C++ function *reference*, rather than a C++ function *pointer*.
+            case!(
+                rs: "extern \"C\" fn (f32, f32) -> f32",
+                cc: "crubit :: type_identity_t < float (float , float) > &",
+                includes: ["<crubit/support/for/tests/internal/cxx20_backports.h>"]
             ),
             // Unsafe extern "C" function pointers are, to C++, just function pointers.
-            (
-                "unsafe extern \"C\" fn(f32, f32) -> f32",
-                (
-                    "crubit :: type_identity_t < float (float , float) > &",
-                    "<crubit/support/for/tests/internal/cxx20_backports.h>",
-                    "",
-                    "",
-                ),
+            case!(
+                rs: "unsafe extern \"C\" fn(f32, f32) -> f32",
+                cc: "crubit :: type_identity_t < float (float , float) > &",
+                includes: ["<crubit/support/for/tests/internal/cxx20_backports.h>"]
             ),
-            (
-                // Nested function pointer (i.e. `TypeLocation::Other`) means that
-                // we need to generate a C++ function *pointer*, rather than a C++
-                // function *reference*.
-                "*const extern \"C\" fn (f32, f32) -> f32",
-                (
-                    "crubit :: type_identity_t < float (float , float) > * const *",
-                    "<crubit/support/for/tests/internal/cxx20_backports.h>",
-                    "",
-                    "",
-                ),
+            // Nested function pointer (i.e. `TypeLocation::Other`) means that
+            // we need to generate a C++ function *pointer*, rather than a C++
+            // function *reference*.
+            case!(
+                rs: "*const extern \"C\" fn (f32, f32) -> f32",
+                cc: "crubit :: type_identity_t < float (float , float) > * const *",
+                includes: ["<crubit/support/for/tests/internal/cxx20_backports.h>"]
             ),
             // Extra parens/sugar are expected to be ignored:
-            ("(bool)", ("bool", "", "", "")),
+            case!(rs: "(bool)", cc: "bool"),
         ];
         let preamble = quote! {
             #![allow(unused_parens)]
@@ -7635,8 +7623,15 @@ pub mod tests {
             TypeLocation::FnParam,
             &testcases,
             preamble,
-            |desc, tcx, ty,
-             (expected_tokens, expected_include, expected_prereq_def, expected_prereq_fwd_decl)| {
+            |desc,
+             tcx,
+             ty,
+             FormatCcExpectation {
+                 expected_tokens,
+                 expected_includes,
+                 expected_prereq_def,
+                 expected_prereq_fwd_decl,
+             }| {
                 let (actual_tokens, actual_prereqs) = {
                     let db = bindings_db_for_tests(tcx);
                     let s = format_ty_for_cc(&db, ty, TypeLocation::FnParam).unwrap();
@@ -7648,40 +7643,45 @@ pub mod tests {
                 let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
                 assert_eq!(actual_tokens, expected_tokens, "{desc}");
 
-                if expected_include.is_empty() {
-                    assert!(
-                        actual_includes.is_empty(),
-                        "{desc}: `actual_includes` is unexpectedly non-empty: {actual_includes:?}",
-                    );
-                } else {
-                    let expected_include: TokenStream = expected_include.parse().unwrap();
+                assert!(
+                    expected_includes.len() == actual_includes.len(),
+                    "{desc}: `actual_includes` is unexpectedly not of the same length as `expected_includes`. actual_includes: {actual_includes:#?}; expected_includes: {expected_includes:#?}"
+                );
+
+                if expected_includes.len() > 0 {
+                    let expected_includes = expected_includes
+                        .into_iter()
+                        .map(|include| include.parse::<TokenStream>().unwrap())
+                        .collect::<Vec<_>>();
                     assert_cc_matches!(
                         format_cc_includes(&actual_includes),
-                        quote! { __HASH_TOKEN__ include #expected_include }
+                        quote! { #( __HASH_TOKEN__ include #expected_includes )*}
                     );
                 }
 
-                if expected_prereq_def.is_empty() {
+                if let Some(expected_prereq_def) = expected_prereq_def {
+                    let expected_def_id = find_def_id_by_name(tcx, expected_prereq_def);
+                    assert_eq!(1, actual_prereq_defs.len());
+                    assert_eq!(expected_def_id, actual_prereq_defs.into_iter().next().unwrap());
+                } else {
                     assert!(
                         actual_prereq_defs.is_empty(),
                         "{desc}: `actual_prereq_defs` is unexpectedly non-empty",
                     );
-                } else {
-                    let expected_def_id = find_def_id_by_name(tcx, expected_prereq_def);
-                    assert_eq!(1, actual_prereq_defs.len());
-                    assert_eq!(expected_def_id, actual_prereq_defs.into_iter().next().unwrap());
                 }
 
-                if expected_prereq_fwd_decl.is_empty() {
+                if let Some(expected_prereq_fwd_decl) = expected_prereq_fwd_decl {
+                    let expected_def_id = find_def_id_by_name(tcx, expected_prereq_fwd_decl);
+                    assert_eq!(1, actual_prereq_fwd_decls.len());
+                    assert_eq!(
+                        expected_def_id,
+                        actual_prereq_fwd_decls.into_iter().next().unwrap()
+                    );
+                } else {
                     assert!(
                         actual_prereq_fwd_decls.is_empty(),
                         "{desc}: `actual_prereq_fwd_decls` is unexpectedly non-empty",
                     );
-                } else {
-                    let expected_def_id = find_def_id_by_name(tcx, expected_prereq_fwd_decl);
-                    assert_eq!(1, actual_prereq_fwd_decls.len());
-                    assert_eq!(expected_def_id,
-                               actual_prereq_fwd_decls.into_iter().next().unwrap());
                 }
             },
         );
