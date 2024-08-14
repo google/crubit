@@ -69,6 +69,7 @@ crubit_rust_test(
     name = "cc_bindings_from_rs_test",
     crate = ":cc_bindings_from_rs",
     rustc_flags = ["-Zallow-features=never_type,rustc_private"],
+    tags = ["notap"],  # TODO(b/359815720): Remove once the test is fixed.
     deps = [
         ":run_compiler_test_support",
         "@crate_index//:regex",
