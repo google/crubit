@@ -894,6 +894,45 @@ TEST(PointerNullabilityTest, ConstMethodConditionalWithSeparateNullChecks) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ConstMethodJoinLosesInformation) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct A {
+      bool cond() const;
+    };
+    struct C {
+      int *_Nullable property() const;
+      A a() const;
+    };
+    void target(const C &c1, const C &c2) {
+      if (c1.property() == nullptr || c2.property() == nullptr || c2.a().cond())
+        return;
+      *c1.property();
+      // TODO(b/359457439): This is a false positive, caused by a suboptimal CFG
+      // structure. All of the possible edges out of the if statement's
+      // condition join in a single CFG block before branching out again to
+      // the `return` block on the one hand and the block that performs the
+      // dereferences on the other.
+      // When we perform the join for the various edges out of the condition,
+      // we discard the return value for `c2.property()` because in the case
+      // where `c1.property()` is null, we never evaluate `c2.property()` and
+      // hence don't have a return value for it. When we call `c2.property()`
+      // again, we therefore create a fresh return value for it, and we hence
+      // cannot infer that this value is nonnull.
+      // The false positive does not occur if `c2.a().cond()` is replaced with
+      // a simpler condition, e.g. `c2.cond()` (assuming that `cond()` is
+      // moved to `C`). In this case, the CFG is structured differently: All of
+      // the edges taken when one of the conditions in the if state is true
+      // lead directly to the `return` block, and the edge taken when all
+      // conditions are false leads diresctly to the block that performs the
+      // dereferences. No join is performed, and we can therefore conclude that
+      // `c2.property()` is nonnull.
+      // I am not sure what causes the different CFG structure in the two cases,
+      // but it may be triggered by the `A` temporary that is returned by `a()`.
+      *c2.property();  // [[unsafe]]
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, ConstMethodNoRecordForCallObject) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
