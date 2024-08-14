@@ -543,8 +543,7 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
             .into()
         }
         Item::TypeMapOverride(type_override) => {
-            // (This shouldn't fail, since we replace with known Rust types via a string.)
-            let rs_type = RsTypeKind::new_type_map_override(type_override);
+            let rs_type = RsTypeKind::new_type_map_override(db, type_override)?;
             let disable_comment = format!(
                 "Type bindings for {cpp_type} suppressed due to being mapped to \
                     an existing Rust type ({rs_type})",
@@ -1148,7 +1147,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                 Item::Enum(enum_) => RsTypeKind::new_enum(enum_.clone(), &ir)?,
                 Item::TypeAlias(type_alias) => new_type_alias(db, type_alias.clone())?,
                 Item::TypeMapOverride(type_map_override) => {
-                    RsTypeKind::new_type_map_override(type_map_override)
+                    RsTypeKind::new_type_map_override(db, type_map_override)?
                 }
                 other_item => bail!("Item does not define a type: {other_item:?}"),
             }

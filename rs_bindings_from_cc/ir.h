@@ -779,6 +779,9 @@ struct TypeMapOverride {
   std::string rs_name;
   std::string cc_name;
 
+  // The generic/template type parameters to the C++/Rust type.
+  std::vector<MappedType> type_parameters;
+
   BazelLabel owning_target;
   // Size and alignment, if known.
   // (These will not be known for a forward declaration, for example.)

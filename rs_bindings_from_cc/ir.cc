@@ -299,6 +299,7 @@ llvm::json::Value TypeMapOverride::ToJson() const {
   llvm::json::Object override{
       {"rs_name", rs_name},
       {"cc_name", cc_name},
+      {"type_parameters", type_parameters},
       {"owning_target", owning_target},
       {"is_same_abi", is_same_abi},
       {"id", id},

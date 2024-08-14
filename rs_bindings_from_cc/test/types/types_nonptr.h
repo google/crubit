@@ -115,4 +115,39 @@ TEST(TypeMapOverrideClass, MyI8Class);
 TEST(TypeMapOverrideEnum, MyI8Enum);
 TEST(TypeMapOverrideAlias, MyI8Alias);
 
+template <typename T>
+struct CRUBIT_INTERNAL_RUST_TYPE("&[]") SliceRef final {
+  size_t size;
+  T* data;
+};
+
+// Test all numerical types...
+TEST(TypeMapOverrideSliceRefConstUint8, SliceRef<const uint8_t>);
+TEST(TypeMapOverrideSliceRefUint8, SliceRef<uint8_t>);
+TEST(TypeMapOverrideSliceRefConstUint16, SliceRef<const uint16_t>);
+TEST(TypeMapOverrideSliceRefUint16, SliceRef<uint16_t>);
+TEST(TypeMapOverrideSliceRefConstUint32, SliceRef<const uint32_t>);
+TEST(TypeMapOverrideSliceRefUint32, SliceRef<uint32_t>);
+TEST(TypeMapOverrideSliceRefConstUint64, SliceRef<const uint64_t>);
+TEST(TypeMapOverrideSliceRefUint64, SliceRef<uint64_t>);
+
+TEST(TypeMapOverrideSliceRefConstInt8, SliceRef<const int8_t>);
+TEST(TypeMapOverrideSliceRefInt8, SliceRef<int8_t>);
+TEST(TypeMapOverrideSliceRefConstInt16, SliceRef<const int16_t>);
+TEST(TypeMapOverrideSliceRefInt16, SliceRef<int16_t>);
+TEST(TypeMapOverrideSliceRefConstInt32, SliceRef<const int32_t>);
+TEST(TypeMapOverrideSliceRefInt32, SliceRef<int32_t>);
+TEST(TypeMapOverrideSliceRefConstInt64, SliceRef<const int64_t>);
+TEST(TypeMapOverrideSliceRefInt64, SliceRef<int64_t>);
+
+TEST(TypeMapOverrideSliceRefConstFloat, SliceRef<const float>);
+TEST(TypeMapOverrideSliceRefFloat, SliceRef<float>);
+TEST(TypeMapOverrideSliceRefConstDouble, SliceRef<const double>);
+TEST(TypeMapOverrideSliceRefDouble, SliceRef<double>);
+
+// ... and arbitrary structs/enums.
+TEST(TypeMapOverrideSliceRefArbitraryStruct, SliceRef<ns::ExampleStruct>);
+TEST(TypeMapOverrideSliceRefArbitraryEnum, SliceRef<const ns::ExampleEnum>);
+TEST(TypeMapOverrideSliceRefArbitraryAliasEnum, SliceRef<AliasEnum>);
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_

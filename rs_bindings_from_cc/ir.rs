@@ -954,6 +954,7 @@ impl GenericItem for UseMod {
 pub struct TypeMapOverride {
     pub rs_name: Rc<str>,
     pub cc_name: Rc<str>,
+    pub type_parameters: Vec<MappedType>,
     pub owning_target: BazelLabel,
     pub size_align: Option<SizeAlign>,
     pub is_same_abi: bool,

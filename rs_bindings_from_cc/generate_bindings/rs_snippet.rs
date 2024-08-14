@@ -4,6 +4,7 @@
 #![allow(clippy::collapsible_else_if)]
 //! Vocabulary types and code generation functions for generating Rust code.
 
+use crate::BindingsGenerator;
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::NamespaceQualifier;
@@ -15,6 +16,8 @@ use quote::{quote, ToTokens};
 use std::collections::HashSet;
 use std::rc::Rc;
 use token_stream_printer::write_unformatted_tokens;
+
+const SLICE_REF_NAME_RS: &str = "&[]";
 
 /// A struct with information associated with the formatted Rust code snippet.
 #[derive(Clone, Debug)]
@@ -334,6 +337,7 @@ pub enum RsTypeKind {
         crate_path: Rc<CratePath>,
     },
     Primitive(PrimitiveType),
+    Slice(Rc<RsTypeKind>),
     /// Nullable T, using the rust Option type.
     Option(Rc<RsTypeKind>),
     Other {
@@ -362,12 +366,35 @@ impl RsTypeKind {
         Ok(RsTypeKind::Enum { enum_, crate_path })
     }
 
-    pub fn new_type_map_override(type_map_override: &TypeMapOverride) -> Self {
-        RsTypeKind::Other {
+    pub fn new_type_map_override(
+        db: &dyn BindingsGenerator,
+        type_map_override: &TypeMapOverride,
+    ) -> Result<Self> {
+        if type_map_override.rs_name.as_ref() == SLICE_REF_NAME_RS {
+            if type_map_override.type_parameters.len() != 1 {
+                bail!(
+                    "SliceRef has {} type parameters, expected 1",
+                    type_map_override.type_parameters.len()
+                );
+            }
+            let mapped_slice_type = type_map_override.type_parameters.first().unwrap();
+            let mapped_slice_type_rs = db.rs_type_kind(mapped_slice_type.rs_type.clone())?;
+
+            return Ok(RsTypeKind::Pointer {
+                pointee: Rc::new(RsTypeKind::Slice(Rc::new(mapped_slice_type_rs))),
+                mutability: if mapped_slice_type.cpp_type.is_const {
+                    Mutability::Const
+                } else {
+                    Mutability::Mut
+                },
+            });
+        }
+
+        Ok(RsTypeKind::Other {
             name: type_map_override.rs_name.clone(),
             type_args: Rc::from([]),
             is_same_abi: type_map_override.is_same_abi,
-        }
+        })
     }
 
     /// Returns true if the type is known to be `Unpin`, false otherwise.
@@ -475,6 +502,7 @@ impl RsTypeKind {
                 // aliased type, which is also visited by dfs_iter.
                 RsTypeKind::TypeAlias { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::Supported, None),
+                RsTypeKind::Slice { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Option { .. } => require_feature(CrubitFeature::Supported, None),
                 // Fallback case, we can't really give a good error message here.
                 RsTypeKind::Other { .. } => require_feature(CrubitFeature::Experimental, None),
@@ -627,6 +655,7 @@ impl RsTypeKind {
             RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
             RsTypeKind::Option(t) => t.implements_copy(),
+            RsTypeKind::Slice(t) => t.implements_copy(),
             RsTypeKind::Other { type_args, .. } => {
                 // All types that may appear here without `type_args` (e.g.
                 // primitive types like `i32`) implement `Copy`. Generic types
@@ -757,6 +786,10 @@ impl RsTypeKind {
                     quote! { #crate_path #ident }
                 }
             }
+            RsTypeKind::Slice(t) => {
+                let type_arg = t.to_token_stream_replacing_by_self(self_record);
+                quote! {[#type_arg]}
+            }
             RsTypeKind::Option(t) => {
                 let type_arg = t.to_token_stream_replacing_by_self(self_record);
                 // TODO(jeanpierreda): This should likely be `::core::option::Option`.
@@ -847,6 +880,10 @@ impl ToTokens for RsTypeKind {
                 quote! { #crate_path #ident }
             }
             RsTypeKind::Primitive(primitive) => quote! {#primitive},
+            RsTypeKind::Slice(t) => {
+                let type_arg = t.to_token_stream();
+                quote! {[#type_arg]}
+            }
             RsTypeKind::Option(t) => {
                 // TODO(jeanpierreda): This should likely be `::core::option::Option`.
                 quote! {Option<#t>}
@@ -891,6 +928,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                         self.todo.push(return_type);
                         self.todo.extend(param_types.iter().rev());
                     }
+                    RsTypeKind::Slice(t) => self.todo.push(t),
                     RsTypeKind::Option(t) => self.todo.push(t),
                     RsTypeKind::Other { type_args, .. } => self.todo.extend(type_args.iter().rev()),
                 };

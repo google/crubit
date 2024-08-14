@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -14,15 +15,16 @@
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
+#include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Type.h"
-#include "clang/Basic/LLVM.h"
-#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Casting.h"
 
 namespace crubit {
 namespace {
@@ -55,6 +57,33 @@ absl::StatusOr<bool> GetIsSameAbiAttribute(const clang::Decl* decl) {
         "The `crubit_internal_same_abi` attribute takes no arguments.");
   return attr != nullptr;
 }
+
+// Gathers all instantiated template parameters for `decl` (if any) and converts
+// them to `MappedType`s.
+//
+// `decl` must not be null.
+absl::StatusOr<std::optional<std::vector<MappedType>>> GetTemplateParameters(
+    ImportContext& ictx, const clang::Decl* decl) {
+  const auto* specialization_decl =
+      llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(decl);
+  if (!specialization_decl) {
+    return std::nullopt;
+  }
+
+  std::vector<MappedType> result;
+  for (const auto& arg : specialization_decl->getTemplateArgs().asArray()) {
+    auto mapped_type =
+        ictx.ConvertQualType(arg.getAsType(), /*lifetimes=*/nullptr,
+                             /*ref_qualifier_kind=*/std::nullopt,
+                             /*nullable=*/false);
+    if (!mapped_type.ok()) return mapped_type.status();
+
+    result.push_back(*mapped_type);
+  }
+
+  return result;
+}
+
 }  // namespace
 
 std::optional<IR::Item> TypeMapOverrideImporter::Import(
@@ -85,6 +114,14 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
   if (cpp_type == nullptr) return std::nullopt;
   std::string cc_name = cc_qualtype.getAsString();
 
+  absl::StatusOr<std::optional<std::vector<MappedType>>> type_parameters =
+      GetTemplateParameters(ictx_, type_decl);
+  if (!type_parameters.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        type_decl, absl::StrCat("Error fetching template parameters: ",
+                                type_parameters.status().message()));
+  }
+
   ictx_.MarkAsSuccessfullyImported(type_decl);
 
   std::optional<SizeAlign> size_align;
@@ -97,6 +134,7 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
   return TypeMapOverride{
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
+      .type_parameters = type_parameters->value_or(std::vector<MappedType>()),
       .owning_target = ictx_.GetOwningTarget(type_decl),
       .size_align = std::move(size_align),
       .is_same_abi = *is_same_abi,

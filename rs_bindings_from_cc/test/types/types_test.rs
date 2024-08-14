@@ -123,6 +123,33 @@ type_is!(
     TypeMapOverrideClass => i8,
     TypeMapOverrideEnum => i8,
     TypeMapOverrideAlias => i8,
+
+    TypeMapOverrideSliceRefConstUint8 => *const [u8],
+    TypeMapOverrideSliceRefUint8 => *mut [u8],
+    TypeMapOverrideSliceRefConstUint16 => *const [u16],
+    TypeMapOverrideSliceRefUint16 => *mut [u16],
+    TypeMapOverrideSliceRefConstUint32 => *const [u32],
+    TypeMapOverrideSliceRefUint32 => *mut [u32],
+    TypeMapOverrideSliceRefConstUint64 => *const [u64],
+    TypeMapOverrideSliceRefUint64 => *mut [u64],
+
+    TypeMapOverrideSliceRefConstInt8 => *const [i8],
+    TypeMapOverrideSliceRefInt8 => *mut [i8],
+    TypeMapOverrideSliceRefConstInt16 => *const [i16],
+    TypeMapOverrideSliceRefInt16 => *mut [i16],
+    TypeMapOverrideSliceRefConstInt32 => *const [i32],
+    TypeMapOverrideSliceRefInt32 => *mut [i32],
+    TypeMapOverrideSliceRefConstInt64 => *const [i64],
+    TypeMapOverrideSliceRefInt64 => *mut [i64],
+
+    TypeMapOverrideSliceRefConstFloat => *const [f32],
+    TypeMapOverrideSliceRefFloat => *mut [f32],
+    TypeMapOverrideSliceRefConstDouble => *const [f64],
+    TypeMapOverrideSliceRefDouble => *mut [f64],
+
+    TypeMapOverrideSliceRefArbitraryStruct => *mut [types_nonptr::ns::ExampleStruct],
+    TypeMapOverrideSliceRefArbitraryEnum => *const [types_nonptr::ns::ExampleEnum],
+    TypeMapOverrideSliceRefArbitraryAliasEnum => *mut [types_nonptr::AliasEnum],
 );
 
 // TODO(b/228569417): These should all generate bindings and be & (mut) 'static.
