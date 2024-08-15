@@ -125,6 +125,7 @@ mod tests {
     use regex::{Regex, RegexBuilder};
     use run_compiler_test_support::get_sysroot_for_testing;
     use run_compiler_test_support::setup_rustc_target_for_testing;
+    use serde::Deserialize;
     use std::path::PathBuf;
     use tempfile::{tempdir, TempDir};
     use token_stream_printer::{CLANG_FORMAT_EXE_PATH_FOR_TESTING, RUSTFMT_EXE_PATH_FOR_TESTING};
@@ -330,18 +331,26 @@ mod tests {
                 "#,
             );
 
+        #[derive(Deserialize, Debug, PartialEq, Eq)]
+        struct Item {
+            count: usize,
+            // NOTE: Ignore sample_message, which is non-deterministic.
+        }
+
         let test_result = test_args.run().expect("Error report generation should succeed");
         assert!(test_result.error_report_out_path.is_some());
         let error_report_out_path = test_result.error_report_out_path.as_ref().unwrap();
         assert!(error_report_out_path.exists());
-        let error_report = std::fs::read_to_string(&error_report_out_path)?;
-        let expected_error_report = r#"{
-  "Unsupported use statement that refers to this type of the entity: {:#?}": {
-    "count": 2,
-    "sample_message": "Unsupported use statement that refers to this type of the entity: [\n    Def(\n        Mod,\n        DefId(1:750 ~ std[46ff]::collections),\n    ),\n]"
-  }
-}"#;
-        assert_eq!(expected_error_report, error_report);
+        let error_report: HashMap<String, Item> = serde_json::from_str(
+            &std::fs::read_to_string(&error_report_out_path)
+                .expect("Failed to read error report file"),
+        )
+        .expect("Failed to parse error report");
+        assert!(matches!(
+            error_report
+                .get("Unsupported use statement that refers to this type of the entity: {:#?}"),
+            Some(&Item { count: 2 }),
+        ));
         Ok(())
     }
 

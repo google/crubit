@@ -73,6 +73,8 @@ crubit_rust_test(
     deps = [
         ":run_compiler_test_support",
         "@crate_index//:regex",
+        "@crate_index//:serde",
+        "@crate_index//:serde_json",
         "@crate_index//:tempfile",
     ],
 )
