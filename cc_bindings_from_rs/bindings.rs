@@ -115,10 +115,6 @@ pub struct Output {
 
 pub fn generate_bindings(db: &Database) -> Result<Output> {
     let tcx = db.tcx();
-    match tcx.sess().panic_strategy() {
-        PanicStrategy::Unwind => bail!("No support for panic=unwind strategy (b/254049425)"),
-        PanicStrategy::Abort => (),
-    };
 
     let top_comment = {
         let crate_name = tcx.crate_name(LOCAL_CRATE);
@@ -1195,25 +1191,20 @@ fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
 /// Otherwise returns an error the describes why the thunk is needed.
 fn is_thunk_required(sig: &ty::FnSig) -> Result<()> {
     match sig.abi {
-        // "C" ABI is okay: Before https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a
-        // Rust panic that "escapes" a "C" ABI function leads to Undefined Behavior.  This is
-        // unfortunate, but Crubit's `panics_and_exceptions.md` documents that `-Cpanic=abort`
-        // is the only supported configuration.
-        //
-        // After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a Rust panic that
-        // tries to "escape" a "C" ABI function will terminate the program.  This is okay.
+        // "C" ABI is okay: since https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html has been
+        // accepted, a Rust panic that "escapes" a "C" ABI function is a defined crash. See
+        // https://doc.rust-lang.org/nomicon/ffi.html#ffi-and-unwinding.
         rustc_target::spec::abi::Abi::C { unwind: false } => (),
 
-        // "C-unwind" ABI is okay: After
-        // https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a new "C-unwind" ABI may be
-        // used by Rust functions that want to safely propagate Rust panics through frames that
-        // may belong to another language.
+        // This requires a thunk if the calling C++ frames use `-fno-exceptions`, as it is
+        // UB. However, we leave this to the caller: if you use `extern "C-unwind"`, we assume you
+        // know what you are doing and do not block you from integrating with exception-enabled C++.
         rustc_target::spec::abi::Abi::C { unwind: true } => (),
 
         // All other ABIs trigger thunk generation.  This covers Rust ABI functions, but also
         // ABIs that theoretically are understood both by C++ and Rust (e.g. see
         // `format_cc_call_conv_as_clang_attribute` in `rs_bindings_from_cc/src_code_gen.rs`).
-        _ => bail!("Calling convention other than `extern \"C\"` requires a thunk"),
+        _ => bail!("Any calling convention other than `extern \"C\"` requires a thunk"),
     };
 
     ensure!(is_c_abi_compatible_by_value(sig.output()), "Return type requires a thunk");
@@ -7758,7 +7749,7 @@ pub mod tests {
             (
                 "fn(i32) -> i32", // TyKind::FnPtr (default ABI = "Rust")
                 "Function pointers can't have a thunk: \
-                 Calling convention other than `extern \"C\"` requires a thunk",
+                 Any calling convention other than `extern \"C\"` requires a thunk",
             ),
             (
                 "extern \"C\" fn (SomeStruct, f32) -> f32",

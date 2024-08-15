@@ -21,8 +21,7 @@ $ bazel run :cc_bindings_from_rs -- \
     --clang-format-exe-path=<path_of_clang_format_executable> -- \
     --rustfmt-exe-path=<path_of_rustfmt_executable> -- \
     $HOME/scratch/test.rs \
-    --crate-type=lib \
-    --codegen=panic=abort
+    --crate-type=lib
 
 $ cat $HOME/scratch/test.h
 // Automatically @generated C++ bindings for the following Rust crate:

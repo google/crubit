@@ -135,7 +135,7 @@ def _generate_bindings(ctx, basename, inputs, args, rustc_env):
         # can be interleaved with rustc flags in any order, and if we used _cc_bindings_from_rs_tool
         # as the tool_path for construct_arguments, then this could be `args.all` instead.
 
-        # TODO(b/254049425): We shouldn't override the panic arg, and instead work fine in any case.
+        # TODO(b/254049425): Remove `-Cpanic=abort` after crosstool contains cl/657372371.
         arguments = [args.process_wrapper_flags, "--", ctx.executable._cc_bindings_from_rs_tool.path, crubit_args, "--", args.rustc_flags, "-Cpanic=abort"],
     )
 

@@ -437,21 +437,27 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         Ok(())
     }
 
-    /// `test_rustc_unsupported_panic_mechanism` tests that `panic=unwind`
-    /// results in an error.
+    /// `test_rustc_with_panic_unwind` tests that `panic=unwind`
+    /// is supported at least nominally.
     ///
     /// This is tested at the `cc_bindings_from_rs.rs` level instead of at the
     /// `bindings.rs` level, because `run_compiler_test_support` doesn't
     /// support specifying a custom panic mechanism.
     #[test]
-    fn test_rustc_unsupported_panic_mechanism() -> Result<()> {
-        let err = TestArgs::default_args()?
+    fn test_rustc_with_panic_unwind() -> Result<()> {
+        let _ = TestArgs::default_args()?
             .with_panic_mechanism("unwind")
             .run()
-            .expect_err("panic=unwind should trigger an error");
+            .expect("panic=unwind should not cause an error");
+        Ok(())
+    }
 
-        let msg = format!("{err:#}");
-        assert_eq!("No support for panic=unwind strategy (b/254049425)", msg);
+    #[test]
+    fn test_rustc_with_panic_abort() -> Result<()> {
+        let _ = TestArgs::default_args()?
+            .with_panic_mechanism("abort")
+            .run()
+            .expect("panic=abort should not cause an error");
         Ok(())
     }
 

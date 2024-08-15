@@ -60,8 +60,7 @@ function test::happy_path() {
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
         --sysroot=$SYSROOT_PATH \
-        $(rustc_target_arg) \
-        --codegen=panic=abort" \
+        $(rustc_target_arg)" \
         "Expecting that this invocation of cc_bindings_from_rs will succeed"
 
   EXPECT_STR_EMPTY "$(cat $STDOUT_PATH)"
@@ -146,8 +145,7 @@ function test::invalid_h_out() {
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
         --sysroot=$SYSROOT_PATH \
-        $(rustc_target_arg) \
-        --codegen=panic=abort" \
+        $(rustc_target_arg)" \
     "Invalid --h-out path should result in non-0 exit code"
 
   EXPECT_STR_EMPTY "$(cat $STDOUT_PATH)"
@@ -192,8 +190,7 @@ function test::rustc_warnings_are_silenced() {
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
         $(rustc_target_arg) \
-        --sysroot=$SYSROOT_PATH \
-        --codegen=panic=abort" \
+        --sysroot=$SYSROOT_PATH" \
     "Expecting that this invocation of cc_bindings_from_rs will succeed"
 
   EXPECT_STR_EMPTY "$(cat $STDOUT_PATH)"

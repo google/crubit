@@ -195,11 +195,6 @@ def _cmdline_flags_test_impl(ctx):
         "--crate-type=rlib" in cmdline,
         "Expected to find `--crate-type=rlib` on the command line, got {}.".format(cmdline),
     )
-    asserts.true(
-        env,
-        "-Cpanic=abort" in cmdline,
-        "Expected to find `-Cpanic=abort` on the command line, got {}.".format(cmdline),
-    )
 
     # ":emptylib" is a dependency of the crate for which we are generating bindings.
     # Similarly to how we pass `--extern=emptylib` to the command line for the `Rustc`
