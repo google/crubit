@@ -18,7 +18,7 @@ pub fn extract_int(s: other_crate::SomeStruct) -> i32 {
 
 // b/292231336: Crubit currently fails to generate bindings for this function.
 // Error message: Type std::string::String comes from the `alloc` crate, but no
-// `--bindings-from-dependency` was specified for this crate.
+// `--crate-header` was specified for this crate.
 pub fn return_a_type_from_a_rust_toolchain_crate() -> String {
     "String".to_owned()
 }

@@ -37,7 +37,7 @@ fn new_db<'tcx>(
     let crubit_support_path_format = cmdline.crubit_support_path_format.as_str().into();
 
     let mut crate_name_to_include_paths = <HashMap<Rc<str>, Vec<CcInclude>>>::new();
-    for (crate_name, include_path) in &cmdline.bindings_from_dependencies {
+    for (crate_name, include_path) in &cmdline.crate_headers {
         let paths = crate_name_to_include_paths.entry(crate_name.as_str().into()).or_default();
         paths.push(CcInclude::user_header(include_path.as_str().into()));
     }
