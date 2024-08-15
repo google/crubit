@@ -277,9 +277,9 @@ TEST(CollectEvidenceFromDefinitionTest, DereferenceBeforeAssignment) {
       p = &i;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, DereferenceAfterAssignment) {
@@ -290,7 +290,8 @@ TEST(CollectEvidenceFromDefinitionTest, DereferenceAfterAssignment) {
       *p;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              Not(Contains(evidence(_, Evidence::UNCHECKED_DEREFERENCE))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, DereferenceAfterAssignmentFromReturn) {
@@ -305,7 +306,8 @@ TEST(CollectEvidenceFromDefinitionTest, DereferenceAfterAssignmentFromReturn) {
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              Not(Contains(evidence(_, _, functionNamed("target")))));
+              Not(Contains(evidence(_, Evidence::UNCHECKED_DEREFERENCE,
+                                    functionNamed("target")))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, DerefOfPtrRef) {
@@ -1496,10 +1498,11 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinitionMatching(
           cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
-      // No evidence collected from constructor body, which assigns a Nonnull
-      // value, and no evidence collected from *implicit* member initializer
+      // Evidence collected from constructor body, which assigns a Nonnull
+      // value, but no evidence collected from *implicit* member initializer
       // which default constructs to null.
-      IsEmpty());
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                                    fieldNamed("Target::I"))));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,
@@ -1519,8 +1522,14 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
       collectFromDefinitionMatching(
           cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
       // By the end of the constructor body, the field is still potentially
-      // default-initialized, which for smart pointers means it may be null.
+      // default-initialized, which for smart pointers means it may be null, so
+      // we collect ASSIGNED_FROM_NULLABLE.
+      // We also collect ASSIGNED_FROM_NONNULL, because the field can be
+      // assigned a Nonnull value in the body, though this doesn't end up
+      // affecting the inferred annotation.
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("Target::I")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
                                     fieldNamed("Target::I"))));
 }
 
@@ -1888,7 +1897,9 @@ TEST(CollectEvidenceFromDefinitionTest,
       q = r;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(1), Evidence::ASSIGNED_FROM_UNKNOWN)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, InitializationOfNullableRef) {
@@ -1950,12 +1961,12 @@ TEST(CollectEvidenceFromDefinitionTest,
 
 TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullptr) {
   static constexpr llvm::StringRef Src = R"cc(
-    void target(int* p, int* q) {
-      q = nullptr;
+    void target(int* p) {
+      p = nullptr;
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(evidence(paramSlot(1),
+              UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("target"))));
 }
@@ -1975,12 +1986,10 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullptrIndirect) {
 
 TEST(CollectEvidenceFromDefinitionTest, AssignedFromZero) {
   static constexpr llvm::StringRef Src = R"cc(
-    void target(int* p, int* q) {
-      q = 0;
-    }
+    void target(int* p) { p = 0; }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(evidence(paramSlot(1),
+              UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("target"))));
 }
@@ -2040,7 +2049,7 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullptrMultipleOperators) {
 // was already nullable, and so any formula does imply that the LHS type of the
 // assignment is nullable.
 TEST(CollectEvidenceFromDefinitionTest,
-     AnnotatedLocalAssignedFromNullableAfterFunctionReturn) {
+     AnnotatedLocalAssignedFromNullableAfterFunctionCallAssignment) {
   static constexpr llvm::StringRef Src = R"cc(
     int* foo();
     void target() {
@@ -2049,6 +2058,29 @@ TEST(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromDefinitionTest, AssignedFromNonnull) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p) {
+      int a = 0;
+      p = &a;
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NONNULL)));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, AssignedFromUnknown) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* p, int* q) {
+      p = q;
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_UNKNOWN)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,

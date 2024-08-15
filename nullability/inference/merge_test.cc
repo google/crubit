@@ -282,5 +282,14 @@ TEST_F(InferTest, NullableDefaultMemberInitializer) {
   EXPECT_EQ(Nullability::NONNULL, infer());
 }
 
+TEST_F(InferTest, MixedAssignments) {
+  add(Evidence::ASSIGNED_FROM_NONNULL);
+  EXPECT_EQ(Nullability::NONNULL, infer());
+  add(Evidence::ASSIGNED_FROM_UNKNOWN);
+  EXPECT_EQ(Nullability::UNKNOWN, infer());
+  add(Evidence::ASSIGNED_FROM_NULLABLE);
+  EXPECT_EQ(Nullability::NULLABLE, infer());
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

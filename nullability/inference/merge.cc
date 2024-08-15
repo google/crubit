@@ -154,6 +154,10 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
     return {Nullability::NONNULL};
   if (Counts[Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER])
     return {Nullability::NULLABLE};
+  if (!Counts[Evidence::ASSIGNED_FROM_NULLABLE] &&
+      !Counts[Evidence::ASSIGNED_FROM_UNKNOWN] &&
+      Counts[Evidence::ASSIGNED_FROM_NONNULL])
+    return {Nullability::NONNULL};
 
   return {Nullability::UNKNOWN};
 }

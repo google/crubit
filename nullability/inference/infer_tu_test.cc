@@ -444,7 +444,8 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
       inferTU(AST->context(), Pragmas, /*Iterations=*/1),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Nullability::UNKNOWN),
-                                        inferredSlot(1, Nullability::NONNULL)}),
+                                        inferredSlot(1, Nullability::NONNULL),
+                                        inferredSlot(2, Nullability::UNKNOWN)}),
           inference(hasName("returnsToBeNonnull"),
                     {inferredSlot(0, Nullability::UNKNOWN),
                      inferredSlot(1, Nullability::UNKNOWN)}),

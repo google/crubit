@@ -73,12 +73,15 @@ message Evidence {
     // A value with Unknown nullability was returned.
     UNKNOWN_RETURN = 9;
     // A value was assigned to a Nonnull declaration.
+    // e.g. evidence for `p` from `Nonnull<int*> q = p;`.
     ASSIGNED_TO_NONNULL = 10;
     // A value was assigned to a mutable Nullable declaration.
+    // e.g. evidence for `p` from `Nullable<int*>& q = p;`.
     ASSIGNED_TO_MUTABLE_NULLABLE = 11;
     // The program aborts if a value is null.
     ABORT_IF_NULL = 12;
     // A nullable value was assigned.
+    // e.g. evidence for `p` from `int* p = nullptr;`.
     ASSIGNED_FROM_NULLABLE = 13;
     // A pointer was used with an arithmetic operator without being checked for
     // null first.
@@ -109,6 +112,12 @@ message Evidence {
     NONNULL_REFERENCE_ARGUMENT = 21;
     // A value with Unknown nullability was passed as a reference argument.
     UNKNOWN_REFERENCE_ARGUMENT = 22;
+    // A nonnull value was assigned.
+    // e.g. evidence for `p` from `int a; int* p = &a;`.
+    ASSIGNED_FROM_NONNULL = 23;
+    // An unknown value was assigned.
+    // e.g. evidence for `p` from `int* p = getUnknownPtr();`.
+    ASSIGNED_FROM_UNKNOWN = 24;
   }
 }
 

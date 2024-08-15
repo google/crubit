@@ -163,6 +163,8 @@ static VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
     case Evidence::ANNOTATED_UNKNOWN:
     case Evidence::UNKNOWN_ARGUMENT:
     case Evidence::UNKNOWN_RETURN:
+    case Evidence::ASSIGNED_FROM_NONNULL:
+    case Evidence::ASSIGNED_FROM_UNKNOWN:
       return ForReturnSlot ? kFromBaseToDerived : kFromDerivedToBase;
     case Evidence::ANNOTATED_NULLABLE:
     case Evidence::NULLABLE_ARGUMENT:
@@ -976,9 +978,10 @@ class DefinitionEvidenceCollector {
                          ReturnTypeNullability, *PV, ReturnExpr->getExprLoc());
   }
 
-  /// Checks whether PointerValue is null or nullable and if so, collects
-  /// evidence for a slot that would, if marked Nullable, cause
-  /// TypeNullability's first-layer nullability to be Nullable.
+  /// Collects evidence for a slot that would, if marked Nullable, cause
+  /// TypeNullability's first-layer nullability to be Nullable. We collect for
+  /// this slot, evidence that a value was assigned with `PointerValue`'s
+  /// nullability, whether Nullable, Nonnull, or Unknown.
   ///
   /// e.g. This is used for example to collect from the following:
   /// ```
@@ -987,36 +990,48 @@ class DefinitionEvidenceCollector {
   ///   if (!r) {
   ///     q = r;
   ///   }
+  ///   int i = 0;
+  ///   int* s = &i;
   /// }
   /// ```
-  /// evidence for each of the assignments of `p` and `q` that they were
-  /// ASSIGNED_FROM_NULLABLE.
-  void fromAssignmentFromNullable(const TypeNullability &TypeNullability,
-                                  const dataflow::PointerValue &PointerValue,
-                                  SourceLocation ValueLoc,
-                                  Evidence::Kind EvidenceKind) {
+  /// evidence from each of the assignments of `p` and `q` that they were
+  /// ASSIGNED_FROM_NULLABLE and evidence from the assignemnt of `s` that it was
+  /// ASSIGNED_FROM_NONNULL.
+  void fromAssignmentFromValue(
+      const TypeNullability &TypeNullability,
+      const dataflow::PointerValue &PointerValue, SourceLocation ValueLoc,
+      Evidence::Kind EvidenceKindForAssignmentFromNullable) {
     if (TypeNullability.empty() || !hasPointerNullState(PointerValue)) return;
     dataflow::Arena &A = Env.arena();
-    if (getNullability(PointerValue, Env, &InferableSlotsConstraint) ==
-        NullabilityKind::Nullable) {
-      const Formula &TypeIsNullable = TypeNullability[0].isNullable(A);
-      // If the flow conditions already imply that the type is nullable, or
-      // that the type is not nullable, we can skip collecting evidence.
-      if (Env.proves(TypeIsNullable) || !Env.allows(TypeIsNullable)) return;
-
-      for (auto &IS : InferableSlots) {
-        auto &Implication = A.makeImplies(
-            IS.getSymbolicNullability().isNullable(A), TypeIsNullable);
-        // It's not expected that a slot's isNullable formula could be proven
-        // false by the environment alone (without the
-        // InferableSlotsConstraint), but SAT calls are relatively expensive, so
-        // only DCHECK.
-        DCHECK(Env.allows(IS.getSymbolicNullability().isNullable(A)));
-        if (Env.proves(Implication)) {
-          Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind,
-               ValueLoc);
-          return;
+    const Formula &TypeIsNullable = TypeNullability[0].isNullable(A);
+    // If the flow conditions already imply that the type is nullable, or
+    // that the type is not nullable, we can skip collecting evidence.
+    if (Env.proves(TypeIsNullable) || !Env.allows(TypeIsNullable)) return;
+    for (auto &IS : InferableSlots) {
+      auto &Implication = A.makeImplies(
+          IS.getSymbolicNullability().isNullable(A), TypeIsNullable);
+      // It's not expected that a slot's isNullable formula could be proven
+      // false by the environment alone (without the
+      // InferableSlotsConstraint), but SAT calls are relatively expensive, so
+      // only DCHECK.
+      DCHECK(Env.allows(IS.getSymbolicNullability().isNullable(A)));
+      if (Env.proves(Implication)) {
+        clang::NullabilityKind PVNullability =
+            getNullability(PointerValue, Env, &InferableSlotsConstraint);
+        Evidence::Kind EvidenceKind;
+        switch (PVNullability) {
+          case NullabilityKind::Nullable:
+            EvidenceKind = EvidenceKindForAssignmentFromNullable;
+            break;
+          case NullabilityKind::NonNull:
+            EvidenceKind = Evidence::ASSIGNED_FROM_NONNULL;
+            break;
+          default:
+            EvidenceKind = Evidence::ASSIGNED_FROM_UNKNOWN;
         }
+        Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind,
+             ValueLoc);
+        return;
       }
     }
   }
@@ -1044,8 +1059,8 @@ class DefinitionEvidenceCollector {
     const dataflow::PointerValue *PV = getPointerValue(&RHS, Env);
     if (!PV) return;
     fromAssignmentToType(LHSType, LHSNullability, *PV, Loc);
-    fromAssignmentFromNullable(LHSNullability, *PV, Loc,
-                               EvidenceKindForAssignmentFromNullable);
+    fromAssignmentFromValue(LHSNullability, *PV, Loc,
+                            EvidenceKindForAssignmentFromNullable);
   }
 
   /// Collects evidence from direct assignment statements, e.g. `p = nullptr`,
