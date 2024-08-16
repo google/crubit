@@ -743,12 +743,39 @@ fn format_ty_for_cc<'tcx>(
                     format!("Failed to format the referent of the reference type `{ty}`")
                 })?
         }
-
-        ty::TyKind::FnPtr(sig) => {
-            let sig = match sig.no_bound_vars() {
-                None => bail!("Generic functions are not supported yet (b/259749023)"),
-                Some(sig) => sig,
+        fn_ptr @ ty::TyKind::FnPtr { .. } => {
+            // Temporary support for both before / after FnPtr was split in two.
+            // TODO(jeanpierreda): Delete the dead branch after the commit is deployed everywhere.
+            #[cfg(not(
+                google3_internal_rustc_contains_commit_9859bf27fd9892f48725c59b56aeee2be1d2fbad
+            ))]
+            let sig = {
+                let ty::TyKind::FnPtr(sig) = fn_ptr else {
+                    unreachable!();
+                };
+                match sig.no_bound_vars() {
+                    None => bail!("Generic functions are not supported yet (b/259749023)"),
+                    Some(sig) => sig,
+                }
             };
+
+            #[cfg(google3_internal_rustc_contains_commit_9859bf27fd9892f48725c59b56aeee2be1d2fbad)]
+            let sig = {
+                let ty::TyKind::FnPtr(sig_tys, fn_header) = fn_ptr else {
+                    unreachable!();
+                };
+                let sig_tys = match sig_tys.no_bound_vars() {
+                    None => bail!("Generic functions are not supported yet (b/259749023)"),
+                    Some(sig_tys) => sig_tys,
+                };
+                rustc_middle::ty::FnSig {
+                    inputs_and_output: sig_tys.inputs_and_output,
+                    c_variadic: fn_header.c_variadic,
+                    safety: fn_header.safety,
+                    abi: fn_header.abi,
+                }
+            };
+
             check_fn_sig(&sig)?;
             is_thunk_required(&sig).context("Function pointers can't have a thunk")?;
 
@@ -906,7 +933,7 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
         | ty::TyKind::Char
         | ty::TyKind::Int(_)
         | ty::TyKind::Uint(_)
-        | ty::TyKind::FnPtr(_)
+        | ty::TyKind::FnPtr { .. }
         | ty::TyKind::Never => ty
             .to_string()
             .parse()
