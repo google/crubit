@@ -39,13 +39,14 @@ in `support/rs_std/rs_char_test.cc`. These assertions seem unlikely to fail, but
 if they do, then hopefully `rs_char` can just be tweaked to wrap another of the
 C++ integer types.
 
-## Rust built-in `&[T]` slice reference type
+## Rust built-in `[T]` slice type
 
-In the *future* `extern “C”` thunks generated in `..._cc_api_impl.rs` may take
-`&[i32]` and similar arguments (or return them).
+`extern “C”` thunks generated in `..._cc_api_impl.rs` can take `*const [i32]`
+and similar arguments (or return them). At the moment references to slices (like
+`&[u8]`) are not supported.
 
 [Rust documentation describes](https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html)
-the layout of arrays and slices and
+the layout of references and pointers to arrays and slices and
 [also documents](https://doc.rust-lang.org/std/primitive.slice.html) that slice
 references are “represented as a pointer and a length”.
 

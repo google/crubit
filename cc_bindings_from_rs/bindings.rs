@@ -408,6 +408,14 @@ fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
         // See `rust_builtin_type_abi_assumptions.md` for more details.
         ty::TyKind::Char => true,
 
+        // TODO(b/271016831): When launching `&[T]` (not just `*const T`), consider returning
+        // `true` for `TyKind::Ref` and document the rationale for such decision - maybe
+        // something like this will be sufficient:
+        // - In general `TyKind::Ref` should have the same ABI as `TyKind::RawPtr`
+        // - References to slices (`&[T]`) or strings (`&str`) rely on assumptions
+        //   spelled out in `rust_builtin_type_abi_assumptions.md`.
+        ty::TyKind::Slice{..} => false,
+
         // Crubit's C++ bindings for tuples, structs, and other ADTs may not preserve
         // their ABI (even if they *do* preserve their memory layout).  For example:
         // - In System V ABI replacing a field with a fixed-length array of bytes may affect
@@ -428,17 +436,8 @@ fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
 
         // These kinds of reference-related types are not implemented yet - `is_c_abi_compatible_by_value`
         // should never need to handle them, because `format_ty_for_cc` fails for such types.
-        //
-        // TODO(b/258235219): When implementing support for references we should
-        // consider returning `true` for `TyKind::Ref` and document the rationale
-        // for such decision - maybe something like this will be sufficient:
-        // - In general `TyKind::Ref` should have the same ABI as `TyKind::RawPtr`
-        // - References to slices (`&[T]`) or strings (`&str`) rely on assumptions
-        //   spelled out in `rust_builtin_type_abi_assumptions.md`..
         ty::TyKind::Str |
-        ty::TyKind::Array{..} |
-        ty::TyKind::Slice{..} =>
-            unimplemented!(),
+        ty::TyKind::Array{..} => unimplemented!(),
 
         // `format_ty_for_cc` is expected to fail for other kinds of types
         // and therefore `is_c_abi_compatible_by_value` should never be called for
@@ -490,6 +489,32 @@ fn format_pointer_or_reference_ty_for_cc<'tcx>(
     let CcSnippet { tokens, mut prereqs } = db.format_ty_for_cc(pointee, TypeLocation::Other)?;
     prereqs.move_defs_to_fwd_decls();
     Ok(CcSnippet { prereqs, tokens: quote! { #tokens #const_qualifier #pointer_sigil } })
+}
+
+fn format_slice_pointer_for_cc<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    slice_ty: SugaredTy<'tcx>,
+    mutability: rustc_middle::mir::Mutability,
+) -> Result<CcSnippet> {
+    let const_qualifier = match mutability {
+        Mutability::Mut => quote! {},
+        Mutability::Not => quote! { const },
+    };
+
+    let CcSnippet { tokens, mut prereqs } =
+        db.format_ty_for_cc(slice_ty, TypeLocation::Other).with_context(|| {
+            format!("Failed to format the inner type of the slice type `{slice_ty}`")
+        })?;
+    prereqs.includes.insert(db.support_header("rs_std/slice_ref.h"));
+
+    Ok(CcSnippet {
+        prereqs,
+        tokens: quote! {
+            rs_std::SliceRef<
+                #const_qualifier #tokens
+            >
+        },
+    })
 }
 
 /// Checks that `ty` has the same ABI as `rs_std::SliceRef`.
@@ -667,8 +692,21 @@ fn format_ty_for_cc<'tcx>(
         }
 
         ty::TyKind::RawPtr(pointee_mid, mutbl) => {
-            if let ty::TyKind::Slice(_) = pointee_mid.kind() {
+            if let ty::TyKind::Slice(slice_ty) = pointee_mid.kind() {
                 check_slice_layout(db.tcx(), ty.mid());
+                let mut slice_hir_ty = None;
+                if let Some(hir) = ty.hir(db) {
+                    if let rustc_hir::TyKind::Ptr(pointee) = &hir.kind {
+                        if let rustc_hir::TyKind::Slice(slice_ty) = &pointee.ty.kind {
+                            slice_hir_ty = Some(*slice_ty);
+                        }
+                    }
+                }
+                return format_slice_pointer_for_cc(
+                    db,
+                    SugaredTy::new(*slice_ty, slice_hir_ty),
+                    *mutbl,
+                );
             }
             let mut pointee_hir = None;
             if let Some(hir) = ty.hir(db) {
@@ -906,6 +944,12 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
             })?;
             let lifetime = format_region_as_rs_lifetime(region);
             quote! { & #lifetime #mutability #ty }
+        }
+        ty::TyKind::Slice(slice_ty) => {
+            let ty = format_ty_for_rs(tcx, *slice_ty).with_context(|| {
+                format!("Failed to format the element type of the slice type `{ty}`")
+            })?;
+            quote! { [#ty] }
         }
         _ => bail!("The following Rust type is not supported yet: {ty}"),
     })
@@ -4550,6 +4594,29 @@ pub mod tests {
         });
     }
 
+    #[test]
+    fn test_format_item_slice() {
+        let test_src = r#"
+                pub fn foo(_a: *const [u32], _b: *const [u8], _c: *mut [i16], _d: *mut [bool]) { todo!() }
+            "#;
+        test_format_item(test_src, "foo", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                  void
+                  foo(
+                    rs_std::SliceRef<const std::uint32_t> _a,
+                    rs_std::SliceRef<const std::uint8_t> _b,
+                    rs_std::SliceRef<std::int16_t> _c,
+                    rs_std::SliceRef<bool> _d
+                  );
+                }
+            );
+        });
+    }
+
     /// Test of lifetime-generic function with a `where` clause.
     ///
     /// The `where` constraint below is a bit silly (why not just use `'static`
@@ -7538,6 +7605,29 @@ pub mod tests {
                 cc: "std :: int32_t & [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
                 includes: ["<cstdint>"]
             ),
+            // Slice pointers:
+            case!(
+                rs: "*const [i8]",
+                cc: "rs_std::SliceRef<const std::int8_t>",
+                includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            ),
+            case!(
+                rs: "*mut [i64]",
+                cc: "rs_std::SliceRef<std::int64_t>",
+                includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            ),
+            case!(
+                rs: "*const [c_char]",
+                cc: "rs_std::SliceRef<const char>",
+                includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            ),
+            case!(
+                rs: "*mut [SomeStruct]",
+                cc: "rs_std::SliceRef< ::rust_out::SomeStruct>",
+                includes: [ "<crubit/support/for/tests/rs_std/slice_ref.h>"],
+                prereq_def: "SomeStruct"
+
+            ),
             // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
             case!(
                 rs: "*mut SomeStruct",
@@ -7878,6 +7968,8 @@ pub mod tests {
             // Pointer to an ADT:
             ("*mut SomeStruct", "* mut :: rust_out :: SomeStruct"),
             ("extern \"C\" fn(i32) -> i32", "extern \"C\" fn(i32) -> i32"),
+            // Pointer to a Slice:
+            ("*mut [i32]", "*mut [i32]"),
         ];
         let preamble = quote! {
             #![feature(never_type)]
@@ -7915,11 +8007,6 @@ pub mod tests {
             (
                 "[i32; 42]", // TyKind::Array
                 "The following Rust type is not supported yet: [i32; 42]",
-            ),
-            (
-                "&'static [i32]", // TyKind::Slice (nested underneath TyKind::Ref)
-                "Failed to format the referent of the reference type `&'static [i32]`: \
-                 The following Rust type is not supported yet: [i32]",
             ),
             (
                 "&'static str", // TyKind::Str (nested underneath TyKind::Ref)
