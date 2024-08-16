@@ -18,7 +18,7 @@ extern crate rustc_target;
 use itertools::Itertools;
 
 use rustc_middle::ty::TyCtxt;
-use rustc_session::config::{CodegenOptions, CrateType, Input, Options, OutputType, OutputTypes};
+use rustc_session::config::{CrateType, Input, Options, OutputType, OutputTypes};
 use rustc_span::def_id::LocalDefId;
 use rustc_target::spec::TargetTriple;
 
