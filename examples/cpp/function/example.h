@@ -7,10 +7,10 @@
 
 #include <stdint.h>
 
-namespace ghoe {
+namespace gshoe {
 
 inline int32_t add_two_integers(int32_t x, int32_t y) { return x + y; }
 
-}  // namespace ghoe
+}  // namespace gshoe
 
 #endif  // THIRD_PARTY_CRUBIT_EXAMPLES_CPP_FUNCTION_EXAMPLE_H_
