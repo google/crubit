@@ -8,12 +8,12 @@ more context.
 """
 
 load(
-    "@@//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
-    "get_additional_rust_srcs",
+    "//features:crubit_feature_hint.bzl",
+    "find_crubit_features",
 )
 load(
-    "@@//rs_bindings_from_cc/bazel_support:crubit_feature_hint.bzl",
-    "find_crubit_features",
+    "@@//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
+    "get_additional_rust_srcs",
 )
 load(
     "@@//rs_bindings_from_cc/bazel_support:providers.bzl",

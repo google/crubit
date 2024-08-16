@@ -1,5 +1,6 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
-    "//rs_bindings_from_cc/bazel_support:crubit_feature_hint.bzl",
+    ":crubit_feature_hint.bzl",
     "crubit_feature_hint",
 )
 
@@ -42,4 +43,14 @@ crubit_feature_hint(
     name = "internal_testonly_experimental",
     crubit_features = ["experimental"],
     visibility = ["//:__subpackages__"],
+)
+
+# Implementation details follow.
+
+bzl_library(
+    name = "crubit_feature_hint_bzl",
+    srcs = ["crubit_feature_hint.bzl"],
+    visibility = [
+        "//:__subpackages__",
+    ],
 )

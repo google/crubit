@@ -19,10 +19,10 @@ bzl_library(
     ],
     deps = [
         ":additional_rust_srcs_for_crubit_bindings_aspect_hint_bzl",
-        ":crubit_feature_hint_bzl",
         ":providers_bzl",
         ":rust_bindings_from_cc_cli_flag_aspect_hint",
         ":rust_bindings_from_cc_utils_bzl",
+        "//features:crubit_feature_hint_bzl",
     ],
 )
 
@@ -92,11 +92,6 @@ bzl_library(
 bzl_library(
     name = "compile_cc_bzl",
     srcs = ["compile_cc.bzl"],
-)
-
-bzl_library(
-    name = "crubit_feature_hint_bzl",
-    srcs = ["crubit_feature_hint.bzl"],
 )
 
 bzl_library(
