@@ -127,7 +127,9 @@ crubit_rust_test(
     name = "crubit_attr_test",
     crate = ":crubit_attr",
     rustc_flags = ["-Zallow-features=rustc_private"],
-    deps = [":run_compiler_test_support"],
+    deps = [
+        ":run_compiler_test_support",
+    ],
 )
 
 rust_library(
