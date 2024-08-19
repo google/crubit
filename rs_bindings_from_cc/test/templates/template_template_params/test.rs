@@ -4,7 +4,9 @@
 
 #[cfg(test)]
 mod tests {
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn test_template_template_params() {
         assert_eq!(42, template_template_params::MyTypeAlias::GetPolicy());
     }

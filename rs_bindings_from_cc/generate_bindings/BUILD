@@ -43,6 +43,7 @@ multiplatform_rust_test(
         "//common:token_stream_matchers",
         "//rs_bindings_from_cc:ir_matchers",
         "//rs_bindings_from_cc:ir_testing",
+        "//third_party/gtest_rust/googletest",
         "@crate_index//:static_assertions",
     ],
 )

@@ -499,6 +499,7 @@ fn recursively_pinned_impl(
 #[cfg(test)]
 mod test {
     use super::*;
+    use googletest::prelude::*;
     use token_stream_matchers::assert_rs_matches;
 
     /// Essentially a change detector, but handy for debugging.
@@ -507,7 +508,7 @@ mod test {
     /// asserting on the output is as close as we can get. Once negative
     /// compilation tests are added, it would be better to test various
     /// safety features that way.
-    #[test]
+    #[gtest]
     fn test_recursively_pinned_struct() {
         let definition =
             recursively_pinned_impl(quote! {}, quote! {#[repr(C)] struct S {x: i32}}).unwrap();
@@ -550,7 +551,7 @@ mod test {
     }
 
     /// The enum version of `test_recursively_pinned_struct`.
-    #[test]
+    #[gtest]
     fn test_recursively_pinned_enum() {
         let definition = recursively_pinned_impl(
             quote! {},

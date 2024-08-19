@@ -17,4 +17,7 @@ crubit_rust_test(
     proc_macro_deps = [
         "//common:item_exists",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

@@ -26,4 +26,7 @@ crubit_rust_test(
     cc_deps = [
         ":uses_macro",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

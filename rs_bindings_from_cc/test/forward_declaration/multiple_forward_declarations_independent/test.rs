@@ -4,8 +4,9 @@
 
 use core::any::TypeId;
 use forward_declare::CcCast;
+use googletest::prelude::*;
 
-#[test]
+#[gtest]
 fn test_complete_to_incomplete_ptr_conversion_crossing_crate_boundaries() {
     let mut a = definition::A::default();
     let a_ptr: *mut definition::A = &mut a;
@@ -21,7 +22,7 @@ fn test_complete_to_incomplete_ptr_conversion_crossing_crate_boundaries() {
     }
 }
 
-#[test]
+#[gtest]
 fn test_complete_to_incomplete_ref_conversion_crossing_crate_boundaries() {
     let mut a = definition::A::default();
     let a_ptr: *mut definition::A = &mut a;
@@ -37,7 +38,7 @@ fn test_complete_to_incomplete_ref_conversion_crossing_crate_boundaries() {
     }
 }
 
-#[test]
+#[gtest]
 fn test_each_crate_has_distinct_type_for_a() {
     assert_ne!(TypeId::of::<forward_declaration1::A>(), TypeId::of::<forward_declaration2::A>());
     assert_ne!(TypeId::of::<forward_declaration1::A>(), TypeId::of::<definition::A>());

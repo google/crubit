@@ -10,6 +10,9 @@ crubit_rust_test(
     cc_deps = [
         "//rs_bindings_from_cc/test/cpp_reserved_target_name/subdir2",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 # Tests that the name of a Crubit-enabled cc_library named 'core'.
@@ -26,6 +29,9 @@ crubit_rust_test(
     ],
     proc_macro_deps = [
         "//common:item_exists",
+    ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
     ],
 )
 
@@ -44,5 +50,8 @@ crubit_rust_test(
     srcs = ["test_crubit_enabled_cc_library_named_core_in_transitive_deps.rs"],
     cc_deps = [
         ":core_user",
+    ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
     ],
 )

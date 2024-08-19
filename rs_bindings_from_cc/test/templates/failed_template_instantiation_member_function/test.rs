@@ -3,17 +3,18 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use failed_template_instantiation_member_function::*;
+use googletest::prelude::*;
 
 /// Test to ensure that Crubit can import class template specialization with
 /// un-instantiable member function.
-#[test]
+#[gtest]
 fn test_failed_template_instantiation_member_function() {
     InvokeNoOp(AForNoMethod::default());
     InvokeMethodReturnAuto(AForHasMethodReturningVoid::default());
     assert_eq!(1, InvokeMethodReturnAutoAndInt(AForHasMethodReturningInt::default()));
 }
 
-#[test]
+#[gtest]
 fn test_failed_template_instantiation_member_function_preserves_instantiable() {
     AForNoMethod::default().NoOp();
 

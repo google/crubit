@@ -282,12 +282,13 @@ fn clang_format(input: String, clang_format_exe_path: &Path) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::prelude::*;
 
     use super::Result;
     use quote::quote;
     use tempfile::tempdir;
 
-    #[test]
+    #[gtest]
     fn test_simple_token_stream() -> Result<()> {
         let token_stream = quote! {
           struct Foo {}
@@ -303,14 +304,14 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_space_idents_and_literals() -> Result<()> {
         let token_stream = quote! { foo 42 bar 23 };
         assert_eq!(tokens_to_string(token_stream)?, "foo 42 bar 23");
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_dont_space_punctuation() -> Result<()> {
         let token_stream = quote! { foo+42+bar+23 };
         assert_eq!(tokens_to_string(token_stream)?, "foo+42+bar+23");
@@ -318,7 +319,7 @@ mod tests {
     }
 
     /// `foo : ::bar` is valid syntax, but `foo:::bar` is not.
-    #[test]
+    #[gtest]
     fn test_paamayim_nekudotayim() -> Result<()> {
         assert_eq!(tokens_to_string(quote! { x : :: y })?, "x: ::y");
         // The following variants are not syntactically valid, but good to have working
@@ -329,56 +330,56 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_newline_token() -> Result<()> {
         let token_stream = quote! { a __NEWLINE__ b };
         assert_eq!(tokens_to_string(token_stream)?, "a\nb");
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_space_token() -> Result<()> {
         let token_stream = quote! { a __SPACE__ = __SPACE__ b };
         assert_eq!(tokens_to_string(token_stream)?, "a = b");
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_redundant_space_token() -> Result<()> {
         let token_stream = quote! { a __SPACE__ b };
         assert_eq!(tokens_to_string(token_stream)?, "a b");
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_hash_token() -> Result<()> {
         let token_stream = quote! { a __HASH_TOKEN__ b };
         assert_eq!(tokens_to_string(token_stream)?, "a #b");
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_include_standard_header() -> Result<()> {
         let token_stream = quote! { __HASH_TOKEN__ include <cstddef> };
         assert_eq!(tokens_to_string(token_stream)?, "#include<cstddef>");
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_comments() -> Result<()> {
         let token_stream = quote! { __COMMENT__ "line1\nline2" };
         assert_eq!(tokens_to_string(token_stream)?, "// line1\n// line2\n");
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_invalid_comment() -> Result<()> {
         assert!(tokens_to_string(quote! { __COMMENT__ }).is_err());
         assert!(tokens_to_string(quote! { __COMMENT__ ident }).is_err());
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_doc_comment() -> Result<()> {
         // token_stream_printer (and rustfmt) don't put a space between /// and the doc
         // comment, if the space is desired, it has to appear in the annotation.
@@ -395,7 +396,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_doc_comment_leading_spaces() -> Result<()> {
         assert_eq!(
             rs_tokens_to_formatted_string_for_tests(quote! { #[doc = " hello"] struct X {} })?,
@@ -410,7 +411,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_special_tokens_in_groups() -> Result<()> {
         assert_eq!(tokens_to_string(quote! {{ a __NEWLINE__ b }})?, "{ a\nb }");
         assert_eq!(tokens_to_string(quote! {{ a __SPACE__ b }})?, "{ a b }");
@@ -419,7 +420,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_tokens_to_formatted_string_for_tests() {
         let input = quote! {
             fn foo() {}
@@ -434,7 +435,7 @@ fn bar() {}
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_tokens_to_formatted_string() {
         let cfg = RustfmtConfig::new(Path::new(RUSTFMT_EXE_PATH_FOR_TESTING), None);
         let input = quote! {
@@ -452,7 +453,7 @@ fn foo(x: i32, y: i32) -> i32 {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_tokens_to_formatted_string_with_custom_rustfmt_toml() -> Result<()> {
         let tmpdir = tempdir()?;
         let rustfmt_toml_path = tmpdir.path().join("rustfmt-for-tests.toml");
@@ -484,7 +485,7 @@ fn foo(
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_cc_tokens_to_formatted_string_for_tests() {
         let input = quote! {
             namespace ns {

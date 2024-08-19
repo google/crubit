@@ -4,7 +4,9 @@
 
 #[cfg(test)]
 mod tests {
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn test_two_template_parameters() {
         let s =
             two_template_parameters::AliasToTemplateWithTwoParams { value1: 123, value2: 456.789 };

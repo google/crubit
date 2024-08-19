@@ -20,5 +20,8 @@ crubit_rust_test(
         ":thread_safe_types",
         ":thread_unsafe_types",
     ],
-    deps = ["@crate_index//:static_assertions"],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+        "@crate_index//:static_assertions",
+    ],
 )

@@ -2,7 +2,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[test]
+use googletest::prelude::*;
+
+#[gtest]
 fn test_round_trip() {
     let value = leaf_rs_lib::wrap(4);
     assert_eq!(middle_cc_lib::crubit::Unwrap(value), 4);
@@ -11,7 +13,7 @@ fn test_round_trip() {
     assert_eq!(leaf_rs_lib::unwrap(value), 2);
 }
 
-#[test]
+#[gtest]
 fn test_enum_round_trip() {
     let value = leaf_rs_lib::wrap_enum(2);
     assert_eq!(middle_cc_lib::crubit::UnwrapEnum(value), 2);

@@ -205,12 +205,13 @@ unsafe impl<T> Inherits<T> for T {
 #[cfg(test)]
 mod test {
     use super::*;
+    use googletest::prelude::*;
 
     fn ptr_location<T: std::ops::Deref>(x: T) -> usize {
         &*x as *const _ as *const u8 as usize
     }
 
-    #[test]
+    #[gtest]
     fn test_unpin_upcast() {
         #[derive(Default)]
         struct Base(i32);
@@ -245,7 +246,7 @@ mod test {
         assert_eq!(derived.base.0, 42);
     }
 
-    #[test]
+    #[gtest]
     fn test_nonunpin_upcast() {
         #[derive(Default)]
         struct Base(i32);

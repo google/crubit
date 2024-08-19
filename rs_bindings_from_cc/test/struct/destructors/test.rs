@@ -5,9 +5,10 @@
 #[cfg(test)]
 mod tests {
     use field_destruction_order::*;
+    use googletest::prelude::*;
     use std::mem::ManuallyDrop;
 
-    #[test]
+    #[gtest]
     fn test_field_destruction_order() {
         let field1_value = 1;
         let field2_value = 2;

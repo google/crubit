@@ -5,8 +5,9 @@
 #[cfg(test)]
 mod tests {
     use forward_declare::CcCast;
+    use googletest::prelude::*;
 
-    #[test]
+    #[gtest]
     fn test_bridging() {
         let x = class_template_instantiation1::Create(123);
 

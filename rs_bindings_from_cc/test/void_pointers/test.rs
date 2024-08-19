@@ -4,7 +4,9 @@
 
 #[cfg(test)]
 mod tests {
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn test_invoke_memcpy() {
         use void_pointers::invoke_memcpy;
 

@@ -2,15 +2,16 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use googletest::prelude::*;
 use item_exists::value_exists;
 use reopened_namespace::foo;
 
-#[test]
+#[gtest]
 fn test_not_present() {
     assert!(!value_exists!(foo::FunctionUsesNamespaceType));
 }
 
-#[test]
+#[gtest]
 fn test_reopened_namespace() {
     assert_eq!(42, foo::Returns42());
 }

@@ -1504,13 +1504,14 @@ pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ide
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::prelude::*;
 
-    #[test]
+    #[gtest]
     fn test_identifier_debug_print() {
         assert_eq!(format!("{:?}", Identifier { identifier: "hello".into() }), "\"hello\"");
     }
 
-    #[test]
+    #[gtest]
     fn test_unqualified_identifier_debug_print() {
         assert_eq!(
             format!(
@@ -1523,7 +1524,7 @@ mod tests {
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Destructor), "Destructor");
     }
 
-    #[test]
+    #[gtest]
     fn test_used_headers() {
         let input = r#"
         {
@@ -1543,14 +1544,14 @@ mod tests {
         assert_eq!(ir.flat_ir, expected);
     }
 
-    #[test]
+    #[gtest]
     fn test_empty_crate_root_path() {
         let input = "{ \"current_target\": \"//foo:bar\" }";
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         assert_eq!(ir.crate_root_path(), None);
     }
 
-    #[test]
+    #[gtest]
     fn test_crate_root_path() {
         let input = r#"
         {
@@ -1562,19 +1563,19 @@ mod tests {
         assert_eq!(ir.crate_root_path().as_deref(), Some("__cc_template_instantiations_rs_api"));
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_label_target() {
         let label: BazelLabel = "//foo:bar".into();
         assert_eq!(label.target_name(), "bar");
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_label_target_dotless() {
         let label: BazelLabel = "//foo".into();
         assert_eq!(label.target_name(), "foo");
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_label_dotless_slashless() {
         let label: BazelLabel = "foo".into();
         assert_eq!(label.target_name(), "foo");
@@ -1582,7 +1583,7 @@ mod tests {
 
     /// These are not labels, but there is an unambiguous interpretation of
     /// what their target should be that lets us keep going.
-    #[test]
+    #[gtest]
     fn test_bazel_label_empty_target() {
         for s in ["foo:", "foo/", ""] {
             let label: BazelLabel = s.into();
@@ -1590,61 +1591,61 @@ mod tests {
         }
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_label_escape_target_name_with_relative_label() {
         let label: BazelLabel = "foo".into();
         assert_eq!(label.target_name_escaped(), "foo");
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_label_escape_target_name_with_invalid_characters() {
         let label: BazelLabel = "//:!./%-@^#$&()*-+,;<=>?[]{|}~".into();
         assert_eq!(label.target_name_escaped(), "___________________________");
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_label_escape_target_name_core() {
         let label: BazelLabel = "//foo~:core".into();
         assert_eq!(label.target_name_escaped(), "core_foo_");
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_label_escape_target_name_with_no_target_name() {
         let label: BazelLabel = "//foo/bar~".into();
         assert_eq!(label.target_name_escaped(), "bar_");
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_label_escape_target_name_with_no_package_name() {
         let label: BazelLabel = "//:foo~".into();
         assert_eq!(label.target_name_escaped(), "foo_");
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_label_escape_target_name_core_with_no_package_name_with_no_target_name() {
         let label: BazelLabel = "core".into();
         assert_eq!(label.target_name_escaped(), "core_");
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_label_escape_target_name_starting_with_digit() {
         let label: BazelLabel = "12345".into();
         assert_eq!(label.target_name_escaped(), "n12345");
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_to_cc_identifier_empty() {
         assert_eq!(BazelLabel::from("").convert_to_cc_identifier(), "_");
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_to_cc_identifier_alphanumeric_not_transformed() {
         assert_eq!(BazelLabel::from("abc").convert_to_cc_identifier(), "_abc");
         assert_eq!(BazelLabel::from("foo123").convert_to_cc_identifier(), "_foo123");
         assert_eq!(BazelLabel::from("123foo").convert_to_cc_identifier(), "_123foo");
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_to_cc_identifier_simple_targets() {
         assert_eq!(
             BazelLabel::from("//foo/bar:baz_abc").convert_to_cc_identifier(),
@@ -1652,7 +1653,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_bazel_to_cc_identifier_conflict() {
         assert_ne!(
             BazelLabel::from("//foo_bar:baz").convert_to_cc_identifier(),

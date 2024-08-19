@@ -38,6 +38,9 @@ cc_library(
 crubit_rust_test(
     name = "arc_anyhow_test",
     crate = ":arc_anyhow",
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 rust_library(
@@ -63,6 +66,7 @@ crubit_rust_test(
     deps = [
         ":token_stream_matchers",
         ":token_stream_printer",
+        "//third_party/gtest_rust/googletest",
     ],
 )
 
@@ -97,6 +101,9 @@ rust_library(
 crubit_rust_test(
     name = "memoized_test",
     crate = ":memoized",
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 bzl_library(
@@ -128,6 +135,9 @@ rust_library(
 crubit_rust_test(
     name = "ffi_types_test",
     crate = ":ffi_types",
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 rust_proc_macro(
@@ -149,6 +159,9 @@ crubit_rust_test(
     srcs = ["item_exists_test.rs"],
     proc_macro_deps = [
         ":item_exists",
+    ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
     ],
 )
 
@@ -197,7 +210,10 @@ crubit_rust_test(
     tags = [
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
     ],
-    deps = ["@crate_index//:quote"],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+        "@crate_index//:quote",
+    ],
 )
 
 rust_library(
@@ -219,6 +235,7 @@ crubit_rust_test(
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
     ],
     deps = [
+        "//third_party/gtest_rust/googletest",
         "@crate_index//:quote",
         "@crate_index//:tempfile",
     ],
@@ -271,6 +288,7 @@ crubit_rust_test(
     name = "error_report_test",
     crate = ":error_report",
     deps = [
+        "//third_party/gtest_rust/googletest",
         "@crate_index//:serde_json",
     ],
 )

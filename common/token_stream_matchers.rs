@@ -408,6 +408,7 @@ pub mod internal {
 mod tests {
     use super::internal::*;
     use super::*;
+    use googletest::prelude::*;
     use quote::quote;
 
     macro_rules! assert_rs_cc_matches {
@@ -417,7 +418,7 @@ mod tests {
         };
     }
 
-    #[test]
+    #[gtest]
     fn test_optional_trailing_comma() {
         assert_rs_matches!(quote! {x}, quote! {x});
         assert_rs_matches!(quote! {x}, quote! {x},);
@@ -432,13 +433,13 @@ mod tests {
         assert_cc_not_matches!(quote! {x}, quote! {y},);
     }
 
-    #[test]
+    #[gtest]
     fn test_assert_not_matches_accepts_not_matching_pattern() {
         assert_cc_not_matches!(quote! { fn foo() {} }, quote! { fn bar() {} });
         assert_rs_not_matches!(quote! { fn foo() {} }, quote! { fn bar() {} });
     }
 
-    #[test]
+    #[gtest]
     #[should_panic(expected = r#"input unexpectedly matched the pattern. input:
 
 ```
@@ -448,30 +449,30 @@ fn foo() {}
         assert_cc_not_matches!(quote! { fn foo() {} }, quote! { fn foo() {} });
     }
 
-    #[test]
+    #[gtest]
     #[should_panic(expected = "input:\n\n```\nfn foo() {}\n\n```")]
     fn test_assert_rs_not_matches_panics_on_match() {
         assert_rs_not_matches!(quote! { fn foo() {} }, quote! { fn foo() {} });
     }
 
-    #[test]
+    #[gtest]
     fn test_assert_cc_matches_accepts_matching_pattern() {
         assert_rs_cc_matches!(quote! { fn foo() {} }, quote! { fn foo() {} });
     }
 
-    #[test]
+    #[gtest]
     #[should_panic]
     fn test_assert_cc_matches_panics_on_mismatch() {
         assert_cc_matches!(quote! { fn foo() {} }, quote! { fn bar() {} });
     }
 
-    #[test]
+    #[gtest]
     #[should_panic]
     fn test_assert_rs_matches_panics_on_mismatch() {
         assert_rs_matches!(quote! { fn foo() {} }, quote! { fn bar() {} });
     }
 
-    #[test]
+    #[gtest]
     fn test_accept_siblings() {
         assert_rs_cc_matches!(quote! {a b c d}, quote! {a b c d});
         assert_rs_cc_matches!(quote! {a b c d}, quote! {a b});
@@ -479,24 +480,24 @@ fn foo() {}
         assert_rs_cc_matches!(quote! {a b c d}, quote! {c d});
     }
 
-    #[test]
+    #[gtest]
     fn test_accept_subtrees() {
         assert_rs_cc_matches!(quote! {impl SomeStruct { fn foo() {} }}, quote! {fn foo() {}});
     }
 
-    #[test]
+    #[gtest]
     #[should_panic]
     fn test_cc_reject_partial_subtree() {
         assert_cc_matches!(quote! {fn foo() {a(); b();}}, quote! {fn foo() { a(); }});
     }
 
-    #[test]
+    #[gtest]
     #[should_panic]
     fn test_rs_reject_partial_subtree() {
         assert_rs_matches!(quote! {fn foo() {a(); b();}}, quote! {fn foo() { a(); }});
     }
 
-    #[test]
+    #[gtest]
     fn test_cc_error_message() {
         assert_eq!(
             format!(
@@ -523,7 +524,7 @@ Caused by:
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_rustfmt_in_rs_error_message() {
         assert_eq!(
             format!(
@@ -547,7 +548,7 @@ Caused by:
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_reject_unfinished_pattern() {
         assert_eq!(
             format!(
@@ -568,7 +569,7 @@ fn foo() {}
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_reject_different_delimiters() {
         assert_eq!(
             format!(
@@ -589,7 +590,7 @@ fn foo() {}
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_reject_mismatch_inside_group() {
         assert_eq!(
             format!(
@@ -609,7 +610,7 @@ fn foo() {}
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_accept_wildcard_in_group() {
         assert_rs_cc_matches!(
             quote! {fn foo() -> bool { return false; }},
@@ -617,7 +618,7 @@ fn foo() {}
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_ignore_newlines() {
         assert_rs_cc_matches!(
             quote! {__NEWLINE__ fn __NEWLINE__ foo __NEWLINE__ (
@@ -626,7 +627,7 @@ fn foo() {}
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_ignore_space() {
         assert_rs_cc_matches!(
             quote! {__SPACE__ fn __SPACE__ foo __SPACE__ (
@@ -635,7 +636,7 @@ fn foo() {}
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_reject_unfinished_input_inside_group() {
         assert_eq!(
             format!(
@@ -682,28 +683,28 @@ impl Drop {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_accept_unfinished_input_with_only_newlines() {
         assert_rs_cc_matches!(quote! {fn foo() { __NEWLINE__ }}, quote! {fn foo() {}});
         assert_rs_cc_matches!(quote! {fn foo() { a(); __NEWLINE__ }}, quote! {fn foo() { a(); }});
     }
 
-    #[test]
+    #[gtest]
     fn test_wildcard_in_the_beginning_of_the_group() {
         assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ ... c ] });
         assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ ... c c ] });
     }
-    #[test]
+    #[gtest]
     fn test_wildcard_in_the_middle_of_the_group() {
         assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ a ... c ] });
         assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ a a ... c c ] });
     }
-    #[test]
+    #[gtest]
     fn test_wildcard_in_the_end_of_the_group() {
         assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ a ... ] });
         assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ a a ... ] });
     }
-    #[test]
+    #[gtest]
     fn test_pattern_with_wildcards_must_cover_entire_group() {
         // pattern `[]` would not match the input
         assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ ... ] });
@@ -713,7 +714,7 @@ impl Drop {
         assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ a ... ] });
     }
 
-    #[test]
+    #[gtest]
     fn test_wildcard_not_consuming_anything_in_group() {
         assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ ... a b c ] });
         assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ a ... b c ] });
@@ -721,13 +722,13 @@ impl Drop {
         assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ a b c ... ] });
     }
 
-    #[test]
+    #[gtest]
     fn test_multiple_wildcards() {
         assert_rs_cc_matches!(quote! { [ a b c d e f g ] }, quote! { [ a ... b ... c ... f ... ] });
         assert_rs_cc_matches!(quote! { [ a b c d e f g ] }, quote! { [ a ... b ... f ... g ] });
     }
 
-    #[test]
+    #[gtest]
     fn test_error_message_shows_the_longest_match_with_wildcards() {
         assert_eq!(
             format!(
@@ -763,7 +764,7 @@ impl Drop {
         );
     }
 
-    #[test]
+    #[gtest]
     #[should_panic(expected = "Empty `pattern` is unexpected, because it always matches. \
              (Maybe you used `// comment text` instead of `__COMMENT__ \"comment text\"? \
               Or maybe you want to use `TokenStream::is_empty`?)")]
@@ -777,7 +778,7 @@ impl Drop {
         );
     }
 
-    #[test]
+    #[gtest]
     #[should_panic(expected = "Empty `pattern` is unexpected, because it always matches. \
              (Maybe you used `// comment text` instead of `__COMMENT__ \"comment text\"? \
               Or maybe you want to use `TokenStream::is_empty`?)")]
@@ -791,7 +792,7 @@ impl Drop {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_assert_rs_matches_does_not_need_trailing_wildcard() {
         assert_rs_matches!(
             quote! {
@@ -804,7 +805,7 @@ impl Drop {
         );
     }
 
-    #[test]
+    #[gtest]
     #[should_panic]
     fn test_assert_rs_matches_no_trailing_wildcard_inside_group() {
         assert_rs_matches!(

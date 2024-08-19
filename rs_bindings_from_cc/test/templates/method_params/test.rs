@@ -4,7 +4,9 @@
 
 #[cfg(test)]
 mod tests {
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn test_const_ref_to_self() {
         // Among other things, this test provides coverage against infinite
         // recursion around Importer::ConvertTemplateSpecializationType which
@@ -15,7 +17,7 @@ mod tests {
         assert_eq!(1 + 2, s1.AddOneOtherItem(&s2));
     }
 
-    #[test]
+    #[gtest]
     fn test_repeating_parameter_type() {
         // Among other things, this test provides coverage for the (not
         // currently implemented, but still considered for the future) mangling

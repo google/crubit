@@ -5,8 +5,9 @@
 #[cfg(test)]
 mod tests {
     use fields::*;
+    use googletest::prelude::*;
 
-    #[test]
+    #[gtest]
     fn test_simple_struct() {
         // This test doesn't really do a whole lot beyond verifying that the
         // struct and its fields are imported correctly and that the generated

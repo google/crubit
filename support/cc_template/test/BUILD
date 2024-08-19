@@ -13,4 +13,7 @@ crubit_rust_test(
     rustc_env = {
         "CRUBIT_INSTANTIATIONS_FILE": "$(location __cc_template_instantiations.json)",
     },
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

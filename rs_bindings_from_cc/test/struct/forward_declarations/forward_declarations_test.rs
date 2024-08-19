@@ -1,13 +1,15 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 use forward_declare::CcCast;
+use googletest::prelude::*;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
 use std::pin::Pin;
 
 /// Given a complete UnpinStruct, all APIs accepting a (possibly incomplete)
 /// UnpinStruct work (with an cc_cast()).
-#[test]
+#[gtest]
 fn test_read_complete_unpin() {
     let s = definition::ns::UnpinStruct { field: 42 };
     let s = &s;
@@ -26,7 +28,7 @@ fn test_read_complete_unpin() {
 
 /// Given a complete UnpinStruct, all APIs accepting a (possibly incomplete)
 /// mut UnpinStruct work (with an cc_cast()).
-#[test]
+#[gtest]
 fn test_write_complete_unpin() {
     let mut s = definition::ns::UnpinStruct { field: 42 };
     let s = &mut s;
@@ -49,7 +51,7 @@ fn test_write_complete_unpin() {
 
 /// Given an incomplete UnpinStruct, all APIs accepting a (possibly
 /// incomplete) UnpinStruct work (with an cc_cast()).
-#[test]
+#[gtest]
 fn test_read_incomplete_unpin() {
     let s = definition::ns::UnpinStruct { field: 42 };
     let decl1_s: &declaration_1::ns::UnpinStruct = (&s).cc_cast();
@@ -68,7 +70,7 @@ fn test_read_incomplete_unpin() {
 
 /// Given an incomplete UnpinStruct, all APIs accepting a (possibly
 /// incomplete) mut UnpinStruct work (with an cc_cast()).
-#[test]
+#[gtest]
 fn test_write_incomplete_unpin() {
     let mut s = definition::ns::UnpinStruct { field: 42 };
     let mut decl1_s: Pin<&mut declaration_1::ns::UnpinStruct> = (&mut s).cc_cast();
@@ -91,7 +93,7 @@ fn test_write_incomplete_unpin() {
 
 /// Given a complete NonunpinStruct, all APIs accepting a (possibly incomplete)
 /// NonunpinStruct work (with an cc_cast()).
-#[test]
+#[gtest]
 fn test_read_complete_nonunpin() {
     ctor::emplace! {
       let mut s = ctor::ctor!(definition::ns::NonunpinStruct {field: 42});
@@ -111,7 +113,7 @@ fn test_read_complete_nonunpin() {
 
 /// Given a complete NonunpinStruct, all APIs accepting a (possibly incomplete)
 /// mut NonunpinStruct work (with an cc_cast()).
-#[test]
+#[gtest]
 fn test_write_complete_nonunpin() {
     ctor::emplace! {
       let mut s = ctor::ctor!(definition::ns::NonunpinStruct {field: 42});
@@ -135,7 +137,7 @@ fn test_write_complete_nonunpin() {
 
 /// Given an incomplete NonunpinStruct, all APIs accepting a (possibly
 /// incomplete) NonunpinStruct work (with an cc_cast()).
-#[test]
+#[gtest]
 fn test_read_incomplete_nonunpin() {
     ctor::emplace! {
       let mut s = ctor::ctor!(definition::ns::NonunpinStruct {field: 42});
@@ -156,7 +158,7 @@ fn test_read_incomplete_nonunpin() {
 
 /// Given an incomplete NonunpinStruct, all APIs accepting a (possibly
 /// incomplete) mut NonunpinStruct work (with an cc_cast()).
-#[test]
+#[gtest]
 fn test_write_incomplete_nonunpin() {
     ctor::emplace! {
       let mut s = ctor::ctor!(definition::ns::NonunpinStruct {field: 42});
@@ -179,7 +181,7 @@ fn test_write_incomplete_nonunpin() {
     assert_eq!(declaration_1::ns::ReadNonunpinStruct(&*decl1_s), 3);
 }
 
-#[test]
+#[gtest]
 fn test_inline_functions_with_incomplete_parameters() {
     let unpin = definition::ns::UnpinStruct { field: 42 };
     let unpin_ref = &unpin;
@@ -194,7 +196,7 @@ fn test_inline_functions_with_incomplete_parameters() {
 
 /// Classes in different forward-declared namespaces should not be castable to
 /// one another.
-#[test]
+#[gtest]
 fn test_namespaced_forward_declarations() {
     type Declaration = *const declaration_1::ns::UnpinStruct;
     type Definition = *const definition::ns::UnpinStruct;
@@ -209,7 +211,7 @@ fn test_namespaced_forward_declarations() {
     assert_not_impl_any!(Other: CcCast<Declaration>);
 }
 
-#[test]
+#[gtest]
 fn test_forward_declared_used_as_field_type() {
     // This is a regression test for b/246962427.  This mostly verifies that the
     // generated bindings compile (and are usable at a very basic level).

@@ -9,7 +9,10 @@ crubit_rust_test(
     cc_deps = [
         "//support/cc_std",
     ],
-    deps = ["//support:ctor"],
+    deps = [
+        "//support:ctor",
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 crubit_rust_test(
@@ -18,7 +21,10 @@ crubit_rust_test(
     cc_deps = [
         "//support/cc_std",
     ],
-    deps = ["//support:ctor"],
+    deps = [
+        "//support:ctor",
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 crubit_test_cc_library(

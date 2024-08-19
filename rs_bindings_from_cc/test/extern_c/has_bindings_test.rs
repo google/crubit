@@ -2,30 +2,31 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use googletest::prelude::*;
 use has_bindings::crubit::has_bindings;
 use static_assertions::assert_not_impl_any;
 
-#[test]
+#[gtest]
 fn test_void_function_non_extern_c() {
     has_bindings::crubit_void_function_non_extern_c();
 }
 
-#[test]
+#[gtest]
 fn test_void_function() {
     has_bindings::crubit_void_function();
 }
 
-#[test]
+#[gtest]
 fn test_non_inline_function() {
     has_bindings::crubit_non_inline_function();
 }
 
-#[test]
+#[gtest]
 fn test_extern_c_directly_function() {
     has_bindings::crubit_extern_c_directly_function();
 }
 
-#[test]
+#[gtest]
 fn test_void_ptr_function() {
     let value = 1;
     let ptr = &value as *const _ as *const std::ffi::c_void;
@@ -34,7 +35,7 @@ fn test_void_ptr_function() {
     assert_eq!(ptr, result_ptr);
 }
 
-#[test]
+#[gtest]
 fn test_user_struct() {
     let mut i: core::ffi::c_int = 123;
     let s = has_bindings::Struct { x: &mut i, y: 123, z: 0 as *mut _ };
@@ -47,7 +48,7 @@ fn test_user_struct() {
     assert_eq!(s.z.type_id(), std::any::TypeId::of::<*mut has_bindings::Struct>());
 }
 
-#[test]
+#[gtest]
 fn test_nontrivial_struct() {
     let mut i = 0;
     {
@@ -58,7 +59,7 @@ fn test_nontrivial_struct() {
     assert_eq!(i, 42);
 }
 
-#[test]
+#[gtest]
 fn test_user_enum() {
     let _: has_bindings::Enum = has_bindings::Enum::kEnumerator;
     // Can't really assert this due to how value_exists works, sadly.
@@ -66,14 +67,14 @@ fn test_user_enum() {
     // (has_bindings::Enum::kUnkownAttrEnumerator));
 }
 
-#[test]
+#[gtest]
 fn test_user_union() {
     // as close as one gets to verifying that it's a union. It is indeed a union!
     let _: has_bindings::Union = has_bindings::Union { x: 1 };
     let _: has_bindings::Union = has_bindings::Union { y: 3 };
 }
 
-#[test]
+#[gtest]
 fn test_alias() {
     assert_eq!(
         std::any::TypeId::of::<has_bindings::Struct>(),
@@ -81,12 +82,12 @@ fn test_alias() {
     )
 }
 
-#[test]
+#[gtest]
 fn test_crubit_add() {
     assert_eq!(has_bindings::crubit_add(1, 2), 3);
 }
 
-#[test]
+#[gtest]
 fn test_crubit_enum_function() {
     assert_eq!(
         has_bindings::crubit_enum_function(has_bindings::Enum::kEnumerator),
@@ -94,7 +95,7 @@ fn test_crubit_enum_function() {
     );
 }
 
-#[test]
+#[gtest]
 fn test_crubit_union_function() {
     let u = has_bindings::crubit_union_function(has_bindings::Union { x: 42 });
     assert_eq!(
@@ -104,7 +105,7 @@ fn test_crubit_union_function() {
     );
 }
 
-#[test]
+#[gtest]
 fn test_function_pointer() {
     extern "C" fn my_callback(a: *mut std::ffi::c_int) {
         // SAFETY: we're going to pass it a valid pointer to an integer, it's OK!
@@ -123,7 +124,7 @@ fn test_function_pointer() {
     assert_eq!(state, 42);
 }
 
-#[test]
+#[gtest]
 fn test_nullable_function_pointer() {
     extern "C" fn my_callback(a: *mut std::ffi::c_int) {
         // SAFETY: we're going to pass it a valid pointer to an integer, it's OK!
@@ -145,7 +146,7 @@ fn test_nullable_function_pointer() {
 /// You can use a class that uses inheritance, but to Rust, it looks like
 /// private inheritance: the struct is only available as an opaque thunk within
 /// the derived class.
-#[test]
+#[gtest]
 fn test_oop() {
     assert_not_impl_any!(has_bindings::MyDerivedStruct : oops::Inherits<has_bindings::Struct>);
 }

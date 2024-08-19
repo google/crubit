@@ -39,6 +39,9 @@ crubit_rust_test(
     cc_deps = [
         ":crubit_disabled_cc_library_with_invalid_character_in_transitive_deps",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 crubit_test_cc_library(
@@ -54,6 +57,9 @@ crubit_rust_test(
     cc_deps = [
         ":crubit_enabled_cc_library_with_invalid_character_in_transitive_deps",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 crubit_test_cc_library(
@@ -66,5 +72,8 @@ crubit_rust_test(
     srcs = ["test_with_crubit_enabled_cc_library_with_invalid_character.rs"],
     cc_deps = [
         ":crubit_enabled_cc_library_with_!./%-@^#$&()*-+,;<=>?[]{|}~",
+    ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
     ],
 )

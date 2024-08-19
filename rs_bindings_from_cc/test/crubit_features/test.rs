@@ -5,14 +5,16 @@ use item_exists::{type_exists, value_exists};
 
 mod definitions {
     use super::*;
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn disabled_struct_has_no_bindings() {
         assert!(
             !type_exists!(definition_disabled::DisabledStruct),
             "definition_disabled::DisabledStruct was exposed through bindings."
         );
     }
-    #[test]
+    #[gtest]
     fn enabled_struct_has_bindings() {
         assert!(
             type_exists!(definition_enabled::EnabledStruct),
@@ -23,9 +25,11 @@ mod definitions {
 
 mod aliases {
     use super::*;
+    use googletest::prelude::*;
+
     /// This test will fail if aliases expose a struct whose bindings were
     /// disabled.
-    #[test]
+    #[gtest]
     fn aliases_dont_expose_disabled_structs() {
         assert!(
             !type_exists!(alias_enabled::AliasedDisabledStruct),
@@ -40,7 +44,7 @@ mod aliases {
     /// _instantiation_ actually occurs in this crate. Template _instantiation_
     /// in other headers should respect the template _definition_ and its
     /// API promises.
-    #[test]
+    #[gtest]
     fn aliases_dont_expose_disabled_templates() {
         assert!(
             !type_exists!(alias_enabled::AliasedDisabledTemplate),
@@ -54,7 +58,7 @@ mod aliases {
     /// While Crubit _was_ enabled for the definition, the usage site also needs
     /// to consent to people depending on the type _via_ the using library,
     /// since that implies a maintenance burden.
-    #[test]
+    #[gtest]
     fn disabled_struct_aliases_arent_exposed() {
         assert!(
             !type_exists!(alias_disabled::AliasedEnabledStruct),
@@ -62,7 +66,7 @@ mod aliases {
         );
     }
 
-    #[test]
+    #[gtest]
     fn disabled_template_aliases_arent_exposed() {
         assert!(
             !type_exists!(alias_disabled::AliasedEnabledTemplate),
@@ -73,12 +77,15 @@ mod aliases {
 
 mod functions {
     use super::*;
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn test_functions_disabled_when_parameter_types_are() {
         assert!(!value_exists!(func_enabled::FuncTakesDisabledStruct));
         assert!(!value_exists!(func_enabled::FuncTakesDisabledTemplate));
     }
-    #[test]
+
+    #[gtest]
     fn test_functions_disabled_when_return_type_is() {
         assert!(!value_exists!(func_enabled::FuncReturnsDisabledStruct));
         assert!(!value_exists!(func_enabled::FuncReturnsDisabledTemplate));
@@ -87,7 +94,9 @@ mod functions {
 
 mod structs {
     use super::*;
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn test_struct_enabled() {
         // The generated field assertions will handle the rest.
         assert!(type_exists!(wrapper_struct_enabled::EnabledStructWithDisabledField));

@@ -36,4 +36,7 @@ crubit_rust_test(
         ":types_nonptr",
     ],
     proc_macro_deps = ["//common:item_exists"],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

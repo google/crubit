@@ -2,40 +2,41 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use googletest::prelude::*;
 use item_exists::{type_exists, value_exists};
 use no_bindings::crubit::no_bindings;
 
-#[test]
+#[gtest]
 fn test_nontrivial_type() {
     assert!(!type_exists!(no_bindings::Nontrivial));
 }
 
-#[test]
+#[gtest]
 fn test_nontrivial_alias() {
     assert!(!type_exists!(no_bindings::NontrivialAlias));
 }
 
-#[test]
+#[gtest]
 fn test_deprecated_alias() {
     assert!(!type_exists!(no_bindings::DeprecatedAlias));
 }
 
-#[test]
+#[gtest]
 fn test_accepts_nontrivial_ptr() {
     assert!(!value_exists!(no_bindings::crubit_accepts_nontrivial_ptr));
 }
 
-#[test]
+#[gtest]
 fn test_accepts_nontrivial_value() {
     assert!(!value_exists!(no_bindings::crubit_accepts_nontrivial_value));
 }
 
-#[test]
+#[gtest]
 fn test_returns_nontrivial_ptr() {
     assert!(!value_exists!(no_bindings::crubit_returns_nontrivial_ptr));
 }
 
-#[test]
+#[gtest]
 fn test_returns_nontrivial_value() {
     assert!(!value_exists!(no_bindings::crubit_returns_nontrivial_value));
 }
@@ -44,47 +45,47 @@ fn test_returns_nontrivial_value() {
 // this isn't actually a different calling convention, and we'd expect bindings
 // to exist after all.
 #[cfg(target_arch = "x86_64")]
-#[test]
+#[gtest]
 fn test_vectorcall() {
     assert!(!value_exists!(no_bindings::crubit_vectorcall));
 }
 
-#[test]
+#[gtest]
 fn test_parameter_lifetimebound() {
     assert!(!value_exists!(no_bindings::crubit_parameter_lifetimebound));
 }
 
-#[test]
+#[gtest]
 fn test_noreturn() {
     assert!(!value_exists!(no_bindings::crubit_noreturn));
 }
 
-#[test]
+#[gtest]
 fn test_nodiscard() {
     assert!(!value_exists!(no_bindings::crubit_nodiscard));
 }
 
-#[test]
+#[gtest]
 fn test_deprecated() {
     assert!(!value_exists!(no_bindings::crubit_deprecated));
 }
 
-#[test]
+#[gtest]
 fn test_enable_if() {
     assert!(!value_exists!(no_bindings::crubit_enable_if));
 }
 
-#[test]
+#[gtest]
 fn test_unknown_attr_struct() {
     assert!(!type_exists!(no_bindings::UnknownAttrStruct));
 }
 
-#[test]
+#[gtest]
 fn test_unknown_attr_enum() {
     assert!(!type_exists!(no_bindings::UnknownAttrEnum));
 }
 
-#[test]
+#[gtest]
 fn test_templates() {
     assert!(!type_exists!(no_bindings::TemplatedStruct));
     assert!(!type_exists!(no_bindings::InstantiatedTemplatedStruct));
@@ -92,19 +93,19 @@ fn test_templates() {
 
 /// Function pointers, like most supported types, are only supported if their
 /// type dependencies are.
-#[test]
+#[gtest]
 fn test_function_pointers() {
     assert!(!type_exists!(no_bindings::Callback));
     assert!(!value_exists!(no_bindings::crubit_invoke_callback));
 }
 
-#[test]
+#[gtest]
 fn test_type_attributes() {
     assert!(!type_exists!(no_bindings::UnknownTypeAttribute));
     assert!(!value_exists!(no_bindings::crubit_unknown_type_attribute));
 }
 
-#[test]
+#[gtest]
 fn test_incomplete_type() {
     assert!(!value_exists!(no_bindings::crubit_incomplete_type));
 }

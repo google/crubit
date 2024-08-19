@@ -103,8 +103,9 @@ pub enum SourceLocationDocComment {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::prelude::*;
 
-    #[test]
+    #[gtest]
     fn test_from_into_ffi_u8_slice_box() {
         let slice = Box::<[u8]>::from(*b"Hello World!");
         let ffi_slice = FfiU8SliceBox::from_boxed_slice(slice.clone());

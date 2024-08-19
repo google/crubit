@@ -875,10 +875,12 @@ mod tests {
     use super::*;
     use crate::tests::*;
     use crate::BindingsTokens;
+    use arc_anyhow::Result;
+    use googletest::prelude::*;
     use ir_testing::with_lifetime_macros;
     use token_stream_matchers::{assert_cc_matches, assert_rs_matches, assert_rs_not_matches};
 
-    #[test]
+    #[gtest]
     fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
         // See also the test with the same name in `ir_from_cc_test.rs`.
         let ir = {
@@ -951,7 +953,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_template_with_out_of_line_definition() -> Result<()> {
         // See also an end-to-end test in the `test/templates/out_of_line_definition`
         // directory.
@@ -1007,7 +1009,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_simple_struct() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1075,7 +1077,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_struct_vs_class() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1112,7 +1114,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_struct_vs_typedefed_struct() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1171,7 +1173,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_record_with_unsupported_field_type() -> Result<()> {
         // Using a nested struct because it's currently not supported.
         // But... any other unsupported type would also work for this test.
@@ -1211,7 +1213,7 @@ mod tests {
 
     /// This is a regression test for b/283835873 where the alignment of the
     /// generated struct was wrong/missing.
-    #[test]
+    #[gtest]
     fn test_struct_with_only_bitfields() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1249,7 +1251,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
         // This test input causes `field_decl->getName()` to return an empty string.
         // This example is based on `struct timex` from
@@ -1287,7 +1289,7 @@ mod tests {
 
     /// Classes with a non-public destructor shouldn't be constructible, not
     /// even via Copy/Clone.
-    #[test]
+    #[gtest]
     fn test_trivial_nonpublic_destructor() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -1320,7 +1322,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_nontrivial_nonpublic_destructor() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -1355,7 +1357,7 @@ mod tests {
     ///
     /// Right now, a struct can only be Copy/Clone if it's final, but that
     /// restriction will likely be lifted later.
-    #[test]
+    #[gtest]
     fn test_trivial_abstract_by_value() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -1383,7 +1385,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_nontrivial_abstract_by_value() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -1407,7 +1409,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
         // This test input causes `field_decl->getName()` to return an empty string.
         // See also:
@@ -1467,34 +1469,34 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_copy_derives() {
         let record = ir_record("S");
         assert_eq!(generate_derives(&record), &["Clone", "Copy"]);
     }
 
-    #[test]
+    #[gtest]
     fn test_copy_derives_not_is_trivial_abi() {
         let mut record = ir_record("S");
         record.is_trivial_abi = false;
         assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
-    #[test]
+    #[gtest]
     fn test_copy_derives_ctor_deleted() {
         let mut record = ir_record("S");
         record.copy_constructor = ir::SpecialMemberFunc::Unavailable;
         assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
-    #[test]
+    #[gtest]
     fn test_copy_derives_ctor_nontrivial_members() {
         let mut record = ir_record("S");
         record.copy_constructor = ir::SpecialMemberFunc::NontrivialMembers;
         assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
-    #[test]
+    #[gtest]
     fn test_copy_derives_ctor_nontrivial_self() {
         let mut record = ir_record("S");
         record.copy_constructor = ir::SpecialMemberFunc::NontrivialUserDefined;
@@ -1502,7 +1504,7 @@ mod tests {
     }
 
     /// In Rust, a Drop type cannot be Copy.
-    #[test]
+    #[gtest]
     fn test_copy_derives_dtor_nontrivial_self() {
         let mut record = ir_record("S");
         for definition in
@@ -1513,7 +1515,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[gtest]
     fn test_base_class_subobject_layout() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1540,7 +1542,7 @@ mod tests {
 
     /// The same as test_base_class_subobject_layout, but with multiple
     /// inheritance.
-    #[test]
+    #[gtest]
     fn test_base_class_multiple_inheritance_subobject_layout() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1566,7 +1568,7 @@ mod tests {
 
     /// The same as test_base_class_subobject_layout, but with a chain of
     /// inheritance.
-    #[test]
+    #[gtest]
     fn test_base_class_deep_inheritance_subobject_layout() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1592,7 +1594,7 @@ mod tests {
 
     /// For derived classes with no data members, we can't use the offset of the
     /// first member to determine the size of the base class subobjects.
-    #[test]
+    #[gtest]
     fn test_base_class_subobject_fieldless_layout() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1614,7 +1616,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_base_class_subobject_empty_fieldless() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1637,7 +1639,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_base_class_subobject_empty() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1662,7 +1664,7 @@ mod tests {
 
     /// Non-aggregate structs can't be directly initialized, because we add
     /// a zero-sized private field to the bindings.
-    #[test]
+    #[gtest]
     fn test_non_aggregate_struct_private_field() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1688,7 +1690,7 @@ mod tests {
 
     /// When a field is [[no_unique_address]], it occupies the space up to the
     /// next field.
-    #[test]
+    #[gtest]
     fn test_no_unique_address() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1740,7 +1742,7 @@ mod tests {
 
     /// When a [[no_unique_address]] field is the last one, it occupies the rest
     /// of the object.
-    #[test]
+    #[gtest]
     fn test_no_unique_address_last_field() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1769,7 +1771,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_no_unique_address_empty() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1806,7 +1808,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_base_class_subobject_empty_last_field() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1840,7 +1842,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_doc_comment_record() -> Result<()> {
         let ir = ir_from_cc(
             "// Doc Comment\n\
@@ -1868,7 +1870,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_basic_union() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1915,7 +1917,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_union_with_opaque_field() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1953,7 +1955,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_currently_no_offset_assertions_for_unions() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1981,7 +1983,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_union_with_private_fields() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2026,7 +2028,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_nontrivial_unions() -> Result<()> {
         let ir = ir_from_cc_dependency(
             r#"
@@ -2056,7 +2058,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_empty_struct() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2093,7 +2095,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_empty_union() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2130,7 +2132,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_union_field_with_nontrivial_destructor() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2169,7 +2171,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_union_with_constructors() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2228,7 +2230,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_unambiguous_public_bases() -> Result<()> {
         let ir = ir_from_cc_dependency(
             "
@@ -2288,7 +2290,7 @@ mod tests {
     ///
     /// So, we need to be sure to not allow casting to privately-ambiguous
     /// bases.
-    #[test]
+    #[gtest]
     fn test_unambiguous_public_bases_private_ambiguity() -> Result<()> {
         let ir = ir_from_cc_dependency(
             "
@@ -2306,7 +2308,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_virtual_thunk() -> Result<()> {
         let ir = ir_from_cc("struct Polymorphic { virtual void Foo(); };")?;
 
@@ -2321,7 +2323,7 @@ mod tests {
 
     /// A trivially relocatable final struct is safe to use in Rust as normal,
     /// and is Unpin.
-    #[test]
+    #[gtest]
     fn test_no_negative_impl_unpin() -> Result<()> {
         let ir = ir_from_cc("struct Trivial final {};")?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -2329,7 +2331,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_no_aligned_attr() {
         let ir = ir_from_cc("struct SomeStruct {};").unwrap();
         let rs_api = generate_bindings_tokens(ir).unwrap().rs_api;
@@ -2341,7 +2343,7 @@ mod tests {
         }};
     }
 
-    #[test]
+    #[gtest]
     fn test_aligned_attr() {
         let ir = ir_from_cc("struct SomeStruct {} __attribute__((aligned(64)));").unwrap();
         let rs_api = generate_bindings_tokens(ir).unwrap().rs_api;
@@ -2354,7 +2356,7 @@ mod tests {
         };
     }
 
-    #[test]
+    #[gtest]
     fn test_forward_declared() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2371,7 +2373,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_private_struct_not_present() -> Result<()> {
         let ir = ir_from_cc(&with_lifetime_macros(
             r#"#pragma clang lifetime_elision
@@ -2395,7 +2397,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result<()> {
         let bindings = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -2461,7 +2463,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_implicit_template_specialization_namespace_qualifier() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#" #pragma clang lifetime_elision
@@ -2495,7 +2497,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_derived_class_inherits_unambiguous_public_functions_bases() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -2537,7 +2539,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_member_in_derived_class_overwrites_inherited_ones() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -2573,7 +2575,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_forward_declared_class_template_specialization_symbol() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -2606,7 +2608,7 @@ mod tests {
     /// Unsupported fields on supported structs are replaced with opaque blobs.
     ///
     /// This is hard to test any other way than token comparison!
-    #[test]
+    #[gtest]
     fn test_supported_suppressed_field_types() -> Result<()> {
         // Ideally we'd use a cross-platform test, but it's hard to craft an unsupported
         // type that is still returned successfully by db.rs_type_kind(), and so
@@ -2649,7 +2651,7 @@ mod tests {
 
     /// Nontrivial fields are replaced with opaque blobs, even if they're
     /// supported!
-    #[test]
+    #[gtest]
     fn test_supported_nontrivial_field() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"
@@ -2675,7 +2677,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_supported_no_unique_address_field() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"

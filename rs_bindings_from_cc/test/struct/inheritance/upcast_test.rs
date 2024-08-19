@@ -4,10 +4,11 @@
 #[cfg(test)]
 mod tests {
     use ctor::CtorNew as _;
+    use googletest::prelude::*;
     use oops::Upcast as _;
     use upcast::*;
 
-    #[test]
+    #[gtest]
     fn test_upcast() {
         let derived = Derived::default();
         let derived = &derived;
@@ -24,7 +25,7 @@ mod tests {
         assert_eq!(base4 as *const _ as usize, derived.base4_address());
     }
 
-    #[test]
+    #[gtest]
     fn test_virtual_upcast() {
         use upcast::virtual_inheritance::*;
         ctor::emplace! {
@@ -46,7 +47,7 @@ mod tests {
         assert_eq!(base1 as *const _ as usize, base1_address);
     }
 
-    #[test]
+    #[gtest]
     fn test_upcast_thunk_name_uniqueness() {
         ctor::emplace! {
             let derived = another_namespace::VirtualBase2::ctor_new(());

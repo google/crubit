@@ -65,6 +65,9 @@ crubit_rust_test(
     cc_deps = [
         ":definition_with_crubit_disabled",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 crubit_test_cc_library(
@@ -89,5 +92,8 @@ crubit_rust_test(
     srcs = ["test_with_crubit_disabled_in_deps.rs"],
     cc_deps = [
         ":definition_with_crubit_disabled_in_deps",
+    ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
     ],
 )

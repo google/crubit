@@ -27,6 +27,9 @@ crubit_rust_test(
     cc_deps = [
         ":empty_cc_lib_with_additional_rust_srcs",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite(

@@ -4,9 +4,10 @@
 
 #[cfg(test)]
 mod tests {
+    use googletest::prelude::*;
     use no_elided_lifetimes::*;
 
-    #[test]
+    #[gtest]
     fn test_store_pointer() {
         let mut boxed_int = Box::new(123);
 

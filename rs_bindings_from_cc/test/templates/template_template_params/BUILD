@@ -14,4 +14,7 @@ crubit_rust_test(
     name = "main",
     srcs = ["test.rs"],
     cc_deps = [":template_template_params"],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

@@ -47,10 +47,16 @@ crubit_rust_test(
     name = "struct_from_textual_hdr_test",
     srcs = ["uses_struct_from_textual_header.rs"],
     cc_deps = [":uses_struct_from_textual_hdr"],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 crubit_rust_test(
     name = "struct_travels_through_textual_hdrs_test",
     srcs = ["uses_struct_from_layers_of_textual_headers.rs"],
     cc_deps = [":uses_struct_from_textual_hdr_in_textual_hdr"],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

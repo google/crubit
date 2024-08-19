@@ -6,7 +6,7 @@
 mod tests {
     // TODO(mboehme): Disabled because absl::Duration cannot yet be imported.
     /*
-    #[test]
+    #[gtest]
     fn test_seconds() {
         use time::Seconds;
         use time::ToInt64Seconds;

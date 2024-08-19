@@ -14,6 +14,9 @@ crubit_rust_test(
     cc_deps = [
         ":failed_template_instantiation_member_function",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 crubit_test_cc_library(
@@ -38,5 +41,8 @@ crubit_rust_test(
         "manual",
         "nobuilder",
         "notap",
+    ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
     ],
 )

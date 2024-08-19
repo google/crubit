@@ -19,4 +19,7 @@ crubit_rust_test(
         ":string_view_apis",
         "//support/cc_std",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

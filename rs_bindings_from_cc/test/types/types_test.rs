@@ -5,6 +5,7 @@
 #![allow(unreachable_code)] // compilation-only test.
 
 use core::ffi::c_void;
+use googletest::prelude::*;
 
 macro_rules! struct_field_type_is {
   ($mod:ident, $($cc_name:ident => $rs_type:ty),* $(,)?) => {
@@ -240,7 +241,7 @@ function_parameter_type_is!(types_inferred_lifetimes,
     ConstStructRef => &types_inferred_lifetimes::ExampleStruct,
 );
 
-#[test]
+#[gtest]
 fn test_typemap_suppresses_bindings() {
     assert!(!item_exists::type_exists!(types_nonptr::MyI8Class));
     assert!(!item_exists::type_exists!(types_nonptr::MyI8Struct));

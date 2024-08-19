@@ -16,5 +16,8 @@ crubit_rust_test(
     srcs = ["nonunpin_test.rs"],
     cc_deps = [":nonunpin"],
     rustc_flags = ["-Zallow-features=negative_impls"],
-    deps = ["//support:ctor"],
+    deps = [
+        "//support:ctor",
+        "//third_party/gtest_rust/googletest",
+    ],
 )

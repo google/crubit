@@ -4,6 +4,8 @@
 
 #[cfg(test)]
 mod tests {
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn test_build() {}
 }

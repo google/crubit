@@ -146,12 +146,14 @@ pub fn retrieve_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use arc_anyhow::Result;
+    use googletest::prelude::*;
     use ir::ItemId;
     use ir_matchers::assert_ir_matches;
     use multiplatform_testing::Platform;
     use quote::quote;
 
-    #[test]
+    #[gtest]
     fn test_features_ir_from_cc() -> Result<()> {
         assert_ir_matches!(
             ir_from_cc(multiplatform_testing::Platform::X86Linux, "")?,
@@ -165,7 +167,7 @@ mod tests {
         );
         Ok(())
     }
-    #[test]
+    #[gtest]
     fn test_features_ir_from_items() -> Result<()> {
         assert_ir_matches!(
             make_ir_from_items([]),
@@ -180,7 +182,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     #[should_panic(expected = "Duplicate decl_id found in")]
     fn test_duplicate_decl_ids_err() {
         let mut r1 = ir_record(Platform::X86Linux, "R1");

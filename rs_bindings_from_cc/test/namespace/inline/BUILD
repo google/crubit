@@ -12,4 +12,7 @@ crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
     cc_deps = [":inline"],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

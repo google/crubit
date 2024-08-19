@@ -1241,17 +1241,18 @@ impl<'a, T> Captures<'a> for T {}
 #[cfg(test)]
 mod test {
     use super::*;
+    use googletest::prelude::*;
     use std::cell::RefCell;
     use std::pin::Pin;
     use std::sync::Mutex;
 
-    #[test]
+    #[gtest]
     fn test_default_rust_type() {
         emplace! {let x = u32::ctor_new(());}
         assert_eq!(*x, 0);
     }
 
-    #[test]
+    #[gtest]
     fn test_copy_rust_type() {
         let x: u32 = 42;
         let mut y = Box::emplace(copy(&x));
@@ -1271,7 +1272,7 @@ mod test {
         assert_eq!(*y, 100);
     }
 
-    #[test]
+    #[gtest]
     fn test_copy_smart_ptr() {
         let x = Box::new(42_u32);
         emplace! {
@@ -1282,7 +1283,7 @@ mod test {
     }
 
     /// Tests that the assigned variables have the correct type.
-    #[test]
+    #[gtest]
     fn test_emplace_type() {
         let x: u32 = 42;
         emplace! {
@@ -1291,7 +1292,7 @@ mod test {
         let _foo: Pin<&mut u32> = foo; // type checks OK
     }
 
-    #[test]
+    #[gtest]
     fn test_emplace() {
         let x: u32 = 42;
         emplace! {
@@ -1300,7 +1301,7 @@ mod test {
         assert_eq!(*foo, 42);
     }
 
-    #[test]
+    #[gtest]
     fn test_emplace_mut() {
         let x: u32 = 42;
         emplace! {
@@ -1311,7 +1312,7 @@ mod test {
         assert_eq!(*foo, 0);
     }
 
-    #[test]
+    #[gtest]
     fn test_emplace_multi() {
         let x: u32 = 42;
         emplace! {
@@ -1322,7 +1323,7 @@ mod test {
         assert_eq!(*bar, 42);
     }
 
-    #[test]
+    #[gtest]
     fn test_emplace_type_syntax() {
         let x: u32 = 42;
         emplace! {
@@ -1335,7 +1336,7 @@ mod test {
         assert_eq!(*bar, 42);
     }
 
-    #[test]
+    #[gtest]
     fn test_ctor_macro() {
         struct MyStruct {
             x: u32,
@@ -1359,7 +1360,7 @@ mod test {
         });
     }
 
-    #[test]
+    #[gtest]
     fn test_ctor_macro_unit_struct() {
         struct MyStruct;
         unsafe impl RecursivelyPinned for MyStruct {
@@ -1369,7 +1370,7 @@ mod test {
         emplace! { let _my_struct = ctor!(MyStruct {});}
     }
 
-    #[test]
+    #[gtest]
     fn test_ctor_macro_named_tuple_struct() {
         struct MyStruct(u32, u32);
         unsafe impl RecursivelyPinned for MyStruct {
@@ -1383,7 +1384,7 @@ mod test {
         assert_eq!(my_struct.1, 2);
     }
 
-    #[test]
+    #[gtest]
     fn test_ctor_macro_tuple_struct() {
         struct MyStruct(u32, u32);
         unsafe impl RecursivelyPinned for MyStruct {
@@ -1394,7 +1395,7 @@ mod test {
         assert_eq!(my_struct.1, 2);
     }
 
-    #[test]
+    #[gtest]
     fn test_ctor_macro_manuallydrop_struct() {
         struct MyStruct {
             x: ManuallyDrop<Vec<u32>>,
@@ -1408,7 +1409,7 @@ mod test {
         assert_eq!(my_struct.y, 0);
     }
 
-    #[test]
+    #[gtest]
     fn test_ctor_macro_union() {
         union MyUnion {
             x: ManuallyDrop<Vec<u32>>,
@@ -1429,7 +1430,7 @@ mod test {
         assert_eq!(unsafe { my_union.y }, 24);
     }
 
-    #[test]
+    #[gtest]
     fn test_ctor_macro_nested_struct() {
         mod nested {
             pub struct MyStruct {
@@ -1448,7 +1449,7 @@ mod test {
         assert_eq!(my_struct.y, 2);
     }
 
-    #[test]
+    #[gtest]
     fn test_ctor_macro_nested_tuple_struct() {
         mod nested {
             pub struct MyStruct(pub u32, pub u32);
@@ -1463,7 +1464,7 @@ mod test {
 
     /// Test that the ctor macro safety check doesn't rely on the struct not
     /// implementing Drop.
-    #[test]
+    #[gtest]
     fn test_ctor_macro_drop_struct() {
         struct MyStruct {
             x: String,
@@ -1514,7 +1515,7 @@ mod test {
     impl !Unpin for PanicCtor<'_> {}
 
     /// Tests that drop() is called when the Ctor doesn't panic.
-    #[test]
+    #[gtest]
     fn test_emplace_drop() {
         let is_dropped = Mutex::new(false);
         {
@@ -1525,7 +1526,7 @@ mod test {
 
     /// Tests that when a panic occurs during emplace!{}, the uninitialized
     /// value is not dropped.
-    #[test]
+    #[gtest]
     fn test_emplace_no_drop_on_panic() {
         let is_dropped = Mutex::new(false);
         let panic_result = std::panic::catch_unwind(|| {
@@ -1538,7 +1539,7 @@ mod test {
     /// Tests that when a panic occurs during initialization of a struct with
     /// ctor!, the initialized fields are dropped, and the uninitialized
     /// fields are not.
-    #[test]
+    #[gtest]
     fn test_ctor_macro_drop() {
         struct MyStruct<'a> {
             x: DropNotify<'a>,
@@ -1561,7 +1562,7 @@ mod test {
         assert!(!*y_dropped.lock().unwrap());
     }
 
-    #[test]
+    #[gtest]
     fn test_ctor_initialized_fields_struct() {
         pub struct CtorOnly {
             pub field: i32,
@@ -1584,7 +1585,7 @@ mod test {
         assert_eq!(x.field, 3);
     }
 
-    #[test]
+    #[gtest]
     fn ctor_initialized_fields_tuple_struct() {
         pub struct CtorOnly(pub i32, [(); 0]);
         pub struct CtorOnlyPubFields(i32);
@@ -1642,7 +1643,7 @@ mod test {
 
     /// Tests the ctor/drop order for copy-constructible Unpin types: ctor comes
     /// before drop.
-    #[test]
+    #[gtest]
     fn test_copy_ctor_drop_order() {
         let log = RefCell::new(vec![]);
         let log = &log;
@@ -1657,7 +1658,7 @@ mod test {
 
     /// Tests the ctor/drop order for move-constructible Unpin types: ctor comes
     /// before drop.
-    #[test]
+    #[gtest]
     fn test_move_ctor_drop_order() {
         let log = RefCell::new(vec![]);
         let log = &log;
@@ -1674,7 +1675,7 @@ mod test {
     /// Non-obvious fact: you can mov() an owned reference type! Moving anything
     /// also performs a rust move, but the resulting rvalue reference is
     /// still valid for a temporary's lifetime.
-    #[test]
+    #[gtest]
     fn test_mov_box() {
         struct S;
         let x: Pin<Box<S>> = Box::pin(S);
@@ -1682,19 +1683,19 @@ mod test {
         // let _x = x; // fails to compile: x is moved!
     }
 
-    #[test]
+    #[gtest]
     fn test_mov_mut_ref_to_unpin() {
         takes_rvalue_reference(mov!(&mut 1));
     }
 
-    #[test]
+    #[gtest]
     fn test_mov_pinned_mut_ref() {
         let x = &mut 2;
         let pinned_mut_ref = Pin::new(x);
         takes_rvalue_reference(mov!(pinned_mut_ref));
     }
 
-    #[test]
+    #[gtest]
     fn test_ctor_then() {
         emplace! {
             let x = 40.ctor_then(|mut y| { *y += 2 });
@@ -1703,13 +1704,13 @@ mod test {
     }
 
     /// Test that a slot can be created in a temporary.
-    #[test]
+    #[gtest]
     fn test_slot_temporary() {
         assert_eq!(*emplace!(Slot::new(42)).as_opt().unwrap(), 42);
     }
 
     /// Test that a slot can be created in a local.
-    #[test]
+    #[gtest]
     fn test_slot_local() {
         emplace! {let slot = Slot::new(42); }
         assert_eq!(*slot.as_opt().unwrap(), 42);
@@ -1717,7 +1718,7 @@ mod test {
 
     /// Shows the use of Slot to implement a "slotted return value", similar to
     /// moveit.
-    #[test]
+    #[gtest]
     fn test_slotted_return_value() {
         // TODO(jeanpierreda): delete this, use doctests when doctests work.
         fn foo(slot: Pin<&mut Slot<u32>>) -> Pin<&mut u32> {
@@ -1730,7 +1731,7 @@ mod test {
     }
 
     /// Shows the use of Slot to implement output parameters.
-    #[test]
+    #[gtest]
     fn test_slotted_output_parameter() {
         // TODO(jeanpierreda): delete this, use doctests when doctests work.
         fn foo(slot: Pin<&mut Slot<u32>>) {
@@ -1742,7 +1743,7 @@ mod test {
         assert_eq!(*slot.as_opt().unwrap(), 42);
     }
 
-    #[test]
+    #[gtest]
     fn test_ctor_trait_captures() {
         fn adder<'a, 'b>(
             x: &'a i32,
@@ -1764,7 +1765,7 @@ mod test {
     // deprecated and removed.
     //
     // ```
-    // #[test]
+    // #[gtest]
     // fn test_ctor_native_captures() {
     //     fn adder<'a, 'b>(
     //         x: &'a i32,

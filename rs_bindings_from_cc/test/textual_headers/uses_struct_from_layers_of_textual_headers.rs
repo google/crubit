@@ -4,8 +4,9 @@
 
 #[cfg(test)]
 mod tests {
+    use googletest::prelude::*;
 
-    #[test]
+    #[gtest]
     fn test_access_to_struct_through_the_right_crate() {
         // MyStruct was defined in a textual header of :defines_struct_in_textual_hdr,
         // but we should consider that header to belong to whichever target

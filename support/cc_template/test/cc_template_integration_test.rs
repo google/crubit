@@ -5,6 +5,7 @@
 #![cfg(test)]
 
 use cc_template::cc_template;
+use googletest::prelude::*;
 
 /// Test the `cc_template!` macro with:
 /// * the JSON file `__cc_template_instantiations.json` (the environment
@@ -15,7 +16,7 @@ use cc_template::cc_template;
 #[allow(non_camel_case_types)]
 mod __cc_template_instantiations_rs_api;
 
-#[test]
+#[gtest]
 fn test_in_mocked_context() {
     let x = <cc_template!(my_namespace::MyTemplate<MyArg>)>::new(42);
     assert!(x.value == 42);

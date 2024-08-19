@@ -4,7 +4,9 @@
 
 #[cfg(test)]
 mod tests {
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn test_member_function_of_class_template_defined_in_cc_file() {
         let s = definition_in_cc::MyTypeAlias::Create(123);
         assert_eq!(123, *s.value());

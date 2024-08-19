@@ -5,6 +5,6 @@
 #[cfg(test)]
 mod tests {
 
-    #[test]
+    #[gtest]
     fn test_compile() {}
 }

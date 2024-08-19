@@ -4,7 +4,9 @@
 
 #[cfg(test)]
 mod tests {
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn test_has_dependency() {
         let dependency = dependency::Dependency { magic: 42 };
         assert_eq!(uses_dependency::UseDependency(dependency).magic, dependency.magic);

@@ -4,25 +4,26 @@
 
 #[cfg(test)]
 mod tests {
+    use googletest::prelude::*;
     use hello_world::*;
 
-    #[test]
+    #[gtest]
     fn test_hello_world() {
         assert_eq!(hello_world_inline(), 42);
     }
 
-    #[test]
+    #[gtest]
     fn test_take_struct_by_const_ref() {
         let s = SomeStruct { int_field: 789 };
         assert_eq!(789, take_struct_by_const_ref(&s));
     }
 
-    #[test]
+    #[gtest]
     fn test_double_unsigned_int() {
         assert_eq!(double_unsigned_int(123), 246);
     }
 
-    #[test]
+    #[gtest]
     fn test_forward_declared_doubler() {
         assert_eq!(foo::forward_declared_doubler(124), 248);
     }

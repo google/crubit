@@ -2,10 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use googletest::prelude::*;
+
 /// Test to ensure that Crubit can import class template specialization with
 /// un-instantiable member function that passes the type check but has an
 /// incorrect function body.
-#[test]
+#[gtest]
 fn test_build() {
     // TODO:(b/248542210): Assert `AForInt` is generated and does not have
     // method `Call_FailMethod`, `FailMethod`, `FailStaticMethod`.

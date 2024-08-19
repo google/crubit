@@ -4,25 +4,26 @@
 
 #[cfg(test)]
 mod tests {
+    use googletest::prelude::*;
     use no_unique_address::*;
 
     use ctor::CtorNew as _;
 
-    #[test]
+    #[gtest]
     fn test_get() {
         let s = Struct::Make(1, 2);
         assert_eq!(s.field1(), &1);
         assert_eq!(s.field2(), &2);
     }
 
-    #[test]
+    #[gtest]
     fn test_padding_between_fields() {
         let s = PaddingBetweenFields::Make(1, 2);
         assert_eq!(s.field1, 1);
         assert_eq!(s.field2(), &2);
     }
 
-    #[test]
+    #[gtest]
     fn test_field_in_tail_padding() {
         ctor::emplace! {
             let s = FieldInTailPadding::ctor_new((1, 2, 3));
@@ -32,7 +33,7 @@ mod tests {
         assert_eq!(s.char_in_tail_padding_of_prev_field, 3);
     }
 
-    #[test]
+    #[gtest]
     fn test_struct_with_fields_written_before_empty_no_unique_address_field() {
         ctor::emplace! {
           let mut s = StructWithFieldsWrittenBeforeEmptyNoUniqueAddressField::Make(1);
@@ -41,12 +42,12 @@ mod tests {
         assert_eq!(s.no_unique_address_empty_field().method(), 12345);
     }
 
-    #[test]
+    #[gtest]
     fn test_class_with_fields_written_before_empty_no_unique_address_field_compile() {
         let _ = ClassWithFieldsWrittenBeforeEmptyNoUniqueAddressField::default();
     }
 
-    #[test]
+    #[gtest]
     fn test_struct_with_bit_fields_and_no_unique_address_fields() {
         let s = StructWithBitFieldsAndNoUniqueAddressField::default();
         assert_eq!(s.field2, 54321);

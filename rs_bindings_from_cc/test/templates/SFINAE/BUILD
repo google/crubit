@@ -14,4 +14,7 @@ crubit_rust_test(
     cc_deps = [
         ":sfinae",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

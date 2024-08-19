@@ -294,10 +294,11 @@ pub mod internal {
 
 #[cfg(test)]
 pub mod tests {
+    use googletest::prelude::*;
     use std::cell::Cell;
     use std::rc::Rc;
 
-    #[test]
+    #[gtest]
     fn test_basic_memoization() {
         crate::query_group! {
           pub trait Add10 {
@@ -331,7 +332,7 @@ pub mod tests {
     ///
     /// This test is similar to test_basic_memoization, except that it accepts
     /// and returns references.
-    #[test]
+    #[gtest]
     fn test_nonstatic_memoization() {
         crate::query_group! {
           pub trait Add10<'a> {
@@ -370,7 +371,7 @@ pub mod tests {
         assert_eq!(count.get(), 3);
     }
 
-    #[test]
+    #[gtest]
     #[should_panic(
         expected = "Cycle detected: a memoized function depends on its own return value"
     )]
@@ -388,7 +389,7 @@ pub mod tests {
         db.add10(1);
     }
 
-    #[test]
+    #[gtest]
     fn test_finite_recursion() {
         crate::query_group! {
           pub trait Add10 {
@@ -427,7 +428,7 @@ pub mod tests {
     ///
     /// [^1]: Since it has no inputs at all, we could store it as a bare `Option<ReturnType>`, but
     /// instead we use `HashMap<(), ReturnType>`. Well, good enough.
-    #[test]
+    #[gtest]
     fn test_argless() {
         crate::query_group! {
           pub trait Argless {

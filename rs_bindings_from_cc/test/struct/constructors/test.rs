@@ -6,10 +6,11 @@
 mod tests {
     use constructors::*;
     use ctor::CtorNew as _;
+    use googletest::prelude::*;
     use no_elided_lifetimes::*;
     use static_assertions::{assert_impl_all, assert_not_impl_any};
 
-    #[test]
+    #[gtest]
     #[allow(clippy::redundant_clone)]
     fn test_user_provided_constructors() {
         assert_impl_all!(StructWithUserProvidedConstructors: Default);
@@ -25,28 +26,28 @@ mod tests {
         assert_not_impl_any!(StructWithUserProvidedConstructors: Copy);
     }
 
-    #[test]
+    #[gtest]
     fn test_explicit_conversion_constructor() {
         assert_impl_all!(StructWithExplicitConversionConstructor: From<i32>);
         let i: StructWithExplicitConversionConstructor = 125.into();
         assert_eq!(125, i.int_field);
     }
 
-    #[test]
+    #[gtest]
     fn test_implicit_conversion_constructor() {
         assert_impl_all!(StructWithImplicitConversionConstructor: From<i32>);
         let i: StructWithImplicitConversionConstructor = 125.into();
         assert_eq!(125, i.int_field);
     }
 
-    #[test]
+    #[gtest]
     fn test_implicit_conversion_from_reference() {
         let other = OtherSimpleStruct { int_field: 126 };
         let i: StructWithImplicitConversionFromReference = (&other).into();
         assert_eq!(126, i.int_field);
     }
 
-    #[test]
+    #[gtest]
     #[allow(clippy::redundant_clone)]
     fn test_inline_constructors() {
         assert_impl_all!(StructWithInlineConstructors: Default);
@@ -66,17 +67,17 @@ mod tests {
         assert_eq!(456, i.int_field);
     }
 
-    #[test]
+    #[gtest]
     fn test_deleted_constructors() {
         assert_not_impl_any!(StructWithDeletedConstructors: Clone, Copy, Default, From<i32>);
     }
 
-    #[test]
+    #[gtest]
     fn test_private_constructors() {
         assert_not_impl_any!(StructWithPrivateConstructors: Clone, Copy, Default, From<i32>);
     }
 
-    #[test]
+    #[gtest]
     #[allow(clippy::clone_on_copy)]
     fn test_explicitly_defaulted_constructors() {
         assert_impl_all!(StructWithExplicitlyDefaultedConstructors: Default);
@@ -98,7 +99,7 @@ mod tests {
         assert_impl_all!(StructWithExplicitlyDefaultedConstructors: Copy);
     }
 
-    #[test]
+    #[gtest]
     fn test_nontrivial_struct() {
         // Non-trivial types cannot be copied.
         assert_not_impl_any!(NonTrivialStructWithConstructors: Copy);
@@ -118,7 +119,7 @@ mod tests {
         assert_eq!(s_clone.int_field, 123);
     }
 
-    #[test]
+    #[gtest]
     fn test_no_elided_lifetimes() {
         // b/214244223: No bindings should be generated for any of the
         // constructors if no lifetimes are present on `this` parameter in C++.

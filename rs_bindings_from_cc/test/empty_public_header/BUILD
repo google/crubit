@@ -28,4 +28,7 @@ crubit_rust_test(
     cc_deps = [
         ":cc_library_with_rust_deps",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

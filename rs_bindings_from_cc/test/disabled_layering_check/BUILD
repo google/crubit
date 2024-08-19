@@ -18,6 +18,9 @@ crubit_rust_test(
         # doesn't get compiled with :my_lib as direct.
         ":top_lib",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 crubit_test_cc_library(

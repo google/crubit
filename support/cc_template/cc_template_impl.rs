@@ -72,6 +72,7 @@ fn make_syn_error<T: Into<String>>(message: T) -> syn::Error {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::prelude::*;
     use maplit::hashmap;
     use std::path::Path;
 
@@ -79,7 +80,7 @@ mod tests {
         read_instantiations_map().expect_err(no_error_happened_msg).to_string()
     }
 
-    #[test]
+    #[gtest]
     fn test_env_var_not_set() {
         let err_message =
             get_error_from_read_instantiations_map("The env var was unexpectedly set.");
@@ -90,7 +91,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_instantiations_file_not_found() {
         env::set_var("CRUBIT_INSTANTIATIONS_FILE", "path/does/not/exist");
 
@@ -103,7 +104,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_instantiations_file_deserialization_error() {
         let path = Path::join(Path::new(&env::var("TEST_TMPDIR").unwrap()), "my_file.not_json");
         std::fs::write(&path, "definitely not json").unwrap();
@@ -122,7 +123,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_instantiations_deserialization_success() {
         let path = Path::join(Path::new(&env::var("TEST_TMPDIR").unwrap()), "instantiations.json");
         let key = "std::string<bool>";
@@ -136,7 +137,7 @@ mod tests {
         assert_eq!(deserialized_map, hashmap! { key.to_string() => value.to_string() });
     }
 
-    #[test]
+    #[gtest]
     fn test_successful_expansion() {
         let expanded = get_instantiation_struct_name(
             quote! { std::vector<bool> },
@@ -151,7 +152,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_parsing_valid_cc_instantiations() {
         validate_user_input(&quote! {vector<bool>}).unwrap();
         validate_user_input(&quote! {std::vector<bool>}).unwrap();

@@ -4,28 +4,30 @@
 
 #[cfg(test)]
 mod tests {
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn test_rs_char_parameter_type_and_return_type() {
         use roundtrip::rs_char_test::*;
         let roundtrip = NextChar('a');
         assert_eq!(roundtrip, 'b');
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_char_field_type() {
         use roundtrip::rs_char_test::*;
         let s = SomeStruct { c: 'x' };
         assert_eq!('x', s.GetChar());
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_char_via_type_alias() {
         use roundtrip::rs_char_test::*;
         let roundtrip = NextCharViaTypeAlias('a');
         assert_eq!(roundtrip, 'b');
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_char_via_import() {
         use roundtrip::rs_char_test::*;
         let roundtrip = NextCharViaImport('a');

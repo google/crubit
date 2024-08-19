@@ -4,7 +4,9 @@
 
 #[cfg(test)]
 mod tests {
-    #[test]
+    use googletest::prelude::*;
+
+    #[gtest]
     fn test_alias_to_template_without_instantiation_in_different_target() {
         let s = type_alias_in_different_target::TypeAliasInDifferentTarget::Create(321);
         assert_eq!(321, *s.value());

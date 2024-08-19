@@ -130,6 +130,7 @@ pub mod internal {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::prelude::*;
     use quote::quote;
 
     /// We aren't testing platform-specific details, just the matchers.
@@ -137,7 +138,7 @@ mod tests {
         ir_testing::ir_from_cc(multiplatform_testing::Platform::X86Linux, header)
     }
 
-    #[test]
+    #[gtest]
     fn test_optional_trailing_comma() {
         assert_ir_matches!(ir_from_cc("").unwrap(), quote! { FlatIR { ... }});
         assert_ir_matches!(ir_from_cc("").unwrap(), quote! { FlatIR { ... }},);
@@ -146,23 +147,23 @@ mod tests {
         assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir},);
     }
 
-    #[test]
+    #[gtest]
     fn test_assert_ir_matches_assumes_trailing_commas_in_groups() {
         assert_ir_matches!(ir_from_cc("").unwrap(), quote! {{... , }});
     }
 
-    #[test]
+    #[gtest]
     fn test_assert_not_matches_accepts_not_matching_pattern() {
         assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir});
     }
 
-    #[test]
+    #[gtest]
     #[should_panic(expected = "input:\n\n```\nFlatIR {")]
     fn test_assert_ir_not_matches_panics_on_match() {
         assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {items});
     }
 
-    #[test]
+    #[gtest]
     #[should_panic]
     fn test_assert_ir_matches_panics_on_mismatch() {
         assert_ir_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir});

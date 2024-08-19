@@ -5,8 +5,9 @@
 
 mod tests {
     use crubit_enabled_cc_library_with____________________________::func;
+    use googletest::prelude::*;
 
-    #[test]
+    #[gtest]
     fn test_build_with_crubit_enabled_cc_library_with_invalid_character() {
         func();
     }

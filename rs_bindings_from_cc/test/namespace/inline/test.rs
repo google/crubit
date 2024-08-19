@@ -4,9 +4,10 @@
 
 #[cfg(test)]
 mod tests {
+    use googletest::prelude::*;
     use inline::*;
 
-    #[test]
+    #[gtest]
     fn test_inline_namespaces() {
         let s = foo::inline1::MyStruct { value: 123 };
         assert_eq!(123, foo::inline1::GetStructValue1(&s));

@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[test]
+#[gtest]
 fn test_build() {
     // Currently, the generated bindings of
     // `definition_forward_declared_template` doesn't compile: "cannot find

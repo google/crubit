@@ -4,8 +4,9 @@
 
 #[cfg(test)]
 mod tests {
+    use googletest::prelude::*;
 
-    #[test]
+    #[gtest]
     fn test_uses_struct_and_function_from_macro() {
         let my_struct = uses_macro::StructFromMacro { val: 3 };
         assert_eq!(my_struct.val, uses_macro::functionFromMacro(3));

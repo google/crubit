@@ -23,4 +23,7 @@ crubit_rust_test(
         ":actual_instantiation",
         ":extern_definition",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

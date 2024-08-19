@@ -1995,13 +1995,15 @@ mod tests {
     use super::*;
     use crate::tests::*;
     use crate::BindingsTokens;
+    use arc_anyhow::Result;
+    use googletest::prelude::*;
     use ir_testing::{retrieve_func, with_lifetime_macros};
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
     use token_stream_printer::rs_tokens_to_formatted_string_for_tests;
 
-    #[test]
+    #[gtest]
     fn test_simple_function() -> Result<()> {
         let ir = ir_from_cc("int Add(int a, int b);")?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -2033,7 +2035,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_inline_function() -> Result<()> {
         let ir = ir_from_cc("inline int Add(int a, int b);")?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -2070,7 +2072,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_simple_function_with_types_from_other_target() -> Result<()> {
         let ir = ir_from_cc_dependency(
             "inline ReturnStruct DoSomething(ParamStruct param);",
@@ -2121,7 +2123,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_ref_to_struct_in_thunk_impls() -> Result<()> {
         let ir = ir_from_cc("struct S{}; inline void foo(S& s) {} ")?;
         let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
@@ -2136,7 +2138,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_const_ref_to_struct_in_thunk_impls() -> Result<()> {
         let ir = ir_from_cc("struct S{}; inline void foo(const S& s) {} ")?;
         let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
@@ -2151,7 +2153,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_unsigned_int_in_thunk_impls() -> Result<()> {
         let ir = ir_from_cc("inline void foo(unsigned int i) {} ")?;
         let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
@@ -2166,7 +2168,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_record_static_methods_qualify_call_in_thunk() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2186,7 +2188,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_record_instance_methods_deref_this_in_thunk() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2207,7 +2209,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_ptr_func() -> Result<()> {
         let ir = ir_from_cc(r#" inline int* Deref(int*const* p); "#)?;
 
@@ -2245,7 +2247,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_const_char_ptr_func() -> Result<()> {
         // This is a regression test: We used to include the "const" in the name
         // of the CcType, which caused a panic in the code generator
@@ -2282,7 +2284,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_func_ptr_thunk() -> Result<()> {
         // Using an `inline` keyword forces generation of a C++ thunk in
         // `rs_api_impl` (i.e. exercises `format_cpp_type` and similar code).
@@ -2307,7 +2309,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_doc_comment_func() -> Result<()> {
         let ir = ir_from_cc(
             "
@@ -2332,7 +2334,7 @@ mod tests {
 
     /// Trivial types (at least those that are mapped to Copy rust types) do not
     /// get a Drop impl.
-    #[test]
+    #[gtest]
     fn test_impl_drop_trivial() -> Result<()> {
         let ir = ir_from_cc(
             r#"struct Trivial final {
@@ -2348,7 +2350,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_default_explicitly_defaulted_constructor() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2384,7 +2386,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
         // This test covers the case where a single lifetime applies to 1)
         // the `__this` parameter and 2) other constructor parameters. For
@@ -2439,7 +2441,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_default_non_trivial_struct() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2453,7 +2455,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_from_for_1_arg_constructor() -> Result<()> {
         for explicit_qualifier in ["", "explicit"] {
             let ir = ir_from_cc(&format!(
@@ -2482,7 +2484,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_from_for_implicit_conversion_from_reference() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2516,7 +2518,7 @@ mod tests {
 
     /// Methods with missing lifetimes for `self` should give a useful error
     /// message.
-    #[test]
+    #[gtest]
     fn test_eq_nolifetime() -> Result<()> {
         // Missing lifetimes currently only causes hard errors for trait impls,
         // not For inherent methods.
@@ -2531,7 +2533,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_eq_for_member_function() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2566,7 +2568,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_eq_for_free_function() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2590,7 +2592,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_eq_for_free_function_different_types() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2615,7 +2617,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_eq_for_free_function_by_value() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2640,7 +2642,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_lt_for_member_function() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2691,7 +2693,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_lt_for_free_function() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2733,7 +2735,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_lt_for_free_function_by_value() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2774,7 +2776,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_assign() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2801,7 +2803,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_assign_nonreference_other() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2828,7 +2830,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_assign_nonreference_return() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2855,7 +2857,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_eq_non_const_member_function() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2868,7 +2870,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_lt_different_operands() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2890,7 +2892,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_lt_non_const_member_function() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2907,7 +2909,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_lt_rhs_by_value() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2924,7 +2926,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_impl_lt_missing_eq_impl() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2940,7 +2942,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_thunk_ident_function() -> Result<()> {
         let ir = ir_from_cc("inline int foo() {}")?;
         let func = retrieve_func(&ir, "foo");
@@ -2948,7 +2950,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_thunk_ident_special_names() {
         let ir = ir_from_cc("struct Class {};").unwrap();
 
@@ -2963,7 +2965,7 @@ mod tests {
         assert_eq!(thunk_ident(default_constructor), make_rs_ident("__rust_thunk___ZN5ClassC1Ev"));
     }
 
-    #[test]
+    #[gtest]
     fn test_elided_lifetimes() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -2988,7 +2990,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_annotated_lifetimes() -> Result<()> {
         let ir = ir_from_cc(&with_lifetime_macros(
             r#"
@@ -3012,7 +3014,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_format_generic_params() -> Result<()> {
         assert!(
             format_generic_params(/* lifetimes= */ &[], std::iter::empty::<syn::Ident>())
@@ -3034,7 +3036,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_format_tuple_except_singleton() {
         fn format(xs: &[TokenStream]) -> TokenStream {
             format_tuple_except_singleton(xs)
@@ -3044,7 +3046,7 @@ mod tests {
         assert_rs_matches!(format(&[quote! {a}, quote! {b}]), quote! {(a, b)});
     }
 
-    #[test]
+    #[gtest]
     fn test_overloaded_functions() -> Result<()> {
         // TODO(b/213280424): We don't support creating bindings for overloaded
         // functions yet, except in the case of overloaded constructors with a
@@ -3107,7 +3109,7 @@ mod tests {
     }
 
     /// !Unpin references should not be pinned.
-    #[test]
+    #[gtest]
     fn test_nonunpin_ref_param() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -3127,7 +3129,7 @@ mod tests {
     }
 
     /// !Unpin mut references must be pinned.
-    #[test]
+    #[gtest]
     fn test_nonunpin_mut_param() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -3147,7 +3149,7 @@ mod tests {
     }
 
     /// !Unpin &self should not be pinned.
-    #[test]
+    #[gtest]
     fn test_nonunpin_ref_self() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -3169,7 +3171,7 @@ mod tests {
     }
 
     /// !Unpin &mut self must be pinned.
-    #[test]
+    #[gtest]
     fn test_nonunpin_mut_self() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -3191,7 +3193,7 @@ mod tests {
     }
 
     /// Drop::drop must not use self : Pin<...>.
-    #[test]
+    #[gtest]
     fn test_nonunpin_drop() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -3208,7 +3210,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_nonunpin_0_arg_constructor() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3241,7 +3243,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_nonunpin_1_arg_constructor() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3274,7 +3276,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_nonunpin_2_arg_constructor() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3310,7 +3312,7 @@ mod tests {
     /// Traits which monomorphize the `Ctor` parameter into the caller must
     /// synthesize an RvalueReference parameter, with an appropriate
     /// lifetime parameter.
-    #[test]
+    #[gtest]
     fn test_nonunpin_by_value_params() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3361,7 +3363,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_nonunpin_return() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3401,7 +3403,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_nonunpin_const_return() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3441,7 +3443,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_unpin_by_value_param() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3479,7 +3481,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_unpin_by_value_return() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3523,7 +3525,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_unpin_rvalue_ref_qualified_method() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3555,7 +3557,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_unpin_rvalue_ref_const_qualified_method() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3589,7 +3591,7 @@ mod tests {
 
     /// Assignment is special in that it discards the return type.
     /// So if the return type is !Unpin, it needs to emplace!() it.
-    #[test]
+    #[gtest]
     fn test_nonunpin_return_assign() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3637,7 +3639,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_nonunpin_param() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3673,7 +3675,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_nonunpin_trait_param() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3711,7 +3713,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_nonmovable_param() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -3730,7 +3732,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_function_returning_rvalue_reference() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision

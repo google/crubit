@@ -1,7 +1,10 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#[test]
+
+use googletest::prelude::*;
+
+#[gtest]
 fn test_return_value() {
     use type_alias::return_underlying;
     use type_alias::Int;
@@ -10,7 +13,7 @@ fn test_return_value() {
 }
 
 /// Vector aliases are not supported (yet???).
-#[test]
+#[gtest]
 fn test_vector_alias() {
     assert!(!item_exists::type_exists!(type_alias::MyVector));
     assert!(!item_exists::value_exists!(type_alias::VectorFunction));

@@ -166,9 +166,10 @@ fn to_use_stmts(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::prelude::*;
     use std::ops::Deref;
 
-    #[test]
+    #[gtest]
     fn from_json() {
         let json = r#"{
             "label": "//foo/bar:baz",
@@ -186,7 +187,7 @@ mod tests {
         assert_eq!(&*ns.namespaces[0].name, "top_level");
     }
 
-    #[test]
+    #[gtest]
     fn test_merge_namespace_hierarchies() {
         let hierarchy_one: JsonNamespaceHierarchy = serde_json::from_str(
             r#"{
@@ -244,7 +245,7 @@ mod tests {
         assert_eq!(labels.iter().map(Deref::deref).collect::<Vec<_>>(), ["//foo/bar:xyz"]);
     }
 
-    #[test]
+    #[gtest]
     #[should_panic(expected = "Cannot merge namespaces with different names, got 'a' and 'b'")]
     fn test_merge_different_namespaces() {
         let mut namespace_one = MergedNamespace::from_json_namespace(
@@ -272,7 +273,7 @@ mod tests {
         namespace_one.merge(namespace_two);
     }
 
-    #[test]
+    #[gtest]
     fn test_merge_namespaces() {
         let json_namespace_one: JsonNamespace = serde_json::from_str(
             r#"{
@@ -346,7 +347,7 @@ mod tests {
         assert_eq!(d_labels.iter().map(Deref::deref).collect::<Vec<_>>(), ["//:label2"]);
     }
 
-    #[test]
+    #[gtest]
     fn test_to_tokens() {
         let hierarchy_one: JsonNamespaceHierarchy = serde_json::from_str(
             r#"{

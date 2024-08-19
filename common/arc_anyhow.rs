@@ -260,9 +260,13 @@ macro_rules! bail {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    use googletest::prelude::*;
+
+    use super::Result as AAResult;
+
+    #[gtest]
     fn test_result_context() {
-        let result: Result<()> = Result::Err(anyhow!("Something went wrong!"))
+        let result: AAResult<()> = AAResult::Err(anyhow!("Something went wrong!"))
             .with_context(|| "context 1")
             .context("context 2");
         let err = result.unwrap_err();
@@ -294,7 +298,7 @@ mod tests {
         // );
         // ```
     }
-    #[test]
+    #[gtest]
     fn test_error_context() {
         let err = anyhow!("Something went wrong!").context("context 1").context("context 2");
         assert_eq!(&format!("{err}"), "context 2",);
@@ -309,18 +313,18 @@ mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_macro_anyhow() {
         assert_eq!(&format!("{}", anyhow!("message")), "message");
     }
 
-    #[test]
+    #[gtest]
     fn test_macro_bail() {
-        let err = (|| -> Result<()> { bail!("message") })().unwrap_err();
+        let err = (|| -> AAResult<()> { bail!("message") })().unwrap_err();
         assert_eq!(&format!("{err}"), "message");
     }
 
-    #[test]
+    #[gtest]
     fn test_macro_ensure() {
         let err = (|| {
             ensure!(false, "message");

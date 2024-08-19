@@ -5,8 +5,9 @@
 #[cfg(test)]
 mod tests {
     use abi_class::*;
+    use googletest::prelude::*;
 
-    #[test]
+    #[gtest]
     fn test_struct_float() {
         let x = StructFloat::Create(123.0);
         let y = StructFloat::Create(456.0);
@@ -14,7 +15,7 @@ mod tests {
         assert_eq!(123.0 + 456.0, StructFloat::Inspect(sum));
     }
 
-    #[test]
+    #[gtest]
     fn test_struct_memory() {
         let x = StructMemory::Create(456);
         let y = StructMemory::Create(321);
@@ -22,7 +23,7 @@ mod tests {
         assert_eq!(456 + 321, StructMemory::Inspect(sum));
     }
 
-    #[test]
+    #[gtest]
     fn test_struct_integer() {
         let x = StructInteger::Create(456);
         let y = StructInteger::Create(789);

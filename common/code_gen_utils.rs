@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{anyhow, ensure, Result};
-use itertools::Itertools;
 use once_cell::sync::Lazy;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
@@ -362,31 +361,33 @@ static RESERVED_CC_KEYWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
 #[cfg(test)]
 pub mod tests {
     use super::*;
+    use googletest::prelude::*;
+    use itertools::Itertools;
     use quote::quote;
     use token_stream_matchers::{assert_cc_matches, assert_rs_matches};
     use token_stream_printer::cc_tokens_to_formatted_string_for_tests;
 
-    #[test]
+    #[gtest]
     fn test_format_cc_ident_basic() {
         assert_cc_matches!(format_cc_ident("foo").unwrap(), quote! { foo });
     }
 
-    #[test]
+    #[gtest]
     fn test_format_cc_ident_exotic_xid_start() {
         assert_cc_matches!(format_cc_ident("Łukasz").unwrap(), quote! { Łukasz });
     }
 
-    #[test]
+    #[gtest]
     fn test_format_cc_ident_underscore() {
         assert_cc_matches!(format_cc_ident("_").unwrap(), quote! { _ });
     }
 
-    #[test]
+    #[gtest]
     fn test_format_cc_ident_reserved_rust_keyword() {
         assert_cc_matches!(format_cc_ident("impl").unwrap(), quote! { impl });
     }
 
-    #[test]
+    #[gtest]
     fn test_format_cc_ident_reserved_cc_keyword() {
         let err = format_cc_ident("reinterpret_cast").unwrap_err();
         let msg = err.to_string();
@@ -394,7 +395,7 @@ pub mod tests {
         assert!(msg.contains("C++ reserved keyword"));
     }
 
-    #[test]
+    #[gtest]
     fn test_format_cc_ident_unparseable_identifier() {
         let err = format_cc_ident("foo)").unwrap_err();
         let msg = err.to_string();
@@ -402,7 +403,7 @@ pub mod tests {
         assert!(msg.contains("cannot parse"));
     }
 
-    #[test]
+    #[gtest]
     fn test_format_cc_ident_unqualified_identifiers() {
         // https://en.cppreference.com/w/cpp/language/identifiers#Unqualified_identifiers
 
@@ -419,7 +420,7 @@ pub mod tests {
     ///
     /// This may appear in `IR::Record::cc_name`, or in
     /// `__crubit::annotate(cpp_type=...)`.
-    #[test]
+    #[gtest]
     fn test_format_cc_ident_qualified_identifiers() {
         assert_cc_matches!(
             format_cc_ident("std::vector<int>").unwrap(),
@@ -427,14 +428,14 @@ pub mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_format_cc_ident_empty() {
         let err = format_cc_ident("").unwrap_err();
         let msg = err.to_string();
         assert_eq!(msg, "Empty string is not a valid C++ identifier");
     }
 
-    #[test]
+    #[gtest]
     fn test_format_cc_ident_invalid_first_char() {
         let tests = vec![
             // `0` and `1 are field names in `struct RustStruct(i32, u16)`.
@@ -462,37 +463,37 @@ pub mod tests {
         }
     }
 
-    #[test]
+    #[gtest]
     fn test_make_rs_ident_basic() {
         let id = make_rs_ident("foo");
         assert_rs_matches!(quote! { #id }, quote! { foo });
     }
 
-    #[test]
+    #[gtest]
     fn test_make_rs_ident_reserved_cc_keyword() {
         let id = make_rs_ident("reinterpret_cast");
         assert_rs_matches!(quote! { #id }, quote! { reinterpret_cast });
     }
 
-    #[test]
+    #[gtest]
     fn test_make_rs_ident_reserved_rust_keyword() {
         let id = make_rs_ident("impl");
         assert_rs_matches!(quote! { #id }, quote! { r#impl });
     }
 
-    #[test]
+    #[gtest]
     #[should_panic]
     fn test_make_rs_ident_unfinished_group() {
         make_rs_ident("(foo"); // No closing `)`.
     }
 
-    #[test]
+    #[gtest]
     #[should_panic]
     fn test_make_rs_ident_empty() {
         make_rs_ident("");
     }
 
-    #[test]
+    #[gtest]
     fn test_cc_include_to_tokens_for_system_header() {
         let include = CcInclude::cstddef();
         assert_cc_matches!(
@@ -503,7 +504,7 @@ pub mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_cc_include_to_tokens_for_user_header() {
         let include = CcInclude::user_header("some/path/to/header.h".into());
         assert_cc_matches!(
@@ -514,7 +515,7 @@ pub mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_cc_include_ord() {
         let cstddef = CcInclude::cstddef();
         let memory = CcInclude::memory();
@@ -528,7 +529,7 @@ pub mod tests {
         assert!(a < b);
     }
 
-    #[test]
+    #[gtest]
     fn test_format_cc_includes() {
         let includes = [
             CcInclude::cstddef(),
@@ -554,7 +555,7 @@ pub mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_namespace_qualifier_empty() {
         let ns = NamespaceQualifier::new::<&str>([]);
         let actual_rs = ns.format_for_rs();
@@ -563,7 +564,7 @@ pub mod tests {
         assert!(actual_cc.is_empty());
     }
 
-    #[test]
+    #[gtest]
     fn test_namespace_qualifier_basic() {
         let ns = NamespaceQualifier::new(["foo", "bar"]);
         let actual_rs = ns.format_for_rs();
@@ -572,7 +573,7 @@ pub mod tests {
         assert_cc_matches!(actual_cc, quote! { foo::bar:: });
     }
 
-    #[test]
+    #[gtest]
     fn test_namespace_qualifier_reserved_cc_keyword() {
         let ns = NamespaceQualifier::new(["foo", "impl", "bar"]);
         let actual_rs = ns.format_for_rs();
@@ -581,7 +582,7 @@ pub mod tests {
         assert_cc_matches!(actual_cc, quote! { foo::impl::bar:: });
     }
 
-    #[test]
+    #[gtest]
     fn test_namespace_qualifier_reserved_rust_keyword() {
         let ns = NamespaceQualifier::new(["foo", "reinterpret_cast", "bar"]);
         let actual_rs = ns.format_for_rs();
@@ -592,7 +593,7 @@ pub mod tests {
         assert!(msg.contains("C++ reserved keyword"));
     }
 
-    #[test]
+    #[gtest]
     fn test_namespace_qualifier_format_with_cc_body_top_level_namespace() {
         let ns = NamespaceQualifier::new::<&str>([]);
         assert_cc_matches!(
@@ -601,7 +602,7 @@ pub mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_namespace_qualifier_format_with_cc_body_nested_namespace() {
         let ns = NamespaceQualifier::new(["foo", "bar", "baz"]);
         assert_cc_matches!(
@@ -614,7 +615,7 @@ pub mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_format_cc_include_support_lib_header() {
         let tests = vec![
             (
@@ -655,7 +656,7 @@ pub mod tests {
         }
     }
 
-    #[test]
+    #[gtest]
     fn test_escape_non_identifier_chars() {
         let tests = vec![
             ("", ""),

@@ -195,8 +195,11 @@ impl ErrorReportEntry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::prelude::*;
 
-    #[test]
+    use arc_anyhow::Result;
+
+    #[gtest]
     fn anyhow_1arg_static_plain() {
         let arc_err = anyhow!("abc");
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
@@ -206,7 +209,7 @@ mod tests {
         assert_eq!(err.message, "abc");
     }
 
-    #[test]
+    #[gtest]
     fn anyhow_1arg_static_fmt() {
         let some_var = "def";
         let arc_err = anyhow!("abc{some_var}");
@@ -217,7 +220,7 @@ mod tests {
         assert_eq!(err.message, "abcdef");
     }
 
-    #[test]
+    #[gtest]
     fn anyhow_1arg_dynamic() {
         let arc_err = anyhow!(format!("abc{}", "def"));
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
@@ -227,7 +230,7 @@ mod tests {
         assert_eq!(err.message, "abcdef");
     }
 
-    #[test]
+    #[gtest]
     fn anyhow_2arg() {
         let arc_err = anyhow!("abc{}", "def");
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
@@ -237,7 +240,7 @@ mod tests {
         assert_eq!(err.message, "abcdef");
     }
 
-    #[test]
+    #[gtest]
     fn bail_1arg_static_plain() {
         let arc_err = (|| -> arc_anyhow::Result<()> { bail!("abc") })().unwrap_err();
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
@@ -247,7 +250,7 @@ mod tests {
         assert_eq!(err.message, "abc");
     }
 
-    #[test]
+    #[gtest]
     fn bail_1arg_static_fmt() {
         let some_var = "def";
         let arc_err = (|| -> arc_anyhow::Result<()> { bail!("abc{some_var}") })().unwrap_err();
@@ -258,7 +261,7 @@ mod tests {
         assert_eq!(err.message, "abcdef");
     }
 
-    #[test]
+    #[gtest]
     fn bail_1arg_dynamic() {
         let arc_err =
             (|| -> arc_anyhow::Result<()> { bail!(format!("abc{}", "def")) })().unwrap_err();
@@ -269,7 +272,7 @@ mod tests {
         assert_eq!(err.message, "abcdef");
     }
 
-    #[test]
+    #[gtest]
     fn bail_2arg() {
         let arc_err = (|| -> arc_anyhow::Result<()> { bail!("abc{}", "def") })().unwrap_err();
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
@@ -279,7 +282,7 @@ mod tests {
         assert_eq!(err.message, "abcdef");
     }
 
-    #[test]
+    #[gtest]
     fn ensure_pass() {
         let f = || {
             ensure!(true, "unused message");
@@ -288,7 +291,7 @@ mod tests {
         f().unwrap();
     }
 
-    #[test]
+    #[gtest]
     fn ensure_fail_1arg_static_plain() {
         let arc_err = (|| {
             ensure!(false, "abc");
@@ -302,7 +305,7 @@ mod tests {
         assert_eq!(err.message, "abc");
     }
 
-    #[test]
+    #[gtest]
     fn ensure_fail_1arg_static_fmt() {
         let some_var = "def";
         let arc_err = (|| {
@@ -317,7 +320,7 @@ mod tests {
         assert_eq!(err.message, "abcdef");
     }
 
-    #[test]
+    #[gtest]
     fn ensure_fail_1arg_dynamic() {
         let arc_err = (|| {
             ensure!(false, format!("abc{}", "def"));
@@ -331,7 +334,7 @@ mod tests {
         assert_eq!(err.message, "abcdef");
     }
 
-    #[test]
+    #[gtest]
     fn ensure_fail_2arg() {
         let arc_err = (|| {
             ensure!(false, "abc{}", "def");
@@ -345,7 +348,7 @@ mod tests {
         assert_eq!(err.message, "abcdef");
     }
 
-    #[test]
+    #[gtest]
     fn error_report() {
         let report = ErrorReport::new();
         report.insert(&anyhow!("abc{}", "def"));

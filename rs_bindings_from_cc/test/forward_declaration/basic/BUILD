@@ -20,4 +20,7 @@ crubit_rust_test(
     cc_deps = [
         ":forward_declaration",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

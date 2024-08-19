@@ -19,4 +19,7 @@ crubit_rust_test(
     name = "includes_test",
     srcs = ["includes_test.rs"],
     cc_deps = [":using_includes"],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )

@@ -7,12 +7,13 @@
 mod tests {
     use ctor::{ctor, emplace, mov, ConstRvalueReference, Ctor, Emplace, RvalueReference};
     use ctor::{Assign as _, CtorNew as _, ReconstructUnchecked as _};
+    use googletest::prelude::*;
     use nonunpin::{Nonmovable, Nonunpin, NonunpinStruct, ReturnsNonmovable};
     use std::pin::Pin;
 
     /// When a value is constructed in-place, it is initialized, has the correct
     /// address.
-    #[test]
+    #[gtest]
     fn test_onearg_ctor() {
         ctor::emplace! {
             let mut x = Nonunpin::ctor_new(42);
@@ -21,7 +22,7 @@ mod tests {
         assert_eq!(x.addr(), &*x as *const _ as usize);
     }
 
-    #[test]
+    #[gtest]
     fn test_default_ctor() {
         ctor::emplace! {
             let mut x = Nonunpin::ctor_new(());
@@ -30,7 +31,7 @@ mod tests {
         assert_eq!(x.addr(), &*x as *const _ as usize);
     }
 
-    #[test]
+    #[gtest]
     fn test_move_construct() {
         ctor::emplace! {
             let mut x = Nonunpin::ctor_new(42);
@@ -44,7 +45,7 @@ mod tests {
         assert_eq!(y.addr(), &*y as *const _ as usize);
     }
 
-    #[test]
+    #[gtest]
     fn test_move_assign() {
         ctor::emplace! {
             let mut x = Nonunpin::ctor_new(42);
@@ -60,7 +61,7 @@ mod tests {
         assert_eq!(y.addr(), &*y as *const _ as usize);
     }
 
-    #[test]
+    #[gtest]
     fn test_copy_construct() {
         ctor::emplace! {
             let x = Nonunpin::ctor_new(42);
@@ -74,7 +75,7 @@ mod tests {
         assert_eq!(y.addr(), &*y as *const _ as usize);
     }
 
-    #[test]
+    #[gtest]
     fn test_copy_assign() {
         ctor::emplace! {
             let x = Nonunpin::ctor_new(42);
@@ -89,7 +90,7 @@ mod tests {
         assert_eq!(y.addr(), &*y as *const _ as usize);
     }
 
-    #[test]
+    #[gtest]
     fn test_methods() {
         ctor::emplace! {
             let mut x = Nonunpin::ctor_new(42);
@@ -100,7 +101,7 @@ mod tests {
 
     /// Test that the struct can be returned and passed as all the reference
     /// types, and passed by value.
-    #[test]
+    #[gtest]
     fn test_ref() {
         ctor::emplace! {
             let mut x = Nonunpin::ctor_new(42);
@@ -132,7 +133,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[gtest]
     fn test_aggregate() {
         ctor::emplace! {
             let mut x = ctor!(NonunpinStruct {value: 42});
@@ -148,7 +149,7 @@ mod tests {
         assert_eq!(x.value, 0);
     }
 
-    #[test]
+    #[gtest]
     fn test_return_by_value() {
         ctor::emplace! {
             let x = Nonunpin::ctor_new(42);
@@ -162,7 +163,7 @@ mod tests {
         assert_eq!(y.addr(), &*y as *const _ as usize);
     }
 
-    #[test]
+    #[gtest]
     fn test_nonmovable_ctor() {
         ctor::emplace! {
             let x = Nonmovable::ctor_new(());
@@ -172,7 +173,7 @@ mod tests {
 
     /// Thanks to C++17 prvalue semantics, we can in fact return a non-movable
     /// type by value.
-    #[test]
+    #[gtest]
     fn test_nonmovable_return_value() {
         ctor::emplace! {
             let x = ReturnsNonmovable();
@@ -191,7 +192,7 @@ mod tests {
     /// In that case, the struct containing it must *also* become
     /// non-trivially-relocatable, and it becomes ~exactly as difficult to deal
     /// with as the C++ class it contains.
-    #[test]
+    #[gtest]
     fn test_struct_field() {
         #[ctor::recursively_pinned]
         struct MyStruct {
@@ -220,7 +221,7 @@ mod tests {
     /// Rust union. This mirrors the struct case, storing by value.
     ///
     /// It is also quite ugly, but, fortunately, these unions are not common.
-    #[test]
+    #[gtest]
     fn test_union_field() {
         union MyUnion {
             int: u32,
@@ -247,7 +248,7 @@ mod tests {
     }
 
     /// The example from the ctor.rs docs; copy-pasted.
-    #[test]
+    #[gtest]
     fn test_swap() {
         fn swap(mut x: Pin<&mut Nonunpin>, mut y: Pin<&mut Nonunpin>) {
             emplace! { let mut tmp = mov!(x.as_mut()); }

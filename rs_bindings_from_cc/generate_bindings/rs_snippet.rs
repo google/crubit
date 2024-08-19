@@ -941,9 +941,11 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use arc_anyhow::Result;
+    use googletest::prelude::*;
     use token_stream_matchers::assert_rs_matches;
 
-    #[test]
+    #[gtest]
     fn test_dfs_iter_ordering() {
         // Set up a test input representing: A<B<C>, D<E>>.
         let a = {
@@ -975,7 +977,7 @@ mod tests {
         assert_eq!(vec!["A", "B", "C", "D", "E"], dfs_names);
     }
 
-    #[test]
+    #[gtest]
     fn test_dfs_iter_ordering_for_func_ptr() {
         // Set up a test input representing: fn(A, B) -> C
         let f = {
@@ -1011,7 +1013,7 @@ mod tests {
         assert_eq!(vec!["fn", "A", "B", "C"], dfs_names);
     }
 
-    #[test]
+    #[gtest]
     fn test_lifetime_elision_for_references() {
         let type_args: &[RsTypeKind] = &[];
         let referent = Rc::new(RsTypeKind::Other {
@@ -1027,7 +1029,7 @@ mod tests {
         assert_rs_matches!(quote! {#reference}, quote! {&T});
     }
 
-    #[test]
+    #[gtest]
     fn test_lifetime_elision_for_rvalue_references() {
         let type_args: &[RsTypeKind] = &[];
         let referent = Rc::new(RsTypeKind::Other {
@@ -1043,7 +1045,7 @@ mod tests {
         assert_rs_matches!(quote! {#reference}, quote! {RvalueReference<'_, T>});
     }
 
-    #[test]
+    #[gtest]
     fn test_format_as_self_param_rvalue_reference() -> Result<()> {
         let type_args: &[RsTypeKind] = &[];
         let referent = Rc::new(RsTypeKind::Other {
@@ -1062,7 +1064,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_format_as_self_param_const_rvalue_reference() -> Result<()> {
         let type_args: &[RsTypeKind] = &[];
         let referent = Rc::new(RsTypeKind::Other {
@@ -1085,7 +1087,7 @@ mod tests {
     ///
     /// If a nested type within it requires a feature, then the whole feature
     /// does. This is done automatically via dfs_iter().
-    #[test]
+    #[gtest]
     fn test_required_crubit_features() {
         let no_types: &[RsTypeKind] = &[];
         let int = RsTypeKind::Primitive(PrimitiveType::i32);

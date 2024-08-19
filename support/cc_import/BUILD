@@ -53,5 +53,8 @@ rust_library(
 crubit_rust_test(
     name = "merged_namespaces_test",
     crate = "merged_namespaces",
-    deps = ["//common:token_stream_matchers"],
+    deps = [
+        "//common:token_stream_matchers",
+        "//third_party/gtest_rust/googletest",
+    ],
 )

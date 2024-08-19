@@ -94,14 +94,16 @@ fn find_cc_template_calls(input: TokenStream, results: &mut HashSet<String>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use arc_anyhow::Result;
+    use googletest::prelude::*;
     use quote::quote;
 
-    #[test]
+    #[gtest]
     fn test_noop() {
         assert!(collect_instantiations_impl(vec![]).unwrap().is_empty());
     }
 
-    #[test]
+    #[gtest]
     fn test_file_does_not_exist() {
         let err = collect_instantiations_impl(vec!["does/not/exist".into()]).unwrap_err();
         assert_eq!(
@@ -122,7 +124,7 @@ mod tests {
         collect_instantiations_impl(vec![file])
     }
 
-    #[test]
+    #[gtest]
     fn test_file_doesnt_parse() {
         let input = make_tmp_input_file("does_not_parse", "This is not (Rust>!");
         let err = collect_instantiations_impl(vec![input.clone()]).unwrap_err();
@@ -132,7 +134,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_single_template_parens() {
         let result =
             write_file_and_collect_instantiations(quote! { cc_template!(MyTemplate<int>) })
@@ -140,7 +142,7 @@ mod tests {
         assert_eq!(result, vec!["MyTemplate<int>".to_string()]);
     }
 
-    #[test]
+    #[gtest]
     fn test_single_template_brackets() {
         let result =
             write_file_and_collect_instantiations(quote! { cc_template![MyTemplate<int>] })
@@ -148,7 +150,7 @@ mod tests {
         assert_eq!(result, vec!["MyTemplate<int>".to_string()]);
     }
 
-    #[test]
+    #[gtest]
     fn test_single_template_curlies() {
         let result =
             write_file_and_collect_instantiations(quote! { cc_template!{MyTemplate<int>} })
@@ -156,7 +158,7 @@ mod tests {
         assert_eq!(result, vec!["MyTemplate<int>".to_string()]);
     }
 
-    #[test]
+    #[gtest]
     fn test_multiple_instantiations() {
         let result = write_file_and_collect_instantiations(quote! {
             cc_template!(MyTemplate<short>);
@@ -174,7 +176,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_instantiations_in_subgroups() {
         let result = write_file_and_collect_instantiations(quote! {
             fn my_rust_func(input: cc_template!(std::vector<Foo>)) ->
@@ -193,7 +195,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_identical_instantiations() {
         let result = write_file_and_collect_instantiations(quote! {
             fn my_rust_func(input: cc_template!(std::vector<Foo>)) ->
@@ -212,7 +214,7 @@ mod tests {
         std::str::from_utf8(&u8_slice).unwrap().to_string()
     }
 
-    #[test]
+    #[gtest]
     fn test_collect_instantiations_json() {
         let filename = make_tmp_input_file(
             "json",

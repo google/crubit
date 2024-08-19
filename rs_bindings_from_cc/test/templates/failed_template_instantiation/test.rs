@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use failed_template_instantiation::*;
+use googletest::prelude::*;
 
-#[test]
+#[gtest]
 fn test_build() {
     let ok = Ok::default();
     Func1(ok);

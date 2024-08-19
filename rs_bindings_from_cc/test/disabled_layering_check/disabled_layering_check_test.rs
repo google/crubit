@@ -2,7 +2,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[test]
+use googletest::prelude::*;
+
+#[gtest]
 fn test_disabled_layering_check() {
     assert_eq!(top_lib::GetValFromMyStruct(my_lib::MyStruct { val: 42 }), 42);
 }

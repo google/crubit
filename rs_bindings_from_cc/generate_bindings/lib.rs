@@ -1446,6 +1446,8 @@ fn generate_rs_api_impl_includes(
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+    use arc_anyhow::Result;
+    use googletest::prelude::*;
     use ir_testing::{make_ir_from_items, retrieve_func, with_lifetime_macros};
     use static_assertions::{assert_impl_all, assert_not_impl_any};
     use token_stream_matchers::{
@@ -1484,7 +1486,7 @@ pub(crate) mod tests {
         ))
     }
 
-    #[test]
+    #[gtest]
     fn test_disable_thread_safety_warnings() -> Result<()> {
         let ir = ir_from_cc("inline void foo() {}")?;
         let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
@@ -1504,7 +1506,7 @@ pub(crate) mod tests {
     }
 
     // TODO(b/200067824): These should generate nested types.
-    #[test]
+    #[gtest]
     fn test_nested_type_definitions() -> Result<()> {
         for nested_type in ["enum NotPresent {};", "struct NotPresent {};", "struct NotPresent;"] {
             let ir = ir_from_cc(&format!(
@@ -1524,7 +1526,7 @@ pub(crate) mod tests {
 
     /// Unlike other nested type definitions, typedefs can use the aliased type
     /// instead.
-    #[test]
+    #[gtest]
     fn test_typedef_member() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -1547,7 +1549,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_struct_from_other_target() -> Result<()> {
         let ir = ir_from_cc_dependency("// intentionally empty", "struct SomeStruct {};")?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -1556,7 +1558,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
         let ir = ir_from_cc(r#" int (*get_ptr_to_func())(float, double); "#)?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -1596,7 +1598,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_func_ref() -> Result<()> {
         let ir = ir_from_cc(r#" int (&get_ref_to_func())(float, double); "#)?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -1612,7 +1614,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_func_ptr_with_non_static_lifetime() -> Result<()> {
         let ir = ir_from_cc(&with_lifetime_macros(
             r#"
@@ -1628,7 +1630,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
         let ir = ir_from_cc(r#" const int* (*get_ptr_to_func())(const int*); "#)?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -1682,7 +1684,7 @@ pub(crate) mod tests {
     mod custom_abi_tests {
         use super::*;
         use ir_matchers::assert_ir_matches;
-        #[test]
+        #[gtest]
         fn test_func_ptr_with_custom_abi() -> Result<()> {
             if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
                 return Ok(());
@@ -1747,7 +1749,7 @@ pub(crate) mod tests {
             Ok(())
         }
 
-        #[test]
+        #[gtest]
         fn test_func_ptr_with_custom_abi_thunk() -> Result<()> {
             if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
                 return Ok(());
@@ -1801,7 +1803,7 @@ pub(crate) mod tests {
             Ok(())
         }
 
-        #[test]
+        #[gtest]
         fn test_custom_abi_thunk() -> Result<()> {
             if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
                 return Ok(());
@@ -1868,7 +1870,7 @@ pub(crate) mod tests {
         }
     }
 
-    #[test]
+    #[gtest]
     fn test_item_order() -> Result<()> {
         let ir = ir_from_cc(
             "int first_func();
@@ -1897,7 +1899,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_enum_basic() -> Result<()> {
         let ir = ir_from_cc("enum Color { kRed = 5, kBlue };")?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -1927,7 +1929,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_opaque_enum() -> Result<()> {
         let ir = ir_from_cc("enum Color : int;")?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -1935,7 +1937,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_scoped_enum_basic() -> Result<()> {
         let ir = ir_from_cc("enum class Color { kRed = -5, kBlue };")?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -1965,7 +1967,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
         let ir = ir_from_cc(
             r#"enum Color : long {
@@ -2006,7 +2008,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
         let ir = ir_from_cc(
             r#" enum Color: unsigned long {
@@ -2043,7 +2045,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_enum_with_32_bit_signed_vals() -> Result<()> {
         let ir = ir_from_cc(
             "enum Color { kViolet = -2147483647 - 1, kRed = -5, kBlue, kGreen = 3, kMagenta = 2147483647 };",
@@ -2078,7 +2080,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_enum_with_32_bit_unsigned_vals() -> Result<()> {
         let ir = ir_from_cc("enum Color: unsigned int { kRed, kBlue, kLimeGreen = 4294967295 };")?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -2109,7 +2111,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_enum_bool() -> Result<()> {
         let ir = ir_from_cc("enum Bool : bool { kFalse, kTrue };")?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -2139,7 +2141,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_enum_bool_alias() -> Result<()> {
         let ir = ir_from_cc("using MyBool = bool; enum Bool : MyBool { kFalse, kTrue };")?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -2171,7 +2173,7 @@ pub(crate) mod tests {
 
     /// At the least, a trivial type should have no drop impl if or until we add
     /// empty drop impls.
-    #[test]
+    #[gtest]
     fn test_no_impl_drop() -> Result<()> {
         let ir = ir_from_cc("struct Trivial {};")?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -2182,7 +2184,7 @@ pub(crate) mod tests {
 
     /// User-defined destructors *must* become Drop impls with ManuallyDrop
     /// fields
-    #[test]
+    #[gtest]
     fn test_impl_drop_user_defined_destructor() -> Result<()> {
         let ir = ir_from_cc(
             r#" struct NontrivialStruct { ~NontrivialStruct(); };
@@ -2214,7 +2216,7 @@ pub(crate) mod tests {
 
     /// nontrivial types without user-defined destructors should invoke
     /// the C++ destructor to preserve the order of field destructions.
-    #[test]
+    #[gtest]
     fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
         // TODO(jeanpierreda): This would be cleaner if the UserDefinedDestructor code were
         // omitted. For example, we simulate it so that UserDefinedDestructor
@@ -2251,7 +2253,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_type_alias() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2293,7 +2295,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_type_kind_implements_copy() -> Result<()> {
         let template = r#" LIFETIMES
             struct [[clang::trivial_abi]] TrivialStruct final { int i; };
@@ -2426,7 +2428,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
         let db = db_from_cc(
             "#pragma clang lifetime_elision
@@ -2458,7 +2460,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_type_kind_is_shared_ref_to_without_lifetimes() -> Result<()> {
         let db = db_from_cc(
             "struct SomeStruct {};
@@ -2479,7 +2481,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_type_kind_lifetimes() -> Result<()> {
         let db = db_from_cc(
             r#"
@@ -2510,7 +2512,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_type_kind_lifetimes_raw_ptr() -> Result<()> {
         let db = db_from_cc("void foo(int* a);")?;
         let ir = db.ir();
@@ -2520,7 +2522,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_type_kind_rejects_func_ptr_that_returns_struct_by_value() -> Result<()> {
         let db = db_from_cc(
             r#"
@@ -2545,7 +2547,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_rs_type_kind_rejects_func_ptr_that_takes_struct_by_value() -> Result<()> {
         let db = db_from_cc(
             r#"
@@ -2570,7 +2572,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_rust_keywords_are_escaped_in_rs_api_file() -> Result<()> {
         let ir = ir_from_cc("struct type { int dyn; };")?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -2578,7 +2580,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_rust_keywords_are_not_escaped_in_rs_api_impl_file() -> Result<()> {
         let ir = ir_from_cc("struct type { int dyn; };")?;
         let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
@@ -2589,7 +2591,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_namespace_module_items() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -2627,7 +2629,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_detail_outside_of_namespace_module() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -2658,7 +2660,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_assertions_outside_of_namespace_module() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -2690,7 +2692,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_reopened_namespaces() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -2728,7 +2730,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_qualified_identifiers_in_impl_file() -> Result<()> {
         let rs_api_impl = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -2757,7 +2759,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_inline_namespace() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -2802,7 +2804,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_inline_namespace_not_marked_inline() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
@@ -2836,13 +2838,13 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_doc_comment_with_no_comment_with_no_source_loc_with_source_loc_enabled() {
         let actual = generate_doc_comment(None, None, SourceLocationDocComment::Enabled);
         assert!(actual.is_empty());
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_doc_comment_with_no_comment_with_source_loc_with_source_loc_enabled() {
         let actual = generate_doc_comment(
             None,
@@ -2852,7 +2854,7 @@ pub(crate) mod tests {
         assert_rs_matches!(actual, quote! {#[doc = " google3/some/header;l=11"]});
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_doc_comment_with_comment_with_source_loc_with_source_loc_enabled() {
         let actual = generate_doc_comment(
             Some("Some doc comment"),
@@ -2865,20 +2867,20 @@ pub(crate) mod tests {
         );
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_doc_comment_with_comment_with_no_source_loc_with_source_loc_enabled() {
         let actual =
             generate_doc_comment(Some("Some doc comment"), None, SourceLocationDocComment::Enabled);
         assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
     }
 
-    #[test]
+    #[gtest]
     fn test_no_generate_doc_comment_with_no_comment_with_no_source_loc_with_source_loc_disabled() {
         let actual = generate_doc_comment(None, None, SourceLocationDocComment::Disabled);
         assert!(actual.is_empty());
     }
 
-    #[test]
+    #[gtest]
     fn test_no_generate_doc_comment_with_no_comment_with_source_loc_with_source_loc_disabled() {
         let actual = generate_doc_comment(
             None,
@@ -2888,7 +2890,7 @@ pub(crate) mod tests {
         assert!(actual.is_empty());
     }
 
-    #[test]
+    #[gtest]
     fn test_no_generate_doc_comment_with_comment_with_source_loc_with_source_loc_disabled() {
         let actual = generate_doc_comment(
             Some("Some doc comment"),
@@ -2898,7 +2900,7 @@ pub(crate) mod tests {
         assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
     }
 
-    #[test]
+    #[gtest]
     fn test_no_generate_doc_comment_with_comment_with_no_source_loc_with_source_loc_disabled() {
         let actual = generate_doc_comment(
             Some("Some doc comment"),
@@ -2926,7 +2928,7 @@ pub(crate) mod tests {
         }
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
         let db = Database::new(
             Rc::new(make_ir_from_items([])),
@@ -2949,7 +2951,7 @@ pub(crate) mod tests {
     /// Not all items currently have source_loc(), e.g. comments.
     ///
     /// For these, we omit the mention of the location.
-    #[test]
+    #[gtest]
     fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
         let db = Database::new(
             Rc::new(make_ir_from_items([])),
@@ -2969,7 +2971,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_generate_unsupported_item_with_source_loc_disabled() -> Result<()> {
         let db = Database::new(
             Rc::new(make_ir_from_items([])),
@@ -2992,7 +2994,7 @@ pub(crate) mod tests {
     /// Enumerators with unknown attributes on otherwise-ok enums are omitted.
     ///
     /// This is hard to test any other way than token comparison!
-    #[test]
+    #[gtest]
     fn test_supported_unknown_attr_enumerator() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"
@@ -3013,7 +3015,7 @@ pub(crate) mod tests {
     ///
     /// This is hard to test any other way than token comparison, because it's
     /// hard to test for the nonexistence of a module.
-    #[test]
+    #[gtest]
     fn test_supported_unknown_attr_namespace() -> Result<()> {
         for nested_notpresent in
             ["struct NotPresent {};", "struct NotPresent;", "enum NotPresent {};"]
@@ -3043,7 +3045,7 @@ pub(crate) mod tests {
 
     /// Namespaces with an unknown attribute are still merged with the same
     /// namespace with no unknown attribute.
-    #[test]
+    #[gtest]
     fn test_supported_unknown_attr_namespace_merge() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"
@@ -3072,7 +3074,7 @@ pub(crate) mod tests {
 
     /// Namespaces with an unknown attribute are not present in supported, but
     /// their typedefs are.
-    #[test]
+    #[gtest]
     fn test_supported_unknown_attr_namespace_typedef() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"
@@ -3097,7 +3099,7 @@ pub(crate) mod tests {
     }
 
     /// The default crubit feature set currently doesn't include supported.
-    #[test]
+    #[gtest]
     fn test_default_crubit_features_disabled_supported() -> Result<()> {
         for item in [
             "extern \"C\" void NotPresent() {}",
@@ -3123,7 +3125,7 @@ pub(crate) mod tests {
     }
 
     /// The default crubit feature set currently doesn't include experimetnal.
-    #[test]
+    #[gtest]
     fn test_default_crubit_features_disabled_experimental() -> Result<()> {
         let mut ir = ir_from_cc("struct NotPresent {~NotPresent();};")?;
         ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
@@ -3139,7 +3141,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_default_crubit_features_disabled_dependency_supported_function_parameter() -> Result<()>
     {
         for dependency in ["struct NotPresent {};"] {
@@ -3158,7 +3160,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_default_crubit_features_disabled_dependency_experimental_function_parameter()
     -> Result<()> {
         let mut ir =
@@ -3176,7 +3178,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_default_crubit_features_disabled_dependency_supported_function_return_type()
     -> Result<()> {
         let mut ir = ir_from_cc_dependency("NotPresent Func();", "struct NotPresent {};")?;
@@ -3193,7 +3195,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_default_crubit_features_disabled_dependency_experimental_function_return_type()
     -> Result<()> {
         let mut ir =
@@ -3211,7 +3213,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_default_crubit_features_disabled_dependency_struct() -> Result<()> {
         for dependency in ["struct NotPresent {signed char x;};", "using NotPresent = signed char;"]
         {
@@ -3231,7 +3233,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_type_map_override_assert() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#" #pragma clang lifetime_elision
@@ -3257,7 +3259,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_type_map_override_c_abi_incompatible() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#" #pragma clang lifetime_elision
@@ -3284,7 +3286,7 @@ pub(crate) mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn test_type_map_override_c_abi_compatible() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#" #pragma clang lifetime_elision
@@ -3313,7 +3315,7 @@ pub(crate) mod tests {
     }
 
     /// We cannot generate size/align assertions for incomplete types.
-    #[test]
+    #[gtest]
     fn test_type_map_override_assert_incomplete() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#" #pragma clang lifetime_elision

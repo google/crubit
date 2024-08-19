@@ -14,6 +14,9 @@ crubit_rust_test(
     cc_deps = [
         ":use_forward_declared_template",
     ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
+    ],
 )
 
 crubit_test_cc_library(
@@ -33,6 +36,9 @@ crubit_rust_test(
     cc_deps = [
         ":definition_forward_declared_template_with_crubit_disabled",
         ":use_forward_declared_template",
+    ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
     ],
 )
 
@@ -56,5 +62,8 @@ crubit_rust_test(
         "manual",
         "nobuilder",
         "notap",
+    ],
+    deps = [
+        "//third_party/gtest_rust/googletest",
     ],
 )
