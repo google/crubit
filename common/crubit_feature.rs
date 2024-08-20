@@ -90,13 +90,30 @@ impl<'de> Deserialize<'de> for SerializedCrubitFeatures {
     where
         D: serde::Deserializer<'de>,
     {
-        let mut features = flagset::FlagSet::<CrubitFeature>::default();
-        for SerializedCrubitFeature(feature) in
-            <Vec<SerializedCrubitFeature> as Deserialize<'de>>::deserialize(deserializer)?
-        {
-            features |= feature;
+        struct CrubitFeaturesVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for CrubitFeaturesVisitor {
+            type Value = SerializedCrubitFeatures;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a sequence of Crubit feature flag names")
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::SeqAccess<'de>,
+            {
+                let mut result = <flagset::FlagSet<CrubitFeature>>::default();
+
+                while let Some(SerializedCrubitFeature(flags)) = seq.next_element()? {
+                    result |= flags;
+                }
+
+                Ok(SerializedCrubitFeatures(result))
+            }
         }
-        Ok(SerializedCrubitFeatures(features))
+
+        deserializer.deserialize_seq(CrubitFeaturesVisitor)
     }
 }
 
