@@ -27,12 +27,14 @@ use rustc_hir::def::{DefKind, Res};
 use rustc_hir::{AssocItemKind, HirId, Item, ItemKind, Node, Safety, UseKind, UsePath};
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::dep_graph::DepContext;
+use rustc_middle::mir::interpret::InterpResult;
+use rustc_middle::mir::ConstValue;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_target::abi::{
-    Abi, AddressSpace, FieldsShape, Integer, Layout, Pointer, Primitive, Scalar,
+    Abi, AddressSpace, FieldsShape, HasDataLayout, Integer, Layout, Pointer, Primitive, Scalar,
 };
 use rustc_trait_selection::infer::InferCtxtExt;
 use rustc_type_ir::RegionKind;
@@ -1418,6 +1420,109 @@ fn format_use(
             use_path.res
         ),
     }
+}
+
+fn format_const_value_to_cc(
+    cx: &impl HasDataLayout,
+    kind: &ty::TyKind,
+    value: &ConstValue,
+) -> Result<String> {
+    macro_rules! convert {
+        ($kind:expr, $value:expr, $(($rust_type:pat, $to_method:ident)),*) => {
+            match $kind {
+                $(
+                    $rust_type => {
+                        Ok(match $value {
+                            ConstValue::Scalar(scalar) => {
+                                if let InterpResult::Ok(value) = scalar.$to_method() {
+                                    value.to_string()
+                                } else {
+                                    panic!("Failed to evaluate constant scalar.")
+                                }
+                            },
+                            _ => panic!("Unexpected ConstValue type."),
+                        })
+                    },
+                )*
+                ty::TyKind::Uint(ty::UintTy::Usize) => {
+                    Ok(match value {
+                        ConstValue::Scalar(scalar) => {
+                            if let InterpResult::Ok(value) = scalar.to_target_usize(cx) {
+                                value.to_string()
+                            } else {
+                                panic!("Failed to evaluate constant scalar (usize).")
+                            }
+                        },
+                        _ => panic!("Unexpected ConstValue type."),
+                    })
+                },
+                ty::TyKind::Int(ty::IntTy::Isize) => {
+                    Ok(match value {
+                        ConstValue::Scalar(scalar) => {
+                            if let InterpResult::Ok(value) = scalar.to_target_isize(cx) {
+                                value.to_string()
+                            } else {
+                                panic!("Failed to evaluate constant scalar (isize).")
+                            }
+                        },
+                        _ => panic!("Unexpected ConstValue type."),
+                    })
+                },
+                _ => Err(anyhow!("Unsupported constant type.")),
+            }
+        };
+    }
+
+    convert!(
+        kind,
+        value,
+        (ty::TyKind::Bool, to_bool),
+        (ty::TyKind::Int(ty::IntTy::I8), to_i8),
+        (ty::TyKind::Int(ty::IntTy::I16), to_i16),
+        (ty::TyKind::Int(ty::IntTy::I32), to_i32),
+        (ty::TyKind::Int(ty::IntTy::I64), to_i64),
+        (ty::TyKind::Uint(ty::UintTy::U8), to_u8),
+        (ty::TyKind::Uint(ty::UintTy::U16), to_u16),
+        (ty::TyKind::Uint(ty::UintTy::U32), to_u32),
+        (ty::TyKind::Uint(ty::UintTy::U64), to_u64),
+        (ty::TyKind::Float(ty::FloatTy::F32), to_f32),
+        (ty::TyKind::Float(ty::FloatTy::F64), to_f64)
+    )
+}
+
+fn format_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result<ApiSnippets> {
+    let tcx = db.tcx();
+    let def_id: DefId = local_def_id.to_def_id();
+    let node = tcx.hir_node_by_def_id(local_def_id);
+
+    if let Node::Item(item) = node {
+        if let ItemKind::Const(hir_ty, ..) = item.kind {
+            let ty = tcx.type_of(def_id).instantiate_identity();
+
+            let value = tcx.const_eval_poly(def_id).unwrap();
+
+            let cc_type_snippet =
+                format_ty_for_cc(db, SugaredTy::new(ty, Some(hir_ty)), TypeLocation::Other)?;
+            let cc_value = format_const_value_to_cc(&tcx, ty.kind(), &value)?;
+
+            let cc_type = cc_type_snippet.tokens;
+            let cc_value: TokenStream = cc_value.parse().unwrap();
+            let cc_name: TokenStream = format_cc_ident(tcx.item_name(def_id).as_str())?;
+
+            return Ok(ApiSnippets {
+                main_api: CcSnippet {
+                    tokens: quote! {
+                        constexpr #cc_type #cc_name = #cc_value;
+                    },
+                    ..cc_type_snippet
+                },
+                cc_details: CcSnippet::default(),
+                rs_details: quote! {},
+            });
+        }
+        panic!("Called format_const on a non-constant");
+    }
+    panic!("Called format_const on a non-item");
 }
 
 fn format_type_alias(
@@ -2927,6 +3032,7 @@ fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Opt
         Item { ident, kind: ItemKind::Use(use_path, use_kind), ..} => {
             format_use(db, ident.as_str(), use_path, use_kind).map(Some)
         },
+        Item { kind: ItemKind::Const(..), .. } => format_const(db, def_id).map(Some),
         Item { kind: ItemKind::Impl(_), .. } |  // Handled by `format_adt`
         Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
             Ok(None),
@@ -3933,6 +4039,148 @@ pub mod tests {
 
             // There is no need to have a separate thunk for an `extern "C"` function.
             assert!(result.rs_details.is_empty());
+        });
+    }
+
+    #[test]
+    fn test_format_const() {
+        let test_src = r#"
+            pub const BOOL_TRUE: bool = true;
+            pub const BOOL_FALSE: bool = false;
+            pub const INT_POS: i32 = 42;
+            pub const INT_NEG: i32 = -17;
+            pub const FLOAT_32: f32 = 0.125; // 2^(-3)
+            pub const FLOAT_64: f64 = 0.0078125; // 2^(-7)
+            pub const LARGE_INT: i64 = 9223372036854775807;
+            pub const UNSIGNED_INT: u32 = 4294967295;
+            pub const SLICE_LENGTH: usize = "hello world".len();
+            pub const ISIZE: isize = 42;
+            use core::ffi::c_char;
+            pub const CHAR: c_char = 42;
+        "#;
+
+        test_format_item(test_src, "BOOL_TRUE", |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr bool BOOL_TRUE = true;
+                }
+            );
+        });
+
+        test_format_item(test_src, "BOOL_FALSE", |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr bool BOOL_FALSE = false;
+                }
+            );
+        });
+
+        test_format_item(test_src, "INT_POS", |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr std::int32_t INT_POS = 42;
+                }
+            );
+        });
+
+        test_format_item(test_src, "LARGE_INT", |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr std::int64_t LARGE_INT = 9223372036854775807;
+                }
+            );
+        });
+
+        test_format_item(test_src, "UNSIGNED_INT", |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr std::uint32_t UNSIGNED_INT = 4294967295;
+                }
+            );
+        });
+
+        test_format_item(test_src, "INT_NEG", |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr std::int32_t INT_NEG = -17;
+                }
+            );
+        });
+
+        test_format_item(test_src, "FLOAT_32", |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr float FLOAT_32 = 0.125;
+                }
+            );
+        });
+
+        test_format_item(test_src, "FLOAT_64", |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr double FLOAT_64 = 0.0078125;
+                }
+            );
+        });
+
+        test_format_item(test_src, "SLICE_LENGTH", |result| {
+            let result = result.unwrap().unwrap();
+            assert_eq!("hello world".len(), 11);
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr std::uintptr_t SLICE_LENGTH = 11;
+                }
+            );
+        });
+
+        test_format_item(test_src, "ISIZE", |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr std::intptr_t ISIZE = 42;
+                }
+            );
+        });
+
+        test_format_item(test_src, "CHAR", |result| {
+            let result = result.unwrap().unwrap();
+            assert_eq!("hello world".len(), 11);
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr char CHAR = 42;
+                }
+            );
+        });
+
+        let test_src = r#"
+                #![allow(nonstandard_style)]
+                pub const reinterpret_cast: u32 = 42;
+            "#;
+        test_format_item(test_src, "reinterpret_cast", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "`reinterpret_cast` is a C++ reserved keyword and can't be used as a C++ identifier"
+            );
         });
     }
 
@@ -7295,17 +7543,6 @@ pub mod tests {
         test_format_item(test_src, "STATIC_VALUE", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: static item");
-        });
-    }
-
-    #[test]
-    fn test_format_item_unsupported_const_value() {
-        let test_src = r#"
-                pub const CONST_VALUE: i32 = 42;
-            "#;
-        test_format_item(test_src, "CONST_VALUE", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: constant item");
         });
     }
 
