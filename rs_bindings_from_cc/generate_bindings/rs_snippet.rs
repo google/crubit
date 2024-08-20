@@ -8,6 +8,7 @@ use crate::BindingsGenerator;
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::NamespaceQualifier;
+use crubit_feature::CrubitFeature;
 use error_report::bail;
 use ir::*;
 use itertools::Itertools;
@@ -432,18 +433,17 @@ impl RsTypeKind {
     /// merge these two functions.
     pub fn required_crubit_features(
         &self,
-        enabled_features: flagset::FlagSet<ir::CrubitFeature>,
-    ) -> (flagset::FlagSet<ir::CrubitFeature>, String) {
+        enabled_features: flagset::FlagSet<CrubitFeature>,
+    ) -> (flagset::FlagSet<CrubitFeature>, String) {
         // TODO(b/318006909): Explain why a given feature is required, don't just return
         // a FlagSet.
 
-        let mut missing_features = <flagset::FlagSet<ir::CrubitFeature>>::default();
+        let mut missing_features = <flagset::FlagSet<CrubitFeature>>::default();
         let mut reasons = <std::collections::BTreeSet<std::borrow::Cow<'static, str>>>::new();
         let mut require_feature =
-            |required_feature: ir::CrubitFeature,
+            |required_feature: CrubitFeature,
              reason: Option<&dyn Fn() -> std::borrow::Cow<'static, str>>| {
-                let required_features =
-                    <flagset::FlagSet<ir::CrubitFeature>>::from(required_feature);
+                let required_features = <flagset::FlagSet<CrubitFeature>>::from(required_feature);
                 let missing = required_features - enabled_features;
                 if !missing.is_empty() {
                     missing_features |= missing;
@@ -1109,11 +1109,8 @@ mod tests {
             },
         ] {
             let (missing_features, reason) =
-                func_ptr.required_crubit_features(<flagset::FlagSet<ir::CrubitFeature>>::default());
-            assert_eq!(
-                missing_features,
-                ir::CrubitFeature::Experimental | ir::CrubitFeature::Supported
-            );
+                func_ptr.required_crubit_features(<flagset::FlagSet<CrubitFeature>>::default());
+            assert_eq!(missing_features, CrubitFeature::Experimental | CrubitFeature::Supported);
             assert_eq!(reason, "references are not supported");
         }
     }

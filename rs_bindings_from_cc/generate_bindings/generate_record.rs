@@ -115,7 +115,7 @@ fn get_field_rs_type_kind_for_layout(
         for target in record.defining_target.iter().chain([&record.owning_target]) {
             let enabled_features = db.ir().target_crubit_features(target);
             ensure!(
-                enabled_features.contains(ir::CrubitFeature::Experimental),
+                enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
                 "unknown field attributes are only supported with experimental features \
                 enabled on {target}\nUnknown attribute: {unknown_attr}`"
             );
@@ -145,7 +145,7 @@ fn get_field_rs_type_kind_for_layout(
         for target in record.defining_target.iter().chain([&record.owning_target]) {
             let enabled_features = db.ir().target_crubit_features(target);
             ensure!(
-                enabled_features.contains(ir::CrubitFeature::Experimental),
+                enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
                 "nontrivial fields would be destroyed in the wrong order"
             );
         }
@@ -557,15 +557,18 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
     if let Some(defining_target) = &record.defining_target {
         crubit_features |= ir.target_crubit_features(defining_target);
     }
-    if crubit_features.contains(ir::CrubitFeature::Experimental) {
+    if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
         record_generated_items.push(cc_struct_upcast_impl(record, &ir)?);
     }
-    let no_unique_address_accessors = if crubit_features.contains(ir::CrubitFeature::Experimental) {
-        cc_struct_no_unique_address_impl(db, record)?
-    } else {
-        quote! {}
-    };
-    let incomplete_definition = if crubit_features.contains(ir::CrubitFeature::Experimental) {
+    let no_unique_address_accessors =
+        if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
+            cc_struct_no_unique_address_impl(db, record)?
+        } else {
+            quote! {}
+        };
+    let incomplete_definition = if crubit_features
+        .contains(crubit_feature::CrubitFeature::Experimental)
+    {
         quote! {
             forward_declare::unsafe_define!(forward_declare::symbol!(#fully_qualified_cc_name), #qualified_ident);
         }
@@ -2633,7 +2636,7 @@ mod tests {
         "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::Supported.into();
+            crubit_feature::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
@@ -2660,7 +2663,7 @@ mod tests {
             "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::Supported.into();
+            crubit_feature::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         // Note: inner is a supported type, so it isn't being replaced by a blob because
         // it's unsupporter or anything.
@@ -2687,7 +2690,7 @@ mod tests {
         "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::Supported.into();
+            crubit_feature::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,

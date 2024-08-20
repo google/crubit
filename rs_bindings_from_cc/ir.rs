@@ -8,6 +8,7 @@
 
 use arc_anyhow::{anyhow, bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, NamespaceQualifier};
+use crubit_feature::CrubitFeature;
 use once_cell::unsync::OnceCell;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
@@ -79,7 +80,9 @@ where
         crate_root_path,
         crubit_features: crubit_features
             .into_iter()
-            .map(|(label, features)| (label, CrubitFeaturesIR(features.into())))
+            .map(|(label, features)| {
+                (label, crubit_feature::SerializedCrubitFeatures(features.into()))
+            })
             .collect(),
     })
 }
@@ -1166,60 +1169,6 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Namespace> {
     }
 }
 
-flagset::flags! {
-    pub enum CrubitFeature : u8 {
-        Supported,
-        /// Experimental is never *set* without also setting Supported, but we allow it to be
-        /// *required* without also requiring Supported, so that error messages can be more direct.
-        Experimental,
-    }
-}
-
-impl CrubitFeature {
-    /// The name of this feature.
-    pub fn short_name(&self) -> &'static str {
-        match self {
-            Self::Supported => "supported",
-            Self::Experimental => "experimental",
-        }
-    }
-
-    /// The aspect hint required to enable this feature.
-    pub fn aspect_hint(&self) -> &'static str {
-        match self {
-            Self::Supported => "//features:supported",
-            Self::Experimental => "//features:experimental",
-        }
-    }
-}
-
-/// A newtype around a flagset of features, so that it can be deserialized from
-/// an array of strings instead of an integer.
-#[derive(Debug, Default, PartialEq, Eq, Clone)]
-struct CrubitFeaturesIR(pub(crate) flagset::FlagSet<CrubitFeature>);
-
-impl<'de> serde::Deserialize<'de> for CrubitFeaturesIR {
-    fn deserialize<D>(deserializer: D) -> Result<CrubitFeaturesIR, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let mut features = flagset::FlagSet::<CrubitFeature>::default();
-        for feature in <Vec<String> as serde::Deserialize<'de>>::deserialize(deserializer)? {
-            features |= match &*feature {
-                "all" => flagset::FlagSet::<CrubitFeature>::full(),
-                "supported" => CrubitFeature::Supported.into(),
-                "experimental" => CrubitFeature::Experimental.into(),
-                other => {
-                    return Err(<D::Error as serde::de::Error>::custom(format!(
-                        "Unexpected Crubit feature: {other}"
-                    )));
-                }
-            };
-        }
-        Ok(CrubitFeaturesIR(features))
-    }
-}
-
 #[derive(PartialEq, Eq, Clone, Deserialize)]
 #[serde(deny_unknown_fields, rename(deserialize = "IR"))]
 struct FlatIR {
@@ -1233,7 +1182,7 @@ struct FlatIR {
     #[serde(default)]
     crate_root_path: Option<Rc<str>>,
     #[serde(default)]
-    crubit_features: HashMap<BazelLabel, CrubitFeaturesIR>,
+    crubit_features: HashMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
 }
 
 /// A custom debug impl that wraps the HashMap in rustfmt-friendly notation.

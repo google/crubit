@@ -616,7 +616,7 @@ enum NoBindingsReason {
 /// RequiredCrubitFeature {
 ///   target: "//foo".into(),
 ///   item: "kFoo".into(),
-///   missing_features: ir::CrubitFeature::Experimental.into(),
+///   missing_features: CrubitFeature::Experimental.into(),
 ///   capability_description: "int addition".into(),
 /// }
 /// ```
@@ -624,7 +624,7 @@ enum NoBindingsReason {
 pub struct RequiredCrubitFeature {
     pub target: BazelLabel,
     pub item: Rc<str>,
-    pub missing_features: flagset::FlagSet<ir::CrubitFeature>,
+    pub missing_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
     pub capability_description: Rc<str>,
 }
 
@@ -751,7 +751,7 @@ fn required_crubit_features(
 
     let require_any_feature =
         |missing_features: &mut Vec<RequiredCrubitFeature>,
-         alternative_required_features: flagset::FlagSet<ir::CrubitFeature>,
+         alternative_required_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
          capability_description: &dyn Fn() -> Rc<str>| {
             // We refuse to generate bindings if either the definition of an item, or
             // instantiation (if it is a template) of an item are in a translation unit
@@ -795,9 +795,11 @@ fn required_crubit_features(
     };
 
     if let Some(unknown_attr) = item.unknown_attr() {
-        require_any_feature(&mut missing_features, ir::CrubitFeature::Experimental.into(), &|| {
-            format!("unknown attribute(s): {unknown_attr}").into()
-        });
+        require_any_feature(
+            &mut missing_features,
+            crubit_feature::CrubitFeature::Experimental.into(),
+            &|| format!("unknown attribute(s): {unknown_attr}").into(),
+        );
     }
     match item {
         Item::UnsupportedItem(..) => {}
@@ -808,7 +810,7 @@ fn required_crubit_features(
                 // particular case, it's safe.
                 require_any_feature(
                     &mut missing_features,
-                    ir::CrubitFeature::Supported.into(),
+                    crubit_feature::CrubitFeature::Supported.into(),
                     &|| "destructors".into(),
                 );
             } else {
@@ -823,41 +825,41 @@ fn required_crubit_features(
                 if func.is_extern_c {
                     require_any_feature(
                         &mut missing_features,
-                        ir::CrubitFeature::Supported.into(),
+                        crubit_feature::CrubitFeature::Supported.into(),
                         &|| "extern \"C\" function".into(),
                     );
                 } else {
                     require_any_feature(
                         &mut missing_features,
-                        ir::CrubitFeature::Supported.into(),
+                        crubit_feature::CrubitFeature::Supported.into(),
                         &|| "non-extern \"C\" function".into(),
                     );
                 }
                 if !func.has_c_calling_convention {
                     require_any_feature(
                         &mut missing_features,
-                        ir::CrubitFeature::Experimental.into(),
+                        crubit_feature::CrubitFeature::Experimental.into(),
                         &|| "non-C calling convention".into(),
                     );
                 }
                 if func.is_noreturn {
                     require_any_feature(
                         &mut missing_features,
-                        ir::CrubitFeature::Experimental.into(),
+                        crubit_feature::CrubitFeature::Experimental.into(),
                         &|| "[[noreturn]] attribute".into(),
                     );
                 }
                 if func.nodiscard.is_some() {
                     require_any_feature(
                         &mut missing_features,
-                        ir::CrubitFeature::Experimental.into(),
+                        crubit_feature::CrubitFeature::Experimental.into(),
                         &|| "[[nodiscard]] attribute".into(),
                     );
                 }
                 if func.deprecated.is_some() {
                     require_any_feature(
                         &mut missing_features,
-                        ir::CrubitFeature::Experimental.into(),
+                        crubit_feature::CrubitFeature::Experimental.into(),
                         &|| "[[deprecated]] attribute".into(),
                     );
                 }
@@ -865,7 +867,7 @@ fn required_crubit_features(
                     if let Some(unknown_attr) = &param.unknown_attr {
                         require_any_feature(
                             &mut missing_features,
-                            ir::CrubitFeature::Experimental.into(),
+                            crubit_feature::CrubitFeature::Experimental.into(),
                             &|| {
                                 format!(
                                     "param {param} has unknown attribute(s): {unknown_attr}",
@@ -902,14 +904,14 @@ fn required_crubit_features(
         Item::Namespace(_) => {
             require_any_feature(
                 &mut missing_features,
-                ir::CrubitFeature::Supported.into(),
+                crubit_feature::CrubitFeature::Supported.into(),
                 &|| "namespace".into(),
             );
         }
         Item::IncompleteRecord(_) => {
             require_any_feature(
                 &mut missing_features,
-                ir::CrubitFeature::Experimental.into(),
+                crubit_feature::CrubitFeature::Experimental.into(),
                 &|| "incomplete type".into(),
             );
         }
@@ -917,7 +919,7 @@ fn required_crubit_features(
         Item::TypeMapOverride { .. } => {
             require_any_feature(
                 &mut missing_features,
-                ir::CrubitFeature::Experimental.into(),
+                crubit_feature::CrubitFeature::Experimental.into(),
                 &|| "type map override".into(),
             );
         }
@@ -3004,7 +3006,7 @@ pub(crate) mod tests {
             "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::Supported.into();
+            crubit_feature::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(rs_api, quote! {pub struct Enum});
         assert_rs_not_matches!(rs_api, quote! {kHidden});
@@ -3032,7 +3034,7 @@ pub(crate) mod tests {
                 "#
             ))?;
             *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-                ir::CrubitFeature::Supported.into();
+                crubit_feature::CrubitFeature::Supported.into();
             let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
             // The namespace, and everything in it or using it, will be missing from the
             // output.
@@ -3061,7 +3063,7 @@ pub(crate) mod tests {
             "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::Supported.into();
+            crubit_feature::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         // The namespace, and everything in it or using it, will be missing from the
         // output.
@@ -3088,7 +3090,7 @@ pub(crate) mod tests {
             "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
-            ir::CrubitFeature::Supported.into();
+            crubit_feature::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         // The namespace, and everything in it or using it, will be missing from the
         // output.

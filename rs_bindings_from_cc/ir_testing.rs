@@ -33,8 +33,9 @@ pub fn with_lifetime_macros(source: &str) -> String {
 
 /// Name of the current target used by `ir_from_cc` and `ir_from_cc_dependency`.
 pub const TESTING_TARGET: &str = "//test:testing_target";
-static TESTING_FEATURES: Lazy<flagset::FlagSet<ir::CrubitFeature>> =
-    Lazy::new(|| ir::CrubitFeature::Experimental | ir::CrubitFeature::Supported);
+static TESTING_FEATURES: Lazy<flagset::FlagSet<crubit_feature::CrubitFeature>> = Lazy::new(|| {
+    crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported
+});
 
 /// Update the IR to have common test-only items.
 ///
@@ -55,7 +56,7 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR {
         /* top_level_item_ids= */ vec![],
         /* crate_root_path= */ None,
         /* crubit_features= */
-        <HashMap<ir::BazelLabel, flagset::FlagSet<ir::CrubitFeature>>>::new(),
+        <HashMap<ir::BazelLabel, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new(),
     );
     update_test_ir(&mut ir);
     ir
@@ -160,7 +161,7 @@ mod tests {
             quote! {
                 crubit_features: hash_map!{
                     ...
-                    BazelLabel("//test:testing_target"): CrubitFeaturesIR(FlagSet(Supported|Experimental))
+                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Experimental))
                     ...
                 }
             }
@@ -174,7 +175,7 @@ mod tests {
             quote! {
                 crubit_features: hash_map!{
                     ...
-                    BazelLabel("//test:testing_target"): CrubitFeaturesIR(FlagSet(Supported|Experimental))
+                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Experimental))
                     ...
                 }
             }

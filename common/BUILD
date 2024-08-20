@@ -70,6 +70,15 @@ crubit_rust_test(
     ],
 )
 
+rust_library(
+    name = "crubit_feature",
+    srcs = ["crubit_feature.rs"],
+    deps = [
+        "@crate_index//:flagset",
+        "@crate_index//:serde",
+    ],
+)
+
 cc_library(
     name = "file_io",
     srcs = ["file_io.cc"],

@@ -19,6 +19,7 @@ rust_library(
     deps = [
         "//common:arc_anyhow",
         "//common:code_gen_utils",
+        "//common:crubit_feature",
         "//common:error_report",
         "//common:ffi_types",
         "//common:memoized",

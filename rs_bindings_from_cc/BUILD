@@ -346,6 +346,7 @@ rust_library(
     deps = [
         "//common:arc_anyhow",
         "//common:code_gen_utils",
+        "//common:crubit_feature",
         "//common:error_report",
         "@crate_index//:flagset",
         "@crate_index//:itertools",
@@ -374,6 +375,7 @@ rust_library(
         ":ir",
         ":json_from_cc",
         "//common:arc_anyhow",
+        "//common:crubit_feature",
         "//common:ffi_types",
         "//common:multiplatform_testing",
         "@crate_index//:flagset",
