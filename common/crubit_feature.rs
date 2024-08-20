@@ -43,17 +43,40 @@ impl<'de> Deserialize<'de> for SerializedCrubitFeature {
     where
         D: serde::Deserializer<'de>,
     {
-        let features = match <String as Deserialize<'de>>::deserialize(deserializer)?.as_str() {
-            "all" => flagset::FlagSet::<CrubitFeature>::full(),
-            "supported" => CrubitFeature::Supported.into(),
-            "experimental" => CrubitFeature::Experimental.into(),
-            other => {
-                return Err(<D::Error as serde::de::Error>::custom(format!(
-                    "Unexpected Crubit feature: {other}"
-                )));
+        // we can't just deserialize as a `&[u8]` or similar, because the bytes may be
+        // ephemeral (e.g. from a `\u` escape). Aside from that, serde_json also
+        // insists on handing out allocated strings sometimes. So we write our
+        // own visitor, which can always handle even ephemeral bytestrings.
+        struct CrubitFeatureVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for CrubitFeatureVisitor {
+            type Value = SerializedCrubitFeature;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a Crubit feature flag name")
             }
-        };
-        Ok(SerializedCrubitFeature(features))
+
+            fn visit_bytes<E>(self, bytes: &[u8]) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                let features = match bytes {
+                    b"all" => flagset::FlagSet::<CrubitFeature>::full(),
+                    b"supported" => CrubitFeature::Supported.into(),
+                    b"experimental" => CrubitFeature::Experimental.into(),
+                    other => {
+                        return Err(E::custom(format!(
+                            "Unexpected Crubit feature: {:?}",
+                            String::from_utf8_lossy(other)
+                        )));
+                    }
+                };
+
+                Ok(SerializedCrubitFeature(features))
+            }
+        }
+
+        deserializer.deserialize_bytes(CrubitFeatureVisitor)
     }
 }
 
