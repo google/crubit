@@ -11,12 +11,14 @@
 // Allow unused imports so that we can produce pathological aliases.
 #![allow(unused_imports)]
 
+use googletest::prelude::*;
+
 // pathological shadowed names: shadow important modules that the macros use.
 mod std {}
 mod ctor {}
 
 /// Expand emplace!{let ...} to test for hygiene.
-#[test]
+#[gtest]
 fn test_emplace_stmt_hygiene() {
     ::ctor::emplace! {
         let _x1 = 0;
@@ -27,13 +29,13 @@ fn test_emplace_stmt_hygiene() {
 }
 
 /// Expand emplace!(expr) to test for hygiene.
-#[test]
+#[gtest]
 fn test_emplace_expr_hygiene() {
     let _ = ::ctor::emplace!(4);
 }
 
 /// Expand ctor!{Struct{...}} to test for hygiene.
-#[test]
+#[gtest]
 fn test_ctor_struct_hygiene() {
     struct Struct {
         x: i32,
@@ -45,7 +47,7 @@ fn test_ctor_struct_hygiene() {
 }
 
 /// Expand ctor!{TupleStruct(...)} to test for hygiene.
-#[test]
+#[gtest]
 fn test_ctor_tuple_struct_hygiene() {
     struct TupleStruct(i32);
     unsafe impl ::ctor::RecursivelyPinned for TupleStruct {

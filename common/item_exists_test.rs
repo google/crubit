@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use googletest::prelude::*;
+
 // shadow core and std to try to break the proc macro :)
 mod std {}
 mod core {}
@@ -10,13 +12,13 @@ mod type_exists {
     #[allow(unused_imports)]
     use super::*;
 
-    #[test]
+    #[gtest]
     fn type_doesnt_exist() {
         mod m {}
         assert!(!item_exists::type_exists!(m::DoesNotExist));
     }
 
-    #[test]
+    #[gtest]
     fn struct_does_exist() {
         mod m {
             pub struct S {}
@@ -24,7 +26,7 @@ mod type_exists {
         assert!(item_exists::type_exists!(m::S));
     }
 
-    #[test]
+    #[gtest]
     fn unit_struct_does_exist() {
         mod m {
             pub struct S;
@@ -32,7 +34,7 @@ mod type_exists {
         assert!(item_exists::type_exists!(m::S));
     }
 
-    #[test]
+    #[gtest]
     fn tuple_struct_does_exist() {
         mod m {
             pub struct S();
@@ -40,7 +42,7 @@ mod type_exists {
         assert!(item_exists::type_exists!(m::S));
     }
 
-    #[test]
+    #[gtest]
     fn enum_does_exist() {
         mod m {
             pub enum E {}
@@ -48,7 +50,7 @@ mod type_exists {
         assert!(item_exists::type_exists!(m::E));
     }
 
-    #[test]
+    #[gtest]
     fn union_does_exist() {
         mod m {
             pub union U {
@@ -60,7 +62,7 @@ mod type_exists {
 
     /// When we use the same name in a type context, we find no such type
     /// exists.
-    #[test]
+    #[gtest]
     fn function_doesnt_exist() {
         mod m {
             #[allow(unused)]
@@ -69,7 +71,7 @@ mod type_exists {
         assert!(!item_exists::type_exists!(m::foo));
     }
 
-    #[test]
+    #[gtest]
     fn constant_doesnt_exist() {
         mod m {
             #[allow(unused)]
@@ -78,7 +80,7 @@ mod type_exists {
         assert!(!item_exists::type_exists!(m::X));
     }
 
-    #[test]
+    #[gtest]
     fn static_doesnt_exist() {
         mod m {
             #[allow(unused)]
@@ -87,7 +89,7 @@ mod type_exists {
         assert!(!item_exists::type_exists!(m::X));
     }
 
-    #[test]
+    #[gtest]
     fn mod_doesnt_exist() {
         mod m {
             mod m2 {}
@@ -95,7 +97,7 @@ mod type_exists {
         assert!(!item_exists::type_exists!(m::m2));
     }
 
-    #[test]
+    #[gtest]
     fn nested_module() {
         mod m {
             pub mod m2 {
@@ -107,17 +109,17 @@ mod type_exists {
         assert!(!item_exists::type_exists!(m::m2::DoesNotExist));
     }
 
-    #[test]
+    #[gtest]
     fn std_type() {
         assert!(item_exists::type_exists!(::std::num::NonZeroU8));
     }
 
-    #[test]
+    #[gtest]
     fn function_type() {
         assert!(item_exists::type_exists!(::std::num::NonZeroU8));
     }
 
-    #[test]
+    #[gtest]
     fn alias() {
         mod m {
             pub type X = ::std::num::NonZeroU8;
@@ -125,7 +127,7 @@ mod type_exists {
         assert!(item_exists::type_exists!(m::X));
     }
 
-    #[test]
+    #[gtest]
     fn use_alias() {
         mod m {
             pub use ::std::num::NonZeroU8 as X;
@@ -135,7 +137,7 @@ mod type_exists {
 
     /// Invoke the proc-macro twice in the same scope. This can expose some
     /// implementation errors.
-    #[test]
+    #[gtest]
     fn type_exists_twice() {
         mod m {
             pub struct A;
@@ -149,13 +151,13 @@ mod value_exists {
     #[allow(unused_imports)]
     use super::*;
 
-    #[test]
+    #[gtest]
     fn value_doesnt_exist() {
         mod m {}
         assert!(!item_exists::value_exists!(m::does_not_exist));
     }
 
-    #[test]
+    #[gtest]
     fn struct_doesnt_exist() {
         mod m {
             #[allow(dead_code)]
@@ -166,7 +168,7 @@ mod value_exists {
 
     /// In type_exists!, we find the type. In value_exists!, we find the
     /// _constant_.
-    #[test]
+    #[gtest]
     fn unit_struct_does_exist() {
         mod m {
             pub struct S;
@@ -177,7 +179,7 @@ mod value_exists {
     /// This one may be surprising, but it's ultimately similar to unit structs.
     /// In type_exists!, we find the type. In value_exists!, we find the
     /// _constructor_, a function.
-    #[test]
+    #[gtest]
     fn tuple_struct_does_exist() {
         mod m {
             pub struct S();
@@ -185,7 +187,7 @@ mod value_exists {
         assert!(item_exists::value_exists!(m::S));
     }
 
-    #[test]
+    #[gtest]
     fn enum_doesnt_exist() {
         mod m {
             #[allow(dead_code)]
@@ -194,7 +196,7 @@ mod value_exists {
         assert!(!item_exists::value_exists!(m::E));
     }
 
-    #[test]
+    #[gtest]
     fn union_doesnt_exist() {
         mod m {
             #[allow(dead_code)]
@@ -205,7 +207,7 @@ mod value_exists {
         assert!(!item_exists::value_exists!(m::U));
     }
 
-    #[test]
+    #[gtest]
     fn function_does_exist() {
         mod m {
             pub fn foo() {}
@@ -213,7 +215,7 @@ mod value_exists {
         assert!(item_exists::value_exists!(m::foo));
     }
 
-    #[test]
+    #[gtest]
     fn constant_does_exist() {
         mod m {
             pub const X: () = ();
@@ -221,7 +223,7 @@ mod value_exists {
         assert!(item_exists::value_exists!(m::X));
     }
 
-    #[test]
+    #[gtest]
     fn static_does_exist() {
         mod m {
             pub static X: () = ();
@@ -229,7 +231,7 @@ mod value_exists {
         assert!(item_exists::value_exists!(m::X));
     }
 
-    #[test]
+    #[gtest]
     fn mod_doesnt_exist() {
         mod m {
             mod m2 {}
@@ -237,7 +239,7 @@ mod value_exists {
         assert!(!item_exists::value_exists!(m::m2));
     }
 
-    #[test]
+    #[gtest]
     fn nested_module() {
         mod m {
             pub mod m2 {
@@ -249,12 +251,12 @@ mod value_exists {
         assert!(!item_exists::value_exists!(m::m2::DoesNotExist));
     }
 
-    #[test]
+    #[gtest]
     fn std_value() {
         assert!(item_exists::value_exists!(::std::f32::consts::E));
     }
 
-    #[test]
+    #[gtest]
     fn alias_doesnt_exist() {
         mod m {
             #[allow(dead_code)]
@@ -263,7 +265,7 @@ mod value_exists {
         assert!(!item_exists::value_exists!(m::X));
     }
 
-    #[test]
+    #[gtest]
     fn use_alias_doesnt_exist() {
         mod m {
             #[allow(unused_imports)]
@@ -272,7 +274,7 @@ mod value_exists {
         assert!(!item_exists::value_exists!(m::X));
     }
 
-    #[test]
+    #[gtest]
     fn use_const_does_exist() {
         mod m {
             pub use ::std::f32::consts::E as X;

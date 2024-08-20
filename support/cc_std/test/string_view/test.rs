@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use cc_std::*;
+use googletest::prelude::*;
 use string_view_apis::crubit_string_view::GetHelloWorld;
 
 /// Converts a string_view to a &'static str.
@@ -15,7 +16,7 @@ unsafe fn to_str(sv: std::string_view) -> &'static str {
 }
 
 /// An empty slice round trips, but the pointer value may change.
-#[test]
+#[gtest]
 fn test_round_trip_empty_slice() {
     // we need to create an empty slice somewhere specific in memory in order to
     // test the pointer-value-discarding behavior, so let's create an array on
@@ -28,14 +29,14 @@ fn test_round_trip_empty_slice() {
     assert_eq!(unsafe { &*raw_round_tripped }, original);
 }
 
-#[test]
+#[gtest]
 fn test_round_trip_str() {
     let original: &'static str = "this is a string";
     let sv: std::string_view = original.into();
     assert_eq!(unsafe { to_str(sv) }, original);
 }
 
-#[test]
+#[gtest]
 fn test_round_trip_cstr() {
     let original: &'static str = "hello, world\0";
     let cstr = core::ffi::CStr::from_bytes_with_nul(original.as_bytes()).unwrap();
@@ -44,7 +45,7 @@ fn test_round_trip_cstr() {
     assert_eq!(unsafe { to_str(sv) }, original);
 }
 
-#[test]
+#[gtest]
 fn test_ffi() {
     assert_eq!(unsafe { to_str(GetHelloWorld()) }, "Hello, world!");
 }

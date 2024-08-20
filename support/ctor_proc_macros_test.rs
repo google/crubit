@@ -15,12 +15,14 @@
 // more_qualified_paths is used to make project_pin_type!() simpler to use.
 #![feature(negative_impls)]
 
+use googletest::prelude::*;
+
 // pathological shadowed names: shadow important modules that the macros use.
 mod std {}
 mod ctor {}
 mod pin_project {}
 
-#[test]
+#[gtest]
 fn test_derive_default_unit_struct() {
     #[derive(::ctor::CtorFrom_Default)]
     struct Struct;
@@ -32,7 +34,7 @@ fn test_derive_default_unit_struct() {
     ::ctor::emplace! {let _p = <Struct as ::ctor::CtorNew<()>>::ctor_new(()); }
 }
 
-#[test]
+#[gtest]
 fn test_derive_default_struct() {
     #[derive(::ctor::CtorFrom_Default)]
     struct Struct {
@@ -49,7 +51,7 @@ fn test_derive_default_struct() {
     assert_eq!(p.y, 0.0);
 }
 
-#[test]
+#[gtest]
 fn test_derive_default_tuple_struct() {
     #[derive(::ctor::CtorFrom_Default)]
     struct Struct(i32, f32);
@@ -63,7 +65,7 @@ fn test_derive_default_tuple_struct() {
     assert_eq!(p.1, 0.0);
 }
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_unit_struct() {
     #[::ctor::recursively_pinned]
     struct S;
@@ -71,7 +73,7 @@ fn test_recursively_pinned_unit_struct() {
     assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
 }
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_fieldless_struct() {
     #[::ctor::recursively_pinned]
     struct S {}
@@ -83,7 +85,7 @@ fn test_recursively_pinned_fieldless_struct() {
     assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
 }
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_fieldless_tuple_struct() {
     #[::ctor::recursively_pinned]
     struct S();
@@ -91,7 +93,7 @@ fn test_recursively_pinned_fieldless_tuple_struct() {
     assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
 }
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_fieldless_enum() {
     #[::ctor::recursively_pinned]
     enum E {
@@ -101,7 +103,7 @@ fn test_recursively_pinned_fieldless_enum() {
     assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(E)>(), 0);
 }
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_in_module() {
     mod submodule {
         #[::ctor::recursively_pinned]
@@ -110,7 +112,7 @@ fn test_recursively_pinned_in_module() {
     let _: ::ctor::project_pin_type!(submodule::S) = Box::pin(submodule::S).as_mut().project_pin();
 }
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_struct() {
     #[::ctor::recursively_pinned]
     struct S {
@@ -125,7 +127,7 @@ fn test_recursively_pinned_struct() {
     .x;
 }
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_tuple_struct() {
     #[::ctor::recursively_pinned]
     struct S(i32);
@@ -135,7 +137,7 @@ fn test_recursively_pinned_tuple_struct() {
 // TODO(b/331688163): remove this workaround.
 type Identity<T> = T;
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_enum_struct() {
     #[::ctor::recursively_pinned]
     enum E {
@@ -148,7 +150,7 @@ fn test_recursively_pinned_enum_struct() {
     }
 }
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_enum_tuple() {
     #[::ctor::recursively_pinned]
     enum E {
@@ -161,7 +163,7 @@ fn test_recursively_pinned_enum_tuple() {
     }
 }
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_generic() {
     #[::ctor::recursively_pinned]
     struct S<'proj, 'proj_2: 'proj, 'proj_4, T>
@@ -183,7 +185,7 @@ fn test_recursively_pinned_generic() {
     .x;
 }
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_struct_derive_default() {
     #[::ctor::recursively_pinned]
     #[derive(::ctor::CtorFrom_Default)]
@@ -201,7 +203,7 @@ fn test_recursively_pinned_struct_derive_default() {
 
 /// The same as the previous test, but with the attribute order swapped.
 /// This only compiles with macro_attributes_in_derive_output.
-#[test]
+#[gtest]
 fn test_derive_default_recursively_pinned_struct() {
     #[derive(::ctor::CtorFrom_Default)]
     #[::ctor::recursively_pinned]
@@ -215,7 +217,7 @@ fn test_derive_default_recursively_pinned_struct() {
     assert_eq!(p.y, 0.0);
 }
 
-#[test]
+#[gtest]
 fn test_recursively_pinned_actually_pinned() {
     #[::ctor::recursively_pinned]
     struct Struct {
@@ -248,7 +250,7 @@ fn test_recursively_pinned_actually_pinned() {
 // * implemented PinnedDrop, but forgot to pass in PinnedDrop to
 //   `::ctor::recursively_pinned`.
 
-#[test]
+#[gtest]
 fn test_pinned_drop() {
     use ::std::cell::Cell;
     use ::std::rc::Rc;

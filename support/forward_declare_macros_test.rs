@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use googletest::prelude::*;
+
 // pathological shadowed names: shadow important modules that the macros use.
 mod std {}
 mod forward_declare {}
@@ -31,7 +33,7 @@ mod test_is_same_3 {
     }
 }
 
-#[test]
+#[gtest]
 fn test_conversions() {
     use ::forward_declare::CcCast as _; // test becomes too verbose otherwise.
     struct MyType;
@@ -140,7 +142,7 @@ fn test_conversions() {
 
 /// You should be able to call unsafe_define!() twice (on different types) in
 /// the same scope.
-#[test]
+#[gtest]
 fn test_hygiene() {
     struct MyType1;
     type MyTypeSymbol1 = ::forward_declare::symbol!("X1");
@@ -157,7 +159,7 @@ fn test_hygiene() {
 ///
 /// (The reverse direction, fundamentally, is a lot less likely to work in
 /// idiomatic code.)
-#[test]
+#[gtest]
 fn test_formerly_incomplete() {
     use ::forward_declare::CcCast as _; // test becomes too verbose otherwise.
     struct MyType;
@@ -209,7 +211,7 @@ fn test_formerly_incomplete() {
 /// We can then add an additional trait bound on all methods, `where T :
 /// Complete`. This turns out to be easier, for silly typing reasons, than
 /// defining a whole new vector type for incomplete T.
-#[test]
+#[gtest]
 fn test_vector_alike() {
     use ::forward_declare::{
         forward_declare, internal::CcType, symbol, unsafe_define, CcCast, Complete,
