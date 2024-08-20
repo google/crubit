@@ -4,6 +4,7 @@
 
 //! Supporting types to read and display Crubit feature flags
 //! (<internal link>)
+use serde::Deserialize;
 
 flagset::flags! {
     pub enum CrubitFeature : u8 {
@@ -32,28 +33,45 @@ impl CrubitFeature {
     }
 }
 
-/// A newtype around a flagset of features, so that it can be deserialized from
-/// an array of strings instead of an integer.
+/// A newtype around a single named feature flagset, so that it can be
+/// deserialized from a string instead of an integer.
+#[derive(Debug, Default, PartialEq, Eq, Clone)]
+struct SerializedCrubitFeature(pub flagset::FlagSet<CrubitFeature>);
+
+impl<'de> Deserialize<'de> for SerializedCrubitFeature {
+    fn deserialize<D>(deserializer: D) -> Result<SerializedCrubitFeature, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let features = match <String as Deserialize<'de>>::deserialize(deserializer)?.as_str() {
+            "all" => flagset::FlagSet::<CrubitFeature>::full(),
+            "supported" => CrubitFeature::Supported.into(),
+            "experimental" => CrubitFeature::Experimental.into(),
+            other => {
+                return Err(<D::Error as serde::de::Error>::custom(format!(
+                    "Unexpected Crubit feature: {other}"
+                )));
+            }
+        };
+        Ok(SerializedCrubitFeature(features))
+    }
+}
+
+/// A newtype around a union of named feature flagsets, so that it can be
+/// deserialized from an array of strings instead of an integer.
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct SerializedCrubitFeatures(pub flagset::FlagSet<CrubitFeature>);
 
-impl<'de> serde::Deserialize<'de> for SerializedCrubitFeatures {
+impl<'de> Deserialize<'de> for SerializedCrubitFeatures {
     fn deserialize<D>(deserializer: D) -> Result<SerializedCrubitFeatures, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
         let mut features = flagset::FlagSet::<CrubitFeature>::default();
-        for feature in <Vec<String> as serde::Deserialize<'de>>::deserialize(deserializer)? {
-            features |= match &*feature {
-                "all" => flagset::FlagSet::<CrubitFeature>::full(),
-                "supported" => CrubitFeature::Supported.into(),
-                "experimental" => CrubitFeature::Experimental.into(),
-                other => {
-                    return Err(<D::Error as serde::de::Error>::custom(format!(
-                        "Unexpected Crubit feature: {other}"
-                    )));
-                }
-            };
+        for SerializedCrubitFeature(feature) in
+            <Vec<SerializedCrubitFeature> as Deserialize<'de>>::deserialize(deserializer)?
+        {
+            features |= feature;
         }
         Ok(SerializedCrubitFeatures(features))
     }
@@ -63,6 +81,18 @@ impl<'de> serde::Deserialize<'de> for SerializedCrubitFeatures {
 mod tests {
     use super::*;
     use googletest::prelude::*;
+
+    #[gtest]
+    fn test_serialized_crubit_feature() {
+        let SerializedCrubitFeature(features) = serde_json::from_str("\"supported\"").unwrap();
+        assert_eq!(features, CrubitFeature::Supported);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_all() {
+        let SerializedCrubitFeature(features) = serde_json::from_str("\"all\"").unwrap();
+        assert_eq!(features, CrubitFeature::Supported | CrubitFeature::Experimental);
+    }
 
     #[gtest]
     fn test_serialized_crubit_features_empty() {
