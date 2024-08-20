@@ -155,11 +155,6 @@ cc_library(
 cc_test(
     name = "eligible_ranges_test",
     srcs = ["eligible_ranges_test.cc"],
-    # TODO(b/357760487): re-enable it.
-    tags = [
-        "manual",
-        "notap",
-    ],
     deps = [
         ":augmented_test_inputs",
         ":eligible_ranges",

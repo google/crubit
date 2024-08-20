@@ -312,7 +312,10 @@ int main(int argc, absl::Nonnull<const char **> argv) {
            "-w",
            // Include the file containing macro replacements that enable
            // additional inference.
-           "-include", std::string(ReplacementMacrosHeaderFileName)},
+           "-include", std::string(ReplacementMacrosHeaderFileName),
+           // TODO: b/357760487 -- use the flag until the issue is resolved or
+           // we find a workaround.
+           "-Xclang", "-fretain-subst-template-type-parm-type-ast-nodes"},
           ArgumentInsertPosition::BEGIN));
   QCHECK(!Err) << toString(std::move(Err));
 }

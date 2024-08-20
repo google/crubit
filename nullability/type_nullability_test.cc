@@ -393,6 +393,10 @@ class GetTypeNullabilityTest : public ::testing::Test {
     Inputs.ExtraArgs.push_back("nullability.h");
     Inputs.ExtraArgs.push_back("-include");
     Inputs.ExtraArgs.push_back("header.h");
+    // TODO: b/357760487 -- use the flag until the issue is resolved or we find
+    // a workaround.
+    Inputs.ExtraArgs.push_back(
+        "-fretain-subst-template-type-parm-type-ast-nodes");
     Inputs.ExtraFiles["nullability.h"] = R"cpp(
       template <class X>
       using Nullable [[clang::annotate("Nullable")]] = X;
@@ -765,6 +769,10 @@ std::vector<ComparableNullabilityLoc> getComparableNullabilityLocs(
   TestInputs Inputs(AnnotatedInput.code());
   Inputs.MakeAction = makeRegisterPragmasAction(Pragmas);
   Inputs.Language = TestLanguage::Lang_CXX17;
+  // TODO: b/357760487 -- use the flag until the issue is resolved or we find a
+  // workaround.
+  Inputs.ExtraArgs.push_back(
+      "-fretain-subst-template-type-parm-type-ast-nodes");
   if (!HeaderWithAttributes.empty()) {
     Inputs.ExtraFiles["header.h"] = HeaderWithAttributes;
     Inputs.ExtraArgs.push_back("-include");
@@ -1245,14 +1253,13 @@ TEST_F(GetTypeNullabilityLocsTest, ClassTemplateParamPack) {
 }
 
 TEST_F(GetTypeNullabilityLocsTest, AliasTemplateWithDefaultArg) {
-  // TODO(b/281474380): The NullabilityKind should be Nullable and the range
-  // should only enclose the `int *`, but we don't yet handle default argument
-  // sugar correctly.
+  // TODO(b/281474380): The range should only enclose the `int *`, but we don't
+  // yet handle default argument sugar correctly.
   Snippet = R"(
     template <typename T1, typename T2 = T1>
     using AliasTemplate = T2;
 
-  using Target =$0[[AliasTemplate<int * _Nullable>]];
+  using Target = $0(Nullable)[[AliasTemplate<int * _Nullable>]];
   )";
   EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
 }
