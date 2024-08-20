@@ -55,6 +55,6 @@ crubit_rust_test(
     crate = "merged_namespaces",
     deps = [
         "//common:token_stream_matchers",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )

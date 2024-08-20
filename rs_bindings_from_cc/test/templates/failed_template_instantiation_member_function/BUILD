@@ -15,7 +15,7 @@ crubit_rust_test(
         ":failed_template_instantiation_member_function",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -43,6 +43,6 @@ crubit_rust_test(
         "notap",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )

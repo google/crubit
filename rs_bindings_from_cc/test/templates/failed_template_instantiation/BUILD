@@ -15,6 +15,6 @@ crubit_rust_test(
         ":failed_template_instantiation",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )

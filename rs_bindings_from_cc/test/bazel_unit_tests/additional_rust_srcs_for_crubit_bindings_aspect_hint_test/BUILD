@@ -28,7 +28,7 @@ crubit_rust_test(
         ":empty_cc_lib_with_additional_rust_srcs",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 

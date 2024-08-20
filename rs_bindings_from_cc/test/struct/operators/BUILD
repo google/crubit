@@ -17,7 +17,7 @@ crubit_rust_test(
     cc_deps = [":add"],
     deps = [
         "//support:ctor",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -33,7 +33,7 @@ crubit_rust_test(
     cc_deps = [":add_assign"],
     deps = [
         "//support:ctor",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
         "@crate_index//:static_assertions",
     ],
 )
@@ -50,7 +50,7 @@ crubit_rust_test(
     cc_deps = [":operators"],
     deps = [
         "//support:ctor",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
         "@crate_index//:static_assertions",
     ],
 )

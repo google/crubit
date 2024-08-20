@@ -101,6 +101,9 @@ crates_repository(
         "flagset": crate.spec(
             version = ">0.0.0",
         ),
+        "googletest": crate.spec(
+            version = ">0.0.0",
+        ),
         "itertools": crate.spec(
             version = ">0.0.0",
         ),

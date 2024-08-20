@@ -19,6 +19,6 @@ crubit_rust_test(
         ":reference_incomplete_record_by_value",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )

@@ -50,7 +50,7 @@ crubit_rust_test(
     deps = [
         "//support:ctor",
         "//support:forward_declare",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
         "@crate_index//:static_assertions",
     ],
 )

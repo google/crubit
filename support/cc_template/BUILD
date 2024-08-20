@@ -40,7 +40,7 @@ crubit_rust_test(
     ],
     crate = ":cc_template_impl",
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
         "@crate_index//:maplit",
     ],
 )

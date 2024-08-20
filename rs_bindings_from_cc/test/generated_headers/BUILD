@@ -22,6 +22,6 @@ crubit_rust_test(
     srcs = ["generated_header_test.rs"],
     cc_deps = [":generated_header"],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )

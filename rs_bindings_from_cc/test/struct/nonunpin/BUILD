@@ -18,6 +18,6 @@ crubit_rust_test(
     rustc_flags = ["-Zallow-features=negative_impls"],
     deps = [
         "//support:ctor",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )

@@ -32,7 +32,7 @@ crubit_rust_test(
     ],
     deps = [
         ":leaf_rs_lib",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 

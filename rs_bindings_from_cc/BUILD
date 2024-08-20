@@ -362,7 +362,7 @@ crubit_rust_test(
     name = "rs_ir_test",
     crate = ":ir",
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -393,7 +393,7 @@ crubit_rust_test(
     deps = [
         ":ir_matchers",
         ":ir_testing",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
         "@crate_index//:quote",
     ],
 )
@@ -444,7 +444,7 @@ multiplatform_rust_test(
         ":ir_testing",
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
@@ -522,7 +522,7 @@ crubit_rust_test(
     deps = [
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -582,7 +582,7 @@ crubit_rust_test(
     ],
     crate = ":collect_instantiations",
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
         "@crate_index//:quote",
     ],
 )

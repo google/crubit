@@ -48,7 +48,7 @@ crubit_rust_test(
     srcs = ["uses_struct_from_textual_header.rs"],
     cc_deps = [":uses_struct_from_textual_hdr"],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -57,6 +57,6 @@ crubit_rust_test(
     srcs = ["uses_struct_from_layers_of_textual_headers.rs"],
     cc_deps = [":uses_struct_from_textual_hdr_in_textual_hdr"],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )

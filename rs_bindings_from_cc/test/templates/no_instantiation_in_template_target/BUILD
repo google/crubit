@@ -25,6 +25,6 @@ crubit_rust_test(
         ":type_alias_in_different_target",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )

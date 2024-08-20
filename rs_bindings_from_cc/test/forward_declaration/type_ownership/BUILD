@@ -66,7 +66,7 @@ crubit_rust_test(
         ":definition_with_crubit_disabled",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -94,6 +94,6 @@ crubit_rust_test(
         ":definition_with_crubit_disabled_in_deps",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )

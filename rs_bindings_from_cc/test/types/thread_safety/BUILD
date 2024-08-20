@@ -21,7 +21,7 @@ crubit_rust_test(
         ":thread_unsafe_types",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
         "@crate_index//:static_assertions",
     ],
 )

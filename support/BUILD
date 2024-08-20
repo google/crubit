@@ -28,7 +28,7 @@ crubit_rust_test(
     crate = ":ctor_proc_macros_proc_macro_internal",
     deps = [
         "//common:token_stream_matchers",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -38,7 +38,7 @@ crubit_rust_test(
     proc_macro_deps = [":ctor_proc_macros"],
     rustc_flags = ["-Zallow-features=negative_impls"],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -48,7 +48,7 @@ crubit_rust_test(
     rustc_flags = ["-Zallow-features=negative_impls"],
     deps = [
         ":ctor",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -57,7 +57,7 @@ crubit_rust_test(
     srcs = ["ctor_macro_test.rs"],
     deps = [
         ":ctor",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -84,7 +84,7 @@ crubit_rust_test(
     srcs = ["forward_declare_macros_test.rs"],
     deps = [
         ":forward_declare",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -102,6 +102,6 @@ crubit_rust_test(
     srcs = ["oops.rs"],
     rustc_flags = ["-Zallow-features=negative_impls"],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )

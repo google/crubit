@@ -26,7 +26,7 @@ crubit_rust_test(
     ],
     deps = [
         "//support:ctor",
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
         "@crate_index//:static_assertions",
     ],
 )

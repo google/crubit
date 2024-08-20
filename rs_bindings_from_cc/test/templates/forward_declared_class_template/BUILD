@@ -15,7 +15,7 @@ crubit_rust_test(
         ":use_forward_declared_template",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -38,7 +38,7 @@ crubit_rust_test(
         ":use_forward_declared_template",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
 
@@ -64,6 +64,6 @@ crubit_rust_test(
         "notap",
     ],
     deps = [
-        "//third_party/gtest_rust/googletest",
+        "@crate_index//:googletest",
     ],
 )
