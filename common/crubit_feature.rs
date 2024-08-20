@@ -58,3 +58,35 @@ impl<'de> serde::Deserialize<'de> for SerializedCrubitFeatures {
         Ok(SerializedCrubitFeatures(features))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use googletest::prelude::*;
+
+    #[gtest]
+    fn test_serialized_crubit_features_empty() {
+        let SerializedCrubitFeatures(features) = serde_json::from_str("[]").unwrap();
+        assert!(features.is_empty());
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_features() {
+        let SerializedCrubitFeatures(features) =
+            serde_json::from_str("[\"supported\", \"experimental\"]").unwrap();
+        assert_eq!(features, CrubitFeature::Supported | CrubitFeature::Experimental);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_features_all() {
+        let SerializedCrubitFeatures(features) = serde_json::from_str("[\"all\"]").unwrap();
+        assert_eq!(features, CrubitFeature::Supported | CrubitFeature::Experimental);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_features_all_overlapping() {
+        let SerializedCrubitFeatures(features) =
+            serde_json::from_str("[\"all\", \"supported\", \"experimental\"]").unwrap();
+        assert_eq!(features, CrubitFeature::Supported | CrubitFeature::Experimental);
+    }
+}

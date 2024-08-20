@@ -84,6 +84,15 @@ rust_library(
     ],
 )
 
+crubit_rust_test(
+    name = "crubit_feature_test",
+    crate = ":crubit_feature",
+    deps = [
+        "@crate_index//:googletest",
+        "@crate_index//:serde_json",
+    ],
+)
+
 cc_library(
     name = "file_io",
     srcs = ["file_io.cc"],
