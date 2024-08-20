@@ -13,6 +13,11 @@ package(
     default_visibility = ["//:__subpackages__"],
 )
 
+exports_files([
+    "LICENSE_HEADER",
+    "golden_test.sh",
+])
+
 rust_library(
     name = "arc_anyhow",
     srcs = ["arc_anyhow.rs"],

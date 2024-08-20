@@ -39,7 +39,7 @@ The easiest way to see the output of Crubit on a C++ header is to add the header
 to the [`golden`](test/golden) directory and regenerate the golden outputs:
 
 ```sh
-rs_bindings_from_cc/test/golden/update.sh
+common/golden_update.sh
 ```
 
 ### Running Crubit on a Bazel target

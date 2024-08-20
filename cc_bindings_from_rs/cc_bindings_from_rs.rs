@@ -47,6 +47,7 @@ fn new_db<'tcx>(
         crubit_support_path_format,
         crate_name_to_include_paths.into(),
         errors,
+        cmdline.no_thunk_name_mangling,
         /* _features= */ (),
     )
 }

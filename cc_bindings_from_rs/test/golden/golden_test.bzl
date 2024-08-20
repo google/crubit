@@ -2,37 +2,37 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-"""A rule that generates bindings source files for a given C++ library."""
+"""A rule that generates bindings source files for a given Rust library."""
 
+load("@rules_rust//rust/private:providers.bzl", "CrateInfo")  # buildifier: disable=bzl-visibility
+load(
+    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
+    "cc_bindings_from_rust_aspect",
+)
+load(
+    "//cc_bindings_from_rs/bazel_support:providers.bzl",
+    "GeneratedBindingsInfo",
+)
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_flavor_transition",
 )
-load(
-    "//rs_bindings_from_cc/bazel_support:providers.bzl",
-    "GeneratedBindingsInfo",
-)
-load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
-    "rust_bindings_from_cc_aspect",
-)
 
 def _generate_bindings_impl(ctx):
-    cc_library = ctx.attr.cc_library[0]
-    if not GeneratedBindingsInfo in cc_library:
-        fail("Bindings were not generated for the given cc_library.")
-    bindings = cc_library[GeneratedBindingsInfo]
+    rust_library = ctx.attr.rust_library[0]
+    if not GeneratedBindingsInfo in rust_library:
+        fail("Bindings were not generated for the given rust_library.")
+    bindings = rust_library[GeneratedBindingsInfo]
     return OutputGroupInfo(
-        cc_file = [bindings.cc_file],
+        h_file = [bindings.h_file],
         rust_file = [bindings.rust_file],
-        namespaces_file = [bindings.namespaces_file],
     )
 
 _generate_bindings = rule(
     attrs = {
-        "cc_library": attr.label(
-            providers = [CcInfo],
-            aspects = [rust_bindings_from_cc_aspect],
+        "rust_library": attr.label(
+            providers = [CrateInfo],
+            aspects = [cc_bindings_from_rust_aspect],
             cfg = crubit_flavor_transition,
         ),
     },
@@ -41,22 +41,20 @@ _generate_bindings = rule(
 
 def golden_test(
         name,
-        cc_library,
+        rust_library,
         tags = None,
         basename = None,
-        golden_cc = None,
-        golden_rs = None,
-        golden_namespaces = None):
-    """Generates a golden test for `cc_library`.
+        golden_h = None,
+        golden_rs = None):
+    """Generates a golden test for `rust_library`.
 
     Args:
         name: The name of the golden test.
-        cc_library: The C++ library whose outputs should be checked.
+        rust_library: The Rust library whose outputs should be checked.
         tags: The test tags.
         basename: The name to use for generated files.
-        golden_cc: The generated C++ source code for the bindings.
+        golden_h: The generated C++ source code for the bindings.
         golden_rs: The generated Rust source code for the bindings.
-        golden_namespaces: The generated namespaces JSON file for the bindings.
 
     """
     if not basename:
@@ -69,27 +67,27 @@ def golden_test(
 
     _generate_bindings(
         name = bindings_name,
-        cc_library = cc_library,
+        rust_library = rust_library,
     )
     args = []
     data = ["//common:LICENSE_HEADER"]
     owned_files = []
-    if golden_cc:
-        new_cc = basename + ".cc_file"
+    if golden_h:
+        new_h = basename + ".h_file"
         native.filegroup(
-            name = new_cc,
+            name = new_h,
             srcs = [bindings_name],
-            output_group = "cc_file",
+            output_group = "h_file",
         )
         args += [
-            "$(location %s)" % golden_cc,
-            "$(location %s)" % new_cc,
+            "$(location %s)" % golden_h,
+            "$(location %s)" % new_h,
         ]
         data += [
-            golden_cc,
-            new_cc,
+            golden_h,
+            new_h,
         ]
-        owned_files.append(golden_cc)
+        owned_files.append(golden_h)
 
     if golden_rs:
         new_rs = basename + ".rs_file"
@@ -107,23 +105,6 @@ def golden_test(
             new_rs,
         ]
         owned_files.append(golden_rs)
-
-    if golden_namespaces:
-        new_namespaces = basename + ".namespaces_file"
-        native.filegroup(
-            name = new_namespaces,
-            srcs = [bindings_name],
-            output_group = "namespaces_file",
-        )
-        args += [
-            "$(location %s)" % golden_namespaces,
-            "$(location %s)" % new_namespaces,
-        ]
-        data += [
-            golden_namespaces,
-            new_namespaces,
-        ]
-        owned_files.append(golden_namespaces)
 
     native.sh_test(
         name = name,

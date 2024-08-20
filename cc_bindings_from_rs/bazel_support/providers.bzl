@@ -15,3 +15,11 @@ CcBindingsFromRustInfo = provider(
         "headers": "A list of C++ headers which correspond to this crate.",
     },
 )
+
+GeneratedBindingsInfo = provider(
+    doc = "A provider that contains the generated C++ and Rust files.",
+    fields = {
+        "h_file": "The generated C++ header file.",
+        "rust_file": "The generated Rust source file.",
+    },
+)

@@ -33,8 +33,13 @@ load(
 )
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load(
+    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_cli_flag_aspect_hint.bzl",
+    "collect_cc_bindings_from_rust_cli_flags",
+)
+load(
     "//cc_bindings_from_rs/bazel_support:providers.bzl",
     "CcBindingsFromRustInfo",
+    "GeneratedBindingsInfo",
 )
 load(
     "//rs_bindings_from_cc/bazel_support:compile_rust.bzl",
@@ -72,11 +77,12 @@ def _get_dep_bindings_infos(ctx):
         if CcBindingsFromRustInfo in dep
     ]
 
-def _generate_bindings(ctx, basename, inputs, args, rustc_env):
+def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
     Args:
       ctx: The rule context.
+      target: The target crate.
       basename: The basename for the generated files
       inputs: `cc_bindings_from_rs` inputs specific to the target `crate`
       args: `rustc` and `process_wrapper` arguments from construct_arguments.
@@ -114,6 +120,8 @@ def _generate_bindings(ctx, basename, inputs, args, rustc_env):
         )
         outputs.append(error_report_output)
 
+    for flag in collect_cc_bindings_from_rust_cli_flags(target, ctx):
+        crubit_args.add(flag)
     ctx.actions.run(
         outputs = outputs,
         inputs = depset(
@@ -292,6 +300,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
 
     (h_out_file, rs_out_file) = _generate_bindings(
         ctx,
+        target,
         basename,
         compile_inputs,
         args,
@@ -313,6 +322,10 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
             cc_info = cc_info,
             crate_key = crate_info.name,
             headers = [h_out_file],
+        ),
+        GeneratedBindingsInfo(
+            h_file = h_out_file,
+            rust_file = rs_out_file,
         ),
         OutputGroupInfo(out = depset([h_out_file, rs_out_file])),
     ]

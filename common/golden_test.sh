@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 function prepend_license() {
-  cat rs_bindings_from_cc/test/golden/LICENSE_HEADER "$1"
+  cat common/LICENSE_HEADER "$1"
 }
 
 STATUS=0
@@ -27,6 +27,6 @@ do
 done
 
 if [ $STATUS != 0 ]; then
-  echo >&2 "To regenerate the goldens, run rs_bindings_from_cc/test/golden/update.sh"
+  echo >&2 "To regenerate the goldens, run cc_bindings_from_rs/test/golden/update.sh"
   exit 1
 fi

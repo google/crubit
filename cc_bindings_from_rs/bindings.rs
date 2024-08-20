@@ -69,6 +69,9 @@ memoized::query_group! {
         #[input]
         fn errors(&self) -> Rc<dyn ErrorReporting>;
 
+        #[input]
+        fn no_thunk_name_mangling(&self) -> bool;
+
         // TODO(b/262878759): Provide a set of enabled/disabled Crubit features.
         #[input]
         fn _features(&self) -> ();
@@ -1478,13 +1481,18 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         || (tcx.get_attr(def_id, rustc_span::symbol::sym::no_mangle).is_none()
             && tcx.get_attr(def_id, rustc_span::symbol::sym::export_name).is_none());
     let thunk_name = {
-        let symbol_name = {
+        let symbol_name = if db.no_thunk_name_mangling() {
+            FullyQualifiedName::new(tcx, def_id)
+                .name
+                .expect("Functions are assumed to always have a name")
+                .to_string()
+        } else {
             // Call to `mono` is ok - `generics_of` have been checked above.
             let instance = ty::Instance::mono(tcx, def_id);
-            tcx.symbol_name(instance).name
+            tcx.symbol_name(instance).name.to_string()
         };
         if needs_thunk {
-            format!("__crubit_thunk_{}", &escape_non_identifier_chars(symbol_name))
+            format!("__crubit_thunk_{}", &escape_non_identifier_chars(&symbol_name))
         } else {
             symbol_name.to_string()
         }
@@ -2311,9 +2319,13 @@ fn format_trait_thunks<'tcx>(
         };
 
         let thunk_name = {
-            let instance = ty::Instance::new(method.def_id, substs);
-            let symbol = tcx.symbol_name(instance);
-            format!("__crubit_thunk_{}", &escape_non_identifier_chars(symbol.name))
+            if db.no_thunk_name_mangling() {
+                format!("__crubit_thunk_{}", &escape_non_identifier_chars(method.name.as_str()))
+            } else {
+                let instance = ty::Instance::new(method.def_id, substs);
+                let symbol = tcx.symbol_name(instance);
+                format!("__crubit_thunk_{}", &escape_non_identifier_chars(symbol.name))
+            }
         };
         method_name_to_cc_thunk_name.insert(method.name, format_cc_ident(&thunk_name)?);
 
@@ -9014,6 +9026,7 @@ pub mod tests {
             /* crubit_support_path_format= */ "<crubit/support/for/tests/{header}>".into(),
             /* crate_name_to_include_paths= */ Default::default(),
             /* errors = */ Rc::new(IgnoreErrors),
+            /* no_thunk_name_mangling= */ false,
             /* _features= */ (),
         )
     }
