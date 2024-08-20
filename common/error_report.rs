@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use regex::Regex;
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -134,6 +135,12 @@ impl ErrorReporting for IgnoreErrors {
     }
 }
 
+fn hide_unstable_details(input: &str) -> String {
+    // Remove line:column in def id
+    let regex = Regex::new(r"DefId\(\d+:\d+ ~ ").unwrap();
+    regex.replace_all(input, "DefId(").to_string()
+}
+
 /// An aggregate of zero or more errors.
 #[derive(Default, Debug)]
 pub struct ErrorReport {
@@ -157,13 +164,13 @@ impl ErrorReporting for ErrorReport {
                 .borrow_mut()
                 .entry(error.fmt.clone())
                 .or_default()
-                .add(Cow::Borrowed(sample_message));
+                .add(Cow::Owned(hide_unstable_details(sample_message)));
         } else {
             self.map
                 .borrow_mut()
                 .entry(Cow::Borrowed("{}"))
                 .or_default()
-                .add(Cow::Owned(format!("{error}")));
+                .add(Cow::Owned(hide_unstable_details(&format!("{error}"))));
         }
     }
 
