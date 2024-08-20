@@ -8,6 +8,7 @@ crubit_test_cc_library(
     srcs = ["has_bindings.cc"],
     hdrs = ["has_bindings.h"],
     aspect_hints = ["//features:supported"],
+    copts = ["-Wno-nullability-completeness"],
     deps = ["@abseil-cpp//absl/base:core_headers"],
 )
 

@@ -36,6 +36,15 @@ fn test_void_ptr_function() {
 }
 
 #[gtest]
+fn test_nullability_annotated_function() {
+    let value = 1;
+    let ptr = &value as *const _ as *const std::ffi::c_void;
+    // Regression test: Check that we produce bindings for a function that has
+    // nullability annotations.
+    unsafe { has_bindings::crubit_nullability_annotated_function(ptr) };
+}
+
+#[gtest]
 fn test_user_struct() {
     let mut i: core::ffi::c_int = 123;
     let s = has_bindings::Struct { x: &mut i, y: 123, z: 0 as *mut _ };
