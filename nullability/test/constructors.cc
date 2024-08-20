@@ -74,7 +74,11 @@ TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
       target()
           : ptr_nonnull(makeNullable()),  // [[unsafe]]
             ptr_nullable(makeNullable()),
-            ptr_unannotated(makeNullable()) {}
+            ptr_unannotated(makeNullable()) {
+        *ptr_nonnull;      // [[unsafe]]
+        *ptr_nullable;     // [[unsafe]]
+        *ptr_unannotated;  // [[unsafe]]
+      }
     };
   )cc"));
 
@@ -87,7 +91,11 @@ TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
       target()
           : ptr_nonnull(makeNonnull()),
             ptr_nullable(makeNonnull()),
-            ptr_unannotated(makeNonnull()) {}
+            ptr_unannotated(makeNonnull()) {
+        *ptr_nonnull;
+        *ptr_nullable;
+        *ptr_unannotated;
+      }
     };
   )cc"));
 
@@ -100,7 +108,11 @@ TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
       target()
           : ptr_nonnull(makeUnannotated()),
             ptr_nullable(makeUnannotated()),
-            ptr_unannotated(makeUnannotated()) {}
+            ptr_unannotated(makeUnannotated()) {
+        *ptr_nonnull;
+        *ptr_nullable;
+        *ptr_unannotated;
+      }
     };
   )cc"));
 }
