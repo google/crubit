@@ -1335,13 +1335,13 @@ absl::StatusOr<UnqualifiedIdentifier> Importer::GetTranslatedName(
 
 void Importer::MarkAsSuccessfullyImported(const clang::NamedDecl* decl) {
   known_type_decls_.insert(
-      clang::cast<clang::TypeDecl>(CanonicalizeDecl(decl)));
+      clang::cast<clang::NamedDecl>(CanonicalizeDecl(decl)));
 }
 
 bool Importer::HasBeenAlreadySuccessfullyImported(
     const clang::NamedDecl* decl) const {
   return known_type_decls_.contains(
-      clang::cast<clang::TypeDecl>(CanonicalizeDecl(decl)));
+      clang::cast<clang::NamedDecl>(CanonicalizeDecl(decl)));
 }
 
 }  // namespace crubit
