@@ -35,6 +35,7 @@
 #include "clang/Lex/Lexer.h"
 #include "clang/Lex/Token.h"
 #include "clang/Tooling/Transformer/SourceCode.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Path.h"
 
@@ -77,14 +78,16 @@ getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
                                                const LangOptions &LangOpts,
                                                const FileID &DeclFID) {
   // absl::NullabilityUnknown< is 4 tokens, one for the `<`, one for the `::`,
-  // and one for each identifier.
+  // and one for each identifier. Same for absl::Nonnull< and absl::Nullable<.
   Token PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
   if (!PrevTok.is(tok::less)) return {};
   if (PrevTok =
           utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
       !PrevTok.is(tok::raw_identifier))
     return {};
-  if (PrevTok.getRawIdentifier() != "NullabilityUnknown") return {};
+  if (const StringRef ID = PrevTok.getRawIdentifier();
+      ID != "NullabilityUnknown" && ID != "Nullable" && ID != "Nonnull")
+    return {};
   if (PrevTok =
           utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
       PrevTok.isNot(tok::coloncolon))
@@ -135,8 +138,9 @@ static std::optional<unsigned> getEndOffsetOfImmediateClangAttribute(
   std::optional<Token> NextTok =
       utils::lexer::findNextTokenSkippingComments(End, SM, LangOpts);
   if (!NextTok) return std::nullopt;
-  if (!NextTok->is(tok::raw_identifier) ||
-      NextTok->getRawIdentifier() != "_Null_unspecified")
+  if (!NextTok->is(tok::raw_identifier)) return std::nullopt;
+  if (const StringRef ID = NextTok->getRawIdentifier();
+      ID != "_Null_unspecified" && ID != "_Nonnull" && ID != "_Nullable")
     return std::nullopt;
 
   auto [FID, Offset] = SM.getDecomposedLoc(NextTok->getEndLoc());
@@ -387,7 +391,7 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
 
     SlotRange *Range = Result.add_range();
     initSlotRange(*Range, SlotInContext, BeginOffset, EndOffset, Nullability);
-    if (Nullability && Nullability == NullabilityKind::Unspecified)
+    if (Nullability)
       addAnnotationPreAndPostRangeLength(Begin, R->getEnd(), BeginOffset,
                                          EndOffset, DeclFID, SM, LangOpts,
                                          *Range);

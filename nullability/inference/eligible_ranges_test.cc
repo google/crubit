@@ -877,21 +877,31 @@ TEST(ExistingAnnotationLengthTest, AbslTemplate) {
   namespace absl {
   template <typename T>
   using NullabilityUnknown = ::NullabilityUnknown<T>;
+  template <typename T>
+  using Nullable = ::Nullable<T>;
+  template <typename T>
+  using Nonnull = ::Nonnull<T>;
   }
   void target($no[[int*]] p, absl::NullabilityUnknown<$yes[[int*]]> q,
-  absl::/* a comment*/NullabilityUnknown< /* a comment */ $with_comments[[int*]]
-  /* a comment */  > r);
+              absl::/* a comment*/NullabilityUnknown< /* a comment */
+              $with_comments[[int*]] /* a comment */  > r,
+              absl::Nullable<$nullable[[int*]]> s,
+              absl::Nonnull<$nonnull[[int*]]> t);
     )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(
+          MainFileName, testing::ElementsAre(
                             AllOf(SlotRange(1, Input.range("no")),
                                   NoPreRangeLength(), NoPostRangeLength()),
                             AllOf(SlotRange(2, Input.range("yes")),
                                   PreRangeLength(25), PostRangeLength(1)),
                             AllOf(SlotRange(3, Input.range("with_comments")),
-                                  PreRangeLength(56), PostRangeLength(21))))));
+                                  PreRangeLength(70), PostRangeLength(19)),
+                            AllOf(SlotRange(4, Input.range("nullable")),
+                                  PreRangeLength(15), PostRangeLength(1)),
+                            AllOf(SlotRange(5, Input.range("nonnull")),
+                                  PreRangeLength(14), PostRangeLength(1))))));
 }
 
 TEST(ExistingAnnotationLengthTest, AnnotationInMacro) {
@@ -967,18 +977,23 @@ TEST(ExistingAnnotationLengthTest, DoubleClosingAngleBrackets) {
 TEST(ExistingAnnotationLengthTest, ClangAttribute) {
   auto Input = Annotations(R"(
   void target($no[[int*]] p, $yes[[int*]] _Null_unspecified q,
-  $with_comment[[int*]]/* a comment */_Null_unspecified r);
+              $with_comment[[int*]]/* a comment */_Null_unspecified r,
+              $nullable[[int*]] _Nullable s, $nonnull[[int*]] _Nonnull t);
     )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
-          MainFileName, UnorderedElementsAre(
-                            AllOf(SlotRange(1, Input.range("no")),
-                                  NoPreRangeLength(), NoPostRangeLength()),
-                            AllOf(SlotRange(2, Input.range("yes")),
-                                  PreRangeLength(0), PostRangeLength(18)),
-                            AllOf(SlotRange(3, Input.range("with_comment")),
-                                  PreRangeLength(0), PostRangeLength(32))))));
+          MainFileName,
+          UnorderedElementsAre(AllOf(SlotRange(1, Input.range("no")),
+                                     NoPreRangeLength(), NoPostRangeLength()),
+                               AllOf(SlotRange(2, Input.range("yes")),
+                                     PreRangeLength(0), PostRangeLength(18)),
+                               AllOf(SlotRange(3, Input.range("with_comment")),
+                                     PreRangeLength(0), PostRangeLength(32)),
+                               AllOf(SlotRange(4, Input.range("nullable")),
+                                     PreRangeLength(0), PostRangeLength(10)),
+                               AllOf(SlotRange(5, Input.range("nonnull")),
+                                     PreRangeLength(0), PostRangeLength(9))))));
 }
 
 MATCHER(EquivalentRanges, "") {
