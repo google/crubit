@@ -23,8 +23,10 @@ rust_library(
         ":toposort",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
+        "//common:crubit_feature",
         "//common:error_report",
         "//common:memoized",
+        "@crate_index//:flagset",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
@@ -58,9 +60,11 @@ crubit_rust_binary(
         ":run_compiler",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
+        "//common:crubit_feature",
         "//common:error_report",
         "//common:token_stream_printer",
         "@crate_index//:clap",
+        "@crate_index//:flagset",
         "@crate_index//:itertools",
     ],
 )
@@ -95,8 +99,10 @@ rust_library(
     ],
     rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
+        "//common:crubit_feature",
         "@crate_index//:anyhow",
         "@crate_index//:clap",
+        "@crate_index//:flagset",
     ],
 )
 

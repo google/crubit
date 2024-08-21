@@ -67,16 +67,18 @@ memoized::query_group! {
         #[input]
         fn crate_name_to_include_paths(&self) -> Rc<HashMap<Rc<str>, Vec<CcInclude>>>;
 
+        /// A map from a crate name to the features enabled on that crate.
+        // TODO(b/271857814): A crate name might not be globally unique - the key needs to also cover
+        // a "hash" of the crate version and compilation flags.
+        #[input]
+        fn crate_name_to_features(&self) -> Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>;
+
         /// Error collector for generating reports of errors encountered during the generation of bindings.
         #[input]
         fn errors(&self) -> Rc<dyn ErrorReporting>;
 
         #[input]
         fn no_thunk_name_mangling(&self) -> bool;
-
-        // TODO(b/262878759): Provide a set of enabled/disabled Crubit features.
-        #[input]
-        fn _features(&self) -> ();
 
         fn support_header(&self, suffix: &'tcx str) -> CcInclude;
 
@@ -9262,9 +9264,9 @@ pub mod tests {
             tcx,
             /* crubit_support_path_format= */ "<crubit/support/for/tests/{header}>".into(),
             /* crate_name_to_include_paths= */ Default::default(),
+            /* crate_name_to_features= */ Default::default(),
             /* errors = */ Rc::new(IgnoreErrors),
             /* no_thunk_name_mangling= */ false,
-            /* _features= */ (),
         )
     }
 

@@ -42,13 +42,21 @@ fn new_db<'tcx>(
         paths.push(CcInclude::user_header(include_path.as_str().into()));
     }
 
+    let mut crate_name_to_features =
+        <HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new();
+    for (crate_name, features) in &cmdline.crate_features {
+        let accumulated_features =
+            crate_name_to_features.entry(crate_name.as_str().into()).or_default();
+        *accumulated_features |= *features
+    }
+
     Database::new(
         tcx,
         crubit_support_path_format,
         crate_name_to_include_paths.into(),
+        crate_name_to_features.into(),
         errors,
         cmdline.no_thunk_name_mangling,
-        /* _features= */ (),
     )
 }
 

@@ -33,6 +33,17 @@ impl CrubitFeature {
     }
 }
 
+/// Returns the set of features named by this short name.
+pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
+    let features = match name {
+        b"all" => flagset::FlagSet::<CrubitFeature>::full(),
+        b"supported" => CrubitFeature::Supported.into(),
+        b"experimental" => CrubitFeature::Experimental.into(),
+        _ => return None,
+    };
+    Some(features)
+}
+
 /// A newtype around a single named feature flagset, so that it can be
 /// deserialized from a string instead of an integer.
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
@@ -60,16 +71,11 @@ impl<'de> Deserialize<'de> for SerializedCrubitFeature {
             where
                 E: serde::de::Error,
             {
-                let features = match bytes {
-                    b"all" => flagset::FlagSet::<CrubitFeature>::full(),
-                    b"supported" => CrubitFeature::Supported.into(),
-                    b"experimental" => CrubitFeature::Experimental.into(),
-                    other => {
-                        return Err(E::custom(format!(
-                            "Unexpected Crubit feature: {:?}",
-                            String::from_utf8_lossy(other)
-                        )));
-                    }
+                let Some(features) = named_features(bytes) else {
+                    return Err(E::custom(format!(
+                        "Unexpected Crubit feature: {:?}",
+                        String::from_utf8_lossy(bytes)
+                    )));
                 };
 
                 Ok(SerializedCrubitFeature(features))
