@@ -101,7 +101,8 @@ std::optional<clang::tidy::nullability::TypeLocRanges> getFunctionRanges(
 
 std::optional<clang::tidy::nullability::TypeLocRanges> getFieldRanges(
     llvm::StringRef Input, llvm::StringRef FieldName = "target") {
-  return getRanges<FieldDecl>(Input, fieldDecl(hasName(FieldName)));
+  return getRanges<FieldDecl>(
+      Input, FieldName.empty() ? fieldDecl() : fieldDecl(hasName(FieldName)));
 }
 
 std::optional<clang::tidy::nullability::TypeLocRanges> getVarRanges(
@@ -798,6 +799,21 @@ TEST(EligibleRangesTest, Lambda) {
                   UnorderedElementsAre(SlotRange(0, Input.range("zero")),
                                        SlotRange(1, Input.range("one"))),
                   Nullability::UNKNOWN)));
+}
+
+TEST(EligibleRangesTest, LambdaCaptureWithFunctionTypeInTemplateArg) {
+  std::string Input = R"cc(
+    template <typename T>
+    using ATemplate = T;
+
+    void WithPartsOfWindowedValue(ATemplate<void(const int)> *f) {
+      [&f]() { f(0); }();
+    }
+  )cc";
+  // We expect no ranges for the lambda's implicit FieldDecl, which for some
+  // reason has an incomplete FunctionTypeLoc that has only nullptrs where the
+  // ParmVarDecls should be for the function parameters.
+  EXPECT_EQ(getFieldRanges(Input, ""), std::nullopt);
 }
 
 TEST(EligibleRangesTest, Pragma) {

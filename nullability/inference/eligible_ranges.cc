@@ -483,6 +483,8 @@ static std::optional<TypeLocRanges> getEligibleRanges(
 
 std::optional<TypeLocRanges> getEligibleRanges(
     const Decl &D, const TypeNullabilityDefaults &Defaults) {
+  // We'll never be able to edit a written type for an implicit declaration.
+  if (D.isImplicit()) return std::nullopt;
   if (const auto *Fun = clang::dyn_cast<FunctionDecl>(&D))
     return getEligibleRanges(*Fun, Defaults);
   if (const auto *Field = clang::dyn_cast<FieldDecl>(&D))

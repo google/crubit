@@ -631,6 +631,11 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
       std::optional<TypeLoc> ParamLoc;
       if (L) {
         const auto *ParamDecl = L->getParam(I);
+        // The only known case of null ParamDecls is when a function type is
+        // seen as a template argument in a type of a lambda capture's implicit
+        // FieldDecl. We avoid using NullabilityWalker to walk the TypeLocs of
+        // such Decls. If other cases arise, this CHECK serves to make sure we
+        // find out about them and handle them appropriately.
         CHECK(ParamDecl);
         if (auto *TSI = ParamDecl->getTypeSourceInfo()) {
           ParamLoc = TSI->getTypeLoc();
