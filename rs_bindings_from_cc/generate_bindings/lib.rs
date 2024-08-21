@@ -1086,7 +1086,12 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
         if ty.type_args.len() != 1 {
             bail!("Missing pointee/referent type (need exactly 1 type argument): {:?}", ty);
         }
-        Ok(Rc::new(get_type_args()?.remove(0)))
+        // TODO(b/351976044): Support bridge types by pointer/reference.
+        let pointee = get_type_args()?.pop().unwrap();
+        if pointee.is_bridge_type() {
+            bail!("Bridging types are not supported as pointee/referent types.");
+        }
+        Ok(Rc::new(pointee))
     };
     let get_lifetime = || -> Result<Lifetime> {
         if ty.lifetime_args.len() != 1 {
@@ -1145,7 +1150,13 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                         rs_imported_crate_name(&incomplete_record.owning_target, &ir),
                     )),
                 },
-                Item::Record(record) => RsTypeKind::new_record(record.clone(), &ir)?,
+                Item::Record(record) => {
+                    if record.bridge_type_info.is_some() {
+                        RsTypeKind::new_bridge_type(record.clone())?
+                    } else {
+                        RsTypeKind::new_record(record.clone(), &ir)?
+                    }
+                }
                 Item::Enum(enum_) => RsTypeKind::new_enum(enum_.clone(), &ir)?,
                 Item::TypeAlias(type_alias) => new_type_alias(db, type_alias.clone())?,
                 Item::TypeMapOverride(type_map_override) => {
@@ -1421,6 +1432,15 @@ fn generate_rs_api_impl_includes(
             "internal/sizeof.h".into(),
         ));
     };
+
+    for record in ir.records() {
+        if record.bridge_type_info.is_some() {
+            internal_includes.insert(CcInclude::SupportLibHeader(
+                crubit_support_path_format.into(),
+                "internal/lazy_init.h".into(),
+            ));
+        }
+    }
     for crubit_header in ["internal/cxx20_backports.h", "internal/offsetof.h"] {
         internal_includes.insert(CcInclude::SupportLibHeader(
             crubit_support_path_format.into(),

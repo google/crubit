@@ -442,9 +442,9 @@ llvm::json::Value SizeAlign::ToJson() const {
   };
 }
 
-llvm::json::Value BridgingTypeInfo::ToJson() const {
+llvm::json::Value BridgeTypeInfo::ToJson() const {
   return llvm::json::Object{
-      {"bridging_type", bridging_type},
+      {"bridge_type", bridge_type},
       {"rust_to_cpp_converter", rust_to_cpp_converter},
       {"cpp_to_rust_converter", cpp_to_rust_converter},
   };
@@ -466,7 +466,7 @@ llvm::json::Value Record::ToJson() const {
       {"defining_target", defining_target},
       {"unknown_attr", unknown_attr},
       {"doc_comment", doc_comment},
-      {"bridging_type_info", bridging_type_info},
+      {"bridge_type_info", bridge_type_info},
       {"source_loc", source_loc},
       {"unambiguous_public_bases", unambiguous_public_bases},
       {"fields", fields},

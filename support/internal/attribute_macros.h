@@ -71,25 +71,25 @@
 #define CRUBIT_INTERNAL_SAME_ABI \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_same_abi")
 
-#define CRUBIT_INTERNAL_BRIDGING_TYPE(t) \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_bridging_type", t)
+#define CRUBIT_INTERNAL_BRIDGE_TYPE(t) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_type", t)
 
-#define CRUBIT_INTERNAL_BRIDGING_TYPE_RUST_TO_CPP_CONVERTER(t) \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_bridging_type_rust_to_cpp_converter", t)
+#define CRUBIT_INTERNAL_BRIDGE_TYPE_RUST_TO_CPP_CONVERTER(t) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_type_rust_to_cpp_converter", t)
 
-#define CRUBIT_INTERNAL_BRIDGING_TYPE_CPP_TO_RUST_CONVERTER(t) \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_bridging_type_cpp_to_rust_converter", t)
+#define CRUBIT_INTERNAL_BRIDGE_TYPE_CPP_TO_RUST_CONVERTER(t) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_type_cpp_to_rust_converter", t)
 
-// Declare a Rust type as the bridging type for binding generation.
+// Declare a Rust type as the bridge type for binding generation.
 //
 // This can be applied to a struct, class, or enum.
 //
-// For example, We have the following C++ struct and its Rust bridging
+// For example, We have the following C++ struct and its Rust bridge
 // counterpart:
 //
 // ```c++
 // struct
-//   CRUBIT_INTERNAL_BRIDGING_SUPPORT("MyRustStruct", "rust_to_cpp",
+//   CRUBIT_INTERNAL_BRIDGE_SUPPORT("MyRustStruct", "rust_to_cpp",
 //   "cpp_to_rust") MyCppStruct {
 //     std::string name;
 // };
@@ -111,11 +111,14 @@
 // ```
 //
 // SAFETY:
-//   `ty` must be a fully-qualified valid Rust type name.
-//   `rust_to_cpp` and `cpp_to_rust` must be valid function names.
-#define CRUBIT_INTERNAL_BRIDGING_SUPPORT(ty, rust_to_cpp, cpp_to_rust) \
-  CRUBIT_INTERNAL_BRIDGING_TYPE(ty)                                    \
-  CRUBIT_INTERNAL_BRIDGING_TYPE_RUST_TO_CPP_CONVERTER(rust_to_cpp)     \
-  CRUBIT_INTERNAL_BRIDGING_TYPE_CPP_TO_RUST_CONVERTER(cpp_to_rust)
+//   * `ty` must be a fully-qualified valid Rust type name.
+//   * `rust_to_cpp` must be a valid function name, and its signature must be
+//     `void rust_to_cpp (void* rust_struct, MyCppStruct* cpp_struct)`.
+//   * `cpp_to_rust` must be valid function name and its signature must be
+//     `void cpp_to_rust (MyCppStruct* cpp_struct, void* rust_struct)`.
+#define CRUBIT_INTERNAL_BRIDGE_SUPPORT(ty, rust_to_cpp, cpp_to_rust) \
+  CRUBIT_INTERNAL_BRIDGE_TYPE(ty)                                    \
+  CRUBIT_INTERNAL_BRIDGE_TYPE_RUST_TO_CPP_CONVERTER(rust_to_cpp)     \
+  CRUBIT_INTERNAL_BRIDGE_TYPE_CPP_TO_RUST_CONVERTER(cpp_to_rust)
 
 #endif  // CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_

@@ -73,11 +73,18 @@ rust_bindings_from_cc_cli_flag(
     tags = [tag for tag in (TAGS[name] if name in TAGS else [])],
 ) for name in TESTS]
 
+NON_BUILDABLE_TEST = [
+    # The bridge type is not defined in the C++ header so it cannot be built.
+    "bridge_type",
+]
+
+BUILDABLE_TESTS = [name for name in TESTS if name not in NON_BUILDABLE_TEST]
+
 [crubit_rust_test(
     name = name + "_rs_test",
     srcs = ["empty_rs_test.rs"],
     cc_deps = ["%s_cc" % name],
-) for name in TESTS]
+) for name in BUILDABLE_TESTS]
 
 cc_library(
     name = "namespaces_json",

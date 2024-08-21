@@ -341,6 +341,12 @@ pub enum RsTypeKind {
     Slice(Rc<RsTypeKind>),
     /// Nullable T, using the rust Option type.
     Option(Rc<RsTypeKind>),
+    BridgeType {
+        name: Rc<str>,
+        cpp_to_rust_converter: Rc<str>,
+        rust_to_cpp_converter: Rc<str>,
+        original_type: Rc<Record>,
+    },
     Other {
         name: Rc<str>,
         type_args: Rc<[RsTypeKind]>,
@@ -365,6 +371,19 @@ impl RsTypeKind {
             rs_imported_crate_name(&enum_.owning_target, ir),
         ));
         Ok(RsTypeKind::Enum { enum_, crate_path })
+    }
+
+    pub fn new_bridge_type(original_record: Rc<Record>) -> Result<Self> {
+        if let Some(bridge_type_info) = &original_record.bridge_type_info {
+            Ok(RsTypeKind::BridgeType {
+                name: bridge_type_info.bridge_type.clone(),
+                cpp_to_rust_converter: bridge_type_info.cpp_to_rust_converter.clone(),
+                rust_to_cpp_converter: bridge_type_info.rust_to_cpp_converter.clone(),
+                original_type: original_record,
+            })
+        } else {
+            bail!("Record does not have bridge type info: {:?}", original_record);
+        }
     }
 
     pub fn new_type_map_override(
@@ -404,6 +423,7 @@ impl RsTypeKind {
             RsTypeKind::IncompleteRecord { .. } => false,
             RsTypeKind::Record { record, .. } => record.is_unpin(),
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_unpin(),
+            RsTypeKind::BridgeType { .. } => true,
             _ => true,
         }
     }
@@ -415,6 +435,10 @@ impl RsTypeKind {
     pub fn is_unsafe(&self) -> bool {
         // TODO(b/315346467): also include string_view, etc. here.
         matches!(self, RsTypeKind::Pointer { .. })
+    }
+
+    pub fn is_bridge_type(&self) -> bool {
+        matches!(self, RsTypeKind::BridgeType { .. })
     }
 
     /// Returns the features required to use this type which are not already
@@ -504,6 +528,7 @@ impl RsTypeKind {
                 RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Slice { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Option { .. } => require_feature(CrubitFeature::Supported, None),
+                RsTypeKind::BridgeType { .. } => require_feature(CrubitFeature::Experimental, None),
                 // Fallback case, we can't really give a good error message here.
                 RsTypeKind::Other { .. } => require_feature(CrubitFeature::Experimental, None),
             }
@@ -534,6 +559,7 @@ impl RsTypeKind {
             // TODO(b/274177296): Return `true` for structs where bindings replicate the type of
             // all the fields.
             RsTypeKind::Record { .. } => false,
+            RsTypeKind::BridgeType { .. } => false,
             RsTypeKind::Other { is_same_abi, .. } => *is_same_abi,
             _ => true,
         }
@@ -553,6 +579,7 @@ impl RsTypeKind {
             RsTypeKind::TypeAlias { underlying_type, .. } => {
                 underlying_type.is_move_constructible()
             }
+            RsTypeKind::BridgeType { .. } => true,
             _ => true,
         }
     }
@@ -656,6 +683,8 @@ impl RsTypeKind {
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
             RsTypeKind::Option(t) => t.implements_copy(),
             RsTypeKind::Slice(t) => t.implements_copy(),
+            // We cannot get the information of the Rust type so we assume it is not Copy.
+            RsTypeKind::BridgeType { .. } => false,
             RsTypeKind::Other { type_args, .. } => {
                 // All types that may appear here without `type_args` (e.g.
                 // primitive types like `i32`) implement `Copy`. Generic types
@@ -795,6 +824,7 @@ impl RsTypeKind {
                 // TODO(jeanpierreda): This should likely be `::core::option::Option`.
                 quote! {Option<#type_arg>}
             }
+            RsTypeKind::BridgeType { .. } => self.to_token_stream(),
             RsTypeKind::Other { name, type_args, .. } => {
                 let name: TokenStream = name.parse().expect("Invalid RsType::name in the IR");
                 let generic_params =
@@ -888,6 +918,10 @@ impl ToTokens for RsTypeKind {
                 // TODO(jeanpierreda): This should likely be `::core::option::Option`.
                 quote! {Option<#t>}
             }
+            RsTypeKind::BridgeType { name, .. } => {
+                let ident = make_rs_ident(name);
+                quote! { #ident }
+            }
             RsTypeKind::Other { name, type_args, .. } => {
                 let name: TokenStream = name.parse().expect("Invalid RsType::name in the IR");
                 let generic_params =
@@ -930,6 +964,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                     }
                     RsTypeKind::Slice(t) => self.todo.push(t),
                     RsTypeKind::Option(t) => self.todo.push(t),
+                    RsTypeKind::BridgeType { .. } => {}
                     RsTypeKind::Other { type_args, .. } => self.todo.extend(type_args.iter().rev()),
                 };
                 Some(curr)

@@ -554,13 +554,13 @@ fn test_struct_with_unnamed_bitfield_member() {
 }
 
 #[gtest]
-fn test_struct_with_bridging_type_annotation() {
+fn test_struct_with_bridge_type_annotation() {
     let ir = ir_from_cc(
         r#"
-        struct [[clang::annotate("crubit_bridging_type", "SomeBridgingType"),
-                 clang::annotate("crubit_bridging_type_rust_to_cpp_converter", "cpp_to_rust_converter"),
-                 clang::annotate("crubit_bridging_type_cpp_to_rust_converter", "rust_to_cpp_converter")]]
-                RecordWithBridgingType {
+        struct [[clang::annotate("crubit_bridge_type", "SomeBridgeType"),
+                 clang::annotate("crubit_bridge_type_rust_to_cpp_converter", "cpp_to_rust_converter"),
+                 clang::annotate("crubit_bridge_type_cpp_to_rust_converter", "rust_to_cpp_converter")]]
+                RecordWithBridgeType {
             int foo;
         };"#,
     )
@@ -570,9 +570,9 @@ fn test_struct_with_bridging_type_annotation() {
         ir,
         quote! {
             Record {
-                rs_name: "RecordWithBridgingType", ...
-                bridging_type_info: Some(BridgingTypeInfo {
-                  bridging_type: "SomeBridgingType",
+                rs_name: "RecordWithBridgeType", ...
+                bridge_type_info: Some(BridgeTypeInfo {
+                  bridge_type: "SomeBridgeType",
                   rust_to_cpp_converter: "cpp_to_rust_converter",
                   cpp_to_rust_converter: "rust_to_cpp_converter",
                 }), ...
@@ -2465,7 +2465,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
               defining_target: None,
               unknown_attr: None,
               doc_comment: Some(...),
-              bridging_type_info: None,
+              bridge_type_info: None,
               source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=15",
               unambiguous_public_bases: [],
               fields: [Field {

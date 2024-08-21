@@ -246,6 +246,10 @@ fn filter_out_ambiguous_member_functions(
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> {
+    // If the record has a bridge type, we don't need to generate any bindings.
+    if record.bridge_type_info.is_some() {
+        return Ok(GeneratedItem::default());
+    }
     let ir = db.ir();
     let crate_root_path = crate::crate_root_path_tokens(&ir);
     let ident = make_rs_ident(record.rs_name.as_ref());

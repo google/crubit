@@ -551,10 +551,10 @@ struct SizeAlign {
   int64_t alignment;
 };
 
-struct BridgingTypeInfo {
+struct BridgeTypeInfo {
   llvm::json::Value ToJson() const;
 
-  std::string bridging_type;
+  std::string bridge_type;
   std::string rust_to_cpp_converter;
   std::string cpp_to_rust_converter;
 };
@@ -575,7 +575,7 @@ struct Record {
   std::optional<BazelLabel> defining_target;
   std::optional<std::string> unknown_attr;
   std::optional<std::string> doc_comment;
-  std::optional<BridgingTypeInfo> bridging_type_info;
+  std::optional<BridgeTypeInfo> bridge_type_info;
   std::string source_loc;
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;

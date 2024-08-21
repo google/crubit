@@ -1706,6 +1706,7 @@ fn generate_func_thunk(
     } else if !return_type.is_c_abi_compatible_by_value() {
         // For return types that can't be passed by value, create a new out parameter.
         // The lifetime doesn't matter, so we can insert a new anonymous lifetime here.
+        // TODO(yongheng): Switch to `void*`.
         out_param = Some(quote! {
             &mut ::core::mem::MaybeUninit< #return_type >
         });
@@ -1872,16 +1873,44 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
     let mut param_idents =
         func.params.iter().map(|p| crate::format_cc_ident(&p.identifier.identifier)).collect_vec();
 
+    let mut conversion_externs = quote! {};
+    let mut conversion_stmts = quote! {};
+    let convert_ident = |ident: &TokenStream| -> TokenStream {
+        let ident = format_ident!("__converted_{}", ident.to_string());
+        quote! { #ident }
+    };
     let mut param_types = func
         .params
         .iter()
         .map(|p| {
-            let formatted = crate::format_cpp_type(&p.type_.cpp_type, &ir)?;
-            if !db.rs_type_kind(p.type_.rs_type.clone())?.is_c_abi_compatible_by_value() {
+            let cpp_type = crate::format_cpp_type(&p.type_.cpp_type, &ir)?;
+            let arg_type = db.rs_type_kind(p.type_.rs_type.clone())?;
+            if arg_type.is_bridge_type() {
+                match &arg_type {
+                    RsTypeKind::BridgeType { rust_to_cpp_converter, .. } => {
+                        let convert_function = crate::format_cc_ident(rust_to_cpp_converter);
+                        let ident = crate::format_cc_ident(&p.identifier.identifier);
+                        let cpp_ident = convert_ident(&ident);
+                        conversion_externs.extend(quote! {
+                            extern "C" void #convert_function(void* rust_struct, void* cpp_struct);
+                        });
+                        conversion_stmts.extend(quote! {
+                            ::crubit::LazyInit<#cpp_type> #cpp_ident;
+                        });
+                        conversion_stmts.extend(quote! {
+                            #convert_function(#ident, &#cpp_ident.val);
+                        });
+                        Ok(quote! { void* })
+                    }
+                    _ => {
+                        bail!("Invalid bridge type: {:?}", arg_type);
+                    }
+                }
+            } else if !arg_type.is_c_abi_compatible_by_value() {
                 // non-Unpin types are wrapped by a pointer in the thunk.
-                Ok(quote! {#formatted *})
+                Ok(quote! {#cpp_type *})
             } else {
-                Ok(formatted)
+                Ok(cpp_type)
             }
         })
         .collect::<Result<Vec<_>>>()?;
@@ -1890,7 +1919,11 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
         .params
         .iter()
         .map(|p| {
-            let ident = crate::format_cc_ident(&p.identifier.identifier);
+            let mut ident = crate::format_cc_ident(&p.identifier.identifier);
+            if db.rs_type_kind(p.type_.rs_type.clone())?.is_bridge_type() {
+                let formatted_ident = convert_ident(&ident);
+                ident = quote! { &(#formatted_ident.val) };
+            }
             match p.type_.cpp_type.name.as_deref() {
                 Some("&") => Ok(quote! { * #ident }),
                 Some("&&") => Ok(quote! { std::move(* #ident) }),
@@ -1910,8 +1943,8 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
     // value across `extern "C"` ABI.  (We do this after the arg_expressions
     // computation, so that it's only in the parameter list, not the argument
     // list.)
-    let is_return_value_c_abi_compatible =
-        db.rs_type_kind(func.return_type.rs_type.clone())?.is_c_abi_compatible_by_value();
+    let return_type_kind = db.rs_type_kind(func.return_type.rs_type.clone())?;
+    let is_return_value_c_abi_compatible = return_type_kind.is_c_abi_compatible_by_value();
 
     let return_type_name = if !is_return_value_c_abi_compatible {
         param_idents.insert(0, crate::format_cc_ident("__return"));
@@ -1919,7 +1952,18 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
         let mut cc_return_type = func.return_type.cpp_type.clone();
         cc_return_type.is_const = false;
         let return_type_name = crate::format_cpp_type(&cc_return_type, &ir)?;
-        param_types.insert(0, quote! {#return_type_name *});
+        match &return_type_kind {
+            RsTypeKind::BridgeType { cpp_to_rust_converter, .. } => {
+                let convert_function = crate::format_cc_ident(cpp_to_rust_converter);
+                conversion_externs.extend(quote! {
+                    extern "C" void #convert_function(void* cpp_struct, void* rust_struct);
+                });
+                param_types.insert(0, quote! {void *});
+            }
+            _ => {
+                param_types.insert(0, quote! {#return_type_name *});
+            }
+        };
         quote! {void}
     } else {
         crate::format_cpp_type(&func.return_type.cpp_type, &ir)?
@@ -1956,10 +2000,21 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
 
     let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
     let return_stmt = if !is_return_value_c_abi_compatible {
-        // Explicitly use placement `new` so that we get guaranteed copy elision in
-        // C++17.
         let out_param = &param_idents[0];
-        quote! {new(#out_param) auto(#return_expr)}
+        match &return_type_kind {
+            RsTypeKind::BridgeType { cpp_to_rust_converter, .. } => {
+                let convert_function = crate::format_cc_ident(cpp_to_rust_converter);
+                quote! {
+                    auto __original_cpp_struct = #return_expr;
+                    #convert_function(&__original_cpp_struct, #out_param)
+                }
+            }
+            _ => {
+                // Explicitly use placement `new` so that we get guaranteed copy elision in
+                // C++17.
+                quote! {new(#out_param) auto(#return_expr)}
+            }
+        }
     } else {
         match func.return_type.cpp_type.name.as_deref() {
             Some("void") => return_expr,
@@ -1984,7 +2039,10 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
     };
 
     Ok(quote! {
+        #conversion_externs
+
         extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
+            #conversion_stmts
             #return_stmt;
         }
     })

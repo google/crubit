@@ -7,6 +7,7 @@ cc_library(
     hdrs = [
         "attribute_macros.h",
         "cxx20_backports.h",
+        "lazy_init.h",
         "memswap.h",
         "offsetof.h",
         "return_value_slot.h",
