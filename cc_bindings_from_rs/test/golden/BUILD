@@ -8,9 +8,14 @@ load(
     "cc_bindings_from_rust_cli_flag",
 )
 load(
+    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
+    "cc_bindings_from_rust",
+)
+load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
     "golden_test",
 )
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -47,6 +52,17 @@ cc_bindings_from_rust_cli_flag(
     golden_h = name + "_cc_api.h",
     golden_rs = name + "_cc_api_impl.rs",
     rust_library = name + "_rust",
+) for name in TESTS]
+
+[cc_bindings_from_rust(
+    name = name + "_cc_api",
+    crate = ":" + name + "_rust",
+) for name in TESTS]
+
+[crubit_cc_test(
+    name = name + "_cc_test",
+    srcs = ["empty_cc_test.cc"],
+    deps = ["%s_cc_api" % name],
 ) for name in TESTS]
 
 bzl_library(
