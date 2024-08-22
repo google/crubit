@@ -99,12 +99,15 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
     absl::Nonnull<const Expr *> E, const Environment &Env,
     PointerNullabilityDiagnostic::Context DiagCtx,
     absl::Nullable<const clang::NamedDecl *> Callee = nullptr,
-    absl::Nullable<const clang::IdentifierInfo *> ParamName = nullptr) {
+    absl::Nullable<const clang::IdentifierInfo *> ParamName = nullptr,
+    CharSourceRange Range = {}) {
   if (PointerValue *ActualVal = getPointerValue(E, Env)) {
-    if (isNullable(*ActualVal, Env))
+    if (isNullable(*ActualVal, Env)) {
+      if (!Range.isValid())
+        Range = CharSourceRange::getTokenRange(E->getSourceRange());
       return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
-               DiagCtx, CharSourceRange::getTokenRange(E->getSourceRange()),
-               Callee, ParamName}};
+               DiagCtx, Range, Callee, ParamName}};
+    }
     return {};
   }
 
@@ -164,7 +167,15 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(
       MemberExpr->getBase(), State.Env,
-      PointerNullabilityDiagnostic::Context::NullableDereference);
+      PointerNullabilityDiagnostic::Context::NullableDereference,
+      /*Callee=*/nullptr, /*ParamName=*/nullptr,
+      // Attach the diagnostic to the source range of the `->` operator, rather
+      // than the source range of `MemberExpr->getBase()`.
+      // In a chain of dereferences, such as `p1->p2->field`, this ensures that
+      // the specific dereference that the diagnostic refers to is unambiguously
+      // clear, even if some system consuming the range only preserves the start
+      // of the range.
+      CharSourceRange::getTokenRange(MemberExpr->getOperatorLoc()));
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseAssignment(
