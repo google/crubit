@@ -1,6 +1,7 @@
 <!--* css: "//depot/docs/includes/sitemap.css" *-->
 
 *   [Home](/docs/index.md)
+*   [Are We Crubit Yet?](/docs/overview/status)
 *   Rust Bindings for C++ Libraries
 
     *   [Overview](/docs/cpp/)
