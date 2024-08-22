@@ -31,7 +31,7 @@ inline CppStruct Concat(CppStruct x, CppStruct y) {
 }
 
 inline void ffi_create_my_cpp_struct(const char* s, size_t len, void* output) {
-  *(reinterpret_cast<CppStruct*>(output)) = CppStruct(std::string(s, len));
+  new (output) CppStruct(std::string(s, len));
 }
 
 inline const char* ffi_get_buffer(const void* input) {
