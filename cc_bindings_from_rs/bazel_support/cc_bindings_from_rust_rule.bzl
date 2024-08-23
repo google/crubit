@@ -217,6 +217,9 @@ def _compile_rs_out_file(ctx, rs_out_file, target):
         )
         for dep in ctx.attr._rs_deps_for_bindings + [target]
     ]
+
+    # The `..._cc_api_impl.rs` file needs to depend on all the deps of the target crate.
+    deps += target[CrateInfo].deps.to_list()
     dep_variant_info = compile_rust(
         ctx,
         attr = ctx.rule.attr,
@@ -225,6 +228,7 @@ def _compile_rs_out_file(ctx, rs_out_file, target):
         deps = deps,
         crate_name = target[CrateInfo].name + "_cc_api_impl",
         include_coverage = True,
+        force_all_deps_direct = False,
     )
     return dep_variant_info.cc_info
 

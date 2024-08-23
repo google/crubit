@@ -33,7 +33,7 @@ def _get_cc_info(providers):
             return provider
     fail("Couldn't find a CcInfo in the list of providers")
 
-def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage):
+def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage, force_all_deps_direct):
     """Compiles a Rust source file.
 
     Args:
@@ -44,6 +44,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage)
       deps: List[DepVariantInfo]: A list of dependencies needed.
       crate_name: (string) crate name for naming the output files (.rlib, .rmeta...))
       include_coverage: (bool) Whether or not coverage information should be generated.
+      force_all_deps_direct: (bool) Whether or not to force all deps to be direct.
 
     Returns:
       A DepVariantInfo provider.
@@ -98,7 +99,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage)
                      # TODO(b/349776381): remove.
                      ["-Adead_code"],
         output_hash = output_hash,
-        force_all_deps_direct = True,
+        force_all_deps_direct = force_all_deps_direct,
         include_coverage = include_coverage,
     )
 
