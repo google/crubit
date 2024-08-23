@@ -16,7 +16,6 @@ extern crate rustc_type_ir;
 use rustc_attr::find_deprecation;
 use std::slice;
 use std::iter::once;
-use rustc_middle::mir::interpret::InterpResult;
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::ConstValue;
@@ -30,7 +29,7 @@ use rustc_hir::def::{DefKind, Res};
 use std::hash::{Hash, Hasher};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use rustc_target::abi::{
-    Abi, AddressSpace, FieldsShape, HasDataLayout, Integer, Layout, Pointer, Primitive, Scalar,
+    Abi, AddressSpace, FieldsShape, Integer, Layout, Pointer, Primitive, Scalar,
 };
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use itertools::Itertools;
@@ -1424,74 +1423,6 @@ fn format_use(
     }
 }
 
-fn format_const_value_to_cc(
-    cx: &impl HasDataLayout,
-    kind: &ty::TyKind,
-    value: &ConstValue,
-) -> Result<String> {
-    macro_rules! convert {
-        ($kind:expr, $value:expr, $(($rust_type:pat, $to_method:ident)),*) => {
-            match $kind {
-                $(
-                    $rust_type => {
-                        Ok(match $value {
-                            ConstValue::Scalar(scalar) => {
-                                if let InterpResult::Ok(value) = scalar.$to_method() {
-                                    value.to_string()
-                                } else {
-                                    panic!("Failed to evaluate constant scalar.")
-                                }
-                            },
-                            _ => panic!("Unexpected ConstValue type."),
-                        })
-                    },
-                )*
-                ty::TyKind::Uint(ty::UintTy::Usize) => {
-                    Ok(match value {
-                        ConstValue::Scalar(scalar) => {
-                            if let InterpResult::Ok(value) = scalar.to_target_usize(cx) {
-                                value.to_string()
-                            } else {
-                                panic!("Failed to evaluate constant scalar (usize).")
-                            }
-                        },
-                        _ => panic!("Unexpected ConstValue type."),
-                    })
-                },
-                ty::TyKind::Int(ty::IntTy::Isize) => {
-                    Ok(match value {
-                        ConstValue::Scalar(scalar) => {
-                            if let InterpResult::Ok(value) = scalar.to_target_isize(cx) {
-                                value.to_string()
-                            } else {
-                                panic!("Failed to evaluate constant scalar (isize).")
-                            }
-                        },
-                        _ => panic!("Unexpected ConstValue type."),
-                    })
-                },
-                _ => Err(anyhow!("Unsupported constant type.")),
-            }
-        };
-    }
-
-    convert!(
-        kind,
-        value,
-        (ty::TyKind::Bool, to_bool),
-        (ty::TyKind::Int(ty::IntTy::I8), to_i8),
-        (ty::TyKind::Int(ty::IntTy::I16), to_i16),
-        (ty::TyKind::Int(ty::IntTy::I32), to_i32),
-        (ty::TyKind::Int(ty::IntTy::I64), to_i64),
-        (ty::TyKind::Uint(ty::UintTy::U8), to_u8),
-        (ty::TyKind::Uint(ty::UintTy::U16), to_u16),
-        (ty::TyKind::Uint(ty::UintTy::U32), to_u32),
-        (ty::TyKind::Uint(ty::UintTy::U64), to_u64),
-        (ty::TyKind::Float(ty::FloatTy::F32), to_f32),
-        (ty::TyKind::Float(ty::FloatTy::F64), to_f64)
-    )
-}
-
 fn format_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     let tcx = db.tcx();
     let def_id: DefId = local_def_id.to_def_id();
@@ -1503,17 +1434,40 @@ fn format_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Res
         Node::ImplItem(item) => item.expect_const().0,
         _ => panic!("{}", unsupported_node_item_msg),
     };
-
     let ty = tcx.type_of(def_id).instantiate_identity();
-    let value = tcx.const_eval_poly(def_id).unwrap();
-
     let cc_type_snippet =
         format_ty_for_cc(db, SugaredTy::new(ty, Some(hir_ty)), TypeLocation::Other)?;
-    let cc_value = format_const_value_to_cc(&tcx, ty.kind(), &value)?;
 
     let cc_type = cc_type_snippet.tokens;
-    let cc_value: TokenStream = cc_value.parse().unwrap();
-    let cc_name: TokenStream = format_cc_ident(tcx.item_name(def_id).as_str())?;
+    let cc_name = format_cc_ident(tcx.item_name(def_id).as_str())?;
+    let cc_value = match tcx.const_eval_poly(def_id).unwrap() {
+        ConstValue::Scalar(scalar) => {
+            macro_rules! eval {
+                ($method:ident $(,$arg:expr)?) => {
+                    Ok(scalar.$method($($arg)?).unwrap().to_string())
+                };
+            }
+            match ty.kind() {
+                ty::TyKind::Bool => eval!(to_bool),
+                ty::TyKind::Int(ty::IntTy::I8) => eval!(to_i8),
+                ty::TyKind::Int(ty::IntTy::I16) => eval!(to_i16),
+                ty::TyKind::Int(ty::IntTy::I32) => eval!(to_i32),
+                ty::TyKind::Int(ty::IntTy::I64) => eval!(to_i64),
+                ty::TyKind::Uint(ty::UintTy::U8) => eval!(to_u8),
+                ty::TyKind::Uint(ty::UintTy::U16) => eval!(to_u16),
+                ty::TyKind::Uint(ty::UintTy::U32) => eval!(to_u32),
+                ty::TyKind::Uint(ty::UintTy::U64) => eval!(to_u64),
+                ty::TyKind::Float(ty::FloatTy::F32) => eval!(to_f32),
+                ty::TyKind::Float(ty::FloatTy::F64) => eval!(to_f64),
+                ty::TyKind::Uint(ty::UintTy::Usize) => eval!(to_target_usize, &tcx),
+                ty::TyKind::Int(ty::IntTy::Isize) => eval!(to_target_isize, &tcx),
+                _ => Err(anyhow!("Unsupported constant type")),
+            }
+        }
+        _ => Err(anyhow!("Unexpected ConstValue type")),
+    }?
+    .parse::<TokenStream>()
+    .unwrap();
 
     Ok(ApiSnippets {
         main_api: CcSnippet {
