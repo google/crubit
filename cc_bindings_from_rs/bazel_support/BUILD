@@ -15,7 +15,7 @@ bool_flag(
 bzl_library(
     name = "cc_bindings_from_rust_rule_bzl",
     srcs = ["cc_bindings_from_rust_rule.bzl"],
-    visibility = ["//visibility:private"],
+    visibility = ["//:__subpackages__"],
 )
 
 bzl_library(

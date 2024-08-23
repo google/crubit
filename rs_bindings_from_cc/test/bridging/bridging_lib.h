@@ -8,10 +8,11 @@
 #include <string>
 #include <utility>
 
-#include "support/internal/attribute_macros.h"
-
-struct CRUBIT_INTERNAL_BRIDGE_SUPPORT("MyRustStruct", "rust_to_cpp_converter",
-                                      "cpp_to_rust_converter") CppStruct {
+struct [[clang::annotate("crubit_bridge_type", "MyRustStruct"),
+         clang::annotate("crubit_bridge_type_rust_to_cpp_converter",
+                         "rust_to_cpp_converter"),
+         clang::annotate("crubit_bridge_type_cpp_to_rust_converter",
+                         "cpp_to_rust_converter")]] CppStruct {
   std::string s;
 
   explicit CppStruct(std::string s) : s(std::move(s)) {}
