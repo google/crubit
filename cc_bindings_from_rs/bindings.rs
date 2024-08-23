@@ -13,37 +13,37 @@ extern crate rustc_target;
 extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 
-use arc_anyhow::{Context, Error, Result};
+use rustc_attr::find_deprecation;
+use std::slice;
+use std::iter::once;
+use rustc_middle::mir::interpret::InterpResult;
+use rustc_infer::infer::TyCtxtInferExt;
+use rustc_middle::dep_graph::DepContext;
+use rustc_middle::mir::ConstValue;
+use rustc_middle::mir::Mutability;
+use rustc_trait_selection::infer::InferCtxtExt;
+use std::ops::AddAssign;
+use std::rc::Rc;
+use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
+use rustc_span::symbol::{kw, sym, Symbol};
+use rustc_hir::def::{DefKind, Res};
+use std::hash::{Hash, Hasher};
+use std::collections::{BTreeSet, HashMap, HashSet};
+use rustc_target::abi::{
+    Abi, AddressSpace, FieldsShape, HasDataLayout, Integer, Layout, Pointer, Primitive, Scalar,
+};
+use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
+use itertools::Itertools;
+use rustc_type_ir::RegionKind;
 use code_gen_utils::{
     escape_non_identifier_chars, format_cc_ident, format_cc_includes, make_rs_ident, CcInclude,
     NamespaceQualifier,
 };
 use error_report::{anyhow, bail, ensure, ErrorReporting};
-use itertools::Itertools;
-use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
-use rustc_attr::find_deprecation;
-use rustc_hir::def::{DefKind, Res};
+use arc_anyhow::{Context, Error, Result};
+use proc_macro2::{Ident, Literal, TokenStream};
 use rustc_hir::{AssocItemKind, HirId, Item, ItemKind, Node, Safety, UseKind, UsePath};
-use rustc_infer::infer::TyCtxtInferExt;
-use rustc_middle::dep_graph::DepContext;
-use rustc_middle::mir::interpret::InterpResult;
-use rustc_middle::mir::ConstValue;
-use rustc_middle::mir::Mutability;
-use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
-use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
-use rustc_span::symbol::{kw, sym, Symbol};
-use rustc_target::abi::{
-    Abi, AddressSpace, FieldsShape, HasDataLayout, Integer, Layout, Pointer, Primitive, Scalar,
-};
-use rustc_trait_selection::infer::InferCtxtExt;
-use rustc_type_ir::RegionKind;
-use std::collections::{BTreeSet, HashMap, HashSet};
-use std::hash::{Hash, Hasher};
-use std::iter::once;
-use std::ops::AddAssign;
-use std::rc::Rc;
-use std::slice;
 
 memoized::query_group! {
     trait BindingsGenerator<'tcx> {
@@ -1495,36 +1495,46 @@ fn format_const_value_to_cc(
 fn format_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     let tcx = db.tcx();
     let def_id: DefId = local_def_id.to_def_id();
-    let node = tcx.hir_node_by_def_id(local_def_id);
+    let unsupported_node_item_msg = "Called `format_const` with a `rustc_hir::Node` that is not a `Node::Item` or `Node::ImplItem`";
+    let hir_node = tcx.hir_node_by_def_id(local_def_id);
 
-    if let Node::Item(item) = node {
-        if let ItemKind::Const(hir_ty, ..) = item.kind {
-            let ty = tcx.type_of(def_id).instantiate_identity();
+    let hir_ty = match hir_node {
+        Node::Item(item) => item.expect_const().0,
+        Node::ImplItem(item) => item.expect_const().0,
+        _ => panic!("{}", unsupported_node_item_msg),
+    };
 
-            let value = tcx.const_eval_poly(def_id).unwrap();
+    let ty = tcx.type_of(def_id).instantiate_identity();
+    let value = tcx.const_eval_poly(def_id).unwrap();
 
-            let cc_type_snippet =
-                format_ty_for_cc(db, SugaredTy::new(ty, Some(hir_ty)), TypeLocation::Other)?;
-            let cc_value = format_const_value_to_cc(&tcx, ty.kind(), &value)?;
+    let cc_type_snippet =
+        format_ty_for_cc(db, SugaredTy::new(ty, Some(hir_ty)), TypeLocation::Other)?;
+    let cc_value = format_const_value_to_cc(&tcx, ty.kind(), &value)?;
 
-            let cc_type = cc_type_snippet.tokens;
-            let cc_value: TokenStream = cc_value.parse().unwrap();
-            let cc_name: TokenStream = format_cc_ident(tcx.item_name(def_id).as_str())?;
+    let cc_type = cc_type_snippet.tokens;
+    let cc_value: TokenStream = cc_value.parse().unwrap();
+    let cc_name: TokenStream = format_cc_ident(tcx.item_name(def_id).as_str())?;
 
-            return Ok(ApiSnippets {
-                main_api: CcSnippet {
-                    tokens: quote! {
+    Ok(ApiSnippets {
+        main_api: CcSnippet {
+            tokens: match hir_node {
+                Node::Item(_) => {
+                    quote! {
                         constexpr #cc_type #cc_name = #cc_value;
-                    },
-                    ..cc_type_snippet
-                },
-                cc_details: CcSnippet::default(),
-                rs_details: quote! {},
-            });
-        }
-        panic!("Called format_const on a non-constant");
-    }
-    panic!("Called format_const on a non-item");
+                    }
+                }
+                Node::ImplItem(_) => {
+                    quote! {
+                        static constexpr #cc_type #cc_name = #cc_value;
+                    }
+                }
+                _ => panic!("{}", unsupported_node_item_msg),
+            },
+            ..cc_type_snippet
+        },
+        cc_details: CcSnippet::default(),
+        rs_details: quote! {},
+    })
 }
 
 fn format_type_alias(
@@ -2835,6 +2845,7 @@ fn format_adt<'tcx>(
             }
             let result = match impl_item_ref.kind {
                 AssocItemKind::Fn { .. } => db.format_fn(def_id).map(Some),
+                AssocItemKind::Const => format_const(db, def_id).map(Some),
                 other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
             };
             result.unwrap_or_else(|err| Some(format_unsupported_def(db, def_id, err)))
@@ -7703,16 +7714,13 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             assert!(!main_api.prereqs.is_empty());
-            let unsupported_msg = "Error generating bindings for `SomeStruct::CONST_VALUE` \
-                                   defined at <crubit_unittests.rs>;l=7: \
-                                   Unsupported `impl` item kind: Const";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
                     ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeStruct final {
                         ...
-                        __COMMENT__ #unsupported_msg
+                        static constexpr std::int32_t CONST_VALUE = 42;
                         ...
                     };
                     ...
