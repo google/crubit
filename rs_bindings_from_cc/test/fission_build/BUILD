@@ -18,6 +18,8 @@ crubit_rust_test(
     cc_deps = [
         ":empty",
     ],
+    # Do not introduce a fake dependency on Crubit, because it adds conflicting actions.
+    crubit_dep = False,
 )
 
 # Regression test for b/326976757.

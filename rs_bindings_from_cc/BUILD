@@ -64,6 +64,8 @@ deps_for_bindings(
 crubit_cc_binary(
     name = "rs_bindings_from_cc_impl",
     srcs = ["rs_bindings_from_cc.cc"],
+    # Do not add a fake dependency on Crubit, because it will introduce a dependency cycle.
+    crubit_dep = False,
     visibility = ["//visibility:public"],
     deps = [
         ":cc_ir",

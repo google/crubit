@@ -49,6 +49,8 @@ crubit_rust_test(
 crubit_rust_binary(
     name = "cc_bindings_from_rs",
     srcs = ["cc_bindings_from_rs.rs"],
+    # Do not add a fake dependency on Crubit, because it will introduce a dependency cycle.
+    crubit_dep = False,
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
     rustc_flags = ["-Zallow-features=never_type,rustc_private"],
     visibility = [
