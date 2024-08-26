@@ -508,6 +508,21 @@ TEST(EligibleRangesTest, DependentAliasNested) {
                                        SlotRange(-1, Input.range("three"))))));
 }
 
+TEST(EligibleRangesTest, NoreturnAliasLosesFunctionTypeSourceInfo) {
+  // This previously crashed because the noreturn attribute causes the
+  // TypedefType to be unwrapped and rewritten without the Typedef layer and
+  // the source information below that layer to be dropped.
+  auto Input = Annotations(R"(
+    typedef void (*Alias)(const char *, ...);
+
+    __attribute__((__noreturn__)) [[Alias]] target;
+  )");
+  EXPECT_THAT(
+      getVarRanges(Input.code()),
+      Optional(TypeLocRanges(
+          MainFileName, UnorderedElementsAre(SlotRange(0, Input.range(""))))));
+}
+
 TEST(EligibleRangesTest, TemplatedClassContext) {
   auto Input = Annotations(R"(
   template <typename T>

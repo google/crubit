@@ -622,6 +622,13 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   void visitFunctionProtoType(absl::Nonnull<const FunctionProtoType *> FPT,
                               std::optional<FunctionProtoTypeLoc> L) {
     ignoreUnexpectedNullability();
+    if (FPT->getNoReturnAttr() && L && L->getNumParams() > 0 &&
+        L->getParam(0) == nullptr) {
+      // This FunctionProtoType was unwrapped and rewrapped to add a noreturn
+      // attribute, in a way that lost source information. We should not walk
+      // the TypeLoc.
+      L = std::nullopt;
+    }
     visit(FPT->getReturnType(),
           L ? std::optional<TypeLoc>(L->getReturnLoc()) : std::nullopt);
     if (L) {

@@ -162,7 +162,6 @@ cc_test(
         "//nullability:pragma",
         "//nullability:type_nullability",
         "@abseil-cpp//absl/log:check",
-        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
