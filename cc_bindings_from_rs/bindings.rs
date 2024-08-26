@@ -1572,11 +1572,13 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
     let fully_qualified_fn_name = FullyQualifiedName::new(tcx, def_id);
     let unqualified_rust_fn_name =
         fully_qualified_fn_name.name.expect("Functions are assumed to always have a name");
-    let attribute = crubit_attr::get(tcx, def_id).unwrap();
-    let cpp_name = attribute.cpp_name;
-    // The generated C++ function name.
-    let main_api_fn_name = format_cc_ident(cpp_name.unwrap_or(unqualified_rust_fn_name).as_str())
-        .context("Error formatting function name")?;
+    let main_api_fn_name = format_cc_ident(
+        fully_qualified_fn_name
+            .cpp_name
+            .expect("Functions are assumed to always have a cpp name")
+            .as_str(),
+    )
+    .context("Error formatting function name")?;
 
     let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_ret_type =
@@ -1924,12 +1926,12 @@ fn format_adt_core<'tcx>(
     assert!(self_ty.is_adt());
     assert!(is_directly_public(tcx, def_id), "Caller should verify");
 
-    let attribute = crubit_attr::get(tcx, def_id).unwrap();
-
-    let item_name = attribute.cpp_name.unwrap_or_else(|| tcx.item_name(def_id));
-    let rs_fully_qualified_name = format_ty_for_rs(tcx, self_ty)?;
-    let cc_short_name =
-        format_cc_ident(item_name.as_str()).context("Error formatting item name")?;
+    let fully_qualified_name = FullyQualifiedName::new(tcx, def_id);
+    let rs_fully_qualified_name = fully_qualified_name.format_for_rs();
+    let cpp_name = format_cc_ident(
+        fully_qualified_name.cpp_name.expect("Structs always have a name").as_str(),
+    )
+    .context("Error formatting item name")?;
 
     // The check below ensures that `format_trait_thunks` will succeed for the
     // `Drop`, `Default`, and/or `Clone` trait. Ideally we would directly check
@@ -1937,9 +1939,9 @@ fn format_adt_core<'tcx>(
     // succeeds, but this would lead to infinite recursion, so we only replicate
     // `format_ty_for_cc` / `TyKind::Adt` checks that are outside of
     // `format_adt_core`.
-    FullyQualifiedName::new(tcx, def_id).format_for_cc().with_context(|| {
-        format!("Error formatting the fully-qualified C++ name of `{item_name}")
-    })?;
+    fully_qualified_name
+        .format_for_cc()
+        .with_context(|| format!("Error formatting the fully-qualified C++ name of `{cpp_name}"))?;
 
     let adt_def = self_ty.ty_adt_def().expect("`def_id` needs to identify an ADT");
     let keyword = match adt_def.adt_kind() {
@@ -1948,7 +1950,7 @@ fn format_adt_core<'tcx>(
     };
 
     let layout = get_layout(tcx, self_ty)
-        .with_context(|| format!("Error computing the layout of #{item_name}"))?;
+        .with_context(|| format!("Error computing the layout of #{cpp_name}"))?;
     ensure!(layout.abi().is_sized(), "Bindings for dynamically sized types are not supported.");
     let alignment_in_bytes = {
         // Only the ABI-mandated alignment is considered (i.e. `AbiAndPrefAlign::pref`
@@ -1963,7 +1965,7 @@ fn format_adt_core<'tcx>(
     Ok(Rc::new(AdtCoreBindings {
         def_id,
         keyword,
-        cc_short_name,
+        cc_short_name: cpp_name,
         rs_fully_qualified_name,
         self_ty,
         alignment_in_bytes,
