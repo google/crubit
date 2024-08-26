@@ -89,9 +89,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
       rustc_env: `rustc` environment to use when running `cc_bindings_from_rs`
 
     Returns:
-      A pair of files:
-      - h_out_file (named "<basename>_cc_api.h")
-      - rs_out_file (named "<basename>_cc_api_impl.rs")
+      The GeneratedBindingsInfo provider.
     """
     h_out_file = ctx.actions.declare_file(basename + "_cc_api.h")
     rs_out_file = ctx.actions.declare_file(basename + "_cc_api_impl.rs")
@@ -147,7 +145,10 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
         arguments = [args.process_wrapper_flags, "--", ctx.executable._cc_bindings_from_rs_tool.path, crubit_args, "--", args.rustc_flags, "-Cpanic=abort"],
     )
 
-    return (h_out_file, rs_out_file)
+    return GeneratedBindingsInfo(
+        h_file = h_out_file,
+        rust_file = rs_out_file,
+    )
 
 def _make_cc_info_for_h_out_file(ctx, h_out_file, cc_infos):
     """Creates and returns CcInfo for the generated ..._cc_api.h header file.
@@ -302,7 +303,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         skip_expanding_rustc_env = True,
     )
 
-    (h_out_file, rs_out_file) = _generate_bindings(
+    bindings_info = _generate_bindings(
         ctx,
         target,
         basename,
@@ -311,11 +312,11 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         env,
     )
 
-    impl_cc_info = _compile_rs_out_file(ctx, rs_out_file, target)
+    impl_cc_info = _compile_rs_out_file(ctx, bindings_info.rust_file, target)
 
     cc_info = _make_cc_info_for_h_out_file(
         ctx,
-        h_out_file,
+        bindings_info.h_file,
         cc_infos = [target[CcInfo], impl_cc_info] + [
             dep_bindings_info.cc_info
             for dep_bindings_info in _get_dep_bindings_infos(ctx)
@@ -325,13 +326,10 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         CcBindingsFromRustInfo(
             cc_info = cc_info,
             crate_key = crate_info.name,
-            headers = [h_out_file],
+            headers = [bindings_info.h_file],
         ),
-        GeneratedBindingsInfo(
-            h_file = h_out_file,
-            rust_file = rs_out_file,
-        ),
-        OutputGroupInfo(out = depset([h_out_file, rs_out_file])),
+        bindings_info,
+        OutputGroupInfo(out = depset([bindings_info.h_file, bindings_info.rust_file])),
     ]
 
 cc_bindings_from_rust_aspect = aspect(
