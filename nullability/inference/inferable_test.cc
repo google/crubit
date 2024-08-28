@@ -85,8 +85,9 @@ TEST(IsInferenceTargetTest, GlobalVariables) {
 
 TEST(IsInferenceTargetTest, Functions) {
   TestAST AST((SmartPointerHeader + R"cc(
-                int* func(int*, int**, std::unique_ptr<int>,
-                          custom_smart_ptr<int>) {
+                int* func(int* Param, int** NestedParam,
+                          std::unique_ptr<int> StdSmartParam,
+                          custom_smart_ptr<int> CustomSmartParam) {
                   int* Local;
                   static int* StaticLocal;
                   std::unique_ptr<int> StdSmartLocal;
@@ -100,10 +101,14 @@ TEST(IsInferenceTargetTest, Functions) {
 
   auto &Ctx = AST.context();
   EXPECT_TRUE(isInferenceTarget(lookup("func", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("Local", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("StaticLocal", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("StdSmartLocal", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("CustomSmartLocal", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("Param", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("NestedParam", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("StdSmartParam", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("CustomSmartParam", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("Local", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("StaticLocal", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("StdSmartLocal", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartLocal", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("empty", Ctx)));
   auto &Lambda = lookup<VarDecl>("Lambda", Ctx);
   auto *LambdaCtx = cast<LambdaExpr>(Lambda.getInit())->getLambdaClass();
@@ -144,23 +149,31 @@ TEST(IsInferenceTargetTest, ClassAndMembers) {
 TEST(IsInferenceTargetTest, FunctionTemplate) {
   TestAST AST(R"cc(
     template <int X>
-    void funcTmpl(int*) {}
+    void funcTmpl(int*) {
+      int* LocalInTmpl;
+    }
 
     auto& FuncTmplSpec = funcTmpl<2>;
   )cc");
 
   auto &Ctx = AST.context();
-  // A function template is not an inference target.
+  // A function template is not an inference target, nor are local variables
+  // contained within.
   const FunctionTemplateDecl &FuncTmpl =
       lookup<FunctionTemplateDecl>("funcTmpl", Ctx);
   EXPECT_FALSE(isInferenceTarget(FuncTmpl));
   EXPECT_FALSE(isInferenceTarget(*FuncTmpl.getTemplatedDecl()));
-  // The function template specialization is *also* not an inference target.
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("LocalInTmpl", Ctx, FuncTmpl.getTemplatedDecl())));
+  // The function template specialization is *also* not an inference target, nor
+  // are local variables contained within.
   const ValueDecl &Specialization =
       *cast<DeclRefExpr>(
            lookup<VarDecl>("FuncTmplSpec", Ctx).getInit()->IgnoreImplicit())
            ->getDecl();
   EXPECT_FALSE(isInferenceTarget(Specialization));
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("LocalInTmpl", Ctx, cast<FunctionDecl>(&Specialization))));
 }
 
 TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {

@@ -268,12 +268,14 @@ TEST_F(InferTUTest, CHECKNEMacro) {
       CHECK_NE(s, a);
     }
   )cc");
-  EXPECT_THAT(infer(),
-              UnorderedElementsAre(inference(
-                  hasName("target"), {inferredSlot(1, Nullability::NONNULL),
-                                      inferredSlot(2, Nullability::NONNULL),
-                                      inferredSlot(3, Nullability::NONNULL),
-                                      inferredSlot(4, Nullability::NONNULL)})));
+  EXPECT_THAT(
+      infer(),
+      UnorderedElementsAre(
+          inference(hasName("target"), {inferredSlot(1, Nullability::NONNULL),
+                                        inferredSlot(2, Nullability::NONNULL),
+                                        inferredSlot(3, Nullability::NONNULL),
+                                        inferredSlot(4, Nullability::NONNULL)}),
+          inference(hasName("a"), {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUTest, Fields) {
@@ -414,6 +416,20 @@ TEST_F(InferTUTest, StaticMemberVariables) {
       UnorderedElementsAre(
           inference(hasName("SI"), {inferredSlot(0, Nullability::NONNULL)}),
           inference(hasName("SB"), {inferredSlot(0, Nullability::NULLABLE)})));
+}
+
+TEST_F(InferTUTest, Locals) {
+  build(R"cc(
+    void target() {
+      int* A = nullptr;
+      static int* B = nullptr;
+    }
+  )cc");
+  EXPECT_THAT(
+      infer(),
+      UnorderedElementsAre(
+          inference(hasName("A"), {inferredSlot(0, Nullability::NULLABLE)}),
+          inference(hasName("B"), {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUTest, Filter) {

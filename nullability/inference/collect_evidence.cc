@@ -1452,6 +1452,15 @@ llvm::Error collectEvidenceFromDefinition(
           Slot(0), *Global);
     }
   }
+  for (const VarDecl *Local : ReferencedDecls.Locals) {
+    if (isInferenceTarget(*Local) &&
+        !evidenceKindFromDeclaredTypeLoc(
+            Local->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
+      InferableSlots.emplace_back(
+          Analysis.assignNullabilityVariable(Local, AnalysisContext.arena()),
+          Slot(0), *Local);
+    }
+  }
   for (const FunctionDecl *Function : ReferencedDecls.Functions) {
     if (isInferenceTarget(*Function) &&
         hasInferable(Function->getReturnType()) &&

@@ -71,7 +71,7 @@ MATCHER_P3(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher, "") {
 
 MATCHER_P(functionNamed, Name, "") {
   return llvm::StringRef(arg.usr()).contains(
-      ("@" + llvm::StringRef(Name) + "#").str());
+      ("@" + llvm::Twine(Name) + "#").str());
 }
 
 /// Matches a non-static field with the given name.
@@ -94,7 +94,18 @@ MATCHER_P(staticFieldNamed, TypeQualifiedFieldName, "") {
 }
 
 MATCHER_P(globalVarNamed, Name, "") {
-  return arg.usr() == ("c:@" + llvm::StringRef(Name)).str();
+  return arg.usr() == ("c:@" + llvm::Twine(Name)).str();
+}
+
+MATCHER_P2(localVarNamedImpl, VarName, FunctionName, "") {
+  return llvm::StringRef(arg.usr()).contains(
+             ("@F@" + llvm::Twine(FunctionName) + "#").str()) &&
+         arg.usr().ends_with(("@" + llvm::Twine(VarName)).str());
+}
+
+auto localVarNamed(llvm::StringRef VarName,
+                   llvm::StringRef FunctionName = "target") {
+  return localVarNamedImpl(VarName, FunctionName);
 }
 
 testing::Matcher<const Evidence&> evidence(
@@ -391,7 +402,11 @@ TEST(CollectEvidenceFromDefinitionTest, DerefAndOrCheckOfCopiedPtr) {
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                           localVarNamed("a")),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                           localVarNamed("b"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FirstSufficientSlotOnly) {
@@ -412,7 +427,11 @@ TEST(CollectEvidenceFromDefinitionTest, FirstSufficientSlotOnly) {
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                           localVarNamed("a")),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                           localVarNamed("a"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -548,7 +567,9 @@ TEST(CollectEvidenceFromDefinitionTest, CheckMacro) {
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(3), Evidence::ABORT_IF_NULL),
-                           evidence(paramSlot(4), Evidence::ABORT_IF_NULL)));
+                           evidence(paramSlot(4), Evidence::ABORT_IF_NULL),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    localVarNamed("a"))));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest, CheckMacro) {
@@ -595,7 +616,9 @@ TEST(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
-                           evidence(paramSlot(3), Evidence::ABORT_IF_NULL)));
+                           evidence(paramSlot(3), Evidence::ABORT_IF_NULL),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    localVarNamed("a"))));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest, CheckNEMacro) {
@@ -679,7 +702,7 @@ TEST(CollectEvidenceFromDefinitionTest, NullptrPassed) {
     void target() {
       callee(nullptr);
       int* p = nullptr;
-      callee(nullptr);
+      callee(p);
     }
   )cc";
   EXPECT_THAT(
@@ -687,7 +710,9 @@ TEST(CollectEvidenceFromDefinitionTest, NullptrPassed) {
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("callee")),
                            evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                    functionNamed("callee"))));
+                                    functionNamed("callee")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    localVarNamed("p"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, NonPtrArgPassed) {
@@ -992,7 +1017,10 @@ TEST(CollectEvidenceFromDefinitionTest,
       if (p) *p;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      Not(Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
+                            functionNamed("makePtr")))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -1787,7 +1815,9 @@ TEST(CollectEvidenceFromDefinitionTest,
           evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
                    functionNamed("producer")),
           evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
-                   functionNamed("callee"))));
+                   functionNamed("callee")),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                   localVarNamed("p", "target"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNullableRefFromFunctionCall) {
@@ -1899,7 +1929,11 @@ TEST(CollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
-                  evidence(paramSlot(1), Evidence::ASSIGNED_FROM_UNKNOWN)));
+                  evidence(paramSlot(1), Evidence::ASSIGNED_FROM_UNKNOWN),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                           localVarNamed("b")),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                           localVarNamed("c"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, InitializationOfNullableRef) {
@@ -1979,9 +2013,10 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullptrIndirect) {
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(evidence(paramSlot(0),
-                                            Evidence::ASSIGNED_FROM_NULLABLE,
-                                            functionNamed("target"))));
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           localVarNamed("a"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, AssignedFromZero) {
@@ -2091,17 +2126,11 @@ TEST(CollectEvidenceFromDefinitionTest,
     };
 
     void target(int* p) {
-      int* a = p;  // No useful information.
-
       // We don't collect if types on either side are not a supported pointer
       // type.
-      int* b = 0;
-      int c = 4;
-      bool d = false;
-      S e = a;
-
-      // We don't collect from compound assignments.
-      b += 8;
+      int a = 4;
+      bool b = false;
+      S e = p;
     }
   )cc";
   EXPECT_THAT(
@@ -2361,20 +2390,22 @@ TEST(CollectEvidenceFromDefinitionTest, StaticInitOutOfClass) {
     };
     int* MyStruct::Target = nullptr;
   )cc";
-  EXPECT_THAT(collectFromDefinitionMatching(varDecl(hasInit()), Src),
-              UnorderedElementsAre(
-
-                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                           staticFieldNamed("MyStruct::Target"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(varDecl(hasInit()), Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    staticFieldNamed("MyStruct::Target"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, NoEvidenceForLocals) {
+TEST(CollectEvidenceFromDefinitionTest, LocalVariable) {
   static constexpr llvm::StringRef Src = R"cc(
     void target() {
       int* p = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    localVarNamed("p"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FunctionCallInLoop) {
@@ -3622,7 +3653,7 @@ TEST(EvidenceSitesTest, NonStaticMemberVariables) {
   EXPECT_THAT(Sites.Definitions, IsEmpty());
 }
 
-TEST(EvidenceSitesTest, LocalVariablesNotIncluded) {
+TEST(EvidenceSitesTest, LocalVariables) {
   TestAST AST(R"cc(
     void foo() {
       int* p = nullptr;
@@ -3631,7 +3662,9 @@ TEST(EvidenceSitesTest, LocalVariablesNotIncluded) {
     }
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
-  EXPECT_THAT(Sites.Declarations, IsEmpty());
+  EXPECT_THAT(
+      Sites.Declarations,
+      UnorderedElementsAre(declNamed("p"), declNamed("q"), declNamed("r")));
   EXPECT_THAT(Sites.Definitions, UnorderedElementsAre(declNamed("foo")));
 }
 

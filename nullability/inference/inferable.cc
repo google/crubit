@@ -70,13 +70,22 @@ bool isInferenceTarget(const Decl& D) {
         countPointersInType(Field->getType()) > 0;
   }
   if (const auto* Var = dyn_cast<VarDecl>(&D)) {
-    // Include static member variables and global variables, but not static
-    // local variables. Local variables often do not need annotation in order to
-    // be verified.
-    return Var->hasGlobalStorage() && !Var->isStaticLocal() &&
-           // See comments above regarding dependent contexts and templates.
-           !Var->getDeclContext()->isDependentContext() &&
-           !Var->isTemplated() && !Var->getTemplateInstantiationPattern() &&
+    // Include static member variables, global variables, and local variables,
+    // including static variables defined in a function.
+
+    // Exclude parameters, which are handled as part of their enclosing function
+    // declaration.
+    if (isa<ParmVarDecl>(Var)) return false;
+
+    // Exclude variables in templates and dependent contexts as well as variable
+    // templates. See comments above regarding similar restrictions on
+    // functions.
+    const DeclContext* DC = Var->getDeclContext();
+    if (DC->isDependentContext()) return false;
+    if (auto* EnclosingFunc = dyn_cast<FunctionDecl>(DC);
+        EnclosingFunc && EnclosingFunc->isTemplateInstantiation())
+      return false;
+    return !Var->isTemplated() && !Var->getTemplateInstantiationPattern() &&
            // Do the most expensive check last.
            countPointersInType(Var->getType()) > 0;
   }
