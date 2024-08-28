@@ -4,6 +4,10 @@
 
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load(
+    "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
+    "additional_rust_srcs_for_crubit_bindings",
+)
+load(
     "//rs_bindings_from_cc/bazel_support:toolchain_headers.bzl",
     "bindings_for_toolchain_headers",
 )
@@ -12,9 +16,12 @@ package(default_applicable_licenses = ["//:license"])
 
 filegroup(
     name = "extra_rs_srcs_for_cc_std",
-    srcs = glob([
-        "*.rs",
-    ]),
+    srcs = glob(
+        [
+            "*.rs",
+        ],
+        exclude = ["cpp_std_string.rs"],
+    ),
 )
 
 LIBCXX_HEADERS = [
@@ -156,6 +163,23 @@ bindings_for_toolchain_headers(
     extra_rs_srcs = [":extra_rs_srcs_for_cc_std"],
     public_libc_hdrs = LIBC_HEADERS,
     public_libcxx_hdrs = LIBCXX_HEADERS,
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+additional_rust_srcs_for_crubit_bindings(
+    name = "cpp_std_string_rust",
+    srcs = ["cpp_std_string.rs"],
+)
+
+cc_library(
+    name = "cpp_std_string",
+    hdrs = ["cpp_std_string.h"],
+    aspect_hints = [
+        "//features:experimental",
+        ":cpp_std_string_rust",
+    ],
     visibility = [
         "//visibility:public",
     ],

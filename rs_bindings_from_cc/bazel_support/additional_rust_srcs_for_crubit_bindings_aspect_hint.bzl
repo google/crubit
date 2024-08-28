@@ -9,6 +9,7 @@ load("@bazel_skylib//lib:collections.bzl", "collections")
 
 visibility([
     "//rs_bindings_from_cc/...",
+    "//support/...",
 ])
 
 _AdditionalRustSrcsProviderInfo = provider(
