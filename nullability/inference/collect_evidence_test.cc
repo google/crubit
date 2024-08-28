@@ -795,10 +795,9 @@ TEST(CollectEvidenceFromDefinitionTest, NullableReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target() { return nullptr; }
   )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                    functionNamed("target"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, NullableButCheckedReturn) {
@@ -810,10 +809,9 @@ TEST(CollectEvidenceFromDefinitionTest, NullableButCheckedReturn) {
       // compiles, as the lack of return in a path is only a warning.
     }
   )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
-                                    functionNamed("target"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, NonnullReturn) {
@@ -822,20 +820,18 @@ TEST(CollectEvidenceFromDefinitionTest, NonnullReturn) {
       return p;
     }
   )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
-                                    functionNamed("target"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, UnknownReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(int* p) { return p; }
   )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN,
-                                    functionNamed("target"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullReturn) {
@@ -848,10 +844,9 @@ TEST(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullReturn) {
       // compiles, as the lack of return in a path is only a warning.
     }
   )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                    functionNamed("target"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, MultipleReturns) {
@@ -862,14 +857,11 @@ TEST(CollectEvidenceFromDefinitionTest, MultipleReturns) {
       return p;
     }
   )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                    functionNamed("target")),
-                           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                    functionNamed("target")),
-                           evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
-                                    functionNamed("target"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
+                  evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, ReferenceReturns) {
@@ -894,10 +886,9 @@ TEST(CollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
       return a;
     }
   )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("target"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -909,13 +900,11 @@ TEST(CollectEvidenceFromDefinitionTest,
       collectFromTargetFuncDefinition(
           Src, {.Nonnull = {fingerprint("c:@F@target#*I#", 0)}}),
       UnorderedElementsAre(
-          evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                   functionNamed("target")),
+          evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
           // We still collect evidence for the return type in case iteration
           // turns up new evidence to contradict a previous inference. Only
           // nullabilities written in source code are considered unchangeable.
-          evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN,
-                   functionNamed("target"))));
+          evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FromAutoReturnAnnotationByPragma) {
@@ -1067,9 +1056,8 @@ TEST(CollectEvidenceFromDefinitionTest, FunctionPointerCall) {
     void target(void (*f)()) { f(); }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(evidence(paramSlot(0),
-                                            Evidence::UNCHECKED_DEREFERENCE,
-                                            functionNamed("target"))));
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
 // This is a crash repro; see b/352043668.
@@ -1844,14 +1832,11 @@ TEST(CollectEvidenceFromDefinitionTest,
       a = r;
     }
   )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("target")),
-                           evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("target")),
-                           evidence(paramSlot(2), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("target"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
+                  evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL),
+                  evidence(paramSlot(2), Evidence::ASSIGNED_TO_NONNULL)));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,
@@ -1888,10 +1873,9 @@ TEST(CollectEvidenceFromDefinitionTest, InitializationOfNonnullRefFromRef) {
       Nonnull<int*>& a = p;
     }
   )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("target"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -1943,9 +1927,8 @@ TEST(CollectEvidenceFromDefinitionTest, InitializationOfNullableRef) {
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
-                           functionNamed("target"))));
+              UnorderedElementsAre(evidence(
+                  paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE)));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,
@@ -1969,9 +1952,8 @@ TEST(CollectEvidenceFromDefinitionTest, InitializationOfNullableRefFromRef) {
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
-                           functionNamed("target"))));
+              UnorderedElementsAre(evidence(
+                  paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE)));
 }
 
 // Ternary expressions are not currently modeled correctly by the analysis, but
@@ -1985,12 +1967,11 @@ TEST(CollectEvidenceFromDefinitionTest,
       Nullable<int*>& x = b ? p : q;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
-                           functionNamed("target")),
-                  evidence(paramSlot(1), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
-                           functionNamed("target"))));
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE),
+          evidence(paramSlot(1), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullptr) {
@@ -2000,9 +1981,8 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullptr) {
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(evidence(paramSlot(0),
-                                            Evidence::ASSIGNED_FROM_NULLABLE,
-                                            functionNamed("target"))));
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullptrIndirect) {
@@ -2024,9 +2004,8 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromZero) {
     void target(int* p) { p = 0; }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(evidence(paramSlot(0),
-                                            Evidence::ASSIGNED_FROM_NULLABLE,
-                                            functionNamed("target"))));
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullable) {
@@ -2048,9 +2027,8 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromLocalNullable) {
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(evidence(paramSlot(0),
-                                            Evidence::ASSIGNED_FROM_NULLABLE,
-                                            functionNamed("target"))));
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullableMemberCallExpr) {
@@ -2074,9 +2052,8 @@ TEST(CollectEvidenceFromDefinitionTest, AssignedFromNullptrMultipleOperators) {
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(evidence(paramSlot(0),
-                                            Evidence::ASSIGNED_FROM_NULLABLE,
-                                            functionNamed("target"))));
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
 
 // This is a regression test for a bug where we collected ASSIGNED_FROM_NULLABLE
@@ -2157,16 +2134,14 @@ TEST(CollectEvidenceFromDefinitionTest, Arithmetic) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(
-          evidence(paramSlot(0), Evidence::ARITHMETIC, functionNamed("target")),
-          evidence(paramSlot(1), Evidence::ARITHMETIC, functionNamed("target")),
-          evidence(paramSlot(2), Evidence::ARITHMETIC, functionNamed("target")),
-          evidence(paramSlot(3), Evidence::ARITHMETIC, functionNamed("target")),
-          evidence(paramSlot(4), Evidence::ARITHMETIC, functionNamed("target")),
-          evidence(paramSlot(5), Evidence::ARITHMETIC, functionNamed("target")),
-          evidence(paramSlot(6), Evidence::ARITHMETIC, functionNamed("target")),
-          evidence(paramSlot(7), Evidence::ARITHMETIC,
-                   functionNamed("target"))));
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ARITHMETIC),
+                           evidence(paramSlot(1), Evidence::ARITHMETIC),
+                           evidence(paramSlot(2), Evidence::ARITHMETIC),
+                           evidence(paramSlot(3), Evidence::ARITHMETIC),
+                           evidence(paramSlot(4), Evidence::ARITHMETIC),
+                           evidence(paramSlot(5), Evidence::ARITHMETIC),
+                           evidence(paramSlot(6), Evidence::ARITHMETIC),
+                           evidence(paramSlot(7), Evidence::ARITHMETIC)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, Fields) {
@@ -2424,12 +2399,9 @@ TEST(CollectEvidenceFromDefinitionTest, FunctionCallInLoop) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                    functionNamed("target")),
-                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
-                                    functionNamed("target")),
-                           evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
-                                    functionNamed("target"))));
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT),
+                           evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT),
+                           evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, OutputParameterPointerToPointer) {
@@ -3271,8 +3243,7 @@ TEST(CollectEvidenceFromDeclarationTest, FunctionDeclReturnType) {
   )cc";
   EXPECT_THAT(
       collectFromTargetDecl(Src),
-      ElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::ANNOTATED_NONNULL,
-                           functionNamed("target"))));
+      ElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::ANNOTATED_NONNULL)));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, FunctionDeclParams) {
@@ -3320,21 +3291,18 @@ TEST(CollectEvidenceFromDeclarationTest, DefaultArgumentNullptrLiteral) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* = nullptr);
   )cc";
-  EXPECT_THAT(
-      collectFromTargetDecl(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                    functionNamed("target"))));
+  EXPECT_THAT(collectFromTargetDecl(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT)));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, DefaultArgumentZeroLiteral) {
-  static constexpr llvm::StringRef Src =
-      R"cc(
+  static constexpr llvm::StringRef Src = R"cc(
     void target(int* = 0);
-      )cc";
-  EXPECT_THAT(
-      collectFromTargetDecl(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                    functionNamed("target"))));
+  )cc";
+  EXPECT_THAT(collectFromTargetDecl(Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT)));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, DefaultArgumentAnnotatedVariable) {
@@ -3344,8 +3312,7 @@ TEST(CollectEvidenceFromDeclarationTest, DefaultArgumentAnnotatedVariable) {
   )cc";
   EXPECT_THAT(
       collectFromTargetDecl(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
-                                    functionNamed("target"))));
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT)));
 }
 
 TEST(CollectEvidenceFromDeclarationTest,
