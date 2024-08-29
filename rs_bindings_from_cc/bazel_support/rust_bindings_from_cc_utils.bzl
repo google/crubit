@@ -152,12 +152,6 @@ bindings_attrs = {
     "_cc_toolchain": attr.label(
         default = "@bazel_tools//tools/cpp:current_cc_toolchain",
     ),
-    "_generator": attr.label(
-        default = "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_target",
-        executable = True,
-        allow_single_file = True,
-        cfg = "exec",
-    ),
     "_deps_for_bindings": attr.label(
         doc = "Dependencies that are needed to compile the generated .cc and .rs file.",
         default = "@@//rs_bindings_from_cc/bazel_support:deps_for_bindings",

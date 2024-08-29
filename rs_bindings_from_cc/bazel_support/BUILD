@@ -117,35 +117,16 @@ bzl_library(
     deps = ["@bazel_skylib//lib:collections"],
 )
 
-config_setting(
-    name = "use_fake_bindings_generator_setting",
-    flag_values = {
-        ":use_actual_bindings_generator": "False",
-    },
-)
-
 bool_flag(
     name = "use_actual_bindings_generator",
     build_setting_default = True,
     visibility = ["//visibility:public"],
 )
 
-sh_binary(
+filegroup(
     name = "fake_rust_bindings_from_cc",
     srcs = ["fake_rust_bindings_from_cc.sh"],
-)
-
-bool_flag(
-    name = "use_prebuilt_rs_bindings_from_cc_for_debugging",
-    build_setting_default = False,
-    visibility = ["//visibility:public"],
-)
-
-config_setting(
-    name = "use_prebuilt_rs_bindings_from_cc_setting_for_debugging",
-    flag_values = {
-        ":use_prebuilt_rs_bindings_from_cc_for_debugging": "True",
-    },
+    visibility = ["//:__subpackages__"],
 )
 
 alias(
@@ -180,18 +161,13 @@ bool_flag(
     visibility = ["//visibility:public"],
 )
 
-alias(
-    name = "rust_bindings_from_cc_target",
-    actual = select({
-        ":use_prebuilt_rs_bindings_from_cc_setting": "prebuilt_rs_bindings_from_cc",
-        ":use_fake_bindings_generator_setting": ":fake_rust_bindings_from_cc",
-        "//conditions:default": "//rs_bindings_from_cc:rs_bindings_from_cc",
-    }),
-    visibility = ["//visibility:public"],
-)
-
 string_list_flag(
     name = "globally_enabled_features",
     build_setting_default = [],
     visibility = ["//visibility:public"],
+)
+
+toolchain_type(
+    name = "toolchain_type",
+    visibility = ["//:__subpackages__"],
 )

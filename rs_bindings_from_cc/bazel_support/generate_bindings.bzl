@@ -109,6 +109,9 @@ def generate_bindings(
     libcxx_include_path = ("include/c++/v1" in cc_toolchain.built_in_include_directories[0]) or \
                           ("fake_path" in cc_toolchain.built_in_include_directories[0])
 
+    toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"]
+    rs_bindings_from_cc_tool = toolchain.rs_bindings_from_cc_toolchain_info.binary
+
     variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
@@ -130,7 +133,7 @@ def generate_bindings(
         ),
         preprocessor_defines = compilation_context.defines,
         variables_extension = {
-            "rs_bindings_from_cc_tool": ctx.executable._generator.path,
+            "rs_bindings_from_cc_tool": rs_bindings_from_cc_tool.path,
             "rs_bindings_from_cc_flags": rs_bindings_from_cc_flags + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs),
             "target_args": target_args,
         },
@@ -149,7 +152,7 @@ def generate_bindings(
             direct = [
                 ctx.executable._clang_format,
                 ctx.executable._rustfmt,
-                ctx.executable._generator,
+                rs_bindings_from_cc_tool,
             ] + ctx.files._rustfmt_cfg + extra_rs_srcs,
             transitive = [action_inputs],
         ),

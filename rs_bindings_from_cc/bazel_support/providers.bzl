@@ -42,3 +42,11 @@ DepsForBindingsInfo = provider(
         "deps_for_cc_file": "list[CcInfo]",
     },
 )
+
+RustBindingsFromCcToolchainInfo = provider(
+    doc = """A provider for platform-specific data, provided as a toolchain.""",
+    fields = {
+        "binary": "The label for the rs_bindings_from_cc binary",
+        "is_on_demand": "Whether this is a dynamically built binary or not",
+    },
+)
