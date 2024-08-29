@@ -13,6 +13,11 @@ load(
     "crubit_make_analysis_test",
 )
 
+def _remove_trailing_hash(s):
+    "Strips the trailing output hash from names like rust_library_fission234234"
+
+    return s.rstrip("-0123456789")
+
 def _fission_test_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
@@ -25,7 +30,7 @@ def _fission_test_impl(ctx):
         "rust_library_2_cc_api_impl_fission",  # the generated bindings for C++
     ])
     actual = sorted([
-        f.basename
+        _remove_trailing_hash(f.basename)
         for f in target_under_test[CcInfo].debug_context().pic_files.to_list()
     ])
     asserts.equals(

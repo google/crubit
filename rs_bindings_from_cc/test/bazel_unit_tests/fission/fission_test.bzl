@@ -9,6 +9,11 @@ load(
     "crubit_make_analysis_test",
 )
 
+def _remove_trailing_hash(s):
+    "Strips the trailing output hash from names like rust_library_fission234234"
+
+    return s.rstrip("-0123456789")
+
 def _fission_test_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
@@ -25,11 +30,11 @@ def _fission_test_impl(ctx):
         "oops_fission",  # Object Oriented Programming Support for Rust.
     ])
     actual = sorted([
-        f.basename
+        _remove_trailing_hash(f.basename)
         for f in target_under_test[CcInfo].debug_context().pic_files.to_list()
         # The full list is too large and fragile to test -- this would be a change-detector -- but
         # we can test representative examples of everything we expect in it.
-        if f.basename in expected
+        if _remove_trailing_hash(f.basename) in expected
     ])
     asserts.equals(
         env,
