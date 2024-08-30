@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
@@ -20,7 +21,10 @@ filegroup(
         [
             "*.rs",
         ],
-        exclude = ["cpp_std_string.rs"],
+        exclude = [
+            "cpp_std_string.rs",
+            "vector.rs",
+        ],
     ),
 )
 
@@ -180,6 +184,14 @@ cc_library(
         "//features:experimental",
         ":cpp_std_string_rust",
     ],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+rust_library(
+    name = "vector",
+    srcs = ["vector.rs"],
     visibility = [
         "//visibility:public",
     ],
