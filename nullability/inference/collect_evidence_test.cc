@@ -14,6 +14,7 @@
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/pragma.h"
 #include "nullability/type_nullability.h"
+#include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -21,6 +22,8 @@
 #include "clang/ASTMatchers/ASTMatchersMacros.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendActions.h"
 #include "clang/Testing/TestAST.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/DenseMap.h"
@@ -3501,6 +3504,41 @@ MATCHER_P(declNamed, Name, "") {
         OS, arg->getDeclContext()->getParentASTContext().getPrintingPolicy(),
         /*Qualified=*/true);
   return ::testing::ExplainMatchResult(Name, Actual, result_listener);
+}
+
+TEST(EvidenceSitesTest, FastMode) {
+  TestInputs Inputs;
+  NullabilityPragmas Pragmas;
+  Inputs.FileName = "input.cc";
+  Inputs.MakeAction = [&] {
+    struct Action : public SyntaxOnlyAction {
+      NullabilityPragmas& Pragmas;
+      Action(NullabilityPragmas& Pragmas) : Pragmas(Pragmas) {}
+      std::unique_ptr<ASTConsumer> CreateASTConsumer(
+          CompilerInstance& CI, llvm::StringRef File) override {
+        registerPragmaHandler(CI.getPreprocessor(), Pragmas);
+        return SyntaxOnlyAction::CreateASTConsumer(CI, File);
+      }
+    };
+    return std::make_unique<Action>(Pragmas);
+  };
+  Inputs.Code = R"cpp(
+#include "input.h"
+#include "header.h"
+    int* foo();
+  )cpp";
+  Inputs.ExtraFiles["input.h"] = R"cpp(
+    int* bar();
+  )cpp";
+  Inputs.ExtraFiles["header.h"] = R"cpp(
+    int* baz();
+  )cpp";
+
+  TestAST AST(Inputs);
+  auto Sites = EvidenceSites::discover(AST.context(),
+                                       /*RestrictToMainFileOrHeader=*/true);
+  EXPECT_THAT(Sites.Declarations,
+              UnorderedElementsAre(declNamed("foo"), declNamed("bar")));
 }
 
 TEST(EvidenceSitesTest, Functions) {

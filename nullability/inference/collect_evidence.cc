@@ -17,6 +17,7 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
+#include "absl/strings/string_view.h"
 #include "nullability/ast_helpers.h"
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
@@ -54,6 +55,7 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/Builtins.h"
+#include "clang/Basic/FileEntry.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/SourceLocation.h"
@@ -62,9 +64,11 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
@@ -995,7 +999,7 @@ class DefinitionEvidenceCollector {
   /// }
   /// ```
   /// evidence from each of the assignments of `p` and `q` that they were
-  /// ASSIGNED_FROM_NULLABLE and evidence from the assignemnt of `s` that it was
+  /// ASSIGNED_FROM_NULLABLE and evidence from the assignment of `s` that it was
   /// ASSIGNED_FROM_NONNULL.
   void fromAssignmentFromValue(
       const TypeNullability &TypeNullability,
@@ -1622,11 +1626,55 @@ void collectEvidenceFromTargetDeclaration(
   }
 }
 
-EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
+EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
+                                      bool RestrictToMainFileOrHeader) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
     EvidenceSites Out;
+    llvm::StringRef MainFileName;
+    const SourceManager &SM;
+    bool RestrictToMainFileOrHeader;
+    absl::flat_hash_map<std::string, bool> InMainFileOrHeaderCache;
+
+    Walker(const SourceManager &SM, bool RestrictToMainFileOrHeader)
+        : SM(SM), RestrictToMainFileOrHeader(RestrictToMainFileOrHeader) {
+      MainFileName = "";
+      if (OptionalFileEntryRef MainFile =
+              SM.getFileEntryRefForID(SM.getMainFileID())) {
+        MainFileName = MainFile->getName();
+        MainFileName = MainFileName.starts_with("./") ? MainFileName.substr(2)
+                                                      : MainFileName;
+      }
+    }
+
+    // Returns whether `loc` is in the main file or its associated header (i.e.
+    // a header that has the same file path except for the extension).
+    bool inMainFileOrHeader(SourceLocation Loc) {
+      if (SM.isInMainFile(Loc)) {
+        return true;
+      }
+
+      auto FileName = SM.getFilename(Loc);
+      auto It = InMainFileOrHeaderCache.find(FileName);
+      if (It != InMainFileOrHeaderCache.end()) {
+        return It->second;
+      }
+
+      auto FileNameWoDotSlash =
+          FileName.starts_with("./") ? FileName.substr(2) : FileName;
+      bool Ret = !MainFileName.empty() && !FileNameWoDotSlash.empty() &&
+                 llvm::sys::path::parent_path(FileNameWoDotSlash) ==
+                     llvm::sys::path::parent_path(MainFileName) &&
+                 llvm::sys::path::stem(FileNameWoDotSlash) ==
+                     llvm::sys::path::stem(MainFileName);
+      InMainFileOrHeaderCache[FileName] = Ret;
+      return Ret;
+    }
 
     bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
+      if (RestrictToMainFileOrHeader &&
+          !inMainFileOrHeader(FD->getBeginLoc())) {
+        return true;
+      }
       if (isInferenceTarget(*FD)) Out.Declarations.insert(FD);
 
       // Visiting template instantiations is fine, these are valid functions!
@@ -1647,11 +1695,19 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
     }
 
     bool VisitFieldDecl(absl::Nonnull<const FieldDecl *> FD) {
+      if (RestrictToMainFileOrHeader &&
+          !inMainFileOrHeader(FD->getBeginLoc())) {
+        return true;
+      }
       if (isInferenceTarget(*FD)) Out.Declarations.insert(FD);
       return true;
     }
 
     bool VisitVarDecl(absl::Nonnull<const VarDecl *> VD) {
+      if (RestrictToMainFileOrHeader &&
+          !inMainFileOrHeader(VD->getBeginLoc())) {
+        return true;
+      }
       if (isInferenceTarget(*VD)) {
         Out.Declarations.insert(VD);
       }
@@ -1665,7 +1721,7 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx) {
     }
   };
 
-  Walker W;
+  Walker W(Ctx.getSourceManager(), RestrictToMainFileOrHeader);
   W.TraverseAST(Ctx);
   return std::move(W.Out);
 }

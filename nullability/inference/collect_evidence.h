@@ -85,8 +85,11 @@ struct EvidenceSites {
   /// passed to collectEvidenceFromDefinition().
   llvm::DenseSet<const Decl *> Definitions;
 
-  /// Find the evidence sites within the provided AST.
-  static EvidenceSites discover(ASTContext &);
+  /// Find the evidence sites within the provided AST. If in_main_file_or_header
+  /// is true, only looks for evidence sites in the main file or its associated
+  /// header.
+  static EvidenceSites discover(ASTContext &,
+                                bool RestrictToMainFileOrHeader = false);
 };
 
 /// Returns the slot number for the I'th parameter (0-based).
