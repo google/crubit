@@ -13,36 +13,36 @@ extern crate rustc_target;
 extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 
-use rustc_attr::find_deprecation;
-use std::slice;
-use std::iter::once;
-use rustc_infer::infer::TyCtxtInferExt;
-use rustc_middle::dep_graph::DepContext;
-use rustc_middle::mir::ConstValue;
-use rustc_middle::mir::Mutability;
-use rustc_trait_selection::infer::InferCtxtExt;
-use std::ops::AddAssign;
-use std::rc::Rc;
-use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
-use rustc_span::symbol::{kw, sym, Symbol};
-use rustc_hir::def::{DefKind, Res};
-use std::hash::{Hash, Hasher};
-use std::collections::{BTreeSet, HashMap, HashSet};
-use rustc_target::abi::{
-    Abi, AddressSpace, FieldsShape, Integer, Layout, Pointer, Primitive, Scalar,
-};
-use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
-use itertools::Itertools;
-use rustc_type_ir::RegionKind;
+use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{
     escape_non_identifier_chars, format_cc_ident, format_cc_includes, make_rs_ident, CcInclude,
     NamespaceQualifier,
 };
 use error_report::{anyhow, bail, ensure, ErrorReporting};
-use quote::{format_ident, quote, ToTokens};
-use arc_anyhow::{Context, Error, Result};
+use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
+use quote::{format_ident, quote, ToTokens};
+use rustc_attr::find_deprecation;
+use rustc_hir::def::{DefKind, Res};
 use rustc_hir::{AssocItemKind, HirId, Item, ItemKind, Node, Safety, UseKind, UsePath};
+use rustc_infer::infer::TyCtxtInferExt;
+use rustc_middle::dep_graph::DepContext;
+use rustc_middle::mir::ConstValue;
+use rustc_middle::mir::Mutability;
+use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
+use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
+use rustc_span::symbol::{kw, sym, Symbol};
+use rustc_target::abi::{
+    Abi, AddressSpace, FieldsShape, Integer, Layout, Pointer, Primitive, Scalar,
+};
+use rustc_trait_selection::infer::InferCtxtExt;
+use rustc_type_ir::RegionKind;
+use std::collections::{BTreeSet, HashMap, HashSet};
+use std::hash::{Hash, Hasher};
+use std::iter::once;
+use std::ops::AddAssign;
+use std::rc::Rc;
+use std::slice;
 
 memoized::query_group! {
     trait BindingsGenerator<'tcx> {
@@ -1353,9 +1353,9 @@ fn format_use(
     }
 
     match use_kind {
-        UseKind::Single => {}
-        // TODO(b/350772554): Implement `pub use foo::{x,y}` and `pub use foo::*`
-        UseKind::Glob | UseKind::ListStem => {
+        UseKind::Single | UseKind::ListStem => {}
+        // TODO(b/350772554): Implement `pub use foo::*`
+        UseKind::Glob => {
             bail!("Unsupported use kind: {use_kind:?}");
         }
     };
@@ -7534,6 +7534,33 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     using G = ::rust_out::test_mod::S;
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_generate_bindings_use_list_items() {
+        let test_src = r#"
+            pub mod test_mod {
+                pub struct X{
+                    pub field: i32
+                }
+                pub struct Y{
+                    pub field: i32
+                }
+            }
+
+            pub use test_mod::{X, Y};
+            "#;
+
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.unwrap();
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    using X = ::rust_out::test_mod::X;
+                    using Y = ::rust_out::test_mod::Y;
                 }
             );
         });
