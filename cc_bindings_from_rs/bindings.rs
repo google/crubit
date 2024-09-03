@@ -30,7 +30,7 @@ use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
-use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
+use rustc_span::def_id::{DefId, LocalDefId, LocalModDefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_target::abi::{
     Abi, AddressSpace, FieldsShape, Integer, Layout, Pointer, Primitive, Scalar,
@@ -1336,44 +1336,13 @@ fn format_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
     None
 }
 
-fn format_use(
+fn generate_using_statement(
     db: &dyn BindingsGenerator<'_>,
     using_name: &str,
-    use_path: &UsePath,
-    use_kind: &UseKind,
+    def_id: DefId,
+    def_kind: DefKind,
 ) -> Result<ApiSnippets> {
     let tcx = db.tcx();
-
-    // TODO(b/350772554): Support multiple items with the same name in `use`
-    // statements.`
-    if use_path.res.len() != 1 {
-        bail!(
-            "use statements which resolve to multiple items with the same name are not supported yet"
-        );
-    }
-
-    match use_kind {
-        UseKind::Single | UseKind::ListStem => {}
-        // TODO(b/350772554): Implement `pub use foo::*`
-        UseKind::Glob => {
-            bail!("Unsupported use kind: {use_kind:?}");
-        }
-    };
-    let (def_kind, def_id) = match use_path.res[0] {
-        // TODO(b/350772554): Support PrimTy.
-        Res::Def(def_kind, def_id) => (def_kind, def_id),
-        _ => {
-            bail!(
-                "Unsupported use statement that refers to this type of the entity: {:#?}",
-                use_path.res[0]
-            );
-        }
-    };
-    ensure!(
-        is_directly_public(tcx, def_id),
-        "Not directly public type (re-exports are not supported yet - b/262052635)"
-    );
-
     match def_kind {
         DefKind::Fn => {
             let mut prereqs;
@@ -1416,11 +1385,94 @@ fn format_use(
             let use_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), None);
             create_type_alias(db, def_id, using_name, use_type)
         }
-        _ => bail!(
-            "Unsupported use statement that refers to this type of the entity: {:#?}",
-            use_path.res
-        ),
+        _ => {
+            bail!("Unsupported use statement that refers to this type of the entity: {:#?}", def_id)
+        }
     }
+}
+
+fn public_free_items_in_mod(
+    db: &dyn BindingsGenerator<'_>,
+    def_id: DefId,
+) -> Vec<(DefId, DefKind)> {
+    let mut items = vec![];
+    if def_id.as_local().is_none() {
+        return items;
+    }
+    let tcx = db.tcx();
+    let local_mod_def_id = LocalModDefId::new_unchecked(def_id.as_local().unwrap());
+    for item_id in tcx.hir_module_items(local_mod_def_id).free_items() {
+        let item_local_def_id: LocalDefId = item_id.owner_id.def_id;
+        let item_def_id = item_local_def_id.to_def_id();
+        let item_def_kind = tcx.def_kind(item_def_id);
+
+        if !is_directly_public(tcx, item_def_id) {
+            continue;
+        }
+        match item_def_kind {
+            DefKind::Fn | DefKind::Struct | DefKind::Enum => {
+                items.push((item_def_id, item_def_kind));
+            }
+            _ => {}
+        }
+    }
+    items
+}
+
+fn format_use(
+    db: &dyn BindingsGenerator<'_>,
+    using_name: &str,
+    use_path: &UsePath,
+    use_kind: &UseKind,
+) -> Result<ApiSnippets> {
+    let tcx = db.tcx();
+
+    // TODO(b/350772554): Support multiple items with the same name in `use`
+    // statements.`
+    if use_path.res.len() != 1 {
+        bail!(
+            "use statements which resolve to multiple items with the same name are not supported yet"
+        );
+    }
+
+    let (def_kind, def_id) = match use_path.res[0] {
+        // TODO(b/350772554): Support PrimTy.
+        // TODO(b/350772554): Support `use some_module`.
+        Res::Def(def_kind, def_id) if def_kind != DefKind::Mod || use_kind == &UseKind::Glob => {
+            (def_kind, def_id)
+        }
+        _ => {
+            bail!(
+                "Unsupported use statement that refers to this type of the entity: {:#?}",
+                use_path.res[0]
+            );
+        }
+    };
+    ensure!(
+        is_directly_public(tcx, def_id),
+        "Not directly public type (re-exports are not supported yet - b/262052635)"
+    );
+
+    let mut aliases = vec![];
+    if def_kind == DefKind::Mod {
+        for (item_def_id, item_def_kind) in public_free_items_in_mod(db, def_id) {
+            let item_using_name = format_cc_ident(tcx.item_name(item_def_id).as_str())
+                .context("Error formatting using name")?;
+            aliases.push((item_using_name.to_string(), item_def_id, item_def_kind));
+        }
+    } else {
+        aliases.push((using_name.to_string(), def_id, def_kind));
+    }
+    // TODO(b/350772554): Expose the errors. If any of the types in the `use`
+    // statement is not supported, we currently ignore it and discard the
+    // errors.
+    Ok(aliases
+        .into_iter()
+        .map(|(using_name, def_id, def_kind)| {
+            generate_using_statement(db, &using_name, def_id, def_kind)
+        })
+        .filter_map(Result::ok)
+        .collect())
 }
 
 fn format_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result<ApiSnippets> {
@@ -7552,6 +7604,33 @@ pub mod tests {
             }
 
             pub use test_mod::{X, Y};
+            "#;
+
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.unwrap();
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    using X = ::rust_out::test_mod::X;
+                    using Y = ::rust_out::test_mod::Y;
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_generate_bindings_use_glob() {
+        let test_src = r#"
+            pub mod test_mod {
+                pub struct X{
+                    pub field: i32
+                }
+                pub struct Y{
+                    pub field: i32
+                }
+            }
+
+            pub use test_mod::*;
             "#;
 
         test_generated_bindings(test_src, |bindings| {
