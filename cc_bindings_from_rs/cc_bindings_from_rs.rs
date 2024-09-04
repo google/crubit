@@ -24,6 +24,11 @@ use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
 };
 
+fn turn_off_clang_format(mut h_body: String) -> String {
+    h_body.insert_str(h_body.find("#pragma once").unwrap(), "// clang-format off\n");
+    h_body
+}
+
 fn write_file(path: &Path, content: &str) -> Result<()> {
     std::fs::write(path, content)
         .with_context(|| format!("Error when writing to {}", path.display()))
@@ -76,6 +81,7 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
 
     {
         let h_body = cc_tokens_to_formatted_string(h_body, &cmdline.clang_format_exe_path)?;
+        let h_body = turn_off_clang_format(h_body);
         write_file(&cmdline.h_out, &h_body)?;
     }
 
@@ -370,6 +376,7 @@ mod tests {
 r#"// Automatically @generated C++ bindings for the following Rust crate:
 // test_crate
 
+// clang-format off
 #pragma once
 
 namespace test_crate {

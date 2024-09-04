@@ -5,6 +5,7 @@
 // Automatically @generated C++ bindings for the following Rust crate:
 // type_aliases_rust
 
+// clang-format off
 #pragma once
 
 #include <cstdint>

@@ -5,6 +5,7 @@
 // Automatically @generated C++ bindings for the following Rust crate:
 // uses_rust
 
+// clang-format off
 #pragma once
 
 #include "support/internal/attribute_macros.h"
