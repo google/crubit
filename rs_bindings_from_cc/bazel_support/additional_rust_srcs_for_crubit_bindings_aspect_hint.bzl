@@ -18,7 +18,7 @@ The provider that specifies the Rust source files to be included in the Rust cra
 generated Rust bindings of this C++ target.
 """,
     fields = {
-        "srcs": "The Rust source files to be incldued in addition to generated Rust bindings.",
+        "srcs": "The Rust source files to be included in addition to generated Rust bindings.",
     },
 )
 
