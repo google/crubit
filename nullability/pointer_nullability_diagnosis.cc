@@ -71,6 +71,7 @@ using ast_matchers::initListExpr;
 using ast_matchers::match;
 using ast_matchers::MatchFinder;
 using ast_matchers::onImplicitObjectArgument;
+using ast_matchers::unaryOperator;
 using ast_matchers::unless;
 using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
@@ -342,6 +343,13 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
            CharSourceRange::getTokenRange(CE->getSourceRange())}};
 }
 
+SmallVector<PointerNullabilityDiagnostic> diagnoseIncrementDecrement(
+    absl::Nonnull<const UnaryOperator *> UnaryOp,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  return diagnoseNonnullExpected(UnaryOp->getSubExpr(), State.Env,
+                                 PointerNullabilityDiagnostic::Context::Other);
+}
+
 SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
     absl::Nonnull<const CallExpr *> CE, const MatchFinder::MatchResult &Result,
     const DiagTransferState &State) {
@@ -605,20 +613,20 @@ DiagTransferFunc pointerNullabilityDiagnoserBefore() {
   // performed by the `CFGElement`.
   return CFGMatchSwitchBuilder<const DiagTransferState,
                                SmallVector<PointerNullabilityDiagnostic>>()
-      // (*)
+      // `*`
       .CaseOfCFGStmt<UnaryOperator>(isPointerDereference(), diagnoseDereference)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("*"),
                                           diagnoseSmartPointerDereference)
-      // ([])
+      // `[]`
       .CaseOfCFGStmt<ArraySubscriptExpr>(isPointerSubscript(),
                                          diagnoseSubscript)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("[]"),
                                           diagnoseSmartPointerDereference)
-      // (->)
+      // `->`
       .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("->"),
                                           diagnoseSmartPointerDereference)
-      // (=) / `reset()`
+      // `=` / `reset()`
       .CaseOfCFGStmt<BinaryOperator>(
           binaryOperator(hasOperatorName("="), hasLHS(isPointerExpr())),
           diagnoseAssignment)
@@ -626,6 +634,11 @@ DiagTransferFunc pointerNullabilityDiagnoserBefore() {
                                           diagnoseSmartPointerAssignment)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("reset"),
                                         diagnoseSmartPointerReset)
+      // `--` / `++`
+      .CaseOfCFGStmt<UnaryOperator>(
+          unaryOperator(hasType(isSupportedRawPointer()),
+                        anyOf(hasOperatorName("++"), hasOperatorName("--"))),
+          diagnoseIncrementDecrement)
       // Check compatibility of parameter assignments and return values.
       .CaseOfCFGStmt<CallExpr>(callExpr(), diagnoseCallExpr)
       .CaseOfCFGStmt<CXXConstructExpr>(cxxConstructExpr(),

@@ -16,29 +16,6 @@ TEST(PointerNullabilityTest, PointerArithmeticNullable) {
       int *orig = nullable;
 
       // Operations without side-effects.
-      *(nullable + i);  // [[unsafe]]
-      *(nullable - i);  // [[unsafe]]
-      *+nullable;       // [[unsafe]]
-
-      // Operations with side-effects; these need to restore the original value
-      // of `nullable` every time.
-      *nullable++;  // [[unsafe]]
-      nullable = orig;
-
-      // TODO(mboehme): False negative. The increment operation is creating a
-      // new nonnull value, so the dereference isn't considered unsafe, but the
-      // increment of a nullable pointer should itself be considered unsafe.
-      *++nullable;
-      nullable = orig;
-
-      *nullable--;  // [[unsafe]]
-      nullable = orig;
-
-      // TODO(mboehme): False negative. The decrement operation is creating a
-      // new nonnull value, so the dereference isn't considered unsafe, but the
-      // decrement of a nullable pointer should itself be considered unsafe.
-      *--nullable;
-      nullable = orig;
 
       // On a nullable pointer, the pointer arithmetic itself should already be
       // considered unsafe, unless we know that the offset is zero.
@@ -50,16 +27,19 @@ TEST(PointerNullabilityTest, PointerArithmeticNullable) {
       // Unary `+` is safe on a nullable pointer.
       +nullable;
 
-      ++nullable;  // TODO(b/321265696): False negative.
+      // Operations with side-effects; these need to restore the original value
+      // of `nullable` every time.
+
+      nullable++;  // [[unsafe]]
       nullable = orig;
 
-      nullable++;  // TODO(b/321265696): False negative.
+      ++nullable;  // [[unsafe]]
       nullable = orig;
 
-      --nullable;  // TODO(b/321265696): False negative.
+      nullable--;  // [[unsafe]]
       nullable = orig;
 
-      nullable--;  // TODO(b/321265696): False negative.
+      --nullable;  // [[unsafe]]
       nullable = orig;
     }
   )cc"));
@@ -70,20 +50,20 @@ TEST(PointerNullabilityTest, PointerArithmeticNonnull) {
     void target(int *_Nonnull nonnull, int i) {
       int *orig = nonnull;
 
-      *(nonnull + i);
-      *(nonnull - i);
-      *+nonnull;
+      nonnull + i;
+      nonnull - i;
+      +nonnull;
 
-      *++nonnull;
+      ++nonnull;
       nonnull = orig;
 
-      *nonnull++;
+      nonnull++;
       nonnull = orig;
 
-      *--nonnull;
+      --nonnull;
       nonnull = orig;
 
-      *nonnull--;
+      nonnull--;
       nonnull = orig;
     }
   )cc"));
@@ -94,20 +74,20 @@ TEST(PointerNullabilityTest, PointerArithmeticUnknown) {
     void target(int *unknown, int i) {
       int *orig = unknown;
 
-      *(unknown + i);
-      *(unknown - i);
-      *+unknown;
+      unknown + i;
+      unknown - i;
+      +unknown;
 
-      *++unknown;
+      ++unknown;
       unknown = orig;
 
-      *unknown++;
+      unknown++;
       unknown = orig;
 
-      *--unknown;
+      --unknown;
       unknown = orig;
 
-      *unknown--;
+      unknown--;
       unknown = orig;
     }
   )cc"));
