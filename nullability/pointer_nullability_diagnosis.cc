@@ -352,26 +352,31 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseIncrementDecrement(
                                  PointerNullabilityDiagnostic::Context::Other);
 }
 
-SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractInteger(
-    absl::Nonnull<const BinaryOperator *> BinaryOp,
-    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
-  Expr *IntExpr = nullptr;
-  Expr *PtrExpr = nullptr;
-  if (BinaryOp->getLHS()->getType()->isIntegerType()) {
-    IntExpr = BinaryOp->getLHS();
-    PtrExpr = BinaryOp->getRHS();
-  } else {
-    IntExpr = BinaryOp->getRHS();
-    PtrExpr = BinaryOp->getLHS();
-  }
-
+SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtract(
+    Expr *PtrExpr, Expr *IntExpr, const Environment &Env) {
   // Adding or subtracting zero is allowed even if the pointer is null.
   if (auto *Lit = dyn_cast<IntegerLiteral>(IntExpr->IgnoreParenImpCasts())) {
     if (Lit->getValue().isZero()) return {};
   }
 
-  return diagnoseNonnullExpected(PtrExpr, State.Env,
+  return diagnoseNonnullExpected(PtrExpr, Env,
                                  PointerNullabilityDiagnostic::Context::Other);
+}
+
+SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractAssign(
+    absl::Nonnull<const BinaryOperator *> BinaryOp,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  return diagnoseAddSubtract(BinaryOp->getLHS(), BinaryOp->getRHS(), State.Env);
+}
+
+SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractInteger(
+    absl::Nonnull<const BinaryOperator *> BinaryOp,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  if (BinaryOp->getLHS()->getType()->isIntegerType()) {
+    return diagnoseAddSubtract(BinaryOp->getRHS(), BinaryOp->getLHS(),
+                               State.Env);
+  }
+  return diagnoseAddSubtract(BinaryOp->getLHS(), BinaryOp->getRHS(), State.Env);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnosePointerDifference(
@@ -675,6 +680,11 @@ DiagTransferFunc pointerNullabilityDiagnoserBefore() {
           unaryOperator(hasType(isSupportedRawPointer()),
                         anyOf(hasOperatorName("++"), hasOperatorName("--"))),
           diagnoseIncrementDecrement)
+      // `+=` / `-=`
+      .CaseOfCFGStmt<BinaryOperator>(
+          binaryOperator(anyOf(hasOperatorName("+="), hasOperatorName("-=")),
+                         hasOperands(isPointerExpr(), hasType(isInteger()))),
+          diagnoseAddSubtractAssign)
       // `+` / `-`
       .CaseOfCFGStmt<BinaryOperator>(
           binaryOperator(

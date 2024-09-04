@@ -41,6 +41,12 @@ TEST(PointerNullabilityTest, PointerArithmeticNullable) {
 
       --nullable;  // [[unsafe]]
       nullable = orig;
+
+      nullable += 1;  // [[unsafe]]
+      nullable = orig;
+
+      nullable -= 1;  // [[unsafe]]
+      nullable = orig;
     }
   )cc"));
 }
@@ -65,6 +71,12 @@ TEST(PointerNullabilityTest, PointerArithmeticNonnull) {
 
       nonnull--;
       nonnull = orig;
+
+      nonnull += 1;
+      nonnull = orig;
+
+      nonnull -= 1;
+      nonnull = orig;
     }
   )cc"));
 }
@@ -88,6 +100,12 @@ TEST(PointerNullabilityTest, PointerArithmeticUnknown) {
       unknown = orig;
 
       unknown--;
+      unknown = orig;
+
+      unknown += 1;
+      unknown = orig;
+
+      unknown -= 1;
       unknown = orig;
     }
   )cc"));
