@@ -352,7 +352,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseIncrementDecrement(
                                  PointerNullabilityDiagnostic::Context::Other);
 }
 
-SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtract(
+SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractInteger(
     absl::Nonnull<const BinaryOperator *> BinaryOp,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   Expr *IntExpr = nullptr;
@@ -372,6 +372,18 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtract(
 
   return diagnoseNonnullExpected(PtrExpr, State.Env,
                                  PointerNullabilityDiagnostic::Context::Other);
+}
+
+SmallVector<PointerNullabilityDiagnostic> diagnosePointerDifference(
+    absl::Nonnull<const BinaryOperator *> BinaryOp,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  SmallVector<PointerNullabilityDiagnostic> Diagnostics =
+      diagnoseNonnullExpected(BinaryOp->getLHS(), State.Env,
+                              PointerNullabilityDiagnostic::Context::Other);
+  Diagnostics.append(
+      diagnoseNonnullExpected(BinaryOp->getRHS(), State.Env,
+                              PointerNullabilityDiagnostic::Context::Other));
+  return Diagnostics;
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
@@ -669,7 +681,11 @@ DiagTransferFunc pointerNullabilityDiagnoserBefore() {
               anyOf(hasOperatorName("+"), hasOperatorName("-")),
               anyOf(hasOperands(isPointerExpr(), hasType(isInteger())),
                     hasOperands(hasType(isInteger()), isPointerExpr()))),
-          diagnoseAddSubtract)
+          diagnoseAddSubtractInteger)
+      .CaseOfCFGStmt<BinaryOperator>(
+          binaryOperator(hasOperatorName("-"),
+                         hasOperands(isPointerExpr(), isPointerExpr())),
+          diagnosePointerDifference)
       // Check compatibility of parameter assignments and return values.
       .CaseOfCFGStmt<CallExpr>(callExpr(), diagnoseCallExpr)
       .CaseOfCFGStmt<CXXConstructExpr>(cxxConstructExpr(),

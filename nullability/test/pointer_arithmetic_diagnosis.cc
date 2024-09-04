@@ -93,5 +93,23 @@ TEST(PointerNullabilityTest, PointerArithmeticUnknown) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, PointerDifference) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int *_Nullable nullable, int *_Nonnull nonnull, int *unknown) {
+      nullable - nullable;  // [[unsafe]]
+      nullable - nonnull;   // [[unsafe]]
+      nullable - unknown;   // [[unsafe]]
+
+      nonnull - nullable;  // [[unsafe]]
+      nonnull - nonnull;
+      nonnull - unknown;
+
+      unknown - nullable;  // [[unsafe]]
+      unknown - nonnull;
+      unknown - unknown;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

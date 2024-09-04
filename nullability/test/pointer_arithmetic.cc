@@ -75,9 +75,17 @@ TEST void add(Nonnull<int *> NonnullParam, Nullable<int *> NullableParam,
 
 TEST void subtract(Nonnull<int *> NonnullParam, Nullable<int *> NullableParam,
                    int *UnknownParam, int I) {
+  // Pointer minus integer.
   type<Nonnull<int *>>(NonnullParam - I);
   type<Nonnull<int *>>(NullableParam - I);
   type<Nonnull<int *>>(UnknownParam - I);
+
+  // Pointer minus pointer.
+  // Spot-checking just a few of the possible combinations.
+  using Ptrdiff = decltype(UnknownParam - UnknownParam);
+  type<Ptrdiff>(NonnullParam - NonnullParam);
+  type<Ptrdiff>(NonnullParam - NullableParam);
+  type<Ptrdiff>(NullableParam - UnknownParam);
 }
 
 TEST void addAssignType(Nonnull<int *> NonnullParam,

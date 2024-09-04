@@ -1558,10 +1558,18 @@ void transferType_BinaryOperator(
       // can otherwise be handled using the same code as `+` and `-`, so we do.
       case BO_AddAssign:
       case BO_SubAssign: {
+        bool LhsIsPointer = isSupportedRawPointerType(BO->getLHS()->getType());
+        bool RhsIsPointer = isSupportedRawPointerType(BO->getRHS()->getType());
+        // Pointer difference.
+        if (LhsIsPointer && RhsIsPointer) {
+          assert(BO->getOpcode() == BO_Sub);
+          assert(BO->getType()->isIntegerType());
+          return {};
+        }
         TypeNullability PtrNullability;
-        if (isSupportedRawPointerType(BO->getLHS()->getType()))
+        if (LhsIsPointer)
           PtrNullability = getNullabilityForChild(BO->getLHS(), State);
-        else if (isSupportedRawPointerType(BO->getRHS()->getType()))
+        else if (RhsIsPointer)
           PtrNullability = getNullabilityForChild(BO->getRHS(), State);
         else
           return unspecifiedNullability(BO);
