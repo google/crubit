@@ -2037,6 +2037,7 @@ fn repr_attrs(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Rc<[rustc_attr::
 fn format_fields<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
+    member_function_names: &HashSet<String>,
 ) -> ApiSnippets {
     let tcx = db.tcx();
 
@@ -2115,8 +2116,15 @@ fn format_fields<'tcx>(
                         cpp_type: db.format_ty_for_cc(ty, TypeLocation::Other)?,
                     })
                 });
-                let name = field_def.ident(tcx);
-                let cc_name = format_cc_ident(name.as_str())
+                let name = field_def.ident(tcx).to_string();
+                let cc_name = if member_function_names.contains(&name) {
+                    // TODO: Handle the case of name_ itself also being taken? e.g. the Rust struct
+                    // struct S {a: i32, a_: i32} impl S { fn a() {} fn a_() {} fn a__(){}.
+                    format!("{name}_")
+                } else {
+                    name.clone()
+                };
+                let cc_name = format_cc_ident(cc_name.as_str())
                     .unwrap_or_else(|_err| format_ident!("__field{index}").into_token_stream());
                 let rs_name = {
                     let name_starts_with_digit = name
@@ -2833,6 +2841,7 @@ fn format_adt<'tcx>(
     let move_ctor_and_assignment_snippets =
         db.format_move_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
 
+    let mut member_function_names = HashSet::<String>::new();
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
         .into_iter()
@@ -2852,7 +2861,17 @@ fn format_adt<'tcx>(
                 return None;
             }
             let result = match impl_item_ref.kind {
-                AssocItemKind::Fn { .. } => db.format_fn(def_id).map(Some),
+                AssocItemKind::Fn { .. } => {
+                    let result = db.format_fn(def_id);
+                    if result.is_ok() {
+                        let cpp_name = FullyQualifiedName::new(tcx, def_id.into())
+                            .cpp_name
+                            .unwrap()
+                            .to_string();
+                        member_function_names.insert(cpp_name);
+                    }
+                    result.map(Some)
+                }
                 AssocItemKind::Const => format_const(db, def_id).map(Some),
                 other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
             };
@@ -2878,7 +2897,7 @@ fn format_adt<'tcx>(
         main_api: fields_main_api,
         cc_details: fields_cc_details,
         rs_details: fields_rs_details,
-    } = format_fields(db, &core);
+    } = format_fields(db, &core, &member_function_names);
 
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
@@ -8529,6 +8548,58 @@ pub mod tests {
                     };
                 }
             )
+        })
+    }
+
+    #[test]
+    fn test_format_item_rename_field_with_conflicting_name() {
+        let test_src = r#"
+        pub struct X {
+            pub a: i32,
+            b: i32,
+            #[allow(dead_code)]
+            c: i32,
+        }
+
+        impl X {
+            pub fn a(&self) -> i32 {
+                self.a
+            }
+            pub fn b(&self) -> i32 {
+                self.b
+            }
+        }
+        "#;
+
+        test_format_item(test_src, "X", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    std::int32_t a_;
+                }
+            );
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    std::int32_t b_;
+                }
+            );
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    std::int32_t c;
+                }
+            );
+            // Check that the fields are not renamed in the Rust side.
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    ::core::mem::offset_of!(::rust_out::X, a) == 0
+                }
+            );
         })
     }
 
