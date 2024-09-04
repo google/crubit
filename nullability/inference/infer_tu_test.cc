@@ -445,6 +445,94 @@ TEST_F(InferTUTest, Filter) {
               ElementsAre(inference(hasName("target1"), {_})));
 }
 
+TEST_F(InferTUTest, AutoNoStarType) {
+  build(R"cc(
+    int *_Nullable getNullable();
+
+    void func() { auto AutoLocal = getNullable(); }
+
+    int *autoParamAkaTemplate(auto p) {
+      auto AutoLocalInTemplate = getNullable();
+      *p;
+      return getNullable();
+    }
+
+    auto autoReturn(int *q) {
+      *q;
+      auto AutoLocalInAutoReturn = getNullable();
+      return getNullable();
+    }
+
+    auto autoReturnAndParam(auto r) {
+      *r;
+      return getNullable();
+    }
+  )cc");
+  EXPECT_THAT(infer(),
+              UnorderedElementsAre(
+                  // Already annotated.
+                  inference(hasName("getNullable"),
+                            {inferredSlot(0, Nullability::NULLABLE)}),
+                  // We infer for local variables with type `auto*`.
+                  inference(hasName("AutoLocal"),
+                            {inferredSlot(0, Nullability::NULLABLE)}),
+                  // We infer for return types with type `auto*`, for the
+                  // parameters of functions with return type `auto*`, and for
+                  // local variables in these functions.
+                  inference(hasName("autoReturn"),
+                            {inferredSlot(0, Nullability::NULLABLE),
+                             inferredSlot(1, Nullability::NONNULL)}),
+                  inference(hasName("AutoLocalInAutoReturn"),
+                            {inferredSlot(0, Nullability::NULLABLE)})
+                  // We don't infer anything for or from functions with
+                  // parameters of type `auto*`, because these are templates.
+                  ));
+}
+
+TEST_F(InferTUTest, AutoStarType) {
+  build(R"cc(
+    int *_Nullable getNullable();
+
+    void func() { auto *AutoStarLocal = getNullable(); }
+
+    int *autoStarParamAkaTemplate(auto *p) {
+      auto *AutoStarLocalInTemplate = getNullable();
+      *p;
+      return getNullable();
+    }
+
+    auto *autoStarReturn(int *q) {
+      *q;
+      auto *AutoStarLocalInAutoStarReturn = getNullable();
+      return getNullable();
+    }
+
+    auto *autoStarReturnAndParam(auto *r) {
+      *r;
+      return getNullable();
+    }
+  )cc");
+  EXPECT_THAT(infer(),
+              UnorderedElementsAre(
+                  // Already annotated.
+                  inference(hasName("getNullable"),
+                            {inferredSlot(0, Nullability::NULLABLE)}),
+                  // We infer for local variables with type `auto*`.
+                  inference(hasName("AutoStarLocal"),
+                            {inferredSlot(0, Nullability::NULLABLE)}),
+                  // We infer for return types with type `auto*`, for the
+                  // parameters of functions with return type `auto*`, and for
+                  // local variables in these functions.
+                  inference(hasName("autoStarReturn"),
+                            {inferredSlot(0, Nullability::NULLABLE),
+                             inferredSlot(1, Nullability::NONNULL)}),
+                  inference(hasName("AutoStarLocalInAutoStarReturn"),
+                            {inferredSlot(0, Nullability::NULLABLE)})
+                  // We don't infer anything for or from functions with
+                  // parameters of type `auto*`, because these are templates.
+                  ));
+}
+
 TEST_F(InferTUTest, IterationsPropagateInferences) {
   build(R"cc(
     void takesToBeNonnull(int* x) { *x; }

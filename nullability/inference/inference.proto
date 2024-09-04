@@ -201,6 +201,8 @@ message SlotRange {
   optional uint32 existing_annotation_post_range_length = 6;
 
   optional ComplexDeclaratorRanges complex_declarator_ranges = 7;
+
+  optional bool is_auto_star = 8;
 }
 
 // A set of slot ranges and their associated file.

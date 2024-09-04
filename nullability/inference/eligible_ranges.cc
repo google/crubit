@@ -414,6 +414,11 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
         *Range->mutable_complex_declarator_ranges() = std::move(*CDR);
       }
     }
+
+    if (auto PTL = MaybeLoc->getAsAdjusted<PointerTypeLoc>();
+        PTL && PTL.getPointeeLoc().getAs<AutoTypeLoc>()) {
+      Range->set_is_auto_star(true);
+    }
   }
 }
 

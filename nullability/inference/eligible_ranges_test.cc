@@ -33,7 +33,9 @@ using ::clang::ast_matchers::selectFirst;
 using ::clang::ast_matchers::varDecl;
 using ::llvm::Annotations;
 using ::testing::AllOf;
+using ::testing::Contains;
 using ::testing::ExplainMatchResult;
+using ::testing::Not;
 using ::testing::Optional;
 using ::testing::Pointwise;
 using ::testing::UnorderedElementsAre;
@@ -867,6 +869,75 @@ TEST(EligibleRangesTest, Pragma) {
       Optional(TypeLocRangesWithNoPragmaNullability(
           MainFileName, UnorderedElementsAre(SlotRangeWithNoExistingAnnotation(
                             0, Input.range())))));
+}
+
+TEST(EligibleRangesTest, RangesWithBareAutoTypeNotReturned) {
+  auto Input = Annotations(R"cc(
+    $func_auto[[auto]] no_star(int* a) {
+      a = nullptr;
+      return a;
+    }
+
+    int* getPtr();
+    auto g_no_star = getPtr();
+    auto _Nullable g_no_star_nullable = getPtr();
+  )cc");
+  EXPECT_THAT(getFunctionRanges(Input.code(), "no_star"),
+              Optional(TypeLocRangesWithNoPragmaNullability(
+                  MainFileName, Not(Contains(SlotRangeWithNoExistingAnnotation(
+                                    0, Input.range("func_auto")))))));
+  EXPECT_EQ(getVarRanges(Input.code(), "g_no_star"), std::nullopt);
+  EXPECT_EQ(getVarRanges(Input.code(), "g_no_star_nullable"), std::nullopt);
+}
+
+MATCHER_P2(AutoSlotRangeWithNoExistingAnnotation, SlotID, Range, "") {
+  return arg.is_auto_star() && !arg.has_existing_annotation() &&
+         ExplainMatchResult(SlotRange(SlotID, Range), arg, result_listener);
+}
+
+MATCHER_P3(AutoSlotRange, SlotID, Range, ExistingAnnotation,
+           absl::StrCat("is a SlotRange with ID ", SlotID,
+                        " and range equivalent to [", Range.Begin, ",",
+                        Range.End, ") and existing annotation ",
+                        ExistingAnnotation)) {
+  return arg.is_auto_star() &&
+         ExplainMatchResult(SlotRange(SlotID, Range, ExistingAnnotation), arg,
+                            result_listener);
+}
+
+TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
+  auto Input = Annotations(R"(
+     $func_auto[[auto*]] star($func_not_auto[[int*]] a) {
+      a = nullptr;
+      return a;
+    }
+    
+    int* getPtr();
+    $var_auto[[auto*]] g_star = getPtr();
+    $var_auto_attributed[[auto*]] _Nullable g_star_nullable = getPtr();
+    )");
+  EXPECT_THAT(getFunctionRanges(Input.code(), "star"),
+              Optional(TypeLocRangesWithNoPragmaNullability(
+                  MainFileName, UnorderedElementsAre(
+                                    AutoSlotRangeWithNoExistingAnnotation(
+                                        0, Input.range("func_auto")),
+                                    AllOf(SlotRangeWithNoExistingAnnotation(
+                                              1, Input.range("func_not_auto")),
+                                          ResultOf(
+                                              [](const class SlotRange& SR) {
+                                                return SR.is_auto_star();
+                                              },
+                                              testing::IsFalse()))))));
+  EXPECT_THAT(getVarRanges(Input.code(), "g_star"),
+              Optional(TypeLocRangesWithNoPragmaNullability(
+                  MainFileName,
+                  UnorderedElementsAre(AutoSlotRangeWithNoExistingAnnotation(
+                      0, Input.range("var_auto"))))));
+  EXPECT_THAT(getVarRanges(Input.code(), "g_star_nullable"),
+              Optional(TypeLocRangesWithNoPragmaNullability(
+                  MainFileName, UnorderedElementsAre(AutoSlotRange(
+                                    0, Input.range("var_auto_attributed"),
+                                    Nullability::NULLABLE)))));
 }
 
 MATCHER(NoPreRangeLength, "") {
