@@ -65,9 +65,11 @@ using ast_matchers::expr;
 using ast_matchers::findAll;
 using ast_matchers::hasArgument;
 using ast_matchers::hasLHS;
+using ast_matchers::hasOperands;
 using ast_matchers::hasOperatorName;
 using ast_matchers::hasType;
 using ast_matchers::initListExpr;
+using ast_matchers::isInteger;
 using ast_matchers::match;
 using ast_matchers::MatchFinder;
 using ast_matchers::onImplicitObjectArgument;
@@ -347,6 +349,28 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseIncrementDecrement(
     absl::Nonnull<const UnaryOperator *> UnaryOp,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(UnaryOp->getSubExpr(), State.Env,
+                                 PointerNullabilityDiagnostic::Context::Other);
+}
+
+SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtract(
+    absl::Nonnull<const BinaryOperator *> BinaryOp,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  Expr *IntExpr = nullptr;
+  Expr *PtrExpr = nullptr;
+  if (BinaryOp->getLHS()->getType()->isIntegerType()) {
+    IntExpr = BinaryOp->getLHS();
+    PtrExpr = BinaryOp->getRHS();
+  } else {
+    IntExpr = BinaryOp->getRHS();
+    PtrExpr = BinaryOp->getLHS();
+  }
+
+  // Adding or subtracting zero is allowed even if the pointer is null.
+  if (auto *Lit = dyn_cast<IntegerLiteral>(IntExpr->IgnoreParenImpCasts())) {
+    if (Lit->getValue().isZero()) return {};
+  }
+
+  return diagnoseNonnullExpected(PtrExpr, State.Env,
                                  PointerNullabilityDiagnostic::Context::Other);
 }
 
@@ -639,6 +663,13 @@ DiagTransferFunc pointerNullabilityDiagnoserBefore() {
           unaryOperator(hasType(isSupportedRawPointer()),
                         anyOf(hasOperatorName("++"), hasOperatorName("--"))),
           diagnoseIncrementDecrement)
+      // `+` / `-`
+      .CaseOfCFGStmt<BinaryOperator>(
+          binaryOperator(
+              anyOf(hasOperatorName("+"), hasOperatorName("-")),
+              anyOf(hasOperands(isPointerExpr(), hasType(isInteger())),
+                    hasOperands(hasType(isInteger()), isPointerExpr()))),
+          diagnoseAddSubtract)
       // Check compatibility of parameter assignments and return values.
       .CaseOfCFGStmt<CallExpr>(callExpr(), diagnoseCallExpr)
       .CaseOfCFGStmt<CXXConstructExpr>(cxxConstructExpr(),

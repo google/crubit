@@ -19,8 +19,8 @@ TEST(PointerNullabilityTest, PointerArithmeticNullable) {
 
       // On a nullable pointer, the pointer arithmetic itself should already be
       // considered unsafe, unless we know that the offset is zero.
-      nullable + i;  // TODO(b/321265696): False negative.
-      nullable - i;  // TODO(b/321265696): False negative.
+      nullable + i;  // [[unsafe]]
+      nullable - i;  // [[unsafe]]
       nullable + 0;
       nullable - 0;
 
