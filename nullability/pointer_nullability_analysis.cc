@@ -382,6 +382,37 @@ void transferValue_NullPointer(
   }
 }
 
+void transferValue_PointerIncOrDec(
+    absl::Nonnull<const UnaryOperator *> UnaryOp,
+    const MatchFinder::MatchResult &,
+    TransferState<PointerNullabilityLattice> &State) {
+  // The framework propagates the subexpression's value (in the case of post-
+  // increment) or storage location (in the case of pre-increment). We just
+  // need to create a new nonnull value.
+  if (StorageLocation *Loc =
+          State.Env.getStorageLocation(*UnaryOp->getSubExpr())) {
+    auto *Val = cast<PointerValue>(State.Env.createValue(Loc->getType()));
+    initPointerNullState(*Val, State.Env.getDataflowAnalysisContext(),
+                         NullabilityKind::NonNull);
+    State.Env.setValue(*Loc, *Val);
+  }
+}
+
+void transferValue_PointerAddOrSubAssign(
+    absl::Nonnull<const BinaryOperator *> BinaryOp,
+    const MatchFinder::MatchResult &,
+    TransferState<PointerNullabilityLattice> &State) {
+  // The framework propagates the storage location of the LHS, so we just need
+  // to create a new nonnull value.
+  if (StorageLocation *Loc =
+          State.Env.getStorageLocation(*BinaryOp->getLHS())) {
+    auto *Val = cast<PointerValue>(State.Env.createValue(Loc->getType()));
+    initPointerNullState(*Val, State.Env.getDataflowAnalysisContext(),
+                         NullabilityKind::NonNull);
+    State.Env.setValue(*Loc, *Val);
+  }
+}
+
 void transferValue_NotNullPointer(
     absl::Nonnull<const Expr *> NotNullPointer,
     const MatchFinder::MatchResult &,
@@ -1479,10 +1510,19 @@ void transferType_UnaryOperator(
             .drop_front()
             .vec();
 
+      case UO_PreInc:
+      case UO_PreDec: {
+        TypeNullability SubNullability =
+            getNullabilityForChild(UO->getSubExpr(), State);
+        if (!isSupportedRawPointerType(UO->getSubExpr()->getType()))
+          return SubNullability;
+        assert(!SubNullability.empty());
+        SubNullability[0] = NullabilityKind::NonNull;
+        return SubNullability;
+      }
+
       case UO_PostInc:
       case UO_PostDec:
-      case UO_PreInc:
-      case UO_PreDec:
       case UO_Plus:
       case UO_Minus:
       case UO_Not:
@@ -1512,6 +1552,23 @@ void transferType_BinaryOperator(
       case BO_Assign:
       case BO_Comma:
         return getNullabilityForChild(BO->getRHS(), State);
+      case BO_Add:
+      case BO_Sub:
+      // The `+=` and `-=` operators will always take the "LHS" branch below but
+      // can otherwise be handled using the same code as `+` and `-`, so we do.
+      case BO_AddAssign:
+      case BO_SubAssign: {
+        TypeNullability PtrNullability;
+        if (isSupportedRawPointerType(BO->getLHS()->getType()))
+          PtrNullability = getNullabilityForChild(BO->getLHS(), State);
+        else if (isSupportedRawPointerType(BO->getRHS()->getType()))
+          PtrNullability = getNullabilityForChild(BO->getRHS(), State);
+        else
+          return unspecifiedNullability(BO);
+        assert(!PtrNullability.empty());
+        PtrNullability[0] = NullabilityKind::NonNull;
+        return PtrNullability;
+      }
       default:
         // No other built-in binary operators can be pointer-valued
         return unspecifiedNullability(BO);
@@ -1605,6 +1662,10 @@ auto buildValueTransferer() {
       .CaseOfCFGStmt<Expr>(isNullPointerLiteral(), transferValue_NullPointer)
       .CaseOfCFGStmt<CXXScalarValueInitExpr>(isRawPointerValueInit(),
                                              transferValue_NullPointer)
+      .CaseOfCFGStmt<UnaryOperator>(isPointerIncOrDec(),
+                                    transferValue_PointerIncOrDec)
+      .CaseOfCFGStmt<BinaryOperator>(isPointerAddOrSubAssign(),
+                                     transferValue_PointerAddOrSubAssign)
       .CaseOfCFGStmt<CXXConstructExpr>(isSmartPointerConstructor(),
                                        transferValue_SmartPointerConstructor)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("="),

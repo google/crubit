@@ -25,13 +25,19 @@ TEST(PointerNullabilityTest, PointerArithmeticNullable) {
       *nullable++;  // [[unsafe]]
       nullable = orig;
 
-      *++nullable;  // [[unsafe]]
+      // TODO(mboehme): False negative. The increment operation is creating a
+      // new nonnull value, so the dereference isn't considered unsafe, but the
+      // increment of a nullable pointer should itself be considered unsafe.
+      *++nullable;
       nullable = orig;
 
       *nullable--;  // [[unsafe]]
       nullable = orig;
 
-      *--nullable;  // [[unsafe]]
+      // TODO(mboehme): False negative. The decrement operation is creating a
+      // new nonnull value, so the dereference isn't considered unsafe, but the
+      // decrement of a nullable pointer should itself be considered unsafe.
+      *--nullable;
       nullable = orig;
 
       // On a nullable pointer, the pointer arithmetic itself should already be

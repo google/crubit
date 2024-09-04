@@ -268,6 +268,11 @@ cc_test(
     ],
 )
 
+nullability_test(
+    name = "pointer_arithmetic",
+    srcs = ["pointer_arithmetic.cc"],
+)
+
 cc_test(
     name = "pointer_arithmetic_diagnosis",
     srcs = ["pointer_arithmetic_diagnosis.cc"],

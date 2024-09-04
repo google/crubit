@@ -55,6 +55,7 @@ using ast_matchers::implicitCastExpr;
 using ast_matchers::isArrow;
 using ast_matchers::isConst;
 using ast_matchers::isInStdNamespace;
+using ast_matchers::isInteger;
 using ast_matchers::isMemberInitializer;
 using ast_matchers::memberExpr;
 using ast_matchers::ofClass;
@@ -84,6 +85,14 @@ Matcher<Stmt> isPointerSubscript() {
 Matcher<Stmt> isPointerCheckBinOp() {
   return binaryOperator(hasAnyOperatorName("!=", "=="),
                         hasOperands(isPointerExpr(), isPointerExpr()));
+}
+Matcher<Stmt> isPointerIncOrDec() {
+  return unaryOperator(hasAnyOperatorName("++", "--"),
+                       hasUnaryOperand(isPointerExpr()));
+}
+Matcher<Stmt> isPointerAddOrSubAssign() {
+  return binaryOperator(hasAnyOperatorName("+=", "-="),
+                        hasOperands(isPointerExpr(), hasType(isInteger())));
 }
 Matcher<Stmt> isImplicitCastPointerToBool() {
   return implicitCastExpr(hasCastKind(CK_PointerToBoolean));
