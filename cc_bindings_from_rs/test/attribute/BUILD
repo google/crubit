@@ -16,6 +16,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "cpp_name",
     srcs = ["cpp_name.rs"],
+    rustc_flags = ["-Zallow-features=register_tool"],
 )
 
 cc_bindings_from_rust(
