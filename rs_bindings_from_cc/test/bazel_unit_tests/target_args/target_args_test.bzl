@@ -207,6 +207,8 @@ def _toolchain_headers_in_header_analysis_action_test_impl(ctx):
         inttypes[1] in [
             "//nowhere/libc_x86include/inttypes.h",
             "//nowhere/libc_arminclude/inttypes.h",
+            "third_party/grte/v5_diorite_acc/release/usr/grte/v5/include/inttypes.h",
+            "third_party/grte/v5_diorite_imc/release/usr/grte/v5/include/inttypes.h",
         ],
     )
     asserts.equals(
