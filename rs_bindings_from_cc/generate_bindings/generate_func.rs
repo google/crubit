@@ -1928,11 +1928,14 @@ fn generate_func_thunk_impl(db: &dyn BindingsGenerator, func: &Func) -> Result<T
                 Some("&") => Ok(quote! { * #ident }),
                 Some("&&") => Ok(quote! { std::move(* #ident) }),
                 _ => {
+                    let rs_type_kind = db.rs_type_kind(p.type_.rs_type.clone())?;
                     // non-Unpin types are wrapped by a pointer in the thunk.
-                    if !db.rs_type_kind(p.type_.rs_type.clone())?.is_c_abi_compatible_by_value() {
+                    if !rs_type_kind.is_c_abi_compatible_by_value() {
                         Ok(quote! { std::move(* #ident) })
-                    } else {
+                    } else if rs_type_kind.is_primitive() || rs_type_kind.referent().is_some() {
                         Ok(quote! { #ident })
+                    } else {
+                        Ok(quote! { std::move( #ident) })
                     }
                 }
             }

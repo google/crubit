@@ -441,6 +441,10 @@ impl RsTypeKind {
         matches!(self, RsTypeKind::BridgeType { .. })
     }
 
+    pub fn is_primitive(&self) -> bool {
+        matches!(self, RsTypeKind::Primitive { .. })
+    }
+
     /// Returns the features required to use this type which are not already
     /// enabled.
     ///

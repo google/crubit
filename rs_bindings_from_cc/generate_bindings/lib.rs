@@ -2276,6 +2276,27 @@ pub(crate) mod tests {
     }
 
     #[gtest]
+    fn test_c_abi_compatible_type_by_value_with_move() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+                typedef int MyTypedefDecl;
+
+                inline void f(MyTypedefDecl a, void* b, int c) {}
+            "#,
+        )?;
+        let BindingsTokens { rs_api_impl, .. } = generate_bindings_tokens(ir)?;
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___Z1fiPvi(MyTypedefDecl a, void* b, int c) {
+                    f(std::move(a), b, c);
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[gtest]
     fn test_type_alias() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -2311,7 +2332,7 @@ pub(crate) mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___Z1fi(MyTypedefDecl t) { f(t); }
+                extern "C" void __rust_thunk___Z1fi(MyTypedefDecl t) { f(std::move(t)); }
             }
         );
         Ok(())
