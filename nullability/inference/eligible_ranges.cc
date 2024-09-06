@@ -415,9 +415,15 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
       }
     }
 
-    if (auto PTL = MaybeLoc->getAsAdjusted<PointerTypeLoc>();
-        PTL && PTL.getPointeeLoc().getAs<AutoTypeLoc>()) {
-      Range->set_is_auto_star(true);
+    auto PTL = MaybeLoc->getAsAdjusted<PointerTypeLoc>();
+    if (PTL) {
+      while (auto PointeeTL =
+                 PTL.getPointeeLoc().getAsAdjusted<PointerTypeLoc>()) {
+        PTL = PointeeTL;
+      }
+      if (PTL.getPointeeLoc().getAs<AutoTypeLoc>()) {
+        Range->set_contains_auto_star(true);
+      }
     }
   }
 }

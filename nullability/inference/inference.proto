@@ -202,7 +202,7 @@ message SlotRange {
 
   optional ComplexDeclaratorRanges complex_declarator_ranges = 7;
 
-  optional bool is_auto_star = 8;
+  optional bool contains_auto_star = 8;
 }
 
 // A set of slot ranges and their associated file.

@@ -891,7 +891,7 @@ TEST(EligibleRangesTest, RangesWithBareAutoTypeNotReturned) {
 }
 
 MATCHER_P2(AutoSlotRangeWithNoExistingAnnotation, SlotID, Range, "") {
-  return arg.is_auto_star() && !arg.has_existing_annotation() &&
+  return arg.contains_auto_star() && !arg.has_existing_annotation() &&
          ExplainMatchResult(SlotRange(SlotID, Range), arg, result_listener);
 }
 
@@ -900,7 +900,7 @@ MATCHER_P3(AutoSlotRange, SlotID, Range, ExistingAnnotation,
                         " and range equivalent to [", Range.Begin, ",",
                         Range.End, ") and existing annotation ",
                         ExistingAnnotation)) {
-  return arg.is_auto_star() &&
+  return arg.contains_auto_star() &&
          ExplainMatchResult(SlotRange(SlotID, Range, ExistingAnnotation), arg,
                             result_listener);
 }
@@ -915,6 +915,7 @@ TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
     int* getPtr();
     $var_auto[[auto*]] g_star = getPtr();
     $var_auto_attributed[[auto*]] _Nullable g_star_nullable = getPtr();
+    $var_auto_star_star[[$var_auto_star_inner[[auto*]]*]] g_star_star = &g_star;
     )");
   EXPECT_THAT(getFunctionRanges(Input.code(), "star"),
               Optional(TypeLocRangesWithNoPragmaNullability(
@@ -925,7 +926,7 @@ TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
                                               1, Input.range("func_not_auto")),
                                           ResultOf(
                                               [](const class SlotRange& SR) {
-                                                return SR.is_auto_star();
+                                                return SR.contains_auto_star();
                                               },
                                               testing::IsFalse()))))));
   EXPECT_THAT(getVarRanges(Input.code(), "g_star"),
@@ -938,6 +939,14 @@ TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
                   MainFileName, UnorderedElementsAre(AutoSlotRange(
                                     0, Input.range("var_auto_attributed"),
                                     Nullability::NULLABLE)))));
+  EXPECT_THAT(
+      getVarRanges(Input.code(), "g_star_star"),
+      Optional(TypeLocRangesWithNoPragmaNullability(
+          MainFileName,
+          UnorderedElementsAre(AutoSlotRangeWithNoExistingAnnotation(
+                                   0, Input.range("var_auto_star_star")),
+                               AutoSlotRangeWithNoExistingAnnotation(
+                                   -1, Input.range("var_auto_star_inner"))))));
 }
 
 MATCHER(NoPreRangeLength, "") {
