@@ -47,6 +47,7 @@ RustBindingsFromCcToolchainInfo = provider(
     doc = """A provider for platform-specific data, provided as a toolchain.""",
     fields = {
         "binary": "The label for the rs_bindings_from_cc binary",
+        "builtin_headers": "The list of clang builtin headers.",
         "is_on_demand": "Whether this is a dynamically built binary or not",
     },
 )

@@ -28,11 +28,17 @@ config_setting(
 rs_bindings_from_cc_toolchain(
     name = "crubit_on_demand_impl",
     binary = "//rs_bindings_from_cc:rs_bindings_from_cc",
+    builtin_headers = [
+        "//llvm/llvm-project/clang:builtin_headers_filegroup",
+        "//llvm/llvm-project/compiler-rt:fuzzer_filegroup",
+        "//llvm/llvm-project/compiler-rt:sanitizer_filegroup",
+    ],
     is_on_demand = True,
 )
 
 rs_bindings_from_cc_toolchain(
     name = "crubit_fake_impl",
     binary = "//rs_bindings_from_cc/bazel_support:fake_rust_bindings_from_cc",
+    builtin_headers = [],
     is_on_demand = True,
 )

@@ -14,6 +14,7 @@ def _rs_bindings_from_cc_toolchain_impl(ctx):
         platform_common.ToolchainInfo(
             rs_bindings_from_cc_toolchain_info = RustBindingsFromCcToolchainInfo(
                 binary = ctx.file.binary,
+                builtin_headers = ctx.files.builtin_headers,
                 is_on_demand = ctx.attr.is_on_demand,
             ),
         ),
@@ -27,6 +28,7 @@ rs_bindings_from_cc_toolchain = rule(
             allow_single_file = True,
             cfg = "exec",
         ),
+        "builtin_headers": attr.label_list(allow_files = True),
         "is_on_demand": attr.bool(),
     },
 )

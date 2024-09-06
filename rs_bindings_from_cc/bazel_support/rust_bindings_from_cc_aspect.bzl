@@ -100,8 +100,8 @@ def retain_proto_dot_h_headers(headers):
 def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # We use a fake generator only when we are building the real one, in order to avoid
     # dependency cycles.
-    toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"]
-    generator = toolchain.rs_bindings_from_cc_toolchain_info.binary
+    toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"].rs_bindings_from_cc_toolchain_info
+    generator = toolchain.binary
     if generator.basename == "fake_rust_bindings_from_cc":
         return []
 
@@ -199,7 +199,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         public_hdrs = public_hdrs,
         header_includes = header_includes,
         action_inputs = depset(
-            direct = public_hdrs + ctx.files._builtin_hdrs,
+            direct = public_hdrs + toolchain.builtin_headers,
             transitive = [
                 ctx.attr._std[RustToolchainHeadersInfo].headers,
             ],

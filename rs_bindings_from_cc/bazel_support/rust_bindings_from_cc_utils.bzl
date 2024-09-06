@@ -190,9 +190,6 @@ bindings_attrs = {
         allow_single_file = True,
         cfg = "exec",
     ),
-    "_builtin_hdrs": attr.label(
-        default = "//rs_bindings_from_cc:builtin_headers",
-    ),
     "_generate_error_report": attr.label(
         default = "@@//rs_bindings_from_cc/bazel_support:generate_error_report",
     ),
