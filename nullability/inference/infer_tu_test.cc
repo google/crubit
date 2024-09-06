@@ -81,12 +81,12 @@ class InferTUTest : public ::testing::Test {
 
 TEST_F(InferTUTest, UncheckedDeref) {
   build(R"cc(
-    void target(int *p, bool cond) {
-      if (cond) *p;
+    void target(int *P, bool Cond) {
+      if (Cond) *P;
     }
 
-    void guarded(int *p) {
-      if (p) *p;
+    void guarded(int *P) {
+      if (P) *P;
     }
   )cc");
 
@@ -97,8 +97,8 @@ TEST_F(InferTUTest, UncheckedDeref) {
 
 TEST_F(InferTUTest, Samples) {
   llvm::StringRef Code =
-      "void target(int * p) { *p + *p; }\n"
-      "void another(int x) { target(&x); }";
+      "void target(int * P) { *P + *P; }\n"
+      "void another(int X) { target(&X); }";
   //   123456789012345678901234567890123456789
   //   0        1         2         3
 
@@ -119,8 +119,8 @@ TEST_F(InferTUTest, Samples) {
 
 TEST_F(InferTUTest, Annotations) {
   build(R"cc(
-    Nonnull<int *> target(int *a, int *b);
-    Nonnull<int *> target(int *a, Nullable<int *> p) { *p; }
+    Nonnull<int *> target(int *A, int *B);
+    Nonnull<int *> target(int *A, Nullable<int *> P) { *P; }
   )cc");
 
   EXPECT_THAT(infer(),
@@ -144,8 +144,8 @@ TEST_F(InferTUTest, AnnotationsConflict) {
 
 TEST_F(InferTUTest, ParamsFromCallSite) {
   build(R"cc(
-    void callee(int* p, int* q, int* r);
-    void target(int* a, Nonnull<int*> b, Nullable<int*> c) { callee(a, b, c); }
+    void callee(int* P, int* Q, int* R);
+    void target(int* A, Nonnull<int*> B, Nullable<int*> C) { callee(A, B, C); }
   )cc");
 
   ASSERT_THAT(infer(),
@@ -179,8 +179,8 @@ TEST_F(InferTUTest, ReturnTypeNonnull) {
 TEST_F(InferTUTest, ReturnTypeNonnullAndUnknown) {
   build(R"cc(
     Nonnull<int*> providesNonnull();
-    int* target(bool b, int* q) {
-      if (b) return q;
+    int* target(bool B, int* Q) {
+      if (B) return Q;
       return providesNonnull();
     }
   )cc");
@@ -192,8 +192,8 @@ TEST_F(InferTUTest, ReturnTypeNonnullAndUnknown) {
 TEST_F(InferTUTest, ReturnTypeNonnullAndNullable) {
   build(R"cc(
     Nonnull<int*> providesNonnull();
-    int* target(bool b) {
-      if (b) return nullptr;
+    int* target(bool B) {
+      if (B) return nullptr;
       return providesNonnull();
     }
   )cc");
@@ -219,7 +219,7 @@ TEST_F(InferTUTest, ReturnTypeDereferenced) {
 TEST_F(InferTUTest, PassedToNonnull) {
   build(R"cc(
     void takesNonnull(Nonnull<int*>);
-    void target(int* p) { takesNonnull(p); }
+    void target(int* P) { takesNonnull(P); }
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
@@ -229,7 +229,7 @@ TEST_F(InferTUTest, PassedToNonnull) {
 TEST_F(InferTUTest, PassedToMutableNullableRef) {
   build(R"cc(
     void takesMutableNullableRef(Nullable<int*>&);
-    void target(int* p) { takesMutableNullableRef(p); }
+    void target(int* P) { takesMutableNullableRef(P); }
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
@@ -238,7 +238,7 @@ TEST_F(InferTUTest, PassedToMutableNullableRef) {
 
 TEST_F(InferTUTest, AssignedFromNullable) {
   build(R"cc(
-    void target(int* p) { p = nullptr; }
+    void target(int* P) { P = nullptr; }
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
@@ -248,8 +248,8 @@ TEST_F(InferTUTest, AssignedFromNullable) {
 TEST_F(InferTUTest, CHECKMacro) {
   build(R"cc(
     // macro must use the parameter, but otherwise body doesn't matter
-#define CHECK(x) x
-    void target(int* p) { CHECK(p); }
+#define CHECK(X) X
+    void target(int* P) { CHECK(P); }
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
@@ -259,13 +259,13 @@ TEST_F(InferTUTest, CHECKMacro) {
 TEST_F(InferTUTest, CHECKNEMacro) {
   build(R"cc(
     // macro must use the first parameter, but otherwise body doesn't matter
-#define CHECK_NE(x, y) x
-    void target(int* p, int* q, int* r, int* s) {
-      CHECK_NE(p, nullptr);
-      CHECK_NE(nullptr, q);
-      int* a = nullptr;
-      CHECK_NE(a, r);
-      CHECK_NE(s, a);
+#define CHECK_NE(X, Y) X
+    void target(int* P, int* Q, int* R, int* S) {
+      CHECK_NE(P, nullptr);
+      CHECK_NE(nullptr, Q);
+      int* A = nullptr;
+      CHECK_NE(A, R);
+      CHECK_NE(S, A);
     }
   )cc");
   EXPECT_THAT(
@@ -275,64 +275,64 @@ TEST_F(InferTUTest, CHECKNEMacro) {
                                         inferredSlot(2, Nullability::NONNULL),
                                         inferredSlot(3, Nullability::NONNULL),
                                         inferredSlot(4, Nullability::NONNULL)}),
-          inference(hasName("a"), {inferredSlot(0, Nullability::NULLABLE)})));
+          inference(hasName("A"), {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUTest, Fields) {
   build(R"cc(
     int* getIntPtr();
     struct S {
-      int* unchecked_deref;
-      int* default_null_and_unchecked_deref = nullptr;
-      int* uninitialized;
+      int* UncheckedDeref;
+      int* DefaultNullAndUncheckedDeref = nullptr;
+      int* Uninitialized;
       int NotATarget = *getIntPtr();
 
       void method() {
-        *unchecked_deref;
-        *default_null_and_unchecked_deref;
+        *UncheckedDeref;
+        *DefaultNullAndUncheckedDeref;
       }
     };
 
     void foo() {
       // Use the implicitly-declared default constructor so that it will be
       // generated.
-      S s;
+      S AnS;
     }
 
     class C {
      public:
-      C() : null_constructor_init(nullptr) {
-        null_in_constructor_and_unchecked_deref = nullptr;
-        null_in_constructor = nullptr;
+      C() : NullConstructorInit(nullptr) {
+        NullInConstructorAndUncheckedDeref = nullptr;
+        NullInConstructor = nullptr;
       }
 
-      void method() { *null_in_constructor_and_unchecked_deref; }
+      void method() { *NullInConstructorAndUncheckedDeref; }
 
      private:
-      int* null_in_constructor_and_unchecked_deref;
-      int* null_constructor_init;
-      int* null_in_constructor;
+      int* NullInConstructorAndUncheckedDeref;
+      int* NullConstructorInit;
+      int* NullInConstructor;
     };
   )cc");
   EXPECT_THAT(
       infer(),
       UnorderedElementsAre(
-          inference(hasName("unchecked_deref"),
+          inference(hasName("UncheckedDeref"),
                     {inferredSlot(0, Nullability::NONNULL)}),
           // Unchecked deref is strong evidence and a default null
           // member initializer is weak.
-          inference(hasName("default_null_and_unchecked_deref"),
+          inference(hasName("DefaultNullAndUncheckedDeref"),
                     {inferredSlot(0, Nullability::NONNULL)}),
           // No inference for uninitialized.,
           inference(hasName("getIntPtr"),
                     {inferredSlot(0, Nullability::NONNULL)}),
           // Initialization to null in the constructor or another
           // function body is strong, producing a conflict.
-          inference(hasName("null_in_constructor_and_unchecked_deref"),
+          inference(hasName("NullInConstructorAndUncheckedDeref"),
                     {inferredSlot(0, Nullability::NONNULL, /*Conflict*/ true)}),
-          inference(hasName("null_constructor_init"),
+          inference(hasName("NullConstructorInit"),
                     {inferredSlot(0, Nullability::NULLABLE)}),
-          inference(hasName("null_in_constructor"),
+          inference(hasName("NullInConstructor"),
                     {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
@@ -345,7 +345,7 @@ TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorNeverUsed) {
       char *C = static_cast<char *>(nullptr);
     };
 
-    void foo(S s);
+    void foo(S AnS);
   )cc");
   // Because the implicitly-declared default constructor is never used, it is
   // not present in the AST and we never analyze it. So, we collect no evidence
@@ -367,7 +367,7 @@ TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorUsed) {
     // A use of the implicitly-declared default constructor, so it is generated
     // and included in the AST for us to analyze, allowing us to infer from
     // default member initializers.
-    void foo() { S s; }
+    void foo() { S AnS; }
   )cc");
   EXPECT_THAT(
       infer(),
@@ -451,20 +451,20 @@ TEST_F(InferTUTest, AutoNoStarType) {
 
     void func() { auto AutoLocal = getNullable(); }
 
-    int *autoParamAkaTemplate(auto p) {
+    int *autoParamAkaTemplate(auto P) {
       auto AutoLocalInTemplate = getNullable();
-      *p;
+      *P;
       return getNullable();
     }
 
-    auto autoReturn(int *q) {
-      *q;
+    auto autoReturn(int *Q) {
+      *Q;
       auto AutoLocalInAutoReturn = getNullable();
       return getNullable();
     }
 
-    auto autoReturnAndParam(auto r) {
-      *r;
+    auto autoReturnAndParam(auto R) {
+      *R;
       return getNullable();
     }
   )cc");
@@ -495,20 +495,20 @@ TEST_F(InferTUTest, AutoStarType) {
 
     void func() { auto *AutoStarLocal = getNullable(); }
 
-    int *autoStarParamAkaTemplate(auto *p) {
+    int *autoStarParamAkaTemplate(auto *P) {
       auto *AutoStarLocalInTemplate = getNullable();
-      *p;
+      *P;
       return getNullable();
     }
 
-    auto *autoStarReturn(int *q) {
-      *q;
+    auto *autoStarReturn(int *Q) {
+      *Q;
       auto *AutoStarLocalInAutoStarReturn = getNullable();
       return getNullable();
     }
 
-    auto *autoStarReturnAndParam(auto *r) {
-      *r;
+    auto *autoStarReturnAndParam(auto *R) {
+      *R;
       return getNullable();
     }
   )cc");
@@ -535,13 +535,13 @@ TEST_F(InferTUTest, AutoStarType) {
 
 TEST_F(InferTUTest, IterationsPropagateInferences) {
   build(R"cc(
-    void takesToBeNonnull(int* x) { *x; }
-    int* returnsToBeNonnull(int* a) { return a; }
-    int* target(int* p, int* q, int* r) {
-      *p;
-      takesToBeNonnull(q);
-      q = r;
-      return returnsToBeNonnull(p);
+    void takesToBeNonnull(int* X) { *X; }
+    int* returnsToBeNonnull(int* A) { return A; }
+    int* target(int* P, int* Q, int* R) {
+      *P;
+      takesToBeNonnull(Q);
+      Q = R;
+      return returnsToBeNonnull(P);
     }
   )cc");
   EXPECT_THAT(
@@ -595,13 +595,13 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
 TEST_F(InferTUTest, Pragma) {
   build(R"cc(
 #pragma nullability file_default nonnull
-    void target(int* default_nonnull, NullabilityUnknown<int*> inferred_nonnull,
-                Nullable<int*> nullable,
-                NullabilityUnknown<int*> inferred_nullable,
-                NullabilityUnknown<int*> unknown) {
-      default_nonnull = inferred_nonnull;
-      default_nonnull = nullptr;
-      inferred_nullable = nullable;
+    void target(int* DefaultNonnull, NullabilityUnknown<int*> InferredNonnull,
+                Nullable<int*> Nullable,
+                NullabilityUnknown<int*> InferredNullable,
+                NullabilityUnknown<int*> Unknown) {
+      DefaultNonnull = InferredNonnull;
+      DefaultNonnull = nullptr;
+      InferredNullable = Nullable;
     }
   )cc");
   EXPECT_THAT(infer(),
@@ -629,11 +629,11 @@ using InferTUSmartPointerTest = InferTUTest;
 TEST_F(InferTUSmartPointerTest, Annotations) {
   build(R"cc(
 #include <memory>
-    Nonnull<std::unique_ptr<int>> target(std::unique_ptr<int> a,
-                                         std::unique_ptr<int> b);
-    Nonnull<std::unique_ptr<int>> target(std::unique_ptr<int> a,
-                                         Nullable<std::unique_ptr<int>> p) {
-      *p;
+    Nonnull<std::unique_ptr<int>> target(std::unique_ptr<int> A,
+                                         std::unique_ptr<int> B);
+    Nonnull<std::unique_ptr<int>> target(std::unique_ptr<int> A,
+                                         Nullable<std::unique_ptr<int>> P) {
+      *P;
     }
   )cc");
 
@@ -649,11 +649,11 @@ TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
   build(R"cc(
 #include <memory>
 #include <utility>
-    void callee(std::unique_ptr<int> p, std::unique_ptr<int> q,
-                std::unique_ptr<int> r);
-    void target(std::unique_ptr<int> a, Nonnull<std::unique_ptr<int>> b,
-                Nullable<std::unique_ptr<int>> c) {
-      callee(std::move(a), std::move(b), std::move(c));
+    void callee(std::unique_ptr<int> P, std::unique_ptr<int> Q,
+                std::unique_ptr<int> R);
+    void target(std::unique_ptr<int> A, Nonnull<std::unique_ptr<int>> B,
+                Nullable<std::unique_ptr<int>> C) {
+      callee(std::move(A), std::move(B), std::move(C));
     }
   )cc");
 
@@ -691,17 +691,17 @@ using InferTUVirtualMethodsTest = InferTUTest;
 TEST_F(InferTUVirtualMethodsTest, SafeVarianceNoConflicts) {
   build(R"cc(
     struct Base {
-      virtual int* foo(int* p) {
-        *p;
+      virtual int* foo(int* P) {
+        *P;
         return nullptr;
       }
     };
 
     struct Derived : public Base {
-      int* foo(int* p) override {
-        static int i = 0;
-        p = nullptr;
-        return &i;
+      int* foo(int* P) override {
+        static int I = 0;
+        P = nullptr;
+        return &I;
       }
     };
   )cc");
@@ -719,15 +719,15 @@ TEST_F(InferTUVirtualMethodsTest, SafeVarianceNoConflicts) {
 TEST_F(InferTUVirtualMethodsTest, BaseConstrainsDerived) {
   build(R"cc(
     struct Base {
-      virtual Nonnull<int*> foo(int* p) {
-        static int i = 0;
-        p = nullptr;
-        return &i;
+      virtual Nonnull<int*> foo(int* P) {
+        static int I = 0;
+        P = nullptr;
+        return &I;
       }
     };
 
     struct Derived : public Base {
-      int* foo(int* p) override;
+      int* foo(int* P) override;
     };
   )cc");
 
@@ -744,12 +744,12 @@ TEST_F(InferTUVirtualMethodsTest, BaseConstrainsDerived) {
 TEST_F(InferTUVirtualMethodsTest, DerivedConstrainsBase) {
   build(R"cc(
     struct Base {
-      virtual int* foo(int* p);
+      virtual int* foo(int* P);
     };
 
     struct Derived : public Base {
-      int* foo(int* p) override {
-        *p;
+      int* foo(int* P) override {
+        *P;
         return nullptr;
       }
     };
@@ -767,12 +767,12 @@ TEST_F(InferTUVirtualMethodsTest, DerivedConstrainsBase) {
 TEST_F(InferTUVirtualMethodsTest, Conflict) {
   build(R"cc(
     struct Base {
-      virtual int* foo(int* p);
+      virtual int* foo(int* P);
     };
 
     struct Derived : public Base {
-      int* foo(int* p) override {
-        *p;
+      int* foo(int* P) override {
+        *P;
         return nullptr;
       }
     };
@@ -801,15 +801,15 @@ TEST_F(InferTUVirtualMethodsTest, Conflict) {
 TEST_F(InferTUVirtualMethodsTest, MultipleDerived) {
   build(R"cc(
     struct Base {
-      virtual void foo(int* p) { p = nullptr; }
+      virtual void foo(int* P) { P = nullptr; }
     };
 
     struct DerivedA : public Base {
-      void foo(int* p) override;
+      void foo(int* P) override;
     };
 
     struct DerivedB : public Base {
-      void foo(int* p) override;
+      void foo(int* P) override;
     };
   )cc");
   EXPECT_THAT(infer(),
@@ -825,15 +825,15 @@ TEST_F(InferTUVirtualMethodsTest, MultipleDerived) {
 TEST_F(InferTUVirtualMethodsTest, MultipleBase) {
   build(R"cc(
     struct BaseA {
-      virtual void foo(int* p);
+      virtual void foo(int* P);
     };
 
     struct BaseB {
-      virtual void foo(int* p);
+      virtual void foo(int* P);
     };
 
     struct Derived : public BaseA, public BaseB {
-      void foo(int* p) override { *p; }
+      void foo(int* P) override { *P; }
     };
   )cc");
 

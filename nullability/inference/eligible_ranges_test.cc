@@ -102,18 +102,18 @@ std::optional<clang::tidy::nullability::TypeLocRanges> getFunctionRanges(
 }
 
 std::optional<clang::tidy::nullability::TypeLocRanges> getFieldRanges(
-    llvm::StringRef Input, llvm::StringRef FieldName = "target") {
+    llvm::StringRef Input, llvm::StringRef FieldName = "Target") {
   return getRanges<FieldDecl>(
       Input, FieldName.empty() ? fieldDecl() : fieldDecl(hasName(FieldName)));
 }
 
 std::optional<clang::tidy::nullability::TypeLocRanges> getVarRanges(
-    llvm::StringRef Input, llvm::StringRef VarName = "target") {
+    llvm::StringRef Input, llvm::StringRef VarName = "Target") {
   return getRanges<VarDecl>(Input, varDecl(hasName(VarName)));
 }
 
 TEST(EligibleRangesTest, ReturnAndOneParameterIdentified) {
-  auto Input = Annotations("$r[[int *]]target($p[[int *]]p) { return p; }");
+  auto Input = Annotations("$r[[int *]]target($p[[int *]]P) { return P; }");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
@@ -124,7 +124,7 @@ TEST(EligibleRangesTest, ReturnAndOneParameterIdentified) {
 }
 
 TEST(EligibleRangesTest, OnlyFirstParameterIdentified) {
-  auto Input = Annotations("void target([[int *]]p1, int p2) { return; }");
+  auto Input = Annotations("void target([[int *]]P1, int P2) { return; }");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
@@ -133,7 +133,7 @@ TEST(EligibleRangesTest, OnlyFirstParameterIdentified) {
 
 // Checks that a function decl without a body is handled correctly.
 TEST(EligibleRangesTest, DeclHandled) {
-  auto Input = Annotations("void target([[int *]]p1, int p2);");
+  auto Input = Annotations("void target([[int *]]P1, int P2);");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
@@ -142,7 +142,7 @@ TEST(EligibleRangesTest, DeclHandled) {
 
 TEST(EligibleRangesTest, AllNestedPointersEligible) {
   auto Input =
-      Annotations("void target($three[[$two[[$one[[int *]]*]]*]]p1, int p2);");
+      Annotations("void target($three[[$two[[$one[[int *]]*]]*]]P1, int P2);");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
@@ -153,8 +153,8 @@ TEST(EligibleRangesTest, AllNestedPointersEligible) {
 
 TEST(EligibleRangesTest, DeclConstExcluded) {
   auto Input = Annotations(R"(
-  void target($one[[int *]] const p1,
-           $two_o[[$two_i[[int *]] const *]] const p2);
+  void target($one[[int *]] const P1,
+           $two_o[[$two_i[[int *]] const *]] const P2);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -166,7 +166,7 @@ TEST(EligibleRangesTest, DeclConstExcluded) {
 
 TEST(EligibleRangesTest, PointeeConstIncluded) {
   auto Input = Annotations(R"(
-  void target([[const int *]]p);
+  void target([[const int *]]P);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -175,7 +175,7 @@ TEST(EligibleRangesTest, PointeeConstIncluded) {
 }
 
 TEST(EligibleRangesTest, NestedPointeeConstIncluded) {
-  auto Input = Annotations("void target($o[[$i[[const int *]] const *]]p);");
+  auto Input = Annotations("void target($o[[$i[[const int *]] const *]]P);");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
@@ -185,9 +185,9 @@ TEST(EligibleRangesTest, NestedPointeeConstIncluded) {
 
 TEST(EligibleRangesTest, AnnotatedSlotsGetRangesForPointerTypeOnly) {
   auto Input = Annotations(R"(
-  void target(Nonnull<$one[[int *]]> nonnull,
-           Nullable<$two[[int *]]> nullable,
-           NullabilityUnknown<$three[[int *]]> unknown);
+  void target(Nonnull<$one[[int *]]> NonnullP,
+           Nullable<$two[[int *]]> NullableP,
+           NullabilityUnknown<$three[[int *]]> UnknownP);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -213,9 +213,9 @@ TEST(EligibleRangesTest, NamespacedAliasAnnotatedSlotsGetNoRange) {
   // Note also that these custom annotations are aliases for the nullability
   // annotations, not themselves annotated. Aliases of any depth for a
   // nullability annotation are considered an annotation.
-  void target(custom::CustomNonnull<$one[[int *]]> nonnull,
-           custom::CustomNullable<$two[[int *]]> nullable,
-           custom::CustomUnknown<$three[[int *]]> unknown);
+  void target(custom::CustomNonnull<$one[[int *]]> NonnullP,
+           custom::CustomNullable<$two[[int *]]> NullableP,
+           custom::CustomUnknown<$three[[int *]]> UnknownP);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -226,7 +226,7 @@ TEST(EligibleRangesTest, NamespacedAliasAnnotatedSlotsGetNoRange) {
 }
 
 TEST(EligibleRangesTest, NestedAnnotationsGetOneRange) {
-  auto Input = Annotations(R"(void target(Nonnull<Nonnull<[[int *]]>> a);)");
+  auto Input = Annotations(R"(void target(Nonnull<Nonnull<[[int *]]>> P);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
@@ -240,10 +240,10 @@ TEST(EligibleRangesTest, NestedPointersOuterAnnotated) {
   class unique_ptr;
   }
   void target(
-      Nonnull<$one_o[[$one_i[[int *]]*]]> p,
-      Nonnull<$two_o[[std::unique_ptr<$two_i[[int*]]>]]> q,
-      Nonnull<$three_o[[$three_i[[std::unique_ptr<int>]]*]]> r,
-      Nonnull<$four_o[[std::unique_ptr<$four_i[[std::unique_ptr<int>]]>]]> s);
+      Nonnull<$one_o[[$one_i[[int *]]*]]> P,
+      Nonnull<$two_o[[std::unique_ptr<$two_i[[int*]]>]]> Q,
+      Nonnull<$three_o[[$three_i[[std::unique_ptr<int>]]*]]> R,
+      Nonnull<$four_o[[std::unique_ptr<$four_i[[std::unique_ptr<int>]]>]]> S);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -266,10 +266,10 @@ TEST(EligibleRangesTest, NestedPointersInnerAnnotated) {
   }
 
   void target(
-      $one_o[[Nonnull<$one_i[[int *]]>*]] p,
-      $two_o[[std::unique_ptr<Nonnull<$two_i[[int*]]>>]] q,
-      $three_o[[Nonnull<$three_i[[std::unique_ptr<int>]]>*]] r,
-      $four_o[[std::unique_ptr<Nonnull<$four_i[[std::unique_ptr<int>]]>>]] s);
+      $one_o[[Nonnull<$one_i[[int *]]>*]] P,
+      $two_o[[std::unique_ptr<Nonnull<$two_i[[int*]]>>]] Q,
+      $three_o[[Nonnull<$three_i[[std::unique_ptr<int>]]>*]] R,
+      $four_o[[std::unique_ptr<Nonnull<$four_i[[std::unique_ptr<int>]]>>]] S);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -285,7 +285,7 @@ TEST(EligibleRangesTest, NestedPointersInnerAnnotated) {
 }
 
 TEST(EligibleRangesTest, RefToPointer) {
-  auto Input = Annotations("void target([[int *]]&p);");
+  auto Input = Annotations("void target([[int *]]&P);");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
@@ -297,7 +297,7 @@ TEST(EligibleRangesTest, TemplateOfPointers) {
   template <typename One, typename Two>
   struct S {}; 
 
-  void target(S<$one[[int *]], $two[[$two_inner[[bool *]]*]]> p);
+  void target(S<$one[[int *]], $two[[$two_inner[[bool *]]*]]> P);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -313,8 +313,8 @@ TEST(EligibleRangesTest, TemplateOfConstPointers) {
   struct S {};
 
   void target(
-      S<$one[[const int *]], $two_o[[$two_i[[const int *]] const *]]> p,
-      S<$three[[int *]] const, $four_o[[$four_i[[int *]] const *]] const> q);
+      S<$one[[const int *]], $two_o[[$two_i[[const int *]] const *]]> P,
+      S<$three[[int *]] const, $four_o[[$four_i[[int *]] const *]] const> Q);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -334,8 +334,8 @@ TEST(EligibleRangesTest, UniquePtr) {
   class unique_ptr;
   }
 
-  void target($one[[std::unique_ptr<int>]] std_smart,
-           Nonnull<$two[[std::unique_ptr<int>]]> nonnull_std_smart);
+  void target($one[[std::unique_ptr<int>]] StdSmart,
+           Nonnull<$two[[std::unique_ptr<int>]]> NonnullStdSmart);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -351,8 +351,8 @@ TEST(EligibleRangesTest, UserDefinedSmartPointer) {
     using pointer = int *;
   };
 
-  void target($one[[MySmartIntPtr]] user_defined_smart,
-           Nonnull<$two[[MySmartIntPtr]]> nonnull_user_defined_smart);
+  void target($one[[MySmartIntPtr]] UserDefinedSmart,
+           Nonnull<$two[[MySmartIntPtr]]> NonnullUserDefinedSmart);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -368,8 +368,8 @@ TEST(EligibleRangesTest, UserDefinedTemplatedSmartPointer) {
     using absl_nullability_compatible = void;
   };
 
-  void target($one[[MySmartPtr<int>]] user_defined_smart,
-           Nonnull<$two[[MySmartPtr<int>]]> nonnull_user_defined_smart);
+  void target($one[[MySmartPtr<int>]] UserDefinedSmart,
+           Nonnull<$two[[MySmartPtr<int>]]> NonnullUserDefinedSmart);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -382,7 +382,7 @@ TEST(EligibleRangesTest, SimpleAlias) {
   auto Input = Annotations(R"(
   using IntPtr = int *;
 
-  void target([[IntPtr]] a);
+  void target([[IntPtr]] P);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -396,7 +396,7 @@ TEST(EligibleRangesTest, InaccessibleAlias) {
   class TemplateClass {};
   using Inaccessible = TemplateClass<int *>;
 
-  void target(Inaccessible a);
+  void target(Inaccessible P);
   )");
   EXPECT_EQ(getFunctionRanges(Input.code()), std::nullopt);
 }
@@ -405,7 +405,7 @@ TEST(EligibleRangesTest, NestedAlias) {
   auto Input = Annotations(R"(
   using Nested = int **;
 
-  void target($[[Nested]] a);
+  void target($[[Nested]] P);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -418,7 +418,7 @@ TEST(EligibleRangesTest, AliasTemplate) {
   template <typename T>
   using AliasTemplate = T;
 
-  void target(AliasTemplate<[[int*]]> a, AliasTemplate<int> b);
+  void target(AliasTemplate<[[int*]]> P, AliasTemplate<int> Q);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -430,10 +430,10 @@ TEST(EligibleRangesTest, DependentAliasSimple) {
   auto Input = Annotations(R"(
   template <typename T>
   struct S {
-    using type = T;
+    using Type = T;
   };
 
-  void target(S<[[int *]]>::type a, S<int>::type b);
+  void target(S<[[int *]]>::Type P, S<int>::Type Q);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -448,7 +448,7 @@ TEST(EligibleRangesTest, DependentAliasAnnotated) {
     using type = T;
   };
 
-  void target(S<Nullable<[[int *]]>>::type a);
+  void target(S<Nullable<[[int *]]>>::type P);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -467,7 +467,7 @@ TEST(EligibleRangesTest, DependentAliasOfDependentAlias) {
     using type = vector<T>::value_type;
   };
 
-  void target(S<[[int *]]>::type a);
+  void target(S<[[int *]]>::type P);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -485,7 +485,7 @@ TEST(EligibleRangesTest, DependentAliasTemplate) {
     using type = U<T>;
   };
 
-  void target(S<[[int*]]>::type<vector> a);
+  void target(S<[[int*]]>::type<vector> P);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -500,7 +500,7 @@ TEST(EligibleRangesTest, DependentAliasNested) {
     using value_type = V;
   };
 
-  void target(vector<$one[[$two[[$three[[int*]]*]]*]]>::value_type a);
+  void target(vector<$one[[$two[[$three[[int*]]*]]*]]>::value_type P);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -517,7 +517,7 @@ TEST(EligibleRangesTest, NoreturnAliasLosesFunctionTypeSourceInfo) {
   auto Input = Annotations(R"(
     typedef void (*Alias)(const char *, ...);
 
-    __attribute__((__noreturn__)) [[Alias]] target;
+    __attribute__((__noreturn__)) [[Alias]] Target;
   )");
   EXPECT_THAT(
       getVarRanges(Input.code()),
@@ -532,7 +532,7 @@ TEST(EligibleRangesTest, TemplatedClassContext) {
     struct Inner {};
   };
 
-  void target(Outer<[[int *]]>::Inner a);
+  void target(Outer<[[int *]]>::Inner P);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -553,7 +553,7 @@ TEST(EligibleRangesTest, NestedTemplatedClasses) {
 
   void target(
       Outermost<$three[[char *]]>::Outer<$two[[int *]]>::Inner<$one[[bool *]]>
-          a);
+          P);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -574,7 +574,7 @@ TEST(EligibleRangesTest, DependentAliasReferencingFurtherOutTemplateParam) {
     };
   };
 
-  void target(Outermost<[[int*]]>::Outer<bool>::Inner<char*> a);
+  void target(Outermost<[[int*]]>::Outer<bool>::Inner<char*> P);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -591,7 +591,7 @@ TEST(EligibleRangesTest, DependentAliasForwardingMultipleTemplateArguments) {
     using type = Pair<T , U>;
   };
 
-  void target(PairWrapper<$one[[int *]], $two[[bool *]]>::type a);
+  void target(PairWrapper<$one[[int *]], $two[[bool *]]>::type P);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -613,7 +613,7 @@ TEST(EligibleRangesTest, DependentAliasInMultipleNestedClassContexts) {
     };
   };
 
-  void target(Outer<$one[[int *]]>::Inner<$two[[bool *]]>::type a);
+  void target(Outer<$one[[int *]]>::Inner<$two[[bool *]]>::type P);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -633,7 +633,7 @@ TEST(EligibleRangesTest, AliasTemplateInNestedClassContext) {
     using Inner = Pair<T, U>;
   };
 
-  void target(Outer<$one[[int *]]>::Inner<$two[[bool *]]> a);
+  void target(Outer<$one[[int *]]>::Inner<$two[[bool *]]> P);
   )");
 
   EXPECT_THAT(getFunctionRanges(Input.code()),
@@ -655,7 +655,7 @@ TEST(EligibleRangesTest, DependentAliasOfSmartPointer) {
     using type = std::unique_ptr<T>;
   };
 
-  void target($unique_ptr[[S<$inner[[int*]]>::type]] a);
+  void target($unique_ptr[[S<$inner[[int*]]>::type]] P);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -676,9 +676,9 @@ TEST(EligibleRangesTest, DependentlyNamedTemplate) {
     using type = typename WrapT::template Alias<U> *;
   };
 
-  // a's canonical type is int**. The outer pointer's range is the whole type,
+  // P's canonical type is int**. The outer pointer's range is the whole type,
   // and the inner pointer's range is the first template argument to S.
-  void target($outer[[S<$inner[[int *]], Wrapper>::type]] a);
+  void target($outer[[S<$inner[[int *]], Wrapper>::type]] P);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -697,11 +697,11 @@ TEST(EligibleRangesTest, PartialSpecialization) {
     using Alias = P;
   };
 
-  // a's canonical type is int * and derives its nullability from the template
+  // P's canonical type is int * and derives its nullability from the template
   // argument minus a layer of pointer indirection. But NullabilityWalker
   // doesn't support resugaring template arguments in partial specializations,
   // so we only see the pointer type at the alias' Loc.
-  void target([[S<int **>::Alias]] a);
+  void target([[S<int **>::Alias]] P);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -716,8 +716,8 @@ TEST(EligibleRangesTest, TypeTemplateParamPack) {
     using type = int;
   };
 
-  void target(Tuple<$one[[int *]], $two[[$three[[int *]]*]]> a,
-           Tuple<int *, int **>::type b);
+  void target(Tuple<$one[[int *]], $two[[$three[[int *]]*]]> P,
+           Tuple<int *, int **>::type Q);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -734,7 +734,7 @@ TEST(EligibleRangesTest, DefaultTemplateArgs) {
   template <typename T1, typename T2 = T1>
   using Alias = T2;
 
-  void target(S<$one[[int *]]> a, $two[[Alias<int *>]] b);
+  void target(S<$one[[int *]]> P, $two[[Alias<int *>]] Q);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -757,7 +757,7 @@ TEST(EligibleRangesTest, MultipleSlotsOneRange) {
   template <typename T>
   using Couple = Pair<T, T>;
 
-  void target(Couple<[[int *]]> c);
+  void target(Couple<[[int *]]> P);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -772,7 +772,7 @@ TEST(EligibleRangesTest, MultipleSlotsOneRange) {
 TEST(EligibleRangesTest, Field) {
   auto Input = Annotations(R"(
   struct S {
-    $zero[[$one[[int *]]*]] target;
+    $zero[[$one[[int *]]*]] Target;
   };
   )");
   EXPECT_THAT(getFieldRanges(Input.code()),
@@ -785,7 +785,7 @@ TEST(EligibleRangesTest, Field) {
 TEST(EligibleRangesTest, StaticFieldAkaGlobal) {
   auto Input = Annotations(R"(
   struct S {
-    static $zero[[$one[[int *]]*]] target;
+    static $zero[[$one[[int *]]*]] Target;
   };
   )");
   EXPECT_THAT(getVarRanges(Input.code()),
@@ -797,7 +797,7 @@ TEST(EligibleRangesTest, StaticFieldAkaGlobal) {
 
 TEST(EligibleRangesTest, GlobalVariable) {
   auto Input = Annotations(R"(
-    $zero[[$one[[int *]]*]] target;
+    $zero[[$one[[int *]]*]] Target;
   )");
   EXPECT_THAT(getVarRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -808,7 +808,7 @@ TEST(EligibleRangesTest, GlobalVariable) {
 
 TEST(EligibleRangesTest, Lambda) {
   auto Input = Annotations(R"(
-  auto lambda = []($one[[int *]]) -> $zero[[int *]] {};
+  auto Lambda = []($one[[int *]]) -> $zero[[int *]] {};
   )");
   EXPECT_THAT(getFunctionRanges(Input.code(), "operator()"),
               Optional(TypeLocRanges(
@@ -823,8 +823,8 @@ TEST(EligibleRangesTest, LambdaCaptureWithFunctionTypeInTemplateArg) {
     template <typename T>
     using ATemplate = T;
 
-    void WithPartsOfWindowedValue(ATemplate<void(const int)> *f) {
-      [&f]() { f(0); }();
+    void func(ATemplate<void(const int)> *P) {
+      [&P]() { P(0); }();
     }
   )cc";
   // We expect no ranges for the lambda's implicit FieldDecl, which for some
@@ -852,7 +852,7 @@ TEST(EligibleRangesTest, Pragma) {
 
   Input = Annotations(R"(
   #pragma nullability file_default nullable
-  [[int*]] target;
+  [[int*]] Target;
   )");
   EXPECT_THAT(
       getVarRanges(Input.code()),
@@ -862,7 +862,7 @@ TEST(EligibleRangesTest, Pragma) {
                              Nullability::NULLABLE)));
 
   Input = Annotations(R"(
-  [[int*]] target;
+  [[int*]] Target;
   )");
   EXPECT_THAT(
       getVarRanges(Input.code()),
@@ -873,21 +873,21 @@ TEST(EligibleRangesTest, Pragma) {
 
 TEST(EligibleRangesTest, RangesWithBareAutoTypeNotReturned) {
   auto Input = Annotations(R"cc(
-    $func_auto[[auto]] no_star(int* a) {
-      a = nullptr;
-      return a;
+    $func_auto[[auto]] noStar(int* P) {
+      P = nullptr;
+      return P;
     }
 
     int* getPtr();
-    auto g_no_star = getPtr();
-    auto _Nullable g_no_star_nullable = getPtr();
+    auto GNoStar = getPtr();
+    auto _Nullable GNoStarNullable = getPtr();
   )cc");
-  EXPECT_THAT(getFunctionRanges(Input.code(), "no_star"),
+  EXPECT_THAT(getFunctionRanges(Input.code(), "noStar"),
               Optional(TypeLocRangesWithNoPragmaNullability(
                   MainFileName, Not(Contains(SlotRangeWithNoExistingAnnotation(
                                     0, Input.range("func_auto")))))));
-  EXPECT_EQ(getVarRanges(Input.code(), "g_no_star"), std::nullopt);
-  EXPECT_EQ(getVarRanges(Input.code(), "g_no_star_nullable"), std::nullopt);
+  EXPECT_EQ(getVarRanges(Input.code(), "GNoStar"), std::nullopt);
+  EXPECT_EQ(getVarRanges(Input.code(), "GNoStarNullable"), std::nullopt);
 }
 
 MATCHER_P2(AutoSlotRangeWithNoExistingAnnotation, SlotID, Range, "") {
@@ -907,15 +907,15 @@ MATCHER_P3(AutoSlotRange, SlotID, Range, ExistingAnnotation,
 
 TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
   auto Input = Annotations(R"(
-     $func_auto[[auto*]] star($func_not_auto[[int*]] a) {
-      a = nullptr;
-      return a;
+     $func_auto[[auto*]] star($func_not_auto[[int*]] P) {
+      P = nullptr;
+      return P;
     }
     
     int* getPtr();
-    $var_auto[[auto*]] g_star = getPtr();
-    $var_auto_attributed[[auto*]] _Nullable g_star_nullable = getPtr();
-    $var_auto_star_star[[$var_auto_star_inner[[auto*]]*]] g_star_star = &g_star;
+    $var_auto[[auto*]] GStar = getPtr();
+    $var_auto_attributed[[auto*]] _Nullable GStarNullable = getPtr();
+    $var_auto_star_star[[$var_auto_star_inner[[auto*]]*]] GStarStar = &GStar;
     )");
   EXPECT_THAT(getFunctionRanges(Input.code(), "star"),
               Optional(TypeLocRangesWithNoPragmaNullability(
@@ -929,18 +929,18 @@ TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
                                                 return SR.contains_auto_star();
                                               },
                                               testing::IsFalse()))))));
-  EXPECT_THAT(getVarRanges(Input.code(), "g_star"),
+  EXPECT_THAT(getVarRanges(Input.code(), "GStar"),
               Optional(TypeLocRangesWithNoPragmaNullability(
                   MainFileName,
                   UnorderedElementsAre(AutoSlotRangeWithNoExistingAnnotation(
                       0, Input.range("var_auto"))))));
-  EXPECT_THAT(getVarRanges(Input.code(), "g_star_nullable"),
+  EXPECT_THAT(getVarRanges(Input.code(), "GStarNullable"),
               Optional(TypeLocRangesWithNoPragmaNullability(
                   MainFileName, UnorderedElementsAre(AutoSlotRange(
                                     0, Input.range("var_auto_attributed"),
                                     Nullability::NULLABLE)))));
   EXPECT_THAT(
-      getVarRanges(Input.code(), "g_star_star"),
+      getVarRanges(Input.code(), "GStarStar"),
       Optional(TypeLocRangesWithNoPragmaNullability(
           MainFileName,
           UnorderedElementsAre(AutoSlotRangeWithNoExistingAnnotation(
@@ -977,11 +977,11 @@ TEST(ExistingAnnotationLengthTest, AbslTemplate) {
   template <typename T>
   using Nonnull = ::Nonnull<T>;
   }
-  void target($no[[int*]] p, absl::NullabilityUnknown<$yes[[int*]]> q,
+  void target($no[[int*]] P, absl::NullabilityUnknown<$yes[[int*]]> Q,
               absl::/* a comment*/NullabilityUnknown< /* a comment */
-              $with_comments[[int*]] /* a comment */  > r,
-              absl::Nullable<$nullable[[int*]]> s,
-              absl::Nonnull<$nonnull[[int*]]> t);
+              $with_comments[[int*]] /* a comment */  > R,
+              absl::Nullable<$nullable[[int*]]> S,
+              absl::Nonnull<$nonnull[[int*]]> T);
     )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -1008,7 +1008,7 @@ TEST(ExistingAnnotationLengthTest, AnnotationInMacro) {
 
   #define UNKNOWN(T) absl::NullabilityUnknown<T>
 
-  void target(UNKNOWN([[int *]]) x);
+  void target(UNKNOWN([[int *]]) P);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -1033,7 +1033,7 @@ TEST(ExistingAnnotationLengthTest, UniquePtr) {
   using NullabilityUnknown = ::NullabilityUnknown<T>;
   }
   
-  void target(absl::NullabilityUnknown<[[std::unique_ptr<int>]]> x);
+  void target(absl::NullabilityUnknown<[[std::unique_ptr<int>]]> P);
   )");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
@@ -1052,10 +1052,10 @@ TEST(ExistingAnnotationLengthTest, DoubleClosingAngleBrackets) {
   template <typename T>
   using MyTemplateAlias = T;
   
-  void target(MyTemplateAlias<absl::NullabilityUnknown<$nothing[[int *]]>> x,
-  MyTemplateAlias<absl::NullabilityUnknown<$comment[[int *]]>/* a comment */> y,
+  void target(MyTemplateAlias<absl::NullabilityUnknown<$nothing[[int *]]>> P,
+  MyTemplateAlias<absl::NullabilityUnknown<$comment[[int *]]>/* a comment */> Q,
   MyTemplateAlias<absl::NullabilityUnknown<$whitespace[[int *]]>
-  > z);
+  > R);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -1071,9 +1071,9 @@ TEST(ExistingAnnotationLengthTest, DoubleClosingAngleBrackets) {
 
 TEST(ExistingAnnotationLengthTest, ClangAttribute) {
   auto Input = Annotations(R"(
-  void target($no[[int*]] p, $yes[[int*]] _Null_unspecified q,
-              $with_comment[[int*]]/* a comment */_Null_unspecified r,
-              $nullable[[int*]] _Nullable s, $nonnull[[int*]] _Nonnull t);
+  void target($no[[int*]] P, $yes[[int*]] _Null_unspecified Q,
+              $with_comment[[int*]]/* a comment */_Null_unspecified R,
+              $nullable[[int*]] _Nullable S, $nonnull[[int*]] _Nonnull T);
     )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -1120,7 +1120,7 @@ MATCHER(NoComplexDeclarator, "") {
 
 TEST(ComplexDeclaratorTest, FunctionPointer) {
   auto Input = Annotations(R"(
-  void target($func_pointer[[int (*$remove_from_type[[p]])(int, $pointer_param[[int*]])]]);
+  void target($func_pointer[[int (*$remove_from_type[[P]])(int, $pointer_param[[int*]])]]);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -1128,7 +1128,7 @@ TEST(ComplexDeclaratorTest, FunctionPointer) {
           MainFileName,
           UnorderedElementsAre(
               AllOf(SlotRange(1, Input.range("func_pointer")),
-                    ComplexDeclarator("p", {Input.range("remove_from_type")})),
+                    ComplexDeclarator("P", {Input.range("remove_from_type")})),
               AllOf(SlotRange(-1, Input.range("pointer_param")),
                     NoComplexDeclarator())))));
 
@@ -1141,12 +1141,12 @@ TEST(ComplexDeclaratorTest, FunctionPointer) {
 }
 
 TEST(ComplexDeclaratorTest, ArrayOfNonPointersHasNoRanges) {
-  std::string Input = "void target(int p[]);";
+  std::string Input = "void target(int P[]);";
   EXPECT_EQ(getFunctionRanges(Input), std::nullopt);
 }
 
 TEST(ComplexDeclaratorTest, ArrayOfSimplePointers) {
-  auto Input = Annotations("void target([[int*]] p[]);");
+  auto Input = Annotations("void target([[int*]] P[]);");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
@@ -1158,14 +1158,14 @@ TEST(ComplexDeclaratorTest, ArrayOfFunctionPointers) {
   // Can't use ranges marked by [[...]] around arrays because of the adjacent
   // closing square bracket at the end of the array length and the unfortunate
   // syntax of Annotations, so use individual points.
-  auto Input = Annotations("void target([[int (*$1^p[3]$2^)(float)]]);");
+  auto Input = Annotations("void target([[int (*$1^P[3]$2^)(float)]]);");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(AllOf(
                       SlotRange(-1, Input.range()),
                       ComplexDeclarator(
-                          "p[3]", {Annotations::Range(Input.point("1"),
+                          "P[3]", {Annotations::Range(Input.point("1"),
                                                       Input.point("2"))}))))));
 
   // An unnamed array of function pointers. The array brackets are still moved.
@@ -1185,7 +1185,7 @@ TEST(ComplexDeclaratorTest, ArrayOfArrayOfPointersToArray) {
   // closing square bracket at the end of the array length and the unfortunate
   // syntax of Annotations, so use individual points.
   auto Input = Annotations(R"(
-  void target($1^$range[[int*]] (*$3^p[3][2]$4^)[1]$2^);)");
+  void target($1^$range[[int*]] (*$3^P[3][2]$4^)[1]$2^);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
@@ -1195,7 +1195,7 @@ TEST(ComplexDeclaratorTest, ArrayOfArrayOfPointersToArray) {
               AllOf(SlotRange(-1, Annotations::Range(Input.point("1"),
                                                      Input.point("2"))),
                     ComplexDeclarator(
-                        "p[3][2]", {Annotations::Range(Input.point("3"),
+                        "P[3][2]", {Annotations::Range(Input.point("3"),
                                                        Input.point("4"))}))))));
 }
 
@@ -1204,7 +1204,7 @@ TEST(ComplexDeclaratorTest, PointerToArray) {
   // closing square bracket at the end of the array length and the unfortunate
   // syntax of Annotations, so use individual points.
   auto Input =
-      Annotations(R"(void target($1^int (*$remove_from_type[[p]])[]$2^);)");
+      Annotations(R"(void target($1^int (*$remove_from_type[[P]])[]$2^);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
@@ -1212,7 +1212,7 @@ TEST(ComplexDeclaratorTest, PointerToArray) {
           UnorderedElementsAre(AllOf(
               SlotRange(1,
                         Annotations::Range(Input.point("1"), Input.point("2"))),
-              ComplexDeclarator("p", {Input.range("remove_from_type")}))))));
+              ComplexDeclarator("P", {Input.range("remove_from_type")}))))));
 
   // An unnamed pointer to an array. There's nothing to move.
   Input = Annotations(R"(void target($1^int (*)[]$2^);)");
@@ -1230,14 +1230,14 @@ TEST(ComplexDeclaratorTest,
   // Can't use ranges marked by [[...]] around arrays because of the adjacent
   // closing square bracket at the end of the array length and the unfortunate
   // syntax of Annotations, so use individual points.
-  auto Input = Annotations(R"(void target([[int (*$3^((p))[(1 + 2)]$4^)]]);)");
+  auto Input = Annotations(R"(void target([[int (*$3^((P))[(1 + 2)]$4^)]]);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName,
           UnorderedElementsAre(AllOf(
               SlotRange(-1, Input.range()),
-              ComplexDeclarator("((p))[(1 + 2)]",
+              ComplexDeclarator("((P))[(1 + 2)]",
                                 {Annotations::Range(Input.point("3"),
                                                     Input.point("4"))}))))));
 }
@@ -1247,14 +1247,14 @@ TEST(ComplexDeclaratorTest, PointerToPointerToArray) {
   // closing square bracket at the end of the array length and the unfortunate
   // syntax of Annotations, so use individual points.
   auto Input =
-      Annotations(R"(void target($1^int (*$star[[*]]$q[[q]])[1]$2^);)");
+      Annotations(R"(void target($1^int (*$star[[*]]$q[[Q]])[1]$2^);)");
   EXPECT_THAT(getFunctionRanges(Input.code()),
               Optional(TypeLocRanges(
                   MainFileName,
                   UnorderedElementsAre(
                       AllOf(SlotRange(1, Annotations::Range(Input.point("1"),
                                                             Input.point("2"))),
-                            ComplexDeclarator("q", {Input.range("q")})),
+                            ComplexDeclarator("Q", {Input.range("q")})),
                       AllOf(SlotRange(-1, Annotations::Range(Input.point("1"),
                                                              Input.point("2"))),
                             ComplexDeclarator("*", {Input.range("star")}))))));
@@ -1265,19 +1265,19 @@ TEST(ComplexDeclaratorTest, PointerToArrayOfFunctionPointers) {
   // closing square bracket at the end of the array length and the unfortunate
   // syntax of Annotations, so use individual points.
   auto Input = Annotations(
-      R"(void target($whole[[void (*$1^(*$f[[(f)]])[]$2^)(int)]]);)");
+      R"(void target($whole[[void (*$1^(*$p[[(P)]])[]$2^)(int)]]);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       Optional(TypeLocRanges(
           MainFileName,
           UnorderedElementsAre(
               AllOf(SlotRange(1, Input.range("whole")),
-                    ComplexDeclarator("(f)", {Input.range("f")})),
+                    ComplexDeclarator("(P)", {Input.range("p")})),
               AllOf(SlotRange(-1, Input.range("whole")),
                     ComplexDeclarator(
                         "(*)[]", {Annotations::Range(Input.point("1"),
-                                                     Input.range("f").Begin),
-                                  Annotations::Range(Input.range("f").End,
+                                                     Input.range("p").Begin),
+                                  Annotations::Range(Input.range("p").End,
                                                      Input.point("2"))}))))));
 }
 
