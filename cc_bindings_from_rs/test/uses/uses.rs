@@ -11,3 +11,23 @@ pub mod test_mod {
         42
     }
 }
+
+mod private_mod {
+    pub struct ReexportedStruct {
+        pub field: i32,
+    }
+
+    impl ReexportedStruct {
+        pub fn create(field: i32) -> ReexportedStruct {
+            ReexportedStruct { field }
+        }
+    }
+
+    pub fn private_fn() -> i32 {
+        42
+    }
+}
+
+pub use private_mod::private_fn;
+pub use private_mod::ReexportedStruct as ExportedStruct;
+pub use private_mod::ReexportedStruct as AliasOfExportedStruct;

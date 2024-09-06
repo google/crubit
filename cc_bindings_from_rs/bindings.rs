@@ -83,6 +83,8 @@ memoized::query_group! {
 
         fn repr_attrs(&self, did: DefId) -> Rc<[rustc_attr::ReprAttr]>;
 
+        fn reexported_symbol_canonical_name_mapping(&self) -> HashMap<DefId, FullyQualifiedName>;
+
         fn format_ty_for_cc(
             &self,
             ty: SugaredTy<'tcx>,
@@ -260,6 +262,7 @@ impl AddAssign for CcSnippet {
 
 /// Represents the fully qualified name of a Rust item (e.g. of a `struct` or a
 /// function).
+#[derive(Clone, Debug)]
 struct FullyQualifiedName {
     /// Name of the crate that defines the item.
     /// For example, this would be `std` for `std::cmp::Ordering`.
@@ -268,20 +271,16 @@ struct FullyQualifiedName {
     /// Path to the module where the item is located.
     /// For example, this would be `cmp` for `std::cmp::Ordering`.
     /// The path may contain multiple modules - e.g. `foo::bar::baz`.
-    mod_path: NamespaceQualifier,
+    rs_mod_path: NamespaceQualifier,
+    /// The C++ namespace to use for the symbol excluding the top-level
+    /// namespace.
+    cpp_ns_path: NamespaceQualifier,
 
-    /// Name of the item.
+    /// Rust name of the item.
     /// For example, this would be:
     /// * `Some("Ordering")` for `std::cmp::Ordering`.
     /// * `None` for `ItemKind::Use` - e.g.: `use submodule::*`
-    name: Option<Symbol>,
-
-    /// The fully-qualified C++ type to use for this, if this was originally a
-    /// C++ type.
-    ///
-    /// For example, if a type has `#[__crubit::annotate(cpp_type="x::y")]`,
-    /// then cpp_type will be `Some(x::y)`.
-    cpp_type: Option<Symbol>,
+    rs_name: Option<Symbol>,
 
     /// The C++ name to use for the symbol.
     ///
@@ -292,6 +291,13 @@ struct FullyQualifiedName {
     /// ```
     /// will be generated as a C++ struct named `Bar` instead of `Foo`.
     cpp_name: Option<Symbol>,
+
+    /// The fully-qualified C++ type to use for this, if this was originally a
+    /// C++ type.
+    ///
+    /// For example, if a type has `#[__crubit::annotate(cpp_type="x::y")]`,
+    /// then cpp_type will be `Some(x::y)`.
+    cpp_type: Option<Symbol>,
 }
 
 impl FullyQualifiedName {
@@ -299,7 +305,12 @@ impl FullyQualifiedName {
     ///
     /// May panic if `def_id` is an invalid id.
     // TODO(b/259724276): This function's results should be memoized.
-    fn new(tcx: TyCtxt, def_id: DefId) -> Self {
+    fn new(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Self {
+        if let Some(canonical_name) = db.reexported_symbol_canonical_name_mapping().get(&def_id) {
+            return canonical_name.clone();
+        }
+
+        let tcx = db.tcx();
         let krate = tcx.crate_name(def_id.krate);
 
         // Crash OK: these attributes are introduced by crubit itself, and "should
@@ -309,8 +320,8 @@ impl FullyQualifiedName {
 
         let mut full_path = tcx.def_path(def_id).data; // mod_path + name
         let name = full_path.pop().expect("At least the item's name should be present");
-        let name = name.data.get_opt_name();
-        let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).or(name);
+        let rs_name = name.data.get_opt_name();
+        let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).or(rs_name);
 
         let mod_path = NamespaceQualifier::new(
             full_path
@@ -319,7 +330,14 @@ impl FullyQualifiedName {
                 .map(|s| Rc::<str>::from(s.as_str())),
         );
 
-        Self { krate, mod_path, name, cpp_type, cpp_name }
+        Self {
+            krate,
+            rs_mod_path: mod_path.clone(),
+            cpp_ns_path: mod_path,
+            rs_name,
+            cpp_name,
+            cpp_type,
+        }
     }
 
     fn format_for_cc(&self) -> Result<TokenStream> {
@@ -328,22 +346,23 @@ impl FullyQualifiedName {
             return Ok(quote! {#path});
         }
 
-        let name = self.cpp_name.as_ref().unwrap_or_else(|| {
-            self.name.as_ref().expect("`format_for_cc` can't be called on name-less item kinds")
-        });
+        let name = self
+            .cpp_name
+            .as_ref()
+            .expect("`format_for_cc` can't be called on name-less item kinds");
 
         let top_level_ns = format_cc_ident(self.krate.as_str())?;
-        let ns_path = self.mod_path.format_for_cc()?;
+        let ns_path = self.cpp_ns_path.format_for_cc()?;
         let name = format_cc_ident(name.as_str())?;
         Ok(quote! { :: #top_level_ns :: #ns_path #name })
     }
 
     fn format_for_rs(&self) -> TokenStream {
         let name =
-            self.name.as_ref().expect("`format_for_rs` can't be called on name-less item kinds");
+            self.rs_name.as_ref().expect("`format_for_rs` can't be called on name-less item kinds");
 
         let krate = make_rs_ident(self.krate.as_str());
-        let mod_path = self.mod_path.format_for_rs();
+        let mod_path = self.rs_mod_path.format_for_rs();
         let name = make_rs_ident(name.as_str());
         quote! { :: #krate :: #mod_path #name }
     }
@@ -475,6 +494,120 @@ enum TypeLocation {
 
     /// Other location (e.g. pointee type, field type, etc.).
     Other,
+}
+
+/// Computes a mapping from a `DefId` to a `FullyQualifiedName` for all
+/// not-directly-public symbols that are reexported by a `use` statement.
+// TODO(b/350772554): Don't generate bindings for ambiguous symbols.
+fn reexported_symbol_canonical_name_mapping(
+    db: &dyn BindingsGenerator<'_>,
+) -> HashMap<DefId, FullyQualifiedName> {
+    let tcx = db.tcx();
+    let mut name_map: HashMap<DefId, FullyQualifiedName> = HashMap::new();
+    let create_canonical_name = |name_map: &mut HashMap<DefId, FullyQualifiedName>,
+                                 alias_name: &str,
+                                 alias_local_def_id: LocalDefId,
+                                 aliased_entity_def_id: DefId|
+     -> Option<FullyQualifiedName> {
+        let rs_name = Symbol::intern(alias_name);
+        if let Some(canonical_name) = name_map.get(&aliased_entity_def_id) {
+            // We keep the lexicographically smallest name.
+            if canonical_name.rs_name.unwrap().as_str() < rs_name.as_str() {
+                return None;
+            }
+        }
+        let def_id = alias_local_def_id.to_def_id();
+        let tcx = db.tcx();
+
+        // We only handle local reexported private symbols for `pub use`.
+        if !tcx.effective_visibilities(()).is_directly_public(alias_local_def_id) // not pub use
+                || !aliased_entity_def_id.is_local() // symbols from other crates
+                || tcx.effective_visibilities(()).is_directly_public(aliased_entity_def_id.expect_local())
+        {
+            return None;
+        }
+        let item_name = tcx.opt_item_name(aliased_entity_def_id)?;
+        let krate = tcx.crate_name(def_id.krate);
+        let parent_def_key = tcx.def_key(def_id).parent?;
+        let parent_def_id = DefId::local(parent_def_key);
+
+        // If the parent is being aliased, we use its canonical name and we always
+        // process parents before their children.
+        let full_path_strs: Vec<Rc<str>> = if let Some(con_name) = name_map.get(&parent_def_id) {
+            con_name.rs_mod_path.0.clone()
+        } else {
+            let mut full_path = tcx.def_path(def_id).data; // mod_path + name
+            full_path.pop().expect("At least the use exists");
+            full_path
+                .into_iter()
+                .filter_map(|p| p.data.get_opt_name())
+                .map(|s| Rc::<str>::from(s.as_str()))
+                .collect()
+        };
+
+        let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone());
+        let cpp_ns_path = NamespaceQualifier::new(
+            full_path_strs.into_iter().chain([Rc::from("__crubit_internal")]),
+        );
+        Some(FullyQualifiedName {
+            cpp_name: Some(item_name),
+            cpp_ns_path,
+            rs_name: Some(rs_name),
+            krate,
+            rs_mod_path,
+            cpp_type: None,
+        })
+    };
+
+    struct AliasInfo {
+        using_name: String,
+        local_def_id: LocalDefId,
+        type_def_id: DefId,
+        def_kind: DefKind,
+    }
+    let aliases =
+        tcx.hir()
+            .items()
+            .filter_map(|item_id| {
+                let local_def_id: LocalDefId = item_id.owner_id.def_id;
+                if let Item { ident, kind: ItemKind::Use(use_path, use_kind), .. } =
+                    tcx.hir().expect_item(local_def_id)
+                {
+                    // TODO(b/350772554): Preserve the errors.
+                    collect_alias_from_use(db, ident.as_str(), use_path, use_kind).ok().map(
+                        |aliases| {
+                            aliases.into_iter().map(move |(using_name, type_def_id, def_kind)| {
+                                AliasInfo { using_name, local_def_id, type_def_id, def_kind }
+                            })
+                        },
+                    )
+                } else {
+                    None
+                }
+            })
+            .flatten()
+            .collect::<Vec<AliasInfo>>();
+
+    // TODO(b/350772554): Support mod.
+    // We should process the aliases in the path order: mod -> struct ->
+    // function/etc. Otherwise, for example, the function will still use the
+    // private fully qualified name as it doesn't know the canonical struct name
+    // yet.
+    let (struct_like_aliases, other_aliases): (Vec<AliasInfo>, Vec<AliasInfo>) =
+        aliases.into_iter().partition(|AliasInfo { def_kind, .. }| {
+            matches!(*def_kind, DefKind::Struct | DefKind::Enum | DefKind::Union)
+        });
+    for AliasInfo { using_name, local_def_id, type_def_id, .. } in
+        struct_like_aliases.into_iter().chain(other_aliases.into_iter())
+    {
+        if let Some(canonical_name) =
+            create_canonical_name(&mut name_map, &using_name, local_def_id, type_def_id)
+        {
+            name_map.insert(type_def_id, canonical_name);
+        }
+    }
+
+    name_map
 }
 
 fn format_pointer_or_reference_ty_for_cc<'tcx>(
@@ -666,8 +799,8 @@ fn format_ty_for_cc<'tcx>(
         ty::TyKind::Adt(adt, substs) => {
             ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
             ensure!(
-                is_directly_public(tcx, adt.did()),
-                "Not directly public type (re-exports are not supported yet - b/262052635)"
+                is_public_or_supported_export(db, adt.did()),
+                "Not a public or a supported reexported type (b/262052635)."
             );
 
             let def_id = adt.did();
@@ -693,7 +826,7 @@ fn format_ty_for_cc<'tcx>(
                 format!("Failed to generate bindings for the definition of `{ty}`")
             })?;
 
-            CcSnippet { tokens: FullyQualifiedName::new(tcx, def_id).format_for_cc()?, prereqs }
+            CcSnippet { tokens: FullyQualifiedName::new(db, def_id).format_for_cc()?, prereqs }
         }
 
         ty::TyKind::RawPtr(pointee_mid, mutbl) => {
@@ -932,7 +1065,7 @@ fn format_param_types_for_cc<'tcx>(
 /// than just `SomeStruct`.
 //
 // TODO(b/259724276): This function's results should be memoized.
-fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
+fn format_ty_for_rs(db: &dyn BindingsGenerator<'_>, ty: Ty) -> Result<TokenStream> {
     Ok(match ty.kind() {
         ty::TyKind::Bool
         | ty::TyKind::Float(_)
@@ -954,14 +1087,14 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
         }
         ty::TyKind::Adt(adt, substs) => {
             ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
-            FullyQualifiedName::new(tcx, adt.did()).format_for_rs()
+            FullyQualifiedName::new(db, adt.did()).format_for_rs()
         }
         ty::TyKind::RawPtr(pointee_ty, mutbl) => {
             let qualifier = match mutbl {
                 Mutability::Mut => quote! { mut },
                 Mutability::Not => quote! { const },
             };
-            let ty = format_ty_for_rs(tcx, *pointee_ty).with_context(|| {
+            let ty = format_ty_for_rs(db, *pointee_ty).with_context(|| {
                 format!("Failed to format the pointee of the pointer type `{ty}`")
             })?;
             quote! { * #qualifier #ty }
@@ -971,14 +1104,14 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
                 Mutability::Mut => quote! { mut },
                 Mutability::Not => quote! {},
             };
-            let ty = format_ty_for_rs(tcx, *referent_ty).with_context(|| {
+            let ty = format_ty_for_rs(db, *referent_ty).with_context(|| {
                 format!("Failed to format the referent of the reference type `{ty}`")
             })?;
             let lifetime = format_region_as_rs_lifetime(region);
             quote! { & #lifetime #mutability #ty }
         }
         ty::TyKind::Slice(slice_ty) => {
-            let ty = format_ty_for_rs(tcx, *slice_ty).with_context(|| {
+            let ty = format_ty_for_rs(db, *slice_ty).with_context(|| {
                 format!("Failed to format the element type of the slice type `{ty}`")
             })?;
             quote! { [#ty] }
@@ -1144,12 +1277,13 @@ fn format_thunk_decl<'tcx>(
 /// - `<::crate_name::some_module::SomeStruct as
 ///   ::core::default::Default>::default`
 fn format_thunk_impl<'tcx>(
-    tcx: TyCtxt<'tcx>,
+    db: &dyn BindingsGenerator<'tcx>,
     fn_def_id: DefId,
     sig: &ty::FnSig<'tcx>,
     thunk_name: &str,
     fully_qualified_fn_name: TokenStream,
 ) -> Result<TokenStream> {
+    let tcx = db.tcx();
     let param_names_and_types: Vec<(Ident, Ty)> = {
         let param_names = tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, ident)| {
             if ident.as_str().is_empty() {
@@ -1167,7 +1301,7 @@ fn format_thunk_impl<'tcx>(
     let mut thunk_params = param_names_and_types
         .iter()
         .map(|(param_name, ty)| {
-            let rs_type = format_ty_for_rs(tcx, *ty)
+            let rs_type = format_ty_for_rs(db, *ty)
                 .with_context(|| format!("Error handling parameter `{param_name}`"))?;
             Ok(if is_c_abi_compatible_by_value(*ty) {
                 quote! { #param_name: #rs_type }
@@ -1177,7 +1311,7 @@ fn format_thunk_impl<'tcx>(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let mut thunk_ret_type = format_ty_for_rs(tcx, sig.output())?;
+    let mut thunk_ret_type = format_ty_for_rs(db, sig.output())?;
     let mut thunk_body = {
         let fn_args = param_names_and_types.iter().map(|(rs_name, ty)| {
             if is_c_abi_compatible_by_value(*ty) {
@@ -1343,6 +1477,7 @@ fn generate_using_statement(
     def_kind: DefKind,
 ) -> Result<ApiSnippets> {
     let tcx = db.tcx();
+
     match def_kind {
         DefKind::Fn => {
             let mut prereqs;
@@ -1356,13 +1491,10 @@ fn generate_using_statement(
             } else {
                 bail!("Unsupported checking for external function");
             }
-            let fully_qualified_fn_name = FullyQualifiedName::new(tcx, def_id);
-            let unqualified_rust_fn_name =
-                fully_qualified_fn_name.name.expect("Functions are assumed to always have a name");
+            let fully_qualified_fn_name = FullyQualifiedName::new(db, def_id);
             let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc()?;
-            let cpp_name = crubit_attr::get(tcx, def_id).unwrap().cpp_name;
             let main_api_fn_name =
-                format_cc_ident(cpp_name.unwrap_or(unqualified_rust_fn_name).as_str())
+                format_cc_ident(fully_qualified_fn_name.cpp_name.unwrap().as_str())
                     .context("Error formatting function name")?;
             let using_name = format_cc_ident(using_name).context("Error formatting using name")?;
 
@@ -1406,7 +1538,7 @@ fn public_free_items_in_mod(
         let item_def_id = item_local_def_id.to_def_id();
         let item_def_kind = tcx.def_kind(item_def_id);
 
-        if !is_directly_public(tcx, item_def_id) {
+        if !is_exported(tcx, item_def_id) {
             continue;
         }
         match item_def_kind {
@@ -1419,14 +1551,16 @@ fn public_free_items_in_mod(
     items
 }
 
-fn format_use(
+// Collect all the aliases (alias_name, underlying_type_def_id,
+// underlying_type_def_kind) created by the `use` statement. For example, `pub
+// use some_mod::*` will return all the free items that are exported.
+fn collect_alias_from_use(
     db: &dyn BindingsGenerator<'_>,
     using_name: &str,
     use_path: &UsePath,
     use_kind: &UseKind,
-) -> Result<ApiSnippets> {
+) -> Result<Vec<(String, DefId, DefKind)>> {
     let tcx = db.tcx();
-
     // TODO(b/350772554): Support multiple items with the same name in `use`
     // statements.`
     if use_path.res.len() != 1 {
@@ -1448,21 +1582,29 @@ fn format_use(
             );
         }
     };
-    ensure!(
-        is_directly_public(tcx, def_id),
-        "Not directly public type (re-exports are not supported yet - b/262052635)"
-    );
 
     let mut aliases = vec![];
     if def_kind == DefKind::Mod {
         for (item_def_id, item_def_kind) in public_free_items_in_mod(db, def_id) {
-            let item_using_name = format_cc_ident(tcx.item_name(item_def_id).as_str())
-                .context("Error formatting using name")?;
-            aliases.push((item_using_name.to_string(), item_def_id, item_def_kind));
+            if let Ok(item_using_name) = format_cc_ident(tcx.item_name(item_def_id).as_str())
+                .context("Error formatting using name")
+            {
+                aliases.push((item_using_name.to_string(), item_def_id, item_def_kind));
+            }
         }
     } else {
         aliases.push((using_name.to_string(), def_id, def_kind));
     }
+    Ok(aliases)
+}
+
+fn format_use(
+    db: &dyn BindingsGenerator<'_>,
+    using_name: &str,
+    use_path: &UsePath,
+    use_kind: &UseKind,
+) -> Result<ApiSnippets> {
+    let aliases = collect_alias_from_use(db, using_name, use_path, use_kind)?;
     // TODO(b/350772554): Expose the errors. If any of the types in the `use`
     // statement is not supported, we currently ignore it and discard the
     // errors.
@@ -1605,8 +1747,8 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
             && tcx.get_attr(def_id, rustc_span::symbol::sym::export_name).is_none());
     let thunk_name = {
         let symbol_name = if db.no_thunk_name_mangling() {
-            FullyQualifiedName::new(tcx, def_id)
-                .name
+            FullyQualifiedName::new(db, def_id)
+                .rs_name
                 .expect("Functions are assumed to always have a name")
                 .to_string()
         } else {
@@ -1621,16 +1763,11 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         }
     };
 
-    let fully_qualified_fn_name = FullyQualifiedName::new(tcx, def_id);
+    let fully_qualified_fn_name = FullyQualifiedName::new(db, def_id);
     let unqualified_rust_fn_name =
-        fully_qualified_fn_name.name.expect("Functions are assumed to always have a name");
-    let main_api_fn_name = format_cc_ident(
-        fully_qualified_fn_name
-            .cpp_name
-            .expect("Functions are assumed to always have a cpp name")
-            .as_str(),
-    )
-    .context("Error formatting function name")?;
+        fully_qualified_fn_name.rs_name.expect("Functions are assumed to always have a name");
+    let main_api_fn_name = format_cc_ident(fully_qualified_fn_name.cpp_name.unwrap().as_str())
+        .context("Error formatting function name")?;
 
     let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_ret_type =
@@ -1705,7 +1842,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         Some(ty) => match ty.kind() {
             ty::TyKind::Adt(adt, substs) => {
                 assert_eq!(0, substs.len(), "Callers should filter out generics");
-                Some(FullyQualifiedName::new(tcx, adt.did()))
+                Some(FullyQualifiedName::new(db, adt.did()))
             }
             _ => panic!("Non-ADT `impl`s should be filtered by caller"),
         },
@@ -1855,7 +1992,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
                 quote! { #struct_name :: #fn_name }
             }
         };
-        format_thunk_impl(tcx, def_id, &sig_mid, &thunk_name, fully_qualified_fn_name)?
+        format_thunk_impl(db, def_id, &sig_mid, &thunk_name, fully_qualified_fn_name)?
     };
     Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
@@ -1937,6 +2074,27 @@ fn is_directly_public(tcx: TyCtxt, def_id: DefId) -> bool {
     }
 }
 
+/// Like `TyCtxt::is_exported`, but works not only with `LocalDefId`, but
+/// also with `DefId`.
+fn is_exported(tcx: TyCtxt, def_id: DefId) -> bool {
+    match def_id.as_local() {
+        None => {
+            // This mimics the checks in `try_print_visible_def_path_recur` in
+            // `compiler/rustc_middle/src/ty/print/pretty.rs`.
+            let actual_parent = tcx.opt_parent(def_id);
+            let visible_parent = tcx.visible_parent_map(()).get(&def_id).copied();
+            actual_parent == visible_parent
+        }
+        Some(local_def_id) => tcx.effective_visibilities(()).is_exported(local_def_id),
+    }
+}
+
+fn is_public_or_supported_export(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> bool {
+    is_directly_public(db.tcx(), def_id)
+        || (is_exported(db.tcx(), def_id)
+            && db.reexported_symbol_canonical_name_mapping().contains_key(&def_id))
+}
+
 fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
     let param_env = match ty.ty_adt_def() {
         None => ty::ParamEnv::empty(),
@@ -1976,14 +2134,12 @@ fn format_adt_core<'tcx>(
     let tcx = db.tcx();
     let self_ty = tcx.type_of(def_id).instantiate_identity();
     assert!(self_ty.is_adt());
-    assert!(is_directly_public(tcx, def_id), "Caller should verify");
+    assert!(is_public_or_supported_export(db, def_id), "Caller should verify");
 
-    let fully_qualified_name = FullyQualifiedName::new(tcx, def_id);
+    let fully_qualified_name = FullyQualifiedName::new(db, def_id);
     let rs_fully_qualified_name = fully_qualified_name.format_for_rs();
-    let cpp_name = format_cc_ident(
-        fully_qualified_name.cpp_name.expect("Structs always have a name").as_str(),
-    )
-    .context("Error formatting item name")?;
+    let cpp_name = format_cc_ident(fully_qualified_name.cpp_name.unwrap().as_str())
+        .context("Error formatting item name")?;
 
     // The check below ensures that `format_trait_thunks` will succeed for the
     // `Drop`, `Default`, and/or `Clone` trait. Ideally we would directly check
@@ -2494,12 +2650,12 @@ fn format_trait_thunks<'tcx>(
             } else {
                 let fully_qualified_fn_name = {
                     let fully_qualified_trait_name =
-                        FullyQualifiedName::new(tcx, trait_id).format_for_rs();
+                        FullyQualifiedName::new(db, trait_id).format_for_rs();
                     let method_name = make_rs_ident(method.name.as_str());
                     quote! { <#struct_name as #fully_qualified_trait_name>::#method_name }
                 };
                 format_thunk_impl(
-                    tcx,
+                    db,
                     method.def_id,
                     &sig_mid,
                     &thunk_name,
@@ -2857,14 +3013,14 @@ fn format_adt<'tcx>(
         })
         .filter_map(|impl_item_ref| {
             let def_id = impl_item_ref.id.owner_id.def_id;
-            if !tcx.effective_visibilities(()).is_directly_public(def_id) {
+            if !is_exported(db.tcx(), def_id.to_def_id()) {
                 return None;
             }
             let result = match impl_item_ref.kind {
                 AssocItemKind::Fn { .. } => {
                     let result = db.format_fn(def_id);
                     if result.is_ok() {
-                        let cpp_name = FullyQualifiedName::new(tcx, def_id.into())
+                        let cpp_name = FullyQualifiedName::new(db, def_id.into())
                             .cpp_name
                             .unwrap()
                             .to_string();
@@ -3047,13 +3203,9 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
 fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Option<ApiSnippets>> {
     let tcx = db.tcx();
-    // TODO(b/262052635): When adding support for re-exports we may need to change
-    // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is
-    // undesirable, because it would mean exposing items from a private module.
-    // Exposing a private module is undesirable, because it would mean that
-    // changes of private implementation details of the crate could become
-    // breaking changes for users of the generated C++ bindings.)
-    if !tcx.effective_visibilities(()).is_directly_public(def_id) {
+
+    // TODO(b/350772554): Support `use` mod.
+    if !is_public_or_supported_export(db, def_id.to_def_id()) {
         return Ok(None);
     }
 
@@ -3263,7 +3415,7 @@ fn format_crate(db: &Database) -> Result<Output> {
             .chain(cc_details)
             .map(|(local_def_id, tokens)| {
                 let ns_def_id = tcx.opt_parent(local_def_id.to_def_id());
-                let mod_path = FullyQualifiedName::new(tcx, local_def_id.to_def_id()).mod_path;
+                let mod_path = FullyQualifiedName::new(db, local_def_id.to_def_id()).cpp_ns_path;
                 (ns_def_id, mod_path, tokens)
             })
             .collect_vec();
@@ -3938,49 +4090,58 @@ pub mod tests {
     }
 
     #[test]
-    fn test_generated_bindings_reimports() {
+    fn test_format_item_reexport_private_type() {
         let test_src = r#"
-                #![allow(dead_code)]
-                #![allow(unused_imports)]
-                mod private_submodule1 {
-                    pub fn subfunction1() {}
-                    pub fn subfunction2() {}
-                    pub fn subfunction3() {}
+            #![allow(dead_code)]
+            mod test_mod {
+                pub struct ReExportedStruct{
+                    pub field: i32
                 }
-                mod private_submodule2 {
-                    pub fn subfunction8() {}
-                    pub fn subfunction9() {}
+                pub struct NotReExportedStruct{
+                    pub field: i32
                 }
+            }
 
-                // Public re-import.
-                pub use private_submodule1::subfunction1;
-
-                // Private re-import.
-                use private_submodule1::subfunction2;
-
-                // Re-import that renames.
-                pub use private_submodule1::subfunction3 as public_function3;
-
-                // Re-import of multiple items via glob.
-                pub use private_submodule2::*;
+            pub use crate::test_mod::ReExportedStruct as Z;
+            pub use crate::test_mod::ReExportedStruct as X;
+            pub use crate::test_mod::ReExportedStruct as Y;
+            #[allow(unused_imports)]
+            use crate::test_mod::ReExportedStruct as PrivateUse;
             "#;
+        test_format_item(test_src, "NotReExportedStruct", |result| {
+            let result = result.unwrap();
+            assert!(result.is_none());
+        });
+
+        test_format_item(test_src, "PrivateUse", |result| {
+            let result = result.unwrap();
+            assert!(result.is_none());
+        });
+
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
-
-            let failures = vec![(1, 15), (3, 21)];
-            for (use_number, line_number) in failures.into_iter() {
-                let expected_comment_txt = format!(
-                    "Error generating bindings for `{{use#{use_number}}}` defined at \
-                     <crubit_unittests.rs>;l={line_number}: \
-                     Not directly public type (re-exports are not supported yet - b/262052635)"
-                );
-                assert_cc_matches!(
-                    bindings.h_body,
-                    quote! {
-                        __COMMENT__ #expected_comment_txt
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    ...
+                    namespace __crubit_internal {
+                    ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: X") alignas(4)
+                    [[clang::trivial_abi]] ReExportedStruct final
+                    ...
                     }
-                );
-            }
+                }
+            );
+
+            assert_rs_matches!(
+                bindings.rs_body,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::X>() == 4);
+                }
+            );
+
+            assert_rs_not_matches!(bindings.rs_body, quote! { ::rust_out::Y });
+            assert_rs_not_matches!(bindings.rs_body, quote! { ::rust_out::Z });
         });
     }
 
@@ -7722,10 +7883,7 @@ pub mod tests {
             "#;
         test_format_item(test_src, "TypeAlias", |result| {
             let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "Not directly public type (re-exports are not supported yet - b/262052635)"
-            );
+            assert_eq!(err, "Not a public or a supported reexported type (b/262052635).");
         });
     }
 
@@ -8236,10 +8394,6 @@ pub mod tests {
             ),
             ("Option<i8>", "Generic types are not supported yet (b/259749095)"),
             (
-                "PublicReexportOfStruct",
-                "Not directly public type (re-exports are not supported yet - b/262052635)",
-            ),
-            (
                 // This testcase is like `PublicReexportOfStruct`, but the private type and the
                 // re-export are in another crate.  When authoring this test
                 // `core::alloc::LayoutError` was a public re-export of
@@ -8249,7 +8403,7 @@ pub mod tests {
                 // to test them via a test crate that we control (rather than testing via
                 // implementation details of the std crate).
                 "core::alloc::LayoutError",
-                "Not directly public type (re-exports are not supported yet - b/262052635)",
+                "Not a public or a supported reexported type (b/262052635).",
             ),
             (
                 "*const Option<i8>",
@@ -8278,12 +8432,6 @@ pub mod tests {
             pub struct LifetimeGenericStruct<'a> {
                 pub reference: &'a u8,
             }
-
-            mod private_submodule {
-                pub struct PublicStructInPrivateModule;
-            }
-            pub use private_submodule::PublicStructInPrivateModule
-                as PublicReexportOfStruct;
         };
         test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_msg| {
             let db = bindings_db_for_tests(tcx);
@@ -8354,7 +8502,8 @@ pub mod tests {
             }
         };
         test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_tokens| {
-            let actual_tokens = format_ty_for_rs(tcx, ty.mid()).unwrap().to_string();
+            let db = bindings_db_for_tests(tcx);
+            let actual_tokens = format_ty_for_rs(&db, ty.mid()).unwrap().to_string();
             let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(actual_tokens, expected_tokens, "{desc}");
         });
@@ -8390,8 +8539,9 @@ pub mod tests {
         ];
         let preamble = quote! {};
         test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_err| {
+            let db = bindings_db_for_tests(tcx);
             let anyhow_err =
-                format_ty_for_rs(tcx, ty.mid()).expect_err(&format!("Expecting error for: {desc}"));
+                format_ty_for_rs(&db, ty.mid()).expect_err(&format!("Expecting error for: {desc}"));
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         });

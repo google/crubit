@@ -14,5 +14,15 @@ namespace {
 
 TEST(UsesTest, UsesExportsAsUsing) { EXPECT_EQ(uses::f(), 42); }
 
+TEST(UsesTest, ReexportPrivateStruct) {
+  constexpr int kField = 42;
+  uses::ExportedStruct x = uses::ExportedStruct::create(kField);
+  EXPECT_EQ(x.field, kField);
+
+  EXPECT_TRUE(
+      (std::is_same_v<uses::ExportedStruct, uses::AliasOfExportedStruct>));
+}
+
+TEST(UsesTest, ReexportPrivateFunction) { EXPECT_EQ(uses::private_fn(), 42); }
 }  // namespace
 }  // namespace crubit
