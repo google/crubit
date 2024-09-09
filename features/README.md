@@ -43,7 +43,7 @@ capabilities in `:supported`.
 Crubit developers may want to temporarily enable features without respect to
 visibility restrictions or level of support. The build flag:
 
-`--//rs_bindings_from_cc/bazel_support:globally_enabled_features`
+`--//common/bazel_support:globally_enabled_features`
 
 accepts a comma-separated list of unstable internal feature names (like
 `supported`, `experimental`, or the special alias `all`) and overrides the

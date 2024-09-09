@@ -2,7 +2,6 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "@bazel_skylib//rules:common_settings.bzl",
     "bool_flag",
-    "string_list_flag",
 )
 load(
     "//rs_bindings_from_cc/bazel_support:deps_for_bindings.bzl",
@@ -158,12 +157,6 @@ deps_for_bindings(
 bool_flag(
     name = "generate_error_report",
     build_setting_default = False,
-    visibility = ["//visibility:public"],
-)
-
-string_list_flag(
-    name = "globally_enabled_features",
-    build_setting_default = [],
     visibility = ["//visibility:public"],
 )
 

@@ -1,3 +1,7 @@
+load(
+    "@bazel_skylib//rules:common_settings.bzl",
+    "string_list_flag",
+)
 load("//rs_bindings_from_cc/bazel_support:toolchain.bzl", "rs_bindings_from_cc_toolchain")
 
 package(
@@ -5,10 +9,21 @@ package(
     default_visibility = ["//common/bazel_support:__subpackages__"],
 )
 
+# FLAGS
+# =====
+#
+# The following flags can be used by either direction of interop to control behavior of the tool.
+
+string_list_flag(
+    name = "globally_enabled_features",
+    build_setting_default = [],
+    visibility = ["//visibility:public"],
+)
+
 # TOOLCHAINS
 # ==========
 #
-# This BUILD file contains all of the Crubit toolchain implementations.
+# The following are all of the Crubit toolchain implementations.
 # The actual registration happens in MODULE.bazel and toolchains/BUILD.
 
 config_setting(

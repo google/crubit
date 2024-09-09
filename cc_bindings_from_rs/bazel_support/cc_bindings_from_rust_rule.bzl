@@ -403,7 +403,7 @@ cc_bindings_from_rust_aspect = aspect(
             default = "//cc_bindings_from_rs/bazel_support:generate_error_report",
         ),
         "_globally_enabled_features": attr.label(
-            default = "//rs_bindings_from_cc/bazel_support:globally_enabled_features",
+            default = "//common/bazel_support:globally_enabled_features",
         ),
     },
     toolchains = [
