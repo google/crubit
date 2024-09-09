@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 
-use bindings::Database;
+use bindings::{Database, IncludeGuard};
 use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
 use error_report::{ErrorReport, ErrorReporting, IgnoreErrors};
@@ -25,7 +25,10 @@ use token_stream_printer::{
 };
 
 fn turn_off_clang_format(mut h_body: String) -> String {
-    h_body.insert_str(h_body.find("#pragma once").unwrap(), "// clang-format off\n");
+    h_body.insert_str(
+        h_body.find("#ifndef").unwrap_or_else(|| h_body.find("#pragma once").unwrap()),
+        "// clang-format off\n",
+    );
     h_body
 }
 
@@ -54,7 +57,11 @@ fn new_db<'tcx>(
             crate_name_to_features.entry(crate_name.as_str().into()).or_default();
         *accumulated_features |= *features
     }
-
+    let include_guard = if let Some(include_guard) = &cmdline.h_out_include_guard {
+        IncludeGuard::Guard(include_guard.clone())
+    } else {
+        IncludeGuard::PragmaOnce
+    };
     Database::new(
         tcx,
         crubit_support_path_format,
@@ -62,6 +69,7 @@ fn new_db<'tcx>(
         crate_name_to_features.into(),
         errors,
         cmdline.no_thunk_name_mangling,
+        include_guard,
     )
 }
 
@@ -159,6 +167,7 @@ mod tests {
         extra_rustc_args: Vec<String>,
 
         tempdir: TempDir,
+        include_guard: Option<String>,
     }
 
     /// Result of `TestArgs::run` that helps tests access test outputs (e.g. the
@@ -180,6 +189,7 @@ mod tests {
                 panic_mechanism: "abort".to_string(),
                 extra_rustc_args: vec![],
                 tempdir: tempdir()?,
+                include_guard: None,
             })
         }
 
@@ -220,6 +230,11 @@ mod tests {
         /// Appends `extra_crubit_args` before the first `--`.
         fn with_extra_crubit_args(mut self, extra_crubit_args: &[&str]) -> Self {
             self.extra_crubit_args = extra_crubit_args.iter().map(|t| t.to_string()).collect_vec();
+            self
+        }
+
+        fn with_include_guard(mut self, include_guard: &str) -> Self {
+            self.include_guard = Some(include_guard.to_string());
             self
         }
 
@@ -269,6 +284,11 @@ mod tests {
                     error_report_out_path.as_ref().unwrap().display()
                 ));
             }
+
+            if let Some(include_guard) = &self.include_guard {
+                args.push(format!("--h-out-include-guard={include_guard}"));
+            }
+
             args.extend(self.extra_crubit_args.iter().cloned());
             args.extend([
                 "--".to_string(),
@@ -357,6 +377,55 @@ mod tests {
   }
 }"#;
         assert_eq!(expected_error_report, error_report);
+        Ok(())
+    }
+
+    #[test]
+    fn test_with_include_guard() -> Result<()> {
+        let test_args =
+            TestArgs::default_args()?.with_include_guard("CRUBIT_GENERATED_HEADER_FOR_test_crate_");
+        let test_result = test_args.run().expect("Customized include guard should succeed");
+
+        assert!(test_result.h_path.exists());
+        let temp_dir_str = test_args.tempdir.path().to_str().unwrap();
+        let h_body = std::fs::read_to_string(&test_result.h_path)?;
+        #[rustfmt::skip]
+        assert_body_matches(
+            &h_body,
+            &format!(
+                "{}\n{}\n{}",
+r#"// Automatically @generated C++ bindings for the following Rust crate:
+// test_crate
+// Features: <none>
+
+// clang-format off
+#ifndef CRUBIT_GENERATED_HEADER_FOR_test_crate_
+#define CRUBIT_GENERATED_HEADER_FOR_test_crate_
+
+namespace test_crate {
+
+namespace public_module {
+"#,
+ // TODO(b/261185414): Avoid assuming that all source code paths are google3 paths.
+format!("// Generated from: google3/{temp_dir_str}/test_crate.rs;l=2"),
+r#"void public_function();
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
+}
+inline void public_function() {
+  return __crubit_internal::
+      __crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
+}
+
+}  // namespace public_module
+
+}  // namespace test_crate
+#endif  // CRUBIT_GENERATED_HEADER_FOR_test_crate_
+"#
+            ),
+        );
         Ok(())
     }
 

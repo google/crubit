@@ -22,6 +22,10 @@ pub struct Cmdline {
     #[clap(long, value_parser, value_name = "FILE")]
     pub h_out: PathBuf,
 
+    /// Include guard for the C++ header file with bindings.
+    #[clap(long, value_parser, value_name = "STRING")]
+    pub h_out_include_guard: Option<String>,
+
     /// Output path for Rust implementation of the bindings.
     #[clap(long, value_parser, value_name = "FILE")]
     pub rs_out: PathBuf,
@@ -258,6 +262,9 @@ Arguments:
 Options:
       --h-out <FILE>
           Output path for C++ header file with bindings
+
+      --h-out-include-guard <STRING>
+          Include guard for the C++ header file with bindings
 
       --rs-out <FILE>
           Output path for Rust implementation of the bindings

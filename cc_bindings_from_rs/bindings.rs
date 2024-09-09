@@ -80,6 +80,9 @@ memoized::query_group! {
         #[input]
         fn no_thunk_name_mangling(&self) -> bool;
 
+        #[input]
+        fn h_out_include_guard(&self) -> IncludeGuard;
+
         fn support_header(&self, suffix: &'tcx str) -> CcInclude;
 
         fn repr_attrs(&self, did: DefId) -> Rc<[rustc_attr::ReprAttr]>;
@@ -112,6 +115,12 @@ memoized::query_group! {
     pub struct Database;
 }
 
+#[derive(Clone, Debug)]
+pub enum IncludeGuard {
+    PragmaOnce,
+    Guard(String),
+}
+
 fn support_header<'tcx>(db: &dyn BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcInclude {
     CcInclude::support_lib_header(db.crubit_support_path_format(), suffix.into())
 }
@@ -119,6 +128,29 @@ fn support_header<'tcx>(db: &dyn BindingsGenerator<'tcx>, suffix: &'tcx str) -> 
 pub struct Output {
     pub h_body: TokenStream,
     pub rs_body: TokenStream,
+}
+
+fn add_include_guard(db: &dyn BindingsGenerator<'_>, h_body: TokenStream) -> Result<TokenStream> {
+    match db.h_out_include_guard() {
+        IncludeGuard::PragmaOnce => Ok(quote! {
+            __HASH_TOKEN__ pragma once __NEWLINE__
+            __NEWLINE__
+
+            #h_body
+        }),
+        IncludeGuard::Guard(include_guard_str) => {
+            let include_guard = format_cc_ident(include_guard_str.as_str())?;
+            Ok(quote! {
+                __HASH_TOKEN__ ifndef #include_guard __NEWLINE__
+                __HASH_TOKEN__ define #include_guard __NEWLINE__
+                __NEWLINE__
+
+                #h_body
+
+                __HASH_TOKEN__ endif __COMMENT__ #include_guard_str __NEWLINE__
+            })
+        }
+    }
 }
 
 pub fn generate_bindings(db: &Database) -> Result<Output> {
@@ -151,13 +183,9 @@ pub fn generate_bindings(db: &Database) -> Result<Output> {
         let src = quote! { __COMMENT__ #txt };
         Output { h_body: src.clone(), rs_body: src }
     });
-
+    let h_body = add_include_guard(db, h_body)?;
     let h_body = quote! {
         #top_comment
-
-        // TODO(b/251445877): Replace `#pragma once` with include guards.
-        __HASH_TOKEN__ pragma once __NEWLINE__
-        __NEWLINE__
 
         #h_body
     };
@@ -9586,6 +9614,7 @@ pub mod tests {
             /* crate_name_to_features= */ Default::default(),
             /* errors = */ Rc::new(IgnoreErrors),
             /* no_thunk_name_mangling= */ false,
+            /* include_guard */ IncludeGuard::PragmaOnce,
         )
     }
 
