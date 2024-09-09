@@ -145,6 +145,7 @@ def generate_and_compile_bindings(
             cc_info = cc_info,
             crate_key = dep_variant_info.crate_info.name,
             headers = public_hdrs,
+            features = [],
         ),
     ]
 

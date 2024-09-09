@@ -4,6 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // type_aliases_rust
+// Features: experimental, supported
 
 #![allow(improper_ctypes_definitions)]
 

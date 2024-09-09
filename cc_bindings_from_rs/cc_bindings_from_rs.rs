@@ -375,6 +375,7 @@ mod tests {
                 "{}\n{}\n{}",
 r#"// Automatically @generated C++ bindings for the following Rust crate:
 // test_crate
+// Features: <none>
 
 // clang-format off
 #pragma once
@@ -409,6 +410,7 @@ inline void public_function() {
             &rs_body,
             r#"// Automatically @generated C++ bindings for the following Rust crate:
 // test_crate
+// Features: <none>
 
 #![allow(improper_ctypes_definitions)]
 

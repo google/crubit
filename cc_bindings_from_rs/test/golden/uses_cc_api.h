@@ -4,6 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // uses_rust
+// Features: experimental, supported
 
 // clang-format off
 #pragma once

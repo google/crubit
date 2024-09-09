@@ -13,6 +13,7 @@ CcBindingsFromRustInfo = provider(
         # flags.
         "crate_key": "String with a crate key to use in --other-crate-bindings",
         "headers": "A list of C++ headers which correspond to this crate.",
+        "features": "A list of features enabled for the bindings for this crate.",
     },
 )
 

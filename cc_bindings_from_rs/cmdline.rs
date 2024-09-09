@@ -51,7 +51,8 @@ pub struct Cmdline {
     /// Feature flags enabled for a given crate. Keys are crate names, and
     /// values are feature flags. All crates must have their features fully
     /// specified, and consistently across rustc invocations, or the
-    /// behavior is undefined.
+    /// behavior is undefined. As a special case, the crate name `self`
+    /// refers to the current crate, whose bindings are being generated.
     ///
     /// Example: "--crate-feature=foo=experimental".
     #[clap(long = "crate-feature", value_parser = parse_crate_feature,
@@ -273,7 +274,7 @@ Options:
           [aliases: bindings-from-dependency]
 
       --crate-feature <CRATE_NAME=CRUBIT_FEATURE>
-          Feature flags enabled for a given crate. Keys are crate names, and values are feature flags. All crates must have their features fully specified, and consistently across rustc invocations, or the behavior is undefined.
+          Feature flags enabled for a given crate. Keys are crate names, and values are feature flags. All crates must have their features fully specified, and consistently across rustc invocations, or the behavior is undefined. As a special case, the crate name `self` refers to the current crate, whose bindings are being generated.
           
           Example: "--crate-feature=foo=experimental".
 

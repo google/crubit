@@ -30,7 +30,7 @@ use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
-use rustc_span::def_id::{DefId, LocalDefId, LocalModDefId, LOCAL_CRATE};
+use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LocalModDefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_target::abi::{
     Abi, AddressSpace, FieldsShape, Integer, Layout, Pointer, Primitive, Scalar,
@@ -66,7 +66,8 @@ memoized::query_group! {
         #[input]
         fn crate_name_to_include_paths(&self) -> Rc<HashMap<Rc<str>, Vec<CcInclude>>>;
 
-        /// A map from a crate name to the features enabled on that crate.
+        /// A map from a crate name to the features enabled on that crate. The special name `self`
+        /// refers to the current crate.
         // TODO(b/271857814): A crate name might not be globally unique - the key needs to also cover
         // a "hash" of the crate version and compilation flags.
         #[input]
@@ -125,9 +126,22 @@ pub fn generate_bindings(db: &Database) -> Result<Output> {
 
     let top_comment = {
         let crate_name = tcx.crate_name(LOCAL_CRATE);
+        let crubit_features = {
+            let mut crubit_features: Vec<&str> = crate_features(db, LOCAL_CRATE)
+                .into_iter()
+                .map(|feature| feature.short_name())
+                .collect();
+            crubit_features.sort();
+            if crubit_features.is_empty() {
+                "<none>".to_string()
+            } else {
+                crubit_features.join(", ")
+            }
+        };
         let txt = format!(
             "Automatically @generated C++ bindings for the following Rust crate:\n\
-             {crate_name}"
+             {crate_name}\n\
+             Features: {crubit_features}"
         );
         quote! { __COMMENT__ #txt __NEWLINE__ }
     };
@@ -162,6 +176,19 @@ pub fn generate_bindings(db: &Database) -> Result<Output> {
     };
 
     Ok(Output { h_body, rs_body })
+}
+
+fn crate_features(
+    db: &dyn BindingsGenerator,
+    krate: CrateNum,
+) -> flagset::FlagSet<crubit_feature::CrubitFeature> {
+    let crate_features = db.crate_name_to_features();
+    let features = if krate == LOCAL_CRATE {
+        crate_features.get("self")
+    } else {
+        crate_features.get(db.tcx().crate_name(krate).as_str())
+    };
+    features.copied().unwrap_or_default()
 }
 
 #[derive(Clone, Debug, Default)]
@@ -4035,7 +4062,8 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             let expected_comment_txt = "Automatically @generated C++ bindings for the following Rust crate:\n\
-                 rust_out";
+                 rust_out\n\
+                 Features: <none>";
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {

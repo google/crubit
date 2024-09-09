@@ -4,6 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // struct_with_conflicting_fields_and_member_functions_rust
+// Features: experimental, supported
 
 #![allow(improper_ctypes_definitions)]
 

@@ -42,6 +42,10 @@ load(
     "GeneratedBindingsInfo",
 )
 load(
+    "//features:crubit_feature_hint.bzl",
+    "find_crubit_features",
+)
+load(
     "//rs_bindings_from_cc/bazel_support:compile_rust.bzl",
     "compile_rust",
 )
@@ -89,7 +93,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
       rustc_env: `rustc` environment to use when running `cc_bindings_from_rs`
 
     Returns:
-      The GeneratedBindingsInfo provider.
+      A tuple of (GeneratedBindingsInfo, features).
     """
     h_out_file = ctx.actions.declare_file(basename + "_cc_api.h")
     rs_out_file = ctx.actions.declare_file(basename + "_cc_api_impl.rs")
@@ -108,6 +112,13 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
         for header in dep_bindings_info.headers:
             arg = dep_bindings_info.crate_key + "=" + header.short_path
             crubit_args.add("--bindings-from-dependency", arg)
+        for feature in dep_bindings_info.features:
+            arg = dep_bindings_info.crate_key + "=" + feature
+            crubit_args.add("--crate-feature", arg)
+
+    features = find_crubit_features(target, ctx)
+    for feature in features:
+        crubit_args.add("--crate-feature", "self=" + feature)
 
     outputs = [h_out_file, rs_out_file]
     if ctx.attr._generate_error_report[BuildSettingInfo].value:
@@ -145,10 +156,12 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
         arguments = [args.process_wrapper_flags, "--", ctx.executable._cc_bindings_from_rs_tool.path, crubit_args, "--", args.rustc_flags, "-Cpanic=abort"],
     )
 
-    return GeneratedBindingsInfo(
+    generated_bindings_info = GeneratedBindingsInfo(
         h_file = h_out_file,
         rust_file = rs_out_file,
     )
+
+    return generated_bindings_info, features
 
 def _make_cc_info_for_h_out_file(ctx, h_out_file, cc_infos):
     """Creates and returns CcInfo for the generated ..._cc_api.h header file.
@@ -303,7 +316,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         skip_expanding_rustc_env = True,
     )
 
-    bindings_info = _generate_bindings(
+    bindings_info, features = _generate_bindings(
         ctx,
         target,
         basename,
@@ -327,6 +340,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
             cc_info = cc_info,
             crate_key = crate_info.name,
             headers = [bindings_info.h_file],
+            features = features,
         ),
         bindings_info,
         OutputGroupInfo(out = depset([bindings_info.h_file, bindings_info.rust_file])),
@@ -387,6 +401,9 @@ cc_bindings_from_rust_aspect = aspect(
         ),
         "_generate_error_report": attr.label(
             default = "//cc_bindings_from_rs/bazel_support:generate_error_report",
+        ),
+        "_globally_enabled_features": attr.label(
+            default = "//rs_bindings_from_cc/bazel_support:globally_enabled_features",
         ),
     },
     toolchains = [
