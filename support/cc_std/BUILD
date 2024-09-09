@@ -152,10 +152,7 @@ alias(
 
 filegroup(
     name = "toolchain_headers",
-    srcs = select({
-        "//third_party/crosstool:unstable_config": ["//nowhere/llvm:cc-std-headers"],
-        "//conditions:default": ["//nowhere/llvm:cc-std-headers"],
-    }) + [
+    srcs = [
         ":grte",
     ],
     visibility = ["//visibility:private"],

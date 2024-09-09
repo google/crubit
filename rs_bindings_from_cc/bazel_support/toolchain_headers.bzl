@@ -31,9 +31,11 @@ def _add_prefix(strings, prefix):
     return [prefix + s for s in strings]
 
 def _bindings_for_toolchain_headers_impl(ctx):
-    builtin_headers = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"].rs_bindings_from_cc_toolchain_info.builtin_headers
-    std_files = ctx.attr._stl[CcInfo].compilation_context.headers.to_list() + ctx.files.hdrs
-    std_and_builtin_files = depset(direct = ctx.files.hdrs + builtin_headers, transitive = [ctx.attr._stl[CcInfo].compilation_context.headers])
+    toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"].rs_bindings_from_cc_toolchain_info
+    builtin_headers = toolchain.builtin_headers
+    stl_headers = toolchain.stl_headers + ctx.files.hdrs
+    std_files = ctx.attr._stl[CcInfo].compilation_context.headers.to_list() + stl_headers
+    std_and_builtin_files = depset(direct = stl_headers + builtin_headers, transitive = [ctx.attr._stl[CcInfo].compilation_context.headers])
 
     prefixed_libcxx_hdrs = _add_prefix(ctx.attr.public_libcxx_hdrs, "c++/v1/")
 
