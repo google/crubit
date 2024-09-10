@@ -98,8 +98,10 @@ impl<T> Default for Vector<T> {
 
 impl<T> Drop for Vector<T> {
     fn drop(&mut self) {
-        unsafe {
-            _ = Vec::from_raw_parts(self.begin, self.len(), self.capacity());
+        if !self.begin.is_null() {
+            unsafe {
+                _ = Vec::from_raw_parts(self.begin, self.len(), self.capacity());
+            }
         }
     }
 }
