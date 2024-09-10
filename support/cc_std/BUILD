@@ -2,16 +2,17 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
 )
+load("//rs_bindings_from_cc/bazel_support:toolchain.bzl", "grte_toolchain")
 load(
     "//rs_bindings_from_cc/bazel_support:toolchain_headers.bzl",
     "bindings_for_toolchain_headers",
 )
+load("//support/cc_std:grte_versions.bzl", "CPU", "CPU_GRTE_VERSIONS")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -94,73 +95,51 @@ LIBCXX_HEADERS = [
 
 LIBC_HEADERS = []
 
-_CPU = {
-    "arm": "//third_party/bazel_platforms/cpu:aarch64",
-    "x86": "//third_party/bazel_platforms/cpu:x86_64",
-    "diorite_acc": "//buildenv/platforms/settings:diorite_acc",
-    "diorite_imc": "//buildenv/platforms/settings:diorite_imc",
-}
-
-_GRTE = {
-    "v4": "//third_party/grte:grte_v4",
-    "v5": "//third_party/grte:grte_v5",
-}
-
-_CPU_GRTE_VERSIONS = {
-    # diorite is v5-only.
-    "diorite_acc": ["v5"],
-    "diorite_imc": ["v5"],
-}
-
-[
-    selects.config_setting_group(
-        name = "grte_{grte_name}_cpu_{cpu_name}".format(
-            cpu_name = cpu_name,
-            grte_name = grte_name,
-        ),
-        match_all = [
-            grte_config_setting,
-            cpu_config_setting,
-        ],
-    )
-    for (cpu_name, cpu_config_setting) in _CPU.items()
-    for (grte_name, grte_config_setting) in _GRTE.items()
-    if grte_name in _CPU_GRTE_VERSIONS.get(
-        cpu_name,
-        [grte_name],
-    )
-]
-
-alias(
-    name = "grte",
-    actual = select({
-        "grte_{grte}_cpu_{cpu}".format(
-            cpu = cpu,
-            grte = grte,
-        ): "//third_party/grte/{grte}_{cpu}/release/usr/grte/{grte}:compile".format(
-            cpu = cpu,
-            grte = grte,
-        )
-        for cpu in _CPU.keys()
-        for grte in _GRTE.keys()
-        if grte in _CPU_GRTE_VERSIONS.get(
-            cpu,
-            [grte],
-        )
-    }),
+config_setting(
+    name = "cpu_arm",
+    constraint_values = [
+        "//third_party/bazel_platforms/cpu:aarch64",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
 )
 
-filegroup(
-    name = "toolchain_headers",
-    srcs = [
-        ":grte",
+config_setting(
+    name = "cpu_x86",
+    constraint_values = [
+        "//third_party/bazel_platforms/cpu:x86_64",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+[
+    grte_toolchain(
+        name = "grte_{grte}_cpu_{cpu}_toolchain".format(
+            cpu = cpu,
+            grte = grte,
+        ),
+        grte_headers = ["//third_party/grte/{grte}_{cpu}/release/usr/grte/{grte}:compile".format(
+            cpu = cpu,
+            grte = grte,
+        )],
+    )
+    for cpu in CPU
+    for grte in CPU_GRTE_VERSIONS[cpu]
+]
+
+# TODO(b/336981839): Delete this, it's only here for compatibility.
+# Once we delete the `hdrs` parameter to bindings_for_toolchain_headers, this has no purpose.
+filegroup(
+    name = "empty_filegroup",
+    srcs = [],
+    visibility = ["//visibility:public"],
 )
 
 bindings_for_toolchain_headers(
     name = "cc_std",
-    hdrs = ":toolchain_headers",
     extra_rs_srcs = [":extra_rs_srcs_for_cc_std"],
     public_libc_hdrs = LIBC_HEADERS,
     public_libcxx_hdrs = LIBCXX_HEADERS,
