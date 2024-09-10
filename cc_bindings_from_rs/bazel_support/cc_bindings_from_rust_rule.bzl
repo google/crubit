@@ -96,6 +96,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
       A tuple of (GeneratedBindingsInfo, features).
     """
     h_out_file = ctx.actions.declare_file(basename + "_cc_api.h")
+    new_h_out_file = ctx.actions.declare_file(basename + ".h")
     rs_out_file = ctx.actions.declare_file(basename + "_cc_api_impl.rs")
 
     crubit_args = ctx.actions.args()
@@ -155,15 +156,23 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
         # TODO(b/254049425): Remove `-Cpanic=abort` after crosstool contains cl/657372371.
         arguments = [args.process_wrapper_flags, "--", ctx.executable._cc_bindings_from_rs_tool.path, crubit_args, "--", args.rustc_flags, "-Cpanic=abort"],
     )
+    include_statement = "#include \"%s\"" % h_out_file.short_path
+    ctx.actions.run_shell(
+        outputs = [new_h_out_file],
+        inputs = [],
+        progress_message = "Generate a wrapper header of %s as %s" % (h_out_file.path, new_h_out_file.path),
+        command = "echo '%s' > %s" % (include_statement, new_h_out_file.path),
+    )
 
     generated_bindings_info = GeneratedBindingsInfo(
         h_file = h_out_file,
+        new_h_file = new_h_out_file,
         rust_file = rs_out_file,
     )
 
     return generated_bindings_info, features
 
-def _make_cc_info_for_h_out_file(ctx, h_out_file, cc_infos):
+def _make_cc_info_for_h_out_file(ctx, h_out_file, new_h_out_file, cc_infos):
     """Creates and returns CcInfo for the generated ..._cc_api.h header file.
 
     Args:
@@ -190,7 +199,7 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, cc_infos):
         actions = ctx.actions,
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
-        public_hdrs = [h_out_file],
+        public_hdrs = [h_out_file, new_h_out_file],
         compilation_contexts = [cc_info.compilation_context],
     )
     (linking_context, _) = cc_common.create_linking_context_from_compilation_outputs(
@@ -330,6 +339,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
     cc_info = _make_cc_info_for_h_out_file(
         ctx,
         bindings_info.h_file,
+        bindings_info.new_h_file,
         cc_infos = [target[CcInfo], impl_cc_info] + [
             dep_bindings_info.cc_info
             for dep_bindings_info in _get_dep_bindings_infos(ctx)
@@ -343,7 +353,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
             features = features,
         ),
         bindings_info,
-        OutputGroupInfo(out = depset([bindings_info.h_file, bindings_info.rust_file])),
+        OutputGroupInfo(out = depset([bindings_info.h_file, bindings_info.rust_file, bindings_info.new_h_file])),
     ]
 
 cc_bindings_from_rust_aspect = aspect(
