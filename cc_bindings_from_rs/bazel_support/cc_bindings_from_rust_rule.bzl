@@ -37,6 +37,10 @@ load(
     "collect_cc_bindings_from_rust_cli_flags",
 )
 load(
+    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl",
+    "crate_name_to_library_config",
+)
+load(
     "//cc_bindings_from_rs/bazel_support:providers.bzl",
     "CcBindingsFromRustInfo",
     "GeneratedBindingsInfo",
@@ -129,6 +133,11 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
             error_report_output.path,
         )
         outputs.append(error_report_output)
+    config = crate_name_to_library_config(target, ctx)
+    current_config = config.get("self", None)
+    for crate_name, crate_config in config.items():
+        if crate_config.namespace:
+            crubit_args.add("--crate-namespace", crate_name + "=" + crate_config.namespace)
 
     for flag in collect_cc_bindings_from_rust_cli_flags(target, ctx):
         crubit_args.add(flag)
@@ -170,7 +179,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
         rust_file = rs_out_file,
     )
 
-    return generated_bindings_info, features
+    return generated_bindings_info, features, current_config
 
 def _make_cc_info_for_h_out_file(ctx, h_out_file, new_h_out_file, cc_infos):
     """Creates and returns CcInfo for the generated ..._cc_api.h header file.
@@ -325,7 +334,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         skip_expanding_rustc_env = True,
     )
 
-    bindings_info, features = _generate_bindings(
+    bindings_info, features, config = _generate_bindings(
         ctx,
         target,
         basename,
@@ -351,6 +360,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
             crate_key = crate_info.name,
             headers = [bindings_info.h_file],
             features = features,
+            configuration = config,
         ),
         bindings_info,
         OutputGroupInfo(out = depset([bindings_info.h_file, bindings_info.rust_file, bindings_info.new_h_file])),

@@ -73,6 +73,11 @@ memoized::query_group! {
         #[input]
         fn crate_name_to_features(&self) -> Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>;
 
+        /// A map from a crate name to the top-level namespace of the C++ bindings. The special name
+        /// `self` refers to the current crate.
+        #[input]
+        fn crate_name_to_namespace(&self) -> Rc<HashMap<Rc<str>, Rc<str>>>;
+
         /// Error collector for generating reports of errors encountered during the generation of bindings.
         #[input]
         fn errors(&self) -> Rc<dyn ErrorReporting>;
@@ -123,6 +128,19 @@ pub enum IncludeGuard {
 
 fn support_header<'tcx>(db: &dyn BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcInclude {
     CcInclude::support_lib_header(db.crubit_support_path_format(), suffix.into())
+}
+
+fn top_level_ns_for_crate(db: &dyn BindingsGenerator<'_>, krate: CrateNum) -> Symbol {
+    let crate_name = if krate == LOCAL_CRATE {
+        "self".to_string()
+    } else {
+        db.tcx().crate_name(krate).to_string()
+    };
+    if let Some(namespace) = db.crate_name_to_namespace().get(crate_name.as_str()) {
+        Symbol::intern(namespace)
+    } else {
+        db.tcx().crate_name(krate)
+    }
 }
 
 pub struct Output {
@@ -323,6 +341,10 @@ struct FullyQualifiedName {
     /// For example, this would be `std` for `std::cmp::Ordering`.
     krate: Symbol,
 
+    /// Configurable top-level namespace of the C++ bindings.
+    /// For example, this would be `::foo` for `foo::bar::baz::qux`.
+    cpp_top_level_ns: Symbol,
+
     /// Path to the module where the item is located.
     /// For example, this would be `cmp` for `std::cmp::Ordering`.
     /// The path may contain multiple modules - e.g. `foo::bar::baz`.
@@ -367,6 +389,7 @@ impl FullyQualifiedName {
 
         let tcx = db.tcx();
         let krate = tcx.crate_name(def_id.krate);
+        let cpp_top_level_ns = top_level_ns_for_crate(db, def_id.krate);
 
         // Crash OK: these attributes are introduced by crubit itself, and "should
         // never" be malformed.
@@ -387,6 +410,7 @@ impl FullyQualifiedName {
 
         Self {
             krate,
+            cpp_top_level_ns,
             rs_mod_path: mod_path.clone(),
             cpp_ns_path: mod_path,
             rs_name,
@@ -406,10 +430,10 @@ impl FullyQualifiedName {
             .as_ref()
             .expect("`format_for_cc` can't be called on name-less item kinds");
 
-        let top_level_ns = format_cc_ident(self.krate.as_str())?;
+        let cpp_top_level_ns = format_cc_ident(self.cpp_top_level_ns.as_str())?;
         let ns_path = self.cpp_ns_path.format_for_cc()?;
         let name = format_cc_ident(name.as_str())?;
-        Ok(quote! { :: #top_level_ns :: #ns_path #name })
+        Ok(quote! { :: #cpp_top_level_ns:: #ns_path #name })
     }
 
     fn format_for_rs(&self) -> TokenStream {
@@ -583,6 +607,7 @@ fn reexported_symbol_canonical_name_mapping(
         }
         let item_name = tcx.opt_item_name(aliased_entity_def_id)?;
         let krate = tcx.crate_name(def_id.krate);
+        let cpp_top_level_ns = top_level_ns_for_crate(db, def_id.krate);
         let parent_def_key = tcx.def_key(def_id).parent?;
         let parent_def_id = DefId::local(parent_def_key);
 
@@ -609,6 +634,7 @@ fn reexported_symbol_canonical_name_mapping(
             cpp_ns_path,
             rs_name: Some(rs_name),
             krate,
+            cpp_top_level_ns,
             rs_mod_path,
             cpp_type: None,
         })
@@ -3480,17 +3506,15 @@ fn format_crate(db: &Database) -> Result<Output> {
 
     // Generate top-level elements of the C++ header file.
     let h_body = {
-        // TODO(b/254690602): Decide whether using `#crate_name` as the name of the
-        // top-level namespace is okay (e.g. investigate if this name is globally
-        // unique + ergonomic).
-        let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
+        let cpp_top_level_ns = top_level_ns_for_crate(db, LOCAL_CRATE);
+        let cpp_top_level_ns = format_cc_ident(cpp_top_level_ns.as_str())?;
 
         let includes = format_cc_includes(&includes);
         let ordered_cc = format_namespace_bound_cc_tokens(ordered_cc, tcx);
         quote! {
             #includes
             __NEWLINE__ __NEWLINE__
-            namespace #crate_name {
+            namespace #cpp_top_level_ns {
                 __NEWLINE__
                 #ordered_cc
                 __NEWLINE__
@@ -9612,6 +9636,7 @@ pub mod tests {
             /* crubit_support_path_format= */ "<crubit/support/for/tests/{header}>".into(),
             /* crate_name_to_include_paths= */ Default::default(),
             /* crate_name_to_features= */ Default::default(),
+            /* crate_name_to_namespace= */ HashMap::default().into(),
             /* errors = */ Rc::new(IgnoreErrors),
             /* no_thunk_name_mangling= */ false,
             /* include_guard */ IncludeGuard::PragmaOnce,

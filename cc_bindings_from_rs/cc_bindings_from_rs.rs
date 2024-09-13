@@ -62,11 +62,17 @@ fn new_db<'tcx>(
     } else {
         IncludeGuard::PragmaOnce
     };
+    let mut crate_name_to_namespace = <HashMap<Rc<str>, Rc<str>>>::new();
+    for (crate_name, namespace) in &cmdline.crate_namespaces {
+        // TODO: Check dup.
+        crate_name_to_namespace.insert(crate_name.as_str().into(), namespace.as_str().into());
+    }
     Database::new(
         tcx,
         crubit_support_path_format,
         crate_name_to_include_paths.into(),
         crate_name_to_features.into(),
+        crate_name_to_namespace.into(),
         errors,
         cmdline.no_thunk_name_mangling,
         include_guard,

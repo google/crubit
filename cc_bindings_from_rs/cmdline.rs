@@ -85,6 +85,13 @@ pub struct Cmdline {
     /// undefined behavior.
     #[clap(long, value_parser, value_name = "BOOL")]
     pub no_thunk_name_mangling: bool,
+
+    /// The top level namespace of the C++ bindings for a given crate. Keys are
+    /// crate names, and values are namespaces. Example:
+    /// "--crate-namespace=foo=a_namespace::b_namespace
+    #[clap(long = "crate-namespace", value_parser = parse_crate_namespace,
+           value_name = "CRATE_NAME=NAMESPACE")]
+    pub crate_namespaces: Vec<(String, String)>,
 }
 
 impl Cmdline {
@@ -142,6 +149,24 @@ fn parse_crate_header(s: &str) -> Result<(String, String)> {
     ensure!(!include.is_empty(), "Empty include paths are invalid");
 
     Ok((crate_name.to_string(), include.to_string()))
+}
+
+fn parse_key_value_pair(s: &str) -> Result<(String, String)> {
+    let Some(pos) = s.find('=') else {
+        bail!("Expected KEY=VALUE syntax but no `=` found in `{s}`");
+    };
+
+    let key = &s[..pos];
+    ensure!(!key.is_empty(), "Empty key names are invalid");
+
+    let value = &s[(pos + 1)..];
+    ensure!(!value.is_empty(), "Empty values are invalid");
+
+    Ok((key.to_string(), value.to_string()))
+}
+
+fn parse_crate_namespace(s: &str) -> Result<(String, String)> {
+    parse_key_value_pair(s)
 }
 
 /// Parse cmdline arguments of the following form:`"crate_name=crubit_feature"`.
@@ -296,6 +321,9 @@ Options:
 
       --no-thunk-name-mangling
           This is for golden tests only. Using this in production may cause undefined behavior
+
+      --crate-namespace <CRATE_NAME=NAMESPACE>
+          The top level namespace of the C++ bindings for a given crate. Keys are crate names, and values are namespaces. Example: "--crate-namespace=foo=a_namespace::b_namespace
 
   -h, --help
           Print help (see a summary with '-h')
