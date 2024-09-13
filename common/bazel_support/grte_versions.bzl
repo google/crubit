@@ -12,8 +12,8 @@ placing too much strain on users.
 
 # Mapping of GRTE CPU name to the config_setting for that CPU.
 CPU = {
-    "arm": "//support/cc_std:cpu_arm",
-    "x86": "//support/cc_std:cpu_x86",
+    "arm": "//common/bazel_support:cpu_arm",
+    "x86": "//common/bazel_support:cpu_x86",
     "diorite_acc": "//buildenv/platforms/settings:diorite_acc",
     "diorite_imc": "//buildenv/platforms/settings:diorite_imc",
 }

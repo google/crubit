@@ -6,7 +6,7 @@
 #
 # Do not add anything to this file except additional toolchain() calls.
 
-load("//support/cc_std:grte_versions.bzl", "CPU", "CPU_GRTE_VERSIONS", "GRTE")
+load("//common/bazel_support:grte_versions.bzl", "CPU", "CPU_GRTE_VERSIONS", "GRTE")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -38,7 +38,7 @@ toolchain(
             cpu_config_setting,
             grte_config_setting,
         ],
-        toolchain = "//support/cc_std:grte_{grte_name}_cpu_{cpu_name}_toolchain".format(
+        toolchain = "//common/bazel_support:grte_{grte_name}_cpu_{cpu_name}_toolchain".format(
             cpu_name = cpu_name,
             grte_name = grte_name,
         ),

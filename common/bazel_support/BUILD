@@ -2,7 +2,8 @@ load(
     "@bazel_skylib//rules:common_settings.bzl",
     "string_list_flag",
 )
-load("//rs_bindings_from_cc/bazel_support:toolchain.bzl", "rs_bindings_from_cc_toolchain")
+load("//common/bazel_support:grte_versions.bzl", "CPU", "CPU_GRTE_VERSIONS")
+load("//rs_bindings_from_cc/bazel_support:toolchain.bzl", "grte_toolchain", "rs_bindings_from_cc_toolchain")
 
 package(
     default_applicable_licenses = ["//:license"],
@@ -59,3 +60,45 @@ rs_bindings_from_cc_toolchain(
     is_on_demand = True,
     stl_headers = [],
 )
+
+# GRTE TOOLCHAINS
+# ---------------
+#
+# The following are the actual toolchain implementations for GRTE.
+# They aren't placed in cc_std to avoid pointless (and confusing) duplication,
+# if cc_std is branched into a stable/unstable directory.
+
+config_setting(
+    name = "cpu_arm",
+    constraint_values = [
+        "//third_party/bazel_platforms/cpu:aarch64",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+config_setting(
+    name = "cpu_x86",
+    constraint_values = [
+        "//third_party/bazel_platforms/cpu:x86_64",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+[
+    grte_toolchain(
+        name = "grte_{grte}_cpu_{cpu}_toolchain".format(
+            cpu = cpu,
+            grte = grte,
+        ),
+        grte_headers = ["//third_party/grte/{grte}_{cpu}/release/usr/grte/{grte}:compile".format(
+            cpu = cpu,
+            grte = grte,
+        )],
+    )
+    for cpu in CPU
+    for grte in CPU_GRTE_VERSIONS[cpu]
+]

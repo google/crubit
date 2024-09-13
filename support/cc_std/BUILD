@@ -7,12 +7,10 @@ load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
 )
-load("//rs_bindings_from_cc/bazel_support:toolchain.bzl", "grte_toolchain")
 load(
     "//rs_bindings_from_cc/bazel_support:toolchain_headers.bzl",
     "bindings_for_toolchain_headers",
 )
-load("//support/cc_std:grte_versions.bzl", "CPU", "CPU_GRTE_VERSIONS")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -94,41 +92,6 @@ LIBCXX_HEADERS = [
 ]
 
 LIBC_HEADERS = []
-
-config_setting(
-    name = "cpu_arm",
-    constraint_values = [
-        "//third_party/bazel_platforms/cpu:aarch64",
-    ],
-    visibility = [
-        "//visibility:public",
-    ],
-)
-
-config_setting(
-    name = "cpu_x86",
-    constraint_values = [
-        "//third_party/bazel_platforms/cpu:x86_64",
-    ],
-    visibility = [
-        "//visibility:public",
-    ],
-)
-
-[
-    grte_toolchain(
-        name = "grte_{grte}_cpu_{cpu}_toolchain".format(
-            cpu = cpu,
-            grte = grte,
-        ),
-        grte_headers = ["//third_party/grte/{grte}_{cpu}/release/usr/grte/{grte}:compile".format(
-            cpu = cpu,
-            grte = grte,
-        )],
-    )
-    for cpu in CPU
-    for grte in CPU_GRTE_VERSIONS[cpu]
-]
 
 # TODO(b/336981839): Delete this, it's only here for compatibility.
 # Once we delete the `hdrs` parameter to bindings_for_toolchain_headers, this has no purpose.
