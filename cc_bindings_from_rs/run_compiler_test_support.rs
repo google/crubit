@@ -37,7 +37,7 @@ const TOOLCHAIN_ROOT: &str = env!("G3_SYSROOT_PATH");
 /// `run_compiler`
 pub fn get_sysroot_for_testing() -> PathBuf {
     let runfiles = runfiles::Runfiles::create().unwrap();
-    let loc = runfiles.rlocation(Path::new(TOOLCHAIN_ROOT));
+    let loc = runfiles.rlocation(Path::new(TOOLCHAIN_ROOT)).expect("Failed to locate runfile");
     assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
     assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
     loc
