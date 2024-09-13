@@ -6,27 +6,36 @@
 
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/log/check.h"
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/pragma.h"
+#include "nullability/proto_matchers.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/Testing/Annotations/Annotations.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"  // IWYU pragma: keep
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "third_party/protobuf/message.h"
 
 namespace clang::tidy::nullability {
 namespace {
+using ::clang::ast_matchers::classTemplateDecl;
+using ::clang::ast_matchers::classTemplateSpecializationDecl;
 using ::clang::ast_matchers::fieldDecl;
+using ::clang::ast_matchers::findAll;
 using ::clang::ast_matchers::functionDecl;
+using ::clang::ast_matchers::functionTemplateDecl;
 using ::clang::ast_matchers::hasName;
 using ::clang::ast_matchers::match;
 using ::clang::ast_matchers::selectFirst;
@@ -35,10 +44,12 @@ using ::llvm::Annotations;
 using ::testing::AllOf;
 using ::testing::Contains;
 using ::testing::ExplainMatchResult;
+using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::Optional;
 using ::testing::Pointwise;
 using ::testing::UnorderedElementsAre;
+using ::testing::UnorderedElementsAreArray;
 
 test::EnableSmartPointers Enable;
 
@@ -86,14 +97,20 @@ MATCHER_P3(TypeLocRanges, Path, Ranges, PragmaNullability, "") {
 
 template <typename DeclT, typename MatcherT>
 std::optional<clang::tidy::nullability::TypeLocRanges> getRanges(
+    ASTContext &Ctx, MatcherT Matcher,
+    const TypeNullabilityDefaults &Defaults) {
+  const auto *D = selectFirst<DeclT>("d", match(Matcher.bind("d"), Ctx));
+  CHECK(D != nullptr);
+  return clang::tidy::nullability::getEligibleRanges(*D, Defaults);
+}
+
+template <typename DeclT, typename MatcherT>
+std::optional<clang::tidy::nullability::TypeLocRanges> getRanges(
     llvm::StringRef Input, MatcherT Matcher) {
   NullabilityPragmas Pragmas;
   TestAST TU(getAugmentedTestInputs(Input, Pragmas));
-  const auto *D =
-      selectFirst<DeclT>("d", match(Matcher.bind("d"), TU.context()));
-  CHECK(D != nullptr);
-  return clang::tidy::nullability::getEligibleRanges(
-      *D, TypeNullabilityDefaults(TU.context(), Pragmas));
+  return getRanges<DeclT>(TU.context(), Matcher,
+                          TypeNullabilityDefaults(TU.context(), Pragmas));
 }
 
 std::optional<clang::tidy::nullability::TypeLocRanges> getFunctionRanges(
@@ -1281,5 +1298,425 @@ TEST(ComplexDeclaratorTest, PointerToArrayOfFunctionPointers) {
                                                      Input.point("2"))}))))));
 }
 
+template <typename DeclT, typename MatcherT>
+std::vector<testing::Matcher<const proto2::Message &>> rangesFor(
+    std::vector<std::pair<std::string, MatcherT>> DeclMatchers, ASTContext &Ctx,
+    const TypeNullabilityDefaults &Defaults) {
+  std::vector<testing::Matcher<const proto2::Message &>> RangeMatchers;
+  for (const auto &[Name, Matcher] : DeclMatchers) {
+    llvm::errs() << "Getting ranges for " << Name << "\n";
+    auto Ranges = getRanges<DeclT>(Ctx, Matcher, Defaults);
+    if (!Ranges) {
+      ADD_FAILURE() << "No ranges found for " << Name << "!";
+      return {};
+    }
+    RangeMatchers.push_back(EqualsProto(*Ranges));
+  }
+  return RangeMatchers;
+}
+
+auto rangesForFunctions(std::vector<std::string> FunctionNames, ASTContext &Ctx,
+                        const TypeNullabilityDefaults &Defaults) {
+  std::vector<std::pair<std::string, decltype(functionDecl())>>
+      FunctionMatchers;
+  for (const auto &Name : FunctionNames) {
+    FunctionMatchers.push_back({Name, functionDecl(hasName(Name))});
+  }
+  return rangesFor<FunctionDecl>(FunctionMatchers, Ctx, Defaults);
+}
+
+auto rangesForVars(std::vector<std::string> VarNames, ASTContext &Ctx,
+                   const TypeNullabilityDefaults &Defaults) {
+  std::vector<std::pair<std::string, decltype(varDecl())>> VarMatchers;
+  for (const auto &Name : VarNames) {
+    VarMatchers.push_back({Name, varDecl(hasName(Name))});
+  }
+  return rangesFor<VarDecl>(VarMatchers, Ctx, Defaults);
+}
+
+auto rangesForFields(std::vector<std::string> FieldNames, ASTContext &Ctx,
+                     const TypeNullabilityDefaults &Defaults) {
+  std::vector<std::pair<std::string, decltype(fieldDecl())>> FieldMatchers;
+  for (const auto &Name : FieldNames) {
+    FieldMatchers.push_back({Name, fieldDecl(hasName(Name))});
+  }
+  return rangesFor<FieldDecl>(FieldMatchers, Ctx, Defaults);
+}
+
+TEST(GetEligibleRangesFromASTTest, Functions) {
+  std::string Input = R"cc(
+    namespace std {
+    template <typename T>
+    class unique_ptr;
+    }  // namespace std
+
+    void ptrParam(int* P);
+    int* ptrReturn();
+    void smartPtrParam(std::unique_ptr<int> P);
+    void noPtrs();
+    auto autoReturn() { return ptrReturn(); }
+    auto* autoStarReturn() { return ptrReturn(); }
+  )cc";
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  EXPECT_THAT(getEligibleRanges(TU.context(), Defaults),
+              UnorderedElementsAreArray(rangesForFunctions(
+                  {"ptrParam", "smartPtrParam", "ptrReturn", "autoStarReturn"},
+                  TU.context(), Defaults)));
+}
+
+TEST(GetEligibleRangesFromASTTest, Variables) {
+  std::string Input = R"cc(
+    int* IntPtr;
+    int** IntPtrPtr = nullptr;
+    auto Auto = IntPtr;
+    auto* AutoStar = IntPtr;
+
+    void func() {
+      int* LocalIntPtr;
+      int** LocalIntPtrPtr = nullptr;
+      auto LocalAuto = LocalIntPtr;
+      auto* LocalAutoStar = LocalIntPtr;
+      static int* StaticInFuncIntPtr;
+    }
+
+    namespace std {
+    template <typename T>
+    class unique_ptr {
+      // we need a more complete type for the pointer to use it for variables
+      // than we do to use it for functions
+      using pointer = T*;
+    };
+    }  // namespace std
+
+    std::unique_ptr<int> UniquePtr;
+    auto AutoUniquePtr =
+        UniquePtr;  // not realistic, but just to get the auto deduced
+    void smartFunc() {
+      std::unique_ptr<int> LocalUniquePtr;
+      auto LocalAutoUniquePtr = LocalUniquePtr;
+    }
+  )cc";
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  EXPECT_THAT(getEligibleRanges(TU.context(), Defaults),
+              UnorderedElementsAreArray(rangesForVars(
+                  {"IntPtr", "IntPtrPtr", "AutoStar", "LocalIntPtr",
+                   "LocalIntPtrPtr", "LocalAutoStar", "StaticInFuncIntPtr",
+                   "UniquePtr", "LocalUniquePtr"},
+                  TU.context(), Defaults)));
+}
+
+TEST(GetEligibleRangesFromASTTest, Lambda) {
+  std::string Input = R"cc(
+    auto Lambda = []() {};
+    auto LambdaWithPtrParam = [](int*) {};
+    auto LambdaWithPtrReturn = []() -> int* { return nullptr; };
+  )cc";
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  // TODO(b/347210071) Include the ranges for LambdaWithPtr's parameter and
+  // LambdaWithPtrReturn's return type.
+  EXPECT_THAT(getEligibleRanges(TU.context(), Defaults), IsEmpty());
+}
+
+TEST(GetEligibleRangesFromASTTest, ClassMembers) {
+  std::string Input = R"cc(
+    namespace std {
+    template <typename T>
+    struct unique_ptr {
+      using pointer = T*;
+    };
+    }  // namespace std
+
+    template <typename T>
+    struct custom_smart_ptr {
+      using absl_nullability_compatible = void;
+      using pointer = T*;
+    };
+
+    class C {
+      void method();
+      int* methodWithPtr();
+      int NonPtrField;
+      int* PtrField;
+      static int* StaticField;
+      std::unique_ptr<int> StdSmartField;
+      custom_smart_ptr<int> CustomSmartField;
+    };
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  auto Expected = rangesForFunctions({"methodWithPtr"}, TU.context(), Defaults);
+  auto AlsoExpected =
+      rangesForFields({"PtrField", "StdSmartField", "CustomSmartField"},
+                      TU.context(), Defaults);
+  Expected.insert(Expected.end(), AlsoExpected.begin(), AlsoExpected.end());
+  AlsoExpected = rangesForVars({"StaticField"}, TU.context(), Defaults);
+  Expected.insert(Expected.end(), AlsoExpected.begin(), AlsoExpected.end());
+
+  EXPECT_THAT(getEligibleRanges(TU.context(), Defaults),
+              UnorderedElementsAreArray(Expected));
+}
+
+TEST(GetEligibleRangesFromASTTest, ClassTemplateMembersNoInstantiation) {
+  std::string Input = R"cc(
+    template <typename T>
+    class CTemplate {
+      void method();
+      T* methodWithPtr();
+      T NonPtrField;
+      T* PtrField;
+      static T* StaticField;
+    };
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  auto &TemplatedDecl =
+      *selectFirst<ClassTemplateDecl>(
+           "b", match(classTemplateDecl(hasName("CTemplate")).bind("b"),
+                      TU.context()))
+           ->getTemplatedDecl();
+
+  // Matches the ranges for decls in the template.
+  EXPECT_THAT(
+      getEligibleRanges(TU.context(), Defaults),
+      UnorderedElementsAre(
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<FunctionDecl>(
+                  "b",
+                  match(
+                      findAll(functionDecl(hasName("methodWithPtr")).bind("b")),
+                      TemplatedDecl, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<FieldDecl>(
+                  "b", match(findAll(fieldDecl(hasName("PtrField")).bind("b")),
+                             TemplatedDecl, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<VarDecl>(
+                  "b", match(findAll(varDecl(hasName("StaticField")).bind("b")),
+                             TemplatedDecl, TU.context())),
+              Defaults))));
+}
+
+TEST(GetEligibleRangesFromASTTest, ClassTemplateMembersHasInstantiation) {
+  std::string Input = R"cc(
+    template <typename T>
+    class CTemplate {
+      void method();
+      T* methodWithPtr();
+      T NonPtrField;
+      T* PtrField;
+      static T* StaticField;
+    };
+
+    CTemplate<int> Int;
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  auto &TemplatedDecl =
+      *selectFirst<ClassTemplateDecl>(
+           "b", match(classTemplateDecl(hasName("CTemplate")).bind("b"),
+                      TU.context()))
+           ->getTemplatedDecl();
+
+  // Matches the ranges for decls in the template.
+  EXPECT_THAT(
+      getEligibleRanges(TU.context(), Defaults),
+      UnorderedElementsAre(
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<FunctionDecl>(
+                  "b",
+                  match(
+                      findAll(functionDecl(hasName("methodWithPtr")).bind("b")),
+                      TemplatedDecl, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<FieldDecl>(
+                  "b", match(findAll(fieldDecl(hasName("PtrField")).bind("b")),
+                             TemplatedDecl, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<VarDecl>(
+                  "b", match(findAll(varDecl(hasName("StaticField")).bind("b")),
+                             TemplatedDecl, TU.context())),
+              Defaults))));
+}
+
+TEST(GetEligibleRangesFromASTTest, ClassTemplateExplicitSpecializationMembers) {
+  std::string Input = R"cc(
+    template <typename T>
+    class CTemplate {
+      void method();
+      T* methodWithPtr();
+      T NonPtrField;
+      T* PtrField;
+      static T* StaticField;
+    };
+
+    template <>
+    class CTemplate<int> {
+      void method();
+      int* methodWithPtr();
+      int NonPtrField;
+      int* PtrField;
+      static int* StaticField;
+
+      int* ExtraFieldInSpecialization;
+    };
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  auto &TemplatedDecl =
+      *selectFirst<ClassTemplateDecl>(
+           "b", match(classTemplateDecl(hasName("CTemplate")).bind("b"),
+                      TU.context()))
+           ->getTemplatedDecl();
+  auto &ExplicitSpecialization = *selectFirst<ClassTemplateSpecializationDecl>(
+      "b", match(classTemplateSpecializationDecl().bind("b"), TU.context()));
+
+  // Matches the ranges for decls in the template and the ranges in the explicit
+  // specialization.
+  EXPECT_THAT(
+      getEligibleRanges(TU.context(), Defaults),
+      UnorderedElementsAre(
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<FunctionDecl>(
+                  "b",
+                  match(
+                      findAll(functionDecl(hasName("methodWithPtr")).bind("b")),
+                      TemplatedDecl, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<FieldDecl>(
+                  "b", match(findAll(fieldDecl(hasName("PtrField")).bind("b")),
+                             TemplatedDecl, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<VarDecl>(
+                  "b", match(findAll(varDecl(hasName("StaticField")).bind("b")),
+                             TemplatedDecl, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<FunctionDecl>(
+                  "b",
+                  match(
+                      findAll(functionDecl(hasName("methodWithPtr")).bind("b")),
+                      ExplicitSpecialization, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<FieldDecl>(
+                  "b", match(findAll(fieldDecl(hasName("PtrField")).bind("b")),
+                             ExplicitSpecialization, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<VarDecl>(
+                  "b", match(findAll(varDecl(hasName("StaticField")).bind("b")),
+                             ExplicitSpecialization, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<FieldDecl>(
+                  "b",
+                  match(findAll(fieldDecl(hasName("ExtraFieldInSpecialization"))
+                                    .bind("b")),
+                        ExplicitSpecialization, TU.context())),
+              Defaults))));
+}
+
+TEST(GetEligibleRangesFromASTTest, FunctionTemplateNoInstantiation) {
+  std::string Input = R"cc(
+    template <typename T>
+    int funcTemplate(T*) {
+      T* LocalInTemplate;
+      return 0;
+    }
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  auto &TemplatedFuncDecl =
+      *selectFirst<FunctionTemplateDecl>(
+           "b", match(functionTemplateDecl(hasName("funcTemplate")).bind("b"),
+                      TU.context()))
+           ->getTemplatedDecl();
+
+  EXPECT_THAT(
+      getEligibleRanges(TU.context(), Defaults),
+      UnorderedElementsAre(
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<FunctionDecl>(
+                  "b",
+                  match(
+                      findAll(functionDecl(hasName("funcTemplate")).bind("b")),
+                      TemplatedFuncDecl, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<VarDecl>(
+                  "b",
+                  match(findAll(varDecl(hasName("LocalInTemplate")).bind("b")),
+                        TemplatedFuncDecl, TU.context())),
+              Defaults))));
+}
+
+TEST(GetEligibleRangesFromASTTest, FunctionTemplateHasInstantiation) {
+  std::string Input = R"cc(
+    template <typename T>
+    int funcTemplate(T*) {
+      T* LocalInTemplate;
+      return 0;
+    }
+
+    int I = funcTemplate<int>(nullptr);
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  auto &TemplatedFuncDecl =
+      *selectFirst<FunctionTemplateDecl>(
+           "b", match(functionTemplateDecl(hasName("funcTemplate")).bind("b"),
+                      TU.context()))
+           ->getTemplatedDecl();
+
+  EXPECT_THAT(
+      getEligibleRanges(TU.context(), Defaults),
+      UnorderedElementsAre(
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<FunctionDecl>(
+                  "b",
+                  match(
+                      findAll(functionDecl(hasName("funcTemplate")).bind("b")),
+                      TemplatedFuncDecl, TU.context())),
+              Defaults)),
+          EqualsProto(*getEligibleRanges(
+              *selectFirst<VarDecl>(
+                  "b",
+                  match(findAll(varDecl(hasName("LocalInTemplate")).bind("b")),
+                        TemplatedFuncDecl, TU.context())),
+              Defaults))));
+}
 }  // namespace
 }  // namespace clang::tidy::nullability

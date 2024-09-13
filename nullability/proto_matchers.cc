@@ -5,12 +5,14 @@
 #include "nullability/proto_matchers.h"
 
 #include <memory>
+#include <new>
 #include <ostream>
 #include <string>
 
 #include "absl/base/nullability.h"
 #include "llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
+#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 #include "third_party/protobuf/message.h"
 #include "third_party/protobuf/text_format.h"
 
@@ -23,6 +25,12 @@ class EqualsProtoMatcher
 
  public:
   EqualsProtoMatcher(llvm::StringRef Expected) : Expected(Expected) {}
+
+  EqualsProtoMatcher(const proto2::Message &ExpectedProto) {
+    if (!proto2::TextFormat::PrintToString(ExpectedProto, &Expected)) {
+      Expected = "Failed to print expected proto!";
+    }
+  }
 
   bool MatchAndExplain(
       const proto2::Message &M,
@@ -56,6 +64,11 @@ class EqualsProtoMatcher
 
 testing::Matcher<const proto2::Message &> EqualsProto(llvm::StringRef Textual) {
   return testing::MakeMatcher(new EqualsProtoMatcher(Textual));
+}
+
+testing::Matcher<const proto2::Message &> EqualsProto(
+    const proto2::Message &Expected) {
+  return testing::MakeMatcher(new EqualsProtoMatcher(Expected));
 }
 
 }  // namespace clang::tidy::nullability

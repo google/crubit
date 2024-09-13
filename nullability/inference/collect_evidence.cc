@@ -27,6 +27,7 @@
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/pragma.h"
+#include "nullability/restrict_to_main_walker.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
@@ -38,7 +39,6 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/OperationKinds.h"
-#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
@@ -55,7 +55,6 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/Builtins.h"
-#include "clang/Basic/FileEntry.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/SourceLocation.h"
@@ -68,7 +67,6 @@
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
@@ -103,10 +101,15 @@ static llvm::DenseSet<const CXXMethodDecl *> getOverridden(
   return Overridden;
 }
 
+namespace {
 /// Shared base class for visitors that walk the AST for evidence collection
 /// purposes, to ensure they see the same nodes.
 template <typename Derived>
-struct EvidenceLocationsWalker : public RecursiveASTVisitor<Derived> {
+struct EvidenceLocationsWalker
+    : public RestrictToMainFileOrHeaderWalker<Derived> {
+  using RestrictToMainFileOrHeaderWalker<
+      Derived>::RestrictToMainFileOrHeaderWalker;
+
   // We do want to see concrete code, including function instantiations.
   bool shouldVisitTemplateInstantiations() const { return true; }
 
@@ -121,10 +124,13 @@ struct EvidenceLocationsWalker : public RecursiveASTVisitor<Derived> {
 using VirtualMethodOverridesMap =
     absl::flat_hash_map<const CXXMethodDecl *,
                         llvm::DenseSet<const CXXMethodDecl *>>;
+}  // namespace
 
 /// Collect a map from virtual methods to a set of their overrides.
 static VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
+    using EvidenceLocationsWalker<Walker>::EvidenceLocationsWalker;
+
     VirtualMethodOverridesMap Out;
 
     bool VisitCXXMethodDecl(const CXXMethodDecl *MD) {
@@ -137,7 +143,10 @@ static VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx) {
     }
   };
 
-  Walker W;
+  // Don't restrict to the main file or header, because we want to propagate
+  // evidence from virtual methods, called in the main file or header, to their
+  // overrides, no matter where they are each defined.
+  Walker W(Ctx.getSourceManager(), /* RestrictToMainFileOrHeader= */ false);
   W.TraverseAST(Ctx);
   return std::move(W.Out);
 }
@@ -1629,46 +1638,9 @@ void collectEvidenceFromTargetDeclaration(
 EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
                                       bool RestrictToMainFileOrHeader) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
+    using EvidenceLocationsWalker<Walker>::EvidenceLocationsWalker;
+
     EvidenceSites Out;
-    llvm::StringRef MainFileName;
-    const SourceManager &SM;
-    bool RestrictToMainFileOrHeader;
-    absl::flat_hash_map<std::string, bool> InMainFileOrHeaderCache;
-
-    Walker(const SourceManager &SM, bool RestrictToMainFileOrHeader)
-        : SM(SM), RestrictToMainFileOrHeader(RestrictToMainFileOrHeader) {
-      MainFileName = "";
-      if (OptionalFileEntryRef MainFile =
-              SM.getFileEntryRefForID(SM.getMainFileID())) {
-        MainFileName = MainFile->getName();
-        MainFileName = MainFileName.starts_with("./") ? MainFileName.substr(2)
-                                                      : MainFileName;
-      }
-    }
-
-    // Returns whether `loc` is in the main file or its associated header (i.e.
-    // a header that has the same file path except for the extension).
-    bool inMainFileOrHeader(SourceLocation Loc) {
-      if (SM.isInMainFile(Loc)) {
-        return true;
-      }
-
-      auto FileName = SM.getFilename(Loc);
-      auto It = InMainFileOrHeaderCache.find(FileName);
-      if (It != InMainFileOrHeaderCache.end()) {
-        return It->second;
-      }
-
-      auto FileNameWoDotSlash =
-          FileName.starts_with("./") ? FileName.substr(2) : FileName;
-      bool Ret = !MainFileName.empty() && !FileNameWoDotSlash.empty() &&
-                 llvm::sys::path::parent_path(FileNameWoDotSlash) ==
-                     llvm::sys::path::parent_path(MainFileName) &&
-                 llvm::sys::path::stem(FileNameWoDotSlash) ==
-                     llvm::sys::path::stem(MainFileName);
-      InMainFileOrHeaderCache[FileName] = Ret;
-      return Ret;
-    }
 
     bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
       if (RestrictToMainFileOrHeader &&

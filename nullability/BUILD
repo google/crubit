@@ -259,6 +259,7 @@ cc_library(
         "@abseil-cpp//absl/base:nullability",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
     ],
 )
 
@@ -277,6 +278,32 @@ cc_library(
     hdrs = ["macro_arg_capture.h"],
     visibility = ["//nullability/inference:__pkg__"],
     deps = ["@llvm-project//llvm:Support"],
+)
+
+cc_library(
+    name = "restrict_to_main_walker",
+    hdrs = ["restrict_to_main_walker.h"],
+    visibility = ["//nullability/inference:__pkg__"],
+    deps = [
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_test(
+    name = "restrict_to_main_walker_test",
+    srcs = ["restrict_to_main_walker_test.cc"],
+    deps = [
+        ":restrict_to_main_walker",
+        "@abseil-cpp//absl/base:nullability",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:testing",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+    ],
 )
 
 cc_test(

@@ -13,6 +13,9 @@ namespace clang::tidy::nullability {
 
 testing::Matcher<const proto2::Message&> EqualsProto(llvm::StringRef Textual);
 
+testing::Matcher<const proto2::Message&> EqualsProto(
+    const proto2::Message& Expected);
+
 }  // namespace clang::tidy::nullability
 
 #endif

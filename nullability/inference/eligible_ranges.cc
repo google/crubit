@@ -15,6 +15,7 @@
 #include "absl/log/check.h"
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
+#include "nullability/restrict_to_main_walker.h"
 #include "nullability/type_nullability.h"
 #include "third_party/llvm/llvm-project/clang-tools-extra/clang-tidy/utils/LexerUtils.h"
 #include "clang/AST/Decl.h"
@@ -513,6 +514,55 @@ std::optional<TypeLocRanges> getInferenceRanges(
     const Decl &D, const TypeNullabilityDefaults &Defaults) {
   if (!isInferenceTarget(D)) return std::nullopt;
   return getEligibleRanges(D, Defaults);
+}
+
+namespace {
+struct Walker : public RestrictToMainFileOrHeaderWalker<Walker> {
+  Walker(const TypeNullabilityDefaults &Defaults,
+         const SourceManager &SourceManager,
+         bool ShouldRestrictToMainFileOrHeader)
+      : RestrictToMainFileOrHeaderWalker(SourceManager,
+                                         ShouldRestrictToMainFileOrHeader),
+        Defaults(Defaults) {}
+
+  // Must outlive the walker.
+  const TypeNullabilityDefaults &Defaults;
+  std::vector<TypeLocRanges> Out;
+
+  template <typename DeclT>
+  void insertPointerRanges(absl::Nonnull<const DeclT *> Decl) {
+    if ((!RestrictToMainFileOrHeader ||
+         inMainFileOrHeader(Decl->getBeginLoc())))
+      if (auto Ranges = getEligibleRanges(*Decl, Defaults))
+        Out.push_back(*Ranges);
+  }
+
+  bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
+    insertPointerRanges(FD);
+    return true;
+  }
+
+  bool VisitFieldDecl(absl::Nonnull<const FieldDecl *> FD) {
+    insertPointerRanges(FD);
+    return true;
+  }
+
+  bool VisitVarDecl(absl::Nonnull<const VarDecl *> VD) {
+    // We'll see these as part of function decls.
+    if (isa<ParmVarDecl>(VD)) return true;
+
+    insertPointerRanges(VD);
+    return true;
+  }
+};
+}  // namespace
+
+std::vector<TypeLocRanges> getEligibleRanges(
+    ASTContext &Ctx, const TypeNullabilityDefaults &Defaults,
+    bool RestrictToMainFileOrHeader) {
+  Walker W(Defaults, Ctx.getSourceManager(), RestrictToMainFileOrHeader);
+  W.TraverseAST(Ctx);
+  return std::move(W.Out);
 }
 
 }  // namespace clang::tidy::nullability

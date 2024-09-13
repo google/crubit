@@ -6,6 +6,7 @@
 #define CRUBIT_NULLABILITY_INFERENCE_ELIGIBLE_RANGES_H_
 
 #include <optional>
+#include <vector>
 
 #include "nullability/inference/inference.proto.h"
 #include "nullability/type_nullability.h"
@@ -27,6 +28,12 @@ std::optional<TypeLocRanges> getEligibleRanges(
 /// inference target.
 std::optional<TypeLocRanges> getInferenceRanges(
     const Decl& D, const TypeNullabilityDefaults& Defaults);
+
+/// Collects the ranges of types written in the given AST that are eligible for
+/// nullability annotations.
+std::vector<TypeLocRanges> getEligibleRanges(
+    ASTContext& Ctx, const TypeNullabilityDefaults& Defaults,
+    bool RestrictToMainFileOrHeader = false);
 
 }  // namespace clang::tidy::nullability
 
