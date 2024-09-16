@@ -44,8 +44,6 @@ cc_bindings_from_rust_cli_flag(
     ],
 ) for name in TESTS]
 
-# TODO(yongheng): Add a test to compile the generated bindings.
-
 [golden_test(
     name = name + "_test",
     basename = name,
