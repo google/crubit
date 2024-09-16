@@ -20,7 +20,7 @@ Support for calling Rust from C++ will arrive in 2024H2.
 Consider the following C++ function:
 
 ```c++
-extern "C" bool IsGreater(int lhs, int rhs);
+bool IsGreater(int lhs, int rhs);
 ```
 
 This function, if present in a header file which is processed by Crubit, becomes
@@ -31,9 +31,8 @@ pub fn IsGreater(lhs: ffi::c_int, rhs: ffi::c_int) -> bool {...}
 ```
 
 Note: There are some temporary restrictions on the API shape. For example,
-functions that are not `extern "C"`, or that accept a type like `std::string`,
-can't be called from Rust directly via Crubit. These restrictions will be
-relaxed over time.
+functions that accept a type like `std::string` can't be called from Rust
+directly via Crubit. These restrictions will be relaxed over time.
 
 ## Getting Started
 

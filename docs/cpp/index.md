@@ -14,10 +14,10 @@ copy-pasting something, start there.
 
 ## How to use Crubit {#introduction}
 
-Crubit allows you to call a C-like interface from Rust. That is, an interface
-where all [functions are `extern "C"`](functions),
-[classes and structs are rust-movable](classes_and_structs), and there are no
-advanced features like templates or virtual inheritance.
+Crubit allows you to call some C++ interfaces from Rust. It supports
+[functions](functions), [rust-movable classes and structs](classes_and_structs),
+and [enums](enums). Crubit does **not** support advanced features like templates
+or virtual inheritance.
 
 The rest of this document goes over how to create a C++ library that can be
 called from Rust, and how to actually call it from Rust. The quick summary is:
@@ -105,14 +105,12 @@ This error is saying something important. It was trying to generate bindings for
 the function `crubit_add_two_integers`, but it couldn't, because four different
 things about the function require the `supported` feature to be enabled on the
 target. The parameter and return types require `supported`, as does the function
-itself in the abstract (as it is an `extern "C"` function).
+itself in the abstract.
 
 `supported` indicates that a library target supports Rust callers via Crubit,
-using the stable features. (Temporarily, you may see references to `extern_c` --
-these are part of `supported`). Other functions and classes might
+using the stable features. Other functions and classes might
 require `experimental`, for experimental features of Crubit. For example, if we
-had defined an`operator+`, or if the function were not`extern "C"`. For more on
-this, see <internal link>.
+had defined an`operator+`. For more on this, see <internal link>.
 
 ### Enable Crubit on a target {#enable}
 

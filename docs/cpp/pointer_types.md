@@ -27,10 +27,6 @@ supported yet. For example:
 Types containing a pointer lifetime are not usable from Rust. (This is blocked
 on support for aliasing in Rust.)
 
-### Nullability {#object_nullability}
-
-Non-nullable object pointers and references are not yet supported.
-
 ## Function pointers {#function}
 
 C++ function pointers map to Rust `extern "C" fn(...) -> ...` types:

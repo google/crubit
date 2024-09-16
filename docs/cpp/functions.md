@@ -1,6 +1,6 @@
 # Rust bindings for C++ functions
 
-Rust code can call `extern "C"` functions defined in C++, provided that the
+Rust code can call (non-member) functions defined in C++, provided that the
 parameter and return types are supported by Crubit:
 
 *   If a parameter or return type is a [fundamental type](fundamental_types),
