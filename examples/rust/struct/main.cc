@@ -4,7 +4,7 @@
 
 #include <utility>
 
-#include "examples/rust/struct/example_crate_cc_api.h"
+#include "examples/rust/struct/example_crate.h"
 
 int main(int argc, char* argv[]) {
   // Does not compile: Struct doesn't implement the `Default` trait.
