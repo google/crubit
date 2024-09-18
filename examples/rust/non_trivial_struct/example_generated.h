@@ -56,23 +56,23 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk__uRNvYNtCs7yi1OKfGkgc_u13example_ucrate16NonTrivialStructNtNtCsgfW9T37y7c0_u4core7default7Default7defaultB4_u(
+__crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate16NonTrivialStructNtNtCs8sGNUgcxoFi_u4core7default7Default7defaultB4_u(
     ::example_crate::NonTrivialStruct* __ret_ptr);
 }
 inline NonTrivialStruct::NonTrivialStruct() {
   __crubit_internal::
-      __crubit_thunk__uRNvYNtCs7yi1OKfGkgc_u13example_ucrate16NonTrivialStructNtNtCsgfW9T37y7c0_u4core7default7Default7defaultB4_u(
+      __crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate16NonTrivialStructNtNtCs8sGNUgcxoFi_u4core7default7Default7defaultB4_u(
           this);
 }
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk__uRNvYNtCs7yi1OKfGkgc_u13example_ucrate16NonTrivialStructNtNtNtCsgfW9T37y7c0_u4core3ops4drop4Drop4dropB4_u(
+__crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate16NonTrivialStructNtNtNtCs8sGNUgcxoFi_u4core3ops4drop4Drop4dropB4_u(
     ::example_crate::NonTrivialStruct& [[clang::annotate_type("lifetime",
                                                               "__anon1")]]);
 }
 inline NonTrivialStruct::~NonTrivialStruct() {
   __crubit_internal::
-      __crubit_thunk__uRNvYNtCs7yi1OKfGkgc_u13example_ucrate16NonTrivialStructNtNtNtCsgfW9T37y7c0_u4core3ops4drop4Drop4dropB4_u(
+      __crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate16NonTrivialStructNtNtNtCs8sGNUgcxoFi_u4core3ops4drop4Drop4dropB4_u(
           *this);
 }
 inline NonTrivialStruct::NonTrivialStruct(NonTrivialStruct&& other)
