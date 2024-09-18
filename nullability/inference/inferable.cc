@@ -34,6 +34,19 @@ int countInferableSlots(const Decl& D) {
   return 0;
 }
 
+static bool isAnyParentContextTemplateOrInstantiation(const Decl& D) {
+  auto* Parent = D.getDeclContext();
+  if (Parent->isDependentContext()) return true;
+  while (Parent) {
+    if (isa<ClassTemplateSpecializationDecl>(Parent)) return true;
+    if (auto* FD = dyn_cast<FunctionDecl>(Parent);
+        FD && FD->isTemplateInstantiation())
+      return true;
+    Parent = Parent->getParent();
+  }
+  return false;
+}
+
 bool isInferenceTarget(const Decl& D) {
   if (const auto* Func = dyn_cast<FunctionDecl>(&D)) {
     return
@@ -48,7 +61,7 @@ bool isInferenceTarget(const Decl& D) {
         // itself. We can't record them anywhere unless they apply to the
         // template in general.
         // TODO: work out in what circumstances that would be safe.
-        !Func->getTemplateInstantiationPattern() &&
+        !Func->isTemplateInstantiation() &&
         // builtins can't be annotated and are irregular in their type checking
         // and in other ways, leading to violations of otherwise sound
         // assumptions.
@@ -57,15 +70,14 @@ bool isInferenceTarget(const Decl& D) {
         // small set of functions.
         Func->getBuiltinID() == 0 &&
         // Implicit functions cannot be annotated.
-        !Func->isImplicit() &&
+        !Func->isImplicit() && !isAnyParentContextTemplateOrInstantiation(D) &&
         // Do the most expensive check last.
         countPointersInType(Func->getType()) > 0;
   }
   if (const auto* Field = dyn_cast<FieldDecl>(&D)) {
     return
         // See comments above regarding dependent contexts and templates.
-        !Field->getDeclContext()->isDependentContext() &&
-        !isa<ClassTemplateSpecializationDecl>(Field->getParent()) &&
+        !isAnyParentContextTemplateOrInstantiation(D) &&
         // Do the most expensive check last.
         countPointersInType(Field->getType()) > 0;
   }
@@ -76,18 +88,14 @@ bool isInferenceTarget(const Decl& D) {
     // Exclude parameters, which are handled as part of their enclosing function
     // declaration.
     if (isa<ParmVarDecl>(Var)) return false;
-
-    // Exclude variables in templates and dependent contexts as well as variable
-    // templates. See comments above regarding similar restrictions on
-    // functions.
-    const DeclContext* DC = Var->getDeclContext();
-    if (DC->isDependentContext()) return false;
-    if (auto* EnclosingFunc = dyn_cast<FunctionDecl>(DC);
-        EnclosingFunc && EnclosingFunc->isTemplateInstantiation())
-      return false;
-    return !Var->isTemplated() && !Var->getTemplateInstantiationPattern() &&
-           // Do the most expensive check last.
-           countPointersInType(Var->getType()) > 0;
+    return
+        // Exclude variables in templates and dependent contexts as well as
+        // variable templates. See comments above regarding similar restrictions
+        // on functions.
+        !Var->isTemplated() && !Var->getTemplateInstantiationPattern() &&
+        !isAnyParentContextTemplateOrInstantiation(D) &&
+        // Do the most expensive check last.
+        countPointersInType(Var->getType()) > 0;
   }
   return false;
 }

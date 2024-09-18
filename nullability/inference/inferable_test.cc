@@ -151,29 +151,50 @@ TEST(IsInferenceTargetTest, FunctionTemplate) {
     template <int X>
     void funcTmpl(int*) {
       int* LocalInTmpl;
+
+      struct StructInTmpl {
+        void funcInStructInTmpl(int* P) { int* LocalInStructInTmpl; }
+        int* FieldInStructInTmpl;
+      };
     }
 
     auto& FuncTmplSpec = funcTmpl<2>;
   )cc");
 
   auto &Ctx = AST.context();
-  // A function template is not an inference target, nor are local variables
-  // contained within.
+  // A function template is not an inference target, nor are functions or fields
+  // or local variables contained within.
   const FunctionTemplateDecl &FuncTmpl =
       lookup<FunctionTemplateDecl>("funcTmpl", Ctx);
   EXPECT_FALSE(isInferenceTarget(FuncTmpl));
   EXPECT_FALSE(isInferenceTarget(*FuncTmpl.getTemplatedDecl()));
   EXPECT_FALSE(isInferenceTarget(
       lookup("LocalInTmpl", Ctx, FuncTmpl.getTemplatedDecl())));
+  auto *StructInTmpl =
+      &lookup<CXXRecordDecl>("StructInTmpl", Ctx, FuncTmpl.getTemplatedDecl());
+  EXPECT_FALSE(
+      isInferenceTarget(lookup("FieldInStructInTmpl", Ctx, StructInTmpl)));
+  auto &FuncInStructInTmpl = lookup("funcInStructInTmpl", Ctx, StructInTmpl);
+  EXPECT_FALSE(isInferenceTarget(FuncInStructInTmpl));
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("LocalInStructInTmpl", Ctx, &FuncInStructInTmpl)));
   // The function template specialization is *also* not an inference target, nor
-  // are local variables contained within.
+  // are functions or fields or local variables contained within.
   const ValueDecl &Specialization =
       *cast<DeclRefExpr>(
            lookup<VarDecl>("FuncTmplSpec", Ctx).getInit()->IgnoreImplicit())
            ->getDecl();
   EXPECT_FALSE(isInferenceTarget(Specialization));
+  EXPECT_FALSE(isInferenceTarget(lookup("LocalInTmpl", Ctx, &Specialization)));
+  auto *StructInSpecialization =
+      &lookup<CXXRecordDecl>("StructInTmpl", Ctx, &Specialization);
   EXPECT_FALSE(isInferenceTarget(
-      lookup("LocalInTmpl", Ctx, cast<FunctionDecl>(&Specialization))));
+      lookup("FieldInStructInTmpl", Ctx, StructInSpecialization)));
+  auto &FuncInStructInSpecialization =
+      lookup("funcInStructInTmpl", Ctx, StructInSpecialization);
+  EXPECT_FALSE(isInferenceTarget(FuncInStructInSpecialization));
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("LocalInStructInTmpl", Ctx, &FuncInStructInSpecialization)));
 }
 
 TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
@@ -183,16 +204,24 @@ TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
       T NonPtrField;
       T* PtrField;
       static T* StaticField;
+      struct Nested {
+        T* NestedStructPtrField;
+        bool* nestedStructMethod();
+      };
+      Nested NestedStruct;
     };
 
     ClassTemplate<int> I;
     int A = I.NonPtrField;
     int* B = I.PtrField;
     int* C = I.StaticField;
+    int* D = I.NestedStruct.NestedStructPtrField;
+    bool* E = I.NestedStruct.nestedStructMethod();
   )cc");
 
   auto &Ctx = AST.context();
-  // Class templates and their fields are not inference targets.
+  // Class templates and fields and functions inside them are not inference
+  // targets.
   auto &ClassTemplate = lookup<ClassTemplateDecl>("ClassTemplate", Ctx);
   EXPECT_FALSE(isInferenceTarget(ClassTemplate));
   EXPECT_FALSE(isInferenceTarget(*ClassTemplate.getTemplatedDecl()));
@@ -202,6 +231,12 @@ TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
       lookup("PtrField", Ctx, ClassTemplate.getTemplatedDecl())));
   EXPECT_FALSE(isInferenceTarget(
       lookup("StaticField", Ctx, ClassTemplate.getTemplatedDecl())));
+  auto *NestedInClassTemplate =
+      &lookup<CXXRecordDecl>("Nested", Ctx, ClassTemplate.getTemplatedDecl());
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("NestedStructPtrField", Ctx, NestedInClassTemplate)));
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("nestedStructMethod", Ctx, NestedInClassTemplate)));
 
   // Class template specializations and their fields are also not inference
   // targets.
@@ -216,6 +251,13 @@ TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
   EXPECT_FALSE(isInferenceTarget(
       *cast<MemberExpr>(lookup<VarDecl>("C", Ctx).getInit()->IgnoreImplicit())
            ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(lookup<VarDecl>("D", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<CXXMemberCallExpr>(
+           lookup<VarDecl>("E", Ctx).getInit()->IgnoreImplicit())
+           ->getMethodDecl()));
 }
 
 TEST(InferableTest, CountInferableSlots) {
