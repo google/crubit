@@ -1412,18 +1412,21 @@ TEST(GetEligibleRangesFromASTTest, Variables) {
 }
 
 TEST(GetEligibleRangesFromASTTest, Lambda) {
-  std::string Input = R"cc(
+  auto Input = Annotations(R"(
     auto Lambda = []() {};
-    auto LambdaWithPtrParam = [](int*) {};
-    auto LambdaWithPtrReturn = []() -> int* { return nullptr; };
-  )cc";
+    auto LambdaWithPtrParam = []($param[[int*]]) {};
+    auto LambdaWithPtrReturn = []() -> $return[[int*]] { return nullptr; };
+  )");
   NullabilityPragmas Pragmas;
-  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TestAST TU(getAugmentedTestInputs(Input.code(), Pragmas));
   TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
 
-  // TODO(b/347210071) Include the ranges for LambdaWithPtr's parameter and
-  // LambdaWithPtrReturn's return type.
-  EXPECT_THAT(getEligibleRanges(TU.context(), Defaults), IsEmpty());
+  EXPECT_THAT(getEligibleRanges(TU.context(), Defaults),
+              UnorderedElementsAre(
+                  TypeLocRanges(MainFileName, UnorderedElementsAre(SlotRange(
+                                                  1, Input.range("param")))),
+                  TypeLocRanges(MainFileName, UnorderedElementsAre(SlotRange(
+                                                  0, Input.range("return"))))));
 }
 
 TEST(GetEligibleRangesFromASTTest, ClassMembers) {

@@ -20,6 +20,7 @@
 #include "third_party/llvm/llvm-project/clang-tools-extra/clang-tidy/utils/LexerUtils.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/Type.h"
@@ -552,6 +553,14 @@ struct Walker : public RestrictToMainFileOrHeaderWalker<Walker> {
     if (isa<ParmVarDecl>(VD)) return true;
 
     insertPointerRanges(VD);
+    return true;
+  }
+
+  bool VisitLambdaExpr(absl::Nonnull<const LambdaExpr *> LE) {
+    if (LE->hasExplicitParameters() || LE->hasExplicitResultType()) {
+      insertPointerRanges(LE->getCallOperator());
+    }
+
     return true;
   }
 };
