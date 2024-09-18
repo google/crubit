@@ -62,6 +62,17 @@ mod private_module {
 
 pub use private_module::*;
 
+mod m1 {
+    mod m2 {
+        pub struct InnerX {
+            pub field: i32,
+        }
+    }
+    pub use self::m2::InnerX;
+}
+
+pub use self::m1::InnerX;
+
 // Unsupported case: `use` mod.
 /*
 mod another_private_mod {

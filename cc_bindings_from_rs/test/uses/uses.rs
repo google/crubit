@@ -31,3 +31,17 @@ mod private_mod {
 pub use private_mod::private_fn;
 pub use private_mod::ReexportedStruct as ExportedStruct;
 pub use private_mod::ReexportedStruct as AliasOfExportedStruct;
+
+mod gg {
+    pub use extern_crate::X;
+}
+
+// TODO(b/350772554): `use extern_crate::*`.
+pub use gg::X;
+pub fn return_x() -> X {
+    X { field: 42 }
+}
+
+pub fn return_y() -> ::extern_crate::Y {
+    ::extern_crate::Y { field: 42 }
+}

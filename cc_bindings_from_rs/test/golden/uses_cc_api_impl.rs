@@ -43,3 +43,6 @@ extern "C" fn __crubit_thunk_g1() -> i32 {
 extern "C" fn __crubit_thunk_g2() -> i32 {
     ::uses_rust::g2()
 }
+const _: () = assert!(::std::mem::size_of::<::uses_rust::InnerX>() == 4);
+const _: () = assert!(::std::mem::align_of::<::uses_rust::InnerX>() == 4);
+const _: () = assert!(::core::mem::offset_of!(::uses_rust::InnerX, field) == 0);

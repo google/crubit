@@ -335,7 +335,7 @@ impl AddAssign for CcSnippet {
 
 /// Represents the fully qualified name of a Rust item (e.g. of a `struct` or a
 /// function).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 struct FullyQualifiedName {
     /// Name of the crate that defines the item.
     /// For example, this would be `std` for `std::cmp::Ordering`.
@@ -575,6 +575,86 @@ enum TypeLocation {
     Other,
 }
 
+fn create_canonical_name_from_foreign_path(
+    db: &dyn BindingsGenerator<'_>,
+    path_segments: &[rustc_hir::PathSegment<'_>],
+    res: &Res,
+) -> Option<(DefId, FullyQualifiedName)> {
+    let tcx = db.tcx();
+    let Res::Def(_, def_id) = res else {
+        return None;
+    };
+    if def_id.is_local() {
+        return None;
+    }
+    let mut segments = path_segments.to_vec();
+    if segments.is_empty() {
+        return None;
+    }
+
+    // The starting `::` will become `{{root}}` and should be removed.
+    if segments[0].ident.name.as_str() == "{{root}}" {
+        segments.remove(0);
+    }
+    let segment_len = segments.len();
+    if segment_len < 2 {
+        return None;
+    }
+
+    let krate = tcx.crate_name(def_id.krate);
+    // If the crate name is different from the first segment, the path is using an
+    // local alias.
+    if krate.as_str() != segments[0].ident.name.as_str() {
+        return None;
+    }
+    let item_name = tcx.opt_item_name(*def_id)?;
+    let rs_name = Some(item_name);
+    let cpp_name = rs_name;
+    let rs_mod_path = NamespaceQualifier::new(
+        segments[1..segment_len - 1].iter().map(|s| Rc::<str>::from(s.ident.name.as_str())),
+    );
+    let cpp_ns_path = rs_mod_path.clone();
+    let attributes = crubit_attr::get(tcx, *def_id).unwrap();
+    let cpp_type = attributes.cpp_type;
+    Some((
+        *def_id,
+        FullyQualifiedName {
+            krate,
+            rs_name,
+            rs_mod_path,
+            cpp_top_level_ns: top_level_ns_for_crate(db, def_id.krate),
+            cpp_ns_path,
+            cpp_name,
+            cpp_type,
+        },
+    ))
+}
+
+fn symbols_from_extern_crate(db: &dyn BindingsGenerator<'_>) -> Vec<(DefId, FullyQualifiedName)> {
+    use rustc_hir::intravisit::Visitor;
+    let tcx = db.tcx();
+    struct ForeignSymbols<'a, 'tcx> {
+        pub symbols: Vec<(DefId, FullyQualifiedName)>,
+        pub db: &'a dyn BindingsGenerator<'tcx>,
+    }
+
+    impl<'tcx> Visitor<'tcx> for ForeignSymbols<'_, '_> {
+        fn visit_path(&mut self, path: &rustc_hir::Path<'tcx>, _id: rustc_hir::HirId) {
+            let db = self.db;
+            if let Some((def_id, fully_qualified_name)) =
+                create_canonical_name_from_foreign_path(db, path.segments, &path.res)
+            {
+                self.symbols.push((def_id, fully_qualified_name));
+            }
+        }
+    }
+
+    let mut visitor = ForeignSymbols { symbols: Vec::new(), db };
+    tcx.hir().visit_all_item_likes_in_crate(&mut visitor);
+
+    visitor.symbols
+}
+
 /// Computes a mapping from a `DefId` to a `FullyQualifiedName` for all
 /// not-directly-public symbols that are reexported by a `use` statement.
 // TODO(b/350772554): Don't generate bindings for ambiguous symbols.
@@ -583,11 +663,20 @@ fn reexported_symbol_canonical_name_mapping(
 ) -> HashMap<DefId, FullyQualifiedName> {
     let tcx = db.tcx();
     let mut name_map: HashMap<DefId, FullyQualifiedName> = HashMap::new();
+
+    #[derive(Debug)]
+    struct AliasInfo {
+        using_name: String,
+        local_def_id: LocalDefId,
+        type_def_id: DefId,
+        def_kind: DefKind,
+    }
     let create_canonical_name = |name_map: &mut HashMap<DefId, FullyQualifiedName>,
-                                 alias_name: &str,
-                                 alias_local_def_id: LocalDefId,
-                                 aliased_entity_def_id: DefId|
+                                 alias_info: &AliasInfo|
      -> Option<FullyQualifiedName> {
+        let alias_name = &alias_info.using_name;
+        let alias_local_def_id = alias_info.local_def_id;
+        let aliased_entity_def_id = alias_info.type_def_id;
         let rs_name = Symbol::intern(alias_name);
         if let Some(canonical_name) = name_map.get(&aliased_entity_def_id) {
             // We keep the lexicographically smallest name.
@@ -629,6 +718,8 @@ fn reexported_symbol_canonical_name_mapping(
         let cpp_ns_path = NamespaceQualifier::new(
             full_path_strs.into_iter().chain([Rc::from("__crubit_internal")]),
         );
+        let attributes = crubit_attr::get(tcx, aliased_entity_def_id).unwrap();
+        let cpp_type = attributes.cpp_type;
         Some(FullyQualifiedName {
             cpp_name: Some(item_name),
             cpp_ns_path,
@@ -636,15 +727,12 @@ fn reexported_symbol_canonical_name_mapping(
             krate,
             cpp_top_level_ns,
             rs_mod_path,
-            cpp_type: None,
+            cpp_type,
         })
     };
 
-    struct AliasInfo {
-        using_name: String,
-        local_def_id: LocalDefId,
-        type_def_id: DefId,
-        def_kind: DefKind,
+    for (def_id, fully_qualified_name) in symbols_from_extern_crate(db).into_iter() {
+        name_map.insert(def_id, fully_qualified_name);
     }
     let aliases =
         tcx.hir()
@@ -678,13 +766,9 @@ fn reexported_symbol_canonical_name_mapping(
         aliases.into_iter().partition(|AliasInfo { def_kind, .. }| {
             matches!(*def_kind, DefKind::Struct | DefKind::Enum | DefKind::Union)
         });
-    for AliasInfo { using_name, local_def_id, type_def_id, .. } in
-        struct_like_aliases.into_iter().chain(other_aliases.into_iter())
-    {
-        if let Some(canonical_name) =
-            create_canonical_name(&mut name_map, &using_name, local_def_id, type_def_id)
-        {
-            name_map.insert(type_def_id, canonical_name);
+    for alias_info in struct_like_aliases.into_iter().chain(other_aliases.into_iter()) {
+        if let Some(canonical_name) = create_canonical_name(&mut name_map, &alias_info) {
+            name_map.insert(alias_info.type_def_id, canonical_name);
         }
     }
 
@@ -1670,11 +1754,17 @@ fn collect_alias_from_use(
             if let Ok(item_using_name) = format_cc_ident(tcx.item_name(item_def_id).as_str())
                 .context("Error formatting using name")
             {
-                aliases.push((item_using_name.to_string(), item_def_id, item_def_kind));
+                // TODO(b/350772554): Support export Enum fields.
+                if !item_using_name.is_empty() {
+                    aliases.push((item_using_name.to_string(), item_def_id, item_def_kind));
+                }
             }
         }
     } else {
-        aliases.push((using_name.to_string(), def_id, def_kind));
+        // TODO(b/350772554): Support export Enum fields.
+        if !using_name.is_empty() {
+            aliases.push((using_name.to_string(), def_id, def_kind));
+        }
     }
     Ok(aliases)
 }
@@ -1691,8 +1781,12 @@ fn format_use(
     // errors.
     Ok(aliases
         .into_iter()
-        .map(|(using_name, def_id, def_kind)| {
-            generate_using_statement(db, &using_name, def_id, def_kind)
+        .filter_map(|(using_name, def_id, def_kind)| {
+            if is_public_or_supported_export(db, def_id) {
+                Some(generate_using_statement(db, &using_name, def_id, def_kind))
+            } else {
+                None
+            }
         })
         .filter_map(Result::ok)
         .collect())
@@ -2172,7 +2266,7 @@ fn is_exported(tcx: TyCtxt, def_id: DefId) -> bool {
 
 fn is_public_or_supported_export(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> bool {
     is_directly_public(db.tcx(), def_id)
-        || (is_exported(db.tcx(), def_id)
+        || ((is_exported(db.tcx(), def_id) || !def_id.is_local())
             && db.reexported_symbol_canonical_name_mapping().contains_key(&def_id))
 }
 
@@ -8474,16 +8568,11 @@ pub mod tests {
             ),
             ("Option<i8>", "Generic types are not supported yet (b/259749095)"),
             (
-                // This testcase is like `PublicReexportOfStruct`, but the private type and the
-                // re-export are in another crate.  When authoring this test
-                // `core::alloc::LayoutError` was a public re-export of
-                // `core::alloc::layout::LayoutError`:
-                // `https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=d2b5528af9b33b25abe44cc4646d65e3`
                 // TODO(b/258261328): Once cross-crate bindings are supported we should try
                 // to test them via a test crate that we control (rather than testing via
                 // implementation details of the std crate).
                 "core::alloc::LayoutError",
-                "Not a public or a supported reexported type (b/262052635).",
+                "Type `std::alloc::LayoutError` comes from the `core` crate, but no `--crate-header` was specified for this crate",
             ),
             (
                 "*const Option<i8>",

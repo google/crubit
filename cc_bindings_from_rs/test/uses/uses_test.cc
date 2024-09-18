@@ -24,5 +24,13 @@ TEST(UsesTest, ReexportPrivateStruct) {
 }
 
 TEST(UsesTest, ReexportPrivateFunction) { EXPECT_EQ(uses::private_fn(), 42); }
+
+TEST(UsesTest, RexportExternCrateStruct) {
+  uses::X x = uses::return_x();
+  EXPECT_EQ(x.field, 42);
+
+  extern_crate::Y y = uses::return_y();
+  EXPECT_EQ(y.field, 42);
+}
 }  // namespace
 }  // namespace crubit
