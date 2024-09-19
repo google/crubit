@@ -1751,13 +1751,10 @@ fn collect_alias_from_use(
     let mut aliases = vec![];
     if def_kind == DefKind::Mod {
         for (item_def_id, item_def_kind) in public_free_items_in_mod(db, def_id) {
-            if let Ok(item_using_name) = format_cc_ident(tcx.item_name(item_def_id).as_str())
-                .context("Error formatting using name")
-            {
-                // TODO(b/350772554): Support export Enum fields.
-                if !item_using_name.is_empty() {
-                    aliases.push((item_using_name.to_string(), item_def_id, item_def_kind));
-                }
+            let item_name = tcx.item_name(item_def_id).to_string();
+            // TODO(b/350772554): Support export Enum fields.
+            if !item_name.is_empty() {
+                aliases.push((item_name, item_def_id, item_def_kind));
             }
         }
     } else {
