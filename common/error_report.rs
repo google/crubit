@@ -138,7 +138,11 @@ impl ErrorReporting for IgnoreErrors {
 fn hide_unstable_details(input: &str) -> String {
     // Remove line:column in def id
     let regex = Regex::new(r"DefId\(\d+:\d+ ~ ").unwrap();
-    regex.replace_all(input, "DefId(").to_string()
+    let res = regex.replace_all(input, "DefId(").to_string();
+
+    // Remove all hash id in the def id
+    let regex = Regex::new(r"\[[0-9a-fA-F]{4}\]").unwrap();
+    regex.replace_all(res.as_str(), "").to_string()
 }
 
 /// An aggregate of zero or more errors.

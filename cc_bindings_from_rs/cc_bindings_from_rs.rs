@@ -379,7 +379,7 @@ mod tests {
         let expected_error_report = r#"{
   "Unsupported use statement that refers to this type of the entity: {:#?}": {
     "count": 2,
-    "sample_message": "Unsupported use statement that refers to this type of the entity: Def(\n    Mod,\n    DefId(std[46ff]::collections),\n)"
+    "sample_message": "Unsupported use statement that refers to this type of the entity: Def(\n    Mod,\n    DefId(std::collections),\n)"
   }
 }"#;
         assert_eq!(expected_error_report, error_report);
