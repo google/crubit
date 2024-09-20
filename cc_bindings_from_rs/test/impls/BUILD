@@ -20,6 +20,9 @@ rust_library(
     name = "impls",
     testonly = 1,
     srcs = ["impls.rs"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
 )
 
 cc_bindings_from_rust(

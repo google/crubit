@@ -29,7 +29,7 @@ use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::mir::Mutability;
-use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
+use rustc_middle::ty::{self, Region, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LocalModDefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_target::abi::{
@@ -237,6 +237,35 @@ fn crate_features(
     features.copied().unwrap_or_default()
 }
 
+flagset::flags! {
+    /// An "expanded" version of CrubitFeature that includes specific cc_bindings_from_rs features.
+    /// This allows them to be converted into more readable error messages: rather than simply
+    /// stating "<big thing> requires experimental", we can say it requires experimental because
+    /// it needs e.g. "references".
+    enum FineGrainedFeature : u8 {
+        References
+    }
+}
+
+impl FineGrainedFeature {
+    fn ensure_crubit_feature(
+        self,
+        crubit_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+    ) -> Result<()> {
+        use crubit_feature::CrubitFeature::*;
+        match self {
+            Self::References => {
+                ensure!(
+                    crubit_features.contains(Experimental),
+                    "support for references requires {}",
+                    Experimental.aspect_hint()
+                )
+            }
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 struct CcPrerequisites {
     /// Set of `#include`s that a `CcSnippet` depends on.  For example if
@@ -261,13 +290,19 @@ struct CcPrerequisites {
     /// *not* need to appear earlier (and therefore `defs` will *not*
     /// contain `LocalDefId` corresponding to `S`).
     fwd_decls: HashSet<LocalDefId>,
+
+    /// Set of Crubit feature flags required for the CcSnippet to be valid.
+    required_features: flagset::FlagSet<FineGrainedFeature>,
 }
 
 impl CcPrerequisites {
     #[cfg(test)]
     fn is_empty(&self) -> bool {
-        let &Self { ref includes, ref defs, ref fwd_decls } = self;
-        includes.is_empty() && defs.is_empty() && fwd_decls.is_empty()
+        let Self { includes, defs, fwd_decls, required_features } = self;
+        includes.is_empty()
+            && defs.is_empty()
+            && fwd_decls.is_empty()
+            && required_features.is_empty()
     }
 
     /// Weakens all dependencies to only require a forward declaration. Example
@@ -283,7 +318,7 @@ impl CcPrerequisites {
 
 impl AddAssign for CcPrerequisites {
     fn add_assign(&mut self, rhs: Self) {
-        let Self { mut includes, defs, fwd_decls } = rhs;
+        let Self { mut includes, defs, fwd_decls, required_features } = rhs;
 
         // `BTreeSet::append` is used because it _seems_ to be more efficient than
         // calling `extend`.  This is because `extend` takes an iterator
@@ -296,6 +331,7 @@ impl AddAssign for CcPrerequisites {
 
         self.defs.extend(defs);
         self.fwd_decls.extend(fwd_decls);
+        self.required_features |= required_features;
     }
 }
 
@@ -324,6 +360,32 @@ impl CcSnippet {
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(include);
         Self { tokens, prereqs }
+    }
+
+    /// Resolves the feature requirements. If the required features of `self`
+    /// are in `crubit_features`, then this returns a version of `self` with
+    /// the feature requirements removed. Otherwise, this returns an error.
+    fn resolve_feature_requirements(
+        mut self,
+        crubit_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+    ) -> Result<Self> {
+        let mut errs = Vec::new();
+        for feature in self.prereqs.required_features {
+            if let Err(e) = feature.ensure_crubit_feature(crubit_features) {
+                errs.push(e);
+            }
+        }
+        match errs.len() {
+            0 => {
+                self.prereqs.required_features.clear();
+                Ok(self)
+            }
+            1 => Err(errs.pop().unwrap()),
+            _ => {
+                let mut errs = errs.into_iter().map(|e| e.to_string());
+                bail!(errs.join(", "))
+            }
+        }
     }
 }
 
@@ -1042,10 +1104,25 @@ fn format_ty_for_cc<'tcx>(
                 ),
             };
             let lifetime = format_region_as_cc_lifetime(region);
-            format_pointer_or_reference_ty_for_cc(db, referent, *mutability, quote! { & #lifetime })
-                .with_context(|| {
-                    format!("Failed to format the referent of the reference type `{ty}`")
-                })?
+            let mut cc_type = format_pointer_or_reference_ty_for_cc(
+                db,
+                referent,
+                *mutability,
+                quote! { & #lifetime },
+            )
+            .with_context(|| {
+                format!("Failed to format the referent of the reference type `{ty}`")
+            })?;
+            // For function parameters which are `'_`, we allow the caller to decide whether
+            // to require the reference feature. Some use cases are safe (e.g.
+            // if it's the only reference/pointer parameter.)
+            //
+            // In all other cases, we assume it is unsafe and require references to be
+            // enabled.
+            if location != TypeLocation::FnParam || !region.is_param() {
+                cc_type.prereqs.required_features |= FineGrainedFeature::References;
+            }
+            cc_type
         }
         fn_ptr @ ty::TyKind::FnPtr { .. } => {
             // Temporary support for both before / after FnPtr was split in two.
@@ -1195,6 +1272,41 @@ fn format_ret_ty_for_cc<'tcx>(
         .context("Error formatting function return type")
 }
 
+/// Gets the exactly one region used in this function signature.
+///
+/// If the function has more than one region, or no regions, returns None.
+fn get_exactly_one_region<'tcx>(sig_mid: &ty::FnSig<'tcx>) -> Option<Region<'tcx>> {
+    use rustc_middle::ty::TypeVisitor;
+    enum SingleRegionVisitor<'tcx> {
+        Zero,
+        One(Region<'tcx>),
+        Many,
+    }
+    impl<'tcx> TypeVisitor<TyCtxt<'tcx>> for SingleRegionVisitor<'tcx> {
+        fn visit_region(&mut self, region: Region<'tcx>) {
+            match self {
+                SingleRegionVisitor::Zero => {
+                    *self = SingleRegionVisitor::One(region);
+                }
+                SingleRegionVisitor::One(_) => {
+                    *self = SingleRegionVisitor::Many;
+                }
+                SingleRegionVisitor::Many => {}
+            }
+        }
+    }
+
+    let mut visitor = SingleRegionVisitor::Zero;
+    for ty in sig_mid.inputs() {
+        visitor.visit_ty(*ty);
+    }
+    visitor.visit_ty(sig_mid.output());
+    match visitor {
+        SingleRegionVisitor::One(region) => Some(region),
+        _ => None,
+    }
+}
+
 /// Returns the C++ parameter types.
 ///
 /// `sig_hir` is the optional HIR FnSig, if available. This is used to retrieve
@@ -1211,14 +1323,35 @@ fn format_param_types_for_cc<'tcx>(
             "internal error: MIR and HIR function signatures do not line up"
         );
     }
+
+    let single_region = std::cell::LazyCell::new(|| get_exactly_one_region(sig_mid));
+
     sig_mid
         .inputs()
         .iter()
         .enumerate()
         .map(|(i, &mid)| {
             let hir = sig_hir.map(|sig_hir| &sig_hir.inputs[i]);
-            db.format_ty_for_cc(SugaredTy::new(mid, hir), TypeLocation::FnParam)
-                .with_context(|| format!("Error handling parameter #{i}"))
+            let mut cc_type = db
+                .format_ty_for_cc(SugaredTy::new(mid, hir), TypeLocation::FnParam)
+                .with_context(|| format!("Error handling parameter #{i}"))?;
+            // In parameter position, format_ty_for_cc defaults to allowing free
+            // (non-static) references. We need to decide which references we
+            // allow -- in this case, we choose to allow references _only_ if
+            // the reference is the single only reference for the function, and
+            // its lifetime is the only lifetime for the function.
+            //
+            // OK: fn foo(&self)
+            // OK: fn foo(_: &i32, _: *f64, _: i32) -> i8
+            // NOT OK: fn foo(&self, &i32);  // caller must guarantee neither argument alias
+            // NOT OK: fn foo(&i32) -> &i32; // worse: alias-free for whole return lifetime
+            if let ty::TyKind::Ref(input_region, ..) = mid.kind() {
+                if Some(input_region) != single_region.as_ref() {
+                    cc_type.prereqs.required_features |= FineGrainedFeature::References;
+                }
+            }
+
+            Ok(cc_type)
         })
         .collect()
 }
@@ -1320,6 +1453,22 @@ struct ApiSnippets {
     /// - A Rust implementation of an `extern "C"` thunk,
     /// - Rust `assert!`s about struct size, aligment, and field offsets.
     rs_details: TokenStream,
+}
+
+impl ApiSnippets {
+    /// Resolves the feature requirements. If the required features of `self`
+    /// are in `crubit_features`, then this returns a version of `self` with
+    /// the feature requirements removed. Otherwise, this returns an error.
+    fn resolve_feature_requirements(
+        self,
+        crubit_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+    ) -> Result<Self> {
+        Ok(Self {
+            main_api: self.main_api.resolve_feature_requirements(crubit_features)?,
+            cc_details: self.cc_details.resolve_feature_requirements(crubit_features)?,
+            rs_details: self.rs_details,
+        })
+    }
 }
 
 impl FromIterator<ApiSnippets> for ApiSnippets {
@@ -2441,7 +2590,9 @@ fn format_fields<'tcx>(
                 let type_info = size.and_then(|size| {
                     Ok(FieldTypeInfo {
                         size,
-                        cpp_type: db.format_ty_for_cc(ty, TypeLocation::Other)?,
+                        cpp_type: db
+                            .format_ty_for_cc(ty, TypeLocation::Other)?
+                            .resolve_feature_requirements(crate_features(db, LOCAL_CRATE))?,
                     })
                 });
                 let name = field_def.ident(tcx).to_string();
@@ -3381,7 +3532,7 @@ fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Opt
         return Ok(None);
     }
 
-    match tcx.hir().expect_item(def_id) {
+    let item = match tcx.hir().expect_item(def_id) {
         Item { kind: ItemKind::Struct(_, generics) |
                      ItemKind::Enum(_, generics) |
                      ItemKind::Union(_, generics),
@@ -3401,6 +3552,12 @@ fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Opt
         Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
             Ok(None),
         Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
+    };
+
+    if let Ok(Some(item)) = item {
+        Ok(Some(item.resolve_feature_requirements(crate_features(db, LOCAL_CRATE))?))
+    } else {
+        item
     }
 }
 
@@ -4206,7 +4363,7 @@ pub mod tests {
             let bindings = bindings.unwrap();
             let expected_comment_txt = "Automatically @generated C++ bindings for the following Rust crate:\n\
                  rust_out\n\
-                 Features: <none>";
+                 Features: experimental, supported";
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
@@ -4738,6 +4895,128 @@ pub mod tests {
                 }
             );
         });
+    }
+
+    #[test]
+    fn test_format_item_fn_single_reference() {
+        let test_src = r#"
+                #[no_mangle]
+                pub fn foo(_x: &i32) {}
+            "#;
+        test_format_item_with_features(
+            test_src,
+            "foo",
+            <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
+            |result| {
+                let main_api = result.unwrap().unwrap().main_api;
+                assert_cc_matches!(
+                    main_api.tokens,
+                    quote! {
+                        void foo(std::int32_t const& [[clang::annotate_type("lifetime" , "__anon1")]] _x );
+                    }
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn test_format_item_fn_double_reference() {
+        let test_src = r#"
+                #[no_mangle]
+                pub fn foo(_x: &i32, _y: &i32) {}
+            "#;
+        test_format_item_with_features(
+            test_src,
+            "foo",
+            <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
+            |result| {
+                assert_eq!(
+                    result.unwrap_err(),
+                    "support for references requires //features:experimental"
+                )
+            },
+        );
+    }
+
+    #[test]
+    fn test_format_item_fn_static_reference() {
+        let test_src = r#"
+                #[no_mangle]
+                pub fn foo(_x: &'static i32) {}
+            "#;
+        test_format_item_with_features(
+            test_src,
+            "foo",
+            <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
+            |result| {
+                assert_eq!(
+                    result.unwrap_err(),
+                    "support for references requires //features:experimental"
+                )
+            },
+        );
+    }
+
+    // NOTE: If we gain support for references as non-parameter types, we must
+    // _still_ require :experimental.
+    #[test]
+    fn test_format_item_fn_nested_reference() {
+        let test_src = r#"
+                #[no_mangle]
+                pub fn foo(_x: &&i32) {}
+            "#;
+        test_format_item_with_features(
+            test_src,
+            "foo",
+            <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
+            |result| {
+                assert_eq!(
+                    result.unwrap_err(),
+                    "Error handling parameter #0: Failed to format the referent of the reference type `&'__anon1 &'__anon2 i32`: Can't format `&'__anon2 i32`, because references are only supported in function parameter types and return types (b/286256327)"
+                )
+            },
+        );
+    }
+
+    #[test]
+    fn test_format_item_fn_returned_static_reference() {
+        let test_src = r#"
+                #[no_mangle]
+                pub fn foo() ->&'static i32 {todo!()}
+            "#;
+        test_format_item_with_features(
+            test_src,
+            "foo",
+            <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
+            |result| {
+                assert_eq!(
+                    result.unwrap_err(),
+                    "support for references requires //features:experimental"
+                )
+            },
+        );
+    }
+
+    // NOTE: If we gain support for lifetime generic parameters, we must _still_
+    // require :experimental.
+    #[test]
+    fn test_format_item_fn_reused_reference_lifetime() {
+        let test_src = r#"
+                pub struct Foo<'a>(pub i32, core::marker::PhantomData<&'a i32>);
+                #[no_mangle]
+                pub fn foo<'a>(_x: &'a Foo<'a>) {}
+            "#;
+        test_format_item_with_features(
+            test_src,
+            "foo",
+            <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
+            |result| {
+                assert_eq!(
+                    result.unwrap_err(),
+                    "Error handling parameter #0: Failed to format the referent of the reference type `&'a Foo<'a>`: Generic types are not supported yet (b/259749095)"
+                )
+            },
+        );
     }
 
     #[test]
@@ -9716,16 +9995,55 @@ pub mod tests {
         })
     }
 
-    fn bindings_db_for_tests(tcx: TyCtxt) -> Database {
+    /// Tests invoking `format_item` on the item with the specified `name` from
+    /// the given Rust `source`, with the specified features  Returns the result
+    /// of calling `test_function` with `format_item`'s result as an
+    /// argument. (`test_function` should typically `assert!` that it got
+    /// the expected result from `format_item`.)
+    fn test_format_item_with_features<F, T>(
+        source: &str,
+        name: &str,
+        features: impl Into<flagset::FlagSet<crubit_feature::CrubitFeature>>,
+        test_function: F,
+    ) -> T
+    where
+        F: FnOnce(Result<Option<ApiSnippets>, String>) -> T + Send,
+        T: Send,
+    {
+        let features = features.into();
+        run_compiler_for_testing(source, |tcx| {
+            let def_id = find_def_id_by_name(tcx, name);
+            let result = bindings_db_for_tests_with_features(tcx, features).format_item(def_id);
+
+            // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
+            // To print causes as well [...], use the alternate selector “{:#}”.
+            let result = result.map_err(|anyhow_err| format!("{anyhow_err:#}"));
+
+            test_function(result)
+        })
+    }
+
+    fn bindings_db_for_tests_with_features(
+        tcx: TyCtxt,
+        features: impl Into<flagset::FlagSet<crubit_feature::CrubitFeature>>,
+    ) -> Database {
         Database::new(
             tcx,
             /* crubit_support_path_format= */ "<crubit/support/for/tests/{header}>".into(),
             /* crate_name_to_include_paths= */ Default::default(),
-            /* crate_name_to_features= */ Default::default(),
+            /* crate_name_to_features= */
+            Rc::new(HashMap::from([(Rc::from("self"), features.into())])),
             /* crate_name_to_namespace= */ HashMap::default().into(),
             /* errors = */ Rc::new(IgnoreErrors),
             /* no_thunk_name_mangling= */ false,
             /* include_guard */ IncludeGuard::PragmaOnce,
+        )
+    }
+
+    fn bindings_db_for_tests(tcx: TyCtxt) -> Database {
+        bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
         )
     }
 

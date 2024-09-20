@@ -17,6 +17,9 @@ rust_library(
     name = "functions",
     testonly = 1,
     srcs = ["functions.rs"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
 )
 
 cc_bindings_from_rust(
