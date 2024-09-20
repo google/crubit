@@ -3544,10 +3544,15 @@ TEST(EvidenceSitesTest, FastMode) {
   )cc";
 
   TestAST AST(Inputs);
-  auto Sites = EvidenceSites::discover(AST.context(),
-                                       /*RestrictToMainFileOrHeader=*/true);
-  EXPECT_THAT(Sites.Declarations,
+  EXPECT_THAT(EvidenceSites::discover(AST.context(),
+                                      /*RestrictToMainFileOrHeader=*/true)
+                  .Declarations,
               UnorderedElementsAre(declNamed("foo"), declNamed("bar")));
+  EXPECT_THAT(EvidenceSites::discover(AST.context(),
+                                      /*RestrictToMainFileOrHeader=*/false)
+                  .Declarations,
+              UnorderedElementsAre(declNamed("foo"), declNamed("bar"),
+                                   declNamed("baz")));
 }
 
 TEST(EvidenceSitesTest, Functions) {

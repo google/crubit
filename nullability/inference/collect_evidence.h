@@ -85,9 +85,10 @@ struct EvidenceSites {
   /// passed to collectEvidenceFromDefinition().
   llvm::DenseSet<const Decl *> Definitions;
 
-  /// Find the evidence sites within the provided AST. If in_main_file_or_header
-  /// is true, only looks for evidence sites in the main file or its associated
-  /// header.
+  /// Find the evidence sites within the provided AST. If
+  /// RestrictToMainFileOrHeader is true, only looks for evidence sites in the
+  /// main file or its associated header. Implicit declarations are never
+  /// considered to be in the main file or header.
   static EvidenceSites discover(ASTContext &,
                                 bool RestrictToMainFileOrHeader = false);
 };

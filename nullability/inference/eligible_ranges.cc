@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <memory>
 #include <optional>
 #include <string_view>
 #include <utility>
@@ -15,13 +16,14 @@
 #include "absl/log/check.h"
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
-#include "nullability/restrict_to_main_walker.h"
+#include "nullability/loc_filter.h"
 #include "nullability/type_nullability.h"
 #include "third_party/llvm/llvm-project/clang-tools-extra/clang-tidy/utils/LexerUtils.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/NestedNameSpecifier.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
@@ -518,22 +520,19 @@ std::optional<TypeLocRanges> getInferenceRanges(
 }
 
 namespace {
-struct Walker : public RestrictToMainFileOrHeaderWalker<Walker> {
+struct Walker : public RecursiveASTVisitor<Walker> {
   Walker(const TypeNullabilityDefaults &Defaults,
-         const SourceManager &SourceManager,
-         bool ShouldRestrictToMainFileOrHeader)
-      : RestrictToMainFileOrHeaderWalker(SourceManager,
-                                         ShouldRestrictToMainFileOrHeader),
-        Defaults(Defaults) {}
+         std::unique_ptr<LocFilter> LocFilter)
+      : Defaults(Defaults), LocFilter(std::move(LocFilter)) {}
 
   // Must outlive the walker.
   const TypeNullabilityDefaults &Defaults;
   std::vector<TypeLocRanges> Out;
+  std::unique_ptr<LocFilter> LocFilter;
 
   template <typename DeclT>
   void insertPointerRanges(absl::Nonnull<const DeclT *> Decl) {
-    if ((!RestrictToMainFileOrHeader ||
-         inMainFileOrHeader(Decl->getBeginLoc())))
+    if (LocFilter->check(Decl->getBeginLoc()))
       if (auto Ranges = getEligibleRanges(*Decl, Defaults))
         Out.push_back(*Ranges);
   }
@@ -569,7 +568,8 @@ struct Walker : public RestrictToMainFileOrHeaderWalker<Walker> {
 std::vector<TypeLocRanges> getEligibleRanges(
     ASTContext &Ctx, const TypeNullabilityDefaults &Defaults,
     bool RestrictToMainFileOrHeader) {
-  Walker W(Defaults, Ctx.getSourceManager(), RestrictToMainFileOrHeader);
+  Walker W(Defaults,
+           getLocFilter(Ctx.getSourceManager(), RestrictToMainFileOrHeader));
   W.TraverseAST(Ctx);
   return std::move(W.Out);
 }

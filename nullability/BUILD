@@ -281,11 +281,12 @@ cc_library(
 )
 
 cc_library(
-    name = "restrict_to_main_walker",
-    hdrs = ["restrict_to_main_walker.h"],
+    name = "loc_filter",
+    srcs = ["loc_filter.cc"],
+    hdrs = ["loc_filter.h"],
     visibility = ["//nullability/inference:__pkg__"],
     deps = [
-        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
@@ -293,15 +294,13 @@ cc_library(
 )
 
 cc_test(
-    name = "restrict_to_main_walker_test",
-    srcs = ["restrict_to_main_walker_test.cc"],
+    name = "loc_filter_test",
+    srcs = ["loc_filter_test.cc"],
     deps = [
-        ":restrict_to_main_walker",
-        "@abseil-cpp//absl/base:nullability",
+        ":loc_filter",
         "@llvm-project//clang:ast",
-        "@llvm-project//clang:basic",
+        "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:testing",
-        "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
     ],
 )

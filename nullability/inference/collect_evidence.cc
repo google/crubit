@@ -22,12 +22,12 @@
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
+#include "nullability/loc_filter.h"
 #include "nullability/macro_arg_capture.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_lattice.h"
 #include "nullability/pragma.h"
-#include "nullability/restrict_to_main_walker.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
@@ -39,6 +39,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/OperationKinds.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
@@ -105,11 +106,7 @@ namespace {
 /// Shared base class for visitors that walk the AST for evidence collection
 /// purposes, to ensure they see the same nodes.
 template <typename Derived>
-struct EvidenceLocationsWalker
-    : public RestrictToMainFileOrHeaderWalker<Derived> {
-  using RestrictToMainFileOrHeaderWalker<
-      Derived>::RestrictToMainFileOrHeaderWalker;
-
+struct EvidenceLocationsWalker : public RecursiveASTVisitor<Derived> {
   // We do want to see concrete code, including function instantiations.
   bool shouldVisitTemplateInstantiations() const { return true; }
 
@@ -129,8 +126,6 @@ using VirtualMethodOverridesMap =
 /// Collect a map from virtual methods to a set of their overrides.
 static VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
-    using EvidenceLocationsWalker<Walker>::EvidenceLocationsWalker;
-
     VirtualMethodOverridesMap Out;
 
     bool VisitCXXMethodDecl(const CXXMethodDecl *MD) {
@@ -143,10 +138,10 @@ static VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx) {
     }
   };
 
-  // Don't restrict to the main file or header, because we want to propagate
-  // evidence from virtual methods, called in the main file or header, to their
-  // overrides, no matter where they are each defined.
-  Walker W(Ctx.getSourceManager(), /* RestrictToMainFileOrHeader= */ false);
+  // Don't use a LocFilter here to restrict to the main file or header, because
+  // we want to propagate evidence from virtual methods, called in the main file
+  // or header, to their overrides, no matter where they are each defined.
+  Walker W;
   W.TraverseAST(Ctx);
   return std::move(W.Out);
 }
@@ -1638,13 +1633,14 @@ void collectEvidenceFromTargetDeclaration(
 EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
                                       bool RestrictToMainFileOrHeader) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
-    using EvidenceLocationsWalker<Walker>::EvidenceLocationsWalker;
+    Walker(std::unique_ptr<LocFilter> LocFilter)
+        : LocFilter(std::move(LocFilter)) {}
 
     EvidenceSites Out;
+    std::unique_ptr<LocFilter> LocFilter;
 
     bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
-      if (RestrictToMainFileOrHeader &&
-          !inMainFileOrHeader(FD->getBeginLoc())) {
+      if (!LocFilter->check(FD->getBeginLoc())) {
         return true;
       }
       if (isInferenceTarget(*FD)) Out.Declarations.insert(FD);
@@ -1667,8 +1663,7 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
     }
 
     bool VisitFieldDecl(absl::Nonnull<const FieldDecl *> FD) {
-      if (RestrictToMainFileOrHeader &&
-          !inMainFileOrHeader(FD->getBeginLoc())) {
+      if (!LocFilter->check(FD->getBeginLoc())) {
         return true;
       }
       if (isInferenceTarget(*FD)) Out.Declarations.insert(FD);
@@ -1676,8 +1671,7 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
     }
 
     bool VisitVarDecl(absl::Nonnull<const VarDecl *> VD) {
-      if (RestrictToMainFileOrHeader &&
-          !inMainFileOrHeader(VD->getBeginLoc())) {
+      if (!LocFilter->check(VD->getBeginLoc())) {
         return true;
       }
       if (isInferenceTarget(*VD)) {
@@ -1693,7 +1687,7 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
     }
   };
 
-  Walker W(Ctx.getSourceManager(), RestrictToMainFileOrHeader);
+  Walker W(getLocFilter(Ctx.getSourceManager(), RestrictToMainFileOrHeader));
   W.TraverseAST(Ctx);
   return std::move(W.Out);
 }
