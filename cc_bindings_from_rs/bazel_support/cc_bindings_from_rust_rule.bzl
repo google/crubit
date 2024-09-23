@@ -129,7 +129,8 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
     # Once feature gating is completely implemented, we can apply the features to everything,
     # and remove the magic default.
     # TODO(b/262878759): Remove `all` once all users have the correct features applied.
-    features.append("all")
+    if not features:
+        features.append("all")
 
     for feature in features:
         crubit_args.add("--crate-feature", "self=" + feature)
