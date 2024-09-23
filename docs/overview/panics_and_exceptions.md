@@ -58,4 +58,4 @@ Crubit FFI boundary. (See b/200067087 for catching this at compile time.)
     incorporated into a stable Rust release, and requires
     nightly.
 
-<!-- TODO: remove above note once crash reaches stable. -->
+<!-- TODO(b/254049425): remove above note once crash reaches stable. -->
