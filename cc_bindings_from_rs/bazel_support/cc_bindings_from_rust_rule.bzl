@@ -171,9 +171,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
         # That said, if we passed arguments to crubit via environment variables or via flags that
         # can be interleaved with rustc flags in any order, and if we used _cc_bindings_from_rs_tool
         # as the tool_path for construct_arguments, then this could be `args.all` instead.
-
-        # TODO(b/254049425): Remove `-Cpanic=abort` after crosstool contains cl/657372371.
-        arguments = [args.process_wrapper_flags, "--", ctx.executable._cc_bindings_from_rs_tool.path, crubit_args, "--", args.rustc_flags, "-Cpanic=abort"],
+        arguments = [args.process_wrapper_flags, "--", ctx.executable._cc_bindings_from_rs_tool.path, crubit_args, "--", args.rustc_flags],
     )
     include_statement = "#include \"%s\"" % h_out_file.short_path
     ctx.actions.run_shell(
