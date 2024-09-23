@@ -6,9 +6,18 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 
+cc_library(
+    name = "cc_helper_functions",
+    hdrs = ["cc_helper_functions.h"],
+    aspect_hints = [
+        "//features:supported",
+    ],
+)
+
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
+    cc_deps = [":cc_helper_functions"],
     deps = [
         "//support/cc_std:vector",
         "@crate_index//:googletest",

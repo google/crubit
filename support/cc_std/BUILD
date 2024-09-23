@@ -128,9 +128,21 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "std_allocator",
+    hdrs = ["std_allocator.h"],
+    aspect_hints = [
+        "//features:supported",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
 rust_library(
     name = "vector",
     srcs = ["vector.rs"],
+    cc_deps = [":std_allocator"],
     visibility = [
         "//visibility:public",
     ],
