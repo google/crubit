@@ -243,7 +243,9 @@ flagset::flags! {
     /// stating "<big thing> requires experimental", we can say it requires experimental because
     /// it needs e.g. "references".
     enum FineGrainedFeature : u8 {
-        References
+        References,
+        MultipleReferenceParams,
+        NonFreeReferenceParams,
     }
 }
 
@@ -258,6 +260,20 @@ impl FineGrainedFeature {
                 ensure!(
                     crubit_features.contains(Experimental),
                     "support for references requires {}",
+                    Experimental.aspect_hint()
+                )
+            }
+            Self::MultipleReferenceParams => {
+                ensure!(
+                    crubit_features.contains(Experimental),
+                    "support for multiple reference parameters requires {}",
+                    Experimental.aspect_hint()
+                )
+            }
+            Self::NonFreeReferenceParams => {
+                ensure!(
+                    crubit_features.contains(Experimental),
+                    "support for bound reference lifetimes (such as 'static) requires {}",
                     Experimental.aspect_hint()
                 )
             }
@@ -1119,8 +1135,10 @@ fn format_ty_for_cc<'tcx>(
             //
             // In all other cases, we assume it is unsafe and require references to be
             // enabled.
-            if location != TypeLocation::FnParam || !region.is_param() {
+            if location != TypeLocation::FnParam {
                 cc_type.prereqs.required_features |= FineGrainedFeature::References;
+            } else if !region.is_param() {
+                cc_type.prereqs.required_features |= FineGrainedFeature::NonFreeReferenceParams;
             }
             cc_type
         }
@@ -1347,7 +1365,8 @@ fn format_param_types_for_cc<'tcx>(
             // NOT OK: fn foo(&i32) -> &i32; // worse: alias-free for whole return lifetime
             if let ty::TyKind::Ref(input_region, ..) = mid.kind() {
                 if Some(input_region) != single_region.as_ref() {
-                    cc_type.prereqs.required_features |= FineGrainedFeature::References;
+                    cc_type.prereqs.required_features |=
+                        FineGrainedFeature::MultipleReferenceParams;
                 }
             }
 
@@ -4932,7 +4951,7 @@ pub mod tests {
             |result| {
                 assert_eq!(
                     result.unwrap_err(),
-                    "support for references requires //features:experimental"
+                    "support for multiple reference parameters requires //features:experimental"
                 )
             },
         );
@@ -4951,7 +4970,7 @@ pub mod tests {
             |result| {
                 assert_eq!(
                     result.unwrap_err(),
-                    "support for references requires //features:experimental"
+                    "support for bound reference lifetimes (such as 'static) requires //features:experimental"
                 )
             },
         );
@@ -4982,7 +5001,7 @@ pub mod tests {
     fn test_format_item_fn_returned_static_reference() {
         let test_src = r#"
                 #[no_mangle]
-                pub fn foo() ->&'static i32 {todo!()}
+                pub fn foo() -> &'static i32 {todo!()}
             "#;
         test_format_item_with_features(
             test_src,
