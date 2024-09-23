@@ -1,0 +1,25 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "rs_bindings_from_cc_sys"
+edition = "2021"
+
+build = "build.rs"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+# NOTE: These dependencies are used only from the C++ lib. They each appear as
+# `extern crate X` in the lib.rs in order to prevent them from being dropped at
+# link time.
+collect_instantiations = { path = "../collect_instantiations" }
+common_sys = { path = "../../../common/car<internal link>_sys" }
+generate_bindings = { path = "../generate_bindings" }
+lifetime_analysis_sys = { path = "../../../lifetime_analysis/car<internal link>_analysis_sys" }
+lifetime_annotations_sys = { path = "../../../lifetime_annotations/car<internal link>_annotations_sys" }
+
+[build-dependencies]
+crubit_build = { path = "../../../car<internal link>" }

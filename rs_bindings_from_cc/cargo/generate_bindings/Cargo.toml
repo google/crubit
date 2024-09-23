@@ -1,0 +1,27 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "generate_bindings"
+edition = "2021"
+
+[lib]
+path = "../../generate_bindings/lib.rs"
+
+[dependencies]
+anyhow.workspace = true
+itertools.workspace = true
+flagset.workspace = true
+once_cell.workspace = true
+proc-macro2.workspace = true
+quote.workspace = true
+syn.workspace = true
+arc_anyhow = { path = "../../../common/car<internal link>_anyhow" }
+code_gen_utils = { path = "../../../common/car<internal link>_gen_utils" }
+crubit_feature = { path = "../../../common/car<internal link>_feature" }
+error_report = { path = "../../../common/car<internal link>_report" }
+ffi_types = { path = "../../../common/car<internal link>_types" }
+ir = { path = "../ir" }
+memoized = { path = "../../../common/car<internal link>" }
+token_stream_printer = { path = "../../../common/car<internal link>_stream_printer" }

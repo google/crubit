@@ -95,7 +95,8 @@ absl::Status Main(absl::Span<char* const> positional_args) {
 
 }  // namespace crubit
 
-int main(int argc, char* argv[]) {
+extern "C" int crubit_rs_bindings_from_cc_main(int argc, char* argv[]) {
+  // TODO(jeanpierreda): move these functions into rs_bindings_from_cc.rs.
   crubit::ExpandParamfiles(argc, argv);
   crubit::PreprocessTargetArgs(argc, argv);
   auto args = absl::ParseCommandLine(argc, argv);

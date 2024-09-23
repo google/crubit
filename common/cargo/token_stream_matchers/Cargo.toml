@@ -1,0 +1,15 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "token_stream_matchers"
+edition = "2021"
+
+[lib]
+path = "../../token_stream_matchers.rs"
+
+[dependencies]
+anyhow.workspace = true
+proc-macro2.workspace = true
+token_stream_printer = { path = "../../../common/car<internal link>_stream_printer" }

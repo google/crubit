@@ -47,22 +47,73 @@ Here are some resources for getting started with Crubit:
 
 ## Building Crubit
 
-```
-$ apt install clang lld bazel
-$ git clone git@github.com:google/crubit.git
-$ cd crubit
-$ bazel build --linkopt=-fuse-ld=/usr/bin/ld.lld //rs_bindings_from_cc:rs_bindings_from_cc_impl
+### Cargo
+
+Prerequisites:
+* Requires LLVM and Clang libraries to be built and installed.
+  * They must be built with support for compression (zlib), which is the default
+    build config.
+* Requires Abseil libraries to be built and installed.
+* Requires zlib (e.g. libz.so) to be available in the system include and lib
+  paths.
+* An up-to-date stable Rust toolchain.
+
+Linux instructions:
+```sh
+# Paths for Crubit's cargo to use.
+## This path contains clang/ and llvm/ dirs with their respective headers.
+export CLANG_INCLUDE_PATH=/path/to/llvm/and/clang/headers
+## This path contains libLLVM*.a and libclang*.a.
+export CLANG_LIB_STATIC_PATH=/path/to/llvm/and/clang/libs
+## This path contains absl/ dir with all the includes.
+export ABSL_INCLUDE_DIR=/path/to/absl/include/dir
+## This path contains libabsl_*
+export ABSL_LIB_STATIC_PATH=/path/to/absl/libs
+
+# Choice of compiler is optional.
+export CC=/path/to/clang
+export CXX=/path/to/clang++
+
+# We must use `lld` linker via clang.
+export PATH="$PATH:/dir/containing/lld"
+export LD=ld.lld
+# We use clang as the linker, it finds lld.
+export RUSTFLAGS="$RUSTFLAGS -Clinker=/path/to/clang"
+export LDFLAGS="$LDFLAGS -fuse-ld=lld"
+export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-fuse-ld=lld"
+
+# Explicitly link the C++ std library for the C++ components.
+export LDFLAGS="$LDFLAGS -lstdc++"
+export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-lstdc++"
+
+# If you want to use a sysroot.
+# SYSROOT_FLAG=--sysroot=$SYSROOT
+# export CFLAGS="$CFLAGS $SYSROOT_FLAG"
+# export CXXFLAGS="$CXXFLAGS $SYSROOT_FLAG"
+# export LDFLAGS="$LDFLAGS $SYSROOT_FLAG"
+# export RUSTFLAGS="$RUSTFLAGS -Clink-arg=$SYSROOT_FLAG"
+
+cargo build --bin rs_bindings_from_cc
 ```
 
-### Using a prebuilt LLVM tree
+### Bazel
 
+```sh
+apt install clang lld bazel
+git clone git@github.com:google/crubit.git
+cd crubit
+bazel build --linkopt=-fuse-ld=/usr/bin/ld.lld //rs_bindings_from_cc:rs_bindings_from_cc_impl
 ```
-$ git clone https://github.com/llvm/llvm-project
-$ cd llvm-project
-$ CC=clang CXX=clang++ cmake -S llvm -B build -DLLVM_ENABLE_PROJECTS='clang' -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install
-$ cmake --build build -j
-$ # wait...
-$ cmake --install build
-$ cd ../crubit
-$ LLVM_INSTALL_PATH=../llvm-project/install bazel build //rs_bindings_from_cc:rs_bindings_from_cc_impl
+
+#### Using a prebuilt LLVM tree
+
+```sh
+git clone https://github.com/llvm/llvm-project
+cd llvm-project
+CC=clang CXX=clang++ cmake -S llvm -B build -DLLVM_ENABLE_PROJECTS='clang' -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install
+cmake --build build -j
+# wait...
+cmake --install build
+cd ../crubit
+LLVM_INSTALL_PATH=../llvm-project/install bazel build //rs_bindings_from_cc:rs_bindings_from_cc_impl
 ```
