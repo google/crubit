@@ -1203,7 +1203,7 @@ fn format_ty_for_cc<'tcx>(
                 }
             }
             let ret_type = format_ret_ty_for_cc(db, &sig, sig_hir)?.into_tokens(&mut prereqs);
-            let param_types = format_param_types_for_cc(db, &sig, sig_hir)?
+            let param_types = format_param_types_for_cc(db, &sig, sig_hir, AllowReferences::Safe)?
                 .into_iter()
                 .map(|snippet| snippet.into_tokens(&mut prereqs));
             let tokens = quote! {
@@ -1325,14 +1325,27 @@ fn get_exactly_one_region<'tcx>(sig_mid: &ty::FnSig<'tcx>) -> Option<Region<'tcx
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum AllowReferences {
+    /// Only allow references when it is safe.
+    Safe,
+    /// Allow references unconditionally, and rely on users to check for
+    /// aliasing.
+    UnsafeAll,
+}
+
 /// Returns the C++ parameter types.
 ///
 /// `sig_hir` is the optional HIR FnSig, if available. This is used to retrieve
 /// alias information.
+///
+/// if `allow_references` is `Safe`, then this only allows exactly one reference
+/// parameter.
 fn format_param_types_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
+    allow_references: AllowReferences,
 ) -> Result<Vec<CcSnippet>> {
     if let Some(sig_hir) = sig_hir {
         assert_eq!(
@@ -1353,20 +1366,22 @@ fn format_param_types_for_cc<'tcx>(
             let mut cc_type = db
                 .format_ty_for_cc(SugaredTy::new(mid, hir), TypeLocation::FnParam)
                 .with_context(|| format!("Error handling parameter #{i}"))?;
-            // In parameter position, format_ty_for_cc defaults to allowing free
-            // (non-static) references. We need to decide which references we
-            // allow -- in this case, we choose to allow references _only_ if
-            // the reference is the single only reference for the function, and
-            // its lifetime is the only lifetime for the function.
-            //
-            // OK: fn foo(&self)
-            // OK: fn foo(_: &i32, _: *f64, _: i32) -> i8
-            // NOT OK: fn foo(&self, &i32);  // caller must guarantee neither argument alias
-            // NOT OK: fn foo(&i32) -> &i32; // worse: alias-free for whole return lifetime
-            if let ty::TyKind::Ref(input_region, ..) = mid.kind() {
-                if Some(input_region) != single_region.as_ref() {
-                    cc_type.prereqs.required_features |=
-                        FineGrainedFeature::MultipleReferenceParams;
+            if allow_references == AllowReferences::Safe {
+                // In parameter position, format_ty_for_cc defaults to allowing free
+                // (non-static) references. We need to decide which references we
+                // allow -- in this case, we choose to allow references _only_ if
+                // the reference is the single only reference for the function, and
+                // its lifetime is the only lifetime for the function.
+                //
+                // OK: fn foo(&self)
+                // OK: fn foo(_: &i32, _: *f64, _: i32) -> i8
+                // NOT OK: fn foo(&self, &i32);  // caller must guarantee neither argument alias
+                // NOT OK: fn foo(&i32) -> &i32; // worse: alias-free for whole return lifetime
+                if let ty::TyKind::Ref(input_region, ..) = mid.kind() {
+                    if Some(input_region) != single_region.as_ref() {
+                        cc_type.prereqs.required_features |=
+                            FineGrainedFeature::MultipleReferenceParams;
+                    }
                 }
             }
 
@@ -1552,6 +1567,7 @@ fn format_thunk_decl<'tcx>(
     sig_mid: &ty::FnSig<'tcx>,
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
     thunk_name: &TokenStream,
+    allow_references: AllowReferences,
 ) -> Result<CcSnippet> {
     let tcx = db.tcx();
 
@@ -1559,7 +1575,7 @@ fn format_thunk_decl<'tcx>(
     let main_api_ret_type = format_ret_ty_for_cc(db, sig_mid, sig_hir)?.into_tokens(&mut prereqs);
 
     let mut thunk_params = {
-        let cpp_types = format_param_types_for_cc(db, sig_mid, sig_hir)?;
+        let cpp_types = format_param_types_for_cc(db, sig_mid, sig_hir, allow_references)?;
         sig_mid
             .inputs()
             .iter()
@@ -2120,7 +2136,8 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
     }
     let params = {
         let names = tcx.fn_arg_names(def_id).iter();
-        let cpp_types = format_param_types_for_cc(db, &sig_mid, Some(sig_hir))?;
+        let cpp_types =
+            format_param_types_for_cc(db, &sig_mid, Some(sig_hir), AllowReferences::Safe)?;
         names
             .enumerate()
             .zip(sig_mid.inputs().iter())
@@ -2266,8 +2283,15 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         };
 
         let mut prereqs = main_api_prereqs;
-        let thunk_decl = format_thunk_decl(db, def_id, &sig_mid, Some(sig_hir), &thunk_name)?
-            .into_tokens(&mut prereqs);
+        let thunk_decl = format_thunk_decl(
+            db,
+            def_id,
+            &sig_mid,
+            Some(sig_hir),
+            &thunk_name,
+            AllowReferences::Safe,
+        )?
+        .into_tokens(&mut prereqs);
 
         let mut thunk_args = params
             .iter()
@@ -2970,9 +2994,18 @@ fn format_trait_thunks<'tcx>(
         // to for traits defined or implemented in the current crate.
         let sig_hir = None;
 
+        let allow_references =
+            if method.name == sym::clone_from && Some(trait_id) == tcx.lang_items().clone_trait() {
+                // We specially handle aliases in `operator=` so that clone_from cannot be
+                // called with an alias. (`if (this != &other) {...}`)
+                AllowReferences::UnsafeAll
+            } else {
+                AllowReferences::Safe
+            };
+
         cc_thunk_decls.add_assign({
             let thunk_name = format_cc_ident(&thunk_name)?;
-            format_thunk_decl(db, method.def_id, &sig_mid, sig_hir, &thunk_name)?
+            format_thunk_decl(db, method.def_id, &sig_mid, sig_hir, &thunk_name, allow_references)?
         });
 
         rs_thunk_impls.extend({

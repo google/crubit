@@ -17,6 +17,11 @@ rust_library(
     name = "structs",
     testonly = 1,
     srcs = ["structs.rs"],
+
+    # TODO(b/262878759): Remove this once `all` is not automatically added anymore.
+    aspect_hints = [
+        "//features:supported",
+    ],
 )
 
 cc_bindings_from_rust(
