@@ -9,6 +9,10 @@ use std::collections::{BTreeSet, HashSet};
 use std::rc::Rc;
 use std::sync::LazyLock;
 
+pub fn is_cpp_reserved_keyword(ident: &str) -> bool {
+    RESERVED_CC_KEYWORDS.contains(ident)
+}
+
 /// Formats a C++ (qualified) identifier. Returns an error when `ident` is a C++
 /// reserved keyword or is an invalid identifier.
 pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {

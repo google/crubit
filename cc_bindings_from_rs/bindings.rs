@@ -15,8 +15,7 @@ extern crate rustc_type_ir;
 
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{
-    escape_non_identifier_chars, format_cc_ident, format_cc_includes, make_rs_ident, CcInclude,
-    NamespaceQualifier,
+    escape_non_identifier_chars, format_cc_includes, make_rs_ident, CcInclude, NamespaceQualifier,
 };
 use error_report::{anyhow, bail, ensure, ErrorReporting};
 use itertools::Itertools;
@@ -157,7 +156,7 @@ fn add_include_guard(db: &dyn BindingsGenerator<'_>, h_body: TokenStream) -> Res
             #h_body
         }),
         IncludeGuard::Guard(include_guard_str) => {
-            let include_guard = format_cc_ident(include_guard_str.as_str())?;
+            let include_guard = format_cc_ident(db, include_guard_str.as_str())?;
             Ok(quote! {
                 __HASH_TOKEN__ ifndef #include_guard __NEWLINE__
                 __HASH_TOKEN__ define #include_guard __NEWLINE__
@@ -237,6 +236,63 @@ fn crate_features(
     features.copied().unwrap_or_default()
 }
 
+fn check_feature_enabled_on_self_and_all_deps(
+    db: &dyn BindingsGenerator,
+    feature: FineGrainedFeature,
+) -> bool {
+    for (_, crate_features) in db.crate_name_to_features().iter() {
+        if feature.ensure_crubit_feature(*crate_features).is_err() {
+            return false;
+        }
+    }
+    true
+}
+
+fn format_cc_ident(db: &dyn BindingsGenerator, ident: &str) -> Result<TokenStream> {
+    // TODO(b/254104998): Check whether the crate where the identifier is defined is
+    // enabled for the feature. Right now if the dep enables the feature but the
+    // current crate doesn't, we will escape the identifier in the dep but
+    // consider it failed in the current crate.
+    if code_gen_utils::is_cpp_reserved_keyword(ident)
+        && check_feature_enabled_on_self_and_all_deps(
+            db,
+            FineGrainedFeature::EscapeCppReservedKeyword,
+        )
+    {
+        let ident = format!("{ident}_");
+        code_gen_utils::format_cc_ident(&ident)
+    } else {
+        code_gen_utils::format_cc_ident(ident)
+    }
+}
+
+fn format_with_cc_body(
+    db: &dyn BindingsGenerator,
+    ns: &NamespaceQualifier,
+    body: TokenStream,
+    attributes: Vec<TokenStream>,
+) -> Result<TokenStream> {
+    if ns.0.is_empty() {
+        Ok(body)
+    } else {
+        let namespace_cc_idents =
+            ns.0.iter().map(|s| format_cc_ident(db, s)).collect::<Result<Vec<_>>>()?;
+        Ok(quote! {
+            __NEWLINE__ #(#attributes)* namespace #(#namespace_cc_idents)::* { __NEWLINE__
+                #body
+            __NEWLINE__ }  __NEWLINE__
+        })
+    }
+}
+
+fn format_ns_path_for_cc(
+    db: &dyn BindingsGenerator<'_>,
+    ns: &NamespaceQualifier,
+) -> Result<TokenStream> {
+    let idents = ns.0.iter().map(|s| format_cc_ident(db, s)).collect::<Result<Vec<_>>>()?;
+    Ok(quote! { #(#idents::)* })
+}
+
 flagset::flags! {
     /// An "expanded" version of CrubitFeature that includes specific cc_bindings_from_rs features.
     /// This allows them to be converted into more readable error messages: rather than simply
@@ -246,6 +302,7 @@ flagset::flags! {
         References,
         MultipleReferenceParams,
         NonFreeReferenceParams,
+        EscapeCppReservedKeyword,
     }
 }
 
@@ -274,6 +331,13 @@ impl FineGrainedFeature {
                 ensure!(
                     crubit_features.contains(Experimental),
                     "support for bound reference lifetimes (such as 'static) requires {}",
+                    Experimental.aspect_hint()
+                )
+            }
+            Self::EscapeCppReservedKeyword => {
+                ensure!(
+                    crubit_features.contains(Experimental),
+                    "support for escaping C++ reserved keywords requires {}",
                     Experimental.aspect_hint()
                 )
             }
@@ -497,9 +561,9 @@ impl FullyQualifiedName {
         }
     }
 
-    fn format_for_cc(&self) -> Result<TokenStream> {
+    fn format_for_cc(&self, db: &dyn BindingsGenerator<'_>) -> Result<TokenStream> {
         if let Some(path) = self.cpp_type {
-            let path = format_cc_ident(path.as_str())?;
+            let path = format_cc_ident(db, path.as_str())?;
             return Ok(quote! {#path});
         }
 
@@ -508,9 +572,9 @@ impl FullyQualifiedName {
             .as_ref()
             .expect("`format_for_cc` can't be called on name-less item kinds");
 
-        let cpp_top_level_ns = format_cc_ident(self.cpp_top_level_ns.as_str())?;
-        let ns_path = self.cpp_ns_path.format_for_cc()?;
-        let name = format_cc_ident(name.as_str())?;
+        let cpp_top_level_ns = format_cc_ident(db, self.cpp_top_level_ns.as_str())?;
+        let ns_path = format_ns_path_for_cc(db, &self.cpp_ns_path)?;
+        let name = format_cc_ident(db, name.as_str())?;
         Ok(quote! { :: #cpp_top_level_ns:: #ns_path #name })
     }
 
@@ -1069,7 +1133,7 @@ fn format_ty_for_cc<'tcx>(
                 format!("Failed to generate bindings for the definition of `{ty}`")
             })?;
 
-            CcSnippet { tokens: FullyQualifiedName::new(db, def_id).format_for_cc()?, prereqs }
+            CcSnippet { tokens: FullyQualifiedName::new(db, def_id).format_for_cc(db)?, prereqs }
         }
 
         ty::TyKind::RawPtr(pointee_mid, mutbl) => {
@@ -1841,11 +1905,12 @@ fn generate_using_statement(
                 bail!("Unsupported checking for external function");
             }
             let fully_qualified_fn_name = FullyQualifiedName::new(db, def_id);
-            let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc()?;
+            let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc(db)?;
             let main_api_fn_name =
-                format_cc_ident(fully_qualified_fn_name.cpp_name.unwrap().as_str())
+                format_cc_ident(db, fully_qualified_fn_name.cpp_name.unwrap().as_str())
                     .context("Error formatting function name")?;
-            let using_name = format_cc_ident(using_name).context("Error formatting using name")?;
+            let using_name =
+                format_cc_ident(db, using_name).context("Error formatting using name")?;
 
             prereqs.defs.insert(def_id.expect_local());
             let tokens = if format!("{}", using_name) == format!("{}", main_api_fn_name) {
@@ -1989,7 +2054,7 @@ fn format_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Res
         format_ty_for_cc(db, SugaredTy::new(ty, Some(hir_ty)), TypeLocation::Other)?;
 
     let cc_type = cc_type_snippet.tokens;
-    let cc_name = format_cc_ident(tcx.item_name(def_id).as_str())?;
+    let cc_name = format_cc_ident(db, tcx.item_name(def_id).as_str())?;
     let cc_value = match tcx.const_eval_poly(def_id).unwrap() {
         ConstValue::Scalar(scalar) => {
             macro_rules! eval {
@@ -2065,7 +2130,7 @@ fn create_type_alias<'tcx>(
     let mut main_api_prereqs = CcPrerequisites::default();
     let actual_type_name = cc_bindings.into_tokens(&mut main_api_prereqs);
 
-    let alias_name = format_cc_ident(alias_name).context("Error formatting type alias name")?;
+    let alias_name = format_cc_ident(db, alias_name).context("Error formatting type alias name")?;
 
     let mut attributes = vec![];
     if let Some(cc_deprecated_tag) = format_deprecated_tag(db.tcx(), def_id) {
@@ -2122,7 +2187,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
     let fully_qualified_fn_name = FullyQualifiedName::new(db, def_id);
     let unqualified_rust_fn_name =
         fully_qualified_fn_name.rs_name.expect("Functions are assumed to always have a name");
-    let main_api_fn_name = format_cc_ident(fully_qualified_fn_name.cpp_name.unwrap().as_str())
+    let main_api_fn_name = format_cc_ident(db, fully_qualified_fn_name.cpp_name.unwrap().as_str())
         .context("Error formatting function name")?;
 
     let mut main_api_prereqs = CcPrerequisites::default();
@@ -2143,8 +2208,8 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
             .zip(sig_mid.inputs().iter())
             .zip(cpp_types)
             .map(|(((i, name), &ty), cpp_type)| {
-                let cc_name = format_cc_ident(name.as_str())
-                    .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{i}")).unwrap());
+                let cc_name = format_cc_ident(db, name.as_str())
+                    .unwrap_or_else(|_err| format_cc_ident(db, &format!("__param_{i}")).unwrap());
                 let cpp_type = cpp_type.into_tokens(&mut main_api_prereqs);
                 Param { cc_name, cpp_type, ty }
             })
@@ -2271,12 +2336,12 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
     let cc_details = if !needs_definition {
         CcSnippet::default()
     } else {
-        let thunk_name = format_cc_ident(&thunk_name).context("Error formatting thunk name")?;
+        let thunk_name = format_cc_ident(db, &thunk_name).context("Error formatting thunk name")?;
         let struct_name = match struct_name.as_ref() {
             None => quote! {},
             Some(fully_qualified_name) => {
                 let name = fully_qualified_name.cpp_name.expect("Structs always have a name");
-                let name = format_cc_ident(name.as_str())
+                let name = format_cc_ident(db, name.as_str())
                     .expect("Caller of format_fn should verify struct via format_adt_core");
                 quote! { #name :: }
             }
@@ -2502,7 +2567,7 @@ fn format_adt_core<'tcx>(
 
     let fully_qualified_name = FullyQualifiedName::new(db, def_id);
     let rs_fully_qualified_name = fully_qualified_name.format_for_rs();
-    let cpp_name = format_cc_ident(fully_qualified_name.cpp_name.unwrap().as_str())
+    let cpp_name = format_cc_ident(db, fully_qualified_name.cpp_name.unwrap().as_str())
         .context("Error formatting item name")?;
 
     // The check below ensures that `format_trait_thunks` will succeed for the
@@ -2512,7 +2577,7 @@ fn format_adt_core<'tcx>(
     // `format_ty_for_cc` / `TyKind::Adt` checks that are outside of
     // `format_adt_core`.
     fully_qualified_name
-        .format_for_cc()
+        .format_for_cc(db)
         .with_context(|| format!("Error formatting the fully-qualified C++ name of `{cpp_name}"))?;
 
     let adt_def = self_ty.ty_adt_def().expect("`def_id` needs to identify an ADT");
@@ -2660,7 +2725,7 @@ fn format_fields<'tcx>(
                 } else {
                     name.clone()
                 };
-                let cc_name = format_cc_ident(cc_name.as_str())
+                let cc_name = format_cc_ident(db, cc_name.as_str())
                     .unwrap_or_else(|_err| format_ident!("__field{index}").into_token_stream());
                 let rs_name = {
                     let name_starts_with_digit = name
@@ -2995,7 +3060,7 @@ fn format_trait_thunks<'tcx>(
                 format!("__crubit_thunk_{}", &escape_non_identifier_chars(symbol.name))
             }
         };
-        method_name_to_cc_thunk_name.insert(method.name, format_cc_ident(&thunk_name)?);
+        method_name_to_cc_thunk_name.insert(method.name, format_cc_ident(db, &thunk_name)?);
 
         let sig_mid = liberate_and_deanonymize_late_bound_regions(
             tcx,
@@ -3017,7 +3082,7 @@ fn format_trait_thunks<'tcx>(
             };
 
         cc_thunk_decls.add_assign({
-            let thunk_name = format_cc_ident(&thunk_name)?;
+            let thunk_name = format_cc_ident(db, &thunk_name)?;
             format_thunk_decl(db, method.def_id, &sig_mid, sig_hir, &thunk_name, allow_references)?
         });
 
@@ -3679,7 +3744,8 @@ fn format_unsupported_def(
 ///     ```
 ///     #tokens
 ///     ```
-pub fn format_namespace_bound_cc_tokens(
+fn format_namespace_bound_cc_tokens(
+    db: &dyn BindingsGenerator<'_>,
     iter: impl IntoIterator<Item = (Option<DefId>, NamespaceQualifier, TokenStream)>,
     tcx: TyCtxt,
 ) -> TokenStream {
@@ -3701,7 +3767,7 @@ pub fn format_namespace_bound_cc_tokens(
                     ns_attributes.push(cc_deprecated_tag);
                 }
             }
-            ns.format_with_cc_body(tokens, ns_attributes).unwrap_or_else(|err| {
+            format_with_cc_body(db, &ns, tokens, ns_attributes).unwrap_or_else(|err| {
                 let name = ns.0.iter().join("::");
                 let err = format!("Failed to format namespace name `{name}`: {err}");
                 quote! { __COMMENT__ #err }
@@ -3820,10 +3886,10 @@ fn format_crate(db: &Database) -> Result<Output> {
     // Generate top-level elements of the C++ header file.
     let h_body = {
         let cpp_top_level_ns = top_level_ns_for_crate(db, LOCAL_CRATE);
-        let cpp_top_level_ns = format_cc_ident(cpp_top_level_ns.as_str())?;
+        let cpp_top_level_ns = format_cc_ident(db, cpp_top_level_ns.as_str())?;
 
         let includes = format_cc_includes(&includes);
-        let ordered_cc = format_namespace_bound_cc_tokens(ordered_cc, tcx);
+        let ordered_cc = format_namespace_bound_cc_tokens(db, ordered_cc, tcx);
         quote! {
             #includes
             __NEWLINE__ __NEWLINE__
@@ -4329,42 +4395,26 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_module_name_is_cpp_reserved_keyword() {
         let test_src = r#"
-                pub mod working_module {
+                pub mod reinterpret_cast {
                     pub fn working_module_f1() {}
                     pub fn working_module_f2() {}
-                }
-                pub mod reinterpret_cast {
-                    pub fn broken_module_f1() {}
-                    pub fn broken_module_f2() {}
                 }
             "#;
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
 
-            // Items in the broken module should be replaced with a comment explaining the
-            // problem.
-            let broken_module_msg = "Failed to format namespace name `reinterpret_cast`: \
-                                     `reinterpret_cast` is a C++ reserved keyword \
-                                     and can't be used as a C++ identifier";
-            assert_cc_not_matches!(bindings.h_body, quote! { namespace reinterpret_cast });
-            assert_cc_not_matches!(bindings.h_body, quote! { broken_module_f1 });
-            assert_cc_not_matches!(bindings.h_body, quote! { broken_module_f2 });
-
-            // Items in the other module should still go through.
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
                     namespace rust_out {
-                        namespace working_module {
+                        namespace reinterpret_cast_ {
                             ...
                             void working_module_f1();
                             ...
                             void working_module_f2();
                             ...
-                        }  // namespace some_module
+                        }  // namespace reinterpret_cast_
 
-                        __COMMENT__ #broken_module_msg
-                        ...
                     }  // namespace rust_out
                 }
             );
@@ -4443,38 +4493,6 @@ pub mod tests {
             );
             assert_cc_matches!(
                 bindings.rs_body,
-                quote! {
-                    __COMMENT__ #expected_comment_txt
-                }
-            );
-        })
-    }
-
-    /// The `test_generated_bindings_unsupported_item` test verifies how `Err`
-    /// from `format_item` is formatted as a C++ comment (in `format_crate`
-    /// and `format_unsupported_def`):
-    /// - This test covers only a single example of an unsupported item.
-    ///   Additional coverage is provided by `test_format_item_unsupported_...`
-    ///   tests.
-    /// - This test somewhat arbitrarily chooses an example of an unsupported
-    ///   item, trying to pick one that 1) will never be supported (b/254104998
-    ///   has some extra notes about APIs named after reserved C++ keywords) and
-    ///   2) tests that the full error chain is included in the message.
-    #[test]
-    fn test_generated_bindings_unsupported_item() {
-        let test_src = r#"
-                #[no_mangle]
-                pub extern "C" fn reinterpret_cast() {}
-            "#;
-        test_generated_bindings(test_src, |bindings| {
-            let bindings = bindings.unwrap();
-            let expected_comment_txt = "Error generating bindings for `reinterpret_cast` \
-                 defined at <crubit_unittests.rs>;l=3: \
-                 Error formatting function name: \
-                 `reinterpret_cast` is a C++ reserved keyword \
-                 and can't be used as a C++ identifier";
-            assert_cc_matches!(
-                bindings.h_body,
                 quote! {
                     __COMMENT__ #expected_comment_txt
                 }
@@ -4756,7 +4774,6 @@ pub mod tests {
 
         test_format_item(test_src, "CHAR", |result| {
             let result = result.unwrap().unwrap();
-            assert_eq!("hello world".len(), 11);
             assert_cc_matches!(
                 result.main_api.tokens,
                 quote! {
@@ -4770,10 +4787,12 @@ pub mod tests {
                 pub const reinterpret_cast: u32 = 42;
             "#;
         test_format_item(test_src, "reinterpret_cast", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "`reinterpret_cast` is a C++ reserved keyword and can't be used as a C++ identifier"
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    constexpr std::uint32_t reinterpret_cast_ = 42;
+                }
             );
         });
     }
@@ -5433,12 +5452,14 @@ pub mod tests {
                 pub extern "C" fn reinterpret_cast() -> () {}
             "#;
         test_format_item(test_src, "reinterpret_cast", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "Error formatting function name: \
-                       `reinterpret_cast` is a C++ reserved keyword \
-                       and can't be used as a C++ identifier"
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    extern "C" void reinterpret_cast_();
+                }
             );
         });
     }
@@ -6007,7 +6028,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    extern "C" void some_function(double __param_0);
+                    extern "C" void some_function(double reinterpret_cast_);
                 }
             );
         });
@@ -7135,12 +7156,13 @@ pub mod tests {
                 }
             "#;
         test_format_item(test_src, "reinterpret_cast", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "Error formatting item name: \
-                             `reinterpret_cast` is a C++ reserved keyword \
-                             and can't be used as a C++ identifier"
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... reinterpret_cast_ final
+                }
             );
         });
     }
@@ -7264,11 +7286,13 @@ pub mod tests {
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "Error formatting the fully-qualified C++ name of `SomeStruct: \
-                 `private` is a C++ reserved keyword and can't be used as a C++ identifier",
+            let result = result.unwrap().unwrap();
+            let cc_details = &result.cc_details;
+            assert_cc_matches!(
+                cc_details.tokens,
+                quote! {
+                    ::rust_out::private_::SomeStruct
+                }
             );
         });
     }
@@ -9060,6 +9084,7 @@ pub mod tests {
     #[test]
     fn test_format_namespace_bound_cc_tokens() {
         run_compiler_for_testing("", |tcx| {
+            let db = bindings_db_for_tests(tcx);
             let top_level = NamespaceQualifier::new::<&str>([]);
             let m1 = NamespaceQualifier::new(["m1"]);
             let m2 = NamespaceQualifier::new(["m2"]);
@@ -9074,7 +9099,7 @@ pub mod tests {
                 (None, m1.clone(), quote! { void f1d(); }),
             ];
             assert_cc_matches!(
-                format_namespace_bound_cc_tokens(input, tcx),
+                format_namespace_bound_cc_tokens(&db, input, tcx),
                 quote! {
                     void f0a();
 
@@ -9094,51 +9119,6 @@ pub mod tests {
                     void f1c();
                     void f1d();
                     }  // namespace m1
-                },
-            );
-        });
-    }
-
-    #[test]
-    fn test_format_namespace_bound_cc_tokens_with_reserved_cpp_keywords() {
-        run_compiler_for_testing("", |tcx| {
-            let working_module = NamespaceQualifier::new(["foo", "working_module", "bar"]);
-            let broken_module = NamespaceQualifier::new(["foo", "reinterpret_cast", "bar"]);
-            let input = vec![
-                (None, broken_module.clone(), quote! { void broken_module_f1(); }),
-                (None, broken_module.clone(), quote! { void broken_module_f2(); }),
-                (None, working_module.clone(), quote! { void working_module_f3(); }),
-                (None, working_module.clone(), quote! { void working_module_f4(); }),
-                (None, broken_module.clone(), quote! { void broken_module_f5(); }),
-                (None, broken_module.clone(), quote! { void broken_module_f6(); }),
-                (None, working_module.clone(), quote! { void working_module_f7(); }),
-                (None, working_module.clone(), quote! { void working_module_f8(); }),
-            ];
-            let broken_module_msg = "Failed to format namespace name `foo::reinterpret_cast::bar`: \
-                                    `reinterpret_cast` is a C++ reserved keyword \
-                                    and can't be used as a C++ identifier";
-            assert_cc_matches!(
-                format_namespace_bound_cc_tokens(input, tcx),
-                quote! {
-                    __COMMENT__ #broken_module_msg
-
-                    namespace foo::working_module::bar {
-                    void working_module_f3();
-                    void working_module_f4();
-                    }  // namespace foo::working_module::bar
-
-                    // TODO(lukasza): Repeating the error message below seems somewhat undesirable.
-                    // OTOH fixing this seems low priority, given that errors when formatting
-                    // namespace names should be fairly rare.  And fixing this requires extra work
-                    // and effort, especially if we want to:
-                    // 1) coalesce the 2 chunks of the `working_module`
-                    // 2) avoid reordering where the `broken_module` error comment appears.
-                    __COMMENT__ #broken_module_msg
-
-                    namespace foo::working_module::bar {
-                    void working_module_f7();
-                    void working_module_f8();
-                    }  // namespace foo::working_module::bar
                 },
             );
         });
