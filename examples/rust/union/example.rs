@@ -4,8 +4,8 @@
 
 #[repr(C)]
 pub union ReprCUnion {
-    a: i32,
-    b: f64,
+    pub a: i32,
+    pub b: f64,
 }
 
 impl Default for ReprCUnion {

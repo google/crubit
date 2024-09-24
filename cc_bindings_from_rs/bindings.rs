@@ -2878,7 +2878,7 @@ fn format_fields<'tcx>(
                             ty::AdtKind::Union => {
                                 if repr_attrs.contains(&rustc_attr::ReprC) {
                                     quote! {
-                                        __NEWLINE__
+                                        #visibility __NEWLINE__
                                         #doc_comment
                                         #cpp_type #cc_name;
                                     }
@@ -2890,7 +2890,7 @@ fn format_fields<'tcx>(
                                          quote! {char __crubit_internal_padding[#internal_padding_size]}
                                     };
                                     quote! {
-                                        __NEWLINE__
+                                        #visibility __NEWLINE__
                                         #doc_comment
                                         struct {
                                             #internal_padding

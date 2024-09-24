@@ -32,9 +32,13 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: example_crate :: ReprCUnion") alignas(8)
   // `ReprCUnion` doesn't implement the `Clone` trait
   ReprCUnion(const ReprCUnion&) = delete;
   ReprCUnion& operator=(const ReprCUnion&) = delete;
+
+ public:
   // Generated from:
   // examples/rust/union/example.rs;l=7
   std::int32_t a;
+
+ public:
   // Generated from:
   // examples/rust/union/example.rs;l=8
   double b;

@@ -42,11 +42,14 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: example_crate :: ReprRustUnion") alignas(8)
   // examples/rust/rust_union/example.rs;l=25
   void set_b(double b) [[clang::annotate_type("lifetime", "__anon1")]];
 
+ private:
   // Generated from:
   // examples/rust/rust_union/example.rs;l=6
   struct {
     std::int32_t value;
   } a;
+
+ private:
   // Generated from:
   // examples/rust/rust_union/example.rs;l=7
   struct {
