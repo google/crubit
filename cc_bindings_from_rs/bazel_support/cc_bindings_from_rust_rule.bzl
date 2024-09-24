@@ -173,7 +173,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
         # as the tool_path for construct_arguments, then this could be `args.all` instead.
         arguments = [args.process_wrapper_flags, "--", ctx.executable._cc_bindings_from_rs_tool.path, crubit_args, "--", args.rustc_flags],
     )
-    include_statement = "#include \"%s\"" % h_out_file.short_path
+    include_statement = "#include \"%s\"  // IWYU pragma: export" % h_out_file.short_path
     ctx.actions.run_shell(
         outputs = [new_h_out_file],
         inputs = [],
