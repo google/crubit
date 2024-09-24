@@ -2554,6 +2554,7 @@ fn repr_attrs(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Rc<[rustc_attr::
     attrs.into()
 }
 
+/// Returns the body of the C++ struct that represents the given ADT.
 fn format_fields<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
@@ -2563,6 +2564,8 @@ fn format_fields<'tcx>(
 
     // TODO(b/259749095): Support non-empty set of generic parameters.
     let substs_ref = ty::List::empty();
+
+    let repr_attrs = db.repr_attrs(core.def_id);
 
     struct FieldTypeInfo {
         size: u64,
@@ -2591,9 +2594,9 @@ fn format_fields<'tcx>(
     let layout = get_layout(tcx, core.self_ty)
         .expect("Layout should be already verified by `format_adt_core`");
     let adt_def = core.self_ty.ty_adt_def().expect("`core.def_id` needs to identify an ADT");
-    let fields: Vec<Field> = if core.self_ty.is_enum() {
+    let err_fields = |err| {
         vec![Field {
-            type_info: Err(anyhow!("No support for bindings of individual `enum` fields")),
+            type_info: Err(err),
             cc_name: quote! { __opaque_blob_of_bytes },
             rs_name: quote! { __opaque_blob_of_bytes },
             is_public: false,
@@ -2603,6 +2606,17 @@ fn format_fields<'tcx>(
             doc_comment: quote! {},
             attributes: vec![],
         }]
+    };
+    let fields: Vec<Field> = if core.self_ty.is_enum() {
+        err_fields(anyhow!("No support for bindings of individual `enum` fields"))
+    } else if core.self_ty.is_union()
+        && !repr_attrs.contains(&rustc_attr::ReprC)
+        && !crate_features(db, core.def_id.krate)
+            .contains(crubit_feature::CrubitFeature::Experimental)
+    {
+        err_fields(anyhow!(
+            "support for non-repr(C) unions requires //features:experimental"
+        ))
     } else {
         let rustc_hir::Node::Item(item) = tcx.hir_node_by_def_id(core.def_id.expect_local()) else {
             panic!("internal error: def_id referring to an ADT was not a HIR Item.");
@@ -2785,7 +2799,6 @@ fn format_fields<'tcx>(
         // Foo(i8);` there are four different places the `i8` could be.
         // If it was placed in the second byte, for any reason, then we would need
         // explicit padding bytes.
-        let repr_attrs = db.repr_attrs(core.def_id);
         let always_omit_padding = repr_attrs.contains(&rustc_attr::ReprC)
             && fields.iter().all(|field| field.type_info.is_ok());
 

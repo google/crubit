@@ -28,6 +28,21 @@ pub mod repr_rust {
     pub fn create() -> U {
         U { x: 0 }
     }
+
+    impl U {
+        pub fn set_x(&mut self, x: u32) {
+            self.x = x;
+        }
+        pub unsafe fn get_x(&self) -> u32 {
+            unsafe { self.x }
+        }
+        pub fn set_y(&mut self, y: u32) {
+            self.y = y;
+        }
+        pub unsafe fn get_y(&self) -> u32 {
+            unsafe { self.y }
+        }
+    }
 }
 
 /// Test for a `#[repr(C, packed)]` union
@@ -61,7 +76,6 @@ pub mod repr_c_clone {
     #[repr(C)]
     pub union U {
         pub x: u32,
-        pub y: u32,
     }
 
     impl Clone for U {
@@ -79,7 +93,6 @@ pub mod repr_c_clone {
 pub mod repr_rust_clone {
     pub union U {
         pub x: u32,
-        pub y: u32,
     }
 
     impl Clone for U {
@@ -90,6 +103,15 @@ pub mod repr_rust_clone {
 
     pub fn create() -> U {
         U { x: 0 }
+    }
+
+    impl U {
+        pub fn set_x(&mut self, x: u32) {
+            self.x = x;
+        }
+        pub unsafe fn get_x(&self) -> u32 {
+            unsafe { self.x }
+        }
     }
 }
 
@@ -129,6 +151,15 @@ pub mod repr_rust_drop {
     impl Drop for U {
         fn drop(&mut self) {
             unsafe { *self.x += 1 }
+        }
+    }
+
+    impl U {
+        pub fn set_x(&mut self, x: *mut i32) {
+            self.x = x;
+        }
+        pub unsafe fn get_x(&self) -> *mut i32 {
+            unsafe { self.x }
         }
     }
 }

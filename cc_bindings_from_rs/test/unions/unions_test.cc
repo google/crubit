@@ -20,12 +20,19 @@ TEST(UnionsTest, ReprCUnionFieldSmokeTest) {
   EXPECT_EQ(union_value, 2);
 }
 
+template <class T>
+concept HasXField = requires(T u) { u.x; };
+template <class T>
+concept HasYField = requires(T u) { u.x; };
+
 TEST(UnionsTest, ReprRustUnionFieldSmokeTest) {
   unions::repr_rust::U my_union = unions::repr_rust::create();
-  my_union.x.value = 1;
-  my_union.y.value = 2;
+  EXPECT_FALSE(HasXField<unions::repr_rust::U>);
+  EXPECT_FALSE(HasYField<unions::repr_rust::U>);
+  my_union.set_x(1);
+  my_union.set_y(2);
 
-  EXPECT_EQ(my_union.y.value, 2);
+  EXPECT_EQ(my_union.get_y(), 2);
 }
 
 TEST(UnionsTest, ReprCUnionPacked) {
@@ -40,6 +47,8 @@ TEST(UnionsTest, ReprRustUnionPacked) {
   unions::repr_rust_packed::U my_union_packed =
       unions::repr_rust_packed::create();
   unions::repr_rust::U my_union = unions::repr_rust::create();
+  EXPECT_FALSE(HasXField<unions::repr_rust_packed::U>);
+  EXPECT_FALSE(HasYField<unions::repr_rust_packed::U>);
 
   EXPECT_EQ(alignof(my_union_packed), 1);
   EXPECT_EQ(alignof(my_union), 4);
@@ -60,16 +69,18 @@ TEST(UnionsTest, ReprCUnionCloneTest) {
 
 TEST(UnionsTest, ReprRustUnionCloneTest) {
   unions::repr_rust_clone::U my_union = unions::repr_rust_clone::create();
-  my_union.x.value = 3;
+  EXPECT_FALSE(HasXField<unions::repr_rust_clone::U>);
+  EXPECT_FALSE(HasYField<unions::repr_rust_clone::U>);
+  my_union.set_x(3);
   unions::repr_rust_clone::U my_clone = my_union;
-  my_union.x.value = 2;
+  my_union.set_x(2);
   unions::repr_rust_clone::U my_clone_from =
       unions::repr_rust_clone::U(my_union);
-  my_union.x.value = 1;
+  my_union.set_x(1);
 
-  EXPECT_EQ(my_clone.x.value, 3);
-  EXPECT_EQ(my_clone_from.x.value, 2);
-  EXPECT_EQ(my_union.x.value, 1);
+  EXPECT_EQ(my_clone.get_x(), 3);
+  EXPECT_EQ(my_clone_from.get_x(), 2);
+  EXPECT_EQ(my_union.get_x(), 1);
 }
 
 TEST(UnionsTest, ReprCUnionDropTest) {
@@ -82,10 +93,11 @@ TEST(UnionsTest, ReprCUnionDropTest) {
 }
 
 TEST(UnionsTest, ReprRustUnionDropTest) {
+  EXPECT_FALSE(HasXField<unions::repr_rust_drop::U>);
   int32_t drops = 0;
   {
     unions::repr_rust_drop::U my_union;
-    my_union.x.value = &drops;
+    my_union.set_x(&drops);
   }
   EXPECT_EQ(drops, 1);
 }
