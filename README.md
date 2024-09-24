@@ -66,7 +66,7 @@ export CLANG_INCLUDE_PATH=/path/to/llvm/and/clang/headers
 ## This path contains libLLVM*.a and libclang*.a.
 export CLANG_LIB_STATIC_PATH=/path/to/llvm/and/clang/libs
 ## This path contains absl/ dir with all the includes.
-export ABSL_INCLUDE_DIR=/path/to/absl/include/dir
+export ABSL_INCLUDE_PATH=/path/to/absl/include/dir
 ## This path contains libabsl_*
 export ABSL_LIB_STATIC_PATH=/path/to/absl/libs
 
