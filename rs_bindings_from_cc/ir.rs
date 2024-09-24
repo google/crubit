@@ -9,10 +9,10 @@
 use arc_anyhow::{anyhow, bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, NamespaceQualifier};
 use crubit_feature::CrubitFeature;
-use once_cell::unsync::OnceCell;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 use serde::Deserialize;
+use std::cell::OnceCell;
 use std::collections::hash_map::{Entry, HashMap};
 use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};

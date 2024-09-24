@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{anyhow, ensure, Result};
-use once_cell::sync::Lazy;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashSet};
 use std::rc::Rc;
+use std::sync::LazyLock;
 
 /// Formats a C++ (qualified) identifier. Returns an error when `ident` is a C++
 /// reserved keyword or is an invalid identifier.
@@ -253,7 +253,7 @@ pub fn format_cc_includes(set_of_includes: &BTreeSet<CcInclude>) -> TokenStream 
     tokens
 }
 
-static RESERVED_CC_KEYWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
+static RESERVED_CC_KEYWORDS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
     // `RESERVED_CC_KEYWORDS` are based on https://en.cppreference.com/w/cpp/keyword
     [
         "alignas",

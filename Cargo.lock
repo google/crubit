@@ -39,7 +39,6 @@ version = "0.0.0"
 dependencies = [
  "arc_anyhow",
  "itertools",
- "once_cell",
  "proc-macro2",
  "quote",
  "syn",
@@ -124,7 +123,6 @@ dependencies = [
  "ir",
  "itertools",
  "memoized",
- "once_cell",
  "proc-macro2",
  "quote",
  "syn",
@@ -140,7 +138,6 @@ dependencies = [
  "crubit_feature",
  "error_report",
  "flagset",
- "once_cell",
  "proc-macro2",
  "quote",
  "serde",
@@ -185,12 +182,6 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 [[package]]
 name = "memoized"
 version = "0.0.0"
-
-[[package]]
-name = "once_cell"
-version = "1.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 
 [[package]]
 name = "proc-macro2"

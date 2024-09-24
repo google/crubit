@@ -10,7 +10,6 @@ edition = "2021"
 path = "../../code_gen_utils.rs"
 
 [dependencies]
-once_cell.workspace = true
 itertools.workspace = true
 proc-macro2.workspace = true
 syn.workspace = true

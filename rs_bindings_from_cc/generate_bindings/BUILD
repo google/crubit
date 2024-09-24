@@ -27,7 +27,6 @@ rust_library(
         "//rs_bindings_from_cc:ir",
         "@crate_index//:flagset",
         "@crate_index//:itertools",
-        "@crate_index//:once_cell",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
         "@crate_index//:serde_json",

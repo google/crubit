@@ -4,7 +4,7 @@
 
 //! Vocabulary library for multi-platform tests which use cross-compilation.
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -28,7 +28,7 @@ pub fn test_platform() -> Platform {
     *TEST_PLATFORM.as_ref().unwrap()
 }
 
-static TEST_PLATFORM: Lazy<Result<Platform, String>> = Lazy::new(|| {
+static TEST_PLATFORM: LazyLock<Result<Platform, String>> = LazyLock::new(|| {
     let env = std::env::var("CRUBIT_TEST_PLATFORM")
         .map_err(|_| "multiplatform tests must use `multiplatform_rust_test`.".to_string())?;
     let platform = match env.as_str() {

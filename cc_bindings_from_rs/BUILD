@@ -125,7 +125,6 @@ rust_library(
     rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         "@crate_index//:anyhow",
-        "@crate_index//:once_cell",
     ],
 )
 
@@ -147,7 +146,6 @@ rust_library(
     deps = [
         "//common:arc_anyhow",
         "@crate_index//:either",
-        "@crate_index//:once_cell",
     ],
 )
 

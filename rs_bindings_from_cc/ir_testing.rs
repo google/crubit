@@ -3,10 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use std::collections::hash_map::HashMap;
+use std::sync::LazyLock;
 
 use arc_anyhow::Result;
 use itertools::Itertools;
-use once_cell::sync::Lazy;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{self, make_ir_from_parts, Func, Identifier, Item, Record, IR};
@@ -33,9 +33,10 @@ pub fn with_lifetime_macros(source: &str) -> String {
 
 /// Name of the current target used by `ir_from_cc` and `ir_from_cc_dependency`.
 pub const TESTING_TARGET: &str = "//test:testing_target";
-static TESTING_FEATURES: Lazy<flagset::FlagSet<crubit_feature::CrubitFeature>> = Lazy::new(|| {
-    crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported
-});
+static TESTING_FEATURES: LazyLock<flagset::FlagSet<crubit_feature::CrubitFeature>> =
+    LazyLock::new(|| {
+        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported
+    });
 
 /// Update the IR to have common test-only items.
 ///

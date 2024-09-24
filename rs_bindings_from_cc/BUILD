@@ -361,7 +361,6 @@ rust_library(
         "//common:error_report",
         "@crate_index//:flagset",
         "@crate_index//:itertools",
-        "@crate_index//:once_cell",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
         "@crate_index//:serde",
@@ -391,7 +390,6 @@ rust_library(
         "//common:multiplatform_testing",
         "@crate_index//:flagset",
         "@crate_index//:itertools",
-        "@crate_index//:once_cell",
     ],
 )
 

@@ -13,13 +13,13 @@ use code_gen_utils::make_rs_ident;
 use error_report::{anyhow, bail, ensure};
 use ir::*;
 use itertools::Itertools;
-use once_cell::sync::Lazy;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::Write as _;
 use std::ptr;
 use std::rc::Rc;
+use std::sync::LazyLock;
 
 /// If we know the original C++ function is codegenned and already compatible
 /// with `extern "C"` calling convention we skip creating/calling the C++ thunk
@@ -422,7 +422,7 @@ impl OperatorMetadataEntry {
     }
 }
 
-static OPERATOR_METADATA: Lazy<OperatorMetadata> = Lazy::new(|| {
+static OPERATOR_METADATA: LazyLock<OperatorMetadata> = LazyLock::new(|| {
     const ENTRIES: &[OperatorMetadataEntry] = &[
         OperatorMetadataEntry::unary("-", "Neg", "neg"),
         // The Rust `Not` trait matches with both the C++ `!` and `~` operators to some extent. The

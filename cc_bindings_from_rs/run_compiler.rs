@@ -37,7 +37,7 @@ where
     F: FnOnce(TyCtxt) -> Result<R> + Send,
     R: Send,
 {
-    // Calling `init_logger` 1) here and 2) via `sync::Lazy` helps to ensure
+    // Calling `init_logger` 1) here and 2) via `sync::LazyLock` helps to ensure
     // that logging is intialized exactly once, even if the `run_compiler`
     // function is invoked by mutliple unit tests running in parallel on
     // separate threads.  This is important for avoiding flaky/racy
@@ -45,15 +45,15 @@ where
     // `!tracing::dispatcher::has_been_set()` code in `rustc_driver_impl/src/
     // lib.rs` and 2) `rustc_log/src/lib.rs` assumming that
     // `tracing::subscriber::set_global_default` always succeeds.
-    use once_cell::sync::Lazy;
-    static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| {
+    use std::sync::LazyLock;
+    static ENV_LOGGER_INIT: LazyLock<()> = LazyLock::new(|| {
         let early_error_handler = EarlyDiagCtxt::new(ErrorOutputType::default());
         rustc_driver::init_logger(
             &early_error_handler,
             rustc_log::LoggerConfig::from_env("CRUBIT_LOG"),
         );
     });
-    Lazy::force(&ENV_LOGGER_INIT);
+    LazyLock::force(&ENV_LOGGER_INIT);
 
     AfterAnalysisCallback::new(rustc_args, callback).run()
 }
