@@ -13,5 +13,5 @@ path = "../../collect_instantiations.rs"
 proc-macro2.workspace = true
 serde_json.workspace = true
 syn.workspace = true
-arc_anyhow = { path = "../../../common/car<internal link>_anyhow" }
-ffi_types = { path = "../../../common/car<internal link>_types" }
+arc_anyhow = { path = "../../../common/cargo/arc_anyhow" }
+ffi_types = { path = "../../../common/cargo/ffi_types" }

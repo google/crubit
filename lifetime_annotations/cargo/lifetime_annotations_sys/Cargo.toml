@@ -12,4 +12,4 @@ build = "build.rs"
 path = "lib.rs"
 
 [build-dependencies]
-crubit_build = { path = "../../../car<internal link>" }
+crubit_build = { path = "../../../cargo/build" }

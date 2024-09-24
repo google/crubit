@@ -11,4 +11,4 @@ path = "../../ffi_types.rs"
 
 [dependencies]
 serde.workspace = true
-arc_anyhow = { path = "../../../common/car<internal link>_anyhow" }
+arc_anyhow = { path = "../../../common/cargo/arc_anyhow" }

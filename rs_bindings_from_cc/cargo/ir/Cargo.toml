@@ -15,7 +15,7 @@ proc-macro2.workspace = true
 quote.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-arc_anyhow = { path = "../../../common/car<internal link>_anyhow" }
-code_gen_utils = { path = "../../../common/car<internal link>_gen_utils" }
-crubit_feature = { path = "../../../common/car<internal link>_feature" }
-error_report = { path = "../../../common/car<internal link>_report" }
+arc_anyhow = { path = "../../../common/cargo/arc_anyhow" }
+code_gen_utils = { path = "../../../common/cargo/code_gen_utils" }
+crubit_feature = { path = "../../../common/cargo/crubit_feature" }
+error_report = { path = "../../../common/cargo/error_report" }

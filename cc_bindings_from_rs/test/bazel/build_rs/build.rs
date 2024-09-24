@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 //! This file is based on
-//! https://doc.rust-lang.org/car<internal link>/build-script-examples.html#code-generation
+//! https://doc.rust-lang.org/cargo/reference/build-script-examples.html#code-generation
 //!
 //! See the top-level comment in BUILD for a high-level description and
 //! motivation of the test.

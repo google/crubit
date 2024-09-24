@@ -16,10 +16,10 @@ path = "lib.rs"
 # `extern crate X` in the lib.rs in order to prevent them from being dropped at
 # link time.
 collect_instantiations = { path = "../collect_instantiations" }
-common_sys = { path = "../../../common/car<internal link>_sys" }
+common_sys = { path = "../../../common/cargo/common_sys" }
 generate_bindings = { path = "../generate_bindings" }
-lifetime_analysis_sys = { path = "../../../lifetime_analysis/car<internal link>_analysis_sys" }
-lifetime_annotations_sys = { path = "../../../lifetime_annotations/car<internal link>_annotations_sys" }
+lifetime_analysis_sys = { path = "../../../lifetime_analysis/cargo/lifetime_analysis_sys" }
+lifetime_annotations_sys = { path = "../../../lifetime_annotations/cargo/lifetime_annotations_sys" }
 
 [build-dependencies]
-crubit_build = { path = "../../../car<internal link>" }
+crubit_build = { path = "../../../cargo/build" }
