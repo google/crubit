@@ -516,12 +516,17 @@ impl RsTypeKind {
                     // only supported experimentally.
                     if rs_type_kind.is_unpin() && record.defining_target.is_none() {
                         require_feature(CrubitFeature::Supported, None)
-                    } else {
+                    } else if !rs_type_kind.is_unpin() {
                         require_feature(
                             CrubitFeature::Experimental,
                             Some(&|| {
                                 format!("<internal link>_relocatable_error: {rs_type_kind} is not rust-movable").into()
                             }),
+                        )
+                    } else {
+                        require_feature(
+                            CrubitFeature::Experimental,
+                            Some(&|| format!("{rs_type_kind} is a template instantiation").into()),
                         )
                     }
                 }
