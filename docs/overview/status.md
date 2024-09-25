@@ -67,7 +67,6 @@ The following types are **not** yet supported, among many others:
 *   b/254094650: `i128` and `u128`
 *   Rust `String`
 *   `Option<T>` (except in some narrow circumstances) and `std::optional<T>`.
-*   Specifically the type alias `ffi::c_char`.
 *   `Result<T, E>`
 *   b/254099023: `()` as anything but a return type.
 *   b/213960614: `std::byte`
