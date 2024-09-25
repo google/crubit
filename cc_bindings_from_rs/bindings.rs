@@ -303,6 +303,7 @@ flagset::flags! {
         MultipleReferenceParams,
         NonFreeReferenceParams,
         EscapeCppReservedKeyword,
+        RustChar,
     }
 }
 
@@ -338,6 +339,13 @@ impl FineGrainedFeature {
                 ensure!(
                     crubit_features.contains(Experimental),
                     "support for escaping C++ reserved keywords requires {}",
+                    Experimental.aspect_hint()
+                )
+            }
+            Self::RustChar => {
+                ensure!(
+                    crubit_features.contains(Experimental),
+                    "support for the Rust `char` type requires {}",
                     Experimental.aspect_hint()
                 )
             }
@@ -1062,10 +1070,12 @@ fn format_ty_for_cc<'tcx>(
                 })
             ));
 
-            CcSnippet::with_include(
+            let mut cc_type = CcSnippet::with_include(
                 quote! { rs_std::rs_char },
                 db.support_header("rs_std/rs_char.h"),
-            )
+            );
+            cc_type.prereqs.required_features |= FineGrainedFeature::RustChar;
+            cc_type
         }
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
@@ -5098,6 +5108,25 @@ pub mod tests {
                 assert_eq!(
                     result.unwrap_err(),
                     "Error handling parameter #0: Failed to format the referent of the reference type `&'a Foo<'a>`: Generic types are not supported yet (b/259749095)"
+                )
+            },
+        );
+    }
+
+    #[test]
+    fn test_format_item_fn_char() {
+        let test_src = r#"
+                #[no_mangle]
+                pub fn foo(_x: char) {}
+            "#;
+        test_format_item_with_features(
+            test_src,
+            "foo",
+            <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
+            |result| {
+                assert_eq!(
+                    result.unwrap_err(),
+                    "support for the Rust `char` type requires //features:experimental"
                 )
             },
         );
