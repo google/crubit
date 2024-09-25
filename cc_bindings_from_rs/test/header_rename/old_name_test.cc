@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "gtest/gtest.h"
-#include "cc_bindings_from_rs/test/header_rename/rename_lib_cc_api.h"
+#include "cc_bindings_from_rs/test/header_rename/rename_lib.h"
 
 namespace crubit {
 namespace {

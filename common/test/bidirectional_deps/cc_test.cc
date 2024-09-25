@@ -4,7 +4,7 @@
 
 #include "gtest/gtest.h"
 #include "common/test/bidirectional_deps/leaf_cc_lib.h"
-#include "common/test/bidirectional_deps/middle_rs_lib_cc_api.h"
+#include "common/test/bidirectional_deps/middle_rs_lib.h"
 
 namespace crubit {
 namespace {

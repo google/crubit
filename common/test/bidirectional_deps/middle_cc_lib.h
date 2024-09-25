@@ -7,7 +7,7 @@
 
 #include <utility>
 
-#include "common/test/bidirectional_deps/leaf_rs_lib_cc_api.h"
+#include "common/test/bidirectional_deps/leaf_rs_lib.h"
 
 #pragma clang lifetime_elision
 
