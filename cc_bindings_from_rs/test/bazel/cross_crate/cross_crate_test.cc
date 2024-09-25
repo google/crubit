@@ -6,7 +6,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "cc_bindings_from_rs/test/bazel/cross_crate/test_api_cc_api.h"
+#include "cc_bindings_from_rs/test/bazel/cross_crate/test_api.h"
 
 namespace crubit {
 namespace {

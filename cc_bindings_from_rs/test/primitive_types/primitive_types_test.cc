@@ -2,13 +2,14 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include "cc_bindings_from_rs/test/primitive_types/primitive_types.h"
+
 #include <stdint.h>
 
 #include <string>
 #include <type_traits>
 
 #include "gtest/gtest.h"
-#include "cc_bindings_from_rs/test/primitive_types/primitive_types_cc_api.h"
 
 namespace crubit {
 namespace {

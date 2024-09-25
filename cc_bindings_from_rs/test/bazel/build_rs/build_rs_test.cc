@@ -4,7 +4,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "cc_bindings_from_rs/test/bazel/build_rs/build_rs_user_cc_api.h"
+#include "cc_bindings_from_rs/test/bazel/build_rs/build_rs_user.h"
 
 namespace crubit {
 namespace {

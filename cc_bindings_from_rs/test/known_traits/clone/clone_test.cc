@@ -7,7 +7,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "cc_bindings_from_rs/test/known_traits/clone/rs_clone_cc_api.h"
+#include "cc_bindings_from_rs/test/known_traits/clone/rs_clone.h"
 
 namespace crubit {
 namespace {

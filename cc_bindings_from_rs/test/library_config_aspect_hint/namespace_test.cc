@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "gtest/gtest.h"
-#include "cc_bindings_from_rs/test/library_config_aspect_hint/namespace_crate2_cc_api.h"
+#include "cc_bindings_from_rs/test/library_config_aspect_hint/namespace_crate2.h"
 
 namespace crubit {
 namespace {

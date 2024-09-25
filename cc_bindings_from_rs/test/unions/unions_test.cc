@@ -2,11 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include "cc_bindings_from_rs/test/unions/unions.h"
+
 #include <bit>
 #include <cstdint>
 
 #include "gtest/gtest.h"
-#include "cc_bindings_from_rs/test/unions/unions_cc_api.h"
 
 namespace crubit {
 namespace {

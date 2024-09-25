@@ -4,7 +4,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "cc_bindings_from_rs/test/unwinding/panic_function_cc_api.h"
+#include "cc_bindings_from_rs/test/unwinding/panic_function.h"
 
 namespace {
 
