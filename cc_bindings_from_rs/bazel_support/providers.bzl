@@ -26,3 +26,10 @@ GeneratedBindingsInfo = provider(
         "new_h_file": "The generated C++ header.",
     },
 )
+
+CcBindingsFromRustToolchainInfo = provider(
+    doc = """A provider for platform-specific data, provided as a toolchain.""",
+    fields = {
+        "binary": "The label for the cc_bindings_from_rs binary",
+    },
+)

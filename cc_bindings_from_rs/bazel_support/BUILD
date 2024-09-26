@@ -25,3 +25,8 @@ bzl_library(
         "//:__subpackages__",
     ],
 )
+
+toolchain_type(
+    name = "toolchain_type",
+    visibility = ["//:__subpackages__"],
+)

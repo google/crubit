@@ -2,6 +2,7 @@ load(
     "@bazel_skylib//rules:common_settings.bzl",
     "string_list_flag",
 )
+load("//cc_bindings_from_rs/bazel_support:toolchain.bzl", "cc_bindings_from_rs_toolchain")
 load("//common/bazel_support:grte_versions.bzl", "CPU", "CPU_GRTE_VERSIONS")
 load("//rs_bindings_from_cc/bazel_support:toolchain.bzl", "grte_toolchain", "rs_bindings_from_cc_toolchain")
 
@@ -27,6 +28,17 @@ string_list_flag(
 # The following are all of the Crubit toolchain implementations.
 # The actual registration happens in MODULE.bazel and toolchains/BUILD.
 
+# cc_bindings_from_rs
+# -------------------
+
+cc_bindings_from_rs_toolchain(
+    name = "cc_bindings_from_rs_on_demand_impl",
+    binary = "//cc_bindings_from_rs:cc_bindings_from_rs",
+)
+
+# rs_bindings_from_cc
+# -------------------
+
 config_setting(
     name = "use_fake_rs_bindings_from_cc_setting",
     flag_values = {
@@ -42,7 +54,7 @@ config_setting(
 )
 
 rs_bindings_from_cc_toolchain(
-    name = "crubit_on_demand_impl",
+    name = "rs_bindings_from_cc_on_demand_impl",
     binary = "//rs_bindings_from_cc:rs_bindings_from_cc",
     builtin_headers = [
         "//llvm/llvm-project/clang:builtin_headers_filegroup",
@@ -54,7 +66,7 @@ rs_bindings_from_cc_toolchain(
 )
 
 rs_bindings_from_cc_toolchain(
-    name = "crubit_fake_impl",
+    name = "rs_bindings_from_cc_fake_impl",
     binary = "//rs_bindings_from_cc/bazel_support:fake_rust_bindings_from_cc",
     builtin_headers = [],
     is_on_demand = True,

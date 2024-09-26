@@ -151,6 +151,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
 
     for flag in collect_cc_bindings_from_rust_cli_flags(target, ctx):
         crubit_args.add(flag)
+    toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"].cc_bindings_from_rs_toolchain_info
     ctx.actions.run(
         outputs = outputs,
         inputs = depset(
@@ -158,7 +159,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
             transitive = [inputs],
         ),
         env = rustc_env,
-        tools = [ctx.executable._cc_bindings_from_rs_tool],
+        tools = [toolchain.binary],
         executable = ctx.executable._process_wrapper,
         mnemonic = "CcBindingsFromRust",
         progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
@@ -169,9 +170,10 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
         # 2. change the rustc path to instead point to crubit.
         #
         # That said, if we passed arguments to crubit via environment variables or via flags that
-        # can be interleaved with rustc flags in any order, and if we used _cc_bindings_from_rs_tool
+        # can be interleaved with rustc flags in any order, and if we used toolchain.binary
         # as the tool_path for construct_arguments, then this could be `args.all` instead.
-        arguments = [args.process_wrapper_flags, "--", ctx.executable._cc_bindings_from_rs_tool.path, crubit_args, "--", args.rustc_flags],
+        arguments = [args.process_wrapper_flags, "--", toolchain.binary.path, crubit_args, "--", args.rustc_flags],
+        toolchain = "//cc_bindings_from_rs/bazel_support:toolchain_type",
     )
     include_statement = "#include \"%s\"  // IWYU pragma: export" % h_out_file.short_path
     ctx.actions.run_shell(
@@ -379,12 +381,6 @@ cc_bindings_from_rust_aspect = aspect(
     doc = "Aspect for generating C++ bindings for a Rust library.",
     attr_aspects = ["deps"],
     attrs = {
-        "_cc_bindings_from_rs_tool": attr.label(
-            default = Label("//cc_bindings_from_rs:cc_bindings_from_rs"),
-            executable = True,
-            cfg = "exec",
-            allow_single_file = True,
-        ),
         "_cc_toolchain": attr.label(
             default = "@bazel_tools//tools/cpp:current_cc_toolchain",
         ),
@@ -436,6 +432,7 @@ cc_bindings_from_rust_aspect = aspect(
     },
     toolchains = [
         "@rules_rust//rust:toolchain_type",
+        "//cc_bindings_from_rs/bazel_support:toolchain_type",
     ] + use_cpp_toolchain(),
     fragments = ["cpp"],
 )
