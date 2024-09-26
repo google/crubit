@@ -2,56 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(allocator_api)]
-use core::ffi::c_void;
-use std::alloc::AllocError;
-use std::alloc::Allocator;
-use std::alloc::Layout;
 use std::ops::{Deref, DerefMut};
 use std::ops::{Index, IndexMut};
-use std::ptr::NonNull;
-
-struct StdAllocator {}
-unsafe impl Allocator for StdAllocator {
-    fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
-        // The algorithm is:
-        // - If the alignment does not exceed the default alignment, allocate with
-        //   `new[]`.
-        // - Otherwise, allocate with `new with alignment`.
-        //
-        // This emulates the behavior of `std::allocator<T>::allocate` from C++.
-        let raw_ptr = if layout.align()
-            > std_allocator::crubit_internal::StdCppDefaultNewAlignment::Value.into()
-        {
-            // overaligned allocation
-            std_allocator::crubit_internal::cpp_new_with_alignment(layout.size(), layout.align())
-                as *mut u8
-        } else {
-            std_allocator::crubit_internal::cpp_new(layout.size()) as *mut u8
-        };
-        let ptr = NonNull::new(raw_ptr).ok_or(AllocError)?;
-        Ok(NonNull::slice_from_raw_parts(ptr, layout.size()))
-    }
-
-    unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {
-        unsafe {
-            if layout.align()
-                > std_allocator::crubit_internal::StdCppDefaultNewAlignment::Value.into()
-            {
-                // overaligned allocation
-                std_allocator::crubit_internal::cpp_delete_with_alignment(
-                    ptr.as_ptr() as *mut c_void,
-                    layout.size(),
-                    layout.align(),
-                )
-            } else {
-                std_allocator::crubit_internal::cpp_delete(
-                    ptr.as_ptr() as *mut c_void,
-                    layout.size(),
-                )
-            }
-        }
-    }
-}
 
 /// A mutable, contiguous, dynamically-sized container of elements of type `T`,
 /// ABI-compatible with `std::vector` from C++.
@@ -114,13 +66,18 @@ impl<T: Unpin> Vector<T> {
     /// Mutates `self` as if it were a `Vec<T>`.
     fn mutate_self_as_vec<F, R>(&mut self, mutate_self: F) -> R
     where
-        F: FnOnce(&mut Vec<T, StdAllocator>) -> R,
+        F: FnOnce(&mut Vec<T, cpp_std_allocator::StdAllocator>) -> R,
     {
         unsafe {
             let mut v = if self.begin.is_null() {
-                Vec::new_in(StdAllocator {})
+                Vec::new_in(cpp_std_allocator::StdAllocator {})
             } else {
-                Vec::from_raw_parts_in(self.begin, self.len(), self.capacity(), StdAllocator {})
+                Vec::from_raw_parts_in(
+                    self.begin,
+                    self.len(),
+                    self.capacity(),
+                    cpp_std_allocator::StdAllocator {},
+                )
             };
             let result = mutate_self(&mut v);
             let len = v.len();
@@ -152,7 +109,7 @@ impl<T> Drop for Vector<T> {
                     self.begin,
                     self.len(),
                     self.capacity(),
-                    StdAllocator {},
+                    cpp_std_allocator::StdAllocator {},
                 );
             }
         }

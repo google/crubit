@@ -22,6 +22,7 @@ filegroup(
         ],
         exclude = [
             "cpp_std_string.rs",
+            "cpp_std_allocator.rs",
             "vector.rs",
         ],
     ),
@@ -140,10 +141,19 @@ cc_library(
 )
 
 rust_library(
-    name = "vector",
-    srcs = ["vector.rs"],
+    name = "cpp_std_allocator",
+    srcs = ["cpp_std_allocator.rs"],
     cc_deps = [":std_allocator"],
     visibility = [
         "//visibility:public",
     ],
+)
+
+rust_library(
+    name = "vector",
+    srcs = ["vector.rs"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [":cpp_std_allocator"],
 )
