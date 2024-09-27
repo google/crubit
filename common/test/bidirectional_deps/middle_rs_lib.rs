@@ -17,3 +17,6 @@ pub fn wrap_enum(x: u8) -> LeafCcEnum {
 pub fn unwrap_enum(x: LeafCcEnum) -> u8 {
     UnwrapEnum(x)
 }
+
+pub use leaf_cc_lib::crubit::LeafCcTypeAlias as LeafCcTypeAlias2;
+pub type LeafCcTypeAlias3 = LeafCcTypeAlias;

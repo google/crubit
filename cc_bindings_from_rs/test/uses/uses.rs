@@ -45,3 +45,11 @@ pub fn return_x() -> X {
 pub fn return_y() -> ::extern_crate::Y {
     ::extern_crate::Y { field: 42 }
 }
+
+pub struct Original {
+    pub field: i32,
+}
+
+pub type Alias = Original;
+
+pub use Alias as Alias2;

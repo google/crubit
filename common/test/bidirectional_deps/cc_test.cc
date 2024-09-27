@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <type_traits>
+
 #include "gtest/gtest.h"
 #include "common/test/bidirectional_deps/leaf_cc_lib.h"
 #include "common/test/bidirectional_deps/middle_rs_lib.h"
@@ -25,5 +27,11 @@ TEST(BidirectionalDepsTest, EnumRoundTrip) {
   ASSERT_EQ(UnwrapEnum(value_from_rs), 1);
 }
 
+TEST(BidirectionalDepsTest, TypeAliasRoundTrip) {
+  bool res = std::is_same_v<LeafCcTypeAlias, middle_rs_lib::LeafCcTypeAlias2>;
+  ASSERT_TRUE(res);
+  res = std::is_same_v<LeafCcTypeAlias, middle_rs_lib::LeafCcTypeAlias3>;
+  ASSERT_TRUE(res);
+};
 }  // namespace
 }  // namespace crubit

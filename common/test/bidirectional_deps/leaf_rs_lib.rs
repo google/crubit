@@ -37,3 +37,5 @@ pub fn wrap_enum(x: u8) -> LeafRsEnum {
 pub fn unwrap_enum(x: LeafRsEnum) -> u8 {
     x as u8
 }
+
+pub use LeafRsType as LeafRsTypeAlias;

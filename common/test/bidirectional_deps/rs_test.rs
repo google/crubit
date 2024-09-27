@@ -21,3 +21,9 @@ fn test_enum_round_trip() {
     let value = middle_cc_lib::crubit::WrapEnum(1);
     assert_eq!(leaf_rs_lib::unwrap_enum(value), 1);
 }
+
+#[gtest]
+fn test_alias_round_trip() {
+    let value: middle_cc_lib::LeafRsTypeAlias2 = leaf_rs_lib::wrap(2);
+    assert_eq!(middle_cc_lib::crubit::Unwrap(value), 2);
+}

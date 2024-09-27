@@ -26,6 +26,8 @@ inline LeafCcEnum WrapEnum(unsigned char x) {
 inline unsigned char UnwrapEnum(LeafCcEnum x) {
   return static_cast<unsigned char>(x);
 }
+
+using LeafCcTypeAlias = LeafCcType;
 }  // namespace crubit
 
 #endif  // CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_CC_LIB_H_

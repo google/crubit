@@ -1941,6 +1941,21 @@ fn generate_using_statement(
             let use_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), None);
             create_type_alias(db, def_id, using_name, use_type)
         }
+        DefKind::TyAlias => {
+            let hir_ty = if def_id.is_local() {
+                let local_def_id = def_id.as_local().unwrap();
+                let Item { kind: ItemKind::TyAlias(hir_ty, ..), .. } =
+                    tcx.hir().expect_item(local_def_id)
+                else {
+                    panic!("{:#?} is not a type alias", def_id);
+                };
+                Some(*hir_ty)
+            } else {
+                None
+            };
+            let alias_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), hir_ty);
+            create_type_alias(db, def_id, using_name, alias_type)
+        }
         _ => {
             bail!("Unsupported use statement that refers to this type of the entity: {:#?}", def_id)
         }

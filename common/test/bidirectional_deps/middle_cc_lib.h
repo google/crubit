@@ -29,4 +29,5 @@ inline unsigned char UnwrapEnum(leaf_rs_lib::LeafRsEnum x) {
 
 }  // namespace crubit
 
+using LeafRsTypeAlias2 = leaf_rs_lib::LeafRsTypeAlias;
 #endif  // CRUBIT_COMMON_TEST_MIDDLE_CC_LIB_H_

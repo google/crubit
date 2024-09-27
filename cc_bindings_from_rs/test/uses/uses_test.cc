@@ -32,6 +32,8 @@ TEST(UsesTest, RexportExternCrateStruct) {
 
   extern_crate::Y y = uses::return_y();
   EXPECT_EQ(y.field, 42);
+
+  EXPECT_TRUE((std::is_same_v<uses::Alias, uses::Original>));
 }
 }  // namespace
 }  // namespace crubit
