@@ -641,6 +641,7 @@ pub struct BridgeTypeInfo {
 pub struct Record {
     pub rs_name: Rc<str>,
     pub cc_name: Rc<str>,
+    pub cc_preferred_name: Rc<str>,
     pub mangled_cc_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,

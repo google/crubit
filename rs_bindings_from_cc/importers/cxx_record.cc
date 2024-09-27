@@ -179,6 +179,14 @@ std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
   return *name;
 }
 
+bool IsKnownAttr(const clang::Attr& attr) {
+  return clang::isa<clang::AlignedAttr>(attr) ||
+         clang::isa<clang::FinalAttr>(attr) ||
+         clang::isa<clang::TrivialABIAttr>(attr) ||
+         clang::isa<clang::PreferredNameAttr>(attr) ||
+         clang::isa<clang::PointerAttr>(attr);
+}
+
 std::optional<IR::Item> CXXRecordDeclImporter::Import(
     clang::CXXRecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
@@ -239,11 +247,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   std::optional<IR::Item> attr_error_item;
   std::optional<std::string> unknown_attr =
       CollectUnknownAttrs(*record_decl, [&](const clang::Attr& attr) {
-        if (clang::isa<clang::AlignedAttr>(attr)) {
-          return true;
-        } else if (clang::isa<clang::FinalAttr>(attr)) {
-          return true;
-        } else if (clang::isa<clang::TrivialABIAttr>(attr)) {
+        if (IsKnownAttr(attr)) {
           return true;
         } else if (auto* visibility =
                        clang::dyn_cast<clang::VisibilityAttr>(&attr);
@@ -368,6 +372,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   auto record = Record{
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
+      .cc_preferred_name = std::move(preferred_cc_name),
       .mangled_cc_name = ictx_.GetMangledName(record_decl),
       .id = ictx_.GenerateItemId(record_decl),
       .owning_target = ictx_.GetOwningTarget(record_decl),

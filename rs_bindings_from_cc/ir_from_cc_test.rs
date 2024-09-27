@@ -2459,6 +2459,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
            Record {
               rs_name: "DerivedClass",
               cc_name: "DerivedClass",
+              cc_preferred_name: "",
               mangled_cc_name: "12DerivedClass",
               id: ItemId(...),
               owning_target: BazelLabel("//test:testing_target"),
@@ -3206,6 +3207,67 @@ fn test_aligned_attr() {
         } ...
         ... override_alignment: true ...
       }}
+    };
+}
+
+#[gtest]
+fn test_template_with_preferred_name_attribute() {
+    let ir = ir_from_cc(
+        r#"
+      template<typename T> struct basic_string;
+      using string = basic_string<char>;
+      template<typename T> struct [[clang::preferred_name(string)]] basic_string {
+      };
+      "#,
+    )
+    .unwrap();
+    assert_ir_matches! {ir, quote! {
+      ...
+      Record {
+        ... cc_name: "basic_string<char>" ...
+        ... cc_preferred_name: "string" ...
+        ... unknown_attr: None ...
+      }
+      ...
+    }
+    };
+}
+
+#[gtest]
+fn test_template_without_preferred_name_attribute() {
+    let ir = ir_from_cc(
+        r#"
+      template<typename T> struct basic_string {};
+      using string = basic_string<char>;
+      "#,
+    )
+    .unwrap();
+    assert_ir_matches! {ir, quote! {
+      ...
+      Record {
+        ... cc_name: "basic_string<char>" ...
+        ... cc_preferred_name: "basic_string<char>" ...
+        ... unknown_attr: None ...
+      }
+      ...
+    }
+    };
+}
+
+#[gtest]
+fn test_record_with_pointer_attribute() {
+    let ir = ir_from_cc(
+        r#"
+      class [[gsl::Pointer(int)]] Struct {};
+      "#,
+    )
+    .unwrap();
+    assert_ir_matches! {ir, quote! {
+      Record {
+        ... rs_name: "Struct" ...
+        ... unknown_attr: None ...
+      }
+    }
     };
 }
 
