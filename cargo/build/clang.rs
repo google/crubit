@@ -40,7 +40,7 @@ fn include_lib(libname: &str) -> bool {
 pub fn collect_clang_includes() -> Vec<PathBuf> {
     paths::print_env_to_string("CLANG_INCLUDE_PATH")
         .expect("CLANG_INCLUDE_PATH must be specified in the environment")
-        .split(':')
+        .split(',')
         .map(|s| Path::new(s).to_owned())
         .collect()
 }
@@ -54,7 +54,7 @@ pub fn collect_clang_libs() -> (Vec<PathBuf>, Vec<OsString>) {
 
     let clang_lib_dirs: Vec<PathBuf> = std::env::var("CLANG_LIB_STATIC_PATH")
         .expect("CLANG_LIB_STATIC_PATH must be specified in the environment")
-        .split(':')
+        .split(',')
         .map(|s| Path::new(&s).to_owned())
         .collect();
 

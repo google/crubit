@@ -16,7 +16,7 @@ const LIB_EXTENSION: &str = "lib";
 pub fn collect_absl_includes() -> Vec<PathBuf> {
     paths::print_env_to_string("ABSL_INCLUDE_PATH")
         .expect("ABSL_INCLUDE_PATH must be specified in the environment")
-        .split(':')
+        .split(',')
         .map(|s| Path::new(s).to_owned())
         .collect()
 }
@@ -28,7 +28,7 @@ pub fn collect_absl_libs() -> (Vec<PathBuf>, Vec<OsString>) {
 
     let absl_lib_dirs: Vec<PathBuf> = std::env::var("ABSL_LIB_STATIC_PATH")
         .expect("ABSL_LIB_STATIC_PATH must be specified in the environment")
-        .split(':')
+        .split(',')
         .map(|s| Path::new(&s).to_owned())
         .collect();
 
