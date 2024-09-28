@@ -300,7 +300,8 @@ flagset::flags! {
     /// it needs e.g. "references".
     enum FineGrainedFeature : u8 {
         References,
-        MultipleReferenceParams,
+        LifetimeReuse,
+        PossibleMutableAliasing,
         NonFreeReferenceParams,
         EscapeCppReservedKeyword,
         RustChar,
@@ -321,10 +322,10 @@ impl FineGrainedFeature {
                     Experimental.aspect_hint()
                 )
             }
-            Self::MultipleReferenceParams => {
+            Self::LifetimeReuse => {
                 ensure!(
                     crubit_features.contains(Experimental),
-                    "support for multiple reference parameters requires {}",
+                    "support for multiple uses of a lifetime parameter requires {}",
                     Experimental.aspect_hint()
                 )
             }
@@ -332,6 +333,13 @@ impl FineGrainedFeature {
                 ensure!(
                     crubit_features.contains(Experimental),
                     "support for bound reference lifetimes (such as 'static) requires {}",
+                    Experimental.aspect_hint()
+                )
+            }
+            Self::PossibleMutableAliasing => {
+                ensure!(
+                    crubit_features.contains(Experimental),
+                    "support for functions taking a mutable reference, and which may alias in C++, requires {}",
                     Experimental.aspect_hint()
                 )
             }
@@ -1367,36 +1375,22 @@ fn format_ret_ty_for_cc<'tcx>(
 /// Gets the exactly one region used in this function signature.
 ///
 /// If the function has more than one region, or no regions, returns None.
-fn get_exactly_one_region<'tcx>(sig_mid: &ty::FnSig<'tcx>) -> Option<Region<'tcx>> {
+fn count_regions<'tcx>(sig_mid: &ty::FnSig<'tcx>) -> HashMap<Region<'tcx>, u8> {
     use rustc_middle::ty::TypeVisitor;
-    enum SingleRegionVisitor<'tcx> {
-        Zero,
-        One(Region<'tcx>),
-        Many,
-    }
-    impl<'tcx> TypeVisitor<TyCtxt<'tcx>> for SingleRegionVisitor<'tcx> {
+    struct RegionCounter<'tcx>(HashMap<Region<'tcx>, u8>);
+    impl<'tcx> TypeVisitor<TyCtxt<'tcx>> for RegionCounter<'tcx> {
         fn visit_region(&mut self, region: Region<'tcx>) {
-            match self {
-                SingleRegionVisitor::Zero => {
-                    *self = SingleRegionVisitor::One(region);
-                }
-                SingleRegionVisitor::One(_) => {
-                    *self = SingleRegionVisitor::Many;
-                }
-                SingleRegionVisitor::Many => {}
-            }
+            let count = self.0.entry(region).or_default();
+            *count = count.saturating_add(1);
         }
     }
 
-    let mut visitor = SingleRegionVisitor::Zero;
+    let mut visitor = RegionCounter(Default::default());
     for ty in sig_mid.inputs() {
         visitor.visit_ty(*ty);
     }
     visitor.visit_ty(sig_mid.output());
-    match visitor {
-        SingleRegionVisitor::One(region) => Some(region),
-        _ => None,
-    }
+    visitor.0
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -1429,7 +1423,7 @@ fn format_param_types_for_cc<'tcx>(
         );
     }
 
-    let single_region = std::cell::LazyCell::new(|| get_exactly_one_region(sig_mid));
+    let region_counts = std::cell::LazyCell::new(|| count_regions(sig_mid));
 
     sig_mid
         .inputs()
@@ -1444,18 +1438,21 @@ fn format_param_types_for_cc<'tcx>(
                 // In parameter position, format_ty_for_cc defaults to allowing free
                 // (non-static) references. We need to decide which references we
                 // allow -- in this case, we choose to allow references _only_ if
-                // the reference is the single only reference for the function, and
-                // its lifetime is the only lifetime for the function.
-                //
-                // OK: fn foo(&self)
-                // OK: fn foo(_: &i32, _: *f64, _: i32) -> i8
-                // NOT OK: fn foo(&self, &i32);  // caller must guarantee neither argument alias
-                // NOT OK: fn foo(&i32) -> &i32; // worse: alias-free for whole return lifetime
-                if let ty::TyKind::Ref(input_region, ..) = mid.kind() {
-                    if Some(input_region) != single_region.as_ref() {
-                        cc_type.prereqs.required_features |=
-                            FineGrainedFeature::MultipleReferenceParams;
+                // the reference cannot mutably alias, and does not have any lifetime
+                // requirements from the caller.
+                match mid.kind() {
+                    ty::TyKind::Ref(input_region, .., Mutability::Not) => {
+                        if region_counts[input_region] > 1 {
+                            cc_type.prereqs.required_features |= FineGrainedFeature::LifetimeReuse;
+                        }
                     }
+                    ty::TyKind::Ref(input_region, .., Mutability::Mut) => {
+                        if region_counts.len() > 1 || region_counts[input_region] > 1 {
+                            cc_type.prereqs.required_features |=
+                                FineGrainedFeature::PossibleMutableAliasing;
+                        }
+                    }
+                    _ => {}
                 }
             }
 
@@ -5007,10 +5004,10 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_item_fn_single_reference() {
+    fn test_format_item_fn_references() {
         let test_src = r#"
                 #[no_mangle]
-                pub fn foo(_x: &i32) {}
+                pub fn foo(_x: &i32, _y: &i32) {}
             "#;
         test_format_item_with_features(
             test_src,
@@ -5021,7 +5018,9 @@ pub mod tests {
                 assert_cc_matches!(
                     main_api.tokens,
                     quote! {
-                        void foo(std::int32_t const& [[clang::annotate_type("lifetime" , "__anon1")]] _x );
+                        void foo(
+                            std::int32_t const& [[clang::annotate_type("lifetime" , "__anon1")]] _x,
+                            std::int32_t const& [[clang::annotate_type("lifetime" , "__anon2")]] _y );
                     }
                 );
             },
@@ -5029,10 +5028,10 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_item_fn_double_reference() {
+    fn test_format_item_fn_risky_mut_reference() {
         let test_src = r#"
                 #[no_mangle]
-                pub fn foo(_x: &i32, _y: &i32) {}
+                pub fn foo(_x: &mut i32, _y: &i32) {}
             "#;
         test_format_item_with_features(
             test_src,
@@ -5041,7 +5040,7 @@ pub mod tests {
             |result| {
                 assert_eq!(
                     result.unwrap_err(),
-                    "support for multiple reference parameters requires //features:experimental"
+                    "support for functions taking a mutable reference, and which may alias in C++, requires //features:experimental"
                 )
             },
         );
@@ -5106,10 +5105,29 @@ pub mod tests {
         );
     }
 
+    #[test]
+    fn test_format_item_fn_reused_reference_lifetime() {
+        let test_src = r#"
+                #[no_mangle]
+                pub fn foo<'a>(_x: &'a i32, _y: &'a i32) {}
+            "#;
+        test_format_item_with_features(
+            test_src,
+            "foo",
+            <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
+            |result| {
+                assert_eq!(
+                    result.unwrap_err(),
+                    "support for multiple uses of a lifetime parameter requires //features:experimental"
+                )
+            },
+        );
+    }
+
     // NOTE: If we gain support for lifetime generic parameters, we must _still_
     // require :experimental.
     #[test]
-    fn test_format_item_fn_reused_reference_lifetime() {
+    fn test_format_item_fn_reused_reference_lifetime_struct() {
         let test_src = r#"
                 pub struct Foo<'a>(pub i32, core::marker::PhantomData<&'a i32>);
                 #[no_mangle]
