@@ -1347,20 +1347,25 @@ static void collectEvidenceFromConstructorExitBlock(
             ExitEnv.getThisPointeeStorageLocation()->getChild(*Field)),
         ExitEnv);
     if (PV == nullptr) continue;
-    // We have seen copy/move constructors that leave smart pointer fields
-    // without null state, because the field of the copied/moved-from value is
-    // not modeled or referenced and so has no null state.
-    // We don't get useful evidence from these cases anyway, because whether the
-    // field has been initialized with a non-null value is determined by some
-    // other form of construction for the same type, and we'll collect the
-    // relevant evidence there.
-    // In these cases, return early without emitting evidence.
-    if (!hasPointerNullState(*PV) && Ctor->isCopyOrMoveConstructor()) return;
+    // We have seen constructors that copy/move into *this that leave smart
+    // pointer fields without null state, because the field of the
+    // copied/moved-from value is not modeled or referenced and so has no null
+    // state. We don't get useful evidence from these cases anyway, because
+    // whether the field has been initialized with a non-null value is
+    // determined by some other form of construction for the same type, and
+    // we'll collect the relevant evidence there. If we did try to model the
+    // fields that are not directly referenced in the function body, we would
+    // only get null state based on the annotated type, which is always Unknown
+    // if we're trying to infer for it. In these cases, return early without
+    // emitting evidence.
+    //
+    // It's possible there are other cases that result in a lack of null state
+    // that should be fixed, but we don't have the tools to detect the
+    // difference between the case detailed above and other cases, so we give up
+    // on finding other cases by way of loudly detecting a lack of null state
+    // here.
+    if (!hasPointerNullState(*PV)) return;
 
-    // Otherwise, we should always have null state for smart pointer fields. If
-    // not, we should fail loudly so we find out about it and can better handle
-    // those specific cases.
-    CHECK(hasPointerNullState(*PV));
     if (isNullable(*PV, ExitEnv)) {
       Emit(*Field, Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
            Ctor->isImplicit() ? Field->getBeginLoc() : Ctor->getBeginLoc());

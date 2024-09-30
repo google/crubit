@@ -1563,7 +1563,7 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
 
 // This is a crash repro.
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,
-     ConstructorExitingWithUnmodeledField) {
+     CopyConstructorExitingWithUnmodeledField) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     struct Target {
@@ -1571,6 +1571,26 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
       // coped into this.Field, leaving it without null state at the end of the
       // constructor.
       Target(Target& other) { *this = other; }
+      Target& operator=(const Target& other);
+      std::unique_ptr<int> Field;
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
+      IsEmpty());
+}
+
+// This is a crash repro; see b/369863079.
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     CustomConstructorExitingWithUnmodeledField) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    struct Target {
+      // other.Field is not modeled and has no null state attached. Its value is
+      // coped into this.Field, leaving it without null state at the end of the
+      // constructor. Note that this is not technically a copy constructor.
+      Target(Target& other, bool b) { *this = other; }
       Target& operator=(const Target& other);
       std::unique_ptr<int> Field;
     };
