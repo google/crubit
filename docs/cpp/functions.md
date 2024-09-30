@@ -3,10 +3,11 @@
 Rust code can call (non-member) functions defined in C++, provided that the
 parameter and return types are supported by Crubit:
 
-*   If a parameter or return type is a [fundamental type](fundamental_types),
+*   If a parameter or return type is a [primitive type](../types/primitive),
     then the bindings for the function use the corresponding Rust type.
-*   Similarly, if a parameter or return type is a [pointer type](pointer_types),
-    then the bindings for the function use the corresponding Rust pointer type.
+*   Similarly, if a parameter or return type is a
+    [pointer type](../types/pointer), then the bindings for the function use the
+    corresponding Rust pointer type.
 *   If the type is a user-defined type, such as a
     [class type](classes_and_structs) or [enum](enums), then the bindings for
     the function use the bindings for that type.
@@ -26,7 +27,7 @@ and the corresponding FFI glue:
 cs/file:examples/cpp/function/example_generated.rs content:^([^/\n])([^!\n]|$)[^\n]*
 ```
 
-## `unsafe` functions
+## `unsafe` functions {#unsafe}
 
 Functions accepting or returning simple types, like integers, can be called from
 safe code. However, functions which accept a raw pointer are automatically

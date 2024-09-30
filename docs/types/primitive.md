@@ -1,13 +1,19 @@
-# Rust bindings for C++ fundamental types
+# Primitive types
 
-Crubit maps most C++ fundamental types to the direct Rust equivalent. For
-example, `int32_t` becomes `i32`, `int` becomes `ffi::c_int`, `double` becomes
-`f64`, and so on.
+Crubit maps primitive types[^terminology] to the direct equivalent in the other
+language. For example, C++ `int32_t` is Rust `i32`, C++ `int` is Rust
+`ffi::c_int`, C++ `double` is Rust `f64`, and so on.
 
-The exceptions are the currently-unsupported types `nullptr_t`, `char8_t`,
-`wchar_t`, and `(u)int128_t`.
+Exceptions:
 
-## Bidirectional map of C++ types
+*   **C++:** There is no mapping for the currently-unsupported types
+    `nullptr_t`, `char8_t`, `wchar_t`, and `(u)int128_t`.
+*   **Rust:** There is no mapping for the currently-unsupported `char` and `str`
+    types, and the never (`!`) type, except as a return type.
+
+For more information, see [Unsupported types](#unsupported)
+
+## Bidirectional type mapping {#bidirectional}
 
 The following map is bidirectional. If you call a C++ interface from Rust using
 Crubit, then `int32_t` in C++ becomes `i32` in Rust. Vice versa, if you call a
@@ -41,10 +47,15 @@ C++                  | Rust
 `long long`          | `::core::ffi::c_longlong`
 `unsigned long long` | `::core::ffi::c_ulonglong`
 
-## One-way map of C++ into Rust types
+## One-way type mapping {#one_way}
 
-The C++ types below are mapped one-way into the corresponding Rust types. For
-example `size_t` maps to `usize`, but `usize` maps to `uintptr_t`.
+The types below are mapped in only one direction, but do not round trip back to
+the original type. For example, `size_t` maps to `usize`, but `usize` maps to
+`uintptr_t`.
+
+### C++ to Rust {#cpp_to_rust}
+
+The following C++ types become the following Rust types, but not vice versa:
 
 C++         | Rust
 ----------- | -----------------
@@ -53,15 +64,37 @@ C++         | Rust
 `char16_t`  | `u16`
 `char32_t`  | `u32` [^char32_t]
 
-## Unsupported types
+### One-way mapping of Rust to C++ types {#rust_to_cpp}
+
+The following Rust types become the following C++ types, but not vice versa:
+
+Rust              | C++
+----------------- | ------
+`!` (return type) | `void`
+
+## Unsupported types {#unsupported}
 
 Bindings for the following types are not supported at this point:
+
+### C++
 
 *   `nullptr_t` and `char8_t` have not yet been implemented.
 *   b/283268558: `wchar_t` is currently unsupported, for portability reasons.
 *   b/254094650: `int128_t` is currently unsupported, because it does not yet
     have a decided ABI.
 
+### Rust
+
+*   `char` is currently unsupported, pending design review.
+*   b/262580415: `str` has not yet been implemented
+*   b/254507801: `!` has not yet been implemented except for return types.
+
+[^terminology]: Rust calls these types
+    [primitive types](https://doc.rust-lang.org/reference/types.html),
+    while C++ calls them
+    [fundamental types](https://en.cppreference.com/w/cpp/language/types).
+    Since the Rust terminology is probably well understood by
+    everybody, we use it here.
 [^char32_t]: Unlike Rust `char`, `char16_t` and `char32_t` may contain invalid
     Unicode characters.
 [^char]: Note that Rust `c_char` and C++ `char` have different signedness in

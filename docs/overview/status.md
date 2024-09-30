@@ -21,20 +21,12 @@ This page should evolve over time:
 
 ## Types
 
-Types come in three flavors:
+See <internal link>/types for more details about types in general, including
+explanations of what it means for a type to be ABI-compatible versus
+layout-compatible.
 
-*   ABI-compatible: the type can be used by value or by pointer, in fields,
-    functions, function pointers
-*   Layout-compatible: the type can be used anywhere an ABI-compatible type can
-    be *except:*
-    *   not by-value in manual FFI that does not use Crubit
-    *   not by-value in function pointers
-*   Bridged: the type can only be passed or returned directly by value. It
-    cannot be used by pointer, in struct fields, or in function pointers in any
-    way.
-
-Unless otherwise specified, the below types are supported and ABI-compatible
-(see <internal link>/cpp/fundamental_types, <internal link>/cpp/pointer_types):
+Unless otherwise specified, the types below are supported and ABI-compatible
+(see <internal link>/types/primitive, <internal link>/types/pointer):
 
 *   integer types (except 128-bit integers)
 *   floating point types

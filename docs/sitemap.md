@@ -2,15 +2,18 @@
 
 *   [Home](/docs/index.md)
 *   [Are We Crubit Yet?](/docs/overview/status)
+*   Types
+
+    *   [Overview](/docs/types/)
+    *   [Primitive Types](/docs/types/primitive)
+    *   [Pointer Types](/docs/types/pointer)
+
 *   Rust Bindings for C++ Libraries
 
     *   [Overview](/docs/cpp/)
     *   [Functions](/docs/cpp/functions)
     *   [Classes and Structs](/docs/cpp/classes_and_structs)
     *   [Enums](/docs/cpp/enums)
-    *   <hr>
-    *   [Fundamental Types](/docs/cpp/fundamental_types)
-    *   [Pointer Types](/docs/cpp/pointer_types)
 
 *   Design {.cnav-collapsed-by-default}
 
