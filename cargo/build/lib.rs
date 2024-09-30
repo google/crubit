@@ -46,16 +46,13 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>>(
     paths::print_link_searchs(&absl_lib_dirs)?;
     paths::print_link_libs(&absl_libs)?;
 
-    // ===== libtooling =====
+    // ===== LLVM libtooling =====
 
     // TODO: Use llvm-config instead of LIBCLANG_STATIC_PATH?
     let clang_include_dirs = clang::collect_clang_includes();
     let (clang_lib_dirs, clang_libs) = clang::collect_clang_libs();
     paths::print_link_searchs(&clang_lib_dirs)?;
     paths::print_link_libs(&clang_libs)?;
-
-    // llvm depends on zlib.
-    paths::print_link_libs(&["z"])?;
 
     // ===== The cc lib ======
 

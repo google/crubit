@@ -75,7 +75,6 @@ export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-lstdc++"
 # If you want to use a sysroot.
 # SYSROOT_FLAG=--sysroot=$SYSROOT
 # export CFLAGS="$CFLAGS $SYSROOT_FLAG"
-# export CXXFLAGS="$CXXFLAGS $SYSROOT_FLAG"
 # export RUSTFLAGS="$RUSTFLAGS -Clink-arg=$SYSROOT_FLAG"
 ```
 
@@ -91,7 +90,6 @@ export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-lc++"
 
 # Point to the Xcode sysroot.
 export CFLAGS="$CFLAGS -isysroot $(xcrun --show-sdk-path)"
-export CXXFLAGS="$CXXFLAGS -isysroot $(xcrun --show-sdk-path)"
 export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-isysroot -Clink-arg=$(xcrun --show-sdk-path)"
 ```
 
@@ -101,18 +99,23 @@ Windows-specific setup:
 * All commands must be run from a development shell, where MSVC environment
   variables are set up.
 ```sh
-# We use clang compiler (not clang-cl) because the build scripts don't use
-# MSVC-formatted flags.
-export CC=clang
-export CXX=clang++
+# We use clang compiler (clang-cl); MSVC may work too but is unsupported.
+export CC=clang-cl
+export CXX=clang-cl
 # We must use lld to link, which is spelt lld-link. So user-specified linker
 # flags must be in MSVC format.
 export RUSTFLAGS="$RUSTFLAGS -Clinker=/path/to/lld-link"
 
 # LLVM was built with Zlib support. Point Crubit to the same library.
-export CFLAGS="$CFLAGS -I$ZLIB_DIR"
-export CXXFLAGS="$CXXFLAGS -I$ZLIB_DIR"
-export RUSTFLAGS="$RUSTFLAGS -Clink-arg=/LIBPATH:$ZLIB_DIR"
+export CFLAGS="$CFLAGS /I/path/to/zlib"
+export RUSTFLAGS="$RUSTFLAGS -Clink-arg=/LIBPATH:/path/to/zlib"
+
+# Avoid deprecation warnings.
+export CFLAGS="$CFLAGS /D_CRT_SECURE_NO_DEPRECATE"
+
+# If LLVM (-DCMAKE_MSVC_RUNTIME_LIBRARY) and Abseil (-DABSL_MSVC_STATIC_RUNTIME)
+# are built against static CRT, then Rust needs to match, or vice-versa.
+# export RUSTFLAGS="$RUSTFLAGS -Ctarget-feature=+crt-static"
 ```
 
 Run the build step via cargo:

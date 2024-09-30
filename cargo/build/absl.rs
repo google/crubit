@@ -4,7 +4,7 @@
 
 use crate::paths;
 
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
 #[cfg(unix)]
@@ -64,7 +64,7 @@ pub fn collect_absl_libs() -> (Vec<PathBuf>, Vec<OsString>) {
                 let s = stem.to_str().expect("absl lib has non-utf8 name");
                 s.strip_prefix("lib").unwrap_or(s)
             };
-            libs.push(OsStr::new(libname).to_owned())
+            libs.push(OsString::from(libname))
         }
     }
     libs.sort_unstable();

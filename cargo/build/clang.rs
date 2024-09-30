@@ -4,13 +4,18 @@
 
 use crate::paths;
 
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
 #[cfg(unix)]
 const LIB_EXTENSION: &str = "a";
 #[cfg(windows)]
 const LIB_EXTENSION: &str = "lib";
+
+#[cfg(unix)]
+const ZLIB_NAME: &str = "z";
+#[cfg(windows)]
+const ZLIB_NAME: &str = "zlib";
 
 fn include_lib(libname: &str) -> bool {
     if libname.ends_with("Main") {
@@ -89,10 +94,18 @@ pub fn collect_clang_libs() -> (Vec<PathBuf>, Vec<OsString>) {
                 s.strip_prefix("lib").unwrap_or(s)
             };
             if include_lib(libname) {
-                libs.push(OsStr::new(libname).to_owned())
+                libs.push(OsString::from(libname))
             }
         }
     }
+
+    // libclang uses functions from Version.lib on Windows.
+    #[cfg(windows)]
+    libs.push(OsString::from("Version"));
+
+    // llvm depends on zlib.
+    libs.push(OsString::from(ZLIB_NAME));
+
     libs.sort_unstable();
 
     (clang_lib_dirs, libs)
