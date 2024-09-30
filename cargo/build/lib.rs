@@ -28,6 +28,14 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>>(
     // collision. Put it in a subdir of the target's individual output
     // directory.
     let obj_dir = Path::new(&out_dir).join("obj");
+    // Ensure the directory exists. The linker makes the dir on Linux but will
+    // fail on Windows.
+    if let Err(e) = std::fs::create_dir(&obj_dir) {
+        match e.kind() {
+            std::io::ErrorKind::AlreadyExists => (),
+            _ => Err(e)?,
+        }
+    }
 
     paths::print_compiler_deps();
 
