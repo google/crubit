@@ -6,6 +6,10 @@ load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
 )
+load(
+    "//cc_bindings_from_rs/test/golden:golden_test.bzl",
+    "golden_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -27,4 +31,10 @@ cc_binary(
     name = "main",
     srcs = ["main.cc"],
     deps = [":example_crate_cc_api"],
+)
+
+golden_test(
+    name = "example_golden_test",
+    golden_h = "example_generated.h",
+    rust_library = "example_crate",
 )
