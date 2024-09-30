@@ -80,17 +80,17 @@ pub fn collect_clang_libs() -> (Vec<PathBuf>, Vec<OsString>) {
                 continue;
             }
             let libname = if cfg!(windows) {
-                // On windows, the full filename: `name.lib`.
-                let Some(filename) = path.file_name() else {
+                // On windows, the filename without an extension: `name`.
+                let Some(stem) = path.file_stem() else {
                     continue;
                 };
-                filename.to_str().expect("absl lib has non-utf8 name")
+                stem.to_str().expect("clang lib has non-utf8 name")
             } else {
                 // On unix, drop the lib prefix and the extension: `libname.a` => `name`.
                 let Some(stem) = path.file_stem() else {
                     continue;
                 };
-                let s = stem.to_str().expect("absl lib has non-utf8 name");
+                let s = stem.to_str().expect("clang lib has non-utf8 name");
                 s.strip_prefix("lib").unwrap_or(s)
             };
             if include_lib(libname) {
