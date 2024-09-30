@@ -16,6 +16,7 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 use std::collections::HashSet;
 use std::rc::Rc;
+use std::sync::LazyLock;
 use token_stream_printer::write_unformatted_tokens;
 
 const SLICE_REF_NAME_RS: &str = "&[]";
@@ -297,6 +298,9 @@ impl ToTokens for PrimitiveType {
     }
 }
 
+static TEMPLATE_INSTANTIATION_ALLOWLIST: LazyLock<HashSet<&'static str>> =
+    LazyLock::new(|| ["std::string_view", "std::wstring_view"].into_iter().collect());
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum RsTypeKind {
     Pointer {
@@ -512,9 +516,17 @@ impl RsTypeKind {
                 //
                 // Instead, what matters is the abstract properties of the struct itself!
                 RsTypeKind::Record { record, .. } => {
-                    // Types which aren't rust-movable, or which are template instantiations, are
-                    // only supported experimentally.
-                    if rs_type_kind.is_unpin() && record.defining_target.is_none() {
+                    // Types which aren't rust-movable, or which are general template
+                    // instantiations, are only supported experimentally.
+                    // But we do want to allow some commonly used template instantiations such as
+                    // std::string_view so we create an allow list fo them. This is just a temporary
+                    // solution until we have a better way to handle template
+                    // instantiations.
+                    if rs_type_kind.is_unpin()
+                        && (record.defining_target.is_none()
+                            || TEMPLATE_INSTANTIATION_ALLOWLIST
+                                .contains(&record.cc_preferred_name.as_ref()))
+                    {
                         require_feature(CrubitFeature::Supported, None)
                     } else if !rs_type_kind.is_unpin() {
                         require_feature(
