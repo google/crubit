@@ -1125,6 +1125,12 @@ class DefinitionEvidenceCollector {
     if (!isSupportedPointerType(RHS->getType())) return;
 
     const TypeNullability *TypeNullability = Lattice.getTypeNullability(LHS);
+    // TODO(b/293609145) Without nullability tracked through the conditional
+    // operator, we have no LHS type nullability for assignments where the LHS
+    // is a conditional expression.
+    if (TypeNullability == nullptr &&
+        isa<ConditionalOperator>(dataflow::ignoreCFGOmittedNodes(*LHS)))
+      return;
     CHECK(TypeNullability);
     fromAssignmentLike(LHSType, *TypeNullability, *RHS, *Loc);
   }

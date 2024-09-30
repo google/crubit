@@ -2150,6 +2150,19 @@ TEST(CollectEvidenceFromDefinitionTest,
                                     functionNamed("S"))));
 }
 
+// This is a crash repro; see b/370031684 and b/293609145.
+TEST(CollectEvidenceFromDefinitionTest, ConditionalOperatorAssignment) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* A, int* B, bool C) {
+      (C ? A : B) = nullptr;
+    }
+  )cc";
+  // Could in theory collect evidence for both A and B as nullable, but we don't
+  // track null state through the conditional operator, so we don't collect
+  // evidence for either.
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
+}
+
 TEST(CollectEvidenceFromDefinitionTest, Arithmetic) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* A, int* B, int* C, int* D, int* E, int* F, int* G,
