@@ -10,4 +10,4 @@ edition = "2021"
 path = "lib.rs"
 
 [dependencies]
-cc = "1"
+cc = { version = "1", features = [ "parallel" ] }
