@@ -69,12 +69,9 @@ export PATH="$PATH:/dir/containing/lld"
 export RUSTFLAGS="$RUSTFLAGS -Clinker=/path/to/clang"
 export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-fuse-ld=lld"
 
-# Explicitly link the C++ std library for the C++ components.
-export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-lstdc++"
-
 # If you want to use a sysroot.
 # SYSROOT_FLAG=--sysroot=$SYSROOT
-# export CFLAGS="$CFLAGS $SYSROOT_FLAG"
+# export CXXFLAGS="$CXXFLAGS $SYSROOT_FLAG"
 # export RUSTFLAGS="$RUSTFLAGS -Clink-arg=$SYSROOT_FLAG"
 ```
 
@@ -85,11 +82,8 @@ export CXX=clang++
 export RUSTFLAGS="$RUSTFLAGS -Clinker=clang"
 export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-fuse-ld=lld"
 
-# Explicitly link the C++ std library for the C++ components.
-export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-lc++"
-
 # Point to the Xcode sysroot.
-export CFLAGS="$CFLAGS -isysroot $(xcrun --show-sdk-path)"
+export CXXFLAGS="$CXXFLAGS -isysroot $(xcrun --show-sdk-path)"
 export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-isysroot -Clink-arg=$(xcrun --show-sdk-path)"
 ```
 
@@ -107,11 +101,11 @@ export CXX=clang-cl
 export RUSTFLAGS="$RUSTFLAGS -Clinker=/path/to/lld-link"
 
 # LLVM was built with Zlib support. Point Crubit to the same library.
-export CFLAGS="$CFLAGS /I/path/to/zlib"
+export CXXFLAGS="$CXXFLAGS /I/path/to/zlib"
 export RUSTFLAGS="$RUSTFLAGS -Clink-arg=/LIBPATH:/path/to/zlib"
 
 # Avoid deprecation warnings.
-export CFLAGS="$CFLAGS /D_CRT_SECURE_NO_DEPRECATE"
+export CXXFLAGS="$CXXFLAGS /D_CRT_SECURE_NO_DEPRECATE"
 
 # If LLVM (-DCMAKE_MSVC_RUNTIME_LIBRARY) and Abseil (-DABSL_MSVC_STATIC_RUNTIME)
 # are built against static CRT, then Rust needs to match, or vice-versa.

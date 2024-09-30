@@ -68,6 +68,7 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>>(
     for p in absl_include_dirs.into_iter().chain(clang_include_dirs) {
         paths::add_include_path(&mut cc_lib, p, false);
     }
+    cc_lib.cpp(true);
     cc_lib.compile(&name);
 
     paths::print_link_search(&obj_dir)?;
