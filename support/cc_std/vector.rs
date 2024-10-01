@@ -17,10 +17,7 @@ pub struct Vector<T> {
     capacity_end: *mut T,
 }
 
-// TODO(b/356221873): Add a test that checks that the layout of this struct is
-// consistent with the layout of `std::vector` from C++.
 // TODO(b/356221873): Implement Send and Sync.
-// TODO(b/356221873): Implement conversion to and from std::Vec
 // TODO(b/356221873): Implement FromIterator, FromIteratorMut.
 // TODO(b/356221873): Implement function for resizing (resize, shrink_to_fit,
 // reserve etc).
@@ -90,6 +87,16 @@ impl<T: Unpin> Vector<T> {
         }
     }
 
+    pub fn reserve(&mut self, capacity: usize) {
+        self.mutate_self_as_vec(|v| v.reserve(capacity));
+    }
+
+    pub fn with_capacity(capacity: usize) -> Vector<T> {
+        let mut result = Vector::new();
+        result.reserve(capacity);
+        result
+    }
+
     pub fn push(&mut self, value: T) {
         self.mutate_self_as_vec(|v| v.push(value));
     }
@@ -147,5 +154,19 @@ impl<T: Unpin> DerefMut for Vector<T> {
         } else {
             unsafe { std::slice::from_raw_parts_mut(self.begin, self.len()) }
         }
+    }
+}
+
+impl<T: Unpin> From<Vec<T>> for Vector<T> {
+    fn from(v: Vec<T>) -> Self {
+        // Elements from `v` are moved. It would be more efficient to steal a buffer
+        // from `v`. But `v` might have different allocator than Vector.
+        // TODO(b/356221873): Figure out conditions when it is possible to steal buffer
+        // from `v`.
+        let mut result = Vector::<T>::with_capacity(v.len());
+        result.mutate_self_as_vec(|u| {
+            u.extend(v);
+        });
+        result
     }
 }

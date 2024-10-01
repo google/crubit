@@ -124,6 +124,28 @@ fn use_variable<T>(v: T) {
     std::hint::black_box(v);
 }
 
+#[gtest]
+fn test_vector_reserve() {
+    let mut v = vector::Vector::<i32>::new();
+    v.reserve(10);
+    expect_that!(v.capacity(), ge(10));
+}
+
+#[gtest]
+fn test_vector_with_capacity() {
+    let v = vector::Vector::<i32>::with_capacity(100);
+    expect_that!(v.capacity(), ge(100));
+}
+
+#[gtest]
+fn test_vector_from_vec() {
+    let v = vector::Vector::from(vec![0, 1, 2, 3, 4]);
+    expect_eq!(v.len(), 5);
+    for i in 0..5 {
+        expect_eq!(v[i], i);
+    }
+}
+
 mod layout_tests {
     use crate::to_void_ptr;
     use googletest::prelude::*;
