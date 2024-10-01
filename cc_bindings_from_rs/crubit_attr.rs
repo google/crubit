@@ -27,7 +27,7 @@ use rustc_span::symbol::Symbol;
 pub struct CrubitAttr {
     /// The C++ type of this is spelled as so.
     /// For instance,
-    /// `#[__crubit::annotate(internal_cpp_type="std::basic_string<char>")]`
+    /// `#[__crubit::annotate(cpp_type="std::basic_string<char>")]`
     pub cpp_type: Option<Symbol>,
     // The C++ name of the item. This allows us to rename Rust function names that are
     // not C++-compatible like `new`.
