@@ -404,6 +404,18 @@ TEST void makeShared() {
   nonnull(std::make_shared_for_overwrite<int[]>(5));
 }
 
+TEST void makeSmartPointerToRawPointer() {
+  nullable(*std::make_shared<int *>(nullptr));
+  nullable(*std::make_shared<int *>(nullptr).get());
+  int *Raw = nullptr;
+  nullable(*std::make_shared<int *>(Raw));
+  nullable(*std::make_shared<int *>(Raw).get());
+  int I;
+  Raw = &I;
+  nonnull(*std::make_shared<int *>(Raw));
+  nonnull(*std::make_shared<int *>(Raw).get());
+}
+
 TEST void allocateShared() {
   nonnull(std::allocate_shared<int>(std::allocator<int>()));
   nonnull(std::allocate_shared<int>(std::allocator<int>(), 42));

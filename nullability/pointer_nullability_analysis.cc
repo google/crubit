@@ -628,6 +628,27 @@ void transferValue_SmartPointerFactoryCall(
   StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
 
   setToPointerWithNullability(PtrLoc, NullabilityKind::NonNull, State.Env);
+
+  // If the smart pointer is a pointer to a raw pointer and is constructed from
+  // one raw pointer or nullptr_t, initialize the null state of the pointee raw
+  // pointer from the argument passed in.
+  if (isSupportedRawPointerType(PtrLoc.getType()->getPointeeType()) &&
+      CE->getNumArgs() == 1 &&
+      (CE->getArg(0)->getType()->isPointerType() ||
+       CE->getArg(0)->getType()->isNullPtrType())) {
+    auto *SmartPV = State.Env.get<PointerValue>(PtrLoc);
+    if (!SmartPV) return;
+    auto *RawPV = State.Env.get<PointerValue>(SmartPV->getPointeeLoc());
+    if (!RawPV) return;
+    if (CE->getArg(0)->getType()->isNullPtrType()) {
+      initNullPointer(*RawPV, State.Env.getDataflowAnalysisContext());
+      return;
+    }
+    auto *ArgPV = getRawPointerValue(CE->getArg(0), State.Env);
+    if (!ArgPV || !hasPointerNullState(*ArgPV)) return;
+    initPointerNullState(*RawPV, State.Env.getDataflowAnalysisContext(),
+                         getPointerNullState(*ArgPV));
+  }
 }
 
 void transferValue_SmartPointerComparisonOpCall(

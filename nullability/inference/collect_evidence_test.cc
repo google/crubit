@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
@@ -600,6 +601,26 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, CheckMacro) {
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL)));
+}
+
+// This is a crash repro; see b/370737278.
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     CheckMacroSmartPointerToPointer) {
+  llvm::Twine Src = CheckMacroDefinitions + R"cc(
+#include <memory>
+
+    class Target {
+      std::shared_ptr<int*> Shared;
+
+      Target(int* Raw) : Shared(std::make_shared<int*>(Raw)) { CHECK(*Shared); }
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(functionDecl(hasName("Target")), Src.str()),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                                    fieldNamed("Target::Shared")),
+                           evidence(paramSlot(0), Evidence::ABORT_IF_NULL,
+                                    functionNamed("Target"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
