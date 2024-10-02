@@ -91,14 +91,6 @@ class ImportContext {
   virtual IR::Item ImportUnsupportedItem(const clang::Decl* decl,
                                          std::vector<FormattedError> error) = 0;
 
-  // Imports an unsupported item with a single error message.
-  virtual IR::Item ImportUnsupportedItem(const clang::Decl* decl,
-                                         std::string error) = 0;
-
-  // Imports an unsupported item with multiple error messages.
-  virtual IR::Item ImportUnsupportedItem(const clang::Decl* decl,
-                                         std::set<std::string> errors) = 0;
-
   // Imports a decl and creates an IR item (or error messages). This allows
   // importers to recursively delegate to other importers.
   // Does not use or update the cache.

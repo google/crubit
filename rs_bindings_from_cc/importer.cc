@@ -11,7 +11,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -765,21 +764,6 @@ IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
                          .errors = std::move(errors),
                          .source_loc = source_loc,
                          .id = GenerateItemId(decl)};
-}
-
-IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
-                                         std::string message) {
-  return ImportUnsupportedItem(decl, FormattedError{.message = message});
-}
-
-IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
-                                         std::set<std::string> messages) {
-  std::vector<FormattedError> errors;
-  errors.reserve(messages.size());
-  for (std::string message : messages) {
-    errors.push_back(FormattedError{.message = std::move(message)});
-  }
-  return ImportUnsupportedItem(decl, errors);
 }
 
 static bool ShouldKeepCommentLine(absl::string_view line) {
