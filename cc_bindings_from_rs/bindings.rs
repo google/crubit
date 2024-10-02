@@ -3692,9 +3692,18 @@ fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Opt
             bail!("Generic types are not supported yet (b/259749095)");
         },
         Item { kind: ItemKind::Fn(..), .. } => db.format_fn(def_id).map(Some),
-        Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
+        Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } => {
+            let attributes = crubit_attr::get(tcx, def_id.to_def_id()).unwrap();
+            if let Some(cpp_type) = attributes.cpp_type {
+                let item_name = tcx.def_path_str(def_id.to_def_id());
+                bail!(
+                    "Type bindings for {item_name} suppressed due to being mapped to \
+                            an existing C++ type ({cpp_type})"
+                );
+            }
             db.format_adt_core(def_id.to_def_id())
-                .map(|core| Some(format_adt(db, core))),
+                .map(|core| Some(format_adt(db, core)))
+        }
         Item { kind: ItemKind::TyAlias(..), ..} => format_type_alias(db, def_id).map(Some),
         Item { ident, kind: ItemKind::Use(use_path, use_kind), ..} => {
             format_use(db, ident.as_str(), use_path, use_kind).map(Some)
@@ -5163,6 +5172,27 @@ pub mod tests {
                 )
             },
         );
+    }
+
+    #[test]
+    fn test_format_fn_cpp_name2() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+
+                #[__crubit::annotate(cpp_type="cpp_ns::CppType")]
+                pub struct RustType {
+                    pub x: i32,
+                }
+            "#;
+        test_format_item(test_src, "RustType", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Type bindings for RustType suppressed \
+                    due to being mapped to an existing C++ type (cpp_ns::CppType)"
+            );
+        });
     }
 
     #[test]
@@ -8712,12 +8742,6 @@ pub mod tests {
             case!(rs: "SomeStruct", cc: "::rust_out::SomeStruct", includes: [],  prereq_def: "SomeStruct"),
             case!(rs: "SomeEnum", cc: "::rust_out::SomeEnum", includes: [], prereq_def: "SomeEnum"),
             case!(rs: "SomeUnion", cc: "::rust_out::SomeUnion", includes: [], prereq_def: "SomeUnion"),
-            case!(
-                rs: "OriginallyCcStruct",
-                cc: "cc_namespace :: CcStruct",
-                includes: [],
-                prereq_def: "OriginallyCcStruct"
-            ),
             case!(rs: "*const i32", cc: "std :: int32_t const *", includes: ["<cstdint>"]),
             case!(rs: "*mut i32", cc: "std :: int32_t *", includes: ["<cstdint>"]),
             case!(
@@ -8811,11 +8835,6 @@ pub mod tests {
             pub union SomeUnion {
                 pub x: i32,
                 pub y: i32,
-            }
-
-            #[__crubit::annotate(cpp_type = "cc_namespace::CcStruct")]
-            pub struct OriginallyCcStruct {
-                pub x: i32
             }
 
             #[allow(unused)]
