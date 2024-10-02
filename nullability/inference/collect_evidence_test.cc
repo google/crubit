@@ -17,6 +17,7 @@
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchersMacros.h"
@@ -3200,6 +3201,42 @@ TEST(CollectEvidenceFromDefinitionTest, PragmaAndMacroReplace) {
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
                   evidence(paramSlot(0), Evidence::ABORT_IF_NULL)));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     UnsupportedVarTemplateSpecializationWithInitListExpr) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      int Field;
+    };
+
+    template <int I>
+    S AnS = {.Field = I};
+
+    constexpr int getInt(const char* s) { return 0; }
+
+    // Not entirely sure why, but sufficient complexity in the template argument
+    // is needed to produce the crash conditions. Check carefully that the crash
+    // would still occur without the fix if modifying this test case.
+    S usage() { return AnS<getInt("foo")>; }
+  )cc";
+  NullabilityPragmas Pragmas;
+  clang::TestAST AST(getAugmentedTestInputs(Src, Pragmas));
+  std::vector<Evidence> Results;
+  USRCache UsrCache;
+
+  auto& Decl = *selectFirst<VarTemplateSpecializationDecl>(
+      "d", match(varDecl(isTemplateInstantiation()).bind("d"), AST.context()));
+  EXPECT_THAT_ERROR(
+      collectEvidenceFromDefinition(
+          Decl,
+          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
+                          UsrCache, AST.context()),
+          UsrCache, Pragmas),
+      llvm::FailedWithMessage("Variable template specializations with "
+                              "InitListExpr initializers are currently "
+                              "unsupported."));
+  EXPECT_THAT(Results, IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest, SolverLimitReached) {

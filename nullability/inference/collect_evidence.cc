@@ -36,6 +36,7 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclGroup.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/OperationKinds.h"
@@ -1391,7 +1392,7 @@ llvm::Error collectEvidenceFromDefinition(
   const auto *TargetAsFunc = dyn_cast<FunctionDecl>(&Definition);
   if (TargetAsFunc != nullptr) {
     if (!TargetAsFunc->doesThisDeclarationHaveABody()) {
-      return llvm::createStringError(llvm::inconvertibleErrorCode(),
+      return llvm::createStringError(llvm::errc::invalid_argument,
                                      "Function definitions must have a body.");
     }
     TargetStmt = TargetAsFunc->getBody();
@@ -1399,8 +1400,15 @@ llvm::Error collectEvidenceFromDefinition(
   } else if (auto *Var = dyn_cast<VarDecl>(&Definition)) {
     if (!Var->hasInit()) {
       return llvm::createStringError(
-          llvm::inconvertibleErrorCode(),
+          llvm::errc::invalid_argument,
           "Variable definitions must have an initializer.");
+    }
+    if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(Var);
+        VTSD && dyn_cast<InitListExpr>(Var->getInit())) {
+      return llvm::createStringError(
+          llvm::errc::not_supported,
+          "Variable template specializations with InitListExpr initializers "
+          "are currently unsupported.");
     }
     // Synthesize a temporary DeclStmt for the assignment of the variable to
     // its initializing expression. This is an unusual pattern that does not
