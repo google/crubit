@@ -13,8 +13,9 @@ namespace crubit {
 
 std::optional<IR::Item> ClassTemplateDeclImporter::Import(
     clang::ClassTemplateDecl* class_template_decl) {
-  return ictx_.ImportUnsupportedItem(class_template_decl,
-                                     "Class templates are not supported yet");
+  return ictx_.ImportUnsupportedItem(
+      class_template_decl,
+      FormattedError::Static("Class templates are not supported yet"));
 }
 
 }  // namespace crubit

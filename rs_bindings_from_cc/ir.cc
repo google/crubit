@@ -12,8 +12,11 @@
 #include <vector>
 
 #include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/strings/cord.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "common/string_type.h"
 #include "common/strong_int.h"
 #include "clang/AST/Type.h"
@@ -532,6 +535,22 @@ llvm::json::Value TypeAlias::ToJson() const {
 
   return llvm::json::Object{
       {"TypeAlias", std::move(type_alias)},
+  };
+}
+
+FormattedError FormattedError::FromStatus(absl::Status status) {
+  std::optional<absl::Cord> fmt_cord =
+      status.GetPayload(FormattedError::kFmtPayloadTypeUrl);
+  std::string fmt;
+  if (fmt_cord) {
+    fmt = std::string(*fmt_cord);
+  } else {
+    fmt = absl::StrCat("(unannotated `",
+                       absl::StatusCodeToString(status.code()), "` status)");
+  }
+  return {
+      .fmt = fmt,
+      .message = std::string(status.message()),
   };
 }
 

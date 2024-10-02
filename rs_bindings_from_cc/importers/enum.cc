@@ -10,7 +10,6 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -26,15 +25,17 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     // `enum { kFoo = 1 }`, which only exists to provide constants into the
     // surrounding scope and doesn't actually introduce an enum namespace. It
     // seems like it should probably be handled with other constants.
-    return ictx_.ImportUnsupportedItem(enum_decl,
-                                       "Unnamed enums are not supported yet");
+    return ictx_.ImportUnsupportedItem(
+        enum_decl,
+        FormattedError::Static("Unnamed enums are not supported yet"));
   }
   absl::StatusOr<Identifier> enum_name =
       ictx_.GetTranslatedIdentifier(enum_decl);
   if (!enum_name.ok()) {
     return ictx_.ImportUnsupportedItem(
-        enum_decl, absl::StrCat("Enum name is not supported: ",
-                                enum_name.status().message()));
+        enum_decl,
+        FormattedError::PrefixedStrCat("Enum name is not supported",
+                                       enum_name.status().message()));
   }
 
   clang::QualType cpp_type = enum_decl->getIntegerType();
@@ -45,14 +46,15 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     // occur in C++ nor in standard C, but clang supports enums like this
     // in C "as an extension".
     return ictx_.ImportUnsupportedItem(
-        enum_decl,
-        "Forward declared enums without type specifiers are not supported");
+        enum_decl, FormattedError::Static("Forward declared enums without type "
+                                          "specifiers are not supported"));
   }
   const clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
   absl::StatusOr<MappedType> type =
       ictx_.ConvertQualType(cpp_type, no_lifetimes, std::nullopt);
   if (!type.ok()) {
-    return ictx_.ImportUnsupportedItem(enum_decl, type.status().ToString());
+    return ictx_.ImportUnsupportedItem(
+        enum_decl, FormattedError::FromStatus(std::move(type.status())));
   }
 
   std::vector<Enumerator> enumerators;
@@ -63,8 +65,9 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     if (!enumerator_name.ok()) {
       // It's not clear that this case is possible
       return ictx_.ImportUnsupportedItem(
-          enum_decl, absl::StrCat("Enumerator name is not supported: ",
-                                  enumerator_name.status().message()));
+          enum_decl,
+          FormattedError::PrefixedStrCat("Enumerator name is not supported",
+                                         enumerator_name.status().message()));
     }
 
     enumerators.push_back(Enumerator{
@@ -77,7 +80,8 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   auto enclosing_item_id = ictx_.GetEnclosingItemId(enum_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
-        enum_decl, std::string(enclosing_item_id.status().message()));
+        enum_decl,
+        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
   ictx_.MarkAsSuccessfullyImported(enum_decl);

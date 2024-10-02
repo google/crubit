@@ -1646,7 +1646,7 @@ pub(crate) mod tests {
         assert_cc_matches!(rs_api, {
             let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=33\n\
                            Error while generating bindings for item 'get_ptr_to_func':\n\
-                           Type may not be annotated with lifetimes";
+                           Unable to get lifetime annotations: Type may not be annotated with lifetimes";
             quote! { __COMMENT__ #txt }
         });
         Ok(())

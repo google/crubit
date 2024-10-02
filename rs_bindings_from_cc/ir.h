@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 
+#include <cstddef>
 #include <iomanip>
 #include <optional>
 #include <ostream>
@@ -24,17 +25,16 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
+#include "absl/strings/substitute.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
-#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
-#include "clang/Basic/LLVM.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
@@ -701,6 +701,40 @@ inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
 
 // An error that stores its format string as well as the formatted message.
 struct FormattedError {
+  auto operator<=>(const FormattedError&) const = default;
+
+  // Returns a FormattedError for a static string. The string is used as both
+  // the format string and the formatted message. Intended to be used only with
+  // string literals.
+  template <size_t N>
+  static constexpr FormattedError Static(const char (&array)[N]) {
+    return {.fmt = array, .message = array};
+  }
+
+  // Returns a FormattedError built with `absl::StrCat()`. The first argument is
+  // taken as the format string. All arguments are concatenated to form the
+  // formatted message, with an extra `": "` inserted after the first argument.
+  template <size_t N, typename... Ts>
+  static FormattedError PrefixedStrCat(const char (&prefix)[N],
+                                       Ts&&... moreArgs) {
+    return {
+        .fmt = prefix,
+        .message = absl::StrCat(prefix, ": ", std::forward<Ts>(moreArgs)...),
+    };
+  }
+
+  // Returns a FormattedError built with `absl::Substitute()`.
+  template <size_t N, typename... Ts>
+  static FormattedError Substitute(const char (&format)[N], Ts&&... args) {
+    return {
+        .fmt = format,
+        .message = absl::Substitute(format, std::forward<Ts>(args)...),
+    };
+  }
+
+  // Extracts a format string from a status payload, if present.
+  static FormattedError FromStatus(absl::Status status);
+
   llvm::json::Value ToJson() const;
 
   // The format string that produced the error message, if available. This is
@@ -708,6 +742,10 @@ struct FormattedError {
   std::string fmt;
   // Explanation of why we couldn't generate bindings.
   std::string message;
+
+  // Type URL for use as an `absl::Status` payload.
+  static constexpr absl::string_view kFmtPayloadTypeUrl =
+      "type.googleapis.com/crubit.FormattedError.fmt";
 };
 
 // A placeholder for an item that we can't generate bindings for (yet)

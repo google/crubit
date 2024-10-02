@@ -15,19 +15,16 @@
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
-#include "absl/strings/substitute.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/lifetime_error.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
-#include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
-#include "clang/AST/DeclarationName.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/LLVM.h"
@@ -78,7 +75,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         id != nullptr && id->getName().find("__") != llvm::StringRef::npos) {
       return ictx_.ImportUnsupportedItem(
           function_decl,
-          "Internal functions from the standard library are not supported");
+          FormattedError::Static("Internal functions from the standard "
+                                 "library are not supported"));
     }
   }
   // Method is private, we don't need to import it.
@@ -148,8 +146,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
             ictx_.sema_.InstantiateFunctionDefinition(point_of_instantiation,
                                                       function_decl);
           });
-      std::string diagnostics = diagnostic_recorder.ConcatenatedDiagnostics(
-          ": Diagnostics emitted:\n");
+      std::string diagnostics =
+          diagnostic_recorder.ConcatenatedDiagnostics("Diagnostics emitted:\n");
       if (diagnostic_recorder.getNumErrors() != 0) {
         // Clang considers the function decl valid even fatal diagnostics is
         // emitted during instantiation. However, such diagnostics would fail
@@ -158,14 +156,16 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         function_decl->setInvalidDecl();
         return ictx_.ImportUnsupportedItem(
             function_decl,
-            absl::StrCat("Failed to instantiate the function/method template",
-                         diagnostics));
+            FormattedError::PrefixedStrCat(
+                "Failed to instantiate the function/method template",
+                diagnostics));
       }
     }
   }
   if (function_decl->isInvalidDecl()) {
     return ictx_.ImportUnsupportedItem(
-        function_decl, "Function declaration is considered invalid");
+        function_decl,
+        FormattedError::Static("Function declaration is considered invalid"));
   }
 
   clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
@@ -198,7 +198,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         });
     if (remaining_err) {
       return ictx_.ImportUnsupportedItem(
-          function_decl, llvm::toString(std::move(remaining_err)));
+          function_decl, FormattedError::PrefixedStrCat(
+                             "Unable to get lifetime annotations",
+                             llvm::toString(std::move(remaining_err))));
     }
   }
 
@@ -206,21 +208,22 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       ictx_.GetTranslatedName(function_decl);
   if (!translated_name.ok()) {
     return ictx_.ImportUnsupportedItem(
-        function_decl, absl::StrCat("Function name is not supported: ",
-                                    translated_name.status().message()));
+        function_decl,
+        FormattedError::PrefixedStrCat("Function name is not supported",
+                                       translated_name.status().message()));
   }
 
   std::vector<FuncParam> params;
-  std::set<std::string> errors;
-  auto add_error = [&errors](std::string msg) {
-    auto result = errors.insert(std::move(msg));
+  std::set<FormattedError> errors;
+  auto add_error = [&errors](FormattedError error) {
+    auto result = errors.insert(std::move(error));
     CHECK(result.second) << "Duplicated error message";
   };
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (!ictx_.HasBeenAlreadySuccessfullyImported(method_decl->getParent())) {
-      return ictx_.ImportUnsupportedItem(function_decl,
-                                         "Couldn't import the parent");
+      return ictx_.ImportUnsupportedItem(
+          function_decl, FormattedError::Static("Couldn't import the parent"));
     }
 
     // non-static member functions receive an implicit `this` parameter.
@@ -235,8 +238,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
                                     method_decl->getRefQualifier()),
                                 /*nullable=*/false);
       if (!param_type.ok()) {
-        add_error(absl::StrCat("`this` parameter is not supported: ",
-                               param_type.status().message()));
+        add_error(
+            FormattedError::PrefixedStrCat("`this` parameter is not supported",
+                                           param_type.status().message()));
       } else {
         params.push_back(
             {.type = *std::move(param_type),
@@ -260,8 +264,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     auto param_type =
         ictx_.ConvertQualType(param->getType(), param_lifetimes, std::nullopt);
     if (!param_type.ok()) {
-      add_error(absl::Substitute("Parameter #$0 is not supported: $1", i,
-                                 param_type.status().message()));
+      add_error(FormattedError::Substitute("Parameter #$0 is not supported: $1",
+                                           i, param_type.status().message()));
       continue;
     }
 
@@ -284,9 +288,10 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
               function_decl, function_decl->getLocation());
         });
     if (undeduced_return_type) {
-      add_error(absl::StrCat("Couldn't deduce the return type",
-                             diagnostic_recorder.ConcatenatedDiagnostics(
-                                 ": Diagnostics emitted:\n")));
+      add_error(FormattedError::PrefixedStrCat(
+          "Couldn't deduce the return type",
+          diagnostic_recorder.ConcatenatedDiagnostics(
+              "Diagnostics emitted:\n")));
     }
   }
   absl::StatusOr<MappedType> return_type;
@@ -298,8 +303,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     return_type = ictx_.ConvertQualType(function_decl->getReturnType(),
                                         return_lifetimes, std::nullopt);
     if (!return_type.ok()) {
-      add_error(absl::StrCat("Return type is not supported: ",
-                             return_type.status().message()));
+      add_error(FormattedError::PrefixedStrCat("Return type is not supported",
+                                               return_type.status().message()));
     }
   }
 
@@ -351,7 +356,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   }
 
   if (!errors.empty()) {
-    return ictx_.ImportUnsupportedItem(function_decl, errors);
+    return ictx_.ImportUnsupportedItem(
+        function_decl, std::vector(errors.begin(), errors.end()));
   }
 
   bool has_c_calling_convention =
@@ -400,7 +406,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   auto enclosing_item_id = ictx_.GetEnclosingItemId(function_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
-        function_decl, std::string(enclosing_item_id.status().message()));
+        function_decl,
+        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
   return Func{

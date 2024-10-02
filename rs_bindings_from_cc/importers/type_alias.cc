@@ -5,11 +5,9 @@
 #include "rs_bindings_from_cc/importers/type_alias.h"
 
 #include <optional>
-#include <string>
 #include <utility>
 
 #include "absl/log/check.h"
-#include "absl/strings/str_cat.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -39,7 +37,9 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
         tag_decl && tag_decl->getDeclContext() == decl_context &&
         tag_decl->getName() == decl->getName()) {
       return ictx_.ImportUnsupportedItem(
-          decl, "Typedef only used to introduce a name in C. Not importing.");
+          decl,
+          FormattedError::Static(
+              "Typedef only used to introduce a name in C. Not importing."));
     }
   } else if (auto* using_decl = clang::dyn_cast<clang::UsingShadowDecl>(decl)) {
     clang::NamedDecl* target = using_decl->getTargetDecl();
@@ -59,8 +59,8 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   absl::StatusOr<Identifier> identifier = ictx_.GetTranslatedIdentifier(decl);
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
-        decl, absl::StrCat("Type alias name is not supported: ",
-                           identifier.status().message()));
+        decl, FormattedError::PrefixedStrCat("Type alias name is not supported",
+                                             identifier.status().message()));
   }
 
   clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
@@ -71,13 +71,14 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
 
   if (!underlying_type.ok()) {
     return ictx_.ImportUnsupportedItem(
-        decl, std::string(underlying_type.status().message()));
+        decl, FormattedError::FromStatus(std::move(underlying_type.status())));
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
-        decl, std::string(enclosing_item_id.status().message()));
+        decl,
+        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
   ictx_.MarkAsSuccessfullyImported(decl);
   return TypeAlias{

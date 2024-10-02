@@ -14,7 +14,8 @@ namespace crubit {
 std::optional<IR::Item> FunctionTemplateDeclImporter::Import(
     clang::FunctionTemplateDecl* function_template_decl) {
   return ictx_.ImportUnsupportedItem(
-      function_template_decl, "Function templates are not supported yet");
+      function_template_decl,
+      FormattedError::Static("Function templates are not supported yet"));
 }
 
 }  // namespace crubit

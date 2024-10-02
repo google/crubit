@@ -92,8 +92,9 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
       GetRustTypeAttribute(type_decl);
   if (!rust_type.ok()) {
     return ictx_.ImportUnsupportedItem(
-        type_decl, absl::StrCat("Invalid crubit_internal_rust_type attribute: ",
-                                rust_type.status().message()));
+        type_decl, FormattedError::PrefixedStrCat(
+                       "Invalid crubit_internal_rust_type attribute",
+                       rust_type.status().message()));
   }
   if (!rust_type->has_value()) {
     return std::nullopt;
@@ -101,9 +102,9 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
   absl::StatusOr<bool> is_same_abi = GetIsSameAbiAttribute(type_decl);
   if (!is_same_abi.ok()) {
     return ictx_.ImportUnsupportedItem(
-        type_decl,
-        absl::StrCat("Invalid crubit_internal_is_same_abi attribute: ",
-                     is_same_abi.status().message()));
+        type_decl, FormattedError::PrefixedStrCat(
+                       "Invalid crubit_internal_is_same_abi attribute",
+                       is_same_abi.status().message()));
   }
 
   auto rs_name = std::string(**rust_type);
@@ -118,8 +119,9 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
       GetTemplateParameters(ictx_, type_decl);
   if (!type_parameters.ok()) {
     return ictx_.ImportUnsupportedItem(
-        type_decl, absl::StrCat("Error fetching template parameters: ",
-                                type_parameters.status().message()));
+        type_decl,
+        FormattedError::PrefixedStrCat("Error fetching template parameters",
+                                       type_parameters.status().message()));
   }
 
   ictx_.MarkAsSuccessfullyImported(type_decl);

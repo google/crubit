@@ -196,10 +196,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (ictx_.HasBeenAlreadySuccessfullyImported(record_decl)) {
     return ictx_.ImportUnsupportedItem(
         record_decl,
-        "THIS IS A BUG: the type was marked as imported, so we short-circuited "
-        "evaluation here. However, instead of the fully imported type being "
-        "used, apparently this empty stub was used instead. Report this "
-        "upstream.");
+        FormattedError::Static(
+            "THIS IS A BUG: the type was marked as imported, so we "
+            "short-circuited evaluation here. However, instead of the fully "
+            "imported type being used, apparently this empty stub was used "
+            "instead. Report this upstream."));
   }
   if (record_decl->isInjectedClassName()) {
     return std::nullopt;
@@ -209,12 +210,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     return std::nullopt;
   }
   if (decl_context->isRecord()) {
-    return ictx_.ImportUnsupportedItem(record_decl,
-                                       "Nested classes are not supported yet");
+    return ictx_.ImportUnsupportedItem(
+        record_decl,
+        FormattedError::Static("Nested classes are not supported yet"));
   }
   if (clang::isa<clang::ClassTemplatePartialSpecializationDecl>(record_decl)) {
     return ictx_.ImportUnsupportedItem(
-        record_decl, "Partially-specialized class templates are not supported");
+        record_decl,
+        FormattedError::Static(
+            "Partially-specialized class templates are not supported"));
   }
   if (record_decl->isDependentContext()) {
     // We can't pass this to getASTRecordLayout() or it'll segfault.
@@ -222,8 +226,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     // All I know is that I saw other code calling getASTRecordLayout() do the
     // same check. But getASTRecordLayout() itself doesn't actually document
     // this.
-    return ictx_.ImportUnsupportedItem(record_decl,
-                                       "Dependent records are not supported");
+    return ictx_.ImportUnsupportedItem(
+        record_decl,
+        FormattedError::Static("Dependent records are not supported"));
   }
   if (record_decl->isInvalidDecl()) {
     return std::nullopt;
@@ -232,7 +237,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   absl::StatusOr<RecordType> record_type = TranslateRecordType(*record_decl);
   if (!record_type.ok()) {
     return ictx_.ImportUnsupportedItem(
-        record_decl, std::string(record_type.status().message()));
+        record_decl,
+        FormattedError::FromStatus(std::move(record_type.status())));
   }
 
   if (record_decl->hasAttr<clang::PackedAttr>() ||
@@ -241,7 +247,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                     return field_decl->hasAttr<clang::PackedAttr>();
                   })) {
     return ictx_.ImportUnsupportedItem(
-        record_decl, "Records with packed layout are not supported");
+        record_decl,
+        FormattedError::Static("Records with packed layout are not supported"));
   }
 
   std::optional<IR::Item> attr_error_item;
@@ -256,8 +263,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
               clang::VisibilityAttr::VisibilityType::Hidden) {
             attr_error_item = ictx_.ImportUnsupportedItem(
                 record_decl,
-                "Records from the standard library with hidden visibility are "
-                "not supported");
+                FormattedError::Static("Records from the standard library with "
+                                       "hidden visibility are not supported"));
           }
           return true;
         }
@@ -326,15 +333,17 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       source_loc = record_decl->getBeginLoc();
     } else {
       return ictx_.ImportUnsupportedItem(
-          record_decl, absl::StrCat("Record name is not supported: ",
-                                    record_name.status().message()));
+          record_decl,
+          FormattedError::PrefixedStrCat("Record name is not supported",
+                                         record_name.status().message()));
     }
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(record_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
-        record_decl, std::string(enclosing_item_id.status().message()));
+        record_decl,
+        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
   ictx_.MarkAsSuccessfullyImported(record_decl);

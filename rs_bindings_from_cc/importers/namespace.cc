@@ -9,7 +9,6 @@
 #include <utility>
 
 #include "absl/log/check.h"
-#include "absl/strings/str_cat.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
@@ -20,15 +19,17 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
     clang::NamespaceDecl* namespace_decl) {
   if (namespace_decl->isAnonymousNamespace()) {
     return ictx_.ImportUnsupportedItem(
-        namespace_decl, "Anonymous namespaces are not supported yet");
+        namespace_decl,
+        FormattedError::Static("Anonymous namespaces are not supported yet"));
   }
 
   absl::StatusOr<Identifier> identifier =
       ictx_.GetTranslatedIdentifier(namespace_decl);
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
-        namespace_decl, absl::StrCat("Namespace name is not supported: ",
-                                     identifier.status().message()));
+        namespace_decl,
+        FormattedError::PrefixedStrCat("Namespace name is not supported",
+                                       identifier.status().message()));
   }
 
   ictx_.ImportDeclsFromDeclContext(namespace_decl);
@@ -42,7 +43,8 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   auto enclosing_item_id = ictx_.GetEnclosingItemId(namespace_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
-        namespace_decl, std::string(enclosing_item_id.status().message()));
+        namespace_decl,
+        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
   return Namespace{.name = *identifier,
                    .id = ictx_.GenerateItemId(namespace_decl),
