@@ -1629,19 +1629,14 @@ fn get_fn_sig(tcx: TyCtxt, local_def_id: LocalDefId) -> (ty::FnSig, &rustc_hir::
     (sig_mid, sig_hir.decl)
 }
 
-/// Formats a C++ function declaration of a thunk that wraps a Rust function
-/// identified by `fn_def_id`.  `format_thunk_impl` may panic if `fn_def_id`
-/// doesn't identify a function.
+/// Formats a C++ function declaration of a thunk that wraps a Rust function.
 fn format_thunk_decl<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    fn_def_id: DefId,
     sig_mid: &ty::FnSig<'tcx>,
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
     thunk_name: &TokenStream,
     allow_references: AllowReferences,
 ) -> Result<CcSnippet> {
-    let tcx = db.tcx();
-
     let mut prereqs = CcPrerequisites::default();
     let main_api_ret_type = format_ret_ty_for_cc(db, sig_mid, sig_hir)?.into_tokens(&mut prereqs);
 
@@ -1655,15 +1650,14 @@ fn format_thunk_decl<'tcx>(
                 let cpp_type = cpp_type.into_tokens(&mut prereqs);
                 if is_c_abi_compatible_by_value(ty) {
                     Ok(quote! { #cpp_type })
-                } else {
-                    // Rust thunk will move a value via memcpy - we need to `ensure` that
-                    // invoking the C++ destructor (on the moved-away value) is safe.
-                    ensure!(
-                        !ty.needs_drop(tcx, tcx.param_env(fn_def_id)),
-                        "Only trivially-movable and trivially-destructible types \
-                              may be passed by value over the FFI boundary"
-                    );
+                } else if let Some(adt_def) = ty.ty_adt_def() {
+                    let core = db.format_adt_core(adt_def.did())?;
+                    db.format_move_ctor_and_assignment_operator(core).map_err(|_| {
+                        anyhow!("Can't pass a type by value without a move constructor")
+                    })?;
                     Ok(quote! { #cpp_type* })
+                } else {
+                    bail!("Unknown type")
                 }
             })
             .collect::<Result<Vec<_>>>()?
@@ -2370,15 +2364,9 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         };
 
         let mut prereqs = main_api_prereqs;
-        let thunk_decl = format_thunk_decl(
-            db,
-            def_id,
-            &sig_mid,
-            Some(sig_hir),
-            &thunk_name,
-            AllowReferences::Safe,
-        )?
-        .into_tokens(&mut prereqs);
+        let thunk_decl =
+            format_thunk_decl(db, &sig_mid, Some(sig_hir), &thunk_name, AllowReferences::Safe)?
+                .into_tokens(&mut prereqs);
 
         let mut thunk_args = params
             .iter()
@@ -2392,8 +2380,20 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
                     }
                 } else if is_c_abi_compatible_by_value(*ty) {
                     quote! { #cc_name }
-                } else {
+                } else if !ty.needs_drop(tcx, tcx.param_env(def_id)) {
+                    // As an optimization, if the type is trivially destructible, we don't
+                    // need to move it to a new NoDestructor location. We can directly copy the
+                    // bytes.
                     quote! { & #cc_name }
+                } else {
+                    // The implementation will copy the bytes, we just need to leave the variable
+                    // behind in a valid moved-from state.
+                    // TODO(jeanpierreda): Ideally, the Rust code should C++-move instead of memcpy,
+                    // allowing us to avoid one extra memcpy: we could move it directly into its
+                    // target location, instead of moving to a temporary that we memcpy to its
+                    // target location.
+                    prereqs.includes.insert(CcInclude::absl_header("base/no_destructor.h"));
+                    quote! { absl::NoDestructor(std::move(#cc_name)).get() }
                 }
             })
             .collect_vec();
@@ -3105,7 +3105,7 @@ fn format_trait_thunks<'tcx>(
 
         cc_thunk_decls.add_assign({
             let thunk_name = format_cc_ident(db, &thunk_name)?;
-            format_thunk_decl(db, method.def_id, &sig_mid, sig_hir, &thunk_name, allow_references)?
+            format_thunk_decl(db, &sig_mid, sig_hir, &thunk_name, allow_references)?
         });
 
         rs_thunk_impls.extend({

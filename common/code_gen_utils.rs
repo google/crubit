@@ -162,6 +162,8 @@ pub enum CcInclude {
     /// Represents a system header, e.g., `cstdef`, which will be included by
     /// angular brackets.
     SystemHeader(&'static str),
+    /// Represents an Abseil header, e.g., `base/no_destructor.h`.
+    AbseilHeader(&'static str),
     /// Represents a user header, which will be included by quotes.
     UserHeader(Rc<str>),
     /// Represents an `#include` for Crubit C++ support library headers: the
@@ -210,6 +212,11 @@ impl CcInclude {
         Self::UserHeader(path)
     }
 
+    /// Creates an abseil include: `#include "third_party/absl/foo.h"`.
+    pub fn absl_header(path: &'static str) -> Self {
+        Self::AbseilHeader(path)
+    }
+
     /// Creates a support library header include based on the specified format.
     /// E.g., `\"{header}\"` and `hdr.h` produces `#include "hdr.h"`.
     pub fn support_lib_header(format: Rc<str>, path: Rc<str>) -> Self {
@@ -225,6 +232,17 @@ impl ToTokens for CcInclude {
                     .parse()
                     .expect("`pub` API of `CcInclude` guarantees validity of system includes");
                 quote! { __HASH_TOKEN__ include < #path > __NEWLINE__ }.to_tokens(tokens)
+            }
+            Self::AbseilHeader(path) => {
+                // TODO(b/368434564): Remove the copybara transform here.
+                // In google, these are prefixed with "third_party/".
+                // copybara:strip_begin
+                const PREFIX: &str = "third_party/absl";
+                /* copybara:strip_end_and_replace
+                const PREFIX: &str = "absl";
+                */
+                let path = format!("{PREFIX}/{path}");
+                quote! { __HASH_TOKEN__ include #path __NEWLINE__ }.to_tokens(tokens)
             }
             Self::UserHeader(path) => {
                 quote! { __HASH_TOKEN__ include #path __NEWLINE__ }.to_tokens(tokens)

@@ -86,6 +86,10 @@ pub mod drop_impl_with_default {
             self.field = i;
         }
     }
+
+    impl DropImplWithDefault {
+        pub fn take_by_value(_: Self) {}
+    }
 }
 
 /// Test for `Drop` support when:
@@ -111,6 +115,9 @@ pub mod drop_glue_with_default {
         pub fn set_int(&mut self, i: i32) {
             self.field.set_int(i)
         }
+    }
+    impl DropGlueWithDefault {
+        pub fn take_by_value(_: Self) {}
     }
 }
 
@@ -157,6 +164,9 @@ pub mod drop_impl_with_clone {
         pub fn set_int(&mut self, i: i32) {
             self.field = i;
         }
+    }
+    impl DropImplWithClone {
+        pub fn take_by_value(_: Self) {}
     }
 }
 

@@ -98,6 +98,25 @@ TYPED_TEST(CustomDropWithDefaultTest, MoveAssignmentOperator) {
   EXPECT_EQ(2, drop::counters::get_drop_count());
 }
 
+TYPED_TEST(CustomDropWithDefaultTest, ByValue) {
+  using TypeUnderTest = TypeParam;
+  drop::counters::reset_counts();
+  {
+    TypeUnderTest s;
+    EXPECT_EQ(1, drop::counters::get_default_count());
+    EXPECT_EQ(0, drop::counters::get_drop_count());
+
+    TypeUnderTest::take_by_value(std::move(s));
+    // s is move-constructed twice, causing two extra calls to default().
+    // Once to move into the parameter, and once again to move
+    // from the parameter argument in the thunk to Rust.
+    // Both of those new copies are destroyed.
+    EXPECT_EQ(3, drop::counters::get_default_count());
+    EXPECT_EQ(2, drop::counters::get_drop_count());
+  }  // `TypeUnderTest`'s destructor runs when `s` goes out of scope.
+  EXPECT_EQ(3, drop::counters::get_drop_count());
+}
+
 TEST(DropTest, DropImplWithClone) {
   using TypeUnderTest = drop::drop_impl_with_clone::DropImplWithClone;
   static_assert(!std::is_default_constructible_v<TypeUnderTest>);
@@ -175,6 +194,19 @@ TEST(DropTest, DropImplWithClone) {
   }
   EXPECT_EQ(2, drop::counters::get_clone_count());
   EXPECT_EQ(1, drop::counters::get_clone_from_count());
+  EXPECT_EQ(4, drop::counters::get_drop_count());
+
+  // Testing pass by value.
+  drop::counters::reset_counts();
+  {
+    TypeUnderTest s = TypeUnderTest::create_from_int(123);
+    EXPECT_EQ(1, drop::counters::get_clone_count());
+    // Clones twice: once into the parameter, once again from the thunk to Rust.
+    // Both are destroyed.
+    TypeUnderTest::take_by_value(std::move(s));
+    EXPECT_EQ(3, drop::counters::get_clone_count());
+    EXPECT_EQ(3, drop::counters::get_drop_count());
+  }
   EXPECT_EQ(4, drop::counters::get_drop_count());
 }
 
