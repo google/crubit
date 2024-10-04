@@ -10,6 +10,7 @@
 #include <bit>
 #include <concepts>
 #include <cstddef>
+#include <list>
 #include <type_traits>
 #include <vector>
 
@@ -71,6 +72,14 @@ static_assert(sizeof(rs_std::SliceRef<const uint8_t>) ==
 static_assert(alignof(rs_std::SliceRef<const uint8_t>) ==
               alignof(const uint8_t*));
 static_assert(std::is_standard_layout_v<rs_std::SliceRef<const uint8_t>>);
+
+static_assert(
+    std::is_constructible_v<rs_std::SliceRef<int>, std::vector<int>&>);
+static_assert(std::is_constructible_v<rs_std::SliceRef<const int>,
+                                      const std::vector<int>&>);
+static_assert(!std::is_constructible_v<rs_std::SliceRef<int>, std::list<int>&>);
+static_assert(!std::is_constructible_v<rs_std::SliceRef<const int>,
+                                       const std::list<int>&>);
 
 TEST(SliceTest, Comparison) {
   static constexpr std::array<uint8_t, 5> kArr = {1, 2, 3, 4, 5};

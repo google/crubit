@@ -48,7 +48,6 @@ cc_library(
     # and/or exact absl/base/options.h).
     deps = [
         "//support/internal:bindings_support",
-        "@abseil-cpp//absl/base",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/types:span",
     ],

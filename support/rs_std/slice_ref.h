@@ -12,7 +12,6 @@
 #include <type_traits>
 
 #include "absl/base/attributes.h"
-#include "absl/base/casts.h"
 #include "absl/types/span.h"
 #include "support/internal/attribute_macros.h"
 
@@ -50,8 +49,12 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]")
              !std::is_same_v<Container, absl::Span<T>>)
   // NOLINTNEXTLINE(google-explicit-constructor)
   SliceRef(Container&& container) noexcept
-      : SliceRef(absl::implicit_cast<absl::Span<T>>(
-            std::forward<Container>(container))) {}
+      : SliceRef(
+            // This is using `static_cast` instead of `absl::implicit_cast` to
+            // avoid a dependency on `absl/base/casts.h`, which has a lot of
+            // transitive dependencies. Doing so is safe, because the extra
+            // guarantees are already checked by std::convertible_to.
+            static_cast<absl::Span<T>>(std::forward<Container>(container))) {}
 
   // Also mirror explicit conversions from `absl::Span`.
   template <typename Container>
