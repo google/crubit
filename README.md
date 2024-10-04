@@ -41,7 +41,7 @@ Here are some resources for getting started with Crubit:
 *   [Rust Bindings for C++ Libraries](https://github.com/google/crubit/tree/main/docs/cpp/)
     is a detailed walkthrough on how to use C++ from Rust using Crubit.
 
-*   The [`examples/cpp/`](http://examples/cpp)
+*   The [`examples/cpp/`](examples/cpp)
     directory has copy-pastable examples of calling C++ from Rust, together with
     snapshots of what the generated Rust interface looks like.
 
