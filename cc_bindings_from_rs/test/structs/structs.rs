@@ -301,3 +301,16 @@ pub mod interior_mutability {
         pub field: UnsafeCell<i32>,
     }
 }
+
+pub mod unsupported_types {
+    #[derive(Default)]
+    pub struct SomeStruct {
+        pub unsupported_field: char,
+    }
+
+    impl SomeStruct {
+        pub fn create(x: char) -> Self {
+            Self { unsupported_field: x }
+        }
+    }
+}

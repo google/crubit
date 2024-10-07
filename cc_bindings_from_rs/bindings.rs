@@ -3501,12 +3501,18 @@ fn format_adt<'tcx>(
                             .to_string();
                         member_function_names.insert(cpp_name);
                     }
-                    result.map(Some)
+                    result
                 }
-                AssocItemKind::Const => format_const(db, def_id).map(Some),
+                AssocItemKind::Const => format_const(db, def_id),
                 other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
             };
-            result.unwrap_or_else(|err| Some(format_unsupported_def(db, def_id, err)))
+            let result = result.and_then(|snippet| {
+                snippet.resolve_feature_requirements(crate_features(db, LOCAL_CRATE))
+            });
+            match result {
+                Err(err) => Some(format_unsupported_def(db, def_id, err)),
+                Ok(result) => Some(result),
+            }
         })
         .collect();
 

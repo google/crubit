@@ -120,5 +120,13 @@ TEST(StructsTest, NestedPtrTypeMutabilityQualifiers) {
   static_assert(std::is_same_v<decltype(s.const_mut_ptr), float* const*>);
 }
 
+// Structs can use unsupported types, and it doesn't affect whether they exist.
+// The parts that are unsupported aren't generated, that's all.
+TEST(StructsTest, UnsupportedTypes) {
+  namespace test = structs::unsupported_types;
+  test::SomeStruct s;
+  (void)s;
+}
+
 }  // namespace
 }  // namespace crubit
