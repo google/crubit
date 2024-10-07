@@ -10,6 +10,7 @@ use std::ops::{Index, IndexMut};
 /// This layout was found empirically on Linux with modern g++ and libc++. If
 /// for some version of libc++ it is different, we will need to update it with
 /// conditional compilation.
+#[repr(C)]
 pub struct Vector<T> {
     // TODO(b/356221873): Ensure Vector<T> is covariant.
     begin: *mut T,
