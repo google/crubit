@@ -376,5 +376,31 @@ TEST(PointerNullabilityTest, TriplyNestedForLoopSingleIteration) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, FieldWithLoopInBetweenDefinitionAndUse) {
+  // TODO: b/347699477 Figure out this false positive.
+  // It seems like two loops are needed to repro the issue.
+  // The original code gets the `item` from a foreach loop over a vector
+  // but this is simplified to a function returning the item (vs an iterator
+  // returning the item) (a plain array with [] doesn't repro).
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      Nullable<int*> ptr;
+    };
+    S& at(int i);
+
+    void target() {
+      for (int i = 0; i < 10; ++i) {
+        const S& item = at(i);
+        if (item.ptr == nullptr) continue;
+        (void)*item.ptr;
+        for (int j = 0; j < 5; ++j) {
+        }
+        // NOTE: This should be safe as the loop before does nothing
+        (void)*item.ptr;  // [[unsafe]]
+      }
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
