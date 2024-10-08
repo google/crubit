@@ -15,6 +15,15 @@
     *   [Classes and Structs](/docs/cpp/classes_and_structs)
     *   [Enums](/docs/cpp/enums)
 
+*   \[experimental\] C++ Bindings for Rust Libraries
+
+    *   [Functions](/docs/rust/functions)
+    *   [Structs](/docs/rust/structs)
+    *   [Enums](/docs/rust/enums)
+    *   [Type Aliases](/docs/rust/type_aliases)
+    *   [`use` Statements](/docs/rust/use_statements)
+    *   <hr> [Movable types](/docs/rust/movable_types)
+
 *   Design {.cnav-collapsed-by-default}
 
     *   [High-level design of C++/Rust interop](/docs/design/design.md)

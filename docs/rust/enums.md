@@ -1,49 +1,48 @@
 # C++ bindings for Rust `enum`s
 
-<!-- The example below is based on the
-`test_format_item_enum_with_only_discriminant_items` test from
-`cc_bindings_from_rs/bindings.rs` -->
+WARNING: This page describes an unreleased feature of Crubit.
 
-For the following Rust type:
+A Rust `enum` is mapped to an opaque C++ type. C++ code cannot create a specific
+variant, but can call functions accepting or returning an `enum`.
 
-```rust
-pub enum Color {
-    Red,
-    Green,
-    Blue,
-}
+To receive C++ bindings, the `enum` must be movable in C++. See
+[Movable Types](movable_types).
+
+## Example
+
+Given the following Rust module:
+
+```live-snippet
+cs/file:examples/rust/enum/example.rs content:^([^/\n])([^!\n]|$)[^\n]*
 ```
 
 Crubit will generate the following bindings:
 
-```cpp
-struct alignas(1) Color final {
-    public:
-        // The Rust type has no `Default` impl.
-        Color() = delete;
+<!-- Note: Kythe currently indexes this as class `CRUBIT_INTERNAL_RUST_TYPE` because it doesn't have a build rule. -->
 
-        // The Rust type is not `Copy`.
-        Color(const Color&) = delete;
-        Color& operator=(const Color&) = delete;
-
-        // All non-`Drop` Rust types are trivially-movable.
-        Color(Color&&) = default;
-        Color& operator=(Color&&) = delete;
-
-        // The Rust type has no `Drop` impl,
-        // nor requires custom drop glue.
-        ~Color() = default;
-    private:
-        ...
-};
+```live-snippet
+cs/file:examples/rust/enum/example_generated.h class:CRUBIT_INTERNAL_RUST_TYPE|Color
 ```
 
-Note that the generated C++ bindings are currently opaque (b/259984090 and
-b/280861833 track adding more idiomatic bindings for enumerations). In
-particular, the C++ side doesn't currently have any direct visibility into the
-discriminant the Rust enum. Nevertheless, the bindings should cover methods and
-trait of the Rust enum - for example:
+## Why isn't it a C++ `enum`? {#cpp_enum}
 
-*   mapping static methods from Rust to non-member methods in C++
-*   mapping `Default` trait impl from Rust to the default constructor in C++
-    (this bullet item is WIP - see b/258249980)
+A `repr(i32)` or fieldless `repr(C)` `enum` is very similar to a C++ `enum`.
+However, Rust enums are exhaustive: any value not explicitly listed in the
+`enum` declaration does not exist, and it is
+[undefined behavior](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)
+to attempt to create one.
+
+C++ `enum`s, in contrast, are "non-exhaustive": a C++ `enum` can have *any*
+value supported by the underlying type, even one not listed in the enumerators.
+For example, if the above example were a C++ enum, `static_cast<Color>(42)`
+would be a valid instance of `Color`, even though neither `Red`, `Blue`, nor
+`Green` have that value.
+
+In order to prevent invalid Rust values from being produced by C++, a C++ `enum`
+cannot be used to represent a Rust `enum`. Instead, the C++ bindings are a
+`struct`, even for fieldless `enum`s.
+
+## C++ movable {#cpp_movable}
+
+To receive C++ bindings, the `enum` must be movable in C++. See
+[Movable Types](movable_types).

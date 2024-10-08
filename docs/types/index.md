@@ -24,9 +24,11 @@ into three categories:
     functions, function pointers. All primitive and pointer types are
     ABI-compatible.
 *   **Layout-compatible**: the type can be used anywhere an ABI-compatible type
-    can be used, *except*:
-    *   not by-value in manual FFI that does not use Crubit
-    *   not by-value in function pointers
+    can be used, except that it cannot be accepted or returned by value in
+    functions in the following circumstances:
+    *   if the type is not movable in C++, or
+    *   if the FFI is performed manually, without using Crubit, or
+    *   the function is a function pointer.
 *   **Bridged**: the type can only be passed or returned directly by value. It
     cannot be used by pointer, in struct fields, or in function pointers in any
     way.
