@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate
-// Features: experimental, supported
+// Features: <none>
 
 // clang-format off
 #pragma once
@@ -43,18 +43,9 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: example_crate :: ReprRustUnion") alignas(8)
   void set_b(double b) [[clang::annotate_type("lifetime", "__anon1")]];
 
  private:
-  // Generated from:
-  // examples/rust/rust_union/example.rs;l=6
-  struct {
-    std::int32_t value;
-  } a;
-
- private:
-  // Generated from:
-  // examples/rust/rust_union/example.rs;l=7
-  struct {
-    double value;
-  } b;
+  // Field type has been replaced with a blob of bytes: support for non-repr(C)
+  // unions requires //features:experimental
+  unsigned char __opaque_blob_of_bytes[8];
 
  private:
   static void __crubit_field_offset_assertions();
@@ -107,7 +98,6 @@ inline void ReprRustUnion::set_b(double b)
           *this, b);
 }
 inline void ReprRustUnion::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ReprRustUnion, a));
-  static_assert(0 == offsetof(ReprRustUnion, b));
+  static_assert(0 == offsetof(ReprRustUnion, __opaque_blob_of_bytes));
 }
 }  // namespace example_crate

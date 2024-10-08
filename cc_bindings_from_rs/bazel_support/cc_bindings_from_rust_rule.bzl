@@ -123,15 +123,6 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
 
     features = find_crubit_features(target, ctx)
 
-    # During rollout of feature-gating, we temporarily enable all features on all targets that
-    # do not otherwise specify what features they enable.
-    #
-    # Once feature gating is completely implemented, we can apply the features to everything,
-    # and remove the magic default.
-    # TODO(b/262878759): Remove `all` once all users have the correct features applied.
-    if not features:
-        features.append("all")
-
     for feature in features:
         crubit_args.add("--crate-feature", "self=" + feature)
 

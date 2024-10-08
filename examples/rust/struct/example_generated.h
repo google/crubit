@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate
-// Features: experimental, supported
+// Features: <none>
 
 // clang-format off
 #pragma once
