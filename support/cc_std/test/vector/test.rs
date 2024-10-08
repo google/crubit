@@ -119,6 +119,155 @@ fn test_vector_mut_index_out_of_bounds() {
     v[1] = 10;
 }
 
+#[gtest]
+fn test_vector_from_iter() {
+    let v = vector::Vector::from_iter(std::iter::repeat(1).take(3));
+    expect_eq!(v, [1, 1, 1]);
+}
+
+#[gtest]
+fn test_emtpy_vector_into_iter() {
+    let v = vector::Vector::<i64>::new();
+    let mut sum = 0;
+    for x in v {
+        sum += x;
+    }
+    expect_eq!(sum, 0);
+}
+
+#[gtest]
+fn test_vector_into_iter() {
+    let mut v = vector::Vector::new();
+    v.push(1);
+    v.push(2);
+    v.push(5);
+    let mut sum = 0;
+    for x in v {
+        sum += x;
+    }
+    expect_eq!(sum, 8);
+}
+
+#[gtest]
+fn test_vector_into_iter_size() {
+    let mut v = vector::Vector::new();
+    for i in 0..15 {
+        v.push(i);
+    }
+    let mut iter = v.into_iter();
+    expect_eq!(iter.size_hint(), (15, Option::Some(15)));
+    iter.next();
+    expect_eq!(iter.size_hint(), (14, Option::Some(14)));
+    expect_eq!(iter.count(), 14);
+}
+
+#[gtest]
+fn test_vector_into_iter_as_slice() {
+    let mut v = vector::Vector::new();
+    for i in 0..5 {
+        v.push(i);
+    }
+    let mut iter = v.into_iter();
+    expect_eq!(iter.as_slice(), &[0, 1, 2, 3, 4]);
+    iter.next();
+    expect_eq!(iter.as_slice(), &[1, 2, 3, 4]);
+}
+
+#[gtest]
+fn test_vector_into_iter_as_mut_slice() {
+    let mut v = vector::Vector::new();
+    for i in 0..5 {
+        v.push(i);
+    }
+    let mut iter = v.into_iter();
+    expect_eq!(iter.as_mut_slice(), &mut [0, 1, 2, 3, 4]);
+    iter.next();
+    expect_eq!(iter.as_mut_slice(), &mut [1, 2, 3, 4]);
+}
+
+#[gtest]
+fn test_vector_ref_iter() {
+    let mut v = vector::Vector::new();
+    v.push(1);
+    v.push(5);
+    v.push(10);
+    let mut sum = 0;
+    for x in &v {
+        sum += x;
+    }
+    // Sum the elements in the vector 2nd time to ensure that the vector is still
+    // valid.
+    for x in &v {
+        sum += x;
+    }
+    expect_eq!(sum, 32);
+}
+
+#[gtest]
+fn test_vector_mut_ref_iter() {
+    let mut v = vector::Vector::new();
+    v.push(1);
+    v.push(2);
+    // Increment the elements in the vector (mut access).
+    for x in &mut v {
+        *x += 1;
+    }
+    // Check that the elements were incremented.
+    let mut sum = 0;
+    for x in &v {
+        sum += x;
+    }
+    expect_eq!(sum, 5);
+}
+
+#[gtest]
+fn test_iterator_as_ref() {
+    let mut v = vector::Vector::new();
+    for i in 0..5 {
+        v.push(i);
+    }
+    let mut iter = v.into_iter();
+    expect_eq!(iter.as_ref(), &[0, 1, 2, 3, 4]);
+    iter.next();
+    expect_eq!(iter.as_ref(), &[1, 2, 3, 4]);
+}
+
+#[gtest]
+fn test_iterator_debug() {
+    let mut v = vector::Vector::new();
+    v.push(1);
+    v.push(2);
+    v.push(3);
+    expect_eq!(format!("{:?}", v.into_iter()), "IntoIter([1, 2, 3])");
+}
+
+#[gtest]
+fn test_iterator_default() {
+    expect_eq!(
+        format!("{:?}", <vector::Vector<i32> as IntoIterator>::IntoIter::default()),
+        "IntoIter([])"
+    );
+}
+
+#[gtest]
+fn test_iterator_next_back() {
+    let mut v = vector::Vector::new();
+    v.push(1);
+    v.push(2);
+    let mut iter = v.into_iter();
+    expect_eq!(iter.next_back(), Some(2));
+    expect_eq!(iter.next_back(), Some(1));
+    expect_eq!(iter.next_back(), None);
+}
+
+#[gtest]
+fn test_iterator_drop() {
+    let mut v = vector::Vector::new();
+    v.push(10);
+    let it = v.into_iter();
+    drop(it)
+}
+
 /// Use a variable in a way that can't be optimized out.
 fn use_variable<T>(v: T) {
     std::hint::black_box(v);
