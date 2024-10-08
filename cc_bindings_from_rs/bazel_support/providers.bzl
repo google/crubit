@@ -21,9 +21,8 @@ CcBindingsFromRustInfo = provider(
 GeneratedBindingsInfo = provider(
     doc = "A provider that contains the generated C++ and Rust files.",
     fields = {
-        "h_file": "The generated C++ header file, which will be deprecated soon.",
+        "h_file": "The generated C++ header file.",
         "rust_file": "The generated Rust source file.",
-        "new_h_file": "The generated C++ header.",
     },
 )
 
