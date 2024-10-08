@@ -19,6 +19,17 @@ impl string_view {
     pub fn as_raw_bytes(self) -> *const [u8] {
         self.into()
     }
+
+    /// Converts a `string_view` containing valid UTF-8 to a `*const str`.
+    ///
+    /// # Safety
+    ///
+    /// Behavior is undefined if the `string_view` has an invalid pointer.
+    pub unsafe fn to_str(&self) -> Result<*const str, core::str::Utf8Error> {
+        let bytes: &[u8] = unsafe { &*self.as_raw_bytes() };
+        let res: *const str = core::str::from_utf8(bytes)?;
+        Ok(res)
+    }
 }
 
 /// Equivalent to `as_raw_bytes()`.
