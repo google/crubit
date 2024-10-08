@@ -376,6 +376,7 @@ cc_bindings_from_rust_aspect = aspect(
             default = [
                 "//support/internal:bindings_support",
                 "//support/rs_std:rs_char",
+                "//support/public:slice_ref",
             ],
         ),
         "_process_wrapper": attr.label(

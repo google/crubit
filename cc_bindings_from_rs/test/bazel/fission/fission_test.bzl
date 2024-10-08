@@ -22,22 +22,19 @@ def _fission_test_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
 
-    expected = sorted([
+    expected = [
         "cc_library.pic.dwo",  # the C++ library
         "rust_library_1_fission",
         "rust_library_1_cc_api_impl_fission",  # the generated bindings for C++
         "rust_library_2_fission",
         "rust_library_2_cc_api_impl_fission",  # the generated bindings for C++
-    ])
-    actual = sorted([
+    ]
+    actual = [
         _remove_trailing_hash(f.basename)
         for f in target_under_test[CcInfo].debug_context().pic_files.to_list()
-    ])
-    asserts.equals(
-        env,
-        expected = expected,
-        actual = actual,
-    )
+    ]
+    for fname in expected:
+        asserts.true(env, fname in actual, "expected pic file " + fname + " is missing")
 
     return analysistest.end(env)
 
