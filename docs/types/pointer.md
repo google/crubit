@@ -83,30 +83,13 @@ lifetime of the function pointer.
 
 ## Rust references {#rust_references}
 
-TODO(jeanpierreda): Move this to Rust function documentation, and link from here.
+Rust references, unlike C++ references, cannot mutably alias. This introduces a
+new form of Undefined Behavior (UB) that many C++ programmers may not be
+accustomed to. For now, C++ pointers and references do **not** map to Rust
+references. Instead, they map to Rust raw pointers. Vice versa, Rust references
+are an unsupported type which do not map to any C++ type at all.
 
-In general, Rust references are not exposed to C++. However, some Rust functions
-which accept reference parameters do get mapped to C++ functions accepting a C++
-reference:
-
-*   All references must have an unbound parameter lifetime -- not `'static`, for
-    example.
-*   Only the parameter itself can be a reference type.
-*   If there is a `mut` reference parameter, it is the **only** reference
-    parameter.
-
-This set of rules is intended to describe a safe subset of Rust functions, which
-do not introduce substantial aliasing risk to mixed C++/Rust codebases.
-
-```rust {.good}
-fn foo(&self) {}
-fn foo(_: &i32) {}
-fn foo(_: &i32, _: &i32) {}
-```
-
-```rust {.bad}
-fn foo(_: &'static i32) {}  // 'static lifetime is bound
-fn foo(_: &&i32) {}  // Reference in non-parameter type
-fn foo(_: &mut i32, _: &i32) {}  // More than one reference, one of which is mut
-fn foo(_: &'a i32) {}  // 'a is bound to something else, not a parameter
-```
+The one exception to this rule are function parameters. In some limited
+circumstances, Rust functions may accept references, and the corresponding C++
+interface will accept C++ references. This is documented in
+<internal link>/rust/functions.
