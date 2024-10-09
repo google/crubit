@@ -1,7 +1,5 @@
 # C++ bindings for Rust type aliases.
 
-WARNING: This page describes an unreleased feature of Crubit.
-
 A rust Rust type aliases, such as `pub type X = ...;`, is mapped to the equivalent
 C++ type alias, such as `using X = ...;`.
 

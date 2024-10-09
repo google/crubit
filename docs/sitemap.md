@@ -15,8 +15,9 @@
     *   [Classes and Structs](/docs/cpp/classes_and_structs)
     *   [Enums](/docs/cpp/enums)
 
-*   \[experimental\] C++ Bindings for Rust Libraries
+*   C++ Bindings for Rust Libraries
 
+    *   [Overview](/docs/rust/)
     *   [Functions](/docs/rust/functions)
     *   [Structs](/docs/rust/structs)
     *   [Enums](/docs/rust/enums)

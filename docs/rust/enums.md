@@ -1,7 +1,5 @@
 # C++ bindings for Rust `enum`s
 
-WARNING: This page describes an unreleased feature of Crubit.
-
 A Rust `enum` is mapped to an opaque C++ type. C++ code cannot create a specific
 variant, but can call functions accepting or returning an `enum`.
 

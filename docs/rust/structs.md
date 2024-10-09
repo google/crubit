@@ -1,7 +1,5 @@
 # C++ bindings for Rust structs
 
-WARNING: This page describes an unreleased feature of Crubit.
-
 A Rust `struct` is mapped to a C++ `class`/`struct` with the same fields. If any
 field cannot be represented in C++, the struct itself will still have bindings,
 but [the relevant field will be private](#opaque_fields).

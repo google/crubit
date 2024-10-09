@@ -112,40 +112,29 @@ The following features are **not** supported yet, among many others:
 
 ## Rust
 
-**The following section is "aspirational", not yet true but will be true at end
-of Q3**
-
 For Rust libraries, used from C++, we have support for the following language
 features, used in public interfaces:
 
-*   structs which are copyable or movable (see notes)
-*   repr(C) unions which are copyable or movable (see notes)
-*   opaque representations of other user-defined types which are copyable or
-    movable (see notes):
+*   structs
+*   `repr(C)` unions
+*   opaque representations of other user-defined types
     *   enums
     *   non-repr(C) unions
 *   aliases (via `use`, `type`)
-*   functions
-*   inherent methods
-    *   taking `self` by value
-    *   taking `self: *const Self` or `self: *mut Self`
-    *   static methods
-    *   but **not** `&self`, `&mut self`, or others
-*   Specific known traits with equivalents in C++:
+*   functions and methods
+*   references in functions, provided that mutable aliasing is impossible
+*   specific known traits with equivalents in C++:
     *   `Clone`
     *   `Default`
     *   `Drop`
     *   `From`
-
-**Notes:** to receive bindings, a user-defined type must be C++-movable, and
-therefore must either be copyable (implement `Clone`), or implement `Default` so
-that a default instance can be left in place.
+*   simple `const` constants
 
 We have *experimental* unreleased support for the following language features:
 
-*   unsafe use of references, `&self`, etc.
+*   unsafe use of references, such as two `&mut` references in the same function
 *   non-opaque enums
-*   non-opaque non-repr(C) unions
+*   non-opaque non-`repr(C)` unions
 
 The following features are **not** supported yet, among others:
 
@@ -154,7 +143,7 @@ The following features are **not** supported yet, among others:
     *   inheriting from a C++ class
     *   defining a C++ base class
     *   defining a C++ enum
-*   statics and constants
+*   statics and more complex `const` constants
 *   macros
 
 ## Build System

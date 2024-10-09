@@ -1,7 +1,5 @@
 # C++ bindings for Rust `use` declarations
 
-WARNING: This page describes an unreleased feature of Crubit.
-
 Crubit supports `use` declarations for functions and types, mapping them to
 equivalent `using` declarations in C++.
 

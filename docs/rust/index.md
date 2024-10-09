@@ -1,7 +1,5 @@
 # C++ bindings for Rust libraries
 
-WARNING: This page describes an unreleased feature of Crubit.
-
 Rust libraries can be used directly from C++. This page documents roughly what
 that entails, and additional subpages (available in the left-hand navigation)
 document specific aspects of the generated bindings.

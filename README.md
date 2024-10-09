@@ -16,6 +16,10 @@ current supported features.
 
 ## Example
 
+<section class="tabs">
+
+### C++ {.new-tab}
+
 Consider the following C++ function:
 
 ```c++
@@ -33,16 +37,40 @@ Note: There are some temporary restrictions on the API shape. For example,
 functions that accept a type like `std::string` can't be called from Rust
 directly via Crubit. These restrictions will be relaxed over time.
 
+### Rust {.new-tab}
+
+Consider the following Rust function:
+
+```rust
+pub fn is_greater(lhs: i32, rhs: i32) { ... }
+```
+
+This function becomes callable from C++ as if it were defined as:
+
+```c++
+bool is_greater(int32_t lhs, int32_t rhs);
+```
+
+Note: There are some temporary restrictions on the API shape. For example,
+functions that accept two mutable references can't be called from C++
+directly via Crubit. These restrictions will be relaxed over time.
+
+</section>
+
 ## Getting Started
 
-Here are some resources for getting started with Crubit:
+We have detailed walkthroughs on how to use C++ from Rust, or Rust from C++,
+using Crubit, as well as copy-pastable example code. The example code also
+includes spanshots of what the generated bindings look like.
 
-*   [Rust Bindings for C++ Libraries](https://github.com/google/crubit/tree/main/docs/cpp/)
-    is a detailed walkthrough on how to use C++ from Rust using Crubit.
-
-*   The [`examples/cpp/`](http://examples/cpp)
-    directory has copy-pastable examples of calling C++ from Rust, together with
-    snapshots of what the generated Rust interface looks like.
+*   Walkthrough:
+    [Rust Bindings for C++ Libraries](https://github.com/google/crubit/tree/main/docs/cpp/)
+    *   Examples:
+        [`examples/cpp/`](http://examples/cpp)
+*   Walkthrough:
+    [C++ Bindings for Rust Libraries](https://github.com/google/crubit/tree/main/docs/rust/)
+    *   Examples:
+        [`examples/rust/`](http://examples/rust)
 
 ## Building Crubit
 

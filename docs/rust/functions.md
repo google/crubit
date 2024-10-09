@@ -1,7 +1,5 @@
 # C++ bindings for Rust functions
 
-WARNING: This page describes an unreleased feature of Crubit.
-
 C++ code can call functions defined in Rust, provided that the parameter and
 return types are supported by Crubit:
 

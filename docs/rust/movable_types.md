@@ -1,7 +1,5 @@
 # Movable types
 
-WARNING: This page describes an unreleased feature of Crubit.
-
 Crubit requires types to be "movable" to be passed by value: if a Rust type does
 not logically support a C++ move operation, then it can receive bindings, but it
 cannot be passed by value.
