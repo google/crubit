@@ -10,7 +10,7 @@ To receive C++ bindings, the `enum` must be movable in C++. See
 
 ## Example
 
-Given the following Rust module:
+Given the following Rust crate:
 
 ```live-snippet
 cs/file:examples/rust/enum/example.rs content:^([^/\n])([^!\n]|$)[^\n]*

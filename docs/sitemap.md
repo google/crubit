@@ -21,7 +21,7 @@
     *   [Structs](/docs/rust/structs)
     *   [Enums](/docs/rust/enums)
     *   [Type Aliases](/docs/rust/type_aliases)
-    *   [`use` Statements](/docs/rust/use_statements)
+    *   [`use` Declarations](/docs/rust/use_declarations)
     *   <hr> [Movable types](/docs/rust/movable_types)
 
 *   Design {.cnav-collapsed-by-default}
