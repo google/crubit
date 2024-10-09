@@ -28,6 +28,8 @@ called from C++, and how to actually use it from C++. The quick summary is:
 *   The header name is the Rust target's label with a `.h` appended: to include
     the header for the Rust library `//path/to:example_crate`, you use `#include
     "path/to/example_crate.h"`.
+*   The namespace name is the Rust target name, e.g. `example_crate`. To change
+    the namespace, use `cc_bindings_from_rust_library_config`, described below.
 *   To see the generated C++ API, right click the `"path/to/example_crate.h"`
     include in Cider, and select "Go to Definition".
 
@@ -71,6 +73,25 @@ generated bindings comes from the actual `rust_library` rule. For example, the
 `#include` for the above is `#include
 "examples/rust/function/example_crate.h"`, **not**
 `example_crate_cc_api.h`.
+
+### (Optional) Customize the generated C++ API {#cc_bindings_from_rust_library_config}
+
+#### Give it a better namespace {#namespace}
+
+The crate name might make a poor namespace. In addition, typically, multiple C++
+headers and build targets share the same namespace. To customize the namespace
+name, use `cc_bindings_from_rust_library_config`:
+
+```live-snippet
+cs/file:examples/rust/library_config/BUILD symbol:custom_namespace|example_crate
+```
+
+Now, instead of the crate name, the generated bindings will use the namespace
+name you provided:
+
+```live-snippet
+cs/file:examples/rust/library_config/main.cc content:^[^/\n].*
+```
 
 ### Look at the generated bindings {#examine}
 
