@@ -559,6 +559,23 @@ struct BridgeTypeInfo {
   std::string cpp_to_rust_converter;
 };
 
+// TODO: Handle non-type template parameter.
+// A template argument for a template specialization.
+struct TemplateArg {
+  absl::StatusOr<MappedType> type;
+  llvm::json::Value ToJson() const;
+};
+
+// A template specialization for a template record, containing information
+// including the template name (like `ns::vector` for `ns::vector<int>`) and the
+// template arguments (like [`int`, `float`] for `ns::map<int, float>`).
+struct TemplateSpecialization {
+  llvm::json::Value ToJson() const;
+
+  std::string template_name;
+  std::vector<TemplateArg> template_args;
+};
+
 // A record (struct, class, union).
 struct Record {
   llvm::json::Value ToJson() const;
@@ -574,6 +591,7 @@ struct Record {
   ItemId id;
   BazelLabel owning_target;
   std::optional<BazelLabel> defining_target;
+  std::optional<TemplateSpecialization> template_specialization;
   std::optional<std::string> unknown_attr;
   std::optional<std::string> doc_comment;
   std::optional<BridgeTypeInfo> bridge_type_info;

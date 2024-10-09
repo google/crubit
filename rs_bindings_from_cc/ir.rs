@@ -637,6 +637,18 @@ pub struct BridgeTypeInfo {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct TemplateArg {
+    #[serde(rename(deserialize = "type"))]
+    pub type_: Result<MappedType, String>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct TemplateSpecialization {
+    pub template_name: Rc<str>,
+    pub template_args: Vec<TemplateArg>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Record {
     pub rs_name: Rc<str>,
@@ -648,6 +660,7 @@ pub struct Record {
     /// The target containing the template definition, if this is a templated
     /// record type.
     pub defining_target: Option<BazelLabel>,
+    pub template_specialization: Option<TemplateSpecialization>,
     /// A human-readable list of attributes that Crubit doesn't understand.
     ///
     /// Because attributes can change the behavior or semantics of types in

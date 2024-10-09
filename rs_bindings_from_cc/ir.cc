@@ -453,6 +453,19 @@ llvm::json::Value BridgeTypeInfo::ToJson() const {
   };
 }
 
+llvm::json::Value TemplateArg::ToJson() const {
+  return llvm::json::Object{
+      {"type", type},
+  };
+}
+
+llvm::json::Value TemplateSpecialization::ToJson() const {
+  return llvm::json::Object{
+      {"template_name", template_name},
+      {"template_args", template_args},
+  };
+}
+
 llvm::json::Value Record::ToJson() const {
   std::vector<llvm::json::Value> json_item_ids;
   json_item_ids.reserve(child_item_ids.size());
@@ -468,6 +481,7 @@ llvm::json::Value Record::ToJson() const {
       {"id", id},
       {"owning_target", owning_target},
       {"defining_target", defining_target},
+      {"template_specialization", template_specialization},
       {"unknown_attr", unknown_attr},
       {"doc_comment", doc_comment},
       {"bridge_type_info", bridge_type_info},

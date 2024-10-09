@@ -32,6 +32,7 @@
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
@@ -279,6 +280,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   std::optional<std::string> doc_comment;
   bool is_explicit_class_template_instantiation_definition = false;
   std::optional<BazelLabel> defining_target;
+  std::optional<TemplateSpecialization> template_specialization;
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {
@@ -312,6 +314,19 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                    .get<clang::ClassTemplatePartialSpecializationDecl*>();
       }
       defining_target = ictx_.GetOwningTarget(decl);
+    }
+    template_specialization.emplace();
+    template_specialization->template_name =
+        specialization_decl->getQualifiedNameAsString();
+    // preferred_cc_name.substr(0, preferred_cc_name.find('<'));
+    for (const clang::TemplateArgument& template_arg :
+         specialization_decl->getTemplateArgs().asArray()) {
+      if (template_arg.getKind() == clang::TemplateArgument::ArgKind::Type) {
+        template_specialization->template_args.emplace_back(
+            TemplateArg{ictx_.ConvertQualType(
+                template_arg.getAsType(), /*lifetimes=*/nullptr,
+                /*ref_qualifier_kind=*/std::nullopt)});
+      }
     }
   } else {
     const clang::NamedDecl* named_decl = record_decl;
@@ -386,6 +401,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .id = ictx_.GenerateItemId(record_decl),
       .owning_target = ictx_.GetOwningTarget(record_decl),
       .defining_target = std::move(defining_target),
+      .template_specialization = std::move(template_specialization),
       .unknown_attr = std::move(unknown_attr),
       .doc_comment = std::move(doc_comment),
       .bridge_type_info = GetBridgeTypeInfo(record_decl),

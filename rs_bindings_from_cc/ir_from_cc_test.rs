@@ -2464,6 +2464,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
               id: ItemId(...),
               owning_target: BazelLabel("//test:testing_target"),
               defining_target: None,
+              template_specialization: None,
               unknown_attr: None,
               doc_comment: Some(...),
               bridge_type_info: None,
@@ -3248,6 +3249,50 @@ fn test_template_without_preferred_name_attribute() {
         ... cc_name: "basic_string<char>" ...
         ... cc_preferred_name: "basic_string<char>" ...
         ... unknown_attr: None ...
+      }
+      ...
+    }
+    };
+}
+
+#[gtest]
+fn test_class_template_specialization_information_collection() {
+    let ir = ir_from_cc(
+        r#"
+      namespace ns {
+      template<typename T, typename U> struct basic_string {};
+
+      using string = basic_string<char, int>;
+      }
+      "#,
+    )
+    .unwrap();
+    assert_ir_matches! {ir, quote! {
+      ...
+      Record {
+        ... cc_name: "ns::basic_string<char, int>" ...
+        ... template_specialization: Some(TemplateSpecialization {
+            template_name: "ns::basic_string",
+            template_args: [
+                TemplateArg {
+                    type_: Ok(MappedType {
+                        ...
+                        rs_type: RsType {
+                            ...
+                            name: Some("::core::ffi::c_char") ...
+                        } ...
+                    }),
+                },
+                TemplateArg {
+                    type_: Ok(MappedType {
+                        rs_type: RsType {
+                            ...
+                            name: Some("::core::ffi::c_int") ...
+                        } ...
+                    }),
+                },
+            ],
+        }) ...
       }
       ...
     }
