@@ -99,6 +99,24 @@ TEST(PointerNullabilityTest, UnknownPtrImplicitCastToBool) {
   )cc"));
 }
 
+// This is a crash repro involving implicit casts to bool of nullptr_t values
+// that have a PointerValue but no associated null state.
+TEST(PointerNullabilityTest, NullptrTypeImplicitCastToBool) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    namespace std {
+    using nullptr_t = decltype(nullptr);
+    }
+    void target() {
+      std::nullptr_t A = nullptr;
+      // initialization of B must contain an implicit cast to pointer to trigger
+      // the crash condition.
+      if (std::nullptr_t B = A) {
+        // body doesn't matter; analysis of the condition used to crash.
+      }
+    }
+  )cc"));
+}
+
 // CK_Bitcast: Bitcasts preserve outer nullability
 TEST(PointerNullabilityTest, Bitcast) {
   EXPECT_TRUE(checkDiagnostics(R"cc(

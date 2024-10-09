@@ -906,6 +906,15 @@ void transferValue_NullCheckImplicitCastPtrToBool(
     absl::Nonnull<const Expr *> CastExpr, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   auto &A = State.Env.arena();
+  if (auto *CE = dyn_cast<clang::CastExpr>(CastExpr);
+      CE && CE->getSubExpr()->getType()->isNullPtrType()) {
+    // nullptr_t values might have PointerValues, but never have modeled null
+    // state. Skip over casts of them to bool.
+    // We could explicitly set the boolean value for the cast to false, but the
+    // compiler already detects the branch as unreachable, so we don't traverse
+    // CFG elements that would use this boolean.
+    return;
+  }
   auto *PointerVal = getRawPointerValue(CastExpr->IgnoreImplicit(), State.Env);
   if (!PointerVal) return;
 
