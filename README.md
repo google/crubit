@@ -11,9 +11,8 @@ integrating the C++ and Rust ecosystems.
 
 ## Status
 
-Support for calling FFI-friendly C++ from Rust is in progress.
-
-Support for calling Rust from C++ will arrive in 2024H2.
+See the [status](http://<internal link>/overview/status) page for an overview of the
+current supported features.
 
 ## Example
 

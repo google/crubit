@@ -1,7 +1,5 @@
 # Rust bindings for C++ libraries
 
-[TOC]
-
 When a C++ library enables Crubit, that library can be used directly from Rust.
 This page documents roughly what that entails, and additional subpages
 (available in the left-hand navigation) document specific aspects of the
@@ -172,10 +170,9 @@ interface behind an interface Crubit can handle:
     rust-movable, but a `unique_ptr<std::string>` field is.
 *   Hide unsupported types, in general, behind a wrapper. For example, a
     `std::vector<T>` is not supported, but a struct which wraps a
-    `unique_ptr<std::vector<T>>` is.
-*   Wrap unsupported functions behind `extern "C"` wrappers. For example,
-    methods are not yet supported, but top-level functions are, and can invoke
-    methods.
+    `unique_ptr<std::vector<int32_t>>` is.
+*   Wrap unsupported functions behind wrappers. For example, methods are not yet
+    supported, but top-level functions are, and can invoke methods.
 
 [^aspects]: Crubit is an aspect: an automatically generated entity that exists
     on every build target. It is disabled by default, so that Rust
