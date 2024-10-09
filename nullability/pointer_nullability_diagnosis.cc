@@ -640,10 +640,20 @@ void checkAnnotationsConsistent(
   TypeNullability Canonical = getTypeNullability(*CanonicalDecl, Defaults);
   TypeNullability Cur = getTypeNullability(*VD, Defaults);
   if (Cur != Canonical) {
+    // If the ValueDecl has a body (such as a function or method definition),
+    // skip printing the entire body in the diagnostic.
+    auto SrcRange =
+        VD->hasBody()
+            ? CharSourceRange::getCharRange(
+                  VD->getBeginLoc(),
+                  // Print up to (but not including) the first statement of
+                  // the body, which is often the open brace
+                  VD->getBody()->getBeginLoc())
+            : CharSourceRange::getTokenRange(VD->getSourceRange());
     Diags.push_back(
         {PointerNullabilityDiagnostic::ErrorCode::InconsistentAnnotations,
-         PointerNullabilityDiagnostic::Context::Other,
-         CharSourceRange::getTokenRange(VD->getSourceRange()), nullptr, nullptr,
+         PointerNullabilityDiagnostic::Context::Other, SrcRange, nullptr,
+         nullptr,
          CharSourceRange::getTokenRange(CanonicalDecl->getSourceRange())});
   }
 }
