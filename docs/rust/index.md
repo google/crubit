@@ -49,9 +49,9 @@ define the `cc_bindings_from_rust` target to make it easier to use from C++:
 cs/file:examples/rust/function/BUILD symbol:example_crate|example_crate_cc_api
 ```
 
-If your Rust library is named `//path/to:example_crate`, then the C++ header
-file is `"path/to/example_crate.h"`, and the C++ namespace is `example_crate` by
-default.
+Example: If your Rust library is named `//path/to:example_crate`, then the C++
+header file is `"path/to/example_crate.h"`, and the C++ namespace is
+`example_crate` by default.
 
 ### Use a Rust library from C++ {#use}
 
