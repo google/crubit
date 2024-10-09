@@ -2,13 +2,11 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <iostream>
 
 // The generated bindings are in a header at the same path as the
-// `example_crate` `rust_library` and with the name that follows the `<crate
-// name>_cc_api.h` pattern:
+// `example_crate` rust_library, with a `.h` suffix.
 #include "examples/rust/function/example_crate.h"
 
 int main(int argc, char* argv[]) {
