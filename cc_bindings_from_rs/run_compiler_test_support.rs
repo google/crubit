@@ -129,7 +129,7 @@ where
         make_codegen_backend: None,
         hash_untracked_state: None,
         registry: rustc_errors::registry::Registry::new(rustc_errors::DIAGNOSTICS),
-        locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES,
+        locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES.to_vec(),
         ice_file: None,
         expanded_args: vec![],
         using_internal_features: std::sync::Arc::new(false.into()),
