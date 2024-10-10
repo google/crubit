@@ -61,6 +61,18 @@ impl From<&[u8]> for string_view {
     }
 }
 
+impl<const N: usize> From<&[u8; N]> for string_view {
+    fn from(s: &[u8; N]) -> Self {
+        string_view::from(s as *const [u8])
+    }
+}
+
+impl<const N: usize> From<*const [u8; N]> for string_view {
+    fn from(s: *const [u8; N]) -> Self {
+        string_view::from(s as *const [u8])
+    }
+}
+
 impl From<&str> for string_view {
     fn from(s: &str) -> Self {
         string_view::from(s.as_bytes())
