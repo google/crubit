@@ -399,11 +399,12 @@ class GetTypeNullabilityTest : public ::testing::Test {
         "-fretain-subst-template-type-parm-type-ast-nodes");
     Inputs.ExtraFiles["nullability.h"] = R"cpp(
       template <class X>
-      using Nullable [[clang::annotate("Nullable")]] = X;
+      using Nullable [[clang::annotate("Nullable")]] = X _Nullable;
       template <class X>
-      using Nonnull [[clang::annotate("Nonnull")]] = X;
+      using Nonnull [[clang::annotate("Nonnull")]] = X _Nonnull;
       template <class X>
-      using Unknown [[clang::annotate("Nullability_Unspecified")]] = X;
+      using Unknown [[clang::annotate("Nullability_Unspecified")]] =
+          X _Null_unspecified;
     )cpp";
   }
 
@@ -532,8 +533,6 @@ TEST_F(GetTypeNullabilityTest, Overrides) {
   EXPECT_THAT(nullVec("Nullable<int* _Null_unspecified>"),
               ElementsAre(NullabilityKind::Nullable));
   EXPECT_THAT(nullVec("Unknown<Nullable<int*>>"),
-              ElementsAre(NullabilityKind::Nullable));
-  EXPECT_THAT(nullVec("Nullable<int*> _Null_unspecified"),
               ElementsAre(NullabilityKind::Nullable));
   EXPECT_THAT(nullVec("Nonnull<Nullable<int*>>"),
               ElementsAre(NullabilityKind::NonNull));

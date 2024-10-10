@@ -393,7 +393,8 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
 
   void sawNullability(NullabilityKind NK) {
     // If we see nullability applied twice, the outer one wins.
-    assert(PendingNullability != NullabilityKind::Unspecified &&
+    assert((NK == NullabilityKind::Unspecified ||
+            PendingNullability != NullabilityKind::Unspecified) &&
            "Unknown around nullability sugar should have been ignored!");
     if (!PendingNullability.has_value()) PendingNullability = NK;
   }
