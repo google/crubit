@@ -301,10 +301,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
           ictx_.GetComment(specialization_decl->getSpecializedTemplate());
     }
     source_loc = specialization_decl->getBeginLoc();
-    /// Note: only specify defining_target if it's a template instantiation!
-    /// Explicit specializations are their own defining_target.
+    // Specify defining_target if it's a template instantiation.
     if (auto instantiation_source =
-            specialization_decl->getInstantiatedFrom()) {
+            specialization_decl->getSpecializedTemplateOrPartial()) {
       clang::NamedDecl* decl;
       if (auto* template_decl =
               instantiation_source.dyn_cast<clang::ClassTemplateDecl*>()) {

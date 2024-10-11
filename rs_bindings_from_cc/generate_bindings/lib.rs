@@ -3277,6 +3277,31 @@ pub(crate) mod tests {
     }
 
     #[gtest]
+    fn test_default_crubit_features_disabled_template_explicit_specialization() -> Result<()> {
+        let mut ir = ir_from_cc(
+            r#"
+            template <typename T>
+            struct X {
+                T t;
+            };
+
+            template <>
+            struct X<int> {
+                int val;
+                X<int>() : val(42) {}
+            };
+
+            inline X<int> NotPresent() { return X<int>(); }"#,
+        )?;
+        *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+            crubit_feature::CrubitFeature::Supported.into();
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_not_matches!(rs_api, quote! {NotPresent});
+        assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
+        Ok(())
+    }
+
+    #[gtest]
     fn test_type_map_override_assert() -> Result<()> {
         let rs_api = generate_bindings_tokens(ir_from_cc(
             r#" #pragma clang lifetime_elision
