@@ -673,10 +673,10 @@ DiagTransferFunc pointerNullabilityDiagnoserBefore() {
                                          diagnoseSubscript)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("[]"),
                                           diagnoseSmartPointerDereference)
-      // `->`
+      // `->`. Covers raw and smart pointers, because smart-pointer
+      // `operator->` doesn't dereference. It just returns a pointer from which
+      // a MemberExpr is built (with `->`), which does the actual dereference.
       .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
-      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("->"),
-                                          diagnoseSmartPointerDereference)
       // `=` / `reset()`
       .CaseOfCFGStmt<BinaryOperator>(
           binaryOperator(hasOperatorName("="), hasLHS(isPointerExpr())),
