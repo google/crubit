@@ -463,7 +463,7 @@ impl<'a, 'b> ::core::ops::Add<&'b mut crate::AddableFreeByMutRef>
     }
 }
 
-impl ::core::ops::Add<Self> for AddableFreeByValue {
+impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
     type Output = crate::AddableFreeByValue;
     #[inline(always)]
     fn add(mut self, mut rhs: Self) -> Self::Output {
@@ -1003,7 +1003,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFre
     }
 }
 
-impl ::core::ops::AddAssign<Self> for AddAssignFreeByValue {
+impl ::core::ops::AddAssign<Self> for crate::AddAssignFreeByValue {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, mut rhs: Self) {
         unsafe {
@@ -1118,7 +1118,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFri
     }
 }
 
-impl ::core::ops::AddAssign<Self> for AddAssignFriendByValue {
+impl ::core::ops::AddAssign<Self> for crate::AddAssignFriendByValue {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, mut rhs: Self) {
         unsafe {

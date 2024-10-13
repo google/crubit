@@ -1379,10 +1379,18 @@ pub fn generate_func(
                     extra_items = quote! {};
                 }
             };
+            let record_qualifier = ir.namespace_qualifier(&trait_record)?.format_for_rs();
+            let full_record_qualifier = if Some(trait_record.id) == func.enclosing_item_id {
+                // If the method is defined in the record, then the record qualifier is not
+                // needed for better readability.
+                quote! {}
+            } else {
+                quote! { crate :: #record_qualifier }
+            };
             let (trait_name_without_trait_record, impl_for) = match impl_for {
                 ImplFor::T => (
                     trait_name.to_token_stream_removing_trait_record(Some(&trait_record)),
-                    quote! { #record_name },
+                    quote! { #full_record_qualifier #record_name },
                 ),
                 ImplFor::RefT => {
                     let param = &param_types[0];
@@ -1397,7 +1405,6 @@ pub fn generate_func(
                 }
                 #extra_items
             };
-            let record_qualifier = ir.namespace_qualifier(&trait_record)?.format_for_rs();
             function_id = FunctionId {
                 self_type: Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap()),
                 function_path: syn::parse2(quote! { #trait_name :: #func_name }).unwrap(),
@@ -2633,19 +2640,22 @@ mod tests {
     fn test_impl_eq_for_free_function() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
-            struct SomeStruct final { int i; };
-            bool operator==(const SomeStruct& lhs, const SomeStruct& rhs) {
+            namespace ns {
+                struct SomeStruct final { int i; };
+            }
+            bool operator==(const ns::SomeStruct& lhs, const ns::SomeStruct& rhs) {
                 return lhs.i == rhs.i;
-            }"#,
+            }
+            "#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialEq for SomeStruct {
+                impl PartialEq for crate::ns::SomeStruct {
                     #[inline(always)]
                     fn eq<'a, 'b>(&'a self, rhs: &'b Self) -> bool {
-                        unsafe { crate::detail::__rust_thunk___ZeqRK10SomeStructS1_(self, rhs) }
+                        unsafe { crate::detail::__rust_thunk___ZeqRKN2ns10SomeStructES2_(self, rhs) }
                     }
                 }
             }
@@ -2667,7 +2677,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialEq<crate::SomeOtherStruct> for SomeStruct {
+                impl PartialEq<crate::SomeOtherStruct> for crate::SomeStruct {
                     #[inline(always)]
                     fn eq<'a, 'b>(&'a self, rhs: &'b crate::SomeOtherStruct) -> bool {
                         unsafe { crate::detail::__rust_thunk___ZeqRK10SomeStructRK15SomeOtherStruct(self, rhs) }
@@ -2691,11 +2701,12 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialEq for SomeStruct {
+                impl PartialEq for crate::SomeStruct {
                     #[inline(always)]
-                    fn eq(& self, rhs: & Self) -> bool {
-                        unsafe { crate::detail::__rust_thunk___Zeq10SomeStructS_(
-                                &mut self.clone(), &mut rhs.clone()) }
+                    fn eq(&self, rhs: &Self) -> bool {
+                        unsafe {
+                            crate::detail::__rust_thunk___Zeq10SomeStructS_(&mut self.clone(), &mut rhs.clone())
+                        }
                     }
                 }
             }
@@ -2772,7 +2783,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialOrd for SomeStruct {
+                impl PartialOrd for crate::SomeStruct {
                     #[inline(always)]
                     fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
                         if self == other {
@@ -2812,7 +2823,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialOrd for SomeStruct {
+                impl PartialOrd for crate::SomeStruct {
                     #[inline(always)]
                     fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
                         if self == other {
