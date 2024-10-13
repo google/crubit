@@ -45,6 +45,7 @@ LIBCXX_HEADERS = [
     "climits",
     "cmath",
     "condition_variable",
+    "coroutine",
     "csetjmp",
     "csignal",
     "cstdarg",
