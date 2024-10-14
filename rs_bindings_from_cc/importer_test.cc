@@ -926,7 +926,7 @@ TEST(ImporterTest, FailedClassTemplateMethod) {
   ASSERT_TRUE(unsupported_method != nullptr);
   EXPECT_THAT(
       unsupported_method->errors,
-      Contains(testing::Field(
+      Contains(testing::Property(
           "message", &FormattedError::message,
           HasSubstr(
               // clang-format off

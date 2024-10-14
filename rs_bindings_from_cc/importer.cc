@@ -75,7 +75,7 @@ absl::Status CheckImportStatus(const std::optional<IR::Item>& item) {
     std::vector<absl::string_view> messages;
     messages.reserve(unsupported->errors.size());
     for (const auto& error : unsupported->errors) {
-      messages.push_back(error.message);
+      messages.push_back(error.message());
     }
     return absl::InvalidArgumentError(absl::StrJoin(messages, "\n\n"));
   }

@@ -562,16 +562,13 @@ FormattedError FormattedError::FromStatus(absl::Status status) {
     fmt = absl::StrCat("(unannotated `",
                        absl::StatusCodeToString(status.code()), "` status)");
   }
-  return {
-      .fmt = fmt,
-      .message = std::string(status.message()),
-  };
+  return FormattedError(fmt, std::string(status.message()));
 }
 
 llvm::json::Value FormattedError::ToJson() const {
   return llvm::json::Object{
-      {"fmt", fmt},
-      {"message", message},
+      {"fmt", fmt_},
+      {"message", message_},
   };
 }
 
