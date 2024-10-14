@@ -3338,7 +3338,7 @@ fn test_volatile_is_unsupported() {
     let ir = ir_from_cc("volatile int* foo();").unwrap();
     let f = ir
         .unsupported_items()
-        .find(|i| i.errors.iter().any(|e| e.message.contains("volatile")))
+        .find(|i| i.errors().iter().any(|e| e.to_string().contains("volatile")))
         .unwrap();
     assert_eq!("foo", f.name.as_ref());
 }

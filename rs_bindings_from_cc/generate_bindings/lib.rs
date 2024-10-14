@@ -271,7 +271,7 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
     let Some(enumerators) = &enum_.enumerators else {
         return generate_unsupported(
             db,
-            &UnsupportedItem::new_with_message(
+            &UnsupportedItem::new_with_static_message(
                 &db.ir(),
                 enum_,
                 "b/322391132: Forward-declared (opaque) enums are not supported yet",
@@ -350,8 +350,8 @@ fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<Generate
 
 /// Generates Rust source code for a given `UnsupportedItem`.
 fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<GeneratedItem> {
-    for error in &item.errors {
-        db.errors().insert(&error.to_error());
+    for error in item.errors() {
+        db.errors().insert(error);
     }
 
     let source_loc = item.source_loc();
@@ -367,8 +367,8 @@ fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<Generat
         if source_loc.is_empty() { "" } else { "\n" },
         item.name.as_ref(),
     );
-    for (index, error) in item.errors.iter().enumerate() {
-        message = format!("{message}{}{}", if index == 0 { "" } else { "\n\n" }, error.message,);
+    for (index, error) in item.errors().iter().enumerate() {
+        message = format!("{message}{}{:#}", if index == 0 { "" } else { "\n\n" }, error);
     }
     Ok(GeneratedItem { item: quote! { __COMMENT__ #message }, ..Default::default() })
 }
@@ -2980,7 +2980,7 @@ pub(crate) mod tests {
         );
         let actual = generate_unsupported(
             &db,
-            &UnsupportedItem::new_with_message(
+            &UnsupportedItem::new_with_static_message(
                 &db.ir(),
                 &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
                 "unsupported_message",
@@ -3003,7 +3003,7 @@ pub(crate) mod tests {
         );
         let actual = generate_unsupported(
             &db,
-            &UnsupportedItem::new_with_message(
+            &UnsupportedItem::new_with_static_message(
                 &db.ir(),
                 &TestItem { source_loc: None },
                 "unsupported_message",
@@ -3023,7 +3023,7 @@ pub(crate) mod tests {
         );
         let actual = generate_unsupported(
             &db,
-            &UnsupportedItem::new_with_message(
+            &UnsupportedItem::new_with_static_message(
                 &db.ir(),
                 &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
                 "unsupported_message",
