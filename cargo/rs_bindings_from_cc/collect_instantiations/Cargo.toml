@@ -1,0 +1,19 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate collect_instantiations.
+
+[package]
+name = "collect_instantiations"
+edition = "2021"
+
+[lib]
+path = "../../../rs_bindings_from_cc/collect_instantiations.rs"
+
+[dependencies]
+arc_anyhow = { path = "../../../cargo/common/arc_anyhow" }
+ffi_types = { path = "../../../cargo/common/ffi_types" }
+proc-macro2.workspace = true
+serde_json.workspace = true
+syn.workspace = true

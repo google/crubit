@@ -27,7 +27,10 @@ load(
     "with_cc_toolchain_flags",
 )
 
-package(default_applicable_licenses = ["//:license"])
+package(
+    default_applicable_licenses = ["//:license"],
+    default_visibility = ["//:__subpackages__"],
+)
 
 with_cc_toolchain_flags(
     name = "test_wrapper",
@@ -356,7 +359,7 @@ cc_library(
 rust_library(
     name = "ir",
     srcs = ["ir.rs"],
-    visibility = ["//rs_bindings_from_cc/generate_bindings:__subpackages__"],
+    visibility = ["//:__subpackages__"],
     deps = [
         "//common:arc_anyhow",
         "//common:code_gen_utils",

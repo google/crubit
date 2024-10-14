@@ -1,0 +1,19 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate error_report.
+
+[package]
+name = "error_report"
+edition = "2021"
+
+[lib]
+path = "../../../common/error_report.rs"
+
+[dependencies]
+arc_anyhow = { path = "../../../cargo/common/arc_anyhow" }
+anyhow.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
