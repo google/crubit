@@ -30,13 +30,12 @@
 
 namespace clang::tidy::nullability {
 namespace {
-using ::clang::ast_matchers::classTemplateDecl;
 using ::clang::ast_matchers::classTemplateSpecializationDecl;
 using ::clang::ast_matchers::fieldDecl;
 using ::clang::ast_matchers::findAll;
 using ::clang::ast_matchers::functionDecl;
-using ::clang::ast_matchers::functionTemplateDecl;
 using ::clang::ast_matchers::hasName;
+using ::clang::ast_matchers::isTemplateInstantiation;
 using ::clang::ast_matchers::match;
 using ::clang::ast_matchers::selectFirst;
 using ::clang::ast_matchers::varDecl;
@@ -1487,33 +1486,8 @@ TEST(GetEligibleRangesFromASTTest, ClassTemplateMembersNoInstantiation) {
   TestAST TU(getAugmentedTestInputs(Input, Pragmas));
   TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
 
-  auto &TemplatedDecl =
-      *selectFirst<ClassTemplateDecl>(
-           "b", match(classTemplateDecl(hasName("CTemplate")).bind("b"),
-                      TU.context()))
-           ->getTemplatedDecl();
-
-  // Matches the ranges for decls in the template.
-  EXPECT_THAT(
-      getEligibleRanges(TU.context(), Defaults),
-      UnorderedElementsAre(
-          EqualsProto(*getEligibleRanges(
-              *selectFirst<FunctionDecl>(
-                  "b",
-                  match(
-                      findAll(functionDecl(hasName("methodWithPtr")).bind("b")),
-                      TemplatedDecl, TU.context())),
-              Defaults)),
-          EqualsProto(*getEligibleRanges(
-              *selectFirst<FieldDecl>(
-                  "b", match(findAll(fieldDecl(hasName("PtrField")).bind("b")),
-                             TemplatedDecl, TU.context())),
-              Defaults)),
-          EqualsProto(*getEligibleRanges(
-              *selectFirst<VarDecl>(
-                  "b", match(findAll(varDecl(hasName("StaticField")).bind("b")),
-                             TemplatedDecl, TU.context())),
-              Defaults))));
+  // No ranges without an instantiation.
+  EXPECT_THAT(getEligibleRanges(TU.context(), Defaults), IsEmpty());
 }
 
 TEST(GetEligibleRangesFromASTTest, ClassTemplateMembersHasInstantiation) {
@@ -1534,13 +1508,12 @@ TEST(GetEligibleRangesFromASTTest, ClassTemplateMembersHasInstantiation) {
   TestAST TU(getAugmentedTestInputs(Input, Pragmas));
   TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
 
-  auto &TemplatedDecl =
-      *selectFirst<ClassTemplateDecl>(
-           "b", match(classTemplateDecl(hasName("CTemplate")).bind("b"),
-                      TU.context()))
-           ->getTemplatedDecl();
+  auto &InstantiationDecl = *selectFirst<ClassTemplateSpecializationDecl>(
+      "b",
+      match(classTemplateSpecializationDecl(hasName("CTemplate")).bind("b"),
+            TU.context()));
 
-  // Matches the ranges for decls in the template.
+  // Matches the ranges for decls in the instantiation.
   EXPECT_THAT(
       getEligibleRanges(TU.context(), Defaults),
       UnorderedElementsAre(
@@ -1549,17 +1522,17 @@ TEST(GetEligibleRangesFromASTTest, ClassTemplateMembersHasInstantiation) {
                   "b",
                   match(
                       findAll(functionDecl(hasName("methodWithPtr")).bind("b")),
-                      TemplatedDecl, TU.context())),
+                      InstantiationDecl, TU.context())),
               Defaults)),
           EqualsProto(*getEligibleRanges(
               *selectFirst<FieldDecl>(
                   "b", match(findAll(fieldDecl(hasName("PtrField")).bind("b")),
-                             TemplatedDecl, TU.context())),
+                             InstantiationDecl, TU.context())),
               Defaults)),
           EqualsProto(*getEligibleRanges(
               *selectFirst<VarDecl>(
                   "b", match(findAll(varDecl(hasName("StaticField")).bind("b")),
-                             TemplatedDecl, TU.context())),
+                             InstantiationDecl, TU.context())),
               Defaults))));
 }
 
@@ -1590,36 +1563,13 @@ TEST(GetEligibleRangesFromASTTest, ClassTemplateExplicitSpecializationMembers) {
   TestAST TU(getAugmentedTestInputs(Input, Pragmas));
   TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
 
-  auto &TemplatedDecl =
-      *selectFirst<ClassTemplateDecl>(
-           "b", match(classTemplateDecl(hasName("CTemplate")).bind("b"),
-                      TU.context()))
-           ->getTemplatedDecl();
   auto &ExplicitSpecialization = *selectFirst<ClassTemplateSpecializationDecl>(
       "b", match(classTemplateSpecializationDecl().bind("b"), TU.context()));
 
-  // Matches the ranges for decls in the template and the ranges in the explicit
-  // specialization.
+  // Matches only the ranges in the explicit specialization.
   EXPECT_THAT(
       getEligibleRanges(TU.context(), Defaults),
       UnorderedElementsAre(
-          EqualsProto(*getEligibleRanges(
-              *selectFirst<FunctionDecl>(
-                  "b",
-                  match(
-                      findAll(functionDecl(hasName("methodWithPtr")).bind("b")),
-                      TemplatedDecl, TU.context())),
-              Defaults)),
-          EqualsProto(*getEligibleRanges(
-              *selectFirst<FieldDecl>(
-                  "b", match(findAll(fieldDecl(hasName("PtrField")).bind("b")),
-                             TemplatedDecl, TU.context())),
-              Defaults)),
-          EqualsProto(*getEligibleRanges(
-              *selectFirst<VarDecl>(
-                  "b", match(findAll(varDecl(hasName("StaticField")).bind("b")),
-                             TemplatedDecl, TU.context())),
-              Defaults)),
           EqualsProto(*getEligibleRanges(
               *selectFirst<FunctionDecl>(
                   "b",
@@ -1659,28 +1609,7 @@ TEST(GetEligibleRangesFromASTTest, FunctionTemplateNoInstantiation) {
   TestAST TU(getAugmentedTestInputs(Input, Pragmas));
   TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
 
-  auto &TemplatedFuncDecl =
-      *selectFirst<FunctionTemplateDecl>(
-           "b", match(functionTemplateDecl(hasName("funcTemplate")).bind("b"),
-                      TU.context()))
-           ->getTemplatedDecl();
-
-  EXPECT_THAT(
-      getEligibleRanges(TU.context(), Defaults),
-      UnorderedElementsAre(
-          EqualsProto(*getEligibleRanges(
-              *selectFirst<FunctionDecl>(
-                  "b",
-                  match(
-                      findAll(functionDecl(hasName("funcTemplate")).bind("b")),
-                      TemplatedFuncDecl, TU.context())),
-              Defaults)),
-          EqualsProto(*getEligibleRanges(
-              *selectFirst<VarDecl>(
-                  "b",
-                  match(findAll(varDecl(hasName("LocalInTemplate")).bind("b")),
-                        TemplatedFuncDecl, TU.context())),
-              Defaults))));
+  EXPECT_THAT(getEligibleRanges(TU.context(), Defaults), IsEmpty());
 }
 
 TEST(GetEligibleRangesFromASTTest, FunctionTemplateHasInstantiation) {
@@ -1698,11 +1627,11 @@ TEST(GetEligibleRangesFromASTTest, FunctionTemplateHasInstantiation) {
   TestAST TU(getAugmentedTestInputs(Input, Pragmas));
   TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
 
-  auto &TemplatedFuncDecl =
-      *selectFirst<FunctionTemplateDecl>(
-           "b", match(functionTemplateDecl(hasName("funcTemplate")).bind("b"),
-                      TU.context()))
-           ->getTemplatedDecl();
+  auto &InstantiationDecl = *selectFirst<FunctionDecl>(
+      "b",
+      match(functionDecl(isTemplateInstantiation(), hasName("funcTemplate"))
+                .bind("b"),
+            TU.context()));
 
   EXPECT_THAT(
       getEligibleRanges(TU.context(), Defaults),
@@ -1712,14 +1641,40 @@ TEST(GetEligibleRangesFromASTTest, FunctionTemplateHasInstantiation) {
                   "b",
                   match(
                       findAll(functionDecl(hasName("funcTemplate")).bind("b")),
-                      TemplatedFuncDecl, TU.context())),
+                      InstantiationDecl, TU.context())),
               Defaults)),
           EqualsProto(*getEligibleRanges(
               *selectFirst<VarDecl>(
                   "b",
                   match(findAll(varDecl(hasName("LocalInTemplate")).bind("b")),
-                        TemplatedFuncDecl, TU.context())),
+                        InstantiationDecl, TU.context())),
               Defaults))));
+}
+
+TEST(GetEligibleRangesFromASTTest, AutoTemplateSyntax) {
+  auto Input = Annotations(R"(
+    void funcTemplate(auto P, $star[[auto*]] Q) {}
+
+    void usage() {
+      $local_one[[int*]] A = nullptr;
+      $local_two[[int*]] B = nullptr;
+      funcTemplate(A, B);
+    }
+  )");
+
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input.code(), Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  EXPECT_THAT(
+      getEligibleRanges(TU.context(), Defaults),
+      UnorderedElementsAre(
+          TypeLocRanges(MainFileName, UnorderedElementsAre(
+                                          SlotRange(2, Input.range("star")))),
+          TypeLocRanges(MainFileName, UnorderedElementsAre(SlotRange(
+                                          0, Input.range("local_one")))),
+          TypeLocRanges(MainFileName, UnorderedElementsAre(SlotRange(
+                                          0, Input.range("local_two"))))));
 }
 }  // namespace
 }  // namespace clang::tidy::nullability

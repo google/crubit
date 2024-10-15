@@ -368,6 +368,14 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     // The start of the new range.
     SourceLocation Begin = R->getBegin();
 
+    // We don't annotate bare `auto`s. The only known case of a bare `auto`
+    // range being included in NullabilityLocs is in a template instantiation
+    // with a template parameter introduced by using `auto` as a parameter type.
+    if (MaybeLoc->getAs<SubstTemplateTypeParmTypeLoc>() &&
+        clang::Lexer::getSourceText(*R, SM, LangOpts) == "auto") {
+      continue;
+    }
+
     // Update `Begin` as we search backwards and find qualifier tokens.
     auto PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
     while (PrevTok.getKind() != tok::unknown) {
@@ -455,6 +463,11 @@ static void setPragmaNullability(FileID FID,
 
 static std::optional<TypeLocRanges> getEligibleRanges(
     const FunctionDecl &Fun, const TypeNullabilityDefaults &Defaults) {
+  // NullabilityWalker doesn't work on dependent types.
+  if (Fun.getReturnType()->isDependentType()) return std::nullopt;
+  for (const auto &Param : Fun.parameters()) {
+    if (Param->getType()->isDependentType()) return std::nullopt;
+  }
   FunctionTypeLoc TyLoc = Fun.getFunctionTypeLoc();
   if (TyLoc.isNull()) return std::nullopt;
   const clang::ASTContext &Context = Fun.getParentASTContext();
@@ -482,6 +495,8 @@ static std::optional<TypeLocRanges> getEligibleRanges(
 
 static std::optional<TypeLocRanges> getEligibleRanges(
     const DeclaratorDecl &D, const TypeNullabilityDefaults &Defaults) {
+  // NullabilityWalker doesn't work on dependent types.
+  if (D.getType()->isDependentType()) return std::nullopt;
   TypeLoc TyLoc = D.getTypeSourceInfo()->getTypeLoc();
   if (TyLoc.isNull()) return std::nullopt;
   const clang::ASTContext &Context = D.getASTContext();
@@ -529,6 +544,10 @@ struct Walker : public RecursiveASTVisitor<Walker> {
   const TypeNullabilityDefaults &Defaults;
   std::vector<TypeLocRanges> Out;
   std::unique_ptr<LocFilter> LocFilter;
+
+  // We can't walk the nullabilities in templates themselves, but walking the
+  // instantiations will let us at least see the templates that get used.
+  bool shouldVisitTemplateInstantiations() const { return true; }
 
   template <typename DeclT>
   void insertPointerRanges(absl::Nonnull<const DeclT *> Decl) {

@@ -1180,6 +1180,8 @@ std::string printWithNullability(QualType T, const TypeNullability &Nullability,
 
 std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(
     TypeLoc Loc, const TypeNullabilityDefaults &Defaults) {
+  CHECK(!Loc.getType()->isDependentType()) << Loc.getType().getAsString();
+
   struct Walker : NullabilityWalker<Walker> {
     std::vector<TypeNullabilityLoc> TypeNullabilityLocs;
     unsigned Slot = 0;
