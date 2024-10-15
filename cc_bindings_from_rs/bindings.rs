@@ -978,6 +978,39 @@ fn format_slice_pointer_for_cc<'tcx>(
     })
 }
 
+fn format_transparent_pointee_or_reference_for_cc<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    referent_ty: Ty<'tcx>,
+    referer_hir: Option<&rustc_hir::Ty<'tcx>>,
+    mutability: rustc_middle::mir::Mutability,
+    pointer_sigil: TokenStream,
+) -> Option<CcSnippet> {
+    let ty::TyKind::Adt(adt, substs) = referent_ty.kind() else {
+        return None;
+    };
+
+    if !matches_qualified_name(db, adt.did(), ":: core :: mem :: maybe_uninit :: MaybeUninit")
+        || substs.len() != 1
+    {
+        return None;
+    }
+
+    let referent_mid = substs[0].expect_ty();
+    let referent = SugaredTy::new(referent_mid, referer_hir);
+    format_pointer_or_reference_ty_for_cc(db, referent, mutability, pointer_sigil).ok()
+}
+
+/// Checks whether an definition matches a specific qualified name.
+fn matches_qualified_name(
+    db: &dyn BindingsGenerator<'_>,
+    item_did: DefId,
+    name_to_compare: &str,
+) -> bool {
+    // TODO(b/372153103): Compare the name via `tcx.def_path(adt.did())`.
+    let type_name = FullyQualifiedName::new(db, item_did);
+    type_name.format_for_rs().to_string() == name_to_compare
+}
+
 /// Checks that `ty` has the same ABI as `rs_std::SliceRef`.
 fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
     // Check the assumption from `rust_builtin_type_abi_assumptions.md` that Rust's
@@ -1177,6 +1210,18 @@ fn format_ty_for_cc<'tcx>(
                     pointee_hir = Some(mut_p.ty);
                 }
             }
+
+            // Early return in case we handle a transparent pointer type.
+            if let Some(snippet) = format_transparent_pointee_or_reference_for_cc(
+                db,
+                *pointee_mid,
+                pointee_hir,
+                *mutbl,
+                quote! { * },
+            ) {
+                return Ok(snippet);
+            }
+
             let pointee = SugaredTy::new(*pointee_mid, pointee_hir);
             format_pointer_or_reference_ty_for_cc(db, pointee, *mutbl, quote! { * }).with_context(
                 || format!("Failed to format the pointee of the pointer type `{ty}`"),
@@ -1187,13 +1232,14 @@ fn format_ty_for_cc<'tcx>(
             if let ty::TyKind::Slice(_) = referent_mid.kind() {
                 check_slice_layout(db.tcx(), ty.mid());
             }
+
             let mut referent_hir = None;
             if let Some(hir) = ty.hir(db) {
                 if let rustc_hir::TyKind::Ref(_, mut_p, ..) = &hir.kind {
                     referent_hir = Some(mut_p.ty);
                 }
             }
-            let referent = SugaredTy::new(*referent_mid, referent_hir);
+
             match location {
                 TypeLocation::FnReturn | TypeLocation::FnParam => (),
                 TypeLocation::Other => bail!(
@@ -1202,6 +1248,19 @@ fn format_ty_for_cc<'tcx>(
                 ),
             };
             let lifetime = format_region_as_cc_lifetime(region);
+
+            // Early return in case we handle a transparent reference type.
+            if let Some(snippet) = format_transparent_pointee_or_reference_for_cc(
+                db,
+                *referent_mid,
+                referent_hir,
+                *mutability,
+                quote! { & #lifetime },
+            ) {
+                return Ok(snippet);
+            }
+
+            let referent = SugaredTy::new(*referent_mid, referent_hir);
             let mut cc_type = format_pointer_or_reference_ty_for_cc(
                 db,
                 referent,
@@ -1461,6 +1520,20 @@ fn format_param_types_for_cc<'tcx>(
         .collect()
 }
 
+/// Format a supported `repr(transparent)` pointee type
+fn format_transparent_pointee<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    ty: &Ty<'tcx>,
+) -> Result<TokenStream> {
+    if let ty::TyKind::Adt(adt, substs) = ty.kind() {
+        if matches_qualified_name(db, adt.did(), ":: core :: mem :: maybe_uninit :: MaybeUninit") {
+            let generic_ty = format_ty_for_rs(db, substs[0].expect_ty())?;
+            return Ok(quote! { std::mem::MaybeUninit<#generic_ty> });
+        }
+    }
+    bail!("unable to generate bindings for anything other than `MaybeUninit<T>`")
+}
+
 /// Formats `ty` for Rust - to be used in `..._cc_api_impl.rs` (e.g. as a type
 /// of a parameter in a Rust thunk).  Because `..._cc_api_impl.rs` is a
 /// distinct, separate crate, the returned `TokenStream` uses crate-qualified
@@ -1468,7 +1541,7 @@ fn format_param_types_for_cc<'tcx>(
 /// than just `SomeStruct`.
 //
 // TODO(b/259724276): This function's results should be memoized.
-fn format_ty_for_rs(db: &dyn BindingsGenerator<'_>, ty: Ty) -> Result<TokenStream> {
+fn format_ty_for_rs<'tcx>(db: &dyn BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
     Ok(match ty.kind() {
         ty::TyKind::Bool
         | ty::TyKind::Float(_)
@@ -1497,9 +1570,12 @@ fn format_ty_for_rs(db: &dyn BindingsGenerator<'_>, ty: Ty) -> Result<TokenStrea
                 Mutability::Mut => quote! { mut },
                 Mutability::Not => quote! { const },
             };
-            let ty = format_ty_for_rs(db, *pointee_ty).with_context(|| {
-                format!("Failed to format the pointee of the pointer type `{ty}`")
-            })?;
+            let ty = match format_transparent_pointee(db, pointee_ty) {
+                Ok(generic_ty) => generic_ty,
+                Err(_) => format_ty_for_rs(db, *pointee_ty).with_context(|| {
+                    format!("Failed to format the pointee of the pointer type `{ty}`")
+                })?,
+            };
             quote! { * #qualifier #ty }
         }
         ty::TyKind::Ref(region, referent_ty, mutability) => {
@@ -1507,9 +1583,12 @@ fn format_ty_for_rs(db: &dyn BindingsGenerator<'_>, ty: Ty) -> Result<TokenStrea
                 Mutability::Mut => quote! { mut },
                 Mutability::Not => quote! {},
             };
-            let ty = format_ty_for_rs(db, *referent_ty).with_context(|| {
-                format!("Failed to format the referent of the reference type `{ty}`")
-            })?;
+            let ty = match format_transparent_pointee(db, referent_ty) {
+                Ok(generic_ty) => generic_ty,
+                Err(_) => format_ty_for_rs(db, *referent_ty).with_context(|| {
+                    format!("Failed to format the referent of the reference type `{ty}`")
+                })?,
+            };
             let lifetime = format_region_as_rs_lifetime(region);
             quote! { & #lifetime #mutability #ty }
         }
@@ -8824,6 +8903,17 @@ pub mod tests {
             ),
             // Extra parens/sugar are expected to be ignored:
             case!(rs: "(bool)", cc: "bool"),
+            // References to MaybeUninit:
+            case!(
+                rs: "*const std::mem::MaybeUninit<i32>",
+                cc: "std :: int32_t const *",
+                includes: ["<cstdint>"]
+            ),
+            case!(
+                rs: "&mut std::mem::MaybeUninit<i32>",
+                cc: "std :: int32_t & [[clang :: annotate_type (\"lifetime\" , \"__anon1\")]]",
+                includes: ["<cstdint>"]
+            ),
         ];
         let preamble = quote! {
             #![allow(unused_parens)]
@@ -9105,6 +9195,14 @@ pub mod tests {
             ("extern \"C\" fn(i32) -> i32", "extern \"C\" fn(i32) -> i32"),
             // Pointer to a Slice:
             ("*mut [i32]", "*mut [i32]"),
+            // MaybeUninit:
+            ("&'static std::mem::MaybeUninit<i32>", "& 'static std :: mem :: MaybeUninit < i32 >"),
+            (
+                "&'static mut std::mem::MaybeUninit<i32>",
+                "& 'static mut std :: mem :: MaybeUninit < i32 >",
+            ),
+            ("*const std::mem::MaybeUninit<i32>", "*const std::mem::MaybeUninit<i32>"),
+            ("*mut std::mem::MaybeUninit<i32>", "*mut std::mem::MaybeUninit<i32>"),
         ];
         let preamble = quote! {
             #![feature(never_type)]

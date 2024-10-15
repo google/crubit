@@ -14,6 +14,9 @@ rust_library(
     name = "primitive_types",
     testonly = 1,
     srcs = ["primitive_types.rs"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
     deps = ["@crate_index//:libc"],
 )
 

@@ -3,10 +3,10 @@
 NOTE: The bug links below, of the form `b/123456`, are for Google-internal
 tracking purposes.
 
-What follows is an overview of the major features Crubit does and
-does not support. The list is necessarily incomplete, because there exist more
-features and types than could be feasibly listed in anything readable, but
-it should give a rough idea.
+What follows is an overview of the major features Crubit does and does not
+support. The list is necessarily incomplete, because there exist more features
+and types than could be feasibly listed in anything readable, but it should give
+a rough idea.
 
 This page should evolve over time:
 
@@ -42,6 +42,8 @@ We have *experimental* unreleased support for the following types:
 
 *   (2024H2) b/333737717: ABI-compatible `std::string_view` /
     `absl::string_view`
+*   (2024H2) b/362475441: references and pointers to `MaybeUninit<T>`, which are
+    treated as `T`.
 
 We have planned support for the following types:
 

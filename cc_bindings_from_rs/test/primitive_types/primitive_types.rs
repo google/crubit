@@ -28,6 +28,28 @@ pub mod test_c_void_ptr {
     }
 }
 
+pub mod test_maybe_uninit {
+    use std::mem::MaybeUninit;
+
+    pub fn maybe_uninit_ref(maybe_uninit: &'static MaybeUninit<i32>) -> &'static MaybeUninit<i32> {
+        maybe_uninit
+    }
+
+    pub fn maybe_uninit_ref_mut(
+        maybe_uninit: &'static mut MaybeUninit<i32>,
+    ) -> &'static mut MaybeUninit<i32> {
+        maybe_uninit
+    }
+
+    pub fn maybe_uninit_ptr(maybe_uninit: *const MaybeUninit<i32>) -> *const MaybeUninit<i32> {
+        maybe_uninit
+    }
+
+    pub fn maybe_uninit_ptr_mut(maybe_uninit: *mut MaybeUninit<i32>) -> *mut MaybeUninit<i32> {
+        maybe_uninit
+    }
+}
+
 extern "C" fn i8_func(_: i8) {}
 extern "C" fn c_char_func(_: core::ffi::c_char) {}
 

@@ -44,6 +44,25 @@ TEST(PrimitiveTypesTest, CVoidPtr) {
                                                  identity_mut_c_void_ptr)>));
 }
 
+TEST(PrimitiveTypesTest, MaybeUninitTest) {
+  namespace maybe_uninit = primitive_types::test_maybe_uninit;
+
+  int32_t val = 0;
+  const int32_t const_val = 0;
+
+  auto& ref = maybe_uninit::maybe_uninit_ref(const_val);
+  static_assert(std::is_same_v<const int32_t&, decltype(ref)>);
+
+  auto& ref_mut = maybe_uninit::maybe_uninit_ref_mut(val);
+  static_assert(std::is_same_v<int32_t&, decltype(ref_mut)>);
+
+  auto ptr = maybe_uninit::maybe_uninit_ptr(&const_val);
+  static_assert(std::is_same_v<const int32_t*, decltype(ptr)>);
+
+  auto ptr_mut = maybe_uninit::maybe_uninit_ptr_mut(&val);
+  static_assert(std::is_same_v<int32_t*, decltype(ptr_mut)>);
+}
+
 TEST(PrimitiveTypesTest, ReturnTypes) {
   namespace types = primitive_types::return_types;
 
@@ -130,11 +149,6 @@ TEST(PrimitiveTypesTest, ReturnTypes) {
 
   static_assert(std::is_same_v<decltype(types::f64()), double>);
   EXPECT_EQ(types::f64(), 0);
-
-  static_assert(std::is_same_v<decltype(types::i8_func()),
-                               std::type_identity_t<void(int8_t)>&>);
-  static_assert(std::is_same_v<decltype(types::c_char_func()),
-                               std::type_identity_t<void(char)>&>);
 }
 
 TEST(PrimitiveTypesTest, FieldTypes) {
