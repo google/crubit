@@ -422,6 +422,7 @@ cc_library(
         ":cc_ir",
         ":decl_importer",
         ":frontend_action",
+        "//common:status_macros",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/log:check",

@@ -415,7 +415,7 @@ TEST(ImporterTest, TrivialCopyConstructor) {
       Defaulted(const Defaulted&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -438,7 +438,7 @@ TEST(ImporterTest, NontrivialUserDefinedCopyConstructor) {
     inline NontrivialUserDefinedDefaulted::NontrivialUserDefinedDefaulted(
         const NontrivialUserDefinedDefaulted&) = default;
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
@@ -460,7 +460,7 @@ TEST(ImporterTest, NontrivialMembersCopyConstructor) {
     };
     struct Subclass : public MemberImplicit {};
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
@@ -483,7 +483,7 @@ TEST(ImporterTest, DeletedCopyConstructor) {
       DeletedByCtorDef(DeletedByCtorDef&&) {}
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records,
@@ -501,7 +501,7 @@ TEST(ImporterTest, PublicCopyConstructor) {
       Section(const Section&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
@@ -519,7 +519,7 @@ TEST(ImporterTest, PrivateCopyConstructor) {
       Section(const Section&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -534,7 +534,7 @@ TEST(ImporterTest, TrivialMoveConstructor) {
       Defaulted(Defaulted&&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -557,7 +557,7 @@ TEST(ImporterTest, NontrivialUserDefinedMoveConstructor) {
     inline NontrivialUserDefinedDefaulted::NontrivialUserDefinedDefaulted(
         NontrivialUserDefinedDefaulted&&) = default;
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(
@@ -578,7 +578,7 @@ TEST(ImporterTest, NontrivialMembersMoveConstructor) {
     };
     struct Subclass : public MemberImplicit {};
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
@@ -601,7 +601,7 @@ TEST(ImporterTest, DeletedMoveConstructor) {
       SuppressedByCtorDef(const SuppressedByCtorDef&) {}
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records,
@@ -619,7 +619,7 @@ TEST(ImporterTest, PublicMoveConstructor) {
       Section(Section&&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
@@ -637,7 +637,7 @@ TEST(ImporterTest, PrivateMoveConstructor) {
       Section(Section&&) = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -652,7 +652,7 @@ TEST(ImporterTest, TrivialDestructor) {
       ~Defaulted() = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -680,7 +680,7 @@ TEST(ImporterTest, NontrivialUserDefinedDestructor) {
     inline NontrivialUserDefinedDefaulted::~NontrivialUserDefinedDefaulted() =
         default;
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
@@ -702,7 +702,7 @@ TEST(ImporterTest, NontrivialMembersDestructor) {
     };
     struct Subclass : public MemberImplicit {};
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
@@ -722,7 +722,7 @@ TEST(ImporterTest, DeletedDestructor) {
       Deleted x;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -741,7 +741,7 @@ TEST(ImporterTest, PublicDestructor) {
       ~Section() = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
@@ -758,7 +758,7 @@ TEST(ImporterTest, PrivateDestructor) {
       ~Section() = default;
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
@@ -776,7 +776,7 @@ TEST(ImporterTest, TrivialAbi) {
       Nontrivial(const Nontrivial&) {}
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
@@ -789,7 +789,7 @@ TEST(ImporterTest, NotTrivialAbi) {
       Nontrivial(const Nontrivial&) {}
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(1));
@@ -885,7 +885,7 @@ TEST(ImporterTest, RecordItemIds) {
       int baz();
     };
   )cc";
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   ASSERT_EQ(records.size(), 1);

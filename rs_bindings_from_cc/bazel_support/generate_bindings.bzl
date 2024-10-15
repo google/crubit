@@ -36,7 +36,13 @@ def _get_hdrs_command_line(hdrs):
     return ["--public_headers=" + ",".join([x.path for x in hdrs])]
 
 def _get_extra_rs_srcs_command_line(extra_rs_srcs):
-    return ["--extra_rs_srcs=" + ",".join([x.path for x in extra_rs_srcs])]
+    extra_rs_src_info = []
+    for (file, ns_path) in extra_rs_srcs:
+        if ns_path:
+            extra_rs_src_info.append(file.path + "=" + ns_path)
+        else:
+            extra_rs_src_info.append(file.path)
+    return ["--extra_rs_srcs=" + ",".join(extra_rs_src_info)]
 
 def _get_include_paths_for_builtin_headers_and_compiler_rt_headers(ctx, cc_toolchain):
     return [cc_toolchain.built_in_include_directories[1]]
@@ -153,7 +159,7 @@ def generate_bindings(
                 ctx.executable._clang_format,
                 ctx.executable._rustfmt,
                 rs_bindings_from_cc_tool,
-            ] + ctx.files._rustfmt_cfg + extra_rs_srcs,
+            ] + ctx.files._rustfmt_cfg + [f for f, _ in extra_rs_srcs],
             transitive = [action_inputs],
         ),
         additional_outputs = [x for x in [rs_output, namespaces_output, error_report_output] if x != None],

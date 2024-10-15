@@ -12,19 +12,21 @@ visibility([
     "//support/...",
 ])
 
-_AdditionalRustSrcsProviderInfo = provider(
+AdditionalRustSrcsProviderInfo = provider(
     doc = """
 The provider that specifies the Rust source files to be included in the Rust crate along with
 generated Rust bindings of this C++ target.
 """,
     fields = {
         "srcs": "The Rust source files to be included in addition to generated Rust bindings.",
+        "namespace_path": "The namespace path for the Rust source files.",
     },
 )
 
 def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
-    return [_AdditionalRustSrcsProviderInfo(
+    return [AdditionalRustSrcsProviderInfo(
         srcs = ctx.attr.srcs,
+        namespace_path = ctx.attr.namespace_path,
     )]
 
 additional_rust_srcs_for_crubit_bindings = rule(
@@ -33,6 +35,12 @@ additional_rust_srcs_for_crubit_bindings = rule(
             doc = "The Rust source files to be incldued in addition to generated Rust bindings.",
             allow_files = True,
             mandatory = True,
+        ),
+        "namespace_path": attr.string(
+            doc = """This allows Rust source files define new entries inside of a specific existing C++ namespace instead of the top level namespace.
+For modules which are not existing namespace names, use `pub mod` statement in the Rust source file instead.""",
+            mandatory = False,
+            default = "",
         ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
@@ -50,11 +58,13 @@ def get_additional_rust_srcs(_target, aspect_ctx):
         aspect_ctx: The ctx from an aspect_hint.
 
     Returns:
-        A list of `File`s as specified by the `extra_rs_srcs` associated with the `_target`.
+        A list of `File` and its module paths as specified by the `extra_rs_srcs` associated with the `_target`.
     """
     additional_rust_srcs = []
     for hint in aspect_ctx.rule.attr.aspect_hints:
-        if _AdditionalRustSrcsProviderInfo in hint:
-            for target in hint[_AdditionalRustSrcsProviderInfo].srcs:
-                additional_rust_srcs.extend(target.files.to_list())
+        if AdditionalRustSrcsProviderInfo in hint:
+            ns_path = hint[AdditionalRustSrcsProviderInfo].namespace_path
+            for target in hint[AdditionalRustSrcsProviderInfo].srcs:
+                srcs = [(f, ns_path) for f in target.files.to_list()]
+                additional_rust_srcs.extend(srcs)
     return collections.uniq(additional_rust_srcs)

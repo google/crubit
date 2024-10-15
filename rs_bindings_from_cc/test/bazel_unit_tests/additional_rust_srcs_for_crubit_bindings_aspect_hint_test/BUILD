@@ -35,3 +35,31 @@ crubit_rust_test(
 additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite(
     name = "additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite",
 )
+
+additional_rust_srcs_for_crubit_bindings(
+    name = "additional_rust_srcs_with_namespace_path",
+    srcs = [
+        "inner.rs",
+    ],
+    namespace_path = "a::b::c",
+)
+
+crubit_test_cc_library(
+    name = "cc_lib_with_additional_rust_srcs_with_namespace_path",
+    hdrs = ["namespace_lib.h"],
+    aspect_hints = [
+        ":additional_rust_srcs_with_namespace_path",
+        "//features:supported",
+    ],
+)
+
+crubit_rust_test(
+    name = "additional_rust_srcs_with_namespace_path_test",
+    srcs = ["additional_rust_srcs_with_namespace_path_test.rs"],
+    cc_deps = [
+        ":cc_lib_with_additional_rust_srcs_with_namespace_path",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

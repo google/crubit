@@ -5,6 +5,10 @@
 """Generates bindings for the toolchain headers."""
 
 load(
+    "@@//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
+    "AdditionalRustSrcsProviderInfo",
+)
+load(
     "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
     "DepsForBindingsInfo",
     "RustToolchainHeadersInfo",
@@ -69,7 +73,12 @@ def _bindings_for_toolchain_headers_impl(ctx):
     for hdr in ctx.attr.public_libcxx_hdrs + ctx.attr.public_libc_hdrs:
         header_includes.append("-include")
         header_includes.append(hdr)
-
+    extra_rs_srcs = []
+    for target in ctx.attr.extra_rs_srcs:
+        if AdditionalRustSrcsProviderInfo in target:
+            extra_rs_srcs.extend([(f, target.namespace_path) for f in target.files.to_list()])
+        else:
+            extra_rs_srcs.extend([(f, "") for f in target.files.to_list()])
     return [RustToolchainHeadersInfo(headers = std_and_builtin_files)] + generate_and_compile_bindings(
         ctx,
         ctx.attr,
@@ -78,7 +87,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
         header_includes = header_includes,
         action_inputs = std_and_builtin_files,
         target_args = target_args,
-        extra_rs_srcs = ctx.files.extra_rs_srcs,
+        extra_rs_srcs = extra_rs_srcs,
         deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
         deps_for_rs_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
     )

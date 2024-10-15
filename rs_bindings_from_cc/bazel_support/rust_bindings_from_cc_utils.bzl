@@ -82,8 +82,11 @@ def generate_and_compile_bindings(
 
     # Relocate the rs files so that they can be read by rustc using relative paths.
     extra_rs_srcs_relocated = []
-    for file in extra_rs_srcs:
-        new_file = ctx.actions.declare_file(file.path, sibling = rs_output)
+    for (file, ns_path) in extra_rs_srcs:
+        file_path = file.path
+        if ns_path:
+            file_path = ns_path.replace("::", "/") + "/" + file_path
+        new_file = ctx.actions.declare_file(file_path, sibling = rs_output)
         ctx.actions.symlink(output = new_file, target_file = file)
         extra_rs_srcs_relocated.append(new_file)
 

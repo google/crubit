@@ -873,6 +873,17 @@ struct IR {
     return filtered_items;
   }
 
+  template <typename T>
+  std::vector<T*> get_items_if() {
+    std::vector<T*> filtered_items;
+    for (auto& item : items) {
+      if (auto* filtered_item = std::get_if<T>(&item)) {
+        filtered_items.push_back(const_cast<T*>(filtered_item));
+      }
+    }
+    return filtered_items;
+  }
+
   // Collection of public headers that were used to construct the AST this `IR`.
   //
   // In production, these come from the `--public_headers` cmdline flag.
