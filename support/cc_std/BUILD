@@ -95,12 +95,18 @@ LIBCXX_HEADERS = [
 
 LIBC_HEADERS = []
 
-# TODO(b/336981839): Delete this, it's only here for compatibility.
-# Once we delete the `hdrs` parameter to bindings_for_toolchain_headers, this has no purpose.
 filegroup(
     name = "empty_filegroup",
     srcs = [],
     visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "crubit_internal_helper_headers",
+    srcs = ["std_allocator.h"],
+    visibility = [
+        "//visibility:public",
+    ],
 )
 
 bindings_for_toolchain_headers(

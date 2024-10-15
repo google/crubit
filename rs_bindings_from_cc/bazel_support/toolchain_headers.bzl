@@ -34,7 +34,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
     toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"].rs_bindings_from_cc_toolchain_info
     builtin_headers = toolchain.builtin_headers
     grte_headers = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:grte_toolchain_type"].grte_toolchain_info.grte_headers
-    stl_headers = toolchain.stl_headers + grte_headers + ctx.files.hdrs
+    stl_headers = toolchain.stl_headers + grte_headers + ctx.files.extra_hdrs
     std_files = ctx.attr._stl[CcInfo].compilation_context.headers.to_list() + stl_headers
     std_and_builtin_files = depset(direct = stl_headers + builtin_headers, transitive = [ctx.attr._stl[CcInfo].compilation_context.headers])
 
@@ -74,7 +74,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
         ctx,
         ctx.attr,
         compilation_context = ctx.attr._stl[CcInfo].compilation_context,
-        public_hdrs = public_libc_files + public_libcxx_files,
+        public_hdrs = public_libc_files + public_libcxx_files + ctx.files.extra_hdrs,
         header_includes = header_includes,
         action_inputs = std_and_builtin_files,
         target_args = target_args,
@@ -89,6 +89,10 @@ bindings_for_toolchain_headers = rule(
         bindings_attrs.items() + {
             # TODO(b/336981839): Delete this once cl/671582196 makes it to stable.
             "hdrs": attr.label(default = "//support/cc_std:empty_filegroup"),
+            # Additional internal headers that are not part of the standard library. These headers will
+            # receive bindings which are exposed along with the standard library bindings.
+            # Everything inside these under should be hidden within namespace `crubit_cc_std_internal`.
+            "extra_hdrs": attr.label_list(default = []),
             "public_libc_hdrs": attr.string_list(),
             "public_libcxx_hdrs": attr.string_list(),
             "extra_rs_srcs": attr.label_list(allow_files = True),
