@@ -167,6 +167,21 @@ const TypeNullability &getNullabilityForChild(
   });
 }
 
+static absl::Nullable<const Decl *> getAssociatedTemplateDecl(
+    const SubstTemplateTypeParmType *ST) {
+  const Decl *AssociatedDecl = ST->getAssociatedDecl();
+  if (!AssociatedDecl) return nullptr;
+  if (isa<RedeclarableTemplateDecl>(AssociatedDecl)) return AssociatedDecl;
+  if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(AssociatedDecl))
+    return VTSD->getSpecializedTemplate();
+  if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(AssociatedDecl))
+    return CTSD->getSpecializedTemplate();
+  if (auto *FD = dyn_cast<FunctionDecl>(AssociatedDecl);
+      FD && FD->isTemplateInstantiation())
+    return FD->getPrimaryTemplate();
+  return nullptr;
+}
+
 // The Resugarer describes the nullability of template arguments within types we
 // query using getTypeNullability().
 //
@@ -232,7 +247,7 @@ struct Resugarer {
 
     std::optional<TypeNullability> operator()(
         const SubstTy *ST, const TypeNullabilityDefaults &Defaults) const {
-      if (Template != ST->getAssociatedDecl()) return std::nullopt;
+      if (Template != getAssociatedTemplateDecl(ST)) return std::nullopt;
       // Some or all of the template arguments may be deduced, and we won't
       // see those on the `DeclRefExpr`. If the template argument was deduced,
       // we don't have any sugar for it.
