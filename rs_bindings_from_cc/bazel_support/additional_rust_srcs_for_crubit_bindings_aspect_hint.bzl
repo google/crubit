@@ -2,8 +2,29 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-"""The aspect hint, to be attached to a `cc_library`, specifies additional Rust source files to be
-included in the generated Rust crate."""
+"""The `additional_rust_srcs_for_crubit_bindings` aspect hint, when attached to a `cc_library`,
+specifies additional Rust source files to be included in the generated Rust crate by Crubit.
+
+Typical uses:
+
+ *  Adding trait implementations to a type defined in C++, which call existing C++ functions and
+    methods.
+ *  Renaming methods or functions to a more typical Rust name.
+ *  Defining completely hand-written ABI-equivalent or automatically-bridged wrapper Rust types
+    which substitute for a given C++ type. (Especially to support templates, or where Crubit's
+    automatically generated struct is otherwise insufficient or unavailable.)
+*   Defining inherently Rust-specific helper types, such as an iterator type for the `IntoIter`
+    trait implementation of a C++ container type.
+
+This should **not** be used to introduce substantial new functionality, because any new functions or
+types defined in a `additional_rust_srcs_for_crubit_bindings` source file are inaccessible
+to any C++ callers. Crubit cannot run on this file in the reverse direction (to generate C++
+bindings from Rust source code).
+
+Rust and C++ form one ecosystem: anything a Rust caller may want to do, a C++ caller may want to
+do as well. Typically, abstractions should be defined in the C++ file, and exposed to Rust callers
+through Crubit.
+"""
 
 load("@bazel_skylib//lib:collections.bzl", "collections")
 
