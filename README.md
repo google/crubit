@@ -42,7 +42,7 @@ directly via Crubit. These restrictions will be relaxed over time.
 Consider the following Rust function:
 
 ```rust
-pub fn is_greater(lhs: i32, rhs: i32) { ... }
+pub fn is_greater(lhs: i32, rhs: i32) -> bool { ... }
 ```
 
 This function becomes callable from C++ as if it were defined as:
