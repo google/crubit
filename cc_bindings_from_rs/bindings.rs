@@ -31,9 +31,7 @@ use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Region, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LocalModDefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
-use rustc_target::abi::{
-    Abi, AddressSpace, FieldsShape, Integer, Layout, Pointer, Primitive, Scalar,
-};
+use rustc_target::abi::{Abi, AddressSpace, FieldsShape, Integer, Layout, Primitive, Scalar};
 use rustc_trait_selection::infer::InferCtxtExt;
 use rustc_type_ir::RegionKind;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -1024,7 +1022,7 @@ fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
     assert!(matches!(
         layout.abi(),
         Abi::ScalarPair(
-            Scalar::Initialized { value: Pointer(AddressSpace(_)), .. },
+            Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
             Scalar::Initialized {
                 value: Primitive::Int(Integer::I64, /* signedness = */ false),
                 ..

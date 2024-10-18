@@ -17,7 +17,7 @@ extern crate rustc_span;
 use anyhow::{bail, ensure, Result};
 
 use rustc_ast::ast::LitKind;
-use rustc_ast::ast::{MetaItemKind, NestedMetaItem};
+use rustc_ast::ast::MetaItemKind;
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
@@ -69,7 +69,7 @@ pub fn get(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttr> {
             bail!("Invalid #[__crubit::annotate(...)] attribute (expected __crubit::annotate())");
         };
         for arg in args {
-            let NestedMetaItem::MetaItem(arg) = arg else {
+            let Some(arg) = arg.meta_item() else {
                 bail!(
                     "Invalid #[__crubit::annotate(...)] attribute (expected nested meta item, not a literal)"
                 );
