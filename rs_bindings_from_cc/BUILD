@@ -22,24 +22,10 @@ load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_binary.bzl",
     "rust_bindings_from_cc_binary",
 )
-load(
-    "//rs_bindings_from_cc/bazel_support:with_cc_toolchain_flags.bzl",
-    "with_cc_toolchain_flags",
-)
 
 package(
     default_applicable_licenses = ["//:license"],
     default_visibility = ["//:__subpackages__"],
-)
-
-with_cc_toolchain_flags(
-    name = "test_wrapper",
-    binary = ":rs_bindings_from_cc",
-    extra_args = [
-        "--rs_out=/tmp/rs_api.rs",
-        "--cc_out=/tmp/rs_api_impl.cc",
-        "--ir_out=/tmp/ir.json",
-    ],
 )
 
 rust_bindings_from_cc_binary(

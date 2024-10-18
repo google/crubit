@@ -54,22 +54,6 @@ $ bazel build --config=crubit-genfiles //some/cc/library/target:here
 The source files used for interop will be output into bazel-bin, and their paths
 will be output to the terminal.
 
-### `:test_wrapper`
-
-For convenience, `:test_wrapper` is a shell script that passes all Clang command
-line flags from the current Bazel C++ toolchain:
-
-```
-bazel run //rs_bindings_from_cc:test_wrapper -- --public_headers=hello_world.h
-```
-
-or:
-
-```
-bazel build //rs_bindings_from_cc:test_wrapper
-bazel-bin/rs_bindings_from_cc/test_wrapper --public_headers=hello_world.h
-```
-
 ## Testing Practices
 
 If possible follow these recommendations:

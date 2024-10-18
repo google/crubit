@@ -26,16 +26,6 @@ bzl_library(
 )
 
 bzl_library(
-    name = "with_cc_toolchain_flags",
-    srcs = ["with_cc_toolchain_flags.bzl"],
-    visibility = ["//fuzzer:__pkg__"],
-    deps = [
-        "@bazel_tools//tools/build_defs/cc:action_names",
-        "@bazel_tools//tools/cpp:toolchain_utils",
-    ],
-)
-
-bzl_library(
     name = "toolchain_headers_bzl",
     srcs = ["toolchain_headers.bzl"],
     deps = [
