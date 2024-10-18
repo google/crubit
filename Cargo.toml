@@ -4,7 +4,7 @@
 
 [workspace]
 members = [
-  "rs_bindings_from_cc/cargo/rs_bindings_from_cc",
+  "cargo/cc_bindings_from_rs/cc_bindings_from_rs",
 ]
 resolver = "2"
 
@@ -22,4 +22,6 @@ serde_json = "1"
 syn = { version = "2", features = [ "extra-traits" ] }
 quote = "1"
 unicode-ident = "1"
+either = "1"
+clap = { version = "4", features = [ "derive" ] }
 

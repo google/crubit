@@ -1,0 +1,18 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate cmdline.
+
+[package]
+name = "cmdline"
+edition = "2021"
+
+[lib]
+path = "../../../cc_bindings_from_rs/cmdline.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+crubit_feature = { path = "../../../cargo/common/crubit_feature" }
+flagset.workspace = true

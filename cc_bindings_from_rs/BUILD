@@ -11,7 +11,10 @@ load(
     "crubit_sh_test",
 )
 
-package(default_applicable_licenses = ["//:license"])
+package(
+    default_applicable_licenses = ["//:license"],
+    default_visibility = ["//:__subpackages__"],
+)
 
 rust_library(
     name = "bindings",

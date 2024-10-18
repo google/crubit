@@ -1,0 +1,16 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate run_compiler.
+
+[package]
+name = "run_compiler"
+edition = "2021"
+
+[lib]
+path = "../../../cc_bindings_from_rs/run_compiler.rs"
+
+[dependencies]
+arc_anyhow = { path = "../../../cargo/common/arc_anyhow" }
+either.workspace = true
