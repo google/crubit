@@ -139,28 +139,38 @@ impl Inline {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
+    unsafe extern "C" {
         #[link_name = "_ZN9Noninline17UnqualifiedMethodEv"]
-        pub(crate) fn __rust_thunk___ZN9Noninline17UnqualifiedMethodEv(
+        pub(crate) unsafe fn __rust_thunk___ZN9Noninline17UnqualifiedMethodEv(
             __this: *mut crate::Noninline,
         );
         #[link_name = "_ZNR9Noninline12LvalueMethodEv"]
-        pub(crate) fn __rust_thunk___ZNR9Noninline12LvalueMethodEv(__this: *mut crate::Noninline);
+        pub(crate) unsafe fn __rust_thunk___ZNR9Noninline12LvalueMethodEv(
+            __this: *mut crate::Noninline,
+        );
         #[link_name = "_ZNKR9Noninline17LvalueMethodConstEv"]
-        pub(crate) fn __rust_thunk___ZNKR9Noninline17LvalueMethodConstEv(
+        pub(crate) unsafe fn __rust_thunk___ZNKR9Noninline17LvalueMethodConstEv(
             __this: *const crate::Noninline,
         );
         #[link_name = "_ZNO9Noninline12RvalueMethodEv"]
-        pub(crate) fn __rust_thunk___ZNO9Noninline12RvalueMethodEv(__this: *mut crate::Noninline);
+        pub(crate) unsafe fn __rust_thunk___ZNO9Noninline12RvalueMethodEv(
+            __this: *mut crate::Noninline,
+        );
         #[link_name = "_ZNKO9Noninline17RvalueMethodConstEv"]
-        pub(crate) fn __rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(
+        pub(crate) unsafe fn __rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(
             __this: *const crate::Noninline,
         );
-        pub(crate) fn __rust_thunk___ZN6Inline17UnqualifiedMethodEv(__this: *mut crate::Inline);
-        pub(crate) fn __rust_thunk___ZNR6Inline12LvalueMethodEv(__this: *mut crate::Inline);
-        pub(crate) fn __rust_thunk___ZNKR6Inline17LvalueMethodConstEv(__this: *const crate::Inline);
-        pub(crate) fn __rust_thunk___ZNO6Inline12RvalueMethodEv(__this: *mut crate::Inline);
-        pub(crate) fn __rust_thunk___ZNKO6Inline17RvalueMethodConstEv(__this: *const crate::Inline);
+        pub(crate) unsafe fn __rust_thunk___ZN6Inline17UnqualifiedMethodEv(
+            __this: *mut crate::Inline,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZNR6Inline12LvalueMethodEv(__this: *mut crate::Inline);
+        pub(crate) unsafe fn __rust_thunk___ZNKR6Inline17LvalueMethodConstEv(
+            __this: *const crate::Inline,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZNO6Inline12RvalueMethodEv(__this: *mut crate::Inline);
+        pub(crate) unsafe fn __rust_thunk___ZNKO6Inline17RvalueMethodConstEv(
+            __this: *const crate::Inline,
+        );
     }
 }
 

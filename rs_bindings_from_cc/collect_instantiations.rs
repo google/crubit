@@ -29,7 +29,7 @@ use std::process;
 ///    * function doesn't take ownership of (in other words it borrows) the
 ///      param `json`
 ///    * function passes ownership of the returned value to the caller
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn CollectInstantiationsImpl(json: FfiU8Slice) -> FfiU8SliceBox {
     catch_unwind(|| {
         let filenames: Vec<PathBuf> = serde_json::from_reader(json.as_slice())

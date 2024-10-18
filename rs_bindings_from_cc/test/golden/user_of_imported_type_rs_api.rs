@@ -81,23 +81,23 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UserOfImport
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
             __return: &mut ::core::mem::MaybeUninit<trivial_type_cc::ns::Trivial>,
             t: &mut trivial_type_cc::ns::Trivial,
         );
-        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::UserOfImportedType>,
         );
-        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::UserOfImportedType>,
             __param_0: ::ctor::RvalueReference<'b, crate::UserOfImportedType>,
         );
-        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeaSERKS_<'a, 'b>(
             __this: &'a mut crate::UserOfImportedType,
             __param_0: &'b crate::UserOfImportedType,
         ) -> &'a mut crate::UserOfImportedType;
-        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeaSEOS_<'a, 'b>(
             __this: &'a mut crate::UserOfImportedType,
             __param_0: ::ctor::RvalueReference<'b, crate::UserOfImportedType>,
         ) -> &'a mut crate::UserOfImportedType;

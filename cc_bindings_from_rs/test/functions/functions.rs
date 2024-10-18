@@ -6,24 +6,24 @@
 //! generated C++ bindings are then tested via `functions_test.cc`.
 
 /// APIs for testing various function calling conventions and linking options:
-/// - `#[no_mangle]`
-/// - `#[export_name = ...]`
+/// - `#[unsafe(no_mangle)]`
+/// - `#[unsafe(export_name = ...)]`
 /// - `extern "C"` vs default/Rust ABI
 /// - etc.
 pub mod fn_abi_tests {
 
     /// Testing one of simpler function bindings:
     /// - `extern "C"` means that no thunk is required
-    /// - `#[no_mangle]` means that the function is already exposed with the
-    ///   desired, public name (and just needs to be redeclared in C++).
-    #[no_mangle]
+    /// - `#[unsafe(no_mangle)]` means that the function is already exposed with
+    ///   the desired, public name (and just needs to be redeclared in C++).
+    #[unsafe(no_mangle)]
     pub extern "C" fn get_42_as_f64_via_no_mangle_extern_c() -> f64 {
         42.0
     }
 
-    /// Testing `#[export_name = ...]` - the generated bindings need to
+    /// Testing `#[unsafe(export_name = ...)]` - the generated bindings need to
     /// forward/proxy the call into a function with a different name.
-    #[export_name = "custom_export_name_for_add_i32"]
+    #[unsafe(export_name = "custom_export_name_for_add_i32")]
     pub extern "C" fn add_i32_via_extern_c_with_export_name(x: i32, y: i32) -> i32 {
         x + y
     }
@@ -102,12 +102,12 @@ pub mod unit_ret_ty_tests {
 
     // Presence of the API below tests how bindings handle functions returning
     // `void`.
-    #[export_name = "custom_export_name_for_get_global_i32"]
+    #[unsafe(export_name = "custom_export_name_for_get_global_i32")]
     pub extern "C" fn set_global_i32_via_extern_c_with_export_name(x: i32) {
         *G_I32.lock().unwrap() = x;
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn get_global_i32_via_extern_c_with_export_name() -> i32 {
         *G_I32.lock().unwrap()
     }

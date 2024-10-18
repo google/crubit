@@ -39,7 +39,7 @@ function rustc_target_arg() {
 function test::happy_path() {
   local RS_INPUT_PATH="${TEST_TMPDIR}/crate_name.rs"
   echo >"$RS_INPUT_PATH" "
-      #[no_mangle]
+      #[unsafe(no_mangle)]
       pub extern \"C\" fn public_function() {
           private_function()
       }

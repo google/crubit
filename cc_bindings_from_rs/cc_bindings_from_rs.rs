@@ -489,7 +489,7 @@ inline void public_function() {
 
 #![allow(improper_ctypes_definitions)]
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
 -> () {
     ::test_crate::public_module::public_function()

@@ -936,9 +936,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                mod detail { ...  extern "C" {
+                mod detail { ...  unsafe extern "C" {
                     ...
-                    pub(crate) fn
+                    pub(crate) unsafe fn
                     __rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget<'a>(
                         __this: ... Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>
                     ) -> ::core::ffi::c_int;

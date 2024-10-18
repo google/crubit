@@ -506,158 +506,159 @@ impl __CcTemplateInst10MyTemplateIfE {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1EOS_<'a, 'b>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashesC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::DocCommentSlashes>,
             __param_0: ::ctor::RvalueReference<'b, crate::DocCommentSlashes>,
         );
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashesaSERKS_<'a, 'b>(
             __this: &'a mut crate::DocCommentSlashes,
             __param_0: &'b crate::DocCommentSlashes,
         ) -> &'a mut crate::DocCommentSlashes;
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashesaSEOS_<'a, 'b>(
             __this: &'a mut crate::DocCommentSlashes,
             __param_0: ::ctor::RvalueReference<'b, crate::DocCommentSlashes>,
         ) -> &'a mut crate::DocCommentSlashes;
         #[link_name = "_ZN17DocCommentSlashesC1Ev"]
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashesC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::DocCommentSlashes>,
         );
         #[link_name = "_ZN17DocCommentSlashesC1Ei"]
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ei<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashesC1Ei<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::DocCommentSlashes>,
             __param_0: ::core::ffi::c_int,
         );
         #[link_name = "_ZNK17DocCommentSlashes15get_field_valueEv"]
-        pub(crate) fn __rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv<'a>(
             __this: &'a crate::DocCommentSlashes,
         ) -> ::core::ffi::c_int;
         #[link_name = "_ZN17DocCommentSlashes15set_field_valueEi"]
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashes15set_field_valueEi<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashes15set_field_valueEi<'a>(
             __this: &'a mut crate::DocCommentSlashes,
             new_value: ::core::ffi::c_int,
         );
         #[link_name = "_ZN17DocCommentSlashes13static_methodEv"]
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv() -> ::core::ffi::c_int;
-        pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv()
+        -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN14DocCommentBangC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::DocCommentBang>,
         );
-        pub(crate) fn __rust_thunk___ZN14DocCommentBangC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN14DocCommentBangC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::DocCommentBang>,
             __param_0: ::ctor::RvalueReference<'b, crate::DocCommentBang>,
         );
-        pub(crate) fn __rust_thunk___ZN14DocCommentBangaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN14DocCommentBangaSERKS_<'a, 'b>(
             __this: &'a mut crate::DocCommentBang,
             __param_0: &'b crate::DocCommentBang,
         ) -> &'a mut crate::DocCommentBang;
-        pub(crate) fn __rust_thunk___ZN14DocCommentBangaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN14DocCommentBangaSEOS_<'a, 'b>(
             __this: &'a mut crate::DocCommentBang,
             __param_0: ::ctor::RvalueReference<'b, crate::DocCommentBang>,
         ) -> &'a mut crate::DocCommentBang;
-        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MultilineCommentTwoStars>,
         );
-        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN24MultilineCommentTwoStarsC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MultilineCommentTwoStars>,
             __param_0: ::ctor::RvalueReference<'b, crate::MultilineCommentTwoStars>,
         );
-        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN24MultilineCommentTwoStarsaSERKS_<'a, 'b>(
             __this: &'a mut crate::MultilineCommentTwoStars,
             __param_0: &'b crate::MultilineCommentTwoStars,
         ) -> &'a mut crate::MultilineCommentTwoStars;
-        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN24MultilineCommentTwoStarsaSEOS_<'a, 'b>(
             __this: &'a mut crate::MultilineCommentTwoStars,
             __param_0: ::ctor::RvalueReference<'b, crate::MultilineCommentTwoStars>,
         ) -> &'a mut crate::MultilineCommentTwoStars;
-        pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN11LineCommentC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::LineComment>,
         );
-        pub(crate) fn __rust_thunk___ZN11LineCommentC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11LineCommentC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::LineComment>,
             __param_0: ::ctor::RvalueReference<'b, crate::LineComment>,
         );
-        pub(crate) fn __rust_thunk___ZN11LineCommentaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11LineCommentaSERKS_<'a, 'b>(
             __this: &'a mut crate::LineComment,
             __param_0: &'b crate::LineComment,
         ) -> &'a mut crate::LineComment;
-        pub(crate) fn __rust_thunk___ZN11LineCommentaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11LineCommentaSEOS_<'a, 'b>(
             __this: &'a mut crate::LineComment,
             __param_0: ::ctor::RvalueReference<'b, crate::LineComment>,
         ) -> &'a mut crate::LineComment;
-        pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN16MultilineOneStarC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MultilineOneStar>,
         );
-        pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN16MultilineOneStarC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MultilineOneStar>,
             __param_0: ::ctor::RvalueReference<'b, crate::MultilineOneStar>,
         );
-        pub(crate) fn __rust_thunk___ZN16MultilineOneStaraSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN16MultilineOneStaraSERKS_<'a, 'b>(
             __this: &'a mut crate::MultilineOneStar,
             __param_0: &'b crate::MultilineOneStar,
         ) -> &'a mut crate::MultilineOneStar;
-        pub(crate) fn __rust_thunk___ZN16MultilineOneStaraSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN16MultilineOneStaraSEOS_<'a, 'b>(
             __this: &'a mut crate::MultilineOneStar,
             __param_0: ::ctor::RvalueReference<'b, crate::MultilineOneStar>,
         ) -> &'a mut crate::MultilineOneStar;
-        pub(crate) fn __rust_thunk___Z3foov() -> ::core::ffi::c_int;
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+        pub(crate) unsafe fn __rust_thunk___Z3foov() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(
             __this: &'a mut ::core::mem::MaybeUninit<crate::__CcTemplateInst10MyTemplateIiE>,
         );
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
             'b,
         >(
             __this: &'a mut ::core::mem::MaybeUninit<crate::__CcTemplateInst10MyTemplateIiE>,
             __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
         );
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
             'b,
         >(
             __this: &'a mut crate::__CcTemplateInst10MyTemplateIiE,
             __param_0: &'b crate::__CcTemplateInst10MyTemplateIiE,
         ) -> &'a mut crate::__CcTemplateInst10MyTemplateIiE;
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
             'b,
         >(
             __this: &'a mut crate::__CcTemplateInst10MyTemplateIiE,
             __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
         ) -> &'a mut crate::__CcTemplateInst10MyTemplateIiE;
-        pub(crate) fn __rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(
             __this: &'a crate::__CcTemplateInst10MyTemplateIiE,
         ) -> &'a ::core::ffi::c_int;
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(
             __this: &'a mut ::core::mem::MaybeUninit<crate::__CcTemplateInst10MyTemplateIfE>,
         );
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIfEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
             'b,
         >(
             __this: &'a mut ::core::mem::MaybeUninit<crate::__CcTemplateInst10MyTemplateIfE>,
             __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>,
         );
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIfEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
             'b,
         >(
             __this: &'a mut crate::__CcTemplateInst10MyTemplateIfE,
             __param_0: &'b crate::__CcTemplateInst10MyTemplateIfE,
         ) -> &'a mut crate::__CcTemplateInst10MyTemplateIfE;
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIfEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
             'b,
         >(
             __this: &'a mut crate::__CcTemplateInst10MyTemplateIfE,
             __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>,
         ) -> &'a mut crate::__CcTemplateInst10MyTemplateIfE;
-        pub(crate) fn __rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(
             __this: &'a crate::__CcTemplateInst10MyTemplateIfE,

@@ -44,7 +44,7 @@ pub fn AlsoTemplateOverload() {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___Z20AlsoTemplateOverloadv();
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___Z20AlsoTemplateOverloadv();
     }
 }

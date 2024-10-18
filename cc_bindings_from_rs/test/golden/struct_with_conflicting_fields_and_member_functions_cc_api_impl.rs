@@ -14,13 +14,13 @@ const _: () = assert!(
 const _: () = assert!(
     ::std::mem::align_of::<::struct_with_conflicting_fields_and_member_functions_rust::X>() == 4
 );
-#[no_mangle]
+#[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_a<'__anon1>(
     __self: &'__anon1 ::struct_with_conflicting_fields_and_member_functions_rust::X,
 ) -> i32 {
     ::struct_with_conflicting_fields_and_member_functions_rust::X::a(__self)
 }
-#[no_mangle]
+#[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_b<'__anon1>(
     __self: &'__anon1 ::struct_with_conflicting_fields_and_member_functions_rust::X,
 ) -> i32 {

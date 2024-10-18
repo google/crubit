@@ -65,7 +65,7 @@ pub struct FfiBindings {
 ///      input params: `json`, `crubit_support_path_format`, `rustfmt_exe_path`,
 ///      and `rustfmt_config_path`
 ///    * function passes ownership of the returned value to the caller
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn GenerateBindingsImpl(
     json: FfiU8Slice,
     crubit_support_path_format: FfiU8Slice,
@@ -985,7 +985,7 @@ fn generate_bindings_tokens(
             mod detail {
                 #[allow(unused_imports)]
                 use super::*;
-                extern "C" {
+                unsafe extern "C" {
                     #( #thunks )*
                 }
             }
@@ -1599,9 +1599,9 @@ pub(crate) mod tests {
                 mod detail {
                     #[allow(unused_imports)]
                     use super::*;
-                    extern "C" {
+                    unsafe extern "C" {
                         #[link_name = "_Z15get_ptr_to_funcv"]
-                        pub(crate) fn __rust_thunk___Z15get_ptr_to_funcv()
+                        pub(crate) unsafe fn __rust_thunk___Z15get_ptr_to_funcv()
                         -> Option<extern "C" fn(f32, f64) -> ::core::ffi::c_int>;
                     }
                 }
@@ -1671,9 +1671,9 @@ pub(crate) mod tests {
                 mod detail {
                     #[allow(unused_imports)]
                     use super::*;
-                    extern "C" {
+                    unsafe extern "C" {
                         #[link_name = "_Z15get_ptr_to_funcv"]
-                        pub(crate) fn __rust_thunk___Z15get_ptr_to_funcv()
+                        pub(crate) unsafe fn __rust_thunk___Z15get_ptr_to_funcv()
                         -> Option<unsafe extern "C" fn(*const ::core::ffi::c_int) -> *const ::core::ffi::c_int>;
                     }
                 }
@@ -1757,9 +1757,9 @@ pub(crate) mod tests {
                     mod detail {
                         #[allow(unused_imports)]
                         use super::*;
-                        extern "C" {
+                        unsafe extern "C" {
                             #[link_name = "_Z15get_ptr_to_funcv"]
-                            pub(crate) fn __rust_thunk___Z15get_ptr_to_funcv()
+                            pub(crate) unsafe fn __rust_thunk___Z15get_ptr_to_funcv()
                             -> Option<extern "vectorcall" fn(f32, f64) -> ::core::ffi::c_int>;
                         }
                     }
@@ -1866,11 +1866,11 @@ pub(crate) mod tests {
                     mod detail {
                         #[allow(unused_imports)]
                         use super::*;
-                        extern "C" {
-                            pub(crate) fn __rust_thunk___Z31f_vectorcall_calling_conventionff(
+                        unsafe extern "C" {
+                            pub(crate) unsafe fn __rust_thunk___Z31f_vectorcall_calling_conventionff(
                                 p1: f32, p2: f32) -> f32;
                             #[link_name = "_Z22f_c_calling_conventiondd"]
-                            pub(crate) fn __rust_thunk___Z22f_c_calling_conventiondd(
+                            pub(crate) unsafe fn __rust_thunk___Z22f_c_calling_conventiondd(
                                 p1: f64, p2: f64) -> f64;
                         }
                     }
@@ -2692,9 +2692,9 @@ pub(crate) mod tests {
                 mod detail {
                     #[allow(unused_imports)]
                     use super::*;
-                    extern "C" {
+                    unsafe extern "C" {
                         #[link_name = "_ZN23test_namespace_bindings1fEv"]
-                        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fEv() -> ::core::ffi::c_int;
+                        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1fEv() -> ::core::ffi::c_int;
                     }
                 }
                 ...
@@ -3348,7 +3348,7 @@ pub(crate) mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub(crate) fn __rust_thunk___Z4Makev(__return: &mut ::core::mem::MaybeUninit<i8>);
+                pub(crate) unsafe fn __rust_thunk___Z4Makev(__return: &mut ::core::mem::MaybeUninit<i8>);
             }
         );
         Ok(())
@@ -3376,7 +3376,7 @@ pub(crate) mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub(crate) fn __rust_thunk___Z4Makev() -> i8;
+                pub(crate) unsafe fn __rust_thunk___Z4Makev() -> i8;
             }
         );
         Ok(())

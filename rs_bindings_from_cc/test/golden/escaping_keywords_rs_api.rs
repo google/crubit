@@ -80,24 +80,24 @@ pub fn r#impl(r#match: ::core::ffi::c_int) {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN4typeC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN4typeC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::r#type>,
         );
-        pub(crate) fn __rust_thunk___ZN4typeC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN4typeC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::r#type>,
             __param_0: ::ctor::RvalueReference<'b, crate::r#type>,
         );
-        pub(crate) fn __rust_thunk___ZN4typeaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN4typeaSERKS_<'a, 'b>(
             __this: &'a mut crate::r#type,
             __param_0: &'b crate::r#type,
         ) -> &'a mut crate::r#type;
-        pub(crate) fn __rust_thunk___ZN4typeaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN4typeaSEOS_<'a, 'b>(
             __this: &'a mut crate::r#type,
             __param_0: ::ctor::RvalueReference<'b, crate::r#type>,
         ) -> &'a mut crate::r#type;
         #[link_name = "_Z4impli"]
-        pub(crate) fn __rust_thunk___Z4impli(r#match: ::core::ffi::c_int);
+        pub(crate) unsafe fn __rust_thunk___Z4impli(r#match: ::core::ffi::c_int);
     }
 }
 

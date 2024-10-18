@@ -1610,9 +1610,13 @@ fn function_signature(
             // similar to top-level functions.)
 
             // The returned lazy FnCtor depends on all inputs.
-            let extra_lifetimes = lifetimes.iter().map(|a| quote! {+ ::ctor::Captures<#a>});
+            let extra_lifetimes = if lifetimes.is_empty() {
+                quote! {}
+            } else {
+                quote! {+ use<#(#lifetimes),*> }
+            };
             features.insert(make_rs_ident("impl_trait_in_assoc_type"));
-            quote! {impl ::ctor::Ctor<Output=#ty> #(#extra_lifetimes)* }
+            quote! {impl ::ctor::Ctor<Output=#ty> #extra_lifetimes }
         }
     };
 
@@ -1737,9 +1741,12 @@ fn generate_func_thunk(
         }
     }));
 
+    // Note: some of these are `safe`, but _all_ of them are currently wrapped by a
+    // (possibly safe) function, so we leave them all `unsafe` for convenience.
+
     Ok(quote! {
         #thunk_attr
-        pub(crate) fn #thunk_ident #generic_params( #( #param_idents: #param_types ),*
+        pub(crate) unsafe fn #thunk_ident #generic_params( #( #param_idents: #param_types ),*
         ) #return_type_fragment ;
     })
 }
@@ -2090,9 +2097,9 @@ mod tests {
                 mod detail {
                     #[allow(unused_imports)]
                     use super::*;
-                    extern "C" {
+                    unsafe extern "C" {
                         #[link_name = "_Z3Addii"]
-                        pub(crate) fn __rust_thunk___Z3Addii(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int;
+                        pub(crate) unsafe fn __rust_thunk___Z3Addii(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int;
                     }
                 }
             }
@@ -2122,8 +2129,8 @@ mod tests {
                 mod detail {
                     #[allow(unused_imports)]
                     use super::*;
-                    extern "C" {
-                        pub(crate) fn __rust_thunk___Z3Addii(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int;
+                    unsafe extern "C" {
+                        pub(crate) unsafe fn __rust_thunk___Z3Addii(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int;
                     }
                 }
             }
@@ -2170,8 +2177,8 @@ mod tests {
             mod detail {
                 #[allow(unused_imports)]
                 use super::*;
-                extern "C" {
-                    pub(crate) fn __rust_thunk___Z11DoSomething11ParamStruct(
+                unsafe extern "C" {
+                    pub(crate) unsafe fn __rust_thunk___Z11DoSomething11ParamStruct(
                         __return: &mut ::core::mem::MaybeUninit<dependency::ReturnStruct>,
                         param: &mut dependency::ParamStruct
                     );
@@ -2297,8 +2304,8 @@ mod tests {
                 mod detail {
                     #[allow(unused_imports)]
                     use super::*;
-                    extern "C" {
-                        pub(crate) fn __rust_thunk___Z5DerefPKPi(p: *const *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int;
+                    unsafe extern "C" {
+                        pub(crate) unsafe fn __rust_thunk___Z5DerefPKPi(p: *const *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int;
                     }
                 }
             }
@@ -2338,7 +2345,7 @@ mod tests {
             rs_api,
             quote! {
                 extern "C" {
-                    pub(crate) fn __rust_thunk___Z1fPKa(str: *const ::core::ffi::c_schar);
+                    pub(crate) unsafe fn __rust_thunk___Z1fPKa(str: *const ::core::ffi::c_schar);
                 }
             }
         );
@@ -3055,7 +3062,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub(crate) fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'a mut crate::S, i: &'b mut ::core::ffi::c_int)
+                pub(crate) unsafe fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'a mut crate::S, i: &'b mut ::core::ffi::c_int)
                     -> &'a mut ::core::ffi::c_int;
             }
         );
@@ -3079,7 +3086,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub(crate) fn __rust_thunk___Z1fRiS_<'a>(i1: &'a mut ::core::ffi::c_int, i2: &'a mut ::core::ffi::c_int)
+                pub(crate) unsafe fn __rust_thunk___Z1fRiS_<'a>(i1: &'a mut ::core::ffi::c_int, i2: &'a mut ::core::ffi::c_int)
                     -> &'a mut ::core::ffi::c_int;
             }
         );
@@ -3411,10 +3418,7 @@ mod tests {
                 > for HasConstructor {
                     // The captures are why we need explicit lifetimes for the two rvalue reference
                     // parameters.
-                    type CtorType = impl ::ctor::Ctor<Output = Self>
-                        + ::ctor::Captures<'b>
-                        + ::ctor::Captures<'y>
-                        + ::ctor::Captures<'b_2>;
+                    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b, 'y, 'b_2>;
 
                     #[inline (always)]
                     fn ctor_new(args: (
@@ -3450,9 +3454,7 @@ mod tests {
             rs_api,
             quote! {
                 pub fn ReturnsByValue<'a, 'b>(x: &'a ::core::ffi::c_int, y: &'b ::core::ffi::c_int)
-                -> impl ::ctor::Ctor<Output=crate::Nontrivial>
-                 + ::ctor::Captures<'a>
-                 + ::ctor::Captures<'b> {
+                -> impl ::ctor::Ctor<Output=crate::Nontrivial> + use<'a, 'b> {
                     unsafe {
                         ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<crate::Nontrivial>>| {
                             crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::core::pin::Pin::into_inner_unchecked(dest), x, y);
@@ -3490,9 +3492,7 @@ mod tests {
             rs_api,
             quote! {
                 pub fn ReturnsByValue<'a, 'b>(x: &'a ::core::ffi::c_int, y: &'b ::core::ffi::c_int)
-                -> impl ::ctor::Ctor<Output=crate::Nontrivial>
-                 + ::ctor::Captures<'a>
-                 + ::ctor::Captures<'b> {
+                -> impl ::ctor::Ctor<Output=crate::Nontrivial> + use<'a, 'b> {
                     unsafe {
                         ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<crate::Nontrivial>>| {
                             crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::core::pin::Pin::into_inner_unchecked(dest), x, y);
@@ -3539,7 +3539,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub(crate) fn __rust_thunk___Z3foo7Trivial(param: &mut crate::Trivial);
+                pub(crate) unsafe fn __rust_thunk___Z3foo7Trivial(param: &mut crate::Trivial);
             }
         );
         assert_cc_matches!(
@@ -3581,7 +3581,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub(crate) fn __rust_thunk___Z3foov(
+                pub(crate) unsafe fn __rust_thunk___Z3foov(
                     __return: &mut ::core::mem::MaybeUninit<crate::Trivial>
                 );
             }
@@ -3622,7 +3622,7 @@ mod tests {
             rs_api,
             quote! {
                 #[link_name = "_ZNO35TrivialWithRvalueRefQualifiedMethod27rvalue_ref_qualified_methodEv"]
-                pub (crate) fn __rust_thunk___ZNO35TrivialWithRvalueRefQualifiedMethod27rvalue_ref_qualified_methodEv < 'a > (__this :
+                pub(crate) unsafe fn __rust_thunk___ZNO35TrivialWithRvalueRefQualifiedMethod27rvalue_ref_qualified_methodEv < 'a > (__this :
                     :: ctor :: RvalueReference < 'a , crate :: TrivialWithRvalueRefQualifiedMethod >) ;
             }
         );
@@ -3654,7 +3654,7 @@ mod tests {
             rs_api,
             quote! {
                 #[link_name = "_ZNKO40TrivialWithRvalueRefConstQualifiedMethod33rvalue_ref_const_qualified_methodEv"]
-                pub (crate) fn __rust_thunk___ZNKO40TrivialWithRvalueRefConstQualifiedMethod33rvalue_ref_const_qualified_methodEv < 'a > (__this :
+                pub(crate) unsafe fn __rust_thunk___ZNKO40TrivialWithRvalueRefConstQualifiedMethod33rvalue_ref_const_qualified_methodEv < 'a > (__this :
                     :: ctor :: ConstRvalueReference < 'a , crate :: TrivialWithRvalueRefConstQualifiedMethod >) ;
             }
         );
@@ -3838,7 +3838,7 @@ mod tests {
             quote! {
                 extern "C" {
                     ...
-                    pub(crate) fn __rust_thunk___ZN10SomeStruct18GetRValueReferenceEv<'a>(
+                    pub(crate) unsafe fn __rust_thunk___ZN10SomeStruct18GetRValueReferenceEv<'a>(
                             __this: &'a mut crate::SomeStruct
                        ) -> ::ctor::RvalueReference<'a, crate::SomeStruct>;
                     ...

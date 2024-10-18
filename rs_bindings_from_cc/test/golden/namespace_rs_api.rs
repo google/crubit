@@ -304,40 +304,43 @@ pub mod r#impl {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1SC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::S>,
         );
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SC1EOS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1SC1EOS0_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::S>,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,
         );
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SaSERKS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1SaSERKS0_<'a, 'b>(
             __this: &'a mut crate::test_namespace_bindings::S,
             __param_0: &'b crate::test_namespace_bindings::S,
         ) -> &'a mut crate::test_namespace_bindings::S;
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SaSEOS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1SaSEOS0_<'a, 'b>(
             __this: &'a mut crate::test_namespace_bindings::S,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,
         ) -> &'a mut crate::test_namespace_bindings::S;
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
             s: &mut crate::test_namespace_bindings::S,
         ) -> ::core::ffi::c_int;
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings15inline_functionEv();
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings15inline_functionEv();
         #[link_name = "_ZN23test_namespace_bindings5inner1iEv"]
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings5inner1iEv();
-        pub(crate) fn __rust_thunk___Z8identityN23test_namespace_bindings1SE(
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings5inner1iEv();
+        pub(crate) unsafe fn __rust_thunk___Z8identityN23test_namespace_bindings1SE(
             __return: &mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::S>,
             s: &mut crate::test_namespace_bindings::S,
         );
         #[link_name = "_ZN32test_namespace_bindings_reopened1xEv"]
-        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened1xEv();
-        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened1xEv();
+        pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<
                 crate::test_namespace_bindings_reopened::inner::S,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_<
+            'a,
+            'b,
+        >(
             __this: &'a mut ::core::mem::MaybeUninit<
                 crate::test_namespace_bindings_reopened::inner::S,
             >,
@@ -346,11 +349,17 @@ mod detail {
                 crate::test_namespace_bindings_reopened::inner::S,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSERKS1_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSERKS1_<
+            'a,
+            'b,
+        >(
             __this: &'a mut crate::test_namespace_bindings_reopened::inner::S,
             __param_0: &'b crate::test_namespace_bindings_reopened::inner::S,
         ) -> &'a mut crate::test_namespace_bindings_reopened::inner::S;
-        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSEOS1_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSEOS1_<
+            'a,
+            'b,
+        >(
             __this: &'a mut crate::test_namespace_bindings_reopened::inner::S,
             __param_0: ::ctor::RvalueReference<
                 'b,
@@ -358,18 +367,18 @@ mod detail {
             >,
         ) -> &'a mut crate::test_namespace_bindings_reopened::inner::S;
         #[link_name = "_ZN32test_namespace_bindings_reopened1yEv"]
-        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened1yEv();
-        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1zENS0_1SE(
+        pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened1yEv();
+        pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1zENS0_1SE(
             s: &mut crate::test_namespace_bindings_reopened::inner::S,
         );
-        pub(crate) fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev<
+        pub(crate) unsafe fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev<
             'a,
         >(
             __this: &'a mut ::core::mem::MaybeUninit<
                 crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1EOS1_<
+        pub(crate) unsafe fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1EOS1_<
             'a,
             'b,
         >(
@@ -381,14 +390,14 @@ mod detail {
                 crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSERKS1_<
+        pub(crate) unsafe fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSERKS1_<
             'a,
             'b,
         >(
             __this: &'a mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
             __param_0: &'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
         ) -> &'a mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace;
-        pub(crate) fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSEOS1_<
+        pub(crate) unsafe fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSEOS1_<
             'a,
             'b,
         >(
@@ -398,13 +407,13 @@ mod detail {
                 crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
             >,
         ) -> &'a mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace;
-        pub(crate) fn __rust_thunk___Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
+        pub(crate) unsafe fn __rust_thunk___Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
             s: &mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
         );
-        pub(crate) fn __rust_thunk___Z45useStructInInlineNamespaceSkipInlineQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
+        pub(crate) unsafe fn __rust_thunk___Z45useStructInInlineNamespaceSkipInlineQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
             s: &mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
         );
-        pub(crate) fn __rust_thunk___ZN4impl3fooEv();
+        pub(crate) unsafe fn __rust_thunk___ZN4impl3fooEv();
     }
 }
 

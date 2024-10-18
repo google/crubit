@@ -151,34 +151,34 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AlignmentReg
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN13WithBitfieldsC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::WithBitfields>,
         );
-        pub(crate) fn __rust_thunk___ZN13WithBitfieldsC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::WithBitfields>,
             __param_0: ::ctor::RvalueReference<'b, crate::WithBitfields>,
         );
-        pub(crate) fn __rust_thunk___ZN13WithBitfieldsaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsaSERKS_<'a, 'b>(
             __this: &'a mut crate::WithBitfields,
             __param_0: &'b crate::WithBitfields,
         ) -> &'a mut crate::WithBitfields;
-        pub(crate) fn __rust_thunk___ZN13WithBitfieldsaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsaSEOS_<'a, 'b>(
             __this: &'a mut crate::WithBitfields,
             __param_0: ::ctor::RvalueReference<'b, crate::WithBitfields>,
         ) -> &'a mut crate::WithBitfields;
-        pub(crate) fn __rust_thunk___ZN23AlignmentRegressionTestC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AlignmentRegressionTest>,
         );
-        pub(crate) fn __rust_thunk___ZN23AlignmentRegressionTestC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AlignmentRegressionTest>,
             __param_0: ::ctor::RvalueReference<'b, crate::AlignmentRegressionTest>,
         );
-        pub(crate) fn __rust_thunk___ZN23AlignmentRegressionTestaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestaSERKS_<'a, 'b>(
             __this: &'a mut crate::AlignmentRegressionTest,
             __param_0: &'b crate::AlignmentRegressionTest,
         ) -> &'a mut crate::AlignmentRegressionTest;
-        pub(crate) fn __rust_thunk___ZN23AlignmentRegressionTestaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestaSEOS_<'a, 'b>(
             __this: &'a mut crate::AlignmentRegressionTest,
             __param_0: ::ctor::RvalueReference<'b, crate::AlignmentRegressionTest>,
         ) -> &'a mut crate::AlignmentRegressionTest;

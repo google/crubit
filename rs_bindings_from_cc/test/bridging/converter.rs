@@ -18,7 +18,7 @@ impl MyRustStruct {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rust_to_cpp_converter(x: *const c_void, output: *mut c_void) {
     unsafe {
         let x = &*(x as *const MyRustStruct);
@@ -26,7 +26,7 @@ pub extern "C" fn rust_to_cpp_converter(x: *const c_void, output: *mut c_void) {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn cpp_to_rust_converter(input: *const c_void, output: *mut c_void) {
     unsafe {
         let output = &mut *(output as *mut MaybeUninit<MyRustStruct>);

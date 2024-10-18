@@ -47,7 +47,7 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
@@ -64,7 +64,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicBase {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -119,7 +119,7 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
@@ -136,7 +136,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -198,7 +198,7 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
@@ -215,7 +215,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicDerived {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -224,7 +224,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicDerived {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
@@ -241,7 +241,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for PolymorphicDeriv
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -280,57 +280,57 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for PolymorphicDerive
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN15PolymorphicBaseC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicBase>,
         );
-        pub(crate) fn __rust_thunk___ZN15PolymorphicBaseC1ERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseC1ERKS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicBase>,
             __param_0: &'b crate::PolymorphicBase,
         );
-        pub(crate) fn __rust_thunk___ZN15PolymorphicBaseaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseaSERKS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase>,
             __param_0: &'b crate::PolymorphicBase,
         ) -> ::core::pin::Pin<&'a mut crate::PolymorphicBase>;
-        pub(crate) fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase>,
         );
-        pub(crate) fn __rust_thunk___ZN16PolymorphicBase2C1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicBase2>,
         );
-        pub(crate) fn __rust_thunk___ZN16PolymorphicBase2C1ERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1ERKS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicBase2>,
             __param_0: &'b crate::PolymorphicBase2,
         );
-        pub(crate) fn __rust_thunk___ZN16PolymorphicBase2aSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2aSERKS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
             __param_0: &'b crate::PolymorphicBase2,
         ) -> ::core::pin::Pin<&'a mut crate::PolymorphicBase2>;
-        pub(crate) fn __rust_thunk___ZN16PolymorphicBase23FooEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase23FooEv<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
-        pub(crate) fn __rust_thunk___ZN16PolymorphicBase2D1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2D1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
-        pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicDerived>,
         );
-        pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedC1ERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1ERKS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicDerived>,
             __param_0: &'b crate::PolymorphicDerived,
         );
-        pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicDerived>,
             __param_0: ::ctor::RvalueReference<'b, crate::PolymorphicDerived>,
         );
-        pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedD1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicDerived>,
         );
-        pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedaSERKS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicDerived>,
             __param_0: &'b crate::PolymorphicDerived,
         ) -> ::core::pin::Pin<&'a mut crate::PolymorphicDerived>;
-        pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedaSEOS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicDerived>,
             __param_0: ::ctor::RvalueReference<'b, crate::PolymorphicDerived>,
         ) -> ::core::pin::Pin<&'a mut crate::PolymorphicDerived>;

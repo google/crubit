@@ -101,19 +101,19 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TypeMapOverr
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN25TypeMapOverrideFieldTypesC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN25TypeMapOverrideFieldTypesC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::TypeMapOverrideFieldTypes>,
         );
-        pub(crate) fn __rust_thunk___ZN25TypeMapOverrideFieldTypesC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN25TypeMapOverrideFieldTypesC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::TypeMapOverrideFieldTypes>,
             __param_0: ::ctor::RvalueReference<'b, crate::TypeMapOverrideFieldTypes>,
         );
-        pub(crate) fn __rust_thunk___ZN25TypeMapOverrideFieldTypesaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN25TypeMapOverrideFieldTypesaSERKS_<'a, 'b>(
             __this: &'a mut crate::TypeMapOverrideFieldTypes,
             __param_0: &'b crate::TypeMapOverrideFieldTypes,
         ) -> &'a mut crate::TypeMapOverrideFieldTypes;
-        pub(crate) fn __rust_thunk___ZN25TypeMapOverrideFieldTypesaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN25TypeMapOverrideFieldTypesaSEOS_<'a, 'b>(
             __this: &'a mut crate::TypeMapOverrideFieldTypes,
             __param_0: ::ctor::RvalueReference<'b, crate::TypeMapOverrideFieldTypes>,
         ) -> &'a mut crate::TypeMapOverrideFieldTypes;

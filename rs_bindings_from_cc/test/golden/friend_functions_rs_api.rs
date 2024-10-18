@@ -99,36 +99,38 @@ pub fn multiple_declarations<'a>(__param_0: &'a crate::SomeClass) -> ::core::ffi
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeClass>,
         );
-        pub(crate) fn __rust_thunk___ZN9SomeClassC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeClass>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeClass>,
         );
-        pub(crate) fn __rust_thunk___ZN9SomeClassaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassaSERKS_<'a, 'b>(
             __this: &'a mut crate::SomeClass,
             __param_0: &'b crate::SomeClass,
         ) -> &'a mut crate::SomeClass;
-        pub(crate) fn __rust_thunk___ZN9SomeClassaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassaSEOS_<'a, 'b>(
             __this: &'a mut crate::SomeClass,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeClass>,
         ) -> &'a mut crate::SomeClass;
-        pub(crate) fn __rust_thunk___Z11visible_val9SomeClass(__param_0: &mut crate::SomeClass);
+        pub(crate) unsafe fn __rust_thunk___Z11visible_val9SomeClass(
+            __param_0: &mut crate::SomeClass,
+        );
         #[link_name = "_Z11visible_refR9SomeClass"]
-        pub(crate) fn __rust_thunk___Z11visible_refR9SomeClass<'a>(
+        pub(crate) unsafe fn __rust_thunk___Z11visible_refR9SomeClass<'a>(
             __param_0: &'a mut crate::SomeClass,
         );
         #[link_name = "_Z12visible_crefRK9SomeClass"]
-        pub(crate) fn __rust_thunk___Z12visible_crefRK9SomeClass<'a>(
+        pub(crate) unsafe fn __rust_thunk___Z12visible_crefRK9SomeClass<'a>(
             __param_0: &'a crate::SomeClass,
         );
         #[link_name = "_Z12visible_rrefO9SomeClass"]
-        pub(crate) fn __rust_thunk___Z12visible_rrefO9SomeClass<'a>(
+        pub(crate) unsafe fn __rust_thunk___Z12visible_rrefO9SomeClass<'a>(
             __param_0: ::ctor::RvalueReference<'a, crate::SomeClass>,
         );
-        pub(crate) fn __rust_thunk___Z21multiple_declarationsRK9SomeClass<'a>(
+        pub(crate) unsafe fn __rust_thunk___Z21multiple_declarationsRK9SomeClass<'a>(
             __param_0: &'a crate::SomeClass,
         ) -> ::core::ffi::c_int;
     }

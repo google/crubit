@@ -170,19 +170,19 @@ pub mod struct_by_float_passing_with_no_cc_definition {
         // changes the ABI classification of the struct.
     );
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn no_mangle_create(f: f32) -> StructFloat {
         StructFloat(12.34, f)
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn no_mangle_multiply(x: StructFloat, y: StructFloat) -> StructFloat {
         assert_eq!(12.34, x.0);
         assert_eq!(12.34, y.0);
         no_mangle_create(x.1 * y.1)
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn no_mangle_inspect(s: StructFloat) -> f32 {
         assert_eq!(12.34, s.0);
         s.1
@@ -218,19 +218,19 @@ pub mod struct_by_float_passing_with_no_thunk {
         }
     }
 
-    #[export_name = "struct_by_float_passing_with_no_thunk__thunkless_create"]
+    #[unsafe(export_name = "struct_by_float_passing_with_no_thunk__thunkless_create")]
     pub extern "C" fn thunkless_create(f: f32) -> StructFloat {
         StructFloat(12.34, f)
     }
 
-    #[export_name = "struct_by_float_passing_with_no_thunk__thunkless_multiply"]
+    #[unsafe(export_name = "struct_by_float_passing_with_no_thunk__thunkless_multiply")]
     pub extern "C" fn thunkless_multiply(x: StructFloat, y: StructFloat) -> StructFloat {
         assert_eq!(12.34, x.0);
         assert_eq!(12.34, y.0);
         thunkless_create(x.1 * y.1)
     }
 
-    #[export_name = "struct_by_float_passing_with_no_thunk__thunkless_inspect"]
+    #[unsafe(export_name = "struct_by_float_passing_with_no_thunk__thunkless_inspect")]
     pub extern "C" fn thunkless_inspect(s: StructFloat) -> f32 {
         assert_eq!(12.34, s.0);
         s.1

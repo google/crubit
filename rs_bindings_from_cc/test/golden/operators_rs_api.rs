@@ -705,7 +705,7 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for AddableConstMemberNonunpin {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
@@ -722,7 +722,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for AddableConstMemberNonunpin {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for AddableConstMemberNonunpin {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -742,9 +742,7 @@ impl<'b> ::ctor::Assign<&'b Self> for AddableConstMemberNonunpin {
 impl<'a, 'b> ::core::ops::Add<&'b crate::AddableConstMemberNonunpin>
     for &'a crate::AddableConstMemberNonunpin
 {
-    type Output = impl ::ctor::Ctor<Output = crate::AddableConstMemberNonunpin>
-        + ::ctor::Captures<'a>
-        + ::ctor::Captures<'b>;
+    type Output = impl ::ctor::Ctor<Output = crate::AddableConstMemberNonunpin> + use<'a, 'b>;
     #[inline(always)]
     fn add(self, rhs: &'b crate::AddableConstMemberNonunpin) -> Self::Output {
         unsafe {
@@ -1544,479 +1542,479 @@ impl<'b> ::core::ops::ShrAssign<&'b Self> for ManyOperators {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN18AddableConstMemberC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableConstMemberC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableConstMember>,
         );
-        pub(crate) fn __rust_thunk___ZN18AddableConstMemberC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableConstMemberC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableConstMember>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableConstMember>,
         );
-        pub(crate) fn __rust_thunk___ZN18AddableConstMemberaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableConstMemberaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddableConstMember,
             __param_0: &'b crate::AddableConstMember,
         ) -> &'a mut crate::AddableConstMember;
-        pub(crate) fn __rust_thunk___ZN18AddableConstMemberaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableConstMemberaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddableConstMember,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableConstMember>,
         ) -> &'a mut crate::AddableConstMember;
-        pub(crate) fn __rust_thunk___ZNK18AddableConstMemberplERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK18AddableConstMemberplERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::AddableConstMember>,
             __this: &'a crate::AddableConstMember,
             rhs: &'b crate::AddableConstMember,
         );
-        pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableNonConstMember>,
         );
-        pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableNonConstMember>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableNonConstMember>,
         );
-        pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddableNonConstMember,
             __param_0: &'b crate::AddableNonConstMember,
         ) -> &'a mut crate::AddableNonConstMember;
-        pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddableNonConstMember,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableNonConstMember>,
         ) -> &'a mut crate::AddableNonConstMember;
-        pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberplERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberplERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::AddableNonConstMember>,
             __this: &'a mut crate::AddableNonConstMember,
             rhs: &'b crate::AddableNonConstMember,
         );
-        pub(crate) fn __rust_thunk___ZN13AddableFriendC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFriend>,
         );
-        pub(crate) fn __rust_thunk___ZN13AddableFriendC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFriend>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFriend>,
         );
-        pub(crate) fn __rust_thunk___ZN13AddableFriendaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddableFriend,
             __param_0: &'b crate::AddableFriend,
         ) -> &'a mut crate::AddableFriend;
-        pub(crate) fn __rust_thunk___ZN13AddableFriendaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddableFriend,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFriend>,
         ) -> &'a mut crate::AddableFriend;
-        pub(crate) fn __rust_thunk___ZplRK13AddableFriendS1_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZplRK13AddableFriendS1_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::AddableFriend>,
             lhs: &'a crate::AddableFriend,
             rhs: &'b crate::AddableFriend,
         );
-        pub(crate) fn __rust_thunk___ZN21AddableFreeByConstRefC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN21AddableFreeByConstRefC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByConstRef>,
         );
-        pub(crate) fn __rust_thunk___ZN21AddableFreeByConstRefC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN21AddableFreeByConstRefC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByConstRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByConstRef>,
         );
-        pub(crate) fn __rust_thunk___ZN21AddableFreeByConstRefaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN21AddableFreeByConstRefaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddableFreeByConstRef,
             __param_0: &'b crate::AddableFreeByConstRef,
         ) -> &'a mut crate::AddableFreeByConstRef;
-        pub(crate) fn __rust_thunk___ZN21AddableFreeByConstRefaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN21AddableFreeByConstRefaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddableFreeByConstRef,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByConstRef>,
         ) -> &'a mut crate::AddableFreeByConstRef;
-        pub(crate) fn __rust_thunk___ZN19AddableFreeByMutRefC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN19AddableFreeByMutRefC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByMutRef>,
         );
-        pub(crate) fn __rust_thunk___ZN19AddableFreeByMutRefC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN19AddableFreeByMutRefC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByMutRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByMutRef>,
         );
-        pub(crate) fn __rust_thunk___ZN19AddableFreeByMutRefaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN19AddableFreeByMutRefaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddableFreeByMutRef,
             __param_0: &'b crate::AddableFreeByMutRef,
         ) -> &'a mut crate::AddableFreeByMutRef;
-        pub(crate) fn __rust_thunk___ZN19AddableFreeByMutRefaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN19AddableFreeByMutRefaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddableFreeByMutRef,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByMutRef>,
         ) -> &'a mut crate::AddableFreeByMutRef;
-        pub(crate) fn __rust_thunk___ZN18AddableFreeByValueC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableFreeByValueC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByValue>,
         );
-        pub(crate) fn __rust_thunk___ZN18AddableFreeByValueC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableFreeByValueC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByValue>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByValue>,
         );
-        pub(crate) fn __rust_thunk___ZN18AddableFreeByValueaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableFreeByValueaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddableFreeByValue,
             __param_0: &'b crate::AddableFreeByValue,
         ) -> &'a mut crate::AddableFreeByValue;
-        pub(crate) fn __rust_thunk___ZN18AddableFreeByValueaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableFreeByValueaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddableFreeByValue,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByValue>,
         ) -> &'a mut crate::AddableFreeByValue;
-        pub(crate) fn __rust_thunk___ZN22AddableFreeByRValueRefC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN22AddableFreeByRValueRefC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByRValueRef>,
         );
-        pub(crate) fn __rust_thunk___ZN22AddableFreeByRValueRefC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN22AddableFreeByRValueRefC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableFreeByRValueRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByRValueRef>,
         );
-        pub(crate) fn __rust_thunk___ZN22AddableFreeByRValueRefaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN22AddableFreeByRValueRefaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddableFreeByRValueRef,
             __param_0: &'b crate::AddableFreeByRValueRef,
         ) -> &'a mut crate::AddableFreeByRValueRef;
-        pub(crate) fn __rust_thunk___ZN22AddableFreeByRValueRefaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN22AddableFreeByRValueRefaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddableFreeByRValueRef,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByRValueRef>,
         ) -> &'a mut crate::AddableFreeByRValueRef;
-        pub(crate) fn __rust_thunk___ZplRK21AddableFreeByConstRefS1_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZplRK21AddableFreeByConstRefS1_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::AddableFreeByConstRef>,
             lhs: &'a crate::AddableFreeByConstRef,
             rhs: &'b crate::AddableFreeByConstRef,
         );
-        pub(crate) fn __rust_thunk___ZplR19AddableFreeByMutRefS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZplR19AddableFreeByMutRefS0_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::AddableFreeByMutRef>,
             lhs: &'a mut crate::AddableFreeByMutRef,
             rhs: &'b mut crate::AddableFreeByMutRef,
         );
-        pub(crate) fn __rust_thunk___Zpl18AddableFreeByValueS_(
+        pub(crate) unsafe fn __rust_thunk___Zpl18AddableFreeByValueS_(
             __return: &mut ::core::mem::MaybeUninit<crate::AddableFreeByValue>,
             lhs: &mut crate::AddableFreeByValue,
             rhs: &mut crate::AddableFreeByValue,
         );
-        pub(crate) fn __rust_thunk___ZN10OverloadedC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN10OverloadedC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Overloaded>,
         );
-        pub(crate) fn __rust_thunk___ZN10OverloadedC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN10OverloadedC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Overloaded>,
             __param_0: ::ctor::RvalueReference<'b, crate::Overloaded>,
         );
-        pub(crate) fn __rust_thunk___ZN10OverloadedaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN10OverloadedaSERKS_<'a, 'b>(
             __this: &'a mut crate::Overloaded,
             __param_0: &'b crate::Overloaded,
         ) -> &'a mut crate::Overloaded;
-        pub(crate) fn __rust_thunk___ZN10OverloadedaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN10OverloadedaSEOS_<'a, 'b>(
             __this: &'a mut crate::Overloaded,
             __param_0: ::ctor::RvalueReference<'b, crate::Overloaded>,
         ) -> &'a mut crate::Overloaded;
         #[link_name = "_ZplRK10Overloadedi"]
-        pub(crate) fn __rust_thunk___ZplRK10Overloadedi<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZplRK10Overloadedi<'a>(
             lhs: &'a crate::Overloaded,
             rhs: ::core::ffi::c_int,
         ) -> ::core::ffi::c_int;
         #[link_name = "_ZplRK10Overloadedj"]
-        pub(crate) fn __rust_thunk___ZplRK10Overloadedj<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZplRK10Overloadedj<'a>(
             lhs: &'a crate::Overloaded,
             rhs: ::core::ffi::c_uint,
         ) -> ::core::ffi::c_int;
-        pub(crate) fn __rust_thunk___ZN15IncompatibleLHSC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN15IncompatibleLHSC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::IncompatibleLHS>,
         );
-        pub(crate) fn __rust_thunk___ZN15IncompatibleLHSC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15IncompatibleLHSC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::IncompatibleLHS>,
             __param_0: ::ctor::RvalueReference<'b, crate::IncompatibleLHS>,
         );
-        pub(crate) fn __rust_thunk___ZN15IncompatibleLHSaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15IncompatibleLHSaSERKS_<'a, 'b>(
             __this: &'a mut crate::IncompatibleLHS,
             __param_0: &'b crate::IncompatibleLHS,
         ) -> &'a mut crate::IncompatibleLHS;
-        pub(crate) fn __rust_thunk___ZN15IncompatibleLHSaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15IncompatibleLHSaSEOS_<'a, 'b>(
             __this: &'a mut crate::IncompatibleLHS,
             __param_0: ::ctor::RvalueReference<'b, crate::IncompatibleLHS>,
         ) -> &'a mut crate::IncompatibleLHS;
-        pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableReturnsVoidC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableReturnsVoid>,
         );
-        pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableReturnsVoidC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableReturnsVoid>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableReturnsVoid>,
         );
-        pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableReturnsVoidaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddableReturnsVoid,
             __param_0: &'b crate::AddableReturnsVoid,
         ) -> &'a mut crate::AddableReturnsVoid;
-        pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddableReturnsVoidaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddableReturnsVoid,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableReturnsVoid>,
         ) -> &'a mut crate::AddableReturnsVoid;
         #[link_name = "_ZNK18AddableReturnsVoidplERKS_"]
-        pub(crate) fn __rust_thunk___ZNK18AddableReturnsVoidplERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK18AddableReturnsVoidplERKS_<'a, 'b>(
             __this: &'a crate::AddableReturnsVoid,
             rhs: &'b crate::AddableReturnsVoid,
         );
-        pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN26AddableConstMemberNonunpinC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
         );
-        pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
             __param_0: &'b crate::AddableConstMemberNonunpin,
         );
-        pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN26AddableConstMemberNonunpinaSERKS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
             __param_0: &'b crate::AddableConstMemberNonunpin,
         ) -> ::core::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>;
-        pub(crate) fn __rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
             __this: &'a crate::AddableConstMemberNonunpin,
             rhs: &'b crate::AddableConstMemberNonunpin,
         );
-        pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinD1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN26AddableConstMemberNonunpinD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
         );
-        pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignMemberInt>,
         );
-        pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignMemberInt>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberInt>,
         );
-        pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddAssignMemberInt,
             __param_0: &'b crate::AddAssignMemberInt,
         ) -> &'a mut crate::AddAssignMemberInt;
-        pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddAssignMemberInt,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberInt>,
         ) -> &'a mut crate::AddAssignMemberInt;
         #[link_name = "_ZN18AddAssignMemberIntpLEi"]
-        pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntpLEi<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntpLEi<'a>(
             __this: &'a mut crate::AddAssignMemberInt,
             rhs: ::core::ffi::c_int,
         ) -> ::core::ffi::c_int;
-        pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignMemberByConstRef>,
         );
-        pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignMemberByConstRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>,
         );
-        pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddAssignMemberByConstRef,
             __param_0: &'b crate::AddAssignMemberByConstRef,
         ) -> &'a mut crate::AddAssignMemberByConstRef;
-        pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddAssignMemberByConstRef,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>,
         ) -> &'a mut crate::AddAssignMemberByConstRef;
         #[link_name = "_ZN25AddAssignMemberByConstRefpLERKS_"]
-        pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefpLERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefpLERKS_<'a, 'b>(
             __this: &'a mut crate::AddAssignMemberByConstRef,
             rhs: &'b crate::AddAssignMemberByConstRef,
         ) -> &'a mut crate::AddAssignMemberByConstRef;
-        pub(crate) fn __rust_thunk___ZN23AddAssignFreeByConstRefC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN23AddAssignFreeByConstRefC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFreeByConstRef>,
         );
-        pub(crate) fn __rust_thunk___ZN23AddAssignFreeByConstRefC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23AddAssignFreeByConstRefC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFreeByConstRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>,
         );
-        pub(crate) fn __rust_thunk___ZN23AddAssignFreeByConstRefaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23AddAssignFreeByConstRefaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddAssignFreeByConstRef,
             __param_0: &'b crate::AddAssignFreeByConstRef,
         ) -> &'a mut crate::AddAssignFreeByConstRef;
-        pub(crate) fn __rust_thunk___ZN23AddAssignFreeByConstRefaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23AddAssignFreeByConstRefaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddAssignFreeByConstRef,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>,
         ) -> &'a mut crate::AddAssignFreeByConstRef;
-        pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN20AddAssignFreeByValueC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFreeByValue>,
         );
-        pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN20AddAssignFreeByValueC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFreeByValue>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>,
         );
-        pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN20AddAssignFreeByValueaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddAssignFreeByValue,
             __param_0: &'b crate::AddAssignFreeByValue,
         ) -> &'a mut crate::AddAssignFreeByValue;
-        pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN20AddAssignFreeByValueaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddAssignFreeByValue,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>,
         ) -> &'a mut crate::AddAssignFreeByValue;
-        pub(crate) fn __rust_thunk___ZpLR20AddAssignFreeByValueS_<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZpLR20AddAssignFreeByValueS_<'a>(
             lhs: &'a mut crate::AddAssignFreeByValue,
             rhs: &mut crate::AddAssignFreeByValue,
         ) -> &'a mut crate::AddAssignFreeByValue;
-        pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignFriendByConstRefC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFriendByConstRef>,
         );
-        pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignFriendByConstRefC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFriendByConstRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>,
         );
-        pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignFriendByConstRefaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddAssignFriendByConstRef,
             __param_0: &'b crate::AddAssignFriendByConstRef,
         ) -> &'a mut crate::AddAssignFriendByConstRef;
-        pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignFriendByConstRefaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddAssignFriendByConstRef,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>,
         ) -> &'a mut crate::AddAssignFriendByConstRef;
-        pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFriendByValue>,
         );
-        pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignFriendByValue>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>,
         );
-        pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddAssignFriendByValue,
             __param_0: &'b crate::AddAssignFriendByValue,
         ) -> &'a mut crate::AddAssignFriendByValue;
-        pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddAssignFriendByValue,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>,
         ) -> &'a mut crate::AddAssignFriendByValue;
-        pub(crate) fn __rust_thunk___ZpLR22AddAssignFriendByValueS_<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZpLR22AddAssignFriendByValueS_<'a>(
             lhs: &'a mut crate::AddAssignFriendByValue,
             rhs: &mut crate::AddAssignFriendByValue,
         ) -> &'a mut crate::AddAssignFriendByValue;
-        pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignProhibitedConstMember>,
         );
-        pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignProhibitedConstMember>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>,
         );
-        pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN30AddAssignProhibitedConstMemberaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddAssignProhibitedConstMember,
             __param_0: &'b crate::AddAssignProhibitedConstMember,
         ) -> &'a mut crate::AddAssignProhibitedConstMember;
-        pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN30AddAssignProhibitedConstMemberaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddAssignProhibitedConstMember,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>,
         ) -> &'a mut crate::AddAssignProhibitedConstMember;
-        pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignProhibitedFriendConstLhs>,
         );
-        pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::AddAssignProhibitedFriendConstLhs>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
         );
-        pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSERKS_<'a, 'b>(
             __this: &'a mut crate::AddAssignProhibitedFriendConstLhs,
             __param_0: &'b crate::AddAssignProhibitedFriendConstLhs,
         ) -> &'a mut crate::AddAssignProhibitedFriendConstLhs;
-        pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSEOS_<'a, 'b>(
             __this: &'a mut crate::AddAssignProhibitedFriendConstLhs,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
         ) -> &'a mut crate::AddAssignProhibitedFriendConstLhs;
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorsC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::ManyOperators>,
         );
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorsC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>,
         );
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorsaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsaSERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             __param_0: &'b crate::ManyOperators,
         ) -> &'a mut crate::ManyOperators;
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorsaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsaSEOS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             __param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>,
         ) -> &'a mut crate::ManyOperators;
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsngEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsngEv<'a>(
             __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
         );
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsntEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsntEv<'a>(
             __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
         );
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsplERKS_<'a, 'b>(
-            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
-            __this: &'a crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        );
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsmiERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsplERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         );
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsmlERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsmiERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         );
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsdvERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsmlERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         );
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsrmERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsdvERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         );
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsanERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsrmERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         );
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsorERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsanERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         );
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorseoERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsorERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         );
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorslsERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorseoERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         );
-        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsrsERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorslsERKS_<'a, 'b>(
+            __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
+            __this: &'a crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsrsERKS_<'a, 'b>(
             __return: &mut ::core::mem::MaybeUninit<crate::ManyOperators>,
             __this: &'a crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         );
         #[link_name = "_ZN13ManyOperatorspLERKS_"]
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorspLERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorspLERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         ) -> &'a mut crate::ManyOperators;
         #[link_name = "_ZN13ManyOperatorsmIERKS_"]
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorsmIERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsmIERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         ) -> &'a mut crate::ManyOperators;
         #[link_name = "_ZN13ManyOperatorsmLERKS_"]
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorsmLERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsmLERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         ) -> &'a mut crate::ManyOperators;
         #[link_name = "_ZN13ManyOperatorsdVERKS_"]
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorsdVERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsdVERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         ) -> &'a mut crate::ManyOperators;
         #[link_name = "_ZN13ManyOperatorsrMERKS_"]
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorsrMERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsrMERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         ) -> &'a mut crate::ManyOperators;
         #[link_name = "_ZN13ManyOperatorsaNERKS_"]
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorsaNERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsaNERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         ) -> &'a mut crate::ManyOperators;
         #[link_name = "_ZN13ManyOperatorsoRERKS_"]
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorsoRERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsoRERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         ) -> &'a mut crate::ManyOperators;
         #[link_name = "_ZN13ManyOperatorseOERKS_"]
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorseOERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorseOERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         ) -> &'a mut crate::ManyOperators;
         #[link_name = "_ZN13ManyOperatorslSERKS_"]
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorslSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorslSERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         ) -> &'a mut crate::ManyOperators;
         #[link_name = "_ZN13ManyOperatorsrSERKS_"]
-        pub(crate) fn __rust_thunk___ZN13ManyOperatorsrSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsrSERKS_<'a, 'b>(
             __this: &'a mut crate::ManyOperators,
             rhs: &'b crate::ManyOperators,
         ) -> &'a mut crate::ManyOperators;

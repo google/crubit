@@ -55,19 +55,23 @@ pub unsafe fn ConsumeArrayWithTypedef(__param_0: *mut ::core::ffi::c_int) {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
+    unsafe extern "C" {
         #[link_name = "_Z7AddHookPFvvE"]
-        pub(crate) fn __rust_thunk___Z7AddHookPFvvE(__param_0: Option<extern "C" fn()>);
+        pub(crate) unsafe fn __rust_thunk___Z7AddHookPFvvE(__param_0: Option<extern "C" fn()>);
         #[link_name = "_Z18AddHookWithTypedefPFvvE"]
-        pub(crate) fn __rust_thunk___Z18AddHookWithTypedefPFvvE(hook: Option<extern "C" fn()>);
+        pub(crate) unsafe fn __rust_thunk___Z18AddHookWithTypedefPFvvE(
+            hook: Option<extern "C" fn()>,
+        );
         #[link_name = "_Z14AddAnotherHookRFvvE"]
-        pub(crate) fn __rust_thunk___Z14AddAnotherHookRFvvE(__param_0: extern "C" fn());
+        pub(crate) unsafe fn __rust_thunk___Z14AddAnotherHookRFvvE(__param_0: extern "C" fn());
         #[link_name = "_Z25AddAnotherHookWithTypedefRFvvE"]
-        pub(crate) fn __rust_thunk___Z25AddAnotherHookWithTypedefRFvvE(hook: extern "C" fn());
+        pub(crate) unsafe fn __rust_thunk___Z25AddAnotherHookWithTypedefRFvvE(
+            hook: extern "C" fn(),
+        );
         #[link_name = "_Z12ConsumeArrayPi"]
-        pub(crate) fn __rust_thunk___Z12ConsumeArrayPi(pair: *mut ::core::ffi::c_int);
+        pub(crate) unsafe fn __rust_thunk___Z12ConsumeArrayPi(pair: *mut ::core::ffi::c_int);
         #[link_name = "_Z23ConsumeArrayWithTypedefPi"]
-        pub(crate) fn __rust_thunk___Z23ConsumeArrayWithTypedefPi(
+        pub(crate) unsafe fn __rust_thunk___Z23ConsumeArrayWithTypedefPi(
             __param_0: *mut ::core::ffi::c_int,
         );
     }

@@ -273,7 +273,7 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
@@ -290,7 +290,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase1 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -299,7 +299,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualBase1 {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
@@ -316,7 +316,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase1 {
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -379,7 +379,7 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
@@ -396,7 +396,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -405,7 +405,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualBase2 {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
@@ -422,7 +422,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -485,7 +485,7 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
@@ -502,7 +502,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -511,7 +511,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualDerived {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
@@ -528,7 +528,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived {
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -831,127 +831,127 @@ unsafe impl oops::Inherits<crate::MethodBase2> for crate::MethodDerived {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN5Base0C1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN5Base0C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base0>,
         );
-        pub(crate) fn __rust_thunk___ZN5Base0C1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN5Base0C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base0>,
             __param_0: ::ctor::RvalueReference<'b, crate::Base0>,
         );
-        pub(crate) fn __rust_thunk___ZN5Base0aSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN5Base0aSERKS_<'a, 'b>(
             __this: &'a mut crate::Base0,
             __param_0: &'b crate::Base0,
         ) -> &'a mut crate::Base0;
-        pub(crate) fn __rust_thunk___ZN5Base0aSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN5Base0aSEOS_<'a, 'b>(
             __this: &'a mut crate::Base0,
             __param_0: ::ctor::RvalueReference<'b, crate::Base0>,
         ) -> &'a mut crate::Base0;
-        pub(crate) fn __rust_thunk___ZN5Base1C1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN5Base1C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base1>,
         );
-        pub(crate) fn __rust_thunk___ZN5Base1C1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN5Base1C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base1>,
             __param_0: ::ctor::RvalueReference<'b, crate::Base1>,
         );
-        pub(crate) fn __rust_thunk___ZN5Base1aSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN5Base1aSERKS_<'a, 'b>(
             __this: &'a mut crate::Base1,
             __param_0: &'b crate::Base1,
         ) -> &'a mut crate::Base1;
-        pub(crate) fn __rust_thunk___ZN5Base1aSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN5Base1aSEOS_<'a, 'b>(
             __this: &'a mut crate::Base1,
             __param_0: ::ctor::RvalueReference<'b, crate::Base1>,
         ) -> &'a mut crate::Base1;
-        pub(crate) fn __rust_thunk___ZN5Base2C1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN5Base2C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base2>,
         );
-        pub(crate) fn __rust_thunk___ZN5Base2C1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN5Base2C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Base2>,
             __param_0: ::ctor::RvalueReference<'b, crate::Base2>,
         );
-        pub(crate) fn __rust_thunk___ZN5Base2aSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN5Base2aSERKS_<'a, 'b>(
             __this: &'a mut crate::Base2,
             __param_0: &'b crate::Base2,
         ) -> &'a mut crate::Base2;
-        pub(crate) fn __rust_thunk___ZN5Base2aSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN5Base2aSEOS_<'a, 'b>(
             __this: &'a mut crate::Base2,
             __param_0: ::ctor::RvalueReference<'b, crate::Base2>,
         ) -> &'a mut crate::Base2;
-        pub(crate) fn __rust_thunk___ZN7DerivedC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Derived>,
         );
-        pub(crate) fn __rust_thunk___ZN7DerivedC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Derived>,
             __param_0: ::ctor::RvalueReference<'b, crate::Derived>,
         );
-        pub(crate) fn __rust_thunk___ZN7DerivedaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN7DerivedaSERKS_<'a, 'b>(
             __this: &'a mut crate::Derived,
             __param_0: &'b crate::Derived,
         ) -> &'a mut crate::Derived;
-        pub(crate) fn __rust_thunk___ZN7DerivedaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN7DerivedaSEOS_<'a, 'b>(
             __this: &'a mut crate::Derived,
             __param_0: ::ctor::RvalueReference<'b, crate::Derived>,
         ) -> &'a mut crate::Derived;
-        pub(crate) fn __rust_thunk___ZN12VirtualBase1C1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase1>,
         );
-        pub(crate) fn __rust_thunk___ZN12VirtualBase1C1ERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1ERKS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase1>,
             __param_0: &'b crate::VirtualBase1,
         );
-        pub(crate) fn __rust_thunk___ZN12VirtualBase1C1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase1>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase1>,
         );
-        pub(crate) fn __rust_thunk___ZN12VirtualBase1aSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1aSERKS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::VirtualBase1>,
             __param_0: &'b crate::VirtualBase1,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualBase1>;
-        pub(crate) fn __rust_thunk___ZN12VirtualBase1aSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1aSEOS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::VirtualBase1>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase1>,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualBase1>;
         pub fn __crubit_dynamic_upcast__12VirtualBase1__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
             from: *const crate::VirtualBase1,
         ) -> *const crate::Base1;
-        pub(crate) fn __rust_thunk___ZN12VirtualBase2C1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase2>,
         );
-        pub(crate) fn __rust_thunk___ZN12VirtualBase2C1ERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1ERKS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase2>,
             __param_0: &'b crate::VirtualBase2,
         );
-        pub(crate) fn __rust_thunk___ZN12VirtualBase2C1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase2>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase2>,
         );
-        pub(crate) fn __rust_thunk___ZN12VirtualBase2aSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2aSERKS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::VirtualBase2>,
             __param_0: &'b crate::VirtualBase2,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualBase2>;
-        pub(crate) fn __rust_thunk___ZN12VirtualBase2aSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2aSEOS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::VirtualBase2>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase2>,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualBase2>;
         pub fn __crubit_dynamic_upcast__12VirtualBase2__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
             from: *const crate::VirtualBase2,
         ) -> *const crate::Base1;
-        pub(crate) fn __rust_thunk___ZN14VirtualDerivedC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualDerived>,
         );
-        pub(crate) fn __rust_thunk___ZN14VirtualDerivedC1ERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1ERKS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualDerived>,
             __param_0: &'b crate::VirtualDerived,
         );
-        pub(crate) fn __rust_thunk___ZN14VirtualDerivedC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualDerived>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualDerived>,
         );
-        pub(crate) fn __rust_thunk___ZN14VirtualDerivedaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedaSERKS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::VirtualDerived>,
             __param_0: &'b crate::VirtualDerived,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualDerived>;
-        pub(crate) fn __rust_thunk___ZN14VirtualDerivedaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedaSEOS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::VirtualDerived>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualDerived>,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualDerived>;
@@ -964,87 +964,87 @@ mod detail {
         pub fn __crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
             from: *const crate::VirtualDerived,
         ) -> *const crate::VirtualBase2;
-        pub(crate) fn __rust_thunk___ZN15MyAbstractClassaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15MyAbstractClassaSERKS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::MyAbstractClass>,
             __param_0: &'b crate::MyAbstractClass,
         ) -> ::core::pin::Pin<&'a mut crate::MyAbstractClass>;
-        pub(crate) fn __rust_thunk___ZN11MethodBase1C1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase1>,
         );
-        pub(crate) fn __rust_thunk___ZN11MethodBase1C1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase1>,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodBase1>,
         );
-        pub(crate) fn __rust_thunk___ZN11MethodBase1aSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1aSERKS_<'a, 'b>(
             __this: &'a mut crate::MethodBase1,
             __param_0: &'b crate::MethodBase1,
         ) -> &'a mut crate::MethodBase1;
-        pub(crate) fn __rust_thunk___ZN11MethodBase1aSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1aSEOS_<'a, 'b>(
             __this: &'a mut crate::MethodBase1,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodBase1>,
         ) -> &'a mut crate::MethodBase1;
         #[link_name = "_ZN11MethodBase16PublicEv"]
-        pub(crate) fn __rust_thunk___ZN11MethodBase16PublicEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16PublicEv<'a>(
             __this: &'a mut crate::MethodBase1,
         );
         #[link_name = "_ZN11MethodBase16EqualsEPKS_"]
-        pub(crate) fn __rust_thunk___ZN11MethodBase16EqualsEPKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16EqualsEPKS_<'a, 'b>(
             __this: &'a mut crate::MethodBase1,
             __param_0: Option<&'b crate::MethodBase1>,
         );
         #[link_name = "_ZN11MethodBase110Colliding1Ev"]
-        pub(crate) fn __rust_thunk___ZN11MethodBase110Colliding1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase110Colliding1Ev<'a>(
             __this: &'a mut crate::MethodBase1,
         );
         #[link_name = "_ZN11MethodBase110Colliding2Ev"]
-        pub(crate) fn __rust_thunk___ZN11MethodBase110Colliding2Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase110Colliding2Ev<'a>(
             __this: &'a mut crate::MethodBase1,
         );
-        pub(crate) fn __rust_thunk___ZN11MethodBase2C1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase2>,
         );
-        pub(crate) fn __rust_thunk___ZN11MethodBase2C1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase2>,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodBase2>,
         );
-        pub(crate) fn __rust_thunk___ZN11MethodBase2aSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2aSERKS_<'a, 'b>(
             __this: &'a mut crate::MethodBase2,
             __param_0: &'b crate::MethodBase2,
         ) -> &'a mut crate::MethodBase2;
-        pub(crate) fn __rust_thunk___ZN11MethodBase2aSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2aSEOS_<'a, 'b>(
             __this: &'a mut crate::MethodBase2,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodBase2>,
         ) -> &'a mut crate::MethodBase2;
         #[link_name = "_ZN11MethodBase210Colliding1Ev"]
-        pub(crate) fn __rust_thunk___ZN11MethodBase210Colliding1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase210Colliding1Ev<'a>(
             __this: &'a mut crate::MethodBase2,
         );
         #[link_name = "_ZN11MethodBase210Colliding2Ev"]
-        pub(crate) fn __rust_thunk___ZN11MethodBase210Colliding2Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase210Colliding2Ev<'a>(
             __this: &'a mut crate::MethodBase2,
         );
-        pub(crate) fn __rust_thunk___ZN13MethodDerivedC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MethodDerived>,
         );
-        pub(crate) fn __rust_thunk___ZN13MethodDerivedC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::MethodDerived>,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodDerived>,
         );
-        pub(crate) fn __rust_thunk___ZN13MethodDerivedaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedaSERKS_<'a, 'b>(
             __this: &'a mut crate::MethodDerived,
             __param_0: &'b crate::MethodDerived,
         ) -> &'a mut crate::MethodDerived;
-        pub(crate) fn __rust_thunk___ZN13MethodDerivedaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedaSEOS_<'a, 'b>(
             __this: &'a mut crate::MethodDerived,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodDerived>,
         ) -> &'a mut crate::MethodDerived;
         #[link_name = "_ZN11MethodBase16EqualsEPKS_"]
-        pub(crate) fn __rust_thunk___ZN11MethodBase16EqualsEPKS__MethodDerived<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16EqualsEPKS__MethodDerived<'a, 'b>(
             __this: &'a mut crate::MethodBase1,
             __param_0: Option<&'b crate::MethodBase1>,
         );
         #[link_name = "_ZN11MethodBase16PublicEv"]
-        pub(crate) fn __rust_thunk___ZN11MethodBase16PublicEv_MethodDerived<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16PublicEv_MethodDerived<'a>(
             __this: &'a mut crate::MethodBase1,
         );
     }

@@ -133,29 +133,31 @@ forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate:
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
+    unsafe extern "C" {
         #[link_name = "_Z13free_functionRi"]
-        pub(crate) fn __rust_thunk___Z13free_functionRi(
+        pub(crate) unsafe fn __rust_thunk___Z13free_functionRi(
             p1: *mut ::core::ffi::c_int,
         ) -> *mut ::core::ffi::c_int;
         #[link_name = "_ZNK1S12const_methodERiS0_"]
-        pub(crate) fn __rust_thunk___ZNK1S12const_methodERiS0_(
+        pub(crate) unsafe fn __rust_thunk___ZNK1S12const_methodERiS0_(
             __this: *const crate::S,
             p1: *mut ::core::ffi::c_int,
             p2: *mut ::core::ffi::c_int,
         ) -> *mut ::core::ffi::c_int;
         #[link_name = "_ZN1S6methodERiS0_"]
-        pub(crate) fn __rust_thunk___ZN1S6methodERiS0_(
+        pub(crate) unsafe fn __rust_thunk___ZN1S6methodERiS0_(
             __this: *mut crate::S,
             p1: *mut ::core::ffi::c_int,
             p2: *mut ::core::ffi::c_int,
         ) -> *mut ::core::ffi::c_int;
         #[link_name = "_ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev"]
-        pub(crate) fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<
+            'a,
+        >(
             __this: ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
         );
         #[link_name = "_Z12take_pointerPi"]
-        pub(crate) fn __rust_thunk___Z12take_pointerPi(p: *mut ::core::ffi::c_int);
+        pub(crate) unsafe fn __rust_thunk___Z12take_pointerPi(p: *mut ::core::ffi::c_int);
     }
 }
 

@@ -204,50 +204,50 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasNoComment
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN3FooC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN3FooC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Foo>,
         );
-        pub(crate) fn __rust_thunk___ZN3FooC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN3FooC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Foo>,
             __param_0: ::ctor::RvalueReference<'b, crate::Foo>,
         );
-        pub(crate) fn __rust_thunk___ZN3FooaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN3FooaSERKS_<'a, 'b>(
             __this: &'a mut crate::Foo,
             __param_0: &'b crate::Foo,
         ) -> &'a mut crate::Foo;
-        pub(crate) fn __rust_thunk___ZN3FooaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN3FooaSEOS_<'a, 'b>(
             __this: &'a mut crate::Foo,
             __param_0: ::ctor::RvalueReference<'b, crate::Foo>,
         ) -> &'a mut crate::Foo;
-        pub(crate) fn __rust_thunk___Z3foov();
-        pub(crate) fn __rust_thunk___ZN3BarC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___Z3foov();
+        pub(crate) unsafe fn __rust_thunk___ZN3BarC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Bar>,
         );
-        pub(crate) fn __rust_thunk___ZN3BarC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN3BarC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Bar>,
             __param_0: ::ctor::RvalueReference<'b, crate::Bar>,
         );
-        pub(crate) fn __rust_thunk___ZN3BaraSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN3BaraSERKS_<'a, 'b>(
             __this: &'a mut crate::Bar,
             __param_0: &'b crate::Bar,
         ) -> &'a mut crate::Bar;
-        pub(crate) fn __rust_thunk___ZN3BaraSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN3BaraSEOS_<'a, 'b>(
             __this: &'a mut crate::Bar,
             __param_0: ::ctor::RvalueReference<'b, crate::Bar>,
         ) -> &'a mut crate::Bar;
-        pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN13HasNoCommentsC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::HasNoComments>,
         );
-        pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13HasNoCommentsC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::HasNoComments>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasNoComments>,
         );
-        pub(crate) fn __rust_thunk___ZN13HasNoCommentsaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13HasNoCommentsaSERKS_<'a, 'b>(
             __this: &'a mut crate::HasNoComments,
             __param_0: &'b crate::HasNoComments,
         ) -> &'a mut crate::HasNoComments;
-        pub(crate) fn __rust_thunk___ZN13HasNoCommentsaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN13HasNoCommentsaSEOS_<'a, 'b>(
             __this: &'a mut crate::HasNoComments,
             __param_0: ::ctor::RvalueReference<'b, crate::HasNoComments>,
         ) -> &'a mut crate::HasNoComments;

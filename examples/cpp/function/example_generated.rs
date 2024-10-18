@@ -28,7 +28,7 @@ pub mod gshoe {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN5gshoe16add_two_integersEii(x: i32, y: i32) -> i32;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN5gshoe16add_two_integersEii(x: i32, y: i32) -> i32;
     }
 }

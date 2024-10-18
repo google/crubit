@@ -187,28 +187,28 @@ pub unsafe fn FunctionWithVoidPointers(
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN10SomeStructaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructaSERKS_<'a, 'b>(
             __this: &'a mut crate::SomeStruct,
             __param_0: &'b crate::SomeStruct,
         ) -> &'a mut crate::SomeStruct;
-        pub(crate) fn __rust_thunk___ZN10SomeStructaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructaSEOS_<'a, 'b>(
             __this: &'a mut crate::SomeStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         ) -> &'a mut crate::SomeStruct;
-        pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::FieldTypeTestStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
         );
         #[link_name = "_Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi"]
-        pub(crate) fn __rust_thunk___Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi<
+        pub(crate) unsafe fn __rust_thunk___Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi<
             'a,
             'b,
             'c,
@@ -219,14 +219,14 @@ mod detail {
             const_ptr_param: Option<&'c ::core::ffi::c_int>,
             mut_ptr_param: Option<&'d mut ::core::ffi::c_int>,
         );
-        pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
-        pub(crate) fn __rust_thunk___Z32FunctionPointerReturningFunctionv() -> Option<
+        pub(crate) unsafe fn __rust_thunk___Z21VoidReturningFunctionv();
+        pub(crate) unsafe fn __rust_thunk___Z32FunctionPointerReturningFunctionv() -> Option<
             unsafe extern "C" fn(
                 *const ::core::ffi::c_int,
                 *mut ::core::ffi::c_int,
             ) -> *mut ::core::ffi::c_int,
         >;
-        pub(crate) fn __rust_thunk___Z24FunctionWithVoidPointersPvPKv(
+        pub(crate) unsafe fn __rust_thunk___Z24FunctionWithVoidPointersPvPKv(
             __param_0: *mut ::core::ffi::c_void,
             __param_1: *const ::core::ffi::c_void,
         ) -> *mut ::core::ffi::c_void;

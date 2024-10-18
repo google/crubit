@@ -50,7 +50,7 @@ impl ::ctor::CtorNew<()> for Derived2 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for Derived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
@@ -67,7 +67,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for Derived2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for Derived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -76,7 +76,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for Derived2 {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Derived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
@@ -93,7 +93,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Derived2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Derived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -169,7 +169,7 @@ impl ::ctor::CtorNew<()> for VirtualDerived2 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
@@ -186,7 +186,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualDerived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -195,7 +195,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualDerived2 {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
@@ -212,7 +212,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived2 
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualDerived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -260,45 +260,45 @@ unsafe impl oops::Inherits<inheritance_cc::VirtualBase2> for crate::VirtualDeriv
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN8Derived2C1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Derived2>,
         );
-        pub(crate) fn __rust_thunk___ZN8Derived2C1ERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2C1ERKS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Derived2>,
             __param_0: &'b crate::Derived2,
         );
-        pub(crate) fn __rust_thunk___ZN8Derived2C1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::Derived2>,
             __param_0: ::ctor::RvalueReference<'b, crate::Derived2>,
         );
-        pub(crate) fn __rust_thunk___ZN8Derived2aSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2aSERKS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::Derived2>,
             __param_0: &'b crate::Derived2,
         ) -> ::core::pin::Pin<&'a mut crate::Derived2>;
-        pub(crate) fn __rust_thunk___ZN8Derived2aSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2aSEOS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::Derived2>,
             __param_0: ::ctor::RvalueReference<'b, crate::Derived2>,
         ) -> ::core::pin::Pin<&'a mut crate::Derived2>;
         pub fn __crubit_dynamic_upcast__8Derived2__to__5Base0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(
             from: *const crate::Derived2,
         ) -> *const inheritance_cc::Base0;
-        pub(crate) fn __rust_thunk___ZN15VirtualDerived2C1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2C1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualDerived2>,
         );
-        pub(crate) fn __rust_thunk___ZN15VirtualDerived2C1ERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2C1ERKS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualDerived2>,
             __param_0: &'b crate::VirtualDerived2,
         );
-        pub(crate) fn __rust_thunk___ZN15VirtualDerived2C1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2C1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualDerived2>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualDerived2>,
         );
-        pub(crate) fn __rust_thunk___ZN15VirtualDerived2aSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2aSERKS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::VirtualDerived2>,
             __param_0: &'b crate::VirtualDerived2,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualDerived2>;
-        pub(crate) fn __rust_thunk___ZN15VirtualDerived2aSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2aSEOS_<'a, 'b>(
             __this: ::core::pin::Pin<&'a mut crate::VirtualDerived2>,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualDerived2>,
         ) -> ::core::pin::Pin<&'a mut crate::VirtualDerived2>;

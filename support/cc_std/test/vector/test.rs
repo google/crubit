@@ -433,7 +433,7 @@ mod alignment_tests {
         v.push(OveralignedStuct { x: 2 });
         expect_eq!(v[0].x, 1);
         expect_eq!(v[1].x, 2);
-        expect_eq!(std::ptr::addr_of!(v[0]) as usize % 1024, 0);
+        expect_eq!(&raw const v[0] as usize % 1024, 0);
     }
 }
 

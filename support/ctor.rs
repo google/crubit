@@ -839,8 +839,6 @@ macro_rules! ctor {
         {
             use $t $(:: $ts)* as Type;
             $crate::FnCtor::new(|x: $crate::macro_internal::Pin<&mut $crate::macro_internal::MaybeUninit<Type>>| {
-                // Unused if Type is fieldless.
-                #[allow(unused_imports)] use ::core::ptr::addr_of_mut;
                 struct DropGuard;
                 let drop_guard = DropGuard;
                 let x_mut = unsafe{$crate::macro_internal::Pin::into_inner_unchecked(x)}.as_mut_ptr();
@@ -871,10 +869,10 @@ macro_rules! ctor {
                 $(
                     let sub_ctor = $sub_ctor;
                     let field_drop = unsafe {
+                        // SAFETY: the place is in bounds, just uninitialized. See e.g. second
+                        // example: https://doc.rust-lang.org/nightly/std/ptr/macro.addr_of_mut.html
                         $crate::macro_internal::init_field(
-                            // safety: this is almost verbatim the same as the second example at
-                            // https://doc.rust-lang.org/nightly/std/ptr/macro.addr_of_mut.html
-                            addr_of_mut!((*x_mut).$name),
+                            &raw mut (*x_mut).$name,
                             sub_ctor)
                     };
                     let drop_guard = (drop_guard, field_drop);
@@ -1211,32 +1209,6 @@ impl<T: Ctor> Ctor for ManuallyDropCtor<T> {
 }
 
 impl<T: Ctor> !Unpin for ManuallyDropCtor<T> {}
-
-/// A utility trait to add lifetime bounds to an `impl Ctor`.
-///
-/// When returning trait impls, captures don't work as one would expect;
-/// see https://github.com/rust-lang/rust/issues/66551
-///
-/// For example, this function does not compile:
-///
-/// ```compile_fail
-/// fn adder<'a, 'b>(x: &'a i32, y: &'b i32) -> impl Fn() -> i32 + 'a + 'b {
-///   move || *a + *b
-/// }
-/// ```
-///
-/// However, using Captures, we can write the following, which _does_ compile:
-///
-/// ```
-/// fn adder<'a, 'b>(x: &'a i32, y: &'b i32) -> impl Fn() -> i32 + Captures<'a> + Captures<'b> {
-///   move || *a + *b
-/// }
-/// ```
-///
-/// Since `Ctor` is a in essence glorified `impl Fn(...)`, and will often need
-/// to retain function inputs, this helper trait is provided for such a use.
-pub trait Captures<'a> {}
-impl<'a, T> Captures<'a> for T {}
 
 #[cfg(test)]
 mod test {
@@ -1745,10 +1717,7 @@ mod test {
 
     #[gtest]
     fn test_ctor_trait_captures() {
-        fn adder<'a, 'b>(
-            x: &'a i32,
-            y: &'b i32,
-        ) -> impl Ctor<Output = i32> + Captures<'a> + Captures<'b> {
+        fn adder<'a, 'b>(x: &'a i32, y: &'b i32) -> impl Ctor<Output = i32> + use<'a, 'b> {
             FnCtor::new(|mut dest: Pin<&mut core::mem::MaybeUninit<i32>>| {
                 dest.write(*x + *y);
             })
@@ -1759,27 +1728,4 @@ mod test {
         }
         assert_eq!(*sum, 42);
     }
-
-    // The following test is broken due to https://github.com/rust-lang/rust/issues/66551
-    // If that bug is fixed, this test should be uncommented, and `Captures`
-    // deprecated and removed.
-    //
-    // ```
-    // #[gtest]
-    // fn test_ctor_native_captures() {
-    //     fn adder<'a, 'b>(
-    //         x: &'a i32,
-    //         y: &'b i32,
-    //     ) -> impl Ctor<Output = i32> + 'a + 'b {
-    //         FnCtor::new(|mut dest: Pin<&mut std::mem::MaybeUninit<i32>>| {
-    //             dest.write(*x + *y);
-    //         })
-    //     }
-
-    //     emplace! {
-    //         let sum = adder(&40, &2);
-    //     }
-    //     assert_eq!(*sum, 42);
-    // }
-    // ```
 }

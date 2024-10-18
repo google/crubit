@@ -63,8 +63,8 @@ impl Drop for Position {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN8PositionD1Ev<'a>(__this: &'a mut crate::Position);
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN8PositionD1Ev<'a>(__this: &'a mut crate::Position);
     }
 }
 

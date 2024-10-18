@@ -129,39 +129,39 @@ pub fn second_func() -> ::core::ffi::c_int {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::FirstStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN11FirstStructC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::FirstStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::FirstStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN11FirstStructaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructaSERKS_<'a, 'b>(
             __this: &'a mut crate::FirstStruct,
             __param_0: &'b crate::FirstStruct,
         ) -> &'a mut crate::FirstStruct;
-        pub(crate) fn __rust_thunk___ZN11FirstStructaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructaSEOS_<'a, 'b>(
             __this: &'a mut crate::FirstStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::FirstStruct>,
         ) -> &'a mut crate::FirstStruct;
-        pub(crate) fn __rust_thunk___Z10first_funcv() -> ::core::ffi::c_int;
-        pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___Z10first_funcv() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SecondStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN12SecondStructC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SecondStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::SecondStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN12SecondStructaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructaSERKS_<'a, 'b>(
             __this: &'a mut crate::SecondStruct,
             __param_0: &'b crate::SecondStruct,
         ) -> &'a mut crate::SecondStruct;
-        pub(crate) fn __rust_thunk___ZN12SecondStructaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructaSEOS_<'a, 'b>(
             __this: &'a mut crate::SecondStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::SecondStruct>,
         ) -> &'a mut crate::SecondStruct;
-        pub(crate) fn __rust_thunk___Z11second_funcv() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z11second_funcv() -> ::core::ffi::c_int;
     }
 }
 

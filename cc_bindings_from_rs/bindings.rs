@@ -1851,7 +1851,7 @@ fn format_thunk_impl<'tcx>(
         quote! {}
     };
     Ok(quote! {
-        #[no_mangle]
+        #[unsafe(no_mangle)]
         #unsafe_qualifier extern "C" fn #thunk_name #generic_params (
             #( #thunk_params ),*
         ) -> #thunk_ret_type {
@@ -3173,7 +3173,7 @@ fn format_trait_thunks<'tcx>(
                 // to avoid https://doc.rust-lang.org/error_codes/E0040.html
                 let thunk_name = make_rs_ident(&thunk_name);
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn #thunk_name(
                         __self: &mut ::core::mem::MaybeUninit<#struct_name>
                     ) {
@@ -4020,7 +4020,7 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_fn_no_mangle_extern_c() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn public_function() {
                     println!("foo");
                 }
@@ -4045,7 +4045,7 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_fn_export_name() {
         let test_src = r#"
-                #[export_name = "export_name"]
+                #[unsafe(export_name = "export_name")]
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
         test_generated_bindings(test_src, |bindings| {
@@ -4178,7 +4178,7 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_includes() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn public_function(i: i32, d: isize, u: u64) {
                     dbg!(i);
                     dbg!(d);
@@ -4277,7 +4277,7 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_prereq_fwd_decls_for_cpp_fn_decl() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn f(s: S) -> bool { s.0 }
 
                 #[repr(C)]
@@ -4476,7 +4476,7 @@ pub mod tests {
             assert_rs_matches!(
                 bindings.rs_body,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C"
                     fn ...() -> () {
                         ::rust_out::some_module::some_func()
@@ -4725,7 +4725,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_extern_c_no_mangle_no_params_no_return_type() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn public_function() {}
             "#;
         test_format_item(test_src, "public_function", |result| {
@@ -4903,7 +4903,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_explicit_unit_return_type() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn explicit_unit_return_type() -> () {}
             "#;
         test_format_item(test_src, "explicit_unit_return_type", |result| {
@@ -4922,7 +4922,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_never_return_type() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn never_returning_function() -> ! {
                     panic!("This function panics and therefore never returns");
                 }
@@ -4945,10 +4945,10 @@ pub mod tests {
     }
 
     /// `test_format_item_fn_mangling` checks that bindings can be generated for
-    /// `extern "C"` functions that do *not* have `#[no_mangle]` attribute.  The
-    /// test elides away the mangled name in the `assert_cc_matches` checks
-    /// below, but end-to-end test coverage should eventually be provided by
-    /// `test/functions` (see b/262904507).
+    /// `extern "C"` functions that do *not* have `#[unsafe(no_mangle)]`
+    /// attribute.  The test elides away the mangled name in the
+    /// `assert_cc_matches` checks below, but end-to-end test coverage
+    /// should eventually be provided by `test/functions` (see b/262904507).
     #[test]
     fn test_format_item_fn_mangling() {
         let test_src = r#"
@@ -4985,7 +4985,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_export_name() {
         let test_src = r#"
-                #[export_name = "export_name"]
+                #[unsafe(export_name = "export_name")]
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
         test_format_item(test_src, "public_function", |result| {
@@ -5023,7 +5023,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_extern_c_unsafe() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub unsafe extern "C" fn foo() {}
             "#;
         test_format_item(test_src, "foo", |result| {
@@ -5050,7 +5050,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_unsafe() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub unsafe fn foo() {}
             "#;
         test_format_item(test_src, "foo", |result| {
@@ -5066,7 +5066,7 @@ pub mod tests {
             assert_cc_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     unsafe extern "C" fn __crubit_thunk_foo() -> () {
                         unsafe { ::rust_out::foo() }
                     }
@@ -5078,7 +5078,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_references() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub fn foo(_x: &i32, _y: &i32) {}
             "#;
         test_format_item_with_features(
@@ -5102,7 +5102,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_risky_mut_reference() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub fn foo(_x: &mut i32, _y: &i32) {}
             "#;
         test_format_item_with_features(
@@ -5121,7 +5121,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_static_reference() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub fn foo(_x: &'static i32) {}
             "#;
         test_format_item_with_features(
@@ -5142,7 +5142,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_nested_reference() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub fn foo(_x: &&i32) {}
             "#;
         test_format_item_with_features(
@@ -5161,7 +5161,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_returned_static_reference() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub fn foo() -> &'static i32 {todo!()}
             "#;
         test_format_item_with_features(
@@ -5180,7 +5180,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_reused_reference_lifetime() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub fn foo<'a>(_x: &'a i32, _y: &'a i32) {}
             "#;
         test_format_item_with_features(
@@ -5202,7 +5202,7 @@ pub mod tests {
     fn test_format_item_fn_reused_reference_lifetime_struct() {
         let test_src = r#"
                 pub struct Foo<'a>(pub i32, core::marker::PhantomData<&'a i32>);
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub fn foo<'a>(_x: &'a Foo<'a>) {}
             "#;
         test_format_item_with_features(
@@ -5221,7 +5221,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_char() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub fn foo(_x: char) {}
             "#;
         test_format_item_with_features(
@@ -5264,7 +5264,7 @@ pub mod tests {
                 #![feature(register_tool)]
                 #![register_tool(__crubit)]
 
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 #[__crubit::annotate(cpp_name="Create")]
                 pub fn foo() {}
             "#;
@@ -5276,7 +5276,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn __crubit_thunk_foo() -> () {
                          ::rust_out::foo()
                     }
@@ -5378,7 +5378,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C"
                     fn ...(i: i32) -> i32 {
                         ::rust_out::foo(i)
@@ -5394,7 +5394,7 @@ pub mod tests {
         let test_src = r#"
                 #![feature(c_unwind)]
 
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C-unwind" fn may_throw() {}
             "#;
         test_format_item(test_src, "may_throw", |result| {
@@ -5461,7 +5461,7 @@ pub mod tests {
     #[test]
     fn test_format_item_fn_cc_prerequisites_if_only_cpp_declaration_needed() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn foo(s: S) -> bool { s.0 }
 
                 #[repr(C)]
@@ -5498,7 +5498,7 @@ pub mod tests {
         let test_src = r#"
                 type MyTypeAlias = f64;
 
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn type_aliased_return() -> MyTypeAlias { 42.0 }
             "#;
         test_format_item(test_src, "type_aliased_return", |result| {
@@ -5521,7 +5521,7 @@ pub mod tests {
             /** Outer block doc that spans lines.
              */
             #[doc = "Doc comment via doc attribute."]
-            #[no_mangle]
+            #[unsafe(no_mangle)]
             pub extern "C" fn fn_with_doc_comment_with_unmangled_name() {}
           "#;
         test_format_item(test_src, "fn_with_doc_comment_with_unmangled_name", |result| {
@@ -5553,7 +5553,7 @@ pub mod tests {
     fn test_format_item_fn_with_inner_doc_comment_with_unmangled_name() {
         let test_src = r#"
             /// Outer doc comment.
-            #[no_mangle]
+            #[unsafe(no_mangle)]
             pub extern "C" fn fn_with_inner_doc_comment_with_unmangled_name() {
                 //! Inner doc comment.
             }
@@ -5603,7 +5603,7 @@ pub mod tests {
     #[test]
     fn test_format_item_unsupported_fn_name_is_reserved_cpp_keyword() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn reinterpret_cast() -> () {}
             "#;
         test_format_item(test_src, "reinterpret_cast", |result| {
@@ -5674,7 +5674,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...<'__anon1>(arg: &'__anon1 i32) -> &'__anon1 i32 {
                         ::rust_out::foo(arg)
                     }
@@ -5756,7 +5756,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...<'a, 'foo, '__anon1, '__anon2>(
                         arg1: &'a i32,
                         arg2: &'foo i32,
@@ -5941,7 +5941,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C"
                     fn ...(x: f64, y: f64) -> f64 {
                         ::rust_out::add(x, y)
@@ -5976,7 +5976,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     unsafe extern "C"
                     fn ...(...) -> i32 {
                         unsafe {
@@ -6018,7 +6018,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C"
                     fn ...(s: &mut ::core::mem::MaybeUninit<::rust_out::S>) -> i32 {
                         ::rust_out::into_i32(unsafe { s.assume_init_read() })
@@ -6062,7 +6062,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C"
                     fn ...(
                         i: i32,
@@ -6122,7 +6122,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C"
                     fn ...(x: f64, y: f64) -> f64 {
                         ::rust_out::add(x, y)
@@ -6137,7 +6137,7 @@ pub mod tests {
         let test_src = r#"
                 #![feature(c_variadic)]
 
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub unsafe extern "C" fn variadic_function(_fmt: *const u8, ...) {}
             "#;
         test_format_item(test_src, "variadic_function", |result| {
@@ -6151,7 +6151,7 @@ pub mod tests {
     fn test_format_item_fn_params() {
         let test_src = r#"
                 #[allow(unused_variables)]
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn foo(b: bool, f: f64) {}
             "#;
         test_format_item(test_src, "foo", |result| {
@@ -6172,7 +6172,7 @@ pub mod tests {
     fn test_format_item_fn_param_name_reserved_keyword() {
         let test_src = r#"
                 #[allow(unused_variables)]
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn some_function(reinterpret_cast: f64) {}
             "#;
         test_format_item(test_src, "some_function", |result| {
@@ -6220,7 +6220,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
                         ::rust_out::foo(__param_0, __param_1)
                     }
@@ -6267,7 +6267,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...(
                         __param_0: &mut ::core::mem::MaybeUninit<::rust_out::S>
                     ) -> i32 {
@@ -6296,7 +6296,7 @@ pub mod tests {
     #[test]
     fn test_format_item_unsupported_fn_param_type_unit() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub fn fn_with_params(_param: ()) {}
             "#;
         test_format_item(test_src, "fn_with_params", |result| {
@@ -6314,7 +6314,7 @@ pub mod tests {
         let test_src = r#"
                 #![feature(never_type)]
 
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub extern "C" fn fn_with_params(_param: !) {}
             "#;
         test_format_item(test_src, "fn_with_params", |result| {
@@ -6679,7 +6679,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...(x: f32, y: f32) -> f32 {
                         ::rust_out::Math::add_i32(x, y)
                     }
@@ -6774,7 +6774,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...<'a>(x: &'a i32) -> i32 {
                         ::rust_out::SomeStruct::fn_taking_reference(x)
                     }
@@ -6853,7 +6853,7 @@ pub mod tests {
                 result.rs_details,
                 quote! {
                     ...
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...(__self: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>) -> f32 {
                         ::rust_out::SomeStruct::into_f32(unsafe { __self.assume_init_read() })
                     }
@@ -6928,7 +6928,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...<'__anon1>(__self: &'__anon1 ::rust_out::SomeStruct) -> f32 {
                         ::rust_out::SomeStruct::get_f32(__self)
                     }
@@ -7000,7 +7000,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...<'__anon1>(
                         __self: &'__anon1 mut ::rust_out::SomeStruct,
                         new_value: f32
@@ -7153,7 +7153,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                   #[no_mangle]
+                   #[unsafe(no_mangle)]
                    extern "C" fn ...(
                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::Point>
                    ) -> () {
@@ -7280,7 +7280,7 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details,
                 quote! {
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...<'__anon1>(
                         __self: &'__anon1 ::rust_out::Point,
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::Point>
@@ -7289,7 +7289,7 @@ pub mod tests {
                             <::rust_out::Point as ::core::clone::Clone>::clone(__self)
                         );
                     }
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...<'__anon1, '__anon2>(
                         __self: &'__anon1 mut ::rust_out::Point,
                         source: &'__anon2 ::rust_out::Point
@@ -7504,7 +7504,7 @@ pub mod tests {
                 result.rs_details,
                 quote! {
                     ...
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...(
                         __self: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                     ) {
@@ -7627,13 +7627,13 @@ pub mod tests {
                 result.rs_details,
                 quote! {
                     ...
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...(
                         __self: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                     ) {
                         unsafe { __self.assume_init_drop() };
                     }
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...(
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                     ) -> () {
@@ -7748,13 +7748,13 @@ pub mod tests {
                 result.rs_details,
                 quote! {
                     ...
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...(
                         __self: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                     ) {
                         unsafe { __self.assume_init_drop() };
                     }
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...(
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                     ) -> () {
@@ -7891,14 +7891,14 @@ pub mod tests {
                 result.rs_details,
                 quote! {
                     ...
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...(
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>
                     ) -> () {
                         __ret_slot.write(
                             <::rust_out::SomeStruct as ::core::default::Default>::default());
                     }
-                    #[no_mangle]
+                    #[unsafe(no_mangle)]
                     extern "C" fn ...(
                         __self: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>
                     ) {
@@ -8432,7 +8432,7 @@ pub mod tests {
     #[test]
     fn test_format_item_unsupported_static_value() {
         let test_src = r#"
-                #[no_mangle]
+                #[unsafe(no_mangle)]
                 pub static STATIC_VALUE: i32 = 42;
             "#;
         test_format_item(test_src, "STATIC_VALUE", |result| {

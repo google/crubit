@@ -38,10 +38,10 @@ pub fn TakeCppStruct(mut __param_0: RustStruct) {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___Z15ReturnCppStructv(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___Z15ReturnCppStructv(
             __return: &mut ::core::mem::MaybeUninit<RustStruct>,
         );
-        pub(crate) fn __rust_thunk___Z13TakeCppStruct9CppStruct(__param_0: &mut RustStruct);
+        pub(crate) unsafe fn __rust_thunk___Z13TakeCppStruct9CppStruct(__param_0: &mut RustStruct);
     }
 }

@@ -337,75 +337,75 @@ impl __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN18HasCustomAlignmentC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::HasCustomAlignment>,
         );
-        pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18HasCustomAlignmentC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::HasCustomAlignment>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasCustomAlignment>,
         );
-        pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18HasCustomAlignmentaSERKS_<'a, 'b>(
             __this: &'a mut crate::HasCustomAlignment,
             __param_0: &'b crate::HasCustomAlignment,
         ) -> &'a mut crate::HasCustomAlignment;
-        pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN18HasCustomAlignmentaSEOS_<'a, 'b>(
             __this: &'a mut crate::HasCustomAlignment,
             __param_0: ::ctor::RvalueReference<'b, crate::HasCustomAlignment>,
         ) -> &'a mut crate::HasCustomAlignment;
-        pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
         );
-        pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
         );
-        pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN27HasFieldWithCustomAlignmentaSERKS_<'a, 'b>(
             __this: &'a mut crate::HasFieldWithCustomAlignment,
             __param_0: &'b crate::HasFieldWithCustomAlignment,
         ) -> &'a mut crate::HasFieldWithCustomAlignment;
-        pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN27HasFieldWithCustomAlignmentaSEOS_<'a, 'b>(
             __this: &'a mut crate::HasFieldWithCustomAlignment,
             __param_0: ::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
         ) -> &'a mut crate::HasFieldWithCustomAlignment;
-        pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::InheritsFromBaseWithCustomAlignment>,
         );
-        pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::InheritsFromBaseWithCustomAlignment>,
             __param_0: ::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
         );
-        pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSERKS_<'a, 'b>(
             __this: &'a mut crate::InheritsFromBaseWithCustomAlignment,
             __param_0: &'b crate::InheritsFromBaseWithCustomAlignment,
         ) -> &'a mut crate::InheritsFromBaseWithCustomAlignment;
-        pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSEOS_<'a, 'b>(
             __this: &'a mut crate::InheritsFromBaseWithCustomAlignment,
             __param_0: ::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
         ) -> &'a mut crate::InheritsFromBaseWithCustomAlignment;
-        pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
         );
-        pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
         );
-        pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSERKS_<'a, 'b>(
             __this: &'a mut crate::HasCustomAlignmentWithGnuAttr,
             __param_0: &'b crate::HasCustomAlignmentWithGnuAttr,
         ) -> &'a mut crate::HasCustomAlignmentWithGnuAttr;
-        pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSEOS_<'a, 'b>(
             __this: &'a mut crate::HasCustomAlignmentWithGnuAttr,
             __param_0: ::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
         ) -> &'a mut crate::HasCustomAlignmentWithGnuAttr;
-        pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
             'a,
         >(
             __this: &'a mut ::core::mem::MaybeUninit<
                 crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
             'a,
             'b,
         >(
@@ -417,14 +417,14 @@ mod detail {
                 crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
             'a,
             'b,
         >(
             __this: &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             __param_0: &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
         ) -> &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE;
-        pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
             'a,
             'b,
         >(
@@ -434,7 +434,7 @@ mod detail {
                 crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
             >,
         ) -> &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE;
-        pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiE3fooEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
+        pub(crate) unsafe fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiE3fooEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
             'a,
         >(
             __this: &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,

@@ -90,7 +90,7 @@ forward_declare::unsafe_define!(
 );
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialCustomType {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
@@ -107,7 +107,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialCustom
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialCustomType {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -189,39 +189,39 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ContainingSt
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN17TrivialCustomTypeC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::TrivialCustomType>,
         );
-        pub(crate) fn __rust_thunk___ZN17TrivialCustomTypeC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::TrivialCustomType>,
             __param_0: ::ctor::RvalueReference<'b, crate::TrivialCustomType>,
         );
-        pub(crate) fn __rust_thunk___ZN17TrivialCustomTypeaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeaSERKS_<'a, 'b>(
             __this: &'a mut crate::TrivialCustomType,
             __param_0: &'b crate::TrivialCustomType,
         ) -> &'a mut crate::TrivialCustomType;
-        pub(crate) fn __rust_thunk___ZN17TrivialCustomTypeaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeaSEOS_<'a, 'b>(
             __this: &'a mut crate::TrivialCustomType,
             __param_0: ::ctor::RvalueReference<'b, crate::TrivialCustomType>,
         ) -> &'a mut crate::TrivialCustomType;
         #[link_name = "_ZN20NontrivialCustomTypeC1EOS_"]
-        pub(crate) fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::NontrivialCustomType>,
             __param_0: ::ctor::RvalueReference<'b, crate::NontrivialCustomType>,
         );
-        pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::ContainingStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN16ContainingStructC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::ContainingStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::ContainingStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN16ContainingStructaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructaSERKS_<'a, 'b>(
             __this: &'a mut crate::ContainingStruct,
             __param_0: &'b crate::ContainingStruct,
         ) -> &'a mut crate::ContainingStruct;
-        pub(crate) fn __rust_thunk___ZN16ContainingStructaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructaSEOS_<'a, 'b>(
             __this: &'a mut crate::ContainingStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::ContainingStruct>,
         ) -> &'a mut crate::ContainingStruct;

@@ -102,28 +102,28 @@ impl SomeClass {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeClass>,
         );
-        pub(crate) fn __rust_thunk___ZN9SomeClassC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeClass>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeClass>,
         );
-        pub(crate) fn __rust_thunk___ZN9SomeClassaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassaSERKS_<'a, 'b>(
             __this: &'a mut crate::SomeClass,
             __param_0: &'b crate::SomeClass,
         ) -> &'a mut crate::SomeClass;
-        pub(crate) fn __rust_thunk___ZN9SomeClassaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassaSEOS_<'a, 'b>(
             __this: &'a mut crate::SomeClass,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeClass>,
         ) -> &'a mut crate::SomeClass;
-        pub(crate) fn __rust_thunk___ZN9SomeClass21static_factory_methodEi(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClass21static_factory_methodEi(
             __return: &mut ::core::mem::MaybeUninit<crate::SomeClass>,
             initial_value_of_field: ::core::ffi::c_int,
         );
         #[link_name = "_ZN9SomeClass38static_method_that_multiplies_its_argsEii"]
-        pub(crate) fn __rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
             x: ::core::ffi::c_int,
             y: ::core::ffi::c_int,
         ) -> ::core::ffi::c_int;

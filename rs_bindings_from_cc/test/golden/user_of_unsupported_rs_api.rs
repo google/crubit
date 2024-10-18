@@ -29,8 +29,8 @@ pub fn UseNontrivialCustomType(
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
             non_trivial_custom_type: &mut unsupported_cc::NontrivialCustomType,
         );
     }

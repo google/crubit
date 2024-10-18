@@ -236,69 +236,69 @@ pub fn FunctionUsingNestedType() -> ::core::ffi::c_int {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN10SomeStructaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructaSERKS_<'a, 'b>(
             __this: &'a mut crate::SomeStruct,
             __param_0: &'b crate::SomeStruct,
         ) -> &'a mut crate::SomeStruct;
-        pub(crate) fn __rust_thunk___ZN10SomeStructaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructaSEOS_<'a, 'b>(
             __this: &'a mut crate::SomeStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         ) -> &'a mut crate::SomeStruct;
-        pub(crate) fn __rust_thunk___ZN15SomeOtherStructC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN15SomeOtherStructC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN15SomeOtherStructaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructaSERKS_<'a, 'b>(
             __this: &'a mut crate::SomeOtherStruct,
             __param_0: &'b crate::SomeOtherStruct,
         ) -> &'a mut crate::SomeOtherStruct;
-        pub(crate) fn __rust_thunk___ZN15SomeOtherStructaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructaSEOS_<'a, 'b>(
             __this: &'a mut crate::SomeOtherStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherStruct>,
         ) -> &'a mut crate::SomeOtherStruct;
-        pub(crate) fn __rust_thunk___ZN9SomeUnionC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeUnion>,
         );
-        pub(crate) fn __rust_thunk___ZN9SomeUnionC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeUnion>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
         );
-        pub(crate) fn __rust_thunk___ZN9SomeUnionaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionaSERKS_<'a, 'b>(
             __this: &'a mut crate::SomeUnion,
             __param_0: &'b crate::SomeUnion,
         ) -> &'a mut crate::SomeUnion;
-        pub(crate) fn __rust_thunk___ZN9SomeUnionaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionaSEOS_<'a, 'b>(
             __this: &'a mut crate::SomeUnion,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
         ) -> &'a mut crate::SomeUnion;
-        pub(crate) fn __rust_thunk___ZN14SomeOtherUnionC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherUnion>,
         );
-        pub(crate) fn __rust_thunk___ZN14SomeOtherUnionC1EOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1EOS_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherUnion>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
         );
-        pub(crate) fn __rust_thunk___ZN14SomeOtherUnionaSERKS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionaSERKS_<'a, 'b>(
             __this: &'a mut crate::SomeOtherUnion,
             __param_0: &'b crate::SomeOtherUnion,
         ) -> &'a mut crate::SomeOtherUnion;
-        pub(crate) fn __rust_thunk___ZN14SomeOtherUnionaSEOS_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionaSEOS_<'a, 'b>(
             __this: &'a mut crate::SomeOtherUnion,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
         ) -> &'a mut crate::SomeOtherUnion;
         #[link_name = "_Z23FunctionUsingNestedTypev"]
-        pub(crate) fn __rust_thunk___Z23FunctionUsingNestedTypev() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z23FunctionUsingNestedTypev() -> ::core::ffi::c_int;
     }
 }
 

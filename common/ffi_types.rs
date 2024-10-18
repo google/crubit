@@ -23,7 +23,7 @@ use std::slice;
 ///    * function doesn't take ownership of (in other words it borrows) the
 ///      param `input`
 ///    * function passes ownership of the returned value to the caller
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn AllocFfiU8SliceBox(input: FfiU8Slice) -> FfiU8SliceBox {
     FfiU8SliceBox::from_boxed_slice(Box::<[u8]>::from(input.as_slice()))
 }
@@ -40,7 +40,7 @@ pub unsafe extern "C" fn AllocFfiU8SliceBox(input: FfiU8Slice) -> FfiU8SliceBox 
 ///
 /// Ownership:
 ///    * function takes ownership of the param `sb` and frees its memory.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn FreeFfiU8SliceBox(sb: FfiU8SliceBox) {
     catch_unwind(|| {
         let _ = sb.into_boxed_slice();

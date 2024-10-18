@@ -106,28 +106,31 @@ pub mod test_namespace_bindings {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::SomeClass>,
         );
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1EOS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1EOS0_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::SomeClass>,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::SomeClass>,
         );
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClassaSERKS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassaSERKS0_<'a, 'b>(
             __this: &'a mut crate::test_namespace_bindings::SomeClass,
             __param_0: &'b crate::test_namespace_bindings::SomeClass,
         ) -> &'a mut crate::test_namespace_bindings::SomeClass;
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClassaSEOS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassaSEOS0_<'a, 'b>(
             __this: &'a mut crate::test_namespace_bindings::SomeClass,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::SomeClass>,
         ) -> &'a mut crate::test_namespace_bindings::SomeClass;
         #[link_name = "_ZN23test_namespace_bindings9SomeClass13public_methodEv"]
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv<
+            'a,
+        >(
             __this: &'a mut crate::test_namespace_bindings::SomeClass,
         );
         #[link_name = "_ZN23test_namespace_bindings9SomeClass20public_static_methodEv"]
-        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv();
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv()
+        ;
     }
 }
 

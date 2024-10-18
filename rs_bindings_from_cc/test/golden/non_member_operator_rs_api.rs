@@ -55,8 +55,8 @@ impl PartialEq for crate::ns::X {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZeqN2ns1XES0_(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZeqN2ns1XES0_(
             a: &mut crate::ns::X,
             b: &mut crate::ns::X,
         ) -> bool;

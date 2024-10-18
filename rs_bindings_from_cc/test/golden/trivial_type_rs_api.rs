@@ -268,105 +268,105 @@ pub mod ns {
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___ZN2ns7TrivialC1Ev<'a>(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::ns::Trivial>,
         );
-        pub(crate) fn __rust_thunk___ZN2ns7TrivialC1EOS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1EOS0_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::ns::Trivial>,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::Trivial>,
         );
-        pub(crate) fn __rust_thunk___ZN2ns7TrivialaSERKS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialaSERKS0_<'a, 'b>(
             __this: &'a mut crate::ns::Trivial,
             __param_0: &'b crate::ns::Trivial,
         ) -> &'a mut crate::ns::Trivial;
-        pub(crate) fn __rust_thunk___ZN2ns7TrivialaSEOS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialaSEOS0_<'a, 'b>(
             __this: &'a mut crate::ns::Trivial,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::Trivial>,
         ) -> &'a mut crate::ns::Trivial;
         #[link_name = "_ZN2ns7Trivial11UnqualifiedEv"]
-        pub(crate) fn __rust_thunk___ZN2ns7Trivial11UnqualifiedEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns7Trivial11UnqualifiedEv<'a>(
             __this: &'a mut crate::ns::Trivial,
         );
         #[link_name = "_ZNK2ns7Trivial14ConstQualifiedEv"]
-        pub(crate) fn __rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv<'a>(
             __this: &'a crate::ns::Trivial,
         );
         #[link_name = "_ZNR2ns7Trivial18LvalueRefQualifiedEv"]
-        pub(crate) fn __rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv<'a>(
             __this: &'a mut crate::ns::Trivial,
         );
         #[link_name = "_ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv"]
-        pub(crate) fn __rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv<'a>(
             __this: &'a crate::ns::Trivial,
         );
         #[link_name = "_ZNO2ns7Trivial18RvalueRefQualifiedEv"]
-        pub(crate) fn __rust_thunk___ZNO2ns7Trivial18RvalueRefQualifiedEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZNO2ns7Trivial18RvalueRefQualifiedEv<'a>(
             __this: ::ctor::RvalueReference<'a, crate::ns::Trivial>,
         );
         #[link_name = "_ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv"]
-        pub(crate) fn __rust_thunk___ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv<'a>(
             __this: ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>,
         );
-        pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalC1Ev<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns15TrivialNonfinalC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
         );
-        pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_<'a, 'b>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
         );
-        pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalaSERKS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns15TrivialNonfinalaSERKS0_<'a, 'b>(
             __this: &'a mut crate::ns::TrivialNonfinal,
             __param_0: &'b crate::ns::TrivialNonfinal,
         ) -> &'a mut crate::ns::TrivialNonfinal;
-        pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalaSEOS0_<'a, 'b>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns15TrivialNonfinalaSEOS0_<'a, 'b>(
             __this: &'a mut crate::ns::TrivialNonfinal,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
         ) -> &'a mut crate::ns::TrivialNonfinal;
-        pub(crate) fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
             __return: &mut ::core::mem::MaybeUninit<crate::ns::Trivial>,
             trivial: &mut crate::ns::Trivial,
         );
-        pub(crate) fn __rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
             __return: &mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
             trivial: &mut crate::ns::TrivialNonfinal,
         );
         #[link_name = "_ZN2ns16TakesByReferenceERNS_7TrivialE"]
-        pub(crate) fn __rust_thunk___ZN2ns16TakesByReferenceERNS_7TrivialE<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns16TakesByReferenceERNS_7TrivialE<'a>(
             trivial: &'a mut crate::ns::Trivial,
         ) -> &'a mut crate::ns::Trivial;
         #[link_name = "_ZN2ns31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE"]
-        pub(crate) fn __rust_thunk___ZN2ns31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE<
+        pub(crate) unsafe fn __rust_thunk___ZN2ns31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE<
             'a,
         >(
             trivial: &'a mut crate::ns::TrivialNonfinal,
         ) -> &'a mut crate::ns::TrivialNonfinal;
         #[link_name = "_ZN2ns21TakesByConstReferenceERKNS_7TrivialE"]
-        pub(crate) fn __rust_thunk___ZN2ns21TakesByConstReferenceERKNS_7TrivialE<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns21TakesByConstReferenceERKNS_7TrivialE<'a>(
             trivial: &'a crate::ns::Trivial,
         ) -> &'a crate::ns::Trivial;
         #[link_name = "_ZN2ns36TakesTrivialNonfinalByConstReferenceERKNS_15TrivialNonfinalE"]
-        pub(crate) fn __rust_thunk___ZN2ns36TakesTrivialNonfinalByConstReferenceERKNS_15TrivialNonfinalE<
+        pub(crate) unsafe fn __rust_thunk___ZN2ns36TakesTrivialNonfinalByConstReferenceERKNS_15TrivialNonfinalE<
             'a,
         >(
             trivial: &'a crate::ns::TrivialNonfinal,
         ) -> &'a crate::ns::TrivialNonfinal;
         #[link_name = "_ZN2ns22TakesByRvalueReferenceEONS_7TrivialE"]
-        pub(crate) fn __rust_thunk___ZN2ns22TakesByRvalueReferenceEONS_7TrivialE<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns22TakesByRvalueReferenceEONS_7TrivialE<'a>(
             trivial: ::ctor::RvalueReference<'a, crate::ns::Trivial>,
         ) -> ::ctor::RvalueReference<'a, crate::ns::Trivial>;
         #[link_name = "_ZN2ns37TakesTrivialNonfinalByRvalueReferenceEONS_15TrivialNonfinalE"]
-        pub(crate) fn __rust_thunk___ZN2ns37TakesTrivialNonfinalByRvalueReferenceEONS_15TrivialNonfinalE<
+        pub(crate) unsafe fn __rust_thunk___ZN2ns37TakesTrivialNonfinalByRvalueReferenceEONS_15TrivialNonfinalE<
             'a,
         >(
             trivial: ::ctor::RvalueReference<'a, crate::ns::TrivialNonfinal>,
         ) -> ::ctor::RvalueReference<'a, crate::ns::TrivialNonfinal>;
         #[link_name = "_ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE"]
-        pub(crate) fn __rust_thunk___ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE<'a>(
+        pub(crate) unsafe fn __rust_thunk___ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE<'a>(
             trivial: ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>,
         ) -> ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>;
         #[link_name = "_ZN2ns42TakesTrivialNonfinalByConstRvalueReferenceEOKNS_15TrivialNonfinalE"]
-        pub(crate) fn __rust_thunk___ZN2ns42TakesTrivialNonfinalByConstRvalueReferenceEOKNS_15TrivialNonfinalE<
+        pub(crate) unsafe fn __rust_thunk___ZN2ns42TakesTrivialNonfinalByConstRvalueReferenceEOKNS_15TrivialNonfinalE<
             'a,
         >(
             trivial: ::ctor::ConstRvalueReference<'a, crate::ns::TrivialNonfinal>,

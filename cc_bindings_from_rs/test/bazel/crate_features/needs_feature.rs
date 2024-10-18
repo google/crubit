@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #[cfg(feature = "required_feature")]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn foo() -> i32 {
     42
 }

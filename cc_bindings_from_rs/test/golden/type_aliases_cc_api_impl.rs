@@ -8,7 +8,7 @@
 
 #![allow(improper_ctypes_definitions)]
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_func_uusing_ualias() -> i32 {
     ::type_aliases_rust::test_type_aliases::func_using_alias()
 }

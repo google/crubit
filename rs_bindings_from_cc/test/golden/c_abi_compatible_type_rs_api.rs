@@ -58,9 +58,9 @@ pub unsafe fn f(a: crate::MyTypedefDecl, b: *mut ::core::ffi::c_void, c: ::core:
 mod detail {
     #[allow(unused_imports)]
     use super::*;
-    extern "C" {
-        pub(crate) fn __rust_thunk___Z3ffi4MyI81X(a: i8, b: &mut crate::X) -> i8;
-        pub(crate) fn __rust_thunk___Z1fiPvi(
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___Z3ffi4MyI81X(a: i8, b: &mut crate::X) -> i8;
+        pub(crate) unsafe fn __rust_thunk___Z1fiPvi(
             a: crate::MyTypedefDecl,
             b: *mut ::core::ffi::c_void,
             c: ::core::ffi::c_int,
