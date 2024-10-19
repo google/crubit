@@ -1,0 +1,22 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the cc_libary ir_from_cc_sys.
+
+[package]
+name = "ir_from_cc_sys"
+edition = "2021"
+
+build = "build.rs"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys" }
+frontend_action_sys = { path = "../../../cargo/rs_bindings_from_cc/frontend_action_sys" }
+
+
+[build-dependencies]
+crubit_build = { path =  "../../../cargo/build"}

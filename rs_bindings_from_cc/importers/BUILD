@@ -4,7 +4,7 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(
     default_applicable_licenses = ["//:license"],
-    default_visibility = ["//rs_bindings_from_cc:__pkg__"],
+    default_visibility = ["//:__subpackages__"],
 )
 
 cc_library(

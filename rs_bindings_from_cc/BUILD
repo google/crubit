@@ -144,9 +144,6 @@ cc_library(
     name = "bazel_types",
     srcs = [],
     hdrs = ["bazel_types.h"],
-    visibility = [
-        ":__subpackages__",
-    ],
     deps = [
         "//common:string_type",
         "@abseil-cpp//absl/log:check",
@@ -192,7 +189,6 @@ cc_library(
 cc_library(
     name = "cmdline_flags",
     hdrs = ["cmdline_flags.h"],
-    visibility = ["//visibility:private"],
     deps = ["@abseil-cpp//absl/flags:flag"],
 )
 
@@ -322,7 +318,7 @@ cc_library(
     name = "cc_ir",
     srcs = ["ir.cc"],
     hdrs = ["ir.h"],
-    visibility = ["//rs_bindings_from_cc:__subpackages__"],
+    visibility = ["//:__subpackages__"],
     deps = [
         ":bazel_types",
         "//common:string_type",
@@ -472,7 +468,7 @@ cc_library(
     name = "ast_convert",
     srcs = ["ast_convert.cc"],
     hdrs = ["ast_convert.h"],
-    visibility = ["//rs_bindings_from_cc:__subpackages__"],
+    visibility = ["//:__subpackages__"],
     deps = [
         ":cc_ir",
         "@abseil-cpp//absl/functional:function_ref",
@@ -487,7 +483,7 @@ cc_library(
     srcs = ["recording_diagnostic_consumer.cc"],
     hdrs = ["recording_diagnostic_consumer.h"],
     visibility = [
-        "//rs_bindings_from_cc:__subpackages__",
+        "//:__subpackages__",
     ],
     deps = [
         "@abseil-cpp//absl/log",

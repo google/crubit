@@ -5,6 +5,7 @@
 [workspace]
 members = [
   "cargo/cc_bindings_from_rs/cc_bindings_from_rs",
+  "cargo/rs_bindings_from_cc/rs_bindings_from_cc",
 ]
 resolver = "2"
 

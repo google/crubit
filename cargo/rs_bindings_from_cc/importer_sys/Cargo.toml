@@ -1,0 +1,34 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the cc_libary importer_sys.
+
+[package]
+name = "importer_sys"
+edition = "2021"
+
+build = "build.rs"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+ast_util_sys = { path = "../../../cargo/rs_bindings_from_cc/ast_util_sys" }
+cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys" }
+type_map_sys = { path = "../../../cargo/rs_bindings_from_cc/type_map_sys" }
+type_lifetimes_sys = { path = "../../../cargo/lifetime_annotations/type_lifetimes_sys" }
+recording_diagnostic_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/recording_diagnostic_consumer_sys" }
+class_template_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/class_template_sys" }
+cxx_record_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/cxx_record_sys" }
+enum_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/enum_sys" }
+friend_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/friend_sys" }
+function_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/function_sys" }
+function_template_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/function_template_sys" }
+namespace_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/namespace_sys" }
+type_alias_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/type_alias_sys" }
+type_map_override_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/type_map_override_sys" }
+
+
+[build-dependencies]
+crubit_build = { path =  "../../../cargo/build"}

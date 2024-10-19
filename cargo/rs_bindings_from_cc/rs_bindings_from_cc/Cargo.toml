@@ -1,0 +1,18 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+[package]
+name = "rs_bindings_from_cc"
+edition = "2021"
+
+[[bin]]
+name = "rs_bindings_from_cc"
+path = "main.rs"
+
+[dependencies]
+# NOTE: These dependencies are C++ libraries which are used through extern
+# statements. As such, they each appear as `extern crate X` in the main.rs
+# in order to prevent them from being dropped at link time.
+rs_bindings_from_cc_impl_sys = { path = "../rs_bindings_from_cc_impl_sys" }
+
