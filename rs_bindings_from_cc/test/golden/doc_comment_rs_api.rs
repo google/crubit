@@ -538,8 +538,8 @@ mod detail {
             new_value: ::core::ffi::c_int,
         );
         #[link_name = "_ZN17DocCommentSlashes13static_methodEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv()
-        -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv(
+        ) -> ::core::ffi::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN14DocCommentBangC1Ev<'a>(
             __this: &'a mut ::core::mem::MaybeUninit<crate::DocCommentBang>,
         );

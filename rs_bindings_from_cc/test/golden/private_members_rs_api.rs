@@ -129,8 +129,8 @@ mod detail {
             __this: &'a mut crate::test_namespace_bindings::SomeClass,
         );
         #[link_name = "_ZN23test_namespace_bindings9SomeClass20public_static_methodEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv()
-        ;
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv(
+        );
     }
 }
 

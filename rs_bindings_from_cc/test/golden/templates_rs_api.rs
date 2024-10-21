@@ -532,12 +532,7 @@ pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0
 }
 impl !Send for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {}
 impl !Sync for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(
-        "test_namespace_bindings :: TemplateWithTwoParams < test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"
-    ),
-    crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
-);
+forward_declare::unsafe_define!(forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"),crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE);
 
 impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {
     #[inline(always)]
@@ -1258,8 +1253,8 @@ mod detail {
                 crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
             >,
         ) -> &'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE;
-        pub(crate) unsafe fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEE9GetPolicyEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc()
-        -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEE9GetPolicyEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+        ) -> ::core::ffi::c_int;
     }
 }
 
