@@ -428,5 +428,23 @@ TEST(SmartPointerTest, MovedFromNonnullSmartPointer) {
   )cc"));
 }
 
+TEST(SmartPointerTest, UserDefinedSmartPointer) {
+  // This is a repro for a false negative.
+  // It appears we currently aren't issuing diagnostics on user-defined smart
+  // pointers.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <class T>
+    struct _Nullable MySmartPtr {
+      // The false positive happens whether or not we have this deprecated
+      // tag in place.
+      using absl_nullability_compatible = void;
+    };
+    Nonnull<MySmartPtr<int>> target(Nullable<MySmartPtr<int>> p) {
+      // TODO(b/374925002): False negative
+      return p;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
