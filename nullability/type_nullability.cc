@@ -146,6 +146,16 @@ static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
   return getSmartPointerBaseClass(RD, Seen, BaseAccess);
 }
 
+static QualType underlyingPointerTypeFromTemplateArg(
+    const ClassTemplateSpecializationDecl &CTSD, const ASTContext &ASTCtx) {
+  if (CTSD.getTemplateArgs().size() == 0) return QualType();
+  if (CTSD.getTemplateArgs()[0].getKind() != TemplateArgument::Type)
+    return QualType();
+
+  QualType TemplateArg = CTSD.getTemplateArgs()[0].getAsType();
+  return ASTCtx.getPointerType(ASTCtx.getBaseElementType(TemplateArg));
+}
+
 QualType underlyingRawPointerType(QualType T, AccessSpecifier BaseAccess) {
   if (!SmartPointersEnabled) return QualType();
 
@@ -164,19 +174,14 @@ QualType underlyingRawPointerType(QualType T, AccessSpecifier BaseAccess) {
   //    `absl_nullability_compatible` type alias.
   // *  We extract the underlying pointer type from the template argument (as
   //    that's the best we can do).
-  if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD);
-      CTSD && !CTSD->hasDefinition()) {
+  auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD);
+  if (CTSD && !CTSD->hasDefinition()) {
     if (getSmartPointerBaseClass(
             CTSD->getSpecializedTemplate()->getTemplatedDecl(), BaseAccess) ==
         nullptr)
       return QualType();
 
-    if (CTSD->getTemplateArgs().size() == 0) return QualType();
-    if (CTSD->getTemplateArgs()[0].getKind() != TemplateArgument::Type)
-      return QualType();
-
-    QualType TemplateArg = CTSD->getTemplateArgs()[0].getAsType();
-    return ASTCtx.getPointerType(ASTCtx.getBaseElementType(TemplateArg));
+    return underlyingPointerTypeFromTemplateArg(*CTSD, ASTCtx);
   }
 
   const CXXRecordDecl *SmartPtrDecl = getSmartPointerBaseClass(RD, BaseAccess);
@@ -201,6 +206,12 @@ QualType underlyingRawPointerType(QualType T, AccessSpecifier BaseAccess) {
                         .find_first<TypedefNameDecl>())
       return ASTCtx.getPointerType(TND->getUnderlyingType());
   }
+
+  // If we don't have a `pointer` or `element_type` type alias, we deduce the
+  // underlying pointer type from the template argument if possible.
+  if (CTSD != nullptr)
+    return underlyingPointerTypeFromTemplateArg(*CTSD, ASTCtx);
+
   return QualType();
 }
 

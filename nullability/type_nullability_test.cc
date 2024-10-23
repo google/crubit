@@ -55,7 +55,7 @@ class PointerTypeTest : public ::testing::Test {
   QualType underlying(llvm::StringRef Name, TestAST& AST) {
     auto Lookup = AST.context().getTranslationUnitDecl()->lookup(
         &AST.context().Idents.get(Name));
-    EXPECT_TRUE(Lookup.isSingleResult());
+    EXPECT_TRUE(Lookup.isSingleResult()) << "Name: " << Name;
     return Lookup.find_first<TypeAliasDecl>()->getUnderlyingType();
   }
 };
@@ -196,6 +196,11 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
       using pointer = char *;
     };
 
+    // User-defined smart pointer type without a `pointer` or `element_type`
+    // type alias.
+    template <typename T>
+    struct _Nullable UserDefinedSmartPointerWithoutTypeAlias{};
+
     template <int i>
     struct Recursive : public Recursive<i - 1> {};
     template <>
@@ -216,6 +221,8 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     using PrivateDerivedPointer = PrivateDerived<int>;
     using UserDefined = UserDefinedSmartPointer<int>;
     using UserDefinedWithAttribute = UserDefinedSmartPointerWithAttribute<int>;
+    using UserDefinedWithoutTypeAlias =
+        UserDefinedSmartPointerWithoutTypeAlias<int>;
     using Recursive2 = Recursive<2>;
     using IndirectRecursive2 = IndirectRecursive<2>;
     // Force the compiler to instantiate the templates. Otherwise, the
@@ -228,11 +235,13 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     template class PrivateDerived<int>;
     template class UserDefinedSmartPointer<int>;
     template class UserDefinedSmartPointerWithAttribute<int>;
+    template class UserDefinedSmartPointerWithoutTypeAlias<int>;
     template class Recursive<2>;
     template class IndirectRecursive<2>;
   )cpp");
 
   QualType PointerToCharTy = AST.context().getPointerType(AST.context().CharTy);
+  QualType PointerToIntTy = AST.context().getPointerType(AST.context().IntTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("UniquePointer", AST)),
             PointerToCharTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("SharedPointer", AST)),
@@ -249,6 +258,9 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
   EXPECT_EQ(
       underlyingRawPointerType(underlying("UserDefinedWithAttribute", AST)),
       PointerToCharTy);
+  EXPECT_EQ(
+      underlyingRawPointerType(underlying("UserDefinedWithoutTypeAlias", AST)),
+      PointerToIntTy);
   EXPECT_TRUE(underlyingRawPointerType(underlying("Recursive2", AST)).isNull());
   EXPECT_TRUE(
       underlyingRawPointerType(underlying("IndirectRecursive2", AST)).isNull());

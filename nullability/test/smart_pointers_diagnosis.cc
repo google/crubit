@@ -429,19 +429,18 @@ TEST(SmartPointerTest, MovedFromNonnullSmartPointer) {
 }
 
 TEST(SmartPointerTest, UserDefinedSmartPointer) {
-  // This is a repro for a false negative.
-  // It appears we currently aren't issuing diagnostics on user-defined smart
-  // pointers.
+  // This is a regression test for a false negative where we were not issuing
+  // diagnostics on user-defined smart pointer types when the smart pointer type
+  // did not have a `pointer` or `element_type` type alias.
   EXPECT_TRUE(checkDiagnostics(R"cc(
     template <class T>
     struct _Nullable MySmartPtr {
-      // The false positive happens whether or not we have this deprecated
+      // The false negative happens whether or not we have this deprecated
       // tag in place.
       using absl_nullability_compatible = void;
     };
     Nonnull<MySmartPtr<int>> target(Nullable<MySmartPtr<int>> p) {
-      // TODO(b/374925002): False negative
-      return p;
+      return p;  // [[unsafe]]
     }
   )cc"));
 }
