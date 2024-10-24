@@ -1247,8 +1247,9 @@ void handleNonConstMemberCall(absl::Nonnull<const CallExpr *> CE,
                               dataflow::RecordStorageLocation *RecordLoc,
                               const MatchFinder::MatchResult &Result,
                               TransferState<PointerNullabilityLattice> &State) {
-  // When a non-const member function is called, clear all pointer-type fields
-  // of the receiver.
+  // When a non-const member function is called, clear all (non-const)
+  // pointer-type fields of the receiver. Const-qualified fields can't be
+  // changed (at least, not without UB).
   if (RecordLoc != nullptr) {
     for (const auto [Field, FieldLoc] : RecordLoc->children()) {
       // We can't produce a new `PointerValue` here because we don't necessarily
@@ -1258,7 +1259,8 @@ void handleNonConstMemberCall(absl::Nonnull<const CallExpr *> CE,
       // canonical type arguments), so the `FieldDecl` doesn't contain
       // nullability annotations. The best thing we can do, therefore, is to
       // clear the value.
-      if (isSupportedRawPointerType(Field->getType()))
+      QualType FieldType = Field->getType();
+      if (!FieldType.isConstQualified() && isSupportedRawPointerType(FieldType))
         State.Env.clearValue(*FieldLoc);
     }
     State.Lattice.clearConstMethodReturnValues(*RecordLoc);

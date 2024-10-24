@@ -1005,7 +1005,7 @@ TEST(PointerNullabilityTest, ConstMethodReturningSmartPointerByReference) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, NonConstMethodInvalidatesSmartPointer) {
+TEST(PointerNullabilityTest, NonConstMethodClearsSmartPointer) {
   test::EnableSmartPointers Enable;
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>
@@ -1024,7 +1024,39 @@ TEST(PointerNullabilityTest, NonConstMethodInvalidatesSmartPointer) {
 }
 
 TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembers) {
-  // This is a crash repro.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct S {
+      Nullable<int*> p;
+      void writer();
+    };
+    void target(S s) {
+      if (s.p != nullptr) {
+        s.writer();
+        *(s.p);  // [[unsafe]]
+      }
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, NonConstMethodDoesNotClearConstPointerMembers) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct S {
+      const Nullable<int*> cp;
+      void writer();
+    };
+    void target(S s) {
+      if (s.cp != nullptr) {
+        s.writer();
+        *(s.cp);  // safe
+      }
+    }
+  )cc"));
+}
+
+// This is a crash repro.
+TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembersInExpr) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void f(char* _Nonnull const&, char* const&);
 
