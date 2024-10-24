@@ -2,9 +2,23 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(allocator_api)]
+#![feature(cfg_sanitize)]
+#[cfg(sanitize = "address")]
+use std::ffi::c_void;
 use std::ops::{Deref, DerefMut};
 use std::ops::{Index, IndexMut};
 use std::slice;
+
+extern "C" {
+    // https://github.com/llvm/llvm-project/blob/9d0616ce52fc2a75c8e4808adec41d5189f4240c/compiler-rt/lib/sanitizer_common/sanitizer_interface_internal.h#L70
+    #[cfg(sanitize = "address")]
+    fn __sanitizer_annotate_contiguous_container(
+        beg: *const c_void,
+        end: *const c_void,
+        old_mid: *const c_void,
+        new_mid: *const c_void,
+    );
+}
 
 /// A mutable, contiguous, dynamically-sized container of elements of type `T`,
 /// ABI-compatible with `std::vector` from C++.
@@ -58,6 +72,71 @@ impl<T> Vector<T> {
             unsafe { self.capacity_end.offset_from(self.begin).try_into().unwrap() }
         }
     }
+
+    #[inline]
+    #[cfg(not(sanitize = "address"))]
+    fn asan_poison_tail(&self) {}
+
+    #[inline]
+    #[cfg(not(sanitize = "address"))]
+    fn asan_unpoison_tail(&self) {}
+
+    #[inline]
+    #[cfg(sanitize = "address")]
+    fn asan_poison_tail(&self) {
+        // C++ std::vector supports an ASan container annotation feature
+        // (https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow)
+        // that allows ASan to detect reads and writes in the uninitialized tail of the
+        // std::vector's storage (between the end iterator and capacity).
+        //
+        // Rust std::vec::Vec intentionally does not support this ASan annotation
+        // feature, because it allows users to initialize the elements in the
+        // tail of the storage and then call set_len to tell the Vec about new
+        // elements.
+        //
+        // ASan uses the term "poisoned" for data that cannot be accessed. When marking
+        // data as inaccessible, we poison it, to make them accessible we
+        // unpoison the data. So, the tail of a Rust Vec's storage is always
+        // unpoisoned, even when ASan is enabled.
+        //
+        // Thus, when we use Rust Vec to implement operations on C++ std::vector's
+        // storage, we hit an incompatibility: the tail of the C++ std::vector
+        // is poisoned, but Rust Vec does not unpoison before writing into it.
+        //
+        // Therefore, when we create a Rust Vec using the storage of a C++ std::vector
+        // we need to establish the ASan poision/unpoison invariants that the Rust Vec
+        // expects. Specifically, we unpoison the storage before a Rust Vec
+        // writes into the uninitialized tail. Furthermore, once we are done
+        // using a Rust Vec to manipulate the storage, we poison the tail agail.
+        //
+        // As an optimization we don't poison/unpoison the tail when we create a Rust
+        // Vec purely to perform reads, or to mutate existing elements in-place.
+        unsafe {
+            // The following call is the same as __annotate_new in C++ std::vector
+            // https://github.com/llvm/llvm-project/blob/9d0616ce52fc2a75c8e4808adec41d5189f4240c/libcxx/include/vector#L920
+            __sanitizer_annotate_contiguous_container(
+                self.begin as *const c_void,
+                self.capacity_end as *const c_void,
+                self.capacity_end as *const c_void,
+                self.end as *const c_void,
+            );
+        }
+    }
+
+    #[inline]
+    #[cfg(sanitize = "address")]
+    fn asan_unpoison_tail(&self) {
+        unsafe {
+            // The following call is the same as __annotate_delete in C++
+            // std::vector https://github.com/llvm/llvm-project/blob/9d0616ce52fc2a75c8e4808adec41d5189f4240c/libcxx/include/vector#L927
+            __sanitizer_annotate_contiguous_container(
+                self.begin as *const c_void,
+                self.capacity_end as *const c_void,
+                self.end as *const c_void,
+                self.capacity_end as *const c_void,
+            );
+        }
+    }
 }
 
 impl<T: Unpin> Vector<T> {
@@ -67,6 +146,7 @@ impl<T: Unpin> Vector<T> {
         F: FnOnce(&mut Vec<T, cpp_std_allocator::StdAllocator>) -> R,
     {
         unsafe {
+            self.asan_unpoison_tail();
             let mut v = create_vec_from_raw_parts(self.begin, self.len(), self.capacity());
             let result = mutate_self(&mut v);
             let len = v.len();
@@ -75,6 +155,7 @@ impl<T: Unpin> Vector<T> {
             self.end = self.begin.add(len);
             self.capacity_end = self.begin.add(capacity);
             core::mem::forget(v);
+            self.asan_poison_tail();
             result
         }
     }
@@ -104,6 +185,7 @@ impl<T> Drop for Vector<T> {
     fn drop(&mut self) {
         if !self.begin.is_null() {
             unsafe {
+                self.asan_unpoison_tail();
                 _ = Vec::from_raw_parts_in(
                     self.begin,
                     self.len(),
@@ -284,6 +366,7 @@ impl<T: Unpin> IntoIterator for Vector<T> {
     type IntoIter = VectorIntoIter<T>;
     fn into_iter(self) -> Self::IntoIter {
         unsafe {
+            self.asan_unpoison_tail();
             let v = create_vec_from_raw_parts(self.begin, self.len(), self.capacity());
             core::mem::forget(self);
             VectorIntoIter::new(v.into_iter())
