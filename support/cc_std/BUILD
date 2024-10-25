@@ -151,6 +151,7 @@ rust_library(
     name = "cpp_std_allocator",
     srcs = ["cpp_std_allocator.rs"],
     cc_deps = [":std_allocator"],
+    rustc_flags = ["-Zallow-features=allocator_api"],
     visibility = [
         "//visibility:public",
     ],
