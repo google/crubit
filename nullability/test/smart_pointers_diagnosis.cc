@@ -339,14 +339,12 @@ TEST(SmartPointerTest, NestedPointersArrowOperatorOnInner) {
 TEST(SmartPointerTest, ConstructSmartPointerFromTemporarySmartPointer) {
   // This is a crash repro.
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct OtherS {
+    struct _Nullable OtherS {
       using pointer = char *;
-      using absl_nullability_compatible = void;
     };
 
-    struct S {
+    struct _Nullable S {
       using pointer = bool *;
-      using absl_nullability_compatible = void;
 
       // S needs to be constructed by value from another smart pointer,
       // otherwise, didn't crash.

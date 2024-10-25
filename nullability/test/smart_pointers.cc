@@ -570,8 +570,7 @@ TEST void weakPtrLocReturnsNullable(std::shared_ptr<int> Shared) {
 namespace user_defined_smart_pointers {
 
 template <typename T>
-struct UserDefinedSmartPointer {
-  using absl_nullability_compatible = void;
+struct _Nullable UserDefinedSmartPointer {
   using pointer = T *;
 
   pointer get() const;

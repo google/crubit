@@ -61,8 +61,7 @@ constexpr llvm::StringRef SmartPointerHeader = R"cc(
   }  // namespace std
 
   template <typename T>
-  struct custom_smart_ptr {
-    using absl_nullability_compatible = void;
+  struct _Nullable custom_smart_ptr {
     using pointer = T*;
   };
 )cc";

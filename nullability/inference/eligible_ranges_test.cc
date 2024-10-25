@@ -362,8 +362,7 @@ TEST(EligibleRangesTest, UniquePtr) {
 
 TEST(EligibleRangesTest, UserDefinedSmartPointer) {
   auto Input = Annotations(R"(
-  struct MySmartIntPtr {
-    using absl_nullability_compatible = void;
+  struct _Nullable MySmartIntPtr {
     using pointer = int *;
   };
 
@@ -380,9 +379,7 @@ TEST(EligibleRangesTest, UserDefinedSmartPointer) {
 TEST(EligibleRangesTest, UserDefinedTemplatedSmartPointer) {
   auto Input = Annotations(R"(
   template <typename T>
-  struct MySmartPtr {
-    using absl_nullability_compatible = void;
-  };
+  struct _Nullable MySmartPtr {};
 
   void target($one[[MySmartPtr<int>]] UserDefinedSmart,
            Nonnull<$two[[MySmartPtr<int>]]> NonnullUserDefinedSmart);
@@ -1438,8 +1435,7 @@ TEST(GetEligibleRangesFromASTTest, ClassMembers) {
     }  // namespace std
 
     template <typename T>
-    struct custom_smart_ptr {
-      using absl_nullability_compatible = void;
+    struct _Nullable custom_smart_ptr {
       using pointer = T*;
     };
 
