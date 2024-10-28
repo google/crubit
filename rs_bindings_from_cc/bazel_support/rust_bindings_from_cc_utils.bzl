@@ -5,6 +5,8 @@
 """Utility module for sharing logic between rules and aspects that generate Rust bindings from C++.
 """
 
+# buildifier: disable=bzl-visibility
+load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
 load(
     "//cc_bindings_from_rs/bazel_support:providers.bzl",
     "CcBindingsFromRustInfo",
@@ -35,7 +37,8 @@ def generate_and_compile_bindings(
         deps_for_cc_file,
         deps_for_rs_file,
         extra_cc_compilation_action_inputs = [],
-        extra_rs_bindings_from_cc_cli_flags = []):
+        extra_rs_bindings_from_cc_cli_flags = [],
+        has_public_headers = True):
     """Runs the bindings generator.
 
     Args:
@@ -53,6 +56,7 @@ def generate_and_compile_bindings(
       extra_cc_compilation_action_inputs: A list of input files for the C++ compilation action.
       extra_rs_bindings_from_cc_cli_flags: CLI flags to pass to `rs_bindings_from_cc`, in addition
                                            to the flags that are passed by the build rule.
+      has_public_headers: Whether the target has public headers.
     Returns:
       A RustBindingsFromCcInfo containing the result of the compilation of the generated source
       files, as well a GeneratedBindingsInfo provider containing the generated source files.
@@ -100,17 +104,6 @@ def generate_and_compile_bindings(
         unsupported_features = ctx.disabled_features + ["module_maps"],
     )
 
-    # Compile the "_rust_api_impl.cc" file
-    cc_info = compile_cc(
-        ctx,
-        attr,
-        cc_toolchain,
-        feature_configuration_for_cc_compile,
-        cc_output,
-        deps_for_cc_file,
-        extra_cc_compilation_action_inputs,
-    )
-
     # TODO(b/216587072): Remove this hacky escaping and use the import! macro once available
     crate_name = escape_cpp_target_name(ctx.label.package, ctx.label.name)
 
@@ -130,6 +123,30 @@ def generate_and_compile_bindings(
         force_all_deps_direct = True,
     )
 
+    # If the target has no public headers, then we should skip the thunks and the generated
+    # bindings as linker inputs. But we still need to populate the dependencies since not every C++
+    # target is layering check clean.
+    if not has_public_headers:
+        # Intentionally doesn't include the `.o` compiled from `target_rust_impl_api.rs`.
+        cc_info = cc_common.merge_cc_infos(cc_infos = deps_for_cc_file)
+        dep_variant_info = DepVariantInfo(
+            crate_info = dep_variant_info.crate_info,
+            dep_info = dep_variant_info.dep_info,
+            cc_info = cc_info,  # Intentionally doesn't include `.a` compiled from `target_rust_api.rs`.
+            build_info = None,
+        )
+    else:
+        # Compile the "_rust_api_impl.cc" file
+        cc_info = compile_cc(
+            ctx,
+            attr,
+            cc_toolchain,
+            feature_configuration_for_cc_compile,
+            cc_output,
+            deps_for_cc_file,
+            extra_cc_compilation_action_inputs,
+        )
+
     return [
         RustBindingsFromCcInfo(
             cc_info = cc_info,
@@ -146,7 +163,7 @@ def generate_and_compile_bindings(
         # The C++ bindings of the generated Rust bindings are the original C++ file.
         CcBindingsFromRustInfo(
             cc_info = cc_info,
-            crate_key = dep_variant_info.crate_info.name,
+            crate_key = crate_name,
             headers = public_hdrs,
             features = [],
         ),

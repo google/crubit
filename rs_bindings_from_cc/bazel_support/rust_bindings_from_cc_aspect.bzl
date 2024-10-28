@@ -138,7 +138,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         public_hdrs = target[CcInfo].compilation_context.direct_public_headers
         all_standalone_hdrs = target[CcInfo].compilation_context.direct_headers
 
-    if not public_hdrs:
+    has_public_headers = len(public_hdrs) > 0
+    if not has_public_headers:
         # This target doesn't have public headers, so there are no bindings to generate. However we
         # still need to propagate dependencies since not every C++ target is layering check clean.
         # Since there is no existing API to merge Rust providers besides calling
@@ -219,6 +220,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
         extra_cc_compilation_action_inputs = extra_cc_compilation_action_inputs,
         extra_rs_bindings_from_cc_cli_flags = collect_rust_bindings_from_cc_cli_flags(target, ctx),
+        has_public_headers = has_public_headers,
     )
 
 rust_bindings_from_cc_aspect = aspect(
