@@ -621,7 +621,7 @@ struct Allocator {};
 struct S {};
 
 template <typename T>
-struct DerivedPtr : public std::unique_ptr<T> {
+struct _Nullable DerivedPtr : public std::unique_ptr<T> {
   // Allocates a new object using the given allocator.
   DerivedPtr(Allocator *);
 };

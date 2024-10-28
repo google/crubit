@@ -276,7 +276,7 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
     using UserDefined = UserDefinedSmartPointer<int>;
 
     template <typename T>
-    using Nullable [[clang::annotate("Nullable")]] = T;
+    using Nullable [[clang::annotate("Nullable")]] = T _Nullable;
     using NullableUniquePointer = Nullable<std::unique_ptr<int>>;
 
     template <int i>
@@ -1287,9 +1287,9 @@ TEST_F(GetTypeNullabilityLocsTest, AnnotateNullable) {
   std::string HeaderWithAttributes = R"cpp(
     namespace custom {
     template <class T>
-    using Nullable [[clang::annotate("Nullable")]] = T;
+    using Nullable [[clang::annotate("Nullable")]] = T _Nullable;
     template <class T>
-    using NonNull [[clang::annotate("Nonnull")]] = T;
+    using NonNull [[clang::annotate("Nonnull")]] = T _Nonnull;
     }  // namespace custom
 
     template <class T, class U>
@@ -1348,9 +1348,9 @@ TEST_F(GetTypeNullabilityLocsTest, SmartPointers) {
 
   std::string MoreHeaderWithAttributes = R"cpp(
     template <typename T>
-    using Nullable [[clang::annotate("Nullable")]] = T;
+    using Nullable [[clang::annotate("Nullable")]] = T _Nullable;
     template <typename T>
-    using NonNull [[clang::annotate("Nonnull")]] = T;
+    using NonNull [[clang::annotate("Nonnull")]] = T _Nonnull;
   )cpp";
   Snippet =
       Header +

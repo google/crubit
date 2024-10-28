@@ -8,12 +8,17 @@
 
 bool cond();
 
+// Define a version of the `Nullable` annotation that does not add the
+// `_Nullable` attribute to `T`.
+template <typename T>
+using NullableWithoutAttribute [[clang::annotate("Nullable")]] = T;
+
 // Clang performs merging of nullability attributes on function parameter types.
 // This isn't necessarily desirable: it only works with _Nullable, and only on
 // pointer parameters, not return types, nested types, etc.
 int *merged(int *, int *);
 int *_Nullable merged(int *_Nullable, int *);
-int *merged(int *, Nullable<int *>);
+int *merged(int *, NullableWithoutAttribute<int *>);
 TEST int *merged(int *A, int *B) {
   type<Nullable<int *>>(A);  // _Nullable attributes are merged
   type<int *>(B);            // clang::annotate-based attributes are not merged
