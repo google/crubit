@@ -8,5 +8,6 @@ use googletest::prelude::*;
 #[gtest]
 fn test_additional_rust_srcs_with_namespace_path() {
     assert_eq!(a::b::c::f(), 42);
+    assert_eq!(a::b::k(), 42);
     assert_eq!(a::b::c::a::b::c::g(), 53);
 }

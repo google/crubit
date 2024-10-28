@@ -59,10 +59,11 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
     if (ns->owning_target != ir.current_target) {
       continue;
     }
-    // If a namespace is open more than once, we pick any of them as they all
-    // belong to the same namespace and have the same name.
-    if (top_level_item_id_set.contains(ns->id)) {
-      name_to_top_level_ns.insert({std::string(ns->name.Ident()), ns->id});
+    // If a namespace is open more than once, we pick the last one of them as
+    // it will serve as the canonical namespace without any number suffix in
+    // the name.
+    if (top_level_item_id_set.contains(ns->canonical_namespace_id)) {
+      name_to_top_level_ns[ns->name.Ident()] = ns->id;
     }
     id_to_namespace.insert({ns->id, ns});
   }
