@@ -127,15 +127,8 @@ TEST_F(PointerTypeTest, IsSupportedSmartPointerType) {
     using PrivateDerivedPointer = PrivateDerived<int>;
 
     template <typename T>
-    struct UserDefinedSmartPointer {
-      using absl_nullability_compatible = void;
-    };
+    struct _Nullable UserDefinedSmartPointer{};
     using UserDefined = UserDefinedSmartPointer<NotPointer>;
-
-    template <typename T>
-    struct _Nullable UserDefinedSmartPointerWithAttribute{};
-    using UserDefinedWithAttribute =
-        UserDefinedSmartPointerWithAttribute<NotPointer>;
 
     template <class>
     struct Container;
@@ -150,8 +143,6 @@ TEST_F(PointerTypeTest, IsSupportedSmartPointerType) {
       underlying("UniquePointerWrongNamespace", AST)));
   EXPECT_TRUE(isSupportedSmartPointerType(underlying("SugaredPointer", AST)));
   EXPECT_TRUE(isSupportedSmartPointerType(underlying("UserDefined", AST)));
-  EXPECT_TRUE(
-      isSupportedSmartPointerType(underlying("UserDefinedWithAttribute", AST)));
   EXPECT_TRUE(
       isSupportedSmartPointerType(underlying("PublicDerivedPointer", AST)));
   EXPECT_FALSE(
@@ -186,13 +177,7 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     struct PrivateDerived : private std::unique_ptr<T> {};
 
     template <typename T>
-    struct UserDefinedSmartPointer {
-      using absl_nullability_compatible = void;
-      using pointer = char *;
-    };
-
-    template <typename T>
-    struct _Nullable UserDefinedSmartPointerWithAttribute {
+    struct _Nullable UserDefinedSmartPointer {
       using pointer = char *;
     };
 
@@ -220,7 +205,6 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     using PublicDerivedPointer = PublicDerived<int>;
     using PrivateDerivedPointer = PrivateDerived<int>;
     using UserDefined = UserDefinedSmartPointer<int>;
-    using UserDefinedWithAttribute = UserDefinedSmartPointerWithAttribute<int>;
     using UserDefinedWithoutTypeAlias =
         UserDefinedSmartPointerWithoutTypeAlias<int>;
     using Recursive2 = Recursive<2>;
@@ -234,7 +218,6 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
     template class PublicDerived<int>;
     template class PrivateDerived<int>;
     template class UserDefinedSmartPointer<int>;
-    template class UserDefinedSmartPointerWithAttribute<int>;
     template class UserDefinedSmartPointerWithoutTypeAlias<int>;
     template class Recursive<2>;
     template class IndirectRecursive<2>;
@@ -255,9 +238,6 @@ TEST_F(UnderlyingRawPointerTest, Instantiated) {
             PointerToCharTy);
   EXPECT_EQ(underlyingRawPointerType(underlying("UserDefined", AST)),
             PointerToCharTy);
-  EXPECT_EQ(
-      underlyingRawPointerType(underlying("UserDefinedWithAttribute", AST)),
-      PointerToCharTy);
   EXPECT_EQ(
       underlyingRawPointerType(underlying("UserDefinedWithoutTypeAlias", AST)),
       PointerToIntTy);
@@ -292,8 +272,8 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
     using PrivateDerivedPointer = PrivateDerived<int>;
 
     template <typename T>
-    struct _Nullable UserDefinedSmartPointerWithAttribute;
-    using UserDefinedWithAttribute = UserDefinedSmartPointerWithAttribute<int>;
+    struct _Nullable UserDefinedSmartPointer;
+    using UserDefined = UserDefinedSmartPointer<int>;
 
     template <typename T>
     using Nullable [[clang::annotate("Nullable")]] = T;
@@ -335,9 +315,8 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
                                      AS_private),
             PointerToIntTy);
 
-  EXPECT_EQ(
-      underlyingRawPointerType(underlying("UserDefinedWithAttribute", AST)),
-      PointerToIntTy);
+  EXPECT_EQ(underlyingRawPointerType(underlying("UserDefined", AST)),
+            PointerToIntTy);
 
   EXPECT_EQ(underlyingRawPointerType(underlying("NullableUniquePointer", AST)),
             PointerToIntTy);

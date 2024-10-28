@@ -72,29 +72,13 @@ static bool isStandardSmartPointerDecl(const CXXRecordDecl *RD) {
   return Name == "unique_ptr" || Name == "shared_ptr";
 }
 
-static bool isAnnotatedNullabilityCompatible(const CXXRecordDecl *RD) {
-  // If the specialization hasn't been instantiated -- for example because it
-  // is only used as a function parameter type -- then the specialization won't
-  // contain the `absl_nullability_compatible` tag. Therefore, we look at the
-  // template rather than the specialization.
-  if (const auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD))
-    RD = CTSD->getSpecializedTemplate()->getTemplatedDecl();
-
-  if (RD->hasAttr<TypeNullableAttr>()) return true;
-
-  const auto &Idents = RD->getASTContext().Idents;
-  auto It = Idents.find("absl_nullability_compatible");
-  if (It == Idents.end()) return false;
-  return RD->lookup(It->getValue()).find_first<TypedefNameDecl>() != nullptr;
-}
-
 static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
     absl::Nullable<const CXXRecordDecl *> RD,
     llvm::SmallPtrSet<const CXXRecordDecl *, 2> &Seen,
     AccessSpecifier BaseAccess) {
   if (RD == nullptr) return nullptr;
 
-  if (isStandardSmartPointerDecl(RD) || isAnnotatedNullabilityCompatible(RD))
+  if (isStandardSmartPointerDecl(RD) || RD->hasAttr<TypeNullableAttr>())
     return RD;
 
   if (RD->hasDefinition())
@@ -168,10 +152,9 @@ QualType underlyingRawPointerType(QualType T, AccessSpecifier BaseAccess) {
   // If `RD` is a `ClassTemplateSpecializationDecl` for an uninstantiated
   // specialization of a smart pointer (or a class derived from it), it's just
   // an empty shell -- it doesn't contain any base specifiers or any of the type
-  // aliases we need (`absl_nullability_compatible`, `pointer`, `element_type`).
+  // aliases we need (`pointer`, `element_type`).
   // We deal with this as follows:
-  // *  We check the primary template for base classes and the
-  //    `absl_nullability_compatible` type alias.
+  // *  We check the primary template for base classes.
   // *  We extract the underlying pointer type from the template argument (as
   //    that's the best we can do).
   auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD);
