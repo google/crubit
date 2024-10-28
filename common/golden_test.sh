@@ -27,6 +27,6 @@ do
 done
 
 if [ $STATUS != 0 ]; then
-  echo >&2 "To regenerate the goldens, run cc_bindings_from_rs/test/golden/update.sh"
+  echo >&2 "To regenerate the goldens, run common/golden_update.sh"
   exit 1
 fi
