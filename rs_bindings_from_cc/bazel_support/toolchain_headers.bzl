@@ -19,17 +19,17 @@ load(
     "generate_and_compile_bindings",
 )
 
-def _has_suffix(input, suffices):
-    for suffix in suffices:
+def _has_suffix(input, suffixes):
+    for suffix in suffixes:
         if input.short_path.endswith(suffix):
             return True
     return False
 
-def _filter_headers_with_suffices(input_list, suffices):
-    return [hdr for hdr in input_list if _has_suffix(hdr, suffices)]
+def _filter_headers_with_suffixes(input_list, suffixes):
+    return [hdr for hdr in input_list if _has_suffix(hdr, suffixes)]
 
-def _filter_headers_without_suffices(input_list, suffices):
-    return [hdr for hdr in input_list if not _has_suffix(hdr, suffices)]
+def _filter_headers_without_suffixes(input_list, suffixes):
+    return [hdr for hdr in input_list if not _has_suffix(hdr, suffixes)]
 
 def _add_prefix(strings, prefix):
     return [prefix + s for s in strings]
@@ -46,8 +46,8 @@ def _bindings_for_toolchain_headers_impl(ctx):
 
     # The clang builtin headers also contain some libc++ headers. We consider those part of
     # the libc++ target, so we generate bindings for them.
-    builtin_libcxx_files = _filter_headers_with_suffices(builtin_headers, prefixed_libcxx_hdrs)
-    builtin_nonstd_files = _filter_headers_without_suffices(
+    builtin_libcxx_files = _filter_headers_with_suffixes(builtin_headers, prefixed_libcxx_hdrs)
+    builtin_nonstd_files = _filter_headers_without_suffixes(
         builtin_headers,
         ctx.attr.public_libcxx_hdrs,
     )
@@ -66,8 +66,8 @@ def _bindings_for_toolchain_headers_impl(ctx):
         ],
     )
 
-    public_libcxx_files = _filter_headers_with_suffices(std_files, prefixed_libcxx_hdrs)
-    public_libc_files = _filter_headers_with_suffices(std_files, _add_prefix(ctx.attr.public_libc_hdrs, "v5/include/"))
+    public_libcxx_files = _filter_headers_with_suffixes(std_files, prefixed_libcxx_hdrs)
+    public_libc_files = _filter_headers_with_suffixes(std_files, _add_prefix(ctx.attr.public_libc_hdrs, "v5/include/"))
 
     header_includes = []
     for hdr in ctx.attr.public_libcxx_hdrs + ctx.attr.public_libc_hdrs:
