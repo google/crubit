@@ -39,6 +39,7 @@ pub struct Vector<T> {
 // TODO(b/356221873): Implement clear().
 // TODO(b/356221873): implement insertion, removal of elements.
 // TODO(b/356221873): implement append, extend.
+// TODO(b/356221873): implement set_len.
 
 impl<T> Vector<T> {
     pub fn new() -> Vector<T> {
@@ -173,6 +174,20 @@ impl<T: Unpin> Vector<T> {
     pub fn push(&mut self, value: T) {
         self.mutate_self_as_vec(|v| v.push(value));
     }
+
+    pub fn into_vec(mut self) -> Vec<T> {
+        let mut result = Vec::<T>::with_capacity(self.len());
+        unsafe {
+            std::ptr::copy_nonoverlapping(self.as_ptr(), result.as_mut_ptr(), self.len());
+            result.set_len(self.len());
+
+            // The elements were moved out. Now mark `self` empty, without calling drop on
+            // elements.
+            self.asan_unpoison_tail();
+            self.end = self.begin;
+        }
+        result
+    }
 }
 
 impl<T> Default for Vector<T> {
@@ -242,6 +257,17 @@ impl<T: Unpin> From<Vec<T>> for Vector<T> {
             u.extend(v);
         });
         result
+    }
+}
+
+impl<T: Clone> Vector<T> {
+    /// Clone elements from `self` to `Vec<T>`.
+    pub fn to_vec(&self) -> Vec<T> {
+        let mut v = Vec::<T>::with_capacity(self.len());
+        for el in self.iter() {
+            v.push(el.clone());
+        }
+        v
     }
 }
 
@@ -399,5 +425,11 @@ impl<T: Unpin> FromIterator<T> for Vector<T> {
             u.extend(iter);
         });
         v
+    }
+}
+
+impl<T: Unpin> From<Vector<T>> for std::vec::Vec<T> {
+    fn from(v: Vector<T>) -> std::vec::Vec<T> {
+        v.into_vec()
     }
 }

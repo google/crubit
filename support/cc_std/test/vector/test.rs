@@ -112,6 +112,13 @@ fn test_vector_mut_index() {
 }
 
 #[gtest]
+fn test_vector_to_vec() {
+    let mut v = vector::Vector::from(vec![4, 5, 6]);
+    let v2 = v.to_vec();
+    expect_eq!(v2, vec![4, 5, 6]);
+}
+
+#[gtest]
 #[should_panic]
 fn test_vector_mut_index_out_of_bounds() {
     let mut v = vector::Vector::new();
@@ -287,12 +294,41 @@ fn test_vector_with_capacity() {
 }
 
 #[gtest]
+fn test_vector_into_vec() {
+    let mut v = vector::Vector::<i32>::new();
+    v.push(1);
+    v.push(2);
+    v.push(3);
+    let v2 = v.into_vec();
+    expect_eq!(v2, vec![1, 2, 3]);
+}
+#[gtest]
+fn test_vector_into_dropped_counter() {
+    let mut v = vector::Vector::new();
+    let counter = Rc::new(RefCell::new(0i32));
+    v.push(InstanceCounted::new(counter.clone()));
+    v.push(InstanceCounted::new(counter.clone()));
+    v.push(InstanceCounted::new(counter.clone()));
+    expect_eq!(*counter.borrow(), 3);
+    let v2 = v.into_vec();
+    drop(v2);
+    expect_eq!(*counter.borrow(), 0);
+}
+
+#[gtest]
 fn test_vector_from_vec() {
     let v = vector::Vector::from(vec![0, 1, 2, 3, 4]);
     expect_eq!(v.len(), 5);
     for i in 0..5 {
         expect_eq!(v[i], i);
     }
+}
+
+#[gtest]
+fn test_vector_from_vec_with_capacity() {
+    let mut vector = vector::Vector::from(vec![0, 1, 2, 3, 4]);
+    let mut vec = Vec::from(vector);
+    expect_eq!(vec, [0, 1, 2, 3, 4]);
 }
 
 mod layout_tests {
