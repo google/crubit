@@ -31,18 +31,30 @@ cs/file:examples/cpp/enum/example_generated.rs content:^([^/\n])([^!\n]|$)[^\n]*
 ## Why isn't it an `enum`?
 
 A C++ `enum` cannot be translated directly to a Rust `enum`, because C++ enums
-are "non-exhaustive": a C++ `enum` can have *any* value supported by the
-underlying type, even one not listed in the enumerators. For example, in the
-enum above, `static_cast<Color>(42)` is a valid instance of `Color`, even though
-none of `kRed`, `kBlue`, or `kGreen` have that value.
+are "representationally non-exhaustive": a C++ `enum` can have *any* value
+supported by the underlying type, even one not listed in the enumerators. For
+example, in the enum above, `static_cast<Color>(42)` is a valid instance of
+`Color`, even though none of `kRed`, `kBlue`, or `kGreen` have that value.
 
-Rust enums, in contrast, are exhaustive: any value not explicitly listed in the
-`enum` declaration does not exist, and it is
-[undefined behavior](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)
-to attempt to create one.
+Rust enums, in contrast, are representationally exhaustive. An enum declares a
+*closed* set of valid discriminants, and it is [undefined behavior][ub] to
+attempt to create an enum with a value outside of that set, whether it's via
+`transmute`, a raw pointer cast, or Crubit. The behavior is undefined the moment
+the invalid value is created, even if it is never used.
 
 Since a value like `static_cast<Color>(42)` is not in the list of enumerators, a
 Rust `enum` cannot be used to represent an arbitrary C++ `enum`. Instead, the
 Rust bindings are a `struct`. This `struct` is given the most natural and
 `enum`-like API possible, though there are still gaps. (Casts using `as`, for
 example, will not work with a C++ enum.)
+
+### What about `#[non_exhaustive]`? {#non_exhaustive}
+
+The [`#[non_exhaustive]`][ne] attribute on an enum communicates to external
+crates that more variants may be added in the future, and so a `match` requires
+a wildcard branch. Within the defining crate, `non_exhaustive` has no effect. It
+remains undefined behavior to `transmute` from integers not declared by the
+enum.
+
+[ne]: https://doc.rust-lang.org/reference/attributes/type_system.html#the-non_exhaustive-attribute
+[ub]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
