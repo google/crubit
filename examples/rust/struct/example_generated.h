@@ -55,12 +55,12 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate6StructNtNtCs8sGNUgcxoFi_u4core7default7Default7defaultB4_u(
+__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
     ::example_crate::Struct* __ret_ptr);
 }
 inline Struct::Struct() {
   __crubit_internal::
-      __crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate6StructNtNtCs8sGNUgcxoFi_u4core7default7Default7defaultB4_u(
+      __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
           this);
 }
 static_assert(std::is_trivially_destructible_v<Struct>);
@@ -68,27 +68,27 @@ static_assert(std::is_trivially_move_constructible_v<Struct>);
 static_assert(std::is_trivially_move_assignable_v<Struct>);
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate6StructNtNtCs8sGNUgcxoFi_u4core5clone5Clone5cloneB4_u(
+__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core5clone5Clone5cloneB4_u(
     ::example_crate::Struct const& [[clang::annotate_type("lifetime",
                                                           "__anon1")]],
     ::example_crate::Struct* __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate6StructNtNtCs8sGNUgcxoFi_u4core5clone5Clone10clone_ufromB4_u(
+__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core5clone5Clone10clone_ufromB4_u(
     ::example_crate::Struct& [[clang::annotate_type("lifetime", "__anon1")]],
     ::example_crate::Struct const& [[clang::annotate_type("lifetime",
                                                           "__anon2")]]);
 }
 inline Struct::Struct(const Struct& other) {
   __crubit_internal::
-      __crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate6StructNtNtCs8sGNUgcxoFi_u4core5clone5Clone5cloneB4_u(
+      __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core5clone5Clone5cloneB4_u(
           other, this);
 }
 inline Struct& Struct::operator=(const Struct& other) {
   if (this != &other) {
     __crubit_internal::
-        __crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate6StructNtNtCs8sGNUgcxoFi_u4core5clone5Clone10clone_ufromB4_u(
+        __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core5clone5Clone10clone_ufromB4_u(
             *this, other);
   }
   return *this;

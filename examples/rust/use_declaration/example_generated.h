@@ -60,11 +60,11 @@ namespace module {
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk__uRNvNtCsh2mUQSogkZl_u13example_ucrate6module8function();
+__crubit_thunk__uRNvNtCseF4PRLPR6bH_u13example_ucrate6module8function();
 }
 inline void function() {
   return __crubit_internal::
-      __crubit_thunk__uRNvNtCsh2mUQSogkZl_u13example_ucrate6module8function();
+      __crubit_thunk__uRNvNtCseF4PRLPR6bH_u13example_ucrate6module8function();
 }
 
 static_assert(
@@ -75,12 +75,12 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk__uRNvYNtNtCsh2mUQSogkZl_u13example_ucrate6module4TypeNtNtCs8sGNUgcxoFi_u4core7default7Default7defaultB6_u(
+__crubit_thunk__uRNvYNtNtCseF4PRLPR6bH_u13example_ucrate6module4TypeNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB6_u(
     ::example_crate::module::Type* __ret_ptr);
 }
 inline Type::Type() {
   __crubit_internal::
-      __crubit_thunk__uRNvYNtNtCsh2mUQSogkZl_u13example_ucrate6module4TypeNtNtCs8sGNUgcxoFi_u4core7default7Default7defaultB6_u(
+      __crubit_thunk__uRNvYNtNtCseF4PRLPR6bH_u13example_ucrate6module4TypeNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB6_u(
           this);
 }
 static_assert(std::is_trivially_destructible_v<Type>);

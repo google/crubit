@@ -50,12 +50,12 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate5ColorNtNtCs8sGNUgcxoFi_u4core7default7Default7defaultB4_u(
+__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate5ColorNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
     ::example_crate::Color* __ret_ptr);
 }
 inline Color::Color() {
   __crubit_internal::
-      __crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate5ColorNtNtCs8sGNUgcxoFi_u4core7default7Default7defaultB4_u(
+      __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate5ColorNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
           this);
 }
 static_assert(std::is_trivially_destructible_v<Color>);

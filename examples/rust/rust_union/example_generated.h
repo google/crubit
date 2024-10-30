@@ -59,12 +59,12 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate13ReprRustUnionNtNtCs8sGNUgcxoFi_u4core7default7Default7defaultB4_u(
+__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate13ReprRustUnionNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
     ::example_crate::ReprRustUnion* __ret_ptr);
 }
 inline ReprRustUnion::ReprRustUnion() {
   __crubit_internal::
-      __crubit_thunk__uRNvYNtCsh2mUQSogkZl_u13example_ucrate13ReprRustUnionNtNtCs8sGNUgcxoFi_u4core7default7Default7defaultB4_u(
+      __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate13ReprRustUnionNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
           this);
 }
 static_assert(std::is_trivially_destructible_v<ReprRustUnion>);
@@ -72,7 +72,7 @@ static_assert(std::is_trivially_move_constructible_v<ReprRustUnion>);
 static_assert(std::is_trivially_move_assignable_v<ReprRustUnion>);
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk__uRNvMs_uCsh2mUQSogkZl_u13example_ucrateNtB4_u13ReprRustUnion5set_ua(
+__crubit_thunk__uRNvMs_uCseF4PRLPR6bH_u13example_ucrateNtB4_u13ReprRustUnion5set_ua(
     ::example_crate::ReprRustUnion& [[clang::annotate_type("lifetime",
                                                            "__anon1")]],
     std::int32_t);
@@ -80,13 +80,13 @@ __crubit_thunk__uRNvMs_uCsh2mUQSogkZl_u13example_ucrateNtB4_u13ReprRustUnion5set
 inline void ReprRustUnion::set_a(std::int32_t a)
     [[clang::annotate_type("lifetime", "__anon1")]] {
   return __crubit_internal::
-      __crubit_thunk__uRNvMs_uCsh2mUQSogkZl_u13example_ucrateNtB4_u13ReprRustUnion5set_ua(
+      __crubit_thunk__uRNvMs_uCseF4PRLPR6bH_u13example_ucrateNtB4_u13ReprRustUnion5set_ua(
           *this, a);
 }
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk__uRNvMs_uCsh2mUQSogkZl_u13example_ucrateNtB4_u13ReprRustUnion5set_ub(
+__crubit_thunk__uRNvMs_uCseF4PRLPR6bH_u13example_ucrateNtB4_u13ReprRustUnion5set_ub(
     ::example_crate::ReprRustUnion& [[clang::annotate_type("lifetime",
                                                            "__anon1")]],
     double);
@@ -94,7 +94,7 @@ __crubit_thunk__uRNvMs_uCsh2mUQSogkZl_u13example_ucrateNtB4_u13ReprRustUnion5set
 inline void ReprRustUnion::set_b(double b)
     [[clang::annotate_type("lifetime", "__anon1")]] {
   return __crubit_internal::
-      __crubit_thunk__uRNvMs_uCsh2mUQSogkZl_u13example_ucrateNtB4_u13ReprRustUnion5set_ub(
+      __crubit_thunk__uRNvMs_uCseF4PRLPR6bH_u13example_ucrateNtB4_u13ReprRustUnion5set_ub(
           *this, b);
 }
 inline void ReprRustUnion::__crubit_field_offset_assertions() {
