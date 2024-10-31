@@ -188,6 +188,22 @@ impl<T: Unpin> Vector<T> {
         }
         result
     }
+
+    pub fn as_ptr(&self) -> *const T {
+        self.begin
+    }
+
+    pub fn as_mut_ptr(&mut self) -> *mut T {
+        self.begin
+    }
+
+    pub fn as_slice(&self) -> &[T] {
+        unsafe { std::slice::from_raw_parts(self.begin, self.len()) }
+    }
+
+    pub fn as_mut_slice(&mut self) -> &mut [T] {
+        unsafe { std::slice::from_raw_parts_mut(self.begin, self.len()) }
+    }
 }
 
 impl<T> Default for Vector<T> {

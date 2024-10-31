@@ -331,6 +331,42 @@ fn test_vector_from_vec_with_capacity() {
     expect_eq!(vec, [0, 1, 2, 3, 4]);
 }
 
+#[gtest]
+fn test_as_ptr() {
+    let v = vector::Vector::from(vec!['a', 'b']);
+    let ptr: *const char = v.as_ptr();
+    unsafe {
+        expect_eq!(*ptr, 'a');
+    }
+}
+
+#[gtest]
+fn test_as_mut_ptr() {
+    let mut v = vector::Vector::from(vec!['a', 'b']);
+    let ptr: *mut char = v.as_mut_ptr();
+    unsafe {
+        expect_eq!(*ptr, 'a');
+        *ptr = 'c';
+    }
+    expect_eq!(v[0], 'c');
+}
+
+#[gtest]
+fn test_as_slice() {
+    let v = vector::Vector::from(vec![5, 6, 7]);
+    let slice: &[i32] = v.as_slice();
+    expect_eq!(slice, &[5, 6, 7]);
+}
+
+#[gtest]
+fn test_as_mut_slice() {
+    let mut v = vector::Vector::from(vec![5, 6, 7]);
+    let slice: &mut [i32] = v.as_mut_slice();
+    expect_eq!(slice, &[5, 6, 7]);
+    slice[1] = 1;
+    expect_eq!(v[1], 1);
+}
+
 mod layout_tests {
     use crate::to_void_ptr;
     use googletest::prelude::*;
