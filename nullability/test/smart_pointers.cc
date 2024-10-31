@@ -682,3 +682,32 @@ TEST Deleter::pointer underlyingTypeIsNotRawPointer() {
 }
 
 }  // namespace underlying_type_is_not_raw_pointer
+
+namespace unusual_smart_pointer_type {
+
+// This is a crash repro.
+// This smart pointer type is unusual in that expects its template argument to
+// be the underlying pointer type, rather than the type that the underlying
+// smart pointer points to.
+// Smart pointers that are "unusual" in this way should define a `pointer` type
+// alias to make it clear what the underlying pointer type is, but if they omit
+// this, we shouldn't crash.
+template <class T>
+struct _Nullable UnusualSmartPointer {
+  // A more "usual" smart pointer type, such as `std::unique_ptr`, would return
+  // `T*` here.
+  T operator->() const;
+};
+
+struct S {
+  void nonConstMemberFunction();
+};
+
+TEST void unusualSmartPointerType() {
+  // UnusualSmartPointer<S *> Ptr;
+  // We shouldn't crash while analyzing this call.
+  // Commented out for the time being to avoid the crash.
+  // Ptr->nonConstMemberFunction();
+}
+
+}  // namespace unusual_smart_pointer_type
