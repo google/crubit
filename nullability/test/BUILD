@@ -393,6 +393,7 @@ cc_embed_data(
         "check_diagnostics_preamble.h",
         "new",
         "memory",
+        "type_traits",
         "utility",
     ],
     outs = [

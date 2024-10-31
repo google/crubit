@@ -12,6 +12,7 @@
 // in `unique_ptr`.
 
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 #include "nullability_test.h"
@@ -708,8 +709,12 @@ namespace unusual_smart_pointer_type {
 template <class T>
 struct _Nullable UnusualSmartPointer {
   // A more "usual" smart pointer type, such as `std::unique_ptr`, would return
-  // `T*` here.
+  // `T*` from `operator->()`, `get()`, and `release()`, and `T&` from
+  // `operator*()`.
   T operator->() const;
+  std::remove_pointer_t<T> operator*() const;
+  T get() const;
+  T release();
 };
 
 struct S {
@@ -717,10 +722,12 @@ struct S {
 };
 
 TEST void unusualSmartPointerType() {
-  // UnusualSmartPointer<S *> Ptr;
-  // We shouldn't crash while analyzing this call.
-  // Commented out for the time being to avoid the crash.
-  // Ptr->nonConstMemberFunction();
+  UnusualSmartPointer<S *> Ptr;
+  // We shouldn't crash while analyzing these calls.
+  Ptr->nonConstMemberFunction();
+  (*Ptr).nonConstMemberFunction();
+  Ptr.get()->nonConstMemberFunction();
+  Ptr.release()->nonConstMemberFunction();
 }
 
 }  // namespace unusual_smart_pointer_type

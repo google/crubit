@@ -561,6 +561,16 @@ void transferValue_SmartPointerAssignment(
 void transferValue_SmartPointerReleaseCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
+  // If the return type isn't what we expect, bail out.
+  // This can happen if the smart pointer doesn't declare a `pointer` or
+  // `element_type` type alias and our fallback logic of using `T*` as the
+  // underlying pointer type (where `T` is the first template argument) is
+  // incorrect.
+  if (MCE->getType()->getCanonicalTypeUnqualified() !=
+      underlyingRawPointerType(MCE->getObjectType())
+          ->getCanonicalTypeUnqualified())
+    return;
+
   RecordStorageLocation *Loc = getImplicitObjectLocation(*MCE, State.Env);
   if (Loc == nullptr) return;
   StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
@@ -618,6 +628,12 @@ void transferValue_SmartPointerFreeSwapCall(
 void transferValue_SmartPointerGetCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
+  // If the return type isn't what we expect, bail out.
+  // See  transferValue_SmartPointerReleaseCall()` for more details.
+  if (MCE->getType()->getCanonicalTypeUnqualified() !=
+      underlyingRawPointerType(MCE->getObjectType())
+          ->getCanonicalTypeUnqualified())
+    return;
   if (Value *Val = getPointerValueFromSmartPointer(
           getImplicitObjectLocation(*MCE, State.Env), State.Env))
     State.Env.setValue(*MCE, *Val);
@@ -634,9 +650,27 @@ void transferValue_SmartPointerBoolConversionCall(
   }
 }
 
+QualType getReceiverType(const CXXOperatorCallExpr *OpCall) {
+  const Expr *Receiver = OpCall->getArg(0);
+  if (Receiver->isPRValue()) {
+    assert(Receiver->getType()->isPointerType());
+    return Receiver->getType()->getPointeeType();
+  }
+  return Receiver->getType();
+}
+
 void transferValue_SmartPointerOperatorStar(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
+  // If the return type isn't what we expect, bail out.
+  // See  transferValue_SmartPointerReleaseCall()` for more details.
+  QualType ReturnType = OpCall->getType();
+  if (ReturnType->isReferenceType()) ReturnType = ReturnType->getPointeeType();
+  if (ReturnType->getCanonicalTypeUnqualified() !=
+      underlyingRawPointerType(getReceiverType(OpCall))
+          ->getPointeeType()
+          ->getCanonicalTypeUnqualified())
+    return;
   if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
     State.Env.setStorageLocation(*OpCall, Val->getPointeeLoc());
   }
@@ -645,6 +679,12 @@ void transferValue_SmartPointerOperatorStar(
 void transferValue_SmartPointerOperatorArrow(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
+  // If the return type isn't what we expect, bail out.
+  // See  transferValue_SmartPointerReleaseCall()` for more details.
+  if (OpCall->getType()->getCanonicalTypeUnqualified() !=
+      underlyingRawPointerType(getReceiverType(OpCall))
+          ->getCanonicalTypeUnqualified())
+    return;
   if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
     State.Env.setValue(*OpCall, *Val);
   }
