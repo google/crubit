@@ -7,7 +7,13 @@
 // Features: experimental, supported
 
 #![rustfmt::skip]
-#![feature(arbitrary_self_types, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(
+    allocator_api,
+    arbitrary_self_types,
+    custom_inner_attributes,
+    negative_impls,
+    register_tool
+)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]

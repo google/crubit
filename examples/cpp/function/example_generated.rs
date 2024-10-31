@@ -7,7 +7,7 @@
 // Features: supported
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes)]
+#![feature(allocator_api, custom_inner_attributes)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]

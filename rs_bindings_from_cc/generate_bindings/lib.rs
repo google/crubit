@@ -953,6 +953,8 @@ fn generate_bindings_tokens(
 
     // For #![rustfmt::skip].
     features.insert(make_rs_ident("custom_inner_attributes"));
+    // For the `vector` in `cc_std`.
+    features.insert(make_rs_ident("allocator_api"));
 
     for top_level_item_id in ir.top_level_item_ids() {
         let item =
@@ -3204,8 +3206,8 @@ pub(crate) mod tests {
     }
 
     #[gtest]
-    fn test_default_crubit_features_disabled_dependency_experimental_function_parameter()
-    -> Result<()> {
+    fn test_default_crubit_features_disabled_dependency_experimental_function_parameter(
+    ) -> Result<()> {
         let mut ir =
             ir_from_cc_dependency("void Func(NotPresent);", "struct NotPresent {~NotPresent();};")?;
         ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
@@ -3222,8 +3224,8 @@ pub(crate) mod tests {
     }
 
     #[gtest]
-    fn test_default_crubit_features_disabled_dependency_supported_function_return_type()
-    -> Result<()> {
+    fn test_default_crubit_features_disabled_dependency_supported_function_return_type(
+    ) -> Result<()> {
         let mut ir = ir_from_cc_dependency("NotPresent Func();", "struct NotPresent {};")?;
         ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -3239,8 +3241,8 @@ pub(crate) mod tests {
     }
 
     #[gtest]
-    fn test_default_crubit_features_disabled_dependency_experimental_function_return_type()
-    -> Result<()> {
+    fn test_default_crubit_features_disabled_dependency_experimental_function_return_type(
+    ) -> Result<()> {
         let mut ir =
             ir_from_cc_dependency("NotPresent Func();", "struct NotPresent {~NotPresent();};")?;
         ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();

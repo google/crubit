@@ -8,6 +8,7 @@
 
 #![rustfmt::skip]
 #![feature(
+    allocator_api,
     arbitrary_self_types,
     custom_inner_attributes,
     impl_trait_in_assoc_type,
