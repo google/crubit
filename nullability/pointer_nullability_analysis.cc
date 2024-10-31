@@ -532,6 +532,20 @@ void transferValue_SmartPointerAssignment(
     return;
   }
 
+  if (!isSupportedSmartPointerType(OpCall->getArg(1)->getType())) {
+    // We don't know anything about the RHS, so set the LHS to an unspecified
+    // nullability state.
+    // TODO(b/376231871): We could handle more RHS cases, for example if RHS
+    // is a raw pointer. We could potentially assume that, if RHS is anything
+    // other than a raw pointer, smart pointer, or nullptr_t, then it's
+    // nonnull (instead of unspecified).
+    // If we add more cases, expand `diagnoseSmartPointerAssignment` as well.
+    StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
+    setToPointerWithNullability(PtrLoc, NullabilityKind::Unspecified,
+                                State.Env);
+    return;
+  }
+
   auto *SrcLoc = State.Env.get<RecordStorageLocation>(*OpCall->getArg(1));
   setSmartPointerValue(*Loc, getPointerValueFromSmartPointer(SrcLoc, State.Env),
                        State.Env);

@@ -136,6 +136,10 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
   // For now, we just check whether the top-level pointer type is compatible.
   // TODO: examine inner nullability too, considering variance.
   if (!isSupportedPointerType(LHSType)) return {};
+
+  QualType RHSType = RHS->getType().getNonReferenceType();
+  if (!RHSType->isNullPtrType() && !isSupportedPointerType(RHSType)) return {};
+
   return LHSNullability.front().concrete() == NullabilityKind::NonNull
              ? diagnoseNonnullExpected(RHS, Env, DiagCtx, Callee, ParamName)
              : SmallVector<PointerNullabilityDiagnostic>{};

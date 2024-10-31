@@ -443,5 +443,25 @@ TEST(SmartPointerTest, UserDefinedSmartPointer) {
   )cc"));
 }
 
+TEST(SmartPointerTest, UserDefinedSmartPointerComplexAssignmentOperator) {
+  // This is a regression test for a crash involving an operator= where
+  // - the LHS is a smart pointer without `pointer` or `element_type` type
+  // aliases.
+  // - the RHS is not a smart pointer
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct OtherType {};
+
+    template <class T>
+    struct _Nullable MySmartPtr {
+      MySmartPtr& operator=(const OtherType& other);
+    };
+
+    void target(OtherType& other) {
+      Nonnull<MySmartPtr<int>> p;
+      p = other;
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

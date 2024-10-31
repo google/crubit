@@ -613,6 +613,19 @@ TEST void userDefinedSmartPointersWithAttribute(
   unknown(UnknownParam);
 }
 
+struct NonPointer {};
+
+template <typename T>
+struct _Nullable UserDefinedSmartPointerWithNonPointerRHSAssignOp {
+  UserDefinedSmartPointerWithNonPointerRHSAssignOp &operator=(
+      const NonPointer &);
+};
+
+TEST void userDefinedSmartPointersWithNonPointerRHSAssignOp(NonPointer Param) {
+  UserDefinedSmartPointerWithNonPointerRHSAssignOp<int> Local;
+  unknown(Local = Param);
+}
+
 }  // namespace user_defined_smart_pointers
 
 namespace derived_from_unique_ptr {
