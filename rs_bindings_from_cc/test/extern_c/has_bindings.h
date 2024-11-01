@@ -68,5 +68,15 @@ extern "C" void crubit_extern_c_directly_function();
 struct MyDerivedStruct : Struct {
   int derived_x;
 };
+
+struct Nontrivial {
+  ~Nontrivial() {}  // NOLINT(modernize-use-equals-default)
+};
+
+using NontrivialAlias = Nontrivial;
+
+inline void crubit_accepts_nontrivial_ptr(Nontrivial*) {}
+inline Nontrivial* crubit_returns_nontrivial_ptr() { return nullptr; }
+
 }  // namespace crubit::has_bindings
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_ALLOWED_H_

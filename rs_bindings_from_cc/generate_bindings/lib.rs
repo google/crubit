@@ -14,7 +14,7 @@ use generate_record::{
     collect_unqualified_member_functions, generate_incomplete_record, generate_record,
 };
 
-use crate::rs_snippet::{CratePath, Lifetime, Mutability, PrimitiveType, RsTypeKind};
+use crate::rs_snippet::{CratePath, Lifetime, Mutability, PrimitiveType, RsTypeKind, TypeLocation};
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
 use error_report::{anyhow, bail, ensure, ErrorReport, ErrorReporting, IgnoreErrors};
@@ -771,10 +771,11 @@ fn required_crubit_features(
 
     let require_rs_type_kind = |missing_features: &mut Vec<RequiredCrubitFeature>,
                                 rs_type_kind: &RsTypeKind,
+                                type_location: TypeLocation,
                                 context: &dyn Fn() -> Rc<str>| {
         for target in item.defining_target().into_iter().chain(item.owning_target()) {
-            let (missing, desc) =
-                rs_type_kind.required_crubit_features(ir.target_crubit_features(target));
+            let (missing, desc) = rs_type_kind
+                .required_crubit_features(ir.target_crubit_features(target), type_location);
             if !missing.is_empty() {
                 let context = context();
                 let capability_description = if desc.is_empty() {
@@ -815,12 +816,20 @@ fn required_crubit_features(
                 );
             } else {
                 let return_type = db.rs_type_kind(func.return_type.rs_type.clone())?;
-                require_rs_type_kind(&mut missing_features, &return_type, &|| "return type".into());
+                require_rs_type_kind(
+                    &mut missing_features,
+                    &return_type,
+                    TypeLocation::FnReturn,
+                    &|| "return type".into(),
+                );
                 for (i, param) in func.params.iter().enumerate() {
                     let param_type = db.rs_type_kind(param.type_.rs_type.clone())?;
-                    require_rs_type_kind(&mut missing_features, &param_type, &|| {
-                        format!("the type of {} (parameter #{i})", &param.identifier).into()
-                    });
+                    require_rs_type_kind(
+                        &mut missing_features,
+                        &param_type,
+                        TypeLocation::FnParam,
+                        &|| format!("the type of {} (parameter #{i})", &param.identifier).into(),
+                    );
                 }
                 if func.is_extern_c {
                     require_any_feature(
@@ -884,6 +893,7 @@ fn required_crubit_features(
             require_rs_type_kind(
                 &mut missing_features,
                 &RsTypeKind::new_record(record.clone(), &db.ir())?,
+                TypeLocation::Other,
                 &|| "".into(),
             );
         }
@@ -891,6 +901,7 @@ fn required_crubit_features(
             require_rs_type_kind(
                 &mut missing_features,
                 &new_type_alias(db, alias.clone())?,
+                TypeLocation::Other,
                 &|| "".into(),
             );
         }
@@ -898,6 +909,7 @@ fn required_crubit_features(
             require_rs_type_kind(
                 &mut missing_features,
                 &RsTypeKind::new_enum(e.clone(), &db.ir())?,
+                TypeLocation::Other,
                 &|| "".into(),
             );
         }
@@ -3172,16 +3184,15 @@ pub(crate) mod tests {
     /// The default crubit feature set currently doesn't include experimetnal.
     #[gtest]
     fn test_default_crubit_features_disabled_experimental() -> Result<()> {
-        let mut ir = ir_from_cc("struct NotPresent {~NotPresent();};")?;
+        let mut ir = ir_from_cc("struct NotPresent;")?;
         ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_not_matches!(rs_api, quote! {NotPresent});
         assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
         let expected = "\
-            Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
             Error while generating bindings for item 'NotPresent':\n\
             Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
-            //test:testing_target needs [//features:experimental] for NotPresent (<internal link>_relocatable_error: crate::NotPresent is not rust-movable)";
+            //test:testing_target needs [//features:experimental] for NotPresent (incomplete type)";
         assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         Ok(())
     }
@@ -3208,8 +3219,10 @@ pub(crate) mod tests {
     #[gtest]
     fn test_default_crubit_features_disabled_dependency_experimental_function_parameter(
     ) -> Result<()> {
-        let mut ir =
-            ir_from_cc_dependency("void Func(NotPresent);", "struct NotPresent {~NotPresent();};")?;
+        let mut ir = ir_from_cc_dependency(
+            "void Func(NotPresent);",
+            "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;",
+        )?;
         ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_not_matches!(rs_api, quote! {Func});
@@ -3217,8 +3230,8 @@ pub(crate) mod tests {
         let expected = "\
             Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
             Error while generating bindings for item 'Func':\n\
-            Failed to format type of parameter 0: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
-            //test:dependency needs [//features:experimental] for NotPresent (<internal link>_relocatable_error: dependency::NotPresent is not rust-movable)";
+            Failed to format type of parameter 0: Can't generate bindings for NotPresentTemplate<int>, because of missing required features (<internal link>):\n\
+            //test:dependency needs [//features:experimental] for NotPresentTemplate<int> (crate::__CcTemplateInst18NotPresentTemplateIiE is a template instantiation)";
         assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         Ok(())
     }
@@ -3243,8 +3256,9 @@ pub(crate) mod tests {
     #[gtest]
     fn test_default_crubit_features_disabled_dependency_experimental_function_return_type(
     ) -> Result<()> {
-        let mut ir =
-            ir_from_cc_dependency("NotPresent Func();", "struct NotPresent {~NotPresent();};")?;
+        let mut ir = ir_from_cc_dependency(
+            "NotPresent Func();",
+            "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;")?;
         ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_not_matches!(rs_api, quote! {Func});
@@ -3252,8 +3266,8 @@ pub(crate) mod tests {
         let expected = "\
             Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
             Error while generating bindings for item 'Func':\n\
-            Failed to format return type: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
-            //test:dependency needs [//features:experimental] for NotPresent (<internal link>_relocatable_error: dependency::NotPresent is not rust-movable)";
+            Failed to format return type: Can't generate bindings for NotPresentTemplate<int>, because of missing required features (<internal link>):\n\
+            //test:dependency needs [//features:experimental] for NotPresentTemplate<int> (crate::__CcTemplateInst18NotPresentTemplateIiE is a template instantiation)";
         assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
         Ok(())
     }

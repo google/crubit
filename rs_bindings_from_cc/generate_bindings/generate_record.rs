@@ -5,7 +5,7 @@
 
 use crate::{BindingsGenerator, Database, GeneratedItem};
 
-use crate::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind};
+use crate::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind, TypeLocation};
 use arc_anyhow::{Context, Result};
 use code_gen_utils::make_rs_ident;
 use error_report::{bail, ensure};
@@ -128,7 +128,8 @@ fn get_field_rs_type_kind_for_layout(
 
     for target in record.defining_target.iter().chain([&record.owning_target]) {
         let enabled_features = db.ir().target_crubit_features(target);
-        let (missing_features, reason) = type_kind.required_crubit_features(enabled_features);
+        let (missing_features, reason) =
+            type_kind.required_crubit_features(enabled_features, TypeLocation::Other);
         ensure!(
             missing_features.is_empty(),
             "missing features: [{missing_features}]: {reason}",
@@ -2626,15 +2627,10 @@ mod tests {
         }
         let mut ir = ir_from_cc(
             r#"
-            struct Nontrivial {
-                ~Nontrivial();
-            };
-
             struct Trivial {
-                Nontrivial* hidden_field;
                 // An example of a field which has a type that is not supported,
                 // but _is_ successfully retrieved by db.rs_type_kind().
-                void(*hidden_field_2)() [[clang::vectorcall]];
+                void(*hidden_field)() [[clang::vectorcall]];
             };
         
         "#,
@@ -2649,21 +2645,19 @@ mod tests {
                 ...
                 pub(crate) hidden_field: [::core::mem::MaybeUninit<u8>; 8],
                 ...
-                pub(crate) hidden_field_2: [::core::mem::MaybeUninit<u8>; 8],
-                ...
             }}
         );
         Ok(())
     }
 
-    /// Nontrivial fields are replaced with opaque blobs, even if they're
-    /// supported!
+    /// By value nontrivial fields are replaced with opaque blobs, even if
+    /// they're supported! For pointers, they are not replaced.
     #[gtest]
     fn test_supported_nontrivial_field() -> Result<()> {
         let mut ir = ir_from_cc(
             r#"
             struct [[clang::trivial_abi]] Inner {~Inner();};
-            struct [[clang::trivial_abi]] Outer {Inner inner_field;};
+            struct [[clang::trivial_abi]] Outer {Inner inner_field; Inner* inner_ptr_field;};
             "#,
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
@@ -2678,7 +2672,8 @@ mod tests {
             quote! {
             pub struct Outer {
                 ...
-                pub(crate) inner_field: [::core::mem::MaybeUninit<u8>; 1],
+                pub(crate) inner_field: [::core::mem::MaybeUninit<u8>; 8],
+                pub inner_ptr_field: *mut crate::Inner,
             }}
         );
         Ok(())

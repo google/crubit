@@ -39,9 +39,7 @@ struct TemplatedStruct {
 using InstantiatedTemplatedStruct = TemplatedStruct<int>;
 
 extern "C" {
-inline void crubit_accepts_nontrivial_ptr(Nontrivial*) {}
 inline void crubit_accepts_nontrivial_value(Nontrivial) {}
-inline Nontrivial* crubit_returns_nontrivial_ptr() { return nullptr; }
 inline Nontrivial crubit_returns_nontrivial_value() { return {}; }
 
 [[clang::vectorcall]] inline void crubit_vectorcall() {}
@@ -65,8 +63,9 @@ inline void* crubit_parameter_lifetimebound(void* x [[clang::lifetimebound]]) {
   return x;
 }
 
-typedef void (*Callback)(Nontrivial* x);
-inline void crubit_invoke_callback(void (*f)(Nontrivial* x)) { f(nullptr); }
+inline void crubit_invoke_callback(void (*f)(InstantiatedTemplatedStruct* x)) {
+  f(nullptr);
+}
 
 using UnknownTypeAttribute = __attribute__((noderef)) int*;
 inline void crubit_unknown_type_attribute(__attribute__((noderef)) int*) {}

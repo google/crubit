@@ -4,6 +4,7 @@
 
 use googletest::prelude::*;
 use has_bindings::crubit::has_bindings;
+use item_exists::{type_exists, value_exists};
 use static_assertions::assert_not_impl_any;
 
 #[gtest]
@@ -158,4 +159,24 @@ fn test_nullable_function_pointer() {
 #[gtest]
 fn test_oop() {
     assert_not_impl_any!(has_bindings::MyDerivedStruct : oops::Inherits<has_bindings::Struct>);
+}
+
+#[gtest]
+fn test_nontrivial_type() {
+    assert!(type_exists!(has_bindings::Nontrivial));
+}
+
+#[gtest]
+fn test_nontrivial_alias() {
+    assert!(type_exists!(has_bindings::NontrivialAlias));
+}
+
+#[gtest]
+fn test_returns_nontrivial_ptr() {
+    assert!(value_exists!(has_bindings::crubit_returns_nontrivial_ptr));
+}
+
+#[gtest]
+fn test_accepts_nontrivial_ptr() {
+    assert!(value_exists!(has_bindings::crubit_accepts_nontrivial_ptr));
 }

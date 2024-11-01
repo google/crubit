@@ -301,6 +301,15 @@ impl ToTokens for PrimitiveType {
 static TEMPLATE_INSTANTIATION_ALLOWLIST: LazyLock<HashSet<&'static str>> =
     LazyLock::new(|| ["std::string_view", "std::wstring_view"].into_iter().collect());
 
+/// Location where a type is used.
+// TODO: Merge with `TypeLocation` in the other direction.
+#[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
+pub enum TypeLocation {
+    FnReturn,
+    FnParam,
+    Other,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum RsTypeKind {
     Pointer {
@@ -450,7 +459,7 @@ impl RsTypeKind {
     }
 
     /// Returns the features required to use this type which are not already
-    /// enabled.
+    /// enabled, which might depend on where the type is used.
     ///
     /// If a function accepts or returns this type, or an alias refers to this
     /// type, then the function or type alias will itself also require this
@@ -466,6 +475,7 @@ impl RsTypeKind {
     pub fn required_crubit_features(
         &self,
         enabled_features: flagset::FlagSet<CrubitFeature>,
+        type_location: TypeLocation,
     ) -> (flagset::FlagSet<CrubitFeature>, String) {
         // TODO(b/318006909): Explain why a given feature is required, don't just return
         // a FlagSet.
@@ -484,6 +494,20 @@ impl RsTypeKind {
                     }
                 }
             };
+
+        // !Unpin types are allowed everywhere except as by-value parameter or return
+        // types.
+        if !self.is_unpin()
+            && matches!(type_location, TypeLocation::FnReturn | TypeLocation::FnParam)
+        {
+            require_feature(
+                CrubitFeature::Experimental,
+                Some(&|| {
+                    format!("<internal link>_relocatable_error: {self} is not rust-movable")
+                        .into()
+                }),
+            )
+        }
 
         for rs_type_kind in self.dfs_iter() {
             match rs_type_kind {
@@ -522,20 +546,12 @@ impl RsTypeKind {
                     // std::string_view so we create an allow list fo them. This is just a temporary
                     // solution until we have a better way to handle template
                     // instantiations.
-                    if rs_type_kind.is_unpin()
-                        && (record.defining_target.is_none()
-                            || TEMPLATE_INSTANTIATION_ALLOWLIST
-                                .contains(&record.cc_preferred_name.as_ref()))
+                    if record.defining_target.is_none()
+                        || TEMPLATE_INSTANTIATION_ALLOWLIST
+                            .contains(&record.cc_preferred_name.as_ref())
                     {
                         require_feature(CrubitFeature::Supported, None)
-                    } else if !rs_type_kind.is_unpin() {
-                        require_feature(
-                            CrubitFeature::Experimental,
-                            Some(&|| {
-                                format!("<internal link>_relocatable_error: {rs_type_kind} is not rust-movable").into()
-                            }),
-                        )
-                    } else {
+                    } else if record.defining_target.is_some() {
                         require_feature(
                             CrubitFeature::Experimental,
                             Some(&|| format!("{rs_type_kind} is a template instantiation").into()),
@@ -1164,8 +1180,10 @@ mod tests {
                 param_types: Rc::from([reference]),
             },
         ] {
-            let (missing_features, reason) =
-                func_ptr.required_crubit_features(<flagset::FlagSet<CrubitFeature>>::default());
+            let (missing_features, reason) = func_ptr.required_crubit_features(
+                <flagset::FlagSet<CrubitFeature>>::default(),
+                TypeLocation::Other,
+            );
             assert_eq!(missing_features, CrubitFeature::Experimental | CrubitFeature::Supported);
             assert_eq!(reason, "references are not supported");
         }

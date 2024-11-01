@@ -64,7 +64,7 @@ used as normal.
 
 ## Trivially relocatable classes {#trivially_relocatable}
 
-To receive Rust bindings, a type must be
+For a type to be passed or returned by value in Rust, it must be
 ["trivially relocatable"](https://clang.llvm.org/docs/LanguageExtensions.html#:~:text=__is_trivially_relocatable).
 This is the C++ version of saying a class is "Rust-movable": the class can be
 "teleported" in memory during its lifetime, as if by using `memcpy` and then

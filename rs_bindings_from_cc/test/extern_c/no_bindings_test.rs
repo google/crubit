@@ -7,33 +7,13 @@ use item_exists::{type_exists, value_exists};
 use no_bindings::crubit::no_bindings;
 
 #[gtest]
-fn test_nontrivial_type() {
-    assert!(!type_exists!(no_bindings::Nontrivial));
-}
-
-#[gtest]
-fn test_nontrivial_alias() {
-    assert!(!type_exists!(no_bindings::NontrivialAlias));
-}
-
-#[gtest]
 fn test_deprecated_alias() {
     assert!(!type_exists!(no_bindings::DeprecatedAlias));
 }
 
 #[gtest]
-fn test_accepts_nontrivial_ptr() {
-    assert!(!value_exists!(no_bindings::crubit_accepts_nontrivial_ptr));
-}
-
-#[gtest]
 fn test_accepts_nontrivial_value() {
     assert!(!value_exists!(no_bindings::crubit_accepts_nontrivial_value));
-}
-
-#[gtest]
-fn test_returns_nontrivial_ptr() {
-    assert!(!value_exists!(no_bindings::crubit_returns_nontrivial_ptr));
 }
 
 #[gtest]
@@ -95,7 +75,6 @@ fn test_templates() {
 /// type dependencies are.
 #[gtest]
 fn test_function_pointers() {
-    assert!(!type_exists!(no_bindings::Callback));
     assert!(!value_exists!(no_bindings::crubit_invoke_callback));
 }
 
