@@ -2,6 +2,7 @@
 
 load("@bazel_tools//tools/build_defs/cc:cc_embed_data.bzl", "cc_embed_data")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("//third_party/protobuf/bazel:proto_library.bzl", "proto_library")
 
 package(default_applicable_licenses = ["//:license"])
 
