@@ -24,7 +24,7 @@
 #include "llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
-constexpr llvm::StringRef ReplacementMacrosHeaderFileName =
+inline constexpr llvm::StringRef ReplacementMacrosHeaderFileName =
     "clang_tidy_nullability_replacement_macros.h";
 
 class ReplaceMacrosCallbacks : public clang::PPCallbacks {

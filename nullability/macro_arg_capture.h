@@ -11,10 +11,10 @@
 #include "llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
-constexpr llvm::StringRef ArgCaptureAbortIfFalse =
+inline constexpr llvm::StringRef ArgCaptureAbortIfFalse =
     "clang_tidy_nullability_internal_abortIfFalse";
 
-constexpr llvm::StringRef ArgCaptureAbortIfEqual =
+inline constexpr llvm::StringRef ArgCaptureAbortIfEqual =
     "clang_tidy_nullability_internal_abortIfEqual";
 }  // namespace clang::tidy::nullability
 
