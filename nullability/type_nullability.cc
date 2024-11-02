@@ -1100,8 +1100,7 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
 
     QualType Rebuilt = Ctx.getPointerType(Visit(PT->getPointeeType()));
     if (NK == NullabilityKind::Unspecified) return Rebuilt;
-    return Ctx.getAttributedType(AttributedType::getNullabilityAttrKind(NK),
-                                 Rebuilt, Rebuilt);
+    return Ctx.getAttributedType(NK, Rebuilt, Rebuilt);
   }
 
   QualType VisitRecordType(absl::Nonnull<const RecordType *> RT) {
