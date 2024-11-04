@@ -10,8 +10,6 @@ namespace crubit::has_bindings {
 
 inline void crubit_void_function_non_extern_c() {}
 
-extern "C" {
-
 struct Struct {
   int* x;
   char y;
@@ -61,9 +59,8 @@ inline void crubit_invoke_callback(void (&f)(int* x), int* x) { f(x); }
 // Option<function pointer>.
 typedef void (*NullableCallback)(int* x);
 inline void crubit_invoke_nullable_callback(void (*f)(int* x), int* x) { f(x); }
-}  // extern "C"
 
-extern "C" void crubit_extern_c_directly_function();
+void crubit_extern_c_directly_function();
 
 struct MyDerivedStruct : Struct {
   int derived_x;

@@ -38,7 +38,6 @@ struct TemplatedStruct {
 
 using InstantiatedTemplatedStruct = TemplatedStruct<int>;
 
-extern "C" {
 inline void crubit_accepts_nontrivial_value(Nontrivial) {}
 inline Nontrivial crubit_returns_nontrivial_value() { return {}; }
 
@@ -69,7 +68,6 @@ inline void crubit_invoke_callback(void (*f)(InstantiatedTemplatedStruct* x)) {
 
 using UnknownTypeAttribute = __attribute__((noderef)) int*;
 inline void crubit_unknown_type_attribute(__attribute__((noderef)) int*) {}
-}  // extern "C"
 
 }  // namespace crubit::no_bindings
 
