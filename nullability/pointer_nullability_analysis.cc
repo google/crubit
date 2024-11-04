@@ -650,8 +650,11 @@ void transferValue_SmartPointerBoolConversionCall(
   }
 }
 
-QualType getReceiverType(const CXXOperatorCallExpr *OpCall) {
-  const Expr *Receiver = OpCall->getArg(0);
+QualType getReceiverIgnoringImpCastsType(const CXXOperatorCallExpr *OpCall) {
+  // Matchers hasArgument() appears to ignore implicit casts, so we ignore them
+  // here as well to get the same behavior:
+  // https://github.com/llvm/llvm-project/blob/a58c3d3ac7c6b2fd9710ab2189d7971ef37e714f/clang/include/clang/ASTMatchers/ASTMatchers.h#L4563
+  const Expr *Receiver = OpCall->getArg(0)->IgnoreImpCasts();
   if (Receiver->isPRValue()) {
     assert(Receiver->getType()->isPointerType());
     return Receiver->getType()->getPointeeType();
@@ -667,7 +670,7 @@ void transferValue_SmartPointerOperatorStar(
   QualType ReturnType = OpCall->getType();
   if (ReturnType->isReferenceType()) ReturnType = ReturnType->getPointeeType();
   if (ReturnType->getCanonicalTypeUnqualified() !=
-      underlyingRawPointerType(getReceiverType(OpCall))
+      underlyingRawPointerType(getReceiverIgnoringImpCastsType(OpCall))
           ->getPointeeType()
           ->getCanonicalTypeUnqualified())
     return;
@@ -682,7 +685,7 @@ void transferValue_SmartPointerOperatorArrow(
   // If the return type isn't what we expect, bail out.
   // See  transferValue_SmartPointerReleaseCall()` for more details.
   if (OpCall->getType()->getCanonicalTypeUnqualified() !=
-      underlyingRawPointerType(getReceiverType(OpCall))
+      underlyingRawPointerType(getReceiverIgnoringImpCastsType(OpCall))
           ->getCanonicalTypeUnqualified())
     return;
   if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {

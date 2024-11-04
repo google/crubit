@@ -730,4 +730,28 @@ TEST void unusualSmartPointerType() {
   Ptr.release()->nonConstMemberFunction();
 }
 
+// Similar to `UnusualSmartPointer`, but define the operators in a base class
+// and only mark the child class as a smart pointer.
+template <class T>
+class UnusualSmartPointerBase {
+ public:
+  T operator->() const;
+  std::remove_pointer_t<T> operator*() const;
+  T get() const;
+  T release();
+};
+
+template <class T>
+class _Nullable UnusualSmartPointerOperatorsInBase
+    : public UnusualSmartPointerBase<T>{};
+
+TEST void unusualSmartPointerTypeOperatorsInBase() {
+  UnusualSmartPointerOperatorsInBase<S *> Ptr;
+  // We shouldn't crash while analyzing these calls.
+  Ptr->nonConstMemberFunction();
+  (*Ptr).nonConstMemberFunction();
+  Ptr.get()->nonConstMemberFunction();
+  Ptr.release()->nonConstMemberFunction();
+}
+
 }  // namespace unusual_smart_pointer_type
