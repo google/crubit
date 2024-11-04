@@ -203,6 +203,15 @@ message SlotRange {
   optional ComplexDeclaratorRanges complex_declarator_ranges = 7;
 
   optional bool contains_auto_star = 8;
+
+  // The position of this slot within the TypeLoc from which it was extracted,
+  // counting from outside in, consistent with nullability vector ordering. For
+  // example, for int***, the outermost pointer range will have slot_in_type =
+  // 0, the middle pointer range will have slot_in_type = 1, and the innermost
+  // pointer range (just the `int*`) will have slot_in_type = 2. This is used to
+  // order ranges for source editing purposes, particularly for those with
+  // ComplexDeclaratorRanges.
+  optional uint32 slot_in_type = 9;
 }
 
 // A set of slot ranges and their associated file.
