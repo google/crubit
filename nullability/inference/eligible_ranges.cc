@@ -6,9 +6,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iterator>
 #include <memory>
 #include <optional>
-#include <string_view>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -349,7 +350,7 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
                                     const ASTContext &Context,
                                     const FileID &DeclFID,
                                     const TypeNullabilityDefaults &Defaults,
-                                    TypeLocRanges &Result) {
+                                    std::vector<SlotRange> &Ranges) {
   std::vector<TypeNullabilityLoc> NullabilityLocs =
       getTypeNullabilityLocs(WholeLoc, Defaults);
   std::vector<std::optional<ComplexDeclaratorRanges>>
@@ -402,13 +403,13 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
             ? std::optional(StartingSlot + SlotInLoc)
             : std::nullopt;
 
-    SlotRange *Range = Result.add_range();
-    initSlotRange(*Range, SlotInContext, SlotInLoc, BeginOffset, EndOffset,
+    SlotRange &Range = Ranges.emplace_back();
+    initSlotRange(Range, SlotInContext, SlotInLoc, BeginOffset, EndOffset,
                   Nullability);
     if (Nullability)
       addAnnotationPreAndPostRangeLength(Begin, R->getEnd(), BeginOffset,
                                          EndOffset, DeclFID, SM, LangOpts,
-                                         *Range);
+                                         Range);
 
     // If we don't have a std::nullopt or ComplexDeclaratorRange for every slot,
     // don't add any ComplexDeclaratorRanges. The Decl is a complex declarator
@@ -425,7 +426,7 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
                              [EndOffset](const RemovalRange &Removal) {
                                return Removal.begin() < EndOffset;
                              })) {
-        *Range->mutable_complex_declarator_ranges() = std::move(*CDR);
+        *Range.mutable_complex_declarator_ranges() = std::move(*CDR);
       }
     }
 
@@ -436,51 +437,50 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
         PTL = PointeeTL;
       }
       if (PTL.getPointeeLoc().getAs<AutoTypeLoc>()) {
-        Range->set_contains_auto_star(true);
+        Range.set_contains_auto_star(true);
       }
     }
   }
 }
 
-static bool trySetPath(FileID FID, const SourceManager &SrcMgr,
-                       TypeLocRanges &Ranges) {
+static std::optional<std::string> getPath(FileID FID,
+                                          const SourceManager &SrcMgr) {
   const clang::OptionalFileEntryRef Entry = SrcMgr.getFileEntryRefForID(FID);
-  if (!Entry) return false;
-  Ranges.set_path(std::string_view(
-      llvm::sys::path::remove_leading_dotslash(Entry->getName())));
-  return true;
+  if (!Entry) return std::nullopt;
+  return std::string(
+      llvm::sys::path::remove_leading_dotslash(Entry->getName()));
 }
 
-static void setPragmaNullability(FileID FID,
-                                 const TypeNullabilityDefaults &Defaults,
-                                 TypeLocRanges &Ranges) {
+static std::optional<Nullability> getPragmaNullability(
+    FileID FID, const TypeNullabilityDefaults &Defaults) {
   // Don't use Defaults.get(File) in order to avoid treating a lack of pragma as
   // a pragma setting of Defaults.DefaultNullability.
-  if (!Defaults.FileNullability) return;
+  if (!Defaults.FileNullability) return std::nullopt;
   if (auto It = Defaults.FileNullability->find(FID);
       It != Defaults.FileNullability->end()) {
-    Ranges.set_pragma_nullability(toProtoNullability(It->second));
+    return toProtoNullability(It->second);
   }
+  return std::nullopt;
 }
 
-static std::optional<TypeLocRanges> getEligibleRanges(
+static std::vector<SlotRange> getEligibleRanges(
     const FunctionDecl &Fun, const TypeNullabilityDefaults &Defaults) {
   // NullabilityWalker doesn't work on dependent types.
-  if (Fun.getReturnType()->isDependentType()) return std::nullopt;
+  if (Fun.getReturnType()->isDependentType()) return {};
   for (const auto &Param : Fun.parameters()) {
-    if (Param->getType()->isDependentType()) return std::nullopt;
+    if (Param->getType()->isDependentType()) return {};
   }
   FunctionTypeLoc TyLoc = Fun.getFunctionTypeLoc();
-  if (TyLoc.isNull()) return std::nullopt;
+  if (TyLoc.isNull()) return {};
   const clang::ASTContext &Context = Fun.getParentASTContext();
   const SourceManager &SrcMgr = Context.getSourceManager();
   FileID DeclFID = SrcMgr.getFileID(SrcMgr.getExpansionLoc(Fun.getLocation()));
-  if (!DeclFID.isValid()) return std::nullopt;
+  if (!DeclFID.isValid()) return {};
 
-  TypeLocRanges Result;
-  if (!trySetPath(DeclFID, SrcMgr, Result)) return std::nullopt;
-  setPragmaNullability(DeclFID, Defaults, Result);
+  std::optional<std::string> Path = getPath(DeclFID, SrcMgr);
+  if (!Path) return {};
 
+  std::vector<SlotRange> Result;
   addRangesQualifierAware(nullptr, TyLoc.getReturnLoc(), SLOT_RETURN_TYPE,
                           Context, DeclFID, Defaults, Result);
 
@@ -490,49 +490,62 @@ static std::optional<TypeLocRanges> getEligibleRanges(
                             SLOT_PARAM + I, Context, DeclFID, Defaults, Result);
   }
 
-  if (Result.range().empty()) return std::nullopt;
+  if (Result.empty()) return {};
+
+  std::optional<Nullability> PragmaNullability =
+      getPragmaNullability(DeclFID, Defaults);
+  for (auto &Range : Result) {
+    Range.set_path(*Path);
+    if (PragmaNullability) Range.set_pragma_nullability(*PragmaNullability);
+  }
 
   return Result;
 }
 
-static std::optional<TypeLocRanges> getEligibleRanges(
+static std::vector<SlotRange> getEligibleRanges(
     const DeclaratorDecl &D, const TypeNullabilityDefaults &Defaults) {
   // NullabilityWalker doesn't work on dependent types.
-  if (D.getType()->isDependentType()) return std::nullopt;
+  if (D.getType()->isDependentType()) return {};
   TypeLoc TyLoc = D.getTypeSourceInfo()->getTypeLoc();
-  if (TyLoc.isNull()) return std::nullopt;
+  if (TyLoc.isNull()) return {};
   const clang::ASTContext &Context = D.getASTContext();
   const SourceManager &SrcMgr = Context.getSourceManager();
   FileID DeclFID = SrcMgr.getFileID(SrcMgr.getExpansionLoc(D.getLocation()));
-  if (!DeclFID.isValid()) return std::nullopt;
+  if (!DeclFID.isValid()) return {};
 
-  TypeLocRanges Result;
-  if (!trySetPath(DeclFID, SrcMgr, Result)) return std::nullopt;
-  setPragmaNullability(DeclFID, Defaults, Result);
+  std::optional<std::string> Path = getPath(DeclFID, SrcMgr);
+  if (!Path) return {};
 
+  std::vector<SlotRange> Result;
   addRangesQualifierAware(&D, TyLoc, Slot(0), Context, DeclFID, Defaults,
                           Result);
-  if (Result.range().empty()) return std::nullopt;
+  if (Result.empty()) return {};
 
+  std::optional<Nullability> PragmaNullability =
+      getPragmaNullability(DeclFID, Defaults);
+  for (SlotRange &Range : Result) {
+    Range.set_path(*Path);
+    if (PragmaNullability) Range.set_pragma_nullability(*PragmaNullability);
+  }
   return Result;
 }
 
-std::optional<TypeLocRanges> getEligibleRanges(
+std::vector<SlotRange> getEligibleRanges(
     const Decl &D, const TypeNullabilityDefaults &Defaults) {
   // We'll never be able to edit a written type for an implicit declaration.
-  if (D.isImplicit()) return std::nullopt;
+  if (D.isImplicit()) return {};
   if (const auto *Fun = clang::dyn_cast<FunctionDecl>(&D))
     return getEligibleRanges(*Fun, Defaults);
   if (const auto *Field = clang::dyn_cast<FieldDecl>(&D))
     return getEligibleRanges(*Field, Defaults);
   if (const auto *Var = clang::dyn_cast<VarDecl>(&D))
     return getEligibleRanges(*Var, Defaults);
-  return std::nullopt;
+  return {};
 }
 
-std::optional<TypeLocRanges> getInferenceRanges(
+std::vector<SlotRange> getInferenceRanges(
     const Decl &D, const TypeNullabilityDefaults &Defaults) {
-  if (!isInferenceTarget(D)) return std::nullopt;
+  if (!isInferenceTarget(D)) return {};
   return getEligibleRanges(D, Defaults);
 }
 
@@ -544,7 +557,7 @@ struct Walker : public RecursiveASTVisitor<Walker> {
 
   // Must outlive the walker.
   const TypeNullabilityDefaults &Defaults;
-  std::vector<TypeLocRanges> Out;
+  std::vector<SlotRange> Out;
   std::unique_ptr<LocFilter> LocFilter;
 
   // We can't walk the nullabilities in templates themselves, but walking the
@@ -553,9 +566,10 @@ struct Walker : public RecursiveASTVisitor<Walker> {
 
   template <typename DeclT>
   void insertPointerRanges(absl::Nonnull<const DeclT *> Decl) {
-    if (LocFilter->check(Decl->getBeginLoc()))
-      if (auto Ranges = getEligibleRanges(*Decl, Defaults))
-        Out.push_back(*Ranges);
+    if (!LocFilter->check(Decl->getBeginLoc())) return;
+    std::vector<SlotRange> Ranges = getEligibleRanges(*Decl, Defaults);
+    Out.reserve(Out.size() + Ranges.size());
+    std::move(Ranges.begin(), Ranges.end(), std::back_inserter(Out));
   }
 
   bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
@@ -586,7 +600,7 @@ struct Walker : public RecursiveASTVisitor<Walker> {
 };
 }  // namespace
 
-std::vector<TypeLocRanges> getEligibleRanges(
+std::vector<SlotRange> getEligibleRanges(
     ASTContext &Ctx, const TypeNullabilityDefaults &Defaults,
     bool RestrictToMainFileOrHeader) {
   Walker W(Defaults,

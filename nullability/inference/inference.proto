@@ -188,6 +188,7 @@ message SlotRange {
   optional uint32 slot = 1;
   optional uint64 begin = 2;
   optional uint64 end = 3;
+
   optional Nullability existing_annotation = 4;
   // The length of the source range before the slot that is part of an existing
   // annotation to be potentially removed, e.g. the length of
@@ -212,17 +213,9 @@ message SlotRange {
   // order ranges for source editing purposes, particularly for those with
   // ComplexDeclaratorRanges.
   optional uint32 slot_in_type = 9;
-}
 
-// A set of slot ranges and their associated file.
-message TypeLocRanges {
-  // Path of the file to which the ranges refer.
-  optional string path = 2;
-  // Source ranges of type locations (written types) in `path`. These should be
-  // ordered by slot number to enable predictable edits that may insert multiple
-  // annotations in the same locations, e.g. for applying annotations to nested
-  // pointers.
-  repeated SlotRange range = 3;
+  // Path of the file containing this range.
+  optional string path = 10;
   // The nullability default set by the pragma affecting `path`, if one exists.
-  optional Nullability pragma_nullability = 4;
+  optional Nullability pragma_nullability = 11;
 }
