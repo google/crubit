@@ -463,5 +463,24 @@ TEST(SmartPointerTest, UserDefinedSmartPointerComplexAssignmentOperator) {
   )cc"));
 }
 
+TEST(SmartPointerTest, ArrowOperatorReturnsPointerThatNeedsNullState) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    // Take by reference to avoid an implicit cast of the argument to rvalue.
+    void bar(Nonnull<int *> &A) {}
+
+    class _Nullable CustomSmartIntPtr {
+      using pointer = int *;
+      int *P;
+
+     public:
+      void target() {
+        // We used to crash when requesting the null state for `P` here, which
+        // is implicitly accessed via the arrow operator.
+        bar(P);
+      }
+    };
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

@@ -38,6 +38,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
+#include "clang/Analysis/FlowSensitive/MatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/RecordOps.h"
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
@@ -879,6 +880,16 @@ void transferValue_SmartPointerArrowMemberExpr(
 
   initPointerNullState(*PtrVal, State.Env.getDataflowAnalysisContext(),
                        Nullability);
+
+  // If the result of the arrow access is a pointer, we also need to ensure its
+  // nullability is initialized. Another transfer function may handle this, but
+  // in cases where there's no e.g. ImplicitCastExpr or similar wrapping the
+  // expression, it may be missing null state.
+  if (ME->getType()->isPointerType()) {
+    auto *ExprPtrVal = getPointerValue(ME, State.Env);
+    CHECK(ExprPtrVal != nullptr);
+    initPointerFromTypeNullability(*ExprPtrVal, ME, State);
+  }
 }
 
 void transferValue_Pointer(absl::Nonnull<const Expr *> PointerExpr,
@@ -1918,7 +1929,7 @@ static absl::Nullable<const Formula *> mergeFormulas(
   auto &MergedBool = A.makeAtomRef(A.makeAtom());
   // TODO(b/233582219): Flow conditions are not necessarily mutually
   // exclusive, a fix is in order: https://reviews.llvm.org/D130270. Update
-  // this section when the patch is commited.
+  // this section when the patch is committed.
   auto FC1 = Env1.getFlowConditionToken();
   auto FC2 = Env2.getFlowConditionToken();
   MergedEnv.assume(A.makeOr(
