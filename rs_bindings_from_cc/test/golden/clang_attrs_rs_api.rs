@@ -264,8 +264,9 @@ pub mod template_with_preferred_name {
 
 // namespace template_with_preferred_name
 
-/// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
-/// forward declaration of `basic_string_view` class template.
+/// Based on `llvm/include/c++/v1/string_view` - mimics definition of
+/// `basic_string_view` class template (focusing on the attributes related to the
+/// preferred name).
 #[derive(Clone, Copy)]
 #[repr(C)]
 #[__crubit::annotate(cpp_type = "template_with_preferred_name :: SomeTemplate < int >")]
