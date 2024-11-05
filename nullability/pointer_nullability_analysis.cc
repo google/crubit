@@ -569,8 +569,15 @@ void transferValue_SmartPointerReleaseCall(
   // incorrect.
   if (MCE->getType()->getCanonicalTypeUnqualified() !=
       underlyingRawPointerType(MCE->getObjectType())
-          ->getCanonicalTypeUnqualified())
+          ->getCanonicalTypeUnqualified()) {
+    if (isSupportedRawPointerType(MCE->getType())) {
+      // If the result is a raw pointer (usually the case for `release()`),
+      // ensure the nullability is initialized.
+      if (auto *PointerVal = ensureRawPointerHasValue(MCE, State.Env))
+        initPointerFromTypeNullability(*PointerVal, MCE, State);
+    }
     return;
+  }
 
   RecordStorageLocation *Loc = getImplicitObjectLocation(*MCE, State.Env);
   if (Loc == nullptr) return;
@@ -630,11 +637,18 @@ void transferValue_SmartPointerGetCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   // If the return type isn't what we expect, bail out.
-  // See  transferValue_SmartPointerReleaseCall()` for more details.
+  // See `transferValue_SmartPointerReleaseCall()` for more details.
   if (MCE->getType()->getCanonicalTypeUnqualified() !=
       underlyingRawPointerType(MCE->getObjectType())
-          ->getCanonicalTypeUnqualified())
+          ->getCanonicalTypeUnqualified()) {
+    if (isSupportedRawPointerType(MCE->getType())) {
+      // If the result is a raw pointer (usually the case for `get()`), ensure
+      // the nullability is initialized.
+      if (auto *PointerVal = ensureRawPointerHasValue(MCE, State.Env))
+        initPointerFromTypeNullability(*PointerVal, MCE, State);
+    }
     return;
+  }
   if (Value *Val = getPointerValueFromSmartPointer(
           getImplicitObjectLocation(*MCE, State.Env), State.Env))
     State.Env.setValue(*MCE, *Val);
@@ -667,7 +681,7 @@ void transferValue_SmartPointerOperatorStar(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   // If the return type isn't what we expect, bail out.
-  // See  transferValue_SmartPointerReleaseCall()` for more details.
+  // See `transferValue_SmartPointerReleaseCall()` for more details.
   QualType ReturnType = OpCall->getType();
   if (ReturnType->isReferenceType()) ReturnType = ReturnType->getPointeeType();
   if (ReturnType->getCanonicalTypeUnqualified() !=
@@ -684,11 +698,18 @@ void transferValue_SmartPointerOperatorArrow(
     const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   // If the return type isn't what we expect, bail out.
-  // See  transferValue_SmartPointerReleaseCall()` for more details.
+  // See `transferValue_SmartPointerReleaseCall()` for more details.
   if (OpCall->getType()->getCanonicalTypeUnqualified() !=
       underlyingRawPointerType(getReceiverIgnoringImpCastsType(OpCall))
-          ->getCanonicalTypeUnqualified())
+          ->getCanonicalTypeUnqualified()) {
+    if (isSupportedRawPointerType(OpCall->getType())) {
+      // If the result is a raw pointer (usually the case for `operator->`),
+      // ensure the nullability is initialized.
+      if (auto *PointerVal = ensureRawPointerHasValue(OpCall, State.Env))
+        initPointerFromTypeNullability(*PointerVal, OpCall, State);
+    }
     return;
+  }
   if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
     State.Env.setValue(*OpCall, *Val);
   }

@@ -482,5 +482,43 @@ TEST(SmartPointerTest, ArrowOperatorReturnsPointerThatNeedsNullState) {
   )cc"));
 }
 
+TEST(SmartPointerTest, UnusualSmartPointerTypes) {
+  // This smart pointer type is unusual in that expects its template argument to
+  // be the underlying pointer type, rather than the type that the underlying
+  // smart pointer points to.
+  // Smart pointers that are "unusual" in this way should define a `pointer`
+  // type alias to make it clear what the underlying pointer type is, but if
+  // they omit this, we shouldn't crash.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <type_traits>
+
+    template <class T>
+    class _Nullable UnusualSmartPointer {
+     public:
+      T operator->() const;
+      std::remove_pointer_t<T> operator*() const;
+      T get() const;
+      T release();
+    };
+
+    struct S {
+      void nonConstMemberFunction();
+    };
+
+    void target() {
+      // We'll interpret the default constructor as initializing the smart
+      // pointer to nullptr.
+      // So we know at least (*ptr) is dereferencing a nullptr.
+      // For the other expressions, without the `pointer` type alias, our guess
+      // for the underlying pointer type is incorrect, so we bail out.
+      UnusualSmartPointer<S *> ptr;
+      (*ptr).nonConstMemberFunction();  // [[unsafe]]
+      ptr->nonConstMemberFunction();
+      ptr.get()->nonConstMemberFunction();
+      ptr.release()->nonConstMemberFunction();
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
