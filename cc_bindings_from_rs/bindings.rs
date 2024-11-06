@@ -55,6 +55,10 @@ memoized::query_group! {
         #[input]
         fn crubit_support_path_format(&self) -> Rc<str>;
 
+        /// The default features enabled on all crates, if not present in `crate_name_to_features`.
+        #[input]
+        fn default_features(&self) -> flagset::FlagSet<crubit_feature::CrubitFeature>;
+
         /// A map from a crate name to the include paths of the corresponding C++
         /// headers This is used when formatting a type exported from another
         /// crate.
@@ -231,7 +235,7 @@ fn crate_features(
     } else {
         crate_features.get(db.tcx().crate_name(krate).as_str())
     };
-    features.copied().unwrap_or_default()
+    features.copied().unwrap_or_else(|| db.default_features())
 }
 
 fn check_feature_enabled_on_self_and_all_deps(
@@ -3714,7 +3718,11 @@ fn format_source_location(tcx: TyCtxt, local_def_id: LocalDefId) -> String {
     let google3_prefix = {
         // If rustc_span::FileName isn't a 'real' file, then it's surrounded by by angle
         // brackets, thus don't prepend "google3/" prefix.
-        if file.name.is_real() { "google3/" } else { "" }
+        if file.name.is_real() {
+            "google3/"
+        } else {
+            ""
+        }
     };
     format!("{google3_prefix}{file_name};l={line_number}")
 }
@@ -4570,7 +4578,8 @@ pub mod tests {
         let test_src = "pub fn public_function() {}";
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
-            let expected_comment_txt = "Automatically @generated C++ bindings for the following Rust crate:\n\
+            let expected_comment_txt =
+                "Automatically @generated C++ bindings for the following Rust crate:\n\
                  rust_out\n\
                  Features: experimental, supported";
             assert_cc_matches!(
@@ -6799,7 +6808,8 @@ pub mod tests {
         test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
-            let unsupported_msg = "Error generating bindings for `SomeStruct::fn_taking_reference` \
+            let unsupported_msg =
+                "Error generating bindings for `SomeStruct::fn_taking_reference` \
                                    defined at <crubit_unittests.rs>;l=9: \
                                    Generic functions are not supported yet (b/259749023)";
             assert_cc_matches!(
@@ -8040,7 +8050,8 @@ pub mod tests {
             let main_api = &result.main_api;
             let comment_for_successful_field = " Documentation of `successful_field`.\n\n\
                   Generated from: <crubit_unittests.rs>;l=4";
-            let comment_for_unsupported_field = "Field type has been replaced with a blob of bytes: \
+            let comment_for_unsupported_field =
+                "Field type has been replaced with a blob of bytes: \
                  Generic types are not supported yet (b/259749095)";
             assert_cc_matches!(
                 main_api.tokens,
@@ -10238,6 +10249,7 @@ pub mod tests {
         Database::new(
             tcx,
             /* crubit_support_path_format= */ "<crubit/support/for/tests/{header}>".into(),
+            /* default_features= */ Default::default(),
             /* crate_name_to_include_paths= */ Default::default(),
             /* crate_name_to_features= */
             Rc::new(HashMap::from([(Rc::from("self"), features.into())])),

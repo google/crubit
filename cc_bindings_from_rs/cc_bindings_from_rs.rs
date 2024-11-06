@@ -53,9 +53,16 @@ fn new_db<'tcx>(
     let mut crate_name_to_features =
         <HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new();
     for (crate_name, features) in &cmdline.crate_features {
-        let accumulated_features =
-            crate_name_to_features.entry(crate_name.as_str().into()).or_default();
+        let accumulated_features = crate_name_to_features
+            .entry(crate_name.as_str().into())
+            .or_insert(cmdline.default_crate_features);
         *accumulated_features |= *features
+    }
+    for (crate_name, features) in &cmdline.crate_disabled_features {
+        let accumulated_features = crate_name_to_features
+            .entry(crate_name.as_str().into())
+            .or_insert(cmdline.default_crate_features);
+        *accumulated_features -= *features
     }
     let include_guard = if let Some(include_guard) = &cmdline.h_out_include_guard {
         IncludeGuard::Guard(include_guard.clone())
@@ -70,6 +77,7 @@ fn new_db<'tcx>(
     Database::new(
         tcx,
         crubit_support_path_format,
+        cmdline.default_crate_features,
         crate_name_to_include_paths.into(),
         crate_name_to_features.into(),
         crate_name_to_namespace.into(),
@@ -566,6 +574,62 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
 
         let msg = format!("{err:#}");
         assert_eq!("Error when writing to ../..: Is a directory (os error 21)", msg);
+        Ok(())
+    }
+
+    fn assert_starts_with(data: &str, expected_prefix: &str) {
+        assert!(
+            data.starts_with(expected_prefix),
+            "expected prefix:\n{expected_prefix}\n\nbut got:\n{data}"
+        );
+    }
+
+    #[test]
+    fn test_crate_features() -> Result<()> {
+        let test_args = TestArgs::default_args()?.with_extra_crubit_args(&[
+            "--default-features=supported",
+            "--crate-feature=self=experimental",
+        ]);
+        let test_result = test_args.run()?;
+        let h_body = std::fs::read_to_string(&test_result.h_path)?;
+        assert_starts_with(
+            &h_body,
+            "// Automatically @generated C++ bindings for the following Rust crate:\n\
+            // test_crate\n\
+            // Features: experimental, supported",
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_crate_disabled_features() -> Result<()> {
+        let test_args = TestArgs::default_args()?.with_extra_crubit_args(&[
+            "--default-features=supported,experimental",
+            "--crate-disabled-feature=self=experimental",
+        ]);
+        let test_result = test_args.run()?;
+        let h_body = std::fs::read_to_string(&test_result.h_path)?;
+        assert_starts_with(
+            &h_body,
+            "// Automatically @generated C++ bindings for the following Rust crate:\n\
+            // test_crate\n\
+            // Features: supported",
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_crate_default_features() -> Result<()> {
+        let test_args =
+            TestArgs::default_args()?.with_extra_crubit_args(&["--default-features=supported"]);
+        let test_result = test_args.run()?;
+        let h_body = std::fs::read_to_string(&test_result.h_path)?;
+        assert_starts_with(
+            &h_body,
+            "// Automatically @generated C++ bindings for the following Rust crate:\n\
+            // test_crate\n\
+            // Features: supported",
+        );
         Ok(())
     }
 }
