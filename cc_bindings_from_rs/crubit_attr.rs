@@ -16,45 +16,67 @@ extern crate rustc_span;
 
 use anyhow::{bail, ensure, Result};
 
-use rustc_ast::ast::LitKind;
-use rustc_ast::ast::MetaItemKind;
+use rustc_ast::ast::{LitKind, MetaItemKind};
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 
-/// A `#[__crubit::annotate(...)]` attribute.
+/// A collection of `#[__crubit::annotate(...)]` attributes.
 #[derive(Debug, Default, Clone, PartialEq)]
-pub struct CrubitAttr {
-    /// The C++ type of this is spelled as so.
-    /// For instance,
-    /// `#[__crubit::annotate(cpp_type="std::basic_string<char>")]`
+pub struct CrubitAttrs {
+    /// The spelling of the C++ type of the item.
+    ///
+    /// For example, the following annotation indicates that the C++ type of
+    /// this item should be `std::basic_string<char>`:
+    ///   `#[__crubit::annotate(cpp_type="std::basic_string<char>")]`
     pub cpp_type: Option<Symbol>,
-    // The C++ name of the item. This allows us to rename Rust function names that are
-    // not C++-compatible like `new`.
-    //
-    // For instance,
-    //
-    // ```
-    // #[__crubit::annotate(cpp_name="Create")]
-    // pub fn new() -> i32 {...}
-    // ```
-    //
-    // will rename `new` in Rust to `Create` in C++.
+
+    /// The C++ name of the item. This allows us to rename Rust function names
+    /// that are not C++-compatible like `new`.
+    ///
+    /// For instance, the following annotation indicates that the Rust function
+    /// `new` should be renamed to `Create` in C++:
+    ///
+    /// ```
+    /// #[__crubit::annotate(cpp_name="Create")]
+    /// pub fn new() -> i32 {...}
+    /// ```
     pub cpp_name: Option<Symbol>,
 }
 
-/// Gets the `#[__crubit::annotate(...)]` attribute(s) applied to a definition.
-///
-/// If the definition has no crubit attributes, then an empty (default)
-/// `CrubitAttr` is returned.
-pub fn get(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttr> {
+impl CrubitAttrs {
+    pub const CPP_TYPE: &'static str = "cpp_type";
+    pub const CPP_NAME: &'static str = "cpp_name";
+
+    pub fn get_attr(&self, name: &str) -> Option<Symbol> {
+        match name {
+            CrubitAttrs::CPP_TYPE => self.cpp_type,
+            CrubitAttrs::CPP_NAME => self.cpp_name,
+            _ => panic!("Invalid attribute name: \"{name}\""),
+        }
+    }
+
+    pub fn set_attr(&mut self, name: &str, symbol: Option<Symbol>) {
+        match name {
+            CrubitAttrs::CPP_TYPE => self.cpp_type = symbol,
+            CrubitAttrs::CPP_NAME => self.cpp_name = symbol,
+            _ => panic!("Invalid attribute name: \"{name}\""),
+        }
+    }
+}
+
+/// Returns a CrubitAttrs object containing all the `#[__crubit::annotate(...)]`
+/// attributes of the specified definition.
+pub fn get_attrs(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttrs> {
     // NB: do not make these lazy globals, symbols are per-session and sessions are
     // reset in tests. The resulting test failures are very difficult.
     let crubit_annotate = &[Symbol::intern("__crubit"), Symbol::intern("annotate")];
-    let cpp_type = Symbol::intern("cpp_type");
-    let cpp_name = Symbol::intern("cpp_name");
+    let attr_name_symbol_pairs = [CrubitAttrs::CPP_TYPE, CrubitAttrs::CPP_NAME]
+        .into_iter()
+        .map(|name| (name, Symbol::intern(name)))
+        .collect::<Vec<_>>();
 
-    let mut crubit_attr = CrubitAttr::default();
+    let mut crubit_attrs = CrubitAttrs::default();
     // A quick note: the parsing logic is unfortunate, but such is life. We don't
     // put extra special effort into making the error messages maximally
     // helpful, because they "should never happen": `__crubit::annotate` calls
@@ -74,38 +96,28 @@ pub fn get(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttr> {
                     "Invalid #[__crubit::annotate(...)] attribute (expected nested meta item, not a literal)"
                 );
             };
-            if arg.path == cpp_type {
-                let MetaItemKind::NameValue(value) = &arg.kind else {
-                    bail!("Invalid #[__crubit::annotate(cpp_type=...)] attribute (expected =...)");
-                };
-                let LitKind::Str(s, _raw) = value.kind else {
-                    bail!(
-                        "Invalid #[__crubit::annotate(cpp_type=...)] attribute (expected =\"...\")"
+            for (attr_name, attr_symbol) in attr_name_symbol_pairs.iter() {
+                if arg.path == *attr_symbol {
+                    let bail_message = format!(
+                        "Invalid #[__crubit::annotate({attr_name}=...) attribute (expected =\"...\")"
                     );
-                };
-                ensure!(
-                    crubit_attr.cpp_type.is_none(),
-                    "Unexpected duplicate #[__crubit::annotate(cpp_type=...)]"
-                );
-                crubit_attr.cpp_type = Some(s)
-            } else if arg.path == cpp_name {
-                let MetaItemKind::NameValue(value) = &arg.kind else {
-                    bail!("Invalid #[__crubit::annotate(cpp_name=...)] attribute (expected =...)");
-                };
-                let LitKind::Str(s, _raw) = value.kind else {
-                    bail!(
-                        "Invalid #[__crubit::annotate(cpp_name=...)] attribute (expected =\"...\")"
+
+                    let MetaItemKind::NameValue(value) = &arg.kind else {
+                        bail!(bail_message);
+                    };
+                    let LitKind::Str(s, _raw) = value.kind else {
+                        bail!(bail_message);
+                    };
+                    ensure!(
+                        crubit_attrs.get_attr(attr_name).is_none(),
+                        format!("Unexpected duplicate #[__crubit::annotate({attr_name}=...)]")
                     );
-                };
-                ensure!(
-                    crubit_attr.cpp_name.is_none(),
-                    "Unexpected duplicate #[__crubit::annotate(cpp_name=...)]"
-                );
-                crubit_attr.cpp_name = Some(s);
+                    crubit_attrs.set_attr(attr_name, Some(s));
+                }
             }
         }
     }
-    Ok(crubit_attr)
+    Ok(crubit_attrs)
 }
 
 #[cfg(test)]
@@ -119,8 +131,8 @@ pub mod tests {
                 pub struct SomeStruct;
             "#;
         run_compiler_for_testing(test_src, |tcx| {
-            let attr = get(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
-            assert_eq!(attr, CrubitAttr::default());
+            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
+            assert_eq!(attr, CrubitAttrs::default());
         });
     }
 
@@ -133,8 +145,8 @@ pub mod tests {
                 pub struct SomeStruct;
             "#;
         run_compiler_for_testing(test_src, |tcx| {
-            let attr = get(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
-            assert_eq!(attr, CrubitAttr::default());
+            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
+            assert_eq!(attr, CrubitAttrs::default());
         });
     }
 
@@ -147,7 +159,7 @@ pub mod tests {
                 pub struct SomeStruct;
             "#;
         run_compiler_for_testing(test_src, |tcx| {
-            let attr = get(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
+            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
             assert_eq!(attr.cpp_type.unwrap(), Symbol::intern("A C++ Type"));
         });
     }
@@ -161,7 +173,7 @@ pub mod tests {
                 pub fn new() -> i32 { 0 }
             "#;
         run_compiler_for_testing(test_src, |tcx| {
-            let attr = get(tcx, find_def_id_by_name(tcx, "new")).unwrap();
+            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "new")).unwrap();
             assert_eq!(attr.cpp_name.unwrap(), Symbol::intern("Create"));
         });
     }
@@ -175,7 +187,7 @@ pub mod tests {
                 pub fn new() -> i32 { 0 }
             "#;
         run_compiler_for_testing(test_src, |tcx| {
-            let attr = get(tcx, find_def_id_by_name(tcx, "new"));
+            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "new"));
             assert!(attr.is_err());
         });
     }
@@ -189,7 +201,7 @@ pub mod tests {
                 pub struct SomeStruct;
             "#;
         run_compiler_for_testing(test_src, |tcx| {
-            let attr = get(tcx, find_def_id_by_name(tcx, "SomeStruct"));
+            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "SomeStruct"));
             assert!(attr.is_err());
         });
     }

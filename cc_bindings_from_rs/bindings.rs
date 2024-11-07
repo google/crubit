@@ -553,7 +553,7 @@ impl FullyQualifiedName {
 
         // Crash OK: these attributes are introduced by crubit itself, and "should
         // never" be malformed.
-        let attributes = crubit_attr::get(tcx, def_id).unwrap();
+        let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
         let cpp_type = attributes.cpp_type;
 
         let mut full_path = tcx.def_path(def_id).data; // mod_path + name
@@ -774,7 +774,7 @@ fn create_canonical_name_from_foreign_path(
         segments[1..segment_len - 1].iter().map(|s| Rc::<str>::from(s.ident.name.as_str())),
     );
     let cpp_ns_path = rs_mod_path.clone();
-    let attributes = crubit_attr::get(tcx, *def_id).unwrap();
+    let attributes = crubit_attr::get_attrs(tcx, *def_id).unwrap();
     let cpp_type = attributes.cpp_type;
     Some((
         *def_id,
@@ -878,7 +878,7 @@ fn reexported_symbol_canonical_name_mapping(
         let cpp_ns_path = NamespaceQualifier::new(
             full_path_strs.into_iter().chain([Rc::from("__crubit_internal")]),
         );
-        let attributes = crubit_attr::get(tcx, aliased_entity_def_id).unwrap();
+        let attributes = crubit_attr::get_attrs(tcx, aliased_entity_def_id).unwrap();
         let cpp_type = attributes.cpp_type;
         Some(FullyQualifiedName {
             cpp_name: Some(item_name),
@@ -3764,7 +3764,7 @@ fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Opt
         },
         Item { kind: ItemKind::Fn(..), .. } => db.format_fn(def_id).map(Some),
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } => {
-            let attributes = crubit_attr::get(tcx, def_id.to_def_id()).unwrap();
+            let attributes = crubit_attr::get_attrs(tcx, def_id.to_def_id()).unwrap();
             if let Some(cpp_type) = attributes.cpp_type {
                 let item_name = tcx.def_path_str(def_id.to_def_id());
                 bail!(
