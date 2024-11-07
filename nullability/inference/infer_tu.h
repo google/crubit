@@ -5,8 +5,9 @@
 #ifndef CRUBIT_NULLABILITY_INFERENCE_INFER_TU_H_
 #define CRUBIT_NULLABILITY_INFERENCE_INFER_TU_H_
 
-#include <vector>
+#include <string>
 
+#include "absl/container/flat_hash_map.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/pragma.h"
 #include "clang/AST/ASTContext.h"
@@ -14,7 +15,10 @@
 #include "llvm/ADT/STLFunctionalExtras.h"
 
 namespace clang::tidy::nullability {
-struct EvidenceSites;
+
+// Map from USR to a map from slot number to an inference for that slot.
+using InferenceResults =
+    absl::flat_hash_map<std::string, absl::flat_hash_map<Slot, SlotInference>>;
 
 // Performs nullability inference within the scope of a single translation unit.
 //
@@ -23,7 +27,7 @@ struct EvidenceSites;
 // It also lets us write tests for the whole inference system.
 //
 // If Filter is provided, only considers decls that return true.
-std::vector<Inference> inferTU(
+InferenceResults inferTU(
     ASTContext &, const NullabilityPragmas &, unsigned Iterations = 1,
     llvm::function_ref<bool(const Decl &)> Filter = nullptr);
 

@@ -5,8 +5,10 @@
 #include "nullability/inference/infer_tu.h"
 
 #include <optional>
+#include <string>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/pragma.h"
@@ -26,25 +28,30 @@
 
 namespace clang::tidy::nullability {
 namespace {
-using ast_matchers::hasName;
-using testing::_;
-using testing::ElementsAre;
-using testing::IsSupersetOf;
-using testing::UnorderedElementsAre;
+using ::clang::ast_matchers::hasName;
+using ::testing::_;
+using ::testing::ElementsAre;
+using ::testing::Eq;
+using ::testing::IsSupersetOf;
+using ::testing::UnorderedElementsAre;
 
 test::EnableSmartPointers Enable;
 
 MATCHER_P2(inferredSlot, I, Nullability, "") {
-  return arg.slot() == I && arg.nullability() == Nullability;
+  return testing::ExplainMatchResult(Eq(I), arg.first, result_listener) &&
+         testing::ExplainMatchResult(Eq(Nullability), arg.second.nullability(),
+                                     result_listener);
 }
 MATCHER_P3(inferredSlot, I, Nullability, Conflict, "") {
-  return arg.slot() == I && arg.nullability() == Nullability &&
-         arg.conflict() == Conflict;
+  return testing::ExplainMatchResult(Eq(I), arg.first, result_listener) &&
+         testing::ExplainMatchResult(Eq(Nullability), arg.second.nullability(),
+                                     result_listener) &&
+         testing::ExplainMatchResult(Eq(Conflict), arg.second.conflict(),
+                                     result_listener);
 }
 MATCHER_P2(inferenceMatcher, USR, SlotsMatcher, "") {
-  if (arg.symbol().usr() != USR) return false;
-  return testing::ExplainMatchResult(SlotsMatcher, arg.slot_inference(),
-                                     result_listener);
+  return testing::ExplainMatchResult(Eq(USR), arg.first, result_listener) &&
+         testing::ExplainMatchResult(SlotsMatcher, arg.second, result_listener);
 }
 
 AST_MATCHER(Decl, isCanonical) { return Node.isCanonicalDecl(); }
@@ -60,14 +67,17 @@ class InferTUTest : public ::testing::Test {
 
   auto infer() { return inferTU(AST->context(), Pragmas); }
 
-  // Returns a matcher for an Inference.
+  // Returns a matcher for an InferenceResults entry.
   // The DeclMatcher should uniquely identify the symbol being described.
   // (We use this to compute the USR we expect to find in the inference proto).
   // Slots should describe the slots that were inferred.
   template <typename MatcherT>
-  testing::Matcher<const Inference &> inference(
+  testing::Matcher<
+      std::pair<std::string, absl::flat_hash_map<Slot, SlotInference>>>
+  inference(
       MatcherT DeclMatcher,
-      std::vector<testing::Matcher<const Inference::SlotInference &>> Slots) {
+      std::vector<testing::Matcher<std::pair<Slot, const SlotInference &>>>
+          Slots) {
     llvm::SmallString<128> USR;
     auto Matches = ast_matchers::match(
         ast_matchers::namedDecl(isCanonical(), DeclMatcher).bind("decl"),
@@ -75,7 +85,7 @@ class InferTUTest : public ::testing::Test {
     EXPECT_EQ(Matches.size(), 1);
     if (auto *D = ast_matchers::selectFirst<Decl>("decl", Matches))
       EXPECT_FALSE(index::generateUSRForDecl(D, USR));
-    return inferenceMatcher(USR, testing::ElementsAreArray(Slots));
+    return inferenceMatcher(USR, testing::UnorderedElementsAreArray(Slots));
   }
 };
 
@@ -107,7 +117,7 @@ TEST_F(InferTUTest, Samples) {
   ASSERT_THAT(Results,
               ElementsAre(inference(hasName("target"),
                                     {inferredSlot(1, Nullability::NONNULL)})));
-  EXPECT_THAT(Results.front().slot_inference(0).sample_evidence(),
+  EXPECT_THAT(Results.begin()->second[Slot(1)].sample_evidence(),
               testing::UnorderedElementsAre(
                   EqualsProto(R"pb(location: "input.cc:2:30"
                                    kind: NONNULL_ARGUMENT)pb"),

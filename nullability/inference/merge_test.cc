@@ -24,7 +24,7 @@ T proto(llvm::StringRef Text) {
   return Result;
 }
 
-TEST(MergeEvidenceTest, PartialFromEvidence) {
+TEST(PartialFromEvidenceTest, ContainsEvidenceInfo) {
   EXPECT_THAT(partialFromEvidence(proto<Evidence>(R"pb(
                 symbol { usr: "func" }
                 slot: 1
@@ -32,151 +32,145 @@ TEST(MergeEvidenceTest, PartialFromEvidence) {
                 location: "foo.cc:42"
               )pb")),
               EqualsProto(R"pb(
-                symbol { usr: "func" }
-                slot {}
-                slot {
-                  kind_count { key: 3 value: 1 }
-                  kind_samples {
-                    key: 3
-                    value { location: "foo.cc:42" }
-                  }
+                kind_count { key: 3 value: 1 }
+                kind_samples {
+                  key: 3
+                  value { location: "foo.cc:42" }
                 }
               )pb"));
 }
 
-TEST(MergeEvidenceTest, MergePartials) {
-  auto L = proto<Partial>(R"pb(
-    symbol { usr: "func" }
-    slot {
-      kind_count { key: 1 value: 1 }
-      kind_count { key: 0 value: 2 }
-      kind_samples {
-        key: 0
-        value { location: "a" location: "b" }
-      }
+TEST(MergePartialsTest, BothContainEvidence) {
+  auto L = proto<SlotPartial>(R"pb(
+    kind_count { key: 1 value: 1 }
+    kind_count { key: 0 value: 2 }
+    kind_samples {
+      key: 0
+      value { location: "a" location: "b" }
     }
-    slot { kind_count { key: 0 value: 1 } }
   )pb");
-
-  auto R = proto<Partial>(R"pb(
-    symbol { usr: "func" }
-    slot {
-      kind_count { key: 2 value: 1 }
-      kind_count { key: 0 value: 2 }
-      kind_samples {
-        key: 0
-        value { location: "c" location: "a" location: "d" }
-      }
-    }
-    slot {}
-    slot { kind_count { key: 3 value: 1 } }
-  )pb");
+  auto R = proto<SlotPartial>(
+      R"pb(kind_count { key: 2 value: 1 }
+           kind_count { key: 0 value: 2 }
+           kind_samples {
+             key: 0
+             value { location: "c" location: "a" location: "d" }
+           })pb");
 
   mergePartials(L, R);
   EXPECT_THAT(L, EqualsProto(R"pb(
-                symbol { usr: "func" }
-                slot {
-                  kind_count { key: 0 value: 4 }
-                  kind_count { key: 2 value: 1 }
-                  kind_count { key: 1 value: 1 }
-                  kind_samples {
-                    key: 0
-                    value { location: "a" location: "b" location: "c" }
-                  }
+                kind_count { key: 0 value: 4 }
+                kind_count { key: 2 value: 1 }
+                kind_count { key: 1 value: 1 }
+                kind_samples {
+                  key: 0
+                  value { location: "a" location: "b" location: "c" }
                 }
-                slot { kind_count { key: 0 value: 1 } }
-                slot { kind_count { key: 3 value: 1 } }
               )pb"));
 }
 
-TEST(MergeEvidenceTest, Finalize) {
-  EXPECT_THAT(finalize(proto<Partial>(R"pb(
-                symbol { usr: "func" }
-                slot {
-                  kind_count { key: 1 value: 1 }  # ANNOTATED_NULLABLE
-                  kind_count { key: 2 value: 1 }  # ANNOTATED_NONNULL
-                  kind_samples {
-                    key: 1
-                    value { location: "decl" }
-                  }
-                  kind_samples {
-                    key: 2
-                    value { location: "def" }
-                  }
+TEST(MergePartialsTest, RightEmpty) {
+  auto L = proto<SlotPartial>(R"pb(kind_count { key: 0 value: 1 })pb");
+  SlotPartial R;
+  mergePartials(L, R);
+  EXPECT_THAT(L, EqualsProto(L));
+}
+
+TEST(MergePartialsTest, LeftEmpty) {
+  SlotPartial L;
+  auto R = proto<SlotPartial>(R"pb(kind_count { key: 3 value: 1 })pb");
+  mergePartials(L, R);
+  EXPECT_THAT(L, EqualsProto(R));
+}
+
+TEST(FinalizeTest, ConflictingAnnotations) {
+  EXPECT_THAT(finalize(proto<SlotPartial>(R"pb(
+                kind_count { key: 1 value: 1 }  # ANNOTATED_NULLABLE
+                kind_count { key: 2 value: 1 }  # ANNOTATED_NONNULL
+                kind_samples {
+                  key: 1
+                  value { location: "decl" }
                 }
-                slot {}
-                slot {
-                  kind_count { key: 3 value: 1 }  # UNCHECKED_DEREFERENCE
+                kind_samples {
+                  key: 2
+                  value { location: "def" }
                 }
-                slot { kind_count { key: 0 value: 1 } }  # ANNOTATED_UNKNOWN
-                slot { kind_count { key: 1 value: 1 } }  # ANNOTATED_NULLABLE
               )pb")),
               EqualsProto(R"pb(
-                symbol { usr: "func" }
-                slot_inference {
-                  slot: 0
-                  nullability: UNKNOWN
-                  conflict: true
-                  sample_evidence { kind: ANNOTATED_NULLABLE location: "decl" }
-                  sample_evidence { kind: ANNOTATED_NONNULL location: "def" }
-                }
-                slot_inference { slot: 2 nullability: NONNULL }
-                slot_inference { slot: 3 nullability: UNKNOWN }
-                slot_inference { slot: 4 nullability: NULLABLE trivial: true }
+                nullability: UNKNOWN
+                conflict: true
+                sample_evidence { kind: ANNOTATED_NULLABLE location: "decl" }
+                sample_evidence { kind: ANNOTATED_NONNULL location: "def" }
               )pb"));
+}
+
+TEST(FinalizeTest, Empty) {
+  EXPECT_THAT(finalize(SlotPartial()), EqualsProto(SlotInference()));
+}
+
+TEST(FinalizeTest, TypicalEvidence) {
+  EXPECT_THAT(finalize(proto<SlotPartial>(R"pb(
+                kind_count { key: 3 value: 1 }  # UNCHECKED_DEREFERENCE
+              )pb")),
+              EqualsProto(R"pb(nullability: NONNULL)pb"));
+}
+
+TEST(FinalizeTest, AnnotatedUnknown) {
+  EXPECT_THAT(finalize(proto<SlotPartial>(R"pb(
+                kind_count { key: 0 value: 1 }  # ANNOTATED_UNKNOWN
+              )pb")),
+              EqualsProto(R"pb(nullability: UNKNOWN)pb"));
+}
+
+TEST(FinalizeTest, AnnotatedNonUnknown) {
+  EXPECT_THAT(finalize(proto<SlotPartial>(R"pb(
+                kind_count { key: 1 value: 1 }  # ANNOTATED_NULLABLE
+              )pb")),
+              EqualsProto(R"pb(nullability: NULLABLE trivial: true)pb"));
 }
 
 TEST(MergeEvidenceTest, TreeShapedMerge) {
-  Partial P1 =
-      partialFromEvidence(proto<Evidence>("slot: 0 "
-                                          "kind: ANNOTATED_NULLABLE"));
-  Partial P2 =
-      partialFromEvidence(proto<Evidence>("slot: 2 "
-                                          "kind: UNCHECKED_DEREFERENCE"));
-  Partial P3 =
-      partialFromEvidence(proto<Evidence>("slot: 4 "
-                                          "kind: ANNOTATED_NULLABLE"));
-  Partial P4 =
-      partialFromEvidence(proto<Evidence>("slot: 0 "
-                                          "kind: ANNOTATED_NONNULL"));
+  SlotPartial P1 = partialFromEvidence(
+      proto<Evidence>(R"pb(kind: ASSIGNED_FROM_UNKNOWN)pb"));
+  SlotPartial P2 = partialFromEvidence(
+      proto<Evidence>(R"pb(kind: ASSIGNED_FROM_NONNULL)pb"));
+  SlotPartial P3 = partialFromEvidence(
+      proto<Evidence>(R"pb(kind: GCC_NONNULL_ATTRIBUTE)pb"));
+  SlotPartial P4 = partialFromEvidence(
+      proto<Evidence>(R"pb(kind: ASSIGNED_FROM_NULLABLE)pb"));
 
-  auto IsExpected = EqualsProto(R"pb(
-    symbol {}
-    slot_inference { slot: 0 nullability: UNKNOWN conflict: true }
-    slot_inference { slot: 2 nullability: NONNULL }
-    slot_inference { slot: 4 nullability: NULLABLE trivial: true }
-  )pb");
+  auto Expected = EqualsProto(R"pb(nullability: NULLABLE)pb");
 
   EXPECT_THAT(
       [&] {
-        Partial P = P1;
+        SlotPartial P = P1;
         mergePartials(P, P2);
         mergePartials(P, P3);
         mergePartials(P, P4);
         return finalize(P);
       }(),
-      IsExpected);
+      Expected);
 
   EXPECT_THAT(
       [&] {
-        Partial P = P4;
+        SlotPartial P = P4;
         mergePartials(P, P3);
         mergePartials(P, P2);
         mergePartials(P, P1);
         return finalize(P);
       }(),
-      IsExpected);
+      Expected);
 
   EXPECT_THAT(
       [&] {
-        Partial PA = P1;
+        SlotPartial PA = P1;
         mergePartials(PA, P2);
-        Partial PB = P3;
+        SlotPartial PB = P3;
         mergePartials(PB, P4);
         mergePartials(PA, PB);
         return finalize(PA);
       }(),
-      IsExpected);
+      Expected);
 }
 
 class InferTest : public ::testing::Test {

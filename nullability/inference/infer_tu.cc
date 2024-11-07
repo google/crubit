@@ -32,10 +32,10 @@ class InferenceManager {
                    const NullabilityPragmas& Pragmas)
       : Ctx(Ctx), Iterations(Iterations), Filter(Filter), Pragmas(Pragmas) {}
 
-  std::vector<Inference> inferenceRound(
+  InferenceResults inferenceRound(
       EvidenceSites Sites, USRCache USRCache,
       PreviousInferences InferencesFromLastRound) const {
-    std::vector<Inference> AllInference;
+    InferenceResults AllInference;
     std::vector<Evidence> AllEvidence;
 
     // Collect all evidence.
@@ -53,24 +53,28 @@ class InferenceManager {
                      << toString(std::move(Err)) << "\n";
       }
     }
-    // Group by symbol.
+    // Group by symbol and then slot number.
     llvm::sort(AllEvidence, [&](const Evidence& L, const Evidence& R) {
-      return L.symbol().usr() < R.symbol().usr();
+      if (L.symbol().usr() != R.symbol().usr())
+        return L.symbol().usr() < R.symbol().usr();
+      return L.slot() < R.slot();
     });
-    // For each symbol, combine evidence into an inference.
+    // For each symbol, for each slot, combine evidence into an inference.
     llvm::ArrayRef<Evidence> RemainingEvidence = AllEvidence;
 
     while (!RemainingEvidence.empty()) {
       auto Batch = RemainingEvidence.take_while([&](const Evidence& E) {
-        return E.symbol().usr() == RemainingEvidence.front().symbol().usr();
+        return E.symbol().usr() == RemainingEvidence.front().symbol().usr() &&
+               E.slot() == RemainingEvidence.front().slot();
       });
       RemainingEvidence = RemainingEvidence.drop_front(Batch.size());
-      AllInference.push_back(mergeEvidence(Batch));
+      AllInference[Batch.front().symbol().usr()][Slot(Batch.front().slot())] =
+          mergeEvidence(Batch);
     }
     return AllInference;
   }
 
-  std::vector<Inference> iterativelyInfer() const {
+  InferenceResults iterativelyInfer() const {
     if (!Ctx.getLangOpts().CPlusPlus) {
       llvm::errs() << "Skipping non-C++ input file: "
                    << Ctx.getSourceManager()
@@ -78,28 +82,26 @@ class InferenceManager {
                               Ctx.getSourceManager().getMainFileID())
                           ->getName()
                    << "\n";
-      return std::vector<Inference>();
+      return InferenceResults();
     }
     auto Sites = EvidenceSites::discover(Ctx);
     USRCache USRCache;
 
-    std::vector<Inference> AllInference = inferenceRound(Sites, USRCache, {});
+    InferenceResults AllInference = inferenceRound(Sites, USRCache, {});
 
     for (unsigned Iteration = 1; Iteration < Iterations; ++Iteration) {
       llvm::DenseSet<SlotFingerprint> NullableFromLastRound;
       llvm::DenseSet<SlotFingerprint> NonnullFromLastRound;
 
-      for (const auto& Inference : AllInference) {
-        for (const auto& SlotInference : Inference.slot_inference()) {
+      for (const auto& [USR, Inferences] : AllInference) {
+        for (const auto& [Slot, SlotInference] : Inferences) {
           if (SlotInference.trivial() || SlotInference.conflict()) continue;
           switch (SlotInference.nullability()) {
             case Nullability::NULLABLE:
-              NullableFromLastRound.insert(
-                  fingerprint(Inference.symbol().usr(), SlotInference.slot()));
+              NullableFromLastRound.insert(fingerprint(USR, Slot));
               break;
             case Nullability::NONNULL:
-              NonnullFromLastRound.insert(
-                  fingerprint(Inference.symbol().usr(), SlotInference.slot()));
+              NonnullFromLastRound.insert(fingerprint(USR, Slot));
               break;
             default:
               break;
@@ -121,10 +123,9 @@ class InferenceManager {
 };
 }  // namespace
 
-std::vector<Inference> inferTU(ASTContext& Ctx,
-                               const NullabilityPragmas& Pragmas,
-                               unsigned Iterations,
-                               llvm::function_ref<bool(const Decl&)> Filter) {
+InferenceResults inferTU(ASTContext& Ctx, const NullabilityPragmas& Pragmas,
+                         unsigned Iterations,
+                         llvm::function_ref<bool(const Decl&)> Filter) {
   return InferenceManager(Ctx, Iterations, Filter, Pragmas).iterativelyInfer();
 }
 

@@ -15,6 +15,7 @@
 #include <utility>
 
 #include "absl/base/nullability.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
 #include "nullability/inference/ctn_replacement_macros.h"
@@ -36,9 +37,7 @@
 #include "clang/Tooling/ArgumentsAdjusters.h"
 #include "clang/Tooling/Execution.h"
 #include "clang/Tooling/Tooling.h"
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
@@ -99,18 +98,19 @@ namespace {
 // Walks the AST looking for declarations of symbols we inferred.
 // When it finds them, prints the inference as diagnostics.
 class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
-  llvm::DenseMap<llvm::StringRef, absl::Nonnull<const Inference *>>
-      InferenceByUSR;
+  InferenceResults InferencesByUSR;
   DiagnosticsEngine &Diags;
   unsigned DiagInferHere;
   unsigned DiagSample;
 
-  void render(const Inference &I, const Decl &D) {
-    for (const auto &Slot : I.slot_inference()) {
+  void render(const absl::flat_hash_map<Slot, SlotInference> &InferencesBySlot,
+              const Decl &D) {
+    for (const auto &[Slot, SlotInference] : InferencesBySlot) {
+      if (!IncludeTrivial && SlotInference.trivial()) continue;
       Diags.Report(D.getLocation(), DiagInferHere)
-          << slotName(Slot.slot(), D) << Nullability_Name(Slot.nullability());
+          << slotName(Slot, D) << Nullability_Name(SlotInference.nullability());
       if (PrintEvidence) {
-        for (const auto &Sample : Slot.sample_evidence()) {
+        for (const auto &Sample : SlotInference.sample_evidence()) {
           if (SourceLocation Loc = parseLoc(Sample.location()); Loc.isValid())
             Diags.Report(Loc, DiagSample) << Evidence::Kind_Name(Sample.kind());
         }
@@ -148,9 +148,8 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
   }
 
  public:
-  DiagnosticPrinter(llvm::ArrayRef<Inference> All, DiagnosticsEngine &Diags)
+  DiagnosticPrinter(InferenceResults All, DiagnosticsEngine &Diags)
       : Diags(Diags) {
-    for (const auto &I : All) InferenceByUSR.try_emplace(I.symbol().usr(), &I);
     DiagInferHere = Diags.getCustomDiagID(DiagnosticsEngine::Remark,
                                           "would mark %0 as %1 here");
     DiagSample = Diags.getCustomDiagID(DiagnosticsEngine::Note, "%0 here");
@@ -158,8 +157,12 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
 
   bool VisitDecl(absl::Nonnull<const Decl *> FD) {
     llvm::SmallString<128> USR;
-    if (!index::generateUSRForDecl(FD, USR))
-      if (auto *I = InferenceByUSR.lookup(USR)) render(*I, *FD);
+    if (!index::generateUSRForDecl(FD, USR)) {
+      if (auto It = InferencesByUSR.find(USR.str());
+          It != InferencesByUSR.end()) {
+        render(It->second, *FD);
+      }
+    }
     return true;
   }
 };
@@ -224,28 +227,30 @@ class Action : public SyntaxOnlyAction {
       void HandleTranslationUnit(ASTContext &Ctx) override {
         llvm::errs() << "Running inference...\n";
 
-        auto Results = inferTU(Ctx, Pragmas, Iterations, DeclFilter());
-        if (!IncludeTrivial)
-          llvm::erase_if(Results, [](Inference &I) {
-            llvm::erase_if(
-                *I.mutable_slot_inference(),
-                [](const Inference::SlotInference &S) { return S.trivial(); });
-            return I.slot_inference_size() == 0;
-          });
-        if (PrintProtos)
-          for (const auto &I : Results) llvm::outs() << absl::StrCat(I) << "\n";
+        InferenceResults Results =
+            inferTU(Ctx, Pragmas, Iterations, DeclFilter());
+        if (PrintProtos) {
+          for (const auto &[USR, InferencesBySlot] : Results) {
+            llvm::outs() << "USR: " << absl::StrCat(USR) << "\n";
+            for (const auto &[Slot, SlotInference] : InferencesBySlot) {
+              llvm::outs() << "Slot: " << Slot << "\n";
+              llvm::outs() << "Inference:\n"
+                           << absl::StrCat(SlotInference) << "\n";
+            }
+          }
+        }
         if (PrintMetrics) {
           unsigned Nonnull = 0;
           unsigned Nullable = 0;
           unsigned Unknown = 0;
           unsigned Conflict = 0;
-          for (const auto &I : Results) {
-            for (const auto &Slot : I.slot_inference()) {
-              if (Slot.conflict()) {
+          for (const auto &[_, InferencesBySlot] : Results) {
+            for (const auto &[Slot, SlotInference] : InferencesBySlot) {
+              if (SlotInference.conflict()) {
                 ++Conflict;
                 continue;
               }
-              switch (Slot.nullability()) {
+              switch (SlotInference.nullability()) {
                 case Nullability::NULLABLE:
                   ++Nullable;
                   break;
@@ -271,7 +276,8 @@ class Action : public SyntaxOnlyAction {
                        << "%\n";
         }
         if (Diagnostics)
-          DiagnosticPrinter(Results, Ctx.getDiagnostics()).TraverseAST(Ctx);
+          DiagnosticPrinter(std::move(Results), Ctx.getDiagnostics())
+              .TraverseAST(Ctx);
       }
     };
     return std::make_unique<Consumer>(Pragmas);

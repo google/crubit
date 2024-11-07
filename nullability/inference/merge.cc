@@ -16,8 +16,8 @@
 namespace clang::tidy::nullability {
 namespace {
 
-static void mergeSampleLocations(Partial::SampleLocations &LHS,
-                                 const Partial::SampleLocations &RHS) {
+static void mergeSampleLocations(SlotPartial::SampleLocations &LHS,
+                                 const SlotPartial::SampleLocations &RHS) {
   static constexpr unsigned Limit = 3;
   // We don't care which we pick, but they should be unique.
   // Multiple instantiations of the same template are not interesting.
@@ -28,66 +28,49 @@ static void mergeSampleLocations(Partial::SampleLocations &LHS,
   }
 }
 
-static void mergeSlotPartials(Partial::SlotPartial &LHS,
-                              const Partial::SlotPartial &RHS) {
+}  // namespace
+
+SlotPartial partialFromEvidence(const Evidence &E) {
+  SlotPartial P;
+  ++(*P.mutable_kind_count())[E.kind()];
+  if (E.has_location())
+    (*P.mutable_kind_samples())[E.kind()].add_location(E.location());
+  return P;
+}
+
+void mergePartials(SlotPartial &LHS, const SlotPartial &RHS) {
   for (auto [Kind, Count] : RHS.kind_count())
     (*LHS.mutable_kind_count())[Kind] += Count;
   for (const auto &[Kind, Samples] : RHS.kind_samples())
     mergeSampleLocations((*LHS.mutable_kind_samples())[Kind], Samples);
 }
 
-}  // namespace
+// Form a nullability conclusion from a set of evidence.
+SlotInference finalize(const SlotPartial &P) {
+  SlotInference Inference;
+  if (P.kind_count_size() == 0) return Inference;
 
-Partial partialFromEvidence(const Evidence &E) {
-  Partial P;
-  *P.mutable_symbol() = E.symbol();
-  // We want to set P.slot[E.slot], so populate previous slots.
-  while (P.slot_size() < E.slot()) P.add_slot();
-  auto *S = P.add_slot();
-  ++(*S->mutable_kind_count())[E.kind()];
-  if (E.has_location())
-    (*S->mutable_kind_samples())[E.kind()].add_location(E.location());
-  return P;
-}
-
-void mergePartials(Partial &LHS, const Partial &RHS) {
-  CHECK_EQ(LHS.symbol().usr(), RHS.symbol().usr());
-  auto *Slots = LHS.mutable_slot();
-  while (RHS.slot_size() > Slots->size()) Slots->Add();
-  for (unsigned I = 0; I < RHS.slot_size(); ++I)
-    mergeSlotPartials(*LHS.mutable_slot(I), RHS.slot(I));
-}
-
-// Form nullability conclusions from a set of evidence.
-Inference finalize(const Partial &P) {
-  Inference Result;
-  *Result.mutable_symbol() = P.symbol();
-  for (unsigned I = 0; I < P.slot_size(); ++I) {
-    if (P.slot(I).kind_count_size() == 0) continue;
-    auto &Slot = *Result.add_slot_inference();
-    Slot.set_slot(I);
-
-    // Reconstitute samples, if we have them.
-    for (const auto &[Kind, Samples] : P.slot(I).kind_samples()) {
-      for (const auto &Loc : Samples.location()) {
-        auto *Sample = Slot.add_sample_evidence();
-        Sample->set_location(Loc);
-        Sample->set_kind(static_cast<Evidence::Kind>(Kind));
-      }
+  // Reconstitute samples, if we have them.
+  for (const auto &[Kind, Samples] : P.kind_samples()) {
+    for (const auto &Loc : Samples.location()) {
+      auto *Sample = Inference.add_sample_evidence();
+      Sample->set_location(Loc);
+      Sample->set_kind(static_cast<Evidence::Kind>(Kind));
     }
-    llvm::stable_sort(*Slot.mutable_sample_evidence(), [&](auto &L, auto &R) {
-      return std::forward_as_tuple(L.kind(), L.location()) <
-             std::forward_as_tuple(R.kind(), R.location());
-    });
-
-    std::array<unsigned, Evidence::Kind_MAX + 1> KindCounts = {};
-    for (auto [Kind, Count] : P.slot(I).kind_count()) KindCounts[Kind] = Count;
-    auto Result = infer(KindCounts);
-    Slot.set_nullability(Result.Nullability);
-    if (Result.Conflict) Slot.set_conflict(true);
-    if (Result.Trivial) Slot.set_trivial(true);
   }
-  return Result;
+  llvm::stable_sort(*Inference.mutable_sample_evidence(),
+                    [&](auto &L, auto &R) {
+                      return std::forward_as_tuple(L.kind(), L.location()) <
+                             std::forward_as_tuple(R.kind(), R.location());
+                    });
+
+  std::array<unsigned, Evidence::Kind_MAX + 1> KindCounts = {};
+  for (auto [Kind, Count] : P.kind_count()) KindCounts[Kind] = Count;
+  auto Result = infer(KindCounts);
+  Inference.set_nullability(Result.Nullability);
+  if (Result.Conflict) Inference.set_conflict(true);
+  if (Result.Trivial) Inference.set_trivial(true);
+  return Inference;
 }
 
 namespace {
