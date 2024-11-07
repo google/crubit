@@ -682,13 +682,23 @@ void transferValue_SmartPointerOperatorStar(
     TransferState<PointerNullabilityLattice> &State) {
   // If the return type isn't what we expect, bail out.
   // See `transferValue_SmartPointerReleaseCall()` for more details.
+  // Besides incorrectly guessing the underlyingRawPointerType, we could also
+  // encounter this if the return type is not the pointee type, or reference
+  // to the pointee type (e.g., if it is instead the pointer type).
   QualType ReturnType = OpCall->getType();
   if (ReturnType->isReferenceType()) ReturnType = ReturnType->getPointeeType();
   if (ReturnType->getCanonicalTypeUnqualified() !=
       underlyingRawPointerType(getReceiverIgnoringImpCastsType(OpCall))
           ->getPointeeType()
-          ->getCanonicalTypeUnqualified())
+          ->getCanonicalTypeUnqualified()) {
+    if (isSupportedRawPointerType(ReturnType)) {
+      // If the result is a raw pointer (unusual for `operator*()` but
+      // possible), ensure the nullability is initialized.
+      if (auto *PointerVal = ensureRawPointerHasValue(OpCall, State.Env))
+        initPointerFromTypeNullability(*PointerVal, OpCall, State);
+    }
     return;
+  }
   if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
     State.Env.setStorageLocation(*OpCall, Val->getPointeeLoc());
   }

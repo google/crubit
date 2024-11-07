@@ -520,5 +520,26 @@ TEST(SmartPointerTest, UnusualSmartPointerTypes) {
   )cc"));
 }
 
+TEST(SmartPointerTest, OperatorStarReturnsPointer) {
+  // This smart pointer type is unusual in that `operator*` returns a pointer
+  // (while standard smart pointers like `std::unique_ptr` return a reference to
+  // the pointee)
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <class T>
+    class _Nullable UnusualSmartPointer {
+      using pointer = T*;
+
+     public:
+      T* operator*() const;
+    };
+
+    struct S {
+      void nonConstMemberFunction();
+    };
+
+    void target(UnusualSmartPointer<S> ptr) { (*ptr)->nonConstMemberFunction(); }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
