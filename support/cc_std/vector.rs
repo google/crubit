@@ -5,6 +5,8 @@
 #![feature(cfg_sanitize)]
 #[cfg(sanitize = "address")]
 use std::ffi::c_void;
+use std::mem::ManuallyDrop;
+use std::ops::RangeBounds;
 use std::ops::{Deref, DerefMut};
 use std::ops::{Index, IndexMut};
 use std::slice;
@@ -37,8 +39,7 @@ pub struct Vector<T> {
 // TODO(b/356221873): Implement function for resizing (resize, shrink_to_fit,
 // reserve etc).
 // TODO(b/356221873): Implement clear().
-// TODO(b/356221873): implement insertion, removal of elements.
-// TODO(b/356221873): implement append, extend.
+// TODO(b/356221873): implement removal of elements.
 // TODO(b/356221873): implement set_len.
 
 impl<T> Vector<T> {
@@ -148,14 +149,15 @@ impl<T: Unpin> Vector<T> {
     {
         unsafe {
             self.asan_unpoison_tail();
-            let mut v = create_vec_from_raw_parts(self.begin, self.len(), self.capacity());
-            let result = mutate_self(&mut v);
-            let len = v.len();
-            let capacity = v.capacity();
+            let mut v = ManuallyDrop::new(create_vec_from_raw_parts(
+                self.begin,
+                self.len(),
+                self.capacity(),
+            ));
+            let result = mutate_self(v.deref_mut());
             self.begin = v.as_mut_ptr();
-            self.end = self.begin.add(len);
-            self.capacity_end = self.begin.add(capacity);
-            core::mem::forget(v);
+            self.end = self.begin.add(v.len());
+            self.capacity_end = self.begin.add(v.capacity());
             self.asan_poison_tail();
             result
         }
@@ -173,6 +175,14 @@ impl<T: Unpin> Vector<T> {
 
     pub fn push(&mut self, value: T) {
         self.mutate_self_as_vec(|v| v.push(value));
+    }
+
+    pub fn insert(&mut self, index: usize, element: T) {
+        self.mutate_self_as_vec(|v| v.insert(index, element));
+    }
+
+    pub fn append(&mut self, other: &mut Self) {
+        self.mutate_self_as_vec(|v| other.mutate_self_as_vec(|other_v| v.append(other_v)))
     }
 
     pub fn into_vec(mut self) -> Vec<T> {
@@ -203,6 +213,15 @@ impl<T: Unpin> Vector<T> {
 
     pub fn as_mut_slice(&mut self) -> &mut [T] {
         unsafe { std::slice::from_raw_parts_mut(self.begin, self.len()) }
+    }
+}
+
+impl<T: Unpin + Clone> Vector<T> {
+    pub fn extend_from_within<R>(&mut self, src: R)
+    where
+        R: RangeBounds<usize>,
+    {
+        self.mutate_self_as_vec(|v| v.extend_from_within(src));
     }
 }
 
@@ -284,6 +303,15 @@ impl<T: Clone> Vector<T> {
             v.push(el.clone());
         }
         v
+    }
+}
+
+impl<T: Unpin> Extend<T> for Vector<T> {
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = T>,
+    {
+        self.mutate_self_as_vec(|v| v.extend(iter));
     }
 }
 

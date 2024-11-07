@@ -113,7 +113,7 @@ fn test_vector_mut_index() {
 
 #[gtest]
 fn test_vector_to_vec() {
-    let mut v = vector::Vector::from(vec![4, 5, 6]);
+    let v = vector::Vector::from(vec![4, 5, 6]);
     let v2 = v.to_vec();
     expect_eq!(v2, vec![4, 5, 6]);
 }
@@ -294,6 +294,26 @@ fn test_vector_with_capacity() {
 }
 
 #[gtest]
+fn test_vector_insert() {
+    let mut v = vector::Vector::<i32>::new();
+    v.insert(0, 1);
+    v.insert(0, 2);
+    expect_eq!(v, [2, 1]);
+    v.insert(1, 3);
+    expect_eq!(v, [2, 3, 1]);
+}
+
+#[gtest]
+fn test_vector_append() {
+    let mut v = vector::Vector::from(vec![1, 2]);
+    let mut v2 = vector::Vector::from(vec![3, 4]);
+    v.append(&mut v2);
+    expect_eq!(v, [1, 2, 3, 4]);
+    expect_eq!(v2, []);
+    expect_eq!(v2.is_empty(), true);
+}
+
+#[gtest]
 fn test_vector_into_vec() {
     let mut v = vector::Vector::<i32>::new();
     v.push(1);
@@ -302,6 +322,21 @@ fn test_vector_into_vec() {
     let v2 = v.into_vec();
     expect_eq!(v2, vec![1, 2, 3]);
 }
+
+#[gtest]
+fn test_vector_extend_from_within() {
+    let mut v = vector::Vector::from(vec![0, 1, 2, 3, 4]);
+
+    v.extend_from_within(2..);
+    expect_eq!(v, [0, 1, 2, 3, 4, 2, 3, 4]);
+
+    v.extend_from_within(..2);
+    expect_eq!(v, [0, 1, 2, 3, 4, 2, 3, 4, 0, 1]);
+
+    v.extend_from_within(4..8);
+    expect_eq!(v, [0, 1, 2, 3, 4, 2, 3, 4, 0, 1, 4, 2, 3, 4]);
+}
+
 #[gtest]
 fn test_vector_into_dropped_counter() {
     let mut v = vector::Vector::new();
@@ -325,9 +360,18 @@ fn test_vector_from_vec() {
 }
 
 #[gtest]
+fn test_vector_extend() {
+    let mut v = vector::Vector::new();
+    v.extend(vec![1, 2, 3]);
+    expect_eq!(v, [1, 2, 3]);
+    v.extend(vec![4, 5, 6]);
+    expect_eq!(v, [1, 2, 3, 4, 5, 6]);
+}
+
+#[gtest]
 fn test_vector_from_vec_with_capacity() {
-    let mut vector = vector::Vector::from(vec![0, 1, 2, 3, 4]);
-    let mut vec = Vec::from(vector);
+    let vector = vector::Vector::from(vec![0, 1, 2, 3, 4]);
+    let vec = Vec::from(vector);
     expect_eq!(vec, [0, 1, 2, 3, 4]);
 }
 
