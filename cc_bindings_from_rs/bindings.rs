@@ -3079,8 +3079,9 @@ fn does_type_implement_trait<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>, trait_i
     );
     let substs = [self_ty];
 
+    use rustc_middle::ty::TypingMode;
     tcx.infer_ctxt()
-        .build()
+        .build(TypingMode::non_body_analysis())
         .type_implements_trait(trait_id, substs, tcx.param_env(trait_id))
         .must_apply_modulo_regions()
 }
