@@ -7,7 +7,8 @@
 // Features: <none>
 
 // clang-format off
-#pragma once
+#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_LIBRARY_CONFIG_EXAMPLE_CRATE
+#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_LIBRARY_CONFIG_EXAMPLE_CRATE
 
 #include <cstdint>
 
@@ -29,3 +30,4 @@ inline std::int32_t add_two_integers(std::int32_t x, std::int32_t y) {
 }
 
 }  // namespace my::library
+#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_LIBRARY_CONFIG_EXAMPLE_CRATE

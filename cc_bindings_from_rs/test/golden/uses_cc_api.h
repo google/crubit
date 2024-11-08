@@ -7,7 +7,8 @@
 // Features: experimental, supported
 
 // clang-format off
-#pragma once
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST
 
 #include "support/internal/attribute_macros.h"
 #include "support/internal/return_value_slot.h"
@@ -286,3 +287,4 @@ inline void InnerX::__crubit_field_offset_assertions() {
 }  // namespace __crubit_internal
 
 }  // namespace uses_rust
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST

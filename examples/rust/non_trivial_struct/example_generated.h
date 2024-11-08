@@ -7,7 +7,8 @@
 // Features: <none>
 
 // clang-format off
-#pragma once
+#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_NON_TRIVIAL_STRUCT_EXAMPLE_CRATE
+#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_NON_TRIVIAL_STRUCT_EXAMPLE_CRATE
 
 #include "support/internal/attribute_macros.h"
 #include "support/internal/memswap.h"
@@ -87,3 +88,4 @@ inline void NonTrivialStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NonTrivialStruct, a));
 }
 }  // namespace example_crate
+#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_NON_TRIVIAL_STRUCT_EXAMPLE_CRATE

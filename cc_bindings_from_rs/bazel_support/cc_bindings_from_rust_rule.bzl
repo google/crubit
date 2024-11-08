@@ -85,6 +85,9 @@ def _get_dep_bindings_infos(ctx):
         if CcBindingsFromRustInfo in dep
     ]
 
+def _target_name_to_include_guard(target):
+    return (target.label.package + "/" + target.label.name).replace("/", "_").upper()
+
 def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
@@ -105,6 +108,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
     crubit_args = ctx.actions.args()
     crubit_args.add("--h-out", h_out_file)
     crubit_args.add("--rs-out", rs_out_file)
+    crubit_args.add("--h-out-include-guard", _target_name_to_include_guard(target))
 
     crubit_args.add("--crubit-support-path-format", "\"support/{header}\"")
 

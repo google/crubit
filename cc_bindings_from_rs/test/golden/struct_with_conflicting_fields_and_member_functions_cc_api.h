@@ -7,7 +7,8 @@
 // Features: experimental, supported
 
 // clang-format off
-#pragma once
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST
 
 #include "support/internal/attribute_macros.h"
 
@@ -103,3 +104,4 @@ inline void X::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(X, c));
 }
 }  // namespace struct_with_conflicting_fields_and_member_functions_rust
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST

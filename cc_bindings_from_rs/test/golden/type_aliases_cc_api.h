@@ -7,7 +7,8 @@
 // Features: experimental, supported
 
 // clang-format off
-#pragma once
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST
 
 #include <cstdint>
 
@@ -41,3 +42,4 @@ inline std::int32_t func_using_alias() {
 namespace test_deprecated_type_alias {}
 
 }  // namespace type_aliases_rust
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST

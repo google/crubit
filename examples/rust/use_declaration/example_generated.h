@@ -7,7 +7,8 @@
 // Features: <none>
 
 // clang-format off
-#pragma once
+#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_USE_DECLARATION_EXAMPLE_CRATE
+#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_USE_DECLARATION_EXAMPLE_CRATE
 
 #include "support/internal/attribute_macros.h"
 
@@ -92,3 +93,4 @@ inline void Type::__crubit_field_offset_assertions() {
 }  // namespace module
 
 }  // namespace example_crate
+#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_USE_DECLARATION_EXAMPLE_CRATE

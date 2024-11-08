@@ -7,10 +7,12 @@
 // Features: <none>
 
 // clang-format off
-#pragma once
+#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE
+#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE
 
 #include <cstdint>
 
 namespace example_crate {
 using TypeAlias = std::int32_t;
 }
+#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE
