@@ -320,7 +320,7 @@ impl FineGrainedFeature {
             Self::References => {
                 ensure!(
                     crubit_features.contains(Experimental),
-                    "support for references requires {}",
+                    "support for references of non-function-param types requires {}",
                     Experimental.aspect_hint()
                 )
             }
@@ -5181,7 +5181,7 @@ pub mod tests {
             |result| {
                 assert_eq!(
                     result.unwrap_err(),
-                    "support for references requires //features:experimental"
+                    "support for references of non-function-param types requires //features:experimental"
                 )
             },
         );
