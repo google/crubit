@@ -28,7 +28,14 @@
 
 namespace clang::tidy::nullability {
 namespace {
+using ::clang::ast_matchers::asString;
+using ::clang::ast_matchers::functionDecl;
+using ::clang::ast_matchers::hasDeclContext;
 using ::clang::ast_matchers::hasName;
+using ::clang::ast_matchers::hasTemplateArgument;
+using ::clang::ast_matchers::isTemplateInstantiation;
+using ::clang::ast_matchers::refersToType;
+using ::clang::ast_matchers::varDecl;
 using ::testing::_;
 using ::testing::ElementsAre;
 using ::testing::Eq;
@@ -280,12 +287,13 @@ TEST_F(InferTUTest, CHECKNEMacro) {
   )cc");
   EXPECT_THAT(
       infer(),
-      UnorderedElementsAre(
-          inference(hasName("target"), {inferredSlot(1, Nullability::NONNULL),
-                                        inferredSlot(2, Nullability::NONNULL),
-                                        inferredSlot(3, Nullability::NONNULL),
-                                        inferredSlot(4, Nullability::NONNULL)}),
-          inference(hasName("A"), {inferredSlot(0, Nullability::NULLABLE)})));
+      IsSupersetOf(
+          {inference(hasName("target"),
+                     {inferredSlot(1, Nullability::NONNULL),
+                      inferredSlot(2, Nullability::NONNULL),
+                      inferredSlot(3, Nullability::NONNULL),
+                      inferredSlot(4, Nullability::NONNULL)}),
+           inference(hasName("A"), {inferredSlot(0, Nullability::NULLABLE)})}));
 }
 
 TEST_F(InferTUTest, Fields) {
@@ -521,26 +529,47 @@ TEST_F(InferTUTest, AutoStarType) {
       *R;
       return getNullable();
     }
+
+    void templateUsagesToForceInstantiation() {
+      int *UnimportantLocal = nullptr;
+      autoStarParamAkaTemplate(UnimportantLocal);
+
+      autoStarReturnAndParam<bool *>(nullptr);
+    }
   )cc");
-  EXPECT_THAT(infer(),
-              UnorderedElementsAre(
-                  // Already annotated.
-                  inference(hasName("getNullable"),
-                            {inferredSlot(0, Nullability::NULLABLE)}),
-                  // We infer for local variables with type `auto*`.
-                  inference(hasName("AutoStarLocal"),
-                            {inferredSlot(0, Nullability::NULLABLE)}),
-                  // We infer for return types with type `auto*`, for the
-                  // parameters of functions with return type `auto*`, and for
-                  // local variables in these functions.
-                  inference(hasName("autoStarReturn"),
-                            {inferredSlot(0, Nullability::NULLABLE),
-                             inferredSlot(1, Nullability::NONNULL)}),
-                  inference(hasName("AutoStarLocalInAutoStarReturn"),
-                            {inferredSlot(0, Nullability::NULLABLE)})
-                  // We don't infer anything for or from functions with
-                  // parameters of type `auto*`, because these are templates.
-                  ));
+  EXPECT_THAT(
+      infer(),
+      UnorderedElementsAre(
+          // Already annotated.
+          inference(hasName("getNullable"),
+                    {inferredSlot(0, Nullability::NULLABLE)}),
+          // We infer for local variables with type `auto*`.
+          inference(hasName("AutoStarLocal"),
+                    {inferredSlot(0, Nullability::NULLABLE)}),
+          // We infer for return types with type `auto*`, for the
+          // parameters of functions with return type `auto*`, and for
+          // local variables in these functions.
+          inference(hasName("autoStarReturn"),
+                    {inferredSlot(0, Nullability::NULLABLE),
+                     inferredSlot(1, Nullability::NONNULL)}),
+          inference(hasName("AutoStarLocalInAutoStarReturn"),
+                    {inferredSlot(0, Nullability::NULLABLE)}),
+          // We infer for function template instantiations and for the local
+          // variables in the instantiations.
+          inference(functionDecl(hasName("autoStarParamAkaTemplate"),
+                                 isTemplateInstantiation()),
+                    {inferredSlot(0, Nullability::NULLABLE),
+                     inferredSlot(1, Nullability::NONNULL, /*Conflict*/ true)}),
+          inference(functionDecl(hasName("autoStarReturnAndParam"),
+                                 isTemplateInstantiation()),
+                    {inferredSlot(0, Nullability::NULLABLE),
+                     inferredSlot(1, Nullability::NONNULL, /*Conflict*/ true)}),
+          inference(
+              varDecl(hasName("AutoStarLocalInTemplate"),
+                      hasDeclContext(functionDecl(isTemplateInstantiation()))),
+              {inferredSlot(0, Nullability::NULLABLE)}),
+          inference(hasName("UnimportantLocal"),
+                    {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUTest, IterationsPropagateInferences) {
@@ -634,6 +663,53 @@ TEST_F(InferTUTest, Pragma) {
                   })));
 }
 
+TEST_F(InferTUTest, FunctionTemplate) {
+  build(R"cc(
+    template <typename T>
+    T functionTemplate(int* P, Nullable<int*> Q, T* R, Nullable<T*> S, T U) {
+      *P;
+      *R;
+      return U;
+    }
+
+    void usage() {
+      int I = 0;
+      int* A = &I;
+      int* B = &I;
+      int* C = &I;
+      int* D = &I;
+      int* E = &I;
+      // In the first iteration, infer (for the instantiation) P and R as
+      // Nonnull, Q and S as Nullable, U as Nonnull, and Unknown for the int*
+      // return type (which hasn't yet seen the inference of U as Nonnull).
+      int* TargetIntStarResult = functionTemplate(A, B, &C, &D, E);
+      // Infer (for the instantiation) P and R as Nonnull, Q and S as Nullable,
+      // and nothing for the int U and int return type.
+      int TargetIntResult = functionTemplate(A, B, C, D, I);
+    }
+  )cc");
+  EXPECT_THAT(
+      infer(),
+      IsSupersetOf(
+          {inference(
+               functionDecl(
+                   hasName("functionTemplate"), isTemplateInstantiation(),
+                   hasTemplateArgument(0, refersToType(asString("int *")))),
+               {inferredSlot(0, Nullability::UNKNOWN),
+                inferredSlot(1, Nullability::NONNULL),
+                inferredSlot(2, Nullability::NULLABLE),
+                inferredSlot(3, Nullability::NONNULL),
+                inferredSlot(4, Nullability::NULLABLE),
+                inferredSlot(5, Nullability::NONNULL)}),
+           inference(functionDecl(
+                         hasName("functionTemplate"), isTemplateInstantiation(),
+                         hasTemplateArgument(0, refersToType(asString("int")))),
+                     {inferredSlot(1, Nullability::NONNULL),
+                      inferredSlot(2, Nullability::NULLABLE),
+                      inferredSlot(3, Nullability::NONNULL),
+                      inferredSlot(4, Nullability::NULLABLE)})}));
+}
+
 using InferTUSmartPointerTest = InferTUTest;
 
 TEST_F(InferTUSmartPointerTest, Annotations) {
@@ -648,11 +724,11 @@ TEST_F(InferTUSmartPointerTest, Annotations) {
   )cc");
 
   EXPECT_THAT(infer(),
-              ElementsAre(inference(hasName("target"),
-                                    {
-                                        inferredSlot(0, Nullability::NONNULL),
-                                        inferredSlot(2, Nullability::NULLABLE),
-                                    })));
+              Contains(inference(hasName("target"),
+                                 {
+                                     inferredSlot(0, Nullability::NONNULL),
+                                     inferredSlot(2, Nullability::NULLABLE),
+                                 })));
 }
 
 TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
@@ -682,8 +758,8 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNullable) {
     std::unique_ptr<int> target() { return std::unique_ptr<int>(); }
   )cc");
   EXPECT_THAT(infer(),
-              ElementsAre(inference(hasName("target"),
-                                    {inferredSlot(0, Nullability::NULLABLE)})));
+              Contains(inference(hasName("target"),
+                                 {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUSmartPointerTest, ReturnTypeNonnull) {
@@ -692,8 +768,8 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNonnull) {
     std::unique_ptr<int> target() { return std::make_unique<int>(0); }
   )cc");
   EXPECT_THAT(infer(),
-              ElementsAre(inference(hasName("target"),
-                                    {inferredSlot(0, Nullability::NONNULL)})));
+              Contains(inference(hasName("target"),
+                                 {inferredSlot(0, Nullability::NONNULL)})));
 }
 
 using InferTUVirtualMethodsTest = InferTUTest;

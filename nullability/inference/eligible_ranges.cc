@@ -370,11 +370,21 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     // The start of the new range.
     SourceLocation Begin = R->getBegin();
 
-    // We don't annotate bare `auto`s. The only known case of a bare `auto`
-    // range being included in NullabilityLocs is in a template instantiation
-    // with a template parameter introduced by using `auto` as a parameter type.
-    if (MaybeLoc->getAs<SubstTemplateTypeParmTypeLoc>() &&
-        clang::Lexer::getSourceText(*R, SM, LangOpts) == "auto") {
+    // We don't annotate bare template type arguments or bare `auto`.
+    // For example, we would annotate only the types of B, D, and F in
+    // ```cc
+    //   template <typename T>
+    //   void f(T A, T* B, auto C, auto* D) {
+    //     auto E = A;
+    //     auto* F = B;
+    //   }
+    // ```
+    // The only known case of a bare `auto` range being included in
+    // NullabilityLocs is in a function template instantiation with a template
+    // parameter introduced by using `auto` as a function parameter type. Other
+    // cases are not collected by the NullabilityWalker, and so don't need to be
+    // skipped here.
+    if (MaybeLoc->getAs<SubstTemplateTypeParmTypeLoc>()) {
       continue;
     }
 

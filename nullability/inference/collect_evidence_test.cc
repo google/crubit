@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 
-#include "gmock/gmock.h"
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
@@ -31,6 +30,7 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Testing/Support/Error.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"  // IWYU pragma: keep
@@ -38,14 +38,20 @@
 
 namespace clang::tidy::nullability {
 namespace {
+using ::clang::ast_matchers::asString;
+using ::clang::ast_matchers::booleanType;
 using ::clang::ast_matchers::cxxConstructorDecl;
 using ::clang::ast_matchers::functionDecl;
 using ::clang::ast_matchers::hasName;
+using ::clang::ast_matchers::hasParameter;
+using ::clang::ast_matchers::hasTemplateArgument;
+using ::clang::ast_matchers::hasType;
 using ::clang::ast_matchers::isDefaultConstructor;
 using ::clang::ast_matchers::isImplicit;
 using ::clang::ast_matchers::isTemplateInstantiation;
 using ::clang::ast_matchers::match;
 using ::clang::ast_matchers::parameterCountIs;
+using ::clang::ast_matchers::refersToType;
 using ::clang::ast_matchers::selectFirst;
 using ::clang::ast_matchers::unless;
 using ::clang::ast_matchers::varDecl;
@@ -53,6 +59,7 @@ using ::testing::_;
 using ::testing::AllOf;
 using ::testing::Contains;
 using ::testing::ElementsAre;
+using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::IsSupersetOf;
 using ::testing::Not;
@@ -77,6 +84,11 @@ MATCHER_P3(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher, "") {
 MATCHER_P(functionNamed, Name, "") {
   return llvm::StringRef(arg.usr()).contains(
       ("@" + llvm::Twine(Name) + "#").str());
+}
+
+MATCHER_P(functionTemplateNamed, Name, "") {
+  return llvm::Regex((".*@FT@>[0-9]+(#.*)*" + llvm::Twine(Name) + "#.*").str())
+      .match(arg.usr());
 }
 
 /// Matches a non-static field with the given name.
@@ -617,10 +629,10 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(functionDecl(hasName("Target")), Src.str()),
-      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                                    fieldNamed("Target::Shared")),
-                           evidence(paramSlot(0), Evidence::ABORT_IF_NULL,
-                                    functionNamed("Target"))));
+      IsSupersetOf({(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                              fieldNamed("Target::Shared")),
+                     evidence(paramSlot(0), Evidence::ABORT_IF_NULL,
+                              functionNamed("Target")))}));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
@@ -793,18 +805,22 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, ArgsAndParams) {
       callee(std::move(A), std::move(B), C);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                           functionNamed("callee")),
-                  evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
-                           functionNamed("target")),
-                  evidence(paramSlot(2), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
-                           functionNamed("target")),
-                  evidence(paramSlot(1), Evidence::UNKNOWN_ARGUMENT,
-                           functionNamed("callee")),
-                  evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
-                           functionNamed("callee"))));
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                   functionNamed("callee")),
+          evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
+                   functionNamed("target")),
+          evidence(paramSlot(2), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
+                   functionNamed("target")),
+          evidence(paramSlot(1), Evidence::UNKNOWN_ARGUMENT,
+                   functionNamed("callee")),
+          evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                   functionNamed("callee")),
+          // evidence for the move constructor, which we don't care much about.
+          evidence(_, _, functionNamed("unique_ptr")),
+          evidence(_, _, functionNamed("unique_ptr"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -985,12 +1001,17 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, MultipleReturns) {
       return R;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(
-                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
-                  evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN),
-                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
-                  evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN)));
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
+          evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN),
+          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
+          evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN),
+          // evidence for the move constructor, which we don't care much about.
+          evidence(_, _, functionNamed("unique_ptr")),
+          evidence(_, _, functionNamed("unique_ptr")),
+          evidence(_, _, functionNamed("unique_ptr"))));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
@@ -1000,9 +1021,12 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
       return A;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
+          // evidence for the move constructor, which we don't care much about.
+          evidence(_, _, functionNamed("unique_ptr"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FunctionCallDereferenced) {
@@ -1255,22 +1279,6 @@ TEST(CollectEvidenceFromDefinitionTest, ConstructorCall) {
                                     functionNamed("S"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, NonTargetConstructorCall) {
-  static constexpr llvm::StringRef Src = R"cc(
-    template <typename T>
-    struct S {
-      // Not a target due to templating, but the annotation here can still
-      // provide evidence for `P` from the call in `target`'s body.
-      S(Nonnull<T*> A);
-    };
-    void target(int* P) { S AnS(P); }
-  )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("target"))));
-}
-
 TEST(CollectEvidenceFromDefinitionTest, ConstructorWithBaseInitializer) {
   static constexpr llvm::StringRef Src = R"cc(
     struct TakeNonnull {
@@ -1474,8 +1482,11 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinitionMatching(
           cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("Target"))));
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
+                   functionNamed("Target")),
+          // evidence for the move constructor, which we don't care much about.
+          evidence(_, _, functionNamed("unique_ptr"))));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,
@@ -1491,8 +1502,11 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinitionMatching(
           cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
-      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                                    fieldNamed("Target::I"))));
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   fieldNamed("Target::I")),
+          // evidence for the move constructor, which we don't care much about.
+          evidence(_, _, functionNamed("unique_ptr"))));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,
@@ -1552,7 +1566,10 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
       // value, but no evidence collected from *implicit* member initializer
       // which default constructs to null.
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                                    fieldNamed("Target::I"))));
+                                    fieldNamed("Target::I")),
+                           // evidence for the move assignment operator for
+                           // unique_ptr, which we don't care much about.
+                           evidence(_, _, functionNamed("operator="))));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,
@@ -1580,7 +1597,10 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("Target::I")),
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                                    fieldNamed("Target::I"))));
+                                    fieldNamed("Target::I")),
+                           // evidence for the move assignment operator for
+                           // unique_ptr, which we don't care much about.
+                           evidence(_, _, functionNamed("operator="))));
 }
 
 // This is a crash repro.
@@ -1694,12 +1714,15 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
       Callee(std::move(P));
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                           functionNamed("target")),
-                  evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE,
-                           functionNamed("target"))));
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
+                   functionNamed("target")),
+          evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE,
+                   functionNamed("target")),
+          // evidence for the move constructor, which we don't care much about.
+          evidence(_, _, functionNamed("unique_ptr"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullInFunctionPointerField) {
@@ -1789,31 +1812,6 @@ TEST(CollectEvidenceFromDefinitionTest,
                            functionNamed("makeIntPtr")),
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                            functionNamed("target"))));
-}
-
-TEST(CollectEvidenceFromDefinitionTest,
-     FunctionCallPassedToNonnullFunctionPointerTargetNotAnInferenceTarget) {
-  static constexpr llvm::StringRef Src = R"cc(
-    int* makeIntPtr();
-
-    template <typename T>
-    void target(void (*Callee)(Nonnull<T*> I), int* A) {
-      Callee(makeIntPtr());
-      *A;
-    }
-
-    void instantiate() {
-      target<int>([](Nonnull<int*> I) {}, nullptr);
-    }
-  )cc";
-  // Doesn't collect any evidence for target from target's body, only collects
-  // some for makeIntPtr.
-  EXPECT_THAT(
-      collectFromDefinitionMatching(
-          functionDecl(hasName("target"), isTemplateInstantiation()), Src),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
-                                    Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("makeIntPtr"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNullable) {
@@ -1918,7 +1916,13 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
                   evidence(paramSlot(2), Evidence::ASSIGNED_TO_NONNULL),
                   evidence(paramSlot(3), Evidence::ASSIGNED_TO_NONNULL),
-                  evidence(paramSlot(4), Evidence::ASSIGNED_TO_NONNULL)));
+                  evidence(paramSlot(4), Evidence::ASSIGNED_TO_NONNULL),
+                  // evidence for the move constructor and move assignment
+                  // operator, which we don't care much about.
+                  evidence(_, _, functionNamed("unique_ptr")),
+                  evidence(_, _, functionNamed("operator=")),
+                  evidence(_, _, functionNamed("operator=")),
+                  evidence(_, _, functionNamed("operator="))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, InitializationOfNonnullRefFromRef) {
@@ -1930,29 +1934,6 @@ TEST(CollectEvidenceFromDefinitionTest, InitializationOfNonnullRefFromRef) {
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
-}
-
-TEST(CollectEvidenceFromDefinitionTest,
-     NonnullNonTargetInitializedFromFunctionCall) {
-  static constexpr llvm::StringRef Src = R"cc(
-    int* makeIntPtr();
-
-    template <typename T>
-    void target() {
-      Nonnull<T*> P = makeIntPtr();
-    }
-
-    void instantiate() { target<int>(); }
-  )cc";
-
-  // Doesn't collect any evidence for target from target's body, only collects
-  // some for makeIntPtr.
-  EXPECT_THAT(
-      collectFromDefinitionMatching(
-          functionDecl(hasName("target"), isTemplateInstantiation()), Src),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
-                                    Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("makeIntPtr"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -2690,12 +2671,16 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, AggregateInitialization) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                                    fieldNamed("MyStruct::P")),
-                           evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("target")),
-                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                                    fieldNamed("MyStruct::R"))));
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   fieldNamed("MyStruct::P")),
+          evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
+                   functionNamed("target")),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   fieldNamed("MyStruct::R")),
+          // evidence for the move constructor, which we don't care much about
+          evidence(_, _, functionNamed("unique_ptr")),
+          evidence(_, _, functionNamed("unique_ptr"))));
 }
 
 // This is a crash repro related to aggregate initialization.
@@ -3008,28 +2993,334 @@ TEST(CollectEvidenceFromDefinitionTest, FromVirtualBaseMultipleLayers) {
                            functionNamed("Base@F@foo"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, NotInferenceTarget) {
+TEST(CollectEvidenceFromDefinitionTest, FunctionTemplate) {
   static constexpr llvm::StringRef Src = R"cc(
-    void isATarget(Nonnull<int*> A);
     template <typename T>
-    T* target(T* P) {
+    void tmpl(T* P, T Q) {
       *P;
-      Nonnull<int*> A = P;
-      isATarget(P);
-      target<T>(nullptr);
-      target<int>(nullptr);
-      return nullptr;
     }
 
-    void instantiate() { target<int>(nullptr); }
+    void usage() {
+      tmpl<int>(nullptr, 1);
+      tmpl<bool>(nullptr, true);
+      tmpl<char*>(nullptr, nullptr);
+    }
   )cc";
-  // Doesn't collect any evidence for target from target's body, only collects
-  // some for isATarget.
+  EXPECT_THAT(
+      collectFromDefinitionNamed("usage", Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("tmpl<#I>")),
+                           evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("tmpl<#b>")),
+                           evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("tmpl<#*C>")),
+                           evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("tmpl<#*C>"))));
+
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          functionDecl(hasName("target"), isTemplateInstantiation()), Src),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
-                                    functionNamed("isATarget"))));
+          functionDecl(hasTemplateArgument(0, refersToType(asString("int")))),
+          Src),
+      UnorderedElementsAre(evidence(paramSlot(0),
+                                    Evidence::UNCHECKED_DEREFERENCE,
+                                    functionNamed("tmpl<#I>"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          functionDecl(hasTemplateArgument(0, refersToType(booleanType()))),
+          Src),
+      UnorderedElementsAre(evidence(paramSlot(0),
+                                    Evidence::UNCHECKED_DEREFERENCE,
+                                    functionNamed("tmpl<#b>"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(functionDecl(hasTemplateArgument(
+                                        0, refersToType(asString("char *")))),
+                                    Src),
+      UnorderedElementsAre(evidence(paramSlot(0),
+                                    Evidence::UNCHECKED_DEREFERENCE,
+                                    functionNamed("tmpl<#*C>"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     FunctionTemplateExplicitSpecialization) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T>
+    void tmpl(T* P, T Q) {
+      *P;
+    }
+
+    template <>
+    void tmpl<int*>(int** P, int* Q) {
+      *P;
+      *Q;
+    }
+
+    void usage() { tmpl<int*>(nullptr, nullptr); }
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("usage", Src),
+      // Evidence is emitted for the explicit specialization, not the template.
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("tmpl<#*I>")),
+                           evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("tmpl<#*I>"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          functionDecl(hasTemplateArgument(0, refersToType(asString("int *")))),
+          Src),
+      // Evidence is emitted for the explicit specialization, not the template.
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                   functionNamed("tmpl<#*I>")),
+          evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE,
+                   functionNamed("tmpl<#*I>"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, LocalVariableInFunctionTemplate) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T>
+    void tmpl() {
+      int* A = nullptr;
+      T* B = nullptr;
+    }
+
+    void usage() { tmpl<int>(); }
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(functionDecl(isTemplateInstantiation()),
+                                    Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    localVarNamed("A", "tmpl<#I>")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    localVarNamed("B", "tmpl<#I>"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, ClassTemplate) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T>
+    class C {
+     public:
+      void method(T* P) {
+        *P;
+        *Field;
+      }
+      T* Field;
+    };
+
+    void usage() {
+      C<int> CInt;
+      CInt.Field = nullptr;
+      CInt.method(nullptr);
+      C<char*> CCharPtr;
+      CCharPtr.Field = nullptr;
+      CCharPtr.method(nullptr);
+    }
+  )cc";
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                           AllOf(functionNamed("method"),
+                                 ResultOf([](Symbol S) { return S.usr(); },
+                                          HasSubstr("@S@C>#I@")))),
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                           AllOf(functionNamed("method"),
+                                 ResultOf([](Symbol S) { return S.usr(); },
+                                          HasSubstr("@S@C>#*C@")))),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           fieldNamed("C>#I::Field")),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           fieldNamed("C>#*C::Field"))));
+
+  EXPECT_THAT(collectFromDefinitionMatching(
+                  functionDecl(isTemplateInstantiation(),
+                               hasParameter(0, hasType(asString("int *")))),
+                  Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           AllOf(functionNamed("method"),
+                                 ResultOf([](Symbol S) { return S.usr(); },
+                                          HasSubstr("@S@C>#I@")))),
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           fieldNamed("C>#I::Field"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, InClassInsideClassTemplate) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T>
+    class Tmpl {
+     public:
+      class C {
+       public:
+        void method(T* P) {
+          *P;
+          *Field;
+        }
+        T* Field;
+      };
+    };
+
+    void usage() {
+      Tmpl<int>::C CInt;
+      CInt.Field = nullptr;
+      CInt.method(nullptr);
+      Tmpl<bool*>::C CBoolPtr;
+      CBoolPtr.Field = nullptr;
+      CBoolPtr.method(nullptr);
+    }
+  )cc";
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                           AllOf(functionNamed("method"),
+                                 ResultOf([](Symbol S) { return S.usr(); },
+                                          HasSubstr("@S@Tmpl>#I@S@C@")))),
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                           AllOf(functionNamed("method"),
+                                 ResultOf([](Symbol S) { return S.usr(); },
+                                          HasSubstr("@S@Tmpl>#*b@S@C@")))),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           AllOf(fieldNamed("C::Field"),
+                                 ResultOf([](Symbol S) { return S.usr(); },
+                                          HasSubstr("@S@Tmpl>#I@S@C@")))),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           AllOf(fieldNamed("C::Field"),
+                                 ResultOf([](Symbol S) { return S.usr(); },
+                                          HasSubstr("@S@Tmpl>#*b@S@C@"))))));
+
+  EXPECT_THAT(collectFromDefinitionMatching(
+                  functionDecl(isTemplateInstantiation(),
+                               hasParameter(0, hasType(asString("int *")))),
+                  Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           AllOf(functionNamed("method"),
+                                 ResultOf([](Symbol S) { return S.usr(); },
+                                          HasSubstr("@S@Tmpl>#I@S@C@")))),
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           AllOf(fieldNamed("C::Field"),
+                                 ResultOf([](Symbol S) { return S.usr(); },
+                                          HasSubstr("@S@Tmpl>#I@S@"))))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, ClassTemplateExplicitSpecialization) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T>
+    class C {
+     public:
+      void method(T* P) {}
+      T* Field;
+    };
+
+    template <>
+    class C<int> {
+     public:
+      void method(int* P) {
+        *P;
+        *Field;
+      }
+      int* Field;
+    };
+
+    void usage() {
+      C<int> CInt;
+      CInt.method(nullptr);
+      CInt.Field = nullptr;
+    }
+  )cc";
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                           AllOf(functionNamed("method"),
+                                 ResultOf([](Symbol S) { return S.usr(); },
+                                          HasSubstr("@S@C>#I@")))),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           fieldNamed("C>#I::Field"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, ClassTemplatePartialSpecialization) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T, typename U>
+    class C {
+     public:
+      void method(T* P) {}
+      U* Field;
+    };
+
+    template <typename U>
+    class C<int, U> {
+     public:
+      void method(int* P) {
+        *P;
+        *Field;
+      }
+      U* Field;
+    };
+
+    void usage() {
+      C<int, bool> CIntBool;
+      CIntBool.method(nullptr);
+      CIntBool.Field = nullptr;
+    }
+  )cc";
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                           AllOf(functionNamed("method"),
+                                 ResultOf([](Symbol S) { return S.usr(); },
+                                          HasSubstr("@S@C>#I#b@")))),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           fieldNamed("C>#I#b::Field"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, GlobalVariableTemplate) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T>
+    T* Global = nullptr;
+
+    void usage() { Global<int>; }
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(varDecl(isTemplateInstantiation()), Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    globalVarNamed("Global>#I"))));
+}
+
+AST_MATCHER(VarDecl, isVarTemplateCompleteSpecializationDecl) {
+  return isa<VarTemplateSpecializationDecl>(Node) &&
+         !isa<VarTemplatePartialSpecializationDecl>(Node);
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     GlobalVariableTemplateExplicitSpecialization) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T>
+    T* Global = nullptr;
+
+    template <>
+    int* Global<int> = nullptr;
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          varDecl(isVarTemplateCompleteSpecializationDecl()), Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    globalVarNamed("Global>#I"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     GlobalVariableTemplatePartialSpecialization) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T, typename U>
+    T* Global = U{};
+
+    template <typename U>
+    int* Global<int, U> = nullptr;
+
+    void usage() { Global<int, bool>; }
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          varDecl(isVarTemplateCompleteSpecializationDecl()), Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    globalVarNamed("Global>#I#b"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PropagatesPreviousInferences) {
@@ -3163,13 +3454,9 @@ TEST(CollectEvidenceFromDefinitionTest,
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
-     PreviousInferencesOfNonTargetParameterNullabilitiesPropagate) {
+     PreviousInferencesOfNonFocusParameterNullabilitiesPropagate) {
   static constexpr llvm::StringRef Src = R"cc(
-    void takesToBeNonnull(int* A) {
-      // Not read when collecting evidence only from Target, but corresponding
-      // inference is explicitly input below.
-      *A;
-    }
+    void takesToBeNonnull(int* A);
     void target(int* Q) { takesToBeNonnull(Q); }
   )cc";
   std::string TakesToBeNonnullUsr = "c:@F@takesToBeNonnull#*I#";
@@ -3710,7 +3997,8 @@ TEST(EvidenceSitesTest, GlobalVariables) {
       )cc",
       Pragmas);
 
-  auto Sites = EvidenceSites::discover(AST.context());
+  auto Sites = EvidenceSites::discover(AST.context(),
+                                       /*RestrictToMainFileOrHeader=*/true);
   EXPECT_THAT(Sites.Declarations,
               UnorderedElementsAre(declNamed("X"), declNamed("Y"),
                                    declNamed("P"), declNamed("Q")));
@@ -3756,7 +4044,8 @@ TEST(EvidenceSitesTest, NonStaticMemberVariables) {
         };
       )cc",
       Pragmas);
-  auto Sites = EvidenceSites::discover(AST.context());
+  auto Sites = EvidenceSites::discover(AST.context(),
+                                       /*RestrictToMainFileOrHeader=*/true);
   EXPECT_THAT(Sites.Declarations,
               UnorderedElementsAre(declNamed("S::A"), declNamed("S::B"),
                                    declNamed("S::P"), declNamed("S::Q")));
@@ -3811,9 +4100,12 @@ TEST(EvidenceSitesTest, Templates) {
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
 
-  // Relevant declarations are the written ones that are not templates.
+  // Relevant declarations are the written ones that aren't template-related
+  // plus the template instantiations.
   EXPECT_THAT(Sites.Declarations,
-              UnorderedElementsAre(declNamed("f<1>"), declNamed("V<1>")));
+              UnorderedElementsAre(declNamed("f<0>"), declNamed("V<0>"),
+                                   declNamed("f<1>"), declNamed("V<1>"),
+                                   declNamed("S::f<0>"), declNamed("T<0>::f")));
   // Instantiations are relevant definitions, as is the global variable Unused.
   EXPECT_THAT(Sites.Definitions,
               UnorderedElementsAre(declNamed("f<0>"), declNamed("V<0>"),

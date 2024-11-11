@@ -1626,18 +1626,19 @@ TEST(GetEligibleRangesFromASTTest, FunctionTemplateNoInstantiation) {
 }
 
 TEST(GetEligibleRangesFromASTTest, FunctionTemplateHasInstantiation) {
-  std::string Input = R"cc(
+  auto Input = Annotations(R"(
     template <typename T>
-    int funcTemplate(T*) {
-      T* LocalInTemplate;
+    int funcTemplate($param[[T*]] A, T B) {
+      $local[[T*]] LocalPointerInTemplate;
+      T LocalInTemplate;
       return 0;
     }
 
-    int I = funcTemplate<int>(nullptr);
-  )cc";
+    int I = funcTemplate<int>(nullptr, 0);
+  )");
 
   NullabilityPragmas Pragmas;
-  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TestAST TU(getAugmentedTestInputs(Input.code(), Pragmas));
   TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
 
   auto &InstantiationDecl = *selectFirst<FunctionDecl>(
@@ -1658,16 +1659,21 @@ TEST(GetEligibleRangesFromASTTest, FunctionTemplateHasInstantiation) {
   for (const auto &Range : getEligibleRanges(
            *selectFirst<VarDecl>(
                "b",
-               match(findAll(varDecl(hasName("LocalInTemplate")).bind("b")),
+               match(findAll(
+                         varDecl(hasName("LocalPointerInTemplate")).bind("b")),
                      InstantiationDecl, TU.context())),
            Defaults)) {
     Expected.push_back(EqualsProto(Range));
   }
-  EXPECT_THAT(getEligibleRanges(TU.context(), Defaults),
-              UnorderedElementsAreArray(Expected));
+  EXPECT_THAT(
+      getEligibleRanges(TU.context(), Defaults),
+      AllOf(UnorderedElementsAreArray(Expected),
+            Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+            UnorderedElementsAre(SlotRange(1, 0, Input.range("param")),
+                                 SlotRange(0, 0, Input.range("local")))));
 }
 
-TEST(GetEligibleRangesFromASTTest, AutoTemplateSyntax) {
+TEST(GetEligibleRangesFromASTTest, AutoFunctionTemplateSyntax) {
   auto Input = Annotations(R"(
     void funcTemplate(auto P, $star[[auto*]] Q) {}
 

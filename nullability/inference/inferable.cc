@@ -7,7 +7,6 @@
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
-#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/LLVM.h"
 
@@ -34,34 +33,22 @@ int countInferableSlots(const Decl& D) {
   return 0;
 }
 
-static bool isAnyParentContextTemplateOrInstantiation(const Decl& D) {
-  auto* Parent = D.getDeclContext();
-  if (Parent->isDependentContext()) return true;
-  while (Parent) {
-    if (isa<ClassTemplateSpecializationDecl>(Parent)) return true;
-    if (auto* FD = dyn_cast<FunctionDecl>(Parent);
-        FD && FD->isTemplateInstantiation())
-      return true;
-    Parent = Parent->getParent();
-  }
-  return false;
-}
-
 bool isInferenceTarget(const Decl& D) {
   if (const auto* Func = dyn_cast<FunctionDecl>(&D)) {
     return
         // Function templates are in principle inferable.
         // However since we don't analyze their bodies, and other
-        // implementations cannot interact with them directly, we can't perform
-        // any nontrivial inference, just propagate annotations across redecls.
-        // For now, we don't do this as some infra (NullabilityWalker) doesn't
-        // work on dependent code.
+        // implementations cannot interact with them directly, we can't
+        // perform any nontrivial inference, just propagate annotations
+        // across redecls. For now, we don't do this as some infra
+        // (NullabilityWalker) doesn't work on dependent code. Instead, we infer
+        // for the instantiations and the decls inside the instantiations, and
+        // can use matching source ranges (the ranges inside the template) to
+        // merge evidence and make an inference when all instantiations are
+        // consistent enough.
         !Func->isDependentContext() &&
-        // Inferring properties of template instantiations isn't useful in
-        // itself. We can't record them anywhere unless they apply to the
-        // template in general.
-        // TODO: work out in what circumstances that would be safe.
-        !Func->isTemplateInstantiation() &&
+        // Same treatment for functions in templates as for function templates.
+        !Func->getDeclContext()->isDependentContext() &&
         // builtins can't be annotated and are irregular in their type checking
         // and in other ways, leading to violations of otherwise sound
         // assumptions.
@@ -70,14 +57,14 @@ bool isInferenceTarget(const Decl& D) {
         // small set of functions.
         Func->getBuiltinID() == 0 &&
         // Implicit functions cannot be annotated.
-        !Func->isImplicit() && !isAnyParentContextTemplateOrInstantiation(D) &&
+        !Func->isImplicit() &&
         // Do the most expensive check last.
         countPointersInType(Func->getType()) > 0;
   }
   if (const auto* Field = dyn_cast<FieldDecl>(&D)) {
     return
-        // See comments above regarding dependent contexts and templates.
-        !isAnyParentContextTemplateOrInstantiation(D) &&
+        // See comments above regarding templates.
+        !Field->getDeclContext()->isDependentContext() &&
         // Do the most expensive check last.
         countPointersInType(Field->getType()) > 0;
   }
@@ -88,12 +75,13 @@ bool isInferenceTarget(const Decl& D) {
     // Exclude parameters, which are handled as part of their enclosing function
     // declaration.
     if (isa<ParmVarDecl>(Var)) return false;
+
     return
-        // Exclude variables in templates and dependent contexts as well as
-        // variable templates. See comments above regarding similar restrictions
-        // on functions.
-        !Var->isTemplated() && !Var->getTemplateInstantiationPattern() &&
-        !isAnyParentContextTemplateOrInstantiation(D) &&
+        // Exclude variables inside templates as well as variable templates. See
+        // comments above regarding similar restrictions on functions. As with
+        // functions, the analogous variables inside instantiations and variable
+        // template instantiations are not excluded.
+        !Var->getDeclContext()->isDependentContext() && !Var->isTemplated() &&
         // Do the most expensive check last.
         countPointersInType(Var->getType()) > 0;
   }
