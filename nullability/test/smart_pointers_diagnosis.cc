@@ -541,5 +541,33 @@ TEST(SmartPointerTest, OperatorStarReturnsPointer) {
   )cc"));
 }
 
+TEST(SmartPointerTest, DerivedFromSmartPointerTemplateInstantiation) {
+  // This is a crash repro. We did not recognize `target` as a smart pointer
+  // type because we did not check the template argument of the smart pointer
+  // base class, and it had no other indication of the underlying raw pointer
+  // type.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename Handle>
+    class _Nullable SmartPtr {
+     public:
+      SmartPtr(SmartPtr &&) noexcept;
+    };
+
+    // Public inheritance or private inheritance doesn't matter.
+    struct target : SmartPtr<int *> {
+      target(target &&Other)
+          // The built-in transfer function running over the implicit
+          // CXXConstructExpr in the initializer expression would crash when
+          // trying to copy the synthetic smart pointer field from the source
+          // RecordStorageLocation. The assignment of the result object location
+          // for the derived class to be the result object location for the
+          // base-class-typed initializer expression was removing the synthetic
+          // field because the derived class was not seen as a smart pointer and
+          // did not have the synthetic field.
+          : target::SmartPtr(static_cast<target::SmartPtr &&>(Other)) {}
+    };
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

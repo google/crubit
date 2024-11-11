@@ -17,6 +17,7 @@
 #include "nullability/pragma.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -337,6 +338,41 @@ TEST_F(UnderlyingRawPointerTest, BaseClassIsTemplateTemplateParameter) {
     };
   )cc");
 
+  const auto *Target = selectFirst<TypeAliasDecl>(
+      "T", match(typeAliasDecl(hasName("Target")).bind("T"), AST.context()));
+  EXPECT_EQ(underlyingRawPointerType(Target->getUnderlyingType()), QualType());
+}
+
+TEST_F(UnderlyingRawPointerTest, BaseClassIsTemplateInstantation) {
+  // This is a regression test. We did not recognize `target` as a smart pointer
+  // type because we did not check the template argument of the smart pointer
+  // base class, and it had no other indication of the underlying raw pointer
+  // type.
+  TestAST AST(R"cc(
+    template <typename Handle>
+    class _Nullable SmartPtr{};
+
+    // Public inheritance or private inheritance doesn't matter.
+    struct Derived : SmartPtr<int> {};
+    using Target = Derived;
+  )cc");
+
+  const auto *Target = selectFirst<TypeAliasDecl>(
+      "T", match(typeAliasDecl(hasName("Target")).bind("T"), AST.context()));
+  EXPECT_EQ(underlyingRawPointerType(Target->getUnderlyingType()),
+            AST.context().getPointerType(AST.context().IntTy));
+}
+
+TEST_F(UnderlyingRawPointerTest, InscrutableDerivedSmartPointer) {
+  TestAST AST(R"cc(
+    // This is a smart pointer, but it doesn't provide any of the signals we
+    // ask for to indicate the underlying raw pointer type.
+    class _Nullable SmartIntPtr { int* ptr_field; };
+
+    // Public inheritance or private inheritance doesn't matter.
+    struct Derived : SmartIntPtr {};
+    using Target = Derived;
+  )cc");
   const auto *Target = selectFirst<TypeAliasDecl>(
       "T", match(typeAliasDecl(hasName("Target")).bind("T"), AST.context()));
   EXPECT_EQ(underlyingRawPointerType(Target->getUnderlyingType()), QualType());
