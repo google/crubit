@@ -28,10 +28,13 @@ use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::mir::Mutability;
-use rustc_middle::ty::{self, Region, Ty, TyCtxt};
+use rustc_middle::ty::{self, IntTy, Region, Ty, TyCtxt, UintTy};
 use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LocalModDefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
-use rustc_target::abi::{Abi, AddressSpace, FieldsShape, Integer, Layout, Primitive, Scalar};
+use rustc_target::abi::{
+    Abi, AddressSpace, FieldIdx, FieldsShape, Integer, Layout, Primitive, Scalar, VariantIdx,
+    Variants,
+};
 use rustc_trait_selection::infer::InferCtxtExt;
 use rustc_type_ir::RegionKind;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -2756,155 +2759,326 @@ fn format_fields<'tcx>(
             attributes: vec![],
         }]
     };
-    let fields: Vec<Field> = if core.self_ty.is_enum() {
-        err_fields(anyhow!("No support for bindings of individual `enum` fields"))
+
+    let layout_variants = layout.variants();
+
+    // If the ADT has one variant, then just use the fields in `layout.fields`.
+    // If the ADT has multiple variants, then we need to use the layout of each
+    // variant. The `layout.fields` just contains the tag.
+    let fields_shape = match layout_variants {
+        Variants::Single { .. } => vec![&layout.fields],
+        Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
+            variants.iter().map(|variant| &variant.fields).collect_vec()
+        }
+    };
+
+    // Used for generating enum bindings.
+    let is_supported_enum = adt_def.is_enum()
+        && repr_attrs.contains(&rustc_attr::ReprC)
+        && crate_features(db, core.def_id.krate)
+            .contains(crubit_feature::CrubitFeature::Experimental);
+
+    // If there are multiple variants, there is an offset at the beginning of each
+    // variant to account for the tag. We take it into account here. This is
+    // unused for single variant cases.
+
+    let tag_size_with_padding = match layout_variants {
+        Variants::Single { .. } => 0,
+        Variants::Multiple { .. } if !is_supported_enum => 0,
+        Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
+            let mut variant_offsets = variants.iter().map(|variant| match &variant.fields {
+                FieldsShape::Arbitrary { offsets, .. } => {
+                    if offsets.is_empty() {
+                        variant.size.bytes() // No fields => variant is just the
+                                             // tag.
+                    } else {
+                        offsets[FieldIdx::from_usize(0)].bytes()
+                    }
+                }
+                _ => panic!("Internal Error - Detected an enum with non-arbitrary field"),
+            });
+
+            // There are two equivalent ways to express a rust enum:
+            // 1. A struct that contains the discriminant and a union of the variants
+            // 2. A union where each field begins with a discriminant.
+            //
+            // Rust interally uses the second representation, and we extract out the
+            // discriminant to produce the first.
+            //
+            //
+            // See https://doc.rust-lang.org/beta/nightly-rustc/rustc_abi/enum.FieldsShape.html#variant.Arbitrary
+            // and https://doc.rust-lang.org/reference/type-layout.html#reprc-enums-with-fields
+            let expected_offset = variant_offsets.next().expect("At least one variant is required");
+            for variant_offset in variant_offsets {
+                if variant_offset != expected_offset {
+                    panic!("Internal Error - Detected an enum with different tag offsets.")
+                }
+            }
+            expected_offset
+        }
+    };
+
+    let variant_sizes = match layout_variants {
+        Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
+            variants.iter().map(|layout| layout.size.bytes() - tag_size_with_padding).collect_vec()
+        }
+        Variants::Single { .. } => {
+            vec![core.alignment_in_bytes]
+        }
+    };
+
+    // The size of each variant. Note for enums, this removes the size (and padding)
+    // for the tag.
+    let layout_size = match layout_variants {
+        Variants::Single { .. } => vec![layout.size().bytes()],
+        Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => variants
+            .iter()
+            .map(|variant| variant.size.bytes() - tag_size_with_padding)
+            .collect_vec(),
+    };
+    let variants_fields: Vec<Vec<Field>> = if core.self_ty.is_enum()
+        && (!repr_attrs.contains(&rustc_attr::ReprC))
+    {
+        vec![err_fields(anyhow!("No support for bindings of individual non-repr(C) `enum`s"))]
+    } else if adt_def.is_enum() && !is_supported_enum {
+        vec![err_fields(anyhow!(
+            "support for repr(C) enums requires //features:experimental"
+        ))]
     } else if core.self_ty.is_union()
         && !repr_attrs.contains(&rustc_attr::ReprC)
         && !crate_features(db, core.def_id.krate)
             .contains(crubit_feature::CrubitFeature::Experimental)
     {
-        err_fields(anyhow!(
+        vec![err_fields(anyhow!(
             "support for non-repr(C) unions requires //features:experimental"
-        ))
+        ))]
     } else {
         let rustc_hir::Node::Item(item) = tcx.hir_node_by_def_id(core.def_id.expect_local()) else {
             panic!("internal error: def_id referring to an ADT was not a HIR Item.");
         };
         let variants = match item.kind {
-            rustc_hir::ItemKind::Struct(variants, _) => variants,
-            rustc_hir::ItemKind::Union(variants, _) => variants,
+            rustc_hir::ItemKind::Struct(variant, _) => vec![variant],
+            rustc_hir::ItemKind::Union(variant, _) => vec![variant],
+            rustc_hir::ItemKind::Enum(enum_info, _) => {
+                enum_info.variants.iter().map(|variant| variant.data).collect()
+            }
             _ => panic!(
                 "internal error: def_id referring to a non-enum ADT was not a struct or union."
             ),
         };
-        let hir_fields: Vec<_> = variants.fields().iter().sorted_by_key(|f| f.span).collect();
+        let hir_fields: Vec<Vec<_>> = variants
+            .iter()
+            .map(|variant| variant.fields().iter().sorted_by_key(|f| f.span).collect())
+            .collect();
 
-        let mut fields = core
+        let mut variants_fields = core
             .self_ty
             .ty_adt_def()
             .expect("`core.def_id` needs to identify an ADT")
-            .all_fields()
-            .sorted_by_key(|f| tcx.def_span(f.did))
-            .enumerate()
-            .map(|(index, field_def)| {
-                // *Not* using zip, in order to crash on length mismatch.
-                let hir_field =
-                    hir_fields.get(index).expect("HIR ADT had fewer fields than rustc_middle");
-                assert!(field_def.did == hir_field.def_id.to_def_id());
-                let ty = SugaredTy::new(field_def.ty(tcx, substs_ref), Some(hir_field.ty));
-                let size = get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
-                let type_info = size.and_then(|size| {
-                    Ok(FieldTypeInfo {
-                        size,
-                        cpp_type: db
-                            .format_ty_for_cc(ty, TypeLocation::Other)?
-                            .resolve_feature_requirements(crate_features(db, LOCAL_CRATE))?,
+            .variants()
+            .iter_enumerated()
+            .map(|(variant_index, variant)| {
+                variant
+                    .fields
+                    .iter()
+                    .sorted_by_key(|f| tcx.def_span(f.did))
+                    .enumerate()
+                    .map(|(index, field_def)| {
+                        // *Not* using zip, in order to crash on length mismatch.
+                        let hir_field = hir_fields
+                            .get(variant_index.index())
+                            .expect("HIR ADT had fewer variants than rustc_middle")
+                            .get(index)
+                            .expect("HIR ADT had fewer fields than rustc_middle for this variant");
+                        assert!(field_def.did == hir_field.def_id.to_def_id());
+                        let ty = SugaredTy::new(field_def.ty(tcx, substs_ref), Some(hir_field.ty));
+                        let size = get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
+                        let type_info = size.and_then(|size| {
+                            Ok(FieldTypeInfo {
+                                size,
+                                cpp_type: db
+                                    .format_ty_for_cc(ty, TypeLocation::Other)?
+                                    .resolve_feature_requirements(crate_features(
+                                        db,
+                                        LOCAL_CRATE,
+                                    ))?,
+                            })
+                        });
+                        let name = field_def.ident(tcx).to_string();
+                        let cc_name = if member_function_names.contains(&name) {
+                            // TODO: Handle the case of name_ itself also being taken? e.g. the Rust
+                            // struct struct S {a: i32, a_: i32} impl S
+                            // { fn a() {} fn a_() {} fn a__(){}.
+                            format!("{name}_")
+                        } else {
+                            name.clone()
+                        };
+                        let cc_name =
+                            format_cc_ident(db, cc_name.as_str()).unwrap_or_else(|_err| {
+                                format_ident!("__field{index}").into_token_stream()
+                            });
+                        let rs_name = {
+                            let name_starts_with_digit = name
+                                .as_str()
+                                .chars()
+                                .next()
+                                .expect("Empty names are unexpected (here and in general)")
+                                .is_ascii_digit();
+                            if name_starts_with_digit {
+                                let index = Literal::usize_unsuffixed(index);
+                                quote! { #index }
+                            } else {
+                                let name = make_rs_ident(name.as_str());
+                                quote! { #name }
+                            }
+                        };
+
+                        // `offset` and `offset_of_next_field` will be fixed by
+                        // FieldsShape::Arbitrary branch below.
+                        let offset = 0;
+                        let offset_of_next_field = 0;
+
+                        // Populate attributes.
+                        let mut attributes = vec![];
+                        if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, field_def.did) {
+                            attributes.push(cc_deprecated_tag);
+                        }
+
+                        Field {
+                            type_info,
+                            cc_name,
+                            rs_name,
+                            is_public: field_def.vis == ty::Visibility::Public,
+                            index,
+                            offset,
+                            offset_of_next_field,
+                            doc_comment: format_doc_comment(tcx, field_def.did.expect_local()),
+                            attributes,
+                        }
                     })
-                });
-                let name = field_def.ident(tcx).to_string();
-                let cc_name = if member_function_names.contains(&name) {
-                    // TODO: Handle the case of name_ itself also being taken? e.g. the Rust struct
-                    // struct S {a: i32, a_: i32} impl S { fn a() {} fn a_() {} fn a__(){}.
-                    format!("{name}_")
-                } else {
-                    name.clone()
-                };
-                let cc_name = format_cc_ident(db, cc_name.as_str())
-                    .unwrap_or_else(|_err| format_ident!("__field{index}").into_token_stream());
-                let rs_name = {
-                    let name_starts_with_digit = name
-                        .as_str()
-                        .chars()
-                        .next()
-                        .expect("Empty names are unexpected (here and in general)")
-                        .is_ascii_digit();
-                    if name_starts_with_digit {
-                        let index = Literal::usize_unsuffixed(index);
-                        quote! { #index }
-                    } else {
-                        let name = make_rs_ident(name.as_str());
-                        quote! { #name }
-                    }
-                };
-
-                // `offset` and `offset_of_next_field` will be fixed by FieldsShape::Arbitrary
-                // branch below.
-                let offset = 0;
-                let offset_of_next_field = 0;
-
-                // Populate attributes.
-                let mut attributes = vec![];
-                if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, field_def.did) {
-                    attributes.push(cc_deprecated_tag);
-                }
-
-                Field {
-                    type_info,
-                    cc_name,
-                    rs_name,
-                    is_public: field_def.vis == ty::Visibility::Public,
-                    index,
-                    offset,
-                    offset_of_next_field,
-                    doc_comment: format_doc_comment(tcx, field_def.did.expect_local()),
-                    attributes,
-                }
+                    .collect_vec()
             })
             .collect_vec();
 
-        // Determine the memory layout
-        match layout.fields() {
-            FieldsShape::Arbitrary { offsets, .. } => {
-                for (index, offset) in offsets.iter().enumerate() {
-                    // Documentation of `FieldsShape::Arbitrary says that the offsets are
-                    // "ordered to match the source definition order".
-                    // We can coorelate them with elements
-                    // of the `fields` vector because we've explicitly `sorted_by_key` using
-                    // `def_span`.
-                    fields[index].offset = offset.bytes();
+        for (variant_index, variant_fields) in fields_shape.iter().enumerate() {
+            match variant_fields {
+                // Struct/Enum case
+                FieldsShape::Arbitrary { offsets, .. } => {
+                    for (index, offset) in offsets.iter().enumerate() {
+                        // Documentation of `FieldsShape::Arbitrary says that the offsets are
+                        // "ordered to match the source definition order".
+                        // We can coorelate them with elements
+                        // of the `fields` vector because we've explicitly `sorted_by_key` using
+                        // `def_span`.
+                        variants_fields[variant_index][index].offset = offset.bytes();
+
+                        if is_supported_enum {
+                            // Find the offset for the variant, and take it into
+                            // account.
+                            variants_fields[variant_index][index].offset -= tag_size_with_padding;
+                        }
+                    }
+                    // Sort by offset first; ZSTs in the same offset are sorted by source order.
+                    // Use `field_size` to ensure ZSTs at the same offset as
+                    // non-ZSTs sort first to avoid weird offset issues later on.
+                    variants_fields[variant_index].sort_by_key(|field| {
+                        let field_size =
+                            field.type_info.as_ref().map(|info| info.size).unwrap_or(0);
+                        (field.offset, field_size, field.index)
+                    });
                 }
-                // Sort by offset first; ZSTs in the same offset are sorted by source order.
-                // Use `field_size` to ensure ZSTs at the same offset as
-                // non-ZSTs sort first to avoid weird offset issues later on.
-                fields.sort_by_key(|field| {
-                    let field_size = field.type_info.as_ref().map(|info| info.size).unwrap_or(0);
-                    (field.offset, field_size, field.index)
-                });
-            }
-            FieldsShape::Union(num_fields) => {
-                // Compute the offset of each field
-                for index in 0..num_fields.get() {
-                    fields[index].offset = layout.fields().offset(index).bytes();
+                FieldsShape::Union(num_fields) => {
+                    // Compute the offset of each field
+                    for index in 0..num_fields.get() {
+                        variants_fields[variant_index][index].offset =
+                            layout.fields().offset(index).bytes();
+                    }
                 }
+                unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
             }
-            unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
         }
 
-        let next_offsets = fields
-            .iter()
-            .map(|Field { offset, .. }| *offset)
-            .skip(1)
-            .chain(once(core.size_in_bytes))
-            .collect_vec();
-        for (field, next_offset) in fields.iter_mut().zip(next_offsets) {
-            field.offset_of_next_field = next_offset;
+        for (variant_index, variant_fields) in variants_fields.iter_mut().enumerate() {
+            let next_offsets = variant_fields
+                .iter()
+                .map(|Field { offset, .. }| *offset)
+                .skip(1)
+                .chain(once(layout_size[variant_index]))
+                .collect_vec();
+            for (field, next_offset) in variant_fields.iter_mut().zip(next_offsets) {
+                field.offset_of_next_field = next_offset;
+            }
         }
-        fields
+        variants_fields
     };
 
-    let cc_details = if fields.is_empty() {
+    let cc_details = if variants_fields.is_empty() {
         CcSnippet::default()
     } else {
         let adt_cc_name = &core.cc_short_name;
-        let cc_assertions: TokenStream = fields
-            .iter()
-            // TODO(b/298660437): Add support for ZST fields.
-            .filter(|field| field.size() != 0)
-            .map(|Field { cc_name, offset, .. }| {
-                let offset = Literal::u64_unsuffixed(*offset);
-                quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
-            })
-            .collect();
+        let cc_assertions: TokenStream = match adt_def.adt_kind() {
+            ty::AdtKind::Struct | ty::AdtKind::Union => {
+                variants_fields
+                    .iter()
+                    .flatten()
+                    // TODO(b/298660437): Add support for ZST fields.
+                    .filter(|field| field.size() != 0)
+                    .map(|Field { cc_name, offset, .. }| {
+                        let offset = Literal::u64_unsuffixed(*offset);
+                        quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
+                    })
+                    .collect()
+            }
+            ty::AdtKind::Enum => {
+                // Check if each variant has the tag (and appropriate padding) in the front.
+                if !is_supported_enum {
+                    variants_fields
+                        .iter()
+                        .flatten()
+                        // TODO(b/298660437): Add support for ZST fields.
+                        .filter(|field| field.size() != 0)
+                        .map(|Field { cc_name, offset, .. }| {
+                            let offset = Literal::u64_unsuffixed(*offset);
+                            quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
+                        })
+                        .collect()
+                } else {
+                    let variant_offset_assertions: TokenStream = adt_def.variants().iter_enumerated().map(|(variant_index, variant_def)| {
+                    let cc_variant_struct_name = format_cc_ident(db, variant_def.ident(tcx).as_str())
+                        .unwrap_or_else(|_err| format_ident!("err_field").into_token_stream());
+                    let tag_unsuffixed = Literal::u64_unsuffixed(tag_size_with_padding);
+                    // If the variant has no fields, don't bother generating any assertions.
+                    if variant_sizes[variant_index.index()] == 0  {
+                        quote! {}
+                    } else {
+                        quote! { static_assert(#tag_unsuffixed == offsetof(#adt_cc_name, #cc_variant_struct_name)); }
+                    }
+                }).collect();
+                    // Check for each field's offsets within the variant.
+                    let variant_field_assertions: TokenStream = variants_fields
+                    .iter().enumerate().flat_map(|(variant_index, fields_for_variant)| {
+                        let variant_def = adt_def.variant(VariantIdx::from_usize(variant_index));
+                        let cc_variant = variant_def.ident(tcx);
+                        let qualified_struct_name =
+                            format_cc_ident(db, format!("{}::__crubit_{}_struct", adt_cc_name, cc_variant).as_ref())
+                                .unwrap();
+                        // If the variant has no fields, don't bother generating any assertions.
+                        if variant_def.fields.is_empty() {
+                            quote! {}
+                        }
+                        else {
+                            //
+                        fields_for_variant.iter().filter(|field| field.type_info.is_ok() && field.size() != 0 ).flat_map(move |Field { cc_name, offset, .. }| {
+                        let offset = Literal::u64_unsuffixed(*offset);
+                            quote! { static_assert(#offset == offsetof(#qualified_struct_name, #cc_name)); }
+                    }).collect()
+                }
+                    }).collect();
+                    quote! {#variant_offset_assertions #variant_field_assertions }
+                }
+            }
+        };
+
         CcSnippet::with_include(
             quote! {
                 inline void #adt_cc_name::__crubit_field_offset_assertions() {
@@ -2914,14 +3088,42 @@ fn format_fields<'tcx>(
             CcInclude::cstddef(),
         )
     };
-    let rs_details: TokenStream = {
+
+    let rs_details: TokenStream = if is_supported_enum {
+        // Offsets for enums is an experimental feature.
+        // TODO(b/355642210): Add these assertions once they're not
+        // experiemtnal. let adt_rs_name =
+        // &core.rs_fully_qualified_name; variants_fields
+        //     .iter()
+        //     .enumerate()
+        //     .map(|(variant_index, fields)| {
+        //         let variant_def =
+        // adt_def.variant(VariantIdx::from_usize(variant_index));         let
+        // variant_name = make_rs_ident(variant_def.ident(tcx).as_str());
+        //         let variant_offset_assertions: TokenStream = fields
+        //             .iter()
+        //             .map(|Field { rs_name, offset, .. }| {
+        //                 let expected_offset =
+        // Literal::u64_unsuffixed(*offset);                 let
+        // actual_offset =                     quote! {
+        // ::core::mem::offset_of!(#adt_rs_name, #variant_name.#rs_name)
+        // };                 quote! { const _: () =
+        // assert!(#actual_offset == #expected_offset); }             })
+        //             .collect();
+        //         variant_offset_assertions
+        //     })
+        //     .collect()
+        quote! {}
+    } else {
         let adt_rs_name = &core.rs_fully_qualified_name;
-        fields
+        variants_fields
             .iter()
-            // TODO(b/298660437): Even though we don't generate bindings for ZST fields, we'd still
-            // like to make sure we computed the offset of ZST fields correctly on the Rust side,
-            // so we still emit offset assertions for ZST fields here.
-            // TODO(b/298660437): Remove the comment above when ZST fields are supported.
+            .flatten()
+            // TODO(b/298660437): Even though we don't generate bindings for ZST fields,
+            // we'd still like to make sure we computed the offset of
+            // ZST fields correctly on the Rust side, so we still emit
+            // offset assertions for ZST fields here. TODO(b/298660437):
+            // Remove the comment above when ZST fields are supported.
             .filter(|field| field.is_public)
             .map(|Field { rs_name, offset, .. }| {
                 let expected_offset = Literal::u64_unsuffixed(*offset);
@@ -2931,7 +3133,7 @@ fn format_fields<'tcx>(
             .collect()
     };
     let main_api = {
-        let assertions_method_decl = if fields.is_empty() {
+        let assertions_method_decl = if variants_fields.is_empty() {
             quote! {}
         } else {
             // We put the assertions in a method so that they can read private member
@@ -2949,111 +3151,319 @@ fn format_fields<'tcx>(
         // If it was placed in the second byte, for any reason, then we would need
         // explicit padding bytes.
         let always_omit_padding = repr_attrs.contains(&rustc_attr::ReprC)
-            && fields.iter().all(|field| field.type_info.is_ok());
+            && variants_fields.iter().flatten().all(|field| field.type_info.is_ok());
 
         let mut prereqs = CcPrerequisites::default();
-        let fields: TokenStream = fields
-            .into_iter()
-            .map(|field| {
-                let cc_name = &field.cc_name;
-                match field.type_info {
-                    Err(ref err) => {
-                        let size = field.size();
-                        let msg =
-                            format!("Field type has been replaced with a blob of bytes: {err:#}");
+        // Takes a field and converts it to a token stream.
+        let get_field_tokens = |field: Field, prereqs: &mut CcPrerequisites| -> TokenStream {
+            let cc_name = &field.cc_name;
+            match field.type_info {
+                Err(ref err) => {
+                    let size = field.size();
+                    let msg = format!("Field type has been replaced with a blob of bytes: {err:#}");
 
-                        // Empty arrays are ill-formed, but also unnecessary for padding.
-                        if size > 0 {
-                            let size = Literal::u64_unsuffixed(size);
-                            quote! {
-                                private: __NEWLINE__
-                                    __COMMENT__ #msg
-                                    unsigned char #cc_name[#size];
-                            }
-                        } else {
-                            // TODO(b/258259459): Generate bindings for ZST fields.
-                            let msg = format!(
-                                "Skipped bindings for field `{cc_name}`: \
-                               ZST fields are not supported (b/258259459)"
-                            );
-                            quote! {__NEWLINE__ __COMMENT__ #msg}
+                    // Empty arrays are ill-formed, but also unnecessary for padding.
+                    if size > 0 {
+                        let size = Literal::u64_unsuffixed(size);
+                        quote! {
+                            private: __NEWLINE__
+                                __COMMENT__ #msg
+                                unsigned char #cc_name[#size];
                         }
+                    } else {
+                        // TODO(b/258259459): Generate bindings for ZST fields.
+                        let msg = format!(
+                            "Skipped bindings for field `{cc_name}`: \
+                               ZST fields are not supported (b/258259459)"
+                        );
+                        quote! {__NEWLINE__ __COMMENT__ #msg}
                     }
-                    Ok(FieldTypeInfo { cpp_type, size }) => {
-                        // Only structs require no overlaps.
-                        let padding = match adt_def.adt_kind() {
-                            ty::AdtKind::Struct => {
-                                assert!((field.offset + size) <= field.offset_of_next_field);
-                                field.offset_of_next_field - field.offset - size
-                            }
-                            ty::AdtKind::Union => field.offset,
-                            ty::AdtKind::Enum => todo!(),
-                        };
+                }
+                Ok(FieldTypeInfo { cpp_type, size }) => {
+                    let padding = match adt_def.adt_kind() {
+                        ty::AdtKind::Struct | ty::AdtKind::Enum => {
+                            assert!((field.offset + size) <= field.offset_of_next_field);
+                            field.offset_of_next_field - field.offset - size
+                        }
+                        ty::AdtKind::Union => field.offset,
+                    };
 
-                        // Omit explicit padding if:
-                        //   1. The type is repr(C) and has known types for all fields, so we can
-                        //      reuse the natural repr(C) padding.
-                        //   2. There is no padding
-                        // TODO(jeanpierreda): also omit padding for the final field?
-                        let padding = if always_omit_padding || padding == 0 {
-                            quote! {}
-                        } else {
-                            let padding = Literal::u64_unsuffixed(padding);
-                            let ident = format_ident!("__padding{}", field.index);
-                            quote! { private: unsigned char #ident[#padding]; }
-                        };
-                        let visibility = if field.is_public {
-                            quote! { public: }
-                        } else {
-                            quote! { private: }
-                        };
-                        let cpp_type = cpp_type.into_tokens(&mut prereqs);
-                        let doc_comment = field.doc_comment;
-                        let attributes = field.attributes;
+                    // Omit explicit padding if:
+                    //   1. The type is repr(C) and has known types for all fields, so we can reuse
+                    //      the natural repr(C) padding.
+                    //   2. There is no padding
+                    // TODO(jeanpierreda): also omit padding for the final field?
+                    let padding = if always_omit_padding || padding == 0 {
+                        quote! {}
+                    } else {
+                        let padding = Literal::u64_unsuffixed(padding);
+                        let ident = format_ident!("__padding{}", field.index);
+                        quote! { private: unsigned char #ident[#padding]; }
+                    };
+                    let visibility = if field.is_public {
+                        quote! { public: }
+                    } else {
+                        quote! { private: }
+                    };
+                    let cpp_type = cpp_type.into_tokens(prereqs);
+                    let doc_comment = field.doc_comment;
+                    let attributes = field.attributes;
 
-                        match adt_def.adt_kind() {
-                            ty::AdtKind::Struct => quote! {
-                                #visibility __NEWLINE__
-                                    // The anonymous union gives more control over when exactly
-                                    // the field constructors and destructors run.  See also
-                                    // b/288138612.
-                                    union {  __NEWLINE__
-                                        #doc_comment
-                                        #(#attributes)*
-                                        #cpp_type #cc_name;
-                                    };
-                                #padding
-                            },
-                            ty::AdtKind::Union => {
-                                if repr_attrs.contains(&rustc_attr::ReprC) {
-                                    quote! {
-                                        #visibility __NEWLINE__
-                                        #doc_comment
-                                        #cpp_type #cc_name;
-                                    }
+                    match adt_def.adt_kind() {
+                        ty::AdtKind::Struct => quote! {
+                            #visibility __NEWLINE__
+                                // The anonymous union gives more control over when exactly
+                                // the field constructors and destructors run.  See also
+                                // b/288138612.
+                                union {  __NEWLINE__
+                                    #doc_comment
+                                    #(#attributes)*
+                                    #cpp_type #cc_name;
+                                };
+                            #padding
+                        },
+                        ty::AdtKind::Union => {
+                            if repr_attrs.contains(&rustc_attr::ReprC) {
+                                quote! {
+                                    #visibility __NEWLINE__
+                                    #doc_comment
+                                    #cpp_type #cc_name;
+                                }
+                            } else {
+                                let internal_padding = if field.offset == 0 {
+                                    quote! {}
                                 } else {
-                                     let internal_padding = if field.offset == 0 {
-                                         quote! {}
-                                        } else {
-                                         let internal_padding_size = Literal::u64_unsuffixed(field.offset);
-                                         quote! {char __crubit_internal_padding[#internal_padding_size]}
-                                    };
-                                    quote! {
-                                        #visibility __NEWLINE__
-                                        #doc_comment
-                                        struct {
-                                            #internal_padding
-                                            #cpp_type value;
-                                        } #cc_name;
-                                    }
+                                    let internal_padding_size =
+                                        Literal::u64_unsuffixed(field.offset);
+                                    quote! {char __crubit_internal_padding[#internal_padding_size]}
+                                };
+                                quote! {
+                                    #visibility __NEWLINE__
+                                    #doc_comment
+                                    struct {
+                                        #internal_padding
+                                        #cpp_type value;
+                                    } #cc_name;
                                 }
                             }
-                            ty::AdtKind::Enum => todo!(),
+                        }
+                        ty::AdtKind::Enum => {
+                            quote! {
+                                #visibility __NEWLINE__ #cpp_type #cc_name;
+                            }
                         }
                     }
                 }
-            })
-            .collect();
+            }
+        };
+
+        // For structs and unions, we can just flatten the fields variant. For enums, we
+        // need to handle each variant separately.
+        let fields = match adt_def.adt_kind() {
+            ty::AdtKind::Struct | ty::AdtKind::Union => variants_fields
+                .into_iter()
+                .flatten()
+                .map(|field| get_field_tokens(field, &mut prereqs))
+                .collect(),
+            ty::AdtKind::Enum => {
+                if !is_supported_enum {
+                    variants_fields
+                        .into_iter()
+                        .flatten()
+                        .map(|field| get_field_tokens(field, &mut prereqs))
+                        .collect()
+                } else {
+                    // We need three things:
+                    // 1. A representation of the tag (tag_enum).
+                    // 2. A representation of the fields in each variant (variant_structs).
+                    // 3. A union of the results of (2) (variants_union).
+
+                    // Step 1 is ignored if there is only one variant.
+
+                    // See https://doc.rust-lang.org/reference/type-layout.html#reprc-enums-with-fields
+
+                    // Get tokens for the tag, if it exists.
+                    let tag_enum = match layout_variants {
+                        Variants::Single { .. } => quote! {},
+                        Variants::Multiple { tag, .. } => {
+                            // Get the tag type.
+                            let tag_ty = match tag.primitive() {
+                                // We always expect the tag to be an integer type.
+                                Primitive::Int(tag_int, signed) => {
+                                    // Map the corresponding primitive to rust type.
+                                    match (tag_int, signed) {
+                                        (Integer::I8, false) => Ty::new_uint(tcx, UintTy::U8),
+                                        (Integer::I16, false) => Ty::new_uint(tcx, UintTy::U16),
+                                        (Integer::I32, false) => Ty::new_uint(tcx, UintTy::U32),
+                                        (Integer::I64, false) => Ty::new_uint(tcx, UintTy::U64),
+                                        (Integer::I128, false) => Ty::new_uint(tcx, UintTy::U128),
+                                        (Integer::I8, true) => Ty::new_int(tcx, IntTy::I8),
+                                        (Integer::I16, true) => Ty::new_int(tcx, IntTy::I16),
+                                        (Integer::I32, true) => Ty::new_int(tcx, IntTy::I32),
+                                        (Integer::I64, true) => Ty::new_int(tcx, IntTy::I64),
+                                        (Integer::I128, true) => Ty::new_int(tcx, IntTy::I128),
+                                    }
+                                }
+                                _ => panic!("Internal error: enum tag is not valid."),
+                            };
+
+                            let tag_tokens = format_ty_for_cc(
+                                db,
+                                // An enum cannot have repr(c_char), or any other alias, so there's
+                                // never sugar.
+                                SugaredTy::new(tag_ty, None),
+                                TypeLocation::Other,
+                            )
+                            .expect("discriminant should be a integer type.")
+                            .into_tokens(&mut prereqs);
+
+                            let variant_enum_fields: TokenStream = adt_def
+                                .variants()
+                                .iter_enumerated()
+                                .map(|(variant_index, variant_def)| {
+                                    let cc_variant_name =
+                                        format_cc_ident(db, variant_def.name.as_str())
+                                            .unwrap_or_else(|_err| {
+                                                format_ident!("err_field").into_token_stream()
+                                            });
+                                    let tag_value = Literal::u128_unsuffixed(
+                                        adt_def.discriminant_for_variant(tcx, variant_index).val,
+                                    );
+                                    quote! {
+                                        __NEWLINE__ #cc_variant_name = #tag_value,
+                                    }
+                                })
+                                .collect();
+                            quote! {
+                                __NEWLINE__ enum class Tag : #tag_tokens {
+                                    #variant_enum_fields
+                                }; __NEWLINE__
+                            }
+                        }
+                    };
+
+                    let mut tokens_per_variant: Vec<TokenStream> =
+                        Vec::with_capacity(variants_fields.len());
+
+                    for fields_for_variant in variants_fields.into_iter() {
+                        tokens_per_variant.push(
+                            fields_for_variant
+                                .into_iter()
+                                .map(|field| get_field_tokens(field, &mut prereqs))
+                                .collect(),
+                        );
+                    }
+
+                    // We need to get the alignment of each variant struct.
+                    let variant_alignments = match layout_variants {
+                        Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
+                            variants
+                                .iter()
+                                .map(|layout| layout.align.abi.bytes() - tag_size_with_padding)
+                                .collect_vec()
+                        }
+                        Variants::Single { .. } => {
+                            vec![core.alignment_in_bytes]
+                        }
+                    };
+
+                    let variant_structs: TokenStream = adt_def
+                        .variants()
+                        .iter_enumerated()
+                        .map(|(variant_index, variant_def)| {
+                            // Get the variant name.
+                            let cc_variant_struct_name = format_cc_ident(
+                                db,
+                                format!("__crubit_{}_struct", variant_def.ident(tcx).as_str())
+                                    .as_ref(),
+                            )
+                            .unwrap_or_else(|_err| format_ident!("err_struct").into_token_stream());
+
+                            // Get the corresponding field tokens.
+                            let fields_for_variant = &tokens_per_variant[variant_index.index()];
+
+                            // Get the aligment of the variant...
+                            let variant_alignment =
+                                Literal::u64_unsuffixed(variant_alignments[variant_index.index()]);
+
+                            // Create the actual struct, if the variant has size. Otherwise, make
+                            // a note that the variant is empty.
+                            if variant_sizes[variant_index.index()] == 0 {
+                                let cc_variant_name =
+                                    format_cc_ident(db, variant_def.name.as_str()).unwrap_or_else(
+                                        |_err| format_ident!("err_field").into_token_stream(),
+                                    );
+                                let msg = format!(
+                                    "Variant {} has no size, so no struct is generated.",
+                                    cc_variant_name
+                                );
+                                quote! {__NEWLINE__
+                                __COMMENT__ #msg}
+                            } else {
+                                quote! {
+                                    __NEWLINE__
+                                    struct alignas(#variant_alignment) #cc_variant_struct_name {
+                                        #fields_for_variant
+                                    };
+                                }
+                            }
+                        })
+                        .collect();
+
+                    let variants_union_fields: TokenStream = adt_def
+                        .variants()
+                        .iter_enumerated()
+                        .map(|(variant_index, variant_def)| {
+                            // Get the variant name.
+                            let cc_variant_name = format_cc_ident(db, variant_def.name.as_str())
+                                .unwrap_or_else(|_err| {
+                                    format_ident!("err_field").into_token_stream()
+                                });
+                            let cc_variant_struct_type = format_cc_ident(
+                                db,
+                                format!("__crubit_{}_struct", variant_def.ident(tcx).as_str())
+                                    .as_ref(),
+                            )
+                            .unwrap_or_else(|_err| format_ident!("err_struct").into_token_stream());
+
+                            // If the variant has no fields (i.e. the struct is empty), we can skip
+                            // this declaration.
+                            if variant_sizes[variant_index.index()] == 0 {
+                                quote! {}
+                            } else {
+                                quote! {
+                                    #cc_variant_struct_type #cc_variant_name; __NEWLINE__
+                                }
+                            }
+                        })
+                        .collect();
+
+                    let variants_union: TokenStream = {
+                        let has_no_fields =
+                            variant_sizes.iter().all(|size_of_variant| *size_of_variant == 0);
+
+                        if has_no_fields {
+                            // If there are no fields in any variant, we must skip this union
+                            quote! {}
+                        } else {
+                            quote! {
+                                public: union  {
+                                    #variants_union_fields
+                                };
+                            }
+                        }
+                    };
+
+                    // Combine everything together.
+                    quote! {
+                        #variant_structs __NEWLINE__
+                        #tag_enum __NEWLINE__
+                        public: Tag tag; __NEWLINE__
+                        #variants_union
+                    }
+                }
+            }
+        };
 
         CcSnippet {
             prereqs,
@@ -8096,7 +8506,7 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
-                                 No support for bindings of individual `enum` fields";
+                                 No support for bindings of individual non-repr(C) `enum`s";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -8156,7 +8566,7 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             let main_api = &result.main_api;
             let no_fields_msg = "Field type has been replaced with a blob of bytes: \
-                                 No support for bindings of individual `enum` fields";
+                                 No support for bindings of individual non-repr(C) `enum`s";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -10135,6 +10545,228 @@ pub mod tests {
                     ...
                     extern "C" fn ... (__self: &mut ::core::mem::MaybeUninit<::rust_out::SomeUnion>...) { unsafe { __self.assume_init_drop() }; }
                     ...
+                }
+            );
+        })
+    }
+
+    #[test]
+    fn test_repr_c_enum_fields() {
+        let test_src = r#"
+        #[repr(C, i32)]
+        pub enum SomeEnum {
+            A(i32),
+            B{x: u32},
+            C,
+            D{foo: i32, bar: i32} = 3,
+        }
+
+        const _: () = assert!(std::mem::size_of::<SomeEnum>() == 12);
+        const _: () = assert!(std::mem::align_of::<SomeEnum>() == 4);
+        "#;
+
+        test_format_item(test_src, "SomeEnum", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) ... [[clang::trivial_abi]] SomeEnum final {
+                        public:
+                            ...
+                            __COMMENT__ "`SomeEnum` doesn't implement the `Default` trait"
+                            SomeEnum() = delete;
+                            ...
+                            __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+                            ~SomeEnum() = default;
+                            SomeEnum(SomeEnum&&) = default;
+                            SomeEnum& operator=(SomeEnum&&) = default;
+
+                            __COMMENT__ "`SomeEnum` doesn't implement the `Clone` trait"
+                            SomeEnum(const SomeEnum&) = delete;
+                            SomeEnum& operator=(const SomeEnum&) = delete;
+                            ...
+                            struct alignas(...) __crubit_A_struct {
+                                public:
+                                    std::int32_t __field0;
+                            };
+                            ...
+                            struct alignas(...) __crubit_B_struct {
+                                public:
+                                    std::uint32_t x;
+                            };
+                            ...
+                            __COMMENT__ "Variant C has no size, so no struct is generated."
+                            ...
+                            struct alignas(...) __crubit_D_struct {
+                                public:
+                                    std::int32_t foo;
+                                public:
+                                    std::int32_t bar;
+                            };
+                            ...
+                            enum class Tag : std::int32_t {
+                                A = 0,
+                                B = 1,
+                                C = 2,
+                                D = 3,
+                            };
+                            ...
+                            public:
+                                Tag tag;
+                            ...
+                            public:
+                                union {
+                                    __crubit_A_struct A;
+                                    __crubit_B_struct B;
+                                    __crubit_D_struct D;
+                                };
+                            ...
+                        ...
+                    };
+                }
+            );
+        })
+    }
+
+    #[test]
+    fn test_repr_c_enum_with_zst() {
+        let test_src = r#"
+        #[repr(C, i32)]
+        pub enum SomeEnum {
+            A(()),
+        }
+
+        const _: () = assert!(std::mem::size_of::<SomeEnum>() == 4);
+        const _: () = assert!(std::mem::align_of::<SomeEnum>() == 4);
+        "#;
+
+        test_format_item(test_src, "SomeEnum", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) ... [[clang::trivial_abi]] SomeEnum final {
+                        public:
+                            ...
+                            __COMMENT__ "`SomeEnum` doesn't implement the `Default` trait"
+                            SomeEnum() = delete;
+                            ...
+                            __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
+                            ~SomeEnum() = default;
+                            SomeEnum(SomeEnum&&) = default;
+                            SomeEnum& operator=(SomeEnum&&) = default;
+
+                            __COMMENT__ "`SomeEnum` doesn't implement the `Clone` trait"
+                            SomeEnum(const SomeEnum&) = delete;
+                            SomeEnum& operator=(const SomeEnum&) = delete;
+                            ...
+                            __COMMENT__ "Variant A has no size, so no struct is generated."
+                            ...
+                            enum class Tag : std::int32_t {
+                                A = 0,
+                            };
+                            ...
+                            public:
+                                Tag tag;
+                            ...
+                        ...
+                    };
+                }
+            );
+        })
+    }
+
+    #[test]
+    fn test_repr_c_enum_drop() {
+        let test_src = r#"
+        #[repr(C, i32)]
+        pub enum SomeEnum {
+            A(i32),
+            B{x: u32},
+            C,
+            D{foo: i32, bar: i32} = 3,
+        }
+
+        impl Drop for SomeEnum {
+            fn drop(&mut self) {
+                println!(":)")
+            }
+        }
+
+        const _: () = assert!(std::mem::size_of::<SomeEnum>() == 12);
+        const _: () = assert!(std::mem::align_of::<SomeEnum>() == 4);
+        "#;
+
+        test_format_item(test_src, "SomeEnum", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) ... [[clang::trivial_abi]] SomeEnum final {
+                        public:
+                            ...
+                            __COMMENT__ "Drop::drop"
+                            ~SomeEnum();
+
+                            ...
+                            SomeEnum(SomeEnum&&) = delete;
+                            SomeEnum& operator=(SomeEnum&&) = delete;
+                            ...
+                        ...
+                    };
+                }
+            );
+        })
+    }
+
+    #[test]
+    fn test_repr_c_enum_clone() {
+        let test_src = r#"
+        #[repr(C, i32)]
+        pub enum SomeEnum {
+            A(i32),
+            B{x: u32},
+            C,
+            D{foo: i32, bar: i32} = 3,
+        }
+
+        impl Clone for SomeEnum {
+            fn clone(&self) -> SomeEnum {
+                return SomeEnum::A(1)
+            }
+        }
+
+        const _: () = assert!(std::mem::size_of::<SomeEnum>() == 12);
+        const _: () = assert!(std::mem::align_of::<SomeEnum>() == 4);
+        "#;
+
+        test_format_item(test_src, "SomeEnum", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) ... [[clang::trivial_abi]] SomeEnum final {
+                        public:
+                            ...
+                            __COMMENT__ "Clone::clone"
+                            SomeEnum(const SomeEnum&);
+
+                            __COMMENT__ "Clone::clone_from"
+                            SomeEnum& operator=(const SomeEnum&);
+                        ...
+                    };
                 }
             );
         })
