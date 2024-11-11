@@ -24,6 +24,7 @@ filegroup(
             "cpp_std_string.rs",
             "cpp_std_allocator.rs",
             "vector.rs",
+            "unique_ptr.rs",
         ],
     ),
 )
@@ -117,12 +118,21 @@ additional_rust_srcs_for_crubit_bindings(
     namespace_path = "crubit_cc_std_internal::std_allocator",
 )
 
+additional_rust_srcs_for_crubit_bindings(
+    name = "manually_bridged_types",
+    srcs = [
+        "unique_ptr.rs",
+    ],
+    namespace_path = "std",
+)
+
 bindings_for_toolchain_headers(
     name = "cc_std",
     extra_hdrs = [":crubit_internal_helper_headers"],
     extra_rs_srcs = [
         ":extra_rs_srcs_for_cc_std",
         ":cpp_std_allocator",
+        ":manually_bridged_types",
     ],
     public_libc_hdrs = LIBC_HEADERS,
     public_libcxx_hdrs = LIBCXX_HEADERS,
