@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_AUGMENTED_TEST_INPUTS_H_
-#define THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_AUGMENTED_TEST_INPUTS_H_
+#ifndef CRUBIT_NULLABILITY_INFERENCE_AUGMENTED_TEST_INPUTS_H_
+#define CRUBIT_NULLABILITY_INFERENCE_AUGMENTED_TEST_INPUTS_H_
 
 #include "nullability/pragma.h"
 #include "clang/Testing/TestAST.h"
@@ -19,4 +19,4 @@ TestInputs getAugmentedTestInputs(llvm::StringRef Source,
 
 }  // namespace clang::tidy::nullability
 
-#endif  // THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_AUGMENTED_TEST_INPUTS_H_
+#endif  // CRUBIT_NULLABILITY_INFERENCE_AUGMENTED_TEST_INPUTS_H_

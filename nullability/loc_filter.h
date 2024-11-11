@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_NULLABILITY_LOC_FILTER_H_
-#define THIRD_PARTY_CRUBIT_NULLABILITY_LOC_FILTER_H_
+#ifndef CRUBIT_NULLABILITY_LOC_FILTER_H_
+#define CRUBIT_NULLABILITY_LOC_FILTER_H_
 
 #include <memory>
 
@@ -27,4 +27,4 @@ std::unique_ptr<LocFilter> getLocFilter(const SourceManager &SM,
 
 }  // namespace clang::tidy::nullability
 
-#endif  // THIRD_PARTY_CRUBIT_NULLABILITY_LOC_FILTER_H_
+#endif  // CRUBIT_NULLABILITY_LOC_FILTER_H_

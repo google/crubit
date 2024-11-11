@@ -20,8 +20,8 @@
 // included in affected translation units without the containing directories.
 
 // IWYU pragma: private, include macros from their original definition sites
-#ifndef THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_CLANG_TIDY_NULLABILITY_REPLACEMENT_MACROS_H_
-#define THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_CLANG_TIDY_NULLABILITY_REPLACEMENT_MACROS_H_
+#ifndef CRUBIT_NULLABILITY_INFERENCE_CLANG_TIDY_NULLABILITY_REPLACEMENT_MACROS_H_
+#define CRUBIT_NULLABILITY_INFERENCE_CLANG_TIDY_NULLABILITY_REPLACEMENT_MACROS_H_
 
 #ifdef __cplusplus
 
@@ -84,4 +84,4 @@ constexpr First&& clang_tidy_nullability_internal_abortIfEqual(First&& FirstArg,
 // likely to provide additional coverage as CHECK_NE leading to Nonnull.
 
 #endif  // __cplusplus
-#endif  // THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_CLANG_TIDY_NULLABILITY_REPLACEMENT_MACROS_H_
+#endif  // CRUBIT_NULLABILITY_INFERENCE_CLANG_TIDY_NULLABILITY_REPLACEMENT_MACROS_H_

@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_NULLABILITY_TYPE_AND_MAYBE_LOC_VISITOR_H_
-#define THIRD_PARTY_CRUBIT_NULLABILITY_TYPE_AND_MAYBE_LOC_VISITOR_H_
+#ifndef CRUBIT_NULLABILITY_TYPE_AND_MAYBE_LOC_VISITOR_H_
+#define CRUBIT_NULLABILITY_TYPE_AND_MAYBE_LOC_VISITOR_H_
 
 #include <optional>
 
@@ -54,4 +54,4 @@ class TypeAndMaybeLocVisitor {
 #undef DISPATCH
 }  // namespace clang::tidy::nullability
 
-#endif  // THIRD_PARTY_CRUBIT_NULLABILITY_TYPE_AND_MAYBE_LOC_VISITOR_H_
+#endif  // CRUBIT_NULLABILITY_TYPE_AND_MAYBE_LOC_VISITOR_H_

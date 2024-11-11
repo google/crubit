@@ -6,8 +6,8 @@
 // running inference tooling to allow detection of certain macro calls and the
 // values of their arguments.
 
-#ifndef THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_REPLACE_MACROS_H_
-#define THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_REPLACE_MACROS_H_
+#ifndef CRUBIT_NULLABILITY_INFERENCE_REPLACE_MACROS_H_
+#define CRUBIT_NULLABILITY_INFERENCE_REPLACE_MACROS_H_
 
 #include <memory>
 
@@ -73,4 +73,4 @@ class ReplaceMacrosAction : public clang::ASTFrontendAction {
 };
 }  // namespace clang::tidy::nullability
 
-#endif  // THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_REPLACE_MACROS_H_
+#endif  // CRUBIT_NULLABILITY_INFERENCE_REPLACE_MACROS_H_

@@ -5,8 +5,8 @@
 // This file provides shared constants used when capturing the values passed as
 // arguments to macros of interest.
 
-#ifndef THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_MACRO_ARG_CAPTURE_H_
-#define THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_MACRO_ARG_CAPTURE_H_
+#ifndef CRUBIT_NULLABILITY_INFERENCE_MACRO_ARG_CAPTURE_H_
+#define CRUBIT_NULLABILITY_INFERENCE_MACRO_ARG_CAPTURE_H_
 
 #include "llvm/ADT/StringRef.h"
 
@@ -18,4 +18,4 @@ inline constexpr llvm::StringRef ArgCaptureAbortIfEqual =
     "clang_tidy_nullability_internal_abortIfEqual";
 }  // namespace clang::tidy::nullability
 
-#endif  // THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_MACRO_ARG_CAPTURE_H_
+#endif  // CRUBIT_NULLABILITY_INFERENCE_MACRO_ARG_CAPTURE_H_
