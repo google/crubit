@@ -76,7 +76,8 @@ def _bindings_for_toolchain_headers_impl(ctx):
     extra_rs_srcs = []
     for target in ctx.attr.extra_rs_srcs:
         if AdditionalRustSrcsProviderInfo in target:
-            extra_rs_srcs.extend([(f, target.namespace_path) for f in target.files.to_list()])
+            for src in target[AdditionalRustSrcsProviderInfo].srcs:
+                extra_rs_srcs.extend([(f, target[AdditionalRustSrcsProviderInfo].namespace_path) for f in src.files.to_list()])
         else:
             extra_rs_srcs.extend([(f, "") for f in target.files.to_list()])
     return [RustToolchainHeadersInfo(headers = std_and_builtin_files)] + generate_and_compile_bindings(
