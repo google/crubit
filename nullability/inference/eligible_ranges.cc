@@ -62,10 +62,9 @@ static Nullability toProtoNullability(NullabilityKind Kind) {
   llvm_unreachable("Unhandled NullabilityKind");
 }
 
-static void initSlotRange(SlotRange &R, std::optional<SlotNum> Slot,
-                          SlotNum SlotInType, unsigned Begin, unsigned End,
+static void initSlotRange(SlotRange &R, SlotNum SlotInType, unsigned Begin,
+                          unsigned End,
                           std::optional<NullabilityKind> Nullability) {
-  if (Slot) R.set_slot(*Slot);
   R.set_slot_in_type(SlotInType);
   R.set_begin(Begin);
   R.set_end(End);
@@ -350,7 +349,7 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
                                     const ASTContext &Context,
                                     const FileID &DeclFID,
                                     const TypeNullabilityDefaults &Defaults,
-                                    std::vector<SlotRange> &Ranges) {
+                                    EligibleRanges &Ranges) {
   std::vector<TypeNullabilityLoc> NullabilityLocs =
       getTypeNullabilityLocs(WholeLoc, Defaults);
   std::vector<std::optional<ComplexDeclaratorRanges>>
@@ -408,18 +407,17 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     // TODO(b/323509132) When we can infer more than just top-level pointers,
     // synchronize these slot numbers with inference's slot numbers. For now,
     // assign no slot to anything but a first slot in an inferable type.
-    std::optional<SlotNum> SlotInContext =
+    std::optional<Slot> SlotInContext =
         SlotInLoc == 0 && hasInferable(WholeLoc.getType())
-            ? std::optional(StartingSlot + SlotInLoc)
+            ? std::optional(Slot(StartingSlot + SlotInLoc))
             : std::nullopt;
 
-    SlotRange &Range = Ranges.emplace_back();
-    initSlotRange(Range, SlotInContext, SlotInLoc, BeginOffset, EndOffset,
-                  Nullability);
+    EligibleRange &Range = Ranges.emplace_back(SlotInContext);
+    initSlotRange(Range.Range, SlotInLoc, BeginOffset, EndOffset, Nullability);
     if (Nullability)
       addAnnotationPreAndPostRangeLength(Begin, R->getEnd(), BeginOffset,
                                          EndOffset, DeclFID, SM, LangOpts,
-                                         Range);
+                                         Range.Range);
 
     // If we don't have a std::nullopt or ComplexDeclaratorRange for every slot,
     // don't add any ComplexDeclaratorRanges. The Decl is a complex declarator
@@ -436,7 +434,7 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
                              [EndOffset](const RemovalRange &Removal) {
                                return Removal.begin() < EndOffset;
                              })) {
-        *Range.mutable_complex_declarator_ranges() = std::move(*CDR);
+        *Range.Range.mutable_complex_declarator_ranges() = std::move(*CDR);
       }
     }
 
@@ -447,7 +445,7 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
         PTL = PointeeTL;
       }
       if (PTL.getPointeeLoc().getAs<AutoTypeLoc>()) {
-        Range.set_contains_auto_star(true);
+        Range.Range.set_contains_auto_star(true);
       }
     }
   }
@@ -473,7 +471,7 @@ static std::optional<Nullability> getPragmaNullability(
   return std::nullopt;
 }
 
-static std::vector<SlotRange> getEligibleRanges(
+static EligibleRanges getEligibleRanges(
     const FunctionDecl &Fun, const TypeNullabilityDefaults &Defaults) {
   // NullabilityWalker doesn't work on dependent types.
   if (Fun.getReturnType()->isDependentType()) return {};
@@ -490,7 +488,7 @@ static std::vector<SlotRange> getEligibleRanges(
   std::optional<std::string> Path = getPath(DeclFID, SrcMgr);
   if (!Path) return {};
 
-  std::vector<SlotRange> Result;
+  EligibleRanges Result;
   addRangesQualifierAware(nullptr, TyLoc.getReturnLoc(), SLOT_RETURN_TYPE,
                           Context, DeclFID, Defaults, Result);
 
@@ -504,15 +502,16 @@ static std::vector<SlotRange> getEligibleRanges(
 
   std::optional<Nullability> PragmaNullability =
       getPragmaNullability(DeclFID, Defaults);
-  for (auto &Range : Result) {
-    Range.set_path(*Path);
-    if (PragmaNullability) Range.set_pragma_nullability(*PragmaNullability);
+  for (EligibleRange &Range : Result) {
+    Range.Range.set_path(*Path);
+    if (PragmaNullability)
+      Range.Range.set_pragma_nullability(*PragmaNullability);
   }
 
   return Result;
 }
 
-static std::vector<SlotRange> getEligibleRanges(
+static EligibleRanges getEligibleRanges(
     const DeclaratorDecl &D, const TypeNullabilityDefaults &Defaults) {
   // NullabilityWalker doesn't work on dependent types.
   if (D.getType()->isDependentType()) return {};
@@ -526,22 +525,23 @@ static std::vector<SlotRange> getEligibleRanges(
   std::optional<std::string> Path = getPath(DeclFID, SrcMgr);
   if (!Path) return {};
 
-  std::vector<SlotRange> Result;
+  EligibleRanges Result;
   addRangesQualifierAware(&D, TyLoc, Slot(0), Context, DeclFID, Defaults,
                           Result);
   if (Result.empty()) return {};
 
   std::optional<Nullability> PragmaNullability =
       getPragmaNullability(DeclFID, Defaults);
-  for (SlotRange &Range : Result) {
-    Range.set_path(*Path);
-    if (PragmaNullability) Range.set_pragma_nullability(*PragmaNullability);
+  for (EligibleRange &Range : Result) {
+    Range.Range.set_path(*Path);
+    if (PragmaNullability)
+      Range.Range.set_pragma_nullability(*PragmaNullability);
   }
   return Result;
 }
 
-std::vector<SlotRange> getEligibleRanges(
-    const Decl &D, const TypeNullabilityDefaults &Defaults) {
+EligibleRanges getEligibleRanges(const Decl &D,
+                                 const TypeNullabilityDefaults &Defaults) {
   // We'll never be able to edit a written type for an implicit declaration.
   if (D.isImplicit()) return {};
   if (const auto *Fun = clang::dyn_cast<FunctionDecl>(&D))
@@ -553,8 +553,8 @@ std::vector<SlotRange> getEligibleRanges(
   return {};
 }
 
-std::vector<SlotRange> getInferenceRanges(
-    const Decl &D, const TypeNullabilityDefaults &Defaults) {
+EligibleRanges getInferenceRanges(const Decl &D,
+                                  const TypeNullabilityDefaults &Defaults) {
   if (!isInferenceTarget(D)) return {};
   return getEligibleRanges(D, Defaults);
 }
@@ -567,7 +567,7 @@ struct Walker : public RecursiveASTVisitor<Walker> {
 
   // Must outlive the walker.
   const TypeNullabilityDefaults &Defaults;
-  std::vector<SlotRange> Out;
+  EligibleRanges Out;
   std::unique_ptr<LocFilter> LocFilter;
 
   // We can't walk the nullabilities in templates themselves, but walking the
@@ -577,7 +577,7 @@ struct Walker : public RecursiveASTVisitor<Walker> {
   template <typename DeclT>
   void insertPointerRanges(absl::Nonnull<const DeclT *> Decl) {
     if (!LocFilter->check(Decl->getBeginLoc())) return;
-    std::vector<SlotRange> Ranges = getEligibleRanges(*Decl, Defaults);
+    EligibleRanges Ranges = getEligibleRanges(*Decl, Defaults);
     Out.reserve(Out.size() + Ranges.size());
     std::move(Ranges.begin(), Ranges.end(), std::back_inserter(Out));
   }
@@ -610,9 +610,9 @@ struct Walker : public RecursiveASTVisitor<Walker> {
 };
 }  // namespace
 
-std::vector<SlotRange> getEligibleRanges(
-    ASTContext &Ctx, const TypeNullabilityDefaults &Defaults,
-    bool RestrictToMainFileOrHeader) {
+EligibleRanges getEligibleRanges(ASTContext &Ctx,
+                                 const TypeNullabilityDefaults &Defaults,
+                                 bool RestrictToMainFileOrHeader) {
   Walker W(Defaults,
            getLocFilter(Ctx.getSourceManager(), RestrictToMainFileOrHeader));
   W.TraverseAST(Ctx);

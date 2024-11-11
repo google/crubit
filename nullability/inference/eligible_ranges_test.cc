@@ -4,11 +4,13 @@
 
 #include "nullability/inference/eligible_ranges.h"
 
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/log/check.h"
+#include "absl/strings/str_cat.h"
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/pragma.h"
@@ -25,7 +27,6 @@
 #include "llvm/Testing/Annotations/Annotations.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"  // IWYU pragma: keep
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
-#include "third_party/protobuf/message.h"
 
 namespace clang::tidy::nullability {
 namespace {
@@ -55,75 +56,92 @@ test::EnableSmartPointers Enable;
 constexpr char MainFileName[] = "input.cc";
 
 template <typename DeclT, typename MatcherT>
-std::vector<SlotRange> getRanges(ASTContext &Ctx, MatcherT Matcher,
-                                 const TypeNullabilityDefaults &Defaults) {
+EligibleRanges getRanges(ASTContext &Ctx, MatcherT Matcher,
+                         const TypeNullabilityDefaults &Defaults) {
   const auto *D = selectFirst<DeclT>("d", match(Matcher.bind("d"), Ctx));
   CHECK(D != nullptr);
   return clang::tidy::nullability::getEligibleRanges(*D, Defaults);
 }
 
 template <typename DeclT, typename MatcherT>
-std::vector<SlotRange> getRanges(llvm::StringRef Input, MatcherT Matcher) {
+EligibleRanges getRanges(llvm::StringRef Input, MatcherT Matcher) {
   NullabilityPragmas Pragmas;
   TestAST TU(getAugmentedTestInputs(Input, Pragmas));
   return getRanges<DeclT>(TU.context(), Matcher,
                           TypeNullabilityDefaults(TU.context(), Pragmas));
 }
 
-std::vector<SlotRange> getFunctionRanges(
-    llvm::StringRef Input, llvm::StringRef FunctionName = "target") {
+EligibleRanges getFunctionRanges(llvm::StringRef Input,
+                                 llvm::StringRef FunctionName = "target") {
   return getRanges<FunctionDecl>(Input, functionDecl(hasName(FunctionName)));
 }
 
-std::vector<SlotRange> getFieldRanges(llvm::StringRef Input,
-                                      llvm::StringRef FieldName = "Target") {
+EligibleRanges getFieldRanges(llvm::StringRef Input,
+                              llvm::StringRef FieldName = "Target") {
   return getRanges<FieldDecl>(
       Input, FieldName.empty() ? fieldDecl() : fieldDecl(hasName(FieldName)));
 }
 
-std::vector<SlotRange> getVarRanges(llvm::StringRef Input,
-                                    llvm::StringRef VarName = "Target") {
+EligibleRanges getVarRanges(llvm::StringRef Input,
+                            llvm::StringRef VarName = "Target") {
   return getRanges<VarDecl>(Input, varDecl(hasName(VarName)));
 }
 
-MATCHER_P3(SlotRange, SlotInDecl, SlotInType, Range,
-           absl::StrCat("is a SlotRange with slot ", SlotInDecl,
-                        " and slot_in_type ", SlotInType,
-                        " and range equivalent to [", Range.Begin, ",",
-                        Range.End, ")")) {
-  return ((SlotInDecl == -1 && !arg.has_slot()) || arg.slot() == SlotInDecl) &&
-         arg.has_slot_in_type() && arg.slot_in_type() == SlotInType &&
-         Range.Begin == arg.begin() && Range.End == arg.end();
+std::string printSlot(unsigned Slot) { return absl::StrCat(Slot); }
+
+std::string printSlot(std::optional<Slot> Slot) {
+  if (Slot) return absl::StrCat(*Slot);
+  return "nullopt";
 }
 
-MATCHER_P3(SlotRangeWithNoExistingAnnotation, SlotInDecl, SlotInType, Range,
+MATCHER_P3(eligibleRange, SlotInDecl, SlotInType, Range,
+           absl::StrCat("has a SlotRange for slot ", printSlot(SlotInDecl),
+                        " with slot_in_type ", SlotInType,
+                        " and range equivalent to [", Range.Begin, ",",
+                        Range.End, ")")) {
+  std::optional<Slot> Slot = arg.Slot;
+  const SlotRange &ArgRange = arg.Range;
+  return ExplainMatchResult(SlotInDecl, Slot, result_listener) &&
+         ExplainMatchResult(SlotInType, ArgRange.slot_in_type(),
+                            result_listener) &&
+         ExplainMatchResult(Range.Begin, ArgRange.begin(), result_listener) &&
+         ExplainMatchResult(Range.End, ArgRange.end(), result_listener);
+}
+
+MATCHER_P3(eligibleRangeWithNoExistingAnnotation, SlotInDecl, SlotInType, Range,
            "") {
-  return !arg.has_existing_annotation() &&
-         ExplainMatchResult(SlotRange(SlotInDecl, SlotInType, Range), arg,
+  return ExplainMatchResult(false, arg.Range.has_existing_annotation(),
+                            result_listener) &&
+         ExplainMatchResult(eligibleRange(SlotInDecl, SlotInType, Range), arg,
                             result_listener);
 }
 
-MATCHER_P4(SlotRange, SlotInDecl, SlotInType, Range, ExistingAnnotation,
-           absl::StrCat("is a SlotRange with slot ", SlotInDecl,
-                        " and slot_in_type ", SlotInType,
+MATCHER_P4(eligibleRange, SlotInDecl, SlotInType, Range, ExistingAnnotation,
+           absl::StrCat("has a SlotRange for slot ", printSlot(SlotInDecl),
+                        " with slot_in_type ", SlotInType,
                         " and range equivalent to [", Range.Begin, ",",
                         Range.End, ") and existing annotation ",
                         ExistingAnnotation)) {
-  return ExplainMatchResult(SlotRange(SlotInDecl, SlotInType, Range), arg,
+  return ExplainMatchResult(eligibleRange(SlotInDecl, SlotInType, Range), arg,
                             result_listener) &&
-         arg.has_existing_annotation() &&
-         arg.existing_annotation() == ExistingAnnotation;
+         ExplainMatchResult(true, arg.Range.has_existing_annotation(),
+                            result_listener) &&
+         ExplainMatchResult(ExistingAnnotation, arg.Range.existing_annotation(),
+                            result_listener);
 }
 
-MATCHER_P(HasPath, Path, "") {
-  return ExplainMatchResult(Path, arg.path(), result_listener);
+MATCHER_P(hasPath, Path, "") {
+  return ExplainMatchResult(Path, arg.Range.path(), result_listener);
 }
 
-MATCHER(HasNoPragmaNullability, "") { return !arg.has_pragma_nullability(); }
+MATCHER(hasNoPragmaNullability, "") {
+  return !arg.Range.has_pragma_nullability();
+}
 
-MATCHER_P(HasPragmaNullability, PragmaNullability, "") {
-  return arg.has_pragma_nullability() &&
-         ExplainMatchResult(PragmaNullability, arg.pragma_nullability(),
+MATCHER_P(hasPragmaNullability, PragmaNullability, "") {
+  return ExplainMatchResult(true, arg.Range.has_pragma_nullability(),
+                            result_listener) &&
+         ExplainMatchResult(PragmaNullability, arg.Range.pragma_nullability(),
                             result_listener);
 }
 
@@ -131,18 +149,19 @@ TEST(EligibleRangesTest, ReturnAndOneParameterIdentified) {
   auto Input = Annotations("$r[[int *]]target($p[[int *]]P) { return P; }");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(
-                SlotRangeWithNoExistingAnnotation(0, 0, Input.range("r")),
-                SlotRangeWithNoExistingAnnotation(1, 0, Input.range("p")))));
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(
+              eligibleRangeWithNoExistingAnnotation(0, 0, Input.range("r")),
+              eligibleRangeWithNoExistingAnnotation(1, 0, Input.range("p")))));
 }
 
 TEST(EligibleRangesTest, OnlyFirstParameterIdentified) {
   auto Input = Annotations("void target([[int *]]P1, int P2) { return; }");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 // Checks that a function decl without a body is handled correctly.
@@ -150,8 +169,8 @@ TEST(EligibleRangesTest, DeclHandled) {
   auto Input = Annotations("void target([[int *]]P1, int P2);");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, AllNestedPointersEligible) {
@@ -159,10 +178,11 @@ TEST(EligibleRangesTest, AllNestedPointersEligible) {
       "void target($outer[[$middle[[$inner[[int *]]*]]*]]P1, int P2);");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("outer")),
-                                 SlotRange(-1, 1, Input.range("middle")),
-                                 SlotRange(-1, 2, Input.range("inner")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(1, 0, Input.range("outer")),
+                eligibleRange(std::nullopt, 1, Input.range("middle")),
+                eligibleRange(std::nullopt, 2, Input.range("inner")))));
 }
 
 TEST(EligibleRangesTest, DeclConstExcluded) {
@@ -172,10 +192,11 @@ TEST(EligibleRangesTest, DeclConstExcluded) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("one")),
-                                 SlotRange(2, 0, Input.range("two_o")),
-                                 SlotRange(-1, 1, Input.range("two_i")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(1, 0, Input.range("one")),
+                eligibleRange(2, 0, Input.range("two_o")),
+                eligibleRange(std::nullopt, 1, Input.range("two_i")))));
 }
 
 TEST(EligibleRangesTest, PointeeConstIncluded) {
@@ -184,17 +205,18 @@ TEST(EligibleRangesTest, PointeeConstIncluded) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, NestedPointeeConstIncluded) {
   auto Input = Annotations("void target($o[[$i[[const int *]] const *]]P);");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("o")),
-                                 SlotRange(-1, 1, Input.range("i")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(1, 0, Input.range("o")),
+                eligibleRange(std::nullopt, 1, Input.range("i")))));
 }
 
 TEST(EligibleRangesTest, AnnotatedSlotsGetRangesForPointerTypeOnly) {
@@ -205,11 +227,12 @@ TEST(EligibleRangesTest, AnnotatedSlotsGetRangesForPointerTypeOnly) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                SlotRange(1, 0, Input.range("one"), Nullability::NONNULL),
-                SlotRange(2, 0, Input.range("two"), Nullability::NULLABLE),
-                SlotRange(3, 0, Input.range("three"), Nullability::UNKNOWN))));
+                eligibleRange(1, 0, Input.range("one"), Nullability::NONNULL),
+                eligibleRange(2, 0, Input.range("two"), Nullability::NULLABLE),
+                eligibleRange(3, 0, Input.range("three"),
+                              Nullability::UNKNOWN))));
 }
 
 TEST(EligibleRangesTest, NamespacedAliasAnnotatedSlotsGetNoRange) {
@@ -232,18 +255,18 @@ TEST(EligibleRangesTest, NamespacedAliasAnnotatedSlotsGetNoRange) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("one")),
-                                 SlotRange(2, 0, Input.range("two")),
-                                 SlotRange(3, 0, Input.range("three")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range("one")),
+                                 eligibleRange(2, 0, Input.range("two")),
+                                 eligibleRange(3, 0, Input.range("three")))));
 }
 
 TEST(EligibleRangesTest, NestedAnnotationsGetOneRange) {
   auto Input = Annotations(R"(void target(Nonnull<Nonnull<[[int *]]>> P);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, NestedPointersOuterAnnotated) {
@@ -260,15 +283,16 @@ TEST(EligibleRangesTest, NestedPointersOuterAnnotated) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("one_o")),
-                                 SlotRange(-1, 1, Input.range("one_i")),
-                                 SlotRange(2, 0, Input.range("two_o")),
-                                 SlotRange(-1, 1, Input.range("two_i")),
-                                 SlotRange(3, 0, Input.range("three_o")),
-                                 SlotRange(-1, 1, Input.range("three_i")),
-                                 SlotRange(4, 0, Input.range("four_o")),
-                                 SlotRange(-1, 1, Input.range("four_i")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(1, 0, Input.range("one_o")),
+                eligibleRange(std::nullopt, 1, Input.range("one_i")),
+                eligibleRange(2, 0, Input.range("two_o")),
+                eligibleRange(std::nullopt, 1, Input.range("two_i")),
+                eligibleRange(3, 0, Input.range("three_o")),
+                eligibleRange(std::nullopt, 1, Input.range("three_i")),
+                eligibleRange(4, 0, Input.range("four_o")),
+                eligibleRange(std::nullopt, 1, Input.range("four_i")))));
 }
 
 TEST(EligibleRangesTest, NestedPointersInnerAnnotated) {
@@ -286,23 +310,24 @@ TEST(EligibleRangesTest, NestedPointersInnerAnnotated) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("one_o")),
-                                 SlotRange(-1, 1, Input.range("one_i")),
-                                 SlotRange(2, 0, Input.range("two_o")),
-                                 SlotRange(-1, 1, Input.range("two_i")),
-                                 SlotRange(3, 0, Input.range("three_o")),
-                                 SlotRange(-1, 1, Input.range("three_i")),
-                                 SlotRange(4, 0, Input.range("four_o")),
-                                 SlotRange(-1, 1, Input.range("four_i")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(1, 0, Input.range("one_o")),
+                eligibleRange(std::nullopt, 1, Input.range("one_i")),
+                eligibleRange(2, 0, Input.range("two_o")),
+                eligibleRange(std::nullopt, 1, Input.range("two_i")),
+                eligibleRange(3, 0, Input.range("three_o")),
+                eligibleRange(std::nullopt, 1, Input.range("three_i")),
+                eligibleRange(4, 0, Input.range("four_o")),
+                eligibleRange(std::nullopt, 1, Input.range("four_i")))));
 }
 
 TEST(EligibleRangesTest, RefToPointer) {
   auto Input = Annotations("void target([[int *]]&P);");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, TemplateOfPointers) {
@@ -314,10 +339,11 @@ TEST(EligibleRangesTest, TemplateOfPointers) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(-1, 0, Input.range("one")),
-                                 SlotRange(-1, 1, Input.range("two")),
-                                 SlotRange(-1, 2, Input.range("two_inner")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(std::nullopt, 0, Input.range("one")),
+                eligibleRange(std::nullopt, 1, Input.range("two")),
+                eligibleRange(std::nullopt, 2, Input.range("two_inner")))));
 }
 
 TEST(EligibleRangesTest, TemplateOfConstPointers) {
@@ -331,13 +357,14 @@ TEST(EligibleRangesTest, TemplateOfConstPointers) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(-1, 0, Input.range("one")),
-                                 SlotRange(-1, 1, Input.range("two_o")),
-                                 SlotRange(-1, 2, Input.range("two_i")),
-                                 SlotRange(-1, 0, Input.range("three")),
-                                 SlotRange(-1, 1, Input.range("four_o")),
-                                 SlotRange(-1, 2, Input.range("four_i")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(std::nullopt, 0, Input.range("one")),
+                eligibleRange(std::nullopt, 1, Input.range("two_o")),
+                eligibleRange(std::nullopt, 2, Input.range("two_i")),
+                eligibleRange(std::nullopt, 0, Input.range("three")),
+                eligibleRange(std::nullopt, 1, Input.range("four_o")),
+                eligibleRange(std::nullopt, 2, Input.range("four_i")))));
 }
 
 TEST(EligibleRangesTest, UniquePtr) {
@@ -352,9 +379,9 @@ TEST(EligibleRangesTest, UniquePtr) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("one")),
-                                 SlotRange(2, 0, Input.range("two")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range("one")),
+                                 eligibleRange(2, 0, Input.range("two")))));
 }
 
 TEST(EligibleRangesTest, UserDefinedSmartPointer) {
@@ -368,9 +395,9 @@ TEST(EligibleRangesTest, UserDefinedSmartPointer) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("one")),
-                                 SlotRange(2, 0, Input.range("two")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range("one")),
+                                 eligibleRange(2, 0, Input.range("two")))));
 }
 
 TEST(EligibleRangesTest, UserDefinedTemplatedSmartPointer) {
@@ -383,9 +410,9 @@ TEST(EligibleRangesTest, UserDefinedTemplatedSmartPointer) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("one")),
-                                 SlotRange(2, 0, Input.range("two")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range("one")),
+                                 eligibleRange(2, 0, Input.range("two")))));
 }
 
 TEST(EligibleRangesTest, SimpleAlias) {
@@ -396,8 +423,8 @@ TEST(EligibleRangesTest, SimpleAlias) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, InaccessibleAlias) {
@@ -419,8 +446,8 @@ TEST(EligibleRangesTest, NestedAlias) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, AliasTemplate) {
@@ -432,8 +459,8 @@ TEST(EligibleRangesTest, AliasTemplate) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, DependentAliasSimple) {
@@ -447,8 +474,8 @@ TEST(EligibleRangesTest, DependentAliasSimple) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, DependentAliasAnnotated) {
@@ -462,8 +489,8 @@ TEST(EligibleRangesTest, DependentAliasAnnotated) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, DependentAliasOfDependentAlias) {
@@ -481,8 +508,8 @@ TEST(EligibleRangesTest, DependentAliasOfDependentAlias) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, DependentAliasTemplate) {
@@ -499,8 +526,9 @@ TEST(EligibleRangesTest, DependentAliasTemplate) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(-1, 0, Input.range()))));
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(eligibleRange(std::nullopt, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, DependentAliasNested) {
@@ -514,10 +542,11 @@ TEST(EligibleRangesTest, DependentAliasNested) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("outer")),
-                                 SlotRange(-1, 1, Input.range("middle")),
-                                 SlotRange(-1, 2, Input.range("inner")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(1, 0, Input.range("outer")),
+                eligibleRange(std::nullopt, 1, Input.range("middle")),
+                eligibleRange(std::nullopt, 2, Input.range("inner")))));
 }
 
 TEST(EligibleRangesTest, NoreturnAliasLosesFunctionTypeSourceInfo) {
@@ -531,8 +560,8 @@ TEST(EligibleRangesTest, NoreturnAliasLosesFunctionTypeSourceInfo) {
   )");
   EXPECT_THAT(
       getVarRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(0, 0, Input.range("")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(0, 0, Input.range("")))));
 }
 
 TEST(EligibleRangesTest, TemplatedClassContext) {
@@ -546,8 +575,9 @@ TEST(EligibleRangesTest, TemplatedClassContext) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(-1, 0, Input.range()))));
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(eligibleRange(std::nullopt, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, NestedTemplatedClasses) {
@@ -567,10 +597,11 @@ TEST(EligibleRangesTest, NestedTemplatedClasses) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(-1, 0, Input.range("zero")),
-                                 SlotRange(-1, 1, Input.range("one")),
-                                 SlotRange(-1, 2, Input.range("two")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(std::nullopt, 0, Input.range("zero")),
+                eligibleRange(std::nullopt, 1, Input.range("one")),
+                eligibleRange(std::nullopt, 2, Input.range("two")))));
 }
 
 TEST(EligibleRangesTest, DependentAliasReferencingFurtherOutTemplateParam) {
@@ -588,8 +619,8 @@ TEST(EligibleRangesTest, DependentAliasReferencingFurtherOutTemplateParam) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, DependentAliasForwardingMultipleTemplateArguments) {
@@ -605,9 +636,10 @@ TEST(EligibleRangesTest, DependentAliasForwardingMultipleTemplateArguments) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(-1, 0, Input.range("zero")),
-                                 SlotRange(-1, 1, Input.range("one")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(std::nullopt, 0, Input.range("zero")),
+                eligibleRange(std::nullopt, 1, Input.range("one")))));
 }
 
 TEST(EligibleRangesTest, DependentAliasInMultipleNestedClassContexts) {
@@ -627,9 +659,10 @@ TEST(EligibleRangesTest, DependentAliasInMultipleNestedClassContexts) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(-1, 0, Input.range("zero")),
-                                 SlotRange(-1, 1, Input.range("one")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(std::nullopt, 0, Input.range("zero")),
+                eligibleRange(std::nullopt, 1, Input.range("one")))));
 }
 
 TEST(EligibleRangesTest, AliasTemplateInNestedClassContext) {
@@ -648,9 +681,10 @@ TEST(EligibleRangesTest, AliasTemplateInNestedClassContext) {
 
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(-1, 0, Input.range("zero")),
-                                 SlotRange(-1, 1, Input.range("one")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(std::nullopt, 0, Input.range("zero")),
+                eligibleRange(std::nullopt, 1, Input.range("one")))));
 }
 
 TEST(EligibleRangesTest, DependentAliasOfSmartPointer) {
@@ -669,9 +703,10 @@ TEST(EligibleRangesTest, DependentAliasOfSmartPointer) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("unique_ptr")),
-                                 SlotRange(-1, 1, Input.range("inner")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(1, 0, Input.range("unique_ptr")),
+                eligibleRange(std::nullopt, 1, Input.range("inner")))));
 }
 
 TEST(EligibleRangesTest, DependentlyNamedTemplate) {
@@ -692,9 +727,10 @@ TEST(EligibleRangesTest, DependentlyNamedTemplate) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("outer")),
-                                 SlotRange(-1, 1, Input.range("inner")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(1, 0, Input.range("outer")),
+                eligibleRange(std::nullopt, 1, Input.range("inner")))));
 }
 
 TEST(EligibleRangesTest, PartialSpecialization) {
@@ -715,8 +751,8 @@ TEST(EligibleRangesTest, PartialSpecialization) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, TypeTemplateParamPack) {
@@ -731,10 +767,11 @@ TEST(EligibleRangesTest, TypeTemplateParamPack) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(-1, 0, Input.range("zero")),
-                                 SlotRange(-1, 1, Input.range("one")),
-                                 SlotRange(-1, 2, Input.range("two")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(std::nullopt, 0, Input.range("zero")),
+                eligibleRange(std::nullopt, 1, Input.range("one")),
+                eligibleRange(std::nullopt, 2, Input.range("two")))));
 }
 
 TEST(EligibleRangesTest, DefaultTemplateArgs) {
@@ -748,13 +785,13 @@ TEST(EligibleRangesTest, DefaultTemplateArgs) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                SlotRange(-1, 0, Input.range("one")),
+                eligibleRange(std::nullopt, 0, Input.range("one")),
                 // TODO(b/281474380) Collect the template
                 // argument instead of the whole alias, when we can see
                 // through the layers of default argument redirection
-                SlotRange(2, 0, Input.range("two")))));
+                eligibleRange(2, 0, Input.range("two")))));
 }
 
 TEST(EligibleRangesTest, MultipleSlotsOneRange) {
@@ -771,12 +808,13 @@ TEST(EligibleRangesTest, MultipleSlotsOneRange) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            // Eventually, two different valid slot values for the two
-            // ranges, but for now, inference looks at neither of
-            // them, so both have no slot.
-            UnorderedElementsAre(SlotRange(-1, 0, Input.range()),
-                                 SlotRange(-1, 1, Input.range()))));
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          // Eventually, two different valid slot values for the two
+          // ranges, but for now, inference looks at neither of
+          // them, so both have no slot.
+          UnorderedElementsAre(eligibleRange(std::nullopt, 0, Input.range()),
+                               eligibleRange(std::nullopt, 1, Input.range()))));
 }
 
 TEST(EligibleRangesTest, Field) {
@@ -787,9 +825,10 @@ TEST(EligibleRangesTest, Field) {
   )");
   EXPECT_THAT(
       getFieldRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(0, 0, Input.range("zero")),
-                                 SlotRange(-1, 1, Input.range("one")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(0, 0, Input.range("zero")),
+                eligibleRange(std::nullopt, 1, Input.range("one")))));
 }
 
 TEST(EligibleRangesTest, StaticFieldAkaGlobal) {
@@ -800,9 +839,10 @@ TEST(EligibleRangesTest, StaticFieldAkaGlobal) {
   )");
   EXPECT_THAT(
       getVarRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(0, 0, Input.range("zero")),
-                                 SlotRange(-1, 1, Input.range("one")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(0, 0, Input.range("zero")),
+                eligibleRange(std::nullopt, 1, Input.range("one")))));
 }
 
 TEST(EligibleRangesTest, GlobalVariable) {
@@ -811,9 +851,10 @@ TEST(EligibleRangesTest, GlobalVariable) {
   )");
   EXPECT_THAT(
       getVarRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(0, 0, Input.range("zero")),
-                                 SlotRange(-1, 1, Input.range("one")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(0, 0, Input.range("zero")),
+                eligibleRange(std::nullopt, 1, Input.range("one")))));
 }
 
 TEST(EligibleRangesTest, Lambda) {
@@ -822,9 +863,9 @@ TEST(EligibleRangesTest, Lambda) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code(), "operator()"),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(0, 0, Input.range("zero")),
-                                 SlotRange(1, 0, Input.range("one")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(0, 0, Input.range("zero")),
+                                 eligibleRange(1, 0, Input.range("one")))));
 }
 
 TEST(EligibleRangesTest, LambdaCaptureWithFunctionTypeInTemplateArg) {
@@ -850,33 +891,35 @@ TEST(EligibleRangesTest, Pragma) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName),
-                       HasPragmaNullability(Nullability::NONNULL))),
+      AllOf(Each(AllOf(hasPath(MainFileName),
+                       hasPragmaNullability(Nullability::NONNULL))),
             UnorderedElementsAre(
-                SlotRange(0, 0, Input.range("zero"), Nullability::NONNULL),
-                SlotRange(-1, 1, Input.range("one"), Nullability::NONNULL),
-                SlotRange(1, 0, Input.range("param_one"), Nullability::NONNULL),
-                SlotRange(2, 0, Input.range("param_two"),
-                          Nullability::NONNULL))));
+                eligibleRange(0, 0, Input.range("zero"), Nullability::NONNULL),
+                eligibleRange(std::nullopt, 1, Input.range("one"),
+                              Nullability::NONNULL),
+                eligibleRange(1, 0, Input.range("param_one"),
+                              Nullability::NONNULL),
+                eligibleRange(2, 0, Input.range("param_two"),
+                              Nullability::NONNULL))));
 
   Input = Annotations(R"(
   #pragma nullability file_default nullable
   [[int*]] Target;
   )");
   EXPECT_THAT(getVarRanges(Input.code()),
-              AllOf(Each(AllOf(HasPath(MainFileName),
-                               HasPragmaNullability(Nullability::NULLABLE))),
-                    UnorderedElementsAre(SlotRange(0, 0, Input.range(),
-                                                   Nullability::NULLABLE))));
+              AllOf(Each(AllOf(hasPath(MainFileName),
+                               hasPragmaNullability(Nullability::NULLABLE))),
+                    UnorderedElementsAre(eligibleRange(
+                        0, 0, Input.range(), Nullability::NULLABLE))));
 
   Input = Annotations(R"(
   [[int*]] Target;
   )");
   EXPECT_THAT(
       getVarRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                SlotRangeWithNoExistingAnnotation(0, 0, Input.range()))));
+                eligibleRangeWithNoExistingAnnotation(0, 0, Input.range()))));
 }
 
 TEST(EligibleRangesTest, RangesWithBareAutoTypeNotReturned) {
@@ -892,30 +935,30 @@ TEST(EligibleRangesTest, RangesWithBareAutoTypeNotReturned) {
   )cc");
   EXPECT_THAT(
       getFunctionRanges(Input.code(), "noStar"),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            Not(Contains(SlotRangeWithNoExistingAnnotation(
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            Not(Contains(eligibleRangeWithNoExistingAnnotation(
                 0, 0, Input.range("func_auto"))))));
   EXPECT_THAT(getVarRanges(Input.code(), "GNoStar"), IsEmpty());
   EXPECT_THAT(getVarRanges(Input.code(), "GNoStarNullable"), IsEmpty());
 }
 
-MATCHER_P3(AutoSlotRangeWithNoExistingAnnotation, SlotInDecl, SlotInType, Range,
-           "") {
-  return arg.contains_auto_star() && !arg.has_existing_annotation() &&
-         ExplainMatchResult(SlotRange(SlotInDecl, SlotInType, Range), arg,
+MATCHER_P3(autoEligibleRangeWithNoExistingAnnotation, SlotInDecl, SlotInType,
+           Range, "") {
+  return ExplainMatchResult(true, arg.Range.contains_auto_star(),
+                            result_listener) &&
+         ExplainMatchResult(false, arg.Range.has_existing_annotation(),
+                            result_listener) &&
+         ExplainMatchResult(eligibleRange(SlotInDecl, SlotInType, Range), arg,
                             result_listener);
 }
 
-MATCHER_P4(AutoSlotRange, SlotInDecl, SlotInType, Range, ExistingAnnotation,
-           absl::StrCat("is a SlotRange with slot ", SlotInDecl,
-                        " and slot_in_type ", SlotInType,
-                        " and range equivalent to [", Range.Begin, ",",
-                        Range.End, ") and existing annotation ",
-                        ExistingAnnotation)) {
-  return arg.contains_auto_star() &&
+MATCHER_P4(autoEligibleRange, SlotInDecl, SlotInType, Range, ExistingAnnotation,
+           "") {
+  return ExplainMatchResult(true, arg.Range.contains_auto_star(),
+                            result_listener) &&
          ExplainMatchResult(
-             SlotRange(SlotInDecl, SlotInType, Range, ExistingAnnotation), arg,
-             result_listener);
+             eligibleRange(SlotInDecl, SlotInType, Range, ExistingAnnotation),
+             arg, result_listener);
 }
 
 TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
@@ -932,53 +975,54 @@ TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
     )");
   EXPECT_THAT(
       getFunctionRanges(Input.code(), "star"),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(AutoSlotRangeWithNoExistingAnnotation(
-                                     0, 0, Input.range("func_auto")),
-                                 AllOf(SlotRangeWithNoExistingAnnotation(
-                                           1, 0, Input.range("func_not_auto")),
-                                       ResultOf(
-                                           [](const class SlotRange &SR) {
-                                             return SR.contains_auto_star();
-                                           },
-                                           testing::IsFalse())))));
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
+                                   0, 0, Input.range("func_auto")),
+                               AllOf(eligibleRangeWithNoExistingAnnotation(
+                                         1, 0, Input.range("func_not_auto")),
+                                     ResultOf(
+                                         [](const class EligibleRange &ER) {
+                                           return ER.Range.contains_auto_star();
+                                         },
+                                         testing::IsFalse())))));
   EXPECT_THAT(
       getVarRanges(Input.code(), "GStar"),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(AutoSlotRangeWithNoExistingAnnotation(
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
                 0, 0, Input.range("var_auto")))));
   EXPECT_THAT(
       getVarRanges(Input.code(), "GStarNullable"),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                AutoSlotRange(0, 0, Input.range("var_auto_attributed"),
-                              Nullability::NULLABLE))));
+                autoEligibleRange(0, 0, Input.range("var_auto_attributed"),
+                                  Nullability::NULLABLE))));
   EXPECT_THAT(
       getVarRanges(Input.code(), "GStarStar"),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                AutoSlotRangeWithNoExistingAnnotation(
+                autoEligibleRangeWithNoExistingAnnotation(
                     0, 0, Input.range("var_auto_star_star")),
-                AutoSlotRangeWithNoExistingAnnotation(
-                    -1, 1, Input.range("var_auto_star_inner")))));
+                autoEligibleRangeWithNoExistingAnnotation(
+                    std::nullopt, 1, Input.range("var_auto_star_inner")))));
 }
 
-MATCHER(NoPreRangeLength, "") {
-  return !arg.has_existing_annotation_pre_range_length();
+MATCHER(noPreRangeLength, "") {
+  return !arg.Range.has_existing_annotation_pre_range_length();
 }
 
-MATCHER(NoPostRangeLength, "") {
-  return !arg.has_existing_annotation_post_range_length();
+MATCHER(noPostRangeLength, "") {
+  return !arg.Range.has_existing_annotation_post_range_length();
 }
 
-MATCHER_P(PreRangeLength, Length, "") {
-  return arg.has_existing_annotation_pre_range_length() &&
-         arg.existing_annotation_pre_range_length() == Length;
+MATCHER_P(preRangeLength, Length, "") {
+  return arg.Range.has_existing_annotation_pre_range_length() &&
+         arg.Range.existing_annotation_pre_range_length() == Length;
 }
 
-MATCHER_P(PostRangeLength, Length, "") {
-  return arg.has_existing_annotation_post_range_length() &&
-         arg.existing_annotation_post_range_length() == Length;
+MATCHER_P(postRangeLength, Length, "") {
+  return arg.Range.has_existing_annotation_post_range_length() &&
+         arg.Range.existing_annotation_post_range_length() == Length;
 }
 
 TEST(ExistingAnnotationLengthTest, AbslTemplate) {
@@ -999,17 +1043,17 @@ TEST(ExistingAnnotationLengthTest, AbslTemplate) {
     )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            ElementsAre(AllOf(SlotRange(1, 0, Input.range("no")),
-                              NoPreRangeLength(), NoPostRangeLength()),
-                        AllOf(SlotRange(2, 0, Input.range("yes")),
-                              PreRangeLength(25), PostRangeLength(1)),
-                        AllOf(SlotRange(3, 0, Input.range("with_comments")),
-                              PreRangeLength(70), PostRangeLength(19)),
-                        AllOf(SlotRange(4, 0, Input.range("nullable")),
-                              PreRangeLength(15), PostRangeLength(1)),
-                        AllOf(SlotRange(5, 0, Input.range("nonnull")),
-                              PreRangeLength(14), PostRangeLength(1)))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            ElementsAre(AllOf(eligibleRange(1, 0, Input.range("no")),
+                              noPreRangeLength(), noPostRangeLength()),
+                        AllOf(eligibleRange(2, 0, Input.range("yes")),
+                              preRangeLength(25), postRangeLength(1)),
+                        AllOf(eligibleRange(3, 0, Input.range("with_comments")),
+                              preRangeLength(70), postRangeLength(19)),
+                        AllOf(eligibleRange(4, 0, Input.range("nullable")),
+                              preRangeLength(15), postRangeLength(1)),
+                        AllOf(eligibleRange(5, 0, Input.range("nonnull")),
+                              preRangeLength(14), postRangeLength(1)))));
 }
 
 TEST(ExistingAnnotationLengthTest, AnnotationInMacro) {
@@ -1025,14 +1069,14 @@ TEST(ExistingAnnotationLengthTest, AnnotationInMacro) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                AllOf(SlotRange(1, 0, Input.range("")),
+                AllOf(eligibleRange(1, 0, Input.range("")),
                       // The token checks looking for annotations are done
                       // without expansion of macros, so we see a left
                       // paren as the preceding token and report no
                       // existing pre-range/post-range annotation.
-                      NoPreRangeLength(), NoPostRangeLength()))));
+                      noPreRangeLength(), noPostRangeLength()))));
 }
 
 TEST(ExistingAnnotationLengthTest, UniquePtr) {
@@ -1051,9 +1095,9 @@ TEST(ExistingAnnotationLengthTest, UniquePtr) {
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(
-          Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-          UnorderedElementsAre(AllOf(SlotRange(1, 0, Input.range("")),
-                                     PreRangeLength(25), PostRangeLength(1)))));
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(AllOf(eligibleRange(1, 0, Input.range("")),
+                                     preRangeLength(25), postRangeLength(1)))));
 }
 
 TEST(ExistingAnnotationLengthTest, DoubleClosingAngleBrackets) {
@@ -1073,14 +1117,14 @@ TEST(ExistingAnnotationLengthTest, DoubleClosingAngleBrackets) {
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(
-          Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-          UnorderedElementsAre(AllOf(SlotRange(1, 0, Input.range("nothing")),
-                                     PreRangeLength(25), PostRangeLength(1)),
-                               AllOf(SlotRange(2, 0, Input.range("comment")),
-                                     PreRangeLength(25), PostRangeLength(1)),
-                               AllOf(SlotRange(3, 0, Input.range("whitespace")),
-                                     PreRangeLength(25), PostRangeLength(1)))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(1, 0, Input.range("nothing")),
+                      preRangeLength(25), postRangeLength(1)),
+                AllOf(eligibleRange(2, 0, Input.range("comment")),
+                      preRangeLength(25), postRangeLength(1)),
+                AllOf(eligibleRange(3, 0, Input.range("whitespace")),
+                      preRangeLength(25), postRangeLength(1)))));
 }
 
 TEST(ExistingAnnotationLengthTest, ClangAttribute) {
@@ -1091,45 +1135,45 @@ TEST(ExistingAnnotationLengthTest, ClangAttribute) {
     )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                AllOf(SlotRange(1, 0, Input.range("no")), NoPreRangeLength(),
-                      NoPostRangeLength()),
-                AllOf(SlotRange(2, 0, Input.range("yes")), PreRangeLength(0),
-                      PostRangeLength(18)),
-                AllOf(SlotRange(3, 0, Input.range("with_comment")),
-                      PreRangeLength(0), PostRangeLength(32)),
-                AllOf(SlotRange(4, 0, Input.range("nullable")),
-                      PreRangeLength(0), PostRangeLength(10)),
-                AllOf(SlotRange(5, 0, Input.range("nonnull")),
-                      PreRangeLength(0), PostRangeLength(9)))));
+                AllOf(eligibleRange(1, 0, Input.range("no")),
+                      noPreRangeLength(), noPostRangeLength()),
+                AllOf(eligibleRange(2, 0, Input.range("yes")),
+                      preRangeLength(0), postRangeLength(18)),
+                AllOf(eligibleRange(3, 0, Input.range("with_comment")),
+                      preRangeLength(0), postRangeLength(32)),
+                AllOf(eligibleRange(4, 0, Input.range("nullable")),
+                      preRangeLength(0), postRangeLength(10)),
+                AllOf(eligibleRange(5, 0, Input.range("nonnull")),
+                      preRangeLength(0), postRangeLength(9)))));
 }
 
-MATCHER(EquivalentRanges, "") {
+MATCHER(equivalentRanges, "") {
   return std::get<0>(arg).begin() == std::get<1>(arg).Begin &&
          std::get<0>(arg).end() == std::get<1>(arg).End;
 }
 
-MATCHER_P2(ComplexDeclaratorImpl, FollowingAnnotation, Ranges, "") {
-  if (!arg.has_complex_declarator_ranges()) {
+MATCHER_P2(complexDeclaratorImpl, FollowingAnnotation, Ranges, "") {
+  if (!arg.Range.has_complex_declarator_ranges()) {
     *result_listener << "no complex declarator ranges present";
     return false;
   }
-  ComplexDeclaratorRanges ArgRanges = arg.complex_declarator_ranges();
+  ComplexDeclaratorRanges ArgRanges = arg.Range.complex_declarator_ranges();
   return ExplainMatchResult(FollowingAnnotation,
                             ArgRanges.following_annotation(),
                             result_listener) &&
-         ExplainMatchResult(Pointwise(EquivalentRanges(), Ranges),
+         ExplainMatchResult(Pointwise(equivalentRanges(), Ranges),
                             ArgRanges.removal(), result_listener);
 }
 
-auto ComplexDeclarator(llvm::StringRef FollowingAnnotation,
+auto complexDeclarator(llvm::StringRef FollowingAnnotation,
                        std::vector<Annotations::Range> Ranges) {
-  return ComplexDeclaratorImpl(FollowingAnnotation, Ranges);
+  return complexDeclaratorImpl(FollowingAnnotation, Ranges);
 }
 
-MATCHER(NoComplexDeclarator, "") {
-  return !arg.has_complex_declarator_ranges();
+MATCHER(noComplexDeclarator, "") {
+  return !arg.Range.has_complex_declarator_ranges();
 }
 
 TEST(ComplexDeclaratorTest, FunctionPointer) {
@@ -1139,19 +1183,21 @@ TEST(ComplexDeclaratorTest, FunctionPointer) {
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(
-          Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
           UnorderedElementsAre(
-              AllOf(SlotRange(1, 0, Input.range("func_pointer")),
-                    ComplexDeclarator("P", {Input.range("remove_from_type")})),
-              AllOf(SlotRange(-1, 1, Input.range("pointer_param")),
-                    NoComplexDeclarator()))));
+              AllOf(eligibleRange(1, 0, Input.range("func_pointer")),
+                    complexDeclarator("P", {Input.range("remove_from_type")})),
+              AllOf(
+                  eligibleRange(std::nullopt, 1, Input.range("pointer_param")),
+                  noComplexDeclarator()))));
 
   Input = Annotations("void target($unnamed[[int (*)(int)]]);");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(AllOf(SlotRange(1, 0, Input.range("unnamed")),
-                                       NoComplexDeclarator()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(1, 0, Input.range("unnamed")),
+                      noComplexDeclarator()))));
 }
 
 TEST(ComplexDeclaratorTest, ArrayOfNonPointersHasNoRanges) {
@@ -1163,9 +1209,10 @@ TEST(ComplexDeclaratorTest, ArrayOfSimplePointers) {
   auto Input = Annotations("void target([[int*]] P[]);");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(AllOf(SlotRange(-1, 0, Input.range()),
-                                       NoComplexDeclarator()))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(std::nullopt, 0, Input.range()),
+                      noComplexDeclarator()))));
 }
 
 TEST(ComplexDeclaratorTest, ArrayOfFunctionPointers) {
@@ -1175,10 +1222,10 @@ TEST(ComplexDeclaratorTest, ArrayOfFunctionPointers) {
   auto Input = Annotations("void target([[int (*$1^P[3]$2^)(float)]]);");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                AllOf(SlotRange(-1, 0, Input.range()),
-                      ComplexDeclarator(
+                AllOf(eligibleRange(std::nullopt, 0, Input.range()),
+                      complexDeclarator(
                           "P[3]", {Annotations::Range(Input.point("1"),
                                                       Input.point("2"))})))));
 
@@ -1186,10 +1233,10 @@ TEST(ComplexDeclaratorTest, ArrayOfFunctionPointers) {
   Input = Annotations("void target([[void(*$1^[]$2^)(int)]]);");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                AllOf(SlotRange(-1, 0, Input.range()),
-                      ComplexDeclarator(
+                AllOf(eligibleRange(std::nullopt, 0, Input.range()),
+                      complexDeclarator(
                           "[]", {Annotations::Range(Input.point("1"),
                                                     Input.point("2"))})))));
 }
@@ -1202,14 +1249,14 @@ TEST(ComplexDeclaratorTest, ArrayOfArrayOfPointersToArray) {
   void target($1^$range[[int*]] (*$3^P[3][2]$4^)[1]$2^);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                AllOf(SlotRange(-1, 1, Input.range("range")),
-                      NoComplexDeclarator()),
-                AllOf(SlotRange(-1, 0,
-                                Annotations::Range(Input.point("1"),
-                                                   Input.point("2"))),
-                      ComplexDeclarator("P[3][2]", {Annotations::Range(
+                AllOf(eligibleRange(std::nullopt, 1, Input.range("range")),
+                      noComplexDeclarator()),
+                AllOf(eligibleRange(std::nullopt, 0,
+                                    Annotations::Range(Input.point("1"),
+                                                       Input.point("2"))),
+                      complexDeclarator("P[3][2]", {Annotations::Range(
                                                        Input.point("3"),
                                                        Input.point("4"))})))));
 }
@@ -1223,22 +1270,22 @@ TEST(ComplexDeclaratorTest, PointerToArray) {
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(
-          Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
           UnorderedElementsAre(AllOf(
-              SlotRange(1, 0,
-                        Annotations::Range(Input.point("1"), Input.point("2"))),
-              ComplexDeclarator("P", {Input.range("remove_from_type")})))));
+              eligibleRange(
+                  1, 0, Annotations::Range(Input.point("1"), Input.point("2"))),
+              complexDeclarator("P", {Input.range("remove_from_type")})))));
 
   // An unnamed pointer to an array. There's nothing to move.
   Input = Annotations(R"(void target($1^int (*)[]$2^);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(
-          Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
           UnorderedElementsAre(AllOf(
-              SlotRange(1, 0,
-                        Annotations::Range(Input.point("1"), Input.point("2"))),
-              NoComplexDeclarator()))));
+              eligibleRange(
+                  1, 0, Annotations::Range(Input.point("1"), Input.point("2"))),
+              noComplexDeclarator()))));
 }
 
 TEST(ComplexDeclaratorTest,
@@ -1249,10 +1296,10 @@ TEST(ComplexDeclaratorTest,
   auto Input = Annotations(R"(void target([[int (*$3^((P))[(1 + 2)]$4^)]]);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(AllOf(
-                SlotRange(-1, 0, Input.range()),
-                ComplexDeclarator("((P))[(1 + 2)]",
+                eligibleRange(std::nullopt, 0, Input.range()),
+                complexDeclarator("((P))[(1 + 2)]",
                                   {Annotations::Range(Input.point("3"),
                                                       Input.point("4"))})))));
 }
@@ -1265,16 +1312,16 @@ TEST(ComplexDeclaratorTest, PointerToPointerToArray) {
       Annotations(R"(void target($1^int (*$star[[*]]$q[[Q]])[1]$2^);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                AllOf(SlotRange(1, 0,
-                                Annotations::Range(Input.point("1"),
-                                                   Input.point("2"))),
-                      ComplexDeclarator("Q", {Input.range("q")})),
-                AllOf(SlotRange(-1, 1,
-                                Annotations::Range(Input.point("1"),
-                                                   Input.point("2"))),
-                      ComplexDeclarator("*", {Input.range("star")})))));
+                AllOf(eligibleRange(1, 0,
+                                    Annotations::Range(Input.point("1"),
+                                                       Input.point("2"))),
+                      complexDeclarator("Q", {Input.range("q")})),
+                AllOf(eligibleRange(std::nullopt, 1,
+                                    Annotations::Range(Input.point("1"),
+                                                       Input.point("2"))),
+                      complexDeclarator("*", {Input.range("star")})))));
 }
 
 TEST(ComplexDeclaratorTest, PointerToArrayOfFunctionPointers) {
@@ -1285,33 +1332,38 @@ TEST(ComplexDeclaratorTest, PointerToArrayOfFunctionPointers) {
       R"(void target($whole[[void (*$1^(*$p[[(P)]])[]$2^)(int)]]);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                AllOf(SlotRange(1, 0, Input.range("whole")),
-                      ComplexDeclarator("(P)", {Input.range("p")})),
-                AllOf(SlotRange(-1, 1, Input.range("whole")),
-                      ComplexDeclarator(
+                AllOf(eligibleRange(1, 0, Input.range("whole")),
+                      complexDeclarator("(P)", {Input.range("p")})),
+                AllOf(eligibleRange(std::nullopt, 1, Input.range("whole")),
+                      complexDeclarator(
                           "(*)[]", {Annotations::Range(Input.point("1"),
                                                        Input.range("p").Begin),
                                     Annotations::Range(Input.range("p").End,
                                                        Input.point("2"))})))));
 }
 
+MATCHER_P(eligibleRange, Expected, "") {
+  return ExplainMatchResult(Expected.Slot, arg.Slot, result_listener) &&
+         ExplainMatchResult(EqualsProto(Expected.Range), arg.Range,
+                            result_listener);
+}
+
 template <typename DeclT, typename MatcherT>
-std::vector<testing::Matcher<const proto2::Message &>> rangesFor(
+std::vector<testing::Matcher<EligibleRange>> rangesFor(
     std::vector<std::pair<std::string, MatcherT>> DeclMatchers, ASTContext &Ctx,
     const TypeNullabilityDefaults &Defaults) {
-  std::vector<testing::Matcher<const proto2::Message &>> RangeMatchers;
+  std::vector<testing::Matcher<EligibleRange>> RangeMatchers;
   for (const auto &[Name, Matcher] : DeclMatchers) {
     llvm::errs() << "Getting ranges for " << Name << "\n";
-    std::vector<clang::tidy::nullability::SlotRange> Ranges =
-        getRanges<DeclT>(Ctx, Matcher, Defaults);
+    EligibleRanges Ranges = getRanges<DeclT>(Ctx, Matcher, Defaults);
     if (Ranges.empty()) {
       ADD_FAILURE() << "No ranges found for " << Name << "!";
       return {};
     }
-    for (const auto &Range : Ranges) {
-      RangeMatchers.push_back(EqualsProto(Range));
+    for (const EligibleRange &ER : Ranges) {
+      RangeMatchers.push_back(eligibleRange(ER));
     }
   }
   return RangeMatchers;
@@ -1425,9 +1477,9 @@ TEST(GetEligibleRangesFromASTTest, Lambda) {
 
   EXPECT_THAT(
       getEligibleRanges(TU.context(), Defaults),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("param")),
-                                 SlotRange(0, 0, Input.range("return")))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range("param")),
+                                 eligibleRange(0, 0, Input.range("return")))));
 }
 
 TEST(GetEligibleRangesFromASTTest, ClassMembers) {
@@ -1515,28 +1567,28 @@ TEST(GetEligibleRangesFromASTTest, ClassTemplateMembersHasInstantiation) {
             TU.context()));
 
   // Matches the ranges for decls in the instantiation.
-  std::vector<testing::Matcher<const proto2::Message &>> Expected;
-  for (const auto &Range : getEligibleRanges(
+  std::vector<testing::Matcher<EligibleRange>> Expected;
+  for (const EligibleRange &ER : getEligibleRanges(
            *selectFirst<FunctionDecl>(
                "b",
                match(findAll(functionDecl(hasName("methodWithPtr")).bind("b")),
                      InstantiationDecl, TU.context())),
            Defaults)) {
-    Expected.push_back(EqualsProto(Range));
+    Expected.push_back(eligibleRange(ER));
   }
-  for (const auto &Range : getEligibleRanges(
+  for (const EligibleRange &ER : getEligibleRanges(
            *selectFirst<FieldDecl>(
                "b", match(findAll(fieldDecl(hasName("PtrField")).bind("b")),
                           InstantiationDecl, TU.context())),
            Defaults)) {
-    Expected.push_back(EqualsProto(Range));
+    Expected.push_back(eligibleRange(ER));
   }
-  for (const auto &Range : getEligibleRanges(
+  for (const EligibleRange &ER : getEligibleRanges(
            *selectFirst<VarDecl>(
                "b", match(findAll(varDecl(hasName("StaticField")).bind("b")),
                           InstantiationDecl, TU.context())),
            Defaults)) {
-    Expected.push_back(EqualsProto(Range));
+    Expected.push_back(eligibleRange(ER));
   }
   EXPECT_THAT(getEligibleRanges(TU.context(), Defaults),
               UnorderedElementsAreArray(Expected));
@@ -1573,37 +1625,37 @@ TEST(GetEligibleRangesFromASTTest, ClassTemplateExplicitSpecializationMembers) {
       "b", match(classTemplateSpecializationDecl().bind("b"), TU.context()));
 
   // Matches only the ranges in the explicit specialization.
-  std::vector<testing::Matcher<const proto2::Message &>> Expected;
-  for (const auto &Range : getEligibleRanges(
+  std::vector<testing::Matcher<EligibleRange>> Expected;
+  for (const EligibleRange &ER : getEligibleRanges(
            *selectFirst<FunctionDecl>(
                "b",
                match(findAll(functionDecl(hasName("methodWithPtr")).bind("b")),
                      ExplicitSpecialization, TU.context())),
            Defaults)) {
-    Expected.push_back(EqualsProto(Range));
+    Expected.push_back(eligibleRange(ER));
   }
-  for (const auto &Range : getEligibleRanges(
+  for (const EligibleRange &ER : getEligibleRanges(
            *selectFirst<FieldDecl>(
                "b", match(findAll(fieldDecl(hasName("PtrField")).bind("b")),
                           ExplicitSpecialization, TU.context())),
            Defaults)) {
-    Expected.push_back(EqualsProto(Range));
+    Expected.push_back(eligibleRange(ER));
   }
-  for (const auto &Range : getEligibleRanges(
+  for (const EligibleRange &ER : getEligibleRanges(
            *selectFirst<VarDecl>(
                "b", match(findAll(varDecl(hasName("StaticField")).bind("b")),
                           ExplicitSpecialization, TU.context())),
            Defaults)) {
-    Expected.push_back(EqualsProto(Range));
+    Expected.push_back(eligibleRange(ER));
   }
-  for (const auto &Range : getEligibleRanges(
+  for (const EligibleRange &ER : getEligibleRanges(
            *selectFirst<FieldDecl>(
                "b",
                match(findAll(fieldDecl(hasName("ExtraFieldInSpecialization"))
                                  .bind("b")),
                      ExplicitSpecialization, TU.context())),
            Defaults)) {
-    Expected.push_back(EqualsProto(Range));
+    Expected.push_back(eligibleRange(ER));
   }
   EXPECT_THAT(getEligibleRanges(TU.context(), Defaults),
               UnorderedElementsAreArray(Expected));
@@ -1647,30 +1699,30 @@ TEST(GetEligibleRangesFromASTTest, FunctionTemplateHasInstantiation) {
                 .bind("b"),
             TU.context()));
 
-  std::vector<testing::Matcher<const proto2::Message &>> Expected;
-  for (const auto &Range : getEligibleRanges(
+  std::vector<testing::Matcher<EligibleRange>> Expected;
+  for (const EligibleRange &ER : getEligibleRanges(
            *selectFirst<FunctionDecl>(
                "b",
                match(findAll(functionDecl(hasName("funcTemplate")).bind("b")),
                      InstantiationDecl, TU.context())),
            Defaults)) {
-    Expected.push_back(EqualsProto(Range));
+    Expected.push_back(eligibleRange(ER));
   }
-  for (const auto &Range : getEligibleRanges(
+  for (const EligibleRange &ER : getEligibleRanges(
            *selectFirst<VarDecl>(
                "b",
                match(findAll(
                          varDecl(hasName("LocalPointerInTemplate")).bind("b")),
                      InstantiationDecl, TU.context())),
            Defaults)) {
-    Expected.push_back(EqualsProto(Range));
+    Expected.push_back(eligibleRange(ER));
   }
   EXPECT_THAT(
       getEligibleRanges(TU.context(), Defaults),
       AllOf(UnorderedElementsAreArray(Expected),
-            Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(1, 0, Input.range("param")),
-                                 SlotRange(0, 0, Input.range("local")))));
+            Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range("param")),
+                                 eligibleRange(0, 0, Input.range("local")))));
 }
 
 TEST(GetEligibleRangesFromASTTest, AutoFunctionTemplateSyntax) {
@@ -1690,10 +1742,11 @@ TEST(GetEligibleRangesFromASTTest, AutoFunctionTemplateSyntax) {
 
   EXPECT_THAT(
       getEligibleRanges(TU.context(), Defaults),
-      AllOf(Each(AllOf(HasPath(MainFileName), HasNoPragmaNullability())),
-            UnorderedElementsAre(SlotRange(2, 0, Input.range("star")),
-                                 SlotRange(0, 0, Input.range("local_one")),
-                                 SlotRange(0, 0, Input.range("local_two")))));
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(eligibleRange(2, 0, Input.range("star")),
+                               eligibleRange(0, 0, Input.range("local_one")),
+                               eligibleRange(0, 0, Input.range("local_two")))));
 }
 }  // namespace
 }  // namespace clang::tidy::nullability
