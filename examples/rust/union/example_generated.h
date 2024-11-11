@@ -3,12 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// example_crate
+// example_crate_golden
 // Features: <none>
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_UNION_EXAMPLE_CRATE
-#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_UNION_EXAMPLE_CRATE
+#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_UNION_EXAMPLE_CRATE_GOLDEN
+#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_UNION_EXAMPLE_CRATE_GOLDEN
 
 #include "support/internal/attribute_macros.h"
 
@@ -19,7 +19,8 @@
 namespace example_crate {
 
 // Generated from: examples/rust/union/example.rs;l=6
-union CRUBIT_INTERNAL_RUST_TYPE(":: example_crate :: ReprCUnion") alignas(8)
+union CRUBIT_INTERNAL_RUST_TYPE(
+    ":: example_crate_golden :: ReprCUnion") alignas(8)
     [[clang::trivial_abi]] ReprCUnion final {
  public:
   // Default::default
@@ -55,14 +56,10 @@ static_assert(
     alignof(ReprCUnion) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate10ReprCUnionNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
-    ::example_crate::ReprCUnion* __ret_ptr);
+extern "C" void __crubit_thunk_default(::example_crate::ReprCUnion* __ret_ptr);
 }
 inline ReprCUnion::ReprCUnion() {
-  __crubit_internal::
-      __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate10ReprCUnionNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
-          this);
+  __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<ReprCUnion>);
 static_assert(std::is_trivially_move_constructible_v<ReprCUnion>);
@@ -72,4 +69,4 @@ inline void ReprCUnion::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ReprCUnion, b));
 }
 }  // namespace example_crate
-#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_UNION_EXAMPLE_CRATE
+#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_UNION_EXAMPLE_CRATE_GOLDEN

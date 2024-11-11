@@ -3,12 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// example_crate
+// example_crate_golden
 // Features: <none>
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_RUST_UNION_EXAMPLE_CRATE
-#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_RUST_UNION_EXAMPLE_CRATE
+#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_RUST_UNION_EXAMPLE_CRATE_GOLDEN
+#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_RUST_UNION_EXAMPLE_CRATE_GOLDEN
 
 #include "support/internal/attribute_macros.h"
 
@@ -20,7 +20,8 @@ namespace example_crate {
 
 // Generated from:
 // examples/rust/rust_union/example.rs;l=5
-union CRUBIT_INTERNAL_RUST_TYPE(":: example_crate :: ReprRustUnion") alignas(8)
+union CRUBIT_INTERNAL_RUST_TYPE(
+    ":: example_crate_golden :: ReprRustUnion") alignas(8)
     [[clang::trivial_abi]] ReprRustUnion final {
  public:
   // Default::default
@@ -59,47 +60,38 @@ static_assert(
     alignof(ReprRustUnion) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate13ReprRustUnionNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
+extern "C" void __crubit_thunk_default(
     ::example_crate::ReprRustUnion* __ret_ptr);
 }
 inline ReprRustUnion::ReprRustUnion() {
-  __crubit_internal::
-      __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate13ReprRustUnionNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
-          this);
+  __crubit_internal::__crubit_thunk_default(this);
 }
 static_assert(std::is_trivially_destructible_v<ReprRustUnion>);
 static_assert(std::is_trivially_move_constructible_v<ReprRustUnion>);
 static_assert(std::is_trivially_move_assignable_v<ReprRustUnion>);
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk__uRNvMs_uCseF4PRLPR6bH_u13example_ucrateNtB4_u13ReprRustUnion5set_ua(
+extern "C" void __crubit_thunk_set_ua(
     ::example_crate::ReprRustUnion& [[clang::annotate_type("lifetime",
                                                            "__anon1")]],
     std::int32_t);
 }
 inline void ReprRustUnion::set_a(std::int32_t a)
     [[clang::annotate_type("lifetime", "__anon1")]] {
-  return __crubit_internal::
-      __crubit_thunk__uRNvMs_uCseF4PRLPR6bH_u13example_ucrateNtB4_u13ReprRustUnion5set_ua(
-          *this, a);
+  return __crubit_internal::__crubit_thunk_set_ua(*this, a);
 }
 
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk__uRNvMs_uCseF4PRLPR6bH_u13example_ucrateNtB4_u13ReprRustUnion5set_ub(
+extern "C" void __crubit_thunk_set_ub(
     ::example_crate::ReprRustUnion& [[clang::annotate_type("lifetime",
                                                            "__anon1")]],
     double);
 }
 inline void ReprRustUnion::set_b(double b)
     [[clang::annotate_type("lifetime", "__anon1")]] {
-  return __crubit_internal::
-      __crubit_thunk__uRNvMs_uCseF4PRLPR6bH_u13example_ucrateNtB4_u13ReprRustUnion5set_ub(
-          *this, b);
+  return __crubit_internal::__crubit_thunk_set_ub(*this, b);
 }
 inline void ReprRustUnion::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ReprRustUnion, __opaque_blob_of_bytes));
 }
 }  // namespace example_crate
-#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_RUST_UNION_EXAMPLE_CRATE
+#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_RUST_UNION_EXAMPLE_CRATE_GOLDEN

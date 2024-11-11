@@ -3,12 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// example_crate
+// example_crate_golden
 // Features: <none>
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_STRUCT_EXAMPLE_CRATE
-#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_STRUCT_EXAMPLE_CRATE
+#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_STRUCT_EXAMPLE_CRATE_GOLDEN
+#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_STRUCT_EXAMPLE_CRATE_GOLDEN
 
 #include "support/internal/attribute_macros.h"
 
@@ -20,7 +20,7 @@ namespace example_crate {
 
 // Generated from:
 // examples/rust/struct/example.rs;l=6
-struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate :: Struct") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Struct") alignas(4)
     [[clang::trivial_abi]] Struct final {
  public:
   // Default::default
@@ -55,42 +55,30 @@ static_assert(
     alignof(Struct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
-    ::example_crate::Struct* __ret_ptr);
+extern "C" void __crubit_thunk_default(::example_crate::Struct* __ret_ptr);
 }
-inline Struct::Struct() {
-  __crubit_internal::
-      __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
-          this);
-}
+inline Struct::Struct() { __crubit_internal::__crubit_thunk_default(this); }
 static_assert(std::is_trivially_destructible_v<Struct>);
 static_assert(std::is_trivially_move_constructible_v<Struct>);
 static_assert(std::is_trivially_move_assignable_v<Struct>);
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core5clone5Clone5cloneB4_u(
+extern "C" void __crubit_thunk_clone(
     ::example_crate::Struct const& [[clang::annotate_type("lifetime",
                                                           "__anon1")]],
     ::example_crate::Struct* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core5clone5Clone10clone_ufromB4_u(
+extern "C" void __crubit_thunk_clone_ufrom(
     ::example_crate::Struct& [[clang::annotate_type("lifetime", "__anon1")]],
     ::example_crate::Struct const& [[clang::annotate_type("lifetime",
                                                           "__anon2")]]);
 }
 inline Struct::Struct(const Struct& other) {
-  __crubit_internal::
-      __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core5clone5Clone5cloneB4_u(
-          other, this);
+  __crubit_internal::__crubit_thunk_clone(other, this);
 }
 inline Struct& Struct::operator=(const Struct& other) {
   if (this != &other) {
-    __crubit_internal::
-        __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate6StructNtNtCs6JfLQpFPRiJ_u4core5clone5Clone10clone_ufromB4_u(
-            *this, other);
+    __crubit_internal::__crubit_thunk_clone_ufrom(*this, other);
   }
   return *this;
 }
@@ -98,4 +86,4 @@ inline void Struct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Struct, a));
 }
 }  // namespace example_crate
-#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_STRUCT_EXAMPLE_CRATE
+#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_STRUCT_EXAMPLE_CRATE_GOLDEN

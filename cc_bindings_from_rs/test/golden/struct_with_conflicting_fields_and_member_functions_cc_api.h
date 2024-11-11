@@ -3,12 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// struct_with_conflicting_fields_and_member_functions_rust
+// struct_with_conflicting_fields_and_member_functions_rust_golden
 // Features: experimental, supported
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN
 
 #include "support/internal/attribute_macros.h"
 
@@ -20,10 +20,9 @@ namespace struct_with_conflicting_fields_and_member_functions_rust {
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=6
-struct
-    CRUBIT_INTERNAL_RUST_TYPE(
-        ":: struct_with_conflicting_fields_and_member_functions_rust :: "
-        "X") alignas(4) [[clang::trivial_abi]] X final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: struct_with_conflicting_fields_and_member_functions_rust_golden :: "
+    "X") alignas(4) [[clang::trivial_abi]] X final {
  public:
   // `X` doesn't implement the `Default` trait
   X() = delete;
@@ -104,4 +103,4 @@ inline void X::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(X, c));
 }
 }  // namespace struct_with_conflicting_fields_and_member_functions_rust
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN

@@ -3,12 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// example_crate
+// example_crate_golden
 // Features: <none>
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE
-#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE
+#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN
+#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN
 
 #include "support/internal/attribute_macros.h"
 
@@ -18,7 +18,7 @@
 namespace example_crate {
 
 // Generated from: examples/rust/enum/example.rs;l=6
-struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate :: Color") alignas(1)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
     [[clang::trivial_abi]] Color final {
  public:
   // Default::default
@@ -36,7 +36,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate :: Color") alignas(1)
 
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
-  // of individual `enum` fields
+  // of individual non-repr(C) `enum`s
   unsigned char __opaque_blob_of_bytes[1];
 
  private:
@@ -50,15 +50,9 @@ static_assert(
     alignof(Color) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate5ColorNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
-    ::example_crate::Color* __ret_ptr);
+extern "C" void __crubit_thunk_default(::example_crate::Color* __ret_ptr);
 }
-inline Color::Color() {
-  __crubit_internal::
-      __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate5ColorNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
-          this);
-}
+inline Color::Color() { __crubit_internal::__crubit_thunk_default(this); }
 static_assert(std::is_trivially_destructible_v<Color>);
 static_assert(std::is_trivially_move_constructible_v<Color>);
 static_assert(std::is_trivially_move_assignable_v<Color>);
@@ -68,4 +62,4 @@ inline void Color::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Color, __opaque_blob_of_bytes));
 }
 }  // namespace example_crate
-#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE
+#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN

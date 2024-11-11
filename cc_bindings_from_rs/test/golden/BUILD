@@ -4,10 +4,6 @@ load(
     "rust_library",
 )
 load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_cli_flag_aspect_hint.bzl",
-    "cc_bindings_from_rust_cli_flag",
-)
-load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
 )
@@ -30,17 +26,11 @@ TESTS = [name[:-3] for name in glob(
     exclude = ["*cc_api_impl.rs"],
 )]
 
-cc_bindings_from_rust_cli_flag(
-    name = "no_thunk_name_mangling",
-    flags = "--no-thunk-name-mangling",
-)
-
 [rust_library(
     name = name + "_rust",
     srcs = [name + ".rs"],
     aspect_hints = [
         "//features:experimental",
-        ":no_thunk_name_mangling",
     ],
 ) for name in TESTS]
 

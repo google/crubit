@@ -3,12 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// example_crate
+// example_crate_golden
 // Features: <none>
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_NON_TRIVIAL_STRUCT_EXAMPLE_CRATE
-#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_NON_TRIVIAL_STRUCT_EXAMPLE_CRATE
+#ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_NON_TRIVIAL_STRUCT_EXAMPLE_CRATE_GOLDEN
+#define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_NON_TRIVIAL_STRUCT_EXAMPLE_CRATE_GOLDEN
 
 #include "support/internal/attribute_macros.h"
 #include "support/internal/memswap.h"
@@ -22,7 +22,7 @@ namespace example_crate {
 // Generated from:
 // examples/rust/non_trivial_struct/example.rs;l=6
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: example_crate :: NonTrivialStruct") alignas(4)
+    ":: example_crate_golden :: NonTrivialStruct") alignas(4)
     [[clang::trivial_abi]] NonTrivialStruct final {
  public:
   // Default::default
@@ -56,25 +56,19 @@ static_assert(
     alignof(NonTrivialStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate16NonTrivialStructNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
+extern "C" void __crubit_thunk_default(
     ::example_crate::NonTrivialStruct* __ret_ptr);
 }
 inline NonTrivialStruct::NonTrivialStruct() {
-  __crubit_internal::
-      __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate16NonTrivialStructNtNtCs6JfLQpFPRiJ_u4core7default7Default7defaultB4_u(
-          this);
+  __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate16NonTrivialStructNtNtNtCs6JfLQpFPRiJ_u4core3ops4drop4Drop4dropB4_u(
+extern "C" void __crubit_thunk_drop(
     ::example_crate::NonTrivialStruct& [[clang::annotate_type("lifetime",
                                                               "__anon1")]]);
 }
 inline NonTrivialStruct::~NonTrivialStruct() {
-  __crubit_internal::
-      __crubit_thunk__uRNvYNtCseF4PRLPR6bH_u13example_ucrate16NonTrivialStructNtNtNtCs6JfLQpFPRiJ_u4core3ops4drop4Drop4dropB4_u(
-          *this);
+  __crubit_internal::__crubit_thunk_drop(*this);
 }
 inline NonTrivialStruct::NonTrivialStruct(NonTrivialStruct&& other)
     : NonTrivialStruct() {
@@ -88,4 +82,4 @@ inline void NonTrivialStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NonTrivialStruct, a));
 }
 }  // namespace example_crate
-#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_NON_TRIVIAL_STRUCT_EXAMPLE_CRATE
+#endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_NON_TRIVIAL_STRUCT_EXAMPLE_CRATE_GOLDEN

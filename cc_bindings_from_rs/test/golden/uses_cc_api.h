@@ -3,12 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// uses_rust
+// uses_rust_golden
 // Features: experimental, supported
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST_GOLDEN
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST_GOLDEN
 
 #include "support/internal/attribute_macros.h"
 #include "support/internal/return_value_slot.h"
@@ -32,8 +32,9 @@ std::int32_t f2();
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=20
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust :: test_use_glob :: X1") alignas(
-    4) [[clang::trivial_abi]] X1 final {
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: uses_rust_golden :: test_use_glob :: X1") alignas(4)
+    [[clang::trivial_abi]] X1 final {
  public:
   // `test_use_glob::X1` doesn't implement the `Default` trait
   X1() = delete;
@@ -68,7 +69,7 @@ namespace __crubit_internal {
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=32
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust :: Bar") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
     [[clang::trivial_abi]] Bar final {
  public:
   // `private_module::Bar` doesn't implement the `Default` trait
@@ -96,7 +97,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust :: Bar") alignas(4)
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=35
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust :: Foo") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
     [[clang::trivial_abi]] Foo final {
  public:
   // `private_module::Foo` doesn't implement the `Default` trait
@@ -156,7 +157,7 @@ namespace __crubit_internal {
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=67
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust :: InnerX") alignas(4)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
     [[clang::trivial_abi]] InnerX final {
  public:
   // `m1::m2::InnerX` doesn't implement the `Default` trait
@@ -287,4 +288,4 @@ inline void InnerX::__crubit_field_offset_assertions() {
 }  // namespace __crubit_internal
 
 }  // namespace uses_rust
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST_GOLDEN

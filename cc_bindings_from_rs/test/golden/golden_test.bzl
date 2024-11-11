@@ -4,7 +4,16 @@
 
 """A rule that generates bindings source files for a given Rust library."""
 
+load(
+    "@rules_rust//rust:defs.bzl",
+    rust_library_rule = "rust_library",
+)
 load("@rules_rust//rust/private:providers.bzl", "CrateInfo")  # buildifier: disable=bzl-visibility
+load(
+    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_cli_flag_aspect_hint.bzl",
+    "cc_bindings_from_rust_cli_flag",
+)
+load("//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl", "cc_bindings_from_rust_library_config")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust_aspect",
@@ -65,9 +74,38 @@ def golden_test(
 
     bindings_name = basename + ".generated_bindings"
 
+    # Disable thunk name mangling to avoid breaking tests.
+    no_mangle_cli_flag = "no_thunk_name_mangling_" + rust_library
+    cc_bindings_from_rust_cli_flag(
+        name = no_mangle_cli_flag,
+        flags = "--no-thunk-name-mangling",
+    )
+
+    # Since we have patched the rust_library name, we need to keep the original crate
+    # name as the namespace name otherwise users get confused.
+    top_level_namespace = "top_level_namespace" + rust_library
+    cc_bindings_from_rust_library_config(
+        name = top_level_namespace,
+        namespace = rust_library,
+    )
+    args = {}
+    for key, value in native.existing_rule(rust_library).items():
+        if key != "kind" and key != "name" and value:
+            args[key] = value
+    patched_name = rust_library + "_golden"
+    args["name"] = patched_name
+    if "aspect_hints" in args:
+        args["aspect_hints"] = list(args["aspect_hints"])
+    else:
+        args["aspect_hints"] = []
+    args["aspect_hints"] += [":" + no_mangle_cli_flag, ":" + top_level_namespace]
+    rust_library_rule(
+        **args
+    )
+
     _generate_bindings(
         name = bindings_name,
-        rust_library = rust_library,
+        rust_library = patched_name,
     )
     args = []
     data = ["//common:LICENSE_HEADER"]
