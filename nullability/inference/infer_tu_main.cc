@@ -225,6 +225,10 @@ class Action : public SyntaxOnlyAction {
 
      private:
       void HandleTranslationUnit(ASTContext &Ctx) override {
+        if (Ctx.getDiagnostics().hasErrorOccurred()) {
+          llvm::errs() << "An error has occurred; not running inference.\n";
+          return;
+        }
         llvm::errs() << "Running inference...\n";
 
         InferenceResults Results =
