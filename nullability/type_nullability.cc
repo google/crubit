@@ -192,11 +192,8 @@ QualType underlyingRawPointerType(QualType T, AccessSpecifier BaseAccess) {
 
   // If we don't have a `pointer` or `element_type` type alias, we deduce the
   // underlying pointer type from the template argument if possible.
-  if (CTSD != nullptr)
-    return underlyingPointerTypeFromTemplateArg(*CTSD, ASTCtx);
   if (auto *SmartPointerCTSD =
-          dyn_cast<ClassTemplateSpecializationDecl>(SmartPtrDecl);
-      SmartPointerCTSD != nullptr)
+          dyn_cast<ClassTemplateSpecializationDecl>(SmartPtrDecl))
     return underlyingPointerTypeFromTemplateArg(*SmartPointerCTSD, ASTCtx);
 
   return QualType();
