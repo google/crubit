@@ -71,15 +71,14 @@ Defines an aspect hint that is used to pass extra Rust source files to `rs_bindi
 """,
 )
 
-def get_additional_rust_srcs(_target, aspect_ctx):
+def get_additional_rust_srcs(aspect_ctx):
     """Returns `extra_rs_srcs` associated with the `_target`.
 
     Args:
-        _target: The target, as seen in aspect_hint.
         aspect_ctx: The ctx from an aspect_hint.
 
     Returns:
-        A list of `File` and its module paths as specified by the `extra_rs_srcs` associated with the `_target`.
+        A list of `File` and its module paths as specified by the `extra_rs_srcs`.
     """
     additional_rust_srcs = []
     for hint in aspect_ctx.rule.attr.aspect_hints:

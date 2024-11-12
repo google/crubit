@@ -206,7 +206,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             ],
         ),
         target_args = target_args,
-        extra_rs_srcs = get_additional_rust_srcs(target, ctx),
+        extra_rs_srcs = get_additional_rust_srcs(ctx),
         deps_for_cc_file = [target[CcInfo]] + [
             dep[RustBindingsFromCcInfo].cc_info
             for dep in all_deps

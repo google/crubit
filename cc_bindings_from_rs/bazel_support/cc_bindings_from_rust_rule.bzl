@@ -137,7 +137,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
             error_report_output.path,
         )
         outputs.append(error_report_output)
-    config = crate_name_to_library_config(target, ctx)
+    config = crate_name_to_library_config(ctx)
     current_config = config.get("self", None)
     for crate_name, crate_config in config.items():
         if crate_config.namespace:

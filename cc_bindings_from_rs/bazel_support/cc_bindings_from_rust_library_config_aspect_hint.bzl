@@ -36,11 +36,10 @@ which affects the tool behavior when generating the C++ binding for the Rust tar
 """,
 )
 
-def crate_name_to_library_config(_target, aspect_ctx):
+def crate_name_to_library_config(aspect_ctx):
     """Returns the configuration for `cc_bindings_from_rust`.
 
     Args:
-        _target: The target, as seen in aspect_hint.
         aspect_ctx: The ctx from an aspect_hint.
 
     Returns:
