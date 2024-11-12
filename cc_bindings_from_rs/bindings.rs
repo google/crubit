@@ -1669,7 +1669,7 @@ fn liberate_and_deanonymize_late_bound_regions<'tcx>(
                 Symbol::intern(&format!("'__anon{anon_count}"))
             });
             let id = br.kind.get_id().unwrap_or(fn_def_id);
-            ty::BoundRegionKind::BrNamed(id, name)
+            ty::BoundRegionKind::Named(id, name)
         });
         ty::Region::new_late_param(tcx, fn_def_id, *new_kind)
     };
