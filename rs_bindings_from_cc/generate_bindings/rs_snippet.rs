@@ -310,15 +310,6 @@ pub enum TypeLocation {
     Other,
 }
 
-// A generic monomorphization from a known and manually supported C++ template
-// specialization.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct GenericMonomorphization {
-    template_name: Rc<str>,     // The name of the C++ template.
-    rust_generic_name: Rc<str>, // The name of the corresponding Rust generic type.
-    type_args: Vec<RsTypeKind>, // The type arguments of the generic translated from C++.
-}
-
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum RsTypeKind {
     Pointer {
@@ -349,7 +340,6 @@ pub enum RsTypeKind {
     Record {
         record: Rc<Record>,
         crate_path: Rc<CratePath>,
-        known_generic_monomorphization: Option<Rc<GenericMonomorphization>>,
     },
     Enum {
         enum_: Rc<Enum>,
@@ -378,15 +368,13 @@ pub enum RsTypeKind {
 }
 
 impl RsTypeKind {
-    pub fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>, ir: &IR) -> Result<Self> {
+    pub fn new_record(record: Rc<Record>, ir: &IR) -> Result<Self> {
         let crate_path = Rc::new(CratePath::new(
             ir,
             ir.namespace_qualifier(&record)?,
             rs_imported_crate_name(&record.owning_target, ir),
         ));
-        let known_generic_monomorphization =
-            map_to_supported_generic(db, &record.template_specialization).map(Rc::new);
-        Ok(RsTypeKind::Record { record, crate_path, known_generic_monomorphization })
+        Ok(RsTypeKind::Record { record, crate_path })
     }
 
     pub fn new_enum(enum_: Rc<Enum>, ir: &IR) -> Result<Self> {
@@ -446,9 +434,7 @@ impl RsTypeKind {
     pub fn is_unpin(&self) -> bool {
         match self {
             RsTypeKind::IncompleteRecord { .. } => false,
-            RsTypeKind::Record { record, known_generic_monomorphization, .. } => {
-                known_generic_monomorphization.is_some() || record.is_unpin()
-            }
+            RsTypeKind::Record { record, .. } => record.is_unpin(),
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_unpin(),
             RsTypeKind::BridgeType { .. } => true,
             _ => true,
@@ -858,11 +844,12 @@ impl RsTypeKind {
                 };
                 quote! { #unsafe_ extern #abi fn( #( #param_types_ ),* ) #return_frag }
             }
-            RsTypeKind::Record { record, .. } => {
+            RsTypeKind::Record { record, crate_path } => {
                 if self_record == Some(record) {
                     quote! { Self }
                 } else {
-                    self.to_token_stream()
+                    let ident = make_rs_ident(record.rs_name.as_ref());
+                    quote! { #crate_path #ident }
                 }
             }
             RsTypeKind::Slice(t) => {
@@ -899,50 +886,6 @@ impl std::fmt::Display for RsTypeKind {
             }
         }
     }
-}
-
-/// Returns the Rust generic information if:
-/// - it is a known and supported template specialization.
-/// - all of the template argument types are supported.
-pub fn map_to_supported_generic(
-    db: &dyn BindingsGenerator,
-    template_specialization: &Option<ir::TemplateSpecialization>,
-) -> Option<GenericMonomorphization> {
-    let template_specialization = template_specialization.as_ref()?;
-    let template_name = template_specialization.template_name.to_string();
-    let mut type_args = Vec::new();
-    for arg in template_specialization.template_args.iter() {
-        if arg.type_.is_err() {
-            return None;
-        }
-        let arg_type = arg.type_.clone().unwrap();
-        let arg_type_kind = db.rs_type_kind(arg_type.rs_type.clone());
-        if arg_type_kind.is_err() {
-            return None;
-        }
-        type_args.push(arg_type_kind.unwrap());
-    }
-
-    let rust_generic_name = match (template_name.as_str(), &type_args[..]) {
-        ("std::unique_ptr", [_t, RsTypeKind::Record { record, .. }]) => {
-            let deleter = record.template_specialization.as_ref()?;
-            let template_name = deleter.template_name.to_string();
-            if template_name != "std::default_delete"
-                || deleter.template_args.len() != 1
-                || deleter.template_args[0] != template_specialization.template_args[0]
-            {
-                return None;
-            }
-            "cc_std::std::unique_ptr"
-        }
-        _ => return None,
-    };
-
-    Some(GenericMonomorphization {
-        template_name: template_name.into(),
-        rust_generic_name: rust_generic_name.into(),
-        type_args,
-    })
 }
 
 impl ToTokens for RsTypeKind {
@@ -991,20 +934,7 @@ impl ToTokens for RsTypeKind {
                 let record_ident = make_rs_ident(incomplete_record.rs_name.as_ref());
                 quote! { #crate_path #record_ident }
             }
-            RsTypeKind::Record { record, crate_path, known_generic_monomorphization } => {
-                if let Some(known_generic_monomorphization) = known_generic_monomorphization {
-                    let inner_types_str = known_generic_monomorphization
-                        .type_args
-                        .iter()
-                        .map(|t| t.to_token_stream())
-                        .take(1)
-                        .collect::<Vec<_>>();
-                    let rust_generic_name =
-                        known_generic_monomorphization.rust_generic_name.as_ref();
-                    let rust_generic_name_parts: Vec<_> =
-                        rust_generic_name.split("::").map(make_rs_ident).collect();
-                    return quote! { #(#rust_generic_name_parts)::* <#(#inner_types_str),*>};
-                }
+            RsTypeKind::Record { record, crate_path } => {
                 let ident = make_rs_ident(record.rs_name.as_ref());
                 quote! { #crate_path #ident }
             }

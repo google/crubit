@@ -892,7 +892,7 @@ fn required_crubit_features(
         Item::Record(record) => {
             require_rs_type_kind(
                 &mut missing_features,
-                &RsTypeKind::new_record(db, record.clone(), &db.ir())?,
+                &RsTypeKind::new_record(record.clone(), &db.ir())?,
                 TypeLocation::Other,
                 &|| "".into(),
             );
@@ -1168,7 +1168,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                     if record.bridge_type_info.is_some() {
                         RsTypeKind::new_bridge_type(record.clone())?
                     } else {
-                        RsTypeKind::new_record(db, record.clone(), &ir)?
+                        RsTypeKind::new_record(record.clone(), &ir)?
                     }
                 }
                 Item::Enum(enum_) => RsTypeKind::new_enum(enum_.clone(), &ir)?,
