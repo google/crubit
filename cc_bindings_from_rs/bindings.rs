@@ -32,8 +32,8 @@ use rustc_middle::ty::{self, IntTy, Region, Ty, TyCtxt, UintTy};
 use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LocalModDefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_target::abi::{
-    Abi, AddressSpace, FieldIdx, FieldsShape, Integer, Layout, Primitive, Scalar, VariantIdx,
-    Variants,
+    AddressSpace, BackendRepr, FieldIdx, FieldsShape, Integer, Layout, Primitive, Scalar,
+    VariantIdx, Variants,
 };
 use rustc_trait_selection::infer::InferCtxtExt;
 use rustc_type_ir::RegionKind;
@@ -1027,8 +1027,8 @@ fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
     assert_eq!(8, layout.align().abi.bytes());
     assert_eq!(16, layout.size().bytes());
     assert!(matches!(
-        layout.abi(),
-        Abi::ScalarPair(
+        layout.backend_repr(),
+        BackendRepr::ScalarPair(
             Scalar::Initialized { value: Primitive::Pointer(AddressSpace(_)), .. },
             Scalar::Initialized {
                 value: Primitive::Int(Integer::I64, /* signedness = */ false),
@@ -1109,8 +1109,8 @@ fn format_ty_for_cc<'tcx>(
             assert_eq!(4, layout.align().abi.bytes());
             assert_eq!(4, layout.size().bytes());
             assert!(matches!(
-                layout.abi(),
-                Abi::Scalar(Scalar::Initialized {
+                layout.backend_repr(),
+                BackendRepr::Scalar(Scalar::Initialized {
                     value: Primitive::Int(Integer::I32, /* signedness = */ false),
                     ..
                 })
@@ -2692,7 +2692,10 @@ fn format_adt_core<'tcx>(
 
     let layout = get_layout(tcx, self_ty)
         .with_context(|| format!("Error computing the layout of #{cpp_name}"))?;
-    ensure!(layout.abi().is_sized(), "Bindings for dynamically sized types are not supported.");
+    ensure!(
+        layout.backend_repr().is_sized(),
+        "Bindings for dynamically sized types are not supported."
+    );
     let alignment_in_bytes = {
         // Only the ABI-mandated alignment is considered (i.e. `AbiAndPrefAlign::pref`
         // is ignored), because 1) Rust's `std::mem::align_of` returns the
