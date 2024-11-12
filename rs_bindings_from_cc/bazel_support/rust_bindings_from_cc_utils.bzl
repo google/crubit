@@ -145,7 +145,6 @@ def generate_and_compile_bindings(
             cc_output,
             deps_for_cc_file,
             extra_cc_compilation_action_inputs,
-            extra_hdrs = public_hdrs,
         )
 
     return [
