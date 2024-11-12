@@ -124,7 +124,7 @@ memoized::query_group! {
     pub struct Database;
 }
 
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug)]
 pub enum IncludeGuard {
     PragmaOnce,
     Guard(String),
@@ -2244,39 +2244,22 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
     let (sig_mid, sig_hir) = get_fn_sig(tcx, local_def_id);
     check_fn_sig(&sig_mid)?;
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.
-    let has_export_name = tcx.get_attr(def_id, rustc_span::symbol::sym::export_name).is_some();
-    let has_no_mangle = tcx.get_attr(def_id, rustc_span::symbol::sym::no_mangle).is_some();
-    let needs_thunk = is_thunk_required(&sig_mid).is_err() || (!has_no_mangle && !has_export_name);
+    let needs_thunk = is_thunk_required(&sig_mid).is_err()
+        || (tcx.get_attr(def_id, rustc_span::symbol::sym::no_mangle).is_none()
+            && tcx.get_attr(def_id, rustc_span::symbol::sym::export_name).is_none());
     let thunk_name = {
         let symbol_name = if db.no_thunk_name_mangling() {
-            if has_export_name {
-                tcx.get_attr(def_id, rustc_span::symbol::sym::export_name)
-                    .unwrap()
-                    .value_str()
-                    .expect("export_name is a string")
-                    .to_string()
-            } else {
-                FullyQualifiedName::new(db, def_id)
-                    .rs_name
-                    .expect("Functions are assumed to always have a name")
-                    .to_string()
-            }
+            FullyQualifiedName::new(db, def_id)
+                .rs_name
+                .expect("Functions are assumed to always have a name")
+                .to_string()
         } else {
             // Call to `mono` is ok - `generics_of` have been checked above.
             let instance = ty::Instance::mono(tcx, def_id);
             tcx.symbol_name(instance).name.to_string()
         };
-        let target_path_mangled_hash = if db.no_thunk_name_mangling() {
-            "".to_string()
-        } else {
-            format!("{}_", tcx.crate_hash(LOCAL_CRATE).to_hex())
-        };
         if needs_thunk {
-            format!(
-                "__crubit_thunk_{}{}",
-                target_path_mangled_hash,
-                &escape_non_identifier_chars(&symbol_name)
-            )
+            format!("__crubit_thunk_{}", &escape_non_identifier_chars(&symbol_name))
         } else {
             symbol_name.to_string()
         }
@@ -3572,11 +3555,7 @@ fn format_trait_thunks<'tcx>(
             } else {
                 let instance = ty::Instance::new(method.def_id, substs);
                 let symbol = tcx.symbol_name(instance);
-                format!(
-                    "__crubit_thunk_{}_{}",
-                    tcx.crate_hash(LOCAL_CRATE).to_hex(),
-                    &escape_non_identifier_chars(symbol.name)
-                )
+                format!("__crubit_thunk_{}", &escape_non_identifier_chars(symbol.name))
             }
         };
         method_name_to_cc_thunk_name.insert(method.name, format_cc_ident(db, &thunk_name)?);
@@ -10912,7 +10891,7 @@ pub mod tests {
             Rc::new(HashMap::from([(Rc::from("self"), features.into())])),
             /* crate_name_to_namespace= */ HashMap::default().into(),
             /* errors = */ Rc::new(IgnoreErrors),
-            /* no_thunk_name_mangling= */ true,
+            /* no_thunk_name_mangling= */ false,
             /* include_guard */ IncludeGuard::PragmaOnce,
         )
     }

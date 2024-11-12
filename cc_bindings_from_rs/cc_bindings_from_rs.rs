@@ -426,11 +426,11 @@ r#"void public_function();
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_ANY_IDENTIFIER_CHARACTERS();
+__crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
 }
 inline void public_function() {
   return __crubit_internal::
-      __crubit_thunk_ANY_IDENTIFIER_CHARACTERS();
+      __crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
 }
 
 }  // namespace public_module
@@ -473,11 +473,11 @@ r#"void public_function();
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_ANY_IDENTIFIER_CHARACTERS();
+__crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
 }
 inline void public_function() {
   return __crubit_internal::
-      __crubit_thunk_ANY_IDENTIFIER_CHARACTERS();
+      __crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
 }
 
 }  // namespace public_module
@@ -498,7 +498,7 @@ inline void public_function() {
 #![allow(improper_ctypes_definitions)]
 
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
+extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
 -> () {
     ::test_crate::public_module::public_function()
 }
