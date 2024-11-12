@@ -1005,6 +1005,26 @@ TEST(PointerNullabilityTest, ConstMethodReturningSmartPointerByReference) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, ConstOperatorReturningPointer) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      Nullable<int *> x;
+    };
+    struct SmartPtr {
+      S *operator->() const;
+      void clear();
+    };
+    void target() {
+      SmartPtr ptr;
+      if (ptr->x != nullptr) {
+        *ptr->x;
+        ptr.clear();
+        *ptr->x;  // [[unsafe]]
+      }
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, NonConstMethodClearsSmartPointer) {
   test::EnableSmartPointers Enable;
   EXPECT_TRUE(checkDiagnostics(R"cc(

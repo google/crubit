@@ -113,6 +113,11 @@ Matcher<Stmt> isZeroParamConstMemberCall() {
       callee(cxxMethodDecl(parameterCountIs(0), isConst())));
 }
 
+Matcher<Stmt> isZeroParamConstMemberOperatorCall() {
+  return cxxOperatorCallExpr(
+      callee(cxxMethodDecl(parameterCountIs(0), isConst())));
+}
+
 Matcher<Stmt> isOptionalOperatorArrowCall() {
   return cxxOperatorCallExpr(
       hasOverloadedOperatorName("->"),

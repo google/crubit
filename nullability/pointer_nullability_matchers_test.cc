@@ -74,6 +74,8 @@ TEST(PointerNullabilityTest, MatchConstMemberFunctions) {
       int *_Nullable get(int i) const;
       int *_Nullable get_with_default_arg(int i = 0) const;
       int *_Nullable get_nonconst();
+      C *_Nullable operator->() const;
+      C &operator++();
     };
     C foo() { return C(); }
   )cc");
@@ -88,6 +90,10 @@ TEST(PointerNullabilityTest, MatchConstMemberFunctions) {
                        isZeroParamConstMemberCall()));
   EXPECT_FALSE(matches(Input, "void target(){ C().get_nonconst(); }",
                        isZeroParamConstMemberCall()));
+  EXPECT_TRUE(matches(Input, "void target(){ C()->get(); }",
+                      isZeroParamConstMemberOperatorCall()));
+  EXPECT_FALSE(matches(Input, "void target(){ ++C(); }",
+                       isZeroParamConstMemberOperatorCall()));
 }
 
 TEST(PointerNullabilityTest, MatchSmartPointerMethodCall) {

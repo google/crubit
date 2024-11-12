@@ -1330,6 +1330,14 @@ void transferValue_ConstMemberCall(
       MCE, dataflow::getImplicitObjectLocation(*MCE, State.Env), Result, State);
 }
 
+void transferValue_ConstMemberOperatorCall(
+    const CXXOperatorCallExpr *OCE, const MatchFinder::MatchResult &Result,
+    TransferState<PointerNullabilityLattice> &State) {
+  auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
+      State.Env.getStorageLocation(*OCE->getArg(0)));
+  handleConstMemberCall(OCE, RecordLoc, Result, State);
+}
+
 void transferValue_OptionalOperatorArrowCall(
     absl::Nonnull<const CXXOperatorCallExpr *> OCE,
     const MatchFinder::MatchResult &Result,
@@ -1857,6 +1865,8 @@ auto buildValueTransferer() {
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),
                                         transferValue_ConstMemberCall)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isZeroParamConstMemberOperatorCall(),
+                                          transferValue_ConstMemberOperatorCall)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(
           isOptionalOperatorArrowCall(),
           transferValue_OptionalOperatorArrowCall)
