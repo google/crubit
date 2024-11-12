@@ -47,6 +47,42 @@ TEST void testMemberTemplate(TemplateWrapper &s) {
   nullable(s.get<int *_Nullable>());
 }
 
+namespace template_already_has_nullability {
+
+template <typename T>
+struct StaticWrapperAnnotated {
+  constexpr static Nonnull<T> Value = {};
+};
+
+struct Annotated {
+  template <typename T>
+  Nonnull<T> get_nonnull();
+  template <typename T>
+  Nullable<T> get_nullable();
+};
+
+TEST void testDeclRefExprAlreadyAnnotated() {
+  nonnull(StaticWrapperAnnotated<int *>::Value);
+  nonnull(StaticWrapperAnnotated<Nonnull<int *>>::Value);
+}
+
+TEST void testMemberExprAlreadyAnnotated(Annotated &s) {
+  nonnull(s.get_nonnull<int *>());
+  nonnull(s.get_nonnull<int *_Nonnull>());
+}
+
+TEST void testMemberExprAlreadyAnnotatedConflict(Annotated &s) {
+  // We may want to warn about such conflicts, but for now we pick the
+  // annotation from the type (the outermost annotation).
+  nullable(s.get_nullable<int *_Nonnull>());
+}
+
+TEST void testMemberExprAlreadyAnnotatedMultipleStars(Annotated &s) {
+  nonnull(s.get_nonnull<int *_Nullable *_Nullable *_Nonnull>());
+}
+
+}  // namespace template_already_has_nullability
+
 namespace variable_template {
 
 template <class T>

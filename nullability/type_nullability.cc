@@ -354,11 +354,13 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   using Base = TypeAndMaybeLocVisitor<Impl>;
   Impl &derived() { return *static_cast<Impl *>(this); }
 
+ protected:
   // A nullability attribute we've seen, waiting to attach to a pointer type.
   // There may be sugar in between: Attributed -> Typedef -> Typedef -> Pointer.
   // All non-sugar types must consume nullability, most will ignore it.
   std::optional<NullabilityKind> PendingNullability;
 
+ private:
   // The file whose #pragma governs the type currently being walked.
   FileID File;
 
@@ -1015,6 +1017,19 @@ TypeNullability getTypeNullability(
                     countPointersInType(ST->getCanonicalTypeInternal()))
               << "Substituted nullability has the wrong structure: "
               << QualType(ST, 0).getAsString();
+          // Check if the PendingNullability is more precise than the
+          // substituted nullability.
+          if (!Subst->empty() && PendingNullability.has_value()) {
+            PointerTypeNullability &SubstNullability = Subst->front();
+            if (SubstNullability.concrete() == NullabilityKind::Unspecified) {
+              SubstNullability = PointerTypeNullability(*PendingNullability);
+            }
+          }
+          // Normally, PendingNullability is consumed when we visit further and
+          // hit a non-sugared type like PointerType. However, here we are not
+          // visiting further, so we need to consume the PendingNullability
+          // ourselves.
+          PendingNullability.reset();
           llvm::append_range(Annotations, *Subst);
           return;
         }
