@@ -20,7 +20,7 @@ use itertools::Itertools;
 use rustc_middle::ty::TyCtxt;
 use rustc_session::config::{CrateType, Input, Options, OutputType, OutputTypes};
 use rustc_span::def_id::LocalDefId;
-use rustc_target::spec::TargetTriple;
+use rustc_target::spec::TargetTuple;
 
 use std::path::{Path, PathBuf};
 
@@ -106,8 +106,8 @@ where
 
     if let Some(target) = &setup_rustc_target_for_testing(target_dir.path()) {
         let target_path = &Path::new(target);
-        opts.target_triple = TargetTriple::from_path(target_path).unwrap_or_else(|_| {
-            panic!("failed to construct a TargetTriple from target: '{}'", target_path.display())
+        opts.target_triple = TargetTuple::from_path(target_path).unwrap_or_else(|_| {
+            panic!("failed to construct a TargetTuple from target: '{}'", target_path.display())
         });
     }
 
