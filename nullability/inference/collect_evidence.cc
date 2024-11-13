@@ -1380,6 +1380,27 @@ static void collectEvidenceFromConstructorExitBlock(
   }
 }
 
+static bool containsInitListExpr(const Expr &E) {
+  // Short-circuit for the obvious case.
+  if (isa<InitListExpr>(&E)) return true;
+
+  class ContainsInitListExprVisitor
+      : public RecursiveASTVisitor<ContainsInitListExprVisitor> {
+   public:
+    bool TraverseInitListExpr(const InitListExpr *E) {
+      Found = true;
+      return false;
+    }
+
+    bool Found = false;
+  };
+
+  ContainsInitListExprVisitor Visitor;
+  // Unfortunately, RecursiveASTVisitor requires a non-const input.
+  Visitor.TraverseStmt(&const_cast<Expr &>(E));
+  return Visitor.Found;
+}
+
 llvm::Error collectEvidenceFromDefinition(
     const Decl &Definition, llvm::function_ref<EvidenceEmitter> Emit,
     USRCache &USRCache, const NullabilityPragmas &Pragmas,
@@ -1404,11 +1425,11 @@ llvm::Error collectEvidenceFromDefinition(
           "Variable definitions must have an initializer.");
     }
     if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(Var);
-        VTSD && dyn_cast<InitListExpr>(Var->getInit())) {
-      return llvm::createStringError(
-          llvm::errc::not_supported,
-          "Variable template specializations with InitListExpr initializers "
-          "are currently unsupported.");
+        VTSD && Var->getInit() && containsInitListExpr(*Var->getInit())) {
+      return llvm::createStringError(llvm::errc::not_supported,
+                                     "Variable template specializations with "
+                                     "InitListExprs in their initializers "
+                                     "are currently unsupported.");
     }
     // Synthesize a temporary DeclStmt for the assignment of the variable to
     // its initializing expression. This is an unusual pattern that does not

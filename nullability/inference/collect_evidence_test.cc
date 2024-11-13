@@ -3541,9 +3541,49 @@ TEST(CollectEvidenceFromDefinitionTest,
           evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
                           UsrCache, AST.context()),
           UsrCache, Pragmas),
-      llvm::FailedWithMessage("Variable template specializations with "
-                              "InitListExpr initializers are currently "
-                              "unsupported."));
+      llvm::FailedWithMessage(
+          "Variable template specializations with InitListExprs in their "
+          "initializers are currently unsupported."));
+  EXPECT_THAT(Results, IsEmpty());
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     UnsupportedVarTemplateSpecializationContainingInitListExpr) {
+  static constexpr llvm::StringRef Src = R"cc(
+    template <typename T>
+    class AClassTemplate {
+     public:
+      struct ABaseClass {};
+
+      struct ADerivedClass : ABaseClass {};
+
+      template <typename U>
+      static constexpr ADerivedClass AVariableTemplate = {
+          ABaseClass{},
+      };
+    };
+
+    using AnyPointerType = int*;
+    using AnyType = char;
+
+    auto t = AClassTemplate<AnyPointerType>::AVariableTemplate<AnyType>;
+  )cc";
+  NullabilityPragmas Pragmas;
+  clang::TestAST AST(getAugmentedTestInputs(Src, Pragmas));
+  std::vector<Evidence> Results;
+  USRCache UsrCache;
+
+  auto& Decl = *selectFirst<VarTemplateSpecializationDecl>(
+      "d", match(varDecl(isTemplateInstantiation()).bind("d"), AST.context()));
+  EXPECT_THAT_ERROR(
+      collectEvidenceFromDefinition(
+          Decl,
+          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
+                          UsrCache, AST.context()),
+          UsrCache, Pragmas),
+      llvm::FailedWithMessage(
+          "Variable template specializations with InitListExprs in their "
+          "initializers are currently unsupported."));
   EXPECT_THAT(Results, IsEmpty());
 }
 
