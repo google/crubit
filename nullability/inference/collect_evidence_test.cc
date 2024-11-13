@@ -2574,9 +2574,23 @@ TEST(CollectEvidenceFromDefinitionTest, FromGlobalLabmdaBodyForGlobal) {
                                     globalVarNamed("P"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForCapturedLocal) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void foo() {
+      int* P;
+      auto Lambda = [&P]() { *P; };
+    }
+  )cc";
+
+  EXPECT_THAT(
+      collectFromDefinitionNamed("operator()", Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    localVarNamed("P", "foo"))));
+}
+
 // TODO(b/315967534) Collect for captured function parameters, specifically from
 // the unchecked dereference of `foo`'s parameter.
-TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaForCapturedParam) {
+TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForCapturedParam) {
   static constexpr llvm::StringRef Src = R"cc(
     void foo(int* P) {
       auto Lambda = [&P]() { *P; };
@@ -2586,18 +2600,20 @@ TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaForCapturedParam) {
   EXPECT_THAT(collectFromDefinitionNamed("operator()", Src), IsEmpty());
 }
 
-TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaForCalledFunction) {
+TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForCalledFunction) {
   static constexpr llvm::StringRef Src = R"cc(
-    int* bar();
+    int* bar(bool* B);
     void foo() {
-      auto Lambda = []() { *bar(); };
+      auto Lambda = []() { *bar(nullptr); };
     }
   )cc";
 
   EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
-              UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
-                                            Evidence::UNCHECKED_DEREFERENCE,
-                                            functionNamed("bar"))));
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("bar")),
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                           functionNamed("bar"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, ForLambdaParamOrReturn) {
