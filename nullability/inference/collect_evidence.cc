@@ -471,9 +471,9 @@ class DefinitionEvidenceCollector {
                       llvm::function_ref<EvidenceEmitter> Emit,
                       const CFGElement &CFGElem,
                       const PointerNullabilityLattice &Lattice,
-                      const Environment &Env) {
+                      const Environment &Env, const dataflow::Solver &Solver) {
     DefinitionEvidenceCollector Collector(
-        InferableSlots, InferableSlotsConstraint, Emit, Lattice, Env);
+        InferableSlots, InferableSlotsConstraint, Emit, Lattice, Env, Solver);
     if (auto CFGStmt = CFGElem.getAs<clang::CFGStmt>()) {
       const Stmt *S = CFGStmt->getStmt();
       if (!S) return;
@@ -494,12 +494,14 @@ class DefinitionEvidenceCollector {
                               const Formula &InferableSlotsConstraint,
                               llvm::function_ref<EvidenceEmitter> Emit,
                               const PointerNullabilityLattice &Lattice,
-                              const Environment &Env)
+                              const Environment &Env,
+                              const dataflow::Solver &Solver)
       : InferableSlots(InferableSlots),
         InferableSlotsConstraint(InferableSlotsConstraint),
         Emit(Emit),
         Lattice(Lattice),
-        Env(Env) {}
+        Env(Env),
+        Solver(Solver) {}
 
   /// Records evidence derived from the necessity that `Value` is nonnull.
   /// It may be dereferenced, passed as a nonnull param, etc, per
@@ -1022,8 +1024,14 @@ class DefinitionEvidenceCollector {
       // It's not expected that a slot's isNullable formula could be proven
       // false by the environment alone (without the
       // InferableSlotsConstraint), but SAT calls are relatively expensive, so
-      // only DCHECK.
-      DCHECK(Env.allows(IS.getSymbolicNullability().isNullable(A)));
+      // only DCHECK. This has so far only been observed in the case of the SAT
+      // solver reaching its iteration limit before or during this check, in
+      // which case we won't be able to collect accurate evidence anyway, so we
+      // simply return early.
+      bool AllowsNullable =
+          Env.allows(IS.getSymbolicNullability().isNullable(A));
+      if (Solver.reachedLimit()) return;
+      DCHECK(AllowsNullable);
       if (Env.proves(Implication)) {
         clang::NullabilityKind PVNullability =
             getNullability(PointerValue, Env, &InferableSlotsConstraint);
@@ -1259,6 +1267,7 @@ class DefinitionEvidenceCollector {
   llvm::function_ref<EvidenceEmitter> Emit;
   const PointerNullabilityLattice &Lattice;
   const Environment &Env;
+  const dataflow::Solver &Solver;
 };
 }  // namespace
 
@@ -1537,9 +1546,10 @@ llvm::Error collectEvidenceFromDefinition(
       [&](const CFGElement &Element,
           const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
               &State) {
-        DefinitionEvidenceCollector::collect(InferableSlots,
-                                             InferableSlotsConstraint, Emit,
-                                             Element, State.Lattice, State.Env);
+        if (Solver->reachedLimit()) return;
+        DefinitionEvidenceCollector::collect(
+            InferableSlots, InferableSlotsConstraint, Emit, Element,
+            State.Lattice, State.Env, *Solver);
       };
   if (llvm::Error Error = dataflow::runDataflowAnalysis(*ACFG, Analysis, Env,
                                                         PostAnalysisCallbacks)
