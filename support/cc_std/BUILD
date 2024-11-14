@@ -160,6 +160,7 @@ rust_library(
 rust_library(
     name = "vector",
     srcs = ["vector.rs"],
+    rustc_flags = ["-Zallow-features=allocator_api,cfg_sanitize"],
     visibility = [
         "//visibility:public",
     ],
