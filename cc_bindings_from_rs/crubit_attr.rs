@@ -21,6 +21,14 @@ use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct BridgedTypeAttrs {
+    pub cpp_type: Symbol,
+    pub cpp_type_include: Symbol,
+    pub rust_to_cpp_converter: Symbol,
+    pub cpp_to_rust_converter: Symbol,
+}
+
 /// A collection of `#[__crubit::annotate(...)]` attributes.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct CrubitAttrs {
@@ -30,6 +38,12 @@ pub struct CrubitAttrs {
     /// this item should be `std::basic_string<char>`:
     ///   `#[__crubit::annotate(cpp_type="std::basic_string<char>")]`
     pub cpp_type: Option<Symbol>,
+
+    /// Path to the header file that declares the type specified in `cpp_type`.
+    ///
+    /// If specified, the header file will be added as an #include directive to
+    /// the generated bindings.
+    pub cpp_type_include: Option<Symbol>,
 
     /// The C++ name of the item. This allows us to rename Rust function names
     /// that are not C++-compatible like `new`.
@@ -42,16 +56,48 @@ pub struct CrubitAttrs {
     /// pub fn new() -> i32 {...}
     /// ```
     pub cpp_name: Option<Symbol>,
+
+    /// The name of a function that can convert the annotated Rust
+    /// type into the C++ type specifed in the `cpp_type` attribute.
+    ///
+    /// The generated bindings assume the function to be an `extern C` function
+    /// with the following type signature:
+    /// ```
+    /// fn #rust_to_cpp_converter(rs_in: *const std::ffi::c_void, cpp_out: *mut std::ffi::c_void)
+    /// ```
+    /// `rs_in` is a valid pointer to an instance of the annotated Rust type.
+    /// `cpp_out` is a valid pointer to uninitialized instance of
+    /// `cpp_type`.
+    pub rust_to_cpp_converter: Option<Symbol>,
+
+    /// The name of a function that can convert the C++ type specifed in the
+    /// `cpp_type` attribute into the annotated Rust type.
+    ///
+    /// The generated bindings assume the function to be an `extern C` function
+    /// with the following type signature:
+    /// ```
+    /// fn #cpp_to_rust_converter(cpp_in: *const std::ffi::c_void, rs_out: *mut std::ffi::c_void)
+    /// ```
+    /// `cpp_in` is a valid pointer to an instance of the C++ type specified in
+    /// `cpp_type`. `rs_out` is a valid pointer to uninitialized instance of the
+    /// annotated Rust Type.
+    pub cpp_to_rust_converter: Option<Symbol>,
 }
 
 impl CrubitAttrs {
     pub const CPP_TYPE: &'static str = "cpp_type";
     pub const CPP_NAME: &'static str = "cpp_name";
+    pub const CPP_TYPE_INCLUDE: &'static str = "cpp_type_include";
+    pub const RUST_TO_CPP_CONVERTER: &'static str = "rust_to_cpp_converter";
+    pub const CPP_TO_RUST_CONVERTER: &'static str = "cpp_to_rust_converter";
 
     pub fn get_attr(&self, name: &str) -> Option<Symbol> {
         match name {
             CrubitAttrs::CPP_TYPE => self.cpp_type,
             CrubitAttrs::CPP_NAME => self.cpp_name,
+            CrubitAttrs::CPP_TYPE_INCLUDE => self.cpp_type_include,
+            CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter,
+            CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter,
             _ => panic!("Invalid attribute name: \"{name}\""),
         }
     }
@@ -60,7 +106,44 @@ impl CrubitAttrs {
         match name {
             CrubitAttrs::CPP_TYPE => self.cpp_type = symbol,
             CrubitAttrs::CPP_NAME => self.cpp_name = symbol,
+            CrubitAttrs::CPP_TYPE_INCLUDE => self.cpp_type_include = symbol,
+            CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter = symbol,
+            CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter = symbol,
             _ => panic!("Invalid attribute name: \"{name}\""),
+        }
+    }
+
+    /// Returns true if #[__crubit::annotate(...)] is configured to require type
+    /// bridging.
+    ///
+    /// A type is said to require type bridging ("bridged type") if either
+    /// `cpp_to_rust_converter` or `rust_to_cpp_converter` is set in the
+    /// #[__crubit::annotate(...)] attribute. The idea is that for a Rust
+    /// type with an equivalent but not ABI compatible C++ type, conversion
+    /// functions that turn one type into another can be specified.
+    pub fn requires_type_bridging(&self) -> Result<Option<BridgedTypeAttrs>> {
+        match *self {
+            CrubitAttrs {
+                cpp_type: Some(cpp_type),
+                cpp_type_include: Some(cpp_type_include),
+                cpp_to_rust_converter: Some(cpp_to_rust_converter),
+                rust_to_cpp_converter: Some(rust_to_cpp_converter),
+                ..
+            } => Ok(Some(BridgedTypeAttrs {
+                cpp_type,
+                cpp_type_include,
+                cpp_to_rust_converter,
+                rust_to_cpp_converter,
+            })),
+            CrubitAttrs { cpp_to_rust_converter: Some(cpp_to_rust_converter), .. } => bail!(
+                "Invalid state of  #[__crubit::annotate(...)] attribute. rust_to_cpp_converter \
+                    set ({cpp_to_rust_converter}), but cpp_type not set."
+            ),
+            CrubitAttrs { rust_to_cpp_converter: Some(rust_to_cpp_converter), .. } => bail!(
+                "Invalid state of  #[__crubit::annotate(...)] attribute. cpp_to_rust_converter \
+                    set ({rust_to_cpp_converter}), but cpp_type not set."
+            ),
+            _ => Ok(None),
         }
     }
 }
@@ -71,10 +154,16 @@ pub fn get_attrs(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttrs> {
     // NB: do not make these lazy globals, symbols are per-session and sessions are
     // reset in tests. The resulting test failures are very difficult.
     let crubit_annotate = &[Symbol::intern("__crubit"), Symbol::intern("annotate")];
-    let attr_name_symbol_pairs = [CrubitAttrs::CPP_TYPE, CrubitAttrs::CPP_NAME]
-        .into_iter()
-        .map(|name| (name, Symbol::intern(name)))
-        .collect::<Vec<_>>();
+    let attr_name_symbol_pairs = [
+        CrubitAttrs::CPP_TYPE,
+        CrubitAttrs::CPP_NAME,
+        CrubitAttrs::CPP_TYPE_INCLUDE,
+        CrubitAttrs::RUST_TO_CPP_CONVERTER,
+        CrubitAttrs::CPP_TO_RUST_CONVERTER,
+    ]
+    .into_iter()
+    .map(|name| (name, Symbol::intern(name)))
+    .collect::<Vec<_>>();
 
     let mut crubit_attrs = CrubitAttrs::default();
     // A quick note: the parsing logic is unfortunate, but such is life. We don't
@@ -117,6 +206,7 @@ pub fn get_attrs(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttrs> {
             }
         }
     }
+
     Ok(crubit_attrs)
 }
 
@@ -124,6 +214,33 @@ pub fn get_attrs(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttrs> {
 pub mod tests {
     use super::*;
     use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
+
+    #[test]
+    fn test_bridged_type() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+
+                #[__crubit::annotate(
+                    cpp_type = "CppType",
+                    cpp_type_include = "crubit/cpp_type.h",
+                    cpp_to_rust_converter = "cpp_to_rust",
+                    rust_to_cpp_converter = "rust_to_cpp")
+                ]
+                pub struct SomeStruct;
+        "#;
+        run_compiler_for_testing(test_src, |tcx| {
+            let attrs = get_attrs(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
+
+            let mut expected_attrs = CrubitAttrs::default();
+            expected_attrs.cpp_type = Some(Symbol::intern("CppType"));
+            expected_attrs.cpp_type_include = Some(Symbol::intern("crubit/cpp_type.h"));
+            expected_attrs.cpp_to_rust_converter = Some(Symbol::intern("cpp_to_rust"));
+            expected_attrs.rust_to_cpp_converter = Some(Symbol::intern("rust_to_cpp"));
+
+            assert_eq!(attrs, expected_attrs);
+        });
+    }
 
     #[test]
     fn test_missing() {

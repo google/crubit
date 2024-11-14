@@ -28,7 +28,7 @@ use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::mir::Mutability;
-use rustc_middle::ty::{self, IntTy, Region, Ty, TyCtxt, UintTy};
+use rustc_middle::ty::{self, AdtDef, GenericArg, IntTy, Region, Ty, TyCtxt, UintTy};
 use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LocalModDefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_target::abi::{
@@ -1160,7 +1160,14 @@ fn format_ty_for_cc<'tcx>(
         }
 
         ty::TyKind::Adt(adt, substs) => {
-            ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
+            // If a type needs to be bridged, we ingore the fact that it has generic
+            // parameters (lifetime, const or type) but trust the type
+            // conversion function to be implemented correctly.
+            let is_bridged_type = is_bridged_adt(tcx, adt, substs)?.is_some();
+            ensure!(
+                is_bridged_type || substs.len() == 0,
+                "Generic types are not supported yet (b/259749095)"
+            );
             ensure!(
                 is_public_or_supported_export(db, adt.did()),
                 "Not a public or a supported reexported type (b/262052635)."
@@ -1168,7 +1175,10 @@ fn format_ty_for_cc<'tcx>(
 
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
-            if def_id.krate == LOCAL_CRATE {
+
+            if let Some(user_header) = crubit_attr::get_attrs(tcx, adt.did())?.cpp_type_include {
+                prereqs.includes.insert(CcInclude::user_header(user_header.as_str().into()));
+            } else if def_id.krate == LOCAL_CRATE {
                 prereqs.defs.insert(def_id.expect_local());
             } else {
                 let other_crate_name = tcx.crate_name(def_id.krate);
@@ -1349,6 +1359,65 @@ fn format_ty_for_cc<'tcx>(
         // `CcPrerequisites::move_defs_to_fwd_decls`.
         _ => bail!("The following Rust type is not supported yet: {ty}"),
     })
+}
+
+/// Returns the contents of the `__crubit_annotate` attribute if type bridging
+/// is configured. An error is returned if the type is a pointer or reference or
+/// the attribute could not be parsed or is in an invalid state.
+fn is_bridged_type(tcx: TyCtxt, ty: Ty<'_>) -> Result<Option<crubit_attr::BridgedTypeAttrs>> {
+    match ty.kind() {
+        ty::TyKind::Ref(_, referent_mid, _) if is_bridged_type(tcx, *referent_mid)?.is_some() => {
+            bail!(
+                "Can't format reference type `{ty}` because the referent is a bridged type. \
+                    Passing bridged types by reference is not supported."
+            )
+        }
+        ty::TyKind::RawPtr(pointee_mid, _) if is_bridged_type(tcx, *pointee_mid)?.is_some() => {
+            bail!(
+                "Can't format pointer type `{ty}` because the pointee is a bridged type. \
+                    Passing bridged types by pointer is not supported."
+            )
+        }
+        ty::TyKind::Adt(adt, substs) => is_bridged_adt(tcx, adt, substs),
+        _ => Ok(None),
+    }
+}
+
+/// Returns the contents of the `__crubit_annotate` attribute if type bridging
+/// is configured. An error is returned if the attribute could not be parsed or
+/// is in an invalid state.
+fn is_bridged_adt(
+    tcx: TyCtxt,
+    adt: &AdtDef<'_>,
+    substs: &[GenericArg<'_>],
+) -> Result<Option<crubit_attr::BridgedTypeAttrs>> {
+    match crubit_attr::get_attrs(tcx, adt.did()) {
+        Ok(attrs) => {
+            if let Some(attrs) = attrs.requires_type_bridging()? {
+                Ok(Some(attrs))
+            } else {
+                // The ADT does not need to be bridged, but check if it has generic types that
+                // need to be bridged e.g. Box<BridgedType> cannot be formated at
+                // the moment. If we encounter a type like this we return an error.
+                let res = substs.iter().flat_map(|a| a.walk()).try_for_each(|a| {
+                    if let Some(ty) = a.as_type() {
+                        if is_bridged_type(tcx, ty)?.is_some() {
+                            bail!(
+                                "Can't format ADT as it has a generic type `{ty}` that is a \
+                                    bridged type",
+                            );
+                        }
+                    }
+                    Ok(())
+                });
+                match res {
+                    Ok(_) => Ok(None),
+                    Err(err) => Err(anyhow!(err)),
+                }
+            }
+        }
+        Err(err) => Err(anyhow!(err)),
+    }
 }
 
 /// Returns `Some(CcSnippet)` if `ty` is a special-cased alias type from
@@ -1782,42 +1851,106 @@ fn format_thunk_impl<'tcx>(
         .map(|(param_name, ty)| {
             let rs_type = format_ty_for_rs(db, *ty)
                 .with_context(|| format!("Error handling parameter `{param_name}`"))?;
-            Ok(if is_c_abi_compatible_by_value(*ty) {
-                quote! { #param_name: #rs_type }
+
+            if is_bridged_type(tcx, *ty)?.is_some() {
+                Ok(quote! { #param_name: *const std::ffi::c_void })
+            } else if is_c_abi_compatible_by_value(*ty) {
+                Ok(quote! { #param_name: #rs_type })
             } else {
-                quote! { #param_name: &mut ::core::mem::MaybeUninit<#rs_type> }
-            })
+                Ok(quote! { #param_name: &mut ::core::mem::MaybeUninit<#rs_type> })
+            }
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let mut extern_c_decls: Vec<TokenStream> = vec![];
+
+    let fn_args_conversions = param_names_and_types
+        .iter()
+        .map(|(param_name, ty)| {
+            let rs_type = format_ty_for_rs(db, *ty)
+                .with_context(|| format!("Error handling parameter `{param_name}`"))?;
+
+            match is_bridged_type(tcx, *ty)? {
+                None => Ok(quote! {}),
+                Some(crubit_attr::BridgedTypeAttrs { cpp_to_rust_converter, .. }) => {
+                    let cpp_to_rust_converter = make_rs_ident(cpp_to_rust_converter.as_str());
+                    let varname_rs_out = format_ident!("__crubit_{}_uninit", param_name);
+
+                    extern_c_decls.push(quote! {
+                        fn #cpp_to_rust_converter(cpp_in: *const core::ffi::c_void,
+                            rs_out: *mut core::ffi::c_void);
+                    });
+
+                    Ok(quote! {
+                        let mut #varname_rs_out = ::core::mem::MaybeUninit::<#rs_type>::uninit();
+                        unsafe { #cpp_to_rust_converter(#param_name,
+                            #varname_rs_out.as_mut_ptr() as *mut core::ffi::c_void); }
+                    })
+                }
+            }
         })
         .collect::<Result<Vec<_>>>()?;
 
     let mut thunk_ret_type = format_ty_for_rs(db, sig.output())?;
-    let mut thunk_body = {
-        let fn_args = param_names_and_types.iter().map(|(rs_name, ty)| {
-            if is_c_abi_compatible_by_value(*ty) {
-                quote! { #rs_name }
+
+    let fn_args = param_names_and_types
+        .iter()
+        .map(|(rs_name, ty)| {
+            if is_bridged_type(tcx, *ty)?.is_some() {
+                let varname_rs_out = format_ident!("__crubit_{}_uninit", rs_name);
+                Ok(quote! { unsafe { #varname_rs_out.assume_init() } })
+            } else if is_c_abi_compatible_by_value(*ty) {
+                Ok(quote! { #rs_name })
             } else if let Safety::Unsafe = sig.safety {
                 // The whole call will be wrapped in `unsafe` below.
-                quote! { #rs_name.assume_init_read() }
+                Ok(quote! { #rs_name.assume_init_read() })
             } else {
-                quote! { unsafe { #rs_name.assume_init_read() } }
+                Ok(quote! { unsafe { #rs_name.assume_init_read() } })
             }
-        });
-        quote! {
-            #fully_qualified_fn_name( #( #fn_args ),* )
+        })
+        .collect::<Result<Vec<_>>>()?;
+    let mut thunk_body;
+
+    match is_bridged_type(tcx, sig.output())? {
+        None => {
+            thunk_body = quote! {
+                #( #fn_args_conversions )*
+
+                #fully_qualified_fn_name( #( #fn_args ),* )
+            };
+
+            if !is_c_abi_compatible_by_value(sig.output()) {
+                thunk_params.push(quote! {
+                    __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
+                });
+                thunk_ret_type = quote! { () };
+                thunk_body = quote! { __ret_slot.write(#thunk_body); };
+            };
+        }
+        Some(crubit_attr::BridgedTypeAttrs { rust_to_cpp_converter, .. }) => {
+            thunk_params.push(quote! {
+                __ret_ptr: *mut std::ffi::c_void
+            });
+            thunk_ret_type = quote! { () };
+
+            let rust_to_cpp_converter = make_rs_ident(rust_to_cpp_converter.as_str());
+            extern_c_decls.push(quote! {
+                fn #rust_to_cpp_converter(rs_in: *const core::ffi::c_void, cpp_out: *mut core::ffi::c_void);
+            });
+            thunk_body = quote! {
+                #( #fn_args_conversions )*
+
+                let rs_val = #fully_qualified_fn_name( #( #fn_args ),* );
+                unsafe { #rust_to_cpp_converter(std::ptr::from_ref(&rs_val) as *const std::ffi::c_void, __ret_ptr); }
+            };
         }
     };
+
     // Wrap the call in an unsafe block, for the sake of RFC #2585
     // `unsafe_block_in_unsafe_fn`.
     if let Safety::Unsafe = sig.safety {
         thunk_body = quote! {unsafe {#thunk_body}};
     }
-    if !is_c_abi_compatible_by_value(sig.output()) {
-        thunk_params.push(quote! {
-            __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
-        });
-        thunk_ret_type = quote! { () };
-        thunk_body = quote! { __ret_slot.write(#thunk_body); };
-    };
 
     let generic_params = {
         let regions = sig
@@ -1857,7 +1990,21 @@ fn format_thunk_impl<'tcx>(
     } else {
         quote! {}
     };
+
+    let extern_c_decls = if !extern_c_decls.is_empty() {
+        quote! {
+            extern "C" {
+                #( #extern_c_decls )*
+            }
+        }
+    } else {
+        quote! {}
+    };
+
     Ok(quote! {
+
+        #extern_c_decls
+
         #[unsafe(no_mangle)]
         #unsafe_qualifier extern "C" fn #thunk_name #generic_params (
             #( #thunk_params ),*
@@ -2439,17 +2586,17 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
             .map(|(i, Param { cc_name, ty, .. })| {
                 if i == 0 && method_kind.has_self_param() {
                     if method_kind == FunctionKind::MethodTakingSelfByValue {
-                        quote! { this }
+                        Ok(quote! { this })
                     } else {
-                        quote! { *this }
+                        Ok(quote! { *this })
                     }
                 } else if is_c_abi_compatible_by_value(*ty) {
-                    quote! { #cc_name }
+                    Ok(quote! { #cc_name })
                 } else if !ty.needs_drop(tcx, tcx.param_env(def_id)) {
                     // As an optimization, if the type is trivially destructible, we don't
                     // need to move it to a new NoDestructor location. We can directly copy the
                     // bytes.
-                    quote! { & #cc_name }
+                    Ok(quote! { & #cc_name })
                 } else {
                     // The implementation will copy the bytes, we just need to leave the variable
                     // behind in a valid moved-from state.
@@ -2458,12 +2605,32 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
                     // target location, instead of moving to a temporary that we memcpy to its
                     // target location.
                     prereqs.includes.insert(CcInclude::absl_header("base/no_destructor.h"));
-                    quote! { absl::NoDestructor(std::move(#cc_name)).get() }
+                    Ok(quote! { absl::NoDestructor(std::move(#cc_name)).get() })
                 }
             })
-            .collect_vec();
+            .collect::<Result<Vec<_>>>()?;
         let impl_body: TokenStream;
-        if is_c_abi_compatible_by_value(sig_mid.output()) {
+        if let Some(attrs) = is_bridged_type(db.tcx(), sig_mid.output())? {
+            let cpp_type = format_cc_ident(db, attrs.cpp_type.as_str())?;
+            thunk_args.push(quote! { &__ret_val_holder.val });
+
+            // Below, we use a union to allocate uninitialized memory that fits cpp_type.
+            // The union prevents the type from being default constructed. It's
+            // the responsibility of the thunk to properly initialize the
+            // memory. In the union's destructor we use std::destroy_at to call
+            // the cpp_type's destructor after the value has been moved on return.
+            impl_body = quote! {
+                union __crubit_return_union {
+                    constexpr __crubit_return_union() {}
+                    ~__crubit_return_union() { std::destroy_at(&this->val); }
+                    #cpp_type val;
+                } __ret_val_holder;
+
+                __crubit_internal :: #thunk_name( #( #thunk_args ),* );
+
+                return std::move(__ret_val_holder.val);
+            };
+        } else if is_c_abi_compatible_by_value(sig_mid.output()) {
             impl_body = quote! {
                 return __crubit_internal :: #thunk_name( #( #thunk_args ),* );
             };
@@ -5658,6 +5825,293 @@ pub mod tests {
                 )
             },
         );
+    }
+
+    #[test]
+    fn test_format_bridged_type_in_generic_types() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+
+                #[__crubit::annotate(
+                  cpp_type="cpp_ns::CppType",
+                  cpp_type_include="cpp_ns/cpp_type.h",
+                  rust_to_cpp_converter="convert_rust_to_cpp_type",
+                  cpp_to_rust_converter="convert_cpp_to_rust_type",
+                )]
+                pub struct RustType {
+                    pub x: i32,
+                }
+
+                #[unsafe(no_mangle)]
+                pub fn foo(_: Box<RustType>) {}
+
+                #[unsafe(no_mangle)]
+                pub fn bar(_: Option<Box<Result<RustType, ()>>>) {}
+        "#;
+        test_format_item(test_src, "foo", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Error handling parameter #0: Can't format ADT as it has a generic type \
+                    `RustType` that is a bridged type"
+            );
+        });
+
+        test_format_item(test_src, "bar", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Error handling parameter #0: Can't format ADT as it has a generic type \
+                    `RustType` that is a bridged type"
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_bridged_func_arg() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+
+                #[__crubit::annotate(
+                  cpp_type="cpp_ns::CppType",
+                  cpp_type_include="cpp_ns/cpp_type.h",
+                  rust_to_cpp_converter="convert_rust_to_cpp_type",
+                  cpp_to_rust_converter="convert_cpp_to_rust_type",
+                )]
+                pub struct RustType {
+                    pub x: i32,
+                }
+
+                #[unsafe(no_mangle)]
+                pub fn foo(_a: RustType) {}
+        "#;
+        test_format_item(test_src, "RustType", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Type bindings for RustType suppressed \
+                    due to being mapped to an existing C++ type (cpp_ns::CppType)"
+            );
+        });
+        test_format_item(test_src, "foo", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+
+            assert_eq!(main_api.prereqs.includes.len(), 1);
+            assert_eq!(
+                *main_api.prereqs.includes.first().unwrap(),
+                CcInclude::user_header("cpp_ns/cpp_type.h".into())
+            );
+
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    extern "C" {
+                        fn convert_cpp_to_rust_type(cpp_in: *const core::ffi::c_void,
+                            rs_out: *mut core::ffi::c_void);
+                    }
+                    #[unsafe(no_mangle)]
+                    extern "C" fn __crubit_thunk_foo(_a: *const std::ffi::c_void) -> () {
+                        let mut __crubit__a_uninit =
+                            ::core::mem::MaybeUninit::<::rust_out::RustType>::uninit();
+                        unsafe {
+                            convert_cpp_to_rust_type(
+                                _a,
+                                __crubit__a_uninit.as_mut_ptr() as *mut core::ffi::c_void
+                            );
+                        }
+                        ::rust_out::foo(unsafe { __crubit__a_uninit.assume_init() })
+                    }
+                }
+            );
+
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    void foo(cpp_ns::CppType _a);
+                }
+            );
+
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                        extern "C" void __crubit_thunk_foo(cpp_ns::CppType*);
+                    }
+
+                    inline void foo(cpp_ns::CppType _a) {
+                        return __crubit_internal::__crubit_thunk_foo(&_a);
+                    }
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_bridged_return_type() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+
+                #[__crubit::annotate(
+                  cpp_type="cpp_ns::CppType",
+                  cpp_type_include="cpp_ns/cpp_type.h",
+                  rust_to_cpp_converter="rust_to_cpp_converter",
+                  cpp_to_rust_converter="cpp_to_rust_converter",
+                )]
+                pub struct RustType {
+                    pub x: i32,
+                }
+
+                #[unsafe(no_mangle)]
+                pub fn foo() -> RustType {
+                    RustType { x: 10 }
+                }
+        "#;
+        test_format_item(test_src, "RustType", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Type bindings for RustType suppressed \
+                    due to being mapped to an existing C++ type (cpp_ns::CppType)"
+            );
+        });
+        test_format_item(test_src, "foo", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+
+            assert_eq!(main_api.prereqs.includes.len(), 1);
+            assert_eq!(
+                *main_api.prereqs.includes.first().unwrap(),
+                CcInclude::user_header("cpp_ns/cpp_type.h".into())
+            );
+
+            assert_rs_matches!(
+                result.rs_details,
+                quote! {
+                    extern "C" {
+                        fn rust_to_cpp_converter(rs_in: *const core::ffi::c_void,
+                            cpp_out: *mut core::ffi::c_void);
+                    }
+                    #[unsafe(no_mangle)]
+                    extern "C" fn __crubit_thunk_foo(__ret_ptr: *mut std::ffi::c_void) -> () {
+                        let rs_val = ::rust_out::foo();
+                        unsafe {
+                            rust_to_cpp_converter(
+                                std::ptr::from_ref(&rs_val) as *const std::ffi::c_void,
+                                __ret_ptr
+                            );
+                        }
+                    }
+                }
+            );
+
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    cpp_ns::CppType foo();
+                }
+            );
+
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                        extern "C" void __crubit_thunk_foo(cpp_ns::CppType* __ret_ptr);
+                    }
+
+                    inline cpp_ns::CppType foo() {
+                        union __crubit_return_union {
+                            constexpr __crubit_return_union() {}
+                            ~__crubit_return_union() { std::destroy_at(&this->val); }
+                            cpp_ns::CppType val;
+                        } __ret_val_holder;
+                        __crubit_internal::__crubit_thunk_foo(&__ret_val_holder.val);
+                        return std::move(__ret_val_holder.val);
+                    }
+                }
+            );
+        })
+    }
+
+    #[test]
+    fn test_bridged_type_unsupported() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+
+                #[__crubit::annotate(
+                  cpp_type="cpp_ns::CppType",
+                  cpp_type_include="cpp_ns/cpp_type.h",
+                  rust_to_cpp_converter="convert_rust_to_cpp_type",
+                  cpp_to_rust_converter="convert_cpp_to_rust_type",
+                )]
+                pub struct RustType {
+                    pub x: i32,
+                }
+
+                #[unsafe(no_mangle)]
+                pub fn unsupported_thunk_arg(_: fn() -> RustType) {}
+
+                #[unsafe(no_mangle)]
+                pub fn unsupported_return_ref() -> &'static RustType { todo!(); }
+
+                #[unsafe(no_mangle)]
+                pub fn unsupported_return_ptr() -> *const RustType { todo!(); }
+
+                #[unsafe(no_mangle)]
+                pub fn unsupported_accept_ref<'a>(_: &'a RustType) {}
+
+                #[unsafe(no_mangle)]
+                pub fn unsupported_accept_ptr(_: *const RustType) {}
+        "#;
+
+        test_format_item(test_src, "unsupported_thunk_arg", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Error handling parameter #0: Function pointers can't have a thunk: Any calling \
+                    convention other than `extern \"C\"` requires a thunk"
+            );
+        });
+
+        test_format_item(test_src, "unsupported_return_ref", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Can't format reference type `&'static RustType` because the referent is a \
+                bridged type. Passing bridged types by reference is not supported."
+            );
+        });
+
+        test_format_item(test_src, "unsupported_return_ptr", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Can't format pointer type `*const RustType` because the pointee is a bridged \
+                type. Passing bridged types by pointer is not supported."
+            );
+        });
+
+        test_format_item(test_src, "unsupported_accept_ref", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Can't format reference type `&'a RustType` because the referent is a \
+                bridged type. Passing bridged types by reference is not supported."
+            );
+        });
+
+        test_format_item(test_src, "unsupported_accept_ptr", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Can't format pointer type `*const RustType` because the pointee is a bridged \
+                type. Passing bridged types by pointer is not supported."
+            );
+        });
     }
 
     #[test]

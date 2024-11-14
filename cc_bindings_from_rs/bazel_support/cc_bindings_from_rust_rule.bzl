@@ -39,6 +39,7 @@ load(
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl",
     "crate_name_to_library_config",
+    "get_additional_cc_hdrs_and_srcs",
 )
 load(
     "//cc_bindings_from_rs/bazel_support:providers.bzl",
@@ -177,7 +178,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
 
     return generated_bindings_info, features, current_config
 
-def _make_cc_info_for_h_out_file(ctx, h_out_file, cc_infos):
+def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, cc_infos):
     """Creates and returns CcInfo for the generated ..._cc_api.h header file.
 
     Args:
@@ -199,12 +200,14 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, cc_infos):
         ctx = ctx,
         cc_toolchain = cc_toolchain,
     )
+
     (compilation_context, compilation_outputs) = cc_common.compile(
         name = ctx.label.name,
         actions = ctx.actions,
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
-        public_hdrs = [h_out_file],
+        srcs = extra_cc_srcs,
+        public_hdrs = [h_out_file] + extra_cc_hdrs,
         compilation_contexts = [cc_info.compilation_context],
     )
     (linking_context, _) = cc_common.create_linking_context_from_compilation_outputs(
@@ -341,9 +344,13 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
 
     impl_cc_info = _compile_rs_out_file(ctx, bindings_info.rust_file, target)
 
+    (extra_cc_hdrs, extra_cc_srcs) = get_additional_cc_hdrs_and_srcs(ctx)
+
     cc_info = _make_cc_info_for_h_out_file(
         ctx,
         bindings_info.h_file,
+        extra_cc_hdrs,
+        extra_cc_srcs,
         cc_infos = [target[CcInfo], impl_cc_info] + [
             dep_bindings_info.cc_info
             for dep_bindings_info in _get_dep_bindings_infos(ctx)
