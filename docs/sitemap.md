@@ -11,6 +11,8 @@
 *   Rust Bindings for C++ Libraries
 
     *   [Overview](/docs/cpp/)
+    *   [Cookbook](/docs/cpp/cookbook)
+    *   <hr>
     *   [Functions](/docs/cpp/functions)
     *   [Classes and Structs](/docs/cpp/classes_and_structs)
     *   [Enums](/docs/cpp/enums)
