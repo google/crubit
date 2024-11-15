@@ -106,18 +106,6 @@ absl::Nullable<PointerValue *> ensureRawPointerHasValue(
   return Val;
 }
 
-// If `Elt` is an expression of raw pointer type, ensures that it has a
-// `PointerValue` associated with it.
-void ensureRawPointerHasValue(const CFGElement &Elt, Environment &Env) {
-  auto S = Elt.getAs<CFGStmt>();
-  if (!S) return;
-
-  const Expr *E = dyn_cast<Expr>(S->getStmt());
-  if (!E) return;
-
-  ensureRawPointerHasValue(E, Env);
-}
-
 void computeNullability(absl::Nonnull<const Expr *> E,
                         TransferState<PointerNullabilityLattice> &State,
                         std::function<TypeNullability()> Compute) {
@@ -328,6 +316,25 @@ void initPointerFromTypeNullability(
     TransferState<PointerNullabilityLattice> &State) {
   initPointerNullState(PointerVal, State.Env.getDataflowAnalysisContext(),
                        getPointerTypeNullability(E, State.Lattice));
+}
+
+// If `Elt` is an expression of raw pointer type, ensures that it has a
+// `PointerValue` associated with it. Also ensure that it has nullability
+// state.
+void ensureRawPointerHasValueAndNullability(
+    const CFGElement &Elt, Environment &Env,
+    TransferState<PointerNullabilityLattice> &State) {
+  auto S = Elt.getAs<CFGStmt>();
+  if (!S) return;
+
+  const Expr *E = dyn_cast<Expr>(S->getStmt());
+  if (!E) return;
+
+  if (auto *PointerVal = ensureRawPointerHasValue(E, Env)) {
+    if (!hasPointerNullState(*PointerVal)) {
+      initPointerFromTypeNullability(*PointerVal, E, State);
+    }
+  }
 }
 
 /// If the pointer value stored at `PointerLoc` has any "top" nullability
@@ -570,12 +577,6 @@ void transferValue_SmartPointerReleaseCall(
   if (MCE->getType()->getCanonicalTypeUnqualified() !=
       underlyingRawPointerType(MCE->getObjectType())
           ->getCanonicalTypeUnqualified()) {
-    if (isSupportedRawPointerType(MCE->getType())) {
-      // If the result is a raw pointer (usually the case for `release()`),
-      // ensure the nullability is initialized.
-      if (auto *PointerVal = ensureRawPointerHasValue(MCE, State.Env))
-        initPointerFromTypeNullability(*PointerVal, MCE, State);
-    }
     return;
   }
 
@@ -641,12 +642,6 @@ void transferValue_SmartPointerGetCall(
   if (MCE->getType()->getCanonicalTypeUnqualified() !=
       underlyingRawPointerType(MCE->getObjectType())
           ->getCanonicalTypeUnqualified()) {
-    if (isSupportedRawPointerType(MCE->getType())) {
-      // If the result is a raw pointer (usually the case for `get()`), ensure
-      // the nullability is initialized.
-      if (auto *PointerVal = ensureRawPointerHasValue(MCE, State.Env))
-        initPointerFromTypeNullability(*PointerVal, MCE, State);
-    }
     return;
   }
   if (Value *Val = getPointerValueFromSmartPointer(
@@ -691,12 +686,6 @@ void transferValue_SmartPointerOperatorStar(
       underlyingRawPointerType(getReceiverIgnoringImpCastsType(OpCall))
           ->getPointeeType()
           ->getCanonicalTypeUnqualified()) {
-    if (isSupportedRawPointerType(ReturnType)) {
-      // If the result is a raw pointer (unusual for `operator*()` but
-      // possible), ensure the nullability is initialized.
-      if (auto *PointerVal = ensureRawPointerHasValue(OpCall, State.Env))
-        initPointerFromTypeNullability(*PointerVal, OpCall, State);
-    }
     return;
   }
   if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
@@ -712,12 +701,6 @@ void transferValue_SmartPointerOperatorArrow(
   if (OpCall->getType()->getCanonicalTypeUnqualified() !=
       underlyingRawPointerType(getReceiverIgnoringImpCastsType(OpCall))
           ->getCanonicalTypeUnqualified()) {
-    if (isSupportedRawPointerType(OpCall->getType())) {
-      // If the result is a raw pointer (usually the case for `operator->`),
-      // ensure the nullability is initialized.
-      if (auto *PointerVal = ensureRawPointerHasValue(OpCall, State.Env))
-        initPointerFromTypeNullability(*PointerVal, OpCall, State);
-    }
     return;
   }
   if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
@@ -911,16 +894,6 @@ void transferValue_SmartPointerArrowMemberExpr(
 
   initPointerNullState(*PtrVal, State.Env.getDataflowAnalysisContext(),
                        Nullability);
-
-  // If the result of the arrow access is a pointer, we also need to ensure its
-  // nullability is initialized. Another transfer function may handle this, but
-  // in cases where there's no e.g. ImplicitCastExpr or similar wrapping the
-  // expression, it may be missing null state.
-  if (ME->getType()->isPointerType()) {
-    auto *ExprPtrVal = getPointerValue(ME, State.Env);
-    CHECK(ExprPtrVal != nullptr);
-    initPointerFromTypeNullability(*ExprPtrVal, ME, State);
-  }
 }
 
 void transferValue_Pointer(absl::Nonnull<const Expr *> PointerExpr,
@@ -1939,7 +1912,7 @@ void PointerNullabilityAnalysis::transfer(const CFGElement &Elt,
 
   TypeTransferer(Elt, getASTContext(), State);
   ValueTransferer(Elt, getASTContext(), State);
-  ensureRawPointerHasValue(Elt, Env);
+  ensureRawPointerHasValueAndNullability(Elt, Env, State);
   ensureSmartPointerInitialized(Elt, State);
 }
 
