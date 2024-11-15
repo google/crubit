@@ -314,6 +314,68 @@ fn test_vector_append() {
 }
 
 #[gtest]
+fn test_swap_remove() {
+    let mut v = vector::Vector::from(vec![1, 2, 3, 4]);
+    expect_eq!(v.swap_remove(1), 2);
+    expect_eq!(v, [1, 4, 3]);
+    expect_eq!(v.swap_remove(0), 1);
+    expect_eq!(v, [3, 4]);
+    expect_eq!(v.swap_remove(0), 3);
+    expect_eq!(v, [4]);
+    expect_eq!(v.swap_remove(0), 4);
+    expect_eq!(v.is_empty(), true);
+}
+
+#[gtest]
+#[should_panic]
+fn test_swap_remove_out_of_bounds() {
+    let mut v = vector::Vector::from(vec![1, 2, 3, 4]);
+    v.swap_remove(4);
+}
+
+#[gtest]
+fn test_remove() {
+    let mut v = vector::Vector::from(vec![1, 2, 3, 4]);
+    expect_eq!(v.remove(1), 2);
+    expect_eq!(v, [1, 3, 4]);
+    expect_eq!(v.remove(0), 1);
+    expect_eq!(v, [3, 4]);
+    expect_eq!(v.remove(1), 4);
+    expect_eq!(v, [3]);
+    expect_eq!(v.remove(0), 3);
+    expect_eq!(v.is_empty(), true);
+}
+
+#[gtest]
+#[should_panic]
+fn test_remove_out_of_bounds() {
+    let mut v = vector::Vector::from(vec![1, 2, 3]);
+    v.remove(3);
+}
+
+#[gtest]
+fn test_pop() {
+    let mut v = vector::Vector::from(vec![1, 2, 3, 4]);
+    expect_eq!(v.pop(), Some(4));
+    expect_eq!(v, [1, 2, 3]);
+    expect_eq!(v.pop(), Some(3));
+    expect_eq!(v, [1, 2]);
+    expect_eq!(v.pop(), Some(2));
+    expect_eq!(v, [1]);
+    expect_eq!(v.pop(), Some(1));
+    expect_eq!(v.is_empty(), true);
+    expect_eq!(v.pop(), None);
+}
+
+#[gtest]
+fn test_vector_clear() {
+    let mut v = vector::Vector::from(vec![1, 2, 3, 4]);
+    v.clear();
+    expect_eq!(v.is_empty(), true);
+    expect_eq!(v.capacity(), 4);
+}
+
+#[gtest]
 fn test_vector_into_vec() {
     let mut v = vector::Vector::<i32>::new();
     v.push(1);

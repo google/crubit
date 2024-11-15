@@ -38,8 +38,6 @@ pub struct Vector<T> {
 // TODO(b/356221873): Implement Send and Sync.
 // TODO(b/356221873): Implement function for resizing (resize, shrink_to_fit,
 // reserve etc).
-// TODO(b/356221873): Implement clear().
-// TODO(b/356221873): implement removal of elements.
 // TODO(b/356221873): implement set_len.
 
 impl<T> Vector<T> {
@@ -173,6 +171,7 @@ impl<T: Unpin> Vector<T> {
         result
     }
 
+    // Methods for adding elements to the vector.
     pub fn push(&mut self, value: T) {
         self.mutate_self_as_vec(|v| v.push(value));
     }
@@ -185,6 +184,24 @@ impl<T: Unpin> Vector<T> {
         self.mutate_self_as_vec(|v| other.mutate_self_as_vec(|other_v| v.append(other_v)))
     }
 
+    // Methods for deleting elements from the vector.
+    pub fn swap_remove(&mut self, index: usize) -> T {
+        self.mutate_self_as_vec(|v| v.swap_remove(index))
+    }
+
+    pub fn remove(&mut self, index: usize) -> T {
+        self.mutate_self_as_vec(|v| v.remove(index))
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        self.mutate_self_as_vec(|v| v.pop())
+    }
+
+    pub fn clear(&mut self) {
+        self.mutate_self_as_vec(|v| v.clear());
+    }
+
+    // Methods returning different vector representations.
     pub fn into_vec(mut self) -> Vec<T> {
         let mut result = Vec::<T>::with_capacity(self.len());
         unsafe {
