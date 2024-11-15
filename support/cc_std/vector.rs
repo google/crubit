@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(allocator_api)]
 #![feature(cfg_sanitize)]
+use std::collections::TryReserveError;
 #[cfg(sanitize = "address")]
 use std::ffi::c_void;
 use std::mem::ManuallyDrop;
@@ -161,8 +162,29 @@ impl<T: Unpin> Vector<T> {
         }
     }
 
+    // Methods for changing the capacity of the vector.
     pub fn reserve(&mut self, capacity: usize) {
         self.mutate_self_as_vec(|v| v.reserve(capacity));
+    }
+
+    pub fn reserve_exact(&mut self, additional: usize) {
+        self.mutate_self_as_vec(|v| v.reserve_exact(additional));
+    }
+
+    pub fn try_reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
+        self.mutate_self_as_vec(|v| v.try_reserve(additional))
+    }
+
+    pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), TryReserveError> {
+        self.mutate_self_as_vec(|v| v.try_reserve_exact(additional))
+    }
+
+    pub fn shrink_to_fit(&mut self) {
+        self.mutate_self_as_vec(|v| v.shrink_to_fit());
+    }
+
+    pub fn shrink_to(&mut self, min_capacity: usize) {
+        self.mutate_self_as_vec(|v| v.shrink_to(min_capacity));
     }
 
     pub fn with_capacity(capacity: usize) -> Vector<T> {

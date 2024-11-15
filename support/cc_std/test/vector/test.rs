@@ -285,6 +285,67 @@ fn test_vector_reserve() {
     let mut v = vector::Vector::<i32>::new();
     v.reserve(10);
     expect_that!(v.capacity(), ge(10));
+    let current_capacity = v.capacity();
+    v.reserve(5); // 5 < 10, so it should do nothing.
+    expect_eq!(v.capacity(), current_capacity);
+}
+
+#[gtest]
+fn test_vector_reserve_exact() {
+    let mut v = vector::Vector::<usize>::new();
+    v.reserve_exact(10);
+    expect_that!(v.capacity(), ge(10));
+    let current_capacity = v.capacity();
+    // Add elements to the current capacity.
+    for i in v.len()..current_capacity {
+        v.push(i);
+    }
+    v.reserve_exact(5); // it ensures that the capacity for additional 5 elements.
+    expect_that!(v.capacity(), ge(current_capacity + 5));
+}
+
+#[gtest]
+fn test_vector_try_reserve() {
+    let mut v = vector::Vector::<i32>::new();
+    v.try_reserve(100).unwrap();
+    expect_that!(v.capacity(), ge(100));
+}
+
+#[gtest]
+fn test_vector_try_reserve_exact() {
+    let mut v = vector::Vector::<usize>::new();
+    v.try_reserve_exact(10).unwrap();
+    expect_that!(v.capacity(), ge(10));
+    let current_capacity = v.capacity();
+    // Add elements to the current capacity.
+    for i in v.len()..current_capacity {
+        v.push(i);
+    }
+    v.try_reserve_exact(5).unwrap(); // it ensures that the capacity for additional 5 elements.
+    expect_that!(v.capacity(), ge(current_capacity + 5));
+}
+
+#[gtest]
+fn test_shrink_to_fit() {
+    let mut v = vector::Vector::<i32>::new();
+    for i in 0..100 {
+        v.push(i);
+    }
+    v.clear(); // doesn't shrink the capacity.
+    v.shrink_to_fit();
+    expect_eq!(v.capacity(), 0);
+}
+
+#[gtest]
+fn test_shrink_to() {
+    let mut v = vector::Vector::<i32>::new();
+    for i in 0..100 {
+        v.push(i);
+    }
+    v.clear(); // doesn't shrink the capacity.
+    v.shrink_to(10);
+    expect_that!(v.capacity(), le(99));
+    expect_that!(v.capacity(), ge(10));
 }
 
 #[gtest]
