@@ -232,11 +232,11 @@ rust_bindings_from_cc_aspect = aspect(
         "_cc_lib",
     ],
     required_aspect_providers = [CcInfo],
-    attrs = dict(bindings_attrs.items() + {
+    attrs = bindings_attrs | {
         "_std": attr.label(
             default = "//support/cc_std",
         ),
-    }.items()),
+    },
     toolchains = [
         "@rules_rust//rust:toolchain_type",
         "@bazel_tools//tools/cpp:toolchain_type",

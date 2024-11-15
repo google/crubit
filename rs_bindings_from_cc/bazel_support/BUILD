@@ -29,6 +29,7 @@ bzl_library(
     name = "toolchain_headers_bzl",
     srcs = ["toolchain_headers.bzl"],
     deps = [
+        ":additional_rust_srcs_for_crubit_bindings_aspect_hint_bzl",
         ":providers_bzl",
         ":rust_bindings_from_cc_utils_bzl",
     ],
@@ -86,13 +87,19 @@ bzl_library(
 bzl_library(
     name = "generate_bindings_bzl",
     srcs = ["generate_bindings.bzl"],
-    deps = ["@bazel_tools//tools/build_defs/cc:action_names"],
+    deps = [
+        "@bazel_skylib//rules:common_settings",
+        "@bazel_tools//tools/build_defs/cc:action_names",
+    ],
 )
 
 bzl_library(
     name = "compile_rust_bzl",
     srcs = ["compile_rust.bzl"],
-    deps = ["@rules_rust//rust/private:bzl_lib"],
+    deps = [
+        "@bazel_skylib//lib:structs",
+        "@rules_rust//rust/private:bzl_lib",
+    ],
 )
 
 bzl_library(

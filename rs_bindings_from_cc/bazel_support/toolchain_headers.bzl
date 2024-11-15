@@ -94,20 +94,18 @@ def _bindings_for_toolchain_headers_impl(ctx):
 
 bindings_for_toolchain_headers = rule(
     implementation = _bindings_for_toolchain_headers_impl,
-    attrs = dict(
-        bindings_attrs.items() + {
-            # TODO(b/336981839): Delete this once cl/671582196 makes it to stable.
-            "hdrs": attr.label(default = "//support/cc_std:empty_filegroup"),
-            # Additional internal headers that are not part of the standard library. These headers will
-            # receive bindings which are exposed along with the standard library bindings.
-            # Everything inside these under should be hidden within namespace `crubit_cc_std_internal`.
-            "extra_hdrs": attr.label_list(default = []),
-            "public_libc_hdrs": attr.string_list(),
-            "public_libcxx_hdrs": attr.string_list(),
-            "extra_rs_srcs": attr.label_list(allow_files = True),
-            "_stl": attr.label(default = "//third_party/stl:stl"),
-        }.items(),
-    ),
+    attrs = bindings_attrs | {
+        # TODO(b/336981839): Delete this once cl/671582196 makes it to stable.
+        "hdrs": attr.label(default = "//support/cc_std:empty_filegroup"),
+        # Additional internal headers that are not part of the standard library. These headers will
+        # receive bindings which are exposed along with the standard library bindings.
+        # Everything inside these under should be hidden within namespace `crubit_cc_std_internal`.
+        "extra_hdrs": attr.label_list(default = []),
+        "public_libc_hdrs": attr.string_list(),
+        "public_libcxx_hdrs": attr.string_list(),
+        "extra_rs_srcs": attr.label_list(allow_files = True),
+        "_stl": attr.label(default = "//third_party/stl:stl"),
+    },
     toolchains = [
         "@rules_rust//rust:toolchain_type",
         "@bazel_tools//tools/cpp:toolchain_type",
