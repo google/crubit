@@ -11,20 +11,15 @@
 
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
 #include "nullability/type_nullability.h"
-#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
-#include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
-#include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/ASTOps.h"
+#include "clang/Analysis/FlowSensitive/CachedConstAccessorsLattice.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
-#include "clang/Analysis/FlowSensitive/StorageLocation.h"
-#include "clang/Analysis/FlowSensitive/Value.h"
-#include "clang/Basic/LLVM.h"
 #include "llvm/ADT/FunctionExtras.h"
 
 namespace clang::tidy::nullability {
-class PointerNullabilityLattice {
+class PointerNullabilityLatticeBase {
  public:
   struct NonFlowSensitiveState {
     // Nullability interpretation of types as set e.g. by per-file #pragmas.
@@ -46,7 +41,7 @@ class PointerNullabilityLattice {
         ConcreteNullabilityOverride = [](const Decl &) { return std::nullopt; };
   };
 
-  PointerNullabilityLattice(NonFlowSensitiveState &NFS) : NFS(NFS) {}
+  PointerNullabilityLatticeBase(NonFlowSensitiveState &NFS) : NFS(NFS) {}
 
   absl::Nullable<const TypeNullability *> getTypeNullability(
       absl::Nonnull<const Expr *> E) const {
@@ -62,39 +57,16 @@ class PointerNullabilityLattice {
       absl::Nonnull<const Expr *> E,
       const std::function<TypeNullability()> &GetNullability);
 
-  // Returns the `Value` associated with the `RecordStorageLocation` and
-  // `MethodDecl` of `CE`, creating one if it doesn't yet exist.
-  // The type of `CE` must be either a raw pointer or boolean.
-  absl::Nullable<dataflow::Value *> getConstMethodReturnValue(
-      const dataflow::RecordStorageLocation &RecordLoc,
-      absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env);
-
-  // Returns the `RecordStorageLocation` associated with the
-  // `RecordStorageLocation` and `MethodDecl` of `CE`, creating one if it
-  // doesn't yet exist. The type of `CE` must be a smart pointer.
-  absl::Nullable<dataflow::StorageLocation *>
-  getConstMethodReturnStorageLocation(
-      const dataflow::RecordStorageLocation &RecordLoc,
-      absl::Nonnull<const CallExpr *> CE, dataflow::Environment &Env);
-
-  void clearConstMethodReturnValues(
-      const dataflow::RecordStorageLocation &RecordLoc) {
-    ConstMethodReturnValues.erase(&RecordLoc);
-  }
-
-  void clearConstMethodReturnStorageLocations(
-      const dataflow::RecordStorageLocation &RecordLoc) {
-    ConstMethodReturnStorageLocations.erase(&RecordLoc);
-  }
-
   // If nullability for the decl D has been overridden, patch N to reflect it.
   // (N is the nullability of an access to D).
   void overrideNullabilityFromDecl(absl::Nullable<const Decl *> D,
                                    TypeNullability &N) const;
 
-  bool operator==(const PointerNullabilityLattice &Other) const { return true; }
+  bool operator==(const PointerNullabilityLatticeBase &Other) const {
+    return true;
+  }
 
-  dataflow::LatticeJoinEffect join(const PointerNullabilityLattice &Other);
+  dataflow::LatticeJoinEffect join(const PointerNullabilityLatticeBase &Other);
 
   const TypeNullabilityDefaults &defaults() const { return NFS.Defaults; }
 
@@ -102,25 +74,14 @@ class PointerNullabilityLattice {
   // Owned by the PointerNullabilityAnalysis object, shared by all lattice
   // elements within one analysis run.
   NonFlowSensitiveState &NFS;
-
-  // Maps a record storage location and const method to the value to return
-  // from that const method.
-  using ConstMethodReturnValuesType = llvm::SmallDenseMap<
-      const dataflow::RecordStorageLocation *,
-      llvm::SmallDenseMap<const FunctionDecl *, dataflow::Value *>>;
-  ConstMethodReturnValuesType ConstMethodReturnValues;
-
-  // Maps a record storage location and const method to the record storage
-  // location to return from that const method.
-  using ConstMethodReturnStorageLocationsType = llvm::SmallDenseMap<
-      const dataflow::RecordStorageLocation *,
-      llvm::SmallDenseMap<const FunctionDecl *, dataflow::StorageLocation *>>;
-  ConstMethodReturnStorageLocationsType ConstMethodReturnStorageLocations;
 };
+
+using PointerNullabilityLattice =
+    dataflow::CachedConstAccessorsLattice<PointerNullabilityLatticeBase>;
 
 inline std::ostream &operator<<(std::ostream &OS,
                                 const PointerNullabilityLattice &) {
-  return OS << "noop";
+  return OS << "nullability";
 }
 
 }  // namespace clang::tidy::nullability

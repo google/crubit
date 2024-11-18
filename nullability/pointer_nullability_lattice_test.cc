@@ -78,13 +78,14 @@ TEST_F(PointerNullabilityLatticeTest, ConstMethodProducesNewValueAfterJoin) {
   RecordStorageLocation Loc(SType, RecordStorageLocation::FieldToLoc(), {});
 
   PointerNullabilityLattice Lattice1(NFS);
-  Value *Val1 = Lattice1.getConstMethodReturnValue(Loc, CE, Env);
+  Value *Val1 = Lattice1.getOrCreateConstMethodReturnValue(Loc, CE, Env);
 
   PointerNullabilityLattice Lattice2(NFS);
-  Value *Val2 = Lattice2.getConstMethodReturnValue(Loc, CE, Env);
+  Value *Val2 = Lattice2.getOrCreateConstMethodReturnValue(Loc, CE, Env);
 
   EXPECT_EQ(Lattice1.join(Lattice2), LatticeJoinEffect::Changed);
-  Value *ValAfterJoin = Lattice1.getConstMethodReturnValue(Loc, CE, Env);
+  Value *ValAfterJoin =
+      Lattice1.getOrCreateConstMethodReturnValue(Loc, CE, Env);
 
   EXPECT_NE(ValAfterJoin, Val1);
   EXPECT_NE(ValAfterJoin, Val2);

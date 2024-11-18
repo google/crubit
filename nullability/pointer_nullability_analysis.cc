@@ -1257,8 +1257,15 @@ void handleConstMemberCall(
   // treatment is different from booleans or raw pointers, which are
   // represented as Values.
   if (RecordLoc != nullptr && isSupportedSmartPointerType(CE->getType())) {
-    StorageLocation *Loc = State.Lattice.getConstMethodReturnStorageLocation(
-        *RecordLoc, CE, State.Env);
+    StorageLocation *Loc =
+        State.Lattice.getOrCreateConstMethodReturnStorageLocation(
+            *RecordLoc, CE, State.Env, [&](StorageLocation &Loc) {
+              setSmartPointerValue(
+                  cast<RecordStorageLocation>(Loc),
+                  cast<PointerValue>(State.Env.createValue(
+                      underlyingRawPointerType(CE->getType()))),
+                  State.Env);
+            });
     if (Loc == nullptr) return;
 
     if (CE->isGLValue()) {
@@ -1281,8 +1288,8 @@ void handleConstMemberCall(
   if (RecordLoc != nullptr && CE->isPRValue() &&
       (isSupportedRawPointerType(CE->getType()) ||
        CE->getType()->isBooleanType())) {
-    Value *Val =
-        State.Lattice.getConstMethodReturnValue(*RecordLoc, CE, State.Env);
+    Value *Val = State.Lattice.getOrCreateConstMethodReturnValue(*RecordLoc, CE,
+                                                                 State.Env);
     if (Val == nullptr) return;
 
     State.Env.setValue(*CE, *Val);
