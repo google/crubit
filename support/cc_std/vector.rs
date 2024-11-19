@@ -223,6 +223,22 @@ impl<T: Unpin> Vector<T> {
         self.mutate_self_as_vec(|v| v.clear());
     }
 
+    // Different Vector transformations.
+    pub fn dedup_by<F>(&mut self, same_bucket: F)
+    where
+        F: FnMut(&mut T, &mut T) -> bool,
+    {
+        self.mutate_self_as_vec(|v| v.dedup_by(same_bucket));
+    }
+
+    pub fn dedup_by_key<F, K>(&mut self, key: F)
+    where
+        F: FnMut(&mut T) -> K,
+        K: PartialEq,
+    {
+        self.mutate_self_as_vec(|v| v.dedup_by_key(key));
+    }
+
     // Methods returning different vector representations.
     pub fn into_vec(mut self) -> Vec<T> {
         let mut result = Vec::<T>::with_capacity(self.len());
@@ -261,6 +277,12 @@ impl<T: Unpin + Clone> Vector<T> {
         R: RangeBounds<usize>,
     {
         self.mutate_self_as_vec(|v| v.extend_from_within(src));
+    }
+}
+
+impl<T: Unpin + PartialEq> Vector<T> {
+    pub fn dedup(&mut self) {
+        self.mutate_self_as_vec(|v| v.dedup());
     }
 }
 

@@ -437,6 +437,27 @@ fn test_vector_clear() {
 }
 
 #[gtest]
+fn test_vector_dedup() {
+    let mut v = vector::Vector::from(vec![1, 2, 2, 3, 3, 3, 4, 4, 4, 4]);
+    v.dedup();
+    expect_eq!(v, [1, 2, 3, 4]);
+}
+
+#[gtest]
+fn test_vector_dedup_by() {
+    let mut v = vector::Vector::from(vec![1, 2, 2, 3, 3, 3, 4, 4, 4, 4]);
+    v.dedup_by(|a, b| a == b);
+    expect_eq!(v, [1, 2, 3, 4]);
+}
+
+#[gtest]
+fn test_vector_dedup_by_key() {
+    let mut v = vector::Vector::from(vec![1, 2, 2, 6, 3, 3, 5, 4, 4, 4, 4]);
+    v.dedup_by_key(|a| *a % 2);
+    expect_eq!(v, [1, 2, 3, 4]);
+}
+
+#[gtest]
 fn test_vector_into_vec() {
     let mut v = vector::Vector::<i32>::new();
     v.push(1);
