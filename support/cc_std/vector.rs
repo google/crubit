@@ -37,7 +37,6 @@ pub struct Vector<T> {
 }
 
 // TODO(b/356221873): Implement Send and Sync.
-// TODO(b/356221873): implement set_len.
 
 impl<T> Vector<T> {
     pub fn new() -> Vector<T> {
@@ -70,6 +69,35 @@ impl<T> Vector<T> {
         } else {
             unsafe { self.capacity_end.offset_from(self.begin).try_into().unwrap() }
         }
+    }
+
+    /// Prepares the vector to write into the tail.
+    /// See docstring of [`Vector::set_len`] for more details.
+    pub fn prepare_to_write_into_tail(&mut self) {
+        self.asan_unpoison_tail();
+    }
+
+    /// Sets the length of the vector.
+    ///
+    ///  # Safety
+    ///
+    /// - `new_len` must be less than or equal to [`capacity()`].
+    /// - The elements at `old_len..new_len` must be initialized.
+    ///
+    /// See [`std::vec::Vec::set_len`] for more details.
+    ///
+    /// The difference with `std::vec::Vec::set_len` is that the tail of the
+    /// Vector is poisoned with ASan, so when writing to the tail for
+    /// avoiding ASan errors [`Vector::prepare_to_write_into_tail`] must be
+    /// called first:
+    /// ```
+    /// v.prepare_to_write_into_tail()
+    /// // write to tail (i.e. between v.len() and v.capacity())
+    /// v.set_len(len)
+    /// ```
+    pub unsafe fn set_len(&mut self, len: usize) {
+        self.end = self.begin.add(len);
+        self.asan_poison_tail();
     }
 
     #[inline]
@@ -251,7 +279,7 @@ impl<T: Unpin> Vector<T> {
             // The elements were moved out. Now mark `self` empty, without calling drop on
             // elements.
             self.asan_unpoison_tail();
-            self.end = self.begin;
+            self.set_len(0);
         }
         result
     }

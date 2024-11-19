@@ -16,6 +16,27 @@ fn test_vector_new() {
 }
 
 #[gtest]
+fn test_set_len() {
+    let mut v = vector::Vector::<isize>::with_capacity(10);
+    unsafe {
+        let p = v.as_mut_ptr();
+        v.prepare_to_write_into_tail();
+        for i in 0..3 {
+            std::ptr::write(p.offset(i), i);
+        }
+        v.set_len(3);
+    }
+    expect_eq!(v, [0, 1, 2]);
+    expect_that!(v.capacity(), ge(10));
+
+    unsafe {
+        v.set_len(0);
+    }
+    expect_eq!(v, []);
+    expect_that!(v.capacity(), ge(10));
+}
+
+#[gtest]
 fn test_vector_push() {
     let mut v = vector::Vector::new();
     v.push(1);
