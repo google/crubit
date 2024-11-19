@@ -91,12 +91,14 @@ std::string_view getOrGenerateUSR(USRCache &Cache, const Decl &Decl) {
   return It->second;
 }
 
-static llvm::DenseSet<const CXXMethodDecl *> getOverridden(
-    const CXXMethodDecl *Derived) {
-  llvm::DenseSet<const CXXMethodDecl *> Overridden;
+static llvm::DenseSet<absl::Nonnull<const CXXMethodDecl *>> getOverridden(
+    absl::Nonnull<const CXXMethodDecl *> Derived) {
+  llvm::DenseSet<absl::Nonnull<const CXXMethodDecl *>> Overridden;
   for (const CXXMethodDecl *Base : Derived->overridden_methods()) {
+    if (Base == nullptr) continue;
     Overridden.insert(Base);
     for (const CXXMethodDecl *BaseOverridden : getOverridden(Base)) {
+      if (BaseOverridden == nullptr) continue;
       Overridden.insert(BaseOverridden);
     }
   }
@@ -118,19 +120,14 @@ struct EvidenceLocationsWalker : public RecursiveASTVisitor<Derived> {
   // themselves implicit but show up in an implicit context.
   bool shouldVisitImplicitCode() const { return true; }
 };
-
-using VirtualMethodOverridesMap =
-    absl::flat_hash_map<const CXXMethodDecl *,
-                        llvm::DenseSet<const CXXMethodDecl *>>;
 }  // namespace
 
-/// Collect a map from virtual methods to a set of their overrides.
-static VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx) {
+VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
     VirtualMethodOverridesMap Out;
 
     bool VisitCXXMethodDecl(const CXXMethodDecl *MD) {
-      if (MD->isVirtual()) {
+      if (MD && MD->isVirtual()) {
         for (const auto *O : getOverridden(MD)) {
           Out[O].insert(MD);
         }
@@ -140,23 +137,15 @@ static VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx) {
   };
 
   // Don't use a LocFilter here to restrict to the main file or header, because
-  // we want to propagate evidence from virtual methods, called in the main file
-  // or header, to their overrides, no matter where they are each defined.
+  // we want to propagate evidence from virtual methods to/from their overrides,
+  // no matter where they are each defined.
   Walker W;
   W.TraverseAST(Ctx);
   return std::move(W.Out);
 }
 
-namespace {
-enum VirtualMethodEvidenceFlowDirection {
-  kFromBaseToDerived,
-  kFromDerivedToBase,
-  kBoth,
-};
-}  // namespace
-
-static VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
-                                                           bool ForReturnSlot) {
+VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
+                                                    bool ForReturnSlot) {
   switch (Kind) {
     case Evidence::ANNOTATED_NONNULL:
     case Evidence::UNCHECKED_DEREFERENCE:
@@ -174,21 +163,25 @@ static VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
     case Evidence::UNKNOWN_RETURN:
     case Evidence::ASSIGNED_FROM_NONNULL:
     case Evidence::ASSIGNED_FROM_UNKNOWN:
-      return ForReturnSlot ? kFromBaseToDerived : kFromDerivedToBase;
+      return ForReturnSlot
+                 ? VirtualMethodEvidenceFlowDirection::kFromBaseToDerived
+                 : VirtualMethodEvidenceFlowDirection::kFromDerivedToBase;
     case Evidence::ANNOTATED_NULLABLE:
     case Evidence::NULLABLE_ARGUMENT:
     case Evidence::NULLABLE_RETURN:
     case Evidence::ASSIGNED_TO_MUTABLE_NULLABLE:
     case Evidence::ASSIGNED_FROM_NULLABLE:
     case Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER:
-      return ForReturnSlot ? kFromDerivedToBase : kFromBaseToDerived;
+      return ForReturnSlot
+                 ? VirtualMethodEvidenceFlowDirection::kFromDerivedToBase
+                 : VirtualMethodEvidenceFlowDirection::kFromBaseToDerived;
     case Evidence::NULLABLE_REFERENCE_RETURN:
     case Evidence::NONNULL_REFERENCE_RETURN:
     case Evidence::UNKNOWN_REFERENCE_RETURN:
     case Evidence::NULLABLE_REFERENCE_ARGUMENT:
     case Evidence::NONNULL_REFERENCE_ARGUMENT:
     case Evidence::UNKNOWN_REFERENCE_ARGUMENT:
-      return kBoth;
+      return VirtualMethodEvidenceFlowDirection::kBoth;
   }
 }
 
@@ -199,13 +192,13 @@ getAdditionalTargetsForVirtualMethod(
   VirtualMethodEvidenceFlowDirection FlowDirection =
       getFlowDirection(Kind, ForReturnSlot);
   switch (FlowDirection) {
-    case kFromBaseToDerived:
+    case VirtualMethodEvidenceFlowDirection::kFromBaseToDerived:
       if (auto It = OverridesMap.find(MD); It != OverridesMap.end())
         return It->second;
       return {};
-    case kFromDerivedToBase:
+    case VirtualMethodEvidenceFlowDirection::kFromDerivedToBase:
       return getOverridden(MD);
-    case kBoth:
+    case VirtualMethodEvidenceFlowDirection::kBoth:
       llvm::DenseSet<const CXXMethodDecl *> Results = getOverridden(MD);
       if (auto It = OverridesMap.find(MD); It != OverridesMap.end())
         Results.insert(It->second.begin(), It->second.end());
@@ -216,14 +209,23 @@ getAdditionalTargetsForVirtualMethod(
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(
     llvm::unique_function<void(const Evidence &) const> Emit,
     USRCache &USRCache, ASTContext &Ctx) {
+  return evidenceEmitter(std::move(Emit), USRCache, Ctx,
+                         getVirtualMethodOverrides(Ctx));
+}
+
+llvm::unique_function<EvidenceEmitter> evidenceEmitter(
+    llvm::unique_function<void(const Evidence &) const> Emit,
+    USRCache &USRCache, ASTContext &Ctx,
+    const VirtualMethodOverridesMap &&OverridesMap) {
   class EvidenceEmitterImpl {
    public:
     EvidenceEmitterImpl(
         llvm::unique_function<void(const Evidence &) const> Emit,
-        nullability::USRCache &USRCache, ASTContext &Ctx)
+        nullability::USRCache &USRCache, ASTContext &Ctx,
+        const VirtualMethodOverridesMap &&OverridesMap)
         : Emit(std::move(Emit)),
           USRCache(USRCache),
-          OverridesMap(getVirtualMethodOverrides(Ctx)) {}
+          OverridesMap(std::move(OverridesMap)) {}
 
     void operator()(const Decl &Target, Slot S, Evidence::Kind Kind,
                     SourceLocation Loc) const {
@@ -268,10 +270,12 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
 
    private:
     llvm::unique_function<void(const Evidence &) const> Emit;
+    // Must outlive the EvidenceEmitterImpl.
     nullability::USRCache &USRCache;
     const VirtualMethodOverridesMap OverridesMap;
   };
-  return EvidenceEmitterImpl(std::move(Emit), USRCache, Ctx);
+  return EvidenceEmitterImpl(std::move(Emit), USRCache, Ctx,
+                             std::move(OverridesMap));
 }
 
 namespace {
