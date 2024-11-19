@@ -21,6 +21,7 @@ rust_library(
     aspect_hints = [
         ":cc_type_hint",
     ],
+    rustc_flags = ["-Zallow-features=register_tool"],
 )
 
 cc_bindings_from_rust_library_config(
