@@ -149,7 +149,7 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
 
  public:
   DiagnosticPrinter(InferenceResults All, DiagnosticsEngine &Diags)
-      : Diags(Diags) {
+      : InferencesByUSR(std::move(All)), Diags(Diags) {
     DiagInferHere = Diags.getCustomDiagID(DiagnosticsEngine::Remark,
                                           "would mark %0 as %1 here");
     DiagSample = Diags.getCustomDiagID(DiagnosticsEngine::Note, "%0 here");
