@@ -437,6 +437,41 @@ fn test_vector_clear() {
 }
 
 #[gtest]
+fn test_truncate() {
+    let mut v = vector::Vector::from(vec![1, 2, 3, 4, 5]);
+    let capacity = v.capacity();
+    v.truncate(2);
+    expect_eq!(v, [1, 2]);
+    expect_eq!(v.capacity(), capacity);
+    v.truncate(3); // no effect
+    expect_eq!(v, [1, 2]);
+
+    v.truncate(0);
+    expect_eq!(v, []);
+    expect_eq!(v.capacity(), capacity);
+}
+
+#[gtest]
+fn test_vector_resize() {
+    let mut v = vector::Vector::from(vec![1, 2]);
+    v.resize(6, 5);
+    expect_eq!(v, [1, 2, 5, 5, 5, 5]);
+    v.resize(0, 5);
+    expect_eq!(v, []);
+    v.resize(1, 5);
+    expect_eq!(v, [5]);
+}
+
+#[gtest]
+fn test_vector_resize_with() {
+    let mut v = vector::Vector::from(vec![1, 2]);
+    v.resize_with(6, Default::default);
+    expect_eq!(v, [1, 2, 0, 0, 0, 0]);
+    v.resize_with(0, Default::default);
+    expect_eq!(v, []);
+}
+
+#[gtest]
 fn test_vector_dedup() {
     let mut v = vector::Vector::from(vec![1, 2, 2, 3, 3, 3, 4, 4, 4, 4]);
     v.dedup();

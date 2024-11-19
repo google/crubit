@@ -37,8 +37,6 @@ pub struct Vector<T> {
 }
 
 // TODO(b/356221873): Implement Send and Sync.
-// TODO(b/356221873): Implement function for resizing (resize, shrink_to_fit,
-// reserve etc).
 // TODO(b/356221873): implement set_len.
 
 impl<T> Vector<T> {
@@ -223,6 +221,10 @@ impl<T: Unpin> Vector<T> {
         self.mutate_self_as_vec(|v| v.clear());
     }
 
+    pub fn truncate(&mut self, len: usize) {
+        self.mutate_self_as_vec(|v| v.truncate(len));
+    }
+
     // Different Vector transformations.
     pub fn dedup_by<F>(&mut self, same_bucket: F)
     where
@@ -277,6 +279,17 @@ impl<T: Unpin + Clone> Vector<T> {
         R: RangeBounds<usize>,
     {
         self.mutate_self_as_vec(|v| v.extend_from_within(src));
+    }
+
+    pub fn resize(&mut self, new_len: usize, value: T) {
+        self.mutate_self_as_vec(|v| v.resize(new_len, value));
+    }
+
+    pub fn resize_with<F>(&mut self, new_len: usize, f: F)
+    where
+        F: FnMut() -> T,
+    {
+        self.mutate_self_as_vec(|v| v.resize_with(new_len, f));
     }
 }
 
