@@ -665,10 +665,8 @@ QualType getReceiverIgnoringImpCastsType(const CXXOperatorCallExpr *OpCall) {
   // here as well to get the same behavior:
   // https://github.com/llvm/llvm-project/blob/a58c3d3ac7c6b2fd9710ab2189d7971ef37e714f/clang/include/clang/ASTMatchers/ASTMatchers.h#L4563
   const Expr *Receiver = OpCall->getArg(0)->IgnoreImpCasts();
-  if (Receiver->isPRValue()) {
-    assert(Receiver->getType()->isPointerType());
+  if (Receiver->isPRValue() && Receiver->getType()->isPointerType())
     return Receiver->getType()->getPointeeType();
-  }
   return Receiver->getType();
 }
 
@@ -1810,7 +1808,7 @@ auto buildValueTransferer() {
                                      transferValue_PointerAddOrSubAssign)
       .CaseOfCFGStmt<CXXConstructExpr>(isSmartPointerConstructor(),
                                        transferValue_SmartPointerConstructor)
-      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("="),
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("=", 2),
                                           transferValue_SmartPointerAssignment)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("release"),
                                         transferValue_SmartPointerReleaseCall)
@@ -1827,10 +1825,10 @@ auto buildValueTransferer() {
           isSmartPointerBoolConversionCall(),
           transferValue_SmartPointerBoolConversionCall)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(
-          isSmartPointerOperatorCall("*"),
+          isSmartPointerOperatorCall("*", 1),
           transferValue_SmartPointerOperatorStar)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(
-          isSmartPointerOperatorCall("->"),
+          isSmartPointerOperatorCall("->", 1),
           transferValue_SmartPointerOperatorArrow)
       .CaseOfCFGStmt<CallExpr>(isSmartPointerFactoryCall(),
                                transferValue_SmartPointerFactoryCall)

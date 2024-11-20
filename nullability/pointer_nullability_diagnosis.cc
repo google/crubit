@@ -553,7 +553,7 @@ class AllowedMovedFromNonnullSmartPointerExprs {
                        isSmartPointerMethodCall("reset"),
                        unless(hasArgument(0, hasType(isNullPtrType()))),
                        onImplicitObjectArgument(expr().bind("e"))),
-                   cxxOperatorCallExpr(isSmartPointerOperatorCall("="),
+                   cxxOperatorCallExpr(isSmartPointerOperatorCall("=", 2),
                                        hasArgument(0, expr().bind("e")))))),
                *Func->getBody(), Func->getASTContext())) {
       AllowedExprs.insert(normalize(Node.getNodeAs<Expr>("e")));
@@ -670,12 +670,12 @@ DiagTransferFunc pointerNullabilityDiagnoserBefore() {
                                SmallVector<PointerNullabilityDiagnostic>>()
       // `*`
       .CaseOfCFGStmt<UnaryOperator>(isPointerDereference(), diagnoseDereference)
-      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("*"),
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("*", 1),
                                           diagnoseSmartPointerDereference)
       // `[]`
       .CaseOfCFGStmt<ArraySubscriptExpr>(isPointerSubscript(),
                                          diagnoseSubscript)
-      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("[]"),
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("[]", 2),
                                           diagnoseSmartPointerDereference)
       // `->`. Covers raw and smart pointers, because smart-pointer
       // `operator->` doesn't dereference. It just returns a pointer from which
@@ -685,7 +685,7 @@ DiagTransferFunc pointerNullabilityDiagnoserBefore() {
       .CaseOfCFGStmt<BinaryOperator>(
           binaryOperator(hasOperatorName("="), hasLHS(isPointerExpr())),
           diagnoseAssignment)
-      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("="),
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("=", 2),
                                           diagnoseSmartPointerAssignment)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("reset"),
                                         diagnoseSmartPointerReset)

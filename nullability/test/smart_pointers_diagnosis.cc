@@ -463,6 +463,26 @@ TEST(SmartPointerTest, UserDefinedSmartPointerComplexAssignmentOperator) {
   )cc"));
 }
 
+TEST(SmartPointerTest, DereferenceViaNonMemberStar) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+#include <utility>
+    template <class T>
+    struct _Nullable MySmartPtr {
+      using pointer = T*;
+    };
+
+    // A bit unusual, but one can define a non-member operator*.
+    template <typename T>
+    static T& operator*(MySmartPtr<T> P);
+
+    void target() {
+      MySmartPtr<int> Null;
+      *Null;  // [[unsafe]]
+    }
+  )cc"));
+}
+
 TEST(SmartPointerTest, ArrowOperatorReturnsPointerThatNeedsNullState) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     // Take by reference to avoid an implicit cast of the argument to rvalue.

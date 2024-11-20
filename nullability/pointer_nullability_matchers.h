@@ -57,7 +57,7 @@ ast_matchers::internal::Matcher<Stmt> isNonConstMemberOperatorCall();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerArrowMemberExpr();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerConstructor();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerOperatorCall(
-    llvm::StringRef Name);
+    llvm::StringRef Name, int NumArgs);
 ast_matchers::internal::Matcher<Stmt> isSmartPointerMethodCall(
     llvm::StringRef Name);
 ast_matchers::internal::Matcher<Stmt> isSmartPointerFreeSwapCall();

@@ -755,3 +755,45 @@ TEST void unusualSmartPointerTypeOperatorsInBase() {
 }
 
 }  // namespace unusual_smart_pointer_type
+
+// Check non-member operator overloading (check if we have assumptions
+// about presence of receiver arg that may be a pointer type, etc.).
+namespace free_standing_operator_calls {
+
+struct A {
+  int X;
+};
+
+static Nonnull<std::unique_ptr<A>> operator*(std::unique_ptr<A> L,
+                                             std::unique_ptr<A> R) {
+  return std::make_unique<A>(L->X * R->X);
+}
+
+TEST void nonMemberBinaryOperatorStar() {
+  auto P1 = std::make_unique<A>(1);
+  auto P2 = std::make_unique<A>(2);
+  nonnull(std::move(P1) * std::move(P2));
+}
+
+template <class T>
+struct _Nullable MySmartPtr {
+  using pointer = T *;
+
+  T *get() const;
+  T *Ptr;
+};
+
+// A bit unusual, but one can define a non-member operator*.
+template <typename T>
+static T &operator*(MySmartPtr<T> P) {
+  return *P.Ptr;
+}
+
+TEST void nonMemberUnaryOperatorStar() {
+  int X = 42;
+  Nonnull<int *> PtrToX = &X;
+  MySmartPtr<int *> NonNull = {&PtrToX};
+  provable(NonNull.get() == &*NonNull);
+}
+
+}  // namespace free_standing_operator_calls

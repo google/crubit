@@ -9,7 +9,7 @@
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
-#include "clang/ASTMatchers/ASTMatchersMacros.h"
+#include "clang/ASTMatchers/ASTMatchersInternal.h"
 
 namespace clang::tidy::nullability {
 
@@ -142,9 +142,9 @@ Matcher<Stmt> isSmartPointerConstructor() {
   return cxxConstructExpr(hasType(isSupportedSmartPointer()));
 }
 
-Matcher<Stmt> isSmartPointerOperatorCall(llvm::StringRef Name) {
+Matcher<Stmt> isSmartPointerOperatorCall(llvm::StringRef Name, int NumArgs) {
   return cxxOperatorCallExpr(
-      hasOverloadedOperatorName(Name),
+      hasOverloadedOperatorName(Name), argumentCountIs(NumArgs),
       hasArgument(0, hasType(isSupportedSmartPointer())));
 }
 
