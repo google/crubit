@@ -23,37 +23,62 @@ extern "C" {
     );
 }
 
-/// A mutable, contiguous, dynamically-sized container of elements of type `T`,
-/// ABI-compatible with `std::vector` from C++.
-/// This layout was found empirically on Linux with modern g++ and libc++. If
+/// A mutable, contiguous, dynamically-sized container of elements
+/// of type `T`, ABI-compatible with `std::vector` from C++.
+// TODO(b/356221873): Ensure Vector<T> is covariant.
+/// 2 layouts are supported.
+/// 1. This layout was found empirically on Linux with modern g++ and libc++. If
 /// for some version of libc++ it is different, we will need to update it with
 /// conditional compilation.
+#[cfg(not(len_capacity_encoding))]
 #[repr(C)]
 pub struct Vector<T> {
-    // TODO(b/356221873): Ensure Vector<T> is covariant.
     begin: *mut T,
-    end: *mut T,
-    capacity_end: *mut T,
+    _end: *mut T,
+    _capacity_end: *mut T,
+}
+
+/// 2. This layout is experimental.
+#[cfg(len_capacity_encoding)]
+#[repr(C)]
+pub struct Vector<T> {
+    begin: *mut T,
+    len: usize,
+    capacity: usize,
 }
 
 // TODO(b/356221873): Implement Send and Sync.
 
 impl<T> Vector<T> {
     pub fn new() -> Vector<T> {
-        Vector {
-            begin: core::ptr::null_mut(),
-            end: core::ptr::null_mut(),
-            capacity_end: core::ptr::null_mut(),
+        #[cfg(len_capacity_encoding)]
+        {
+            Vector { begin: core::ptr::null_mut(), len: 0, capacity: 0 }
+        }
+        #[cfg(not(len_capacity_encoding))]
+        {
+            Vector {
+                begin: core::ptr::null_mut(),
+                _end: core::ptr::null_mut(),
+                _capacity_end: core::ptr::null_mut(),
+            }
         }
     }
 
     pub fn len(&self) -> usize {
-        // TODO(b/356221873): delete the `if` once a stable Rust release allows
-        // offset_from for "the same address"
-        if self.begin.is_null() {
-            0
-        } else {
-            unsafe { self.end.offset_from(self.begin).try_into().unwrap() }
+        #[cfg(len_capacity_encoding)]
+        {
+            self.len
+        }
+        #[cfg(not(len_capacity_encoding))]
+        {
+            // TODO(b/356221873): delete the `if` once a stable Rust release allows
+            //offset_from for "the same address"
+            if self.begin.is_null() {
+                0
+            } else {
+                unsafe { self._end.offset_from(self.begin).try_into().unwrap() }
+            }
         }
     }
 
@@ -62,12 +87,56 @@ impl<T> Vector<T> {
     }
 
     pub fn capacity(&self) -> usize {
-        // TODO(b/356221873): delete the `if` once a stable Rust release allows
-        // offset_from for "the same address"
-        if self.begin.is_null() {
-            0
-        } else {
-            unsafe { self.capacity_end.offset_from(self.begin).try_into().unwrap() }
+        #[cfg(len_capacity_encoding)]
+        {
+            self.capacity
+        }
+        #[cfg(not(len_capacity_encoding))]
+        {
+            // TODO(b/356221873): delete the `if` once a stable Rust release allows
+            // offset_from for "the same address"
+            if self.begin.is_null() {
+                0
+            } else {
+                unsafe { self._capacity_end.offset_from(self.begin).try_into().unwrap() }
+            }
+        }
+    }
+
+    fn end(&self) -> *mut T {
+        #[cfg(len_capacity_encoding)]
+        {
+            unsafe { self.begin.add(self.len) }
+        }
+        #[cfg(not(len_capacity_encoding))]
+        {
+            self._end
+        }
+    }
+
+    fn capacity_end(&self) -> *mut T {
+        #[cfg(len_capacity_encoding)]
+        {
+            unsafe { self.begin.add(self.capacity) }
+        }
+        #[cfg(not(len_capacity_encoding))]
+        {
+            self._capacity_end
+        }
+    }
+
+    unsafe fn set_begin_len_capacity(&mut self, begin: *mut T, len: usize, capacity: usize) {
+        #[cfg(len_capacity_encoding)]
+        {
+            self.begin = begin;
+            self.len = len;
+            self.capacity = capacity;
+        }
+        #[cfg(not(len_capacity_encoding))]
+        {
+            self.begin = begin;
+            self._end = begin.add(len);
+            self._capacity_end = begin.add(capacity);
         }
     }
 
@@ -96,7 +165,14 @@ impl<T> Vector<T> {
     /// v.set_len(len)
     /// ```
     pub unsafe fn set_len(&mut self, len: usize) {
-        self.end = self.begin.add(len);
+        #[cfg(len_capacity_encoding)]
+        {
+            self.len = len;
+        }
+        #[cfg(not(len_capacity_encoding))]
+        {
+            self._end = self.begin.add(len);
+        }
         self.asan_poison_tail();
     }
 
@@ -143,9 +219,9 @@ impl<T> Vector<T> {
             // https://github.com/llvm/llvm-project/blob/9d0616ce52fc2a75c8e4808adec41d5189f4240c/libcxx/include/vector#L920
             __sanitizer_annotate_contiguous_container(
                 self.begin as *const c_void,
-                self.capacity_end as *const c_void,
-                self.capacity_end as *const c_void,
-                self.end as *const c_void,
+                self.capacity_end() as *const c_void,
+                self.capacity_end() as *const c_void,
+                self.end() as *const c_void,
             );
         }
     }
@@ -158,9 +234,9 @@ impl<T> Vector<T> {
             // std::vector https://github.com/llvm/llvm-project/blob/9d0616ce52fc2a75c8e4808adec41d5189f4240c/libcxx/include/vector#L927
             __sanitizer_annotate_contiguous_container(
                 self.begin as *const c_void,
-                self.capacity_end as *const c_void,
-                self.end as *const c_void,
-                self.capacity_end as *const c_void,
+                self.capacity_end() as *const c_void,
+                self.end() as *const c_void,
+                self.capacity_end() as *const c_void,
             );
         }
     }
@@ -180,9 +256,7 @@ impl<T: Unpin> Vector<T> {
                 self.capacity(),
             ));
             let result = mutate_self(v.deref_mut());
-            self.begin = v.as_mut_ptr();
-            self.end = self.begin.add(v.len());
-            self.capacity_end = self.begin.add(v.capacity());
+            self.set_begin_len_capacity(v.as_mut_ptr(), v.len(), v.capacity());
             self.asan_poison_tail();
             result
         }
