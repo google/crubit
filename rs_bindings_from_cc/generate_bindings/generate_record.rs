@@ -251,6 +251,11 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
     if record.bridge_type_info.is_some() {
         return Ok(GeneratedItem::default());
     }
+    let record_rs_type_kind = RsTypeKind::new_record(db, record.clone(), &db.ir())?;
+    if let RsTypeKind::Record { known_generic_monomorphization: Some(_), .. } = record_rs_type_kind
+    {
+        return Ok(GeneratedItem::default());
+    }
     let ir = db.ir();
     let crate_root_path = crate::crate_root_path_tokens(&ir);
     let ident = make_rs_ident(record.rs_name.as_ref());
@@ -563,7 +568,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
         crubit_features |= ir.target_crubit_features(defining_target);
     }
     if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
-        record_generated_items.push(cc_struct_upcast_impl(record, &ir)?);
+        record_generated_items.push(cc_struct_upcast_impl(db, record, &ir)?);
     }
     let no_unique_address_accessors =
         if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
@@ -626,7 +631,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
     features.insert(make_rs_ident("register_tool"));
 
     let record_trait_assertions = {
-        let record_type_name = RsTypeKind::new_record(record.clone(), &ir)?.to_token_stream();
+        let record_type_name = RsTypeKind::new_record(db, record.clone(), &ir)?.to_token_stream();
         let mut assertions: Vec<TokenStream> = vec![];
         let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
             assertions.push(quote! {
@@ -825,7 +830,7 @@ fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<To
 
 /// Returns the implementation of base class conversions, for converting a type
 /// to its unambiguous public base classes.
-fn cc_struct_upcast_impl(record: &Rc<Record>, ir: &IR) -> Result<GeneratedItem> {
+fn cc_struct_upcast_impl(db: &Database, record: &Rc<Record>, ir: &IR) -> Result<GeneratedItem> {
     let mut impls = Vec::with_capacity(record.unambiguous_public_bases.len());
     let mut thunks = vec![];
     let mut cc_impls = vec![];
@@ -833,8 +838,8 @@ fn cc_struct_upcast_impl(record: &Rc<Record>, ir: &IR) -> Result<GeneratedItem> 
         let base_record: &Rc<Record> = ir
             .find_decl(base.base_record_id)
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
-        let base_name = RsTypeKind::new_record(base_record.clone(), ir)?.into_token_stream();
-        let derived_name = RsTypeKind::new_record(record.clone(), ir)?.into_token_stream();
+        let base_name = RsTypeKind::new_record(db, base_record.clone(), ir)?.into_token_stream();
+        let derived_name = RsTypeKind::new_record(db, record.clone(), ir)?.into_token_stream();
         let body;
         if let Some(offset) = base.offset {
             let offset = Literal::i64_unsuffixed(offset);
