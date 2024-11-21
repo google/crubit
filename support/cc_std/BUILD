@@ -109,9 +109,21 @@ filegroup(
     ],
 )
 
+additional_rust_srcs_for_crubit_bindings(
+    name = "cpp_std_allocator",
+    srcs = [
+        "cpp_std_allocator.rs",
+    ],
+    namespace_path = "crubit_cc_std_internal::std_allocator",
+)
+
 bindings_for_toolchain_headers(
     name = "cc_std",
-    extra_rs_srcs = [":extra_rs_srcs_for_cc_std"],
+    extra_hdrs = [":crubit_internal_helper_headers"],
+    extra_rs_srcs = [
+        ":extra_rs_srcs_for_cc_std",
+        ":cpp_std_allocator",
+    ],
     public_libc_hdrs = LIBC_HEADERS,
     public_libcxx_hdrs = LIBCXX_HEADERS,
     visibility = [
@@ -136,33 +148,12 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "std_allocator",
-    hdrs = ["std_allocator.h"],
-    aspect_hints = [
-        "//features:supported",
-    ],
-    visibility = [
-        "//visibility:public",
-    ],
-)
-
-rust_library(
-    name = "cpp_std_allocator",
-    srcs = ["cpp_std_allocator.rs"],
-    cc_deps = [":std_allocator"],
-    rustc_flags = ["-Zallow-features=allocator_api"],
-    visibility = [
-        "//visibility:public",
-    ],
-)
-
 rust_library(
     name = "vector",
     srcs = ["vector.rs"],
+    cc_deps = ["//support/cc_std"],
     rustc_flags = ["-Zallow-features=allocator_api,cfg_sanitize"],
     visibility = [
         "//visibility:public",
     ],
-    deps = [":cpp_std_allocator"],
 )

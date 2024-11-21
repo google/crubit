@@ -12,7 +12,8 @@ def compile_cc(
         feature_configuration,
         src,
         cc_infos,
-        extra_cc_compilation_action_inputs):
+        extra_cc_compilation_action_inputs,
+        extra_hdrs = []):
     """Compiles a C++ source file.
 
     Args:
@@ -23,6 +24,7 @@ def compile_cc(
       src: The source file to be compiled.
       cc_infos: List[CcInfo]: A list of CcInfo dependencies.
       extra_cc_compilation_action_inputs: A list of input files for the C++ compilation action.
+      extra_hdrs: A list of headers to be passed to the C++ compilation action.
 
     Returns:
       A CcInfo provider.
@@ -40,6 +42,7 @@ def compile_cc(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
         srcs = [src],
+        public_hdrs = extra_hdrs,
         additional_inputs = extra_cc_compilation_action_inputs,
         user_compile_flags = user_copts,
         compilation_contexts = [cc_info.compilation_context],

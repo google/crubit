@@ -12,6 +12,8 @@ use std::ops::{Deref, DerefMut};
 use std::ops::{Index, IndexMut};
 use std::slice;
 
+use cc_std::crubit_cc_std_internal::std_allocator as cpp_std_allocator;
+
 extern "C" {
     // https://github.com/llvm/llvm-project/blob/9d0616ce52fc2a75c8e4808adec41d5189f4240c/compiler-rt/lib/sanitizer_common/sanitizer_interface_internal.h#L70
     #[cfg(sanitize = "address")]
@@ -507,6 +509,7 @@ fn create_vec_from_raw_parts<T>(
 }
 
 mod iter {
+    use crate::cpp_std_allocator;
     use crate::Vector;
     use std::fmt;
     use std::fmt::Debug;
