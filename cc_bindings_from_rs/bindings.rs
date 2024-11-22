@@ -3008,180 +3008,195 @@ fn format_fields<'tcx>(
             .map(|variant| variant.size.bytes() - tag_size_with_padding)
             .collect_vec(),
     };
-    let variants_fields: Vec<Vec<Field>> = if core.self_ty.is_enum()
-        && (!repr_attrs.contains(&rustc_attr::ReprC))
-    {
-        vec![err_fields(anyhow!("No support for bindings of individual non-repr(C) `enum`s"))]
-    } else if adt_def.is_enum() && !is_supported_enum {
-        vec![err_fields(anyhow!(
-            "support for repr(C) enums requires //features:experimental"
-        ))]
-    } else if core.self_ty.is_union()
-        && !repr_attrs.contains(&rustc_attr::ReprC)
-        && !crate_features(db, core.def_id.krate)
-            .contains(crubit_feature::CrubitFeature::Experimental)
-    {
-        vec![err_fields(anyhow!(
-            "support for non-repr(C) unions requires //features:experimental"
-        ))]
-    } else {
-        let rustc_hir::Node::Item(item) = tcx.hir_node_by_def_id(core.def_id.expect_local()) else {
-            panic!("internal error: def_id referring to an ADT was not a HIR Item.");
-        };
-        let variants = match item.kind {
-            rustc_hir::ItemKind::Struct(variant, _) => vec![variant],
-            rustc_hir::ItemKind::Union(variant, _) => vec![variant],
-            rustc_hir::ItemKind::Enum(enum_info, _) => {
-                enum_info.variants.iter().map(|variant| variant.data).collect()
-            }
-            _ => panic!(
-                "internal error: def_id referring to a non-enum ADT was not a struct or union."
-            ),
-        };
-        let hir_fields: Vec<Vec<_>> = variants
-            .iter()
-            .map(|variant| variant.fields().iter().sorted_by_key(|f| f.span).collect())
-            .collect();
-
-        let mut variants_fields = core
-            .self_ty
-            .ty_adt_def()
-            .expect("`core.def_id` needs to identify an ADT")
-            .variants()
-            .iter_enumerated()
-            .map(|(variant_index, variant)| {
-                variant
-                    .fields
-                    .iter()
-                    .sorted_by_key(|f| tcx.def_span(f.did))
-                    .enumerate()
-                    .map(|(index, field_def)| {
-                        // *Not* using zip, in order to crash on length mismatch.
-                        let hir_field = hir_fields
-                            .get(variant_index.index())
-                            .expect("HIR ADT had fewer variants than rustc_middle")
-                            .get(index)
-                            .expect("HIR ADT had fewer fields than rustc_middle for this variant");
-                        assert!(field_def.did == hir_field.def_id.to_def_id());
-                        let ty = SugaredTy::new(field_def.ty(tcx, substs_ref), Some(hir_field.ty));
-                        let size = get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
-                        let type_info = size.and_then(|size| {
-                            Ok(FieldTypeInfo {
-                                size,
-                                cpp_type: db
-                                    .format_ty_for_cc(ty, TypeLocation::Other)?
-                                    .resolve_feature_requirements(crate_features(
-                                        db,
-                                        LOCAL_CRATE,
-                                    ))?,
-                            })
-                        });
-                        let name = field_def.ident(tcx).to_string();
-                        let cc_name = if member_function_names.contains(&name) {
-                            // TODO: Handle the case of name_ itself also being taken? e.g. the Rust
-                            // struct struct S {a: i32, a_: i32} impl S
-                            // { fn a() {} fn a_() {} fn a__(){}.
-                            format!("{name}_")
-                        } else {
-                            name.clone()
-                        };
-                        let cc_name =
-                            format_cc_ident(db, cc_name.as_str()).unwrap_or_else(|_err| {
-                                format_ident!("__field{index}").into_token_stream()
-                            });
-                        let rs_name = {
-                            let name_starts_with_digit = name
-                                .as_str()
-                                .chars()
-                                .next()
-                                .expect("Empty names are unexpected (here and in general)")
-                                .is_ascii_digit();
-                            if name_starts_with_digit {
-                                let index = Literal::usize_unsuffixed(index);
-                                quote! { #index }
-                            } else {
-                                let name = make_rs_ident(name.as_str());
-                                quote! { #name }
-                            }
-                        };
-
-                        // `offset` and `offset_of_next_field` will be fixed by
-                        // FieldsShape::Arbitrary branch below.
-                        let offset = 0;
-                        let offset_of_next_field = 0;
-
-                        // Populate attributes.
-                        let mut attributes = vec![];
-                        if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, field_def.did) {
-                            attributes.push(cc_deprecated_tag);
-                        }
-
-                        Field {
-                            type_info,
-                            cc_name,
-                            rs_name,
-                            is_public: field_def.vis == ty::Visibility::Public,
-                            index,
-                            offset,
-                            offset_of_next_field,
-                            doc_comment: format_doc_comment(tcx, field_def.did.expect_local()),
-                            attributes,
-                        }
-                    })
-                    .collect_vec()
-            })
-            .collect_vec();
-
-        for (variant_index, variant_fields) in fields_shape.iter().enumerate() {
-            match variant_fields {
-                // Struct/Enum case
-                FieldsShape::Arbitrary { offsets, .. } => {
-                    for (index, offset) in offsets.iter().enumerate() {
-                        // Documentation of `FieldsShape::Arbitrary says that the offsets are
-                        // "ordered to match the source definition order".
-                        // We can coorelate them with elements
-                        // of the `fields` vector because we've explicitly `sorted_by_key` using
-                        // `def_span`.
-                        variants_fields[variant_index][index].offset = offset.bytes();
-
-                        if is_supported_enum {
-                            // Find the offset for the variant, and take it into
-                            // account.
-                            variants_fields[variant_index][index].offset -= tag_size_with_padding;
-                        }
-                    }
-                    // Sort by offset first; ZSTs in the same offset are sorted by source order.
-                    // Use `field_size` to ensure ZSTs at the same offset as
-                    // non-ZSTs sort first to avoid weird offset issues later on.
-                    variants_fields[variant_index].sort_by_key(|field| {
-                        let field_size =
-                            field.type_info.as_ref().map(|info| info.size).unwrap_or(0);
-                        (field.offset, field_size, field.index)
-                    });
-                }
-                FieldsShape::Union(num_fields) => {
-                    // Compute the offset of each field
-                    for index in 0..num_fields.get() {
-                        variants_fields[variant_index][index].offset =
-                            layout.fields().offset(index).bytes();
-                    }
-                }
-                unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
-            }
+    let variants_fields: Vec<Vec<Field>> = match adt_def.adt_kind() {
+        // Handle cases of unsupported ADTs.
+        ty::AdtKind::Enum if (!repr_attrs.contains(&rustc_attr::ReprC)) => {
+            vec![err_fields(anyhow!("No support for bindings of individual non-repr(C) `enum`s"))]
+        }
+        ty::AdtKind::Enum if !is_supported_enum => {
+            vec![err_fields(anyhow!(
+                "support for repr(C) enums requires //features:experimental"
+            ))]
+        }
+        ty::AdtKind::Union
+            if !repr_attrs.contains(&rustc_attr::ReprC)
+                && !crate_features(db, core.def_id.krate)
+                    .contains(crubit_feature::CrubitFeature::Experimental) =>
+        {
+            vec![err_fields(anyhow!(
+                "support for non-repr(C) unions requires //features:experimental"
+            ))]
         }
 
-        for (variant_index, variant_fields) in variants_fields.iter_mut().enumerate() {
-            let next_offsets = variant_fields
+        // Otherwise, get the fields and determine the memory layout.
+        _ => {
+            let rustc_hir::Node::Item(item) = tcx.hir_node_by_def_id(core.def_id.expect_local())
+            else {
+                panic!("internal error: def_id referring to an ADT was not a HIR Item.");
+            };
+            let variants = match item.kind {
+                rustc_hir::ItemKind::Struct(variant, _) => vec![variant],
+                rustc_hir::ItemKind::Union(variant, _) => vec![variant],
+                rustc_hir::ItemKind::Enum(enum_info, _) => {
+                    enum_info.variants.iter().map(|variant| variant.data).collect()
+                }
+                _ => panic!(
+                    "internal error: def_id referring to a non-enum ADT was not a struct or union."
+                ),
+            };
+            let hir_fields: Vec<Vec<_>> = variants
                 .iter()
-                .map(|Field { offset, .. }| *offset)
-                .skip(1)
-                .chain(once(layout_size[variant_index]))
+                .map(|variant| variant.fields().iter().sorted_by_key(|f| f.span).collect())
+                .collect();
+
+            let mut variants_fields = core
+                .self_ty
+                .ty_adt_def()
+                .expect("`core.def_id` needs to identify an ADT")
+                .variants()
+                .iter_enumerated()
+                .map(|(variant_index, variant)| {
+                    variant
+                        .fields
+                        .iter()
+                        .sorted_by_key(|f| tcx.def_span(f.did))
+                        .enumerate()
+                        .map(|(index, field_def)| {
+                            // *Not* using zip, in order to crash on length mismatch.
+                            let hir_field = hir_fields
+                                .get(variant_index.index())
+                                .expect("HIR ADT had fewer variants than rustc_middle")
+                                .get(index)
+                                .expect(
+                                    "HIR ADT had fewer fields than rustc_middle for this variant",
+                                );
+                            assert!(field_def.did == hir_field.def_id.to_def_id());
+                            let ty =
+                                SugaredTy::new(field_def.ty(tcx, substs_ref), Some(hir_field.ty));
+                            let size =
+                                get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
+                            let type_info = size.and_then(|size| {
+                                Ok(FieldTypeInfo {
+                                    size,
+                                    cpp_type: db
+                                        .format_ty_for_cc(ty, TypeLocation::Other)?
+                                        .resolve_feature_requirements(crate_features(
+                                            db,
+                                            LOCAL_CRATE,
+                                        ))?,
+                                })
+                            });
+                            let name = field_def.ident(tcx).to_string();
+                            let cc_name = if member_function_names.contains(&name) {
+                                // TODO: Handle the case of name_ itself also being taken? e.g. the
+                                // Rust struct struct S {a: i32, a_:
+                                // i32} impl S { fn a() {} fn a_()
+                                // {} fn a__(){}.
+                                format!("{name}_")
+                            } else {
+                                name.clone()
+                            };
+                            let cc_name =
+                                format_cc_ident(db, cc_name.as_str()).unwrap_or_else(|_err| {
+                                    format_ident!("__field{index}").into_token_stream()
+                                });
+                            let rs_name = {
+                                let name_starts_with_digit = name
+                                    .as_str()
+                                    .chars()
+                                    .next()
+                                    .expect("Empty names are unexpected (here and in general)")
+                                    .is_ascii_digit();
+                                if name_starts_with_digit {
+                                    let index = Literal::usize_unsuffixed(index);
+                                    quote! { #index }
+                                } else {
+                                    let name = make_rs_ident(name.as_str());
+                                    quote! { #name }
+                                }
+                            };
+
+                            // `offset` and `offset_of_next_field` will be fixed by
+                            // FieldsShape::Arbitrary branch below.
+                            let offset = 0;
+                            let offset_of_next_field = 0;
+
+                            // Populate attributes.
+                            let mut attributes = vec![];
+                            if let Some(cc_deprecated_tag) =
+                                format_deprecated_tag(tcx, field_def.did)
+                            {
+                                attributes.push(cc_deprecated_tag);
+                            }
+
+                            Field {
+                                type_info,
+                                cc_name,
+                                rs_name,
+                                is_public: field_def.vis == ty::Visibility::Public,
+                                index,
+                                offset,
+                                offset_of_next_field,
+                                doc_comment: format_doc_comment(tcx, field_def.did.expect_local()),
+                                attributes,
+                            }
+                        })
+                        .collect_vec()
+                })
                 .collect_vec();
-            for (field, next_offset) in variant_fields.iter_mut().zip(next_offsets) {
-                field.offset_of_next_field = next_offset;
+
+            for (variant_index, variant_fields) in fields_shape.iter().enumerate() {
+                match variant_fields {
+                    // Struct/Enum case
+                    FieldsShape::Arbitrary { offsets, .. } => {
+                        for (index, offset) in offsets.iter().enumerate() {
+                            // Documentation of `FieldsShape::Arbitrary says that the offsets are
+                            // "ordered to match the source definition order".
+                            // We can coorelate them with elements
+                            // of the `fields` vector because we've explicitly `sorted_by_key` using
+                            // `def_span`.
+                            variants_fields[variant_index][index].offset = offset.bytes();
+
+                            if is_supported_enum {
+                                // Find the offset for the variant, and take it into
+                                // account.
+                                variants_fields[variant_index][index].offset -=
+                                    tag_size_with_padding;
+                            }
+                        }
+                        // Sort by offset first; ZSTs in the same offset are sorted by source order.
+                        // Use `field_size` to ensure ZSTs at the same offset as
+                        // non-ZSTs sort first to avoid weird offset issues later on.
+                        variants_fields[variant_index].sort_by_key(|field| {
+                            let field_size =
+                                field.type_info.as_ref().map(|info| info.size).unwrap_or(0);
+                            (field.offset, field_size, field.index)
+                        });
+                    }
+                    FieldsShape::Union(num_fields) => {
+                        // Compute the offset of each field
+                        for index in 0..num_fields.get() {
+                            variants_fields[variant_index][index].offset =
+                                layout.fields().offset(index).bytes();
+                        }
+                    }
+                    unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
+                }
             }
+
+            for (variant_index, variant_fields) in variants_fields.iter_mut().enumerate() {
+                let next_offsets = variant_fields
+                    .iter()
+                    .map(|Field { offset, .. }| *offset)
+                    .skip(1)
+                    .chain(once(layout_size[variant_index]))
+                    .collect_vec();
+                for (field, next_offset) in variant_fields.iter_mut().zip(next_offsets) {
+                    field.offset_of_next_field = next_offset;
+                }
+            }
+            variants_fields
         }
-        variants_fields
     };
 
     let cc_details = if variants_fields.is_empty() {
