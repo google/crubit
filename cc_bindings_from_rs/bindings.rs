@@ -2876,6 +2876,45 @@ fn repr_attrs(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Rc<[rustc_attr::
     attrs.into()
 }
 
+// Accounts for the offset in the front of a repr(C) enum with multiple
+// variants. If given a layout with a single variant, returns 0.
+fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
+    match layout.variants() {
+        Variants::Single { .. } => 0,
+        Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
+            let mut variant_offsets = variants.iter().map(|variant| match &variant.fields {
+                FieldsShape::Arbitrary { offsets, .. } => {
+                    if offsets.is_empty() {
+                        variant.size.bytes() // No fields => variant is just the
+                                             // tag.
+                    } else {
+                        offsets[FieldIdx::from_usize(0)].bytes()
+                    }
+                }
+                _ => panic!("Internal Error - Detected an enum with non-arbitrary field"),
+            });
+
+            // There are two equivalent ways to express a rust enum:
+            // 1. A struct that contains the discriminant and a union of the variants
+            // 2. A union where each field begins with a discriminant.
+            //
+            // Rust interally uses the second representation, and we extract out the
+            // discriminant to produce the first.
+            //
+            //
+            // See https://doc.rust-lang.org/beta/nightly-rustc/rustc_abi/enum.FieldsShape.html#variant.Arbitrary
+            // and https://doc.rust-lang.org/reference/type-layout.html#reprc-enums-with-fields
+            let expected_offset = variant_offsets.next().expect("At least one variant is required");
+            for variant_offset in variant_offsets {
+                if variant_offset != expected_offset {
+                    panic!("Internal Error - Detected an enum with different tag offsets.")
+                }
+            }
+            expected_offset
+        }
+    }
+}
+
 /// Returns the body of the C++ struct that represents the given ADT.
 fn format_fields<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
@@ -2948,45 +2987,8 @@ fn format_fields<'tcx>(
         && crate_features(db, core.def_id.krate)
             .contains(crubit_feature::CrubitFeature::Experimental);
 
-    // If there are multiple variants, there is an offset at the beginning of each
-    // variant to account for the tag. We take it into account here. This is
-    // unused for single variant cases.
-
-    let tag_size_with_padding = match layout_variants {
-        Variants::Single { .. } => 0,
-        Variants::Multiple { .. } if !is_supported_enum => 0,
-        Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
-            let mut variant_offsets = variants.iter().map(|variant| match &variant.fields {
-                FieldsShape::Arbitrary { offsets, .. } => {
-                    if offsets.is_empty() {
-                        variant.size.bytes() // No fields => variant is just the
-                                             // tag.
-                    } else {
-                        offsets[FieldIdx::from_usize(0)].bytes()
-                    }
-                }
-                _ => panic!("Internal Error - Detected an enum with non-arbitrary field"),
-            });
-
-            // There are two equivalent ways to express a rust enum:
-            // 1. A struct that contains the discriminant and a union of the variants
-            // 2. A union where each field begins with a discriminant.
-            //
-            // Rust interally uses the second representation, and we extract out the
-            // discriminant to produce the first.
-            //
-            //
-            // See https://doc.rust-lang.org/beta/nightly-rustc/rustc_abi/enum.FieldsShape.html#variant.Arbitrary
-            // and https://doc.rust-lang.org/reference/type-layout.html#reprc-enums-with-fields
-            let expected_offset = variant_offsets.next().expect("At least one variant is required");
-            for variant_offset in variant_offsets {
-                if variant_offset != expected_offset {
-                    panic!("Internal Error - Detected an enum with different tag offsets.")
-                }
-            }
-            expected_offset
-        }
-    };
+    let tag_size_with_padding =
+        if is_supported_enum { get_tag_size_with_padding(layout) } else { 0 };
 
     let variant_sizes = match layout_variants {
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
