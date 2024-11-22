@@ -2893,6 +2893,31 @@ fn repr_attrs(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Rc<[rustc_attr::
     attrs.into()
 }
 
+// Converts a scalar integer to a Ty.
+// We assume the scalar represents an integer, and not a float or a pointer.
+// https://doc.rust-lang.org/beta/nightly-rustc/rustc_abi/enum.Primitive.html
+fn get_scalar_int_type<'tcx>(db: &dyn BindingsGenerator<'tcx>, scalar: Scalar) -> Ty<'tcx> {
+    let tcx = db.tcx();
+    match scalar.primitive() {
+        Primitive::Int(scalar_int, signed) => {
+            // Map the corresponding primitive to rust type.
+            match (scalar_int, signed) {
+                (Integer::I8, false) => Ty::new_uint(tcx, UintTy::U8),
+                (Integer::I16, false) => Ty::new_uint(tcx, UintTy::U16),
+                (Integer::I32, false) => Ty::new_uint(tcx, UintTy::U32),
+                (Integer::I64, false) => Ty::new_uint(tcx, UintTy::U64),
+                (Integer::I128, false) => Ty::new_uint(tcx, UintTy::U128),
+                (Integer::I8, true) => Ty::new_int(tcx, IntTy::I8),
+                (Integer::I16, true) => Ty::new_int(tcx, IntTy::I16),
+                (Integer::I32, true) => Ty::new_int(tcx, IntTy::I32),
+                (Integer::I64, true) => Ty::new_int(tcx, IntTy::I64),
+                (Integer::I128, true) => Ty::new_int(tcx, IntTy::I128),
+            }
+        }
+        _ => panic!("Internal error: integer scalar is not valid."),
+    }
+}
+
 // Accounts for the offset in the front of a repr(C) enum with multiple
 // variants. If given a layout with a single variant, returns 0.
 fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
@@ -3488,26 +3513,7 @@ fn format_fields<'tcx>(
                 let tag_enum = match layout_variants {
                     Variants::Single { .. } => quote! {},
                     Variants::Multiple { tag, .. } => {
-                        // Get the tag type.
-                        let tag_ty = match tag.primitive() {
-                            // We always expect the tag to be an integer type.
-                            Primitive::Int(tag_int, signed) => {
-                                // Map the corresponding primitive to rust type.
-                                match (tag_int, signed) {
-                                    (Integer::I8, false) => Ty::new_uint(tcx, UintTy::U8),
-                                    (Integer::I16, false) => Ty::new_uint(tcx, UintTy::U16),
-                                    (Integer::I32, false) => Ty::new_uint(tcx, UintTy::U32),
-                                    (Integer::I64, false) => Ty::new_uint(tcx, UintTy::U64),
-                                    (Integer::I128, false) => Ty::new_uint(tcx, UintTy::U128),
-                                    (Integer::I8, true) => Ty::new_int(tcx, IntTy::I8),
-                                    (Integer::I16, true) => Ty::new_int(tcx, IntTy::I16),
-                                    (Integer::I32, true) => Ty::new_int(tcx, IntTy::I32),
-                                    (Integer::I64, true) => Ty::new_int(tcx, IntTy::I64),
-                                    (Integer::I128, true) => Ty::new_int(tcx, IntTy::I128),
-                                }
-                            }
-                            _ => panic!("Internal error: enum tag is not valid."),
-                        };
+                        let tag_ty = get_scalar_int_type(db, *tag);
 
                         let tag_tokens = format_ty_for_cc(
                             db,
