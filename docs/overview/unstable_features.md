@@ -8,7 +8,7 @@ For each feature we use, we document the following:
     is under `supported`, then the Rust feature breaking can break Crubit users
     in general. If it is under `experimental`, then it only breaks tests and
     close partner teams.
-*   **Use case:**What do we use the feature for?
+*   **Use case:** What do we use the feature for?
 *   **Exit strategy:** What would happen if the feature went away?
 
 ### `custom_inner_attributes`
@@ -117,7 +117,7 @@ For each feature we use, we document the following:
 
 The following features are ones we'd hypothetically like to use, but do not.
 
-## `try_trait_v2`
+### `try_trait_v2`
 
 Crubit does aim to support the Abseil error type, `absl::Status`, which ideally
 would be usable everywhere a `Result` is for ergonomics. For example, we'd
@@ -138,7 +138,7 @@ Until it is stabilized, or the cost/benefit becomes worthwhile, we can work
 around it by using `Result`, and converting when a `Result` is passed or
 returned by value.
 
-## `min_specialization`
+### `min_specialization`
 
 We have many use cases for `min_specialization`, including bindings for C++
 templates that have explicit template specialization or partial template
