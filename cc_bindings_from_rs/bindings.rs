@@ -3469,202 +3469,194 @@ fn format_fields<'tcx>(
                 .flatten()
                 .map(|field| get_field_tokens(field, &mut prereqs))
                 .collect(),
+            ty::AdtKind::Enum if !is_supported_enum => variants_fields
+                .into_iter()
+                .flatten()
+                .map(|field| get_field_tokens(field, &mut prereqs))
+                .collect(),
             ty::AdtKind::Enum => {
-                if !is_supported_enum {
-                    variants_fields
-                        .into_iter()
-                        .flatten()
-                        .map(|field| get_field_tokens(field, &mut prereqs))
-                        .collect()
-                } else {
-                    // We need three things:
-                    // 1. A representation of the tag (tag_enum).
-                    // 2. A representation of the fields in each variant (variant_structs).
-                    // 3. A union of the results of (2) (variants_union).
+                // We need three things:
+                // 1. A representation of the tag (tag_enum).
+                // 2. A representation of the fields in each variant (variant_structs).
+                // 3. A union of the results of (2) (variants_union).
 
-                    // Step 1 is ignored if there is only one variant.
+                // Step 1 is ignored if there is only one variant.
 
-                    // See https://doc.rust-lang.org/reference/type-layout.html#reprc-enums-with-fields
+                // See https://doc.rust-lang.org/reference/type-layout.html#reprc-enums-with-fields
 
-                    // Get tokens for the tag, if it exists.
-                    let tag_enum = match layout_variants {
-                        Variants::Single { .. } => quote! {},
-                        Variants::Multiple { tag, .. } => {
-                            // Get the tag type.
-                            let tag_ty = match tag.primitive() {
-                                // We always expect the tag to be an integer type.
-                                Primitive::Int(tag_int, signed) => {
-                                    // Map the corresponding primitive to rust type.
-                                    match (tag_int, signed) {
-                                        (Integer::I8, false) => Ty::new_uint(tcx, UintTy::U8),
-                                        (Integer::I16, false) => Ty::new_uint(tcx, UintTy::U16),
-                                        (Integer::I32, false) => Ty::new_uint(tcx, UintTy::U32),
-                                        (Integer::I64, false) => Ty::new_uint(tcx, UintTy::U64),
-                                        (Integer::I128, false) => Ty::new_uint(tcx, UintTy::U128),
-                                        (Integer::I8, true) => Ty::new_int(tcx, IntTy::I8),
-                                        (Integer::I16, true) => Ty::new_int(tcx, IntTy::I16),
-                                        (Integer::I32, true) => Ty::new_int(tcx, IntTy::I32),
-                                        (Integer::I64, true) => Ty::new_int(tcx, IntTy::I64),
-                                        (Integer::I128, true) => Ty::new_int(tcx, IntTy::I128),
-                                    }
+                // Get tokens for the tag, if it exists.
+                let tag_enum = match layout_variants {
+                    Variants::Single { .. } => quote! {},
+                    Variants::Multiple { tag, .. } => {
+                        // Get the tag type.
+                        let tag_ty = match tag.primitive() {
+                            // We always expect the tag to be an integer type.
+                            Primitive::Int(tag_int, signed) => {
+                                // Map the corresponding primitive to rust type.
+                                match (tag_int, signed) {
+                                    (Integer::I8, false) => Ty::new_uint(tcx, UintTy::U8),
+                                    (Integer::I16, false) => Ty::new_uint(tcx, UintTy::U16),
+                                    (Integer::I32, false) => Ty::new_uint(tcx, UintTy::U32),
+                                    (Integer::I64, false) => Ty::new_uint(tcx, UintTy::U64),
+                                    (Integer::I128, false) => Ty::new_uint(tcx, UintTy::U128),
+                                    (Integer::I8, true) => Ty::new_int(tcx, IntTy::I8),
+                                    (Integer::I16, true) => Ty::new_int(tcx, IntTy::I16),
+                                    (Integer::I32, true) => Ty::new_int(tcx, IntTy::I32),
+                                    (Integer::I64, true) => Ty::new_int(tcx, IntTy::I64),
+                                    (Integer::I128, true) => Ty::new_int(tcx, IntTy::I128),
                                 }
-                                _ => panic!("Internal error: enum tag is not valid."),
-                            };
-
-                            let tag_tokens = format_ty_for_cc(
-                                db,
-                                // An enum cannot have repr(c_char), or any other alias, so there's
-                                // never sugar.
-                                SugaredTy::new(tag_ty, None),
-                                TypeLocation::Other,
-                            )
-                            .expect("discriminant should be a integer type.")
-                            .into_tokens(&mut prereqs);
-
-                            let variant_enum_fields: TokenStream = adt_def
-                                .variants()
-                                .iter_enumerated()
-                                .map(|(variant_index, variant_def)| {
-                                    let cc_variant_name =
-                                        format_cc_ident(db, variant_def.name.as_str())
-                                            .unwrap_or_else(|_err| {
-                                                format_ident!("err_field").into_token_stream()
-                                            });
-                                    let tag_value = Literal::u128_unsuffixed(
-                                        adt_def.discriminant_for_variant(tcx, variant_index).val,
-                                    );
-                                    quote! {
-                                        __NEWLINE__ #cc_variant_name = #tag_value,
-                                    }
-                                })
-                                .collect();
-                            quote! {
-                                __NEWLINE__ enum class Tag : #tag_tokens {
-                                    #variant_enum_fields
-                                }; __NEWLINE__
                             }
-                        }
-                    };
+                            _ => panic!("Internal error: enum tag is not valid."),
+                        };
 
-                    let mut tokens_per_variant: Vec<TokenStream> =
-                        Vec::with_capacity(variants_fields.len());
+                        let tag_tokens = format_ty_for_cc(
+                            db,
+                            // An enum cannot have repr(c_char), or any other alias, so there's
+                            // never sugar.
+                            SugaredTy::new(tag_ty, None),
+                            TypeLocation::Other,
+                        )
+                        .expect("discriminant should be a integer type.")
+                        .into_tokens(&mut prereqs);
 
-                    for fields_for_variant in variants_fields.into_iter() {
-                        tokens_per_variant.push(
-                            fields_for_variant
-                                .into_iter()
-                                .map(|field| get_field_tokens(field, &mut prereqs))
-                                .collect(),
-                        );
-                    }
-
-                    // We need to get the alignment of each variant struct.
-                    let variant_alignments = match layout_variants {
-                        Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
-                            variants
-                                .iter()
-                                .map(|layout| layout.align.abi.bytes() - tag_size_with_padding)
-                                .collect_vec()
-                        }
-                        Variants::Single { .. } => {
-                            vec![core.alignment_in_bytes]
-                        }
-                    };
-
-                    let variant_structs: TokenStream = adt_def
-                        .variants()
-                        .iter_enumerated()
-                        .map(|(variant_index, variant_def)| {
-                            // Get the variant name.
-                            let cc_variant_struct_name = format_cc_ident(
-                                db,
-                                format!("__crubit_{}_struct", variant_def.ident(tcx).as_str())
-                                    .as_ref(),
-                            )
-                            .unwrap_or_else(|_err| format_ident!("err_struct").into_token_stream());
-
-                            // Get the corresponding field tokens.
-                            let fields_for_variant = &tokens_per_variant[variant_index.index()];
-
-                            // Get the aligment of the variant...
-                            let variant_alignment =
-                                Literal::u64_unsuffixed(variant_alignments[variant_index.index()]);
-
-                            // Create the actual struct, if the variant has size. Otherwise, make
-                            // a note that the variant is empty.
-                            if variant_sizes[variant_index.index()] == 0 {
+                        let variant_enum_fields: TokenStream = adt_def
+                            .variants()
+                            .iter_enumerated()
+                            .map(|(variant_index, variant_def)| {
                                 let cc_variant_name =
                                     format_cc_ident(db, variant_def.name.as_str()).unwrap_or_else(
                                         |_err| format_ident!("err_field").into_token_stream(),
                                     );
-                                let msg = format!(
-                                    "Variant {} has no size, so no struct is generated.",
-                                    cc_variant_name
+                                let tag_value = Literal::u128_unsuffixed(
+                                    adt_def.discriminant_for_variant(tcx, variant_index).val,
                                 );
-                                quote! {__NEWLINE__
-                                __COMMENT__ #msg}
-                            } else {
                                 quote! {
-                                    __NEWLINE__
-                                    struct alignas(#variant_alignment) #cc_variant_struct_name {
-                                        #fields_for_variant
-                                    };
+                                    __NEWLINE__ #cc_variant_name = #tag_value,
                                 }
-                            }
-                        })
-                        .collect();
+                            })
+                            .collect();
+                        quote! {
+                            __NEWLINE__ enum class Tag : #tag_tokens {
+                                #variant_enum_fields
+                            }; __NEWLINE__
+                        }
+                    }
+                };
 
-                    let variants_union_fields: TokenStream = adt_def
-                        .variants()
-                        .iter_enumerated()
-                        .map(|(variant_index, variant_def)| {
-                            // Get the variant name.
+                let mut tokens_per_variant: Vec<TokenStream> =
+                    Vec::with_capacity(variants_fields.len());
+
+                for fields_for_variant in variants_fields.into_iter() {
+                    tokens_per_variant.push(
+                        fields_for_variant
+                            .into_iter()
+                            .map(|field| get_field_tokens(field, &mut prereqs))
+                            .collect(),
+                    );
+                }
+
+                // We need to get the alignment of each variant struct.
+                let variant_alignments = match layout_variants {
+                    Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
+                        variants
+                            .iter()
+                            .map(|layout| layout.align.abi.bytes() - tag_size_with_padding)
+                            .collect_vec()
+                    }
+                    Variants::Single { .. } => {
+                        vec![core.alignment_in_bytes]
+                    }
+                };
+
+                let variant_structs: TokenStream = adt_def
+                    .variants()
+                    .iter_enumerated()
+                    .map(|(variant_index, variant_def)| {
+                        // Get the variant name.
+                        let cc_variant_struct_name = format_cc_ident(
+                            db,
+                            format!("__crubit_{}_struct", variant_def.ident(tcx).as_str()).as_ref(),
+                        )
+                        .unwrap_or_else(|_err| format_ident!("err_struct").into_token_stream());
+
+                        // Get the corresponding field tokens.
+                        let fields_for_variant = &tokens_per_variant[variant_index.index()];
+
+                        // Get the aligment of the variant...
+                        let variant_alignment =
+                            Literal::u64_unsuffixed(variant_alignments[variant_index.index()]);
+
+                        // Create the actual struct, if the variant has size. Otherwise, make
+                        // a note that the variant is empty.
+                        if variant_sizes[variant_index.index()] == 0 {
                             let cc_variant_name = format_cc_ident(db, variant_def.name.as_str())
                                 .unwrap_or_else(|_err| {
                                     format_ident!("err_field").into_token_stream()
                                 });
-                            let cc_variant_struct_type = format_cc_ident(
-                                db,
-                                format!("__crubit_{}_struct", variant_def.ident(tcx).as_str())
-                                    .as_ref(),
-                            )
-                            .unwrap_or_else(|_err| format_ident!("err_struct").into_token_stream());
-
-                            // If the variant has no fields (i.e. the struct is empty), we can skip
-                            // this declaration.
-                            if variant_sizes[variant_index.index()] == 0 {
-                                quote! {}
-                            } else {
-                                quote! {
-                                    #cc_variant_struct_type #cc_variant_name; __NEWLINE__
-                                }
-                            }
-                        })
-                        .collect();
-
-                    let variants_union: TokenStream = {
-                        let has_no_fields =
-                            variant_sizes.iter().all(|size_of_variant| *size_of_variant == 0);
-
-                        if has_no_fields {
-                            // If there are no fields in any variant, we must skip this union
-                            quote! {}
+                            let msg = format!(
+                                "Variant {} has no size, so no struct is generated.",
+                                cc_variant_name
+                            );
+                            quote! {__NEWLINE__
+                            __COMMENT__ #msg}
                         } else {
                             quote! {
-                                public: union  {
-                                    #variants_union_fields
+                                __NEWLINE__
+                                struct alignas(#variant_alignment) #cc_variant_struct_name {
+                                    #fields_for_variant
                                 };
                             }
                         }
-                    };
+                    })
+                    .collect();
 
-                    // Combine everything together.
-                    quote! {
-                        #variant_structs __NEWLINE__
-                        #tag_enum __NEWLINE__
-                        public: Tag tag; __NEWLINE__
-                        #variants_union
+                let variants_union_fields: TokenStream = adt_def
+                    .variants()
+                    .iter_enumerated()
+                    .map(|(variant_index, variant_def)| {
+                        // Get the variant name.
+                        let cc_variant_name = format_cc_ident(db, variant_def.name.as_str())
+                            .unwrap_or_else(|_err| format_ident!("err_field").into_token_stream());
+                        let cc_variant_struct_type = format_cc_ident(
+                            db,
+                            format!("__crubit_{}_struct", variant_def.ident(tcx).as_str()).as_ref(),
+                        )
+                        .unwrap_or_else(|_err| format_ident!("err_struct").into_token_stream());
+
+                        // If the variant has no fields (i.e. the struct is empty), we can skip
+                        // this declaration.
+                        if variant_sizes[variant_index.index()] == 0 {
+                            quote! {}
+                        } else {
+                            quote! {
+                                #cc_variant_struct_type #cc_variant_name; __NEWLINE__
+                            }
+                        }
+                    })
+                    .collect();
+
+                let variants_union: TokenStream = {
+                    let has_no_fields =
+                        variant_sizes.iter().all(|size_of_variant| *size_of_variant == 0);
+
+                    if has_no_fields {
+                        // If there are no fields in any variant, we must skip this union
+                        quote! {}
+                    } else {
+                        quote! {
+                            public: union  {
+                                #variants_union_fields
+                            };
+                        }
                     }
+                };
+
+                // Combine everything together.
+                quote! {
+                    #variant_structs __NEWLINE__
+                    #tag_enum __NEWLINE__
+                    public: Tag tag; __NEWLINE__
+                    #variants_union
                 }
             }
         };
