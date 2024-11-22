@@ -15,7 +15,9 @@ crubit_rust_test(
     name = "nonunpin_test",
     srcs = ["nonunpin_test.rs"],
     cc_deps = [":nonunpin"],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=negative_impls"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//support:ctor",
         "@crate_index//:googletest",

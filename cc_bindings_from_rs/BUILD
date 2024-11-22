@@ -19,7 +19,9 @@ package(
 rust_library(
     name = "bindings",
     srcs = ["bindings.rs"],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":crubit_attr",
         ":run_compiler",
@@ -40,7 +42,9 @@ rust_library(
 crubit_rust_test(
     name = "bindings_test",
     crate = ":bindings",
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":run_compiler_test_support",
         "//common:token_stream_matchers",
@@ -54,7 +58,9 @@ crubit_rust_binary(
     # Do not add a fake dependency on Crubit, because it will introduce a dependency cycle.
     crubit_dep = False,
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=never_type,rustc_private"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
         "//visibility:public",
     ],
@@ -76,7 +82,9 @@ crubit_rust_binary(
 crubit_rust_test(
     name = "cc_bindings_from_rs_test",
     crate = ":cc_bindings_from_rs",
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=never_type,rustc_private"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":run_compiler_test_support",
         "@crate_index//:regex",
@@ -101,7 +109,9 @@ rust_library(
     srcs = [
         "cmdline.rs",
     ],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//common:crubit_feature",
         "@crate_index//:anyhow",
@@ -113,7 +123,9 @@ rust_library(
 crubit_rust_test(
     name = "cmdline_test",
     crate = ":cmdline",
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":run_compiler_test_support",
         "@crate_index//:itertools",
@@ -124,7 +136,9 @@ crubit_rust_test(
 rust_library(
     name = "crubit_attr",
     srcs = ["crubit_attr.rs"],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "@crate_index//:anyhow",
     ],
@@ -133,7 +147,9 @@ rust_library(
 crubit_rust_test(
     name = "crubit_attr_test",
     crate = ":crubit_attr",
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":run_compiler_test_support",
     ],
@@ -144,7 +160,9 @@ rust_library(
     srcs = [
         "run_compiler.rs",
     ],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//common:arc_anyhow",
         "@crate_index//:either",
@@ -154,7 +172,9 @@ rust_library(
 crubit_rust_test(
     name = "run_compiler_test",
     crate = ":run_compiler",
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":run_compiler_test_support",
         "@crate_index//:tempfile",

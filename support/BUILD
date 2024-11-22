@@ -9,7 +9,9 @@ rust_library(
     name = "ctor",
     srcs = ["ctor.rs"],
     proc_macro_deps = [":ctor_proc_macros"],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=negative_impls"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = ["//:__subpackages__"],
 )
 
@@ -36,7 +38,9 @@ crubit_rust_test(
     name = "ctor_test",
     srcs = ["ctor.rs"],
     proc_macro_deps = [":ctor_proc_macros"],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=negative_impls"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "@crate_index//:googletest",
     ],
@@ -45,7 +49,9 @@ crubit_rust_test(
 crubit_rust_test(
     name = "ctor_proc_macros_e2e_test",
     srcs = ["ctor_proc_macros_test.rs"],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=negative_impls"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":ctor",
         "@crate_index//:googletest",
@@ -65,7 +71,9 @@ rust_library(
     name = "forward_declare",
     srcs = ["forward_declare.rs"],
     proc_macro_deps = [":forward_declare_proc_macros"],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=extern_types,negative_impls,vec_into_raw_parts"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = ["//:__subpackages__"],
 )
 
@@ -91,7 +99,9 @@ crubit_rust_test(
 rust_library(
     name = "oops",
     srcs = ["oops.rs"],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=negative_impls"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
         "//:__subpackages__",
     ],
@@ -100,7 +110,9 @@ rust_library(
 crubit_rust_test(
     name = "oops_test",
     srcs = ["oops.rs"],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=negative_impls"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "@crate_index//:googletest",
     ],

@@ -161,8 +161,10 @@ cc_library(
 rust_library(
     name = "vector",
     srcs = ["vector.rs"],
+    # LINT.IfChange
     cc_deps = ["//support/cc_std"],
     rustc_flags = ["-Zallow-features=allocator_api,cfg_sanitize"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
         "//visibility:public",
     ],

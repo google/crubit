@@ -16,7 +16,9 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "cpp_name",
     srcs = ["cpp_name.rs"],
+    # LINT.IfChange
     rustc_flags = ["-Zallow-features=register_tool"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
 )
 
 cc_bindings_from_rust(
