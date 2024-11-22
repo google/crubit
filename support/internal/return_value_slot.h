@@ -56,6 +56,9 @@ class ReturnValueSlot {
     // Leaving `value_` uninitialized / not invoking any constructor of `T`.
   }
 
+  // Creates `ReturnValueSlot` with the given value.
+  explicit constexpr ReturnValueSlot(T&& x) : value_(std::move(x)) {}
+
   // Gets a pointer to the slot where the return value may be written.
   //
   // SAFETY REQUIREMENTS:

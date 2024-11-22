@@ -2600,7 +2600,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         let mut thunk_args = params
             .iter()
             .enumerate()
-            .map(|(i, Param { cc_name, ty, .. })| {
+            .map(|(i, Param { cc_name, cpp_type, ty, .. })| {
                 if i == 0 && method_kind.has_self_param() {
                     if method_kind == FunctionKind::MethodTakingSelfByValue {
                         Ok(quote! { this })
@@ -2621,8 +2621,8 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
                     // allowing us to avoid one extra memcpy: we could move it directly into its
                     // target location, instead of moving to a temporary that we memcpy to its
                     // target location.
-                    prereqs.includes.insert(CcInclude::absl_header("base/no_destructor.h"));
-                    Ok(quote! { absl::NoDestructor(std::move(#cc_name)).get() })
+                    prereqs.includes.insert(db.support_header("internal/return_value_slot.h"));
+                    Ok(quote! { crubit::ReturnValueSlot<#cpp_type>(std::move(#cc_name)).Get() })
                 }
             })
             .collect::<Result<Vec<_>>>()?;
