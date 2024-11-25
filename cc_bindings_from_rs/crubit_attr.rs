@@ -21,14 +21,6 @@ use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct BridgedTypeAttrs {
-    pub cpp_type: Symbol,
-    pub cpp_type_include: Symbol,
-    pub rust_to_cpp_converter: Symbol,
-    pub cpp_to_rust_converter: Symbol,
-}
-
 /// A collection of `#[__crubit::annotate(...)]` attributes.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct CrubitAttrs {
@@ -110,40 +102,6 @@ impl CrubitAttrs {
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter = symbol,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter = symbol,
             _ => panic!("Invalid attribute name: \"{name}\""),
-        }
-    }
-
-    /// Returns true if #[__crubit::annotate(...)] is configured to require type
-    /// bridging.
-    ///
-    /// A type is said to require type bridging ("bridged type") if either
-    /// `cpp_to_rust_converter` or `rust_to_cpp_converter` is set in the
-    /// #[__crubit::annotate(...)] attribute. The idea is that for a Rust
-    /// type with an equivalent but not ABI compatible C++ type, conversion
-    /// functions that turn one type into another can be specified.
-    pub fn requires_type_bridging(&self) -> Result<Option<BridgedTypeAttrs>> {
-        match *self {
-            CrubitAttrs {
-                cpp_type: Some(cpp_type),
-                cpp_type_include: Some(cpp_type_include),
-                cpp_to_rust_converter: Some(cpp_to_rust_converter),
-                rust_to_cpp_converter: Some(rust_to_cpp_converter),
-                ..
-            } => Ok(Some(BridgedTypeAttrs {
-                cpp_type,
-                cpp_type_include,
-                cpp_to_rust_converter,
-                rust_to_cpp_converter,
-            })),
-            CrubitAttrs { cpp_to_rust_converter: Some(cpp_to_rust_converter), .. } => bail!(
-                "Invalid state of  #[__crubit::annotate(...)] attribute. rust_to_cpp_converter \
-                    set ({cpp_to_rust_converter}), but cpp_type not set."
-            ),
-            CrubitAttrs { rust_to_cpp_converter: Some(rust_to_cpp_converter), .. } => bail!(
-                "Invalid state of  #[__crubit::annotate(...)] attribute. cpp_to_rust_converter \
-                    set ({rust_to_cpp_converter}), but cpp_type not set."
-            ),
-            _ => Ok(None),
         }
     }
 }

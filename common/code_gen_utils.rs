@@ -3,11 +3,46 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{anyhow, ensure, Result};
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::{Ident, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashSet};
 use std::rc::Rc;
 use std::sync::LazyLock;
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum CcConstQualifier {
+    Mut,
+    Const,
+}
+
+/// Returns Some(..) if the cpp_type is a C++ pointer type.
+pub fn is_cpp_pointer_type(cpp_type: TokenStream) -> Option<CcConstQualifier> {
+    let mut first = None;
+    let mut last = None;
+    let mut prev_last = None;
+    for token in cpp_type.into_iter() {
+        first = if first.is_none() { Some(token.clone()) } else { first };
+        prev_last = last;
+        last = Some(token);
+    }
+
+    match (first, prev_last, last) {
+        (Some(TokenTree::Ident(first)), _, Some(TokenTree::Punct(last)))
+            if first == "const" && last.as_char() == '*' =>
+        {
+            Some(CcConstQualifier::Const)
+        }
+        (_, Some(TokenTree::Ident(prev_last)), Some(TokenTree::Punct(last)))
+            if prev_last == "const" && last.as_char() == '*' =>
+        {
+            Some(CcConstQualifier::Const)
+        }
+        (_, _, Some(TokenTree::Punct(last))) if last.as_char() == '*' => {
+            Some(CcConstQualifier::Mut)
+        }
+        _ => None,
+    }
+}
 
 pub fn is_cpp_reserved_keyword(ident: &str) -> bool {
     RESERVED_CC_KEYWORDS.contains(ident)
@@ -707,5 +742,23 @@ pub mod tests {
             tests.iter().map(|(_, expected)| *expected).duplicates().collect_vec();
         let empty_vec: Vec<&'static str> = vec![];
         assert_eq!(empty_vec, duplicate_expectations);
+    }
+
+    #[gtest]
+    fn test_is_cpp_pointer_type() {
+        let tests = vec![
+            ("Foo", None),
+            ("Foo*", Some(CcConstQualifier::Mut)),
+            ("Foo const*", Some(CcConstQualifier::Const)),
+            ("const Foo*", Some(CcConstQualifier::Const)),
+            ("::foo::bar::Fizz * ", Some(CcConstQualifier::Mut)),
+            ("::foo::bar::Fizz const *", Some(CcConstQualifier::Const)),
+            ("const ::foo::bar::Fizz *", Some(CcConstQualifier::Const)),
+        ];
+
+        for (input, expected_output) in tests.into_iter() {
+            let actual_output = is_cpp_pointer_type(input.parse().unwrap());
+            assert_eq!(actual_output, expected_output);
+        }
     }
 }

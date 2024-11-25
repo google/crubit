@@ -34,10 +34,24 @@ cc_bindings_from_rust(
     crate = ":rust_type",
 )
 
+rust_library(
+    name = "rust_pointer_types",
+    srcs = ["rust_pointer_types.rs"],
+    aspect_hints = [
+        ":cc_type_hint",
+    ],
+)
+
+cc_bindings_from_rust(
+    name = "rust_pointer_types_cc_api",
+    crate = ":rust_pointer_types",
+)
+
 crubit_cc_test(
     name = "bridging_test",
     srcs = ["bridging_test.cc"],
     deps = [
+        ":rust_pointer_types_cc_api",
         ":rust_type_cc_api",
         "@com_google_googletest//:gtest_main",
     ],
