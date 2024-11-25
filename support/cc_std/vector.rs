@@ -345,6 +345,20 @@ impl<T: Unpin> Vector<T> {
         self.mutate_self_as_vec(|v| v.dedup_by_key(key));
     }
 
+    pub fn retain<F>(&mut self, f: F)
+    where
+        F: FnMut(&T) -> bool,
+    {
+        self.mutate_self_as_vec(|v| v.retain(f));
+    }
+
+    pub fn retain_mut<F>(&mut self, f: F)
+    where
+        F: FnMut(&mut T) -> bool,
+    {
+        self.mutate_self_as_vec(|v| v.retain_mut(f));
+    }
+
     // Methods returning different vector representations.
     pub fn into_vec(mut self) -> Vec<T> {
         let mut result = Vec::<T>::with_capacity(self.len());

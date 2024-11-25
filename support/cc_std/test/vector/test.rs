@@ -514,6 +514,27 @@ fn test_vector_dedup_by_key() {
 }
 
 #[gtest]
+fn test_retain() {
+    let mut v = vector::Vector::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    v.retain(|&x| x % 2 == 0);
+    expect_eq!(v, [2, 4, 6, 8, 10]);
+}
+
+#[gtest]
+fn test_retain_mut() {
+    let mut v = vector::Vector::from(vec![1, 2, 3, 4]);
+    v.retain_mut(|x| {
+        if *x <= 3 {
+            *x += 1;
+            true
+        } else {
+            false
+        }
+    });
+    expect_eq!(v, [2, 3, 4]);
+}
+
+#[gtest]
 fn test_vector_into_vec() {
     let mut v = vector::Vector::<i32>::new();
     v.push(1);
