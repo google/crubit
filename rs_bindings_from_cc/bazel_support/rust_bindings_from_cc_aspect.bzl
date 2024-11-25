@@ -138,6 +138,11 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         public_hdrs = target[CcInfo].compilation_context.direct_public_headers
         all_standalone_hdrs = target[CcInfo].compilation_context.direct_headers
 
+    elif ctx.rule.kind == "cc_stubby_library":
+        public_hdrs = target[CcInfo].compilation_context.direct_public_headers
+        all_standalone_hdrs = target[CcInfo].compilation_context.direct_headers
+        extra_rule_specific_deps = ctx.rule.attr.implicit_cc_deps
+
     has_public_headers = len(public_hdrs) > 0
     if not has_public_headers:
         # This target doesn't have public headers, so there are no bindings to generate. However we
@@ -230,6 +235,8 @@ rust_bindings_from_cc_aspect = aspect(
         "deps",
         # for cc_proto_aspect implicit deps
         "_cc_lib",
+        # for cc_stubby_library implicit deps
+        "implicit_cc_deps",
     ],
     required_aspect_providers = [CcInfo],
     attrs = bindings_attrs | {
