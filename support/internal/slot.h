@@ -10,7 +10,7 @@
 
 namespace crubit {
 
-// `ReturnValueSlot<T>` provides a slot that can store a move-only return
+// `Slot<T>` provides a slot that can store a move-only return
 // value.  This class is used to return non-`#[repr(C)]` structs from Rust
 // into C++ in a way that is compatible with the ABI of `extern "C"` Rust
 // thunks.
@@ -26,38 +26,38 @@ namespace crubit {
 //
 //     ```cc
 //              inline SomeStruct foo(int32_t arg1, int32_t arg2) {
-//     /* 1 */    crubit::ReturnValueSlot<SomeStruct> __ret;
+//     /* 1 */    crubit::Slot<SomeStruct> __ret;
 //     /* 2 */    __rust_thunk_for_foo(arg1, arg2, __ret.GetSlotPtr());
 //     /* 3 */    return __ret.AssumeInitAndTakeValue();
 //              }
 //     }
 // ```
 //
-// `ReturnValueSlot` helps to coordinate when C++ constructors and destructors
+// `Slot` helps to coordinate when C++ constructors and destructors
 // run in the example above:
 // - `SomeStruct`'s constructor should *not* run on line 1.
 // - Rust thunk can populates the return slot on line 2.
 //   The Rust thunk may panic without populating the return slot - in this
 //   case nothing should operate on the uninitialized `SomeStruct` value
-//   (this is accomplished by ReturnValueSlot having an empty/no-op destructor)
+//   (this is accomplished by Slot having an empty/no-op destructor)
 // - `SomeStruct`'s move constructor will run on line 3 (moving the return value
-//   out of `ReturnValueSlot::value_`, and then destructing the moved-away
-//   `ReturnValueSlot::value_`).
+//   out of `Slot::value_`, and then destructing the moved-away
+//   `Slot::value_`).
 //
-// Behavior of `ReturnValueSlot<T>` in steps 1 and 2 is identical to
+// Behavior of `Slot<T>` in steps 1 and 2 is identical to
 // `MaybeUninit<T>` in Rust, but the behavior on line 3 is a bit different:
 // there is an extra call to a move constructor in C++, but there are no move
 // constructors in Rust.
 template <typename T>
-class ReturnValueSlot {
+class Slot {
  public:
-  // Creates `ReturnValueSlot` in an uninitialized state.
-  ReturnValueSlot() {
+  // Creates `Slot` in an uninitialized state.
+  Slot() {
     // Leaving `value_` uninitialized / not invoking any constructor of `T`.
   }
 
-  // Creates `ReturnValueSlot` with the given value.
-  explicit constexpr ReturnValueSlot(T&& x) : value_(std::move(x)) {}
+  // Creates `Slot` with the given value.
+  explicit constexpr Slot(T&& x) : value_(std::move(x)) {}
 
   // Gets a pointer to the slot where the return value may be written.
   //
@@ -65,14 +65,14 @@ class ReturnValueSlot {
   // - Caller should not read from the returned pointer before the value has
   //   been initialized.
   // - Caller should only write to the returned pointer while the
-  //   `ReturnValueSlot` is in an uninitialized state (i.e. care should be taken
+  //   `Slot` is in an uninitialized state (i.e. care should be taken
   //   to avoid writing to the slot twice, potentially overwriting a value
   //   without calling its destructor).
   T* Get() { return &value_; }
 
   // Destructively takes and returns the contained value.
   //
-  // Leaves the value contained in `ReturnValueSlot` uninitialized.
+  // Leaves the value contained in `Slot` uninitialized.
   //
   // SAFETY REQUIREMENTS: The contained value is initialized.
   T AssumeInitAndTakeValue() && {
@@ -83,21 +83,21 @@ class ReturnValueSlot {
 
   // SAFETY REQUIREMENTS: The value contained in `other` must be initialized
   // (but may be moved-from).
-  ReturnValueSlot(ReturnValueSlot&& other) { value_ = std::move(other.value_); }
+  Slot(Slot&& other) { value_ = std::move(other.value_); }
 
   // Does not destroy the contained value.
   //
-  // Before `~ReturnValueSlot()` is invoked, the contained value should be
+  // Before `~Slot()` is invoked, the contained value should be
   // destroyed by the user (typically, by calling `AssumeInitAndTakeValue`).  If
-  // the contained value is left initialized by the time `~ReturnValueSlot()`
+  // the contained value is left initialized by the time `~Slot()`
   // runs, the value is leaked.
-  ~ReturnValueSlot() {
+  ~Slot() {
     // Not destroying or otherwise using `value_`.
   }
 
-  ReturnValueSlot(const ReturnValueSlot&) = delete;
-  ReturnValueSlot& operator=(const ReturnValueSlot&) = delete;
-  ReturnValueSlot& operator=(ReturnValueSlot&&) = delete;
+  Slot(const Slot&) = delete;
+  Slot& operator=(const Slot&) = delete;
+  Slot& operator=(Slot&&) = delete;
 
  private:
   // Use a union to allow us full manual control of the initialization and

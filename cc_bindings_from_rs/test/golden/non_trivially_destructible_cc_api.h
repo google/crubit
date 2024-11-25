@@ -12,7 +12,7 @@
 
 #include "support/internal/attribute_macros.h"
 #include "support/internal/memswap.h"
-#include "support/internal/return_value_slot.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -131,8 +131,7 @@ extern "C" void __crubit_thunk_take_uby_uvalue(
 inline void take_by_value(
     ::non_trivially_destructible_rust::NonTriviallyDestructable _x) {
   return __crubit_internal::__crubit_thunk_take_uby_uvalue(
-      crubit::ReturnValueSlot<
-          ::non_trivially_destructible_rust::NonTriviallyDestructable>(
+      crubit::Slot<::non_trivially_destructible_rust::NonTriviallyDestructable>(
           std::move(_x))
           .Get());
 }
@@ -143,8 +142,7 @@ extern "C" void __crubit_thunk_return_uby_uvalue(
 }
 inline ::non_trivially_destructible_rust::NonTriviallyDestructable
 return_by_value() {
-  crubit::ReturnValueSlot<
-      ::non_trivially_destructible_rust::NonTriviallyDestructable>
+  crubit::Slot<::non_trivially_destructible_rust::NonTriviallyDestructable>
       __ret_slot;
   __crubit_internal::__crubit_thunk_return_uby_uvalue(__ret_slot.Get());
   return std::move(__ret_slot).AssumeInitAndTakeValue();

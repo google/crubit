@@ -10,8 +10,8 @@ cc_library(
         "lazy_init.h",
         "memswap.h",
         "offsetof.h",
-        "return_value_slot.h",
         "sizeof.h",
+        "slot.h",
     ],
     visibility = [
         "//visibility:public",
@@ -45,8 +45,8 @@ crubit_cc_test(
 )
 
 crubit_cc_test(
-    name = "return_value_slot_test",
-    srcs = ["return_value_slot_test.cc"],
+    name = "slot_test",
+    srcs = ["slot_test.cc"],
     deps = [
         ":bindings_support",
         "@abseil-cpp//absl/log:check",

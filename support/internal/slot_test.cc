@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "support/internal/return_value_slot.h"
+#include "support/internal/slot.h"
 
 #include <utility>
 #include <vector>
@@ -71,7 +71,7 @@ struct MonitoringHelper {
   std::vector<MonitoringHelper*>* destroyed_locations;
 };
 
-TEST(ReturnValueSlot, Test) {
+TEST(Slot, Test) {
   std::vector<int> destroyed_states;
   std::vector<MonitoringHelper*> destroyed_locations;
 
@@ -83,7 +83,7 @@ TEST(ReturnValueSlot, Test) {
 
   {
     // At this point `slot` is in an uninitialized state.
-    ReturnValueSlot<MonitoringHelper> slot;
+    Slot<MonitoringHelper> slot;
     MonitoringHelper* slot_ptr = slot.Get();
     slot_ptr->state = kUninitializedState;
     slot_ptr->destroyed_states = &destroyed_states;
@@ -103,7 +103,7 @@ TEST(ReturnValueSlot, Test) {
     // Move assignment will destroy fields of the original lhs value that gets
     // overwritten by the assignment - this is where `kInitialValue` comes from.
     //
-    // AssumeInitAndTakeValue will destroy `ReturnValueSlot::value_` in a
+    // AssumeInitAndTakeValue will destroy `Slot::value_` in a
     // kMovedAwayState.  This is asserted by checking that `slot_ptr` is covered
     // by `destroyed_locations`.
     //

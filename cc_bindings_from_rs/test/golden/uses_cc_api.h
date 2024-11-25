@@ -11,7 +11,7 @@
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST_GOLDEN
 
 #include "support/internal/attribute_macros.h"
-#include "support/internal/return_value_slot.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -241,7 +241,7 @@ extern "C" void __crubit_thunk_create(
     ::uses_rust::__crubit_internal::Foo* __ret_ptr);
 }
 inline ::uses_rust::__crubit_internal::Foo Foo::create() {
-  crubit::ReturnValueSlot<::uses_rust::__crubit_internal::Foo> __ret_slot;
+  crubit::Slot<::uses_rust::__crubit_internal::Foo> __ret_slot;
   __crubit_internal::__crubit_thunk_create(__ret_slot.Get());
   return std::move(__ret_slot).AssumeInitAndTakeValue();
 }
@@ -251,7 +251,7 @@ extern "C" void __crubit_thunk_bar(
     ::uses_rust::__crubit_internal::Bar* __ret_ptr);
 }
 inline ::uses_rust::__crubit_internal::Bar Foo::bar() {
-  crubit::ReturnValueSlot<::uses_rust::__crubit_internal::Bar> __ret_slot;
+  crubit::Slot<::uses_rust::__crubit_internal::Bar> __ret_slot;
   __crubit_internal::__crubit_thunk_bar(__ret_slot.Get());
   return std::move(__ret_slot).AssumeInitAndTakeValue();
 }

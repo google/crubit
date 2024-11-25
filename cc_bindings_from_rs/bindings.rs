@@ -2738,8 +2738,8 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
                     // allowing us to avoid one extra memcpy: we could move it directly into its
                     // target location, instead of moving to a temporary that we memcpy to its
                     // target location.
-                    prereqs.includes.insert(db.support_header("internal/return_value_slot.h"));
-                    Ok(quote! { crubit::ReturnValueSlot<#cpp_type>(std::move(#cc_name)).Get() })
+                    prereqs.includes.insert(db.support_header("internal/slot.h"));
+                    Ok(quote! { crubit::Slot<#cpp_type>(std::move(#cc_name)).Get() })
                 }
             })
             .collect::<Result<Vec<_>>>()?;
@@ -2777,12 +2777,12 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
             }
             thunk_args.push(quote! { __ret_slot.Get() });
             impl_body = quote! {
-                crubit::ReturnValueSlot<#main_api_ret_type> __ret_slot;
+                crubit::Slot<#main_api_ret_type> __ret_slot;
                 __crubit_internal :: #thunk_name( #( #thunk_args ),* );
                 return std::move(__ret_slot).AssumeInitAndTakeValue();
             };
             prereqs.includes.insert(CcInclude::utility()); // for `std::move`
-            prereqs.includes.insert(db.support_header("internal/return_value_slot.h"));
+            prereqs.includes.insert(db.support_header("internal/slot.h"));
         };
         CcSnippet {
             prereqs,
@@ -7244,7 +7244,7 @@ pub mod tests {
                     }
                     ...
                     inline ::rust_out::S create(std::int32_t i) {
-                        crubit::ReturnValueSlot<::rust_out::S> __ret_slot;
+                        crubit::Slot<::rust_out::S> __ret_slot;
                         __crubit_internal::...(i, __ret_slot.Get());
                         return std::move(__ret_slot).AssumeInitAndTakeValue();
                     }
@@ -8809,7 +8809,7 @@ pub mod tests {
                     extern "C" void ...(::rust_out::TypeUnderTest* __ret_ptr);
                     }
                     inline ::rust_out::TypeUnderTest TypeUnderTest::pass_by_value() {
-                      crubit::ReturnValueSlot<::rust_out::TypeUnderTest> __ret_slot;
+                      crubit::Slot<::rust_out::TypeUnderTest> __ret_slot;
                       __crubit_internal::...(__ret_slot.Get());
                       return std::move(__ret_slot).AssumeInitAndTakeValue();
                     }
@@ -8929,7 +8929,7 @@ pub mod tests {
                     extern "C" void ...(::rust_out::TypeUnderTest* __ret_ptr);
                     }
                     inline ::rust_out::TypeUnderTest TypeUnderTest::pass_by_value() {
-                      crubit::ReturnValueSlot<::rust_out::TypeUnderTest> __ret_slot;
+                      crubit::Slot<::rust_out::TypeUnderTest> __ret_slot;
                       __crubit_internal::...(__ret_slot.Get());
                       return std::move(__ret_slot).AssumeInitAndTakeValue();
                     }
