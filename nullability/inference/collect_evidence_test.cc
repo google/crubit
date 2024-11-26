@@ -1903,6 +1903,24 @@ TEST(CollectEvidenceFromDefinitionTest,
                   evidence(paramSlot(2), Evidence::ASSIGNED_TO_NONNULL)));
 }
 
+TEST(CollectEvidenceFromDefinitionTest,
+     InitializationOfAndAssignmentToNonnullFromTernary) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(bool B, int* P, int* Q, int* R, int* S) {
+      Nonnull<int*> A = B ? P : Q;
+      A = B ? R : S;
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
+  // TODO(b/293609145) When value nullability for conditional operators is
+  // carried through for glvalues, this should collect the following:
+  // UnorderedElementsAre(evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL),
+  //                      evidence(paramSlot(2), Evidence::ASSIGNED_TO_NONNULL),
+  //                      evidence(paramSlot(3, Evidence::ASSIGNED_TO_NONNULL)),
+  //                      evidence(paramSlot(4,
+  //                      Evidence::ASSIGNED_TO_NONNULL)));
+}
+
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,
      InitializationOfAndAssignmentToNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
