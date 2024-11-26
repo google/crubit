@@ -731,7 +731,13 @@ class DefinitionEvidenceCollector {
                              Iter.arg(), ArgLoc);
       }
 
-      if (CollectEvidenceForCallee) {
+      if (CollectEvidenceForCallee &&
+          // Don't collect evidence if the parameter is already annotated in
+          // source. This will still collect evidence if the parameter has only
+          // a previously-inferred nullability, in order to maintain that
+          // inference in this iteration.
+          !evidenceKindFromDeclaredNullability(
+              getTypeNullability(Iter.param(), Lattice.defaults()))) {
         dataflow::PointerValue *PV = getPointerValue(&Iter.arg(), Env);
         if (PV) {
           // Calculate the parameter's nullability based on InferableSlots
