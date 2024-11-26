@@ -535,6 +535,14 @@ fn test_retain_mut() {
 }
 
 #[gtest]
+fn test_split_off() {
+    let mut vec = vector::Vector::from(vec![1, 2, 3]);
+    let vec2 = vec.split_off(1);
+    expect_eq!(vec, [1]);
+    expect_eq!(vec2, [2, 3]);
+}
+
+#[gtest]
 fn test_vector_into_vec() {
     let mut v = vector::Vector::<i32>::new();
     v.push(1);

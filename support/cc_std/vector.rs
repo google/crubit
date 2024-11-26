@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(allocator_api)]
 #![feature(cfg_sanitize)]
+use std::cmp::Ordering;
 use std::collections::TryReserveError;
 #[cfg(sanitize = "address")]
 use std::ffi::c_void;
@@ -127,6 +128,32 @@ impl<T> Vector<T> {
         }
     }
 
+    /// Sets the begin, len and capacity of the vector.
+    ///
+    /// This function overrides the pointer `self.begin` w/o deleting the
+    /// pointed memory. That is the responsibility of caller to ensure that no
+    /// leaks occur.
+    ///
+    /// # Safety
+    ///
+    /// - `begin` must be a null and (len == capacity == 0) or  `begin` must be
+    ///   a valid pointer and the memory pointed by `begin` must be allocated
+    ///   with `StdAllocator`.
+    /// - `len` must be less than or equal to `capacity`.
+    /// - The first `len` values must be properly initialized values of type
+    ///   `T`.
+    /// - The size of `T `times the `capacity` (i.e. the allocated size in
+    ///   bytes) needs to be the same size as the pointer was allocated with.
+    /// - `T` needs to have the same alignment as what `begin` was allocated
+    ///   with.
+    /// - nothing else believes to have ownership over the memory of `begin`,
+    ///   and that no outstanding references to this memory are still present by
+    ///   the time `self` is next used.
+    ///
+    /// These requirements are always upheld by any `begin` that has been
+    /// allocated via Vec<T, StdAllocator> and the corresponding Vec is
+    /// forgotten after the call of this function. It follows by the properties
+    /// of the `Vec`.
     unsafe fn set_begin_len_capacity(&mut self, begin: *mut T, len: usize, capacity: usize) {
         #[cfg(len_capacity_encoding)]
         {
@@ -359,6 +386,10 @@ impl<T: Unpin> Vector<T> {
         self.mutate_self_as_vec(|v| v.retain_mut(f));
     }
 
+    pub fn split_off(&mut self, at: usize) -> Self {
+        Vector::from(self.mutate_self_as_vec(|v| v.split_off(at)))
+    }
+
     // Methods returning different vector representations.
     pub fn into_vec(mut self) -> Vec<T> {
         let mut result = Vec::<T>::with_capacity(self.len());
@@ -470,20 +501,6 @@ impl<T: Unpin> DerefMut for Vector<T> {
         } else {
             unsafe { std::slice::from_raw_parts_mut(self.begin, self.len()) }
         }
-    }
-}
-
-impl<T: Unpin> From<Vec<T>> for Vector<T> {
-    fn from(v: Vec<T>) -> Self {
-        // Elements from `v` are moved. It would be more efficient to steal a buffer
-        // from `v`. But `v` might have different allocator than Vector.
-        // TODO(b/356221873): Figure out conditions when it is possible to steal buffer
-        // from `v`.
-        let mut result = Vector::<T>::with_capacity(v.len());
-        result.mutate_self_as_vec(|u| {
-            u.extend(v);
-        });
-        result
     }
 }
 
@@ -668,5 +685,37 @@ impl<T: Unpin> FromIterator<T> for Vector<T> {
 impl<T: Unpin> From<Vector<T>> for std::vec::Vec<T> {
     fn from(v: Vector<T>) -> std::vec::Vec<T> {
         v.into_vec()
+    }
+}
+
+impl<T: Unpin> From<Vec<T>> for Vector<T> {
+    fn from(v: Vec<T>) -> Self {
+        // Elements from `v` are moved. It would be more efficient to steal a buffer
+        // from `v`. But `v` might have different allocator than Vector.
+        // TODO(b/356221873): Figure out conditions when it is possible to steal buffer
+        // from `v`.
+        let mut result = Vector::<T>::with_capacity(v.len());
+        result.mutate_self_as_vec(|u| {
+            u.extend(v);
+        });
+        result
+    }
+}
+
+impl<T: Unpin> From<Vec<T, cpp_std_allocator::StdAllocator>> for Vector<T> {
+    /// Creates a `Vector<T>` from a `Vec<T, StdAllocator>`.
+    ///
+    /// Ownership of elements from `v` are taken by the returned `Vector<T>`.
+    fn from(mut v: Vec<T, cpp_std_allocator::StdAllocator>) -> Self {
+        let mut result = Vector::new();
+        // Safety:
+        //
+        // It is safe since the memory is allocated with `Vec<T, StdAllocator>`.
+        unsafe {
+            result.set_begin_len_capacity(v.as_mut_ptr(), v.len(), v.capacity());
+            std::mem::forget(v);
+        }
+        result.asan_poison_tail();
+        result
     }
 }

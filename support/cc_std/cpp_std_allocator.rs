@@ -48,3 +48,9 @@ unsafe impl Allocator for StdAllocator {
         }
     }
 }
+
+impl Clone for StdAllocator {
+    fn clone(&self) -> Self {
+        Self {}
+    }
+}
