@@ -799,28 +799,33 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, ArgsAndParams) {
 #include <memory>
 #include <utility>
     void callee(std::unique_ptr<int> P, Nonnull<std::unique_ptr<int>> Q,
-                Nullable<std::unique_ptr<int>>& R);
+                Nullable<std::unique_ptr<int>>& R,
+                Nullable<std::unique_ptr<int>>* S);
     void target(Nullable<std::unique_ptr<int>> A, std::unique_ptr<int> B,
-                std::unique_ptr<int> C) {
-      callee(std::move(A), std::move(B), C);
+                std::unique_ptr<int> C, std::unique_ptr<int> D) {
+      callee(std::move(A), std::move(B), C, &D);
     }
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(
-          evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                   functionNamed("callee")),
-          evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
-                   functionNamed("target")),
-          evidence(paramSlot(2), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
-                   functionNamed("target")),
-          evidence(paramSlot(1), Evidence::UNKNOWN_ARGUMENT,
-                   functionNamed("callee")),
-          evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
-                   functionNamed("callee")),
-          // evidence for the move constructor, which we don't care much about.
-          evidence(_, _, functionNamed("unique_ptr")),
-          evidence(_, _, functionNamed("unique_ptr"))));
+      AllOf(IsSupersetOf(
+                {evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
+                          functionNamed("target")),
+                 evidence(paramSlot(2), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
+                          functionNamed("target")),
+                 evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                          functionNamed("callee")),
+                 evidence(paramSlot(1), Evidence::UNKNOWN_ARGUMENT,
+                          functionNamed("callee")),
+                 evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                          functionNamed("callee")),
+                 evidence(paramSlot(3), Evidence::NONNULL_ARGUMENT,
+                          functionNamed("callee"))}),
+            Not(Contains(
+                // We aspire to collect ASSIGNED_TO_MUTABLE_NULLABLE evidence
+                // for `D` as the inner pointer passed to `S`, but don't yet.
+                evidence(paramSlot(3), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
+                         functionNamed("target"))))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -1659,16 +1664,21 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNonnull) {
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullRef) {
   static constexpr llvm::StringRef Src = R"cc(
-    void callee(Nonnull<int*>& I);
+    void callee(Nonnull<int*>& I, Nonnull<int*> const& J);
 
-    void target(int* P) { callee(P); }
+    void target(int* P, int* Q) { callee(P, Q); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                           functionNamed("target")),
-                  evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
-                           functionNamed("callee"))));
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL_REFERENCE,
+                   functionNamed("target")),
+          evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                   functionNamed("callee")),
+          evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL_REFERENCE,
+                   functionNamed("target")),
+          evidence(paramSlot(1), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                   functionNamed("callee"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNonnullInMemberFunction) {
@@ -1849,15 +1859,16 @@ TEST(CollectEvidenceFromDefinitionTest,
       callee(P);
     }
   )cc";
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src),
-      UnorderedElementsAre(
-          evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
-                   functionNamed("producer")),
-          evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
-                   functionNamed("callee")),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
-                   localVarNamed("P", "target"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  // The object taken by reference (P) needs to be nullable, not
+                  // necessarily the source of its value (producer).
+                  evidence(Slot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
+                           localVarNamed("P", "target")),
+                  evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                           functionNamed("callee")),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                           localVarNamed("P", "target"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNullableRefFromFunctionCall) {
@@ -1874,6 +1885,23 @@ TEST(CollectEvidenceFromDefinitionTest, PassedToNullableRefFromFunctionCall) {
                    functionNamed("producer")),
           evidence(paramSlot(0), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
                    functionNamed("callee"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, PassedToPtrToNullable) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(Nullable<int*>* I);
+    void target(int* P) { callee(&P); }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      AllOf(UnorderedElementsAre(evidence(paramSlot(0),
+                                          Evidence::NONNULL_ARGUMENT,
+                                          functionNamed("callee"))),
+            Not(Contains(
+                // We aspire to collect ASSIGNED_TO_MUTABLE_NULLABLE evidence
+                // for `P` as the inner pointer passed to `I`, but don't yet.
+                evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
+                         functionNamed("target"))))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -1925,15 +1953,23 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
                   evidence(_, _, functionNamed("operator="))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, InitializationOfNonnullRefFromRef) {
+TEST(CollectEvidenceFromDefinitionTest,
+     InitializationOfAndAssignmentToNonnullRefFromRef) {
   static constexpr llvm::StringRef Src = R"cc(
-    void target(int*& P) {
+    void target(int*& P, int*& Q, int*& R) {
       Nonnull<int*>& A = P;
+      A = Q;
+      Nonnull<int*> const& B = R;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL_REFERENCE),
+          // `A = Q;` copies Q into P; it doesn't make a reference to Q,
+          // so only ASSIGNED_TO_NONNULL.
+          evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL),
+          evidence(paramSlot(2), Evidence::ASSIGNED_TO_NONNULL_REFERENCE)));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -1955,15 +1991,20 @@ TEST(CollectEvidenceFromDefinitionTest,
                            localVarNamed("C"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, InitializationOfNullableRef) {
+TEST(CollectEvidenceFromDefinitionTest,
+     InitializationOfAndAssignmentToNullableRef) {
   static constexpr llvm::StringRef Src = R"cc(
-    void target(int* P) {
+    void target(int* P, int*& Q) {
       Nullable<int*>& A = P;
+      A = Q;
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(evidence(
-                  paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE)));
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE)
+                  // `A = Q;` copies Q into P; it doesn't make a reference to Q,
+                  // so no evidence for Q.
+                  ));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,

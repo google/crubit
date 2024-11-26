@@ -75,8 +75,8 @@ message Evidence {
     // A value was assigned to a Nonnull declaration.
     // e.g. evidence for `p` from `Nonnull<int*> q = p;`.
     ASSIGNED_TO_NONNULL = 10;
-    // A value was assigned to a mutable Nullable declaration.
-    // e.g. evidence for `p` from `Nullable<int*>& q = p;`.
+    // A value was assigned to a declaration that is a reference to a mutable
+    // nullable pointer, e.g. evidence for `p` from `Nullable<int*>& q = p;`.
     ASSIGNED_TO_MUTABLE_NULLABLE = 11;
     // The program aborts if a value is null.
     ABORT_IF_NULL = 12;
@@ -118,6 +118,13 @@ message Evidence {
     // An unknown value was assigned.
     // e.g. evidence for `p` from `int* p = getUnknownPtr();`.
     ASSIGNED_FROM_UNKNOWN = 24;
+    // A value was bound to a reference to a nonnull pointer, regardless of
+    // whether the pointer can be mutated through the reference. If any Nonnull
+    // reference exists, the pointer must be declared Nonnull to prevent the
+    // pointer from being directly, or through a different reference, assigned
+    // to null and then accessed through the Nonnull reference unsafely.
+    // e.g. evidence for `p` from `Nonnull<int*> &q = p;`.
+    ASSIGNED_TO_NONNULL_REFERENCE = 26;
   }
 }
 

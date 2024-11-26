@@ -155,6 +155,7 @@ VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
     case Evidence::ABORT_IF_NULL:
     case Evidence::ARITHMETIC:
     case Evidence::GCC_NONNULL_ATTRIBUTE:
+    case Evidence::ASSIGNED_TO_NONNULL_REFERENCE:
       // Evidence pointing toward Unknown is only used to prevent Nonnull
       // inferences; it cannot override Nullable. So propagate it in the same
       // direction we do for Nonnull-pointing evidence.
@@ -514,24 +515,23 @@ class DefinitionEvidenceCollector {
                      Evidence::Kind EvidenceKind) {
     CHECK(hasPointerNullState(Value))
         << "Value should be the value of an expression. Cannot collect "
-           "evidence for nonnull-ness if there is no null state.";
+           "evidence for nullability if there is no null state.";
     auto *IsNull = getPointerNullState(Value).IsNull;
     // If `IsNull` is top, we can't infer anything about it.
     if (IsNull == nullptr) return;
     auto &A = Env.arena();
-    mustBeTrue(A.makeNot(*IsNull), Loc, EvidenceKind);
+    mustBeTrueByMarkingNonnull(A.makeNot(*IsNull), Loc, EvidenceKind);
   }
 
-  /// Records evidence for Nonnull-ness derived from the necessity that
-  /// `MustBeTrue` must be true.
+  /// Records evidence for Nonnull-ness of one slot, derived from the necessity
+  /// that `MustBeTrue` must be true.
   ///
-  /// Does not consider the possibility that the formula can only be proven true
-  /// by marking a slot Nullable, as this is is not a pattern we have yet seen
-  /// in practice. This function could easily be extended to do so, though.
-  void mustBeTrue(const Formula &MustBeTrue, SourceLocation Loc,
-                  Evidence::Kind EvidenceKind) {
+  /// Used when we have reason to believe that `MustBeTrue` can be made true by
+  /// marking a slot Nonnull.
+  void mustBeTrueByMarkingNonnull(const Formula &MustBeTrue, SourceLocation Loc,
+                                  Evidence::Kind EvidenceKind) {
     auto &A = Env.arena();
-    // If `Value` is already proven true or false (or both, which indicates
+    // If `MustBeTrue` is already proven true or false (or both, which indicates
     // unsatisfiable flow conditions), collect no evidence.
     if (Env.proves(MustBeTrue) || Env.proves(A.makeNot(MustBeTrue))) return;
 
@@ -574,70 +574,115 @@ class DefinitionEvidenceCollector {
     mustBeNonnull(*DereferencedValue, Loc, Evidence::UNCHECKED_DEREFERENCE);
   }
 
+  /// Records evidence for Nullable-ness for potentially multiple slots, derived
+  /// from the necessity that `MustBeTrue` must be true.
+  ///
+  /// Used when we have reason to believe that `MustBeTrue` can be made provably
+  /// true by marking a single slot Nullable, and that all such slots should be
+  /// marked Nullable.
+  void mustBeTrueByMarkingNullable(const Formula &MustBeTrue,
+                                   SourceLocation Loc,
+                                   Evidence::Kind EvidenceKind) {
+    auto &A = Env.arena();
+    // If `MustBeTrue` is already proven true or false (or both, which indicates
+    // unsatisfiable flow conditions), collect no evidence.
+    if (Env.proves(MustBeTrue) || Env.proves(A.makeNot(MustBeTrue))) return;
+
+    for (auto &IS : InferableSlots) {
+      auto &SlotNullable = IS.getSymbolicNullability().isNullable(A);
+      auto &SlotNullableImpliesFormulaTrue =
+          A.makeImplies(SlotNullable, MustBeTrue);
+      // Don't collect evidence if the implication is true by virtue of
+      // `SlotNullable` being false.
+      if (Env.allows(SlotNullable) &&
+          Env.proves(SlotNullableImpliesFormulaTrue)) {
+        Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
+        // Continue the loop, emitting evidence for all such slots.
+      }
+    }
+  }
+
   /// Collect evidence for each of `InferableSlots` if that slot being marked
   /// Nullable would imply `Value`'s FromNullable property.
   ///
   /// This function is called when we have reason to believe that `Value` must
-  /// be Nullable. As we can't directly retrieve the combination of Decl and
-  /// Slot that corresponds to `Value`'s nullability, we consider each inferable
-  /// slot and emit evidence for all inferable slots that, if marked Nullable,
-  /// cause `Value` to be considered explicitly Nullable.
+  /// be Nullable.
   void mustBeMarkedNullable(const dataflow::PointerValue &Value,
                             SourceLocation Loc, Evidence::Kind EvidenceKind) {
     CHECK(hasPointerNullState(Value))
         << "Value should be the value of an expression. Cannot collect "
-           "evidence for nonnull-ness if there is no null state.";
+           "evidence for nullability if there is no null state.";
     auto *FromNullable = getPointerNullState(Value).FromNullable;
     // If `FromNullable` is top, we can't infer anything about it.
     if (FromNullable == nullptr) return;
-    // If the flow conditions already imply that `Value` is from a Nullable,
-    // then we don't have any new evidence of a necessary annotation.
-    if (Env.proves(*FromNullable)) return;
-
-    auto &A = Env.arena();
-    // Otherwise, if an inferable slot being annotated Nullable would imply that
-    // `Value` is from a Nullable, then we have evidence suggesting that slot
-    // should be annotated. We collect this evidence for every slot that
-    // connects in this way to `Value`.
-    //
-    // e.g. We should mark both `p` and `q` Nullable in the following:
-    // ```
-    // void target(int* p, int* q, bool b) {
-    //   Nullable<int*>& x = b ? p : q;
-    //   ...
-    // }
-    // ```
-    // because at runtime, either `p` or `q` could be taken as a mutable
-    // reference and later set to nullptr.
-    for (auto &IS : InferableSlots) {
-      auto &SlotNullableImpliesValueFromNullable = A.makeImplies(
-          IS.getSymbolicNullability().isNullable(A), *FromNullable);
-      if (Env.proves(SlotNullableImpliesValueFromNullable))
-        Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
-    }
+    mustBeTrueByMarkingNullable(*FromNullable, Loc, EvidenceKind);
   }
 
-  void fromAssignmentToType(QualType Type,
-                            const TypeNullability &TypeNullability,
-                            const dataflow::PointerValue &PointerValue,
-                            SourceLocation ValueLoc) {
+  // Emit evidence based on the relationship between the nullability of the
+  // expression on the RHS of an assignment and the nullability of the
+  // declaration on the LHS.
+  // `LHSType` should be a pointer type or a reference to a pointer type.
+  void fromAssignmentToType(QualType LHSType,
+                            const TypeNullability &LHSTypeNullability,
+                            const Expr &RHSExpr, SourceLocation RHSLoc) {
     //  TODO: Account for variance and each layer of nullability when we handle
     //  more than top-level pointers.
-    if (TypeNullability.empty()) return;
-    const PointerTypeNullability &TopLevel = TypeNullability[0];
+    if (LHSTypeNullability.empty()) return;
+    const dataflow::PointerValue *PointerValue = getPointerValue(&RHSExpr, Env);
+    if (!PointerValue) return;
+    const PointerTypeNullability &TopLevel = LHSTypeNullability[0];
     dataflow::Arena &A = Env.arena();
-    if (TopLevel.concrete() == NullabilityKind::NonNull ||
-        (TopLevel.isSymbolic() &&
-         Env.proves(
-             A.makeImplies(InferableSlotsConstraint, TopLevel.isNonnull(A))))) {
-      mustBeNonnull(PointerValue, ValueLoc, Evidence::ASSIGNED_TO_NONNULL);
-    } else if (!Type.isConstQualified() && Type->isReferenceType() &&
-               (TopLevel.concrete() == NullabilityKind::Nullable ||
-                (TopLevel.isSymbolic() &&
-                 Env.proves(A.makeImplies(InferableSlotsConstraint,
-                                          TopLevel.isNullable(A)))))) {
-      mustBeMarkedNullable(PointerValue, ValueLoc,
-                           Evidence::ASSIGNED_TO_MUTABLE_NULLABLE);
+
+    bool SkipValueAssignedToNonnull = false;
+
+    if (/* LHSType is an lvalue reference to a pointer. */
+        LHSType->isLValueReferenceType()) {
+      // If the reference is either to a (mutable or const) Nonnull pointer or
+      // to a mutable Nullable pointer, emit evidence that makes the top level
+      // type nullability of `RHSExpr` match the top level of
+      // `LHSTypeNullability`. This is distinct from the value nullability of
+      // `RHSExpr` being constrained, which is handled below.
+      if (TopLevel.concrete() == NullabilityKind::NonNull ||
+          (TopLevel.isSymbolic() &&
+           Env.proves(A.makeImplies(InferableSlotsConstraint,
+                                    TopLevel.isNonnull(A))))) {
+        if (const TypeNullability *RHSTypeNullability =
+                Lattice.getTypeNullability(&RHSExpr)) {
+          CHECK_GT(RHSTypeNullability->size(), 0);
+          const PointerTypeNullability &RHSTopLevel = (*RHSTypeNullability)[0];
+          mustBeTrueByMarkingNonnull(RHSTopLevel.isNonnull(A), RHSLoc,
+                                     Evidence::ASSIGNED_TO_NONNULL_REFERENCE);
+          // It would be duplicative to emit both ASSIGNED_TO_NONNULL_REFERENCE
+          // and ASSIGNED_TO_NONNULL for the same assignment.
+          SkipValueAssignedToNonnull = true;
+        }
+      } else if (!LHSType.getNonReferenceType().isConstQualified() &&
+                 (TopLevel.concrete() == NullabilityKind::Nullable ||
+                  (TopLevel.isSymbolic() &&
+                   Env.proves(A.makeImplies(InferableSlotsConstraint,
+                                            TopLevel.isNullable(A)))))) {
+        if (const TypeNullability *RHSTypeNullability =
+                Lattice.getTypeNullability(&RHSExpr)) {
+          CHECK_GT(RHSTypeNullability->size(), 0);
+          const PointerTypeNullability &RHSTopLevel = (*RHSTypeNullability)[0];
+          // The LHS can't be Nullable and also Nonnull, so we can skip the
+          // later checks for it being Nonnull.
+          SkipValueAssignedToNonnull = true;
+          mustBeTrueByMarkingNullable(RHSTopLevel.isNullable(A), RHSLoc,
+                                      Evidence::ASSIGNED_TO_MUTABLE_NULLABLE);
+        }
+      }
+    }
+
+    // If the left hand side is Nonnull, emit evidence that the PointerValue on
+    // the right hand side must also be Nonnull, unless we've already emitted
+    // evidence to that effect.
+    if (!SkipValueAssignedToNonnull &&
+        (TopLevel.concrete() == NullabilityKind::NonNull ||
+         (TopLevel.isSymbolic() &&
+          Env.proves(A.makeImplies(InferableSlotsConstraint,
+                                   TopLevel.isNonnull(A)))))) {
+      mustBeNonnull(*PointerValue, RHSLoc, Evidence::ASSIGNED_TO_NONNULL);
     }
   }
 
@@ -649,8 +694,8 @@ class DefinitionEvidenceCollector {
 
     for (ParamAndArgIterator<CallOrConstructExpr> Iter(CalleeDecl, Expr); Iter;
          ++Iter) {
-      const auto ParamType = Iter.param().getType().getNonReferenceType();
-      if (!isSupportedPointerType(ParamType)) continue;
+      if (!isSupportedPointerType(Iter.param().getType().getNonReferenceType()))
+        continue;
       if (!isSupportedPointerType(Iter.arg().getType())) {
         // These builtins are declared with pointer type parameters even when
         // given a valid argument of type uintptr_t. In this case, there's
@@ -674,9 +719,6 @@ class DefinitionEvidenceCollector {
         return;
       }
 
-      dataflow::PointerValue *PV = getPointerValue(&Iter.arg(), Env);
-      if (!PV) continue;
-
       SourceLocation ArgLoc = Iter.arg().getExprLoc();
 
       if (CollectEvidenceForCaller) {
@@ -685,21 +727,24 @@ class DefinitionEvidenceCollector {
 
         // Collect evidence from constraints that the parameter's nullability
         // places on the argument's nullability.
-        fromAssignmentToType(Iter.param().getType(), ParamNullability, *PV,
-                             ArgLoc);
+        fromAssignmentToType(Iter.param().getType(), ParamNullability,
+                             Iter.arg(), ArgLoc);
       }
 
       if (CollectEvidenceForCallee) {
-        // Emit evidence of the parameter's nullability. First, calculate that
-        // nullability based on InferableSlots for the caller being assigned to
-        // Unknown or their previously-inferred value, to reflect the current
-        // annotations and not all possible annotations for them.
-        NullabilityKind ArgNullability =
-            getNullability(*PV, Env, &InferableSlotsConstraint);
-        Emit(CalleeDecl, paramSlot(Iter.paramIdx()),
-             getArgEvidenceKindFromNullability(
-                 ArgNullability, Iter.param().getType()->isReferenceType()),
-             ArgLoc);
+        dataflow::PointerValue *PV = getPointerValue(&Iter.arg(), Env);
+        if (PV) {
+          // Calculate the parameter's nullability based on InferableSlots
+          // for the caller being assigned to Unknown or their
+          // previously-inferred value, to reflect the current annotations and
+          // not all possible annotations for them.
+          NullabilityKind ArgNullability =
+              getNullability(*PV, Env, &InferableSlotsConstraint);
+          Emit(CalleeDecl, paramSlot(Iter.paramIdx()),
+               getArgEvidenceKindFromNullability(
+                   ArgNullability, Iter.param().getType()->isReferenceType()),
+               ArgLoc);
+        }
       }
     }
   }
@@ -721,16 +766,13 @@ class DefinitionEvidenceCollector {
           << "Unsupported argument " << I
           << " type: " << Expr.getArg(I)->getType().getAsString();
 
-      dataflow::PointerValue *PV = getPointerValue(Expr.getArg(I), Env);
-      if (!PV) continue;
-
       // TODO: when we infer function pointer/reference parameters'
       // nullabilities, check for overrides from previous inference iterations.
       auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
 
       // Collect evidence from constraints that the parameter's nullability
       // places on the argument's nullability.
-      fromAssignmentToType(ParamType, ParamNullability, *PV,
+      fromAssignmentToType(ParamType, ParamNullability, *Expr.getArg(I),
                            Expr.getArg(I)->getExprLoc());
     }
   }
@@ -844,7 +886,8 @@ class DefinitionEvidenceCollector {
     } else if (ArgType->isBooleanType()) {
       const dataflow::BoolValue *BV = Env.get<dataflow::BoolValue>(*Arg);
       if (!BV || BV->getKind() == dataflow::BoolValue::Kind::TopBool) return;
-      mustBeTrue(BV->formula(), Arg->getExprLoc(), Evidence::ABORT_IF_NULL);
+      mustBeTrueByMarkingNonnull(BV->formula(), Arg->getExprLoc(),
+                                 Evidence::ABORT_IF_NULL);
     }
   }
 
@@ -951,9 +994,12 @@ class DefinitionEvidenceCollector {
     auto *ReturnStmt = dyn_cast<clang::ReturnStmt>(&S);
     if (!ReturnStmt) return;
     auto *ReturnExpr = ReturnStmt->getRetValue();
-    if (!ReturnExpr || !isSupportedPointerType(ReturnExpr->getType())) return;
+    if (!ReturnExpr) return;
     const FunctionDecl *CurrentFunc = Env.getCurrentFunc();
     CHECK(CurrentFunc) << "A return statement outside of a function?";
+    if (!isSupportedPointerType(
+            CurrentFunc->getReturnType().getNonReferenceType()))
+      return;
 
     // Skip gathering evidence about the current function's return type if
     // the current function is not an inference target or the return type
@@ -985,12 +1031,10 @@ class DefinitionEvidenceCollector {
            ReturnExpr->getExprLoc());
     }
 
-    const dataflow::PointerValue *PV = getPointerValue(ReturnExpr, Env);
-    if (!PV) return;
     TypeNullability ReturnTypeNullability =
         getReturnTypeNullabilityAnnotationsWithOverrides(*CurrentFunc, Lattice);
-    fromAssignmentToType(Env.getCurrentFunc()->getReturnType(),
-                         ReturnTypeNullability, *PV, ReturnExpr->getExprLoc());
+    fromAssignmentToType(CurrentFunc->getReturnType(), ReturnTypeNullability,
+                         *ReturnExpr, ReturnExpr->getExprLoc());
   }
 
   /// Collects evidence for a slot that would, if marked Nullable, cause
@@ -1079,7 +1123,7 @@ class DefinitionEvidenceCollector {
                               Evidence::ASSIGNED_FROM_NULLABLE) {
     const dataflow::PointerValue *PV = getPointerValue(&RHS, Env);
     if (!PV) return;
-    fromAssignmentToType(LHSType, LHSNullability, *PV, Loc);
+    fromAssignmentToType(LHSType, LHSNullability, RHS, Loc);
     fromAssignmentFromValue(LHSNullability, *PV, Loc,
                             EvidenceKindForAssignmentFromNullable);
   }
@@ -1134,6 +1178,9 @@ class DefinitionEvidenceCollector {
       return;
     }
     const QualType LHSType = LHS->getType();
+    // Don't need to check the NonReferenceType here, because using references
+    // in this assignment pattern still results in non-reference types for both
+    // sides.
     if (!isSupportedPointerType(LHSType)) return;
     if (!isSupportedPointerType(RHS->getType())) return;
 
