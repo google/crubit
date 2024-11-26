@@ -7,6 +7,8 @@ use std::cmp::Ordering;
 use std::collections::TryReserveError;
 #[cfg(sanitize = "address")]
 use std::ffi::c_void;
+use std::hash::Hash;
+use std::hash::Hasher;
 use std::mem::ManuallyDrop;
 use std::ops::RangeBounds;
 use std::ops::{Deref, DerefMut};
@@ -521,6 +523,13 @@ impl<T: Unpin> Extend<T> for Vector<T> {
         I: IntoIterator<Item = T>,
     {
         self.mutate_self_as_vec(|v| v.extend(iter));
+    }
+}
+
+impl<T: Hash + Unpin> Hash for Vector<T> {
+    #[inline]
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_slice().hash(state);
     }
 }
 

@@ -5,6 +5,7 @@
 use googletest::prelude::*;
 use std::cell::RefCell;
 use std::ffi::c_void;
+use std::hash::BuildHasher;
 use std::rc::Rc;
 
 #[gtest]
@@ -595,6 +596,14 @@ fn test_vector_extend() {
     expect_eq!(v, [1, 2, 3]);
     v.extend(vec![4, 5, 6]);
     expect_eq!(v, [1, 2, 3, 4, 5, 6]);
+}
+
+#[gtest]
+fn test_hash() {
+    let b = std::hash::RandomState::new();
+    let v: vector::Vector<i64> = vector::Vector::from(vec![10, 12, -4]);
+    let s: &[i64] = &[10, 12, -4];
+    expect_eq!(b.hash_one(v), b.hash_one(s));
 }
 
 #[gtest]
