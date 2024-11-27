@@ -14,6 +14,7 @@ use std::ops::RangeBounds;
 use std::ops::{Deref, DerefMut};
 use std::ops::{Index, IndexMut};
 use std::slice;
+use std::slice::SliceIndex;
 
 use cc_std::crubit_cc_std_internal::std_allocator as cpp_std_allocator;
 
@@ -472,16 +473,16 @@ impl<T> Drop for Vector<T> {
     }
 }
 
-impl<T> Index<usize> for Vector<T> {
-    type Output = T;
-    fn index(&self, index: usize) -> &Self::Output {
-        self.get(index).unwrap()
+impl<T: Unpin, I: SliceIndex<[T]>> Index<I> for Vector<T> {
+    type Output = I::Output;
+    fn index(&self, index: I) -> &Self::Output {
+        self.as_slice().index(index)
     }
 }
 
-impl<T: Unpin> IndexMut<usize> for Vector<T> {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        self.get_mut(index).unwrap()
+impl<T: Unpin, I: SliceIndex<[T]>> IndexMut<I> for Vector<T> {
+    fn index_mut(&mut self, index: I) -> &mut Self::Output {
+        self.as_mut_slice().index_mut(index)
     }
 }
 

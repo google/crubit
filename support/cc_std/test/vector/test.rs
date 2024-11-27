@@ -111,11 +111,12 @@ fn test_vector_drop() {
 
 #[gtest]
 fn test_vector_index() {
-    let mut v = vector::Vector::new();
-    v.push(1);
-    v.push(-3);
+    let v = vector::Vector::from(vec![1, 2, 3, 4]);
     expect_eq!(v[0], 1);
-    expect_eq!(v[1], -3);
+    expect_eq!(v[1], 2);
+    expect_eq!(v[..], [1, 2, 3, 4]);
+    expect_eq!(v[1..], [2, 3, 4]);
+    expect_eq!(v[1..2], [2]);
 }
 
 #[gtest]
@@ -127,10 +128,11 @@ fn test_vector_index_out_of_bounds() {
 
 #[gtest]
 fn test_vector_mut_index() {
-    let mut v = vector::Vector::new();
-    v.push(1);
+    let mut v = vector::Vector::from(vec![1, 2, 3, 4]);
     v[0] = 5;
-    expect_eq!(v[0], 5);
+    expect_eq!(v, vec![5, 2, 3, 4]);
+    v[1..3][0] = 6;
+    expect_eq!(v, vec![5, 6, 3, 4]);
 }
 
 #[gtest]
