@@ -24,6 +24,7 @@ filegroup(
             "cpp_std_string.rs",
             "cpp_std_allocator.rs",
             "vector.rs",
+            "vector_partial_eq.rs",
             "unique_ptr.rs",
         ],
     ),
@@ -160,7 +161,10 @@ cc_library(
 
 rust_library(
     name = "vector",
-    srcs = ["vector.rs"],
+    srcs = [
+        "vector.rs",
+        "vector_partial_eq.rs",
+    ],
     # LINT.IfChange
     cc_deps = ["//support/cc_std"],
     rustc_flags = ["-Zallow-features=allocator_api,cfg_sanitize"],

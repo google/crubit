@@ -820,6 +820,46 @@ mod alignment_tests {
     }
 }
 
+mod partial_equal_tests {
+    use googletest::prelude::*;
+
+    #[gtest]
+    fn test_vector_eq() {
+        let v = vector::Vector::from(vec![1, 2, 3]);
+        let u = vector::Vector::from(vec![1, 2]);
+        expect_eq!(v == v, true);
+        expect_eq!(v == u, false);
+        expect_eq!(v != u, true);
+        expect_eq!(v != v, false);
+    }
+
+    #[gtest]
+    fn test_vec_partial_eq() {
+        let v = vector::Vector::from(vec![1, 2, 3]);
+        expect_eq!(v == vec![1, 2, 3], true);
+        expect_eq!(vec![1, 2, 3] == v, true);
+        expect_eq!(v == vec![1, 2], false);
+        expect_eq!(v == vec![1i16, 2i16, 3i16], true); // i64 and i16 are
+                                                       // comparable.
+    }
+
+    #[gtest]
+    fn test_slice_partial_eq() {
+        let v = vector::Vector::from(vec![1, 2, 3]);
+        expect_eq!(v == [1, 2, 3].as_slice(), true);
+        expect_eq!([1, 2, 3].as_slice() == v, true);
+        expect_eq!(v == [1, 2, 3].as_mut_slice(), true);
+        expect_eq!([1, 2, 3].as_mut_slice() == v, true);
+    }
+
+    #[gtest]
+    fn test_array_partial_eq() {
+        let v = vector::Vector::from(vec![1, 2, 3]);
+        expect_eq!(v == [1, 2, 3], true);
+        expect_eq!(v == &[1, 2, 3], true);
+    }
+}
+
 fn to_void_ptr<T>(t: &T) -> *mut c_void {
     t as *const _ as *mut c_void
 }

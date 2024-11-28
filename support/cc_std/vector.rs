@@ -18,6 +18,8 @@ use std::slice::SliceIndex;
 
 use cc_std::crubit_cc_std_internal::std_allocator as cpp_std_allocator;
 
+mod vector_partial_eq;
+
 extern "C" {
     // https://github.com/llvm/llvm-project/blob/9d0616ce52fc2a75c8e4808adec41d5189f4240c/compiler-rt/lib/sanitizer_common/sanitizer_interface_internal.h#L70
     #[cfg(sanitize = "address")]
