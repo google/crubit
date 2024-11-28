@@ -134,8 +134,8 @@ impl<T> Vector<T> {
     /// Sets the begin, len and capacity of the vector.
     ///
     /// This function overrides the pointer `self.begin` w/o deleting the
-    /// pointed memory. That is the responsibility of caller to ensure that no
-    /// leaks occur.
+    /// pointed memory. That is the responsibility of the caller to ensure that
+    /// no leaks occur.
     ///
     /// # Safety
     ///
@@ -515,6 +515,19 @@ impl<T: Clone> Vector<T> {
             v.push(el.clone());
         }
         v
+    }
+}
+
+impl<T: Unpin + Clone> Clone for Vector<T> {
+    fn clone(&self) -> Self {
+        unsafe {
+            let vec = ManuallyDrop::new(create_vec_from_raw_parts(
+                self.begin,
+                self.len(),
+                self.capacity(),
+            ));
+            Vector::from((*vec).clone())
+        }
     }
 }
 

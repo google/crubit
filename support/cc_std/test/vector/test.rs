@@ -143,6 +143,33 @@ fn test_vector_to_vec() {
 }
 
 #[gtest]
+fn test_clone() {
+    let v = vector::Vector::from(vec![4, 5, 6]);
+    let v2 = v.clone();
+    expect_eq!(v2, vec![4, 5, 6]);
+}
+
+struct CloneCounter {
+    counter: Rc<RefCell<i32>>,
+}
+
+impl Clone for CloneCounter {
+    fn clone(&self) -> Self {
+        *self.counter.borrow_mut() += 1;
+        CloneCounter { counter: self.counter.clone() }
+    }
+}
+
+#[gtest]
+fn test_clone_once_clone() {
+    let counter = Rc::new(RefCell::new(0i32));
+    let v = vector::Vector::from(vec![CloneCounter { counter: counter.clone() }]);
+    expect_eq!(*counter.borrow(), 0);
+    let _ = v.clone();
+    expect_eq!(*counter.borrow(), 1); // the element was cloned once.
+}
+
+#[gtest]
 #[should_panic]
 fn test_vector_mut_index_out_of_bounds() {
     let mut v = vector::Vector::new();
