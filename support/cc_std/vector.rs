@@ -535,17 +535,28 @@ impl<T: Hash + Unpin> Hash for Vector<T> {
 }
 
 /// Helper method for creating a `Vec<T>` from raw parts.
-fn create_vec_from_raw_parts<T>(
+///
+/// # Safety
+///
+/// - `begin` must be a null or  `begin` must be a valid pointer and the memory
+///   pointed by `begin` must be allocated with `StdAllocator`.
+/// - `len` must be less than or equal to `capacity`.
+/// - The first `len` values must be properly initialized values of type `T`.
+/// - The size of `T `times the `capacity` (i.e. the allocated size in bytes)
+///   needs to be the same size as the pointer was allocated with.
+/// - `T` needs to have the same alignment as what `begin` was allocated with.
+///
+/// These requirements are always upheld by any `begin` that has been
+/// allocated via Vec<T, StdAllocator>.
+unsafe fn create_vec_from_raw_parts<T>(
     begin: *mut T,
     len: usize,
     capacity: usize,
 ) -> Vec<T, cpp_std_allocator::StdAllocator> {
-    unsafe {
-        if begin.is_null() {
-            Vec::new_in(cpp_std_allocator::StdAllocator {})
-        } else {
-            Vec::from_raw_parts_in(begin, len, capacity, cpp_std_allocator::StdAllocator {})
-        }
+    if begin.is_null() {
+        Vec::new_in(cpp_std_allocator::StdAllocator {})
+    } else {
+        Vec::from_raw_parts_in(begin, len, capacity, cpp_std_allocator::StdAllocator {})
     }
 }
 
