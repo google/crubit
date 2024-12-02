@@ -710,6 +710,20 @@ TEST_F(InferTUTest, FunctionTemplate) {
                       inferredSlot(4, Nullability::NULLABLE)})}));
 }
 
+TEST_F(InferTUTest, LambdaWithCaptureInit) {
+  build(R"cc(
+    void foo() {
+      int* P;
+      auto Lambda = [Q = P]() { *Q; };
+    }
+  )cc");
+  EXPECT_THAT(
+      inferTU(AST->context(), Pragmas, /*Iterations=*/2),
+      UnorderedElementsAre(
+          inference(hasName("P"), {inferredSlot(0, Nullability::NONNULL)}),
+          inference(hasName("Q"), {inferredSlot(0, Nullability::NONNULL)})));
+}
+
 using InferTUSmartPointerTest = InferTUTest;
 
 TEST_F(InferTUSmartPointerTest, Annotations) {

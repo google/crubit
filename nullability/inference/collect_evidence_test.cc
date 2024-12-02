@@ -2861,6 +2861,19 @@ TEST(CollectEvidenceFromDefinitionTest, ForLambdaInitCapture) {
                                     localVarNamed("Q", "operator()"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, ForLambdaInitCaptureFromInit) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void foo() {
+      auto Lambda = [Q = static_cast<int*>(nullptr)]() {};
+    }
+  )cc";
+
+  EXPECT_THAT(
+      collectFromDefinitionMatching(varDecl(hasName("Q")), Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    localVarNamed("Q", "operator()"))));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, ForLambdaParamOrReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     auto Lambda = [](int* P) -> int* {

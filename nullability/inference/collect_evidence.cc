@@ -1801,8 +1801,8 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
       // Variable initializers outside of function bodies may contain evidence
       // we won't otherwise see, even if the variable is not an inference
       // target.
-      if (VD->hasInit() && !VD->getDeclContext()->isFunctionOrMethod() &&
-          !VD->isTemplated())
+      if (VD->hasInit() && !VD->isTemplated() &&
+          (!VD->getDeclContext()->isFunctionOrMethod() || VD->isInitCapture()))
         Out.Definitions.insert(VD);
       return true;
     }
