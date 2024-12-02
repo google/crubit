@@ -2679,9 +2679,12 @@ TEST(CollectEvidenceFromDefinitionTest,
     }
   )cc";
 
-  // TODO(b/315967534) Collect for the captured function parameter, both
-  // UNCHECKED_DEREFERENCE and ASSIGNED_FROM_NULLABLE evidence for `P`.
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src), IsEmpty());
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("foo")),
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           functionNamed("foo"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -2713,9 +2716,12 @@ TEST(CollectEvidenceFromDefinitionTest,
     }
   )cc";
 
-  // TODO(b/315967534) Collect for captured function parameters and produce the
-  // evidence mentioned above.
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src), IsEmpty());
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
+              UnorderedElementsAre(
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("foo")),
+                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           functionNamed("foo"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForField) {
@@ -2782,16 +2788,14 @@ TEST(CollectEvidenceFromDefinitionTest,
       }
     };
   )cc";
-  EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src),
-      AllOf(UnorderedElementsAre(
-                evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                         fieldNamed("S::F")),
-                evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                         localVarNamed("L", "method"))),
-            // TODO(b/315967534) Collect for captured function parameters.
-            Not(Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
-                                  functionNamed("method"))))));
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
+              UnorderedElementsAre(
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           fieldNamed("S::F")),
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           localVarNamed("L", "method")),
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("method"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest,
@@ -2810,16 +2814,14 @@ TEST(CollectEvidenceFromDefinitionTest,
       }
     };
   )cc";
-  EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src),
-      AllOf(UnorderedElementsAre(
-                evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                         fieldNamed("S::F")),
-                evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                         localVarNamed("L", "method"))),
-            // TODO(b/315967534) Collect for captured function parameters.
-            Not(Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
-                                  functionNamed("method"))))));
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
+              UnorderedElementsAre(
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           fieldNamed("S::F")),
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           localVarNamed("L", "method")),
+                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("method"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FromNestedLambdaBody) {

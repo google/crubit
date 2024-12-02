@@ -1553,7 +1553,7 @@ llvm::Error collectEvidenceFromDefinition(
   if (TargetAsFunc && isInferenceTarget(*TargetAsFunc)) {
     auto Parameters = TargetAsFunc->parameters();
     for (auto I = 0; I < Parameters.size(); ++I) {
-      if (hasInferable(Parameters[I]->getType().getNonReferenceType()) &&
+      if (hasInferable(Parameters[I]->getType()) &&
           !evidenceKindFromDeclaredTypeLoc(
               Parameters[I]->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
         InferableSlots.emplace_back(Analysis.assignNullabilityVariable(
@@ -1597,6 +1597,21 @@ llvm::Error collectEvidenceFromDefinition(
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Function, AnalysisContext.arena()),
           SLOT_RETURN_TYPE, *Function);
+    }
+  }
+  for (const ParmVarDecl *Param : ReferencedDecls.LambdaCapturedParams) {
+    CHECK_EQ(Param->getFunctionScopeDepth(), 0)
+        << "Not expecting lambda capture of anything with depth > 0.";
+    if (const auto *ContainingFunction =
+            dyn_cast<FunctionDecl>(Param->getParentFunctionOrMethod());
+        ContainingFunction && isInferenceTarget(*ContainingFunction) &&
+        hasInferable(Param->getType()) &&
+        !evidenceKindFromDeclaredTypeLoc(
+            Param->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
+      unsigned Index = Param->getFunctionScopeIndex();
+      InferableSlots.emplace_back(
+          Analysis.assignNullabilityVariable(Param, AnalysisContext.arena()),
+          paramSlot(Index), *ContainingFunction);
     }
   }
 
