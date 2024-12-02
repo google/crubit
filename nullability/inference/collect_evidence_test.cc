@@ -41,7 +41,9 @@ namespace {
 using ::clang::ast_matchers::asString;
 using ::clang::ast_matchers::booleanType;
 using ::clang::ast_matchers::cxxConstructorDecl;
+using ::clang::ast_matchers::cxxMethodDecl;
 using ::clang::ast_matchers::functionDecl;
+using ::clang::ast_matchers::hasAncestor;
 using ::clang::ast_matchers::hasName;
 using ::clang::ast_matchers::hasParameter;
 using ::clang::ast_matchers::hasTemplateArgument;
@@ -49,6 +51,7 @@ using ::clang::ast_matchers::hasType;
 using ::clang::ast_matchers::isDefaultConstructor;
 using ::clang::ast_matchers::isImplicit;
 using ::clang::ast_matchers::isTemplateInstantiation;
+using ::clang::ast_matchers::lambdaExpr;
 using ::clang::ast_matchers::match;
 using ::clang::ast_matchers::parameterCountIs;
 using ::clang::ast_matchers::refersToType;
@@ -2634,7 +2637,8 @@ TEST(CollectEvidenceFromDefinitionTest, FromGlobalLabmdaBodyForGlobal) {
                                     globalVarNamed("P"))));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForCapturedLocal) {
+TEST(CollectEvidenceFromDefinitionTest,
+     FromLocalLambdaBodyForCapturedRefLocal) {
   static constexpr llvm::StringRef Src = R"cc(
     void foo() {
       int* P;
@@ -2648,16 +2652,102 @@ TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForCapturedLocal) {
                                     localVarNamed("P", "foo"))));
 }
 
-// TODO(b/315967534) Collect for captured function parameters, specifically from
-// the unchecked dereference of `foo`'s parameter.
-TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForCapturedParam) {
+TEST(CollectEvidenceFromDefinitionTest,
+     FromLocalLambdaBodyForCapturedValueLocal) {
   static constexpr llvm::StringRef Src = R"cc(
-    void foo(int* P) {
-      auto Lambda = [&P]() { *P; };
+    void foo() {
+      int* P;
+      auto Lambda = [P]() { *P; };
     }
   )cc";
 
+  EXPECT_THAT(
+      collectFromDefinitionNamed("operator()", Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    localVarNamed("P", "foo"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     FromLocalLambdaBodyForRefCapturedParam) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void foo(int* P, Nonnull<int*> Q) {
+      auto Lambda = [&P, &Q]() {
+        *P;
+        P = nullptr;
+        *Q;
+      };
+    }
+  )cc";
+
+  // TODO(b/315967534) Collect for the captured function parameter, both
+  // UNCHECKED_DEREFERENCE and ASSIGNED_FROM_NULLABLE evidence for `P`.
   EXPECT_THAT(collectFromDefinitionNamed("operator()", Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     FromLocalLambdaBodyForValueCapturedParam) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void foo(int* P, Nonnull<int*> Q) {
+      auto Lambda = [P, Q]() mutable {
+        // In theory, the captured variable's value could have been modified
+        // from it's argument to foo before the lambda is declared, and we don't
+        // track that state when analyzing the lambda body, so this dereference
+        // could be safe without the variable being declared Nonnull. However,
+        // because we don't track the state, the only way we can assert safety
+        // is by annotating the variable Nonnull, so we collect
+        // UNCHECKED_DEREFERENCE evidence if the variable hasn't been checked or
+        // made Nonnull within the lambda body.
+        *P;
+
+        // Similarly, this assignment to null could be safe, because the capture
+        // here is much like the declaration of a new variable that is simply
+        // initialized to P's value at the time of this lambda's declaration.
+        // However, since we can't annotate this capture variable separately, we
+        // will treat this as relevant for the declaration of `P` as a parameter
+        // and collect ASSIGNED_FROM_NULLABLE evidence.
+        P = nullptr;
+        // Since Q is already annotated, we collect no evidence for it from
+        // lambda bodies.
+        *Q;
+      };
+    }
+  )cc";
+
+  // TODO(b/315967534) Collect for captured function parameters and produce the
+  // evidence mentioned above.
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src), IsEmpty());
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForField) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct A {
+      int* P;
+    };
+    struct B {
+      bool* Q;
+    };
+    struct C {
+      char* R;
+    };
+    void foo(B MyB) {
+      C MyC;
+      auto Lambda = [&MyB, MyC]() {
+        A MyA;
+        *MyA.P;
+        *MyB.Q;
+        *MyC.R;
+      };
+    }
+  )cc";
+
+  EXPECT_THAT(
+      collectFromDefinitionNamed("operator()", Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    fieldNamed("A::P")),
+                           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    fieldNamed("B::Q")),
+                           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    fieldNamed("C::R"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForCalledFunction) {
@@ -2674,6 +2764,101 @@ TEST(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForCalledFunction) {
                            functionNamed("bar")),
                   evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                            functionNamed("bar"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     FromLocalLambdaBodyForDefaultRefCaptures) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      int* F;
+
+      void method(bool* P) {
+        char* L;
+        auto Lambda = [&]() {
+          *P;
+          *F;
+          *L;
+        };
+      }
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("operator()", Src),
+      AllOf(UnorderedElementsAre(
+                evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                         fieldNamed("S::F")),
+                evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                         localVarNamed("L", "method"))),
+            // TODO(b/315967534) Collect for captured function parameters.
+            Not(Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                  functionNamed("method"))))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     FromLocalLambdaBodyForDefaultValueCaptures) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      int* F;
+
+      void method(bool* P) {
+        char* L;
+        auto Lambda = [=]() {
+          *P;
+          *F;
+          *L;
+        };
+      }
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("operator()", Src),
+      AllOf(UnorderedElementsAre(
+                evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                         fieldNamed("S::F")),
+                evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                         localVarNamed("L", "method"))),
+            // TODO(b/315967534) Collect for captured function parameters.
+            Not(Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                  functionNamed("method"))))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, FromNestedLambdaBody) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void foo() {
+      int *A;
+      int *B;
+      auto OuterLambda = [&A, &B]() {
+        auto InnerLambda = [&A, &B]() {
+          *A;
+          *B;
+        };
+      };
+    }
+  )cc";
+
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxMethodDecl(hasName("operator()"),
+                        hasAncestor(lambdaExpr(hasAncestor(lambdaExpr())))),
+          Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    localVarNamed("A", "foo")),
+                           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    localVarNamed("B", "foo"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, ForLambdaInitCapture) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void foo() {
+      int* P;
+      auto Lambda = [Q = P]() { *Q; };
+    }
+  )cc";
+
+  EXPECT_THAT(
+      collectFromDefinitionNamed("operator()", Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    localVarNamed("Q", "operator()"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, ForLambdaParamOrReturn) {
