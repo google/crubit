@@ -21,5 +21,6 @@ crubit_rust_test(
     deps = [
         "//support/cc_std:vector",
         "@crate_index//:googletest",
+        "@crate_index//:static_assertions",
     ],
 )

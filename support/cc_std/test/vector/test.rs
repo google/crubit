@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use googletest::prelude::*;
+use static_assertions::assert_impl_all;
 use std::cell::RefCell;
 use std::ffi::c_void;
 use std::hash::BuildHasher;
@@ -676,6 +677,16 @@ fn test_as_mut_slice() {
     expect_eq!(slice, &[5, 6, 7]);
     slice[1] = 1;
     expect_eq!(v[1], 1);
+}
+
+#[gtest]
+fn test_is_send() {
+    assert_impl_all!(vector::Vector<i64>: Send);
+}
+
+#[gtest]
+fn test_is_sync() {
+    assert_impl_all!(vector::Vector<i64>: Sync);
 }
 
 mod layout_tests {

@@ -55,8 +55,6 @@ pub struct Vector<T> {
     capacity: usize,
 }
 
-// TODO(b/356221873): Implement Send and Sync.
-
 impl<T> Vector<T> {
     pub fn new() -> Vector<T> {
         #[cfg(len_capacity_encoding)]
@@ -548,6 +546,12 @@ impl<T: Hash + Unpin> Hash for Vector<T> {
         self.as_slice().hash(state);
     }
 }
+
+/// `Vector` is `Send` if `T` is `Send` because it uniquely owns its contents.
+unsafe impl<T: Send> Send for Vector<T> {}
+
+/// `Vector` is `Sync` if `T` is `Sync` because it uniquely owns its contents.
+unsafe impl<T: Sync> Sync for Vector<T> {}
 
 /// Helper method for creating a `Vec<T>` from raw parts.
 ///
