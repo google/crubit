@@ -178,9 +178,11 @@ VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
                  : VirtualMethodEvidenceFlowDirection::kFromBaseToDerived;
     case Evidence::NULLABLE_REFERENCE_RETURN:
     case Evidence::NONNULL_REFERENCE_RETURN:
+    case Evidence::NONNULL_REFERENCE_RETURN_AS_CONST:
     case Evidence::UNKNOWN_REFERENCE_RETURN:
     case Evidence::NULLABLE_REFERENCE_ARGUMENT:
     case Evidence::NONNULL_REFERENCE_ARGUMENT:
+    case Evidence::NONNULL_REFERENCE_ARGUMENT_AS_CONST:
     case Evidence::UNKNOWN_REFERENCE_ARGUMENT:
       return VirtualMethodEvidenceFlowDirection::kBoth;
   }
@@ -401,14 +403,20 @@ static TypeNullability getReturnTypeNullabilityAnnotationsWithOverrides(
 }
 
 static Evidence::Kind getArgEvidenceKindFromNullability(
-    NullabilityKind Nullability, bool IsReference) {
+    NullabilityKind Nullability, QualType ParamType) {
+  bool IsReference = ParamType->isReferenceType();
   switch (Nullability) {
     case NullabilityKind::Nullable:
       return IsReference ? Evidence::NULLABLE_REFERENCE_ARGUMENT
                          : Evidence::NULLABLE_ARGUMENT;
-    case NullabilityKind::NonNull:
-      return IsReference ? Evidence::NONNULL_REFERENCE_ARGUMENT
+    case NullabilityKind::NonNull: {
+      bool IsNonReferenceConst =
+          ParamType.getNonReferenceType().isConstQualified();
+      return IsReference ? (IsNonReferenceConst
+                                ? Evidence::NONNULL_REFERENCE_ARGUMENT_AS_CONST
+                                : Evidence::NONNULL_REFERENCE_ARGUMENT)
                          : Evidence::NONNULL_ARGUMENT;
+    }
     default:
       return IsReference ? Evidence::UNKNOWN_REFERENCE_ARGUMENT
                          : Evidence::UNKNOWN_ARGUMENT;
@@ -747,8 +755,8 @@ class DefinitionEvidenceCollector {
           NullabilityKind ArgNullability =
               getNullability(*PV, Env, &InferableSlotsConstraint);
           Emit(CalleeDecl, paramSlot(Iter.paramIdx()),
-               getArgEvidenceKindFromNullability(
-                   ArgNullability, Iter.param().getType()->isReferenceType()),
+               getArgEvidenceKindFromNullability(ArgNullability,
+                                                 Iter.param().getType()),
                ArgLoc);
         }
       }
@@ -1023,11 +1031,18 @@ class DefinitionEvidenceCollector {
                                    ? Evidence::NULLABLE_REFERENCE_RETURN
                                    : Evidence::NULLABLE_RETURN;
           break;
-        case NullabilityKind::NonNull:
-          ReturnEvidenceKind = ReturnTypeIsReference
-                                   ? Evidence::NONNULL_REFERENCE_RETURN
-                                   : Evidence::NONNULL_RETURN;
+        case NullabilityKind::NonNull: {
+          bool ReturnTypeNonReferenceIsConst = CurrentFunc->getReturnType()
+                                                   .getNonReferenceType()
+                                                   .isConstQualified();
+          ReturnEvidenceKind =
+              ReturnTypeIsReference
+                  ? (ReturnTypeNonReferenceIsConst
+                         ? Evidence::NONNULL_REFERENCE_RETURN_AS_CONST
+                         : Evidence::NONNULL_REFERENCE_RETURN)
+                  : Evidence::NONNULL_RETURN;
           break;
+        }
         default:
           ReturnEvidenceKind = ReturnTypeIsReference
                                    ? Evidence::UNKNOWN_REFERENCE_RETURN
@@ -1656,8 +1671,7 @@ static void collectEvidenceFromDefaultArgument(
   } else {
     auto Nullability = getNullabilityAnnotationsFromType(DefaultArg->getType());
     if (auto K = getArgEvidenceKindFromNullability(
-            Nullability.front().concrete(),
-            ParamDecl.getType()->isReferenceType())) {
+            Nullability.front().concrete(), ParamDecl.getType())) {
       Emit(Fn, ParamSlot, K, DefaultArg->getExprLoc());
     } else {
       Emit(Fn, ParamSlot, Evidence::UNKNOWN_ARGUMENT, DefaultArg->getExprLoc());

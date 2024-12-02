@@ -285,5 +285,41 @@ TEST_F(InferTest, MixedAssignments) {
   EXPECT_EQ(Nullability::NULLABLE, infer());
 }
 
+TEST_F(InferTest, MixedConstReferenceReturns) {
+  add(Evidence::NONNULL_REFERENCE_RETURN_AS_CONST);
+  EXPECT_EQ(Nullability::NONNULL, infer());
+  add(Evidence::UNKNOWN_REFERENCE_RETURN);
+  EXPECT_EQ(Nullability::UNKNOWN, infer());
+  add(Evidence::NULLABLE_REFERENCE_RETURN);
+  EXPECT_EQ(Nullability::NULLABLE, infer());
+}
+
+TEST_F(InferTest, MixedReferenceReturns) {
+  add(Evidence::UNKNOWN_REFERENCE_RETURN);
+  EXPECT_EQ(Nullability::UNKNOWN, infer());
+  add(Evidence::NONNULL_REFERENCE_RETURN);
+  EXPECT_EQ(Nullability::NONNULL, infer());
+  add(Evidence::NULLABLE_REFERENCE_RETURN);
+  EXPECT_EQ(Nullability::NULLABLE, infer(/*ExpectConflict=*/true));
+}
+
+TEST_F(InferTest, MixedConstReferenceArguments) {
+  add(Evidence::NONNULL_REFERENCE_ARGUMENT_AS_CONST);
+  EXPECT_EQ(Nullability::NONNULL, infer());
+  add(Evidence::UNKNOWN_REFERENCE_ARGUMENT);
+  EXPECT_EQ(Nullability::UNKNOWN, infer());
+  add(Evidence::NULLABLE_REFERENCE_ARGUMENT);
+  EXPECT_EQ(Nullability::NULLABLE, infer());
+}
+
+TEST_F(InferTest, MixedReferenceArguments) {
+  add(Evidence::UNKNOWN_REFERENCE_ARGUMENT);
+  EXPECT_EQ(Nullability::UNKNOWN, infer());
+  add(Evidence::NONNULL_REFERENCE_ARGUMENT);
+  EXPECT_EQ(Nullability::NONNULL, infer());
+  add(Evidence::NULLABLE_REFERENCE_ARGUMENT);
+  EXPECT_EQ(Nullability::NULLABLE, infer(/*ExpectConflict=*/true));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

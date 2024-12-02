@@ -143,6 +143,16 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
       !Counts[Evidence::ASSIGNED_FROM_UNKNOWN] &&
       Counts[Evidence::ASSIGNED_FROM_NONNULL])
     return {Nullability::NONNULL};
+  if (!Counts[Evidence::NULLABLE_REFERENCE_RETURN] &&
+      !Counts[Evidence::UNKNOWN_REFERENCE_RETURN] &&
+      !Counts[Evidence::NONNULL_REFERENCE_RETURN] &&
+      Counts[Evidence::NONNULL_REFERENCE_RETURN_AS_CONST])
+    return {Nullability::NONNULL};
+  if (!Counts[Evidence::NULLABLE_REFERENCE_ARGUMENT] &&
+      !Counts[Evidence::UNKNOWN_REFERENCE_ARGUMENT] &&
+      !Counts[Evidence::NONNULL_REFERENCE_ARGUMENT] &&
+      Counts[Evidence::NONNULL_REFERENCE_ARGUMENT_AS_CONST])
+    return {Nullability::NONNULL};
 
   return {Nullability::UNKNOWN};
 }

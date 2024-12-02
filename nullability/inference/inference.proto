@@ -102,13 +102,13 @@ message Evidence {
     GCC_NONNULL_ATTRIBUTE = 16;
     // A Nullable value was returned as a reference.
     NULLABLE_REFERENCE_RETURN = 17;
-    // A Nonnull value was returned as a reference.
+    // A Nonnull value was returned as a mutable reference.
     NONNULL_REFERENCE_RETURN = 18;
     // A value with Unknown nullability was returned as a reference.
     UNKNOWN_REFERENCE_RETURN = 19;
     // A Nullable value was passed as a reference argument.
     NULLABLE_REFERENCE_ARGUMENT = 20;
-    // A Nonnull value was passed as a reference argument.
+    // A Nonnull value was passed as a mutable reference argument.
     NONNULL_REFERENCE_ARGUMENT = 21;
     // A value with Unknown nullability was passed as a reference argument.
     UNKNOWN_REFERENCE_ARGUMENT = 22;
@@ -125,6 +125,16 @@ message Evidence {
     // to null and then accessed through the Nonnull reference unsafely.
     // e.g. evidence for `p` from `Nonnull<int*> &q = p;`.
     ASSIGNED_TO_NONNULL_REFERENCE = 26;
+    // A reference to a nonnull value was returned as a reference to a const
+    // value. This is distinct from NONNULL_REFERENCE_RETURN because it does not
+    // require that the return type is Nonnull, the way returning a reference to
+    // a mutable nonnull value does.
+    NONNULL_REFERENCE_RETURN_AS_CONST = 27;
+    // A reference to a nonnull value was passed as an argument to a const
+    // reference parameter. This is distinct from NONNULL_REFERENCE_ARGUMENT
+    // because it does not require that the argument type is Nonnull, the way
+    // passing a reference to a mutable nonnull value does.
+    NONNULL_REFERENCE_ARGUMENT_AS_CONST = 28;
   }
 }
 

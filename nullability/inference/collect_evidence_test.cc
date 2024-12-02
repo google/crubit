@@ -778,20 +778,21 @@ TEST(CollectEvidenceFromDefinitionTest, ReferenceArgsPassed) {
       mutableCallee(P, Q, R);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::NULLABLE_REFERENCE_ARGUMENT,
-                           functionNamed("constCallee")),
-                  evidence(paramSlot(1), Evidence::NONNULL_REFERENCE_ARGUMENT,
-                           functionNamed("constCallee")),
-                  evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
-                           functionNamed("constCallee")),
-                  evidence(paramSlot(0), Evidence::NULLABLE_REFERENCE_ARGUMENT,
-                           functionNamed("mutableCallee")),
-                  evidence(paramSlot(1), Evidence::NONNULL_REFERENCE_ARGUMENT,
-                           functionNamed("mutableCallee")),
-                  evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
-                           functionNamed("mutableCallee"))));
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::NULLABLE_REFERENCE_ARGUMENT,
+                   functionNamed("constCallee")),
+          evidence(paramSlot(1), Evidence::NONNULL_REFERENCE_ARGUMENT_AS_CONST,
+                   functionNamed("constCallee")),
+          evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                   functionNamed("constCallee")),
+          evidence(paramSlot(0), Evidence::NULLABLE_REFERENCE_ARGUMENT,
+                   functionNamed("mutableCallee")),
+          evidence(paramSlot(1), Evidence::NONNULL_REFERENCE_ARGUMENT,
+                   functionNamed("mutableCallee")),
+          evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
+                   functionNamed("mutableCallee"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, NoEvidenceForFullyAnnotatedFunctions) {
@@ -926,7 +927,7 @@ TEST(CollectEvidenceFromDefinitionTest, MultipleReturns) {
                   evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN)));
 }
 
-TEST(CollectEvidenceFromDefinitionTest, ReferenceReturns) {
+TEST(CollectEvidenceFromDefinitionTest, MutableReferenceReturns) {
   static constexpr llvm::StringRef Src = R"cc(
     int*& target(Nonnull<int*>& P, Nullable<int*>& Q, int*& R, bool A, bool B) {
       if (A) return P;
@@ -939,6 +940,24 @@ TEST(CollectEvidenceFromDefinitionTest, ReferenceReturns) {
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_REFERENCE_RETURN),
           evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_REFERENCE_RETURN),
+          evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_REFERENCE_RETURN)));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, ConstReferenceReturns) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* const& target(Nonnull<int*>& P, Nullable<int*>& Q, int*& R, bool A,
+                       bool B) {
+      if (A) return P;
+      if (B) return Q;
+      return R;
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_REFERENCE_RETURN),
+          evidence(SLOT_RETURN_TYPE,
+                   Evidence::NONNULL_REFERENCE_RETURN_AS_CONST),
           evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_REFERENCE_RETURN)));
 }
 
