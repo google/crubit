@@ -24,10 +24,9 @@ pub fn pass_through(val: RustOwned) -> RustOwned {
 
 #[__crubit::annotate(
     cpp_type = "const crubit::test::TheCppType*",
-    cpp_type_include = "cc_bindings_from_rs/test/bridging/cc_type.h",
-    rust_to_cpp_converter = "crubit_test_rust_view_struct_to_cpp_const_pointer",
-    cpp_to_rust_converter = "crubit_test_cpp_const_pointer_to_rust_view_struct"
+    cpp_type_include = "cc_bindings_from_rs/test/bridging/cc_type.h"
 )]
+#[repr(transparent)]
 pub struct RustView<'a> {
     ptr: *const core::ffi::c_void,
     _phantom: PhantomData<&'a RustOwned>,
@@ -67,28 +66,6 @@ mod type_converters {
         unsafe {
             let output = &mut *(rs_out as *mut ::core::mem::MaybeUninit<RustOwned>);
             output.as_mut_ptr().write(RustOwned { ptr: cpp_in });
-        }
-    }
-
-    #[no_mangle]
-    pub unsafe extern "C" fn crubit_test_rust_view_struct_to_cpp_const_pointer(
-        rs_in: *const c_void,
-        cpp_out: *mut *const c_void,
-    ) {
-        unsafe {
-            let rs_view = &*(rs_in as *const RustView);
-            cpp_out.write(rs_view.ptr);
-        }
-    }
-
-    #[no_mangle]
-    pub unsafe extern "C" fn crubit_test_cpp_const_pointer_to_rust_view_struct(
-        cpp_in: *mut c_void,
-        rs_out: *mut c_void,
-    ) {
-        unsafe {
-            let output = &mut *(rs_out as *mut ::core::mem::MaybeUninit<RustView>);
-            output.as_mut_ptr().write(RustView { ptr: cpp_in, _phantom: PhantomData });
         }
     }
 

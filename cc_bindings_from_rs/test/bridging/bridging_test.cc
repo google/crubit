@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "gtest/gtest.h"
+#include "cc_bindings_from_rs/test/bridging/cc_type.h"
 #include "cc_bindings_from_rs/test/bridging/rust_pointer_types.h"
 #include "cc_bindings_from_rs/test/bridging/rust_type.h"
 
