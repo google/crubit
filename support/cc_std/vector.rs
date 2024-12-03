@@ -417,11 +417,23 @@ impl<T: Unpin> Vector<T> {
     }
 
     pub fn as_slice(&self) -> &[T] {
-        unsafe { std::slice::from_raw_parts(self.begin, self.len()) }
+        unsafe {
+            if self.begin.is_null() {
+                &[]
+            } else {
+                std::slice::from_raw_parts(self.begin, self.len())
+            }
+        }
     }
 
     pub fn as_mut_slice(&mut self) -> &mut [T] {
-        unsafe { std::slice::from_raw_parts_mut(self.begin, self.len()) }
+        unsafe {
+            if self.begin.is_null() {
+                &mut []
+            } else {
+                std::slice::from_raw_parts_mut(self.begin, self.len())
+            }
+        }
     }
 }
 
