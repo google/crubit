@@ -5,6 +5,7 @@
 use googletest::prelude::*;
 use static_assertions::assert_impl_all;
 use std::cell::RefCell;
+use std::cmp::Ordering;
 use std::ffi::c_void;
 use std::hash::BuildHasher;
 use std::rc::Rc;
@@ -634,6 +635,48 @@ fn test_hash() {
     let v: vector::Vector<i64> = vector::Vector::from(vec![10, 12, -4]);
     let s: &[i64] = &[10, 12, -4];
     expect_eq!(b.hash_one(v), b.hash_one(s));
+}
+
+#[gtest]
+fn test_partial_ord() {
+    let u = vector::Vector::from(vec![0.5, 1.0]);
+    let v = vector::Vector::from(vec![0.5, 2.5, 3.0]);
+    expect_eq!(u.partial_cmp(&v).unwrap(), Ordering::Less);
+    expect_eq!(u.partial_cmp(&u).unwrap(), Ordering::Equal);
+    expect_eq!(v.partial_cmp(&u).unwrap(), Ordering::Greater);
+}
+
+#[gtest]
+fn test_partial_ord_non_comparable() {
+    let u = vector::Vector::from(vec![1.0, f64::NAN]);
+    let v = vector::Vector::from(vec![1.0, 2.0]);
+    // NAN is not comparable to any other number, so the comparison result is
+    // undefined.
+    expect_eq!(u.partial_cmp(&u), None);
+    expect_eq!(u.partial_cmp(&v), None);
+}
+
+#[gtest]
+fn test_ord() {
+    let u = vector::Vector::from(vec![0, 1]);
+    let v = vector::Vector::from(vec![0, 2]);
+    expect_eq!(u.cmp(&v), Ordering::Less);
+    expect_eq!(u.cmp(&u), Ordering::Equal);
+    expect_eq!(v.cmp(&u), Ordering::Greater);
+}
+
+#[gtest]
+fn test_comparison_operators() {
+    let u = vector::Vector::from(vec![0, 1]);
+    let v = vector::Vector::from(vec![0, 2, 3]);
+    expect_eq!(u < v, true);
+    expect_eq!(u <= v, true);
+    expect_eq!(u > v, false);
+    expect_eq!(u >= v, false);
+}
+#[gtest]
+fn test_eq() {
+    assert_impl_all!(vector::Vector<i64>: Eq);
 }
 
 #[gtest]

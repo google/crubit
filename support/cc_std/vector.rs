@@ -565,6 +565,22 @@ unsafe impl<T: Send> Send for Vector<T> {}
 /// `Vector` is `Sync` if `T` is `Sync` because it uniquely owns its contents.
 unsafe impl<T: Sync> Sync for Vector<T> {}
 
+impl<T: PartialOrd + Unpin> PartialOrd<Vector<T>> for Vector<T> {
+    #[inline]
+    fn partial_cmp(&self, other: &Vector<T>) -> Option<Ordering> {
+        PartialOrd::partial_cmp(self.as_slice(), other.as_slice())
+    }
+}
+
+impl<T: Eq> Eq for Vector<T> {}
+
+impl<T: Ord + Unpin> Ord for Vector<T> {
+    #[inline]
+    fn cmp(&self, other: &Self) -> Ordering {
+        Ord::cmp(self.as_slice(), other.as_slice())
+    }
+}
+
 /// Helper method for creating a `Vec<T>` from raw parts.
 ///
 /// # Safety
