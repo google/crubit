@@ -38,6 +38,7 @@ use rustc_target::abi::{
 };
 use rustc_trait_selection::infer::InferCtxtExt;
 use rustc_type_ir::RegionKind;
+use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 use std::iter::once;
@@ -1817,6 +1818,85 @@ fn format_region_as_rs_lifetime(region: &ty::Region) -> TokenStream {
     quote! { #lifetime }
 }
 
+/// Holds the declaration of an extern "C" function.
+///
+/// ADTs can be annotated with conversion functions that adhere to the C calling
+/// conventions. Crubit needs to declare these functions within an extern "C"
+/// block, so rustc knows that the conversion function is defined elsewhere.
+///
+/// This type implements PartialEq and PartialOrd based on the `symbol` field.
+/// The `decl` field is ignored. All `ExternCDecl` instances from all thunks are
+/// eventually put in BTreeSet to remove duplicates and to achieve deterministic
+/// ordering of the generated extern "C" { ... } block.
+#[derive(Clone, Debug)]
+struct ExternCDecl {
+    /// The name of the function.
+    symbol: Symbol,
+
+    /// The full function declaration as can be placed in an extern "C" block.
+    decl: TokenStream,
+}
+
+impl Ord for ExternCDecl {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.symbol.cmp(&other.symbol)
+    }
+}
+
+impl PartialOrd for ExternCDecl {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for ExternCDecl {
+    fn eq(&self, other: &Self) -> bool {
+        self.symbol == other.symbol
+    }
+}
+
+impl Eq for ExternCDecl {}
+
+#[derive(Clone, Debug, Default)]
+struct RsSnippet {
+    tokens: TokenStream,
+
+    /// Set of extern "C" declarations needed by `tokens`.
+    extern_c_decls: BTreeSet<ExternCDecl>,
+}
+
+impl FromIterator<RsSnippet> for RsSnippet {
+    fn from_iter<I: IntoIterator<Item = RsSnippet>>(iter: I) -> Self {
+        let mut result = RsSnippet::default();
+        for RsSnippet { tokens, extern_c_decls } in iter.into_iter() {
+            result.tokens.extend(tokens);
+            result.extern_c_decls.extend(extern_c_decls);
+        }
+        result
+    }
+}
+
+impl RsSnippet {
+    // Creates a new RsSnippet from a TokenStream.
+    fn new(tokens: TokenStream) -> Self {
+        Self { tokens, ..Default::default() }
+    }
+
+    /// Consumes `self` and returns its `tokens`, while preserving
+    /// its `extern_c_decls` into `extern_c_decls_accumulator`.
+    fn into_tokens(self, extern_c_decls_accumulator: &mut BTreeSet<ExternCDecl>) -> TokenStream {
+        extern_c_decls_accumulator.extend(self.extern_c_decls);
+        self.tokens
+    }
+}
+
+impl AddAssign for RsSnippet {
+    fn add_assign(&mut self, rhs: Self) {
+        self.tokens.extend(rhs.tokens);
+        self.extern_c_decls.extend(rhs.extern_c_decls);
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 struct ApiSnippets {
     /// Main API - for example:
@@ -1829,10 +1909,10 @@ struct ApiSnippets {
     /// - C++ `static_assert`s about struct size, aligment, and field offsets.
     cc_details: CcSnippet,
 
-    /// Rust implementation details - for exmaple:
+    /// Rust implementation details - for example:
     /// - A Rust implementation of an `extern "C"` thunk,
     /// - Rust `assert!`s about struct size, aligment, and field offsets.
-    rs_details: TokenStream,
+    rs_details: RsSnippet,
 }
 
 impl ApiSnippets {
@@ -1857,7 +1937,7 @@ impl FromIterator<ApiSnippets> for ApiSnippets {
         for ApiSnippets { main_api, cc_details, rs_details } in iter.into_iter() {
             result.main_api += main_api;
             result.cc_details += cc_details;
-            result.rs_details.extend(rs_details);
+            result.rs_details += rs_details;
         }
         result
     }
@@ -1978,7 +2058,7 @@ fn format_thunk_impl<'tcx>(
     sig: &ty::FnSig<'tcx>,
     thunk_name: &str,
     fully_qualified_fn_name: TokenStream,
-) -> Result<TokenStream> {
+) -> Result<RsSnippet> {
     let tcx = db.tcx();
     let param_names_and_types: Vec<(Ident, Ty)> = {
         let param_names = tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, ident)| {
@@ -2018,7 +2098,7 @@ fn format_thunk_impl<'tcx>(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let mut extern_c_decls: Vec<TokenStream> = vec![];
+    let mut extern_c_decls = BTreeSet::new();
 
     let fn_args_conversions = param_names_and_types
         .iter()
@@ -2044,7 +2124,8 @@ fn format_thunk_impl<'tcx>(
                         cpp_to_rust_converter,
                         ..
                     } => {
-                        let cpp_to_rust_converter = make_rs_ident(cpp_to_rust_converter.as_str());
+                        let cpp_to_rust_converter_ident =
+                            make_rs_ident(cpp_to_rust_converter.as_str());
                         let cpp_in_ty =
                             if let CcType::Pointer { cv: CcConstQualifier::Mut, .. } = cpp_type {
                                 quote! { *mut core::ffi::c_void }
@@ -2052,15 +2133,18 @@ fn format_thunk_impl<'tcx>(
                                 quote! { *const core::ffi::c_void }
                             };
 
-                        extern_c_decls.push(quote! {
-                            fn #cpp_to_rust_converter(cpp_in: #cpp_in_ty,
-                                rs_out: *mut core::ffi::c_void);
+                        extern_c_decls.insert(ExternCDecl {
+                            symbol: cpp_to_rust_converter,
+                            decl: quote! {
+                                fn #cpp_to_rust_converter_ident(cpp_in: #cpp_in_ty,
+                                    rs_out: *mut core::ffi::c_void);
+                            },
                         });
 
                         Ok(quote! {
                             #rs_out_decl
 
-                            unsafe { #cpp_to_rust_converter(#param_name,
+                            unsafe { #cpp_to_rust_converter_ident(#param_name,
                                 #rs_out_varname.as_mut_ptr() as *mut core::ffi::c_void); }
                         })
                     }
@@ -2140,18 +2224,21 @@ fn format_thunk_impl<'tcx>(
                 BridgedTypeConversionInfo::ExternCFuncConverters {
                     rust_to_cpp_converter, ..
                 } => {
-                    let rust_to_cpp_converter = make_rs_ident(rust_to_cpp_converter.as_str());
+                    let rust_to_cpp_converter_ident = make_rs_ident(rust_to_cpp_converter.as_str());
 
-                    extern_c_decls.push(quote! {
-                        fn #rust_to_cpp_converter(rs_in: *const core::ffi::c_void,
+                    extern_c_decls.insert(ExternCDecl {
+                        symbol: rust_to_cpp_converter,
+                        decl: quote! {
+                        fn #rust_to_cpp_converter_ident(rs_in: *const core::ffi::c_void,
                             cpp_out: #cpp_out_ty);
+                        },
                     });
 
                     quote! {
                         #thunk_body_common
 
                         unsafe {
-                            #rust_to_cpp_converter(
+                            #rust_to_cpp_converter_ident(
                                 std::ptr::from_ref(&rs_val) as *const core::ffi::c_void,
                                 __ret_ptr);
                         }
@@ -2206,26 +2293,16 @@ fn format_thunk_impl<'tcx>(
         quote! {}
     };
 
-    let extern_c_decls = if !extern_c_decls.is_empty() {
-        quote! {
-            extern "C" {
-                #( #extern_c_decls )*
+    Ok(RsSnippet {
+        tokens: quote! {
+            #[unsafe(no_mangle)]
+            #unsafe_qualifier extern "C" fn #thunk_name #generic_params (
+                #( #thunk_params ),*
+            ) -> #thunk_ret_type {
+                #thunk_body
             }
-        }
-    } else {
-        quote! {}
-    };
-
-    Ok(quote! {
-
-        #extern_c_decls
-
-        #[unsafe(no_mangle)]
-        #unsafe_qualifier extern "C" fn #thunk_name #generic_params (
-            #( #thunk_params ),*
-        ) -> #thunk_ret_type {
-            #thunk_body
-        }
+        },
+        extern_c_decls,
     })
 }
 
@@ -2350,7 +2427,7 @@ fn generate_using_statement(
             Ok(ApiSnippets {
                 main_api: CcSnippet { prereqs, tokens },
                 cc_details: CcSnippet::default(),
-                rs_details: quote! {},
+                rs_details: RsSnippet::default(),
             })
         }
         DefKind::Struct | DefKind::Enum => {
@@ -2545,7 +2622,7 @@ fn format_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Res
             ..cc_type_snippet
         },
         cc_details: CcSnippet::default(),
-        rs_details: quote! {},
+        rs_details: RsSnippet::default(),
     })
 }
 
@@ -2585,7 +2662,7 @@ fn create_type_alias<'tcx>(
     Ok(ApiSnippets {
         main_api: CcSnippet { prereqs: main_api_prereqs, tokens },
         cc_details: CcSnippet::default(),
-        rs_details: quote! {},
+        rs_details: RsSnippet::default(),
     })
 }
 
@@ -2903,7 +2980,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
     };
 
     let rs_details = if !needs_thunk {
-        quote! {}
+        RsSnippet::default()
     } else {
         let fully_qualified_fn_name = match struct_name.as_ref() {
             None => fully_qualified_fn_name.format_for_rs(),
@@ -2915,6 +2992,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
         };
         format_thunk_impl(db, def_id, &sig_mid, &thunk_name, fully_qualified_fn_name)?
     };
+
     Ok(ApiSnippets { main_api, cc_details, rs_details })
 }
 
@@ -3539,7 +3617,7 @@ fn format_fields<'tcx>(
         )
     };
 
-    let rs_details: TokenStream = if is_supported_enum {
+    let rs_details: RsSnippet = if is_supported_enum {
         // Offsets for enums is an experimental feature.
         // TODO(b/355642210): Add these assertions once they're not
         // experiemtnal. let adt_rs_name =
@@ -3563,7 +3641,7 @@ fn format_fields<'tcx>(
         //         variant_offset_assertions
         //     })
         //     .collect()
-        quote! {}
+        RsSnippet::default()
     } else {
         let adt_rs_name = &core.rs_fully_qualified_name;
         variants_fields
@@ -3578,7 +3656,9 @@ fn format_fields<'tcx>(
             .map(|Field { rs_name, offset, .. }| {
                 let expected_offset = Literal::u64_unsuffixed(*offset);
                 let actual_offset = quote! { ::core::mem::offset_of!(#adt_rs_name, #rs_name) };
-                quote! { const _: () = assert!(#actual_offset == #expected_offset); }
+                RsSnippet::new(
+                    quote! { const _: () = assert!(#actual_offset == #expected_offset); },
+                )
             })
             .collect()
     };
@@ -3922,7 +4002,7 @@ fn does_type_implement_trait<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>, trait_i
 struct TraitThunks {
     method_name_to_cc_thunk_name: HashMap<Symbol, TokenStream>,
     cc_thunk_decls: CcSnippet,
-    rs_thunk_impls: TokenStream,
+    rs_thunk_impls: RsSnippet,
 }
 
 fn format_trait_thunks<'tcx>(
@@ -3947,7 +4027,7 @@ fn format_trait_thunks<'tcx>(
 
     let mut method_name_to_cc_thunk_name = HashMap::new();
     let mut cc_thunk_decls = CcSnippet::default();
-    let mut rs_thunk_impls = quote! {};
+    let mut rs_thunk_impls = RsSnippet::default();
     let methods = tcx
         .associated_items(trait_id)
         .in_definition_order()
@@ -4008,20 +4088,20 @@ fn format_trait_thunks<'tcx>(
             format_thunk_decl(db, &sig_mid, sig_hir, &thunk_name, allow_references)?
         });
 
-        rs_thunk_impls.extend({
+        rs_thunk_impls += {
             let struct_name = &adt.rs_fully_qualified_name;
             if is_drop_trait {
                 // Manually formatting (instead of depending on `format_thunk_impl`)
                 // to avoid https://doc.rust-lang.org/error_codes/E0040.html
                 let thunk_name = make_rs_ident(&thunk_name);
-                quote! {
+                RsSnippet::new(quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn #thunk_name(
                         __self: &mut ::core::mem::MaybeUninit<#struct_name>
                     ) {
                         unsafe { __self.assume_init_drop() };
                     }
-                }
+                })
             } else {
                 let fully_qualified_fn_name = {
                     let fully_qualified_trait_name =
@@ -4037,7 +4117,7 @@ fn format_trait_thunks<'tcx>(
                     fully_qualified_fn_name,
                 )?
             }
-        });
+        };
     }
 
     Ok(TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls })
@@ -4139,7 +4219,7 @@ fn format_copy_ctor_and_assignment_operator<'tcx>(
                 CcInclude::type_traits(),
             );
 
-            return Ok(ApiSnippets { main_api, cc_details, rs_details: quote! {} });
+            return Ok(ApiSnippets { main_api, cc_details, rs_details: RsSnippet::default() });
         }
 
         let trait_id = tcx
@@ -4513,11 +4593,18 @@ fn format_adt<'tcx>(
     };
     let rs_details = {
         let adt_rs_name = &core.rs_fully_qualified_name;
-        quote! {
-            const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
-            const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
-            #public_functions_rs_details
-            #fields_rs_details
+        let mut extern_c_decls = BTreeSet::new();
+        let public_functions_rs_details =
+            public_functions_rs_details.into_tokens(&mut extern_c_decls);
+        let fields_rs_details = fields_rs_details.into_tokens(&mut extern_c_decls);
+        RsSnippet {
+            tokens: quote! {
+                const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
+                const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
+                #public_functions_rs_details
+                #fields_rs_details
+            },
+            extern_c_decls,
         }
     };
     ApiSnippets { main_api, cc_details, rs_details }
@@ -4648,7 +4735,7 @@ fn format_unsupported_def(
     let msg = format!("Error generating bindings for `{name}` defined at {source_loc}: {err:#}");
     let main_api = CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ });
 
-    ApiSnippets { main_api, cc_details: CcSnippet::default(), rs_details: quote! {} }
+    ApiSnippets { main_api, cc_details: CcSnippet::default(), rs_details: RsSnippet::default() }
 }
 
 /// Formats namespace-bound snippets, given an iterator over (namespace_def_id,
@@ -4731,6 +4818,7 @@ fn format_crate(db: &Database) -> Result<Output> {
     let mut cc_details_prereqs = CcPrerequisites::default();
     let mut cc_details: Vec<(LocalDefId, TokenStream)> = vec![];
     let mut rs_body = TokenStream::default();
+    let mut extern_c_decls = BTreeSet::new();
     let mut main_apis = HashMap::<LocalDefId, CcSnippet>::new();
     let formatted_items = tcx
         .hir()
@@ -4751,7 +4839,7 @@ fn format_crate(db: &Database) -> Result<Output> {
         // - `chain`ing `cc_details` after `ordered_main_apis` trivially
         // meets the prerequisites.
         cc_details.push((def_id, api_snippets.cc_details.into_tokens(&mut cc_details_prereqs)));
-        rs_body.extend(api_snippets.rs_details);
+        rs_body.extend(api_snippets.rs_details.into_tokens(&mut extern_c_decls));
     }
 
     // Find the order of `main_apis` that 1) meets the requirements of
@@ -4841,6 +4929,21 @@ fn format_crate(db: &Database) -> Result<Output> {
             __NEWLINE__
         }
     };
+
+    let mut decls = quote! {};
+    for ExternCDecl { decl, .. } in extern_c_decls.into_iter() {
+        decls.extend(decl);
+    }
+
+    if !decls.is_empty() {
+        rs_body = quote! {
+            #rs_body
+
+           extern "C" {
+               #decls
+           }
+        };
+    }
 
     Ok(Output { h_body, rs_body })
 }
@@ -5591,7 +5694,7 @@ pub mod tests {
             assert!(result.cc_details.tokens.is_empty());
 
             // There is no need to have a separate thunk for an `extern "C"` function.
-            assert!(result.rs_details.is_empty());
+            assert!(result.rs_details.tokens.is_empty());
         });
     }
 
@@ -5812,7 +5915,7 @@ pub mod tests {
                 }
             );
             // TODO(b/262904507): omit the thunk and uncomment the next line.
-            // assert!(result.rs_details.is_empty());
+            // assert!(result.rs_details.tokens.is_empty());
             assert!(result.cc_details.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc_details.tokens,
@@ -5847,7 +5950,7 @@ pub mod tests {
             );
 
             // There is no need to have a separate thunk for an `extern "C"` function.
-            assert!(result.rs_details.is_empty());
+            assert!(result.rs_details.tokens.is_empty());
 
             // We generate a C++-side definition of `public_function` so that we
             // can call a differently-named (but same-signature) `export_name` function.
@@ -5883,7 +5986,7 @@ pub mod tests {
                     void foo();
                 }
             );
-            assert!(result.rs_details.is_empty());
+            assert!(result.rs_details.tokens.is_empty());
         });
     }
 
@@ -5911,7 +6014,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     unsafe extern "C" fn __crubit_thunk_foo() -> () {
@@ -6228,7 +6331,7 @@ pub mod tests {
             );
 
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn __crubit_thunk_foo(__param_0: *const core::ffi::c_void) -> () {
@@ -6298,13 +6401,19 @@ pub mod tests {
                 }
             );
 
+            let extern_c_decl = result.rs_details.extern_c_decls.first().unwrap();
+            assert_eq!(extern_c_decl.symbol, Symbol::intern("cpp_pointer_to_rust_struct"));
             assert_rs_matches!(
-                result.rs_details,
+                extern_c_decl.decl,
                 quote! {
-                    extern "C" {
-                        fn cpp_pointer_to_rust_struct(cpp_in: *const core::ffi::c_void,
-                            rs_out: *mut core::ffi::c_void);
-                    }
+                    fn cpp_pointer_to_rust_struct(cpp_in: *const core::ffi::c_void,
+                        rs_out: *mut core::ffi::c_void);
+                }
+            );
+
+            assert_rs_matches!(
+                result.rs_details.tokens,
+                quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn __crubit_thunk_foo(__param_0: *const core::ffi::c_void) -> () {
                         let mut __crubit___param_0_uninit =
@@ -6359,13 +6468,21 @@ pub mod tests {
                 CcInclude::user_header("cpp_ns/cpp_type.h".into())
             );
 
+            assert_eq!(result.rs_details.extern_c_decls.len(), 1);
+
+            let extern_c_decl = result.rs_details.extern_c_decls.first().unwrap();
+            assert_eq!(extern_c_decl.symbol, Symbol::intern("convert_cpp_to_rust_type"));
             assert_rs_matches!(
-                result.rs_details,
+                extern_c_decl.decl,
                 quote! {
-                    extern "C" {
-                        fn convert_cpp_to_rust_type(cpp_in: *const core::ffi::c_void,
-                            rs_out: *mut core::ffi::c_void);
-                    }
+                    fn convert_cpp_to_rust_type(cpp_in: *const core::ffi::c_void,
+                        rs_out: *mut core::ffi::c_void);
+                }
+            );
+
+            assert_rs_matches!(
+                result.rs_details.tokens,
+                quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn __crubit_thunk_foo(_a: *const core::ffi::c_void) -> () {
                         let mut __crubit__a_uninit =
@@ -6436,7 +6553,7 @@ pub mod tests {
             assert_eq!(main_api.prereqs.includes.len(), 1);
 
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn __crubit_thunk_foo(__ret_ptr: *mut *mut core::ffi::c_void) -> () {
@@ -6475,6 +6592,51 @@ pub mod tests {
     }
 
     #[test]
+    fn test_format_brided_type_deduplicate_extern_c_decls() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+
+                #[__crubit::annotate(
+                  cpp_type="CppType*",
+                  cpp_type_include="cpp_ns/cpp_type.h",
+                  rust_to_cpp_converter="rust_struct_to_cpp_pointer",
+                  cpp_to_rust_converter="cpp_pointer_to_rust_struct",
+                )]
+                pub struct RustType1 {
+                    pub cpp_type: *const core::ffi::c_void,
+                }
+
+                #[__crubit::annotate(
+                  cpp_type="CppType*",
+                  cpp_type_include="cpp_ns/cpp_type.h",
+                  rust_to_cpp_converter="rust_struct_to_cpp_pointer",
+                  cpp_to_rust_converter="cpp_pointer_to_rust_struct",
+                )]
+                pub struct RustType2 {
+                    pub cpp_type: *const core::ffi::c_void,
+                }
+
+                #[unsafe(no_mangle)]
+                pub fn foo(_: RustType1, _: RustType2) { todo!() }
+        "#;
+        test_format_item(test_src, "foo", |result| {
+            let result = result.unwrap().unwrap();
+
+            assert_eq!(result.rs_details.extern_c_decls.len(), 1);
+            let extern_c_decl = result.rs_details.extern_c_decls.first().unwrap();
+            assert_eq!(extern_c_decl.symbol, Symbol::intern("cpp_pointer_to_rust_struct"));
+            assert_rs_matches!(
+                extern_c_decl.decl,
+                quote! {
+                    fn cpp_pointer_to_rust_struct(cpp_in: *mut core::ffi::c_void,
+                        rs_out: *mut core::ffi::c_void);
+                }
+            );
+        });
+    }
+
+    #[test]
     fn test_format_bridged_return_type_by_pointer() {
         let test_src = r#"
                 #![feature(register_tool)]
@@ -6507,15 +6669,21 @@ pub mod tests {
 
             assert_eq!(main_api.prereqs.includes.len(), 1);
 
+            let extern_c_decl = result.rs_details.extern_c_decls.first().unwrap();
+            assert_eq!(extern_c_decl.symbol, Symbol::intern("rust_struct_to_cpp_pointer"));
             assert_rs_matches!(
-                result.rs_details,
+                extern_c_decl.decl,
                 quote! {
-                    extern "C" {
-                        fn rust_struct_to_cpp_pointer(
-                            rs_in: *const core::ffi::c_void,
-                            cpp_out: *mut *mut core::ffi::c_void
-                        );
-                    }
+                    fn rust_struct_to_cpp_pointer(
+                        rs_in: *const core::ffi::c_void,
+                        cpp_out: *mut *mut core::ffi::c_void
+                    );
+                }
+            );
+
+            assert_rs_matches!(
+                result.rs_details.tokens,
+                quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn __crubit_thunk_foo(__ret_ptr: *mut *mut core::ffi::c_void) -> () {
                         let rs_val = ::rust_out::foo();
@@ -6596,13 +6764,18 @@ pub mod tests {
                 CcInclude::user_header("cpp_ns/cpp_type.h".into())
             );
 
+            let extern_c_decl = result.rs_details.extern_c_decls.first().unwrap();
+            assert_eq!(extern_c_decl.symbol, Symbol::intern("rust_to_cpp_converter"));
             assert_rs_matches!(
-                result.rs_details,
+                extern_c_decl.decl,
                 quote! {
-                    extern "C" {
-                        fn rust_to_cpp_converter(rs_in: *const core::ffi::c_void,
-                            cpp_out: *mut core::ffi::c_void);
-                    }
+                    fn rust_to_cpp_converter(rs_in: *const core::ffi::c_void,
+                        cpp_out: *mut core::ffi::c_void);
+                }
+            );
+            assert_rs_matches!(
+                result.rs_details.tokens,
+                quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn __crubit_thunk_foo(__ret_ptr: *mut core::ffi::c_void) -> () {
                         let rs_val = ::rust_out::foo();
@@ -6759,7 +6932,7 @@ pub mod tests {
             assert!(main_api.prereqs.is_empty());
 
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn __crubit_thunk_foo() -> () {
@@ -6806,7 +6979,7 @@ pub mod tests {
             assert!(!main_api.prereqs.is_empty());
 
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::Foo>() == 4);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::Foo>() == 4);
@@ -6861,7 +7034,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C"
@@ -7157,7 +7330,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn ...<'__anon1>(arg: &'__anon1 i32) -> &'__anon1 i32 {
@@ -7239,7 +7412,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn ...<'a, 'foo, '__anon1, '__anon2>(
@@ -7424,7 +7597,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C"
@@ -7459,7 +7632,7 @@ pub mod tests {
         test_format_item(test_src, "transmute_slice", |result| {
             let result = result.unwrap().unwrap();
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     unsafe extern "C"
@@ -7501,7 +7674,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C"
@@ -7545,7 +7718,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C"
@@ -7605,7 +7778,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C"
@@ -7703,7 +7876,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
@@ -7750,7 +7923,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn ...(
@@ -7869,7 +8042,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
@@ -7932,7 +8105,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::TupleStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::TupleStruct>() == 4);
@@ -7994,7 +8167,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
@@ -8052,7 +8225,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 6);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 1);
@@ -8108,7 +8281,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
@@ -8162,7 +8335,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn ...(x: f32, y: f32) -> f32 {
@@ -8210,7 +8383,7 @@ pub mod tests {
                 }
             );
             assert_cc_not_matches!(result.cc_details.tokens, quote! { SomeStruct::generic_method },);
-            assert_rs_not_matches!(result.rs_details, quote! { generic_method },);
+            assert_rs_not_matches!(result.rs_details.tokens, quote! { generic_method },);
         });
     }
 
@@ -8257,7 +8430,7 @@ pub mod tests {
                 },
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn ...<'a>(x: &'a i32) -> i32 {
@@ -8304,7 +8477,7 @@ pub mod tests {
                 result.cc_details.tokens,
                 quote! { SomeStruct::fn_taking_reference },
             );
-            assert_rs_not_matches!(result.rs_details, quote! { fn_taking_reference },);
+            assert_rs_not_matches!(result.rs_details.tokens, quote! { fn_taking_reference },);
         });
     }
 
@@ -8336,7 +8509,7 @@ pub mod tests {
                 },
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     ...
                     #[unsafe(no_mangle)]
@@ -8412,7 +8585,7 @@ pub mod tests {
                 },
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn ...<'__anon1>(__self: &'__anon1 ::rust_out::SomeStruct) -> f32 {
@@ -8484,7 +8657,7 @@ pub mod tests {
                 },
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn ...<'__anon1>(
@@ -8560,7 +8733,7 @@ pub mod tests {
                 }
             );
             assert_cc_not_matches!(result.cc_details.tokens, quote! { SomeStruct::get_f32 },);
-            assert_rs_not_matches!(result.rs_details, quote! { get_f32 },);
+            assert_rs_not_matches!(result.rs_details.tokens, quote! { get_f32 },);
         });
     }
 
@@ -8597,7 +8770,7 @@ pub mod tests {
                 }
             );
             assert_cc_not_matches!(result.cc_details.tokens, quote! { SomeStruct::set_f32 },);
-            assert_rs_not_matches!(result.rs_details, quote! { set_f32 },);
+            assert_rs_not_matches!(result.rs_details.tokens, quote! { set_f32 },);
         });
     }
 
@@ -8637,7 +8810,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                    #[unsafe(no_mangle)]
                    extern "C" fn ...(
@@ -8694,8 +8867,8 @@ pub mod tests {
             );
 
             // Trivial copy doesn't require any Rust details.
-            assert_rs_not_matches!(result.rs_details, quote! { Copy });
-            assert_rs_not_matches!(result.rs_details, quote! { copy });
+            assert_rs_not_matches!(result.rs_details.tokens, quote! { Copy });
+            assert_rs_not_matches!(result.rs_details.tokens, quote! { copy });
         });
     }
 
@@ -8764,7 +8937,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn ...<'__anon1>(
@@ -8853,7 +9026,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 20);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
@@ -8987,7 +9160,7 @@ pub mod tests {
             );
             assert_cc_not_matches!(result.cc_details.tokens, quote! { pass_by_value });
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     ...
                     #[unsafe(no_mangle)]
@@ -8999,7 +9172,7 @@ pub mod tests {
                     ...
                 }
             );
-            assert_rs_not_matches!(result.rs_details, quote! { pass_by_value });
+            assert_rs_not_matches!(result.rs_details.tokens, quote! { pass_by_value });
         });
     }
 
@@ -9110,7 +9283,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     ...
                     #[unsafe(no_mangle)]
@@ -9231,7 +9404,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     ...
                     #[unsafe(no_mangle)]
@@ -9374,7 +9547,7 @@ pub mod tests {
             );
             assert_cc_not_matches!(result.cc_details.tokens, quote! { pass_by_value });
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     ...
                     #[unsafe(no_mangle)]
@@ -9393,7 +9566,7 @@ pub mod tests {
                     ...
                 }
             );
-            assert_rs_not_matches!(result.rs_details, quote! { pass_by_value });
+            assert_rs_not_matches!(result.rs_details.tokens, quote! { pass_by_value });
         });
     }
 
@@ -9480,7 +9653,7 @@ pub mod tests {
             );
 
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 4);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
@@ -9605,7 +9778,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeEnum>() == 1);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeEnum>() == 1);
@@ -9665,7 +9838,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::Point>() == 12);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::Point>() == 4);
@@ -9743,7 +9916,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 8);
@@ -10885,7 +11058,7 @@ pub mod tests {
             );
             // Check that the fields are not renamed in the Rust side.
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     ::core::mem::offset_of!(::rust_out::X, a) == 0
                 }
@@ -11356,7 +11529,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 4);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 4);
@@ -11433,7 +11606,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 4);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 4);
@@ -11482,7 +11655,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 8);
@@ -11544,7 +11717,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     ...
                     extern "C" fn ... (...) -> () {...(<::rust_out::SomeUnion as ::core::clone::Clone>::clone(__self...))...}
@@ -11605,7 +11778,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs_details,
+                result.rs_details.tokens,
                 quote! {
                     ...
                     extern "C" fn ... (__self: &mut ::core::mem::MaybeUninit<::rust_out::SomeUnion>...) { unsafe { __self.assume_init_drop() }; }
