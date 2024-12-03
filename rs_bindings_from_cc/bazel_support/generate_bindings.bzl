@@ -118,18 +118,20 @@ def generate_bindings(
     toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"]
     rs_bindings_from_cc_tool = toolchain.rs_bindings_from_cc_toolchain_info.binary
 
+    system_include_directories = depset(
+       direct = [
+         # libcxx headers.
+         cc_toolchain.built_in_include_directories[0],
+       ] + _get_include_paths_for_builtin_headers_and_compiler_rt_headers(ctx, cc_toolchain) + [
+         cc_toolchain.built_in_include_directories[2],
+       ],
+       transitive = [compilation_context.system_includes],
+    )
+
     variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
-        system_include_directories = depset(
-            direct = [
-               # libcxx headers.
-               cc_toolchain.built_in_include_directories[0],
-            ] + _get_include_paths_for_builtin_headers_and_compiler_rt_headers(ctx, cc_toolchain) + [
-               cc_toolchain.built_in_include_directories[2],
-            ],
-            transitive = [compilation_context.system_includes],
-        ),
+        system_include_directories = system_include_directories,
         include_directories = compilation_context.includes,
         quote_include_directories = compilation_context.quote_includes,
         user_compile_flags = ctx.fragments.cpp.copts +
