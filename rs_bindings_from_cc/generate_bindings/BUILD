@@ -10,6 +10,7 @@ load(
 rust_library(
     name = "generate_bindings",
     srcs = [
+        "code_snippet.rs",
         "db.rs",
         "generate_func.rs",
         "generate_record.rs",

@@ -3,11 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![allow(clippy::collapsible_else_if)]
 
+mod code_snippet;
 mod db;
 mod generate_func;
 mod generate_record;
 mod rs_snippet;
 
+use code_snippet::{Bindings, BindingsTokens, FfiBindings, GeneratedItem};
 use db::{BindingsGenerator, Database};
 use generate_record::{generate_incomplete_record, generate_record};
 
@@ -18,7 +20,7 @@ use error_report::{anyhow, bail, ensure, ErrorReport, ErrorReporting, IgnoreErro
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
-use proc_macro2::{Ident, Literal, TokenStream};
+use proc_macro2::{Literal, TokenStream};
 use quote::{quote, ToTokens};
 use std::collections::BTreeSet;
 use std::ffi::{OsStr, OsString};
@@ -30,14 +32,6 @@ use std::rc::Rc;
 use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
 };
-
-/// FFI equivalent of `Bindings`.
-#[repr(C)]
-pub struct FfiBindings {
-    rs_api: FfiU8SliceBox,
-    rs_api_impl: FfiU8SliceBox,
-    error_report: FfiU8SliceBox,
-}
 
 /// Deserializes IR from `json` and generates bindings source code.
 ///
@@ -106,24 +100,6 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
         }
     })
     .unwrap_or_else(|_| process::abort())
-}
-
-/// Source code for generated bindings.
-struct Bindings {
-    // Rust source code.
-    rs_api: String,
-    // C++ source code.
-    rs_api_impl: String,
-}
-
-/// Source code for generated bindings, as tokens.
-///
-/// This is public within the crate for testing purposes.
-pub(crate) struct BindingsTokens {
-    // Rust source code.
-    rs_api: TokenStream,
-    // C++ source code.
-    rs_api_impl: TokenStream,
 }
 
 fn generate_bindings(
@@ -429,22 +405,6 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
         assertions: quote! { #( #assertions )* },
         ..Default::default()
     })
-}
-
-#[derive(Clone, Debug, Default)]
-struct GeneratedItem {
-    item: TokenStream,
-    thunks: TokenStream,
-    // C++ source code for helper functions.
-    thunk_impls: TokenStream,
-    assertions: TokenStream,
-    features: BTreeSet<Ident>,
-}
-
-impl From<TokenStream> for GeneratedItem {
-    fn from(item: TokenStream) -> Self {
-        GeneratedItem { item, ..Default::default() }
-    }
 }
 
 /// Returns generated bindings for an item, or `Err` if bindings generation
