@@ -2,7 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::{BindingsGenerator, GeneratedItem};
+use crate::db::BindingsGenerator;
+use crate::GeneratedItem;
 
 use crate::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
@@ -3095,10 +3096,8 @@ mod tests {
 
     #[gtest]
     fn test_format_generic_params() -> Result<()> {
-        assert!(
-            format_generic_params(/* lifetimes= */ &[], std::iter::empty::<syn::Ident>())
-                .is_empty(),
-        );
+        assert!(format_generic_params(/* lifetimes= */ &[], std::iter::empty::<syn::Ident>())
+            .is_empty(),);
 
         let idents = ["T1", "T2"].iter().map(|s| make_rs_ident(s));
         assert_rs_matches!(

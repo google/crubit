@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![allow(clippy::collapsible_else_if)]
 
-use crate::{BindingsGenerator, Database, GeneratedItem};
+use crate::db::{BindingsGenerator, Database};
+use crate::GeneratedItem;
 
 use crate::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind, TypeLocation};
 use arc_anyhow::{Context, Result};

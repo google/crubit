@@ -3,16 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![allow(clippy::collapsible_else_if)]
 
+mod db;
 mod generate_func;
 mod generate_record;
 mod rs_snippet;
 
-use generate_func::{
-    generate_func, get_binding, is_record_clonable, overloaded_funcs, FunctionId, ImplKind,
-};
-use generate_record::{
-    collect_unqualified_member_functions, generate_incomplete_record, generate_record,
-};
+use db::{BindingsGenerator, Database};
+use generate_record::{generate_incomplete_record, generate_record};
 
 use crate::rs_snippet::{CratePath, Lifetime, Mutability, PrimitiveType, RsTypeKind, TypeLocation};
 use arc_anyhow::{Context, Error, Result};
@@ -23,7 +20,7 @@ use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{quote, ToTokens};
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::ffi::{OsStr, OsString};
 use std::fmt::{Display, Formatter};
 use std::panic::catch_unwind;
@@ -109,37 +106,6 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
         }
     })
     .unwrap_or_else(|_| process::abort())
-}
-
-memoized::query_group! {
-    trait BindingsGenerator {
-        #[input]
-        fn ir(&self) -> Rc<IR>;
-        #[input]
-        fn errors(&self) -> Rc<dyn ErrorReporting>;
-        #[input]
-        fn generate_source_loc_doc_comment(&self) -> SourceLocationDocComment;
-
-        fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
-
-        fn generate_func(&self, func: Rc<Func>, record_overwrite: Option<Rc<Record>>) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>>;
-
-        fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
-
-        fn is_record_clonable(&self, record: Rc<Record>) -> bool;
-
-        fn get_binding(
-            &self,
-            expected_function_name: UnqualifiedIdentifier,
-            expected_param_types: Vec<RsTypeKind>,
-        ) -> Option<(Ident, ImplKind)>;
-
-        fn collect_unqualified_member_functions(
-            &self,
-            record: Rc<Record>,
-        ) -> Rc<[Rc<Func>]>;
-    }
-    struct Database;
 }
 
 /// Source code for generated bindings.
