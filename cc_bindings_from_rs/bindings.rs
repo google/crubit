@@ -1404,9 +1404,7 @@ enum BridgedTypeConversionInfo {
 /// Returns an error if `ty` is not pointer-like.
 fn ensure_ty_is_pointer_like<'tcx>(db: &dyn BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<()> {
     if let ty::TyKind::Adt(adt, _) = ty.kind() {
-        let repr_attrs = db.repr_attrs(adt.did());
-
-        if !repr_attrs.contains(&rustc_attr::ReprTransparent) {
+        if !adt.repr().transparent() {
             bail!("Can't convert {ty} to a C++ pointer as it's not `repr(transparent)`");
         }
 
