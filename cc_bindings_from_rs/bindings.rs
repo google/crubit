@@ -1023,7 +1023,13 @@ fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
     // Check the assumption from `rust_builtin_type_abi_assumptions.md` that Rust's
     // slice has the same ABI as `rs_std::SliceRef`.
     let layout = tcx
-        .layout_of(ty::ParamEnv::empty().and(ty))
+        .layout_of(
+            ty::TypingEnv {
+                typing_mode: ty::TypingMode::PostAnalysis,
+                param_env: ty::ParamEnv::empty(),
+            }
+            .as_query_input(ty),
+        )
         .expect("`layout_of` is expected to succeed for `{ty}` type")
         .layout;
     assert_eq!(8, layout.align().abi.bytes());
@@ -1105,7 +1111,13 @@ fn format_ty_for_cc<'tcx>(
             // `rust_builtin_type_abi_assumptions.md` - we assume that Rust's `char` has the
             // same ABI as `u32`.
             let layout = tcx
-                .layout_of(ty::ParamEnv::empty().and(ty.mid()))
+                .layout_of(
+                    ty::TypingEnv {
+                        typing_mode: ty::TypingMode::PostAnalysis,
+                        param_env: ty::ParamEnv::empty(),
+                    }
+                    .as_query_input(ty.mid()),
+                )
                 .expect("`layout_of` is expected to succeed for the builtin `char` type")
                 .layout;
             assert_eq!(4, layout.align().abi.bytes());
@@ -2666,6 +2678,10 @@ fn create_type_alias<'tcx>(
     })
 }
 
+fn post_analysis_typing_env(tcx: TyCtxt, def_id: DefId) -> ty::TypingEnv {
+    ty::TypingEnv { typing_mode: ty::TypingMode::PostAnalysis, param_env: tcx.param_env(def_id) }
+}
+
 /// Formats a function with the given `local_def_id`.
 ///
 /// Will panic if `local_def_id`
@@ -2907,7 +2923,7 @@ fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result
                     }
                 } else if is_c_abi_compatible_by_value(*ty) {
                     Ok(quote! { #cc_name })
-                } else if !ty.needs_drop(tcx, tcx.param_env(def_id)) {
+                } else if !ty.needs_drop(tcx, post_analysis_typing_env(tcx, def_id)) {
                     // As an optimization, if the type is trivially destructible, we don't
                     // need to move it to a new NoDestructor location. We can directly copy the
                     // bytes.
@@ -3054,7 +3070,7 @@ impl<'tcx> Hash for AdtCoreBindings<'tcx> {
 
 impl<'tcx> AdtCoreBindings<'tcx> {
     fn needs_drop(&self, tcx: TyCtxt<'tcx>) -> bool {
-        self.self_ty.needs_drop(tcx, tcx.param_env(self.def_id))
+        self.self_ty.needs_drop(tcx, post_analysis_typing_env(tcx, self.def_id))
     }
 }
 
@@ -3095,18 +3111,13 @@ fn is_public_or_supported_export(db: &dyn BindingsGenerator<'_>, def_id: DefId) 
 }
 
 fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
-    let param_env = match ty.ty_adt_def() {
-        None => ty::ParamEnv::empty(),
-        Some(adt_def) => tcx.param_env(adt_def.did()),
-    };
-
-    tcx.layout_of(param_env.and(ty)).map(|ty_and_layout| ty_and_layout.layout).map_err(
-        |layout_err| {
+    tcx.layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
+        .map(|ty_and_layout| ty_and_layout.layout)
+        .map_err(|layout_err| {
             // Have to use `.map_err`, because `LayoutError` doesn't satisfy the
             // `anyhow::context::ext::StdError` trait bound.
             anyhow!("Error computing the layout: {layout_err}")
-        },
-    )
+        })
 }
 
 /// Formats the core of an algebraic data type (an ADT - a struct, an enum, or a
@@ -4019,7 +4030,7 @@ fn format_trait_thunks<'tcx>(
         // To support "drop glue" we don't require that `self_ty` directly implements
         // the `Drop` trait.  Instead we require the caller to check
         // `needs_drop`.
-        assert!(self_ty.needs_drop(tcx, tcx.param_env(adt.def_id)));
+        assert!(self_ty.needs_drop(tcx, post_analysis_typing_env(tcx, adt.def_id)));
     } else if !does_type_implement_trait(tcx, self_ty, trait_id) {
         let trait_name = tcx.item_name(trait_id);
         bail!("`{self_ty}` doesn't implement the `{trait_name}` trait");
@@ -4201,7 +4212,7 @@ fn format_copy_ctor_and_assignment_operator<'tcx>(
             // TODO(b/259749095): Once generic ADTs are supported, `is_copy_modulo_regions`
             // might need to be replaced with a more thorough check - see
             // b/258249993#comment4.
-            core.self_ty.is_copy_modulo_regions(tcx, tcx.param_env(core.def_id))
+            core.self_ty.is_copy_modulo_regions(tcx, post_analysis_typing_env(tcx, core.def_id))
         };
         if is_copy {
             let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
@@ -4291,7 +4302,7 @@ fn format_move_ctor_and_assignment_operator<'tcx>(
         let adt_cc_name = &core.cc_short_name;
         if core.needs_drop(tcx) {
             let has_default_ctor = db.format_default_ctor(core.clone()).is_ok();
-            let is_unpin = core.self_ty.is_unpin(tcx, tcx.param_env(core.def_id));
+            let is_unpin = core.self_ty.is_unpin(tcx, post_analysis_typing_env(tcx, core.def_id));
             if has_default_ctor && is_unpin {
                 let main_api = CcSnippet::new(quote! {
                     #adt_cc_name(#adt_cc_name&&); __NEWLINE__
