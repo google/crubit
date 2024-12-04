@@ -4189,6 +4189,31 @@ TEST(SmartPointerCollectEvidenceFromDeclarationTest, ReturnsNonnullAttribute) {
   EXPECT_THAT(collectFromTargetFuncDecl(Src), IsEmpty());
 }
 
+TEST(CollectEvidenceFromDeclarationTest, MainNoParams) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int main() {}
+  )cc";
+  EXPECT_THAT(collectFromDecl(Src, "main"), IsEmpty());
+}
+
+TEST(CollectEvidenceFromDeclarationTest, MainTwoParamsNestedPointer) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int main(int argc, char** argv) {}
+  )cc";
+  EXPECT_THAT(collectFromDecl(Src, "main"),
+              ElementsAre(evidence(paramSlot(1), Evidence::WELL_KNOWN_NONNULL,
+                                   functionNamed("main"))));
+}
+
+TEST(CollectEvidenceFromDeclarationTest, MainTwoParamsPointerToArray) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int main(int argc, char* argv[]) {}
+  )cc";
+  EXPECT_THAT(collectFromDecl(Src, "main"),
+              ElementsAre(evidence(paramSlot(1), Evidence::WELL_KNOWN_NONNULL,
+                                   functionNamed("main"))));
+}
+
 TEST(CollectEvidenceFromDeclarationTest, Pragma) {
   static constexpr llvm::StringRef Src = R"cc(
 #pragma nullability file_default nonnull

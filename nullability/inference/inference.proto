@@ -135,6 +135,12 @@ message Evidence {
     // because it does not require that the argument type is Nonnull, the way
     // passing a reference to a mutable nonnull value does.
     NONNULL_REFERENCE_ARGUMENT_AS_CONST = 28;
+    // A decl that is defined by the standard or strong convention to be
+    // Nonnull.
+    WELL_KNOWN_NONNULL = 29;
+    // A decl that is defined by the standard or strong convention to be
+    // Nullable.
+    WELL_KNOWN_NULLABLE = 30;
   }
 }
 

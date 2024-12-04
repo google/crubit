@@ -156,6 +156,7 @@ VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
     case Evidence::ARITHMETIC:
     case Evidence::GCC_NONNULL_ATTRIBUTE:
     case Evidence::ASSIGNED_TO_NONNULL_REFERENCE:
+    case Evidence::WELL_KNOWN_NONNULL:
       // Evidence pointing toward Unknown is only used to prevent Nonnull
       // inferences; it cannot override Nullable. So propagate it in the same
       // direction we do for Nonnull-pointing evidence.
@@ -173,6 +174,7 @@ VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
     case Evidence::ASSIGNED_TO_MUTABLE_NULLABLE:
     case Evidence::ASSIGNED_FROM_NULLABLE:
     case Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER:
+    case Evidence::WELL_KNOWN_NULLABLE:
       return ForReturnSlot
                  ? VirtualMethodEvidenceFlowDirection::kFromDerivedToBase
                  : VirtualMethodEvidenceFlowDirection::kFromBaseToDerived;
@@ -1705,6 +1707,20 @@ static void collectNonnullAttributeEvidence(
   }
 }
 
+static void emitWellKnownNullability(const clang::FunctionDecl &Fn,
+                                     llvm::function_ref<EvidenceEmitter> Emit) {
+  if (Fn.isMain() && Fn.getNumParams() > 1) {
+    if (const auto *ArgvParam = Fn.getParamDecl(1)) {
+      Emit(Fn, paramSlot(1), Evidence::WELL_KNOWN_NONNULL,
+           ArgvParam->getBeginLoc());
+      // When we infer for nested pointers, we can add here that the inner
+      // pointer, if the type is declared as char**, is Nullable. We need to
+      // check the type though, as in many cases it is defined as a pointer to
+      // an array of char instead.
+    }
+  }
+}
+
 void collectEvidenceFromTargetDeclaration(
     const clang::Decl &D, llvm::function_ref<EvidenceEmitter> Emit,
     const NullabilityPragmas &Pragmas) {
@@ -1713,6 +1729,8 @@ void collectEvidenceFromTargetDeclaration(
     if (auto K = evidenceKindFromDeclaredReturnType(*Fn, Defaults))
       Emit(*Fn, SLOT_RETURN_TYPE, *K,
            Fn->getReturnTypeSourceRange().getBegin());
+    emitWellKnownNullability(*Fn, Emit);
+
     if (const auto *RNNA = Fn->getAttr<ReturnsNonNullAttr>()) {
       // The attribute does not apply to references-to-pointers or nested
       // pointers or smart pointers.
