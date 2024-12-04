@@ -1130,8 +1130,9 @@ TEST(ExistingAnnotationLengthTest, DoubleClosingAngleBrackets) {
 TEST(ExistingAnnotationLengthTest, ClangAttribute) {
   auto Input = Annotations(R"(
   void target($no[[int*]] P, $yes[[int*]] _Null_unspecified Q,
-              $with_comment[[int*]]/* a comment */_Null_unspecified R,
-              $nullable[[int*]] _Nullable S, $nonnull[[int*]] _Nonnull T);
+              $no_space[[int*]]_Null_unspecified R,
+              $with_comment[[int*]]/* a comment */_Null_unspecified S,
+              $nullable[[int*]] _Nullable T, $nonnull[[int*]] _Nonnull U);
     )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -1141,11 +1142,13 @@ TEST(ExistingAnnotationLengthTest, ClangAttribute) {
                       noPreRangeLength(), noPostRangeLength()),
                 AllOf(eligibleRange(2, 0, Input.range("yes")),
                       preRangeLength(0), postRangeLength(18)),
-                AllOf(eligibleRange(3, 0, Input.range("with_comment")),
+                AllOf(eligibleRange(3, 0, Input.range("no_space")),
+                      preRangeLength(0), postRangeLength(17)),
+                AllOf(eligibleRange(4, 0, Input.range("with_comment")),
                       preRangeLength(0), postRangeLength(32)),
-                AllOf(eligibleRange(4, 0, Input.range("nullable")),
+                AllOf(eligibleRange(5, 0, Input.range("nullable")),
                       preRangeLength(0), postRangeLength(10)),
-                AllOf(eligibleRange(5, 0, Input.range("nonnull")),
+                AllOf(eligibleRange(6, 0, Input.range("nonnull")),
                       preRangeLength(0), postRangeLength(9)))));
 }
 

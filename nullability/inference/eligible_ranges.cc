@@ -132,23 +132,30 @@ getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
   return {PrevTokOffset, NextTokOffset};
 }
 
-/// If the token immediately after `End` is a clang _Null_unspecified attribute,
-/// returns the end location of the attribute. Else, returns std::nullopt.
+/// If the token immediately after `End` is a clang nullability attribute,
+/// returns the end offset of the attribute. Else, returns std::nullopt.
 static std::optional<unsigned> getEndOffsetOfImmediateClangAttribute(
     SourceLocation End, const SourceManager &SM, const LangOptions &LangOpts,
     const FileID &DeclFID) {
-  // We can simply use `findNextTokenSkippingComments` because the attribute
-  // must come at least one space or comment after the type, so it will come
-  // after `End`, not at `End`.
-  std::optional<Token> NextTok =
-      utils::lexer::findNextTokenSkippingComments(End, SM, LangOpts);
-  if (!NextTok) return std::nullopt;
-  if (!NextTok->is(tok::raw_identifier)) return std::nullopt;
-  if (const StringRef ID = NextTok->getRawIdentifier();
+  std::optional<Token> PossibleAttribute;
+  Token AtEnd;
+  // The annotation may appear at `End`, so check the token there first. If it's
+  // whitespace or otherwise fails or is a comment, check the next token.
+  if (bool Failed = Lexer::getRawToken(End, AtEnd, SM, LangOpts,
+                                       /*IgnoreWhiteSpace=*/true);
+      !Failed && !AtEnd.is(tok::comment)) {
+    PossibleAttribute = AtEnd;
+  } else {
+    PossibleAttribute =
+        utils::lexer::findNextTokenSkippingComments(End, SM, LangOpts);
+  }
+  if (!PossibleAttribute) return std::nullopt;
+  if (!PossibleAttribute->is(tok::raw_identifier)) return std::nullopt;
+  if (const StringRef ID = PossibleAttribute->getRawIdentifier();
       ID != "_Null_unspecified" && ID != "_Nonnull" && ID != "_Nullable")
     return std::nullopt;
 
-  auto [FID, Offset] = SM.getDecomposedLoc(NextTok->getEndLoc());
+  auto [FID, Offset] = SM.getDecomposedLoc(PossibleAttribute->getEndLoc());
   if (FID != DeclFID) return std::nullopt;
 
   return Offset;
