@@ -13,6 +13,7 @@ rust_library(
         "code_snippet.rs",
         "db.rs",
         "generate_comment.rs",
+        "generate_enum.rs",
         "generate_func.rs",
         "generate_record.rs",
         "lib.rs",
