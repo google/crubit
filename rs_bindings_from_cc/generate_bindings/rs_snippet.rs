@@ -388,6 +388,17 @@ pub enum RsTypeKind {
 }
 
 impl RsTypeKind {
+    pub fn new_type_alias(db: &dyn BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<Self> {
+        let ir = db.ir();
+        let underlying_type = Rc::new(db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?);
+        let crate_path = Rc::new(CratePath::new(
+            &ir,
+            ir.namespace_qualifier(&type_alias)?,
+            rs_imported_crate_name(&type_alias.owning_target, &ir),
+        ));
+        Ok(RsTypeKind::TypeAlias { type_alias, crate_path, underlying_type })
+    }
+
     pub fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>, ir: &IR) -> Result<Self> {
         let crate_path = Rc::new(CratePath::new(
             ir,
