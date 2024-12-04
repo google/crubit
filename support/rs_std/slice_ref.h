@@ -19,8 +19,8 @@ namespace rs_std {
 
 // `rs_std::SliceRef` is a C++ representation of a pointer or reference to a
 // Rust slice. `SliceRef<int const>` is like a `&[c_int]` or `*const [c_int]`,
-// while `SliceRef<int>` is like a `&[c_int]` or `*mut [c_int]`. `SliceRef` is
-// trivially destructible, copyable, and moveable.
+// while `SliceRef<int>` is like a `&mut [c_int]` or `*mut [c_int]`. `SliceRef`
+// is trivially destructible, copyable, and moveable.
 // `rust_builtin_type_abi_assumptions.md` documents the ABI compatibility of
 // these types.
 template <typename T>
