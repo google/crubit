@@ -12,6 +12,7 @@ rust_library(
     srcs = [
         "code_snippet.rs",
         "db.rs",
+        "generate_comment.rs",
         "generate_func.rs",
         "generate_record.rs",
         "lib.rs",
