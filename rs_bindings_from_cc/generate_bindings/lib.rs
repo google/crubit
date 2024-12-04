@@ -8,6 +8,7 @@ mod db;
 mod generate_comment;
 mod generate_enum;
 mod generate_func;
+mod generate_function_thunk;
 mod generate_record;
 mod rs_snippet;
 

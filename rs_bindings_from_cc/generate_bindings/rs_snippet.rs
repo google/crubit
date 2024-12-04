@@ -135,6 +135,16 @@ impl ToTokens for CratePath {
     }
 }
 
+pub fn unique_lifetimes<'a>(
+    types: impl IntoIterator<Item = &'a RsTypeKind> + 'a,
+) -> impl Iterator<Item = Lifetime> + 'a {
+    let mut unordered_lifetimes = HashSet::new();
+    types
+        .into_iter()
+        .flat_map(|ty| ty.lifetimes())
+        .filter(move |lifetime| unordered_lifetimes.insert(lifetime.clone()))
+}
+
 pub fn format_generic_params<'a, T: ToTokens>(
     lifetimes: impl IntoIterator<Item = &'a Lifetime>,
     types: impl IntoIterator<Item = T>,

@@ -15,6 +15,7 @@ rust_library(
         "generate_comment.rs",
         "generate_enum.rs",
         "generate_func.rs",
+        "generate_function_thunk.rs",
         "generate_record.rs",
         "lib.rs",
         "rs_snippet.rs",
