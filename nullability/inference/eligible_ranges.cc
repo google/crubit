@@ -376,13 +376,15 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     // The start of the new range.
     SourceLocation Begin = R->getBegin();
 
-    // We don't annotate bare template type arguments or bare `auto`.
-    // For example, we would annotate only the types of B, D, and F in
+    // We don't annotate bare template type arguments or bare `auto`, qualified
+    // or not, or references to such types. For example, we would annotate only
+    // the types of B, D, and G in
     // ```cc
     //   template <typename T>
-    //   void f(T A, T* B, auto C, auto* D) {
-    //     auto E = A;
-    //     auto* F = B;
+    //   void f(T A, T* B, auto C, auto* D, const T& E) {
+    //     auto F = A;
+    //     auto* G = B;
+    //     const auto& H = C;
     //   }
     // ```
     // The only known case of a bare `auto` range being included in
@@ -390,7 +392,7 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     // parameter introduced by using `auto` as a function parameter type. Other
     // cases are not collected by the NullabilityWalker, and so don't need to be
     // skipped here.
-    if (MaybeLoc->getAs<SubstTemplateTypeParmTypeLoc>()) {
+    if (MaybeLoc->getUnqualifiedLoc().getAs<SubstTemplateTypeParmTypeLoc>()) {
       continue;
     }
 
@@ -445,13 +447,14 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
       }
     }
 
-    auto PTL = MaybeLoc->getAsAdjusted<PointerTypeLoc>();
+    auto PTL = MaybeLoc->getUnqualifiedLoc().getAsAdjusted<PointerTypeLoc>();
     if (PTL) {
-      while (auto PointeeTL =
-                 PTL.getPointeeLoc().getAsAdjusted<PointerTypeLoc>()) {
+      while (auto PointeeTL = PTL.getPointeeLoc()
+                                  .getUnqualifiedLoc()
+                                  .getAsAdjusted<PointerTypeLoc>()) {
         PTL = PointeeTL;
       }
-      if (PTL.getPointeeLoc().getAs<AutoTypeLoc>()) {
+      if (PTL.getPointeeLoc().getUnqualifiedLoc().getAs<AutoTypeLoc>()) {
         Range.Range.set_contains_auto_star(true);
       }
     }

@@ -942,6 +942,43 @@ TEST(EligibleRangesTest, RangesWithBareAutoTypeNotReturned) {
   EXPECT_THAT(getVarRanges(Input.code(), "GNoStarNullable"), IsEmpty());
 }
 
+TEST(EligibleRangesTest, RangesWithBareAutoAsTemplateParameterNotReturned) {
+  auto Input = Annotations(R"(
+    namespace std {
+    template <typename T>
+    class unique_ptr;
+    }
+
+    void func(auto P, auto& Q) { }
+
+    // The exclusion of std:: from `B`'s range is a known limitation of our
+    // support for complex declarators, like function pointers, that contain
+    // nested smart pointer types.
+    void lambdaRecipient($A[[void (*A)(const std::$B[[unique_ptr<int>]]& B)]]) {}
+
+    void usage() {
+      $I[[int*]] I;
+      func(I, I);
+      lambdaRecipient([](const auto& X) {});
+    }
+  )");
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input.code(), Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  EXPECT_THAT(
+      getEligibleRanges(TU.context(), Defaults),
+      // The only eligible ranges in the entire snippet are the function pointer
+      // parameter `A`, it's unique_ptr parameter `B`, and the local variable
+      // `I`. No ranges are collected for the bare `auto` parameters of `func`
+      // or the bare `auto` parameter of the lambda.
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(eligibleRange(1, 0, Input.range("A")),
+                               eligibleRange(std::nullopt, 1, Input.range("B")),
+                               eligibleRange(0, 0, Input.range("I")))));
+}
+
 MATCHER_P3(autoEligibleRangeWithNoExistingAnnotation, SlotInDecl, SlotInType,
            Range, "") {
   return ExplainMatchResult(true, arg.Range.contains_auto_star(),
@@ -970,6 +1007,10 @@ TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
     
     int* getPtr();
     $var_auto[[auto*]] GStar = getPtr();
+    $var_auto_const[[auto*]] const GStarConst = getPtr();
+    $var_const_auto[[const auto*]]  GConstStar = getPtr();
+    $var_auto_const_ref[[auto*]] const& GStarConstRef = getPtr();
+    $var_const_auto_ref[[const auto*]]& GConstStarRef = GConstStar;
     $var_auto_attributed[[auto*]] _Nullable GStarNullable = getPtr();
     $var_auto_star_star[[$var_auto_star_inner[[auto*]]*]] GStarStar = &GStar;
     )");
@@ -991,6 +1032,26 @@ TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
                 0, 0, Input.range("var_auto")))));
+  EXPECT_THAT(
+      getVarRanges(Input.code(), "GStarConst"),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
+                0, 0, Input.range("var_auto_const")))));
+  EXPECT_THAT(
+      getVarRanges(Input.code(), "GConstStar"),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
+                0, 0, Input.range("var_const_auto")))));
+  EXPECT_THAT(
+      getVarRanges(Input.code(), "GStarConstRef"),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
+                0, 0, Input.range("var_auto_const_ref")))));
+  EXPECT_THAT(
+      getVarRanges(Input.code(), "GConstStarRef"),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
+                0, 0, Input.range("var_const_auto_ref")))));
   EXPECT_THAT(
       getVarRanges(Input.code(), "GStarNullable"),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
