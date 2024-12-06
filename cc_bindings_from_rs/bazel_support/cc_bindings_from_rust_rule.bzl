@@ -51,6 +51,10 @@ load(
     "find_crubit_features",
 )
 load(
+    "//features:global_features.bzl",
+    "SUPPORTED_FEATURES",
+)
+load(
     "//rs_bindings_from_cc/bazel_support:compile_rust.bzl",
     "compile_rust",
 )
@@ -124,6 +128,8 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
         for feature in dep_bindings_info.features:
             arg = dep_bindings_info.crate_key + "=" + feature
             crubit_args.add("--crate-feature", arg)
+
+    crubit_args.add("--default-features", ",".join(SUPPORTED_FEATURES))
 
     features = find_crubit_features(target, ctx)
 

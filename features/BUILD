@@ -1,5 +1,9 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
+    "//features:global_features.bzl",
+    "SUPPORTED_FEATURES",
+)
+load(
     ":crubit_feature_hint.bzl",
     "crubit_feature_hint",
 )
@@ -9,23 +13,19 @@ package(
     default_visibility = ["//visibility:private"],
 )
 
-_SUPPORTED_FEATURES = [
-    "supported",
-]
-
 _EXPERIMENTAL_CLIENTS = [
     "//:__subpackages__",
 ]
 
 crubit_feature_hint(
     name = "supported",
-    crubit_features = _SUPPORTED_FEATURES,
+    crubit_features = SUPPORTED_FEATURES,
     visibility = ["//visibility:public"],
 )
 
 crubit_feature_hint(
     name = "experimental",
-    crubit_features = _SUPPORTED_FEATURES + [
+    crubit_features = SUPPORTED_FEATURES + [
         "experimental",
     ],
     visibility = _EXPERIMENTAL_CLIENTS,
