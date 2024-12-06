@@ -30,9 +30,13 @@ absl::StatusOr<const clang::AnnotateAttr*> GetAnnotateAttr(
 absl::StatusOr<bool> GetAnnotateArgAsBool(const clang::AnnotateAttr& attr,
                                           const clang::ASTContext& ast_context);
 
-// Evaluates `expr` as a string literal.
+// Evaluates the single expr of `attr` as a string literal.
 absl::StatusOr<absl::string_view> GetAnnotateArgAsStringLiteral(
     const clang::AnnotateAttr& attr, const clang::ASTContext& ast_context);
+
+// Evaluates `expr` as a string literal.
+absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
+    const clang::Expr& expr, const clang::ASTContext& ast_context);
 
 std::optional<std::string> GetAnnotateArgAsStringByAttribute(
     const clang::Decl* decl, absl::string_view attribute);

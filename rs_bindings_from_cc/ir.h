@@ -22,6 +22,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
@@ -581,6 +582,25 @@ struct TemplateSpecialization {
   std::vector<TemplateArg> template_args;
 };
 
+enum class TraitImplPolarity : int8_t { kNegative, kNone, kPositive };
+
+// The set of traits to derive on the Rust type.
+struct TraitDerives {
+  llvm::json::Value ToJson() const;
+
+  absl::Nullable<TraitImplPolarity*> Polarity(absl::string_view trait);
+
+  // <internal link> start
+  TraitImplPolarity clone = TraitImplPolarity::kNone;
+  TraitImplPolarity copy = TraitImplPolarity::kNone;
+  TraitImplPolarity debug = TraitImplPolarity::kNone;
+  TraitImplPolarity send = TraitImplPolarity::kNone;
+  TraitImplPolarity sync = TraitImplPolarity::kNone;
+  TraitImplPolarity unpin = TraitImplPolarity::kNone;
+  // <internal link> end
+  std::vector<std::string> custom;
+};
+
 // A record (struct, class, union).
 struct Record {
   llvm::json::Value ToJson() const;
@@ -605,6 +625,7 @@ struct Record {
   std::vector<Field> fields;
   std::vector<LifetimeName> lifetime_params;
   SizeAlign size_align;
+  TraitDerives trait_derives;
 
   // True if any base classes exist.
   bool is_derived_class;
@@ -655,7 +676,7 @@ struct Record {
   // * https://en.cppreference.com/w/cpp/language/aggregate_initialization
   bool is_aggregate = false;
 
-  // It is an anoymous record with a typedef name.
+  // It is an anonymous record with a typedef name.
   bool is_anon_record_with_typedef = false;
 
   // True when this record is created from an explicit class template

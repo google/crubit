@@ -701,6 +701,9 @@ fn generate_derives(record: &Record) -> Vec<Ident> {
     if should_derive_copy(record) {
         derives.push(make_rs_ident("Copy"));
     }
+    if record.trait_derives.debug == TraitImplPolarity::Positive {
+        derives.push(make_rs_ident("Debug"));
+    }
     derives
 }
 

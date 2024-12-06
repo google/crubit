@@ -583,6 +583,32 @@ fn test_struct_with_bridge_type_annotation() {
 }
 
 #[gtest]
+fn test_struct_with_trait_derive_annotation() {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_trait_derive", "Debug", "!Send")]]
+                RecordWithDerives {
+            int foo;
+        };"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "RecordWithDerives", ...
+                unknown_attr: Some("clang::annotate"), ...
+                trait_derives: TraitDerives { ...
+                  debug: Positive, ...
+                  send: Negative, ...
+                }, ...
+            }
+        }
+    );
+}
+
+#[gtest]
 fn test_struct_with_unnamed_struct_and_union_members() {
     // This test input causes `field_decl->getName()` to return an empty string.
     // See also:
@@ -2479,7 +2505,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
               size_align: SizeAlign {
                   size: 8,
                   alignment: 4,
-              },
+              }, ...
               is_derived_class: true,
               override_alignment: true,
               ...

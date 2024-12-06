@@ -658,6 +658,25 @@ pub struct TemplateSpecialization {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub enum TraitImplPolarity {
+    Negative,
+    None,
+    Positive,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TraitDerives {
+    pub copy: TraitImplPolarity,
+    pub clone: TraitImplPolarity,
+    pub debug: TraitImplPolarity,
+    pub send: TraitImplPolarity,
+    pub sync: TraitImplPolarity,
+    pub unpin: TraitImplPolarity,
+    pub custom: Vec<Rc<str>>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Record {
     pub rs_name: Rc<str>,
@@ -683,6 +702,7 @@ pub struct Record {
     pub fields: Vec<Field>,
     pub lifetime_params: Vec<LifetimeName>,
     pub size_align: SizeAlign,
+    pub trait_derives: TraitDerives,
     pub is_derived_class: bool,
     pub override_alignment: bool,
     pub copy_constructor: SpecialMemberFunc,

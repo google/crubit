@@ -56,6 +56,11 @@ absl::StatusOr<absl::string_view> GetAnnotateArgAsStringLiteral(
         "annotation must have exactly one argument");
   }
   const clang::Expr& expr = **attr.args_begin();
+  return GetExprAsStringLiteral(expr, ast_context);
+}
+
+absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
+    const clang::Expr& expr, const clang::ASTContext& ast_context) {
   auto error = []() {
     return absl::InvalidArgumentError(
         "cannot evaluate argument as a string literal");

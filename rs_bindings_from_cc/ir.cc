@@ -11,6 +11,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/cord.h"
@@ -479,6 +480,44 @@ llvm::json::Value TemplateSpecialization::ToJson() const {
   };
 }
 
+absl::Nullable<TraitImplPolarity*> TraitDerives::Polarity(
+    absl::string_view trait) {
+  // <internal link> start
+  if (trait == "Clone") return &clone;
+  if (trait == "Copy") return &copy;
+  if (trait == "Debug") return &debug;
+  if (trait == "Send") return &send;
+  if (trait == "Sync") return &sync;
+  if (trait == "Unpin") return &unpin;
+  // <internal link> end
+  return nullptr;
+}
+
+static std::string TraitImplPolarityToString(TraitImplPolarity polarity) {
+  switch (polarity) {
+    case TraitImplPolarity::kNegative:
+      return "Negative";
+    case TraitImplPolarity::kNone:
+      return "None";
+    case TraitImplPolarity::kPositive:
+      return "Positive";
+  }
+}
+
+llvm::json::Value TraitDerives::ToJson() const {
+  return llvm::json::Object{
+      // <internal link> start
+      {"clone", TraitImplPolarityToString(clone)},
+      {"copy", TraitImplPolarityToString(copy)},
+      {"debug", TraitImplPolarityToString(debug)},
+      {"send", TraitImplPolarityToString(send)},
+      {"sync", TraitImplPolarityToString(sync)},
+      {"unpin", TraitImplPolarityToString(unpin)},
+      // <internal link> end
+      {"custom", custom},
+  };
+}
+
 llvm::json::Value Record::ToJson() const {
   std::vector<llvm::json::Value> json_item_ids;
   json_item_ids.reserve(child_item_ids.size());
@@ -503,6 +542,7 @@ llvm::json::Value Record::ToJson() const {
       {"fields", fields},
       {"lifetime_params", lifetime_params},
       {"size_align", size_align.ToJson()},
+      {"trait_derives", trait_derives.ToJson()},
       {"is_derived_class", is_derived_class},
       {"override_alignment", override_alignment},
       {"copy_constructor", copy_constructor},

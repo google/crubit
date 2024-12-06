@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "clang/Basic/SourceLocation.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
@@ -21,6 +22,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
+#include "common/status_macros.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "rs_bindings_from_cc/ast_util.h"
@@ -31,6 +33,7 @@
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/PrettyPrinter.h"
@@ -155,6 +158,64 @@ std::optional<BridgeTypeInfo> GetBridgeTypeInfo(
         .cpp_to_rust_converter = *bridge_type_cpp_to_rust_converter};
   }
   return std::nullopt;
+}
+
+// Returns the set of traits to derive on the Rust type.
+absl::StatusOr<TraitDerives> GetTraitDerives(const clang::Decl* decl) {
+  TraitDerives result;
+  CRUBIT_ASSIGN_OR_RETURN(
+      const clang::AnnotateAttr* attr,
+      GetAnnotateAttr(*decl, "crubit_internal_trait_derive"));
+  if (attr == nullptr) return result;
+
+  clang::ASTContext& ast_context = decl->getASTContext();
+  absl::flat_hash_set<absl::string_view> custom_traits;
+
+  for (const clang::Expr* arg : attr->args()) {
+    CRUBIT_ASSIGN_OR_RETURN(const absl::string_view derived_trait,
+                            GetExprAsStringLiteral(*arg, ast_context));
+    absl::string_view trait;
+    TraitImplPolarity polarity;
+    if (derived_trait.starts_with("!")) {
+      trait = derived_trait.substr(1);
+      polarity = TraitImplPolarity::kNegative;
+    } else {
+      trait = derived_trait;
+      polarity = TraitImplPolarity::kPositive;
+    }
+
+    absl::Nullable<TraitImplPolarity*> selected = result.Polarity(trait);
+    if (selected == nullptr) {
+      // Custom (unrecognized) trait.
+      if (polarity == TraitImplPolarity::kNegative) {
+        return absl::InvalidArgumentError(absl::StrCat(
+            "Custom trait '", trait, "' cannot be negatively derived."));
+      }
+      auto [it, did_insert] = custom_traits.insert(trait);
+      if (did_insert) continue;
+
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Custom trait '", trait, "' is derived multiple times."));
+    }
+
+    if (*selected == TraitImplPolarity::kNone) {
+      // Trait is not yet derived, happy path :)
+      *selected = polarity;
+      continue;
+    }
+
+    if (*selected != polarity) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Trait '", trait, "' is derived both positively and negatively."));
+    }
+    return absl::InvalidArgumentError(
+        absl::StrCat("Trait '", trait, "' is derived multiple times."));
+  }
+  result.custom.reserve(custom_traits.size());
+  for (const absl::string_view trait : custom_traits) {
+    result.custom.emplace_back(trait);
+  }
+  return result;
 }
 
 }  // namespace
@@ -392,6 +453,13 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   const clang::TypedefNameDecl* anon_typedef =
       record_decl->getTypedefNameForAnonDecl();
 
+  absl::StatusOr<TraitDerives> trait_derives = GetTraitDerives(record_decl);
+  if (!trait_derives.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        record_decl,
+        FormattedError::FromStatus(std::move(trait_derives).status()));
+  }
+
   auto record = Record{
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
@@ -412,6 +480,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
               .size = layout.getSize().getQuantity(),
               .alignment = layout.getAlignment().getQuantity(),
           },
+      .trait_derives = *std::move(trait_derives),
       .is_derived_class = is_derived_class,
       .override_alignment = override_alignment,
       .copy_constructor = GetCopyCtorSpecialMemberFunc(*record_decl),

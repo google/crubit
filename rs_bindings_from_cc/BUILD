@@ -323,6 +323,7 @@ cc_library(
         ":bazel_types",
         "//common:string_type",
         "//common:strong_int",
+        "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/log:check",

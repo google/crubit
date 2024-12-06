@@ -175,22 +175,34 @@ pub fn format_generic_params_replacing_by_self<'a>(
 // Otherwise, these functions should be moved into a separate module.
 
 pub fn should_derive_clone(record: &Record) -> bool {
-    if record.is_union() {
-        // `union`s (unlike `struct`s) should only derive `Clone` if they are `Copy`.
-        should_derive_copy(record)
-    } else {
-        record.is_unpin()
-            && record.copy_constructor == SpecialMemberFunc::Trivial
-            && check_by_value(record).is_ok()
+    match record.trait_derives.clone {
+        TraitImplPolarity::Positive => true,
+        TraitImplPolarity::Negative => false,
+        TraitImplPolarity::None => {
+            if record.is_union() {
+                // `union`s (unlike `struct`s) should only derive `Clone` if they are `Copy`.
+                should_derive_copy(record)
+            } else {
+                record.is_unpin()
+                    && record.copy_constructor == SpecialMemberFunc::Trivial
+                    && check_by_value(record).is_ok()
+            }
+        }
     }
 }
 
 pub fn should_derive_copy(record: &Record) -> bool {
-    // TODO(b/202258760): Make `Copy` inclusion configurable.
-    record.is_unpin()
-        && record.copy_constructor == SpecialMemberFunc::Trivial
-        && record.destructor == ir::SpecialMemberFunc::Trivial
-        && check_by_value(record).is_ok()
+    match record.trait_derives.copy {
+        TraitImplPolarity::Positive => true,
+        TraitImplPolarity::Negative => false,
+        TraitImplPolarity::None => {
+            record.is_unpin()
+                && record.copy_constructor == SpecialMemberFunc::Trivial
+                && record.destructor == SpecialMemberFunc::Trivial
+                && check_by_value(record).is_ok()
+                && record.trait_derives.clone != TraitImplPolarity::Negative
+        }
+    }
 }
 
 pub fn check_by_value(record: &Record) -> Result<()> {
