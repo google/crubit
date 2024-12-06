@@ -18,13 +18,43 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Expr.h"
 #include "clang/Basic/LLVM.h"
+#include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/StringRef.h"
 
 namespace crubit {
 
+absl::StatusOr<bool> GetAnnotateArgAsBool(
+    const clang::AnnotateAttr& attr, const clang::ASTContext& ast_context) {
+  if (attr.args_size() != 1) {
+    return absl::InvalidArgumentError(
+        "annotation must have exactly one argument");
+  }
+  const clang::Expr& expr = **attr.args_begin();
+  clang::Expr::EvalResult eval_result;
+  if (!expr.EvaluateAsConstantExpr(eval_result, ast_context)) {
+    return absl::InvalidArgumentError(
+        "failed to evaluate annotation expression as a constant");
+  }
+  if (eval_result.Val.getKind() != clang::APValue::Int) {
+    return absl::InvalidArgumentError(
+        "annotation expression must evaluate to a bool");
+  }
+  const llvm::APSInt& int_value = eval_result.Val.getInt();
+  if (int_value.isZero()) {
+    return false;
+  } else {
+    // Non-zero values are treated as true.
+    return true;
+  }
+}
+
 // TODO(yongheng): Merge with lifetime_annotations/type_lifetimes.cc.
 absl::StatusOr<absl::string_view> GetAnnotateArgAsStringLiteral(
     const clang::AnnotateAttr& attr, const clang::ASTContext& ast_context) {
+  if (attr.args_size() != 1) {
+    return absl::InvalidArgumentError(
+        "annotation must have exactly one argument");
+  }
   const clang::Expr& expr = **attr.args_begin();
   auto error = []() {
     return absl::InvalidArgumentError(

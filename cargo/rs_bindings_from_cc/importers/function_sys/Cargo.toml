@@ -14,6 +14,7 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
+annotation_reader_sys = { path = "../../../../cargo/common/annotation_reader_sys" }
 lifetime_annotations_sys = { path = "../../../../cargo/lifetime_annotations/lifetime_annotations_sys" }
 lifetime_sys = { path = "../../../../cargo/lifetime_annotations/lifetime_sys" }
 lifetime_symbol_table_sys = { path = "../../../../cargo/lifetime_annotations/lifetime_symbol_table_sys" }

@@ -7,14 +7,15 @@
 #include <algorithm>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/container/btree_set.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "common/annotation_reader.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/lifetime_error.h"
@@ -25,6 +26,7 @@
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/LLVM.h"
@@ -35,6 +37,45 @@
 #include "llvm/Support/Error.h"
 
 namespace crubit {
+namespace {
+
+// A collection of `FormattedError` values that enforces uniqueness.
+struct Errors {
+  // `btree_set` is used to ensure stable ordering.
+  absl::btree_set<FormattedError> error_set;
+  void Add(FormattedError error) {
+    auto result = error_set.insert(std::move(error));
+    CHECK(result.second) << "Duplicated error message";
+  }
+  void AddStatus(absl::Status status) {
+    Add(FormattedError::FromStatus(status));
+  }
+};
+
+SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
+  absl::StatusOr<const clang::AnnotateAttr*> override_annotation =
+      GetAnnotateAttr(decl, "crubit_override_unsafe");
+  if (!override_annotation.ok()) {
+    errors.AddStatus(override_annotation.status());
+    return SafetyAnnotation::kUnannotated;
+  }
+  if (*override_annotation == nullptr) {
+    return SafetyAnnotation::kUnannotated;
+  }
+  absl::StatusOr<bool> is_unsafe =
+      GetAnnotateArgAsBool(**override_annotation, decl.getASTContext());
+  if (!override_annotation.ok()) {
+    errors.AddStatus(is_unsafe.status());
+    return SafetyAnnotation::kUnannotated;
+  }
+  if (*is_unsafe) {
+    return SafetyAnnotation::kUnsafe;
+  } else {
+    return SafetyAnnotation::kDisableUnsafe;
+  }
+}
+
+}  // namespace
 
 static bool IsInStdNamespace(const clang::FunctionDecl* decl) {
   const clang::DeclContext* context = decl->getDeclContext();
@@ -214,11 +255,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   }
 
   std::vector<FuncParam> params;
-  std::set<FormattedError> errors;
-  auto add_error = [&errors](FormattedError error) {
-    auto result = errors.insert(std::move(error));
-    CHECK(result.second) << "Duplicated error message";
-  };
+  Errors errors;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (!ictx_.HasBeenAlreadySuccessfullyImported(method_decl->getParent())) {
@@ -238,7 +275,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
                                     method_decl->getRefQualifier()),
                                 /*nullable=*/false);
       if (!param_type.ok()) {
-        add_error(
+        errors.Add(
             FormattedError::PrefixedStrCat("`this` parameter is not supported",
                                            param_type.status().message()));
       } else {
@@ -264,8 +301,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     auto param_type =
         ictx_.ConvertQualType(param->getType(), param_lifetimes, std::nullopt);
     if (!param_type.ok()) {
-      add_error(FormattedError::Substitute("Parameter #$0 is not supported: $1",
-                                           i, param_type.status().message()));
+      errors.Add(
+          FormattedError::Substitute("Parameter #$0 is not supported: $1", i,
+                                     param_type.status().message()));
       continue;
     }
 
@@ -288,7 +326,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
               function_decl, function_decl->getLocation());
         });
     if (undeduced_return_type) {
-      add_error(FormattedError::PrefixedStrCat(
+      errors.Add(FormattedError::PrefixedStrCat(
           "Couldn't deduce the return type",
           diagnostic_recorder.ConcatenatedDiagnostics(
               "Diagnostics emitted:\n")));
@@ -303,8 +341,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     return_type = ictx_.ConvertQualType(function_decl->getReturnType(),
                                         return_lifetimes, std::nullopt);
     if (!return_type.ok()) {
-      add_error(FormattedError::PrefixedStrCat("Return type is not supported",
-                                               return_type.status().message()));
+      errors.Add(FormattedError::PrefixedStrCat(
+          "Return type is not supported", return_type.status().message()));
     }
   }
 
@@ -355,9 +393,10 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         .instance_method_metadata = instance_metadata};
   }
 
-  if (!errors.empty()) {
+  if (!errors.error_set.empty()) {
     return ictx_.ImportUnsupportedItem(
-        function_decl, std::vector(errors.begin(), errors.end()));
+        function_decl,
+        std::vector(errors.error_set.begin(), errors.error_set.end()));
   }
 
   bool has_c_calling_convention =
@@ -365,6 +404,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       clang::CC_C;
   bool is_member_or_descendant_of_class_template =
       IsFullClassTemplateSpecializationOrChild(function_decl);
+
+  SafetyAnnotation safety_annotation =
+      GetSafetyAnnotation(*function_decl, errors);
 
   std::optional<std::string> doc_comment = ictx_.GetComment(function_decl);
   if (!doc_comment.has_value() && is_member_or_descendant_of_class_template) {
@@ -399,7 +441,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         return false;
       });
 
-  // Silence ClangTidy, checked above: calling `add_error` if
+  // Silence ClangTidy, checked above: calling `errors.Add` if
   // `!return_type.ok()` and returning early if `!errors.empty()`.
   CHECK_OK(return_type);
 
@@ -428,6 +470,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .has_c_calling_convention = has_c_calling_convention,
       .is_member_or_descendant_of_class_template =
           is_member_or_descendant_of_class_template,
+      .safety_annotation = safety_annotation,
       .source_loc = ictx_.ConvertSourceLocation(function_decl->getBeginLoc()),
       .id = ictx_.GenerateItemId(function_decl),
       .enclosing_item_id = *std::move(enclosing_item_id),

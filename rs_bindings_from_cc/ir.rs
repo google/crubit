@@ -449,6 +449,14 @@ pub struct FuncParam {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub enum SafetyAnnotation {
+    DisableUnsafe,
+    Unsafe,
+    Unannotated,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Func {
     pub name: UnqualifiedIdentifier,
     pub owning_target: BazelLabel,
@@ -480,6 +488,7 @@ pub struct Func {
     pub unknown_attr: Option<Rc<str>>,
     pub has_c_calling_convention: bool,
     pub is_member_or_descendant_of_class_template: bool,
+    pub safety_annotation: SafetyAnnotation,
     pub source_loc: Rc<str>,
     pub id: ItemId,
     pub enclosing_item_id: Option<ItemId>,
@@ -1145,7 +1154,11 @@ impl From<Func> for Item {
 impl<'a> TryFrom<&'a Item> for &'a Rc<Func> {
     type Error = Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
-        if let Item::Func(f) = value { Ok(f) } else { bail!("Not a Func: {:#?}", value) }
+        if let Item::Func(f) = value {
+            Ok(f)
+        } else {
+            bail!("Not a Func: {:#?}", value)
+        }
     }
 }
 
@@ -1158,7 +1171,11 @@ impl From<Record> for Item {
 impl<'a> TryFrom<&'a Item> for &'a Rc<Record> {
     type Error = Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
-        if let Item::Record(r) = value { Ok(r) } else { bail!("Not a Record: {:#?}", value) }
+        if let Item::Record(r) = value {
+            Ok(r)
+        } else {
+            bail!("Not a Record: {:#?}", value)
+        }
     }
 }
 
@@ -1188,7 +1205,11 @@ impl From<Comment> for Item {
 impl<'a> TryFrom<&'a Item> for &'a Rc<Comment> {
     type Error = Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
-        if let Item::Comment(c) = value { Ok(c) } else { bail!("Not a Comment: {:#?}", value) }
+        if let Item::Comment(c) = value {
+            Ok(c)
+        } else {
+            bail!("Not a Comment: {:#?}", value)
+        }
     }
 }
 
@@ -1201,7 +1222,11 @@ impl From<Namespace> for Item {
 impl<'a> TryFrom<&'a Item> for &'a Rc<Namespace> {
     type Error = Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
-        if let Item::Namespace(c) = value { Ok(c) } else { bail!("Not a Namespace: {:#?}", value) }
+        if let Item::Namespace(c) = value {
+            Ok(c)
+        } else {
+            bail!("Not a Namespace: {:#?}", value)
+        }
     }
 }
 

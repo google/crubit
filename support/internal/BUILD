@@ -14,6 +14,7 @@ cc_library(
         "slot.h",
     ],
     visibility = [
+        "//rs_bindings_from_cc/test/function/unsafe_attributes:__pkg__",
         "//visibility:public",
     ],
     # It is important to be thoughtful when adding new dependencies for

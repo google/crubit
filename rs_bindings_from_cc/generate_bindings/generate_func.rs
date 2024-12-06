@@ -393,7 +393,11 @@ fn api_func_shape(
         Some(Err(_)) => return Ok(None),
     };
 
-    let is_unsafe = param_types.iter().any(|p| p.is_unsafe());
+    let is_unsafe = match func.safety_annotation {
+        SafetyAnnotation::Unannotated => param_types.iter().any(|p| p.is_unsafe()),
+        SafetyAnnotation::Unsafe => true,
+        SafetyAnnotation::DisableUnsafe => false,
+    };
     let impl_kind: ImplKind;
     let func_name: syn::Ident;
 

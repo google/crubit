@@ -328,6 +328,18 @@ llvm::json::Value UseMod::ToJson() const {
   };
 }
 
+static std::string SafetyAnnotationToString(
+    SafetyAnnotation safety_annotation) {
+  switch (safety_annotation) {
+    case SafetyAnnotation::kDisableUnsafe:
+      return "DisableUnsafe";
+    case SafetyAnnotation::kUnsafe:
+      return "Unsafe";
+    case SafetyAnnotation::kUnannotated:
+      return "Unannotated";
+  }
+}
+
 llvm::json::Value Func::ToJson() const {
   llvm::json::Object func{
       {"name", name},
@@ -346,6 +358,7 @@ llvm::json::Value Func::ToJson() const {
       {"has_c_calling_convention", has_c_calling_convention},
       {"is_member_or_descendant_of_class_template",
        is_member_or_descendant_of_class_template},
+      {"safety_annotation", SafetyAnnotationToString(safety_annotation)},
       {"source_loc", source_loc},
       {"id", id},
       {"enclosing_item_id", enclosing_item_id},

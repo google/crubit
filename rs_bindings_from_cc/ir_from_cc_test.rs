@@ -98,6 +98,7 @@ fn test_function() {
                 unknown_attr: None,
                 has_c_calling_convention: true,
                 is_member_or_descendant_of_class_template: false,
+                safety_annotation: Unannotated,
                 source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
                 id: ItemId(...),
                 enclosing_item_id: None,
@@ -3002,18 +3003,14 @@ fn test_identifier_function_name() {
 
 #[gtest]
 fn test_constructor_function_name() {
-    assert!(
-        get_func_names("struct Struct {Struct();};")
-            .contains(&ir::UnqualifiedIdentifier::Constructor)
-    );
+    assert!(get_func_names("struct Struct {Struct();};")
+        .contains(&ir::UnqualifiedIdentifier::Constructor));
 }
 
 #[gtest]
 fn test_destructor_function_name() {
-    assert!(
-        get_func_names("struct Struct {~Struct();};")
-            .contains(&ir::UnqualifiedIdentifier::Destructor)
-    );
+    assert!(get_func_names("struct Struct {~Struct();};")
+        .contains(&ir::UnqualifiedIdentifier::Destructor));
 }
 
 #[gtest]
@@ -3670,11 +3667,9 @@ fn test_enclosing_item_ids() {
     let inner_namespace_items: Vec<&Item> =
         inner_namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
 
-    assert!(
-        inner_namespace_items
-            .iter()
-            .all(|item| item.enclosing_item_id() == Some(inner_namespace.id))
-    );
+    assert!(inner_namespace_items
+        .iter()
+        .all(|item| item.enclosing_item_id() == Some(inner_namespace.id)));
 
     let record = ir.records().find(|r| r.rs_name.as_ref() == "S").unwrap();
     let record_items: Vec<&Item> =
@@ -3782,20 +3777,18 @@ fn test_namespace_stored_data_in_ir() {
     assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[0].id).unwrap(), 0);
     assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[1].id).unwrap(), 1);
 
-    assert!(
-        !ir.is_last_reopened_namespace(
+    assert!(!ir
+        .is_last_reopened_namespace(
             outer_namespaces[0].id,
             outer_namespaces[0].canonical_namespace_id
         )
-        .unwrap()
-    );
-    assert!(
-        ir.is_last_reopened_namespace(
+        .unwrap());
+    assert!(ir
+        .is_last_reopened_namespace(
             outer_namespaces[1].id,
             outer_namespaces[1].canonical_namespace_id
         )
-        .unwrap()
-    );
+        .unwrap());
 
     let inner_namespaces = ir.namespaces().filter(|ns| ns.name == ir_id("inner")).collect_vec();
     assert_eq!(inner_namespaces.len(), 3);
@@ -3804,27 +3797,24 @@ fn test_namespace_stored_data_in_ir() {
     assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[1].id).unwrap(), 1);
     assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[2].id).unwrap(), 2);
 
-    assert!(
-        !ir.is_last_reopened_namespace(
+    assert!(!ir
+        .is_last_reopened_namespace(
             inner_namespaces[0].id,
             inner_namespaces[0].canonical_namespace_id
         )
-        .unwrap()
-    );
-    assert!(
-        !ir.is_last_reopened_namespace(
+        .unwrap());
+    assert!(!ir
+        .is_last_reopened_namespace(
             inner_namespaces[1].id,
             inner_namespaces[1].canonical_namespace_id
         )
-        .unwrap()
-    );
-    assert!(
-        ir.is_last_reopened_namespace(
+        .unwrap());
+    assert!(ir
+        .is_last_reopened_namespace(
             inner_namespaces[2].id,
             inner_namespaces[2].canonical_namespace_id
         )
-        .unwrap()
-    );
+        .unwrap());
 }
 
 #[gtest]

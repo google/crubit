@@ -134,6 +134,10 @@ inline std::ostream& operator<<(std::ostream& o, const LifetimeName& l) {
   return o << std::string(llvm::formatv("{0:2}", l.ToJson()));
 }
 
+// Whether a function is annotated with `CRUBIT_UNSAFE` or
+// `CRUBIT_DISABLE_UNSAFE`.
+enum class SafetyAnnotation : char { kDisableUnsafe, kUnsafe, kUnannotated };
+
 // A C++ type involved in the bindings. It has the knowledge of how the type
 // is spelled in C++.
 struct CcType {
@@ -440,6 +444,7 @@ struct Func {
   std::optional<std::string> unknown_attr;
   bool has_c_calling_convention = true;
   bool is_member_or_descendant_of_class_template = false;
+  SafetyAnnotation safety_annotation;
   std::string source_loc;
   ItemId id;
   std::optional<ItemId> enclosing_item_id;
@@ -721,6 +726,11 @@ inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
 class FormattedError final {
  public:
   auto operator<=>(const FormattedError&) const = default;
+
+  template <typename H>
+  friend H AbslHashValue(H h, const FormattedError& e) {
+    return H::combine(std::move(h), e.fmt_, e.message_);
+  }
 
   // Returns a FormattedError for a static string. The string is used as both
   // the format string and the formatted message. Intended to be used only with
