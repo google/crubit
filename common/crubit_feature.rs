@@ -7,6 +7,12 @@
 use serde::Deserialize;
 
 flagset::flags! {
+    /// The Crubit feature flags enum.
+    ///
+    /// Every feature flag is also associated with a `short_name`, which is used to serialize and
+    /// deserialize it, and an `aspect_hint`, which is presented to users in error messages. If
+    /// a function requires a feature flag, the users will be told to add the corresponding
+    /// `aspect_hint`.
     pub enum CrubitFeature : u8 {
         Supported,
         /// Experimental is never *set* without also setting Supported, but we allow it to be
@@ -17,6 +23,10 @@ flagset::flags! {
 
 impl CrubitFeature {
     /// The name of this feature.
+    ///
+    /// This is used for serialization/deserialization: an aspect hint maps to a
+    /// list of short names, whicwhichbh are passed to Crubit to enable the
+    /// corresponding feature bits.
     pub fn short_name(&self) -> &'static str {
         match self {
             Self::Supported => "supported",
@@ -25,6 +35,8 @@ impl CrubitFeature {
     }
 
     /// The aspect hint required to enable this feature.
+    ///
+    /// This should be a label in features/BUILD.
     pub fn aspect_hint(&self) -> &'static str {
         match self {
             Self::Supported => "//features:supported",
