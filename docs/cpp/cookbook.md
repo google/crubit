@@ -16,7 +16,7 @@ the recommended practices to evolve over time, as Crubit's capabilities expand!
 > [add `ABSL_ATTRIBUTE_TRIVIAL_ABI`](#trivial_abi) to a type you control,
 > instead of [boxing the type in a pointer](#boxing).
 
-## Making types Rust-movable
+## Making types Rust-movable {#rust_movable}
 
 As described in <internal link>/cpp/classes_and_structs#trivially_relocatable, types
 cannot be passed by value in Rust unless they are Rust-movable, or, in C++

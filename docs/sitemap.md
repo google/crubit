@@ -12,6 +12,7 @@
 
     *   [Overview](/docs/cpp/)
     *   [Cookbook](/docs/cpp/cookbook)
+    *   [Best Practices](/docs/cpp/best_practices)
     *   <hr>
     *   [Functions](/docs/cpp/functions)
     *   [Classes and Structs](/docs/cpp/classes_and_structs)
