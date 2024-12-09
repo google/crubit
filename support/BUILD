@@ -25,6 +25,17 @@ rust_proc_macro(
     ],
 )
 
+cc_library(
+    name = "annotations",
+    hdrs = ["annotations.h"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+    deps = [
+        "//support/internal:bindings_support",
+    ],
+)
+
 crubit_rust_test(
     name = "ctor_proc_macros_test",
     crate = ":ctor_proc_macros_proc_macro_internal",

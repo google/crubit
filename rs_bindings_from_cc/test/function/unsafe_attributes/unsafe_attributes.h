@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_UNSAFE_ATTRIBUTES_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_UNSAFE_ATTRIBUTES_H_
 
-#include "support/internal/attribute_macros.h"
+#include "support/annotations.h"
 
 void SafeSignatureWithoutAnnotation();
 CRUBIT_UNSAFE void SafeSignatureButAnnotatedUnsafe();

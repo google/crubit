@@ -10,7 +10,7 @@ crubit_test_cc_library(
     srcs = ["unsafe_attributes.cc"],
     hdrs = ["unsafe_attributes.h"],
     deps = [
-        "//support/internal:bindings_support",
+        "//support:annotations",
     ],
 )
 
