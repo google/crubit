@@ -15,10 +15,10 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 
-use bindings::{Database, IncludeGuard};
 use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
 use error_report::{ErrorReport, ErrorReporting, IgnoreErrors};
+use generate_bindings::{Database, IncludeGuard};
 use run_compiler::run_compiler;
 use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
@@ -93,7 +93,7 @@ fn new_db<'tcx>(
 }
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
-    use bindings::{generate_bindings, Output};
+    use generate_bindings::{generate_bindings, Output};
 
     let errors: Rc<dyn ErrorReporting> = if cmdline.error_report_out.is_some() {
         Rc::new(ErrorReport::new())

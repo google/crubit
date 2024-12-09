@@ -13,7 +13,7 @@ name = "cc_bindings_from_rs"
 path = "../../../cc_bindings_from_rs/cc_bindings_from_rs.rs"
 
 [dependencies]
-bindings = { path = "../../../cargo/cc_bindings_from_rs/bindings" }
+generate_bindings = { path = "../../../cargo/cc_bindings_from_rs/generate_bindings/generate_bindings" }
 cmdline = { path = "../../../cargo/cc_bindings_from_rs/cmdline" }
 run_compiler = { path = "../../../cargo/cc_bindings_from_rs/run_compiler" }
 code_gen_utils = { path = "../../../cargo/common/code_gen_utils" }

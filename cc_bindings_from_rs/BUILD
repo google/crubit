@@ -16,42 +16,6 @@ package(
     default_visibility = ["//:__subpackages__"],
 )
 
-rust_library(
-    name = "bindings",
-    srcs = ["bindings.rs"],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
-    deps = [
-        ":crubit_attr",
-        ":run_compiler",
-        ":toposort",
-        "//common:arc_anyhow",
-        "//common:code_gen_utils",
-        "//common:crubit_feature",
-        "//common:error_report",
-        "//common:memoized",
-        "@crate_index//:flagset",
-        "@crate_index//:itertools",
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
-        "@crate_index//:syn",
-    ],
-)
-
-crubit_rust_test(
-    name = "bindings_test",
-    crate = ":bindings",
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
-    deps = [
-        ":run_compiler_test_support",
-        "//common:token_stream_matchers",
-        "@crate_index//:itertools",
-    ],
-)
-
 crubit_rust_binary(
     name = "cc_bindings_from_rs",
     srcs = ["cc_bindings_from_rs.rs"],
@@ -65,9 +29,9 @@ crubit_rust_binary(
         "//visibility:public",
     ],
     deps = [
-        ":bindings",
         ":cmdline",
         ":run_compiler",
+        "//cc_bindings_from_rs/generate_bindings",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_feature",
