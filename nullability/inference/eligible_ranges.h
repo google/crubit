@@ -11,6 +11,7 @@
 #include "nullability/inference/inference.proto.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/DeclBase.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
 
@@ -39,6 +40,10 @@ EligibleRanges getInferenceRanges(const Decl& D,
 EligibleRanges getEligibleRanges(ASTContext& Ctx,
                                  const TypeNullabilityDefaults& Defaults,
                                  bool RestrictToMainFileOrHeader = false);
+
+/// Return the given string ref without any escaped newline prefixes.
+/// Does not support backslashes spelled with trigraphs.
+llvm::StringRef skipEscapedNewLinePrefixes(llvm::StringRef Str);
 
 }  // namespace clang::tidy::nullability
 

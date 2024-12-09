@@ -922,6 +922,84 @@ TEST(EligibleRangesTest, Pragma) {
                 eligibleRangeWithNoExistingAnnotation(0, 0, Input.range()))));
 }
 
+TEST(EligibleRangesTest, RangesEntirelyWithinMacro) {
+  auto Input = Annotations(R"(
+  #define MACRO(IpGlobalVar, funcName) $within[[int*]] funcName##Func() {return IpGlobalVar;}
+  int* GlobalVar1;
+  int* GlobalVar2;
+  MACRO(GlobalVar1, getVar1);
+  MACRO(GlobalVar2, getVar2);
+
+  #define A_TYPE int*
+  $whole_type_1[[A_TYPE]] GlobalVar3;
+  $whole_type_2[[A_TYPE]] GlobalVar4;
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code(), "getVar1Func"),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(0, 0, Input.range("within")))));
+  EXPECT_THAT(
+      getFunctionRanges(Input.code(), "getVar2Func"),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(0, 0, Input.range("within")))));
+  EXPECT_THAT(
+      getVarRanges(Input.code(), "GlobalVar3"),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(0, 0, Input.range("whole_type_1")))));
+  EXPECT_THAT(
+      getVarRanges(Input.code(), "GlobalVar4"),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                eligibleRange(0, 0, Input.range("whole_type_2")))));
+}
+
+// We saw specific difficulty finding previous tokens during our search for
+// `const`s when passing over the line continuation in multi-line macros.
+TEST(EligibleRangesTest, RangesInMultiLineMacro) {
+  auto Input = Annotations(R"(
+  #define MACRO(IpGlobalVar, funcName) $return[[int*]] funcName##Func(      \
+                                        $param_one[[const char*]] p,        \
+                                        $param_two[[const                   \
+                                        int*]] p2)                          \
+                                           {return IpGlobalVar;}
+  int* GlobalVar;
+  MACRO(GlobalVar, getVar);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code(), "getVarFunc"),
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(eligibleRange(0, 0, Input.range("return")),
+                               eligibleRange(1, 0, Input.range("param_one")),
+                               eligibleRange(2, 0, Input.range("param_two")))));
+}
+
+// We saw specific difficulty finding the post-line-continuation start of a
+// const or similar that begins with no unescaped whitespace between the `\` and
+// the token's first character. Clang considers each of the `const`s in this
+// tests to begin at the preceding `\` location, but we'd rather add the
+// nullability annotation after the newline.
+TEST(EligibleRangesTest, RangesInMultiLineMacroNoIndentation) {
+  auto Input = Annotations(R"(
+  #define MACRO(IpGlobalVar, funcName) $return[[int*]] funcName##Func(  \
+\
+$param_one[[const char*]] p,        \
+$param_two[[const                   \
+int*]] p2)                          \
+    {return IpGlobalVar;}
+  int* GlobalVar;
+  MACRO(GlobalVar, getVar);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code(), "getVarFunc"),
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(eligibleRange(0, 0, Input.range("return")),
+                               eligibleRange(1, 0, Input.range("param_one")),
+                               eligibleRange(2, 0, Input.range("param_two")))));
+}
+
 TEST(EligibleRangesTest, RangesWithBareAutoTypeNotReturned) {
   auto Input = Annotations(R"cc(
     $func_auto[[auto]] noStar(int* P) {
@@ -1811,6 +1889,26 @@ TEST(GetEligibleRangesFromASTTest, AutoFunctionTemplateSyntax) {
           UnorderedElementsAre(eligibleRange(2, 0, Input.range("star")),
                                eligibleRange(0, 0, Input.range("local_one")),
                                eligibleRange(0, 0, Input.range("local_two")))));
+}
+
+TEST(skipEscapedNewLinePrefixesTest, NoPrefix) {
+  EXPECT_EQ(skipEscapedNewLinePrefixes(""), "");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("foo"), "foo");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\too"), "\too");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\\too"), "\\too");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\foo"), "\foo");
+}
+
+TEST(skipEscapedNewLinePrefixesTest, EscapedNewlinePresent) {
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\\\nfoo"), "foo");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\\\rfoo"), "foo");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\\\n foo"), " foo");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\\  \t \nfoo"), "foo");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\\     \nfoo"), "foo");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\\     \n\rfoo"), "foo");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\\     \r\nfoo"), "foo");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\\     \n\nfoo"), "\nfoo");
+  EXPECT_EQ(skipEscapedNewLinePrefixes("\\     \r\n\\\r\n\\   \r\nfoo"), "foo");
 }
 }  // namespace
 }  // namespace clang::tidy::nullability

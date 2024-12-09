@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <iterator>
 #include <memory>
 #include <optional>
@@ -29,6 +30,7 @@
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
 #include "clang/AST/TypeLocVisitor.h"
+#include "clang/Basic/CharInfo.h"
 #include "clang/Basic/FileEntry.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/LangOptions.h"
@@ -342,6 +344,61 @@ getComplexDeclaratorRanges(const DeclaratorDecl &Decl, TypeLoc TL) {
   return std::move(W.Results);
 }
 
+static StringRef skipOneEscapedNewlinePrefix(StringRef Str) {
+  const char *Ptr = Str.data();
+  size_t OriginalSize = Str.size();
+
+  if (*Ptr == '\\') {
+    Ptr++;
+  } else {
+    return Str;
+  }
+
+  // Whitespace is allowed after the `\`, but before the newline.
+  while (Ptr < Str.data() + OriginalSize && isWhitespace(*Ptr)) {
+    if (*Ptr == '\n' || *Ptr == '\r') {
+      Ptr++;
+      // `\n\r` and `\r\n` can be escaped by a single `\`, but not `\n\n` or
+      // `\r\r`.
+      if ((*Ptr == '\n' || *Ptr == '\r') && *Ptr != *(Ptr - 1)) {
+        Ptr++;
+      }
+      return StringRef(Ptr, OriginalSize - (Ptr - Str.data()));
+    }
+    Ptr++;
+  }
+
+  return Str;
+}
+
+StringRef skipEscapedNewLinePrefixes(StringRef Str) {
+  while (true) {
+    StringRef New = skipOneEscapedNewlinePrefix(Str);
+    if (New == Str) break;
+    Str = New;
+  }
+  return Str;
+}
+
+static SourceLocation includePrecedingCVRQualifiers(
+    SourceLocation Begin, const SourceManager &SM,
+    const LangOptions &LangOpts) {
+  int OffsetForEscapedNewline = 0;
+  // Update `Begin` as we search backwards and find qualifier tokens.
+  auto PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
+  while (PrevTok.getKind() != tok::unknown) {
+    if (!PrevTok.is(tok::raw_identifier)) break;
+    StringRef RawID = PrevTok.getRawIdentifier();
+    size_t OriginalSize = RawID.size();
+    RawID = skipEscapedNewLinePrefixes(RawID);
+    if (RawID != "const" && RawID != "volatile" && RawID != "restrict") break;
+    OffsetForEscapedNewline = OriginalSize - RawID.size();
+    Begin = PrevTok.getLocation();
+    PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
+  }
+  return Begin.getLocWithOffset(OffsetForEscapedNewline);
+}
+
 // Extracts the source ranges and associated slot values of each eligible type
 // within `Loc`, accounting for (nested) qualifiers. Guarantees that each source
 // range is eligible for editing, including that its begin and end locations are
@@ -368,13 +425,6 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
   const auto &LangOpts = Context.getLangOpts();
   for (auto &[SlotInLoc, T, MaybeLoc, Nullability] : NullabilityLocs) {
     if (!MaybeLoc || !isSupportedPointerType(MaybeLoc->getType())) continue;
-    auto R = tooling::getFileRange(
-        CharSourceRange::getTokenRange(MaybeLoc->getSourceRange()), Context,
-        /*IncludeMacroExpansion=*/true);
-    if (!R) continue;
-
-    // The start of the new range.
-    SourceLocation Begin = R->getBegin();
 
     // We don't annotate bare template type arguments or bare `auto`, qualified
     // or not, or references to such types. For example, we would annotate only
@@ -396,15 +446,27 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
       continue;
     }
 
-    // Update `Begin` as we search backwards and find qualifier tokens.
-    auto PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
-    while (PrevTok.getKind() != tok::unknown) {
-      if (!PrevTok.is(tok::raw_identifier)) break;
-      StringRef RawID = PrevTok.getRawIdentifier();
-      if (RawID != "const" && RawID != "volatile" && RawID != "restrict") break;
-      Begin = PrevTok.getLocation();
-      PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
+    SourceRange SR = MaybeLoc->getSourceRange();
+    std::optional<CharSourceRange> R =
+        tooling::getFileRange(CharSourceRange::getTokenRange(SR), Context,
+                              /*IncludeMacroExpansion=*/true);
+    // If our first attempt at getting a file range failed, and the range is
+    // spelled entirely within a macro, try using the spelling locations. This
+    // gives us a chance of being able to edit the macro definition
+    if (!R && SR.getBegin().isMacroID() && SR.getEnd().isMacroID()) {
+      SourceLocation SpellingBegin = SM.getSpellingLoc(SR.getBegin());
+      SourceLocation SpellingEnd = SM.getSpellingLoc(SR.getEnd());
+      if (SpellingBegin.isInvalid() || SpellingEnd.isInvalid()) continue;
+      R = tooling::getFileRange(CharSourceRange::getTokenRange(
+                                    SourceRange(SpellingBegin, SpellingEnd)),
+                                Context,
+                                /*IncludeMacroExpansion=*/true);
     }
+    if (!R) continue;
+
+    // The start of the new range.
+    SourceLocation Begin =
+        includePrecedingCVRQualifiers(R->getBegin(), SM, LangOpts);
 
     auto [FID, BeginOffset] = SM.getDecomposedLoc(Begin);
     // If the type comes from a different file, then don't attempt to edit -- it
