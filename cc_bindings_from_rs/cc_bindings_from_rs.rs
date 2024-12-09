@@ -10,7 +10,7 @@ extern crate rustc_middle;
 
 use arc_anyhow::{Context, Result};
 use itertools::Itertools;
-use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
+use rustc_middle::ty::TyCtxt;
 use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
@@ -74,6 +74,10 @@ fn new_db<'tcx>(
         // TODO: Check dup.
         crate_name_to_namespace.insert(crate_name.as_str().into(), namespace.as_str().into());
     }
+    let mut crate_renames = <HashMap<Rc<str>, Rc<str>>>::new();
+    for (name, renamed) in &cmdline.crate_rename {
+        crate_renames.insert(name.as_str().into(), renamed.as_str().into());
+    }
     Database::new(
         tcx,
         crubit_support_path_format,
@@ -81,6 +85,7 @@ fn new_db<'tcx>(
         crate_name_to_include_paths.into(),
         crate_name_to_features.into(),
         crate_name_to_namespace.into(),
+        crate_renames.into(),
         errors,
         cmdline.no_thunk_name_mangling,
         include_guard,

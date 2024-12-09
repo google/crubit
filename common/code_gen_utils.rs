@@ -68,7 +68,7 @@ pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
     // explicitly catch names of tuple fields (e.g. `some_tuple.0`).
     let first_char = ident.chars().next().expect("!is_empty checked above");
     ensure!(
-        unicode_ident::is_xid_start(first_char) || first_char == '_',
+        unicode_ident::is_xid_start(first_char) || first_char == '_' || first_char == ':',
         "The following character can't be used as a start of a C++ identifier: {first_char}",
     );
 
@@ -482,6 +482,10 @@ pub mod tests {
         assert_cc_matches!(
             format_cc_ident("std::vector<int>").unwrap(),
             quote! { std::vector<int> }
+        );
+        assert_cc_matches!(
+            format_cc_ident("::std::vector<int>").unwrap(),
+            quote! { ::std::vector<int> }
         );
     }
 

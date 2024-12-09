@@ -84,6 +84,9 @@ memoized::query_group! {
         #[input]
         fn crate_name_to_namespace(&self) -> Rc<HashMap<Rc<str>, Rc<str>>>;
 
+        #[input]
+        fn crate_renames(&self) -> Rc<HashMap<Rc<str>, Rc<str>>>;
+
         /// Error collector for generating reports of errors encountered during the generation of bindings.
         #[input]
         fn errors(&self) -> Rc<dyn ErrorReporting>;
@@ -214,6 +217,16 @@ pub fn generate_bindings(db: &Database) -> Result<Output> {
         #h_body
     };
 
+    let mut extern_crate_decls: Vec<TokenStream> = vec![];
+    for (name, renamed) in db.crate_renames().iter() {
+        let name = format_ident!("{}", name.to_string());
+        let renamed = format_ident!("{}", renamed.to_string());
+
+        extern_crate_decls.push(quote! {
+            extern crate #name as #renamed;
+        });
+    }
+
     let rs_body = quote! {
         #top_comment
 
@@ -221,6 +234,10 @@ pub fn generate_bindings(db: &Database) -> Result<Output> {
         // bindings need to relax the `improper_ctypes_definitions` warning
         // for `char` (and possibly for other built-in types in the future).
         #![allow(improper_ctypes_definitions)] __NEWLINE__
+
+        __NEWLINE__
+
+        #(#extern_crate_decls)*
 
         __NEWLINE__
 
@@ -6266,6 +6283,7 @@ pub mod tests {
                 #[unsafe(no_mangle)]
                 pub fn not_pointer_like(_: NotPointerLike) {}
         "#;
+
         test_format_item(test_src, "with_missing_repr_transparent", |result| {
             let err = result.unwrap_err();
             assert_eq!(
@@ -12134,6 +12152,7 @@ pub mod tests {
             /* crate_name_to_features= */
             Rc::new(HashMap::from([(Rc::from("self"), features.into())])),
             /* crate_name_to_namespace= */ HashMap::default().into(),
+            /* crate_renames= */ HashMap::default().into(),
             /* errors = */ Rc::new(IgnoreErrors),
             /* no_thunk_name_mangling= */ true,
             /* include_guard */ IncludeGuard::PragmaOnce,

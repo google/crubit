@@ -112,6 +112,12 @@ pub struct Cmdline {
     #[clap(long = "crate-namespace", value_parser = parse_crate_namespace,
            value_name = "CRATE_NAME=NAMESPACE")]
     pub crate_namespaces: Vec<(String, String)>,
+
+    /// The name of a Rust crate and the new name that should be used within
+    /// the generated bindings.
+    #[clap(long = "crate-rename", value_parser = parse_key_value_pair,
+           value_name = "CRATE_NAME=RENAMED")]
+    pub crate_rename: Vec<(String, String)>,
 }
 
 impl Cmdline {
@@ -371,6 +377,9 @@ Options:
 
       --crate-namespace <CRATE_NAME=NAMESPACE>
           The top level namespace of the C++ bindings for a given crate. Keys are crate names, and values are namespaces. Example: "--crate-namespace=foo=a_namespace::b_namespace
+
+      --crate-rename <CRATE_NAME=RENAMED>
+          The name of a Rust crate and the new name that should be used within the generated bindings
 
   -h, --help
           Print help (see a summary with '-h')
