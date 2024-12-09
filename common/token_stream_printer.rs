@@ -126,12 +126,12 @@ pub fn write_unformatted_tokens(
     let mut it = tokens.into_iter().peekable();
     let mut tt_prev = None;
     while let Some(tt) = it.next() {
-        match tt {
-            TokenTree::Ident(ref tt) if tt == "__NEWLINE__" => writeln!(result)?,
-            TokenTree::Ident(ref tt) if tt == "__SPACE__" => write!(result, " ")?,
-            TokenTree::Ident(ref tt) if tt == "__HASH_TOKEN__" => write!(result, "#")?,
+        match &tt {
+            TokenTree::Ident(tt) if tt == "__NEWLINE__" => writeln!(result)?,
+            TokenTree::Ident(tt) if tt == "__SPACE__" => write!(result, " ")?,
+            TokenTree::Ident(tt) if tt == "__HASH_TOKEN__" => write!(result, "#")?,
 
-            TokenTree::Ident(ref tt) if tt == "__COMMENT__" => {
+            TokenTree::Ident(tt) if tt == "__COMMENT__" => {
                 if let Some(TokenTree::Literal(lit)) = it.next() {
                     writeln!(
                         result,
@@ -142,7 +142,7 @@ pub fn write_unformatted_tokens(
                     bail!("__COMMENT__ must be followed by a literal")
                 }
             }
-            TokenTree::Group(ref tt) => {
+            TokenTree::Group(tt) => {
                 let (open_delimiter, closed_delimiter) = match tt.delimiter() {
                     Delimiter::Parenthesis => ("(", ")"),
                     Delimiter::Bracket => ("[", "]"),
