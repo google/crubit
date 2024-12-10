@@ -493,8 +493,14 @@ impl RsTypeKind {
     /// In particular, anything representing a pointer with unknown lifetime is
     /// unsafe.
     pub fn is_unsafe(&self) -> bool {
-        // TODO(b/315346467): also include string_view, etc. here.
-        matches!(self, RsTypeKind::Pointer { .. })
+        // TODO(b/383284829): Make unsafe types propogate covariantly (e.g., pointer in
+        // public field of a struct makes the struct unsafe, FuncPtr with unsafe return
+        // type is itself an unsafe type).
+        match self {
+            RsTypeKind::Pointer { .. } => true,
+            RsTypeKind::Record { record, .. } => record.is_unsafe_type,
+            _ => false,
+        }
     }
 
     pub fn is_bridge_type(&self) -> bool {

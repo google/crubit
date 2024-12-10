@@ -609,6 +609,28 @@ fn test_struct_with_trait_derive_annotation() {
 }
 
 #[gtest]
+fn test_struct_with_unsafe_annotation() {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_override_unsafe", true)]]
+                UnsafeType {
+            int foo;
+        };"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "UnsafeType", ...
+                is_unsafe_type: true, ...
+            }
+        }
+    );
+}
+
+#[gtest]
 fn test_struct_with_unnamed_struct_and_union_members() {
     // This test input causes `field_decl->getName()` to return an empty string.
     // See also:

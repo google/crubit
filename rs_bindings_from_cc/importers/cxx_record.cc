@@ -271,6 +271,14 @@ absl::StatusOr<TraitDerives> GetTraitDerives(const clang::Decl& decl) {
   return result;
 }
 
+absl::StatusOr<bool> IsUnsafeType(const clang::Decl& decl) {
+  CRUBIT_ASSIGN_OR_RETURN(const clang::AnnotateAttr* attr,
+                          GetAnnotateAttr(decl, "crubit_override_unsafe"));
+  if (attr == nullptr) return false;
+
+  return GetAnnotateArgAsBool(*attr, decl.getASTContext());
+}
+
 }  // namespace
 
 std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
@@ -513,6 +521,13 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         FormattedError::FromStatus(std::move(trait_derives).status()));
   }
 
+  absl::StatusOr<bool> is_unsafe_type = IsUnsafeType(*record_decl);
+  if (!is_unsafe_type.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        record_decl,
+        FormattedError::FromStatus(std::move(is_unsafe_type).status()));
+  }
+
   auto record = Record{
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
@@ -536,6 +551,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .trait_derives = *std::move(trait_derives),
       .is_derived_class = is_derived_class,
       .override_alignment = override_alignment,
+      .is_unsafe_type = *is_unsafe_type,
       .copy_constructor = GetCopyCtorSpecialMemberFunc(*record_decl),
       .move_constructor = GetMoveCtorSpecialMemberFunc(*record_decl),
       .destructor = GetDestructorSpecialMemberFunc(*record_decl),
