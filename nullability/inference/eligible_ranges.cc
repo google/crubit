@@ -464,9 +464,19 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     }
     if (!R) continue;
 
-    // The start of the new range.
+    // For raw pointers, expand the range to include any preceding CVR
+    // qualifiers. These are qualifiers of the pointee type, so we want to
+    // include them in the range, but they are unhelpfully not contained in the
+    // TypeLoc source range, so we need to do this manually. Leaving the
+    // qualifiers out of the range would cause them to apply to the pointer type
+    // when adding template alias annotations.
+    // For smart pointers, a preceding qualifier is a qualifier of the smart
+    // pointer type, so we don't want to include it in the range, as a spelling
+    // preference for template alias annotations.
     SourceLocation Begin =
-        includePrecedingCVRQualifiers(R->getBegin(), SM, LangOpts);
+        isSupportedRawPointerType(MaybeLoc->getType())
+            ? includePrecedingCVRQualifiers(R->getBegin(), SM, LangOpts)
+            : R->getBegin();
 
     auto [FID, BeginOffset] = SM.getDecomposedLoc(Begin);
     // If the type comes from a different file, then don't attempt to edit -- it

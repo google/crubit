@@ -556,7 +556,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
 
   void visit(TypeLoc Loc) { visit(Loc.getType(), Loc); }
   void visit(QualType T, std::optional<TypeLoc> L = std::nullopt) {
-    visit(T.getTypePtr(), L);
+    visit(T.getTypePtr(), L ? L->getUnqualifiedLoc() : L);
   }
   void visit(const TemplateArgument &TA,
              std::optional<TemplateArgumentLoc> TAL) {

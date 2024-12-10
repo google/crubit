@@ -219,6 +219,21 @@ TEST(EligibleRangesTest, NestedPointeeConstIncluded) {
                 eligibleRange(std::nullopt, 1, Input.range("i")))));
 }
 
+TEST(EligibleRangesTest, SmartPointerDeclConstExcluded) {
+  auto Input = Annotations(R"(
+  namespace std {
+  template <typename T>
+  class unique_ptr;
+  }
+
+  void target(const [[std::unique_ptr<int>]] P);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, 0, Input.range()))));
+}
+
 TEST(EligibleRangesTest, AnnotatedSlotsGetRangesForPointerTypeOnly) {
   auto Input = Annotations(R"(
   void target(Nonnull<$one[[int *]]> NonnullP,
@@ -1029,10 +1044,7 @@ TEST(EligibleRangesTest, RangesWithBareAutoAsTemplateParameterNotReturned) {
 
     void func(auto P, auto& Q) { }
 
-    // The exclusion of std:: from `B`'s range is a known limitation of our
-    // support for complex declarators, like function pointers, that contain
-    // nested smart pointer types.
-    void lambdaRecipient($A[[void (*A)(const std::$B[[unique_ptr<int>]]& B)]]) {}
+    void lambdaRecipient($A[[void (*A)(const $B[[std::unique_ptr<int>]]& B)]]) {}
 
     void usage() {
       $I[[int*]] I;

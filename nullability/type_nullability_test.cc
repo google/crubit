@@ -901,6 +901,10 @@ TEST_F(GetTypeNullabilityLocsTest, Pointers) {
   EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
   Snippet = Using + R"($0[[int *]];)";
   EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet = Using + R"(const $0[[int *]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet = Using + R"($0[[int *]] const;)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
   Snippet = Using + R"($0[[$1[[int *]]*]];)";
   EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
   Snippet = Using + R"($0[[$1[[$2[[int *]]*]]*]];)";
@@ -1376,6 +1380,8 @@ TEST_F(GetTypeNullabilityLocsTest, SmartPointers) {
   Snippet = Header + R"(using Target = int;)";
   EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
   Snippet = Header + R"(using Target = $0[[std::unique_ptr<int>]];)";
+  EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
+  Snippet = Header + R"(using Target = const $0[[std::unique_ptr<int>]];)";
   EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
   Snippet =
       Header +
