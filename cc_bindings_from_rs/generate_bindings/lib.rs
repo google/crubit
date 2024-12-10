@@ -13,12 +13,16 @@ extern crate rustc_target;
 extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 
+mod db;
+
+pub use crate::db::{BindingsGenerator, Database};
+
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{
     escape_non_identifier_chars, format_cc_includes, make_rs_ident, CcConstQualifier, CcInclude,
     NamespaceQualifier,
 };
-use error_report::{anyhow, bail, ensure, ErrorReporting};
+use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
@@ -45,89 +49,6 @@ use std::iter::once;
 use std::ops::AddAssign;
 use std::rc::Rc;
 use std::slice;
-
-memoized::query_group! {
-    trait BindingsGenerator<'tcx> {
-        /// Compilation context for the crate that the bindings should be generated
-        /// for.
-        #[input]
-        fn tcx(&self) -> TyCtxt<'tcx>;
-
-        /// Format specifier for `#include` Crubit C++ support library headers,
-        /// using `{header}` as the place holder.  Example:
-        /// `<crubit/support/{header}>` results in `#include
-        /// <crubit/support/hdr.h>`.
-        #[input]
-        fn crubit_support_path_format(&self) -> Rc<str>;
-
-        /// The default features enabled on all crates, if not present in `crate_name_to_features`.
-        #[input]
-        fn default_features(&self) -> flagset::FlagSet<crubit_feature::CrubitFeature>;
-
-        /// A map from a crate name to the include paths of the corresponding C++
-        /// headers This is used when formatting a type exported from another
-        /// crate.
-        // TODO(b/271857814): A crate name might not be globally unique - the key needs to also cover
-        // a "hash" of the crate version and compilation flags.
-        #[input]
-        fn crate_name_to_include_paths(&self) -> Rc<HashMap<Rc<str>, Vec<CcInclude>>>;
-
-        /// A map from a crate name to the features enabled on that crate. The special name `self`
-        /// refers to the current crate.
-        // TODO(b/271857814): A crate name might not be globally unique - the key needs to also cover
-        // a "hash" of the crate version and compilation flags.
-        #[input]
-        fn crate_name_to_features(&self) -> Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>;
-
-        /// A map from a crate name to the top-level namespace of the C++ bindings. The special name
-        /// `self` refers to the current crate.
-        #[input]
-        fn crate_name_to_namespace(&self) -> Rc<HashMap<Rc<str>, Rc<str>>>;
-
-        #[input]
-        fn crate_renames(&self) -> Rc<HashMap<Rc<str>, Rc<str>>>;
-
-        /// Error collector for generating reports of errors encountered during the generation of bindings.
-        #[input]
-        fn errors(&self) -> Rc<dyn ErrorReporting>;
-
-        #[input]
-        fn no_thunk_name_mangling(&self) -> bool;
-
-        #[input]
-        fn h_out_include_guard(&self) -> IncludeGuard;
-
-        fn support_header(&self, suffix: &'tcx str) -> CcInclude;
-
-        fn repr_attrs(&self, did: DefId) -> Rc<[rustc_attr::ReprAttr]>;
-
-        fn reexported_symbol_canonical_name_mapping(&self) -> HashMap<DefId, FullyQualifiedName>;
-
-        fn format_ty_for_cc(
-            &self,
-            ty: SugaredTy<'tcx>,
-            location: TypeLocation,
-        ) -> Result<CcSnippet>;
-
-        fn format_default_ctor(
-            &self,
-            core: Rc<AdtCoreBindings<'tcx>>,
-        ) -> Result<ApiSnippets, ApiSnippets>;
-        fn format_copy_ctor_and_assignment_operator(
-            &self,
-            core: Rc<AdtCoreBindings<'tcx>>,
-        ) -> Result<ApiSnippets, ApiSnippets>;
-        fn format_move_ctor_and_assignment_operator(
-            &self,
-            core: Rc<AdtCoreBindings<'tcx>>,
-        ) -> Result<ApiSnippets, ApiSnippets>;
-
-        fn format_item(&self, def_id: LocalDefId) -> Result<Option<ApiSnippets>>;
-        fn format_fn(&self, local_def_id: LocalDefId) -> Result<ApiSnippets>;
-        fn format_adt_core(&self, def_id: DefId) -> Result<Rc<AdtCoreBindings<'tcx>>>;
-    }
-    pub struct Database;
-}
 
 #[derive(Clone, Debug, Hash)]
 pub enum IncludeGuard {

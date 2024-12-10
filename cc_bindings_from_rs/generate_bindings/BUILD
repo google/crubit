@@ -16,7 +16,10 @@ package(
 
 rust_library(
     name = "generate_bindings",
-    srcs = ["lib.rs"],
+    srcs = [
+        "db.rs",
+        "lib.rs",
+    ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
