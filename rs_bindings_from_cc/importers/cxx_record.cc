@@ -160,18 +160,18 @@ std::optional<BridgeTypeInfo> GetBridgeTypeInfo(
   return std::nullopt;
 }
 
-// Returns the set of traits to derive on the Rust type.
-absl::StatusOr<TraitDerives> GetTraitDerives(const clang::Decl* decl) {
-  TraitDerives result;
+// Helper function for `GetTraitDerives` to populate the derived traits in
+// `TraitDerives`.
+absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
   CRUBIT_ASSIGN_OR_RETURN(
-      const clang::AnnotateAttr* attr,
-      GetAnnotateAttr(*decl, "crubit_internal_trait_derive"));
-  if (attr == nullptr) return result;
+      const clang::AnnotateAttr* crubit_internal_trait_derive,
+      GetAnnotateAttr(decl, "crubit_internal_trait_derive"));
 
-  clang::ASTContext& ast_context = decl->getASTContext();
+  if (crubit_internal_trait_derive == nullptr) return absl::OkStatus();
+  clang::ASTContext& ast_context = decl.getASTContext();
+
   absl::flat_hash_set<absl::string_view> custom_traits;
-
-  for (const clang::Expr* arg : attr->args()) {
+  for (const clang::Expr* arg : crubit_internal_trait_derive->args()) {
     CRUBIT_ASSIGN_OR_RETURN(const absl::string_view derived_trait,
                             GetExprAsStringLiteral(*arg, ast_context));
     absl::string_view trait;
@@ -182,6 +182,18 @@ absl::StatusOr<TraitDerives> GetTraitDerives(const clang::Decl* decl) {
     } else {
       trait = derived_trait;
       polarity = TraitImplPolarity::kPositive;
+    }
+
+    if (trait == "Send" || trait == "Sync") {
+      if (polarity == TraitImplPolarity::kNegative) {
+        return absl::InvalidArgumentError(absl::StrCat(
+            "Trait '", trait, "' is negatively derived by default."));
+      }
+      return absl::InvalidArgumentError(
+          absl::StrCat("Trait '", trait,
+                       "' is an unsafe trait, and must be implemented with the "
+                       "`CRUBIT_UNSAFE_IMPL(\"",
+                       trait, "\")` macro."));
     }
 
     absl::Nullable<TraitImplPolarity*> selected = result.Polarity(trait);
@@ -215,6 +227,47 @@ absl::StatusOr<TraitDerives> GetTraitDerives(const clang::Decl* decl) {
   for (const absl::string_view trait : custom_traits) {
     result.custom.emplace_back(trait);
   }
+  return absl::OkStatus();
+}
+
+// Helper function for `GetTraitDerives` to populate the unsafe implementation
+// fields in `TraitDerives`.
+absl::Status AddUnsafeImpls(const clang::Decl& decl, TraitDerives& result) {
+  CRUBIT_ASSIGN_OR_RETURN(
+      const clang::AnnotateAttr* crubit_internal_unsafe_impl,
+      GetAnnotateAttr(decl, "crubit_internal_unsafe_impl"));
+
+  if (crubit_internal_unsafe_impl == nullptr) return absl::OkStatus();
+  clang::ASTContext& ast_context = decl.getASTContext();
+
+  for (const clang::Expr* arg : crubit_internal_unsafe_impl->args()) {
+    CRUBIT_ASSIGN_OR_RETURN(const absl::string_view unsafe_impl,
+                            GetExprAsStringLiteral(*arg, ast_context));
+    if (unsafe_impl == "Send") {
+      if (result.send) {
+        return absl::InvalidArgumentError(
+            "Unsafe implementation 'Send' is derived multiple times.");
+      }
+      result.send = true;
+    } else if (unsafe_impl == "Sync") {
+      if (result.sync) {
+        return absl::InvalidArgumentError(
+            "Unsafe implementation 'Sync' is derived multiple times.");
+      }
+      result.sync = true;
+    } else {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Unsafe implementation '", unsafe_impl, "' is not supported."));
+    }
+  }
+  return absl::OkStatus();
+}
+
+// Returns the set of traits to derive on the Rust type.
+absl::StatusOr<TraitDerives> GetTraitDerives(const clang::Decl& decl) {
+  TraitDerives result;
+  CRUBIT_RETURN_IF_ERROR(AddTraitDerives(decl, result));
+  CRUBIT_RETURN_IF_ERROR(AddUnsafeImpls(decl, result));
   return result;
 }
 
@@ -453,7 +506,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   const clang::TypedefNameDecl* anon_typedef =
       record_decl->getTypedefNameForAnonDecl();
 
-  absl::StatusOr<TraitDerives> trait_derives = GetTraitDerives(record_decl);
+  absl::StatusOr<TraitDerives> trait_derives = GetTraitDerives(*record_decl);
   if (!trait_derives.ok()) {
     return ictx_.ImportUnsupportedItem(
         record_decl,

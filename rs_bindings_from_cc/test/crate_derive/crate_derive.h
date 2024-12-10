@@ -9,4 +9,9 @@ struct [[clang::annotate("crubit_internal_trait_derive", "!Clone",
   int x;
 };
 
+struct [[clang::annotate("crubit_internal_unsafe_impl", "Send",
+                         "Sync")]] SendSync {
+  int x;
+};
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CRATE_DERIVE_CRATE_DERIVE_H_

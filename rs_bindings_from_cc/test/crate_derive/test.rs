@@ -6,7 +6,9 @@ use crate_derive::*;
 use googletest::prelude::*;
 
 static_assertions::assert_not_impl_all!(StructWithDerives: Clone, Copy);
-static_assertions::assert_impl_all!(StructWithDerives: std::fmt::Debug);
+static_assertions::assert_impl_all!(StructWithDerives: std::fmt::Debug, Unpin);
+
+static_assertions::assert_impl_all!(SendSync: Send, Sync);
 
 #[gtest]
 fn please_compile() {}

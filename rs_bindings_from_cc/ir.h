@@ -594,10 +594,9 @@ struct TraitDerives {
   TraitImplPolarity clone = TraitImplPolarity::kNone;
   TraitImplPolarity copy = TraitImplPolarity::kNone;
   TraitImplPolarity debug = TraitImplPolarity::kNone;
-  TraitImplPolarity send = TraitImplPolarity::kNone;
-  TraitImplPolarity sync = TraitImplPolarity::kNone;
-  TraitImplPolarity unpin = TraitImplPolarity::kNone;
   // <internal link> end
+  bool send = false;
+  bool sync = false;
   std::vector<std::string> custom;
 };
 

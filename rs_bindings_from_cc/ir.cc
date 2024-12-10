@@ -486,9 +486,6 @@ absl::Nullable<TraitImplPolarity*> TraitDerives::Polarity(
   if (trait == "Clone") return &clone;
   if (trait == "Copy") return &copy;
   if (trait == "Debug") return &debug;
-  if (trait == "Send") return &send;
-  if (trait == "Sync") return &sync;
-  if (trait == "Unpin") return &unpin;
   // <internal link> end
   return nullptr;
 }
@@ -510,10 +507,9 @@ llvm::json::Value TraitDerives::ToJson() const {
       {"clone", TraitImplPolarityToString(clone)},
       {"copy", TraitImplPolarityToString(copy)},
       {"debug", TraitImplPolarityToString(debug)},
-      {"send", TraitImplPolarityToString(send)},
-      {"sync", TraitImplPolarityToString(sync)},
-      {"unpin", TraitImplPolarityToString(unpin)},
       // <internal link> end
+      {"send", send},
+      {"sync", sync},
       {"custom", custom},
   };
 }

@@ -606,6 +606,18 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
         features.extend(generated.features.clone());
     }
 
+    let send_impl = if record.trait_derives.send {
+        quote! {unsafe impl Send for #ident {}}
+    } else {
+        quote! {impl !Send for #ident {}}
+    };
+
+    let sync_impl = if record.trait_derives.sync {
+        quote! {unsafe impl Sync for #ident {}}
+    } else {
+        quote! {impl !Sync for #ident {}}
+    };
+
     let record_tokens = quote! {
         #doc_comment
         #derives
@@ -617,8 +629,8 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
             #( #field_definitions, )*
         }
 
-        impl !Send for #ident {}
-        impl !Sync for #ident {}
+        #send_impl
+        #sync_impl
 
         #incomplete_definition
 
@@ -703,6 +715,10 @@ fn generate_derives(record: &Record) -> Vec<Ident> {
     }
     if record.trait_derives.debug == TraitImplPolarity::Positive {
         derives.push(make_rs_ident("Debug"));
+    }
+    for custom_trait in &record.trait_derives.custom {
+        // Breaks for paths right now...
+        derives.push(make_rs_ident(custom_trait));
     }
     derives
 }

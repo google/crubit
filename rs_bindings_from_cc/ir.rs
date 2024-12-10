@@ -667,12 +667,13 @@ pub enum TraitImplPolarity {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TraitDerives {
-    pub copy: TraitImplPolarity,
+    // <internal link> start
     pub clone: TraitImplPolarity,
+    pub copy: TraitImplPolarity,
     pub debug: TraitImplPolarity,
-    pub send: TraitImplPolarity,
-    pub sync: TraitImplPolarity,
-    pub unpin: TraitImplPolarity,
+    // <internal link> end
+    pub send: bool,
+    pub sync: bool,
     pub custom: Vec<Rc<str>>,
 }
 

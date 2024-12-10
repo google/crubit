@@ -145,4 +145,8 @@
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_trait_derive" __VA_OPT__(, ) \
                                __VA_ARGS__)
 
+#define CRUBIT_UNSAFE_IMPL(...)                                         \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_internal_unsafe_impl" __VA_OPT__(, ) \
+                               __VA_ARGS__)
+
 #endif  // CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_
