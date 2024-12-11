@@ -36,12 +36,11 @@ Unless otherwise specified, the types below are supported and ABI-compatible
         obscure attributes)
 *   function pointers, where the parameters and return type are in this list and
     are ABI-compatible
+*   `std::string_view` / `absl::string_view`
 *   raw pointers to anything in this list
 
 We have *experimental* unreleased support for the following types:
 
-*   (2024H2) b/333737717: ABI-compatible `std::string_view` /
-    `absl::string_view`
 *   (2024H2) b/362475441: references and pointers to `MaybeUninit<T>`, which are
     treated as `T`.
 
@@ -152,9 +151,9 @@ The following features are **not** supported yet, among others:
 
 We currently only support Bazel.
 
-TODO:
-
-*   (2025) Cargo support, build scripts, etc.
-*   (2025) Stable command-line interface
-*   (not planned) Buck2
-*   (not planned) CMake
+> TODO:
+> 
+> *   (2025) Cargo support, build scripts, etc.
+> *   (2025) Stable command-line interface
+> *   (not planned) Buck2
+> *   (not planned) CMake
