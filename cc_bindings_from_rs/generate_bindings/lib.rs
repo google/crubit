@@ -4,6 +4,7 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
+extern crate rustc_ast;
 extern crate rustc_attr;
 extern crate rustc_hir;
 extern crate rustc_infer;
@@ -26,7 +27,9 @@ use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
+use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
 use rustc_attr::find_deprecation;
+use rustc_attr::IntType;
 use rustc_hir::def::{DefKind, Res};
 use rustc_hir::{AssocItemKind, HirId, Item, ItemKind, Node, Safety, UseKind, UsePath};
 use rustc_infer::infer::TyCtxtInferExt;
@@ -36,6 +39,7 @@ use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, AdtDef, GenericArg, IntTy, Region, Ty, TyCtxt, UintTy};
 use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LocalModDefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
+use rustc_target::abi::IntegerType;
 use rustc_target::abi::{
     AddressSpace, BackendRepr, FieldIdx, FieldsShape, HasDataLayout, Integer, Layout, Primitive,
     Scalar, VariantIdx, Variants,
@@ -3130,13 +3134,59 @@ fn format_adt_core<'tcx>(
     }))
 }
 
+fn convert_interger_type_to_int_type(input: IntegerType) -> IntType {
+    match input {
+        IntegerType::Pointer(true) => IntType::SignedInt(IntT::Isize),
+        IntegerType::Pointer(false) => IntType::UnsignedInt(UintT::Usize),
+        IntegerType::Fixed(Integer::I8, false) => IntType::UnsignedInt(UintT::U8),
+        IntegerType::Fixed(Integer::I16, false) => IntType::UnsignedInt(UintT::U16),
+        IntegerType::Fixed(Integer::I32, false) => IntType::UnsignedInt(UintT::U32),
+        IntegerType::Fixed(Integer::I64, false) => IntType::UnsignedInt(UintT::U64),
+        IntegerType::Fixed(Integer::I128, false) => IntType::UnsignedInt(UintT::U128),
+        IntegerType::Fixed(Integer::I8, true) => IntType::SignedInt(IntT::I8),
+        IntegerType::Fixed(Integer::I16, true) => IntType::SignedInt(IntT::I16),
+        IntegerType::Fixed(Integer::I32, true) => IntType::SignedInt(IntT::I32),
+        IntegerType::Fixed(Integer::I64, true) => IntType::SignedInt(IntT::I64),
+        IntegerType::Fixed(Integer::I128, true) => IntType::SignedInt(IntT::I128),
+    }
+}
+
+// TODO: Replace calls to this function with direct call to `repr.transparent()`
+// and `repr.c()` etc.
 fn repr_attrs(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Rc<[rustc_attr::ReprAttr]> {
     let tcx = db.tcx();
-    let attrs: Vec<_> = tcx
-        .get_attrs(def_id, sym::repr)
-        .flat_map(|attr| rustc_attr::parse_repr_attr(tcx.sess(), attr))
-        .collect();
-    attrs.into()
+    let mut result = Vec::new();
+    let ty = tcx.type_of(def_id).instantiate_identity();
+    match ty.kind() {
+        ty::TyKind::Adt(adt_def, _) => {
+            let repr = adt_def.repr();
+            if repr.transparent() {
+                result.push(rustc_attr::ReprAttr::ReprTransparent);
+            }
+            if repr.c() {
+                result.push(rustc_attr::ReprAttr::ReprC);
+            }
+            if repr.simd() {
+                result.push(rustc_attr::ReprAttr::ReprSimd);
+            }
+            if let Some(alignment) = repr.align {
+                result.push(rustc_attr::ReprAttr::ReprAlign(alignment));
+            }
+            if let Some(alignment) = repr.pack {
+                result.push(rustc_attr::ReprAttr::ReprPacked(alignment));
+            }
+            if let Some(integer) = repr.int {
+                result.push(rustc_attr::ReprAttr::ReprInt(convert_interger_type_to_int_type(
+                    integer,
+                )));
+            }
+            if result.is_empty() {
+                result.push(rustc_attr::ReprAttr::ReprRust);
+            }
+            result.into()
+        }
+        _ => result.into(),
+    }
 }
 
 // Converts a scalar integer to a Ty.
