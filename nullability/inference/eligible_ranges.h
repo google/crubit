@@ -6,6 +6,7 @@
 #define CRUBIT_NULLABILITY_INFERENCE_ELIGIBLE_RANGES_H_
 
 #include <optional>
+#include <ostream>
 #include <vector>
 
 #include "nullability/inference/inference.proto.h"
@@ -18,6 +19,17 @@ namespace clang::tidy::nullability {
 struct EligibleRange {
   std::optional<Slot> Slot;
   SlotRange Range;
+
+  // Enable GoogleTest to print EligibleRange to ease debugging of tests.
+  // NOLINTNEXTLINE(readability-identifier-naming) must match GoogleTest naming.
+  friend void PrintTo(const EligibleRange& Range, std::ostream* OS) {
+    *OS << "Slot: ";
+    if (Range.Slot)
+      *OS << *Range.Slot;
+    else
+      *OS << "nullopt";
+    *OS << "\nRange: {" << Range.Range.DebugString() << "}\n";
+  }
 };
 using EligibleRanges = std::vector<EligibleRange>;
 
