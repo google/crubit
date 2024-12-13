@@ -62,6 +62,7 @@ load(
     "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "RustBindingsFromCcInfo",
 )
+
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain", "use_cpp_toolchain")
 
 # Targets which do not receive C++ bindings at all.
@@ -93,7 +94,7 @@ def _get_dep_bindings_infos(ctx):
 def _target_name_to_include_guard(target):
     return (target.label.package + "/" + target.label.name).replace("/", "_").upper()
 
-def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
+def _generate_bindings(ctx, target, basename, inputs, args, rustc_env, proto_crate_renames):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
     Args:
@@ -103,6 +104,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
       inputs: `cc_bindings_from_rs` inputs specific to the target `crate`
       args: `rustc` and `process_wrapper` arguments from construct_arguments.
       rustc_env: `rustc` environment to use when running `cc_bindings_from_rs`
+      proto_crate_renames: Mapping of the `rust_proto_library` to the `proto_library` crate name.
 
     Returns:
       A tuple of (GeneratedBindingsInfo, features).
@@ -149,7 +151,8 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env):
     for crate_name, crate_config in config.items():
         if crate_config.namespace:
             crubit_args.add("--crate-namespace", crate_name + "=" + crate_config.namespace)
-
+    for mapping in proto_crate_renames:
+        crubit_args.add("--crate-rename", mapping.crate_name + "=" + mapping.old_crate_name)
     for flag in collect_cc_bindings_from_rust_cli_flags(target, ctx):
         crubit_args.add(flag)
     toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"].cc_bindings_from_rs_toolchain_info
@@ -277,6 +280,8 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
     if str(target.label) in targets_to_remove:
         return []
 
+    proto_crate_renames = []
+
     toolchain = find_toolchain(ctx)
     crate_info = target[CrateInfo]
     cc_toolchain = find_cpp_toolchain(ctx)
@@ -346,6 +351,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         compile_inputs,
         args,
         env,
+        proto_crate_renames,
     )
 
     impl_cc_info = _compile_rs_out_file(ctx, bindings_info.rust_file, target)
