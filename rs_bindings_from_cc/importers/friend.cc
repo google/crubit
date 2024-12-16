@@ -56,9 +56,12 @@ std::optional<IR::Item> FriendDeclImporter::Import(
   Func* func_item = std::get_if<Func>(&*item);
   CHECK(func_item);  // Guaranteed by `isa<clang::FunctionDecl>` above.
   // Return the recursively generated function item almost as-is. It needs a
-  // fresh item ID because it came from this friend_decl. And it needs an ADL
-  // enclosing record note because as a friend function it is not visible at top
-  // level.
+  // fresh item ID because it came from this friend_decl.
+  //
+  // We also set the `adl_enclosing_record` field to the enclosing record. This
+  // allows us to prevent generation of bindings in the case that the enclosing
+  // record is not visible, as ADL is necessary for the friend function to be
+  // found.
   Func result = *func_item;
   result.id = ictx_.GenerateItemId(friend_decl);
   result.adl_enclosing_record = ictx_.GenerateItemId(enclosing_record_decl);

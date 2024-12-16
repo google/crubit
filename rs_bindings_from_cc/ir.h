@@ -449,8 +449,11 @@ struct Func {
   std::string source_loc;
   ItemId id;
   std::optional<ItemId> enclosing_item_id;
+  // The enclosing record that this function is a friend of.
+  //
   // If present, this function should only generate top-level bindings if its
   // arguments refer to this enclosing record according to the ADL rules.
+  // This is necessary because ADL is needed in order to find friend functions.
   //
   // This could in principle be resolved while generating the IR, but the richer
   // Rust type modeling in src_code_gen makes it much easier to do on the

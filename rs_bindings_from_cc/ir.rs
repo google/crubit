@@ -492,6 +492,13 @@ pub struct Func {
     pub source_loc: Rc<str>,
     pub id: ItemId,
     pub enclosing_item_id: Option<ItemId>,
+
+    /// If this function was declared as a `friend` inside of a record
+    /// definition, this ItemId refers to the record containing the `friend`
+    /// function declaration.
+    ///
+    /// The record pointed to by `ItemId` must then be ADL-visible in order to
+    /// invoke this function.
     pub adl_enclosing_record: Option<ItemId>,
 }
 

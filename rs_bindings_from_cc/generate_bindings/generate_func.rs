@@ -363,262 +363,175 @@ static OPERATOR_METADATA: LazyLock<OperatorMetadata> = LazyLock::new(|| {
     }
 });
 
-/// Returns the shape of the generated Rust API for a given function definition.
+/// Whether the function is a friend of a record, but the record is not visible
+/// by ADL.
 ///
-/// If the shape is a trait, this also mutates the parameter types to be
-/// trait-compatible. In particular, types which would be `impl Ctor<Output=T>`
-/// become a `RvalueReference<'_, T>`.
+/// This is a heuristic to avoid generating bindings for functions that are not
+/// visible by ADL.
 ///
-/// Returns:
-///
-///  * `Err(_)`: something went wrong importing this function.
-///  * `Ok(None)`: the function imported as "nothing". (For example, a defaulted
-///    destructor might be mapped to no `Drop` impl at all.)
-///  * `Ok((func_name, impl_kind))`: The function name and ImplKind.
-fn api_func_shape(
+/// This is necessary because ADL is needed in order to find friend functions.
+fn is_friend_of_record_not_visible_by_adl(
     db: &dyn BindingsGenerator,
     func: &Func,
-    param_types: &mut [RsTypeKind],
-) -> Result<Option<(Ident, ImplKind)>> {
+    param_types: &[RsTypeKind],
+) -> bool {
+    let Some(decl_id) = func.adl_enclosing_record else { return false };
     let ir = db.ir();
-    let op_meta = &*OPERATOR_METADATA;
+    let adl_enclosing_record = ir
+        .find_decl::<Rc<Record>>(decl_id)
+        .with_context(|| format!("Failed to look up `adl_enclosing_record` of {:?}", func))
+        .unwrap();
+    !is_visible_by_adl(adl_enclosing_record, param_types)
+}
 
-    let maybe_record = match ir.record_for_member_func(func).map(<&Rc<Record>>::try_from) {
-        None => None,
-        Some(Ok(record)) => Some(record),
-        // Functions whose record was replaced with some other IR Item type are ignored.
-        // This occurs for instance if you use crubit_internal_rust_type: member functions defined
-        // out-of-line, such as implicitly generated constructors, will still be present in the IR,
-        // but should be ignored.
-        Some(Err(_)) => return Ok(None),
-    };
-
-    let is_unsafe = match func.safety_annotation {
-        SafetyAnnotation::Unannotated => param_types.iter().any(|p| p.is_unsafe()),
-        SafetyAnnotation::Unsafe => true,
-        SafetyAnnotation::DisableUnsafe => false,
-    };
-    let impl_kind: ImplKind;
-    let func_name: syn::Ident;
-
-    let adl_check_required_and_failed = if let Some(decl_id) = func.adl_enclosing_record {
-        let adl_enclosing_record = ir
-            .find_decl::<Rc<Record>>(decl_id)
-            .with_context(|| format!("Failed to look up `adl_enclosing_record` of {:?}", func))?;
-        !is_visible_by_adl(adl_enclosing_record, param_types)
-    } else {
-        false
-    };
-
-    match &func.name {
-        UnqualifiedIdentifier::Operator(_) | UnqualifiedIdentifier::Identifier(_)
-            if adl_check_required_and_failed =>
-        {
-            return Ok(None);
-        }
-        UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "==" => {
-            assert_eq!(
-                param_types.len(),
-                2,
-                "Unexpected number of parameters in operator==: {func:?}"
-            );
-            let lhs_record = match &param_types[0] {
-                RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. } => {
-                    if let RsTypeKind::Record { record: lhs_record, .. } = &**lhs {
-                        lhs_record
-                    } else {
-                        bail!(
-                            "operator== where lhs param is reference that doesn't refer to a record",
-                        );
-                    }
-                }
-                RsTypeKind::Record { record: lhs_record, .. } => lhs_record,
-                _ => bail!(
-                    "operator== where lhs operand is not record nor const reference to record"
-                ),
-            };
-            let params = match &param_types[1] {
-                RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. } => {
-                    if let RsTypeKind::Record { .. } = &**rhs {
-                        vec![(**rhs).clone()]
-                    } else {
-                        bail!(
-                            "operator== where rhs param is reference that doesn't refer to a record",
-                        );
-                    }
-                }
-                record @ RsTypeKind::Record { .. } => vec![record.clone()],
-                _ => bail!(
-                    "operator== where rhs operand is not record nor const reference to record"
-                ),
-            };
-            func_name = make_rs_ident("eq");
-            impl_kind = ImplKind::new_trait(
-                TraitName::PartialEq { params: Rc::from(params) },
-                lhs_record.clone(),
-                /* format_first_param_as_self= */ true,
-                /* force_const_reference_params= */ true,
-            )?;
-        }
-        UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "<=>" => {
-            bail!("Three-way comparison operator not yet supported (b/219827738)");
-        }
-        UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "<" => {
-            assert_eq!(
-                param_types.len(),
-                2,
-                "Unexpected number of parameters in operator<: {func:?}"
-            );
-            let lhs_record = match &param_types[0] {
-                RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. } => {
-                    if let RsTypeKind::Record { record: lhs_record, .. } = &**lhs {
-                        lhs_record
-                    } else {
-                        bail!(
-                            "operator== where lhs param is reference that doesn't refer to a record",
-                        );
-                    }
-                }
-                RsTypeKind::Record { record: lhs_record, .. } => lhs_record,
-                _ => {
-                    bail!("operator< where lhs operand is not record nor const reference to record")
-                }
-            };
-            let (rhs_record, params) = match &param_types[1] {
-                RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. } => {
-                    if let RsTypeKind::Record { record: rhs_record, .. } = &**rhs {
-                        (rhs_record, vec![(**rhs).clone()])
-                    } else {
-                        bail!(
-                            "operator== where rhs param is reference that doesn't refer to a record",
-                        );
-                    }
-                }
-                record @ RsTypeKind::Record { record: rhs_record, .. } => {
-                    (rhs_record, vec![record.clone()])
-                }
-                _ => {
-                    bail!("operator< where rhs operand is not record nor const reference to record")
-                }
-            };
-            // Even though Rust and C++ allow operator< to be implemented on different
-            // types, we don't generate bindings for them at this moment. The
-            // issue is that our canonical implementation of partial_cmp relies
-            // on transitivity. This would require checking that both lt(&T1,
-            // &T2) and lt(&T2, &T1) are implemented. In other words, both lt
-            // implementations would need to query for the existence of the other, which
-            // would create a cyclic dependency.
-            if lhs_record != rhs_record {
-                bail!("operator< where lhs and rhs are not the same type.");
-            }
-            // PartialOrd requires PartialEq, so we need to make sure operator== is
-            // implemented for this Record type.
-            match get_binding(
-                db,
-                UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
-                param_types.to_vec(),
-            ) {
-                Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) => {
-                    func_name = make_rs_ident("lt");
-                    impl_kind = ImplKind::new_trait(
-                        TraitName::PartialOrd { params: Rc::from(params) },
-                        lhs_record.clone(),
-                        /* format_first_param_as_self= */
-                        true,
-                        /* force_const_reference_params= */ true,
-                    )?;
-                }
-                _ => bail!("operator< where operator== is missing."),
-            }
-        }
-        UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "=" => {
-            assert_eq!(
-                param_types.len(),
-                2,
-                "Unexpected number of parameters in operator=: {func:?}"
-            );
-            let record =
-                maybe_record.ok_or_else(|| anyhow!("operator= must be a member function."))?;
-            materialize_ctor_in_caller(func, param_types);
-
-            let rhs = &param_types[1];
-
-            //  TODO(b/219963671): consolidate UnpinAssign and Assign in ctor.rs
-            let trait_name;
-            if record.is_unpin() {
-                trait_name = Rc::from("::ctor::UnpinAssign");
-                func_name = make_rs_ident("unpin_assign");
+/// Ensures that `kind` is a record or a const reference to a record.
+///
+/// Returns the `RsTypeKind` and `Record` of the underlying record type.
+fn type_by_value_or_under_const_ref<'a>(
+    kind: &'a RsTypeKind,
+    value_desc: &str,
+) -> Result<(&'a RsTypeKind, &'a Rc<Record>)> {
+    match kind {
+        RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. } => {
+            if let RsTypeKind::Record { record: lhs_record, .. } = &**lhs {
+                Ok((lhs, lhs_record))
             } else {
-                trait_name = Rc::from("::ctor::Assign");
-                func_name = make_rs_ident("assign")
-            };
-
-            impl_kind = {
-                ImplKind::Trait {
-                    record: record.clone(),
-                    trait_name: TraitName::Other {
-                        name: trait_name,
-                        params: Rc::new([rhs.clone()]),
-                        is_unsafe_fn: false,
-                    },
-                    impl_for: ImplFor::T,
-                    trait_generic_params: Rc::new([]),
-                    format_first_param_as_self: true,
-                    drop_return: true,
-                    associated_return_type: None,
-                    force_const_reference_params: false,
-                }
-            };
-        }
-        UnqualifiedIdentifier::Operator(op) => match op_meta
-            .by_cc_name_and_params
-            .get(&(&op.name, param_types.len()))
-        {
-            Some(OperatorMetadataEntry {
-                trait_name,
-                method_name,
-                is_compound_assignment: false,
-                ..
-            }) => {
-                materialize_ctor_in_caller(func, param_types);
-                let (record, impl_for) = match &param_types[0] {
-                    RsTypeKind::Record { record, .. } => (record, ImplFor::T),
-                    RsTypeKind::Reference { referent, .. } => (
-                        match &**referent {
-                            RsTypeKind::Record { record, .. } => record,
-                            _ => bail!("Expected first parameter referent to be a record"),
-                        },
-                        ImplFor::RefT,
-                    ),
-                    RsTypeKind::RvalueReference { .. } => {
-                        bail!("Not yet supported for rvalue references (b/219826128)")
-                    }
-                    _ => bail!("Expected first parameter to be a record or reference"),
-                };
-
-                impl_kind = ImplKind::Trait {
-                    record: record.clone(),
-                    trait_name: TraitName::Other {
-                        name: Rc::from(format!("::core::ops::{trait_name}")),
-                        params: Rc::from(&param_types[1..]),
-                        is_unsafe_fn: false,
-                    },
-                    impl_for,
-                    trait_generic_params: Rc::new([]),
-                    format_first_param_as_self: true,
-                    drop_return: false,
-                    associated_return_type: Some(make_rs_ident("Output")),
-                    force_const_reference_params: false,
-                };
-                func_name = make_rs_ident(method_name);
+                bail!("Expected {value_desc} to be a record or const reference to a record, found a reference that doesn't refer to a record");
             }
-            Some(OperatorMetadataEntry {
-                trait_name,
-                method_name,
-                is_compound_assignment: true,
-                ..
-            }) => {
-                materialize_ctor_in_caller(func, param_types);
+        }
+        RsTypeKind::Record { record: lhs_record, .. } => Ok((kind, lhs_record)),
+        _ => bail!("Expected {value_desc} to be a record or const reference to a record"),
+    }
+}
+
+fn api_func_shape_for_operator_eq(
+    func: &Func,
+    param_types: &[RsTypeKind],
+) -> Result<(Ident, ImplKind)> {
+    // C++ requires that operator== is binary.
+    assert_eq!(
+        param_types.len(),
+        2,
+        "Expected operator== two have exactly two parameters. Found: {func:?}"
+    );
+    let (_, lhs_record) =
+        type_by_value_or_under_const_ref(&param_types[0], "first operator== param")?;
+    let (param, _) = type_by_value_or_under_const_ref(&param_types[1], "second operator== param")?;
+    let params: Rc<[RsTypeKind]> = Rc::new([param.clone()]);
+    let func_name = make_rs_ident("eq");
+    let impl_kind = ImplKind::new_trait(
+        TraitName::PartialEq { params },
+        lhs_record.clone(),
+        /* format_first_param_as_self= */ true,
+        /* force_const_reference_params= */ true,
+    )?;
+    Ok((func_name, impl_kind))
+}
+
+fn api_func_shape_for_operator_lt(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+    param_types: &[RsTypeKind],
+) -> Result<(Ident, ImplKind)> {
+    assert_eq!(param_types.len(), 2, "Unexpected number of parameters in operator<: {func:?}");
+    let (_, lhs_record) =
+        type_by_value_or_under_const_ref(&param_types[0], "first operator< param")?;
+    let (param, rhs_record) =
+        type_by_value_or_under_const_ref(&param_types[1], "second operator< param")?;
+    let params: Rc<[RsTypeKind]> = Rc::new([param.clone()]);
+    // Even though Rust and C++ allow operator< to be implemented on different
+    // types, we don't generate bindings for them at this moment. The
+    // issue is that our canonical implementation of partial_cmp relies
+    // on transitivity. This would require checking that both lt(&T1,
+    // &T2) and lt(&T2, &T1) are implemented. In other words, both lt
+    // implementations would need to query for the existence of the other, which
+    // would create a cyclic dependency.
+    if lhs_record != rhs_record {
+        bail!("operator< where lhs and rhs are not the same type.");
+    }
+    // PartialOrd requires PartialEq, so we need to make sure operator== is
+    // implemented for this Record type.
+    let Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) = get_binding(
+        db,
+        UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
+        param_types.to_vec(),
+    ) else {
+        bail!("operator< where operator== is missing.")
+    };
+    let func_name = make_rs_ident("lt");
+    let impl_kind = ImplKind::new_trait(
+        TraitName::PartialOrd { params },
+        lhs_record.clone(),
+        /* format_first_param_as_self= */ true,
+        /* force_const_reference_params= */ true,
+    )?;
+    Ok((func_name, impl_kind))
+}
+
+fn api_func_shape_for_operator_assign(
+    func: &Func,
+    maybe_record: Option<&Rc<Record>>,
+    param_types: &mut [RsTypeKind],
+) -> Result<(Ident, ImplKind)> {
+    assert_eq!(param_types.len(), 2, "Unexpected number of parameters in operator=: {func:?}");
+    let record = maybe_record.ok_or_else(|| anyhow!("operator= must be a member function."))?;
+    materialize_ctor_in_caller(func, param_types);
+
+    let rhs = &param_types[1];
+
+    //  TODO(b/219963671): consolidate UnpinAssign and Assign in ctor.rs
+    let trait_name;
+    let func_name;
+    if record.is_unpin() {
+        trait_name = Rc::from("::ctor::UnpinAssign");
+        func_name = make_rs_ident("unpin_assign");
+    } else {
+        trait_name = Rc::from("::ctor::Assign");
+        func_name = make_rs_ident("assign")
+    };
+
+    let impl_kind = ImplKind::Trait {
+        record: record.clone(),
+        trait_name: TraitName::Other {
+            name: trait_name,
+            params: Rc::new([rhs.clone()]),
+            is_unsafe_fn: false,
+        },
+        impl_for: ImplFor::T,
+        trait_generic_params: Rc::new([]),
+        format_first_param_as_self: true,
+        drop_return: true,
+        associated_return_type: None,
+        force_const_reference_params: false,
+    };
+    Ok((func_name, impl_kind))
+}
+
+fn api_func_shape_for_operator(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+    maybe_record: Option<&Rc<Record>>,
+    param_types: &mut [RsTypeKind],
+    op: &Operator,
+) -> Result<(Ident, ImplKind)> {
+    match op.name.as_ref() {
+        "==" => api_func_shape_for_operator_eq(func, param_types),
+        "<=>" => bail!("Three-way comparison operator not yet supported (b/219827738)"),
+        "<" => api_func_shape_for_operator_lt(db, func, param_types),
+        "=" => api_func_shape_for_operator_assign(func, maybe_record, param_types),
+        _ => {
+            let Some(op_metadata) =
+                OPERATOR_METADATA.by_cc_name_and_params.get(&(&op.name, param_types.len()))
+            else {
+                bail!(
+                    "Bindings for this kind of operator (operator {op} with {n} parameter(s)) are not supported",
+                    op = &op.name,
+                    n = param_types.len(),
+                );
+            };
+            materialize_ctor_in_caller(func, param_types);
+            let trait_name = op_metadata.trait_name;
+            if op_metadata.is_compound_assignment {
                 let record = match &param_types[0] {
                     RsTypeKind::Record { .. } => {
                         bail!("Compound assignment with by-value left-hand side is not supported")
@@ -645,7 +558,8 @@ fn api_func_shape(
                     "Compound assignment operators are not supported for non-Unpin types);",
                 );
 
-                impl_kind = ImplKind::Trait {
+                let func_name = make_rs_ident(op_metadata.method_name);
+                let impl_kind = ImplKind::Trait {
                     record: record.clone(),
                     trait_name: TraitName::Other {
                         name: Rc::from(format!("::core::ops::{trait_name}")),
@@ -659,22 +573,95 @@ fn api_func_shape(
                     associated_return_type: None,
                     force_const_reference_params: false,
                 };
-                func_name = make_rs_ident(method_name);
+                Ok((func_name, impl_kind))
+            } else {
+                let (record, impl_for) = match &param_types[0] {
+                    RsTypeKind::Record { record, .. } => (record, ImplFor::T),
+                    RsTypeKind::Reference { referent, .. } => (
+                        match &**referent {
+                            RsTypeKind::Record { record, .. } => record,
+                            _ => bail!("Expected first parameter referent to be a record"),
+                        },
+                        ImplFor::RefT,
+                    ),
+                    RsTypeKind::RvalueReference { .. } => {
+                        bail!("Not yet supported for rvalue references (b/219826128)")
+                    }
+                    _ => bail!("Expected first parameter to be a record or reference"),
+                };
+
+                let func_name = make_rs_ident(op_metadata.method_name);
+                let impl_kind = ImplKind::Trait {
+                    record: record.clone(),
+                    trait_name: TraitName::Other {
+                        name: Rc::from(format!("::core::ops::{trait_name}")),
+                        params: Rc::from(&param_types[1..]),
+                        is_unsafe_fn: false,
+                    },
+                    impl_for,
+                    trait_generic_params: Rc::new([]),
+                    format_first_param_as_self: true,
+                    drop_return: false,
+                    associated_return_type: Some(make_rs_ident("Output")),
+                    force_const_reference_params: false,
+                };
+                Ok((func_name, impl_kind))
             }
-            None => {
-                bail!(
-                    "Bindings for this kind of operator (operator {op} with {n} parameter(s)) are not supported",
-                    op = &op.name,
-                    n = param_types.len(),
-                );
+        }
+    }
+}
+
+/// Returns the shape of the generated Rust API for a given function definition.
+///
+/// If the shape is a trait, this also mutates the parameter types to be
+/// trait-compatible. In particular, types which would be `impl Ctor<Output=T>`
+/// become a `RvalueReference<'_, T>`.
+///
+/// Returns:
+///
+///  * `Err(_)`: something went wrong importing this function.
+///  * `Ok(None)`: the function imported as "nothing". (For example, a defaulted
+///    destructor might be mapped to no `Drop` impl at all.)
+///  * `Ok((func_name, impl_kind))`: The function name and ImplKind.
+fn api_func_shape(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+    param_types: &mut [RsTypeKind],
+) -> Result<Option<(Ident, ImplKind)>> {
+    let ir = db.ir();
+    let maybe_record = match ir.record_for_member_func(func).map(<&Rc<Record>>::try_from) {
+        None => None,
+        Some(Ok(record)) => Some(record),
+        // Functions whose record was replaced with some other IR Item type are ignored.
+        // This occurs for instance if you use crubit_internal_rust_type: member functions defined
+        // out-of-line, such as implicitly generated constructors, will still be present in the IR,
+        // but should be ignored.
+        Some(Err(_)) => return Ok(None),
+    };
+
+    if is_friend_of_record_not_visible_by_adl(db, func, param_types) {
+        return Ok(None);
+    }
+
+    let is_unsafe = match func.safety_annotation {
+        SafetyAnnotation::Unannotated => param_types.iter().any(|p| p.is_unsafe()),
+        SafetyAnnotation::Unsafe => true,
+        SafetyAnnotation::DisableUnsafe => false,
+    };
+    let impl_kind: ImplKind;
+    let func_name: syn::Ident;
+
+    match &func.name {
+        UnqualifiedIdentifier::Operator(op) => {
+            if let SafetyAnnotation::Unsafe = func.safety_annotation {
+                bail!("Unsafe annotations on operators are not supported: {func:?}");
             }
-        },
+            return api_func_shape_for_operator(db, func, maybe_record, param_types, op).map(Some);
+        }
         UnqualifiedIdentifier::Identifier(id) => {
             func_name = make_rs_ident(&id.identifier);
-            match maybe_record {
-                None => {
-                    impl_kind = ImplKind::None { is_unsafe };
-                }
+            impl_kind = match maybe_record {
+                None => ImplKind::None { is_unsafe },
                 Some(record) => {
                     let format_first_param_as_self = if func.is_instance_method() {
                         let first_param = param_types.first().ok_or_else(|| {
@@ -684,15 +671,18 @@ fn api_func_shape(
                     } else {
                         false
                     };
-                    impl_kind = ImplKind::Struct {
+                    ImplKind::Struct {
                         record: record.clone(),
                         format_first_param_as_self,
                         is_unsafe,
-                    };
+                    }
                 }
             };
         }
         UnqualifiedIdentifier::Destructor => {
+            if let SafetyAnnotation::Unsafe = func.safety_annotation {
+                bail!("Unsafe annotations on operators are not supported: {func:?}");
+            }
             // Note: to avoid double-destruction of the fields, they are all wrapped in
             // ManuallyDrop in this case. See `generate_record`.
             let record =
@@ -745,20 +735,18 @@ fn api_func_shape(
             if !record.is_unpin() {
                 func_name = make_rs_ident("ctor_new");
 
-                match param_types {
-                    [] => bail!("Missing `__this` parameter in a constructor: {:?}", func),
-                    [_this, params @ ..] => {
-                        impl_kind = ImplKind::Trait {
-                            record: record.clone(),
-                            trait_name: TraitName::CtorNew(params.iter().cloned().collect()),
-                            impl_for: ImplFor::T,
-                            trait_generic_params: Rc::new([]),
-                            format_first_param_as_self: false,
-                            drop_return: false,
-                            associated_return_type: Some(make_rs_ident("CtorType")),
-                            force_const_reference_params: false,
-                        };
-                    }
+                let [_this, params @ ..] = param_types else {
+                    bail!("Missing `__this` parameter in a constructor: {:?}", func)
+                };
+                impl_kind = ImplKind::Trait {
+                    record: record.clone(),
+                    trait_name: TraitName::CtorNew(params.iter().cloned().collect()),
+                    impl_for: ImplFor::T,
+                    trait_generic_params: Rc::new([]),
+                    format_first_param_as_self: false,
+                    drop_return: false,
+                    associated_return_type: Some(make_rs_ident("CtorType")),
+                    force_const_reference_params: false,
                 }
             } else {
                 match func.params.len() {

@@ -875,7 +875,7 @@ impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivi
 }
 
 // Error while generating bindings for item 'NontrivialByValue::operator==':
-// operator== where lhs operand is not record nor const reference to record
+// Expected first operator== param to be a record or const reference to a record
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
