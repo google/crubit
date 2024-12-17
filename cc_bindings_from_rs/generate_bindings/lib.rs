@@ -2128,7 +2128,7 @@ fn format_thunk_impl<'tcx>(
     match is_bridged_type(db, sig.output())? {
         None => {
             thunk_body = quote! {
-                    #( #fn_args_conversions )*
+                #( #fn_args_conversions )*
 
                 #fully_qualified_fn_name( #( #fn_args ),* )
             };
@@ -2138,7 +2138,7 @@ fn format_thunk_impl<'tcx>(
                     __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
                 });
                 thunk_ret_type = quote! { () };
-                thunk_body = quote! { __ret_slot.write(#thunk_body); };
+                thunk_body = quote! { __ret_slot.write({ #thunk_body }); };
             };
         }
         Some(BridgedType { cpp_type, conversion_info, .. }) => {
@@ -7724,7 +7724,7 @@ pub mod tests {
                         i: i32,
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::S>
                     ) -> () {
-                        __ret_slot.write(::rust_out::create(i));
+                        __ret_slot.write({ ::rust_out::create(i) });
                     }
                 }
             );
@@ -8814,7 +8814,7 @@ pub mod tests {
                    extern "C" fn ...(
                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::Point>
                    ) -> () {
-                       __ret_slot.write(<::rust_out::Point as ::core::default::Default>::default());
+                       __ret_slot.write({ <::rust_out::Point as ::core::default::Default>::default() });
                    }
                 }
             );
@@ -8943,7 +8943,7 @@ pub mod tests {
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::Point>
                     ) -> () {
                         __ret_slot.write(
-                            <::rust_out::Point as ::core::clone::Clone>::clone(__self)
+                            { <::rust_out::Point as ::core::clone::Clone>::clone(__self) }
                         );
                     }
                     #[unsafe(no_mangle)]
@@ -9294,7 +9294,7 @@ pub mod tests {
                     extern "C" fn ...(
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                     ) -> () {
-                        __ret_slot.write(::rust_out::TypeUnderTest::pass_by_value());
+                        __ret_slot.write({ ::rust_out::TypeUnderTest::pass_by_value() });
                     }
                     ...
                 }
@@ -9415,7 +9415,7 @@ pub mod tests {
                     extern "C" fn ...(
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                     ) -> () {
-                        __ret_slot.write(::rust_out::TypeUnderTest::pass_by_value());
+                        __ret_slot.write({ ::rust_out::TypeUnderTest::pass_by_value() });
                     }
                     ...
                 }
@@ -9553,7 +9553,8 @@ pub mod tests {
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>
                     ) -> () {
                         __ret_slot.write(
-                            <::rust_out::SomeStruct as ::core::default::Default>::default());
+                           { <::rust_out::SomeStruct as ::core::default::Default>::default() }
+                        );
                     }
                     #[unsafe(no_mangle)]
                     extern "C" fn ...(
@@ -11718,7 +11719,7 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     ...
-                    extern "C" fn ... (...) -> () {...(<::rust_out::SomeUnion as ::core::clone::Clone>::clone(__self...))...}
+                    extern "C" fn ... (...) -> () {...({ <::rust_out::SomeUnion as ::core::clone::Clone>::clone(__self...) })...}
                     ...
                     extern "C" fn ... (...) -> () {...<::rust_out::SomeUnion as ::core::clone::Clone>::clone_from(__self, source)...}
                     ...
