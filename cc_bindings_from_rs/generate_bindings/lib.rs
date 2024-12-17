@@ -1116,44 +1116,39 @@ fn format_ty_for_cc<'tcx>(
         }
 
         ty::TyKind::Adt(adt, substs) => {
-            // If a type needs to be bridged, we ingore the fact that it has generic
-            // parameters (lifetime, const or type) but trust the type
-            // conversion function to be implemented correctly.
-            let bridged_type = is_bridged_type(db, ty.mid())?;
-            ensure!(
-                bridged_type.is_some() || substs.len() == 0,
-                "Generic types are not supported yet (b/259749095)"
-            );
-            ensure!(
-                is_public_or_supported_export(db, adt.did()),
-                "Not a public or a supported reexported type (b/262052635)."
-            );
-
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
-            if let Some(BridgedType { cpp_type_include, .. }) = bridged_type {
+            if let Some(BridgedType { cpp_type_include, .. }) = is_bridged_type(db, ty.mid())? {
                 prereqs.includes.insert(CcInclude::user_header(cpp_type_include.as_str().into()));
-            } else if def_id.krate == LOCAL_CRATE {
-                prereqs.defs.insert(def_id.expect_local());
             } else {
-                let other_crate_name = tcx.crate_name(def_id.krate);
-                let crate_name_to_include_paths = db.crate_name_to_include_paths();
-                let includes = crate_name_to_include_paths
-                    .get(other_crate_name.as_str())
-                    .ok_or_else(|| {
-                        anyhow!(
-                            "Type `{ty}` comes from the `{other_crate_name}` crate, \
-                             but no `--crate-header` was specified for this crate"
-                        )
-                    })?;
-                prereqs.includes.extend(includes.iter().cloned());
-            }
+                ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
+                ensure!(
+                    is_public_or_supported_export(db, adt.did()),
+                    "Not a public or a supported reexported type (b/262052635)."
+                );
 
-            // Verify if definition of `ty` can be succesfully imported and bail otherwise.
-            db.format_adt_core(def_id).with_context(|| {
-                format!("Failed to generate bindings for the definition of `{ty}`")
-            })?;
+                if def_id.krate == LOCAL_CRATE {
+                    prereqs.defs.insert(def_id.expect_local());
+                } else {
+                    let other_crate_name = tcx.crate_name(def_id.krate);
+                    let crate_name_to_include_paths = db.crate_name_to_include_paths();
+                    let includes = crate_name_to_include_paths
+                        .get(other_crate_name.as_str())
+                        .ok_or_else(|| {
+                            anyhow!(
+                                "Type `{ty}` comes from the `{other_crate_name}` crate, \
+                                 but no `--crate-header` was specified for this crate"
+                            )
+                        })?;
+                    prereqs.includes.extend(includes.iter().cloned());
+                }
+
+                // Verify if definition of `ty` can be succesfully imported and bail otherwise.
+                db.format_adt_core(def_id).with_context(|| {
+                    format!("Failed to generate bindings for the definition of `{ty}`")
+                })?;
+            }
 
             CcSnippet { tokens: FullyQualifiedName::new(db, def_id).format_for_cc(db)?, prereqs }
         }
