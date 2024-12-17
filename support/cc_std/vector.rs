@@ -9,6 +9,7 @@ use std::cmp::Ordering;
 use std::collections::TryReserveError;
 #[cfg(sanitize = "address")]
 use std::ffi::c_void;
+use std::fmt::Debug;
 use std::hash::Hash;
 use std::hash::Hasher;
 use std::mem::ManuallyDrop;
@@ -440,6 +441,10 @@ impl<T: Unpin> Vector<T> {
 }
 
 impl<T: Unpin + Clone> Vector<T> {
+    pub fn extend_from_slice(&mut self, src: &[T]) {
+        self.mutate_self_as_vec(|v| v.extend_from_slice(src));
+    }
+
     pub fn extend_from_within<R>(&mut self, src: R)
     where
         R: RangeBounds<usize>,
@@ -498,6 +503,12 @@ impl<T: Unpin> Borrow<[T]> for Vector<T> {
 impl<T: Unpin> BorrowMut<[T]> for Vector<T> {
     fn borrow_mut(&mut self) -> &mut [T] {
         self.as_mut_slice()
+    }
+}
+
+impl<T: Unpin + Debug> Debug for Vector<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_list().entries(self.as_slice()).finish()
     }
 }
 
@@ -820,8 +831,46 @@ impl<T: Unpin> From<Vec<T, cpp_std_allocator::StdAllocator>> for Vector<T> {
         unsafe {
             result.set_begin_len_capacity(v.as_mut_ptr(), v.len(), v.capacity());
             std::mem::forget(v);
+
+            result.asan_poison_tail();
+            result
         }
-        result.asan_poison_tail();
+    }
+}
+
+impl<T: Unpin + Clone> From<&[T]> for Vector<T> {
+    fn from(s: &[T]) -> Self {
+        let mut result = Vector::<T>::with_capacity(s.len());
+        result.mutate_self_as_vec(|u| {
+            u.extend_from_slice(s);
+        });
         result
+    }
+}
+
+impl<T: Unpin + Clone> From<&mut [T]> for Vector<T> {
+    fn from(slice: &mut [T]) -> Self {
+        let mut result = Vector::with_capacity(slice.len());
+        result.mutate_self_as_vec(|u| {
+            u.extend_from_slice(slice);
+        });
+        result
+    }
+}
+
+impl<T: Unpin + Clone, const N: usize> From<&[T; N]> for Vector<T> {
+    fn from(s: &[T; N]) -> Self {
+        Self::from(s.as_slice())
+    }
+}
+impl<T: Unpin + Clone, const N: usize> From<&mut [T; N]> for Vector<T> {
+    fn from(s: &mut [T; N]) -> Self {
+        Self::from(s.as_mut_slice())
+    }
+}
+
+impl<T: Unpin + Clone, const N: usize> From<[T; N]> for Vector<T> {
+    fn from(s: [T; N]) -> Self {
+        Self::from(s.as_slice())
     }
 }

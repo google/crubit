@@ -82,6 +82,12 @@ fn test_vector_deref_mut() {
     expect_eq!((*v)[1], 6);
 }
 
+#[gtest]
+fn test_vector_debug() {
+    let v = vector::Vector::from([1, 2, 3]);
+    expect_eq!(format!("{:?}", v), "[1, 2, 3]");
+}
+
 struct InstanceCounted {
     counter: Rc<RefCell<i32>>,
 }
@@ -620,6 +626,13 @@ fn test_vector_into_vec() {
 }
 
 #[gtest]
+fn test_extend_from_slice() {
+    let mut v = vector::Vector::from(vec![1, 2, 3]);
+    v.extend_from_slice(&[4, 5, 6]);
+    expect_eq!(v, [1, 2, 3, 4, 5, 6]);
+}
+
+#[gtest]
 fn test_vector_extend_from_within() {
     let mut v = vector::Vector::from(vec![0, 1, 2, 3, 4]);
 
@@ -947,6 +960,36 @@ mod partial_equal_tests {
         expect_eq!(v == [1, 2, 3], true);
         expect_eq!(v == &[1, 2, 3], true);
     }
+}
+
+#[gtest]
+fn test_vector_from_slice() {
+    let v = vector::Vector::from(vec![2, 3, 4].as_slice());
+    expect_eq!(v, [2, 3, 4]);
+}
+
+#[gtest]
+fn test_vector_from_mut_slice() {
+    let v = vector::Vector::from(vec![1.0, 2.0, 3.0].as_mut_slice());
+    expect_eq!(v, [1.0, 2.0, 3.0]);
+}
+
+#[gtest]
+fn test_vector_from_array() {
+    let v = vector::Vector::from(['a', 'b']);
+    expect_eq!(v, ['a', 'b']);
+}
+
+#[gtest]
+fn test_vector_from_array_ref() {
+    let v = vector::Vector::from(&["ab", "cd"]);
+    expect_eq!(v, ["ab", "cd"])
+}
+
+#[gtest]
+fn test_vector_from_array_mut_ref() {
+    let v = vector::Vector::from(&mut [0, 1]);
+    expect_eq!(v, [0, 1])
 }
 
 fn to_void_ptr<T>(t: &T) -> *mut c_void {
