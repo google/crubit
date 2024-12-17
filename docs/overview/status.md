@@ -46,10 +46,11 @@ We have *experimental* unreleased support for the following types:
 
 We have planned support for the following types:
 
-*   (2024H2) b/308406733: bridged protocol buffers
-*   (2024H2) b/351976622: bridged `std::string`
-*   (2024H2) b/356221625: bridged `absl::Status`, `absl::StatusOr`
-*   (2024H2) b/271016831: layout-compatible `*const [T]`, `*mut [T]`
+*   (2025!1) b/351976622: bridged `std::string`
+*   (2025H1) b/308406733: bridged protocol buffers
+*   (2025H1) b/356221625: bridged `absl::Status`, `absl::StatusOr`
+*   (2025H1) b/271016831: layout-compatible `*const [T]`, `*mut [T]`
+*   (2025) `Option<T>` and `std::optional<T>`.
 *   (2025) b/356221873: bridged `std::vector`
 *   (2025) b/262580415 layout-compatible `&str`
 
@@ -59,7 +60,6 @@ The following types are **not** yet supported, among many others:
 *   b/260128806: Arrays (`std::array<T, N>`, `[T; N]`)
 *   b/254094650: `i128` and `u128`
 *   Rust `String`
-*   `Option<T>` (except in some narrow circumstances) and `std::optional<T>`.
 *   `Result<T, E>`
 *   b/254099023: `()` as anything but a return type.
 *   b/213960614: `std::byte`
