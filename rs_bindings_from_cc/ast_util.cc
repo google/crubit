@@ -48,6 +48,11 @@ std::optional<std::string> CollectUnknownAttrs(
     if (is_known(*attr)) {
       continue;
     }
+    // Regardless of the callback, always ignore annotate attributes.
+    if (clang::isa<clang::AnnotateAttr>(attr) ||
+        clang::isa<clang::AnnotateTypeAttr>(attr)) {
+      continue;
+    }
     if (unknown_attr.has_value()) {
       absl::StrAppend(&*unknown_attr, ", ");
     } else {
