@@ -100,6 +100,41 @@ impl InstanceCounted {
 }
 
 #[gtest]
+fn test_vector_as_mut() {
+    let mut v = vector::Vector::from(vec![2, 5]);
+    {
+        let mut_v: &mut [i32] = <vector::Vector<i32> as AsMut<[i32]>>::as_mut(&mut v);
+        expect_eq!(mut_v, &[2, 5]);
+        mut_v[0] = 0;
+    }
+    expect_eq!(v, [0, 5]);
+}
+
+#[gtest]
+fn test_vector_as_ref() {
+    let v = vector::Vector::from(vec![2, 5]);
+    expect_eq!(<vector::Vector<i32> as AsRef<[i32]>>::as_ref(&v), &[2, 5]);
+}
+
+#[gtest]
+fn test_vector_borrow() {
+    let v = vector::Vector::from(vec![2, 5]);
+    expect_eq!(<vector::Vector<i32> as std::borrow::Borrow<[i32]>>::borrow(&v), &[2, 5]);
+}
+
+#[gtest]
+fn test_vector_borrow_mut() {
+    let mut v = vector::Vector::from(vec![1, 3]);
+    {
+        let borrowed: &mut [i32] =
+            <vector::Vector<i32> as std::borrow::BorrowMut<[i32]>>::borrow_mut(&mut v);
+        expect_eq!(borrowed, &[1, 3]);
+        borrowed[0] = 2;
+    }
+    expect_eq!(v, [2, 3]);
+}
+
+#[gtest]
 fn test_vector_drop() {
     let mut v = vector::Vector::new();
     let counter = Rc::new(RefCell::new(0i32));

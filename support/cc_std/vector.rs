@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(allocator_api)]
 #![feature(cfg_sanitize)]
+use std::borrow::Borrow;
+use std::borrow::BorrowMut;
 use std::cmp::Ordering;
 use std::collections::TryReserveError;
 #[cfg(sanitize = "address")]
@@ -460,6 +462,42 @@ impl<T: Unpin + Clone> Vector<T> {
 impl<T: Unpin + PartialEq> Vector<T> {
     pub fn dedup(&mut self) {
         self.mutate_self_as_vec(|v| v.dedup());
+    }
+}
+
+impl<T> AsRef<Vector<T>> for Vector<T> {
+    fn as_ref(&self) -> &Vector<T> {
+        self
+    }
+}
+
+impl<T> AsMut<Vector<T>> for Vector<T> {
+    fn as_mut(&mut self) -> &mut Vector<T> {
+        self
+    }
+}
+
+impl<T: Unpin> AsRef<[T]> for Vector<T> {
+    fn as_ref(&self) -> &[T] {
+        self.as_slice()
+    }
+}
+
+impl<T: Unpin> AsMut<[T]> for Vector<T> {
+    fn as_mut(&mut self) -> &mut [T] {
+        self.as_mut_slice()
+    }
+}
+
+impl<T: Unpin> Borrow<[T]> for Vector<T> {
+    fn borrow(&self) -> &[T] {
+        self.as_slice()
+    }
+}
+
+impl<T: Unpin> BorrowMut<[T]> for Vector<T> {
+    fn borrow_mut(&mut self) -> &mut [T] {
+        self.as_mut_slice()
     }
 }
 
