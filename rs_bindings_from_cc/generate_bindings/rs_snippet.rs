@@ -384,15 +384,16 @@ pub enum RsTypeKind {
     Slice(Rc<RsTypeKind>),
     /// Nullable T, using the rust Option type.
     Option(Rc<RsTypeKind>),
+    /// Types that require custom logic to translate.
     BridgeType {
         name: Rc<str>,
         cpp_to_rust_converter: Rc<str>,
         rust_to_cpp_converter: Rc<str>,
         original_type: Rc<Record>,
     },
-    Other {
+    /// Types that can be reinterpreted in place, e.g., signed char <-> i8
+    TypeMapOverride {
         name: Rc<str>,
-        type_args: Rc<[RsTypeKind]>,
         is_same_abi: bool,
     },
 }
@@ -465,9 +466,8 @@ impl RsTypeKind {
             });
         }
 
-        Ok(RsTypeKind::Other {
+        Ok(RsTypeKind::TypeMapOverride {
             name: type_map_override.rs_name.clone(),
-            type_args: Rc::from([]),
             is_same_abi: type_map_override.is_same_abi,
         })
     }
@@ -616,8 +616,9 @@ impl RsTypeKind {
                 RsTypeKind::Slice { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Option { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::BridgeType { .. } => require_feature(CrubitFeature::Experimental, None),
-                // Fallback case, we can't really give a good error message here.
-                RsTypeKind::Other { .. } => require_feature(CrubitFeature::Experimental, None),
+                RsTypeKind::TypeMapOverride { .. } => {
+                    require_feature(CrubitFeature::Experimental, None)
+                }
             }
         }
         (missing_features, reasons.into_iter().join(", "))
@@ -647,7 +648,7 @@ impl RsTypeKind {
             // all the fields.
             RsTypeKind::Record { .. } => false,
             RsTypeKind::BridgeType { .. } => false,
-            RsTypeKind::Other { is_same_abi, .. } => *is_same_abi,
+            RsTypeKind::TypeMapOverride { is_same_abi, .. } => *is_same_abi,
             _ => true,
         }
     }
@@ -772,13 +773,7 @@ impl RsTypeKind {
             RsTypeKind::Slice(t) => t.implements_copy(),
             // We cannot get the information of the Rust type so we assume it is not Copy.
             RsTypeKind::BridgeType { .. } => false,
-            RsTypeKind::Other { type_args, .. } => {
-                // All types that may appear here without `type_args` (e.g.
-                // primitive types like `i32`) implement `Copy`. Generic types
-                // that may be present here (e.g. Option<...>) are `Copy` if all
-                // of their `type_args` are `Copy`.
-                type_args.iter().all(|t| t.implements_copy())
-            }
+            RsTypeKind::TypeMapOverride { .. } => true,
         }
     }
 
@@ -911,12 +906,7 @@ impl RsTypeKind {
                 quote! {Option<#type_arg>}
             }
             RsTypeKind::BridgeType { .. } => self.to_token_stream(),
-            RsTypeKind::Other { name, type_args, .. } => {
-                let name: TokenStream = name.parse().expect("Invalid RsType::name in the IR");
-                let generic_params =
-                    format_generic_params_replacing_by_self(type_args.iter(), self_record);
-                quote! {#name #generic_params}
-            }
+            RsTypeKind::TypeMapOverride { .. } => self.to_token_stream(),
             _ => self.to_token_stream(),
         }
     }
@@ -1065,11 +1055,8 @@ impl ToTokens for RsTypeKind {
                 let ident = make_rs_ident(name);
                 quote! { #ident }
             }
-            RsTypeKind::Other { name, type_args, .. } => {
-                let name: TokenStream = name.parse().expect("Invalid RsType::name in the IR");
-                let generic_params =
-                    format_generic_params(/* lifetimes= */ &[], type_args.iter());
-                quote! {#name #generic_params}
+            RsTypeKind::TypeMapOverride { name, .. } => {
+                name.parse().expect("Invalid RsType::name in the IR")
             }
         }
     }
@@ -1108,7 +1095,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                     RsTypeKind::Slice(t) => self.todo.push(t),
                     RsTypeKind::Option(t) => self.todo.push(t),
                     RsTypeKind::BridgeType { .. } => {}
-                    RsTypeKind::Other { type_args, .. } => self.todo.extend(type_args.iter().rev()),
+                    RsTypeKind::TypeMapOverride { .. } => {}
                 };
                 Some(curr)
             }
@@ -1124,56 +1111,12 @@ mod tests {
     use token_stream_matchers::assert_rs_matches;
 
     #[gtest]
-    fn test_dfs_iter_ordering() {
-        // Set up a test input representing: A<B<C>, D<E>>.
-        let a = {
-            let b = {
-                let c = RsTypeKind::Other {
-                    name: "C".into(),
-                    type_args: Rc::from([]),
-                    is_same_abi: true,
-                };
-                RsTypeKind::Other { name: "B".into(), type_args: Rc::from([c]), is_same_abi: true }
-            };
-            let d = {
-                let e = RsTypeKind::Other {
-                    name: "E".into(),
-                    type_args: Rc::from([]),
-                    is_same_abi: true,
-                };
-                RsTypeKind::Other { name: "D".into(), type_args: Rc::from([e]), is_same_abi: true }
-            };
-            RsTypeKind::Other { name: "A".into(), type_args: Rc::from([b, d]), is_same_abi: true }
-        };
-        let dfs_names = a
-            .dfs_iter()
-            .map(|t| match t {
-                RsTypeKind::Other { name, .. } => &**name,
-                _ => unreachable!("Only 'other' types are used in this test"),
-            })
-            .collect_vec();
-        assert_eq!(vec!["A", "B", "C", "D", "E"], dfs_names);
-    }
-
-    #[gtest]
     fn test_dfs_iter_ordering_for_func_ptr() {
         // Set up a test input representing: fn(A, B) -> C
         let f = {
-            let a = RsTypeKind::Other {
-                name: "A".into(),
-                type_args: Rc::from(&[][..]),
-                is_same_abi: true,
-            };
-            let b = RsTypeKind::Other {
-                name: "B".into(),
-                type_args: Rc::from(&[][..]),
-                is_same_abi: true,
-            };
-            let c = RsTypeKind::Other {
-                name: "C".into(),
-                type_args: Rc::from(&[][..]),
-                is_same_abi: true,
-            };
+            let a = RsTypeKind::TypeMapOverride { name: "A".into(), is_same_abi: true };
+            let b = RsTypeKind::TypeMapOverride { name: "B".into(), is_same_abi: true };
+            let c = RsTypeKind::TypeMapOverride { name: "C".into(), is_same_abi: true };
             RsTypeKind::FuncPtr {
                 abi: "blah".into(),
                 param_types: Rc::from([a, b]),
@@ -1183,9 +1126,9 @@ mod tests {
         let dfs_names = f
             .dfs_iter()
             .map(|t| match t {
-                RsTypeKind::FuncPtr { .. } => "fn",
-                RsTypeKind::Other { name, .. } => &**name,
-                _ => unreachable!("Only FuncPtr and Other kinds are used in this test"),
+                RsTypeKind::FuncPtr { .. } => "fn".to_string(),
+                RsTypeKind::TypeMapOverride { name, .. } => name.to_string(),
+                _ => unreachable!("Only FuncPtr and TypeMapOverride kinds are used in this test"),
             })
             .collect_vec();
         assert_eq!(vec!["fn", "A", "B", "C"], dfs_names);
@@ -1193,12 +1136,7 @@ mod tests {
 
     #[gtest]
     fn test_lifetime_elision_for_references() {
-        let type_args: &[RsTypeKind] = &[];
-        let referent = Rc::new(RsTypeKind::Other {
-            name: "T".into(),
-            type_args: type_args.into(),
-            is_same_abi: true,
-        });
+        let referent = Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_abi: true });
         let reference = RsTypeKind::Reference {
             referent,
             mutability: Mutability::Const,
@@ -1209,12 +1147,7 @@ mod tests {
 
     #[gtest]
     fn test_lifetime_elision_for_rvalue_references() {
-        let type_args: &[RsTypeKind] = &[];
-        let referent = Rc::new(RsTypeKind::Other {
-            name: "T".into(),
-            type_args: type_args.into(),
-            is_same_abi: true,
-        });
+        let referent = Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_abi: true });
         let reference = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -1225,12 +1158,7 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_rvalue_reference() -> Result<()> {
-        let type_args: &[RsTypeKind] = &[];
-        let referent = Rc::new(RsTypeKind::Other {
-            name: "T".into(),
-            type_args: type_args.into(),
-            is_same_abi: true,
-        });
+        let referent = Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_abi: true });
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -1244,12 +1172,7 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_const_rvalue_reference() -> Result<()> {
-        let type_args: &[RsTypeKind] = &[];
-        let referent = Rc::new(RsTypeKind::Other {
-            name: "T".into(),
-            type_args: type_args.into(),
-            is_same_abi: true,
-        });
+        let referent = Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_abi: true });
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Const,

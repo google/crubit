@@ -761,9 +761,8 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                 } else if let Some(abi) = name.strip_prefix("#funcPtr ") {
                     // Assert that function pointers in the IR either have static lifetime or
                     // no lifetime.
-                    match get_lifetime() {
-                        Err(_) => (), // No lifetime
-                        Ok(lifetime) => assert_eq!(lifetime.0.as_ref(), "static"),
+                    if let Ok(lifetime) = get_lifetime() {
+                        assert_eq!(lifetime.0.as_ref(), "static");
                     }
 
                     assert!(
@@ -781,11 +780,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                         param_types: Rc::from(type_args),
                     }
                 } else {
-                    RsTypeKind::Other {
-                        name: name.into(),
-                        type_args: Rc::from(type_args),
-                        is_same_abi: true,
-                    }
+                    bail!("Unknown type: {name}")
                 }
             }
         },
