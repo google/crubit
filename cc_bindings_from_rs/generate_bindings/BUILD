@@ -18,6 +18,7 @@ rust_library(
     name = "generate_bindings",
     srcs = [
         "db.rs",
+        "generate_struct_and_union.rs",
         "lib.rs",
     ],
     # LINT.IfChange
