@@ -9,7 +9,7 @@ use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::NamespaceQualifier;
 use crubit_feature::CrubitFeature;
-use error_report::bail;
+use error_report::{bail, ensure};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -206,18 +206,16 @@ pub fn should_derive_copy(record: &Record) -> bool {
 }
 
 pub fn check_by_value(record: &Record) -> Result<()> {
-    if record.destructor == SpecialMemberFunc::Unavailable {
-        bail!(
-            "Can't directly construct values of type `{}` as it has a non-public or deleted destructor",
-            record.cc_name.as_ref()
-        )
-    }
-    if record.is_abstract {
-        bail!(
-            "Can't directly construct values of type `{}`: it is abstract",
-            record.cc_name.as_ref()
-        );
-    }
+    ensure!(
+        record.destructor != SpecialMemberFunc::Unavailable,
+        "Can't directly construct values of type `{}` as it has a non-public or deleted destructor",
+        record.cc_name.as_ref()
+    );
+    ensure!(
+        !record.is_abstract,
+        "Can't directly construct values of type `{}`: it is abstract",
+        record.cc_name.as_ref()
+    );
     Ok(())
 }
 
@@ -432,16 +430,16 @@ impl RsTypeKind {
     }
 
     pub fn new_bridge_type(original_record: Rc<Record>) -> Result<Self> {
-        if let Some(bridge_type_info) = &original_record.bridge_type_info {
-            Ok(RsTypeKind::BridgeType {
-                name: bridge_type_info.bridge_type.clone(),
-                cpp_to_rust_converter: bridge_type_info.cpp_to_rust_converter.clone(),
-                rust_to_cpp_converter: bridge_type_info.rust_to_cpp_converter.clone(),
-                original_type: original_record,
-            })
-        } else {
+        let Some(bridge_type_info) = &original_record.bridge_type_info else {
             bail!("Record does not have bridge type info: {:?}", original_record);
-        }
+        };
+
+        Ok(RsTypeKind::BridgeType {
+            name: bridge_type_info.bridge_type.clone(),
+            cpp_to_rust_converter: bridge_type_info.cpp_to_rust_converter.clone(),
+            rust_to_cpp_converter: bridge_type_info.rust_to_cpp_converter.clone(),
+            original_type: original_record,
+        })
     }
 
     pub fn new_type_map_override(
@@ -449,12 +447,11 @@ impl RsTypeKind {
         type_map_override: &TypeMapOverride,
     ) -> Result<Self> {
         if type_map_override.rs_name.as_ref() == SLICE_REF_NAME_RS {
-            if type_map_override.type_parameters.len() != 1 {
-                bail!(
-                    "SliceRef has {} type parameters, expected 1",
-                    type_map_override.type_parameters.len()
-                );
-            }
+            ensure!(
+                type_map_override.type_parameters.len() == 1,
+                "SliceRef has {} type parameters, expected 1",
+                type_map_override.type_parameters.len()
+            );
             let mapped_slice_type = type_map_override.type_parameters.first().unwrap();
             let mapped_slice_type_rs = db.rs_type_kind(mapped_slice_type.rs_type.clone())?;
 
