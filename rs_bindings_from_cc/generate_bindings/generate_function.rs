@@ -687,7 +687,7 @@ fn api_func_shape(
             // ManuallyDrop in this case. See `generate_record`.
             let record =
                 maybe_record.ok_or_else(|| anyhow!("Destructors must be member functions."))?;
-            if !crate::generate_record::should_implement_drop(record) {
+            if !crate::generate_struct_and_union::should_implement_drop(record) {
                 return Ok(None);
             }
             if record.is_unpin() {

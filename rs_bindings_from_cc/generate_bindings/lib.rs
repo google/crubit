@@ -7,9 +7,9 @@ mod code_snippet;
 mod db;
 mod generate_comment;
 mod generate_enum;
-mod generate_func;
+mod generate_function;
 mod generate_function_thunk;
-mod generate_record;
+mod generate_struct_and_union;
 mod rs_snippet;
 
 use code_snippet::{
@@ -21,7 +21,7 @@ use generate_comment::{
     generate_comment, generate_doc_comment, generate_top_level_comment, generate_unsupported,
 };
 use generate_enum::generate_enum;
-use generate_record::{generate_incomplete_record, generate_record};
+use generate_struct_and_union::{generate_incomplete_record, generate_record};
 
 use crate::rs_snippet::{CratePath, Lifetime, Mutability, PrimitiveType, RsTypeKind};
 use arc_anyhow::{Context, Error, Result};
@@ -328,7 +328,7 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
                 cpp_type = type_override.debug_name(&ir),
             );
             let assertions = if let Some(size_align) = &type_override.size_align {
-                generate_record::rs_size_align_assertions(rs_type, size_align)
+                generate_struct_and_union::rs_size_align_assertions(rs_type, size_align)
             } else {
                 quote! {}
             };
