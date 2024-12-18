@@ -18,7 +18,6 @@ extern crate rustc_span;
 use arc_anyhow::{anyhow, bail, Result};
 use either::Either;
 use rustc_interface::interface::Compiler;
-use rustc_interface::Queries;
 use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
 use rustc_session::config::ErrorOutputType;
 use rustc_session::EarlyDiagCtxt;
@@ -123,22 +122,14 @@ where
     fn after_analysis<'tcx>(
         &mut self,
         _compiler: &Compiler,
-        queries: &'tcx Queries<'tcx>,
+        tcx: TyCtxt<'tcx>,
     ) -> rustc_driver::Compilation {
-        // `after_analysis` is only called by `rustc_driver` if earlier compiler
-        // analysis was successful (which as the *last* compilation phase
-        // presumably covers *all* errors).
-        let mut query_context = queries
-            .global_ctxt()
-            .expect("Expecting no compile errors inside `after_analysis` callback.");
-        query_context.enter(|tcx| {
-            let callback = {
-                let temporary_placeholder = Either::Right(Err(anyhow!("unused")));
-                std::mem::replace(&mut self.callback_or_result, temporary_placeholder)
-                    .left_or_else(|_| panic!("`after_analysis` should only run once"))
-            };
-            self.callback_or_result = Either::Right(callback(tcx));
-        });
+        let callback = {
+            let temporary_placeholder = Either::Right(Err(anyhow!("unused")));
+            std::mem::replace(&mut self.callback_or_result, temporary_placeholder)
+                .left_or_else(|_| panic!("`after_analysis` should only run once"))
+        };
+        self.callback_or_result = Either::Right(callback(tcx));
 
         rustc_driver::Compilation::Stop
     }
