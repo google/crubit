@@ -16,6 +16,7 @@
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
+#include "nullability/annotations.h"
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/loc_filter.h"
@@ -43,6 +44,7 @@
 #include "clang/Lex/Token.h"
 #include "clang/Tooling/Transformer/SourceCode.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Path.h"
 
@@ -93,7 +95,8 @@ getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
       !PrevTok.is(tok::raw_identifier))
     return {};
   if (const StringRef ID = PrevTok.getRawIdentifier();
-      ID != "NullabilityUnknown" && ID != "Nullable" && ID != "Nonnull")
+      ID != AbslTemplateUnknown && ID != AbslTemplateNullable &&
+      ID != AbslTemplateNonnull)
     return {};
   if (PrevTok =
           utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
@@ -103,7 +106,7 @@ getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
           utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
       !PrevTok.is(tok::raw_identifier))
     return {};
-  if (PrevTok.getRawIdentifier() != "absl") return {};
+  if (PrevTok.getRawIdentifier() != AbslTemplateNamespace) return {};
 
   auto [PrevTokFID, PrevTokOffset] = SM.getDecomposedLoc(PrevTok.getLocation());
   if (PrevTokFID != DeclFID) return {};
@@ -134,27 +137,38 @@ getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
   return {PrevTokOffset, NextTokOffset};
 }
 
-/// If the token immediately after `End` is a clang nullability attribute,
-/// returns the end offset of the attribute. Else, returns std::nullopt.
-static std::optional<unsigned> getEndOffsetOfImmediateClangAttribute(
-    SourceLocation End, const SourceManager &SM, const LangOptions &LangOpts,
-    const FileID &DeclFID) {
+/// If the token immediately at or after `EndOfStar` is a complete nullability
+/// annotation, returns the end offset of the annotation. Else, returns
+/// std::nullopt.
+static std::optional<unsigned> getEndOffsetOfImmediatePostStarAnnotation(
+    SourceLocation EndOfStar, const SourceManager &SM,
+    const LangOptions &LangOpts, const FileID &DeclFID) {
   std::optional<Token> PossibleAttribute;
-  Token AtEnd;
-  // The annotation may appear at `End`, so check the token there first. If it's
-  // whitespace or otherwise fails or is a comment, check the next token.
-  if (bool Failed = Lexer::getRawToken(End, AtEnd, SM, LangOpts,
+  Token AtEndOfStar;
+  // The annotation may appear at `EndOfStar`, so check the token there first.
+  // If it's whitespace or otherwise fails or is a comment, check the next
+  // token.
+  if (bool Failed = Lexer::getRawToken(EndOfStar, AtEndOfStar, SM, LangOpts,
                                        /*IgnoreWhiteSpace=*/true);
-      !Failed && !AtEnd.is(tok::comment)) {
-    PossibleAttribute = AtEnd;
+      !Failed && !AtEndOfStar.is(tok::comment)) {
+    PossibleAttribute = AtEndOfStar;
   } else {
     PossibleAttribute =
-        utils::lexer::findNextTokenSkippingComments(End, SM, LangOpts);
+        utils::lexer::findNextTokenSkippingComments(EndOfStar, SM, LangOpts);
   }
   if (!PossibleAttribute) return std::nullopt;
   if (!PossibleAttribute->is(tok::raw_identifier)) return std::nullopt;
-  if (const StringRef ID = PossibleAttribute->getRawIdentifier();
-      ID != "_Null_unspecified" && ID != "_Nonnull" && ID != "_Nullable")
+
+  const StringRef ID = PossibleAttribute->getRawIdentifier();
+  if (bool IsPostStarAnnotation = llvm::StringSwitch<bool>(ID)
+                                      .Case(ClangNullable, true)
+                                      .Case(ClangNonnull, true)
+                                      .Case(ClangUnknown, true)
+                                      .Case(AbslMacroNullable, true)
+                                      .Case(AbslMacroNonnull, true)
+                                      .Case(AbslMacroUnknown, true)
+                                      .Default(false);
+      !IsPostStarAnnotation)
     return std::nullopt;
 
   auto [FID, Offset] = SM.getDecomposedLoc(PossibleAttribute->getEndLoc());
@@ -180,7 +194,9 @@ static void addAnnotationPreAndPostRangeLength(
     Range.set_existing_annotation_post_range_length(*AnnotationEndOffset -
                                                     EndOffset);
   } else if (std::optional<unsigned> AttributeEndOffset =
-                 getEndOffsetOfImmediateClangAttribute(End, SM, LangOpts,
+                 // TODO: b/381939395 - Pass the star location instead of `End`,
+                 // to support complex declarators.
+             getEndOffsetOfImmediatePostStarAnnotation(End, SM, LangOpts,
                                                        DeclFID)) {
     Range.set_existing_annotation_pre_range_length(0);
     Range.set_existing_annotation_post_range_length(*AttributeEndOffset -
@@ -521,6 +537,28 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
 
     auto PTL = MaybeLoc->getUnqualifiedLoc().getAsAdjusted<PointerTypeLoc>();
     if (PTL) {
+      // For raw pointers, we want to add any post-star annotations immediately
+      // after the `*` instead of at the end of the range. These locations are
+      // different in the case of complex declarators, such as pointers to
+      // functions or arrays and arrays of pointers.
+      // We don't need to compute this for smart pointers, because the post-star
+      // annotation should always be added at the end of the range. There is no
+      // analogous set of complex declarator cases where the smart pointer type
+      // is actually in the middle of the range.
+      SourceLocation StarLoc = SM.getSpellingLoc(PTL.getStarLoc());
+      // If the star is not inside the range, e.g. it's in a macro that expands
+      // to the entire type range, then we will not set the offset after the
+      // star. This will result in the end offset being used to insert any
+      // annotation, which will fail to compile for complex declarator cases
+      // defined as macros, but avoids placing the annotation inside the macro
+      // definition for simple pointers. Not annotating all uses of the macro
+      // with the nullability appropriate for just this usage is more important
+      // than being able to annotate these rare cases of complex declarator
+      // types defined inside a macro.
+      if (StarLoc >= R->getBegin() && StarLoc < R->getEnd()) {
+        Range.Range.set_offset_after_star(
+            SM.getFileOffset(StarLoc.getLocWithOffset(1)));
+      }
       while (auto PointeeTL = PTL.getPointeeLoc()
                                   .getUnqualifiedLoc()
                                   .getAsAdjusted<PointerTypeLoc>()) {

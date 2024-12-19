@@ -293,6 +293,13 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "annotations",
+    hdrs = ["annotations.h"],
+    visibility = ["//nullability/inference:__pkg__"],
+    deps = ["@llvm-project//llvm:Support"],
+)
+
 cc_test(
     name = "loc_filter_test",
     srcs = ["loc_filter_test.cc"],

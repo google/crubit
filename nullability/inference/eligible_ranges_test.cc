@@ -1094,7 +1094,7 @@ TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
       P = nullptr;
       return P;
     }
-    
+
     int* getPtr();
     $var_auto[[auto*]] GStar = getPtr();
     $var_auto_const[[auto*]] const GStarConst = getPtr();
@@ -1240,7 +1240,7 @@ TEST(ExistingAnnotationLengthTest, UniquePtr) {
   template <typename T>
   using NullabilityUnknown = ::NullabilityUnknown<T>;
   }
-  
+
   void target(absl::NullabilityUnknown<[[std::unique_ptr<int>]]> P);
   )");
   EXPECT_THAT(
@@ -1257,10 +1257,10 @@ TEST(ExistingAnnotationLengthTest, DoubleClosingAngleBrackets) {
   template <typename T>
   using NullabilityUnknown = ::NullabilityUnknown<T>;
   }
-  
+
   template <typename T>
   using MyTemplateAlias = T;
-  
+
   void target(MyTemplateAlias<absl::NullabilityUnknown<$nothing[[int *]]>> P,
   MyTemplateAlias<absl::NullabilityUnknown<$comment[[int *]]>/* a comment */> Q,
   MyTemplateAlias<absl::NullabilityUnknown<$whitespace[[int *]]>
@@ -1301,6 +1301,283 @@ TEST(ExistingAnnotationLengthTest, ClangAttribute) {
                       preRangeLength(0), postRangeLength(10)),
                 AllOf(eligibleRange(6, 0, Input.range("nonnull")),
                       preRangeLength(0), postRangeLength(9)))));
+}
+
+// TODO: b/381939395 - Removing post-star annotations from complex declarators
+// is not yet supported.
+TEST(ExistingAnnotationLengthTest, ClangAttributeWithFunctionPointer) {
+  auto Input = Annotations(R"(
+  void target([[void (* _Nonnull P)(int)]]);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(AllOf(
+                eligibleRange(1, 0, Input.range(""), Nullability::NONNULL),
+                noPreRangeLength(), noPostRangeLength()))));
+}
+
+// Removing absl template annotations from complex declarators is partially
+// supported. The pre- and post-range lengths are reported, but this does not
+// provide enough information to rewrite the type without the template alias.
+// TODO: b/364910254 - Stop reporting pre- and post-range lengths for complex
+// declarators, so that we don't facilitate producing edits that won't compile.
+TEST(ExistingAnnotationLengthTest, AbslTemplateWithFunctionPointer) {
+  auto Input = Annotations(R"(
+  namespace absl {
+  template <typename T>
+  using Nonnull = ::Nonnull<T>;
+  }
+
+  void target(absl::Nonnull<[[void (*)(int)]]> P);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(AllOf(
+                eligibleRange(1, 0, Input.range(""), Nullability::NONNULL),
+                preRangeLength(14), postRangeLength(1)))));
+}
+
+MATCHER_P(offsetAfterStar, Point, "") {
+  return arg.Range.has_offset_after_star() &&
+         arg.Range.offset_after_star() == Point;
+}
+
+MATCHER(noOffsetAfterStar, "") { return !arg.Range.has_offset_after_star(); }
+
+TEST(OffsetAfterStarTest, SimplePointers) {
+  auto Input = Annotations(R"(
+  $return[[bool*]] target($zero[[$one[[int*]]*]]P);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(0, 0, Input.range("return")),
+                      offsetAfterStar(Input.range("return").End)),
+                AllOf(eligibleRange(1, 0, Input.range("zero")),
+                      offsetAfterStar(Input.range("zero").End)),
+                AllOf(eligibleRange(std::nullopt, 1, Input.range("one")),
+                      offsetAfterStar(Input.range("one").End)))));
+}
+
+TEST(OffsetAfterStarTest, AnnotatedPointers) {
+  auto Input = Annotations(R"(
+  void target($one[[int*]] _Nonnull P1, Nonnull<$two[[int*]]> P2);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(1, 0, Input.range("one")),
+                      offsetAfterStar(Input.range("one").End)),
+                AllOf(eligibleRange(2, 0, Input.range("two")),
+                      offsetAfterStar(Input.range("two").End)))));
+}
+
+TEST(OffsetAfterStarTest, SmartPointersNotSet) {
+  auto Input = Annotations(R"(
+  namespace std {
+  template <typename T>
+  class unique_ptr;
+  }
+
+  void target([[std::unique_ptr<int>]] StdSmart);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(AllOf(eligibleRange(1, 0, Input.range()),
+                                       noOffsetAfterStar()))));
+}
+
+TEST(OffsetAfterStarTest, FunctionPointer) {
+  auto Input = Annotations(R"(
+  void target($func_pointer[[int (*$after_star_0^P)(int, $pointer_param[[int*]])]]);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(1, 0, Input.range("func_pointer")),
+                      offsetAfterStar(Input.point("after_star_0"))),
+                AllOf(eligibleRange(std::nullopt, 1,
+                                    Input.range("pointer_param"))))));
+
+  Input = Annotations("void target($unnamed[[int (*$after_star^)(int)]]);");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(1, 0, Input.range("unnamed")),
+                      offsetAfterStar(Input.point("after_star"))))));
+}
+
+TEST(OffsetAfterStarTest, ArrayOfNonPointersHasNoRanges) {
+  std::string Input = "void target(int P[]);";
+  EXPECT_THAT(getFunctionRanges(Input), IsEmpty());
+}
+
+TEST(OffsetAfterStarTest, ArrayOfSimplePointers) {
+  auto Input = Annotations("void target([[int*]] P[]);");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(std::nullopt, 0, Input.range()),
+                      offsetAfterStar(Input.range().End)))));
+}
+
+TEST(OffsetAfterStarTest, ArrayOfFunctionPointers) {
+  auto Input = Annotations("void target([[int (*$after_star^P[3])(float)]]);");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(std::nullopt, 0, Input.range()),
+                      offsetAfterStar(Input.point("after_star"))))));
+
+  // An unnamed array of function pointers.
+  Input = Annotations("void target([[void(*$after_star^[])(int)]]);");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(std::nullopt, 0, Input.range()),
+                      offsetAfterStar(Input.point("after_star"))))));
+}
+
+TEST(OffsetAfterStarTest, ArrayOfArrayOfPointersToArray) {
+  // Can't use ranges marked by [[...]] around arrays because of the adjacent
+  // closing square bracket at the end of the array length and the unfortunate
+  // syntax of Annotations, so use individual points.
+  auto Input = Annotations(R"(
+  void target($1^$range[[int*]] (*$after_star^P[3][2])[1]$2^);)");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(std::nullopt, 1, Input.range("range")),
+                      offsetAfterStar(Input.range("range").End)),
+                AllOf(eligibleRange(std::nullopt, 0,
+                                    Annotations::Range(Input.point("1"),
+                                                       Input.point("2"))),
+                      offsetAfterStar(Input.point("after_star"))))));
+}
+
+TEST(OffsetAfterStarTest, PointerToArray) {
+  // Can't use ranges marked by [[...]] around arrays because of the adjacent
+  // closing square bracket at the end of the array length and the unfortunate
+  // syntax of Annotations, so use individual points.
+  auto Input = Annotations(R"(void target($1^int (*$after_star^P)[]$2^);)");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(AllOf(
+              eligibleRange(
+                  1, 0, Annotations::Range(Input.point("1"), Input.point("2"))),
+              offsetAfterStar(Input.point("after_star"))))));
+
+  // An unnamed pointer to an array.
+  Input = Annotations(R"(void target($1^int (*$after_star^)[]$2^);)");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(AllOf(
+              eligibleRange(
+                  1, 0, Annotations::Range(Input.point("1"), Input.point("2"))),
+              offsetAfterStar(Input.point("after_star"))))));
+}
+
+TEST(OffsetAfterStarTest,
+     ArrayOfPointersWithExtraParensAroundNameAndInSizeBrackets) {
+  auto Input =
+      Annotations(R"(void target([[int (*$after_star^((P))[(1 + 2)])]]);)");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(std::nullopt, 0, Input.range()),
+                      offsetAfterStar(Input.point("after_star"))))));
+}
+
+TEST(OffsetAfterStarTest, PointerToPointerToArray) {
+  // Can't use ranges marked by [[...]] around arrays because of the adjacent
+  // closing square bracket at the end of the array length and the unfortunate
+  // syntax of Annotations, so use individual points.
+  auto Input = Annotations(
+      R"(void target($1^int (*$after_star_1^*$after_star_0^Q)[1]$2^);)");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(1, 0,
+                                    Annotations::Range(Input.point("1"),
+                                                       Input.point("2"))),
+                      offsetAfterStar(Input.point("after_star_0"))),
+                AllOf(eligibleRange(std::nullopt, 1,
+                                    Annotations::Range(Input.point("1"),
+                                                       Input.point("2"))),
+                      offsetAfterStar(Input.point("after_star_1"))))));
+}
+
+TEST(OffsetAfterStarTest, PointerToArrayOfFunctionPointers) {
+  auto Input = Annotations(
+      R"(void target($whole[[void (*$after_star_1^(*$after_star_0^(P))[])(int)]]);)");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(1, 0, Input.range("whole")),
+                      offsetAfterStar(Input.point("after_star_0"))),
+                AllOf(eligibleRange(std::nullopt, 1, Input.range("whole")),
+                      offsetAfterStar(Input.point("after_star_1"))))));
+}
+
+TEST(OffsetAfterStarTest, StarInMacroAtEndOfDefinition) {
+  auto Input = Annotations(R"(
+  #define MY_TYPE int*
+
+  void target($one[[MY_TYPE]] P, $two[[MY_TYPE]] Q);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(AllOf(eligibleRange(1, 0, Input.range("one")),
+                                       noOffsetAfterStar()),
+                                 AllOf(eligibleRange(2, 0, Input.range("two")),
+                                       noOffsetAfterStar()))));
+}
+
+TEST(OffsetAfterStarTest, StarInFunctionPointerMacro) {
+  auto Input = Annotations(R"(
+  #define FUNCTION_POINTER void(*)(int)
+
+  void target($one[[FUNCTION_POINTER]], $two[[FUNCTION_POINTER]]);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(AllOf(eligibleRange(1, 0, Input.range("one")),
+                                       noOffsetAfterStar()),
+                                 AllOf(eligibleRange(2, 0, Input.range("two")),
+                                       noOffsetAfterStar()))));
+}
+
+TEST(OffsetAfterStarTest, StarInFunctionPointerInMacroArg) {
+  auto Input = Annotations(R"(
+  #define MACRO(ARG) void target(ARG)
+
+  MACRO([[void (*^)(int)]]);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(AllOf(eligibleRange(1, 0, Input.range()),
+                                       offsetAfterStar(Input.point())))));
 }
 
 MATCHER(equivalentRanges, "") {

@@ -144,6 +144,7 @@ cc_library(
     deps = [
         ":inferable",
         ":inference_cc_proto",
+        "//nullability:annotations",
         "//nullability:loc_filter",
         "//nullability:type_nullability",
         "@abseil-cpp//absl/base:nullability",
