@@ -18,12 +18,6 @@ crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
     cc_deps = [":cc_helper_functions"],
-    # TODO(b/381820646): Fix vector.
-    tags = [
-        "manual",
-        "nobuilder",
-        "notap",
-    ],
     deps = [
         "//support/cc_std:vector",
         "@crate_index//:googletest",
