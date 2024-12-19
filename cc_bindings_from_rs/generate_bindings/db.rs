@@ -2,11 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use crate::code_snippet::{ApiSnippets, CcSnippet};
 use crate::{
     format_adt_core, format_copy_ctor_and_assignment_operator, format_default_ctor, format_fn,
     format_item, format_move_ctor_and_assignment_operator, format_ty_for_cc,
     reexported_symbol_canonical_name_mapping, repr_attrs, support_header, AdtCoreBindings,
-    ApiSnippets, CcSnippet, FullyQualifiedName, IncludeGuard, SugaredTy, TypeLocation,
+    FullyQualifiedName, IncludeGuard, SugaredTy, TypeLocation,
 };
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;

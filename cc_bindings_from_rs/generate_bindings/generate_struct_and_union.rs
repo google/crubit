@@ -3,16 +3,15 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // TODO(b/381888123): Seperate out enum generation.
+use crate::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use crate::db::BindingsGenerator;
-
 use crate::format_cc_ident;
 use crate::format_doc_comment;
 use crate::{
     crate_features, format_const, format_deprecated_tag, format_trait_thunks, format_ty_for_cc,
     format_unsupported_def, get_layout, get_scalar_int_type, get_tag_size_with_padding,
-    is_exported, is_public_or_supported_export, post_analysis_typing_env, ApiSnippets,
-    CcPrerequisites, CcSnippet, FullyQualifiedName, RsSnippet, SugaredTy, TraitThunks,
-    TypeLocation,
+    is_exported, is_public_or_supported_export, post_analysis_typing_env, FullyQualifiedName,
+    RsSnippet, SugaredTy, TraitThunks, TypeLocation,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::make_rs_ident;

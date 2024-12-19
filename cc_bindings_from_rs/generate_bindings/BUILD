@@ -17,6 +17,7 @@ package(
 rust_library(
     name = "generate_bindings",
     srcs = [
+        "code_snippet.rs",
         "db.rs",
         "generate_struct_and_union.rs",
         "lib.rs",
