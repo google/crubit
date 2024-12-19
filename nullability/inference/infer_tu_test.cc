@@ -466,6 +466,7 @@ TEST_F(InferTUTest, Filter) {
 TEST_F(InferTUTest, AutoNoStarType) {
   build(R"cc(
     int *_Nullable getNullable();
+    int *_Nonnull getNonnull();
 
     void func() { auto AutoLocal = getNullable(); }
 
@@ -485,26 +486,45 @@ TEST_F(InferTUTest, AutoNoStarType) {
       *R;
       return getNullable();
     }
+
+    void instantiateTemplates() {
+      autoParamAkaTemplate(getNonnull());
+      autoReturnAndParam(getNonnull());
+    }
   )cc");
-  EXPECT_THAT(infer(),
-              UnorderedElementsAre(
-                  // Already annotated.
-                  inference(hasName("getNullable"),
-                            {inferredSlot(0, Nullability::NULLABLE)}),
-                  // We infer for local variables with type `auto*`.
-                  inference(hasName("AutoLocal"),
-                            {inferredSlot(0, Nullability::NULLABLE)}),
-                  // We infer for return types with type `auto*`, for the
-                  // parameters of functions with return type `auto*`, and for
-                  // local variables in these functions.
-                  inference(hasName("autoReturn"),
-                            {inferredSlot(0, Nullability::NULLABLE),
-                             inferredSlot(1, Nullability::NONNULL)}),
-                  inference(hasName("AutoLocalInAutoReturn"),
-                            {inferredSlot(0, Nullability::NULLABLE)})
-                  // We don't infer anything for or from functions with
-                  // parameters of type `auto*`, because these are templates.
-                  ));
+  EXPECT_THAT(
+      infer(),
+      UnorderedElementsAre(
+          // Already annotated.
+          inference(hasName("getNullable"),
+                    {inferredSlot(0, Nullability::NULLABLE)}),
+          inference(hasName("getNonnull"),
+                    {inferredSlot(0, Nullability::NONNULL)}),
+          // We infer for local variables with type `auto`.
+          inference(hasName("AutoLocal"),
+                    {inferredSlot(0, Nullability::NULLABLE)}),
+          // We infer for return types with type `auto`, for the
+          // parameters of functions with return type `auto`, and for
+          // local variables in these functions.
+          inference(hasName("autoReturn"),
+                    {inferredSlot(0, Nullability::NULLABLE),
+                     inferredSlot(1, Nullability::NONNULL)}),
+          inference(hasName("AutoLocalInAutoReturn"),
+                    {inferredSlot(0, Nullability::NULLABLE)}),
+          // Functions with parameters of type `auto` are templates, so
+          // we infer for/from the instantiations.
+          inference(functionDecl(hasName("autoParamAkaTemplate"),
+                                 isTemplateInstantiation()),
+                    {inferredSlot(0, Nullability::NULLABLE),
+                     inferredSlot(1, Nullability::NONNULL)}),
+          inference(functionDecl(hasName("autoReturnAndParam"),
+                                 isTemplateInstantiation()),
+                    {inferredSlot(0, Nullability::NULLABLE),
+                     inferredSlot(1, Nullability::NONNULL)}),
+          inference(
+              varDecl(hasName("AutoLocalInTemplate"),
+                      hasDeclContext(functionDecl(isTemplateInstantiation()))),
+              {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
 TEST_F(InferTUTest, AutoStarType) {
