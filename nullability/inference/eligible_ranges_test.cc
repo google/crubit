@@ -25,7 +25,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Testing/Annotations/Annotations.h"
-#include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"  // IWYU pragma: keep
+#include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
@@ -47,7 +47,6 @@ using ::testing::ElementsAre;
 using ::testing::ExplainMatchResult;
 using ::testing::IsEmpty;
 using ::testing::Not;
-using ::testing::Pointwise;
 using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedElementsAreArray;
 
@@ -1583,196 +1582,6 @@ TEST(OffsetAfterStarTest, StarInFunctionPointerInMacroArg) {
 MATCHER(equivalentRanges, "") {
   return std::get<0>(arg).begin() == std::get<1>(arg).Begin &&
          std::get<0>(arg).end() == std::get<1>(arg).End;
-}
-
-MATCHER_P2(complexDeclaratorImpl, FollowingAnnotation, Ranges, "") {
-  if (!arg.Range.has_complex_declarator_ranges()) {
-    *result_listener << "no complex declarator ranges present";
-    return false;
-  }
-  ComplexDeclaratorRanges ArgRanges = arg.Range.complex_declarator_ranges();
-  return ExplainMatchResult(FollowingAnnotation,
-                            ArgRanges.following_annotation(),
-                            result_listener) &&
-         ExplainMatchResult(Pointwise(equivalentRanges(), Ranges),
-                            ArgRanges.removal(), result_listener);
-}
-
-auto complexDeclarator(llvm::StringRef FollowingAnnotation,
-                       std::vector<Annotations::Range> Ranges) {
-  return complexDeclaratorImpl(FollowingAnnotation, Ranges);
-}
-
-MATCHER(noComplexDeclarator, "") {
-  return !arg.Range.has_complex_declarator_ranges();
-}
-
-TEST(ComplexDeclaratorTest, FunctionPointer) {
-  auto Input = Annotations(R"(
-  void target($func_pointer[[int (*$remove_from_type[[P]])(int, $pointer_param[[int*]])]]);
-  )");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(
-          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-          UnorderedElementsAre(
-              AllOf(eligibleRange(1, 0, Input.range("func_pointer")),
-                    complexDeclarator("P", {Input.range("remove_from_type")})),
-              AllOf(
-                  eligibleRange(std::nullopt, 1, Input.range("pointer_param")),
-                  noComplexDeclarator()))));
-
-  Input = Annotations("void target($unnamed[[int (*)(int)]]);");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(1, 0, Input.range("unnamed")),
-                      noComplexDeclarator()))));
-}
-
-TEST(ComplexDeclaratorTest, ArrayOfNonPointersHasNoRanges) {
-  std::string Input = "void target(int P[]);";
-  EXPECT_THAT(getFunctionRanges(Input), IsEmpty());
-}
-
-TEST(ComplexDeclaratorTest, ArrayOfSimplePointers) {
-  auto Input = Annotations("void target([[int*]] P[]);");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(std::nullopt, 0, Input.range()),
-                      noComplexDeclarator()))));
-}
-
-TEST(ComplexDeclaratorTest, ArrayOfFunctionPointers) {
-  // Can't use ranges marked by [[...]] around arrays because of the adjacent
-  // closing square bracket at the end of the array length and the unfortunate
-  // syntax of Annotations, so use individual points.
-  auto Input = Annotations("void target([[int (*$1^P[3]$2^)(float)]]);");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(std::nullopt, 0, Input.range()),
-                      complexDeclarator(
-                          "P[3]", {Annotations::Range(Input.point("1"),
-                                                      Input.point("2"))})))));
-
-  // An unnamed array of function pointers. The array brackets are still moved.
-  Input = Annotations("void target([[void(*$1^[]$2^)(int)]]);");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(std::nullopt, 0, Input.range()),
-                      complexDeclarator(
-                          "[]", {Annotations::Range(Input.point("1"),
-                                                    Input.point("2"))})))));
-}
-
-TEST(ComplexDeclaratorTest, ArrayOfArrayOfPointersToArray) {
-  // Can't use ranges marked by [[...]] around arrays because of the adjacent
-  // closing square bracket at the end of the array length and the unfortunate
-  // syntax of Annotations, so use individual points.
-  auto Input = Annotations(R"(
-  void target($1^$range[[int*]] (*$3^P[3][2]$4^)[1]$2^);)");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(std::nullopt, 1, Input.range("range")),
-                      noComplexDeclarator()),
-                AllOf(eligibleRange(std::nullopt, 0,
-                                    Annotations::Range(Input.point("1"),
-                                                       Input.point("2"))),
-                      complexDeclarator("P[3][2]", {Annotations::Range(
-                                                       Input.point("3"),
-                                                       Input.point("4"))})))));
-}
-
-TEST(ComplexDeclaratorTest, PointerToArray) {
-  // Can't use ranges marked by [[...]] around arrays because of the adjacent
-  // closing square bracket at the end of the array length and the unfortunate
-  // syntax of Annotations, so use individual points.
-  auto Input =
-      Annotations(R"(void target($1^int (*$remove_from_type[[P]])[]$2^);)");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(
-          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-          UnorderedElementsAre(AllOf(
-              eligibleRange(
-                  1, 0, Annotations::Range(Input.point("1"), Input.point("2"))),
-              complexDeclarator("P", {Input.range("remove_from_type")})))));
-
-  // An unnamed pointer to an array. There's nothing to move.
-  Input = Annotations(R"(void target($1^int (*)[]$2^);)");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(
-          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-          UnorderedElementsAre(AllOf(
-              eligibleRange(
-                  1, 0, Annotations::Range(Input.point("1"), Input.point("2"))),
-              noComplexDeclarator()))));
-}
-
-TEST(ComplexDeclaratorTest,
-     ArrayOfPointersWithExtraParensAroundNameAndInSizeBrackets) {
-  // Can't use ranges marked by [[...]] around arrays because of the adjacent
-  // closing square bracket at the end of the array length and the unfortunate
-  // syntax of Annotations, so use individual points.
-  auto Input = Annotations(R"(void target([[int (*$3^((P))[(1 + 2)]$4^)]]);)");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(AllOf(
-                eligibleRange(std::nullopt, 0, Input.range()),
-                complexDeclarator("((P))[(1 + 2)]",
-                                  {Annotations::Range(Input.point("3"),
-                                                      Input.point("4"))})))));
-}
-
-TEST(ComplexDeclaratorTest, PointerToPointerToArray) {
-  // Can't use ranges marked by [[...]] around arrays because of the adjacent
-  // closing square bracket at the end of the array length and the unfortunate
-  // syntax of Annotations, so use individual points.
-  auto Input =
-      Annotations(R"(void target($1^int (*$star[[*]]$q[[Q]])[1]$2^);)");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(1, 0,
-                                    Annotations::Range(Input.point("1"),
-                                                       Input.point("2"))),
-                      complexDeclarator("Q", {Input.range("q")})),
-                AllOf(eligibleRange(std::nullopt, 1,
-                                    Annotations::Range(Input.point("1"),
-                                                       Input.point("2"))),
-                      complexDeclarator("*", {Input.range("star")})))));
-}
-
-TEST(ComplexDeclaratorTest, PointerToArrayOfFunctionPointers) {
-  // Can't use ranges marked by [[...]] around arrays because of the adjacent
-  // closing square bracket at the end of the array length and the unfortunate
-  // syntax of Annotations, so use individual points.
-  auto Input = Annotations(
-      R"(void target($whole[[void (*$1^(*$p[[(P)]])[]$2^)(int)]]);)");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(1, 0, Input.range("whole")),
-                      complexDeclarator("(P)", {Input.range("p")})),
-                AllOf(eligibleRange(std::nullopt, 1, Input.range("whole")),
-                      complexDeclarator(
-                          "(*)[]", {Annotations::Range(Input.point("1"),
-                                                       Input.range("p").Begin),
-                                    Annotations::Range(Input.range("p").End,
-                                                       Input.point("2"))})))));
 }
 
 MATCHER_P(eligibleRange, Expected, "") {

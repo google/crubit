@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "absl/base/nullability.h"
-#include "absl/log/check.h"
 #include "nullability/annotations.h"
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
@@ -30,7 +29,6 @@
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
-#include "clang/AST/TypeLocVisitor.h"
 #include "clang/Basic/CharInfo.h"
 #include "clang/Basic/FileEntry.h"
 #include "clang/Basic/LLVM.h"
@@ -204,162 +202,6 @@ static void addAnnotationPreAndPostRangeLength(
   }
 }
 
-/// Declarations involving combinations of pointers, arrays, and functions can
-/// require re-arrangement of the type to add or remove nullability annotations.
-///
-/// The known relevant types are (potentially nested) raw pointers to arrays or
-/// functions and (potentially nested) arrays of raw pointers.
-///
-/// e.g. a length-3 array of length-2 arrays of pointers to length-1 arrays of
-/// int* with the name `p` would start as `int* (*p[3][2])[1]` and if we need to
-/// mark the type of the pointers to the length-1 arrays Nullable, we would need
-/// to re-write this is as `Nullable<int* (*)[1]> p[3][2]`.
-///
-/// Similarly, a function pointer with the name `f` with a single int*
-/// parameter named `a` might start as `void(*f)(int* a)`. If we need to mark
-/// the function pointer as Nullable, we would need to re-write this as
-/// `Nullable<void(*)(int* a)> f`.
-///
-/// If Decl and its TypeLoc TL are such a declaration, returns a vector of
-/// optional ComplexDeclaratorRanges, indexed by nullability slot in TL, to be
-/// added to the corresponding SlotRange.
-///
-/// e.g. For `f` above, returns [{"f", [{7, 8}]}, std::nullopt]. For `p` above,
-/// returns [{"p", [{8, 15}]}, std::nullopt]. And for `void (*(*(f))[])(int)`,
-/// returns [{"(f)", [{10, 13}]}, {"(*)[]", [{8, 10}, {13, 16}]}].
-///
-/// The ranges are produced under the assumption that all slots will receive an
-/// annotation. The types would need to be modified differently if e.g. some
-/// inner slots are annotated but outer slots are not.
-///
-/// Template parameters are not considered, nor are smart pointers, so types
-/// containing these may not have the correct number of results returned and the
-/// results should not be used.
-static std::vector<std::optional<ComplexDeclaratorRanges>>
-getComplexDeclaratorRanges(const DeclaratorDecl &Decl, TypeLoc TL) {
-  class Walker : public TypeLocVisitor<Walker> {
-   public:
-    std::vector<std::optional<ComplexDeclaratorRanges>> Results;
-
-    Walker(const DeclaratorDecl &Decl)
-        : SM(Decl.getASTContext().getSourceManager()), LO(Decl.getLangOpts()) {
-      // Include any name for Decl in the range for the first slot.
-      StartForSlot = Decl.getLocation();
-      if (Decl.getDeclName().isEmpty()) {
-        EndForSlot = StartForSlot;
-      } else {
-        std::optional<Token> NextTok =
-            utils::lexer::findNextTokenSkippingComments(StartForSlot, SM, LO);
-        if (NextTok) {
-          EndForSlot = NextTok->getLocation();
-        } else {
-          EndForSlot = StartForSlot;
-        }
-      }
-    }
-
-    void Visit(TypeLoc TL) {
-      // If the type ends before the start of the name, then Decl is not a
-      // complex declarator.
-      if (TL.getEndLoc() <= StartForSlot) {
-        unsigned PointersInTL = countPointersInType(TL.getType());
-        Results.reserve(PointersInTL);
-        for (int I = 0; I < PointersInTL; ++I) Results.push_back(std::nullopt);
-      } else {
-        TypeLocVisitor::Visit(TL);
-      }
-    }
-
-    void VisitTypeLoc(TypeLoc TL) {
-      if (TL.getNextTypeLoc()) TypeLocVisitor::Visit(TL.getNextTypeLoc());
-    }
-
-    void VisitArrayTypeLoc(ArrayTypeLoc ArrayTL) {
-      // Move the end marker to the right to include the array brackets,
-      // including any size expression.
-      EndForSlot = ArrayTL.getRBracketLoc().getLocWithOffset(1);
-      Visit(ArrayTL.getElementLoc());
-    }
-
-    void VisitParenTypeLoc(ParenTypeLoc ParenTL) {
-      StartForSlot = ParenTL.getLParenLoc();
-      EndForSlot = ParenTL.getRParenLoc().getLocWithOffset(1);
-      Visit(ParenTL.getInnerLoc());
-    }
-
-    void VisitPointerTypeLoc(PointerTypeLoc PointerTL) {
-      if (StartForSlot == EndForSlot) {
-        Results.push_back(std::nullopt);
-      } else {
-        // Save the result for the current slot.
-        auto &Result = Results.emplace_back(ComplexDeclaratorRanges());
-        if (StartForPreviousSlot && EndForPreviousSlot) {
-          Result->set_following_annotation(
-              (Lexer::getSourceText(clang::CharSourceRange::getCharRange(
-                                        StartForSlot, *StartForPreviousSlot),
-                                    SM, LO) +
-               Lexer::getSourceText(clang::CharSourceRange::getCharRange(
-                                        *EndForPreviousSlot, EndForSlot),
-                                    SM, LO))
-                  .str());
-
-          if (StartForPreviousSlot != StartForSlot) {
-            auto *Removal = Result->add_removal();
-            Removal->set_begin(SM.getFileOffset(StartForSlot));
-            Removal->set_end(SM.getFileOffset(*StartForPreviousSlot));
-          }
-          if (EndForPreviousSlot != EndForSlot) {
-            auto *Removal = Result->add_removal();
-            Removal->set_begin(SM.getFileOffset(*EndForPreviousSlot));
-            Removal->set_end(SM.getFileOffset(EndForSlot));
-          }
-        } else {
-          Result->set_following_annotation(Lexer::getSourceText(
-              clang::CharSourceRange::getCharRange(StartForSlot, EndForSlot),
-              SM, LO));
-          auto &Removal = *Result->add_removal();
-          Removal.set_begin(SM.getFileOffset(StartForSlot));
-          Removal.set_end(SM.getFileOffset(EndForSlot));
-        }
-      }
-
-      // Prepare for the next slot.
-      StartForPreviousSlot = StartForSlot;
-      EndForPreviousSlot = EndForSlot;
-
-      // Move the begin marker to include the star to prepare for the next slot.
-      StartForSlot = PointerTL.getStarLoc();
-
-      Visit(PointerTL.getPointeeLoc());
-    }
-
-    void VisitFunctionProtoTypeLoc(FunctionProtoTypeLoc FuncTL) {
-      Visit(FuncTL.getReturnLoc());
-      for (const auto &ParamDecl : FuncTL.getParams()) {
-        if (auto *TSI = ParamDecl->getTypeSourceInfo()) {
-          Walker Recurse(*ParamDecl);
-          Recurse.Visit(TSI->getTypeLoc());
-          for (const auto &Result : Recurse.Results) {
-            Results.push_back(std::move(Result));
-          }
-        }
-      }
-    }
-
-   private:
-    const SourceManager &SM;
-    const LangOptions &LO;
-    SourceLocation StartForSlot;
-    SourceLocation EndForSlot;
-    std::optional<SourceLocation> StartForPreviousSlot;
-    std::optional<SourceLocation> EndForPreviousSlot;
-  };
-
-  Walker W(Decl);
-  W.Visit(TL);
-  return std::move(W.Results);
-}
-
 static StringRef skipOneEscapedNewlinePrefix(StringRef Str) {
   const char *Ptr = Str.data();
   size_t OriginalSize = Str.size();
@@ -432,11 +274,6 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
                                     EligibleRanges &Ranges) {
   std::vector<TypeNullabilityLoc> NullabilityLocs =
       getTypeNullabilityLocs(WholeLoc, Defaults);
-  std::vector<std::optional<ComplexDeclaratorRanges>>
-      AllComplexDeclaratorRanges;
-  if (Decl) {
-    AllComplexDeclaratorRanges = getComplexDeclaratorRanges(*Decl, WholeLoc);
-  }
   const auto &SM = Context.getSourceManager();
   const auto &LangOpts = Context.getLangOpts();
   for (auto &[SlotInLoc, T, MaybeLoc, Nullability] : NullabilityLocs) {
@@ -515,25 +352,6 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
       addAnnotationPreAndPostRangeLength(Begin, R->getEnd(), BeginOffset,
                                          EndOffset, DeclFID, SM, LangOpts,
                                          Range.Range);
-
-    // If we don't have a std::nullopt or ComplexDeclaratorRange for every slot,
-    // don't add any ComplexDeclaratorRanges. The Decl is a complex declarator
-    // but contains at least one unsupported slot syntax, such as slots in
-    // template parameters or smart pointers.
-    if (Decl && AllComplexDeclaratorRanges.size() == NullabilityLocs.size()) {
-      CHECK(AllComplexDeclaratorRanges.size() > SlotInLoc);
-      std::optional<ComplexDeclaratorRanges> &CDR =
-          AllComplexDeclaratorRanges[SlotInLoc];
-      // If all removal ranges are after the end of the range to enclose in the
-      // annotation, then we don't need to add any ComplexDeclaratorRanges and
-      // can leave the text where it is.
-      if (CDR && std::any_of(CDR->removal().begin(), CDR->removal().end(),
-                             [EndOffset](const RemovalRange &Removal) {
-                               return Removal.begin() < EndOffset;
-                             })) {
-        *Range.Range.mutable_complex_declarator_ranges() = std::move(*CDR);
-      }
-    }
 
     auto PTL = MaybeLoc->getUnqualifiedLoc().getAsAdjusted<PointerTypeLoc>();
     if (PTL) {

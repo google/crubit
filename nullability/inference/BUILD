@@ -148,7 +148,6 @@ cc_library(
         "//nullability:loc_filter",
         "//nullability:type_nullability",
         "@abseil-cpp//absl/base:nullability",
-        "@abseil-cpp//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:index",
