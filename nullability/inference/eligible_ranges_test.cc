@@ -1068,25 +1068,6 @@ TEST(EligibleRangesTest, RangesWithBareAutoAsTemplateParameterNotReturned) {
                                eligibleRange(0, 0, Input.range("I")))));
 }
 
-MATCHER_P3(autoEligibleRangeWithNoExistingAnnotation, SlotInDecl, SlotInType,
-           Range, "") {
-  return ExplainMatchResult(true, arg.Range.contains_auto_star(),
-                            result_listener) &&
-         ExplainMatchResult(false, arg.Range.has_existing_annotation(),
-                            result_listener) &&
-         ExplainMatchResult(eligibleRange(SlotInDecl, SlotInType, Range), arg,
-                            result_listener);
-}
-
-MATCHER_P4(autoEligibleRange, SlotInDecl, SlotInType, Range, ExistingAnnotation,
-           "") {
-  return ExplainMatchResult(true, arg.Range.contains_auto_star(),
-                            result_listener) &&
-         ExplainMatchResult(
-             eligibleRange(SlotInDecl, SlotInType, Range, ExistingAnnotation),
-             arg, result_listener);
-}
-
 TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
   auto Input = Annotations(R"(
      $func_auto[[auto*]] star($func_not_auto[[int*]] P) {
@@ -1105,55 +1086,49 @@ TEST(EligibleRangesTest, RangesWithAutoStarTypeReturnedWithMarker) {
     )");
   EXPECT_THAT(
       getFunctionRanges(Input.code(), "star"),
-      AllOf(
-          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-          UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
-                                   0, 0, Input.range("func_auto")),
-                               AllOf(eligibleRangeWithNoExistingAnnotation(
-                                         1, 0, Input.range("func_not_auto")),
-                                     ResultOf(
-                                         [](const class EligibleRange &ER) {
-                                           return ER.Range.contains_auto_star();
-                                         },
-                                         testing::IsFalse())))));
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRangeWithNoExistingAnnotation(
+                                     0, 0, Input.range("func_auto")),
+                                 eligibleRangeWithNoExistingAnnotation(
+                                     1, 0, Input.range("func_not_auto")))));
   EXPECT_THAT(
       getVarRanges(Input.code(), "GStar"),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
+            UnorderedElementsAre(eligibleRangeWithNoExistingAnnotation(
                 0, 0, Input.range("var_auto")))));
   EXPECT_THAT(
       getVarRanges(Input.code(), "GStarConst"),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
+            UnorderedElementsAre(eligibleRangeWithNoExistingAnnotation(
                 0, 0, Input.range("var_auto_const")))));
   EXPECT_THAT(
       getVarRanges(Input.code(), "GConstStar"),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
+            UnorderedElementsAre(eligibleRangeWithNoExistingAnnotation(
                 0, 0, Input.range("var_const_auto")))));
   EXPECT_THAT(
       getVarRanges(Input.code(), "GStarConstRef"),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
+            UnorderedElementsAre(eligibleRangeWithNoExistingAnnotation(
                 0, 0, Input.range("var_auto_const_ref")))));
   EXPECT_THAT(
       getVarRanges(Input.code(), "GConstStarRef"),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(autoEligibleRangeWithNoExistingAnnotation(
+            UnorderedElementsAre(eligibleRangeWithNoExistingAnnotation(
                 0, 0, Input.range("var_const_auto_ref")))));
   EXPECT_THAT(
       getVarRanges(Input.code(), "GStarNullable"),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                autoEligibleRange(0, 0, Input.range("var_auto_attributed"),
-                                  Nullability::NULLABLE))));
+                eligibleRange(0, 0, Input.range("var_auto_attributed"),
+                              Nullability::NULLABLE))));
   EXPECT_THAT(
       getVarRanges(Input.code(), "GStarStar"),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                autoEligibleRangeWithNoExistingAnnotation(
+                eligibleRangeWithNoExistingAnnotation(
                     0, 0, Input.range("var_auto_star_star")),
-                autoEligibleRangeWithNoExistingAnnotation(
+                eligibleRangeWithNoExistingAnnotation(
                     std::nullopt, 1, Input.range("var_auto_star_inner")))));
 }
 
@@ -1347,7 +1322,7 @@ MATCHER(noOffsetAfterStar, "") { return !arg.Range.has_offset_after_star(); }
 
 TEST(OffsetAfterStarTest, SimplePointers) {
   auto Input = Annotations(R"(
-  $return[[bool*]] target($zero[[$one[[int*]]*]]P);
+  $return[[bool*]] target($zero[[$one[[int*]]*]]P, $qualified[[int*]] const Q);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -1358,7 +1333,9 @@ TEST(OffsetAfterStarTest, SimplePointers) {
                 AllOf(eligibleRange(1, 0, Input.range("zero")),
                       offsetAfterStar(Input.range("zero").End)),
                 AllOf(eligibleRange(std::nullopt, 1, Input.range("one")),
-                      offsetAfterStar(Input.range("one").End)))));
+                      offsetAfterStar(Input.range("one").End)),
+                AllOf(eligibleRange(2, 0, Input.range("qualified")),
+                      offsetAfterStar(Input.range("qualified").End)))));
 }
 
 TEST(OffsetAfterStarTest, AnnotatedPointers) {

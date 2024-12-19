@@ -197,8 +197,6 @@ message SlotRange {
   // "_Null_unspecified".
   optional uint32 existing_annotation_post_range_length = 6;
 
-  optional bool contains_auto_star = 8;
-
   // The position of this slot within the TypeLoc from which it was extracted,
   // counting from outside in, consistent with nullability vector ordering. For
   // example, for int***, the outermost pointer range will have slot_in_type =

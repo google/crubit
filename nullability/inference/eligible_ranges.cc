@@ -353,37 +353,32 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
                                          EndOffset, DeclFID, SM, LangOpts,
                                          Range.Range);
 
-    auto PTL = MaybeLoc->getUnqualifiedLoc().getAsAdjusted<PointerTypeLoc>();
-    if (PTL) {
-      // For raw pointers, we want to add any post-star annotations immediately
-      // after the `*` instead of at the end of the range. These locations are
-      // different in the case of complex declarators, such as pointers to
-      // functions or arrays and arrays of pointers.
-      // We don't need to compute this for smart pointers, because the post-star
-      // annotation should always be added at the end of the range. There is no
-      // analogous set of complex declarator cases where the smart pointer type
-      // is actually in the middle of the range.
+    // For raw pointers, we want to add any post-star annotations immediately
+    // after the `*` instead of at the end of the range. These locations are
+    // different in the case of complex declarators, such as pointers to
+    // functions or arrays and arrays of pointers.
+    //
+    // We don't need to compute this for smart pointers, because the post-star
+    // annotation should always be added at the end of the range. There is no
+    // analogous set of complex declarator cases where the smart pointer type is
+    // actually in the middle of the range.
+    if (auto PTL =
+            MaybeLoc->getUnqualifiedLoc().getAsAdjusted<PointerTypeLoc>()) {
       SourceLocation StarLoc = SM.getSpellingLoc(PTL.getStarLoc());
       // If the star is not inside the range, e.g. it's in a macro that expands
       // to the entire type range, then we will not set the offset after the
-      // star. This will result in the end offset being used to insert any
-      // annotation, which will fail to compile for complex declarator cases
-      // defined as macros, but avoids placing the annotation inside the macro
-      // definition for simple pointers. Not annotating all uses of the macro
-      // with the nullability appropriate for just this usage is more important
-      // than being able to annotate these rare cases of complex declarator
-      // types defined inside a macro.
+      // star.
+      //
+      // This will result in the end offset being used to insert any annotation,
+      // which will fail to compile for complex declarator cases defined as
+      // macros, but avoids placing the annotation inside the macro definition
+      // for simple pointers. Avoiding annotating all uses of the macro with the
+      // nullability appropriate for just this usage is more important than
+      // being able to annotate these rare cases of complex declarator types
+      // defined inside a macro.
       if (StarLoc >= R->getBegin() && StarLoc < R->getEnd()) {
         Range.Range.set_offset_after_star(
             SM.getFileOffset(StarLoc.getLocWithOffset(1)));
-      }
-      while (auto PointeeTL = PTL.getPointeeLoc()
-                                  .getUnqualifiedLoc()
-                                  .getAsAdjusted<PointerTypeLoc>()) {
-        PTL = PointeeTL;
-      }
-      if (PTL.getPointeeLoc().getUnqualifiedLoc().getAs<AutoTypeLoc>()) {
-        Range.Range.set_contains_auto_star(true);
       }
     }
   }
