@@ -25,9 +25,6 @@ crubit_rust_binary(
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=never_type,rustc_private"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
-    visibility = [
-        "//visibility:public",
-    ],
     deps = [
         ":cmdline",
         ":run_compiler",
