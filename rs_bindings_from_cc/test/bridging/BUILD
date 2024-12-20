@@ -34,3 +34,26 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+cc_library(
+    name = "string_test_lib",
+    hdrs = ["string_test_lib.h"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    deps = [
+        "//support/internal:bindings_support",
+    ],
+)
+
+crubit_rust_test(
+    name = "string_test",
+    srcs = ["string_test.rs"],
+    cc_deps = [
+        ":string_test_lib",
+        "//support/cc_std",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

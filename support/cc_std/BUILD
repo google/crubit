@@ -26,6 +26,7 @@ filegroup(
             "vector.rs",
             "vector_partial_eq.rs",
             "unique_ptr.rs",
+            "string.rs",
         ],
     ),
 )
@@ -105,7 +106,10 @@ filegroup(
 
 filegroup(
     name = "crubit_internal_helper_headers",
-    srcs = ["std_allocator.h"],
+    srcs = [
+        "conversion_function_helpers.h",
+        "std_allocator.h",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -122,6 +126,7 @@ additional_rust_srcs_for_crubit_bindings(
 additional_rust_srcs_for_crubit_bindings(
     name = "manually_bridged_types",
     srcs = [
+        "string.rs",
         "unique_ptr.rs",
     ],
     namespace_path = "std",

@@ -127,6 +127,10 @@ fn get_field_rs_type_kind_for_layout(
         Err(e) => bail!("{e}"),
     };
 
+    if type_kind.is_bridge_type() {
+        bail!("Bridge-by-value types are not supported in struct fields.")
+    }
+
     for target in record.defining_target.iter().chain([&record.owning_target]) {
         let enabled_features = db.ir().target_crubit_features(target);
         let (missing_features, reason) =
@@ -248,13 +252,12 @@ fn filter_out_ambiguous_member_functions(
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> {
-    // If the record has a bridge type, we don't need to generate any bindings.
-    if record.bridge_type_info.is_some() {
-        return Ok(GeneratedItem::default());
-    }
     let record_rs_type_kind = RsTypeKind::new_record(db, record.clone(), &db.ir())?;
     if let RsTypeKind::Record { known_generic_monomorphization: Some(_), .. } = record_rs_type_kind
     {
+        return Ok(GeneratedItem::default());
+    }
+    if record_rs_type_kind.is_bridge_type() || record.bridge_type_info.is_some() {
         return Ok(GeneratedItem::default());
     }
     let ir = db.ir();

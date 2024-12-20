@@ -157,6 +157,11 @@ fn generate_bindings(
 }
 
 fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<GeneratedItem> {
+    // Skip the type alias if it maps to a bridge type.
+    let rs_type_kind = RsTypeKind::new_type_alias(db, Rc::new(type_alias.clone()))?;
+    if rs_type_kind.is_bridge_type() {
+        return Ok(GeneratedItem::default());
+    }
     let ident = make_rs_ident(&type_alias.identifier.identifier);
     let doc_comment = generate_doc_comment(
         type_alias.doc_comment.as_deref(),
@@ -976,6 +981,18 @@ fn generate_rs_api_impl_includes(
             ));
         }
     }
+
+    for type_alias in ir.type_aliases() {
+        if let Ok(RsTypeKind::BridgeType { .. }) =
+            RsTypeKind::new_type_alias(db, type_alias.clone())
+        {
+            internal_includes.insert(CcInclude::SupportLibHeader(
+                crubit_support_path_format.into(),
+                "internal/lazy_init.h".into(),
+            ));
+        }
+    }
+
     for crubit_header in ["internal/cxx20_backports.h", "internal/offsetof.h"] {
         internal_includes.insert(CcInclude::SupportLibHeader(
             crubit_support_path_format.into(),

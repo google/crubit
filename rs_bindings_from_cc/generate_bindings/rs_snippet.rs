@@ -9,7 +9,7 @@ use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::NamespaceQualifier;
 use crubit_feature::CrubitFeature;
-use error_report::{bail, ensure};
+use error_report::{anyhow, bail, ensure};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -398,6 +398,118 @@ pub enum RsTypeKind {
     },
 }
 
+fn is_basic_string_char(db: &dyn BindingsGenerator, record: &Record) -> bool {
+    if let Some(template_specialization) = &record.template_specialization {
+        let template_name = template_specialization.template_name.as_ref();
+        let mut type_args = Vec::new();
+        for arg in template_specialization.template_args.iter() {
+            if arg.type_.is_err() {
+                return false;
+            }
+            let arg_type = arg.type_.clone().unwrap();
+            let arg_type_kind = db.rs_type_kind(arg_type.rs_type.clone());
+            if arg_type_kind.is_err() {
+                return false;
+            }
+            type_args.push(arg_type_kind.unwrap());
+        }
+
+        match (template_name, &type_args[..]) {
+            (
+                "std::basic_string",
+                [type_arg, RsTypeKind::Record { record: char_traits, .. }, RsTypeKind::Record { record: allocator, .. }],
+            ) => {
+                if *type_arg != RsTypeKind::Primitive(PrimitiveType::c_char) {
+                    return false;
+                }
+                if char_traits.template_specialization.is_none()
+                    || allocator.template_specialization.is_none()
+                {
+                    return false;
+                }
+                let char_traits = char_traits.template_specialization.as_ref().unwrap();
+                let allocator = allocator.template_specialization.as_ref().unwrap();
+                if char_traits.template_name.as_ref() != "std::char_traits"
+                    || allocator.template_name.as_ref() != "std::allocator"
+                {
+                    return false;
+                }
+                if char_traits.template_args.len() != 1 || allocator.template_args.len() != 1 {
+                    return false;
+                }
+                if char_traits.template_args[0].type_.is_err()
+                    || allocator.template_args[0].type_.is_err()
+                {
+                    return false;
+                }
+                let char_traits_type_arg = db.rs_type_kind(
+                    char_traits.template_args[0].type_.as_ref().unwrap().rs_type.clone(),
+                );
+                let allocator_type_arg = db.rs_type_kind(
+                    allocator.template_args[0].type_.as_ref().unwrap().rs_type.clone(),
+                );
+                if char_traits_type_arg.is_err() || allocator_type_arg.is_err() {
+                    return false;
+                }
+                let char_traits_type_arg = char_traits_type_arg.unwrap();
+                let allocator_type_arg = allocator_type_arg.unwrap();
+                *type_arg == char_traits_type_arg && *type_arg == allocator_type_arg
+            }
+            _ => false,
+        }
+    } else {
+        false
+    }
+}
+
+fn create_string_bridge_type(record: &Record) -> Result<RsTypeKind> {
+    let owning_crate = make_rs_ident(&record.owning_target.target_name_escaped());
+    // This is needed to avoid backword reference error. The current conversion
+    // functions are written in Rust and fed into cc_std as additional rust source
+    // files. If we don't disable the original std::string alias in cc_std, the
+    // generated thunk `cc_std_rs_impl.so` will refer to the lib_cc_std.so, causing
+    // a backward reference error.
+    // TODO: Relocate the conversion functions.
+    if owning_crate == "cc_std" {
+        return Err(anyhow!("Disable the original std::string in cc_std"));
+    }
+    let name = "cc_std::std::string";
+    Ok(RsTypeKind::BridgeType {
+        name: Rc::from(name),
+        cpp_to_rust_converter: Rc::from("cpp_string_to_rust_string"),
+        rust_to_cpp_converter: Rc::from("rust_string_to_cpp_string"),
+        original_type: record.clone().into(),
+    })
+}
+
+fn map_record_to_bridge_type(
+    db: &dyn BindingsGenerator,
+    record: &Record,
+) -> Option<Result<RsTypeKind>> {
+    if is_basic_string_char(db, record) {
+        Some(create_string_bridge_type(record))
+    } else {
+        None
+    }
+}
+
+fn map_alias_to_bridge_type(type_alias: &RsTypeKind) -> Option<Result<RsTypeKind>> {
+    match type_alias {
+        RsTypeKind::TypeAlias { underlying_type, .. } => match underlying_type.as_ref() {
+            RsTypeKind::Record { record, .. }
+            | RsTypeKind::BridgeType { original_type: record, .. } => {
+                if record.cc_preferred_name.as_ref() == "std::string" {
+                    Some(create_string_bridge_type(record))
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 impl RsTypeKind {
     pub fn new_type_alias(db: &dyn BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<Self> {
         let ir = db.ir();
@@ -407,7 +519,11 @@ impl RsTypeKind {
             ir.namespace_qualifier(&type_alias)?,
             rs_imported_crate_name(&type_alias.owning_target, &ir),
         ));
-        Ok(RsTypeKind::TypeAlias { type_alias, crate_path, underlying_type })
+        let result = RsTypeKind::TypeAlias { type_alias, crate_path, underlying_type };
+        if let Some(result) = map_alias_to_bridge_type(&result) {
+            return result;
+        }
+        Ok(result)
     }
 
     pub fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>, ir: &IR) -> Result<Self> {
@@ -418,6 +534,9 @@ impl RsTypeKind {
         ));
         let known_generic_monomorphization =
             map_to_supported_generic(db, &record.template_specialization).map(Rc::new);
+        if let Some(result) = map_record_to_bridge_type(db, &record) {
+            return result;
+        }
         Ok(RsTypeKind::Record { record, crate_path, known_generic_monomorphization })
     }
 
@@ -1052,8 +1171,8 @@ impl ToTokens for RsTypeKind {
                 quote! {Option<#t>}
             }
             RsTypeKind::BridgeType { name, .. } => {
-                let ident = make_rs_ident(name);
-                quote! { #ident }
+                let name_parts: Vec<_> = name.split("::").map(make_rs_ident).collect();
+                quote! { #(#name_parts)::* }
             }
             RsTypeKind::TypeMapOverride { name, .. } => {
                 name.parse().expect("Invalid RsType::name in the IR")
@@ -1106,6 +1225,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tests::*;
     use arc_anyhow::Result;
     use googletest::prelude::*;
     use token_stream_matchers::assert_rs_matches;
@@ -1216,5 +1336,91 @@ mod tests {
             assert_eq!(missing_features, CrubitFeature::Experimental | CrubitFeature::Supported);
             assert_eq!(reason, "references are not supported");
         }
+    }
+
+    #[gtest]
+    fn test_basic_string_check_succeeds() -> Result<()> {
+        let db = db_from_cc(
+            r#"
+            namespace std{
+            template <typename T, typename char_traits, typename allocator>
+            class basic_string {
+             public:
+               int x;
+            };
+            
+            template <typename T>
+            class char_traits {
+             public:
+               int x;
+            };
+            
+            template <typename T>
+            class allocator {
+             public:
+               int x;
+            };
+            using char_specialization = char_traits<char>;
+            using allocator_spec = allocator<char>;
+            }  // namespace std
+            void UseBasicString(std::basic_string<char, std::char_traits<char>, std::allocator<char>>& s);
+            "#,
+        )?;
+        let ir = db.ir();
+
+        let record = ir
+            .records()
+            .find(|r| {
+                r.template_specialization.is_some()
+                    && r.template_specialization.as_ref().unwrap().template_name.to_string()
+                        == "std::basic_string".to_string()
+            })
+            .unwrap();
+
+        assert_eq!(is_basic_string_char(&db, record), true);
+        Ok(())
+    }
+
+    #[gtest]
+    fn test_basic_string_check_fails() -> Result<()> {
+        let db = db_from_cc(
+            r#"
+            namespace std{
+            template <typename T, typename char_traits, typename allocator>
+            class basic_string {
+             public:
+               int x;
+            };
+            
+            template <typename T>
+            class char_traits {
+             public:
+               int x;
+            };
+            
+            template <typename T>
+            class allocator {
+             public:
+               int x;
+            };
+            using char_specialization = char_traits<char>;
+            using allocator_spec = allocator<int>;
+            }  // namespace std
+            void UseIncorrectBasicString(std::basic_string<char, std::char_traits<char>, std::allocator<int>>& s);
+            "#,
+        )?;
+        let ir = db.ir();
+
+        let record = ir
+            .records()
+            .find(|r| {
+                r.template_specialization.is_some()
+                    && r.template_specialization.as_ref().unwrap().template_name.to_string()
+                        == "std::basic_string".to_string()
+            })
+            .unwrap();
+
+        assert_eq!(is_basic_string_char(&db, record), false);
+        Ok(())
     }
 }

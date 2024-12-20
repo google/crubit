@@ -1349,6 +1349,13 @@ impl IR {
         })
     }
 
+    pub fn type_aliases(&self) -> impl Iterator<Item = &Rc<TypeAlias>> {
+        self.items().filter_map(|item| match item {
+            Item::TypeAlias(type_alias) => Some(type_alias),
+            _ => None,
+        })
+    }
+
     pub fn records(&self) -> impl Iterator<Item = &Rc<Record>> {
         self.items().filter_map(|item| match item {
             Item::Record(func) => Some(func),
