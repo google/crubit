@@ -255,6 +255,21 @@ static SourceLocation includePrecedingCVRQualifiers(
   return Begin.getLocWithOffset(OffsetForEscapedNewline);
 }
 
+static bool isComplexDeclarator(const Type *T) {
+  if (T == nullptr) return false;
+  while (T->isArrayType()) {
+    T = T->getArrayElementTypeNoTypeQual();
+    if (T->isPointerType()) return true;
+  }
+  if (T->isPointerType()) {
+    if (T->getPointeeType()->isArrayType() ||
+        T->getPointeeType()->isFunctionType())
+      return true;
+    return isComplexDeclarator(T->getPointeeType().getTypePtr());
+  }
+  return false;
+}
+
 // Extracts the source ranges and associated slot values of each eligible type
 // within `Loc`, accounting for (nested) qualifiers. Guarantees that each source
 // range is eligible for editing, including that its begin and end locations are
@@ -298,12 +313,21 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     }
 
     SourceRange SR = MaybeLoc->getSourceRange();
-    std::optional<CharSourceRange> R =
-        tooling::getFileRange(CharSourceRange::getTokenRange(SR), Context,
-                              /*IncludeMacroExpansion=*/true);
-    // If our first attempt at getting a file range failed, and the range is
-    // spelled entirely within a macro, try using the spelling locations. This
-    // gives us a chance of being able to edit the macro definition
+    std::optional<CharSourceRange> R;
+    bool IsComplexDeclarator = isComplexDeclarator(MaybeLoc->getTypePtr());
+    // For complex declarators, prefer a range in a macro definition, since we
+    // can't annotate the type outside the macro if it is defined within one.
+    // For simple pointers, we can and would prefer to annotate outside the
+    // macro if the entire macro definition is the type, but this won't compile
+    // for complex declarators.
+    if (!IsComplexDeclarator) {
+      R = tooling::getFileRange(CharSourceRange::getTokenRange(SR), Context,
+                                /*IncludeMacroExpansion=*/true);
+    }
+    // If our first attempt at getting a file range failed or the type is a
+    // complex declarator, and the range is spelled entirely within a macro, try
+    // using the spelling locations. This gives us a chance of being able to
+    // edit the macro definition
     if (!R && SR.getBegin().isMacroID() && SR.getEnd().isMacroID()) {
       SourceLocation SpellingBegin = SM.getSpellingLoc(SR.getBegin());
       SourceLocation SpellingEnd = SM.getSpellingLoc(SR.getEnd());
@@ -311,6 +335,10 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
       R = tooling::getFileRange(CharSourceRange::getTokenRange(
                                     SourceRange(SpellingBegin, SpellingEnd)),
                                 Context,
+                                /*IncludeMacroExpansion=*/true);
+    }
+    if (!R && IsComplexDeclarator) {
+      R = tooling::getFileRange(CharSourceRange::getTokenRange(SR), Context,
                                 /*IncludeMacroExpansion=*/true);
     }
     if (!R) continue;
@@ -367,14 +395,16 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
       // to the entire type range, then we will not set the offset after the
       // star.
       //
-      // This will result in the end offset being used to insert any annotation,
-      // which will fail to compile for complex declarator cases defined as
-      // macros, but avoids placing the annotation inside the macro definition
-      // for simple pointers. Avoiding annotating all uses of the macro with the
-      // nullability appropriate for just this usage is more important than
-      // being able to annotate these rare cases of complex declarator types
-      // defined inside a macro.
-      if (StarLoc >= R->getBegin() && StarLoc < R->getEnd()) {
+      // This will result in the end offset being used to insert any annotation.
+      //
+      // This works well for simple pointers. For complex declarators, we
+      // shouldn't hit the case of the start not being inside the range, because
+      // we should be using the macro definition range. If we do still hit that
+      // case (in debug), we want to fail loudly and fix it.
+      assert(StarLoc.isInvalid() || !IsComplexDeclarator ||
+             StarLoc >= R->getBegin() && StarLoc < R->getEnd());
+      if (!StarLoc.isInvalid() && StarLoc >= R->getBegin() &&
+          StarLoc < R->getEnd()) {
         Range.Range.set_offset_after_star(
             SM.getFileOffset(StarLoc.getLocWithOffset(1)));
       }

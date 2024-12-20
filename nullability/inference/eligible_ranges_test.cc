@@ -1514,17 +1514,104 @@ TEST(OffsetAfterStarTest, StarInMacroAtEndOfDefinition) {
 
 TEST(OffsetAfterStarTest, StarInFunctionPointerMacro) {
   auto Input = Annotations(R"(
-  #define FUNCTION_POINTER void(*)(int)
+  #define FUNCTION_POINTER [[void(*^)(int)]]
 
-  void target($one[[FUNCTION_POINTER]], $two[[FUNCTION_POINTER]]);
+  void target(FUNCTION_POINTER, FUNCTION_POINTER);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(AllOf(eligibleRange(1, Input.range("one")),
+            UnorderedElementsAre(AllOf(eligibleRange(1, Input.range()),
+                                       offsetAfterStar(Input.point())),
+                                 AllOf(eligibleRange(2, Input.range()),
+                                       offsetAfterStar(Input.point())))));
+}
+
+TEST(OffsetAfterStarTest, StarInArrayPointerMacro) {
+  // Can't use ranges marked by [[...]] around arrays because of the adjacent
+  // closing square bracket at the end of the array length and the unfortunate
+  // syntax of Annotations, so use individual points.
+  auto Input = Annotations(R"(
+  #define ARRAY_POINTER $begin^int(*$after_star^)[]$end^
+
+  void target(ARRAY_POINTER, ARRAY_POINTER);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(1, Annotations::Range(Input.point("begin"),
+                                                          Input.point("end"))),
+                      offsetAfterStar(Input.point("after_star"))),
+                AllOf(eligibleRange(2, Annotations::Range(Input.point("begin"),
+                                                          Input.point("end"))),
+                      offsetAfterStar(Input.point("after_star"))))));
+}
+
+TEST(OffsetAfterStarTest, StarInPointerArrayMacro) {
+  auto Input = Annotations(R"(
+  #define POINTER_ARRAY [[int*]][]
+
+  void target(POINTER_ARRAY, POINTER_ARRAY);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(AllOf(eligibleRange(std::nullopt, Input.range()),
+                                     offsetAfterStar(Input.range().End)),
+                               AllOf(eligibleRange(std::nullopt, Input.range()),
+                                     offsetAfterStar(Input.range().End)))));
+}
+
+TEST(OffsetAfterStarTest, StarInFunctionPointerAlias) {
+  auto Input = Annotations(R"(
+  typedef void(*FunctionPointer)(int);
+  using FunctionPointerUsing = void(*)(int);
+
+  void target($typedef[[FunctionPointer]], $using[[FunctionPointerUsing]]);
+  )");
+  // It's legal to place the annotation immediately after an alias for a complex
+  // declarator type, instead of immediately after the `*`, and it allows for
+  // more precise annotations, so we supply the range for doing so.
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(AllOf(eligibleRange(1, Input.range("typedef")),
                                        noOffsetAfterStar()),
-                                 AllOf(eligibleRange(2, Input.range("two")),
+                                 AllOf(eligibleRange(2, Input.range("using")),
                                        noOffsetAfterStar()))));
+}
+
+TEST(OffsetAfterStarTest, StarInArrayPointerAlias) {
+  auto Input = Annotations(R"(
+  typedef int(*ArrayPointer)[];
+  using ArrayPointerUsing = int(*)[];
+
+  void target($typedef[[ArrayPointer]], $using[[ArrayPointerUsing]]);
+  )");
+  // It's legal to place the annotation immediately after an alias for a complex
+  // declarator type, instead of immediately after the `*`, and it allows for
+  // more precise annotations, so we supply the range for doing so.
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(AllOf(eligibleRange(1, Input.range("typedef")),
+                                       noOffsetAfterStar()),
+                                 AllOf(eligibleRange(2, Input.range("using")),
+                                       noOffsetAfterStar()))));
+}
+
+TEST(OffsetAfterStarTest, StarInPointerArrayAlias) {
+  auto Input = Annotations(R"(
+  typedef int* PointerArray[];
+  using PointerArrayUsing = int*[];
+
+  void target(PointerArray, PointerArrayUsing);
+  )");
+  // We don't dig into the alias for sub-ranges, and the array types are not
+  // eligible pointers.
+  EXPECT_THAT(getFunctionRanges(Input.code()), IsEmpty());
 }
 
 TEST(OffsetAfterStarTest, StarInFunctionPointerInMacroArg) {
@@ -1532,6 +1619,19 @@ TEST(OffsetAfterStarTest, StarInFunctionPointerInMacroArg) {
   #define MACRO(ARG) void target(ARG)
 
   MACRO([[void (*^)(int)]]);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(AllOf(eligibleRange(1, Input.range()),
+                                       offsetAfterStar(Input.point())))));
+}
+
+TEST(OffsetAfterStarTest, StarInFunctionPointerDeclEntirelyInMacro) {
+  auto Input = Annotations(R"(
+  #define MACRO void target([[void (*^)(int)]])
+
+  MACRO;
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
