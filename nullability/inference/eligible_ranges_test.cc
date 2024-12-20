@@ -1264,8 +1264,6 @@ TEST(ExistingAnnotationLengthTest, ClangAttribute) {
                       preRangeLength(0), postRangeLength(9)))));
 }
 
-// TODO: b/381939395 - Removing post-star annotations from complex declarators
-// is not yet supported.
 TEST(ExistingAnnotationLengthTest, ClangAttributeWithFunctionPointer) {
   auto Input = Annotations(R"(
   void target([[void (* _Nonnull P)(int)]]);
@@ -1275,14 +1273,11 @@ TEST(ExistingAnnotationLengthTest, ClangAttributeWithFunctionPointer) {
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
                 AllOf(eligibleRange(1, Input.range(""), Nullability::NONNULL),
-                      noPreRangeLength(), noPostRangeLength()))));
+                      preRangeLength(0), postRangeLength(9)))));
 }
 
-// Removing absl template annotations from complex declarators is partially
-// supported. The pre- and post-range lengths are reported, but this does not
-// provide enough information to rewrite the type without the template alias.
-// TODO: b/364910254 - Stop reporting pre- and post-range lengths for complex
-// declarators, so that we don't facilitate producing edits that won't compile.
+// Removing absl template annotations from complex declarators is not supported.
+// These cases are so rare that we don't plan to support this behavior.
 TEST(ExistingAnnotationLengthTest, AbslTemplateWithFunctionPointer) {
   auto Input = Annotations(R"(
   namespace absl {
@@ -1297,7 +1292,7 @@ TEST(ExistingAnnotationLengthTest, AbslTemplateWithFunctionPointer) {
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
                 AllOf(eligibleRange(1, Input.range(""), Nullability::NONNULL),
-                      preRangeLength(14), postRangeLength(1)))));
+                      noPreRangeLength(), noPostRangeLength()))));
 }
 
 MATCHER_P(offsetAfterStar, Point, "") {

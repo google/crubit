@@ -174,29 +174,32 @@ static std::optional<unsigned> getEndOffsetOfImmediatePostStarAnnotation(
 }
 
 /// If the range specified by `Begin` and `End` is immediately wrapped in an
-/// absl nullability annotation or immediately followed by a clang nullability
-/// attribute, set the pre- and post-range lengths for that
-/// annotation/attribute.
+/// absl nullability annotation and is not a complex declarator, or if
+/// `EndOfStarOffset` is immediately followed by a clang nullability attribute,
+/// set the pre- and post-range lengths for that annotation/attribute.
 static void addAnnotationPreAndPostRangeLength(
-    SourceLocation Begin, SourceLocation End, unsigned BeginOffset,
-    unsigned EndOffset, const FileID &DeclFID, const SourceManager &SM,
+    SourceLocation Begin, SourceLocation End, SourceLocation EndOfStar,
+    unsigned BeginOffset, unsigned EndOffset, unsigned EndOfStarOffset,
+    bool IsComplexDeclarator, const FileID &DeclFID, const SourceManager &SM,
     const LangOptions &LangOpts, SlotRange &Range) {
-  auto [AnnotationStartOffset, AnnotationEndOffset] =
-      getStartAndEndOffsetsOfImmediateAbslAnnotation(Begin, End, SM, LangOpts,
-                                                     DeclFID);
-  if (AnnotationStartOffset && AnnotationEndOffset) {
-    Range.set_existing_annotation_pre_range_length(BeginOffset -
-                                                   *AnnotationStartOffset);
-    Range.set_existing_annotation_post_range_length(*AnnotationEndOffset -
-                                                    EndOffset);
-  } else if (std::optional<unsigned> AttributeEndOffset =
-                 // TODO: b/381939395 - Pass the star location instead of `End`,
-                 // to support complex declarators.
-             getEndOffsetOfImmediatePostStarAnnotation(End, SM, LangOpts,
-                                                       DeclFID)) {
+  if (!IsComplexDeclarator) {
+    auto [AnnotationStartOffset, AnnotationEndOffset] =
+        getStartAndEndOffsetsOfImmediateAbslAnnotation(Begin, End, SM, LangOpts,
+                                                       DeclFID);
+    if (AnnotationStartOffset && AnnotationEndOffset) {
+      Range.set_existing_annotation_pre_range_length(BeginOffset -
+                                                     *AnnotationStartOffset);
+      Range.set_existing_annotation_post_range_length(*AnnotationEndOffset -
+                                                      EndOffset);
+      return;
+    }
+  }
+  if (std::optional<unsigned> AttributeEndOffset =
+          getEndOffsetOfImmediatePostStarAnnotation(EndOfStar, SM, LangOpts,
+                                                    DeclFID)) {
     Range.set_existing_annotation_pre_range_length(0);
     Range.set_existing_annotation_post_range_length(*AttributeEndOffset -
-                                                    EndOffset);
+                                                    EndOfStarOffset);
   }
 }
 
@@ -342,6 +345,8 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
                                 /*IncludeMacroExpansion=*/true);
     }
     if (!R) continue;
+    assert(R->getBegin().isValid() && R->getEnd().isValid());
+    if (R->getBegin().isInvalid() || R->getEnd().isInvalid()) continue;
 
     // For raw pointers, expand the range to include any preceding CVR
     // qualifiers. These are qualifiers of the pointee type, so we want to
@@ -374,11 +379,9 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
 
     EligibleRange &Range = Ranges.emplace_back(SlotInContext);
     initSlotRange(Range.Range, BeginOffset, EndOffset, Nullability);
-    if (Nullability)
-      addAnnotationPreAndPostRangeLength(Begin, R->getEnd(), BeginOffset,
-                                         EndOffset, DeclFID, SM, LangOpts,
-                                         Range.Range);
 
+    std::optional<SourceLocation> EndOfStarLoc;
+    std::optional<unsigned> EndOfStarOffset;
     // For raw pointers, we want to add any post-star annotations immediately
     // after the `*` instead of at the end of the range. These locations are
     // different in the case of complex declarators, such as pointers to
@@ -405,9 +408,20 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
              StarLoc >= R->getBegin() && StarLoc < R->getEnd());
       if (!StarLoc.isInvalid() && StarLoc >= R->getBegin() &&
           StarLoc < R->getEnd()) {
-        Range.Range.set_offset_after_star(
-            SM.getFileOffset(StarLoc.getLocWithOffset(1)));
+        EndOfStarLoc = StarLoc.getLocWithOffset(1);
+        EndOfStarOffset = SM.getFileOffset(*EndOfStarLoc);
+        Range.Range.set_offset_after_star(*EndOfStarOffset);
       }
+    }
+
+    if (Nullability) {
+      bool UseEndOfStarLoc =
+          EndOfStarLoc && EndOfStarLoc->isValid() && EndOfStarOffset;
+      addAnnotationPreAndPostRangeLength(
+          Begin, R->getEnd(), UseEndOfStarLoc ? *EndOfStarLoc : R->getEnd(),
+          BeginOffset, EndOffset,
+          UseEndOfStarLoc ? *EndOfStarOffset : EndOffset, IsComplexDeclarator,
+          DeclFID, SM, LangOpts, Range.Range);
     }
   }
 }
