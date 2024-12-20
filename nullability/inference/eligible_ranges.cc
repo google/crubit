@@ -64,10 +64,8 @@ static Nullability toProtoNullability(NullabilityKind Kind) {
   llvm_unreachable("Unhandled NullabilityKind");
 }
 
-static void initSlotRange(SlotRange &R, SlotNum SlotInType, unsigned Begin,
-                          unsigned End,
+static void initSlotRange(SlotRange &R, unsigned Begin, unsigned End,
                           std::optional<NullabilityKind> Nullability) {
-  R.set_slot_in_type(SlotInType);
   R.set_begin(Begin);
   R.set_end(End);
   if (Nullability) {
@@ -347,7 +345,7 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
             : std::nullopt;
 
     EligibleRange &Range = Ranges.emplace_back(SlotInContext);
-    initSlotRange(Range.Range, SlotInLoc, BeginOffset, EndOffset, Nullability);
+    initSlotRange(Range.Range, BeginOffset, EndOffset, Nullability);
     if (Nullability)
       addAnnotationPreAndPostRangeLength(Begin, R->getEnd(), BeginOffset,
                                          EndOffset, DeclFID, SM, LangOpts,
