@@ -1,27 +1,28 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#![feature(allocator_api)]
-#![feature(cfg_sanitize)]
-use std::borrow::Borrow;
-use std::borrow::BorrowMut;
-use std::cmp::Ordering;
-use std::collections::TryReserveError;
+extern crate alloc;
+use alloc::borrow::Borrow;
+use alloc::borrow::BorrowMut;
+use core::cmp::Ordering;
+
+use alloc::collections::TryReserveError;
+use alloc::vec::Vec;
+use core::convert::TryInto;
 #[cfg(sanitize = "address")]
-use std::ffi::c_void;
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::hash::Hasher;
-use std::mem::ManuallyDrop;
-use std::ops::RangeBounds;
-use std::ops::{Deref, DerefMut};
-use std::ops::{Index, IndexMut};
-use std::slice;
-use std::slice::SliceIndex;
+use core::ffi::c_void;
+use core::fmt::Debug;
+use core::hash::Hash;
+use core::hash::Hasher;
+use core::iter::FromIterator;
+use core::mem::ManuallyDrop;
+use core::ops::RangeBounds;
+use core::ops::{Deref, DerefMut};
+use core::ops::{Index, IndexMut};
+use core::slice;
+use core::slice::SliceIndex;
 
-use cc_std::crubit_cc_std_internal::std_allocator as cpp_std_allocator;
-
-mod vector_partial_eq;
+use crate::crubit_cc_std_internal::std_allocator as cpp_std_allocator;
 
 extern "C" {
     // https://github.com/llvm/llvm-project/blob/9d0616ce52fc2a75c8e4808adec41d5189f4240c/compiler-rt/lib/sanitizer_common/sanitizer_interface_internal.h#L70
@@ -188,9 +189,9 @@ impl<T> Vector<T> {
     /// - `new_len` must be less than or equal to [`capacity()`].
     /// - The elements at `old_len..new_len` must be initialized.
     ///
-    /// See [`std::vec::Vec::set_len`] for more details.
+    /// See [`alloc::vec::Vec::set_len`] for more details.
     ///
-    /// The difference with `std::vec::Vec::set_len` is that the tail of the
+    /// The difference with `alloc::vec::Vec::set_len` is that the tail of the
     /// Vector is poisoned with ASan, so when writing to the tail for
     /// avoiding ASan errors [`Vector::prepare_to_write_into_tail`] must be
     /// called first:
@@ -227,7 +228,7 @@ impl<T> Vector<T> {
         // that allows ASan to detect reads and writes in the uninitialized tail of the
         // std::vector's storage (between the end iterator and capacity).
         //
-        // Rust std::vec::Vec intentionally does not support this ASan annotation
+        // Rust alloc::vec::Vec intentionally does not support this ASan annotation
         // feature, because it allows users to initialize the elements in the
         // tail of the storage and then call set_len to tell the Vec about new
         // elements.
@@ -400,7 +401,7 @@ impl<T: Unpin> Vector<T> {
     pub fn into_vec(mut self) -> Vec<T> {
         let mut result = Vec::<T>::with_capacity(self.len());
         unsafe {
-            std::ptr::copy_nonoverlapping(self.as_ptr(), result.as_mut_ptr(), self.len());
+            core::ptr::copy_nonoverlapping(self.as_ptr(), result.as_mut_ptr(), self.len());
             result.set_len(self.len());
 
             // The elements were moved out. Now mark `self` empty, without calling drop on
@@ -424,7 +425,7 @@ impl<T: Unpin> Vector<T> {
             if self.begin.is_null() {
                 &[]
             } else {
-                std::slice::from_raw_parts(self.begin, self.len())
+                core::slice::from_raw_parts(self.begin, self.len())
             }
         }
     }
@@ -434,7 +435,7 @@ impl<T: Unpin> Vector<T> {
             if self.begin.is_null() {
                 &mut []
             } else {
-                std::slice::from_raw_parts_mut(self.begin, self.len())
+                core::slice::from_raw_parts_mut(self.begin, self.len())
             }
         }
     }
@@ -507,7 +508,7 @@ impl<T: Unpin> BorrowMut<[T]> for Vector<T> {
 }
 
 impl<T: Unpin + Debug> Debug for Vector<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_list().entries(self.as_slice()).finish()
     }
 }
@@ -553,7 +554,7 @@ impl<T> Deref for Vector<T> {
         if self.is_empty() {
             &[]
         } else {
-            unsafe { std::slice::from_raw_parts(self.begin, self.len()) }
+            unsafe { core::slice::from_raw_parts(self.begin, self.len()) }
         }
     }
 }
@@ -563,7 +564,7 @@ impl<T: Unpin> DerefMut for Vector<T> {
         if self.is_empty() {
             &mut []
         } else {
-            unsafe { std::slice::from_raw_parts_mut(self.begin, self.len()) }
+            unsafe { core::slice::from_raw_parts_mut(self.begin, self.len()) }
         }
     }
 }
@@ -657,22 +658,23 @@ unsafe fn create_vec_from_raw_parts<T>(
 }
 
 mod iter {
-    use crate::cpp_std_allocator;
-    use crate::Vector;
-    use std::fmt;
-    use std::fmt::Debug;
-    use std::iter::FusedIterator;
+    use super::alloc;
+    use super::cpp_std_allocator;
+    use super::Vector;
+    use core::fmt;
+    use core::fmt::Debug;
+    use core::iter::FusedIterator;
     /// An iterator that moves out of a vector.
     ///
-    /// This type is currently a wrapper around `std::vec::IntoIter`,
+    /// This type is currently a wrapper around `alloc::vec::IntoIter`,
     /// however users should not depend on it, and the wrapped iterator
     /// should not be made public. If the current implementation
     /// strategy stops working, the wrapped iterator will be replaced with
     /// a more complex implementation.
-    pub struct VectorIntoIter<T>(std::vec::IntoIter<T, cpp_std_allocator::StdAllocator>);
+    pub struct VectorIntoIter<T>(alloc::vec::IntoIter<T, cpp_std_allocator::StdAllocator>);
 
     impl<T> VectorIntoIter<T> {
-        pub fn new(v: std::vec::IntoIter<T, cpp_std_allocator::StdAllocator>) -> Self {
+        pub fn new(v: alloc::vec::IntoIter<T, cpp_std_allocator::StdAllocator>) -> Self {
             VectorIntoIter(v)
         }
 
@@ -719,7 +721,7 @@ mod iter {
     }
 
     impl<T: fmt::Debug> Debug for VectorIntoIter<T> {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             self.0.fmt(f)
         }
     }
@@ -762,6 +764,7 @@ impl<T: Unpin> IntoIterator for Vector<T> {
     type Item = T;
     type IntoIter = VectorIntoIter<T>;
     fn into_iter(self) -> Self::IntoIter {
+        #[allow(unused_unsafe)]
         unsafe {
             self.asan_unpoison_tail();
             let v = create_vec_from_raw_parts(self.begin, self.len(), self.capacity());
@@ -799,8 +802,8 @@ impl<T: Unpin> FromIterator<T> for Vector<T> {
     }
 }
 
-impl<T: Unpin> From<Vector<T>> for std::vec::Vec<T> {
-    fn from(v: Vector<T>) -> std::vec::Vec<T> {
+impl<T: Unpin> From<Vector<T>> for alloc::vec::Vec<T> {
+    fn from(v: Vector<T>) -> alloc::vec::Vec<T> {
         v.into_vec()
     }
 }
@@ -830,7 +833,7 @@ impl<T: Unpin> From<Vec<T, cpp_std_allocator::StdAllocator>> for Vector<T> {
         // It is safe since the memory is allocated with `Vec<T, StdAllocator>`.
         unsafe {
             result.set_begin_len_capacity(v.as_mut_ptr(), v.len(), v.capacity());
-            std::mem::forget(v);
+            core::mem::forget(v);
 
             result.asan_poison_tail();
             result

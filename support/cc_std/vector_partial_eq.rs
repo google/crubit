@@ -1,8 +1,10 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-use super::Vector;
-use std::alloc::Allocator;
+extern crate alloc;
+use crate::std::Vector;
+use alloc::vec::Vec;
+use core::alloc::Allocator;
 
 // The implementation of PartialEq is similar to the one for the std::vec::Vec.
 // https://doc.rust-lang.org/src/alloc/vec/partial_eq.rs.html

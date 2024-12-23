@@ -2,7 +2,6 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
@@ -128,6 +127,8 @@ additional_rust_srcs_for_crubit_bindings(
     srcs = [
         "string.rs",
         "unique_ptr.rs",
+        "vector.rs",
+        "vector_partial_eq.rs",
     ],
     namespace_path = "std",
 )
@@ -159,21 +160,6 @@ cc_library(
         "//features:experimental",
         ":cpp_std_string_rust",
     ],
-    visibility = [
-        "//visibility:public",
-    ],
-)
-
-rust_library(
-    name = "vector",
-    srcs = [
-        "vector.rs",
-        "vector_partial_eq.rs",
-    ],
-    # LINT.IfChange
-    cc_deps = ["//support/cc_std"],
-    rustc_flags = ["-Zallow-features=allocator_api,cfg_sanitize"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
         "//visibility:public",
     ],
