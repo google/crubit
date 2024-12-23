@@ -914,7 +914,9 @@ mod tests {
     use arc_anyhow::Result;
     use googletest::prelude::*;
     use ir_testing::with_lifetime_macros;
-    use token_stream_matchers::{assert_cc_matches, assert_rs_matches, assert_rs_not_matches};
+    use token_stream_matchers::{
+        assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
+    };
 
     #[gtest]
     fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
@@ -2729,6 +2731,59 @@ mod tests {
             }
         );
         assert_rs_not_matches!(rs_api, quote! {pub fn field});
+        Ok(())
+    }
+
+    // TODO(b/200067824): These should generate nested types.
+    #[gtest]
+    fn test_nested_type_definitions() -> Result<()> {
+        for nested_type in ["enum NotPresent {};", "struct NotPresent {};", "struct NotPresent;"] {
+            let ir = ir_from_cc(&format!(
+                r#"
+                    struct SomeStruct final {{
+                        {nested_type}
+                    }};
+                    SomeStruct::NotPresent* AlsoNotPresent();
+                "#
+            ))?;
+            let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+            assert_rs_not_matches!(rs_api, quote! { NotPresent });
+            assert_rs_not_matches!(rs_api, quote! { AlsoNotPresent });
+        }
+        Ok(())
+    }
+
+    /// Unlike other nested type definitions, typedefs can use the aliased type
+    /// instead.
+    #[gtest]
+    fn test_typedef_member() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            struct SomeStruct final {
+              typedef int Type;
+            };
+            inline SomeStruct::Type Function() {return 0;}
+        "#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        // TODO(b/200067824): This should use the alias's real name in Rust, as well.
+        assert_rs_matches!(rs_api, quote! { pub fn Function() -> ::core::ffi::c_int { ... } },);
+
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" SomeStruct::Type __rust_thunk___Z8Functionv(){ return Function(); }
+            },
+        );
+        Ok(())
+    }
+
+    #[gtest]
+    fn test_struct_from_other_target() -> Result<()> {
+        let ir = ir_from_cc_dependency("// intentionally empty", "struct SomeStruct {};")?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_not_matches!(rs_api, quote! { SomeStruct });
+        assert_cc_not_matches!(rs_api_impl, quote! { SomeStruct });
         Ok(())
     }
 }

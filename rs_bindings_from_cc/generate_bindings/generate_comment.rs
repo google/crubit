@@ -102,3 +102,167 @@ pub fn generate_comment(comment: &Comment) -> Result<GeneratedItem> {
     let text = comment.text.as_ref();
     Ok(quote! { __COMMENT__ #text }.into())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use arc_anyhow::Result;
+    use error_report::ErrorReport;
+    use googletest::prelude::*;
+    use ir::ItemId;
+    use ir_testing::make_ir_from_items;
+    use token_stream_matchers::assert_rs_matches;
+
+    #[gtest]
+    fn test_generate_doc_comment_with_no_comment_with_no_source_loc_with_source_loc_enabled() {
+        let actual = generate_doc_comment(None, None, SourceLocationDocComment::Enabled);
+        assert!(actual.is_empty());
+    }
+
+    #[gtest]
+    fn test_generate_doc_comment_with_no_comment_with_source_loc_with_source_loc_enabled() {
+        let actual = generate_doc_comment(
+            None,
+            Some("google3/some/header;l=11"),
+            SourceLocationDocComment::Enabled,
+        );
+        assert_rs_matches!(actual, quote! {#[doc = " google3/some/header;l=11"]});
+    }
+
+    #[gtest]
+    fn test_generate_doc_comment_with_comment_with_source_loc_with_source_loc_enabled() {
+        let actual = generate_doc_comment(
+            Some("Some doc comment"),
+            Some("google3/some/header;l=12"),
+            SourceLocationDocComment::Enabled,
+        );
+        assert_rs_matches!(
+            actual,
+            quote! {#[doc = " Some doc comment\n \n google3/some/header;l=12"]}
+        );
+    }
+
+    #[gtest]
+    fn test_generate_doc_comment_with_comment_with_no_source_loc_with_source_loc_enabled() {
+        let actual =
+            generate_doc_comment(Some("Some doc comment"), None, SourceLocationDocComment::Enabled);
+        assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
+    }
+
+    #[gtest]
+    fn test_no_generate_doc_comment_with_no_comment_with_no_source_loc_with_source_loc_disabled() {
+        let actual = generate_doc_comment(None, None, SourceLocationDocComment::Disabled);
+        assert!(actual.is_empty());
+    }
+
+    #[gtest]
+    fn test_no_generate_doc_comment_with_no_comment_with_source_loc_with_source_loc_disabled() {
+        let actual = generate_doc_comment(
+            None,
+            Some("google3/some/header;l=13"),
+            SourceLocationDocComment::Disabled,
+        );
+        assert!(actual.is_empty());
+    }
+
+    #[gtest]
+    fn test_no_generate_doc_comment_with_comment_with_source_loc_with_source_loc_disabled() {
+        let actual = generate_doc_comment(
+            Some("Some doc comment"),
+            Some("google3/some/header;l=14"),
+            SourceLocationDocComment::Disabled,
+        );
+        assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
+    }
+
+    #[gtest]
+    fn test_no_generate_doc_comment_with_comment_with_no_source_loc_with_source_loc_disabled() {
+        let actual = generate_doc_comment(
+            Some("Some doc comment"),
+            None,
+            SourceLocationDocComment::Disabled,
+        );
+        assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
+    }
+
+    struct TestItem {
+        source_loc: Option<Rc<str>>,
+    }
+    impl ir::GenericItem for TestItem {
+        fn id(&self) -> ItemId {
+            ItemId::new_for_testing(123)
+        }
+        fn debug_name(&self, _: &IR) -> Rc<str> {
+            "test_item".into()
+        }
+        fn source_loc(&self) -> Option<Rc<str>> {
+            self.source_loc.clone()
+        }
+        fn unknown_attr(&self) -> Option<Rc<str>> {
+            None
+        }
+    }
+
+    #[gtest]
+    fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
+        let db = Database::new(
+            Rc::new(make_ir_from_items([])),
+            Rc::new(ErrorReport::new()),
+            SourceLocationDocComment::Enabled,
+        );
+        let actual = generate_unsupported(
+            &db,
+            &UnsupportedItem::new_with_static_message(
+                &db.ir(),
+                &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
+                "unsupported_message",
+            ),
+        )?;
+        let expected = "Generated from: google3/some/header;l=1\nError while generating bindings for item 'test_item':\nunsupported_message";
+        assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+        Ok(())
+    }
+
+    /// Not all items currently have source_loc(), e.g. comments.
+    ///
+    /// For these, we omit the mention of the location.
+    #[gtest]
+    fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
+        let db = Database::new(
+            Rc::new(make_ir_from_items([])),
+            Rc::new(ErrorReport::new()),
+            SourceLocationDocComment::Enabled,
+        );
+        let actual = generate_unsupported(
+            &db,
+            &UnsupportedItem::new_with_static_message(
+                &db.ir(),
+                &TestItem { source_loc: None },
+                "unsupported_message",
+            ),
+        )?;
+        let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
+        assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+        Ok(())
+    }
+
+    #[gtest]
+    fn test_generate_unsupported_item_with_source_loc_disabled() -> Result<()> {
+        let db = Database::new(
+            Rc::new(make_ir_from_items([])),
+            Rc::new(ErrorReport::new()),
+            SourceLocationDocComment::Disabled,
+        );
+        let actual = generate_unsupported(
+            &db,
+            &UnsupportedItem::new_with_static_message(
+                &db.ir(),
+                &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
+                "unsupported_message",
+            ),
+        )?;
+        let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
+        assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+        Ok(())
+    }
+}
