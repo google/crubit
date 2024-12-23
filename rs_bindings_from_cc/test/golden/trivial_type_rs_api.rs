@@ -10,6 +10,7 @@
 #![feature(
     allocator_api,
     arbitrary_self_types,
+    cfg_sanitize,
     custom_inner_attributes,
     negative_impls,
     register_tool

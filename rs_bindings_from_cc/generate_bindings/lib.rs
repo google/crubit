@@ -509,6 +509,7 @@ fn generate_bindings_tokens(
     features.insert(make_rs_ident("custom_inner_attributes"));
     // For the `vector` in `cc_std`.
     features.insert(make_rs_ident("allocator_api"));
+    features.insert(make_rs_ident("cfg_sanitize"));
 
     for top_level_item_id in ir.top_level_item_ids() {
         let item =

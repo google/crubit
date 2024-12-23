@@ -96,7 +96,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             owner = ctx.label,
         ),
         # LINT.IfChange
-        rust_flags = ["-Zallow-features=custom_inner_attributes,impl_trait_in_assoc_type,register_tool,negative_impls,vec_into_raw_parts,extern_types,arbitrary_self_types,allocator_api"],
+        rust_flags = ["-Zallow-features=custom_inner_attributes,impl_trait_in_assoc_type,register_tool,negative_impls,vec_into_raw_parts,extern_types,arbitrary_self_types,allocator_api,cfg_sanitize"],
         # LINT.ThenChange(//docs/overview/unstable_features.md)
         output_hash = output_hash,
         force_all_deps_direct = force_all_deps_direct,

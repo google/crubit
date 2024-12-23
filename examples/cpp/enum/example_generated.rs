@@ -7,7 +7,7 @@
 // Features: supported
 
 #![rustfmt::skip]
-#![feature(allocator_api, custom_inner_attributes, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![register_tool(__crubit)]
