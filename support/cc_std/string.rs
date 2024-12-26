@@ -38,7 +38,7 @@ impl Deref for string {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn rust_string_to_cpp_string(x: *const c_void, output: *mut c_void) {
+pub unsafe extern "C" fn rust_string_to_cpp_string(x: *const c_void, output: *mut c_void) {
     let x = unsafe { &*(x as *const string) };
     let bytes = x.data.as_slice();
     let size = bytes.len();
@@ -49,7 +49,7 @@ pub extern "C" fn rust_string_to_cpp_string(x: *const c_void, output: *mut c_voi
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn cpp_string_to_rust_string(input: *const c_void, output: *mut c_void) {
+pub unsafe extern "C" fn cpp_string_to_rust_string(input: *const c_void, output: *mut c_void) {
     unsafe {
         let size = conversion_function_helpers::StringGetSize(input);
         let buffer = conversion_function_helpers::StringGetData(input) as *const u8;
