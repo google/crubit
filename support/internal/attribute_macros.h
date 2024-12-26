@@ -121,32 +121,4 @@
   CRUBIT_INTERNAL_BRIDGE_TYPE_RUST_TO_CPP_CONVERTER(rust_to_cpp)     \
   CRUBIT_INTERNAL_BRIDGE_TYPE_CPP_TO_RUST_CONVERTER(cpp_to_rust)
 
-// Mark a type as deriving a trait.
-//
-// This can be applied to a struct, class, or enum.
-//
-// For example, we have the following C++ struct and its Rust bridge
-// counterpart:
-//
-// ```c++
-// struct
-//   CRUBIT_TRAIT_DERIVE("Copy", "Debug") MyCppStruct {
-//     bool enable_foo;
-// };
-// ```
-//
-// ```rust
-// #[derive(Copy, Debug)]
-// pub struct MyRustStruct {
-//   enable_foo: bool,
-// }
-// ```
-#define CRUBIT_TRAIT_DERIVE(...)                                         \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_internal_trait_derive" __VA_OPT__(, ) \
-                               __VA_ARGS__)
-
-#define CRUBIT_UNSAFE_IMPL(...)                                         \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_internal_unsafe_impl" __VA_OPT__(, ) \
-                               __VA_ARGS__)
-
 #endif  // CRUBIT_SUPPORT_INTERNAL_ATTRIBUTES_H_

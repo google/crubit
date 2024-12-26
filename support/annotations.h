@@ -54,4 +54,54 @@
 // inference.
 #define CRUBIT_UNSAFE_MARK_SAFE CRUBIT_OVERRIDE_UNSAFE(false)
 
+// Marks a type as deriving a trait.
+//
+// This can be applied to a struct, class, or enum.
+//
+// For example, this C++ header:
+//
+// ```c++
+// struct CRUBIT_TRAIT_DERIVE("Debug") MyStruct {
+//     bool enable_foo;
+// };
+// ```
+//
+// Becomes this Rust interface:
+//
+// ```rust
+// #[derive(..., Debug)]
+// pub struct MyStruct {
+//   enable_foo: bool,
+// }
+// ```
+#define CRUBIT_TRAIT_DERIVE(...)                                         \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_internal_trait_derive" __VA_OPT__(, ) \
+                               __VA_ARGS__)
+
+// Marks a type as unsafely implementing a marker trait.
+//
+// This can be applied to a struct, class, or enum.
+//
+// For example, this C++ header:
+//
+// ```c++
+// struct
+//   CRUBIT_UNSAFE_IMPL("Send") MyStruct {
+//     bool enable_foo;
+// };
+// ```
+//
+// Becomes this Rust interface:
+//
+// ```rust
+// pub struct MyStruct {
+//   enable_foo: bool,
+// }
+//
+// unsafe impl Send for MyStruct {}
+// ```
+#define CRUBIT_UNSAFE_IMPL(...)                                         \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_internal_unsafe_impl" __VA_OPT__(, ) \
+                               __VA_ARGS__)
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_
