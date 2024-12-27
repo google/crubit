@@ -86,7 +86,6 @@ config_setting(
         "//third_party/bazel_platforms/cpu:aarch64",
     ],
     visibility = [
-        "//visibility:public",
     ],
 )
 
@@ -96,7 +95,6 @@ config_setting(
         "//third_party/bazel_platforms/cpu:x86_64",
     ],
     visibility = [
-        "//visibility:public",
     ],
 )
 
