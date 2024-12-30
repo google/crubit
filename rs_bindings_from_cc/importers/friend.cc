@@ -33,15 +33,16 @@ std::optional<IR::Item> FriendDeclImporter::Import(
   clang::DeclContext* decl_context = friend_decl->getDeclContext();
   if (!decl_context) {
     return ictx_.ImportUnsupportedItem(
-        friend_decl,
+        friend_decl, UnsupportedItem::Kind::kValue, std::nullopt,
         FormattedError::Static("DeclContext was unexpectedly null"));
   }
   clang::CXXRecordDecl* enclosing_record_decl =
       clang::dyn_cast<clang::CXXRecordDecl>(decl_context);
   if (!enclosing_record_decl) {
     return ictx_.ImportUnsupportedItem(
-        friend_decl, FormattedError::Static(
-                         "DeclContext was unexpectedly not a CXXRecordDecl"));
+        friend_decl, UnsupportedItem::Kind::kValue, std::nullopt,
+        FormattedError::Static(
+            "DeclContext was unexpectedly not a CXXRecordDecl"));
   }
 
   // If `!is_redeclared_outside_of_friend_decl`, then we need to emit a new item

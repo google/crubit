@@ -109,7 +109,7 @@ mod tests {
     use arc_anyhow::Result;
     use error_report::ErrorReport;
     use googletest::prelude::*;
-    use ir::ItemId;
+    use ir::{ItemId, UnsupportedItemKind};
     use ir_testing::make_ir_from_items;
     use token_stream_matchers::assert_rs_matches;
 
@@ -201,6 +201,9 @@ mod tests {
         fn unknown_attr(&self) -> Option<Rc<str>> {
             None
         }
+        fn unsupported_kind(&self) -> UnsupportedItemKind {
+            UnsupportedItemKind::Unnameable
+        }
     }
 
     #[gtest]
@@ -215,6 +218,7 @@ mod tests {
             &UnsupportedItem::new_with_static_message(
                 &db.ir(),
                 &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
+                /* path= */ None,
                 "unsupported_message",
             ),
         )?;
@@ -238,6 +242,7 @@ mod tests {
             &UnsupportedItem::new_with_static_message(
                 &db.ir(),
                 &TestItem { source_loc: None },
+                /* path= */ None,
                 "unsupported_message",
             ),
         )?;
@@ -258,6 +263,7 @@ mod tests {
             &UnsupportedItem::new_with_static_message(
                 &db.ir(),
                 &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
+                /* path= */ None,
                 "unsupported_message",
             ),
         )?;

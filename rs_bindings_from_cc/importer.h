@@ -71,8 +71,12 @@ class Importer final : public ImportContext {
   void ImportDeclsFromDeclContext(
       const clang::DeclContext* decl_context) override;
   IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                 UnsupportedItem::Kind kind,
+                                 std::optional<UnsupportedItem::Path> path,
                                  FormattedError error) override;
   IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                 UnsupportedItem::Kind kind,
+                                 std::optional<UnsupportedItem::Path> path,
                                  std::vector<FormattedError> error) override;
   std::optional<IR::Item> ImportDecl(clang::Decl* decl) override;
   std::optional<IR::Item> GetImportedItem(
@@ -86,6 +90,8 @@ class Importer final : public ImportContext {
 
   std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) override;
   std::string GetMangledName(const clang::NamedDecl* named_decl) const override;
+  std::optional<UnsupportedItem::Path> GetUnsupportedItemPathForTemplateDecl(
+      clang::RedeclarableTemplateDecl* template_decl) override;
   BazelLabel GetOwningTarget(const clang::Decl* decl) const override;
   bool IsFromCurrentTarget(const clang::Decl* decl) const override;
   absl::StatusOr<UnqualifiedIdentifier> GetTranslatedName(

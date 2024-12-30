@@ -331,6 +331,8 @@ fn test_explicit_class_template_instantiation_declaration_not_supported_yet() {
         ir,
         quote! { UnsupportedItem {
             name: "MyTemplate",
+            kind: Type,
+            path: Some(UnsupportedItemPath { ident: "MyTemplate", enclosing_item_id: None, }),
             errors: [FormattedError {
                 ..., message: "Class templates are not supported yet", ...
             }], ...
@@ -345,6 +347,8 @@ fn test_function_template_not_supported_yet() {
         ir,
         quote! { UnsupportedItem {
             name: "SomeFunctionTemplate",
+            kind: Value,
+            path: Some(UnsupportedItemPath { ident: "SomeFunctionTemplate", enclosing_item_id: None, }),
             errors: [FormattedError {
                 ..., message: "Function templates are not supported yet", ...
             }], ...
@@ -2416,6 +2420,11 @@ fn test_records_nested_in_records_not_supported_yet() {
         ir,
         quote! { UnsupportedItem {
             name: "SomeStruct::NestedStruct",
+            kind: Type,
+            path: Some(UnsupportedItemPath {
+                ident: "NestedStruct",
+                enclosing_item_id: Some(ItemId(...)),
+            }),
             errors: [FormattedError {
                 ..., message: "Nested classes are not supported yet", ...
             }], ...
@@ -2472,6 +2481,11 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
         quote! {
             UnsupportedItem {
                 name: "StructWithUnsupportedField::NestedStruct",
+                kind: Type,
+                path: Some(UnsupportedItemPath {
+                    ident: "NestedStruct",
+                    enclosing_item_id: Some(ItemId(...)),
+                }),
                 errors: [FormattedError {
                     ..., message: "Nested classes are not supported yet", ...
                 }], ...
@@ -2542,6 +2556,11 @@ fn test_record_with_unsupported_base() -> Result<()> {
         quote! {
            UnsupportedItem {
                 name: "OuterStruct::NestedStruct",
+                kind: Type,
+                path: Some(UnsupportedItemPath {
+                    ident: "NestedStruct",
+                    enclosing_item_id: Some(ItemId(...)),
+                }),
                 errors: [FormattedError {
                     ..., message: "Nested classes are not supported yet", ...
                 }], ...
@@ -3396,6 +3415,8 @@ fn test_unnamed_enum_unsupported() {
         quote! {
             UnsupportedItem {
                 name: "(unnamed enum at ./ir_from_cc_virtual_header.h:3:1)",
+                kind: Unnameable,
+                path: None,
                 errors: [FormattedError {
                     ..., message: "Unnamed enums are not supported yet", ...
                 }], ...
@@ -3418,6 +3439,8 @@ fn test_literal_operator_unsupported() {
         quote! {
             UnsupportedItem {
                 name: "operator\"\"_foobar",
+                kind: Value,
+                path: None,
                 errors: [FormattedError {
                     ..., message: "Function name is not supported: Unsupported name: operator\"\"_foobar", ...
                 }], ...
@@ -3572,6 +3595,8 @@ fn test_record_items() {
             quote! {
               ... UnsupportedItem {
                   name: "TopLevelStruct::operator int",
+                  kind: Value,
+                  path: None,
                   errors: [FormattedError {
                     ..., message: "Function name is not supported: Unsupported name: operator int",
                   }],

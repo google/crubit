@@ -274,7 +274,12 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
             if has_bindings(db, item) != HasBindings::Yes {
                 // We didn't guarantee that bindings would exist, so it is not invalid to
                 // write down the error but continue.
-                return generate_unsupported(db, &UnsupportedItem::new_with_cause(&ir, item, err));
+                return generate_unsupported(
+                    db,
+                    // FIXME(cramertj): get paths here in more cases. It may be that
+                    // `generate_item_impl` failed in such a way that the path is still available.
+                    &UnsupportedItem::new_with_cause(&ir, item, /* path= */ None, err),
+                );
             }
             Err(err)
         }

@@ -19,7 +19,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
     clang::NamespaceDecl* namespace_decl) {
   if (namespace_decl->isAnonymousNamespace()) {
     return ictx_.ImportUnsupportedItem(
-        namespace_decl,
+        namespace_decl, UnsupportedItem::Kind::kType, std::nullopt,
         FormattedError::Static("Anonymous namespaces are not supported yet"));
   }
 
@@ -27,7 +27,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
       ictx_.GetTranslatedIdentifier(namespace_decl);
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
-        namespace_decl,
+        namespace_decl, UnsupportedItem::Kind::kType, std::nullopt,
         FormattedError::PrefixedStrCat("Namespace name is not supported",
                                        identifier.status().message()));
   }
@@ -43,7 +43,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   auto enclosing_item_id = ictx_.GetEnclosingItemId(namespace_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
-        namespace_decl,
+        namespace_decl, UnsupportedItem::Kind::kType, std::nullopt,
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
   return Namespace{.name = *identifier,

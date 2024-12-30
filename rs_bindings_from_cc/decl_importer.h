@@ -20,6 +20,7 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/SourceLocation.h"
@@ -84,12 +85,15 @@ class ImportContext {
       const clang::DeclContext* decl_context) = 0;
 
   // Imports an unsupported item with a single formatted error message.
-  virtual IR::Item ImportUnsupportedItem(const clang::Decl* decl,
-                                         FormattedError error) = 0;
+  virtual IR::Item ImportUnsupportedItem(
+      const clang::Decl* decl, UnsupportedItem::Kind kind,
+      std::optional<UnsupportedItem::Path> path, FormattedError error) = 0;
 
   // Imports an unsupported item with a vector of formatted error messages.
-  virtual IR::Item ImportUnsupportedItem(const clang::Decl* decl,
-                                         std::vector<FormattedError> error) = 0;
+  virtual IR::Item ImportUnsupportedItem(
+      const clang::Decl* decl, UnsupportedItem::Kind kind,
+      std::optional<UnsupportedItem::Path> path,
+      std::vector<FormattedError> error) = 0;
 
   // Imports a decl and creates an IR item (or error messages). This allows
   // importers to recursively delegate to other importers.
@@ -126,6 +130,13 @@ class ImportContext {
   // Mangles the name of a named decl.
   virtual std::string GetMangledName(
       const clang::NamedDecl* named_decl) const = 0;
+
+  // Gets the path of an unsupported item by mangling its name and importing
+  // its enclosing item. Returns `std::nullopt` if the enclosing item cannot be
+  // imported.
+  virtual std::optional<UnsupportedItem::Path>
+  GetUnsupportedItemPathForTemplateDecl(
+      clang::RedeclarableTemplateDecl* template_decl) = 0;
 
   // Returs the label of the target that contains a decl.
   virtual BazelLabel GetOwningTarget(const clang::Decl* decl) const = 0;

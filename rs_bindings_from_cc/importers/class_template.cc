@@ -14,7 +14,8 @@ namespace crubit {
 std::optional<IR::Item> ClassTemplateDeclImporter::Import(
     clang::ClassTemplateDecl* class_template_decl) {
   return ictx_.ImportUnsupportedItem(
-      class_template_decl,
+      class_template_decl, UnsupportedItem::Kind::kType,
+      ictx_.GetUnsupportedItemPathForTemplateDecl(class_template_decl),
       FormattedError::Static("Class templates are not supported yet"));
 }
 

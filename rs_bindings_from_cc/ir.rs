@@ -22,10 +22,18 @@ use std::rc::Rc;
 /// Common data about all items.
 pub trait GenericItem {
     fn id(&self) -> ItemId;
+
     /// The name of the item, readable by programmers.
     ///
     /// For example, `void Foo();` should have name `Foo`.
     fn debug_name(&self, ir: &IR) -> Rc<str>;
+
+    /// If this item is unsupported by Crubit, we may generate
+    /// markers in the Rust bindings to indicate that the item is not
+    /// supported. This function returns the kind of unsupported item
+    /// in order to generate such markers in the proper namespace
+    /// (type, function, module).
+    fn unsupported_kind(&self) -> UnsupportedItemKind;
 
     /// The recorded source location, or None if none is present.
     fn source_loc(&self) -> Option<Rc<str>>;
@@ -44,6 +52,9 @@ where
     }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         (**self).debug_name(ir)
+    }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        (**self).unsupported_kind()
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         (**self).source_loc()
@@ -527,6 +538,9 @@ impl GenericItem for Func {
             func_name.into()
         }
     }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        UnsupportedItemKind::Value
+    }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
     }
@@ -611,6 +625,9 @@ impl GenericItem for IncompleteRecord {
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.cc_name.clone()
+    }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        UnsupportedItemKind::Type
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
@@ -734,6 +751,9 @@ impl GenericItem for Record {
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.cc_name.clone()
     }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        UnsupportedItemKind::Type
+    }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
     }
@@ -792,6 +812,9 @@ impl GenericItem for Enum {
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.identifier.identifier.clone()
     }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        UnsupportedItemKind::Type
+    }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
     }
@@ -829,6 +852,9 @@ impl GenericItem for TypeAlias {
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.identifier.identifier.clone()
+    }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        UnsupportedItemKind::Type
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
@@ -874,10 +900,29 @@ pub struct FormattedError {
     pub message: Rc<str>,
 }
 
+/// Which Rust namespace a particular unsupported item belongs to.
+/// See https://doc.rust-lang.org/reference/names/namespaces.html
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub enum UnsupportedItemKind {
+    Value,
+    Type,
+    Unnameable,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct UnsupportedItemPath {
+    pub ident: UnqualifiedIdentifier,
+    pub enclosing_item_id: Option<ItemId>,
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct UnsupportedItem {
     pub name: Rc<str>,
+    pub kind: UnsupportedItemKind,
+    pub path: Option<UnsupportedItemPath>,
     errors: Vec<Rc<FormattedError>>,
     pub source_loc: Option<Rc<str>>,
     pub id: ItemId,
@@ -894,6 +939,9 @@ impl GenericItem for UnsupportedItem {
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.name.clone()
     }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        self.kind
+    }
     fn source_loc(&self) -> Option<Rc<str>> {
         self.source_loc.clone()
     }
@@ -906,12 +954,15 @@ impl UnsupportedItem {
     fn new(
         ir: &IR,
         item: &impl GenericItem,
+        path: Option<UnsupportedItemPath>,
         error: Option<Rc<FormattedError>>,
         cause: Option<Error>,
     ) -> Self {
         Self {
             name: item.debug_name(ir),
             errors: error.into_iter().collect(),
+            kind: item.unsupported_kind(),
+            path,
             source_loc: item.source_loc(),
             id: item.id(),
             cause: IgnoredField(cause.map(|e| OnceCell::from(vec![e])).unwrap_or_default()),
@@ -921,18 +972,25 @@ impl UnsupportedItem {
     pub fn new_with_static_message(
         ir: &IR,
         item: &impl GenericItem,
+        path: Option<UnsupportedItemPath>,
         message: &'static str,
     ) -> Self {
         Self::new(
             ir,
             item,
+            path,
             Some(Rc::new(FormattedError { fmt: message.into(), message: message.into() })),
             None,
         )
     }
 
-    pub fn new_with_cause(ir: &IR, item: &impl GenericItem, cause: Error) -> Self {
-        Self::new(ir, item, None, Some(cause))
+    pub fn new_with_cause(
+        ir: &IR,
+        item: &impl GenericItem,
+        path: Option<UnsupportedItemPath>,
+        cause: Error,
+    ) -> Self {
+        Self::new(ir, item, path, None, Some(cause))
     }
 
     pub fn errors(&self) -> &[Error] {
@@ -965,6 +1023,9 @@ impl GenericItem for Comment {
     fn debug_name(&self, _: &IR) -> Rc<str> {
         "comment".into()
     }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        UnsupportedItemKind::Unnameable
+    }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
     }
@@ -995,6 +1056,9 @@ impl GenericItem for Namespace {
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.name.to_string().into()
     }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        UnsupportedItemKind::Type
+    }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
     }
@@ -1017,6 +1081,9 @@ impl GenericItem for UseMod {
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         format!("[internal] use mod {}::* = {}", self.mod_name, self.path).into()
+    }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        UnsupportedItemKind::Unnameable
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
@@ -1044,6 +1111,9 @@ impl GenericItem for TypeMapOverride {
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.cc_name.clone()
+    }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        UnsupportedItemKind::Type
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
@@ -1099,6 +1169,21 @@ impl GenericItem for Item {
             }
         }
     }
+    fn unsupported_kind(&self) -> UnsupportedItemKind {
+        use Item::*;
+        match self {
+            Func(_) => UnsupportedItemKind::Value,
+            IncompleteRecord(_) => UnsupportedItemKind::Type,
+            Record(_) => UnsupportedItemKind::Type,
+            Enum(_) => UnsupportedItemKind::Type,
+            TypeAlias(_) => UnsupportedItemKind::Type,
+            UnsupportedItem(unsupported) => unsupported.kind,
+            Comment(_) => UnsupportedItemKind::Unnameable,
+            Namespace(_) => UnsupportedItemKind::Type,
+            UseMod(_) => UnsupportedItemKind::Unnameable,
+            TypeMapOverride(_) => UnsupportedItemKind::Type,
+        }
+    }
     fn source_loc(&self) -> Option<Rc<str>> {
         forward_item! {
             match self {
@@ -1125,7 +1210,9 @@ impl Item {
             Item::Namespace(namespace) => namespace.enclosing_item_id,
             Item::TypeAlias(type_alias) => type_alias.enclosing_item_id,
             Item::Comment(..) => None,
-            Item::UnsupportedItem(..) => None,
+            Item::UnsupportedItem(unsupported) => {
+                unsupported.path.as_ref().and_then(|p| p.enclosing_item_id)
+            }
             Item::UseMod(..) => None,
             Item::TypeMapOverride(..) => None,
         }

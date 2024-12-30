@@ -211,4 +211,32 @@ __rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv__2f_2fthird_5fparty_2fcrubi
   return &__this->get_field_value();
 }
 
+static_assert(sizeof(struct OuterTemplate<int>) == 1);
+static_assert(alignof(struct OuterTemplate<int>) == 1);
+
+extern "C" void
+__rust_thunk___ZN13OuterTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
+    struct OuterTemplate<int>* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void
+__rust_thunk___ZN13OuterTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
+    struct OuterTemplate<int>* __this, struct OuterTemplate<int>* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct OuterTemplate<int>*
+__rust_thunk___ZN13OuterTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
+    struct OuterTemplate<int>* __this,
+    const struct OuterTemplate<int>* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" struct OuterTemplate<int>*
+__rust_thunk___ZN13OuterTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
+    struct OuterTemplate<int>* __this, struct OuterTemplate<int>* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
 #pragma clang diagnostic pop

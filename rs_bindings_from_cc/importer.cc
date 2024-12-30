@@ -42,6 +42,7 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclFriend.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
@@ -740,27 +741,34 @@ bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
   return invocation_.target_ == GetOwningTarget(decl);
 }
 
-IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
-                                         FormattedError error) {
+IR::Item Importer::ImportUnsupportedItem(
+    const clang::Decl* decl, UnsupportedItem::Kind kind,
+    std::optional<UnsupportedItem::Path> path, FormattedError error) {
   std::string name = "unnamed";
   if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
   std::string source_loc = ConvertSourceLocation(decl->getBeginLoc());
   return UnsupportedItem{.name = name,
+                         .kind = kind,
+                         .path = std::move(path),
                          .errors = {error},
                          .source_loc = source_loc,
                          .id = GenerateItemId(decl)};
 }
 
-IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
-                                         std::vector<FormattedError> errors) {
+IR::Item Importer::ImportUnsupportedItem(
+    const clang::Decl* decl, UnsupportedItem::Kind kind,
+    std::optional<UnsupportedItem::Path> path,
+    std::vector<FormattedError> errors) {
   std::string name = "unnamed";
   if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
   std::string source_loc = ConvertSourceLocation(decl->getBeginLoc());
   return UnsupportedItem{.name = name,
+                         .kind = kind,
+                         .path = std::move(path),
                          .errors = std::move(errors),
                          .source_loc = source_loc,
                          .id = GenerateItemId(decl)};
@@ -1192,6 +1200,7 @@ std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
     if (clang::isa<clang::ClassTemplateSpecializationDecl>(named_decl)) {
       // We prepend __CcTemplateInst to reduce chances of conflict
       // with regular C and C++ structs.
+      LOG(INFO) << "E";
       constexpr llvm::StringRef kCcTemplatePrefix = "__CcTemplateInst";
       return llvm::formatv("{0}{1}", kCcTemplatePrefix, mangled_record_name);
     }
@@ -1236,6 +1245,33 @@ std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
   mangler_->mangleName(decl, stream);
   stream.flush();
   return name;
+}
+
+std::optional<UnsupportedItem::Path>
+Importer::GetUnsupportedItemPathForTemplateDecl(
+    clang::RedeclarableTemplateDecl* template_decl) {
+  auto enclosing_item_id = GetEnclosingItemId(template_decl);
+  if (!enclosing_item_id.ok()) {
+    return std::nullopt;
+  }
+
+  // NOTE: there's no *real* name for an uninstantiated template declaration
+  // in Rust, but we're only producing an unsupported item path anyways, so
+  // we just use the non-type-qualified name.
+  //
+  // NOTE: it's tempting to call GetMangledName(template_decl) here, but that
+  // segfaults inside ItaniumMangleContextImpl::mangleCXXName. We're not working
+  // with a fully-instantiated template declaration, so there is no mangled
+  // name to refer to.
+  auto rs_name = GetTranslatedName(template_decl);
+  if (!rs_name.ok()) {
+    return std::nullopt;
+  }
+
+  return UnsupportedItem::Path{
+      .ident = std::move(*rs_name),
+      .enclosing_item_id = *enclosing_item_id,
+  };
 }
 
 std::string Importer::GetNameForSourceOrder(const clang::Decl* decl) const {

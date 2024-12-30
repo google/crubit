@@ -8,7 +8,7 @@ use crate::db::{BindingsGenerator, Database};
 use crate::generate_comment::generate_unsupported;
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
-use ir::{Enum, UnsupportedItem};
+use ir::{Enum, UnqualifiedIdentifier, UnsupportedItem, UnsupportedItemPath};
 use proc_macro2::Literal;
 use quote::{quote, ToTokens};
 use std::collections::BTreeSet;
@@ -25,6 +25,10 @@ pub fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
             &UnsupportedItem::new_with_static_message(
                 &db.ir(),
                 enum_,
+                Some(UnsupportedItemPath {
+                    ident: UnqualifiedIdentifier::Identifier(enum_.identifier.clone()),
+                    enclosing_item_id: enum_.enclosing_item_id,
+                }),
                 "b/322391132: Forward-declared (opaque) enums are not supported yet",
             ),
         );

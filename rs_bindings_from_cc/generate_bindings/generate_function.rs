@@ -1627,6 +1627,10 @@ pub fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>
     let mut seen_funcs = HashSet::new();
     let mut overloaded_funcs = HashSet::new();
     for func in db.ir().functions() {
+        // TODO(b/251045039) This check shouldn't fail so eagerly.
+        // Functions that fail to receive bindings may still
+        // participate in a C++ overload set, and we must still detect the
+        // overload.
         if let Ok(Some(f)) = db.generate_func(func.clone(), None) {
             let (.., function_id) = &f;
             if !seen_funcs.insert(function_id.clone()) {

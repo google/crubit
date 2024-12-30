@@ -503,6 +503,69 @@ impl __CcTemplateInst10MyTemplateIfE {
     }
 }
 
+/// Class template with nested struct inside.
+#[derive(Clone, Copy)]
+#[repr(C)]
+#[__crubit::annotate(cpp_type = "OuterTemplate < int >")]
+pub struct __CcTemplateInst13OuterTemplateIiE {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for __CcTemplateInst13OuterTemplateIiE {}
+impl !Sync for __CcTemplateInst13OuterTemplateIiE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("OuterTemplate < int >"),
+    crate::__CcTemplateInst13OuterTemplateIiE
+);
+
+impl Default for __CcTemplateInst13OuterTemplateIiE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13OuterTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst13OuterTemplateIiE {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13OuterTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&mut tmp,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> ::ctor::UnpinAssign<&'b Self> for __CcTemplateInst13OuterTemplateIiE {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13OuterTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(self,__param_0);
+        }
+    }
+}
+
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInst13OuterTemplateIiE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13OuterTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(self,__param_0);
+        }
+    }
+}
+
+// Doc comment for the nested struct.
+
+// Error while generating bindings for item 'OuterTemplate<int>::NestedStruct':
+// Nested classes are not supported yet
+
+// Data member in a nested struct.
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -663,6 +726,32 @@ mod detail {
         >(
             __this: &'a crate::__CcTemplateInst10MyTemplateIfE,
         ) -> &'a f32;
+        pub(crate) unsafe fn __rust_thunk___ZN13OuterTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+            'a,
+        >(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::__CcTemplateInst13OuterTemplateIiE>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN13OuterTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut ::core::mem::MaybeUninit<crate::__CcTemplateInst13OuterTemplateIiE>,
+            __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst13OuterTemplateIiE>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN13OuterTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::__CcTemplateInst13OuterTemplateIiE,
+            __param_0: &'b crate::__CcTemplateInst13OuterTemplateIiE,
+        ) -> &'a mut crate::__CcTemplateInst13OuterTemplateIiE;
+        pub(crate) unsafe fn __rust_thunk___ZN13OuterTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::__CcTemplateInst13OuterTemplateIiE,
+            __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst13OuterTemplateIiE>,
+        ) -> &'a mut crate::__CcTemplateInst13OuterTemplateIiE;
     }
 }
 
@@ -715,4 +804,10 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Copy);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
     assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIfE, value) == 0);
+
+    assert!(::core::mem::size_of::<crate::__CcTemplateInst13OuterTemplateIiE>() == 1);
+    assert!(::core::mem::align_of::<crate::__CcTemplateInst13OuterTemplateIiE>() == 1);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst13OuterTemplateIiE: Clone);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst13OuterTemplateIiE: Copy);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst13OuterTemplateIiE: Drop);
 };

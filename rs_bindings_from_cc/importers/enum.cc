@@ -26,17 +26,38 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     // surrounding scope and doesn't actually introduce an enum namespace. It
     // seems like it should probably be handled with other constants.
     return ictx_.ImportUnsupportedItem(
-        enum_decl,
+        enum_decl, UnsupportedItem::Kind::kUnnameable, std::nullopt,
         FormattedError::Static("Unnamed enums are not supported yet"));
   }
   absl::StatusOr<Identifier> enum_name =
       ictx_.GetTranslatedIdentifier(enum_decl);
   if (!enum_name.ok()) {
     return ictx_.ImportUnsupportedItem(
-        enum_decl,
+        enum_decl, UnsupportedItem::Kind::kType, std::nullopt,
         FormattedError::PrefixedStrCat("Enum name is not supported",
                                        enum_name.status().message()));
   }
+
+  auto enclosing_item_id = ictx_.GetEnclosingItemId(enum_decl);
+  if (!enclosing_item_id.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        enum_decl, UnsupportedItem::Kind::kType, std::nullopt,
+        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
+  }
+
+  // Reports an unsupported enum with the given error.
+  //
+  // This is preferred to invoking `ImportUnsupportedItem` directly because it
+  // ensures that the path is set correctly. Note that this cannot be used above
+  // because the enclosing item ID and translated name are not yet available.
+  auto unsupported = [this, &enum_name, &enclosing_item_id,
+                      enum_decl](FormattedError error) {
+    return ictx_.ImportUnsupportedItem(
+        enum_decl, UnsupportedItem::Kind::kType,
+        UnsupportedItem::Path{.ident = *enum_name,
+                              .enclosing_item_id = *enclosing_item_id},
+        error);
+  };
 
   clang::QualType cpp_type = enum_decl->getIntegerType();
   if (cpp_type.isNull()) {
@@ -45,16 +66,15 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     // with no fixed underlying type." The same page implies that this can't
     // occur in C++ nor in standard C, but clang supports enums like this
     // in C "as an extension".
-    return ictx_.ImportUnsupportedItem(
-        enum_decl, FormattedError::Static("Forward declared enums without type "
-                                          "specifiers are not supported"));
+    return unsupported(
+        FormattedError::Static("Forward declared enums without type "
+                               "specifiers are not supported"));
   }
   const clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
   absl::StatusOr<MappedType> type =
       ictx_.ConvertQualType(cpp_type, no_lifetimes, std::nullopt);
   if (!type.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        enum_decl, FormattedError::FromStatus(std::move(type.status())));
+    return unsupported(FormattedError::FromStatus(std::move(type.status())));
   }
 
   std::vector<Enumerator> enumerators;
@@ -64,8 +84,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
         ictx_.GetTranslatedIdentifier(enumerator);
     if (!enumerator_name.ok()) {
       // It's not clear that this case is possible
-      return ictx_.ImportUnsupportedItem(
-          enum_decl,
+      return unsupported(
           FormattedError::PrefixedStrCat("Enumerator name is not supported",
                                          enumerator_name.status().message()));
     }
@@ -75,13 +94,6 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
         .value = IntegerConstant(enumerator->getInitVal()),
         .unknown_attr = CollectUnknownAttrs(*enumerator),
     });
-  }
-
-  auto enclosing_item_id = ictx_.GetEnclosingItemId(enum_decl);
-  if (!enclosing_item_id.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        enum_decl,
-        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
   ictx_.MarkAsSuccessfullyImported(enum_decl);

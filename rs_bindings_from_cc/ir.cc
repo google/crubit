@@ -622,6 +622,24 @@ llvm::json::Value FormattedError::ToJson() const {
   };
 }
 
+static std::string UnsupportedItemKindToString(UnsupportedItem::Kind kind) {
+  switch (kind) {
+    case UnsupportedItem::Kind::kValue:
+      return "Value";
+    case UnsupportedItem::Kind::kType:
+      return "Type";
+    case UnsupportedItem::Kind::kUnnameable:
+      return "Unnameable";
+  }
+}
+
+llvm::json::Value UnsupportedItem::Path::ToJson() const {
+  return llvm::json::Object{
+      {"ident", ident},
+      {"enclosing_item_id", enclosing_item_id},
+  };
+}
+
 llvm::json::Value UnsupportedItem::ToJson() const {
   std::vector<llvm::json::Value> json_errors;
   json_errors.reserve(errors.size());
@@ -631,6 +649,8 @@ llvm::json::Value UnsupportedItem::ToJson() const {
 
   llvm::json::Object unsupported{
       {"name", name},
+      {"kind", UnsupportedItemKindToString(kind)},
+      {"path", path},
       {"errors", json_errors},
       {"source_loc", source_loc},
       {"id", id},

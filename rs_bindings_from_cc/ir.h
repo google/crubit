@@ -818,6 +818,25 @@ class FormattedError final {
 
 // A placeholder for an item that we can't generate bindings for (yet)
 struct UnsupportedItem {
+  // Kind is used to indicate which Rust namespace the unsupported item would
+  // be generated in.
+  //
+  // See https://doc.rust-lang.org/reference/names/namespaces.html
+  enum class Kind {
+    kValue,
+    kType,
+    // Unnameable items include things like comments that do not result in
+    // Rust types.
+    kUnnameable,
+  };
+
+  struct Path {
+    UnqualifiedIdentifier ident;
+    std::optional<ItemId> enclosing_item_id;
+
+    llvm::json::Value ToJson() const;
+  };
+
   llvm::json::Value ToJson() const;
 
   // TODO(forster): We could show the original declaration in the generated
@@ -825,6 +844,14 @@ struct UnsupportedItem {
 
   // Qualified name of the item for which we couldn't generate bindings
   std::string name;
+
+  // For unsupported items, we may generate markers in the Rust bindings to
+  // indicate that the item is not supported. This function returns the kind of
+  // unsupported item in order to generate such markers in the proper namespace
+  // (type, function, module).
+  Kind kind;
+
+  std::optional<Path> path;
 
   std::vector<FormattedError> errors;
   std::string source_loc;

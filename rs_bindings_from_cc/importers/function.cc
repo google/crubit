@@ -108,14 +108,11 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     clang::FunctionDecl* function_decl) {
   if (!ictx_.IsFromCurrentTarget(function_decl)) return std::nullopt;
   if (function_decl->isDeleted()) return std::nullopt;
-
-  clang::FunctionDecl* template_decl_for_method =
-      function_decl->getInstantiatedFromMemberFunction();
   if (IsInStdNamespace(function_decl)) {
     if (clang::IdentifierInfo* id = function_decl->getIdentifier();
         id != nullptr && id->getName().find("__") != llvm::StringRef::npos) {
       return ictx_.ImportUnsupportedItem(
-          function_decl,
+          function_decl, UnsupportedItem::Kind::kValue, std::nullopt,
           FormattedError::Static("Internal functions from the standard "
                                  "library are not supported"));
     }
@@ -135,12 +132,44 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
   }
 
+  absl::StatusOr<UnqualifiedIdentifier> translated_name =
+      ictx_.GetTranslatedName(function_decl);
+  if (!translated_name.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        function_decl, UnsupportedItem::Kind::kValue, std::nullopt,
+        FormattedError::PrefixedStrCat("Function name is not supported",
+                                       translated_name.status().message()));
+  }
+
+  auto enclosing_item_id = ictx_.GetEnclosingItemId(function_decl);
+  if (!enclosing_item_id.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        function_decl, UnsupportedItem::Kind::kValue, std::nullopt,
+        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
+  }
+
+  // Reports an unsupported function with the given error.
+  //
+  // This is preferred to invoking `ImportUnsupportedItem` directly because it
+  // ensures that the path is set correctly. Note that this cannot be used above
+  // because the enclosing item ID and translated name are not yet available.
+  auto unsupported = [this, &translated_name, &enclosing_item_id,
+                      function_decl](FormattedError error) {
+    return ictx_.ImportUnsupportedItem(
+        function_decl, UnsupportedItem::Kind::kValue,
+        UnsupportedItem::Path{.ident = *translated_name,
+                              .enclosing_item_id = *enclosing_item_id},
+        error);
+  };
+
   // We should only import methods of class template specializations
   // that can be instantiated: the template may spell out the method,
   // but it's not guaranteed to be instantiable for the template parameter(s);
   // importing an un-instantiable method causes Crubit to generate a thunk to
   // invoke this method, which triggers instantiation when compiling the
   // generated bindings, which fails the build.
+  clang::FunctionDecl* template_decl_for_method =
+      function_decl->getInstantiatedFromMemberFunction();
   if (template_decl_for_method) {
     // Some methods in STL are explicitly marked with
     // `__attribute__((exclude_from_explicit_instantiation))`, and attempt to
@@ -195,17 +224,13 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         // compilation of generated bindings, so it's invalid as far as Crubit
         // is concerned, thus set it as invalid here.
         function_decl->setInvalidDecl();
-        return ictx_.ImportUnsupportedItem(
-            function_decl,
-            FormattedError::PrefixedStrCat(
-                "Failed to instantiate the function/method template",
-                diagnostics));
+        return unsupported(FormattedError::PrefixedStrCat(
+            "Failed to instantiate the function/method template", diagnostics));
       }
     }
   }
   if (function_decl->isInvalidDecl()) {
-    return ictx_.ImportUnsupportedItem(
-        function_decl,
+    return unsupported(
         FormattedError::Static("Function declaration is considered invalid"));
   }
 
@@ -238,20 +263,10 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
           }
         });
     if (remaining_err) {
-      return ictx_.ImportUnsupportedItem(
-          function_decl, FormattedError::PrefixedStrCat(
-                             "Unable to get lifetime annotations",
-                             llvm::toString(std::move(remaining_err))));
+      return unsupported(FormattedError::PrefixedStrCat(
+          "Unable to get lifetime annotations",
+          llvm::toString(std::move(remaining_err))));
     }
-  }
-
-  absl::StatusOr<UnqualifiedIdentifier> translated_name =
-      ictx_.GetTranslatedName(function_decl);
-  if (!translated_name.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        function_decl,
-        FormattedError::PrefixedStrCat("Function name is not supported",
-                                       translated_name.status().message()));
   }
 
   std::vector<FuncParam> params;
@@ -259,8 +274,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (!ictx_.HasBeenAlreadySuccessfullyImported(method_decl->getParent())) {
-      return ictx_.ImportUnsupportedItem(
-          function_decl, FormattedError::Static("Couldn't import the parent"));
+      return unsupported(FormattedError::Static("Couldn't import the parent"));
     }
 
     // non-static member functions receive an implicit `this` parameter.
@@ -395,7 +409,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
   if (!errors.error_set.empty()) {
     return ictx_.ImportUnsupportedItem(
-        function_decl,
+        function_decl, UnsupportedItem::Kind::kValue,
+        UnsupportedItem::Path{.ident = *translated_name,
+                              .enclosing_item_id = *enclosing_item_id},
         std::vector(errors.error_set.begin(), errors.error_set.end()));
   }
 
@@ -444,13 +460,6 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   // Silence ClangTidy, checked above: calling `errors.Add` if
   // `!return_type.ok()` and returning early if `!errors.empty()`.
   CHECK_OK(return_type);
-
-  auto enclosing_item_id = ictx_.GetEnclosingItemId(function_decl);
-  if (!enclosing_item_id.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        function_decl,
-        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
-  }
 
   return Func{
       .name = *translated_name,

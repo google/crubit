@@ -37,7 +37,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
         tag_decl && tag_decl->getDeclContext() == decl_context &&
         tag_decl->getName() == decl->getName()) {
       return ictx_.ImportUnsupportedItem(
-          decl,
+          decl, UnsupportedItem::Kind::kType, std::nullopt,
           FormattedError::Static(
               "Typedef only used to introduce a name in C. Not importing."));
     }
@@ -59,8 +59,16 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   absl::StatusOr<Identifier> identifier = ictx_.GetTranslatedIdentifier(decl);
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
-        decl, FormattedError::PrefixedStrCat("Type alias name is not supported",
-                                             identifier.status().message()));
+        decl, UnsupportedItem::Kind::kType, std::nullopt,
+        FormattedError::PrefixedStrCat("Type alias name is not supported",
+                                       identifier.status().message()));
+  }
+
+  auto enclosing_item_id = ictx_.GetEnclosingItemId(decl);
+  if (!enclosing_item_id.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        decl, UnsupportedItem::Kind::kType, std::nullopt,
+        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
   clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
@@ -71,14 +79,10 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
 
   if (!underlying_type.ok()) {
     return ictx_.ImportUnsupportedItem(
-        decl, FormattedError::FromStatus(std::move(underlying_type.status())));
-  }
-
-  auto enclosing_item_id = ictx_.GetEnclosingItemId(decl);
-  if (!enclosing_item_id.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        decl,
-        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
+        decl, UnsupportedItem::Kind::kType,
+        UnsupportedItem::Path{.ident = *identifier,
+                              .enclosing_item_id = *enclosing_item_id},
+        FormattedError::FromStatus(std::move(underlying_type.status())));
   }
   ictx_.MarkAsSuccessfullyImported(decl);
   return TypeAlias{
