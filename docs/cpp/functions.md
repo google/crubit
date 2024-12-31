@@ -29,10 +29,32 @@ cs/file:examples/cpp/function/example_generated.rs content:^([^/\n])([^!\n]|$)[^
 
 ## `unsafe` functions {#unsafe}
 
-Functions accepting or returning simple types, like integers, can be called from
-safe code. However, functions which accept a raw pointer are automatically
-marked **`unsafe`**, and cannot be called outside of an `unsafe` block. To
-ensure that the behavior is defined, callers must:
+### Which C++ functions are marked `unsafe` in Rust? {#unsafe-inference}
+
+By default, the Rust binding to a C++ function is marked as safe or `unsafe`
+based on the types of its parameters. If a C++ function accepts only simple
+types like integers, the resulting Rust binding will be marked as safe.
+Functions which accept a raw pointer are automatically marked as `unsafe`.
+
+This behavior can be overridden using the `CRUBIT_UNSAFE`,
+`CRUBIT_UNSAFE_MARK_SAFE` and `CRUBIT_OVERRIDE_UNSAFE(is_unsafe)` macros.
+
+For example, given the following C++ header:
+
+```live-snippet
+cs/file:examples/cpp/unsafe_attributes/example.h content:^([^/#\n])[^\n]*
+```
+
+Crubit will generate the following bindings:
+
+```live-snippet
+cs/file:examples/cpp/unsafe_attributes/example_generated.rs content:^([^/\n])([^!\n]|$)[^\n]*
+```
+
+### Correct usage of `unsafe` {#using-unsafe}
+
+Functions marked **`unsafe`** cannot be called outside of an `unsafe` block. In
+order to avoid undefined behavior when using `unsafe`, callers must:
 
 *   Ensure that the pointer being passed to C++ is a valid C++ pointer. In
     particular, it must not be dangling (e.g. `Nonnull::dangling()`).
@@ -41,9 +63,12 @@ ensure that the behavior is defined, callers must:
     if the C++ function accepts a reference or non-null pointer, then do not
     pass in `0 as *const _`.
 
-However, even "safe" C++ functions are still potentially dangerous, and can
-still have undefined behavior when called. Callers must still adhere to all
-documented function preconditions.
+### Soundness
+
+Note that many "safe" C++ functions may still trigger undefined behavior if used
+incorrectly. Regardless of whether a C++ function is marked as `unsafe`, calls
+into C++ will only be memory-safe if the caller verifies that all function
+preconditions are met.
 
 ## Function Attributes
 
