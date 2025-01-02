@@ -19,6 +19,7 @@ rust_library(
     srcs = [
         "code_snippet.rs",
         "db.rs",
+        "format_type.rs",
         "generate_function.rs",
         "generate_function_thunk.rs",
         "generate_struct_and_union.rs",
