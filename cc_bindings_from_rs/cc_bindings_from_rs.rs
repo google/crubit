@@ -93,7 +93,7 @@ fn new_db<'tcx>(
 }
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
-    use generate_bindings::{generate_bindings, Output};
+    use generate_bindings::{generate_bindings, BindingsTokens};
 
     let errors: Rc<dyn ErrorReporting> = if cmdline.error_report_out.is_some() {
         Rc::new(ErrorReport::new())
@@ -101,7 +101,7 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
         Rc::new(IgnoreErrors)
     };
 
-    let Output { h_body, rs_body } = {
+    let BindingsTokens { h_body, rs_body } = {
         let db = new_db(cmdline, tcx, errors.clone());
         generate_bindings(&db)?
     };

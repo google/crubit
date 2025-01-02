@@ -67,7 +67,7 @@ fn support_header<'tcx>(db: &dyn BindingsGenerator<'tcx>, suffix: &'tcx str) -> 
     CcInclude::support_lib_header(db.crubit_support_path_format(), suffix.into())
 }
 
-fn top_level_ns_for_crate(db: &dyn BindingsGenerator<'_>, krate: CrateNum) -> Symbol {
+fn format_top_level_ns_for_crate(db: &dyn BindingsGenerator<'_>, krate: CrateNum) -> Symbol {
     let crate_name = if krate == LOCAL_CRATE {
         "self".to_string()
     } else {
@@ -80,7 +80,7 @@ fn top_level_ns_for_crate(db: &dyn BindingsGenerator<'_>, krate: CrateNum) -> Sy
     }
 }
 
-pub struct Output {
+pub struct BindingsTokens {
     pub h_body: TokenStream,
     pub rs_body: TokenStream,
 }
@@ -108,7 +108,7 @@ fn add_include_guard(db: &dyn BindingsGenerator<'_>, h_body: TokenStream) -> Res
     }
 }
 
-pub fn generate_bindings(db: &Database) -> Result<Output> {
+pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
     let tcx = db.tcx();
 
     let top_comment = {
@@ -133,10 +133,10 @@ pub fn generate_bindings(db: &Database) -> Result<Output> {
         quote! { __COMMENT__ #txt __NEWLINE__ }
     };
 
-    let Output { h_body, rs_body } = generate_crate(db).unwrap_or_else(|err| {
+    let BindingsTokens { h_body, rs_body } = generate_crate(db).unwrap_or_else(|err| {
         let txt = format!("Failed to generate bindings for the crate: {err}");
         let src = quote! { __COMMENT__ #txt };
-        Output { h_body: src.clone(), rs_body: src }
+        BindingsTokens { h_body: src.clone(), rs_body: src }
     });
     let h_body = add_include_guard(db, h_body)?;
     let h_body = quote! {
@@ -172,7 +172,7 @@ pub fn generate_bindings(db: &Database) -> Result<Output> {
         #rs_body
     };
 
-    Ok(Output { h_body, rs_body })
+    Ok(BindingsTokens { h_body, rs_body })
 }
 
 fn crate_features(
@@ -370,7 +370,7 @@ impl FullyQualifiedName {
 
         let tcx = db.tcx();
         let krate = tcx.crate_name(def_id.krate);
-        let cpp_top_level_ns = top_level_ns_for_crate(db, def_id.krate);
+        let cpp_top_level_ns = format_top_level_ns_for_crate(db, def_id.krate);
 
         // Crash OK: these attributes are introduced by crubit itself, and "should
         // never" be malformed.
@@ -603,7 +603,7 @@ fn create_canonical_name_from_foreign_path(
             krate,
             rs_name,
             rs_mod_path,
-            cpp_top_level_ns: top_level_ns_for_crate(db, def_id.krate),
+            cpp_top_level_ns: format_top_level_ns_for_crate(db, def_id.krate),
             cpp_ns_path,
             cpp_name,
             cpp_type,
@@ -677,7 +677,7 @@ fn reexported_symbol_canonical_name_mapping(
         }
         let item_name = tcx.opt_item_name(aliased_entity_def_id)?;
         let krate = tcx.crate_name(def_id.krate);
-        let cpp_top_level_ns = top_level_ns_for_crate(db, def_id.krate);
+        let cpp_top_level_ns = format_top_level_ns_for_crate(db, def_id.krate);
         let parent_def_key = tcx.def_key(def_id).parent?;
         let parent_def_id = DefId::local(parent_def_key);
 
@@ -2619,7 +2619,7 @@ fn format_namespace_bound_cc_tokens(
 }
 
 /// Formats all public items from the Rust crate being compiled.
-fn generate_crate(db: &Database) -> Result<Output> {
+fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     let tcx = db.tcx();
     let mut cc_details_prereqs = CcPrerequisites::default();
     let mut cc_details: Vec<(LocalDefId, TokenStream)> = vec![];
@@ -2719,7 +2719,7 @@ fn generate_crate(db: &Database) -> Result<Output> {
 
     // Generate top-level elements of the C++ header file.
     let h_body = {
-        let cpp_top_level_ns = top_level_ns_for_crate(db, LOCAL_CRATE);
+        let cpp_top_level_ns = format_top_level_ns_for_crate(db, LOCAL_CRATE);
         let cpp_top_level_ns = format_cc_ident(db, cpp_top_level_ns.as_str())?;
 
         let includes = format_cc_includes(&includes);
@@ -2751,7 +2751,7 @@ fn generate_crate(db: &Database) -> Result<Output> {
         };
     }
 
-    Ok(Output { h_body, rs_body })
+    Ok(BindingsTokens { h_body, rs_body })
 }
 
 #[cfg(test)]
@@ -8516,7 +8516,7 @@ pub mod tests {
     /// that it got the expected `GeneratedBindings`.)
     pub(crate) fn test_generated_bindings<F, T>(source: &str, test_function: F) -> T
     where
-        F: FnOnce(Result<Output>) -> T + Send,
+        F: FnOnce(Result<BindingsTokens>) -> T + Send,
         T: Send,
     {
         run_compiler_for_testing(source, |tcx| {
