@@ -708,7 +708,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                     incomplete_record: incomplete_record.clone(),
                     crate_path: Rc::new(CratePath::new(
                         &ir,
-                        ir.namespace_qualifier(incomplete_record)?,
+                        ir.namespace_qualifier(incomplete_record),
                         rs_imported_crate_name(&incomplete_record.owning_target, &ir),
                     )),
                 },
@@ -807,7 +807,7 @@ fn cpp_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
 
 fn cc_tagless_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
     let ident = crate::format_cc_ident(record.cc_name.as_ref());
-    let namespace_qualifier = ir.namespace_qualifier(record)?.format_for_cc()?;
+    let namespace_qualifier = ir.namespace_qualifier(record).format_for_cc()?;
     Ok(quote! { #namespace_qualifier #ident })
 }
 
@@ -815,7 +815,7 @@ fn cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
     match item {
         Item::IncompleteRecord(incomplete_record) => {
             let ident = crate::format_cc_ident(incomplete_record.cc_name.as_ref());
-            let namespace_qualifier = ir.namespace_qualifier(incomplete_record)?.format_for_cc()?;
+            let namespace_qualifier = ir.namespace_qualifier(incomplete_record).format_for_cc()?;
             let tag_kind = incomplete_record.record_type;
             Ok(quote! { #tag_kind #namespace_qualifier #ident })
         }
@@ -848,7 +848,7 @@ fn cc_qualified_path_prefix(item: &ir::Item, ir: &ir::IR) -> Result<TokenStream>
     };
     let parent: &ir::Item = ir.find_decl(parent)?;
     match parent {
-        ir::Item::Namespace(_) => Ok(ir.namespace_qualifier(item)?.format_for_cc()?),
+        ir::Item::Namespace(_) => Ok(ir.namespace_qualifier(item).format_for_cc()?),
         ir::Item::Record(r) => {
             let name = cc_tagless_type_name_for_record(r, ir)?;
             Ok(quote! {#name ::})

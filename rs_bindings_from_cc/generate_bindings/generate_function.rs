@@ -930,7 +930,7 @@ pub fn generate_func(
         } else {
             return Ok(None);
         };
-    let namespace_qualifier = ir.namespace_qualifier(&func)?.format_for_rs();
+    let namespace_qualifier = ir.namespace_qualifier(&func).format_for_rs();
 
     let mut return_type = db
         .rs_type_kind(func.return_type.rs_type.clone())
@@ -1278,7 +1278,7 @@ pub fn generate_func(
                     extra_items = quote! {};
                 }
             };
-            let record_qualifier = ir.namespace_qualifier(&trait_record)?.format_for_rs();
+            let record_qualifier = ir.namespace_qualifier(&trait_record).format_for_rs();
             let full_record_qualifier = if Some(trait_record.id) == func.enclosing_item_id {
                 // If the method is defined in the record, then the record qualifier is not
                 // needed for better readability.

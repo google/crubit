@@ -228,13 +228,12 @@ pub fn generate_function_thunk_impl(
                     } else {
                         let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
                         let record_ident = crate::format_cc_ident(record.cc_name.as_ref());
-                        let namespace_qualifier =
-                            ir.namespace_qualifier(record)?.format_for_cc()?;
+                        let namespace_qualifier = ir.namespace_qualifier(record).format_for_cc()?;
                         quote! { #namespace_qualifier #record_ident :: #fn_ident }
                     }
                 }
                 None => {
-                    let namespace_qualifier = ir.namespace_qualifier(func)?.format_for_cc()?;
+                    let namespace_qualifier = ir.namespace_qualifier(func).format_for_cc()?;
                     quote! { #namespace_qualifier #fn_ident }
                 }
             }

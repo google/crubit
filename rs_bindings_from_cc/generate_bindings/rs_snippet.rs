@@ -516,7 +516,7 @@ impl RsTypeKind {
         let underlying_type = Rc::new(db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?);
         let crate_path = Rc::new(CratePath::new(
             &ir,
-            ir.namespace_qualifier(&type_alias)?,
+            ir.namespace_qualifier(&type_alias),
             rs_imported_crate_name(&type_alias.owning_target, &ir),
         ));
         let result = RsTypeKind::TypeAlias { type_alias, crate_path, underlying_type };
@@ -529,7 +529,7 @@ impl RsTypeKind {
     pub fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>, ir: &IR) -> Result<Self> {
         let crate_path = Rc::new(CratePath::new(
             ir,
-            ir.namespace_qualifier(&record)?,
+            ir.namespace_qualifier(&record),
             rs_imported_crate_name(&record.owning_target, ir),
         ));
         let known_generic_monomorphization =
@@ -543,7 +543,7 @@ impl RsTypeKind {
     pub fn new_enum(enum_: Rc<Enum>, ir: &IR) -> Result<Self> {
         let crate_path = Rc::new(CratePath::new(
             ir,
-            ir.namespace_qualifier(&enum_)?,
+            ir.namespace_qualifier(&enum_),
             rs_imported_crate_name(&enum_.owning_target, ir),
         ));
         Ok(RsTypeKind::Enum { enum_, crate_path })

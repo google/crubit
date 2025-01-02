@@ -72,7 +72,7 @@ pub fn generate_incomplete_record(
     incomplete_record: &IncompleteRecord,
 ) -> Result<GeneratedItem> {
     let ident = make_rs_ident(incomplete_record.rs_name.as_ref());
-    let namespace_qualifier = db.ir().namespace_qualifier(incomplete_record)?.format_for_cc()?;
+    let namespace_qualifier = db.ir().namespace_qualifier(incomplete_record).format_for_cc()?;
     let symbol = quote! {#namespace_qualifier #ident}.to_string();
     Ok(quote! {
         forward_declare::forward_declare!(
@@ -263,7 +263,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
     let ir = db.ir();
     let crate_root_path = crate::crate_root_path_tokens(&ir);
     let ident = make_rs_ident(record.rs_name.as_ref());
-    let namespace_qualifier = ir.namespace_qualifier(record)?.format_for_rs();
+    let namespace_qualifier = ir.namespace_qualifier(record).format_for_rs();
     let qualified_ident = {
         quote! { #crate_root_path:: #namespace_qualifier #ident }
     };
@@ -728,7 +728,7 @@ fn generate_derives(record: &Record) -> Vec<Ident> {
 
 fn cc_struct_layout_assertion(db: &Database, record: &Record) -> Result<TokenStream> {
     let record_ident = crate::format_cc_ident(record.cc_name.as_ref());
-    let namespace_qualifier = db.ir().namespace_qualifier(record)?.format_for_cc()?;
+    let namespace_qualifier = db.ir().namespace_qualifier(record).format_for_cc()?;
     let tag_kind = crate::cc_tag_kind(record);
     let field_assertions = record
         .fields

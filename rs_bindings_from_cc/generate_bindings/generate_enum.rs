@@ -15,7 +15,7 @@ use std::collections::BTreeSet;
 
 pub fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
     let ident = crate::format_cc_ident(&enum_.identifier.identifier);
-    let namespace_qualifier = db.ir().namespace_qualifier(enum_)?.format_for_cc()?;
+    let namespace_qualifier = db.ir().namespace_qualifier(enum_).format_for_cc()?;
     let fully_qualified_cc_name = quote! { #namespace_qualifier #ident }.to_string();
     let name = make_rs_ident(&enum_.identifier.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.rs_type.clone())?;
