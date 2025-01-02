@@ -6,11 +6,11 @@ use crate::db::BindingsGenerator;
 
 use crate::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use crate::format_cc_ident;
-use crate::format_doc_comment;
-use crate::generate_function_thunk::{format_thunk_decl, format_thunk_impl, is_thunk_required};
+use crate::generate_doc_comment;
+use crate::generate_function_thunk::{generate_thunk_decl, generate_thunk_impl, is_thunk_required};
 use crate::{
-    format_deprecated_tag, format_param_types_for_cc, format_region_as_cc_lifetime,
-    format_ret_ty_for_cc, is_bridged_type, is_c_abi_compatible_by_value,
+    format_param_types_for_cc, format_region_as_cc_lifetime, format_ret_ty_for_cc,
+    generate_deprecated_tag, is_bridged_type, is_c_abi_compatible_by_value,
     liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, AllowReferences,
     BridgedType, CcType, FullyQualifiedName, RsSnippet,
 };
@@ -58,7 +58,10 @@ impl FunctionKind {
 /// Will panic if `local_def_id`
 /// - is invalid
 /// - doesn't identify a function,
-pub fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result<ApiSnippets> {
+pub fn generate_function(
+    db: &dyn BindingsGenerator<'_>,
+    local_def_id: LocalDefId,
+) -> Result<ApiSnippets> {
     let tcx = db.tcx();
     let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
 
@@ -202,7 +205,7 @@ pub fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Re
         .collect_vec();
     let main_api = {
         let doc_comment = {
-            let doc_comment = format_doc_comment(tcx, local_def_id);
+            let doc_comment = generate_doc_comment(tcx, local_def_id);
             quote! { __NEWLINE__ #doc_comment }
         };
 
@@ -232,14 +235,14 @@ pub fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Re
             };
         }
         // Attribute: deprecated
-        if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, def_id) {
+        if let Some(cc_deprecated_tag) = generate_deprecated_tag(tcx, def_id) {
             attributes.push(cc_deprecated_tag);
         }
         // Also check the impl block to which this function belongs (if there is one).
         // Note: parent_def_id can be Some(...) even if the function is not inside an
         // impl block.
         if let Some(parent_def_id) = tcx.opt_parent(def_id) {
-            if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, parent_def_id) {
+            if let Some(cc_deprecated_tag) = generate_deprecated_tag(tcx, parent_def_id) {
                 attributes.push(cc_deprecated_tag);
             }
         }
@@ -265,15 +268,16 @@ pub fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Re
             None => quote! {},
             Some(fully_qualified_name) => {
                 let name = fully_qualified_name.cpp_name.expect("Structs always have a name");
-                let name = format_cc_ident(db, name.as_str())
-                    .expect("Caller of format_fn should verify struct via format_adt_core");
+                let name = format_cc_ident(db, name.as_str()).expect(
+                    "Caller of generate_function should verify struct via generate_adt_core",
+                );
                 quote! { #name :: }
             }
         };
 
         let mut prereqs = main_api_prereqs;
         let thunk_decl =
-            format_thunk_decl(db, &sig_mid, Some(sig_hir), &thunk_name, AllowReferences::Safe)?
+            generate_thunk_decl(db, &sig_mid, Some(sig_hir), &thunk_name, AllowReferences::Safe)?
                 .into_tokens(&mut prereqs);
 
         let mut thunk_args = params
@@ -338,8 +342,8 @@ pub fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Re
             };
         } else {
             if let Some(adt_def) = sig_mid.output().ty_adt_def() {
-                let core = db.format_adt_core(adt_def.did())?;
-                db.format_move_ctor_and_assignment_operator(core).map_err(|_| {
+                let core = db.generate_adt_core(adt_def.did())?;
+                db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
                     anyhow!("Can't pass the return type by value without a move constructor")
                 })?;
             }
@@ -377,7 +381,7 @@ pub fn format_fn(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Re
                 quote! { #struct_name :: #fn_name }
             }
         };
-        format_thunk_impl(db, def_id, &sig_mid, &thunk_name, fully_qualified_fn_name)?
+        generate_thunk_impl(db, def_id, &sig_mid, &thunk_name, fully_qualified_fn_name)?
     };
 
     Ok(ApiSnippets { main_api, cc_details, rs_details })

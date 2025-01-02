@@ -60,8 +60,8 @@ pub mod static_method_taking_same_struct_by_value {
 /// (with method declarations) cannot be "glued" together with its method
 /// definitions.
 ///
-/// And the above is why `format_fn` and `format_adt` in `bindings.rs` return
-/// multiple snippets - this means that method declarations and method
+/// And the above is why `generate_function` and `generate_adt` in `bindings.rs`
+/// return multiple snippets - this means that method declarations and method
 /// definitions can be reordered independently.
 pub mod non_contiguous_method_decls_and_defs {
     pub struct S1(i32);

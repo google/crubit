@@ -32,7 +32,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::ops::AddAssign;
 
 /// Formats a C++ function declaration of a thunk that wraps a Rust function.
-pub fn format_thunk_decl<'tcx>(
+pub fn generate_thunk_decl<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
@@ -60,8 +60,8 @@ pub fn format_thunk_decl<'tcx>(
                 } else if is_c_abi_compatible_by_value(ty) {
                     Ok(quote! { #cpp_type })
                 } else if let Some(adt_def) = ty.ty_adt_def() {
-                    let core = db.format_adt_core(adt_def.did())?;
-                    db.format_move_ctor_and_assignment_operator(core).map_err(|_| {
+                    let core = db.generate_adt_core(adt_def.did())?;
+                    db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
                         anyhow!("Can't pass a type by value without a move constructor")
                     })?;
                     Ok(quote! { #cpp_type* })
@@ -90,8 +90,8 @@ pub fn format_thunk_decl<'tcx>(
 }
 
 /// Formats a thunk implementation in Rust that provides an `extern "C"` ABI for
-/// calling a Rust function identified by `fn_def_id`.  `format_thunk_impl` may
-/// panic if `fn_def_id` doesn't identify a function.
+/// calling a Rust function identified by `fn_def_id`.  `generate_thunk_impl`
+/// may panic if `fn_def_id` doesn't identify a function.
 ///
 /// `fully_qualified_fn_name` specifies how the thunk can identify the function
 /// to call. Examples of valid arguments:
@@ -99,7 +99,7 @@ pub fn format_thunk_decl<'tcx>(
 /// - `::crate_name::some_module::SomeStruct::method`
 /// - `<::crate_name::some_module::SomeStruct as
 ///   ::core::default::Default>::default`
-pub fn format_thunk_impl<'tcx>(
+pub fn generate_thunk_impl<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     fn_def_id: DefId,
     sig: &ty::FnSig<'tcx>,
@@ -387,7 +387,7 @@ pub struct TraitThunks {
     pub rs_thunk_impls: RsSnippet,
 }
 
-pub fn format_trait_thunks<'tcx>(
+pub fn generate_trait_thunks<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     trait_id: DefId,
     adt: &AdtCoreBindings<'tcx>,
@@ -419,11 +419,11 @@ pub fn format_trait_thunks<'tcx>(
             let generics = tcx.generics_of(method.def_id);
             if generics.own_params.iter().any(|p| p.kind.is_ty_or_const()) {
                 // Note that lifetime-generic methods are ok:
-                // * they are handled by `format_thunk_decl` and `format_thunk_impl`
+                // * they are handled by `generate_thunk_decl` and `generate_thunk_impl`
                 // * the lifetimes are erased by `ty::Instance::mono` and *seem* to be erased by
                 //   `ty::Instance::new`
                 panic!(
-                    "So far callers of `format_trait_thunks` didn't need traits with \
+                    "So far callers of `generate_trait_thunks` didn't need traits with \
                       methods that are type-generic or const-generic"
                 );
             }
@@ -467,13 +467,13 @@ pub fn format_trait_thunks<'tcx>(
 
         cc_thunk_decls.add_assign({
             let thunk_name = format_cc_ident(db, &thunk_name)?;
-            format_thunk_decl(db, &sig_mid, sig_hir, &thunk_name, allow_references)?
+            generate_thunk_decl(db, &sig_mid, sig_hir, &thunk_name, allow_references)?
         });
 
         rs_thunk_impls += {
             let struct_name = &adt.rs_fully_qualified_name;
             if is_drop_trait {
-                // Manually formatting (instead of depending on `format_thunk_impl`)
+                // Manually formatting (instead of depending on `generate_thunk_impl`)
                 // to avoid https://doc.rust-lang.org/error_codes/E0040.html
                 let thunk_name = make_rs_ident(&thunk_name);
                 RsSnippet::new(quote! {
@@ -491,7 +491,7 @@ pub fn format_trait_thunks<'tcx>(
                     let method_name = make_rs_ident(method.name.as_str());
                     quote! { <#struct_name as #fully_qualified_trait_name>::#method_name }
                 };
-                format_thunk_impl(
+                generate_thunk_impl(
                     db,
                     method.def_id,
                     &sig_mid,

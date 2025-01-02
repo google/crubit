@@ -22,9 +22,9 @@ mod generate_struct_and_union;
 
 use crate::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
 pub use crate::db::{BindingsGenerator, Database};
-use crate::generate_function::{check_fn_sig, format_fn};
-use crate::generate_function_thunk::{format_trait_thunks, is_thunk_required, TraitThunks};
-use crate::generate_struct_and_union::{format_adt, format_adt_core, AdtCoreBindings};
+use crate::generate_function::{check_fn_sig, generate_function};
+use crate::generate_function_thunk::{generate_trait_thunks, is_thunk_required, TraitThunks};
+use crate::generate_struct_and_union::{generate_adt, generate_adt_core, AdtCoreBindings};
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{
     format_cc_includes, make_rs_ident, CcConstQualifier, CcInclude, NamespaceQualifier,
@@ -133,7 +133,7 @@ pub fn generate_bindings(db: &Database) -> Result<Output> {
         quote! { __COMMENT__ #txt __NEWLINE__ }
     };
 
-    let Output { h_body, rs_body } = format_crate(db).unwrap_or_else(|err| {
+    let Output { h_body, rs_body } = generate_crate(db).unwrap_or_else(|err| {
         let txt = format!("Failed to generate bindings for the crate: {err}");
         let src = quote! { __COMMENT__ #txt };
         Output { h_body: src.clone(), rs_body: src }
@@ -511,7 +511,7 @@ fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
         //
         // TODO(lukasza): In the future, some additional performance gains may be realized by
         // returning `true` in a few limited cases (this may require additional complexity to
-        // ensure that `format_adt` never injects explicit padding into such structs):
+        // ensure that `generate_adt` never injects explicit padding into such structs):
         // - `#[repr(C)]` structs and unions,
         // - `#[repr(transparent)]` struct that wraps an ABI-safe type,
         // - Discriminant-only enums (b/259984090).
@@ -1019,7 +1019,7 @@ fn format_ty_for_cc<'tcx>(
                 }
 
                 // Verify if definition of `ty` can be succesfully imported and bail otherwise.
-                db.format_adt_core(def_id).with_context(|| {
+                db.generate_adt_core(def_id).with_context(|| {
                     format!("Failed to generate bindings for the definition of `{ty}`")
                 })?;
             }
@@ -1664,7 +1664,7 @@ fn liberate_and_deanonymize_late_bound_regions<'tcx>(
 
 /// Returns the C++ deprecated tag for the item identified by `def_id`, if it is
 /// deprecated. Otherwise, returns None.
-fn format_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
+fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
     if let Some(deprecated_attr) = tcx.get_attr(def_id, rustc_span::symbol::sym::deprecated) {
         if let Some((deprecation, _span)) =
             find_deprecation(tcx.sess(), tcx.features(), slice::from_ref(deprecated_attr))
@@ -1695,7 +1695,7 @@ fn generate_using_statement(
             let mut prereqs;
             // TODO(b/350772554): Support exporting private functions.
             if let Some(local_id) = def_id.as_local() {
-                if let Ok(snippet) = db.format_fn(local_id) {
+                if let Ok(snippet) = db.generate_function(local_id) {
                     prereqs = snippet.main_api.prereqs;
                 } else {
                     bail!("Ignoring the use because the bindings for the target is not generated");
@@ -1829,7 +1829,7 @@ fn collect_alias_from_use(
     Ok(aliases)
 }
 
-fn format_use(
+fn generate_use(
     db: &dyn BindingsGenerator<'_>,
     using_name: &str,
     use_path: &UsePath,
@@ -1852,10 +1852,10 @@ fn format_use(
         .collect())
 }
 
-fn format_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result<ApiSnippets> {
+fn generate_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result<ApiSnippets> {
     let tcx = db.tcx();
     let def_id: DefId = local_def_id.to_def_id();
-    let unsupported_node_item_msg = "Called `format_const` with a `rustc_hir::Node` that is not a `Node::Item` or `Node::ImplItem`";
+    let unsupported_node_item_msg = "Called `generate_const` with a `rustc_hir::Node` that is not a `Node::Item` or `Node::ImplItem`";
     let hir_node = tcx.hir_node_by_def_id(local_def_id);
 
     let hir_ty = match hir_node {
@@ -1920,7 +1920,7 @@ fn format_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Res
     })
 }
 
-fn format_type_alias(
+fn generate_type_alias(
     db: &dyn BindingsGenerator<'_>,
     local_def_id: LocalDefId,
 ) -> Result<ApiSnippets> {
@@ -1928,7 +1928,7 @@ fn format_type_alias(
     let def_id: DefId = local_def_id.to_def_id();
     let Item { kind: ItemKind::TyAlias(hir_ty, ..), .. } = tcx.hir().expect_item(local_def_id)
     else {
-        panic!("called format_type_alias on a non-type-alias");
+        panic!("called generate_type_alias on a non-type-alias");
     };
     let alias_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), Some(*hir_ty));
     create_type_alias(db, def_id, tcx.item_name(def_id).as_str(), alias_type)
@@ -1947,7 +1947,7 @@ fn create_type_alias<'tcx>(
     let alias_name = format_cc_ident(db, alias_name).context("Error formatting type alias name")?;
 
     let mut attributes = vec![];
-    if let Some(cc_deprecated_tag) = format_deprecated_tag(db.tcx(), def_id) {
+    if let Some(cc_deprecated_tag) = generate_deprecated_tag(db.tcx(), def_id) {
         attributes.push(cc_deprecated_tag);
     }
 
@@ -2152,7 +2152,7 @@ fn does_type_implement_trait<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>, trait_i
 /// trait is implemented for the ADT).  Returns an error otherwise (e.g. if
 /// there is no `Default` impl, then the default constructor will be
 /// `=delete`d in the returned snippet).
-fn format_default_ctor<'tcx>(
+fn generate_default_ctor<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Result<ApiSnippets, ApiSnippets> {
@@ -2168,7 +2168,7 @@ fn format_default_ctor<'tcx>(
             method_name_to_cc_thunk_name,
             cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = format_trait_thunks(db, trait_id, &core)?;
+        } = generate_trait_thunks(db, trait_id, &core)?;
 
         let cc_struct_name = &core.cc_short_name;
         let main_api = CcSnippet::new(quote! {
@@ -2211,7 +2211,7 @@ fn format_default_ctor<'tcx>(
 /// possible (i.e. if the `Clone` trait is implemented for the ADT).  Returns an
 /// error otherwise (e.g. if there is no `Clone` impl, then the copy constructor
 /// and assignment operator will be `=delete`d in the returned snippet).
-fn format_copy_ctor_and_assignment_operator<'tcx>(
+fn generate_copy_ctor_and_assignment_operator<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Result<ApiSnippets, ApiSnippets> {
@@ -2255,7 +2255,7 @@ fn format_copy_ctor_and_assignment_operator<'tcx>(
             method_name_to_cc_thunk_name,
             cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = format_trait_thunks(db, trait_id, &core)?;
+        } = generate_trait_thunks(db, trait_id, &core)?;
         let main_api = CcSnippet::new(quote! {
             __NEWLINE__ __COMMENT__ "Clone::clone"
             #cc_struct_name(const #cc_struct_name&); __NEWLINE__
@@ -2304,7 +2304,7 @@ fn format_copy_ctor_and_assignment_operator<'tcx>(
 /// possible (it depends on various factors like `needs_drop`, `is_unpin` and
 /// implementations of `Default` and/or `Clone` traits).  Returns an error
 /// otherwise (the error's `ApiSnippets` contain a `=delete`d declaration).
-fn format_move_ctor_and_assignment_operator<'tcx>(
+fn generate_move_ctor_and_assignment_operator<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Result<ApiSnippets, ApiSnippets> {
@@ -2315,7 +2315,7 @@ fn format_move_ctor_and_assignment_operator<'tcx>(
         let tcx = db.tcx();
         let adt_cc_name = &core.cc_short_name;
         if core.needs_drop(tcx) {
-            let has_default_ctor = db.format_default_ctor(core.clone()).is_ok();
+            let has_default_ctor = db.generate_default_ctor(core.clone()).is_ok();
             let is_unpin = core.self_ty.is_unpin(tcx, post_analysis_typing_env(tcx, core.def_id));
             if has_default_ctor && is_unpin {
                 let main_api = CcSnippet::new(quote! {
@@ -2337,7 +2337,7 @@ fn format_move_ctor_and_assignment_operator<'tcx>(
                 };
                 let cc_details = CcSnippet { tokens, prereqs };
                 Ok(ApiSnippets { main_api, cc_details, ..Default::default() })
-            } else if db.format_copy_ctor_and_assignment_operator(core).is_ok() {
+            } else if db.generate_copy_ctor_and_assignment_operator(core).is_ok() {
                 // The class will have a custom copy constructor and copy assignment operator
                 // and *no* move constructor nor move assignment operator. This
                 // way, when a move is requested, a copy is performed instead
@@ -2418,22 +2418,22 @@ fn format_move_ctor_and_assignment_operator<'tcx>(
 /// `quote!{ struct SomeStruct; }`.
 ///
 /// Will panic if `def_id` doesn't identify an ADT that can be successfully
-/// handled by `format_adt_core`.
+/// handled by `generate_adt_core`.
 fn format_fwd_decl(db: &Database<'_>, def_id: LocalDefId) -> TokenStream {
     let def_id = def_id.to_def_id(); // LocalDefId -> DefId conversion.
 
     // `format_fwd_decl` should only be called for items from
     // `CcPrerequisites::fwd_decls` and `fwd_decls` should only contain ADTs
-    // that `format_adt_core` succeeds for.
+    // that `generate_adt_core` succeeds for.
     let core_bindings = db
-        .format_adt_core(def_id)
-        .expect("`format_fwd_decl` should only be called if `format_adt_core` succeeded");
+        .generate_adt_core(def_id)
+        .expect("`format_fwd_decl` should only be called if `generate_adt_core` succeeded");
     let AdtCoreBindings { keyword, cc_short_name, .. } = &*core_bindings;
 
     quote! { #keyword #cc_short_name; }
 }
 
-fn format_source_location(tcx: TyCtxt, local_def_id: LocalDefId) -> String {
+fn generate_source_location(tcx: TyCtxt, local_def_id: LocalDefId) -> String {
     let def_span = tcx.def_span(local_def_id);
     let rustc_span::FileLines { file, lines } =
         match tcx.sess().source_map().span_to_lines(def_span) {
@@ -2458,7 +2458,7 @@ fn format_source_location(tcx: TyCtxt, local_def_id: LocalDefId) -> String {
 /// Formats the doc comment (if any) associated with the item identified by
 /// `local_def_id`, and appends the source location at which the item is
 /// defined.
-fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
+fn generate_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
     let hir_id = tcx.local_def_id_to_hir_id(local_def_id);
     let doc_comment = tcx
         .hir()
@@ -2466,7 +2466,7 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
         .iter()
         .filter_map(|attr| attr.doc_str())
         .map(|symbol| symbol.to_string())
-        .chain(once(format!("Generated from: {}", format_source_location(tcx, local_def_id))))
+        .chain(once(format!("Generated from: {}", generate_source_location(tcx, local_def_id))))
         .join("\n\n");
     quote! { __COMMENT__ #doc_comment}
 }
@@ -2475,7 +2475,10 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
 /// can be ignored. Returns an `Err` if the definition couldn't be formatted.
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
-fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Option<ApiSnippets>> {
+fn generate_item(
+    db: &dyn BindingsGenerator<'_>,
+    def_id: LocalDefId,
+) -> Result<Option<ApiSnippets>> {
     let tcx = db.tcx();
 
     // TODO(b/350772554): Support `use` mod.
@@ -2490,7 +2493,7 @@ fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Opt
                .. } if !generics.params.is_empty() => {
             bail!("Generic types are not supported yet (b/259749095)");
         },
-        Item { kind: ItemKind::Fn(..), .. } => db.format_fn(def_id).map(Some),
+        Item { kind: ItemKind::Fn(..), .. } => db.generate_function(def_id).map(Some),
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } => {
             let attributes = crubit_attr::get_attrs(tcx, def_id.to_def_id()).unwrap();
             if let Some(cpp_type) = attributes.cpp_type {
@@ -2500,16 +2503,16 @@ fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Opt
                             an existing C++ type ({cpp_type})"
                 );
             }
-            db.format_adt_core(def_id.to_def_id())
-                .map(|core| Some(format_adt(db, core)))
+            db.generate_adt_core(def_id.to_def_id())
+                .map(|core| Some(generate_adt(db, core)))
         }
-        Item { kind: ItemKind::TyAlias(..), ..} => format_type_alias(db, def_id).map(Some),
+        Item { kind: ItemKind::TyAlias(..), ..} => generate_type_alias(db, def_id).map(Some),
         Item { ident, kind: ItemKind::Use(use_path, use_kind), ..} => {
-            format_use(db, ident.as_str(), use_path, use_kind).map(Some)
+            generate_use(db, ident.as_str(), use_path, use_kind).map(Some)
         },
-        Item { kind: ItemKind::Const(..), .. } => format_const(db, def_id).map(Some),
-        Item { kind: ItemKind::Impl(_), .. } |  // Handled by `format_adt`
-        Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
+        Item { kind: ItemKind::Const(..), .. } => generate_const(db, def_id).map(Some),
+        Item { kind: ItemKind::Impl(_), .. } |  // Handled by `generate_adt`
+        Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `generate_crate`
             Ok(None),
         Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
     };
@@ -2523,14 +2526,14 @@ fn format_item(db: &dyn BindingsGenerator<'_>, def_id: LocalDefId) -> Result<Opt
 
 /// Formats a C++ comment explaining why no bindings have been generated for
 /// `local_def_id`.
-fn format_unsupported_def(
+fn generate_unsupported_def(
     db: &dyn BindingsGenerator<'_>,
     local_def_id: LocalDefId,
     err: Error,
 ) -> ApiSnippets {
     let tcx = db.tcx();
     db.errors().insert(&err);
-    let source_loc = format_source_location(tcx, local_def_id);
+    let source_loc = generate_source_location(tcx, local_def_id);
     let name = tcx.def_path_str(local_def_id.to_def_id());
 
     // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
@@ -2593,7 +2596,7 @@ fn format_namespace_bound_cc_tokens(
         .map(|(ns_def_id_opt, ns, tokens)| {
             let mut ns_attributes = vec![];
             if let Some(ns_def_id) = ns_def_id_opt {
-                if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, ns_def_id) {
+                if let Some(cc_deprecated_tag) = generate_deprecated_tag(tcx, ns_def_id) {
                     ns_attributes.push(cc_deprecated_tag);
                 }
             }
@@ -2616,7 +2619,7 @@ fn format_namespace_bound_cc_tokens(
 }
 
 /// Formats all public items from the Rust crate being compiled.
-fn format_crate(db: &Database) -> Result<Output> {
+fn generate_crate(db: &Database) -> Result<Output> {
     let tcx = db.tcx();
     let mut cc_details_prereqs = CcPrerequisites::default();
     let mut cc_details: Vec<(LocalDefId, TokenStream)> = vec![];
@@ -2628,8 +2631,8 @@ fn format_crate(db: &Database) -> Result<Output> {
         .items()
         .filter_map(|item_id| {
             let def_id: LocalDefId = item_id.owner_id.def_id;
-            db.format_item(def_id)
-                .unwrap_or_else(|err| Some(format_unsupported_def(db, def_id, err)))
+            db.generate_item(def_id)
+                .unwrap_or_else(|err| Some(generate_unsupported_def(db, def_id, err)))
                 .map(|api_snippets| (def_id, api_snippets))
         })
         .sorted_by_key(|(def_id, _)| tcx.def_span(*def_id));
@@ -2765,10 +2768,10 @@ pub mod tests {
 
     /// This test covers only a single example of a function that should get a
     /// C++ binding. The test focuses on verification that the output from
-    /// `format_fn` gets propagated all the way to `GenerateBindings::new`.
-    /// Additional coverage of how functions are formatted is provided
-    /// by `test_format_item_..._fn_...` tests (which work at the `format_fn`
-    /// level).
+    /// `generate_function` gets propagated all the way to
+    /// `GenerateBindings::new`. Additional coverage of how functions are
+    /// formatted is provided by `test_format_item_..._fn_...` tests (which
+    /// work at the `generate_function` level).
     #[test]
     fn test_generated_bindings_fn_no_mangle_extern_c() {
         let test_src = r#"
@@ -2826,7 +2829,7 @@ pub mod tests {
     ///
     /// We don't want to duplicate coverage already provided by
     /// `test_format_item_static_method`, but we do want to verify that
-    /// * `format_crate` won't process the `impl` as a standalone HIR item
+    /// * `generate_crate` won't process the `impl` as a standalone HIR item
     /// * The actual shape of the bindings still looks okay at this level.
     #[test]
     fn test_generated_bindings_impl() {
@@ -4743,7 +4746,7 @@ pub mod tests {
         });
     }
 
-    /// This test mainly verifies that `format_item` correctly propagates
+    /// This test mainly verifies that `generate_item` correctly propagates
     /// `CcPrerequisites` of parameter types and return type.
     #[test]
     fn test_format_item_fn_cc_prerequisites_if_cpp_definition_needed() {
@@ -4788,9 +4791,9 @@ pub mod tests {
         });
     }
 
-    /// This test verifies that `format_item` uses `CcPrerequisites::fwd_decls`
-    /// rather than `CcPrerequisites::defs` for function declarations in the
-    /// `main_api`.
+    /// This test verifies that `generate_item` uses
+    /// `CcPrerequisites::fwd_decls` rather than `CcPrerequisites::defs` for
+    /// function declarations in the `main_api`.
     #[test]
     fn test_format_item_fn_cc_prerequisites_if_only_cpp_declaration_needed() {
         let test_src = r#"
@@ -6178,7 +6181,7 @@ pub mod tests {
         });
     }
 
-    /// Test of `format_copy_ctor_and_assignment_operator` when the ADT
+    /// Test of `generate_copy_ctor_and_assignment_operator` when the ADT
     /// implements a `Clone` trait.
     ///
     /// Notes:
@@ -8431,11 +8434,11 @@ pub mod tests {
         }
     }
 
-    /// Tests invoking `format_item` on the item with the specified `name` from
-    /// the given Rust `source`.  Returns the result of calling
-    /// `test_function` with `format_item`'s result as an argument.
+    /// Tests invoking `generate_item` on the item with the specified `name`
+    /// from the given Rust `source`.  Returns the result of calling
+    /// `test_function` with `generate_item`'s result as an argument.
     /// (`test_function` should typically `assert!` that it got the expected
-    /// result from `format_item`.)
+    /// result from `generate_item`.)
     pub(crate) fn test_format_item<F, T>(source: &str, name: &str, test_function: F) -> T
     where
         F: FnOnce(Result<Option<ApiSnippets>, String>) -> T + Send,
@@ -8443,7 +8446,7 @@ pub mod tests {
     {
         run_compiler_for_testing(source, |tcx| {
             let def_id = find_def_id_by_name(tcx, name);
-            let result = bindings_db_for_tests(tcx).format_item(def_id);
+            let result = bindings_db_for_tests(tcx).generate_item(def_id);
 
             // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
             // To print causes as well [...], use the alternate selector “{:#}”.
@@ -8453,11 +8456,11 @@ pub mod tests {
         })
     }
 
-    /// Tests invoking `format_item` on the item with the specified `name` from
-    /// the given Rust `source`, with the specified features  Returns the result
-    /// of calling `test_function` with `format_item`'s result as an
-    /// argument. (`test_function` should typically `assert!` that it got
-    /// the expected result from `format_item`.)
+    /// Tests invoking `generate_item` on the item with the specified `name`
+    /// from the given Rust `source`, with the specified features  Returns
+    /// the result of calling `test_function` with `generate_item`'s result
+    /// as an argument. (`test_function` should typically `assert!` that it
+    /// got the expected result from `generate_item`.)
     pub(crate) fn test_format_item_with_features<F, T>(
         source: &str,
         name: &str,
@@ -8471,7 +8474,7 @@ pub mod tests {
         let features = features.into();
         run_compiler_for_testing(source, |tcx| {
             let def_id = find_def_id_by_name(tcx, name);
-            let result = bindings_db_for_tests_with_features(tcx, features).format_item(def_id);
+            let result = bindings_db_for_tests_with_features(tcx, features).generate_item(def_id);
 
             // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
             // To print causes as well [...], use the alternate selector “{:#}”.

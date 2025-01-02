@@ -6,12 +6,12 @@
 use crate::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use crate::db::BindingsGenerator;
 use crate::format_cc_ident;
-use crate::format_doc_comment;
+use crate::generate_doc_comment;
 use crate::{
-    crate_features, format_const, format_deprecated_tag, format_trait_thunks, format_ty_for_cc,
-    format_unsupported_def, get_layout, get_scalar_int_type, get_tag_size_with_padding,
-    is_exported, is_public_or_supported_export, post_analysis_typing_env, FullyQualifiedName,
-    RsSnippet, SugaredTy, TraitThunks, TypeLocation,
+    crate_features, format_ty_for_cc, generate_const, generate_deprecated_tag,
+    generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
+    get_tag_size_with_padding, is_exported, is_public_or_supported_export,
+    post_analysis_typing_env, FullyQualifiedName, RsSnippet, SugaredTy, TraitThunks, TypeLocation,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::make_rs_ident;
@@ -95,19 +95,19 @@ impl<'tcx> AdtCoreBindings<'tcx> {
 
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
 /// represented by `core`.  This function is infallible - after
-/// `format_adt_core` returns success we have committed to emitting C++ bindings
-/// for the ADT.
-pub fn format_adt<'tcx>(
+/// `generate_adt_core` returns success we have committed to emitting C++
+/// bindings for the ADT.
+pub fn generate_adt<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> ApiSnippets {
     let tcx = db.tcx();
     let adt_cc_name = &core.cc_short_name;
 
-    // `format_adt` should only be called for local ADTs.
+    // `generate_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
 
-    let default_ctor_snippets = db.format_default_ctor(core.clone()).unwrap_or_else(|err| err);
+    let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
 
     let destructor_snippets = if core.needs_drop(tcx) {
         let drop_trait_id =
@@ -116,8 +116,8 @@ pub fn format_adt<'tcx>(
             method_name_to_cc_thunk_name,
             cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = format_trait_thunks(db, drop_trait_id, &core)
-            .expect("`format_adt_core` should have already validated `Drop` support");
+        } = generate_trait_thunks(db, drop_trait_id, &core)
+            .expect("`generate_adt_core` should have already validated `Drop` support");
         let drop_thunk_name = method_name_to_cc_thunk_name
             .into_values()
             .exactly_one()
@@ -152,10 +152,10 @@ pub fn format_adt<'tcx>(
     };
 
     let copy_ctor_and_assignment_snippets =
-        db.format_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
+        db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
 
     let move_ctor_and_assignment_snippets =
-        db.format_move_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
+        db.generate_move_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
 
     let mut member_function_names = HashSet::<String>::new();
     let impl_items_snippets = tcx
@@ -177,7 +177,7 @@ pub fn format_adt<'tcx>(
             }
             let result = match impl_item_ref.kind {
                 AssocItemKind::Fn { .. } => {
-                    let result = db.format_fn(def_id);
+                    let result = db.generate_function(def_id);
                     if result.is_ok() {
                         let cpp_name = FullyQualifiedName::new(db, def_id.into())
                             .cpp_name
@@ -187,14 +187,14 @@ pub fn format_adt<'tcx>(
                     }
                     result
                 }
-                AssocItemKind::Const => format_const(db, def_id),
+                AssocItemKind::Const => generate_const(db, def_id),
                 other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
             };
             let result = result.and_then(|snippet| {
                 snippet.resolve_feature_requirements(crate_features(db, LOCAL_CRATE))
             });
             match result {
-                Err(err) => Some(format_unsupported_def(db, def_id, err)),
+                Err(err) => Some(generate_unsupported_def(db, def_id, err)),
                 Ok(result) => Some(result),
             }
         })
@@ -218,7 +218,7 @@ pub fn format_adt<'tcx>(
         main_api: fields_main_api,
         cc_details: fields_cc_details,
         rs_details: fields_rs_details,
-    } = format_fields(db, &core, &member_function_names);
+    } = generate_fields(db, &core, &member_function_names);
 
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
@@ -249,11 +249,11 @@ pub fn format_adt<'tcx>(
         }
 
         // Attribute: deprecated
-        if let Some(cc_deprecated_tag) = format_deprecated_tag(tcx, core.def_id) {
+        if let Some(cc_deprecated_tag) = generate_deprecated_tag(tcx, core.def_id) {
             attributes.push(cc_deprecated_tag);
         }
 
-        let doc_comment = format_doc_comment(tcx, core.def_id.expect_local());
+        let doc_comment = generate_doc_comment(tcx, core.def_id.expect_local());
         let keyword = &core.keyword;
 
         let mut prereqs = CcPrerequisites::default();
@@ -328,11 +328,11 @@ pub fn format_adt<'tcx>(
 /// cycles / infinite recursion (e.g. when processing fields that refer back to
 /// the struct type, possible with an indirection of a pointer).
 ///
-/// `format_adt_core` is used both to 1) format bindings for the core of an ADT,
-/// and 2) check if formatting would have succeeded (e.g. when called from
+/// `generate_adt_core` is used both to 1) format bindings for the core of an
+/// ADT, and 2) check if formatting would have succeeded (e.g. when called from
 /// `format_ty`).  The 2nd case is needed for ADTs defined in any crate - this
 /// is why the `def_id` parameter is a DefId rather than LocalDefId.
-pub fn format_adt_core<'tcx>(
+pub fn generate_adt_core<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     def_id: DefId,
 ) -> Result<Rc<AdtCoreBindings<'tcx>>> {
@@ -346,12 +346,12 @@ pub fn format_adt_core<'tcx>(
     let cpp_name = format_cc_ident(db, fully_qualified_name.cpp_name.unwrap().as_str())
         .context("Error formatting item name")?;
 
-    // The check below ensures that `format_trait_thunks` will succeed for the
+    // The check below ensures that `generate_trait_thunks` will succeed for the
     // `Drop`, `Default`, and/or `Clone` trait. Ideally we would directly check
-    // if `format_trait_thunks` or `format_ty_for_cc(..., self_ty, ...)`
+    // if `generate_trait_thunks` or `format_ty_for_cc(..., self_ty, ...)`
     // succeeds, but this would lead to infinite recursion, so we only replicate
     // `format_ty_for_cc` / `TyKind::Adt` checks that are outside of
-    // `format_adt_core`.
+    // `generate_adt_core`.
     fully_qualified_name
         .format_for_cc(db)
         .with_context(|| format!("Error formatting the fully-qualified C++ name of `{cpp_name}"))?;
@@ -390,7 +390,7 @@ pub fn format_adt_core<'tcx>(
 }
 
 /// Returns the body of the C++ struct that represents the given ADT.
-fn format_fields<'tcx>(
+fn generate_fields<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
     member_function_names: &HashSet<String>,
@@ -427,7 +427,7 @@ fn format_fields<'tcx>(
     }
 
     let layout = get_layout(tcx, core.self_ty)
-        .expect("Layout should be already verified by `format_adt_core`");
+        .expect("Layout should be already verified by `generate_adt_core`");
     let adt_def = core.self_ty.ty_adt_def().expect("`core.def_id` needs to identify an ADT");
     let err_fields = |err| {
         vec![Field {
@@ -598,7 +598,7 @@ fn format_fields<'tcx>(
                             // Populate attributes.
                             let mut attributes = vec![];
                             if let Some(cc_deprecated_tag) =
-                                format_deprecated_tag(tcx, field_def.did)
+                                generate_deprecated_tag(tcx, field_def.did)
                             {
                                 attributes.push(cc_deprecated_tag);
                             }
@@ -611,7 +611,10 @@ fn format_fields<'tcx>(
                                 index,
                                 offset,
                                 offset_of_next_field,
-                                doc_comment: format_doc_comment(tcx, field_def.did.expect_local()),
+                                doc_comment: generate_doc_comment(
+                                    tcx,
+                                    field_def.did.expect_local(),
+                                ),
                                 attributes,
                             }
                         })
@@ -1735,8 +1738,8 @@ pub mod tests {
         });
     }
 
-    /// This test verifies that `format_trait_thunks(..., drop_trait_id,
-    /// ...).expect(...)` won't panic - the `format_adt_core` needs to
+    /// This test verifies that `generate_trait_thunks(..., drop_trait_id,
+    /// ...).expect(...)` won't panic - the `generate_adt_core` needs to
     /// verify that formatting of the fully qualified C++ name of the struct
     /// works fine.
     #[test]

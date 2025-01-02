@@ -4,10 +4,11 @@
 
 use crate::code_snippet::{ApiSnippets, CcSnippet};
 use crate::{
-    format_adt_core, format_copy_ctor_and_assignment_operator, format_default_ctor, format_fn,
-    format_item, format_move_ctor_and_assignment_operator, format_ty_for_cc,
-    reexported_symbol_canonical_name_mapping, repr_attrs, support_header, AdtCoreBindings,
-    FullyQualifiedName, IncludeGuard, SugaredTy, TypeLocation,
+    format_ty_for_cc, generate_adt_core, generate_copy_ctor_and_assignment_operator,
+    generate_default_ctor, generate_function, generate_item,
+    generate_move_ctor_and_assignment_operator, reexported_symbol_canonical_name_mapping,
+    repr_attrs, support_header, AdtCoreBindings, FullyQualifiedName, IncludeGuard, SugaredTy,
+    TypeLocation,
 };
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
@@ -80,22 +81,22 @@ memoized::query_group! {
           location: TypeLocation,
       ) -> Result<CcSnippet>;
 
-      fn format_default_ctor(
+      fn generate_default_ctor(
           &self,
           core: Rc<AdtCoreBindings<'tcx>>,
       ) -> Result<ApiSnippets, ApiSnippets>;
-      fn format_copy_ctor_and_assignment_operator(
+      fn generate_copy_ctor_and_assignment_operator(
           &self,
           core: Rc<AdtCoreBindings<'tcx>>,
       ) -> Result<ApiSnippets, ApiSnippets>;
-      fn format_move_ctor_and_assignment_operator(
+      fn generate_move_ctor_and_assignment_operator(
           &self,
           core: Rc<AdtCoreBindings<'tcx>>,
       ) -> Result<ApiSnippets, ApiSnippets>;
 
-      fn format_item(&self, def_id: LocalDefId) -> Result<Option<ApiSnippets>>;
-      fn format_fn(&self, local_def_id: LocalDefId) -> Result<ApiSnippets>;
-      fn format_adt_core(&self, def_id: DefId) -> Result<Rc<AdtCoreBindings<'tcx>>>;
+      fn generate_item(&self, def_id: LocalDefId) -> Result<Option<ApiSnippets>>;
+      fn generate_function(&self, local_def_id: LocalDefId) -> Result<ApiSnippets>;
+      fn generate_adt_core(&self, def_id: DefId) -> Result<Rc<AdtCoreBindings<'tcx>>>;
   }
   pub struct Database;
 }
