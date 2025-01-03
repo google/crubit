@@ -24,6 +24,7 @@ rust_library(
         "generate_function_thunk.rs",
         "generate_struct_and_union.rs",
         "lib.rs",
+        "query_compiler.rs",
     ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
