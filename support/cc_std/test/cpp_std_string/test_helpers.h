@@ -5,13 +5,11 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_TEST_CPP_STD_STRING_CPP_STD_STRING_TEST_LIB_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_TEST_CPP_STD_STRING_CPP_STD_STRING_TEST_LIB_H_
 
-#include "support/cc_std/cpp_std_string.h"
+#include <string>
 
 namespace cpp_std_string_test {
 
-inline StdString RoundTrip(StdString s) {
-  return StdString::FromStringView(s.value());
-}
+inline std::string RoundTrip(std::string s) { return s; }
 
 }  // namespace cpp_std_string_test
 
