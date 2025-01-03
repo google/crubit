@@ -7,7 +7,7 @@
 
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_NO_BINDINGS_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_NO_BINDINGS_H_
-
+#include <vector>
 namespace crubit::no_bindings {
 
 struct Nontrivial {
@@ -68,6 +68,10 @@ inline void crubit_invoke_callback(void (*f)(InstantiatedTemplatedStruct* x)) {
 
 using UnknownTypeAttribute = __attribute__((noderef)) int*;
 inline void crubit_unknown_type_attribute(__attribute__((noderef)) int*) {}
+
+inline void UseVectorByValue(std::vector<int> v) {}
+inline void UseVectorByReference(const std::vector<int>& v) {}
+inline void UseVectorByPointer(std::vector<int>* v) {}
 
 }  // namespace crubit::no_bindings
 

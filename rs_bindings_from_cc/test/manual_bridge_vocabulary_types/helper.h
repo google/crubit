@@ -5,8 +5,11 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_HELPER_LIB_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_HELPER_LIB_H_
 
+#include <cstddef>
 #include <memory>
+#include <vector>
 
+// std::unique_ptr begins
 struct NonTrivialType {
   int x;
   ~NonTrivialType() { x = 0; }
@@ -34,5 +37,13 @@ inline int UseUniquePtrByRefForNonTrivialType(
     std::unique_ptr<NonTrivialType>& p) {
   return p->x;
 }
+
+// std::unique_ptr ends
+
+// std::vector begins
+inline size_t UseVectorByValue(std::vector<int> v) { return v.size(); }
+inline size_t UseVectorByRef(std::vector<int>& v) { return v.size(); }
+inline std::vector<int> MakeVector(int value) { return {value}; }
+// std::vector ends
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_HELPER_LIB_H_

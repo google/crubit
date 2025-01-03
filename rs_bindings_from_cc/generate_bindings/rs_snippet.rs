@@ -1090,6 +1090,17 @@ pub fn map_to_supported_generic(
             }
             "cc_std::std::unique_ptr"
         }
+        ("std::vector", [_t, RsTypeKind::Record { record, .. }]) => {
+            let allocator = record.template_specialization.as_ref()?;
+            let template_name = allocator.template_name.to_string();
+            if template_name != "std::allocator"
+                || allocator.template_args.len() != 1
+                || allocator.template_args[0] != template_specialization.template_args[0]
+            {
+                return None;
+            }
+            "cc_std::std::Vector"
+        }
         _ => return None,
     };
 
