@@ -1220,15 +1220,15 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
 ///
 /// Will panic if `def_id` doesn't identify an ADT that can be successfully
 /// handled by `generate_adt_core`.
-fn format_fwd_decl(db: &Database<'_>, def_id: LocalDefId) -> TokenStream {
+fn generate_fwd_decl(db: &Database<'_>, def_id: LocalDefId) -> TokenStream {
     let def_id = def_id.to_def_id(); // LocalDefId -> DefId conversion.
 
-    // `format_fwd_decl` should only be called for items from
+    // `generate_fwd_decl` should only be called for items from
     // `CcPrerequisites::fwd_decls` and `fwd_decls` should only contain ADTs
     // that `generate_adt_core` succeeds for.
     let core_bindings = db
         .generate_adt_core(def_id)
-        .expect("`format_fwd_decl` should only be called if `generate_adt_core` succeeded");
+        .expect("`generate_fwd_decl` should only be called if `generate_adt_core` succeeded");
     let AdtCoreBindings { keyword, cc_short_name, .. } = &*core_bindings;
 
     quote! { #keyword #cc_short_name; }
@@ -1501,7 +1501,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
         let fwd_decls = fwd_decls
             .into_iter()
             .sorted_by_key(|def_id| tcx.def_span(*def_id))
-            .map(|local_def_id| (local_def_id, format_fwd_decl(db, local_def_id)));
+            .map(|local_def_id| (local_def_id, generate_fwd_decl(db, local_def_id)));
 
         // The first item of the tuple here is the DefId of the namespace.
         let ordered_cc: Vec<(Option<DefId>, NamespaceQualifier, TokenStream)> = fwd_decls
