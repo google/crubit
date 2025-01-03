@@ -3382,6 +3382,23 @@ fn test_record_with_pointer_attribute() {
 }
 
 #[gtest]
+fn test_record_with_owner_attribute() {
+    let ir = ir_from_cc(
+        r#"
+      class [[gsl::Owner(int)]] Struct {};
+      "#,
+    )
+    .unwrap();
+    assert_ir_matches! {ir, quote! {
+      Record {
+        ... rs_name: "Struct" ...
+        ... unknown_attr: None ...
+      }
+    }
+    };
+}
+
+#[gtest]
 fn test_c_style_struct_with_typedef_and_aligned_attr() {
     let ir = ir_from_cc("typedef struct {} SomeStruct __attribute__((aligned(64)));").unwrap();
 

@@ -318,8 +318,10 @@ impl ToTokens for PrimitiveType {
     }
 }
 
-static TEMPLATE_INSTANTIATION_ALLOWLIST: LazyLock<HashSet<&'static str>> =
-    LazyLock::new(|| ["std::string_view", "std::wstring_view"].into_iter().collect());
+// TODO(b/351976622): Allow std::basic_string.
+static TEMPLATE_INSTANTIATION_ALLOWLIST: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
+    ["std::string_view", "std::wstring_view", "std::string"].into_iter().collect()
+});
 
 /// Location where a type is used.
 // TODO: Merge with `TypeLocation` in the other direction.
@@ -734,7 +736,15 @@ impl RsTypeKind {
                 RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Slice { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Option { .. } => require_feature(CrubitFeature::Supported, None),
-                RsTypeKind::BridgeType { .. } => require_feature(CrubitFeature::Experimental, None),
+                RsTypeKind::BridgeType { original_type, .. } => {
+                    if TEMPLATE_INSTANTIATION_ALLOWLIST
+                        .contains(&original_type.cc_preferred_name.as_ref())
+                    {
+                        require_feature(CrubitFeature::Supported, None)
+                    } else {
+                        require_feature(CrubitFeature::Experimental, None)
+                    }
+                }
                 RsTypeKind::TypeMapOverride { .. } => {
                     require_feature(CrubitFeature::Experimental, None)
                 }

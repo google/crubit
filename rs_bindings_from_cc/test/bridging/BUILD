@@ -39,7 +39,7 @@ cc_library(
     name = "string_test_lib",
     hdrs = ["string_test_lib.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:supported",
     ],
     deps = [
         "//support/internal:bindings_support",
