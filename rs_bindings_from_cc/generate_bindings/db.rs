@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::generate_function::{
-    generate_func, get_binding, is_record_clonable, overloaded_funcs, FunctionId, ImplKind,
+    generate_function, get_binding, is_record_clonable, overloaded_funcs, FunctionId, ImplKind,
 };
 use crate::generate_struct_and_union::collect_unqualified_member_functions;
 use crate::rs_snippet::RsTypeKind;
@@ -28,7 +28,7 @@ memoized::query_group! {
 
         fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
 
-        fn generate_func(&self, func: Rc<Func>, record_overwrite: Option<Rc<Record>>) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>>;
+        fn generate_function(&self, func: Rc<Func>, record_overwrite: Option<Rc<Record>>) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>>;
 
         fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
 

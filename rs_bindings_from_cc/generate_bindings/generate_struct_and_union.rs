@@ -229,7 +229,7 @@ fn filter_out_ambiguous_member_functions(
         .collect::<HashMap<_, _>>();
     let mut func_counter = HashMap::<_, (&Rc<Func>, u32)>::new();
     for func in inherited_functions.iter() {
-        let Ok(Some(_)) = db.generate_func(func.clone(), None) else {
+        let Ok(Some(_)) = db.generate_function(func.clone(), None) else {
             continue;
         };
         let unqualified_name = &func.name;
@@ -555,7 +555,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
         }
 
         match item.clone().unwrap() {
-            Item::Func(func) => match db.generate_func(func.clone(), Some(record.clone()))? {
+            Item::Func(func) => match db.generate_function(func.clone(), Some(record.clone()))? {
                 None => Ok(GeneratedItem::default()),
                 Some((item, _)) => Ok((*item).clone()),
             },

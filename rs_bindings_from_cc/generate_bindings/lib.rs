@@ -298,7 +298,7 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
     }
     let overloaded_funcs = db.overloaded_funcs();
     let generated_item = match item {
-        Item::Func(func) => match db.generate_func(func.clone(), None)? {
+        Item::Func(func) => match db.generate_function(func.clone(), None)? {
             None => GeneratedItem::default(),
             Some((item, function_id)) => {
                 if overloaded_funcs.contains(&function_id) {

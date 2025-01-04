@@ -815,7 +815,9 @@ pub fn get_binding(
 ) -> Option<(Ident, ImplKind)> {
     db.ir()
         .get_functions_by_name(&expected_function_name)
-        .filter(|function| generate_func(db, (*function).clone(), None).ok().flatten().is_some())
+        .filter(|function| {
+            generate_function(db, (*function).clone(), None).ok().flatten().is_some()
+        })
         .find_map(|function| {
             let mut function_param_types = function
                 .params
@@ -906,7 +908,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
 ///    destructor might be mapped to no `Drop` impl at all.)
 ///  * `Ok((rs_api, rs_thunk, function_id))`: The Rust function definition,
 ///    thunk FFI definition, and function ID.
-pub fn generate_func(
+pub fn generate_function(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
     derived_record: Option<Rc<Record>>,
@@ -1631,7 +1633,7 @@ pub fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>
         // Functions that fail to receive bindings may still
         // participate in a C++ overload set, and we must still detect the
         // overload.
-        if let Ok(Some(f)) = db.generate_func(func.clone(), None) {
+        if let Ok(Some(f)) = db.generate_function(func.clone(), None) {
             let (.., function_id) = &f;
             if !seen_funcs.insert(function_id.clone()) {
                 overloaded_funcs.insert(function_id.clone());
