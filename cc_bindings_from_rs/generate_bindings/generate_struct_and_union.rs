@@ -1145,7 +1145,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     namespace rust_out {
                         ...
@@ -1162,7 +1162,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                bindings.rs_body,
+                bindings.cc_api_impl,
                 quote! {
                     // No point replicating test coverage of
                     // `test_format_item_struct_with_fields`.

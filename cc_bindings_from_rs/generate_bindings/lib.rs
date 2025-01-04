@@ -73,17 +73,17 @@ fn support_header<'tcx>(db: &dyn BindingsGenerator<'tcx>, suffix: &'tcx str) -> 
 }
 
 pub struct BindingsTokens {
-    pub h_body: TokenStream,
-    pub rs_body: TokenStream,
+    pub cc_api: TokenStream,
+    pub cc_api_impl: TokenStream,
 }
 
-fn add_include_guard(db: &dyn BindingsGenerator<'_>, h_body: TokenStream) -> Result<TokenStream> {
+fn add_include_guard(db: &dyn BindingsGenerator<'_>, cc_api: TokenStream) -> Result<TokenStream> {
     match db.h_out_include_guard() {
         IncludeGuard::PragmaOnce => Ok(quote! {
             __HASH_TOKEN__ pragma once __NEWLINE__
             __NEWLINE__
 
-            #h_body
+            #cc_api
         }),
         IncludeGuard::Guard(include_guard_str) => {
             let include_guard = format_cc_ident(db, include_guard_str.as_str())?;
@@ -92,7 +92,7 @@ fn add_include_guard(db: &dyn BindingsGenerator<'_>, h_body: TokenStream) -> Res
                 __HASH_TOKEN__ define #include_guard __NEWLINE__
                 __NEWLINE__
 
-                #h_body
+                #cc_api
 
                 __HASH_TOKEN__ endif __COMMENT__ #include_guard_str __NEWLINE__
             })
@@ -125,16 +125,16 @@ pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
         quote! { __COMMENT__ #txt __NEWLINE__ }
     };
 
-    let BindingsTokens { h_body, rs_body } = generate_crate(db).unwrap_or_else(|err| {
+    let BindingsTokens { cc_api, cc_api_impl } = generate_crate(db).unwrap_or_else(|err| {
         let txt = format!("Failed to generate bindings for the crate: {err}");
         let src = quote! { __COMMENT__ #txt };
-        BindingsTokens { h_body: src.clone(), rs_body: src }
+        BindingsTokens { cc_api: src.clone(), cc_api_impl: src }
     });
-    let h_body = add_include_guard(db, h_body)?;
-    let h_body = quote! {
+    let cc_api = add_include_guard(db, cc_api)?;
+    let cc_api = quote! {
         #top_comment
 
-        #h_body
+        #cc_api
     };
 
     let mut extern_crate_decls: Vec<TokenStream> = vec![];
@@ -147,7 +147,7 @@ pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
         });
     }
 
-    let rs_body = quote! {
+    let cc_api_impl = quote! {
         #top_comment
 
         // `rust_builtin_type_abi_assumptions.md` documents why the generated
@@ -161,10 +161,10 @@ pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
 
         __NEWLINE__
 
-        #rs_body
+        #cc_api_impl
     };
 
-    Ok(BindingsTokens { h_body, rs_body })
+    Ok(BindingsTokens { cc_api, cc_api_impl })
 }
 
 fn crate_features(
@@ -1424,7 +1424,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     let tcx = db.tcx();
     let mut cc_details_prereqs = CcPrerequisites::default();
     let mut cc_details: Vec<(LocalDefId, TokenStream)> = vec![];
-    let mut rs_body = TokenStream::default();
+    let mut cc_api_impl = TokenStream::default();
     let mut extern_c_decls = BTreeSet::new();
     let mut main_apis = HashMap::<LocalDefId, CcSnippet>::new();
     let formatted_items = tcx
@@ -1446,7 +1446,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
         // - `chain`ing `cc_details` after `ordered_main_apis` trivially
         // meets the prerequisites.
         cc_details.push((def_id, api_snippets.cc_details.into_tokens(&mut cc_details_prereqs)));
-        rs_body.extend(api_snippets.rs_details.into_tokens(&mut extern_c_decls));
+        cc_api_impl.extend(api_snippets.rs_details.into_tokens(&mut extern_c_decls));
     }
 
     // Find the order of `main_apis` that 1) meets the requirements of
@@ -1519,7 +1519,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     };
 
     // Generate top-level elements of the C++ header file.
-    let h_body = {
+    let cc_api = {
         let cpp_top_level_ns = format_top_level_ns_for_crate(db, LOCAL_CRATE);
         let cpp_top_level_ns = format_cc_ident(db, cpp_top_level_ns.as_str())?;
 
@@ -1543,8 +1543,8 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     }
 
     if !decls.is_empty() {
-        rs_body = quote! {
-            #rs_body
+        cc_api_impl = quote! {
+            #cc_api_impl
 
            extern "C" {
                #decls
@@ -1552,7 +1552,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
         };
     }
 
-    Ok(BindingsTokens { h_body, rs_body })
+    Ok(BindingsTokens { cc_api, cc_api_impl })
 }
 
 #[cfg(test)]
@@ -1584,14 +1584,14 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     extern "C" void public_function();
                 }
             );
 
             // No Rust thunks should be generated in this test scenario.
-            assert_rs_not_matches!(bindings.rs_body, quote! { public_function });
+            assert_rs_not_matches!(bindings.cc_api_impl, quote! { public_function });
         });
     }
 
@@ -1607,7 +1607,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     namespace rust_out {
                         ...
@@ -1648,7 +1648,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     namespace rust_out {
                         ...
@@ -1668,7 +1668,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                bindings.rs_body,
+                bindings.cc_api_impl,
                 quote! {
                     extern "C" fn ...() -> i32 {
                         ::rust_out::SomeStruct::public_static_method()
@@ -1691,7 +1691,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     __HASH_TOKEN__ include <cstdint> ...
                     namespace ... {
@@ -1719,7 +1719,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     namespace rust_out {
                     ...
@@ -1752,7 +1752,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     namespace rust_out {
                         ...
@@ -1790,7 +1790,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     namespace rust_out {
                         ...
@@ -1834,7 +1834,7 @@ pub mod tests {
                 pub fn f4(_: *const S) {}
             "#;
         test_generated_bindings(test_src, |bindings| {
-            let bindings = bindings.unwrap().h_body.to_string();
+            let bindings = bindings.unwrap().cc_api.to_string();
 
             // Only a single forward declaration is expected.
             assert_eq!(1, bindings.matches("struct S ;").count(), "bindings = {bindings}");
@@ -1872,7 +1872,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     namespace rust_out {
                         ...
@@ -1920,8 +1920,8 @@ pub mod tests {
             "#;
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
-            assert_cc_not_matches!(bindings.h_body, quote! { struct S; });
-            assert_cc_matches!(bindings.h_body, quote! { void f(::rust_out::S const* _s); });
+            assert_cc_not_matches!(bindings.cc_api, quote! { struct S; });
+            assert_cc_matches!(bindings.cc_api, quote! { void f(::rust_out::S const* _s); });
         });
     }
 
@@ -1944,9 +1944,9 @@ pub mod tests {
             "#;
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
-            assert_cc_not_matches!(bindings.h_body, quote! { struct S; });
+            assert_cc_not_matches!(bindings.cc_api, quote! { struct S; });
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     static ::rust_out::S create(); ...
                     union { ... ::rust_out::S const* field; }; ...
@@ -1965,7 +1965,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     namespace rust_out {
                         namespace some_module {
@@ -1977,7 +1977,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                bindings.rs_body,
+                bindings.cc_api_impl,
                 quote! {
                     #[unsafe(no_mangle)]
                     extern "C"
@@ -2001,7 +2001,7 @@ pub mod tests {
             let bindings = bindings.unwrap();
 
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     namespace rust_out {
                         namespace reinterpret_cast_ {
@@ -2051,20 +2051,20 @@ pub mod tests {
             "#;
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
-            assert_cc_not_matches!(bindings.h_body, quote! { private_function });
-            assert_rs_not_matches!(bindings.rs_body, quote! { private_function });
-            assert_cc_not_matches!(bindings.h_body, quote! { PrivateStruct });
-            assert_rs_not_matches!(bindings.rs_body, quote! { PrivateStruct });
-            assert_cc_not_matches!(bindings.h_body, quote! { private_method });
-            assert_rs_not_matches!(bindings.rs_body, quote! { private_method });
-            assert_cc_not_matches!(bindings.h_body, quote! { priv_func_in_priv_module });
-            assert_rs_not_matches!(bindings.rs_body, quote! { priv_func_in_priv_module });
-            assert_cc_not_matches!(bindings.h_body, quote! { priv_func_in_pub_module });
-            assert_rs_not_matches!(bindings.rs_body, quote! { priv_func_in_pub_module });
-            assert_cc_not_matches!(bindings.h_body, quote! { private_module });
-            assert_rs_not_matches!(bindings.rs_body, quote! { private_module });
-            assert_cc_not_matches!(bindings.h_body, quote! { pub_func_in_priv_module });
-            assert_rs_not_matches!(bindings.rs_body, quote! { pub_func_in_priv_module });
+            assert_cc_not_matches!(bindings.cc_api, quote! { private_function });
+            assert_rs_not_matches!(bindings.cc_api_impl, quote! { private_function });
+            assert_cc_not_matches!(bindings.cc_api, quote! { PrivateStruct });
+            assert_rs_not_matches!(bindings.cc_api_impl, quote! { PrivateStruct });
+            assert_cc_not_matches!(bindings.cc_api, quote! { private_method });
+            assert_rs_not_matches!(bindings.cc_api_impl, quote! { private_method });
+            assert_cc_not_matches!(bindings.cc_api, quote! { priv_func_in_priv_module });
+            assert_rs_not_matches!(bindings.cc_api_impl, quote! { priv_func_in_priv_module });
+            assert_cc_not_matches!(bindings.cc_api, quote! { priv_func_in_pub_module });
+            assert_rs_not_matches!(bindings.cc_api_impl, quote! { priv_func_in_pub_module });
+            assert_cc_not_matches!(bindings.cc_api, quote! { private_module });
+            assert_rs_not_matches!(bindings.cc_api_impl, quote! { private_module });
+            assert_cc_not_matches!(bindings.cc_api, quote! { pub_func_in_priv_module });
+            assert_rs_not_matches!(bindings.cc_api_impl, quote! { pub_func_in_priv_module });
         });
     }
 
@@ -2078,7 +2078,7 @@ pub mod tests {
                  rust_out\n\
                  Features: experimental, supported";
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     __COMMENT__ #expected_comment_txt
                     ...
@@ -2090,7 +2090,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                bindings.rs_body,
+                bindings.cc_api_impl,
                 quote! {
                     __COMMENT__ #expected_comment_txt
                 }
@@ -2130,7 +2130,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     ...
                     namespace __crubit_internal {
@@ -2143,14 +2143,14 @@ pub mod tests {
             );
 
             assert_rs_matches!(
-                bindings.rs_body,
+                bindings.cc_api_impl,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::X>() == 4);
                 }
             );
 
-            assert_rs_not_matches!(bindings.rs_body, quote! { ::rust_out::Y });
-            assert_rs_not_matches!(bindings.rs_body, quote! { ::rust_out::Z });
+            assert_rs_not_matches!(bindings.cc_api_impl, quote! { ::rust_out::Y });
+            assert_rs_not_matches!(bindings.cc_api_impl, quote! { ::rust_out::Z });
         });
     }
 
@@ -2165,7 +2165,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     ...
                         [[deprecated]]
@@ -2189,7 +2189,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     ...
                         [[deprecated("Use other_module instead")]]
@@ -2213,7 +2213,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     ...
                         [[deprecated("Use other_module instead")]]
@@ -5640,7 +5640,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     using X = ::rust_out::test_mod::X;
                     using Y = ::rust_out::test_mod::Y;
@@ -5667,7 +5667,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_matches!(
-                bindings.h_body,
+                bindings.cc_api,
                 quote! {
                     using X = ::rust_out::test_mod::X;
                     using Y = ::rust_out::test_mod::Y;

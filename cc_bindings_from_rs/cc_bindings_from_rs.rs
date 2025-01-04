@@ -24,12 +24,12 @@ use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
 };
 
-fn turn_off_clang_format(mut h_body: String) -> String {
-    h_body.insert_str(
-        h_body.find("#ifndef").unwrap_or_else(|| h_body.find("#pragma once").unwrap()),
+fn turn_off_clang_format(mut cc_api: String) -> String {
+    cc_api.insert_str(
+        cc_api.find("#ifndef").unwrap_or_else(|| cc_api.find("#pragma once").unwrap()),
         "// clang-format off\n",
     );
-    h_body
+    cc_api
 }
 
 fn write_file(path: &Path, content: &str) -> Result<()> {
@@ -101,22 +101,22 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
         Rc::new(IgnoreErrors)
     };
 
-    let BindingsTokens { h_body, rs_body } = {
+    let BindingsTokens { cc_api, cc_api_impl } = {
         let db = new_db(cmdline, tcx, errors.clone());
         generate_bindings(&db)?
     };
 
     {
-        let h_body = cc_tokens_to_formatted_string(h_body, &cmdline.clang_format_exe_path)?;
-        let h_body = turn_off_clang_format(h_body);
-        write_file(&cmdline.h_out, &h_body)?;
+        let cc_api = cc_tokens_to_formatted_string(cc_api, &cmdline.clang_format_exe_path)?;
+        let cc_api = turn_off_clang_format(cc_api);
+        write_file(&cmdline.h_out, &cc_api)?;
     }
 
     {
         let rustfmt_config =
             RustfmtConfig::new(&cmdline.rustfmt_exe_path, cmdline.rustfmt_config_path.as_deref());
-        let rs_body = rs_tokens_to_formatted_string(rs_body, &rustfmt_config)?;
-        write_file(&cmdline.rs_out, &rs_body)?;
+        let cc_api_impl = rs_tokens_to_formatted_string(cc_api_impl, &rustfmt_config)?;
+        write_file(&cmdline.rs_out, &cc_api_impl)?;
     }
 
     if let Some(error_report_out) = &cmdline.error_report_out {
@@ -407,10 +407,10 @@ mod tests {
 
         assert!(test_result.h_path.exists());
         let temp_dir_str = test_args.tempdir.path().to_str().unwrap();
-        let h_body = std::fs::read_to_string(&test_result.h_path)?;
+        let cc_api = std::fs::read_to_string(&test_result.h_path)?;
         #[rustfmt::skip]
         assert_body_matches(
-            &h_body,
+            &cc_api,
             &format!(
                 "{}\n{}\n{}",
 r#"// Automatically @generated C++ bindings for the following Rust crate:
@@ -455,10 +455,10 @@ inline void public_function() {
 
         assert!(test_result.h_path.exists());
         let temp_dir_str = test_args.tempdir.path().to_str().unwrap();
-        let h_body = std::fs::read_to_string(&test_result.h_path)?;
+        let cc_api = std::fs::read_to_string(&test_result.h_path)?;
         #[rustfmt::skip]
         assert_body_matches(
-            &h_body,
+            &cc_api,
             &format!(
                 "{}\n{}\n{}",
 r#"// Automatically @generated C++ bindings for the following Rust crate:
@@ -493,9 +493,9 @@ inline void public_function() {
         );
 
         assert!(test_result.rs_path.exists());
-        let rs_body = std::fs::read_to_string(&test_result.rs_path)?;
+        let cc_api_impl = std::fs::read_to_string(&test_result.rs_path)?;
         assert_body_matches(
-            &rs_body,
+            &cc_api_impl,
             r#"// Automatically @generated C++ bindings for the following Rust crate:
 // test_crate
 // Features: <none>
@@ -596,9 +596,9 @@ extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
             "--crate-feature=self=experimental",
         ]);
         let test_result = test_args.run()?;
-        let h_body = std::fs::read_to_string(&test_result.h_path)?;
+        let cc_api = std::fs::read_to_string(&test_result.h_path)?;
         assert_starts_with(
-            &h_body,
+            &cc_api,
             "// Automatically @generated C++ bindings for the following Rust crate:\n\
             // test_crate\n\
             // Features: experimental, supported",
@@ -613,9 +613,9 @@ extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
             "--crate-disabled-feature=self=experimental",
         ]);
         let test_result = test_args.run()?;
-        let h_body = std::fs::read_to_string(&test_result.h_path)?;
+        let cc_api = std::fs::read_to_string(&test_result.h_path)?;
         assert_starts_with(
-            &h_body,
+            &cc_api,
             "// Automatically @generated C++ bindings for the following Rust crate:\n\
             // test_crate\n\
             // Features: supported",
@@ -628,9 +628,9 @@ extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
         let test_args =
             TestArgs::default_args()?.with_extra_crubit_args(&["--default-features=supported"]);
         let test_result = test_args.run()?;
-        let h_body = std::fs::read_to_string(&test_result.h_path)?;
+        let cc_api = std::fs::read_to_string(&test_result.h_path)?;
         assert_starts_with(
-            &h_body,
+            &cc_api,
             "// Automatically @generated C++ bindings for the following Rust crate:\n\
             // test_crate\n\
             // Features: supported",
