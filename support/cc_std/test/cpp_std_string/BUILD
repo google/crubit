@@ -7,9 +7,6 @@ crubit_test_cc_library(
     name = "test_helpers",
     testonly = 1,
     hdrs = ["test_helpers.h"],
-    deps = [
-        "//support/cc_std:cpp_std_string",
-    ],
 )
 
 crubit_rust_test(

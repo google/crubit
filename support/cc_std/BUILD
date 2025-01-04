@@ -20,7 +20,6 @@ filegroup(
             "*.rs",
         ],
         exclude = [
-            "cpp_std_string.rs",
             "cpp_std_allocator.rs",
             "vector.rs",
             "vector_partial_eq.rs",
@@ -143,23 +142,6 @@ bindings_for_toolchain_headers(
     ],
     public_libc_hdrs = LIBC_HEADERS,
     public_libcxx_hdrs = LIBCXX_HEADERS,
-    visibility = [
-        "//visibility:public",
-    ],
-)
-
-additional_rust_srcs_for_crubit_bindings(
-    name = "cpp_std_string_rust",
-    srcs = ["cpp_std_string.rs"],
-)
-
-cc_library(
-    name = "cpp_std_string",
-    hdrs = ["cpp_std_string.h"],
-    aspect_hints = [
-        "//features:experimental",
-        ":cpp_std_string_rust",
-    ],
     visibility = [
         "//visibility:public",
     ],
