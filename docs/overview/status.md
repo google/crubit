@@ -46,7 +46,7 @@ We have *experimental* unreleased support for the following types:
 
 We have planned support for the following types:
 
-*   (2025!1) b/351976622: bridged `std::string`
+*   (2025H1) b/351976622: bridged `std::string`
 *   (2025H1) b/308406733: bridged protocol buffers
 *   (2025H1) b/356221625: bridged `absl::Status`, `absl::StatusOr`
 *   (2025H1) b/271016831: layout-compatible `*const [T]`, `*mut [T]`
