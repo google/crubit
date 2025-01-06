@@ -2561,4 +2561,419 @@ pub mod tests {
             );
         })
     }
+
+    #[test]
+    fn test_format_cpp_name_for_struct() {
+        let test_src = r#"
+                #![feature(register_tool)]
+                #![register_tool(__crubit)]
+
+                #[__crubit::annotate(cpp_type="cpp_ns::CppType")]
+                pub struct RustType {
+                    pub x: i32,
+                }
+            "#;
+        test_format_item(test_src, "RustType", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Type bindings for RustType suppressed \
+                    due to being mapped to an existing C++ type (cpp_ns::CppType)"
+            );
+        });
+    }
+
+    #[test]
+    fn test_must_use_attr_for_struct_no_msg() {
+        let test_src = r#"
+        #[must_use]
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... [[nodiscard]] ... SomeStruct final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_format_item_rename_field_with_conflicting_name() {
+        let test_src = r#"
+        pub struct X {
+            pub a: i32,
+            b: i32,
+            #[allow(dead_code)]
+            c: i32,
+        }
+
+        impl X {
+            pub fn a(&self) -> i32 {
+                self.a
+            }
+            pub fn b(&self) -> i32 {
+                self.b
+            }
+        }
+        "#;
+
+        test_format_item(test_src, "X", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    std::int32_t a_;
+                }
+            );
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    std::int32_t b_;
+                }
+            );
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    std::int32_t c;
+                }
+            );
+            // Check that the fields are not renamed in the Rust side.
+            assert_rs_matches!(
+                result.rs_details.tokens,
+                quote! {
+                    ::core::mem::offset_of!(::rust_out::X, a) == 0
+                }
+            );
+        })
+    }
+
+    #[test]
+    fn test_must_use_attr_for_struct_msg() {
+        let test_src = r#"
+        #[must_use = "foo"]
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... [[nodiscard("foo")]] ... SomeStruct final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_must_use_attr_for_enum_no_msg() {
+        let test_src = r#"
+        #[must_use]
+        pub enum SomeEnum {
+            A(i32),
+            B(u32),
+        }"#;
+
+        test_format_item(test_src, "SomeEnum", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... [[nodiscard]] ... SomeEnum final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_must_use_attr_for_enum_msg() {
+        let test_src = r#"
+        #[must_use = "foo"]
+        pub enum SomeEnum {
+            A(i32),
+            B(u32),
+        }"#;
+
+        test_format_item(test_src, "SomeEnum", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... [[nodiscard("foo")]] ... SomeEnum final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_must_use_attr_for_union_no_msg() {
+        let test_src = r#"
+        #[must_use]
+        pub union SomeUnion {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeUnion", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    union ... [[nodiscard]] ... SomeUnion final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+    #[test]
+    fn test_must_use_attr_for_union_msg() {
+        let test_src = r#"
+        #[must_use = "foo"]
+        pub union SomeUnion {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeUnion", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    union ... [[nodiscard("foo")]] ... SomeUnion final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_struct_no_args() {
+        let test_src = r#"
+        #[deprecated]
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... [[deprecated]] ... SomeStruct final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_struct_with_message() {
+        let test_src = r#"
+        #[deprecated = "Use AnotherStruct instead"]
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... [[deprecated("Use AnotherStruct instead")]] ... SomeStruct final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_struct_with_named_args() {
+        let test_src = r#"
+        #[deprecated(since = "3.14", note = "Use AnotherStruct instead")]
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... [[deprecated("Use AnotherStruct instead")]] ... SomeStruct final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_union_with_named_args() {
+        let test_src = r#"
+        #[deprecated(since = "3.14", note = "Use AnotherUnion instead")]
+        pub struct SomeUnion {
+            pub x: u32,
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeUnion", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... [[deprecated("Use AnotherUnion instead")]] ... SomeUnion final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_enum_with_named_args() {
+        let test_src = r#"
+        #[deprecated(since = "3.14", note = "Use AnotherEnum instead")]
+        pub enum SomeEnum {
+            Integer(i32),
+            FloatingPoint(f64),
+        }"#;
+
+        test_format_item(test_src, "SomeEnum", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... [[deprecated("Use AnotherEnum instead")]] ... SomeEnum final {
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_struct_fields() {
+        let test_src = r#"
+        pub struct SomeStruct {
+            #[deprecated = "Use `y` instead"]
+            pub x: u32,
+
+            pub y: u32,
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... SomeStruct final {
+                        ...
+                        union {
+                            ...
+                            [[deprecated("Use `y` instead")]] std::uint32_t x;
+                        }
+                        ...
+                        union {
+                            ...
+                            std::uint32_t y;
+                        }
+                        ...
+                    };
+                }
+            )
+        })
+    }
+
+    #[test]
+    fn test_deprecated_attr_for_impl_block() {
+        let test_src = r#"
+        pub struct SomeStruct {
+            pub x: u32,
+            pub y: u32,
+        }
+
+        #[deprecated = "Use AnotherStruct instead"]
+        impl SomeStruct {
+            pub fn sum(&self) -> u32 {
+                self.x + self.y
+            }
+
+            pub fn product(&self) -> u32 {
+                self.x * self.y
+            }
+        }"#;
+
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    struct ... SomeStruct final {
+                        ...
+                        ... [[deprecated("Use AnotherStruct instead")]] std::uint32_t sum() const ...
+                        ...
+                        ... [[deprecated("Use AnotherStruct instead")]] std::uint32_t product() const ...
+                        ...
+                    };
+                }
+            )
+        })
+    }
 }

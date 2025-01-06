@@ -6,7 +6,6 @@
 use crate::db::BindingsGenerator;
 use arc_anyhow::Result;
 use error_report::anyhow;
-use itertools::Itertools;
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
 use rustc_attr::IntType;
 use rustc_hir::def::DefKind;
