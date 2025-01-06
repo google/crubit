@@ -8,7 +8,7 @@ use crate::generate_function::{
 use crate::generate_struct_and_union::collect_unqualified_member_functions;
 use crate::rs_snippet::RsTypeKind;
 use crate::rs_type_kind;
-use crate::GeneratedItem;
+use crate::ApiSnippets;
 use arc_anyhow::Result;
 use error_report::ErrorReporting;
 use ffi_types::SourceLocationDocComment;
@@ -28,7 +28,7 @@ memoized::query_group! {
 
         fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
 
-        fn generate_function(&self, func: Rc<Func>, record_overwrite: Option<Rc<Record>>) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>>;
+        fn generate_function(&self, func: Rc<Func>, record_overwrite: Option<Rc<Record>>) -> Result<Option<(Rc<ApiSnippets>, Rc<FunctionId>)>>;
 
         fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
 

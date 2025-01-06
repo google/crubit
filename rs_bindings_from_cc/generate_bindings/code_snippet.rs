@@ -24,18 +24,29 @@ pub struct FfiBindings {
 }
 
 #[derive(Clone, Debug, Default)]
-pub(crate) struct GeneratedItem {
-    pub item: TokenStream,
+pub(crate) struct ApiSnippets {
+    /// Main API - for example:
+    /// - A Rust definition of a function (with a doc comment),
+    /// - A Rust definition of a struct (with a doc comment).
+    pub main_api: TokenStream,
+
+    /// Rust implementation details - for example:
+    /// - A Rust declaration of an `extern "C"` thunk,
+    /// - Rust static assertions about struct size, aligment, and field offsets.
     pub thunks: TokenStream,
-    // C++ source code for helper functions.
-    pub thunk_impls: TokenStream,
     pub assertions: TokenStream,
+
+    /// C++ implementation details - for example:
+    /// - A C++ implementation of an `extern "C"` thunk,
+    /// - C++ static assertions about struct size, aligment, and field offsets.
+    pub cc_details: TokenStream,
+
     pub features: BTreeSet<Ident>,
 }
 
-impl From<TokenStream> for GeneratedItem {
-    fn from(item: TokenStream) -> Self {
-        GeneratedItem { item, ..Default::default() }
+impl From<TokenStream> for ApiSnippets {
+    fn from(main_api: TokenStream) -> Self {
+        ApiSnippets { main_api, ..Default::default() }
     }
 }
 

@@ -13,7 +13,7 @@ mod generate_struct_and_union;
 mod rs_snippet;
 
 use code_snippet::{
-    required_crubit_features, Bindings, BindingsTokens, FfiBindings, GeneratedItem,
+    required_crubit_features, ApiSnippets, Bindings, BindingsTokens, FfiBindings,
     RequiredCrubitFeature,
 };
 use db::{BindingsGenerator, Database};
@@ -156,11 +156,11 @@ fn generate_bindings(
     Ok(Bindings { rs_api, rs_api_impl })
 }
 
-fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<GeneratedItem> {
+fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<ApiSnippets> {
     // Skip the type alias if it maps to a bridge type.
     let rs_type_kind = RsTypeKind::new_type_alias(db, Rc::new(type_alias.clone()))?;
     if rs_type_kind.is_bridge_type() {
-        return Ok(GeneratedItem::default());
+        return Ok(ApiSnippets::default());
     }
     let ident = make_rs_ident(&type_alias.identifier.identifier);
     let doc_comment = generate_doc_comment(
@@ -178,11 +178,11 @@ fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<Generate
     .into())
 }
 
-fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedItem> {
+fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<ApiSnippets> {
     let ir = db.ir();
     let mut items = vec![];
     let mut thunks = vec![];
-    let mut thunk_impls = vec![];
+    let mut cc_details = vec![];
     let mut assertions = vec![];
     let mut features = BTreeSet::new();
 
@@ -191,12 +191,12 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
             format!("Failed to look up namespace.child_item_ids for {:?}", namespace)
         })?;
         let generated = generate_item(db, item)?;
-        items.push(generated.item);
+        items.push(generated.main_api);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
         }
-        if !generated.thunk_impls.is_empty() {
-            thunk_impls.push(generated.thunk_impls);
+        if !generated.cc_details.is_empty() {
+            cc_details.push(generated.cc_details);
         }
         if !generated.assertions.is_empty() {
             assertions.push(generated.assertions);
@@ -254,11 +254,11 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
         #use_stmt_for_inline_namespace
     };
 
-    Ok(GeneratedItem {
-        item: namespace_tokens,
+    Ok(ApiSnippets {
+        main_api: namespace_tokens,
         features,
         thunks: quote! { #( #thunks )* },
-        thunk_impls: quote! { #( #thunk_impls )* },
+        cc_details: quote! { #( #cc_details )* },
         assertions: quote! { #( #assertions )* },
         ..Default::default()
     })
@@ -266,7 +266,7 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
 
 /// Returns generated bindings for an item, or `Err` if bindings generation
 /// failed in such a way as to make the generated bindings as a whole invalid.
-fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
+fn generate_item(db: &Database, item: &Item) -> Result<ApiSnippets> {
     match generate_item_impl(db, item) {
         Ok(generated) => Ok(generated),
         Err(err) => {
@@ -289,17 +289,17 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
 /// The implementation of generate_item, without the error recovery logic.
 ///
 /// Returns Err if bindings could not be generated for this item.
-fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
+fn generate_item_impl(db: &Database, item: &Item) -> Result<ApiSnippets> {
     let ir = db.ir();
     if let Some(owning_target) = item.owning_target() {
         if !ir.is_current_target(owning_target) {
-            return Ok(GeneratedItem::default());
+            return Ok(ApiSnippets::default());
         }
     }
     let overloaded_funcs = db.overloaded_funcs();
     let generated_item = match item {
         Item::Func(func) => match db.generate_function(func.clone(), None)? {
-            None => GeneratedItem::default(),
+            None => ApiSnippets::default(),
             Some((item, function_id)) => {
                 if overloaded_funcs.contains(&function_id) {
                     bail!("Cannot generate bindings for overloaded function")
@@ -343,8 +343,8 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<GeneratedItem> {
                 quote! {}
             };
 
-            GeneratedItem {
-                item: quote! {
+            ApiSnippets {
+                main_api: quote! {
                     __COMMENT__ #disable_comment
                 },
                 assertions,
@@ -497,7 +497,7 @@ fn generate_bindings_tokens(
     let db = Database::new(ir.clone(), errors, generate_source_loc_doc_comment);
     let mut items = vec![];
     let mut thunks = vec![];
-    let mut thunk_impls = vec![
+    let mut cc_details = vec![
         generate_rs_api_impl_includes(&db, crubit_support_path_format)?,
         quote! {
             __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
@@ -520,20 +520,20 @@ fn generate_bindings_tokens(
         let item =
             ir.find_decl(*top_level_item_id).context("Failed to look up ir.top_level_item_ids")?;
         let generated = generate_item(&db, item)?;
-        items.push(generated.item);
+        items.push(generated.main_api);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
         }
         if !generated.assertions.is_empty() {
             assertions.push(generated.assertions);
         }
-        if !generated.thunk_impls.is_empty() {
-            thunk_impls.push(generated.thunk_impls);
+        if !generated.cc_details.is_empty() {
+            cc_details.push(generated.cc_details);
         }
         features.extend(generated.features);
     }
 
-    thunk_impls.push(quote! {
+    cc_details.push(quote! {
         __NEWLINE__
         __HASH_TOKEN__ pragma clang diagnostic pop __NEWLINE__
         // To satisfy http://cs/symbol:devtools.metadata.Presubmit.CheckTerminatingNewline check.
@@ -617,7 +617,7 @@ fn generate_bindings_tokens(
 
             #assertions
         },
-        rs_api_impl: quote! {#(#thunk_impls  __NEWLINE__ __NEWLINE__ )*},
+        rs_api_impl: quote! {#(#cc_details  __NEWLINE__ __NEWLINE__ )*},
     })
 }
 

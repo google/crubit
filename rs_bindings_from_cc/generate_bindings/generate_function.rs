@@ -7,7 +7,7 @@ use crate::generate_function_thunk::{
     generate_function_thunk, generate_function_thunk_impl, thunk_ident,
     thunk_ident_for_derived_member_function,
 };
-use crate::GeneratedItem;
+use crate::ApiSnippets;
 
 use crate::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
@@ -912,7 +912,7 @@ pub fn generate_function(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
     derived_record: Option<Rc<Record>>,
-) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>> {
+) -> Result<Option<(Rc<ApiSnippets>, Rc<FunctionId>)>> {
     let ir = db.ir();
     let crate_root_path = crate::crate_root_path_tokens(&ir);
     let mut features = BTreeSet::new();
@@ -1315,17 +1315,17 @@ pub fn generate_function(
 
     // If we are generating bindings for a derived record, we reuse the base
     // record's thunks, so we don't need to generate thunks.
-    let thunk_impls = if derived_record.is_some() {
+    let cc_details = if derived_record.is_some() {
         quote! {}
     } else {
         generate_function_thunk_impl(db, &func)?
     };
 
-    let generated_item = GeneratedItem {
-        item: api_func,
+    let generated_item = ApiSnippets {
+        main_api: api_func,
         thunks: thunk,
         features,
-        thunk_impls,
+        cc_details,
         ..Default::default()
     };
     Ok(Some((Rc::new(generated_item), Rc::new(function_id))))

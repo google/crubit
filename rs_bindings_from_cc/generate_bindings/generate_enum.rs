@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 /// Generate bindings for C++ enum.
-use crate::code_snippet::GeneratedItem;
+use crate::code_snippet::ApiSnippets;
 use crate::db::{BindingsGenerator, Database};
 use crate::generate_comment::generate_unsupported;
 use arc_anyhow::Result;
@@ -13,7 +13,7 @@ use proc_macro2::Literal;
 use quote::{quote, ToTokens};
 use std::collections::BTreeSet;
 
-pub fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
+pub fn generate_enum(db: &Database, enum_: &Enum) -> Result<ApiSnippets> {
     let ident = crate::format_cc_ident(&enum_.identifier.identifier);
     let namespace_qualifier = db.ir().namespace_qualifier(enum_).format_for_cc()?;
     let fully_qualified_cc_name = quote! { #namespace_qualifier #ident }.to_string();
@@ -79,8 +79,8 @@ pub fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
             }
         }
     };
-    Ok(GeneratedItem {
-        item,
+    Ok(ApiSnippets {
+        main_api: item,
         features: BTreeSet::from([make_rs_ident("register_tool")]),
         ..Default::default()
     })

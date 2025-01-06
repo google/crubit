@@ -4,7 +4,7 @@
 #![allow(clippy::collapsible_else_if)]
 
 use crate::db::{BindingsGenerator, Database};
-use crate::GeneratedItem;
+use crate::ApiSnippets;
 
 use crate::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind, TypeLocation};
 use arc_anyhow::{Context, Result};
@@ -70,7 +70,7 @@ fn needs_manually_drop(ty: &RsTypeKind) -> bool {
 pub fn generate_incomplete_record(
     db: &Database,
     incomplete_record: &IncompleteRecord,
-) -> Result<GeneratedItem> {
+) -> Result<ApiSnippets> {
     let ident = make_rs_ident(incomplete_record.rs_name.as_ref());
     let namespace_qualifier = db.ir().namespace_qualifier(incomplete_record).format_for_cc()?;
     let symbol = quote! {#namespace_qualifier #ident}.to_string();
@@ -251,14 +251,14 @@ fn filter_out_ambiguous_member_functions(
 
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
-pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> {
+pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets> {
     let record_rs_type_kind = RsTypeKind::new_record(db, record.clone(), &db.ir())?;
     if let RsTypeKind::Record { known_generic_monomorphization: Some(_), .. } = record_rs_type_kind
     {
-        return Ok(GeneratedItem::default());
+        return Ok(ApiSnippets::default());
     }
     if record_rs_type_kind.is_bridge_type() || record.bridge_type_info.is_some() {
-        return Ok(GeneratedItem::default());
+        return Ok(ApiSnippets::default());
     }
     let ir = db.ir();
     let crate_root_path = crate::crate_root_path_tokens(&ir);
@@ -551,12 +551,12 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
     .map(|unambiguous_base_class_member_function| {
         let item: Result<&Item> = ir.find_decl(unambiguous_base_class_member_function.id);
         if item.is_err() {
-            return Ok(GeneratedItem::default());
+            return Ok(ApiSnippets::default());
         }
 
         match item.clone().unwrap() {
             Item::Func(func) => match db.generate_function(func.clone(), Some(record.clone()))? {
-                None => Ok(GeneratedItem::default()),
+                None => Ok(ApiSnippets::default()),
                 Some((item, _)) => Ok((*item).clone()),
             },
             _ => panic!("Unexpected item type: {:?}", item),
@@ -596,15 +596,15 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
     let mut assertions_from_record_items = vec![];
 
     for generated in record_generated_items {
-        items.push(generated.item);
+        items.push(generated.main_api);
         if !generated.thunks.is_empty() {
             thunks_from_record_items.push(generated.thunks);
         }
         if !generated.assertions.is_empty() {
             assertions_from_record_items.push(generated.assertions);
         }
-        if !generated.thunk_impls.is_empty() {
-            thunk_impls_from_record_items.push(generated.thunk_impls);
+        if !generated.cc_details.is_empty() {
+            thunk_impls_from_record_items.push(generated.cc_details);
         }
         features.extend(generated.features.clone());
     }
@@ -685,12 +685,12 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedIt
         #( #thunks_from_record_items )*
     };
 
-    Ok(GeneratedItem {
-        item: record_tokens,
+    Ok(ApiSnippets {
+        main_api: record_tokens,
         features,
         assertions: assertion_tokens,
         thunks: thunk_tokens,
-        thunk_impls: quote! {#(#thunk_impls_from_record_items __NEWLINE__ __NEWLINE__)*},
+        cc_details: quote! {#(#thunk_impls_from_record_items __NEWLINE__ __NEWLINE__)*},
         ..Default::default()
     })
 }
@@ -853,7 +853,7 @@ fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<To
 
 /// Returns the implementation of base class conversions, for converting a type
 /// to its unambiguous public base classes.
-fn cc_struct_upcast_impl(db: &Database, record: &Rc<Record>, ir: &IR) -> Result<GeneratedItem> {
+fn cc_struct_upcast_impl(db: &Database, record: &Rc<Record>, ir: &IR) -> Result<ApiSnippets> {
     let mut impls = Vec::with_capacity(record.unambiguous_public_bases.len());
     let mut thunks = vec![];
     let mut cc_impls = vec![];
@@ -898,10 +898,10 @@ fn cc_struct_upcast_impl(db: &Database, record: &Rc<Record>, ir: &IR) -> Result<
         });
     }
 
-    Ok(GeneratedItem {
-        item: quote! {#(#impls)*},
+    Ok(ApiSnippets {
+        main_api: quote! {#(#impls)*},
         thunks: quote! {#(#thunks)*},
-        thunk_impls: quote! {#(#cc_impls)*},
+        cc_details: quote! {#(#cc_impls)*},
         ..Default::default()
     })
 }

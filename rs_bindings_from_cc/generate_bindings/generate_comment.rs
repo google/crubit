@@ -4,7 +4,7 @@
 
 // Generate comments for the bindings.
 
-use crate::code_snippet::GeneratedItem;
+use crate::code_snippet::ApiSnippets;
 use crate::db::{BindingsGenerator, Database};
 use arc_anyhow::Result;
 use ffi_types::SourceLocationDocComment;
@@ -73,7 +73,7 @@ pub fn generate_doc_comment(
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.
-pub fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<GeneratedItem> {
+pub fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<ApiSnippets> {
     for error in item.errors() {
         db.errors().insert(error);
     }
@@ -94,11 +94,11 @@ pub fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<Gen
     for (index, error) in item.errors().iter().enumerate() {
         message = format!("{message}{}{:#}", if index == 0 { "" } else { "\n\n" }, error);
     }
-    Ok(GeneratedItem { item: quote! { __COMMENT__ #message }, ..Default::default() })
+    Ok(ApiSnippets { main_api: quote! { __COMMENT__ #message }, ..Default::default() })
 }
 
 /// Generates Rust source code for a given `Comment`.
-pub fn generate_comment(comment: &Comment) -> Result<GeneratedItem> {
+pub fn generate_comment(comment: &Comment) -> Result<ApiSnippets> {
     let text = comment.text.as_ref();
     Ok(quote! { __COMMENT__ #text }.into())
 }
@@ -223,7 +223,7 @@ mod tests {
             ),
         )?;
         let expected = "Generated from: google3/some/header;l=1\nError while generating bindings for item 'test_item':\nunsupported_message";
-        assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+        assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
         Ok(())
     }
 
@@ -247,7 +247,7 @@ mod tests {
             ),
         )?;
         let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
-        assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+        assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
         Ok(())
     }
 
@@ -268,7 +268,7 @@ mod tests {
             ),
         )?;
         let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
-        assert_rs_matches!(actual.item, quote! { __COMMENT__ #expected});
+        assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
         Ok(())
     }
 }
