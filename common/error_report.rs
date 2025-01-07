@@ -7,16 +7,45 @@ use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::fmt::{self, Arguments, Display, Formatter};
+use std::rc::Rc;
 
 use serde::Serialize;
 
 #[doc(hidden)]
 pub mod macro_internal {
-
     pub use anyhow;
     pub use arc_anyhow;
     pub use std::format_args;
 }
+
+fn to_string_with_cause(error: &arc_anyhow::Error) -> String {
+    format!("{:#}", error)
+}
+
+fn errors_to_string(errors: &[arc_anyhow::Error]) -> String {
+    errors.iter().map(to_string_with_cause).collect::<Vec<_>>().join("\n")
+}
+
+/// A list of errors that, when converted to an `anyhow::Error`, can still be
+/// individually reported when used with `ErrorReport`.
+#[derive(Debug, Clone)]
+pub struct ErrorList {
+    errors: Vec<arc_anyhow::Error>,
+}
+
+impl From<Vec<arc_anyhow::Error>> for ErrorList {
+    fn from(errors: Vec<arc_anyhow::Error>) -> Self {
+        Self { errors }
+    }
+}
+
+impl Display for ErrorList {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        f.write_str(&errors_to_string(&self.errors))
+    }
+}
+
+impl std::error::Error for ErrorList {}
 
 /// An error that stores its format string as well as the formatted message.
 #[derive(Debug, Clone)]
@@ -111,28 +140,16 @@ macro_rules! ensure {
     };
 }
 
-pub trait ErrorReporting: std::fmt::Debug {
-    /// Inserts a new error. Uses interior mutability so that references can be
-    /// shared freely.
-    fn insert(&self, error: &arc_anyhow::Error);
-    fn serialize_to_vec(&self) -> anyhow::Result<Vec<u8>>;
-    fn serialize_to_string(&self) -> anyhow::Result<String>;
+/// An interface by which errors can be recorded to generate a structured
+/// report.
+pub trait ErrorReporting {
+    fn report(&self, error: &arc_anyhow::Error);
 }
 
-/// A null [`ErrorReporting`] strategy.
-#[derive(Debug)]
 pub struct IgnoreErrors;
 
 impl ErrorReporting for IgnoreErrors {
-    fn insert(&self, _error: &arc_anyhow::Error) {}
-
-    fn serialize_to_vec(&self) -> anyhow::Result<Vec<u8>> {
-        Ok(vec![])
-    }
-
-    fn serialize_to_string(&self) -> anyhow::Result<String> {
-        Ok(String::new())
-    }
+    fn report(&self, _: &arc_anyhow::Error) {}
 }
 
 fn hide_unstable_details(input: &str) -> String {
@@ -157,10 +174,29 @@ impl ErrorReport {
     pub fn new() -> Self {
         Self::default()
     }
+
+    /// If `enable` is true, returns a pair of an `ErrorReport` and a `dyn
+    /// ErrorReporting` that will report errors into the `ErrorReport`.
+    ///
+    /// If `enable` is false, returns `None` with a `dyn ErrorReporting` that
+    /// will ignore errors.
+    pub fn new_rc_or_ignore(enable: bool) -> (Option<Rc<Self>>, Rc<dyn ErrorReporting>) {
+        if enable {
+            let this = Rc::new(Self::default());
+            (Some(this.clone()), this)
+        } else {
+            (None, Rc::new(IgnoreErrors))
+        }
+    }
+
+    pub fn to_json_string(&self) -> String {
+        serde_json::to_string_pretty(&*self.map.borrow())
+            .expect("ErrorReporting serialization to JSON failed unexpectedly")
+    }
 }
 
 impl ErrorReporting for ErrorReport {
-    fn insert(&self, error: &arc_anyhow::Error) {
+    fn report(&self, error: &arc_anyhow::Error) {
         let root_cause = error.root_cause();
         if let Some(error) = root_cause.downcast_ref::<FormattedError>() {
             let sample_message = if error.message != error.fmt { &*error.message } else { "" };
@@ -169,6 +205,10 @@ impl ErrorReporting for ErrorReport {
                 .entry(error.fmt.clone())
                 .or_default()
                 .add(Cow::Owned(hide_unstable_details(sample_message)));
+        } else if let Some(error) = root_cause.downcast_ref::<ErrorList>() {
+            for error in &error.errors {
+                self.report(error);
+            }
         } else {
             self.map
                 .borrow_mut()
@@ -176,14 +216,6 @@ impl ErrorReporting for ErrorReport {
                 .or_default()
                 .add(Cow::Owned(hide_unstable_details(&format!("{error}"))));
         }
-    }
-
-    fn serialize_to_vec(&self) -> anyhow::Result<Vec<u8>> {
-        Ok(serde_json::to_vec(&*self.map.borrow())?)
-    }
-
-    fn serialize_to_string(&self) -> anyhow::Result<String> {
-        Ok(serde_json::to_string_pretty(&*self.map.borrow())?)
     }
 }
 
@@ -362,22 +394,22 @@ mod tests {
     #[gtest]
     fn error_report() {
         let report = ErrorReport::new();
-        report.insert(&anyhow!("abc{}", "def"));
-        report.insert(&anyhow!("abc{}", "123"));
-        report.insert(&anyhow!("error code: {}", 65535));
-        report.insert(&anyhow!("no parameters"));
-        report.insert(&anyhow!("no parameters"));
-        report.insert(&anyhow!("no parameters"));
-        report.insert(&anyhow::Error::msg("not attributed").into());
-        report.insert(&anyhow!("has context from arc_anyhow::context()").context("the context"));
-        report.insert(
+        report.report(&anyhow!("abc{}", "def"));
+        report.report(&anyhow!("abc{}", "123"));
+        report.report(&anyhow!("error code: {}", 65535));
+        report.report(&anyhow!("no parameters"));
+        report.report(&anyhow!("no parameters"));
+        report.report(&anyhow!("no parameters"));
+        report.report(&anyhow::Error::msg("not attributed").into());
+        report.report(&anyhow!("has context from arc_anyhow::context()").context("the context"));
+        report.report(
             &arc_anyhow::Context::context(
                 Result::<(), _>::Err(anyhow!("has context from arc_anyhow::Context::context()")),
                 "the context",
             )
             .unwrap_err(),
         );
-        report.insert(
+        report.report(
             &arc_anyhow::Context::with_context(
                 Result::<(), _>::Err(anyhow!(
                     "has context from arc_anyhow::Context::with_context()"
@@ -386,44 +418,65 @@ mod tests {
             )
             .unwrap_err(),
         );
-        report.insert(
+        report.report(
             &anyhow!("has three layers of context")
                 .context("context 1")
                 .context("context 2")
                 .context("context 3"),
         );
 
-        assert_eq!(
-            report.serialize_to_string().unwrap(),
-            r#"{
-  "abc{}": {
-    "count": 2,
-    "sample_message": "abcdef"
-  },
-  "error code: {}": {
-    "count": 1,
-    "sample_message": "error code: 65535"
-  },
-  "has context from arc_anyhow::Context::context()": {
-    "count": 1
-  },
-  "has context from arc_anyhow::Context::with_context()": {
-    "count": 1
-  },
-  "has context from arc_anyhow::context()": {
-    "count": 1
-  },
-  "has three layers of context": {
-    "count": 1
-  },
-  "no parameters": {
-    "count": 3
-  },
-  "{}": {
-    "count": 1,
-    "sample_message": "not attributed"
-  }
-}"#,
+        expect_eq!(
+            serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
+            serde_json::json!({
+              "abc{}": {
+                "count": 2,
+                "sample_message": "abcdef"
+              },
+              "error code: {}": {
+                "count": 1,
+                "sample_message": "error code: 65535"
+              },
+              "has context from arc_anyhow::Context::context()": {
+                "count": 1
+              },
+              "has context from arc_anyhow::Context::with_context()": {
+                "count": 1
+              },
+              "has context from arc_anyhow::context()": {
+                "count": 1
+              },
+              "has three layers of context": {
+                "count": 1
+              },
+              "no parameters": {
+                "count": 3
+              },
+              "{}": {
+                "count": 1,
+                "sample_message": "not attributed"
+              }
+            }),
+        );
+    }
+
+    #[gtest]
+    fn test_error_list_elements_are_reported() {
+        let report = ErrorReport::new();
+        report.report(&arc_anyhow::Error::from(ErrorList::from(vec![
+            anyhow!("abc{}", "def"),
+            anyhow!("hijk"),
+        ])));
+        expect_eq!(
+            serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
+            serde_json::json!({
+              "abc{}": {
+                "count": 1,
+                "sample_message": "abcdef"
+              },
+              "hijk": {
+                "count": 1
+              }
+            }),
         );
     }
 }

@@ -75,7 +75,7 @@ pub fn generate_doc_comment(
 /// Generates Rust source code for a given `UnsupportedItem`.
 pub fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<ApiSnippets> {
     for error in item.errors() {
-        db.errors().insert(error);
+        db.errors().report(error);
     }
 
     let source_loc = item.source_loc();

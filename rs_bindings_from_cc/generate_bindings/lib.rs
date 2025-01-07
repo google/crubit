@@ -26,7 +26,7 @@ use generate_struct_and_union::{generate_incomplete_record, generate_record};
 use crate::rs_snippet::{CratePath, Lifetime, Mutability, PrimitiveType, RsTypeKind};
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
-use error_report::{anyhow, bail, ensure, ErrorReport, ErrorReporting, IgnoreErrors};
+use error_report::{anyhow, bail, ensure, ErrorReport, ErrorReporting};
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
@@ -85,16 +85,15 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     let rustfmt_config_path: OsString =
         std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
     catch_unwind(|| {
+        let (error_report, errors) = ErrorReport::new_rc_or_ignore(generate_error_report);
         // It is ok to abort here.
-        let errors: Rc<dyn ErrorReporting> =
-            if generate_error_report { Rc::new(ErrorReport::new()) } else { Rc::new(IgnoreErrors) };
         let Bindings { rs_api, rs_api_impl } = generate_bindings(
             json,
             crubit_support_path_format,
             &clang_format_exe_path,
             &rustfmt_exe_path,
             &rustfmt_config_path,
-            errors.clone(),
+            errors,
             generate_source_loc_doc_comment,
         )
         .unwrap();
@@ -104,7 +103,9 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
                 rs_api_impl.into_bytes().into_boxed_slice(),
             ),
             error_report: FfiU8SliceBox::from_boxed_slice(
-                errors.serialize_to_vec().unwrap().into_boxed_slice(),
+                error_report
+                    .map(|s| s.to_json_string().into_bytes().into_boxed_slice())
+                    .unwrap_or_else(|| Box::new([])),
             ),
         }
     })
@@ -1053,7 +1054,7 @@ pub(crate) mod tests {
         super::generate_bindings_tokens(
             Rc::new(ir),
             "crubit/rs_bindings_support",
-            Rc::new(IgnoreErrors),
+            Rc::new(error_report::IgnoreErrors),
             SourceLocationDocComment::Enabled,
         )
     }

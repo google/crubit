@@ -17,7 +17,7 @@ use std::rc::Rc;
 
 use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
-use error_report::{ErrorReport, ErrorReporting, IgnoreErrors};
+use error_report::{ErrorReport, ErrorReporting};
 use generate_bindings::{Database, IncludeGuard};
 use run_compiler::run_compiler;
 use token_stream_printer::{
@@ -95,14 +95,11 @@ fn new_db<'tcx>(
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
     use generate_bindings::{generate_bindings, BindingsTokens};
 
-    let errors: Rc<dyn ErrorReporting> = if cmdline.error_report_out.is_some() {
-        Rc::new(ErrorReport::new())
-    } else {
-        Rc::new(IgnoreErrors)
-    };
+    let generate_error_report = cmdline.error_report_out.is_some();
+    let (error_report, errors) = ErrorReport::new_rc_or_ignore(generate_error_report);
 
     let BindingsTokens { cc_api, cc_api_impl } = {
-        let db = new_db(cmdline, tcx, errors.clone());
+        let db = new_db(cmdline, tcx, errors);
         generate_bindings(&db)?
     };
 
@@ -120,7 +117,7 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
     }
 
     if let Some(error_report_out) = &cmdline.error_report_out {
-        write_file(error_report_out, &errors.serialize_to_string().unwrap())?;
+        write_file(error_report_out, &error_report.unwrap().to_json_string())?;
     }
 
     Ok(())

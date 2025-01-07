@@ -1333,7 +1333,7 @@ fn generate_unsupported_def(
     err: Error,
 ) -> ApiSnippets {
     let tcx = db.tcx();
-    db.errors().insert(&err);
+    db.errors().report(&err);
     let source_loc = generate_source_location(tcx, local_def_id);
     let name = tcx.def_path_str(local_def_id.to_def_id());
 

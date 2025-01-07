@@ -5,6 +5,7 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
     "rust_proc_macro",
+    "rust_test",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
@@ -292,6 +293,27 @@ cc_library(
 )
 
 rust_library(
+    name = "errors",
+    srcs = ["errors.rs"],
+    deps = [
+        ":arc_anyhow",
+        ":error_report",
+        "@crate_index//:anyhow",
+    ],
+)
+
+rust_test(
+    name = "errors_test",
+    srcs = ["errors_test.rs"],
+    deps = [
+        ":error_report",
+        ":errors",
+        "@crate_index//:googletest",
+        "@crate_index//:serde_json",
+    ],
+)
+
+rust_library(
     name = "error_report",
     srcs = ["error_report.rs"],
     visibility = ["//:__subpackages__"],
@@ -304,7 +326,7 @@ rust_library(
     ],
 )
 
-crubit_rust_test(
+rust_test(
     name = "error_report_test",
     crate = ":error_report",
     deps = [
