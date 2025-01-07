@@ -79,28 +79,27 @@ pub enum TraitName {
         params: Rc<[RsTypeKind]>,
     },
     /// The PartialEq trait.
-    PartialEq { params: Rc<[RsTypeKind]> },
+    PartialEq { param: Rc<RsTypeKind> },
     /// The PartialOrd trait.
-    PartialOrd { params: Rc<[RsTypeKind]> },
+    PartialOrd { param: Rc<RsTypeKind> },
     /// Any other trait, e.g. Eq.
     Other { name: Rc<str>, params: Rc<[RsTypeKind]>, is_unsafe_fn: bool },
 }
 
 impl TraitName {
     /// Returns the generic parameters in this trait name.
-    fn params(&self) -> impl Iterator<Item = &RsTypeKind> {
+    fn params(&self) -> &[RsTypeKind] {
         match self {
             Self::CtorNew(params)
             | Self::UnpinConstructor { params, .. }
-            | Self::PartialEq { params }
-            | Self::PartialOrd { params }
-            | Self::Other { params, .. } => params.iter(),
+            | Self::Other { params, .. } => params,
+            Self::PartialEq { param } | Self::PartialOrd { param } => core::slice::from_ref(param),
         }
     }
 
     /// Returns the lifetimes used in this trait name.
     pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + '_ {
-        self.params().flat_map(|p| p.lifetimes())
+        self.params().iter().flat_map(|p| p.lifetimes())
     }
     /// Similar to to_tokens but removing a given record type from the list of
     /// generic args
@@ -115,24 +114,25 @@ impl TraitName {
                     format_generic_params_replacing_by_self(&**params, trait_record);
                 quote! {#name_as_token_stream #formatted_params}
             }
-            Self::PartialEq { params } => {
-                assert_eq!(params.len(), 1, "PartialEq must have a single generic param");
-
-                if trait_record.is_some() && params[0].is_record(trait_record.unwrap()) {
+            Self::PartialEq { param } => {
+                if trait_record.is_some() && param.is_record(trait_record.unwrap()) {
                     quote! {PartialEq}
                 } else {
-                    let formatted_params =
-                        format_generic_params_replacing_by_self(&**params, trait_record);
+                    let formatted_params = format_generic_params_replacing_by_self(
+                        core::slice::from_ref(&**param),
+                        trait_record,
+                    );
                     quote! {PartialEq #formatted_params}
                 }
             }
-            Self::PartialOrd { params } => {
-                assert_eq!(params.len(), 1, "PartialOrd must have a single generic param");
-                if trait_record.is_some() && params[0].is_record(trait_record.unwrap()) {
+            Self::PartialOrd { param } => {
+                if trait_record.is_some() && param.is_record(trait_record.unwrap()) {
                     quote! {PartialOrd}
                 } else {
-                    let formatted_params =
-                        format_generic_params_replacing_by_self(&**params, trait_record);
+                    let formatted_params = format_generic_params_replacing_by_self(
+                        core::slice::from_ref(&**param),
+                        trait_record,
+                    );
                     quote! {PartialOrd #formatted_params}
                 }
             }
@@ -417,10 +417,10 @@ fn api_func_shape_for_operator_eq(
     let (_, lhs_record) =
         type_by_value_or_under_const_ref(&param_types[0], "first operator== param")?;
     let (param, _) = type_by_value_or_under_const_ref(&param_types[1], "second operator== param")?;
-    let params: Rc<[RsTypeKind]> = Rc::new([param.clone()]);
+    let param = Rc::new(param.clone());
     let func_name = make_rs_ident("eq");
     let impl_kind = ImplKind::new_trait(
-        TraitName::PartialEq { params },
+        TraitName::PartialEq { param },
         lhs_record.clone(),
         /* format_first_param_as_self= */ true,
         /* force_const_reference_params= */ true,
@@ -438,7 +438,7 @@ fn api_func_shape_for_operator_lt(
         type_by_value_or_under_const_ref(&param_types[0], "first operator< param")?;
     let (param, rhs_record) =
         type_by_value_or_under_const_ref(&param_types[1], "second operator< param")?;
-    let params: Rc<[RsTypeKind]> = Rc::new([param.clone()]);
+    let param: Rc<RsTypeKind> = Rc::new(param.clone());
     // Even though Rust and C++ allow operator< to be implemented on different
     // types, we don't generate bindings for them at this moment. The
     // issue is that our canonical implementation of partial_cmp relies
@@ -460,7 +460,7 @@ fn api_func_shape_for_operator_lt(
     };
     let func_name = make_rs_ident("lt");
     let impl_kind = ImplKind::new_trait(
-        TraitName::PartialOrd { params },
+        TraitName::PartialOrd { param },
         lhs_record.clone(),
         /* format_first_param_as_self= */ true,
         /* force_const_reference_params= */ true,
@@ -1225,8 +1225,7 @@ pub fn generate_function(
                 quote! {
                     type #name = #quoted_return_type;
                 }
-            } else if let TraitName::PartialOrd { ref params } = trait_name {
-                let param = params.get(0).ok_or_else(|| anyhow!("No parameter to PartialOrd"))?;
+            } else if let TraitName::PartialOrd { ref param } = trait_name {
                 let quoted_param_or_self = match impl_for {
                     ImplFor::T => param.to_token_stream_replacing_by_self(Some(&trait_record)),
                     ImplFor::RefT => quote! { #param },
