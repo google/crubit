@@ -4,8 +4,8 @@
 
 use crate::db::BindingsGenerator;
 
-use crate::rs_snippet::{format_generic_params, unique_lifetimes, RsTypeKind};
-use arc_anyhow::{Context, Result};
+use crate::rs_snippet::{format_generic_params, unique_lifetimes, Mutability, RsTypeKind};
+use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
 use error_report::{anyhow, bail};
 use ir::*;
@@ -136,15 +136,15 @@ pub fn generate_function_thunk(
     let mut return_type_fragment = return_type.format_as_return_type_fragment(None);
     if func.name == UnqualifiedIdentifier::Constructor {
         // For constructors, inject MaybeUninit into the type of `__this_` parameter.
-        let first_param = param_types
-            .next()
-            .ok_or_else(|| anyhow!("Constructors should have at least one parameter (__this)"))?;
-        out_param = Some(first_param.format_mut_ref_as_uninitialized().with_context(|| {
-            format!(
-                "Failed to format `__this` param for a constructor thunk: {:?}",
-                func.params.first()
-            )
-        })?);
+        let Some(first_param) = param_types.next() else {
+            bail!("Constructors should have at least one parameter (__this), but none were found.")
+        };
+        let RsTypeKind::Reference { referent, lifetime, mutability: Mutability::Mut } = first_param
+        else {
+            bail!("Expected first constructor parameter to be a mutable reference, got: {first_param}")
+        };
+        let lifetime = lifetime.format_for_reference();
+        out_param = Some(quote! { & #lifetime mut ::core::mem::MaybeUninit< #referent > });
         out_param_ident = Some(param_idents.next().unwrap().clone());
     } else if !return_type.is_c_abi_compatible_by_value() {
         // For return types that can't be passed by value, create a new out parameter.

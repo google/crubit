@@ -821,18 +821,6 @@ impl RsTypeKind {
         }
     }
 
-    /// Formats this RsTypeKind as `&'a mut MaybeUninit<SomeStruct>`. This is
-    /// used to format `__this` parameter in a constructor thunk.
-    pub fn format_mut_ref_as_uninitialized(&self) -> Result<TokenStream> {
-        match self {
-            RsTypeKind::Reference { referent, lifetime, mutability: Mutability::Mut } => {
-                let lifetime = lifetime.format_for_reference();
-                Ok(quote! { & #lifetime mut ::core::mem::MaybeUninit< #referent > })
-            }
-            _ => bail!("Expected reference to format as MaybeUninit, got: {:?}", self),
-        }
-    }
-
     /// Formats this RsTypeKind as the `self` parameter: usually, `&'a self` or
     /// `&'a mut self`.
     ///
