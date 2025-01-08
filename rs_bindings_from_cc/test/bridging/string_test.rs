@@ -20,11 +20,11 @@ fn test_string_type_as_return_value() {
     let s2 = cc_std::std::string::from("hello");
     assert_eq!(s1, s2);
 }
-// TODO(b/351976622): Support basic_string in supported.
-// #[gtest]
-// fn test_basic_string_as_return_value() {
-//    let s1: cc_std::std::string =
-//        unsafe { string_test_lib::CreateStringAsBasicString("hello".as_ptr()
-// as _, 5) };    let s2 = cc_std::std::string::from("hello");
-//    assert_eq!(s1, s2);
-//}
+
+#[gtest]
+fn test_basic_string_as_return_value() {
+    let s1: cc_std::std::string =
+        unsafe { string_test_lib::CreateStringAsBasicString("hello".as_ptr() as _, 5) };
+    let s2 = cc_std::std::string::from("hello");
+    assert_eq!(s1, s2);
+}
