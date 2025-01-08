@@ -941,17 +941,17 @@ absl::StatusOr<MappedType> Importer::ConvertType(
   absl::StatusOr<MappedType> mapped_type =
       ConvertUnattributedType(type, lifetimes, ref_qualifier_kind, nullable);
   if (mapped_type.ok()) {
-    mapped_type->rs_type.unknown_attr =
+    std::optional<std::string> unknown_attr =
         CollectUnknownTypeAttrs(*type, [](clang::attr::Kind kind) {
           using enum clang::attr::Kind;
           switch (kind) {
             // annotate_type is usually meaningless and can be acked as
-            // understood. The major exception is lifetimes, which we do already
-            // handle separately.
+            // understood. The major exception is lifetimes, which we do
+            // already handle separately.
             case AnnotateType:
             // Simply ignore nullability attributes for now.
-            // TODO(mboehme): Ultimately, we want to interpret these and change
-            // the bindings we produce based on the nullability.
+            // TODO(mboehme): Ultimately, we want to interpret these and
+            // change the bindings we produce based on the nullability.
             case TypeNullable:
             case TypeNonNull:
             case TypeNullUnspecified:
@@ -960,6 +960,9 @@ absl::StatusOr<MappedType> Importer::ConvertType(
               return false;
           }
         });
+    if (unknown_attr.has_value()) {
+      mapped_type->rs_type = UnknownAttr{.unknown_attr = *unknown_attr};
+    }
   }
   return mapped_type;
 }

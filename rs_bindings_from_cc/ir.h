@@ -173,9 +173,20 @@ struct CcType {
   std::vector<CcType> type_args = {};
 };
 
+struct RsTypeNamed;
+
+struct UnknownAttr {
+  // A human-readable list of unknown attributes that should have applied to
+  // this RsType.
+  std::string unknown_attr;
+};
+
 // A Rust type involved in the bindings. It has the knowledge of how the type
 // is spelled in Rust.
-struct RsType {
+using RsType = std::variant<RsTypeNamed, ItemId, UnknownAttr>;
+llvm::json::Value toJSON(const RsType& type);
+
+struct RsTypeNamed {
   llvm::json::Value ToJson() const;
 
   // The name of the type. Examples:
@@ -189,12 +200,7 @@ struct RsType {
   //   `type_args`; param types are stored in other `type_args`; <abi> would be
   //   replaced with "cdecl", "stdcall" or other Abi - see
   //   https://doc.rust-lang.org/reference/types/function-pointer.html);
-  // - An empty string when `decl_id` is non-empty.
   std::string name;
-
-  // Id of a decl that this type corresponds to. `nullopt` when `name` is
-  // non-empty.
-  std::optional<ItemId> decl_id;
 
   // Lifetime arguments for a generic type. Examples:
   //   *mut i32 has no lifetime arguments
@@ -206,10 +212,6 @@ struct RsType {
   // type).
   std::vector<LifetimeId> lifetime_args = {};
 
-  // A human-readable list of unknown attributes that should have applied to
-  // this RsType, or None if all attributes were understood.
-  std::optional<std::string> unknown_attr;
-
   // Type arguments for a generic type. Examples:
   //   i32 has no type arguments.
   //   *mut i32 has a single type argument, i32.
@@ -218,7 +220,7 @@ struct RsType {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const RsType& type) {
-  return o << std::string(llvm::formatv("{0:2}", type.ToJson()));
+  return o << std::string(llvm::formatv("{0:2}", toJSON(type)));
 }
 
 // A type involved in the bindings. The rs_type and cpp_type will be treated
@@ -233,11 +235,11 @@ struct MappedType {
   /// Returns the MappedType for a non-templated/generic, non-cv-qualified type.
   /// For example, Void() is Simple("()", "void").
   static MappedType Simple(std::string rs_name, std::string cc_name) {
-    return MappedType{RsType{rs_name}, CcType{cc_name}};
+    return MappedType{RsTypeNamed{rs_name}, CcType{cc_name}};
   }
 
   static MappedType WithDeclId(ItemId decl_id) {
-    return MappedType{RsType{.decl_id = decl_id}, CcType{.decl_id = decl_id}};
+    return MappedType{decl_id, CcType{.decl_id = decl_id}};
   }
 
   static MappedType PointerTo(
@@ -268,7 +270,10 @@ struct MappedType {
                             MappedType return_type,
                             std::vector<MappedType> param_types);
 
-  bool IsVoid() const { return rs_type.name == "()"; }
+  bool IsVoid() const {
+    const auto* rs_type_named = std::get_if<RsTypeNamed>(&rs_type);
+    return rs_type_named != nullptr && rs_type_named->name == "()";
+  }
 
   llvm::json::Value ToJson() const;
 

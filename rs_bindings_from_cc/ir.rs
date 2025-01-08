@@ -196,17 +196,32 @@ pub struct LifetimeName {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct RsType {
-    pub name: Option<Rc<str>>,
-    pub lifetime_args: Rc<[LifetimeId]>,
-    pub type_args: Rc<[RsType]>,
-    pub unknown_attr: Option<Rc<str>>,
-    pub decl_id: Option<ItemId>,
+pub enum RsType {
+    NamedType { name: Rc<str>, lifetime_args: Rc<[LifetimeId]>, type_args: Rc<[RsType]> },
+    ItemIdType { decl_id: ItemId },
+    UnknownAttr { unknown_attr: Rc<str> },
 }
 
 impl RsType {
     pub fn is_unit_type(&self) -> bool {
-        self.name.as_deref() == Some("()")
+        match self {
+            RsType::NamedType { name, .. } => name.as_ref() == "()",
+            _ => false,
+        }
+    }
+
+    pub fn name(&self) -> Option<&str> {
+        match self {
+            RsType::NamedType { name, .. } => Some(name.as_ref()),
+            _ => None,
+        }
+    }
+
+    pub fn lifetime_args(&self) -> Option<&[LifetimeId]> {
+        match self {
+            RsType::NamedType { lifetime_args, .. } => Some(lifetime_args.as_ref()),
+            _ => None,
+        }
     }
 }
 
@@ -225,7 +240,10 @@ pub trait TypeWithDeclId {
 
 impl TypeWithDeclId for RsType {
     fn decl_id(&self) -> Option<ItemId> {
-        self.decl_id
+        match self {
+            RsType::ItemIdType { decl_id } => Some(*decl_id),
+            _ => None,
+        }
     }
 }
 

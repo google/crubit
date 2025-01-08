@@ -10,7 +10,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "common/status_test_matchers.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -126,12 +125,26 @@ auto ParamType(const Args&... matchers) {
   return testing::Field("type", &FuncParam::type, AllOf(matchers...));
 }
 
-// Matches an RsType or CcType that has the given name.
-MATCHER_P(NameIs, name, "") {
+// Matches an CcType that has the given name.
+MATCHER_P(CcTypeNameIs, name, "") {
   if (arg.name == name) return true;
 
   *result_listener << "actual name: '" << arg.name << "'";
   return false;
+}
+
+// Matches an RsType that has the given name.
+MATCHER_P(RsTypeNameIs, name, "") {
+  const auto* named = std::get_if<RsTypeNamed>(&arg);
+  if (named == nullptr || named->name != name) {
+    *result_listener << "actual name: '";
+    if (named != nullptr) {
+      *result_listener << named->name;
+    }
+    *result_listener << "'";
+    return false;
+  }
+  return true;
 }
 
 // Matches text for comments.
@@ -142,13 +155,27 @@ MATCHER_P(TextIs, text, "") {
   return false;
 }
 
-// Matches an RsType or CcType that has the given decl_id.
-MATCHER_P(DeclIdIs, decl_id, "") {
+// Matches an CcType that has the given decl_id.
+MATCHER_P(CcDeclIdIs, decl_id, "") {
   if (arg.decl_id.has_value() && *arg.decl_id == decl_id) return true;
 
   *result_listener << "actual decl_id: ";
   if (arg.decl_id.has_value()) {
     *result_listener << *arg.decl_id;
+  } else {
+    *result_listener << "std::nullopt";
+  }
+  return false;
+}
+
+// Matches an RsType that has the given decl_id.
+MATCHER_P(RsDeclIdIs, decl_id, "") {
+  const auto* arg_decl_id = std::get_if<ItemId>(&arg);
+  if (arg_decl_id != nullptr && *arg_decl_id == decl_id) return true;
+
+  *result_listener << "actual decl_id: ";
+  if (arg_decl_id != nullptr) {
+    *result_listener << *arg_decl_id;
   } else {
     *result_listener << "std::nullopt";
   }
@@ -173,8 +200,8 @@ auto RsTypeIs(const Args&... matchers) {
 // Matches an RsType that has type arguments matching `matchers`.
 template <typename... Args>
 auto RsTypeParamsAre(const Args&... matchers) {
-  return testing::Field("type_args", &RsType::type_args,
-                        ElementsAre(matchers...));
+  return testing::VariantWith<RsTypeNamed>(testing::Field(
+      "type_args", &RsTypeNamed::type_args, ElementsAre(matchers...)));
 }
 
 // Matches a CcType that has type arguments matching `matchers`.
@@ -184,33 +211,33 @@ auto CcTypeParamsAre(const Args&... matchers) {
                         ElementsAre(matchers...));
 }
 
-auto IsCcInt() { return AllOf(NameIs("int"), CcTypeParamsAre()); }
+auto IsCcInt() { return AllOf(CcTypeNameIs("int"), CcTypeParamsAre()); }
 
 auto IsRsInt() {
-  return AllOf(NameIs("::core::ffi::c_int"), RsTypeParamsAre());
+  return AllOf(RsTypeNameIs("::core::ffi::c_int"), RsTypeParamsAre());
 }
 
 // Matches a CcType that is a pointer to a type matching `matcher`.
 template <typename Matcher>
 auto CcPointsTo(const Matcher& matcher) {
-  return AllOf(NameIs("*"), CcTypeParamsAre(matcher));
+  return AllOf(CcTypeNameIs("*"), CcTypeParamsAre(matcher));
 }
 
 template <typename Matcher>
 auto CcReferenceTo(const Matcher& matcher) {
-  return AllOf(NameIs("&"), CcTypeParamsAre(matcher));
+  return AllOf(CcTypeNameIs("&"), CcTypeParamsAre(matcher));
 }
 
 // Matches an RsType that is a mutable pointer to a type matching `matcher`.
 template <typename Matcher>
 auto RsPointsTo(const Matcher& matcher) {
-  return AllOf(NameIs("*mut"), RsTypeParamsAre(matcher));
+  return AllOf(RsTypeNameIs("*mut"), RsTypeParamsAre(matcher));
 }
 
 // Matches an RsType that is a const pointer to a type matching `matcher`.
 template <typename Matcher>
 auto RsConstPointsTo(const Matcher& matcher) {
-  return AllOf(NameIs("*const"), RsTypeParamsAre(matcher));
+  return AllOf(RsTypeNameIs("*const"), RsTypeParamsAre(matcher));
 }
 
 // Matches a MappedType that is void.
@@ -392,8 +419,8 @@ TEST(ImporterTest, TestImportConstStructPointerFunc) {
   ASSERT_TRUE(decl_id.has_value());
 
   auto is_ptr_to_const_s =
-      AllOf(CcTypeIs(CcPointsTo(AllOf(DeclIdIs(*decl_id), IsConst()))),
-            RsTypeIs(RsConstPointsTo(DeclIdIs(*decl_id))));
+      AllOf(CcTypeIs(CcPointsTo(AllOf(CcDeclIdIs(*decl_id), IsConst()))),
+            RsTypeIs(RsConstPointsTo(RsDeclIdIs(*decl_id))));
 
   EXPECT_THAT(ir.items, Contains(VariantWith<Func>(AllOf(
                             IdentifierIs("Foo"), ReturnType(is_ptr_to_const_s),
@@ -901,7 +928,7 @@ TEST(ImporterTest, RecordItemIds) {
               AllOf(Contains(VariantWith<Comment>(TextIs("A free comment"))),
                     Contains(VariantWith<Func>(IdentifierIs("bar"))),
                     Contains(VariantWith<UnsupportedItem>(
-                        NameIs("TopLevelStruct::Nested"))),
+                        CcTypeNameIs("TopLevelStruct::Nested"))),
                     Contains(VariantWith<Func>(IdentifierIs("baz")))));
 }
 
