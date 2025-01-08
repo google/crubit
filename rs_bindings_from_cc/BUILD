@@ -459,6 +459,7 @@ cc_library(
         "//common:cc_ffi_types",
         "//common:status_macros",
         "//rs_bindings_from_cc/generate_bindings",  # buildcleaner: keep
+        "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@llvm-project//llvm:Support",

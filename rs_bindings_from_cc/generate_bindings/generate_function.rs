@@ -611,6 +611,12 @@ fn api_func_shape_for_operator(
     }
 }
 
+/// Reports a fatal error generating bindings for a function.
+/// Fatal errors should only be reported
+fn report_fatal_func_error(db: &dyn BindingsGenerator, func: &Func, msg: &str) {
+    db.fatal_errors().report(&format!("{}: {}", func.source_loc, msg));
+}
+
 /// Returns the shape of the generated Rust API for a given function definition.
 ///
 /// If the shape is a trait, this also mutates the parameter types to be
@@ -654,7 +660,11 @@ fn api_func_shape(
     match &func.name {
         UnqualifiedIdentifier::Operator(op) => {
             if let SafetyAnnotation::Unsafe = func.safety_annotation {
-                bail!("Unsafe annotations on operators are not supported: {func:?}");
+                report_fatal_func_error(
+                    db,
+                    func,
+                    "Unsafe annotations on operators are not supported",
+                );
             }
             return api_func_shape_for_operator(db, func, maybe_record, param_types, op).map(Some);
         }
@@ -681,7 +691,11 @@ fn api_func_shape(
         }
         UnqualifiedIdentifier::Destructor => {
             if let SafetyAnnotation::Unsafe = func.safety_annotation {
-                bail!("Unsafe annotations on operators are not supported: {func:?}");
+                report_fatal_func_error(
+                    db,
+                    func,
+                    "Unsafe annotations on destructors are not supported",
+                );
             }
             // Note: to avoid double-destruction of the fields, they are all wrapped in
             // ManuallyDrop in this case. See `generate_record`.
@@ -3374,6 +3388,25 @@ mod tests {
         // Bindings for TakesByValue cannot be generated.
         assert_rs_not_matches!(rs_api, quote! {TakesByValue});
         assert_cc_not_matches!(rs_api_impl, quote! {TakesByValue});
+        Ok(())
+    }
+
+    #[gtest]
+    fn test_invalid_unsafe_annotation_causes_fatal_error() -> googletest::Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            struct Trivial final {
+                [[clang::annotate("crubit_override_unsafe", true)]]
+                ~Trivial();
+            };
+            "#,
+        )
+        .or_fail()?;
+        let error_message = generate_bindings_tokens(ir).err().or_fail()?.to_string();
+        assert_that!(
+            error_message,
+            contains_substring("Unsafe annotations on destructors are not supported")
+        );
         Ok(())
     }
 

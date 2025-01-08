@@ -21,6 +21,7 @@ pub struct FfiBindings {
     pub rs_api: FfiU8SliceBox,
     pub rs_api_impl: FfiU8SliceBox,
     pub error_report: FfiU8SliceBox,
+    pub fatal_errors: FfiU8SliceBox,
 }
 
 #[derive(Clone, Debug, Default)]

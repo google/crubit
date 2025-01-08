@@ -17,12 +17,64 @@ use proc_macro2::Ident;
 use std::collections::HashSet;
 use std::rc::Rc;
 
+/// Reporter for fatal errors that will cause bindings generation to fail.
+pub trait ReportFatalError {
+    /// Reports a fatal error that will cause bindings generation to fail.
+    ///
+    /// These errors should be issued only in response to misusage of Crubit
+    /// itself, such as incorrect use of Crubit-specific annotations.
+    fn report(&self, msg: &str);
+}
+
+/// A collection of errors that should cause bindings generation to fail.
+#[derive(Default)]
+pub struct FatalErrors {
+    fatal_errors: std::cell::RefCell<String>,
+}
+
+impl ReportFatalError for FatalErrors {
+    fn report(&self, msg: &str) {
+        let mut errors = self.fatal_errors.borrow_mut();
+        errors.push('\n');
+        errors.push_str(msg);
+    }
+}
+
+impl FatalErrors {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn take_string(&self) -> String {
+        std::mem::take(&mut *self.fatal_errors.borrow_mut())
+    }
+}
+
+impl Drop for FatalErrors {
+    fn drop(&mut self) {
+        let errors = self.fatal_errors.borrow();
+        if !errors.is_empty() {
+            panic!("Fatal errors in binding generation were not reported:{}", errors);
+        }
+    }
+}
+
 memoized::query_group! {
     pub(crate) trait BindingsGenerator {
         #[input]
         fn ir(&self) -> Rc<IR>;
+
         #[input]
         fn errors(&self) -> Rc<dyn ErrorReporting>;
+
+
+        /// A collection of errors that should cause bindings generation to fail.
+        ///
+        /// These errors should be issued only in response to misusage of Crubit itself, such as
+        /// incorrect use of Crubit-specific annotations.
+        #[input]
+        fn fatal_errors(&self) -> Rc<dyn ReportFatalError>;
+
         #[input]
         fn generate_source_loc_doc_comment(&self) -> SourceLocationDocComment;
 

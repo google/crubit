@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "common/ffi_types.h"
@@ -20,6 +21,7 @@ struct FfiBindings {
   FfiU8SliceBox rs_api;
   FfiU8SliceBox rs_api_impl;
   FfiU8SliceBox error_report;
+  FfiU8SliceBox fatal_errors;
 };
 
 // This function is implemented in Rust.
@@ -33,6 +35,12 @@ extern "C" FfiBindings GenerateBindingsImpl(
 static absl::StatusOr<Bindings> MakeBindingsFromFfiBindings(
     const FfiBindings& ffi_bindings) {
   Bindings bindings;
+
+  const FfiU8SliceBox& fatal_errors = ffi_bindings.fatal_errors;
+  std::string fatal_errors_string(fatal_errors.ptr, fatal_errors.size);
+  if (!fatal_errors_string.empty()) {
+    return absl::InvalidArgumentError(fatal_errors_string);
+  }
 
   const FfiU8SliceBox& rs_api = ffi_bindings.rs_api;
   const FfiU8SliceBox& rs_api_impl = ffi_bindings.rs_api_impl;

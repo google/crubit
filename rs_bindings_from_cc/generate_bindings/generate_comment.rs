@@ -106,6 +106,7 @@ pub fn generate_comment(comment: &Comment) -> Result<ApiSnippets> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::FatalErrors;
     use arc_anyhow::Result;
     use error_report::ErrorReport;
     use googletest::prelude::*;
@@ -206,13 +207,18 @@ mod tests {
         }
     }
 
-    #[gtest]
-    fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
-        let db = Database::new(
+    fn db_for_test(source_loc_doc_comment: SourceLocationDocComment) -> Database {
+        Database::new(
             Rc::new(make_ir_from_items([])),
             Rc::new(ErrorReport::new()),
-            SourceLocationDocComment::Enabled,
-        );
+            Rc::new(FatalErrors::new()),
+            source_loc_doc_comment,
+        )
+    }
+
+    #[gtest]
+    fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
+        let db = db_for_test(SourceLocationDocComment::Enabled);
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_static_message(
@@ -232,11 +238,7 @@ mod tests {
     /// For these, we omit the mention of the location.
     #[gtest]
     fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
-        let db = Database::new(
-            Rc::new(make_ir_from_items([])),
-            Rc::new(ErrorReport::new()),
-            SourceLocationDocComment::Enabled,
-        );
+        let db = db_for_test(SourceLocationDocComment::Enabled);
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_static_message(
@@ -253,11 +255,7 @@ mod tests {
 
     #[gtest]
     fn test_generate_unsupported_item_with_source_loc_disabled() -> Result<()> {
-        let db = Database::new(
-            Rc::new(make_ir_from_items([])),
-            Rc::new(ErrorReport::new()),
-            SourceLocationDocComment::Disabled,
-        );
+        let db = db_for_test(SourceLocationDocComment::Disabled);
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_static_message(

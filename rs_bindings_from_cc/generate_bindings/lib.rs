@@ -16,7 +16,7 @@ use code_snippet::{
     required_crubit_features, ApiSnippets, Bindings, BindingsTokens, FfiBindings,
     RequiredCrubitFeature,
 };
-use db::{BindingsGenerator, Database};
+use db::{BindingsGenerator, Database, FatalErrors, ReportFatalError};
 use generate_comment::{
     generate_comment, generate_doc_comment, generate_top_level_comment, generate_unsupported,
 };
@@ -86,7 +86,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
         std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
     catch_unwind(|| {
         let (error_report, errors) = ErrorReport::new_rc_or_ignore(generate_error_report);
-        // It is ok to abort here.
+        let fatal_errors = Rc::new(FatalErrors::new());
         let Bindings { rs_api, rs_api_impl } = generate_bindings(
             json,
             crubit_support_path_format,
@@ -94,6 +94,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
             &rustfmt_exe_path,
             &rustfmt_config_path,
             errors,
+            fatal_errors.clone(),
             generate_source_loc_doc_comment,
         )
         .unwrap();
@@ -107,6 +108,9 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
                     .map(|s| s.to_json_string().into_bytes().into_boxed_slice())
                     .unwrap_or_else(|| Box::new([])),
             ),
+            fatal_errors: FfiU8SliceBox::from_boxed_slice(
+                fatal_errors.take_string().into_bytes().into_boxed_slice(),
+            ),
         }
     })
     .unwrap_or_else(|_| process::abort())
@@ -119,6 +123,7 @@ fn generate_bindings(
     rustfmt_exe_path: &OsStr,
     rustfmt_config_path: &OsStr,
     errors: Rc<dyn ErrorReporting>,
+    fatal_errors: Rc<dyn ReportFatalError>,
     generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<Bindings> {
     let ir = Rc::new(deserialize_ir(json)?);
@@ -127,6 +132,7 @@ fn generate_bindings(
         ir.clone(),
         crubit_support_path_format,
         errors,
+        fatal_errors,
         generate_source_loc_doc_comment,
     )?;
     let rs_api = {
@@ -493,9 +499,10 @@ fn generate_bindings_tokens(
     ir: Rc<IR>,
     crubit_support_path_format: &str,
     errors: Rc<dyn ErrorReporting>,
+    fatal_errors: Rc<dyn ReportFatalError>,
     generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<BindingsTokens> {
-    let db = Database::new(ir.clone(), errors, generate_source_loc_doc_comment);
+    let db = Database::new(ir.clone(), errors, fatal_errors, generate_source_loc_doc_comment);
     let mut items = vec![];
     let mut thunks = vec![];
     let mut cc_details = vec![
@@ -1053,18 +1060,26 @@ pub(crate) mod tests {
     }
 
     pub fn generate_bindings_tokens(ir: IR) -> Result<BindingsTokens> {
-        super::generate_bindings_tokens(
+        let fatal_errors = Rc::new(FatalErrors::new());
+        let tokens = super::generate_bindings_tokens(
             Rc::new(ir),
             "crubit/rs_bindings_support",
             Rc::new(error_report::IgnoreErrors),
+            fatal_errors.clone(),
             SourceLocationDocComment::Enabled,
-        )
+        )?;
+        let fatal = fatal_errors.take_string();
+        if !fatal.is_empty() {
+            bail!("Fatal errors:{}", fatal)
+        }
+        Ok(tokens)
     }
 
     pub fn db_from_cc(cc_src: &str) -> Result<Database> {
         Ok(Database::new(
             Rc::new(ir_from_cc(cc_src)?),
             Rc::new(ErrorReport::new()),
+            Rc::new(FatalErrors::new()),
             SourceLocationDocComment::Enabled,
         ))
     }
