@@ -342,10 +342,10 @@ static const Formula &getInferableSlotsAsInferredOrUnknownConstraint(
     std::string_view USR = getOrGenerateUSR(USRCache, IS.getInferenceTarget());
     SlotFingerprint Fingerprint = fingerprint(USR, IS.getTargetSlot());
     auto Nullability = IS.getSymbolicNullability();
-    const Formula &Nullable = PreviousInferences.Nullable.contains(Fingerprint)
+    const Formula &Nullable = PreviousInferences.Nullable->contains(Fingerprint)
                                   ? Nullability.isNullable(A)
                                   : A.makeNot(Nullability.isNullable(A));
-    const Formula &Nonnull = PreviousInferences.Nonnull.contains(Fingerprint)
+    const Formula &Nonnull = PreviousInferences.Nonnull->contains(Fingerprint)
                                  ? Nullability.isNonnull(A)
                                  : A.makeNot(Nullability.isNonnull(A));
     Constraint = &A.makeAnd(*Constraint, A.makeAnd(Nullable, Nonnull));
@@ -1375,9 +1375,9 @@ static auto getConcreteNullabilityOverrideFromPreviousInferences(
       if (!FingerprintedDecl) return std::nullopt;
       auto Fingerprint =
           fingerprint(getOrGenerateUSR(USRCache, **FingerprintedDecl), Slot);
-      if (PreviousInferences.Nullable.contains(Fingerprint)) {
+      if (PreviousInferences.Nullable->contains(Fingerprint)) {
         It->second.emplace(NullabilityKind::Nullable);
-      } else if (PreviousInferences.Nonnull.contains(Fingerprint)) {
+      } else if (PreviousInferences.Nonnull->contains(Fingerprint)) {
         It->second.emplace(NullabilityKind::NonNull);
       } else {
         It->second = std::nullopt;
@@ -1487,7 +1487,7 @@ static bool containsInitListExpr(const Expr &E) {
 llvm::Error collectEvidenceFromDefinition(
     const Decl &Definition, llvm::function_ref<EvidenceEmitter> Emit,
     USRCache &USRCache, const NullabilityPragmas &Pragmas,
-    const PreviousInferences PreviousInferences,
+    const PreviousInferences &PreviousInferences,
     const SolverFactory &MakeSolver) {
   ASTContext &Ctx = Definition.getASTContext();
   dataflow::ReferencedDecls ReferencedDecls;

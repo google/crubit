@@ -4,6 +4,7 @@
 
 #include "nullability/inference/infer_tu.h"
 
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -16,7 +17,6 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/Basic/SourceManager.h"
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/Support/Error.h"
@@ -34,7 +34,7 @@ class InferenceManager {
 
   InferenceResults inferenceRound(
       EvidenceSites Sites, USRCache USRCache,
-      PreviousInferences InferencesFromLastRound) const {
+      const PreviousInferences& InferencesFromLastRound) const {
     InferenceResults AllInference;
     std::vector<Evidence> AllEvidence;
 
@@ -90,18 +90,18 @@ class InferenceManager {
     InferenceResults AllInference = inferenceRound(Sites, USRCache, {});
 
     for (unsigned Iteration = 1; Iteration < Iterations; ++Iteration) {
-      llvm::DenseSet<SlotFingerprint> NullableFromLastRound;
-      llvm::DenseSet<SlotFingerprint> NonnullFromLastRound;
+      std::vector<SlotFingerprint> NullableFromLastRound;
+      std::vector<SlotFingerprint> NonnullFromLastRound;
 
       for (const auto& [USR, Inferences] : AllInference) {
         for (const auto& [Slot, SlotInference] : Inferences) {
           if (SlotInference.trivial() || SlotInference.conflict()) continue;
           switch (SlotInference.nullability()) {
             case Nullability::NULLABLE:
-              NullableFromLastRound.insert(fingerprint(USR, Slot));
+              NullableFromLastRound.push_back(fingerprint(USR, Slot));
               break;
             case Nullability::NONNULL:
-              NonnullFromLastRound.insert(fingerprint(USR, Slot));
+              NonnullFromLastRound.push_back(fingerprint(USR, Slot));
               break;
             default:
               break;
@@ -109,8 +109,12 @@ class InferenceManager {
         }
       }
 
-      AllInference = inferenceRound(
-          Sites, USRCache, {NullableFromLastRound, NonnullFromLastRound});
+      AllInference =
+          inferenceRound(Sites, USRCache,
+                         {.Nullable = std::make_shared<SortedFingerprintVector>(
+                              std::move(NullableFromLastRound)),
+                          .Nonnull = std::make_shared<SortedFingerprintVector>(
+                              std::move(NonnullFromLastRound))});
     }
     return AllInference;
   }

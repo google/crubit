@@ -5,9 +5,12 @@
 #ifndef CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_H_
 #define CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_H_
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
@@ -72,9 +75,31 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
     llvm::unique_function<void(const Evidence &) const>, USRCache &USRCache,
     ASTContext &Ctx, const VirtualMethodOverridesMap &&OverridesMap);
 
+class SortedFingerprintVector {
+ public:
+  SortedFingerprintVector() = default;
+  // These are expected to often be very large containers, so disallow copying.
+  SortedFingerprintVector(const SortedFingerprintVector &) = delete;
+  SortedFingerprintVector &operator=(const SortedFingerprintVector &) = delete;
+  explicit SortedFingerprintVector(std::vector<SlotFingerprint> &&V)
+      : Vector(std::move(V)) {
+    std::sort(Vector.begin(), Vector.end());
+    Vector.erase(std::unique(Vector.begin(), Vector.end()), Vector.end());
+  }
+
+  bool contains(SlotFingerprint Fingerprint) const {
+    return std::binary_search(Vector.begin(), Vector.end(), Fingerprint);
+  }
+
+ private:
+  std::vector<SlotFingerprint> Vector;
+};
+
 struct PreviousInferences {
-  const llvm::DenseSet<SlotFingerprint> &Nullable = {};
-  const llvm::DenseSet<SlotFingerprint> &Nonnull = {};
+  const std::shared_ptr<const SortedFingerprintVector> ABSL_NONNULL Nullable =
+      std::make_shared<const SortedFingerprintVector>();
+  const std::shared_ptr<const SortedFingerprintVector> ABSL_NONNULL Nonnull =
+      std::make_shared<const SortedFingerprintVector>();
 };
 
 /// Creates a solver with default parameters that is suitable for passing to
@@ -93,7 +118,7 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference();
 llvm::Error collectEvidenceFromDefinition(
     const Decl &, llvm::function_ref<EvidenceEmitter>, USRCache &USRCache,
     const NullabilityPragmas &Pragmas,
-    PreviousInferences PreviousInferences = {},
+    const PreviousInferences &PreviousInferences = {},
     const SolverFactory &MakeSolver = makeDefaultSolverForInference);
 
 /// Gathers evidence of a symbol's nullability from a declaration of it.

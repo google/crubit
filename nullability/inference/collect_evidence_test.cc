@@ -28,7 +28,6 @@
 #include "clang/Testing/TestAST.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
@@ -982,7 +981,9 @@ TEST(CollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(
-          Src, {.Nonnull = {fingerprint("c:@F@target#*I#", 0)}}),
+          Src, {.Nonnull = std::make_shared<SortedFingerprintVector>(
+                    std::vector<SlotFingerprint>{
+                        fingerprint("c:@F@target#*I#", 0)})}),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
           // We still collect evidence for the return type in case iteration
@@ -3637,8 +3638,12 @@ TEST(CollectEvidenceFromDefinitionTest, PropagatesPreviousInferences) {
   }
 
   EXPECT_THAT(collectFromTargetFuncDefinition(
-                  Src, {/*Nullable=*/{fingerprint(TargetUsr, paramSlot(0))},
-                        /*Nonnull=*/{fingerprint(TargetUsr, paramSlot(1))}}),
+                  Src, {.Nullable = std::make_shared<SortedFingerprintVector>(
+                            std::vector<SlotFingerprint>{
+                                fingerprint(TargetUsr, paramSlot(0))}),
+                        .Nonnull = std::make_shared<SortedFingerprintVector>(
+                            std::vector<SlotFingerprint>{
+                                fingerprint(TargetUsr, paramSlot(1))})}),
               AllOf(IsSupersetOf(ExpectedBothRoundResults),
                     IsSupersetOf(ExpectedSecondRoundResults)));
 }
@@ -3694,7 +3699,9 @@ TEST(CollectEvidenceFromDefinitionTest,
   }
 
   auto SecondRoundResults = collectFromTargetFuncDefinition(
-      Src, {.Nonnull = {fingerprint(TargetUsr, paramSlot(0))}});
+      Src, {.Nonnull = std::make_shared<SortedFingerprintVector>(
+                std::vector<SlotFingerprint>{
+                    fingerprint(TargetUsr, paramSlot(0))})});
   EXPECT_THAT(SecondRoundResults,
               AllOf(IsSupersetOf(ExpectedNewResultsPerRound.at(0)),
                     IsSupersetOf(ExpectedNewResultsPerRound.at(1))));
@@ -3703,8 +3710,10 @@ TEST(CollectEvidenceFromDefinitionTest,
   }
 
   auto ThirdRoundResults = collectFromTargetFuncDefinition(
-      Src, {.Nonnull = {fingerprint(TargetUsr, paramSlot(0)),
-                        fingerprint(ReturnsToBeNonnullUsr, paramSlot(0))}});
+      Src, {.Nonnull = std::make_shared<SortedFingerprintVector>(
+                std::vector<SlotFingerprint>{
+                    fingerprint(TargetUsr, paramSlot(0)),
+                    fingerprint(ReturnsToBeNonnullUsr, paramSlot(0))})});
   EXPECT_THAT(ThirdRoundResults,
               AllOf(IsSupersetOf(ExpectedNewResultsPerRound.at(0)),
                     IsSupersetOf(ExpectedNewResultsPerRound.at(1)),
@@ -3714,14 +3723,16 @@ TEST(CollectEvidenceFromDefinitionTest,
   }
 
   auto FourthRoundResults = collectFromTargetFuncDefinition(
-      Src, {.Nonnull = {
-                fingerprint(TargetUsr, paramSlot(0)),
-                fingerprint(ReturnsToBeNonnullUsr, paramSlot(0)),
-                // As noted in the Evidence matcher list above, we don't infer
-                // the return type of returnsToBeNonnull from only collecting
-                // evidence from target's definition, but for the sake of this
-                // test, let's pretend we collected evidence from the entire TU.
-                fingerprint(ReturnsToBeNonnullUsr, SLOT_RETURN_TYPE)}});
+      Src,
+      {.Nonnull = std::make_shared<SortedFingerprintVector>(
+           std::vector<SlotFingerprint>{
+               fingerprint(TargetUsr, paramSlot(0)),
+               fingerprint(ReturnsToBeNonnullUsr, paramSlot(0)),
+               // As noted in the Evidence matcher list above, we don't infer
+               // the return type of returnsToBeNonnull from only collecting
+               // evidence from target's definition, but for the sake of this
+               // test, let's pretend we collected evidence from the entire TU.
+               fingerprint(ReturnsToBeNonnullUsr, SLOT_RETURN_TYPE)})});
   EXPECT_THAT(FourthRoundResults,
               AllOf(IsSupersetOf(ExpectedNewResultsPerRound.at(0)),
                     IsSupersetOf(ExpectedNewResultsPerRound.at(1)),
@@ -3741,11 +3752,12 @@ TEST(CollectEvidenceFromDefinitionTest,
   // inference about takesToBeNonnull's first parameter.
   // This test confirms that we use that information when collecting from
   // target's definition.
-  EXPECT_THAT(
-      collectFromTargetFuncDefinition(
-          Src, {.Nonnull = {fingerprint(TakesToBeNonnullUsr, paramSlot(0))}}),
-      Contains(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                        functionNamed("target"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(
+                  Src, {.Nonnull = std::make_shared<SortedFingerprintVector>(
+                            std::vector<SlotFingerprint>{fingerprint(
+                                TakesToBeNonnullUsr, paramSlot(0))})}),
+              Contains(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                functionNamed("target"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, Pragma) {
