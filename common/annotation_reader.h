@@ -19,12 +19,12 @@
 
 namespace crubit {
 
-// Gets the requested attribute for `decl`.
+// Gets the requested annotation for `decl`.
 //
-// Returns an error if there is more than one attribute with the given name,
-// or `nullptr` if the attribute was not found.
+// Returns an error if there is more than one annotation with the given name,
+// or `nullptr` if the annotation was not found.
 absl::StatusOr<const clang::AnnotateAttr*> GetAnnotateAttr(
-    const clang::Decl& decl, absl::string_view attribute);
+    const clang::Decl& decl, absl::string_view annotation_name);
 
 // Evaluates `expr` as a boolean.
 absl::StatusOr<bool> GetAnnotateArgAsBool(const clang::AnnotateAttr& attr,

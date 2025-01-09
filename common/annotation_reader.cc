@@ -88,15 +88,15 @@ absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
 }
 
 absl::StatusOr<const clang::AnnotateAttr*> GetAnnotateAttr(
-    const clang::Decl& decl, absl::string_view attribute) {
+    const clang::Decl& decl, absl::string_view annotation_name) {
   const clang::AnnotateAttr* found_attr = nullptr;
   for (clang::AnnotateAttr* attr : decl.specific_attrs<clang::AnnotateAttr>()) {
-    if (attr->getAnnotation() != llvm::StringRef(attribute)) continue;
+    if (attr->getAnnotation() != llvm::StringRef(annotation_name)) continue;
 
     if (found_attr != nullptr)
       return absl::InvalidArgumentError(
-          absl::StrCat("Only one `", attribute,
-                       "` attribute may be placed on a declaration."));
+          absl::StrCat("Only one `", annotation_name,
+                       "` annotation may be placed on a declaration."));
     found_attr = attr;
   }
   return found_attr;

@@ -48,7 +48,7 @@ TEST(AnnotationReaderTest, GetAnnotateAttrFailureDoubleAnnotation) {
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           HasSubstr(
-              "Only one `foo` attribute may be placed on a declaration.")));
+              "Only one `foo` annotation may be placed on a declaration.")));
 }
 
 }  // namespace
