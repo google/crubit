@@ -629,6 +629,36 @@ fn test_struct_with_unsafe_annotation() {
 }
 
 #[gtest]
+fn test_conflicting_unsafe_annotation() {
+    // This test demonstrates the current behavior when we have conflicting
+    // `crubit_override_unsafe` annotations.
+    // TODO(mboehme): I think this behavior isn't desirable:
+    // - We mark the struct as safe, even though one declaration calls it unsafe.
+    // - But regardless, I think we shouldn't even be trying to consolidate
+    //   conflicting annotations; instead, we should diagnose the conflict as an
+    //   error.
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_override_unsafe", true)]] S;
+        struct [[clang::annotate("crubit_override_unsafe", false)]] S {
+            int foo;
+        };
+        "#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "S", ...
+                is_unsafe_type: false, ...
+            }
+        }
+    );
+}
+
+#[gtest]
 fn test_struct_with_unnamed_struct_and_union_members() {
     // This test input causes `field_decl->getName()` to return an empty string.
     // See also:
