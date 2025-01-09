@@ -487,7 +487,7 @@ impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
 }
 
 // Error while generating bindings for item 'operator+':
-// Not yet supported for rvalue references (b/219826128)
+// Rvalue reference types are not yet supported as first parameter of operators (b/219826128)
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -609,10 +609,10 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Incompatible
 }
 
 // Error while generating bindings for item 'operator+':
-// Expected first parameter to be a record or reference
+// Non-record-nor-reference operator parameters are not yet supported, found ::core::ffi::c_int
 
 // Error while generating bindings for item 'operator+':
-// Expected first parameter referent to be a record
+// Expected first operator parameter to be a record or incomplete record, found ::core::ffi::c_int
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
@@ -953,7 +953,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFre
 }
 
 // Error while generating bindings for item 'operator+=':
-// Not yet supported for pointers with unknown lifetime (b/219826128)
+// Compound assignment operators are not yet supported for pointers with unknown lifetime (b/219826128), found *mut crate::AddAssignFreeByConstRef
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -1190,7 +1191,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignPro
 }
 
 // Error while generating bindings for item 'AddAssignProhibitedConstMember::operator+=':
-// Compound assignment with const left-hand side is not supported
+// Compound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedConstMember
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -1254,7 +1255,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 }
 
 // Error while generating bindings for item 'operator+=':
-// Compound assignment with const left-hand side is not supported
+// Compound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedFriendConstLhs
 
 #[derive(Clone, Copy)]
 #[repr(C)]

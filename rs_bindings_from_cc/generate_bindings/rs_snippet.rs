@@ -43,14 +43,21 @@ pub enum Mutability {
 }
 
 impl Mutability {
-    pub fn format_for_pointer(&self) -> TokenStream {
+    pub fn is_const(self) -> bool {
+        match self {
+            Mutability::Const => true,
+            Mutability::Mut => false,
+        }
+    }
+
+    pub fn format_for_pointer(self) -> TokenStream {
         match self {
             Mutability::Mut => quote! {mut},
             Mutability::Const => quote! {const},
         }
     }
 
-    pub fn format_for_reference(&self) -> TokenStream {
+    pub fn format_for_reference(self) -> TokenStream {
         match self {
             Mutability::Mut => quote! {mut},
             Mutability::Const => quote! {},
@@ -400,7 +407,7 @@ pub enum RsTypeKind {
     },
 }
 
-fn is_basic_string_char(db: &dyn BindingsGenerator, record: &Record) -> bool {
+fn is_basic_string_char(record: &Record) -> bool {
     record.cc_preferred_name.as_ref() == "std::string"
 }
 
@@ -424,11 +431,8 @@ fn create_string_bridge_type(record: &Record) -> Result<RsTypeKind> {
     })
 }
 
-fn map_record_to_bridge_type(
-    db: &dyn BindingsGenerator,
-    record: &Record,
-) -> Option<Result<RsTypeKind>> {
-    if is_basic_string_char(db, record) {
+fn map_record_to_bridge_type(record: &Record) -> Option<Result<RsTypeKind>> {
+    if is_basic_string_char(record) {
         Some(create_string_bridge_type(record))
     } else {
         None
@@ -476,7 +480,7 @@ impl RsTypeKind {
         ));
         let known_generic_monomorphization =
             map_to_supported_generic(db, &record.template_specialization).map(Rc::new);
-        if let Some(result) = map_record_to_bridge_type(db, &record) {
+        if let Some(result) = map_record_to_bridge_type(&record) {
             return result;
         }
         Ok(RsTypeKind::Record { record, crate_path, known_generic_monomorphization })
@@ -1174,7 +1178,6 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::*;
     use arc_anyhow::Result;
     use googletest::prelude::*;
     use token_stream_matchers::assert_rs_matches;

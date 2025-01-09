@@ -29,11 +29,15 @@ impl !Sync for Position {}
 
 // Generated from: examples/cpp/trivial_struct/example.h;l=8
 // Error while generating bindings for item 'Position::Position':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
+// Missing lifetime for `__this` parameter type: *mut crate::Position
 
 // Generated from: examples/cpp/trivial_struct/example.h;l=8
 // Error while generating bindings for item 'Position::Position':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
+// Missing lifetime for `__this` parameter type: *mut crate::Position
 
 // Generated from: examples/cpp/trivial_struct/example.h;l=8
 // Error while generating bindings for item 'Position::Position':

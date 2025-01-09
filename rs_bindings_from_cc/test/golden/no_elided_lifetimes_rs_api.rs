@@ -32,10 +32,14 @@ impl !Sync for S {}
 forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
 // Error while generating bindings for item 'S::S':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::S
+// Missing lifetime for `__this` parameter type: *mut crate::S
 
 // Error while generating bindings for item 'S::S':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::S
+// Missing lifetime for `__this` parameter type: *mut crate::S
 
 // Error while generating bindings for item 'S::S':
 // Parameter #0 is not supported: Unsupported type 'S &&': Unsupported type: && without lifetime
@@ -85,7 +89,9 @@ forward_declare::unsafe_define!(
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Error while generating bindings for item 'TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::TriviallyCopyableButNontriviallyDestructible
+// Missing lifetime for `__this` parameter type: *mut crate::TriviallyCopyableButNontriviallyDestructible
 
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
@@ -113,7 +119,9 @@ impl !Sync for WrappedValue {}
 forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate::WrappedValue);
 
 // Error while generating bindings for item 'WrappedValue::WrappedValue':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::WrappedValue
+// Missing lifetime for `__this` parameter type: *mut crate::WrappedValue
 
 // Error while generating bindings for item 'WrappedValue::WrappedValue':
 // Parameter #0 is not supported: Unsupported type 'WrappedValue &&': Unsupported type: && without lifetime
@@ -125,10 +133,12 @@ forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate:
 // Parameter #0 is not supported: Unsupported type 'WrappedValue &&': Unsupported type: && without lifetime
 
 // Error while generating bindings for item 'WrappedValue::WrappedValue':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::WrappedValue
+// Missing lifetime for `__this` parameter type: *mut crate::WrappedValue
 
 // Error while generating bindings for item 'WrappedValue::operator+':
-// Expected first parameter to be a record or reference
+// Non-record-nor-reference operator parameters are not yet supported, found *const crate::WrappedValue
 
 mod detail {
     #[allow(unused_imports)]

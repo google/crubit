@@ -299,7 +299,7 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::Nontrivial> for &'a crate::Nontrivial {
 }
 
 // Error while generating bindings for item 'Nontrivial::operator+=':
-// Compound assignment operators are not supported for non-Unpin types);
+// Compound assignment operators are not supported for non-Unpin types, found ::core::pin::Pin<&'a mut crate::Nontrivial>
 
 /// Nontrivial due to (inline) user-specified constructor and destructor.
 ///
@@ -629,7 +629,7 @@ impl From<::core::ffi::c_int> for NontrivialUnpin {
 }
 
 // Error while generating bindings for item 'NontrivialUnpin::NontrivialUnpin':
-// More than 1 constructor parameter is not supported yet
+// Constructors with more than one parameter are not yet supported. See b/216648347.
 
 impl Clone for NontrivialUnpin {
     #[inline(always)]
@@ -876,7 +876,7 @@ impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivi
 }
 
 // Error while generating bindings for item 'NontrivialByValue::operator==':
-// Expected first operator== param to be a record or const reference to a record
+// Expected first operator== param reference to be immutable, but found mutable reference: &'a crate::NontrivialByValue
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]

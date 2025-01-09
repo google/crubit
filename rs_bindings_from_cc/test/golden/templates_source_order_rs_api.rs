@@ -30,10 +30,14 @@ impl !Sync for TopLevel {}
 forward_declare::unsafe_define!(forward_declare::symbol!("TopLevel"), crate::TopLevel);
 
 // Error while generating bindings for item 'TopLevel::TopLevel':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::TopLevel
+// Missing lifetime for `__this` parameter type: *mut crate::TopLevel
 
 // Error while generating bindings for item 'TopLevel::TopLevel':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::TopLevel
+// Missing lifetime for `__this` parameter type: *mut crate::TopLevel
 
 // Error while generating bindings for item 'TopLevel::TopLevel':
 // Parameter #0 is not supported: Unsupported type 'TopLevel &&': Unsupported type: && without lifetime
@@ -71,10 +75,14 @@ pub mod test_namespace_bindings {
     );
 
     // Error while generating bindings for item 'Inner::Inner':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+    // Expected first constructor parameter to be a mutable reference, got: *mut crate::test_namespace_bindings::Inner
+    // Missing lifetime for `__this` parameter type: *mut crate::test_namespace_bindings::Inner
 
     // Error while generating bindings for item 'Inner::Inner':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+    // Expected first constructor parameter to be a mutable reference, got: *mut crate::test_namespace_bindings::Inner
+    // Missing lifetime for `__this` parameter type: *mut crate::test_namespace_bindings::Inner
 
     // Error while generating bindings for item 'test_namespace_bindings::Inner::Inner':
     // Parameter #0 is not supported: Unsupported type 'Inner &&': Unsupported type: && without lifetime
@@ -111,10 +119,14 @@ forward_declare::unsafe_define!(
 );
 
 // Error while generating bindings for item 'MyTemplate<TopLevel>::MyTemplate<TopLevel>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateI8TopLevelE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateI8TopLevelE
 
 // Error while generating bindings for item 'MyTemplate<TopLevel>::MyTemplate<TopLevel>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateI8TopLevelE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateI8TopLevelE
 
 // Error while generating bindings for item 'MyTemplate<TopLevel>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<TopLevel> &&': Unsupported type: && without lifetime
@@ -149,10 +161,14 @@ forward_declare::unsafe_define!(
 );
 
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::MyTemplate<test_namespace_bindings::Inner>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
 
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::MyTemplate<test_namespace_bindings::Inner>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
 
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<Inner> &&': Unsupported type: && without lifetime
@@ -187,10 +203,14 @@ forward_declare::unsafe_define!(
 );
 
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::MyTemplate<MyTemplate<TopLevel>>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
 
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::MyTemplate<MyTemplate<TopLevel>>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
 
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<TopLevel> > &&': Unsupported type: && without lifetime
@@ -228,10 +248,14 @@ forward_declare::unsafe_define!(
 );
 
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::MyTemplate<MyTemplate<test_namespace_bindings::Inner>>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
 
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::MyTemplate<MyTemplate<test_namespace_bindings::Inner>>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
 
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<Inner> > &&': Unsupported type: && without lifetime
@@ -269,10 +293,14 @@ forward_declare::unsafe_define!(
 );
 
 // Error while generating bindings for item 'MyTemplate<bool>::MyTemplate<bool>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIbE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIbE
 
 // Error while generating bindings for item 'MyTemplate<bool>::MyTemplate<bool>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIbE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIbE
 
 // Error while generating bindings for item 'MyTemplate<bool>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<_Bool> &&': Unsupported type: && without lifetime
@@ -307,10 +335,14 @@ forward_declare::unsafe_define!(
 );
 
 // Error while generating bindings for item 'MyTemplate<char>::MyTemplate<char>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIcE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIcE
 
 // Error while generating bindings for item 'MyTemplate<char>::MyTemplate<char>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIcE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIcE
 
 // Error while generating bindings for item 'MyTemplate<char>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<char> &&': Unsupported type: && without lifetime
@@ -345,10 +377,14 @@ forward_declare::unsafe_define!(
 );
 
 // Error while generating bindings for item 'MyTemplate<double>::MyTemplate<double>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIdE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIdE
 
 // Error while generating bindings for item 'MyTemplate<double>::MyTemplate<double>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIdE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIdE
 
 // Error while generating bindings for item 'MyTemplate<double>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<double> &&': Unsupported type: && without lifetime
@@ -383,10 +419,14 @@ forward_declare::unsafe_define!(
 );
 
 // Error while generating bindings for item 'MyTemplate<float>::MyTemplate<float>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIfE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIfE
 
 // Error while generating bindings for item 'MyTemplate<float>::MyTemplate<float>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIfE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIfE
 
 // Error while generating bindings for item 'MyTemplate<float>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<float> &&': Unsupported type: && without lifetime
@@ -421,10 +461,14 @@ forward_declare::unsafe_define!(
 );
 
 // Error while generating bindings for item 'MyTemplate<int>::MyTemplate<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIiE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIiE
 
 // Error while generating bindings for item 'MyTemplate<int>::MyTemplate<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIiE
+// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIiE
 
 // Error while generating bindings for item 'MyTemplate<int>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<int> &&': Unsupported type: && without lifetime

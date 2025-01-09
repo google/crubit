@@ -15,7 +15,8 @@ use crate::rs_snippet::{
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::make_rs_ident;
-use error_report::{anyhow, bail, ensure};
+use error_report::{anyhow, bail};
+use errors::{bail_to_errors, Errors, ErrorsOr};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -207,8 +208,8 @@ impl ImplKind {
         record: Rc<Record>,
         format_first_param_as_self: bool,
         force_const_reference_params: bool,
-    ) -> Result<Self> {
-        Ok(ImplKind::Trait {
+    ) -> Self {
+        ImplKind::Trait {
             record,
             trait_name,
             impl_for: ImplFor::T,
@@ -217,7 +218,7 @@ impl ImplKind {
             drop_return: false,
             associated_return_type: None,
             force_const_reference_params,
-        })
+        }
     }
     fn format_first_param_as_self(&self) -> bool {
         matches!(
@@ -388,35 +389,46 @@ fn is_friend_of_record_not_visible_by_adl(
 ///
 /// Returns the `RsTypeKind` and `Record` of the underlying record type.
 fn type_by_value_or_under_const_ref<'a>(
-    kind: &'a RsTypeKind,
+    kind: &'a mut RsTypeKind,
     value_desc: &str,
-) -> Result<(&'a RsTypeKind, &'a Rc<Record>)> {
-    match kind {
-        RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. } => {
+    errors: &Errors,
+) -> ErrorsOr<(&'a RsTypeKind, &'a Rc<Record>)> {
+    match *kind {
+        RsTypeKind::Reference { referent: ref lhs, ref mut mutability, .. } => {
+            if !mutability.is_const() {
+                // NOTE: bindings will never actually rely on this immutability, as we
+                // the resulting generated code will always result in a compiler error if used
+                // because of the `errors.add`.
+                *mutability = Mutability::Const;
+                errors.add(anyhow!("Expected {value_desc} reference to be immutable, but found mutable reference: {kind}"));
+            }
             if let RsTypeKind::Record { record: lhs_record, .. } = &**lhs {
                 Ok((lhs, lhs_record))
             } else {
-                bail!("Expected {value_desc} to be a record or const reference to a record, found a reference that doesn't refer to a record");
+                bail_to_errors!(errors, "Expected {value_desc} to be a record or a const reference to a record, found a reference that doesn't refer to a record: {kind}");
             }
         }
-        RsTypeKind::Record { record: lhs_record, .. } => Ok((kind, lhs_record)),
-        _ => bail!("Expected {value_desc} to be a record or const reference to a record"),
+        RsTypeKind::Record { record: ref lhs_record, .. } => Ok((kind, lhs_record)),
+        _ => bail_to_errors!(
+            errors,
+            "Expected {value_desc} to be a record or const reference to a record, found {kind}"
+        ),
     }
 }
 
 fn api_func_shape_for_operator_eq(
     func: &Func,
-    param_types: &[RsTypeKind],
-) -> Result<(Ident, ImplKind)> {
+    param_types: &mut [RsTypeKind],
+    errors: &Errors,
+) -> ErrorsOr<(Ident, ImplKind)> {
     // C++ requires that operator== is binary.
-    assert_eq!(
-        param_types.len(),
-        2,
-        "Expected operator== two have exactly two parameters. Found: {func:?}"
-    );
-    let (_, lhs_record) =
-        type_by_value_or_under_const_ref(&param_types[0], "first operator== param")?;
-    let (param, _) = type_by_value_or_under_const_ref(&param_types[1], "second operator== param")?;
+    let [param_1, param_2] = param_types else {
+        panic!("Expected operator== to have exactly two parameters. Found: {func:?}");
+    };
+
+    let lhs_ty = type_by_value_or_under_const_ref(param_1, "first operator== param", errors);
+    let rhs_ty = type_by_value_or_under_const_ref(param_2, "second operator== param", errors);
+    let ((_, lhs_record), (param, _)) = (lhs_ty?, rhs_ty?);
     let param = Rc::new(param.clone());
     let func_name = make_rs_ident("eq");
     let impl_kind = ImplKind::new_trait(
@@ -424,21 +436,22 @@ fn api_func_shape_for_operator_eq(
         lhs_record.clone(),
         /* format_first_param_as_self= */ true,
         /* force_const_reference_params= */ true,
-    )?;
+    );
     Ok((func_name, impl_kind))
 }
 
 fn api_func_shape_for_operator_lt(
     db: &dyn BindingsGenerator,
     func: &Func,
-    param_types: &[RsTypeKind],
-) -> Result<(Ident, ImplKind)> {
-    assert_eq!(param_types.len(), 2, "Unexpected number of parameters in operator<: {func:?}");
-    let (_, lhs_record) =
-        type_by_value_or_under_const_ref(&param_types[0], "first operator< param")?;
-    let (param, rhs_record) =
-        type_by_value_or_under_const_ref(&param_types[1], "second operator< param")?;
-    let param: Rc<RsTypeKind> = Rc::new(param.clone());
+    param_types: &mut [RsTypeKind],
+    errors: &Errors,
+) -> ErrorsOr<(Ident, ImplKind)> {
+    let [param_1, param_2] = param_types else {
+        panic!("Expected operator< to have exactly two parameters. Found: {func:?}")
+    };
+    let lhs_ty = type_by_value_or_under_const_ref(param_1, "first operator< param", errors);
+    let rhs_ty = type_by_value_or_under_const_ref(param_2, "second operator< param", errors);
+    let ((_, lhs_record), (param, rhs_record)) = (lhs_ty?, rhs_ty?);
     // Even though Rust and C++ allow operator< to be implemented on different
     // types, we don't generate bindings for them at this moment. The
     // issue is that our canonical implementation of partial_cmp relies
@@ -447,24 +460,31 @@ fn api_func_shape_for_operator_lt(
     // implementations would need to query for the existence of the other, which
     // would create a cyclic dependency.
     if lhs_record != rhs_record {
-        bail!("operator< where lhs and rhs are not the same type.");
+        bail_to_errors!(
+            errors,
+            "operator< where lhs and rhs are not the same type. This is not yet supported."
+        );
     }
+    let param = param.clone();
+    let lhs_record = lhs_record.clone();
     // PartialOrd requires PartialEq, so we need to make sure operator== is
     // implemented for this Record type.
-    let Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) = get_binding(
+    let partialeq_binding = get_binding(
         db,
         UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
         param_types.to_vec(),
-    ) else {
-        bail!("operator< where operator== is missing.")
-    };
+    );
+    match partialeq_binding {
+        Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) => {}
+        _ => errors.add(anyhow!("operator< where operator== is missing.")),
+    }
     let func_name = make_rs_ident("lt");
     let impl_kind = ImplKind::new_trait(
-        TraitName::PartialOrd { param },
+        TraitName::PartialOrd { param: Rc::new(param) },
         lhs_record.clone(),
         /* format_first_param_as_self= */ true,
         /* force_const_reference_params= */ true,
-    )?;
+    );
     Ok((func_name, impl_kind))
 }
 
@@ -472,9 +492,12 @@ fn api_func_shape_for_operator_assign(
     func: &Func,
     maybe_record: Option<&Rc<Record>>,
     param_types: &mut [RsTypeKind],
-) -> Result<(Ident, ImplKind)> {
+    errors: &Errors,
+) -> ErrorsOr<(Ident, ImplKind)> {
     assert_eq!(param_types.len(), 2, "Unexpected number of parameters in operator=: {func:?}");
-    let record = maybe_record.ok_or_else(|| anyhow!("operator= must be a member function."))?;
+    let Some(record) = maybe_record else {
+        bail_to_errors!(errors, "operator= must be a member function")
+    };
     materialize_ctor_in_caller(func, param_types);
 
     let rhs = &param_types[1];
@@ -507,23 +530,103 @@ fn api_func_shape_for_operator_assign(
     Ok((func_name, impl_kind))
 }
 
+fn expect_possibly_incomplete_record<'a>(
+    type_kind: &'a RsTypeKind,
+    value_desc: &str,
+    errors: &Errors,
+) -> ErrorsOr<&'a Rc<Record>> {
+    match type_kind {
+        RsTypeKind::Record { record, .. } => Ok(record),
+        RsTypeKind::IncompleteRecord { .. } => bail_to_errors!(
+            errors,
+            "Incomplete record types are not yet supported as {value_desc}, found {type_kind}",
+        ),
+        _ => bail_to_errors!(
+            errors,
+            "Expected {value_desc} to be a record or incomplete record, found {type_kind}"
+        ),
+    }
+}
+
+fn record_type_of_compound_assignment<'a>(
+    lhs_type: &'a mut RsTypeKind,
+    errors: &Errors,
+) -> ErrorsOr<&'a Rc<Record>> {
+    let lhs_str = lhs_type.to_string();
+    let fix_mutability = |mutability: &mut Mutability| {
+        if mutability.is_const() {
+            errors.add(anyhow!(
+                "Compound assignment with const left-hand side is not supported, found {lhs_str}"
+            ));
+            *mutability = Mutability::Mut;
+        }
+    };
+
+    let lhs_record_type: &Rc<Record> = match lhs_type {
+        RsTypeKind::Record { record, .. } => {
+            errors.add(anyhow!("Compound assignment with by-value left-hand side is not yet supported, found {lhs_str}"));
+            record
+        }
+        RsTypeKind::IncompleteRecord { .. } => {
+            bail_to_errors!(errors, "Compound assignment with incomplete record left-hand side is not yet supported, found {lhs_str}")
+        }
+        RsTypeKind::Reference { referent, mutability, .. } => {
+            fix_mutability(mutability);
+            expect_possibly_incomplete_record(referent, "compound assignment first parameter", errors)?
+        }
+        RsTypeKind::RvalueReference { referent, mutability, .. } => {
+            errors.add(anyhow!("Compound assignment with rvalue reference is not yet supported (b/219826128), found {lhs_str}"));
+            fix_mutability(mutability);
+            expect_possibly_incomplete_record(referent, "compound assignment first parameter", errors)?
+        }
+        RsTypeKind::Pointer { pointee, mutability } => {
+            errors.add(anyhow!("Compound assignment operators are not yet supported for pointers with unknown lifetime (b/219826128), found {lhs_str}"));
+            fix_mutability(mutability);
+            expect_possibly_incomplete_record(pointee, "compound assignment first parameter", errors)?
+        }
+        _ => panic!("Compound assignment operator defined, but first parameter is not a record or reference: {lhs_str}"),
+    };
+    if !lhs_record_type.is_unpin() {
+        // Note: we bail here to avoid generating an impl with `self: Pin<&mut Self>`
+        // which will fail to compile. This could be relaxed in the future.
+        bail_to_errors!(
+            errors,
+            "Compound assignment operators are not supported for non-Unpin types, found {lhs_str}"
+        );
+    }
+    Ok(lhs_record_type)
+}
+
+/// Reports a fatal error generating bindings for a function.
+/// Fatal errors should only be reported
+fn report_fatal_func_error(db: &dyn BindingsGenerator, func: &Func, msg: &str) {
+    db.fatal_errors().report(&format!("{}: {}", func.source_loc, msg));
+}
+
 fn api_func_shape_for_operator(
     db: &dyn BindingsGenerator,
     func: &Func,
     maybe_record: Option<&Rc<Record>>,
     param_types: &mut [RsTypeKind],
     op: &Operator,
-) -> Result<(Ident, ImplKind)> {
+    errors: &Errors,
+) -> ErrorsOr<(Ident, ImplKind)> {
+    if let SafetyAnnotation::Unsafe = func.safety_annotation {
+        report_fatal_func_error(db, func, "Unsafe annotations on operators are not supported");
+    }
     match op.name.as_ref() {
-        "==" => api_func_shape_for_operator_eq(func, param_types),
-        "<=>" => bail!("Three-way comparison operator not yet supported (b/219827738)"),
-        "<" => api_func_shape_for_operator_lt(db, func, param_types),
-        "=" => api_func_shape_for_operator_assign(func, maybe_record, param_types),
+        "==" => api_func_shape_for_operator_eq(func, param_types, errors),
+        "<=>" => {
+            bail_to_errors!(errors, "Three-way comparison operator not yet supported (b/219827738)")
+        }
+        "<" => api_func_shape_for_operator_lt(db, func, param_types, errors),
+        "=" => api_func_shape_for_operator_assign(func, maybe_record, param_types, errors),
         _ => {
             let Some(op_metadata) =
                 OPERATOR_METADATA.by_cc_name_and_params.get(&(&op.name, param_types.len()))
             else {
-                bail!(
+                bail_to_errors!(
+                    errors,
                     "Bindings for this kind of operator (operator {op} with {n} parameter(s)) are not supported",
                     op = &op.name,
                     n = param_types.len(),
@@ -532,32 +635,7 @@ fn api_func_shape_for_operator(
             materialize_ctor_in_caller(func, param_types);
             let trait_name = op_metadata.trait_name;
             if op_metadata.is_compound_assignment {
-                let record = match &param_types[0] {
-                    RsTypeKind::Record { .. } => {
-                        bail!("Compound assignment with by-value left-hand side is not supported")
-                    }
-                    RsTypeKind::Reference { mutability: Mutability::Const, .. } => {
-                        bail!("Compound assignment with const left-hand side is not supported")
-                    }
-                    RsTypeKind::Reference { referent, mutability: Mutability::Mut, .. } => {
-                        match &**referent {
-                            RsTypeKind::Record { record, .. } => maybe_record.unwrap_or(record),
-                            _ => bail!("Expected first parameter referent to be a record"),
-                        }
-                    }
-                    RsTypeKind::RvalueReference { .. } => {
-                        bail!("Not yet supported for rvalue references (b/219826128)")
-                    }
-                    RsTypeKind::Pointer { .. } => {
-                        bail!("Not yet supported for pointers with unknown lifetime (b/219826128)")
-                    }
-                    _ => bail!("Expected first parameter to be a record or reference"),
-                };
-                ensure!(
-                    record.is_unpin(),
-                    "Compound assignment operators are not supported for non-Unpin types);",
-                );
-
+                let record = record_type_of_compound_assignment(&mut param_types[0], errors)?;
                 let func_name = make_rs_ident(op_metadata.method_name);
                 let impl_kind = ImplKind::Trait {
                     record: record.clone(),
@@ -577,17 +655,23 @@ fn api_func_shape_for_operator(
             } else {
                 let (record, impl_for) = match &param_types[0] {
                     RsTypeKind::Record { record, .. } => (record, ImplFor::T),
+                    RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
+                        bail_to_errors!(
+                            errors,
+                            "Incomplete record types are not yet supported as first parameter of operator, found {cc_name}", cc_name=incomplete_record.cc_name,
+                        )
+                    },
                     RsTypeKind::Reference { referent, .. } => (
-                        match &**referent {
-                            RsTypeKind::Record { record, .. } => record,
-                            _ => bail!("Expected first parameter referent to be a record"),
-                        },
+                        expect_possibly_incomplete_record(referent, "first operator parameter", errors)?,
                         ImplFor::RefT,
                     ),
                     RsTypeKind::RvalueReference { .. } => {
-                        bail!("Not yet supported for rvalue references (b/219826128)")
+                        bail_to_errors!(
+                            errors,
+                            "Rvalue reference types are not yet supported as first parameter of operators (b/219826128)",
+                        )
                     }
-                    _ => bail!("Expected first parameter to be a record or reference"),
+                    _ => bail_to_errors!(errors, "Non-record-nor-reference operator parameters are not yet supported, found {}", &param_types[0]),
                 };
 
                 let func_name = make_rs_ident(op_metadata.method_name);
@@ -611,10 +695,159 @@ fn api_func_shape_for_operator(
     }
 }
 
-/// Reports a fatal error generating bindings for a function.
-/// Fatal errors should only be reported
-fn report_fatal_func_error(db: &dyn BindingsGenerator, func: &Func, msg: &str) {
-    db.fatal_errors().report(&format!("{}: {}", func.source_loc, msg));
+fn api_func_shape_for_identifier(
+    func: &Func,
+    maybe_record: Option<&Rc<Record>>,
+    param_types: &mut [RsTypeKind],
+    id: &Identifier,
+    is_unsafe: bool,
+) -> (Ident, ImplKind) {
+    let func_name = make_rs_ident(&id.identifier);
+    let Some(record) = maybe_record else { return (func_name, ImplKind::None { is_unsafe }) };
+    let format_first_param_as_self = if func.is_instance_method() {
+        let Some(first_param) = param_types.first() else {
+            panic!("Missing `__this` parameter in an instance method: {:?}", func);
+        };
+        first_param.is_ref_to(record)
+    } else {
+        false
+    };
+    (func_name, ImplKind::Struct { record: record.clone(), format_first_param_as_self, is_unsafe })
+}
+
+fn api_func_shape_for_destructor(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+    maybe_record: Option<&Rc<Record>>,
+    param_types: &mut [RsTypeKind],
+) -> Option<(Ident, ImplKind)> {
+    if let SafetyAnnotation::Unsafe = func.safety_annotation {
+        report_fatal_func_error(db, func, "Unsafe annotations on destructors are not supported");
+    }
+    let Some(record) = maybe_record else {
+        panic!("Destructors are always member functions, but found: {func:?}");
+    };
+    // Note: to avoid double-destruction of the fields, they are all wrapped in
+    // ManuallyDrop in this case. See `generate_record`.
+    if !crate::generate_struct_and_union::should_implement_drop(record) {
+        return None;
+    }
+    if record.is_unpin() {
+        let func_name = make_rs_ident("drop");
+        let impl_kind = ImplKind::new_trait(
+            TraitName::Other { name: Rc::from("Drop"), params: Rc::from([]), is_unsafe_fn: false },
+            record.clone(),
+            /* format_first_param_as_self= */ true,
+            /* force_const_reference_params= */
+            false,
+        );
+        Some((func_name, impl_kind))
+    } else {
+        materialize_ctor_in_caller(func, param_types);
+        let func_name = make_rs_ident("pinned_drop");
+        let impl_kind = ImplKind::new_trait(
+            TraitName::Other {
+                name: Rc::from("::ctor::PinnedDrop"),
+                params: Rc::from([]),
+                is_unsafe_fn: true,
+            },
+            record.clone(),
+            /* format_first_param_as_self= */ true,
+            /* force_const_reference_params= */ false,
+        );
+        Some((func_name, impl_kind))
+    }
+}
+
+fn api_func_shape_for_constructor(
+    func: &Func,
+    maybe_record: Option<&Rc<Record>>,
+    param_types: &mut [RsTypeKind],
+    is_unsafe: bool,
+    errors: &Errors,
+) -> Option<(Ident, ImplKind)> {
+    let Some(record) = maybe_record else {
+        panic!("Constructors must be associated with a record.");
+    };
+    if is_unsafe {
+        // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
+        // translating C++ constructors into static methods in Rust).
+        errors.add(anyhow!(
+            "Unsafe constructors (e.g. with no elided or explicit lifetimes) \
+            are intentionally not supported. See b/216648347.",
+        ));
+    }
+    if let Err(err) = check_by_value(record) {
+        errors.add(err);
+    }
+    materialize_ctor_in_caller(func, param_types);
+    if !record.is_unpin() {
+        let func_name = make_rs_ident("ctor_new");
+        let [_this, params @ ..] = param_types else {
+            panic!("Missing `__this` parameter in a constructor: {:?}", func)
+        };
+        let impl_kind = ImplKind::Trait {
+            record: record.clone(),
+            trait_name: TraitName::CtorNew(params.iter().cloned().collect()),
+            impl_for: ImplFor::T,
+            trait_generic_params: Rc::new([]),
+            format_first_param_as_self: false,
+            drop_return: false,
+            associated_return_type: Some(make_rs_ident("CtorType")),
+            force_const_reference_params: false,
+        };
+        return Some((func_name, impl_kind));
+    }
+    match func.params.len() {
+        0 => panic!("Missing `__this` parameter in a constructor: {:?}", func),
+        1 => {
+            let func_name = make_rs_ident("default");
+            let impl_kind = ImplKind::new_trait(
+                TraitName::UnpinConstructor { name: Rc::from("Default"), params: Rc::from([]) },
+                record.clone(),
+                /* format_first_param_as_self= */ false,
+                /* force_const_reference_params= */ false,
+            );
+            Some((func_name, impl_kind))
+        }
+        2 if param_types[1].is_shared_ref_to(record) => {
+            // Copy constructor
+            if should_derive_clone(record) {
+                None
+            } else {
+                let func_name = make_rs_ident("clone");
+                let impl_kind = ImplKind::new_trait(
+                    TraitName::UnpinConstructor { name: Rc::from("Clone"), params: Rc::from([]) },
+                    record.clone(),
+                    /* format_first_param_as_self= */ true,
+                    /* force_const_reference_params= */ false,
+                );
+                Some((func_name, impl_kind))
+            }
+        }
+        2 => {
+            let param_type = &param_types[1];
+            let func_name = make_rs_ident("from");
+            let impl_kind = ImplKind::new_trait(
+                TraitName::UnpinConstructor {
+                    name: Rc::from("From"),
+                    params: Rc::from([param_type.clone()]),
+                },
+                record.clone(),
+                /* format_first_param_as_self= */ false,
+                /* force_const_reference_params= */
+                false,
+            );
+            Some((func_name, impl_kind))
+        }
+        _ => {
+            // TODO(b/216648347): Support bindings for other constructors.
+            errors.add(anyhow!(
+                "Constructors with more than one parameter are not yet supported. See b/216648347."
+            ));
+            None
+        }
+    }
 }
 
 /// Returns the shape of the generated Rust API for a given function definition.
@@ -633,7 +866,8 @@ fn api_func_shape(
     db: &dyn BindingsGenerator,
     func: &Func,
     param_types: &mut [RsTypeKind],
-) -> Result<Option<(Ident, ImplKind)>> {
+    errors: &Errors,
+) -> Option<(Ident, ImplKind)> {
     let ir = db.ir();
     let maybe_record = match ir.record_for_member_func(func).map(<&Rc<Record>>::try_from) {
         None => None,
@@ -642,11 +876,11 @@ fn api_func_shape(
         // This occurs for instance if you use crubit_internal_rust_type: member functions defined
         // out-of-line, such as implicitly generated constructors, will still be present in the IR,
         // but should be ignored.
-        Some(Err(_)) => return Ok(None),
+        Some(Err(_)) => return None,
     };
 
     if is_friend_of_record_not_visible_by_adl(db, func, param_types) {
-        return Ok(None);
+        return None;
     }
 
     let is_unsafe = match func.safety_annotation {
@@ -654,170 +888,37 @@ fn api_func_shape(
         SafetyAnnotation::Unsafe => true,
         SafetyAnnotation::DisableUnsafe => false,
     };
-    let impl_kind: ImplKind;
-    let func_name: syn::Ident;
 
     match &func.name {
         UnqualifiedIdentifier::Operator(op) => {
-            if let SafetyAnnotation::Unsafe = func.safety_annotation {
-                report_fatal_func_error(
-                    db,
-                    func,
-                    "Unsafe annotations on operators are not supported",
-                );
-            }
-            return api_func_shape_for_operator(db, func, maybe_record, param_types, op).map(Some);
+            api_func_shape_for_operator(db, func, maybe_record, param_types, op, errors).ok()
         }
         UnqualifiedIdentifier::Identifier(id) => {
-            func_name = make_rs_ident(&id.identifier);
-            impl_kind = match maybe_record {
-                None => ImplKind::None { is_unsafe },
-                Some(record) => {
-                    let format_first_param_as_self = if func.is_instance_method() {
-                        let first_param = param_types.first().ok_or_else(|| {
-                            anyhow!("Missing `__this` parameter in an instance method: {:?}", func)
-                        })?;
-                        first_param.is_ref_to(record)
-                    } else {
-                        false
-                    };
-                    ImplKind::Struct {
-                        record: record.clone(),
-                        format_first_param_as_self,
-                        is_unsafe,
-                    }
-                }
-            };
+            Some(api_func_shape_for_identifier(func, maybe_record, param_types, id, is_unsafe))
         }
         UnqualifiedIdentifier::Destructor => {
-            if let SafetyAnnotation::Unsafe = func.safety_annotation {
-                report_fatal_func_error(
-                    db,
-                    func,
-                    "Unsafe annotations on destructors are not supported",
-                );
-            }
-            // Note: to avoid double-destruction of the fields, they are all wrapped in
-            // ManuallyDrop in this case. See `generate_record`.
-            let record =
-                maybe_record.ok_or_else(|| anyhow!("Destructors must be member functions."))?;
-            if !crate::generate_struct_and_union::should_implement_drop(record) {
-                return Ok(None);
-            }
-            if record.is_unpin() {
-                impl_kind = ImplKind::new_trait(
-                    TraitName::Other {
-                        name: Rc::from("Drop"),
-                        params: Rc::from([]),
-                        is_unsafe_fn: false,
-                    },
-                    record.clone(),
-                    /* format_first_param_as_self= */ true,
-                    /* force_const_reference_params= */
-                    false,
-                )?;
-                func_name = make_rs_ident("drop");
-            } else {
-                materialize_ctor_in_caller(func, param_types);
-                impl_kind = ImplKind::new_trait(
-                    TraitName::Other {
-                        name: Rc::from("::ctor::PinnedDrop"),
-                        params: Rc::from([]),
-                        is_unsafe_fn: true,
-                    },
-                    record.clone(),
-                    /* format_first_param_as_self= */ true,
-                    /* force_const_reference_params= */ false,
-                )?;
-                func_name = make_rs_ident("pinned_drop");
-            }
+            api_func_shape_for_destructor(db, func, maybe_record, param_types)
         }
         UnqualifiedIdentifier::Constructor => {
-            let record = maybe_record
-                .ok_or_else(|| anyhow!("Constructors must be associated with a record."))?;
-            if is_unsafe {
-                // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
-                // translating C++ constructors into static methods in Rust).
-                bail!(
-                    "Unsafe constructors (e.g. with no elided or explicit lifetimes) \
-                    are intentionally not supported",
-                );
-            }
-
-            check_by_value(record)?;
-            materialize_ctor_in_caller(func, param_types);
-            if !record.is_unpin() {
-                func_name = make_rs_ident("ctor_new");
-
-                let [_this, params @ ..] = param_types else {
-                    bail!("Missing `__this` parameter in a constructor: {:?}", func)
-                };
-                impl_kind = ImplKind::Trait {
-                    record: record.clone(),
-                    trait_name: TraitName::CtorNew(params.iter().cloned().collect()),
-                    impl_for: ImplFor::T,
-                    trait_generic_params: Rc::new([]),
-                    format_first_param_as_self: false,
-                    drop_return: false,
-                    associated_return_type: Some(make_rs_ident("CtorType")),
-                    force_const_reference_params: false,
-                }
-            } else {
-                match func.params.len() {
-                    0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
-                    1 => {
-                        impl_kind = ImplKind::new_trait(
-                            TraitName::UnpinConstructor {
-                                name: Rc::from("Default"),
-                                params: Rc::from([]),
-                            },
-                            record.clone(),
-                            /* format_first_param_as_self= */ false,
-                            /* force_const_reference_params= */ false,
-                        )?;
-                        func_name = make_rs_ident("default");
-                    }
-                    2 => {
-                        if param_types[1].is_shared_ref_to(record) {
-                            // Copy constructor
-                            if should_derive_clone(record) {
-                                return Ok(None);
-                            } else {
-                                impl_kind = ImplKind::new_trait(
-                                    TraitName::UnpinConstructor {
-                                        name: Rc::from("Clone"),
-                                        params: Rc::from([]),
-                                    },
-                                    record.clone(),
-                                    /* format_first_param_as_self= */ true,
-                                    /* force_const_reference_params= */ false,
-                                )?;
-                                func_name = make_rs_ident("clone");
-                            }
-                        } else {
-                            let param_type = &param_types[1];
-                            impl_kind = ImplKind::new_trait(
-                                TraitName::UnpinConstructor {
-                                    name: Rc::from("From"),
-                                    params: Rc::from([param_type.clone()]),
-                                },
-                                record.clone(),
-                                /* format_first_param_as_self= */ false,
-                                /* force_const_reference_params= */
-                                false,
-                            )?;
-                            func_name = make_rs_ident("from");
-                        }
-                    }
-                    _ => {
-                        // TODO(b/216648347): Support bindings for other constructors.
-                        bail!("More than 1 constructor parameter is not supported yet",);
-                    }
-                }
-            }
+            api_func_shape_for_constructor(func, maybe_record, param_types, is_unsafe, errors)
         }
     }
-    Ok(Some((func_name, impl_kind)))
+}
+
+/// Returns the shape of the generated Rust API for a given function definition
+/// or `None` if no function will be generated.
+fn api_func_shape_if_some(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+    param_types: &mut [RsTypeKind],
+) -> Option<(Ident, ImplKind)> {
+    let errors = Errors::new();
+    let shape = api_func_shape(db, func, param_types, &errors);
+    if !errors.is_empty() {
+        errors.discard();
+        return None;
+    }
+    shape
 }
 
 /// Returns the generated bindings for a function with the given name and param
@@ -842,7 +943,7 @@ pub fn get_binding(
             if !function_param_types.iter().eq(expected_param_types.iter()) {
                 return None;
             }
-            api_func_shape(db, function, &mut function_param_types).ok().flatten()
+            api_func_shape_if_some(db, function, &mut function_param_types)
         })
 }
 
@@ -871,10 +972,8 @@ pub fn is_record_clonable(db: &dyn BindingsGenerator, record: Rc<Record>) -> boo
                 {
                     return false;
                 }
-                api_func_shape(db, function, &mut function_param_types)
-                    .ok()
-                    .flatten()
-                    .map_or(false, |(func_name, _)| func_name == *"clone")
+                api_func_shape_if_some(db, function, &mut function_param_types)
+                    .is_some_and(|(func_name, _)| func_name == *"clone")
             })
 }
 
@@ -910,6 +1009,60 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
     }
 }
 
+/// A series of adjustments to apply to parameter values to make them compatible
+/// with the Rust trait signature (e.g. adding `&mut ...` or `.clone()`).
+struct ParamValueAdjustments {
+    clone_prefixes: Vec<TokenStream>,
+    clone_suffixes: Vec<TokenStream>,
+}
+
+/// Applies adjustments to the `param_types` of a function to make it compatible
+/// with the Rust trait signature.
+///
+/// If the Rust trait requires a function to take the params by const reference
+/// and the thunk takes some of its params by value then we should add a const
+/// reference around these Rust func params and clone the records when calling
+/// the thunk.
+///
+/// This function mutates `param_types` in-place and returns a
+/// `param_types`-length list containing any necessary adjustments to the
+/// parameter values.
+fn adjust_param_types_for_trait_impl(
+    db: &dyn BindingsGenerator,
+    impl_kind: &ImplKind,
+    param_types: &mut [RsTypeKind],
+    errors: &Errors,
+) -> ParamValueAdjustments {
+    let ImplKind::Trait { trait_name, force_const_reference_params: true, .. } = impl_kind else {
+        return ParamValueAdjustments {
+            clone_prefixes: vec![TokenStream::new(); param_types.len()],
+            clone_suffixes: vec![TokenStream::new(); param_types.len()],
+        };
+    };
+    let (clone_prefixes, clone_suffixes) = param_types
+        .iter_mut()
+        .enumerate()
+        .map(|(i, param_type)| {
+            let RsTypeKind::Record { record: param_record, .. } = &param_type else {
+                return Default::default();
+            };
+            if !is_record_clonable(db, param_record.clone()) {
+                errors.add(anyhow!(
+                    "Argument {i} of Rust trait `{trait_name:?}` requires a const reference, but the C++ implementation takes non-cloneable record `{param_type}` by value",
+                ));
+                return Default::default();
+            }
+            *param_type = RsTypeKind::Reference {
+                referent: Rc::new(param_type.clone()),
+                mutability: Mutability::Const,
+                lifetime: Lifetime::new("_"),
+            };
+            (quote! {&mut }, quote! {.clone()})
+        })
+        .unzip();
+    ParamValueAdjustments { clone_prefixes, clone_suffixes }
+}
+
 /// Generates Rust source code for a given `Func`.
 /// `derived_record` is a derived class type which re-exports `func` as a
 /// method on this record.`func` must be a method on a base class of
@@ -930,28 +1083,38 @@ pub fn generate_function(
     let ir = db.ir();
     let crate_root_path = crate::crate_root_path_tokens(&ir);
     let mut features = BTreeSet::new();
-    let mut param_types = func
+    let param_errors = Errors::new();
+    let mut param_types: Vec<RsTypeKind> = func
         .params
         .iter()
         .enumerate()
-        .map(|(i, p)| {
+        .filter_map(|(i, p)| {
             db.rs_type_kind(p.type_.rs_type.clone())
-                .with_context(|| format!("Failed to format type of parameter {i}"))
+                .map_err(|err| {
+                    param_errors.add(anyhow!("Failed to format type of parameter {i}: {err}"))
+                })
+                .ok()
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect();
+    param_errors.consolidate()?;
 
+    let errors = Errors::new();
     let (func_name, mut impl_kind) =
-        if let Some(values) = api_func_shape(db, &func, &mut param_types)? {
+        if let Some(values) = api_func_shape(db, &func, &mut param_types, &errors) {
             values
         } else {
+            errors.consolidate()?;
             return Ok(None);
         };
     let namespace_qualifier = ir.namespace_qualifier(&func).format_for_rs();
 
-    let mut return_type = db
-        .rs_type_kind(func.return_type.rs_type.clone())
-        .with_context(|| "Failed to format return type")?;
-    return_type.check_by_value()?;
+    let mut return_type = errors.consolidate_on_err(
+        db.rs_type_kind(func.return_type.rs_type.clone())
+            .with_context(|| "Failed to format return type"),
+    )?;
+    if let Err(err) = return_type.check_by_value() {
+        errors.add(err);
+    }
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
     let thunk = generate_function_thunk(
@@ -961,52 +1124,14 @@ pub fn generate_function(
         &param_types,
         &return_type,
         derived_record.clone(),
-    )?;
+    )
+    .unwrap_or_else(|err| {
+        errors.add(err);
+        TokenStream::new()
+    });
 
-    // If the Rust trait require a function to take the params by const reference
-    // and the thunk takes some of its params by value then we should add a const
-    // reference around these Rust func params and clone the records when calling
-    // the thunk. Since some params might require cloning while others don't, we
-    // need to store this information for each param.
-    let (mut param_types, clone_prefixes, clone_suffixes) = if let ImplKind::Trait {
-        force_const_reference_params: true,
-        ..
-    } = impl_kind
-    {
-        let mut clone_prefixes = Vec::with_capacity(param_types.len());
-        let mut clone_suffixes = Vec::with_capacity(param_types.len());
-        (
-            param_types
-                .into_iter()
-                .map(|param_type|
-                    {if let RsTypeKind::Record { record: param_record, .. } = &param_type {
-                        if !is_record_clonable(db, param_record.clone()) {
-                            bail!(
-                                "function requires const ref params in Rust but C++ takes non-cloneable record {:?} by value {:?}",
-                                param_record,
-                                func,
-                            );
-                        }
-                        clone_prefixes.push(quote!{&mut});
-                        clone_suffixes.push(quote!{.clone()});
-                        Ok(RsTypeKind::Reference {
-                            referent: Rc::new(param_type.clone()),
-                            mutability: Mutability::Const,
-                            lifetime: Lifetime::new("_"),
-                        })
-                    } else {
-                        clone_prefixes.push(quote!{});
-                        clone_suffixes.push(quote!{});
-                        Ok(param_type)
-                    }})
-                .collect::<Result<Vec<_>>>()?,
-            clone_prefixes,
-            clone_suffixes,
-        )
-    } else {
-        let empty_clone_snippets = vec![quote! {}; param_types.len()];
-        (param_types, empty_clone_snippets.clone(), empty_clone_snippets)
-    };
+    let ParamValueAdjustments { clone_prefixes, clone_suffixes } =
+        adjust_param_types_for_trait_impl(db, &impl_kind, &mut param_types, &errors);
 
     let BindingsSignature {
         lifetimes,
@@ -1014,7 +1139,7 @@ pub fn generate_function(
         return_type_fragment: mut quoted_return_type,
         thunk_prepare,
         thunk_args,
-    } = function_signature(
+    } = errors.consolidate_on_err(function_signature(
         &mut features,
         &func,
         &impl_kind,
@@ -1022,7 +1147,12 @@ pub fn generate_function(
         &mut param_types,
         &mut return_type,
         derived_record.clone(),
-    )?;
+        &errors,
+    ))?;
+
+    // Code below this point has not been adjusted to work with `Errors`, so We
+    // eagerly consolidate and return any errors created so far.
+    errors.consolidate()?;
 
     let api_func_def = {
         let thunk_ident = if let Some(ref derived_record) = derived_record {
@@ -1388,6 +1518,7 @@ fn function_signature(
     param_types: &mut Vec<RsTypeKind>,
     return_type: &mut RsTypeKind,
     derived_record: Option<Rc<Record>>,
+    errors: &Errors,
 ) -> Result<BindingsSignature> {
     let mut api_params = Vec::with_capacity(func.params.len());
     let mut thunk_args = Vec::with_capacity(func.params.len());
@@ -1404,7 +1535,9 @@ fn function_signature(
         // One exception is the first parameter, as it points to the derived
         // record.
         let should_replace_by_self = derived_record.is_none() || i == 0;
-        type_.check_by_value()?;
+        if let Err(err) = type_.check_by_value() {
+            errors.add(err);
+        }
         if !type_.is_unpin() {
             // `impl Ctor` will fail to compile in a trait.
             // This will only be hit if there was a bug in api_func_shape.
@@ -1416,7 +1549,7 @@ fn function_signature(
             }
             // The generated bindings require a move constructor.
             if !type_.is_move_constructible() {
-                bail!("Non-movable, non-trivial_abi type '{type}' is not supported by value as parameter #{i}", type=quote!{#type_});
+                errors.add(anyhow!("Non-movable, non-trivial_abi type '{type}' is not supported by value as parameter #{i}", type=quote!{#type_}));
             }
             let quoted_type_or_self = if let Some(impl_record) = impl_kind_record {
                 if should_replace_by_self {
@@ -1461,23 +1594,27 @@ fn function_signature(
     {
         // For constructors, we move the output parameter to be the return value.
         // The return value is "really" void.
-        ensure!(
-            func.return_type.rs_type.is_unit_type(),
-            "Unexpectedly non-void return type of a constructor"
-        );
+        if !func.return_type.rs_type.is_unit_type() {
+            panic!("Unexpectedly non-void return type of a constructor: {func:?}");
+        }
 
         //  Presence of element #0 is indirectly verified by a `Constructor`-related
         // `match` branch a little bit above.
         *return_type = param_types[0]
             .referent()
-            .ok_or_else(|| anyhow!("Expected pointer/reference for `__this` parameter"))?
+            .ok_or_else(|| {
+                anyhow!(
+                    "Expected pointer/reference for `__this` parameter, found {}",
+                    param_types[0]
+                )
+            })?
             .clone();
         quoted_return_type = Some(quote! {Self});
 
         // Grab the `__this` lifetime to remove it from the lifetime parameters.
-        let this_lifetime = param_types[0]
-            .lifetime()
-            .ok_or_else(|| anyhow!("Missing lifetime for `__this` parameter"))?;
+        let this_lifetime = param_types[0].lifetime().ok_or_else(|| {
+            anyhow!("Missing lifetime for `__this` parameter type: {}", param_types[0])
+        })?;
 
         // Drop `__this` parameter from the public Rust API.
         api_params.remove(0);
@@ -1486,14 +1623,12 @@ fn function_signature(
 
         // Remove the lifetime associated with `__this`.
         lifetimes.retain(|l| l != &this_lifetime);
-        if let Some(type_still_dependent_on_removed_lifetime) = param_types
-            .iter()
-            .flat_map(|t| t.lifetimes())
-            .find(|lifetime| lifetime == &this_lifetime)
+        if let Some(type_still_dependent_on_removed_lifetime) =
+            param_types.iter().find(|t| t.lifetimes().any(|lt| lt == this_lifetime))
         {
             bail!(
                 "The lifetime of `__this` is unexpectedly also used by another \
-                    parameter: {type_still_dependent_on_removed_lifetime:?}",
+                    parameter: {type_still_dependent_on_removed_lifetime}",
             );
         }
 
@@ -1536,9 +1671,12 @@ fn function_signature(
 
     // Change `__this: &'a SomeStruct` into `&'a self` if needed.
     if impl_kind.format_first_param_as_self() {
-        let first_api_param = param_types
-            .get(0)
-            .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
+        let Some(first_api_param) = param_types.first() else {
+            panic!(
+                "`format_first_param_self` to function with no parameter types:\n\
+                Func: {func:?}\nParameter types: {param_types:?}"
+            )
+        };
         // If param_types[0] exists, so do api_params[0] and thunk_args[0].
         match impl_kind {
             ImplKind::None { .. } => unreachable!(),
@@ -1550,7 +1688,7 @@ fn function_signature(
                 if first_api_param.is_c_abi_compatible_by_value() {
                     let rs_snippet = first_api_param.format_as_self_param()?;
                     api_params[0] = rs_snippet.tokens;
-                    features.extend(rs_snippet.features.into_iter());
+                    features.extend(rs_snippet.features);
                     if derived_record.is_some() {
                         thunk_args[0] = quote! { oops::Upcast::<_>::upcast(self) };
                     } else {
@@ -2099,7 +2237,7 @@ mod tests {
             let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=34\n\
                            Error while generating bindings for item 'Foo::Foo':\n\
                            The lifetime of `__this` is \
-                               unexpectedly also used by another parameter: Lifetime(\"a\")";
+                               unexpectedly also used by another parameter: &'a::core::ffi::c_int";
             quote! { __COMMENT__ #txt }
         });
         Ok(())

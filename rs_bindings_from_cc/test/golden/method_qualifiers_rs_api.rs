@@ -27,10 +27,14 @@ impl !Sync for Noninline {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Noninline"), crate::Noninline);
 
 // Error while generating bindings for item 'Noninline::Noninline':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::Noninline
+// Missing lifetime for `__this` parameter type: *mut crate::Noninline
 
 // Error while generating bindings for item 'Noninline::Noninline':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::Noninline
+// Missing lifetime for `__this` parameter type: *mut crate::Noninline
 
 // Error while generating bindings for item 'Noninline::Noninline':
 // Parameter #0 is not supported: Unsupported type 'Noninline &&': Unsupported type: && without lifetime
@@ -87,10 +91,14 @@ impl !Sync for Inline {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Inline"), crate::Inline);
 
 // Error while generating bindings for item 'Inline::Inline':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::Inline
+// Missing lifetime for `__this` parameter type: *mut crate::Inline
 
 // Error while generating bindings for item 'Inline::Inline':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::Inline
+// Missing lifetime for `__this` parameter type: *mut crate::Inline
 
 // Error while generating bindings for item 'Inline::Inline':
 // Parameter #0 is not supported: Unsupported type 'Inline &&': Unsupported type: && without lifetime

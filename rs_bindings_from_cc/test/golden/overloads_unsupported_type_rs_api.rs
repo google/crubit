@@ -31,10 +31,14 @@ impl !Sync for SomeClass {}
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::SomeClass);
 
 // Error while generating bindings for item 'SomeClass::SomeClass':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::SomeClass
+// Missing lifetime for `__this` parameter type: *mut crate::SomeClass
 
 // Error while generating bindings for item 'SomeClass::SomeClass':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::SomeClass
+// Missing lifetime for `__this` parameter type: *mut crate::SomeClass
 
 // Error while generating bindings for item 'SomeClass::SomeClass':
 // Parameter #0 is not supported: Unsupported type 'SomeClass &&': Unsupported type: && without lifetime

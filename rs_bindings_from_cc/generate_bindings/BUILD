@@ -28,6 +28,7 @@ rust_library(
         "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:error_report",
+        "//common:errors",
         "//common:ffi_types",
         "//common:memoized",
         "//common:token_stream_printer",

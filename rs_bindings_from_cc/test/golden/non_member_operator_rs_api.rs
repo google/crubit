@@ -28,10 +28,14 @@ pub mod ns {
     forward_declare::unsafe_define!(forward_declare::symbol!("ns :: X"), crate::ns::X);
 
     // Error while generating bindings for item 'X::X':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+    // Expected first constructor parameter to be a mutable reference, got: *mut crate::ns::X
+    // Missing lifetime for `__this` parameter type: *mut crate::ns::X
 
     // Error while generating bindings for item 'X::X':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+    // Expected first constructor parameter to be a mutable reference, got: *mut crate::ns::X
+    // Missing lifetime for `__this` parameter type: *mut crate::ns::X
 
     // Error while generating bindings for item 'ns::X::X':
     // Parameter #0 is not supported: Unsupported type 'X &&': Unsupported type: && without lifetime

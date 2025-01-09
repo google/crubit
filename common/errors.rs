@@ -83,3 +83,33 @@ impl Drop for Errors {
         }
     }
 }
+
+/// Similar to `bail!`, but accepts an `Errors` instance as the first argument.
+///
+/// Only use this macro if it is not possible to continue after an error has
+/// been generated. Prefer instead to add an entry to `Errors`.
+///
+/// The error will be added to the provided `Errors` list before returning
+/// `Err(WillError)`.
+///
+/// This macro is intended to be used in a function that returns `ErrorsOr<T>`.
+#[macro_export]
+macro_rules! bail_to_errors {
+    ($errors:expr, $($arg:tt)*) => {
+        {
+        $errors.add(anyhow!($($arg)*));
+        return Err($crate::WillError)
+        }
+    }
+}
+
+/// A promise that an error has been added to an `Errors`.
+pub struct WillError;
+
+/// A `Result` alias indicating that the value may not be available due to
+/// errors that have been added to an `Errors` instance.
+///
+/// Only use this macro if it is not possible to continue after an error has
+/// been generated. Prefer instead to add an entry to `Errors` and continue
+/// successfully.
+pub type ErrorsOr<T> = Result<T, WillError>;

@@ -30,10 +30,14 @@ forward_declare::unsafe_define!(
 );
 
 // Error while generating bindings for item 'ForwardDeclaredStruct::ForwardDeclaredStruct':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::ForwardDeclaredStruct
+// Missing lifetime for `__this` parameter type: *mut crate::ForwardDeclaredStruct
 
 // Error while generating bindings for item 'ForwardDeclaredStruct::ForwardDeclaredStruct':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::ForwardDeclaredStruct
+// Missing lifetime for `__this` parameter type: *mut crate::ForwardDeclaredStruct
 
 // Error while generating bindings for item 'ForwardDeclaredStruct::ForwardDeclaredStruct':
 // Parameter #0 is not supported: Unsupported type 'ForwardDeclaredStruct &&': Unsupported type: && without lifetime
