@@ -5,9 +5,8 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
     "rust_proc_macro",
-    "rust_test",
 )
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
 
 package(
     default_applicable_licenses = ["//:license"],
@@ -38,6 +37,18 @@ cc_library(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "annotation_reader_test",
+    srcs = ["annotation_reader_test.cc"],
+    deps = [
+        ":annotation_reader",
+        ":status_test_matchers",
+        "@abseil-cpp//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
+        "@llvm-project//clang:testing",
     ],
 )
 
@@ -302,7 +313,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "errors_test",
     srcs = ["errors_test.rs"],
     deps = [
@@ -326,7 +337,7 @@ rust_library(
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "error_report_test",
     crate = ":error_report",
     deps = [
