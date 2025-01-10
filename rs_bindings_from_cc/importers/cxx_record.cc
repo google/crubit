@@ -164,14 +164,14 @@ std::optional<BridgeTypeInfo> GetBridgeTypeInfo(
 // `TraitDerives`.
 absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
   CRUBIT_ASSIGN_OR_RETURN(
-      const clang::AnnotateAttr* crubit_internal_trait_derive,
-      GetAnnotateAttr(decl, "crubit_internal_trait_derive"));
+      std::optional<AnnotateArgs> args,
+      GetAnnotateAttrArgs(decl, "crubit_internal_trait_derive"));
 
-  if (crubit_internal_trait_derive == nullptr) return absl::OkStatus();
+  if (!args.has_value()) return absl::OkStatus();
   clang::ASTContext& ast_context = decl.getASTContext();
 
   absl::flat_hash_set<absl::string_view> custom_traits;
-  for (const clang::Expr* arg : crubit_internal_trait_derive->args()) {
+  for (const clang::Expr* arg : *args) {
     CRUBIT_ASSIGN_OR_RETURN(const absl::string_view derived_trait,
                             GetExprAsStringLiteral(*arg, ast_context));
     absl::string_view trait;
@@ -234,13 +234,13 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
 // fields in `TraitDerives`.
 absl::Status AddUnsafeImpls(const clang::Decl& decl, TraitDerives& result) {
   CRUBIT_ASSIGN_OR_RETURN(
-      const clang::AnnotateAttr* crubit_internal_unsafe_impl,
-      GetAnnotateAttr(decl, "crubit_internal_unsafe_impl"));
+      std::optional<AnnotateArgs> args,
+      GetAnnotateAttrArgs(decl, "crubit_internal_unsafe_impl"));
 
-  if (crubit_internal_unsafe_impl == nullptr) return absl::OkStatus();
+  if (!args.has_value()) return absl::OkStatus();
   clang::ASTContext& ast_context = decl.getASTContext();
 
-  for (const clang::Expr* arg : crubit_internal_unsafe_impl->args()) {
+  for (const clang::Expr* arg : *args) {
     CRUBIT_ASSIGN_OR_RETURN(const absl::string_view unsafe_impl,
                             GetExprAsStringLiteral(*arg, ast_context));
     if (unsafe_impl == "Send") {
@@ -272,11 +272,15 @@ absl::StatusOr<TraitDerives> GetTraitDerives(const clang::Decl& decl) {
 }
 
 absl::StatusOr<bool> IsUnsafeType(const clang::Decl& decl) {
-  CRUBIT_ASSIGN_OR_RETURN(const clang::AnnotateAttr* attr,
-                          GetAnnotateAttr(decl, "crubit_override_unsafe"));
-  if (attr == nullptr) return false;
+  CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> args,
+                          GetAnnotateAttrArgs(decl, "crubit_override_unsafe"));
+  if (!args.has_value()) return false;
+  if (args->size() != 1) {
+    return absl::InvalidArgumentError(
+        "`crubit_override_unsafe` annotation must have exactly one argument");
+  }
 
-  return GetAnnotateArgAsBool(*attr, decl.getASTContext());
+  return GetExprAsBool(*args->front(), decl.getASTContext());
 }
 
 }  // namespace

@@ -13,6 +13,7 @@
 
 #include "absl/container/btree_set.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "common/annotation_reader.h"
@@ -53,18 +54,24 @@ struct Errors {
 };
 
 SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
-  absl::StatusOr<const clang::AnnotateAttr*> override_annotation =
-      GetAnnotateAttr(decl, "crubit_override_unsafe");
-  if (!override_annotation.ok()) {
-    errors.AddStatus(override_annotation.status());
+  absl::StatusOr<std::optional<AnnotateArgs>> maybe_args =
+      GetAnnotateAttrArgs(decl, "crubit_override_unsafe");
+  if (!maybe_args.ok()) {
+    errors.AddStatus(maybe_args.status());
     return SafetyAnnotation::kUnannotated;
   }
-  if (*override_annotation == nullptr) {
+  if (!maybe_args->has_value()) {
+    return SafetyAnnotation::kUnannotated;
+  }
+  const AnnotateArgs& args = **maybe_args;
+  if (args.size() != 1) {
+    errors.AddStatus(absl::InvalidArgumentError(
+        "`crubit_override_unsafe` annotation must have exactly one argument"));
     return SafetyAnnotation::kUnannotated;
   }
   absl::StatusOr<bool> is_unsafe =
-      GetAnnotateArgAsBool(**override_annotation, decl.getASTContext());
-  if (!override_annotation.ok()) {
+      GetExprAsBool(*args[0], decl.getASTContext());
+  if (!is_unsafe.ok()) {
     errors.AddStatus(is_unsafe.status());
     return SafetyAnnotation::kUnannotated;
   }

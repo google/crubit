@@ -16,23 +16,23 @@
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/Expr.h"
 
 namespace crubit {
 
-// Gets the requested annotation for `decl`.
+using AnnotateArgs = llvm::SmallVector<clang::Expr*>;
+
+// Returns the arguments of the `[clang::annotate(annotation_name)]`
+// annotation on `decl`, if it exists.
 //
 // Returns an error if there is more than one annotation with the given name,
-// or `nullptr` if the annotation was not found.
-absl::StatusOr<const clang::AnnotateAttr*> GetAnnotateAttr(
+// or `std::nullopt` if the annotation was not found.
+absl::StatusOr<std::optional<AnnotateArgs>> GetAnnotateAttrArgs(
     const clang::Decl& decl, absl::string_view annotation_name);
 
 // Evaluates `expr` as a boolean.
-absl::StatusOr<bool> GetAnnotateArgAsBool(const clang::AnnotateAttr& attr,
-                                          const clang::ASTContext& ast_context);
-
-// Evaluates the single expr of `attr` as a string literal.
-absl::StatusOr<absl::string_view> GetAnnotateArgAsStringLiteral(
-    const clang::AnnotateAttr& attr, const clang::ASTContext& ast_context);
+absl::StatusOr<bool> GetExprAsBool(const clang::Expr& expr,
+                                   const clang::ASTContext& ast_context);
 
 // Evaluates `expr` as a string literal.
 absl::StatusOr<absl::string_view> GetExprAsStringLiteral(

@@ -33,15 +33,17 @@ namespace {
 // `decl` must not be null.
 absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
     const clang::Decl* decl) {
-  CRUBIT_ASSIGN_OR_RETURN(const clang::AnnotateAttr* attr,
-                          GetAnnotateAttr(*decl, "crubit_internal_rust_type"));
-  if (attr == nullptr) return std::nullopt;
-  if (attr->args_size() != 1)
+  CRUBIT_ASSIGN_OR_RETURN(
+      std::optional<AnnotateArgs> args,
+      GetAnnotateAttrArgs(*decl, "crubit_internal_rust_type"));
+  if (!args.has_value()) return std::nullopt;
+  if (args->size() != 1) {
     return absl::InvalidArgumentError(
         "The `crubit_internal_rust_type` attribute requires a single "
         "string literal "
         "argument, the Rust type.");
-  return GetAnnotateArgAsStringLiteral(*attr, decl->getASTContext());
+  }
+  return GetExprAsStringLiteral(*args->front(), decl->getASTContext());
 }
 
 // Gets the crubit_internal_same_abi attribute for `decl`.
@@ -50,12 +52,14 @@ absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
 //
 // `decl` must not be null.
 absl::StatusOr<bool> GetIsSameAbiAttribute(const clang::Decl* decl) {
-  CRUBIT_ASSIGN_OR_RETURN(const clang::AnnotateAttr* attr,
-                          GetAnnotateAttr(*decl, "crubit_internal_same_abi"));
-  if (attr != nullptr && attr->args_size() != 0)
+  CRUBIT_ASSIGN_OR_RETURN(
+      std::optional<AnnotateArgs> args,
+      GetAnnotateAttrArgs(*decl, "crubit_internal_same_abi"));
+  if (args.has_value() && !args->empty()) {
     return absl::InvalidArgumentError(
         "The `crubit_internal_same_abi` attribute takes no arguments.");
-  return attr != nullptr;
+  }
+  return args.has_value();
 }
 
 // Gathers all instantiated template parameters for `decl` (if any) and converts

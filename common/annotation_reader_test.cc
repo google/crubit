@@ -13,9 +13,9 @@
 namespace crubit {
 namespace {
 
+using testing::Eq;
 using testing::HasSubstr;
-using testing::IsNull;
-using testing::NotNull;
+using testing::Ne;
 
 template <class T>
 T& LookupDecl(clang::ASTContext& context, absl::string_view name) {
@@ -25,18 +25,18 @@ T& LookupDecl(clang::ASTContext& context, absl::string_view name) {
   return *cast<T>(result.front());
 }
 
-TEST(AnnotationReaderTest, GetAnnotateAttrSuccess) {
+TEST(GetAnnotateAttrArgsTest, Success) {
   clang::TestAST ast(R"cc(
     [[clang::annotate("foo")]] int i;
   )cc");
 
   auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
 
-  EXPECT_THAT(GetAnnotateAttr(var, "foo"), IsOkAndHolds(NotNull()));
-  EXPECT_THAT(GetAnnotateAttr(var, "bar"), IsOkAndHolds(IsNull()));
+  EXPECT_THAT(GetAnnotateAttrArgs(var, "foo"), IsOkAndHolds(Ne(std::nullopt)));
+  EXPECT_THAT(GetAnnotateAttrArgs(var, "bar"), IsOkAndHolds(Eq(std::nullopt)));
 }
 
-TEST(AnnotationReaderTest, GetAnnotateAttrFailureDoubleAnnotation) {
+TEST(GetAnnotateAttrArgsTest, FailureDoubleAnnotation) {
   clang::TestAST ast(R"cc(
     [[clang::annotate("foo")]] [[clang::annotate("foo")]] int i;
   )cc");
@@ -44,7 +44,7 @@ TEST(AnnotationReaderTest, GetAnnotateAttrFailureDoubleAnnotation) {
   auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
 
   EXPECT_THAT(
-      GetAnnotateAttr(var, "foo"),
+      GetAnnotateAttrArgs(var, "foo"),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           HasSubstr(
