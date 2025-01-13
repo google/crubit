@@ -139,14 +139,14 @@ where
         compiler.enter(|queries| {
             use rustc_interface::interface::Result;
             let try_func = || -> Result<T> {
-                let mut query_context = queries.global_ctxt()?;
+                let mut query_context = queries.global_ctxt();
                 query_context.enter(|tcx| {
                     // Explicitly force full `analysis` stage to detect compilation
                     // errors that the earlier stages might miss.  This helps ensure that the
                     // test inputs are valid Rust (even if `callback` wouldn't
                     // have triggered full analysis).
                     tcx.analysis(())
-                })?;
+                });
 
                 // `analysis` might succeed even if there are some lint / warning errors.
                 // Detecting these requires explicitly checking.

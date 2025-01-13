@@ -84,14 +84,14 @@ where
         // fatal errors. We use `catch_fatal_errors` to 1) catch such panics and
         // translate them into a Result, and 2) resume and propagate other panics.
         let catch_fatal_errors_result: std::result::Result<
-            std::result::Result<(), rustc_span::ErrorGuaranteed>,
+            (),
             rustc_span::fatal_error::FatalError,
         > = rustc_driver::catch_fatal_errors(|| {
             rustc_driver::RunCompiler::new(self.args, &mut self).run()
         });
 
         match catch_fatal_errors_result {
-            Ok(Ok(())) => {}
+            Ok(()) => {}
             // We can ignore the `Err` payloads because the error types have only one value.
             _ => bail!("Errors reported by Rust compiler."),
         };

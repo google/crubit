@@ -1027,7 +1027,10 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
             // TODO(b/259749095): Once generic ADTs are supported, `is_copy_modulo_regions`
             // might need to be replaced with a more thorough check - see
             // b/258249993#comment4.
-            core.self_ty.is_copy_modulo_regions(tcx, post_analysis_typing_env(tcx, core.def_id))
+            tcx.type_is_copy_modulo_regions(
+                post_analysis_typing_env(tcx, core.def_id),
+                core.self_ty,
+            )
         };
         if is_copy {
             let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \

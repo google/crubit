@@ -131,11 +131,8 @@ pub fn get_attrs(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttrs> {
     // going to be read by Crubit developers when we mess up, not Crubit
     // _users_.
     for attr in tcx.get_attrs_by_path(did.into(), crubit_annotate) {
-        let Some(meta) = attr.meta() else {
-            bail!("Invalid #[__crubit::annotate(...)] attribute (not a rustc_ast::ast::MetaItem)");
-        };
-        let MetaItemKind::List(args) = &meta.kind else {
-            bail!("Invalid #[__crubit::annotate(...)] attribute (expected __crubit::annotate())");
+        let Some(args) = attr.meta_item_list() else {
+            bail!("Invalid #[__crubit::annotate(...)] attribute (not a rustc_hir::hir::MetaItem)");
         };
         for arg in args {
             let Some(arg) = arg.meta_item() else {
