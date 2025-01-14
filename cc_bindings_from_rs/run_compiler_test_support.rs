@@ -137,27 +137,28 @@ where
 
     rustc_interface::interface::run_compiler(config, |compiler| {
         compiler.enter(|queries| {
-            use rustc_interface::interface::Result;
-            let try_func = || -> Result<T> {
-                let mut query_context = queries.global_ctxt();
+            use std::panic::{catch_unwind, AssertUnwindSafe};
+            let mut query_context = catch_unwind(AssertUnwindSafe(|| queries.global_ctxt()))
+                .expect("Test input compilation failed while parsing");
+            catch_unwind(AssertUnwindSafe(|| {
                 query_context.enter(|tcx| {
                     // Explicitly force full `analysis` stage to detect compilation
                     // errors that the earlier stages might miss.  This helps ensure that the
                     // test inputs are valid Rust (even if `callback` wouldn't
                     // have triggered full analysis).
-                    tcx.analysis(())
+                    tcx.ensure().analysis(());
                 });
+            }))
+            .expect("Test input compilation failed while analyzing");
 
-                // `analysis` might succeed even if there are some lint / warning errors.
-                // Detecting these requires explicitly checking.
-                if let Some(guar) = compiler.sess.dcx().has_errors() {
-                    return Err(guar);
-                }
+            // `analysis` might succeed even if there are some lint / warning errors.
+            // Detecting these requires explicitly checking.
+            if let Some(_error_guaranteed) = compiler.sess.dcx().has_errors() {
+                panic!("Test input compilation failed while linting")
+            }
 
-                // Run the provided callback.
-                Ok(query_context.enter(callback))
-            };
-            try_func().expect("Test inputs shouldn't cause compilation errors")
+            // Run the provided callback.
+            query_context.enter(callback)
         })
     })
 }
@@ -189,13 +190,13 @@ mod tests {
     use super::*;
 
     #[test]
-    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
+    #[should_panic(expected = "Test input compilation failed while parsing")]
     fn test_run_compiler_for_testing_panic_when_test_input_contains_syntax_errors() {
         run_compiler_for_testing("syntax error here", |_tcx| panic!("This part shouldn't execute"))
     }
 
     #[test]
-    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
+    #[should_panic(expected = "Test input compilation failed while analyzing")]
     fn test_run_compiler_for_testing_panic_when_test_input_triggers_analysis_errors() {
         run_compiler_for_testing("#![feature(no_such_feature)]", |_tcx| {
             panic!("This part shouldn't execute")
@@ -203,7 +204,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
+    #[should_panic(expected = "Test input compilation failed while linting")]
     fn test_run_compiler_for_testing_panic_when_test_input_triggers_warnings() {
         run_compiler_for_testing("pub fn foo(unused_parameter: i32) {}", |_tcx| {
             panic!("This part shouldn't execute")
