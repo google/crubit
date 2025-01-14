@@ -667,7 +667,7 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
     if (field_decl->isZeroSize(ictx_.ctx_)) {
       size = 0;
     } else if (field_decl->isBitField()) {
-      size = field_decl->getBitWidthValue(ictx_.ctx_);
+      size = field_decl->getBitWidthValue();
     } else {
       size = ictx_.ctx_.getTypeSize(field_decl->getType());
     }
