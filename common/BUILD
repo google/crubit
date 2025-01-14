@@ -5,6 +5,7 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
     "rust_proc_macro",
+    "rust_test",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
 
@@ -124,6 +125,24 @@ cc_library(
     deps = [
         ":ffi_types",  # buildcleaner: keep
         "@abseil-cpp//absl/strings",
+    ],
+)
+
+rust_library(
+    name = "interner",
+    srcs = ["interner.rs"],
+    deps = [
+        "@crate_index//:bumpalo",
+    ],
+)
+
+rust_test(
+    name = "interner_test",
+    srcs = ["interner_test.rs"],
+    deps = [
+        ":interner",
+        "@crate_index//:bumpalo",
+        "@crate_index//:googletest",
     ],
 )
 
