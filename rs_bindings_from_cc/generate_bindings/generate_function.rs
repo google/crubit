@@ -15,17 +15,29 @@ use crate::rs_snippet::{
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::make_rs_ident;
-use error_report::{anyhow, bail};
+use error_report::{anyhow, bail, ErrorList};
 use errors::{bail_to_errors, Errors, ErrorsOr};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
-use quote::{quote, ToTokens};
+use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::Write as _;
 use std::ptr;
 use std::rc::Rc;
 use std::sync::LazyLock;
+
+#[derive(Clone)]
+pub struct GeneratedFunction {
+    /// The generated Rust function.
+    pub snippets: Rc<ApiSnippets>,
+    /// The function's ID.
+    pub id: Rc<FunctionId>,
+    /// The status of function generation.
+    /// If this is `Err`, the function or trait impl exists, but is not
+    /// callable.
+    pub status: Result<()>,
+}
 
 /// Uniquely identifies a generated Rust function.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -393,25 +405,27 @@ fn type_by_value_or_under_const_ref<'a>(
     value_desc: &str,
     errors: &Errors,
 ) -> ErrorsOr<(&'a RsTypeKind, &'a Rc<Record>)> {
+    // Pre-record `kind_string` before any adjustments occur.
+    let kind_string = kind.to_string();
     match *kind {
         RsTypeKind::Reference { referent: ref lhs, ref mut mutability, .. } => {
             if !mutability.is_const() {
                 // NOTE: bindings will never actually rely on this immutability, as we
                 // the resulting generated code will always result in a compiler error if used
                 // because of the `errors.add`.
+                errors.add(anyhow!("Expected {value_desc} reference to be immutable, but found mutable reference: {kind_string}"));
                 *mutability = Mutability::Const;
-                errors.add(anyhow!("Expected {value_desc} reference to be immutable, but found mutable reference: {kind}"));
             }
             if let RsTypeKind::Record { record: lhs_record, .. } = &**lhs {
                 Ok((lhs, lhs_record))
             } else {
-                bail_to_errors!(errors, "Expected {value_desc} to be a record or a const reference to a record, found a reference that doesn't refer to a record: {kind}");
+                bail_to_errors!(errors, "Expected {value_desc} to be a record or a const reference to a record, found a reference that doesn't refer to a record: {kind_string}");
             }
         }
         RsTypeKind::Record { record: ref lhs_record, .. } => Ok((kind, lhs_record)),
         _ => bail_to_errors!(
             errors,
-            "Expected {value_desc} to be a record or const reference to a record, found {kind}"
+            "Expected {value_desc} to be a record or const reference to a record, found {kind_string}"
         ),
     }
 }
@@ -1063,6 +1077,166 @@ fn adjust_param_types_for_trait_impl(
     ParamValueAdjustments { clone_prefixes, clone_suffixes }
 }
 
+fn generate_func_body(
+    impl_kind: &ImplKind,
+    crate_root_path: TokenStream,
+    return_type: &RsTypeKind,
+    param_value_adjustments: &ParamValueAdjustments,
+    thunk_ident: Ident,
+    thunk_prepare: TokenStream,
+    thunk_args: Vec<TokenStream>,
+) -> TokenStream {
+    let ParamValueAdjustments { clone_prefixes, clone_suffixes } = param_value_adjustments;
+    match &impl_kind {
+        ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. } => {
+            // SAFETY: A user-defined constructor is not guaranteed to
+            // initialize all the fields. To make the `assume_init()` call
+            // below safe, the memory is zero-initialized first. This is a
+            // bit safer, because zero-initialized memory represents a valid
+            // value for the currently supported field types (this may
+            // change once the bindings generator starts supporting
+            // reference fields). TODO(b/213243309): Double-check if
+            // zero-initialization is desirable here.
+            quote! {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    #crate_root_path::detail::#thunk_ident( &mut tmp #( , #thunk_args )* );
+                    tmp.assume_init()
+                }
+            }
+        }
+        _ => {
+            // Note: for the time being, all !Unpin values are treated as if they were not
+            // trivially relocatable. We could, in the special case of trivial !Unpin types,
+            // not generate the thunk at all, but this would be a bit of extra work.
+            //
+            // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
+            let mut body = if return_type.is_c_abi_compatible_by_value() {
+                quote! {
+                    #crate_root_path::detail::#thunk_ident(
+                        #( #clone_prefixes #thunk_args #clone_suffixes ),*
+                    )
+                }
+            } else {
+                let return_type_or_self = {
+                    let record = match impl_kind {
+                        ImplKind::Struct { ref record, .. }
+                        | ImplKind::Trait { ref record, impl_for: ImplFor::T, .. } => {
+                            Some(&**record)
+                        }
+                        _ => None,
+                    };
+                    return_type.to_token_stream_replacing_by_self(record)
+                };
+                if return_type.is_unpin() {
+                    quote! {
+                        let mut __return =
+                            ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
+                        #crate_root_path::detail::#thunk_ident(
+                            &mut __return
+                            #( , #clone_prefixes #thunk_args #clone_suffixes )*
+                        );
+                        __return.assume_init()
+                    }
+                } else {
+                    // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
+                    // MaybeUninit<T> in Pin if T is !Unpin. It should understand
+                    // 'structural pinning', so that we do not need into_inner_unchecked()
+                    // here.
+                    quote! {
+                        ::ctor::FnCtor::new(
+                            move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<
+                                                                    #return_type_or_self>>| {
+                            #crate_root_path::detail::#thunk_ident(
+                                ::core::pin::Pin::into_inner_unchecked(dest)
+                                #( , #thunk_args )*
+                            );
+                        })
+                    }
+                }
+            };
+            // Discard the return value if requested (for example, when calling a C++
+            // operator that returns a value from a Rust trait that returns
+            // unit).
+            if let ImplKind::Trait { drop_return: true, .. } = impl_kind {
+                if return_type.is_unpin() {
+                    // If it's unpin, just discard it:
+                    body = quote! { #body; };
+                } else {
+                    // Otherwise, in order to discard the return value and return void, we
+                    // need to run the constructor.
+                    body = quote! {let _ = ::ctor::emplace!(#body);};
+                }
+
+                // We would need to do this, but it's no longer used:
+                //    return_type = RsTypeKind::Primitive(PrimitiveType::Unit);
+                let _ = return_type; // proof that we don't need to update it.
+            }
+            // Only need to wrap everything in an `unsafe { ... }` block if
+            // the *whole* api function is safe.
+            if !impl_kind.is_unsafe() {
+                body = quote! { unsafe { #body } };
+            }
+            quote! {
+                #thunk_prepare
+                #body
+            }
+        }
+    }
+}
+
+/// A structure describing how to represent any errors that occured as an
+/// unsatisfied trait bound. See `errors_as_unsatisfied_trait_bound` for more
+/// details.
+///
+/// Note: a default value of this structure represents no errors.
+#[derive(Default)]
+struct ErrorsAsUnsatisfiedTraitBound {
+    // like `'error`
+    lifetime_param: Option<Lifetime>,
+    // like "where &'error (): BindingGenerationFailure"
+    unsatisfied_where_clause: TokenStream,
+    // like `#[diagnostic::on_unimplemented(...)] trait BindingGenerationFailure {}`
+    unimplemented_trait_def: TokenStream,
+}
+
+/// Represents `reportable_errors` as an unsatisfied trait bound which will
+/// report the errors when a user attempts to compile a usage of the generated
+/// function or trait that the `unsatisfied_where_clause` is attached to.
+///
+/// This generates code like:
+///
+/// ```
+/// #[diagnostic::on_unimplemented(message = "binding genertion for function failed\n...")]
+/// pub trait BindingFailedFor{unique_id} {}
+///
+/// fn generated_api_func<'a>() where &'error (): BindingFailedFor{unique_id} { unreachable!() }
+/// ```
+///
+/// Note: the `lifetime_param` `'error` is only needed until the
+/// `trivial_bounds` feature is stable, see: https://github.com/rust-lang/rust/issues/48214#issuecomment-2557829956
+fn errors_as_unsatisfied_trait_bound(
+    reportable_errors: &Result<(), ErrorList>,
+    unique_id: &str,
+) -> ErrorsAsUnsatisfiedTraitBound {
+    let Err(reportable_errors) = reportable_errors else {
+        return ErrorsAsUnsatisfiedTraitBound::default();
+    };
+    let lt = Lifetime::new("error");
+    let trait_name = format_ident!("BindingFailedFor{}", unique_id);
+    let unsatisfied_where_clause = quote! { where & #lt (): #trait_name };
+    let message = format!("binding genertion for function failed\n{reportable_errors}");
+    let unimplemented_trait_def = quote! {
+        #[diagnostic::on_unimplemented(message = #message)]
+        pub trait #trait_name {}
+    };
+    ErrorsAsUnsatisfiedTraitBound {
+        lifetime_param: Some(lt),
+        unsatisfied_where_clause,
+        unimplemented_trait_def,
+    }
+}
+
 /// Generates Rust source code for a given `Func`.
 /// `derived_record` is a derived class type which re-exports `func` as a
 /// method on this record.`func` must be a method on a base class of
@@ -1079,7 +1253,7 @@ pub fn generate_function(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
     derived_record: Option<Rc<Record>>,
-) -> Result<Option<(Rc<ApiSnippets>, Rc<FunctionId>)>> {
+) -> Result<Option<GeneratedFunction>> {
     let ir = db.ir();
     let crate_root_path = crate::crate_root_path_tokens(&ir);
     let mut features = BTreeSet::new();
@@ -1130,11 +1304,11 @@ pub fn generate_function(
         TokenStream::new()
     });
 
-    let ParamValueAdjustments { clone_prefixes, clone_suffixes } =
+    let param_value_adjustments =
         adjust_param_types_for_trait_impl(db, &impl_kind, &mut param_types, &errors);
 
     let BindingsSignature {
-        lifetimes,
+        mut lifetimes,
         params: api_params,
         return_type_fragment: mut quoted_return_type,
         thunk_prepare,
@@ -1150,9 +1324,28 @@ pub fn generate_function(
         &errors,
     ))?;
 
-    // Code below this point has not been adjusted to work with `Errors`, so We
-    // eagerly consolidate and return any errors created so far.
-    errors.consolidate()?;
+    if let ImplKind::Trait { drop_return: true, .. } = impl_kind {
+        quoted_return_type = quote! {};
+    }
+
+    if !errors.is_empty() {
+        if let ImplKind::Trait { trait_name: TraitName::CtorNew(_), .. } = impl_kind {
+            // Generated CtorNew functions return an `impl Trait` type which can't use
+            // the `errors_as_unsatisfied_trait_bound` reporting system because
+            // the `'error` lifetime causes an error when combined with `impl Trait due to
+            // https://github.com/rust-lang/rust/issues/134804
+            errors.consolidate()?;
+        }
+    }
+
+    let reportable_status: Result<(), ErrorList> = errors.consolidate();
+    let failed = reportable_status.is_err();
+
+    let ErrorsAsUnsatisfiedTraitBound {
+        lifetime_param: error_lifetime_param,
+        mut unsatisfied_where_clause,
+        unimplemented_trait_def,
+    } = errors_as_unsatisfied_trait_bound(&reportable_status, &func.mangled_name);
 
     let api_func_def = {
         let thunk_ident = if let Some(ref derived_record) = derived_record {
@@ -1161,101 +1354,23 @@ pub fn generate_function(
             thunk_ident(&func)
         };
 
-        let func_body = match &impl_kind {
-            ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. } => {
-                // SAFETY: A user-defined constructor is not guaranteed to
-                // initialize all the fields. To make the `assume_init()` call
-                // below safe, the memory is zero-initialized first. This is a
-                // bit safer, because zero-initialized memory represents a valid
-                // value for the currently supported field types (this may
-                // change once the bindings generator starts supporting
-                // reference fields). TODO(b/213243309): Double-check if
-                // zero-initialization is desirable here.
-                quote! {
-                    let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-                    unsafe {
-                        #crate_root_path::detail::#thunk_ident( &mut tmp #( , #thunk_args )* );
-                        tmp.assume_init()
-                    }
-                }
-            }
-            _ => {
-                // Note: for the time being, all !Unpin values are treated as if they were not
-                // trivially relocatable. We could, in the special case of trivial !Unpin types,
-                // not generate the thunk at all, but this would be a bit of extra work.
-                //
-                // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
-                let mut body = if return_type.is_c_abi_compatible_by_value() {
-                    quote! {
-                        #crate_root_path::detail::#thunk_ident(
-                            #( #clone_prefixes #thunk_args #clone_suffixes ),*
-                        )
-                    }
-                } else {
-                    let return_type_or_self = {
-                        let record = match impl_kind {
-                            ImplKind::Struct { ref record, .. }
-                            | ImplKind::Trait { ref record, impl_for: ImplFor::T, .. } => {
-                                Some(&**record)
-                            }
-                            _ => None,
-                        };
-                        return_type.to_token_stream_replacing_by_self(record)
-                    };
-                    if return_type.is_unpin() {
-                        quote! {
-                            let mut __return =
-                                ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
-                            #crate_root_path::detail::#thunk_ident(
-                                &mut __return
-                                #( , #clone_prefixes #thunk_args #clone_suffixes )*
-                            );
-                            __return.assume_init()
-                        }
-                    } else {
-                        // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
-                        // MaybeUninit<T> in Pin if T is !Unpin. It should understand
-                        // 'structural pinning', so that we do not need into_inner_unchecked()
-                        // here.
-                        quote! {
-                            ::ctor::FnCtor::new(
-                                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<
-                                                                        #return_type_or_self>>| {
-                                #crate_root_path::detail::#thunk_ident(
-                                    ::core::pin::Pin::into_inner_unchecked(dest)
-                                    #( , #thunk_args )*
-                                );
-                            })
-                        }
-                    }
-                };
-                // Discard the return value if requested (for example, when calling a C++
-                // operator that returns a value from a Rust trait that returns
-                // unit).
-                if let ImplKind::Trait { drop_return: true, .. } = impl_kind {
-                    if return_type.is_unpin() {
-                        // If it's unpin, just discard it:
-                        body = quote! { #body; };
-                    } else {
-                        // Otherwise, in order to discard the return value and return void, we
-                        // need to run the constructor.
-                        body = quote! {let _ = ::ctor::emplace!(#body);};
-                    }
-
-                    // We would need to do this, but it's no longer used:
-                    //    return_type = RsTypeKind::Primitive(PrimitiveType::Unit);
-                    let _ = return_type; // proof that we don't need to update it.
-                    quoted_return_type = quote! {};
-                }
-                // Only need to wrap everything in an `unsafe { ... }` block if
-                // the *whole* api function is safe.
-                if !impl_kind.is_unsafe() {
-                    body = quote! { unsafe { #body } };
-                }
-                quote! {
-                    #thunk_prepare
-                    #body
-                }
+        let func_body = if reportable_status.is_ok() {
+            generate_func_body(
+                &impl_kind,
+                crate_root_path,
+                &return_type,
+                &param_value_adjustments,
+                thunk_ident,
+                thunk_prepare,
+                thunk_args,
+            )
+        } else {
+            quote! {
+                #![allow(unused_variables)]
+                unreachable!(
+                    "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+                )
             }
         };
 
@@ -1267,6 +1382,21 @@ pub fn generate_function(
             quote! { unsafe }
         } else {
             quote! {}
+        };
+
+        // If we don't have an outer `impl ... { ... }` block, we have to introduce the
+        // lifetimes and bounds inside this one.
+        let has_wrapping_impl = match impl_kind {
+            ImplKind::None { .. } => false,
+            ImplKind::Struct { .. } | ImplKind::Trait { .. } => true,
+        };
+        let where_clause = if has_wrapping_impl {
+            None
+        } else {
+            if let Some(lt) = &error_lifetime_param {
+                lifetimes.insert(0, lt.clone());
+            }
+            Some(core::mem::take(&mut unsatisfied_where_clause))
         };
 
         let fn_generic_params: TokenStream;
@@ -1314,7 +1444,7 @@ pub fn generate_function(
         quote! {
             #[inline(always)]
             #pub_ #unsafe_ fn #func_name #fn_generic_params(
-                    #( #api_params ),* ) #arrow #function_return_type {
+                    #( #api_params ),* ) #arrow #function_return_type #where_clause {
                 #func_body
             }
         }
@@ -1329,7 +1459,7 @@ pub fn generate_function(
     let function_id: FunctionId;
     match impl_kind {
         ImplKind::None { .. } => {
-            api_func = quote! { #doc_comment #api_func_def };
+            api_func = quote! { #unimplemented_trait_def #doc_comment #api_func_def };
             function_id = FunctionId {
                 self_type: None,
                 function_path: syn::parse2(quote! { #namespace_qualifier #func_name }).unwrap(),
@@ -1343,7 +1473,11 @@ pub fn generate_function(
             } else {
                 record_name = make_rs_ident(record.rs_name.as_ref());
             };
-            api_func = quote! { impl #record_name { #doc_comment #api_func_def } };
+            let error_lifetime_generic = match &error_lifetime_param {
+                Some(lifetime) => quote! { <#lifetime> },
+                None => quote! {},
+            };
+            api_func = quote! { #unimplemented_trait_def impl #error_lifetime_generic #record_name #unsatisfied_where_clause { #doc_comment #api_func_def } };
             function_id = FunctionId {
                 self_type: None,
                 function_path: syn::parse2(quote! {
@@ -1369,7 +1503,7 @@ pub fn generate_function(
                 quote! {
                     type #name = #quoted_return_type;
                 }
-            } else if let TraitName::PartialOrd { ref param } = trait_name {
+            } else if let TraitName::PartialOrd { param } = &trait_name {
                 let quoted_param_or_self = match impl_for {
                     ImplFor::T => param.to_token_stream_replacing_by_self(Some(&trait_record)),
                     ImplFor::RefT => quote! { #param },
@@ -1395,8 +1529,10 @@ pub fn generate_function(
 
             let record_name = make_rs_ident(trait_record.rs_name.as_ref());
             let extra_items;
+            let trait_lifetime_params = error_lifetime_param.as_slice();
+            // NOTE: `trait_generic_params` may include lifetimes!
             let formatted_trait_generic_params =
-                format_generic_params(/* lifetimes= */ &[], &*trait_generic_params);
+                format_generic_params(trait_lifetime_params, &*trait_generic_params);
             match &trait_name {
                 TraitName::CtorNew(params) => {
                     if params.len() == 1 {
@@ -1405,7 +1541,7 @@ pub fn generate_function(
                             Some(&trait_record),
                         );
                         extra_items = quote! {
-                            impl #formatted_trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #record_name {
+                            impl #formatted_trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #record_name #unsatisfied_where_clause {
                                 #extra_body
 
                                 #[inline (always)]
@@ -1442,8 +1578,9 @@ pub fn generate_function(
                 }
             };
             api_func = quote! {
+                #unimplemented_trait_def
                 #doc_comment
-                impl #formatted_trait_generic_params #trait_name_without_trait_record for #impl_for {
+                impl #formatted_trait_generic_params #trait_name_without_trait_record for #impl_for #unsatisfied_where_clause {
                     #extra_body
                     #api_func_def
                 }
@@ -1458,7 +1595,7 @@ pub fn generate_function(
 
     // If we are generating bindings for a derived record, we reuse the base
     // record's thunks, so we don't need to generate thunks.
-    let cc_details = if derived_record.is_some() {
+    let cc_details = if derived_record.is_some() || failed {
         quote! {}
     } else {
         generate_function_thunk_impl(db, &func)?
@@ -1466,12 +1603,16 @@ pub fn generate_function(
 
     let generated_item = ApiSnippets {
         main_api: api_func,
-        thunks: thunk,
+        thunks: if failed { TokenStream::new() } else { thunk },
         features,
         cc_details,
         ..Default::default()
     };
-    Ok(Some((Rc::new(generated_item), Rc::new(function_id))))
+    Ok(Some(GeneratedFunction {
+        snippets: Rc::new(generated_item),
+        id: Rc::new(function_id),
+        status: reportable_status.map_err(arc_anyhow::Error::from),
+    }))
 }
 
 /// The function signature for a function's bindings.
@@ -1549,7 +1690,7 @@ fn function_signature(
             }
             // The generated bindings require a move constructor.
             if !type_.is_move_constructible() {
-                errors.add(anyhow!("Non-movable, non-trivial_abi type '{type}' is not supported by value as parameter #{i}", type=quote!{#type_}));
+                errors.add(anyhow!("Non-movable, non-trivial_abi type '{type_}' is not supported by value as parameter #{i}"));
             }
             let quoted_type_or_self = if let Some(impl_record) = impl_kind_record {
                 if should_replace_by_self {
@@ -1587,62 +1728,74 @@ fn function_signature(
     let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&*param_types).collect();
 
     let mut quoted_return_type = None;
-    if let ImplKind::Trait {
-        trait_name: trait_name @ (TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)),
-        ..
-    } = &impl_kind
-    {
-        // For constructors, we move the output parameter to be the return value.
-        // The return value is "really" void.
-        if !func.return_type.rs_type.is_unit_type() {
-            panic!("Unexpectedly non-void return type of a constructor: {func:?}");
+    // TODO: b/389131731 - Unify adjustment of return and parameter types.
+    let trait_name = match &impl_kind {
+        ImplKind::Trait { trait_name, .. } => Some(trait_name),
+        _ => None,
+    };
+    match trait_name {
+        Some(TraitName::PartialOrd { .. } | TraitName::PartialEq { .. }) => {
+            if *return_type != RsTypeKind::Primitive(PrimitiveType::bool) {
+                errors.add(anyhow!(
+                    "comparison operator return type must be `bool`, found: {return_type}",
+                ));
+                *return_type = RsTypeKind::Primitive(PrimitiveType::bool);
+            }
         }
+        Some(TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)) => {
+            // For constructors, we move the output parameter to be the return value.
+            // The return value is "really" void.
+            if !func.return_type.rs_type.is_unit_type() {
+                panic!("Unexpectedly non-void return type of a constructor: {func:?}");
+            }
 
-        //  Presence of element #0 is indirectly verified by a `Constructor`-related
-        // `match` branch a little bit above.
-        *return_type = param_types[0]
-            .referent()
-            .ok_or_else(|| {
-                anyhow!(
-                    "Expected pointer/reference for `__this` parameter, found {}",
-                    param_types[0]
-                )
-            })?
-            .clone();
-        quoted_return_type = Some(quote! {Self});
+            //  Presence of element #0 is indirectly verified by a `Constructor`-related
+            // `match` branch a little bit above.
+            *return_type = param_types[0]
+                .referent()
+                .ok_or_else(|| {
+                    anyhow!(
+                        "Expected pointer/reference for `__this` parameter, found {}",
+                        param_types[0]
+                    )
+                })?
+                .clone();
+            quoted_return_type = Some(quote! {Self});
 
-        // Grab the `__this` lifetime to remove it from the lifetime parameters.
-        let this_lifetime = param_types[0].lifetime().ok_or_else(|| {
-            anyhow!("Missing lifetime for `__this` parameter type: {}", param_types[0])
-        })?;
+            // Grab the `__this` lifetime to remove it from the lifetime parameters.
+            let this_lifetime = param_types[0].lifetime().ok_or_else(|| {
+                anyhow!("Missing lifetime for `__this` parameter type: {}", param_types[0])
+            })?;
 
-        // Drop `__this` parameter from the public Rust API.
-        api_params.remove(0);
-        thunk_args.remove(0);
-        param_types.remove(0);
+            // Drop `__this` parameter from the public Rust API.
+            api_params.remove(0);
+            thunk_args.remove(0);
+            param_types.remove(0);
 
-        // Remove the lifetime associated with `__this`.
-        lifetimes.retain(|l| l != &this_lifetime);
-        if let Some(type_still_dependent_on_removed_lifetime) =
-            param_types.iter().find(|t| t.lifetimes().any(|lt| lt == this_lifetime))
-        {
-            bail!(
-                "The lifetime of `__this` is unexpectedly also used by another \
+            // Remove the lifetime associated with `__this`.
+            lifetimes.retain(|l| l != &this_lifetime);
+            if let Some(type_still_dependent_on_removed_lifetime) =
+                param_types.iter().find(|t| t.lifetimes().any(|lt| lt == this_lifetime))
+            {
+                bail!(
+                    "The lifetime of `__this` is unexpectedly also used by another \
                     parameter: {type_still_dependent_on_removed_lifetime}",
-            );
-        }
+                );
+            }
 
-        // CtorNew groups parameters into a tuple.
-        if let TraitName::CtorNew(args_type) = trait_name {
-            let args_type = if let Some(impl_record) = impl_kind_record {
-                format_tuple_except_singleton_replacing_by_self(args_type, Some(impl_record))
-            } else {
-                format_tuple_except_singleton(args_type)
-            };
-            api_params = vec![quote! {args: #args_type}];
-            let thunk_vars = format_tuple_except_singleton(&thunk_args);
-            thunk_prepare.extend(quote! {let #thunk_vars = args;});
+            // CtorNew groups parameters into a tuple.
+            if let Some(TraitName::CtorNew(args_type)) = trait_name {
+                let args_type = if let Some(impl_record) = impl_kind_record {
+                    format_tuple_except_singleton_replacing_by_self(args_type, Some(impl_record))
+                } else {
+                    format_tuple_except_singleton(args_type)
+                };
+                api_params = vec![quote! {args: #args_type}];
+                let thunk_vars = format_tuple_except_singleton(&thunk_args);
+                thunk_prepare.extend(quote! {let #thunk_vars = args;});
+            }
         }
+        Some(TraitName::Other { .. }) | None => {}
     }
 
     let return_type_fragment = if return_type == &RsTypeKind::Primitive(PrimitiveType::Unit) {
@@ -1785,7 +1938,7 @@ pub fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>
         // participate in a C++ overload set, and we must still detect the
         // overload.
         if let Ok(Some(f)) = db.generate_function(func.clone(), None) {
-            let (.., function_id) = &f;
+            let function_id = &f.id;
             if !seen_funcs.insert(function_id.clone()) {
                 overloaded_funcs.insert(function_id.clone());
             }
@@ -3524,7 +3677,7 @@ mod tests {
         )?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         // Bindings for TakesByValue cannot be generated.
-        assert_rs_not_matches!(rs_api, quote! {TakesByValue});
+        assert_rs_matches!(rs_api, quote! {TakesByValue<'error>});
         assert_cc_not_matches!(rs_api_impl, quote! {TakesByValue});
         Ok(())
     }

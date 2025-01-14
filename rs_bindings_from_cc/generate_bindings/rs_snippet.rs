@@ -158,10 +158,16 @@ pub fn format_generic_params<'a, T: ToTokens>(
 ) -> TokenStream {
     let mut lifetimes = lifetimes.into_iter().filter(|lifetime| &*lifetime.0 != "_").peekable();
     let mut types = types.into_iter().peekable();
-    if lifetimes.peek().is_none() && types.peek().is_none() {
-        quote! {}
+    if types.peek().is_none() {
+        if lifetimes.peek().is_none() {
+            quote! {}
+        } else {
+            quote! { < #( #lifetimes ),* > }
+        }
     } else {
-        quote! { < #( #lifetimes ),* #( #types ),*> }
+        // Note: the comma is inside the lifetimes glob because a trailing comma is
+        // needed if there are types that follow.
+        quote! { < #( #lifetimes, )* #( #types ),*> }
     }
 }
 

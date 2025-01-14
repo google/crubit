@@ -875,8 +875,23 @@ impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivi
     }
 }
 
-// Error while generating bindings for item 'NontrivialByValue::operator==':
-// Expected first operator== param reference to be immutable, but found mutable reference: &'a crate::NontrivialByValue
+#[diagnostic::on_unimplemented(
+    message = "binding genertion for function failed\nExpected first operator== param reference to be immutable, but found mutable reference: &'a mut crate::NontrivialByValue\ncomparison operator return type must be `bool`, found: crate::NontrivialByValue"
+)]
+pub trait BindingFailedFor_ZN17NontrivialByValueeqES_ {}
+impl<'error> PartialEq for NontrivialByValue
+where
+    &'error (): BindingFailedFor_ZN17NontrivialByValueeqES_,
+{
+    #[inline(always)]
+    fn eq<'a>(&'a self, other: &Self) -> bool {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
@@ -919,8 +934,21 @@ impl Nonmovable {
     }
 }
 
-// Error while generating bindings for item 'TakesNonmovableByValue':
-// Non-movable, non-trivial_abi type 'crate :: Nonmovable' is not supported by value as parameter #0
+#[diagnostic::on_unimplemented(
+    message = "binding genertion for function failed\nNon-movable, non-trivial_abi type 'crate::Nonmovable' is not supported by value as parameter #0"
+)]
+pub trait BindingFailedFor_Z22TakesNonmovableByValue10Nonmovable {}
+#[inline(always)]
+pub fn TakesNonmovableByValue<'error>(nonmovable: impl ::ctor::Ctor<Output = crate::Nonmovable>)
+where
+    &'error (): BindingFailedFor_Z22TakesNonmovableByValue10Nonmovable,
+{
+    #![allow(unused_variables)]
+    unreachable!(
+        "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+    )
+}
 
 #[inline(always)]
 pub fn ReturnsNonmovableByValue() -> impl ::ctor::Ctor<Output = crate::Nonmovable> {

@@ -540,29 +540,24 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
             })?;
             crate::generate_item(db, item)
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<Result<Vec<ApiSnippets>>>()?;
 
-    let generated_inherited_functions = filter_out_ambiguous_member_functions(
+    let generated_inherited_functions: Vec<ApiSnippets> = filter_out_ambiguous_member_functions(
         db,
         record.clone(),
         collect_unqualified_member_functions_from_all_bases(db, record),
     )
     .iter()
-    .map(|unambiguous_base_class_member_function| {
-        let item: Result<&Item> = ir.find_decl(unambiguous_base_class_member_function.id);
-        if item.is_err() {
-            return Ok(ApiSnippets::default());
-        }
-
-        match item.clone().unwrap() {
-            Item::Func(func) => match db.generate_function(func.clone(), Some(record.clone()))? {
-                None => Ok(ApiSnippets::default()),
-                Some((item, _)) => Ok((*item).clone()),
-            },
-            _ => panic!("Unexpected item type: {:?}", item),
-        }
+    .filter_map(|unambiguous_base_class_member_function| -> Option<ApiSnippets> {
+        let item = ir.find_untyped_decl(unambiguous_base_class_member_function.id);
+        let Item::Func(ir_func) = item else { panic!("Unexpected item type: {:?}", item) };
+        let Ok(Some(generated_func)) = db.generate_function(ir_func.clone(), Some(record.clone()))
+        else {
+            return None;
+        };
+        Some((*generated_func.snippets).clone())
     })
-    .collect::<Result<Vec<_>>>()?;
+    .collect();
     record_generated_items.extend(generated_inherited_functions);
 
     // Both the template definition and its instantiation should enable experimental
@@ -1347,12 +1342,11 @@ mod tests {
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
         // It isn't available by value:
-        assert_rs_not_matches!(rs_api, quote! {Default});
-        assert_rs_not_matches!(rs_api, quote! {From});
-        assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
-        assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
-        assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
-        assert_rs_not_matches!(rs_api, quote! {TakesValue});
+        assert_rs_matches!(rs_api, quote! {impl<'error> Default});
+        assert_rs_matches!(rs_api, quote! {impl<'error> From});
+        assert_rs_matches!(rs_api, quote! {impl<'error> Clone});
+        assert_rs_matches!(rs_api, quote! {ReturnsValue<'error>});
+        assert_rs_matches!(rs_api, quote! {TakesValue<'error>});
         // ... but it is otherwise available:
         assert_rs_matches!(rs_api, quote! {struct Indestructible});
         assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
@@ -1381,8 +1375,8 @@ mod tests {
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
         // It isn't available by value:
         assert_rs_not_matches!(rs_api, quote! {CtorNew});
-        assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
-        assert_rs_not_matches!(rs_api, quote! {TakesValue});
+        assert_rs_matches!(rs_api, quote! {ReturnsValue<'error>});
+        assert_rs_matches!(rs_api, quote! {TakesValue<'error>});
         // ... but it is otherwise available:
         assert_rs_matches!(rs_api, quote! {struct Indestructible});
         assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});

@@ -1190,8 +1190,23 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignPro
     }
 }
 
-// Error while generating bindings for item 'AddAssignProhibitedConstMember::operator+=':
-// Compound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedConstMember
+#[diagnostic::on_unimplemented(
+    message = "binding genertion for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedConstMember"
+)]
+pub trait BindingFailedFor_ZNK30AddAssignProhibitedConstMemberpLEi {}
+impl<'error> ::core::ops::AddAssign<::core::ffi::c_int> for AddAssignProhibitedConstMember
+where
+    &'error (): BindingFailedFor_ZNK30AddAssignProhibitedConstMemberpLEi,
+{
+    #[inline(always)]
+    fn add_assign<'a>(&'a mut self, rhs: ::core::ffi::c_int) {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -1254,8 +1269,23 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-// Error while generating bindings for item 'operator+=':
-// Compound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedFriendConstLhs
+#[diagnostic::on_unimplemented(
+    message = "binding genertion for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedFriendConstLhs"
+)]
+pub trait BindingFailedFor_ZpLRK33AddAssignProhibitedFriendConstLhsi {}
+impl<'error> ::core::ops::AddAssign<::core::ffi::c_int> for crate::AddAssignProhibitedFriendConstLhs
+where
+    &'error (): BindingFailedFor_ZpLRK33AddAssignProhibitedFriendConstLhsi,
+{
+    #[inline(always)]
+    fn add_assign<'a>(&'a mut self, rhs: ::core::ffi::c_int) {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
 #[derive(Clone, Copy)]
 #[repr(C)]

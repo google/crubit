@@ -3,12 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::generate_function::{
-    generate_function, get_binding, is_record_clonable, overloaded_funcs, FunctionId, ImplKind,
+    generate_function, get_binding, is_record_clonable, overloaded_funcs, FunctionId,
+    GeneratedFunction, ImplKind,
 };
 use crate::generate_struct_and_union::collect_unqualified_member_functions;
 use crate::rs_snippet::RsTypeKind;
 use crate::rs_type_kind;
-use crate::ApiSnippets;
 use arc_anyhow::Result;
 use error_report::ErrorReporting;
 use ffi_types::SourceLocationDocComment;
@@ -67,7 +67,6 @@ memoized::query_group! {
         #[input]
         fn errors(&self) -> Rc<dyn ErrorReporting>;
 
-
         /// A collection of errors that should cause bindings generation to fail.
         ///
         /// These errors should be issued only in response to misusage of Crubit itself, such as
@@ -80,7 +79,7 @@ memoized::query_group! {
 
         fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
 
-        fn generate_function(&self, func: Rc<Func>, record_overwrite: Option<Rc<Record>>) -> Result<Option<(Rc<ApiSnippets>, Rc<FunctionId>)>>;
+        fn generate_function(&self, func: Rc<Func>, record_overwrite: Option<Rc<Record>>) -> Result<Option<GeneratedFunction>>;
 
         fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
 

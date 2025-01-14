@@ -256,11 +256,41 @@ impl !Send for NonCopyUnion2 {}
 impl !Sync for NonCopyUnion2 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion2"), crate::NonCopyUnion2);
 
-// Error while generating bindings for item 'NonCopyUnion2::NonCopyUnion2':
-// Can't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor
+#[diagnostic::on_unimplemented(
+    message = "binding genertion for function failed\nCan't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor"
+)]
+pub trait BindingFailedFor_ZN13NonCopyUnion2C1ERKS_ {}
+impl<'error> Clone for NonCopyUnion2
+where
+    &'error (): BindingFailedFor_ZN13NonCopyUnion2C1ERKS_,
+{
+    #[inline(always)]
+    fn clone<'b>(&'b self) -> Self {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
-// Error while generating bindings for item 'NonCopyUnion2::NonCopyUnion2':
-// Can't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor
+#[diagnostic::on_unimplemented(
+    message = "binding genertion for function failed\nCan't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor"
+)]
+pub trait BindingFailedFor_ZN13NonCopyUnion2C1EOS_ {}
+impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for NonCopyUnion2
+where
+    &'error (): BindingFailedFor_ZN13NonCopyUnion2C1EOS_,
+{
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for NonCopyUnion2 {
     #[inline(always)]

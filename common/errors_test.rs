@@ -4,13 +4,13 @@
 
 use error_report::{anyhow, ErrorReport, ErrorReporting};
 use errors::Errors;
-// NOTE: verify_that imported for macro use. This should not be required.
-use googletest::{expect_eq, fail, gtest, verify_eq, verify_that};
+use googletest::{expect_eq, fail, gtest, OrFail};
 
 #[gtest]
-fn test_errors_consolidate_on_empty_list_returns_ok() {
+fn test_errors_consolidate_on_empty_list_returns_ok() -> googletest::Result<()> {
     let errors = Errors::new();
-    expect_eq!(errors.consolidate(), Ok(()));
+    errors.consolidate().or_fail()?;
+    Ok(())
 }
 
 #[gtest]
@@ -23,7 +23,7 @@ fn test_errors_consolidate_on_nonempty_list_returns_reportable_error() -> google
     };
 
     let report = ErrorReport::new();
-    report.report(&error);
+    report.report(&error.into());
     expect_eq!(
         serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
         serde_json::json!({

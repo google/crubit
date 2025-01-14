@@ -47,10 +47,10 @@ impl Errors {
     /// Consolidates any errors into a single error message.
     ////
     /// Returns `Ok` if no errors have been added.
-    pub fn consolidate(&self) -> Result<(), Error> {
+    pub fn consolidate(&self) -> Result<(), error_report::ErrorList> {
         let errors = self.list.take();
         if !errors.is_empty() {
-            return Err(Error::from(error_report::ErrorList::from(errors)));
+            return Err(error_report::ErrorList::from(errors));
         }
         Ok(())
     }
@@ -59,7 +59,10 @@ impl Errors {
     /// list into a single error message.
     ///
     /// Returns `res` unchanged if it is `Ok`.
-    pub fn consolidate_on_err<T>(&self, res: Result<T, Error>) -> Result<T, Error> {
+    pub fn consolidate_on_err<T>(
+        &self,
+        res: Result<T, Error>,
+    ) -> Result<T, error_report::ErrorList> {
         res.map_err(|error| {
             self.add(error);
             self.consolidate().unwrap_err()

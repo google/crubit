@@ -307,11 +307,17 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<ApiSnippets> {
     let generated_item = match item {
         Item::Func(func) => match db.generate_function(func.clone(), None)? {
             None => ApiSnippets::default(),
-            Some((item, function_id)) => {
-                if overloaded_funcs.contains(&function_id) {
+            Some(generated_function) => {
+                if let Err(e) = &generated_function.status {
+                    // Add any non-fatal errors to the error report.
+                    // These won't result in an UnsupportedItem since we *did* generate an
+                    // uncallable function item.
+                    db.errors().report(e);
+                }
+                if overloaded_funcs.contains(&generated_function.id) {
                     bail!("Cannot generate bindings for overloaded function")
                 } else {
-                    (*item).clone()
+                    (*generated_function.snippets).clone()
                 }
             }
         },
