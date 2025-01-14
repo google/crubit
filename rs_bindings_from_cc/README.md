@@ -23,9 +23,10 @@ Some key source files:
     produced by `importers/*.cc` and consumed by `src_code_gen.rs`. If source
     code generation needs to understand something about the AST, it must be
     present here.
-*   [`src_code_gen.rs`](src_code_gen.rs): The actual bindings code generation.
-    This is where the majority of decisions about source code generation go
-    (e.g. how to represent reference types, which traits to implement, etc.)
+*   [`generate_bindings/*`](generate_bindings/): The actual bindings code
+    generation. This is where the majority of decisions about source code
+    generation go (e.g. how to represent reference types, which traits to
+    implement, etc.)
 
 In addition, the generated bindings can depend on runtime libraries, found in
 [`crubit/support/`](../support/). For example, the Rust type for rvalue
