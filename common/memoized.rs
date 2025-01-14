@@ -24,6 +24,8 @@
 //! * Immutable input and no support for recomputation given mutated inputs.
 //! * Correspondingly, no requirement that the *return* types implement `Eq` or
 //!   `Hash`.
+//! * Supports `#[break_cycles_with = <default-value>]`, which generates a
+//!   function that returns <default-value> if a cycle is detected.
 //!
 //! There are more substantial differences with Salsa 2022 - this was written
 //! based on Salsa 0.16. We don't need to match exactly the API, but the
@@ -75,6 +77,15 @@
 ///     //
 ///     // When called on the `&dyn QueryGroupName` or directly on the concrete type, the functions
 ///     // will be memoized, and the return value will be cached, automatically.
+///     //
+///     // Some functions may need to gracefully handle cycles, in which case they should be
+///     // annotated with `#[break_cycles_with = <default_value>]`. This will generate a function
+///     // that returns <default_value> if a cycle is detected, but will _not_ cache the result.
+///     // All `#[break_cycles_with = ..]` functions must appear before all
+///     // non-`#[break_cycles_with = ..]` functions.
+///     #[break_cycles_with = ReturnType::default()]
+///     fn may_be_cyclic(&self, arg: ArgType) -> ReturnType;
+///
 ///     fn some_function(&self, arg: ArgType) -> ReturnType;
 ///   }
 ///   // The concrete type for the storage of inputs and memoized values.
@@ -83,6 +94,10 @@
 /// }
 ///
 /// // The non-memoized implementation of the memoized functions
+/// fn may_by_cyclic(db: &dyn QueryGroupName, arg: ArgType) -> ReturnType {
+///   // ...
+/// }
+///
 /// fn some_function(db: &dyn QueryGroupName, arg: ArgType) -> ReturnType {
 ///   // ...
 /// }
@@ -155,6 +170,19 @@ macro_rules! query_group {
       $(
         // TODO(jeanpierreda): Ideally would like to preserve doc comments here, but it introduces a
         // parsing ambiguity with how the macro is currently structured.
+        // $(#[doc = $break_cycles_doc:literal])*
+        #[break_cycles_with = $break_cycles_default_value:expr]
+        fn $break_cycles_function:ident(
+          &self
+          $(
+            , $break_cycles_arg:ident : $break_cycles_arg_type:ty
+          )*
+          $(,)?
+        ) -> $break_cycles_return_type:ty;
+      )*
+      $(
+        // TODO(jeanpierreda): Ideally would like to preserve doc comments here, but it introduces a
+        // parsing ambiguity with how the macro is currently structured.
         // $(#[doc = $function_doc:literal])?
         fn $function:ident(
           &self
@@ -175,6 +203,14 @@ macro_rules! query_group {
         fn $input_function(&self) -> $input_type
       ;)*
       $(
+        fn $break_cycles_function(
+          &self,
+          $(
+            $break_cycles_arg : $break_cycles_arg_type
+          ),*
+        ) -> $break_cycles_return_type
+      ;)*
+      $(
         fn $function(
           &self,
           $(
@@ -186,8 +222,14 @@ macro_rules! query_group {
 
     // Now we can generate a database struct that contains the lookup tables.
     $struct_vis struct $database_struct $(<$($type_param),*>)? {
+      __unwinding_cycles: ::core::cell::Cell<u32>,
       $(
         $input_function: $input_type,
+      )*
+      $(
+        // Note that we store $break_cycles_return_type here, not Option<$break_cycles_return_type>.
+        // This is because we don't cache failed calls.
+        $break_cycles_function: $crate::internal::MemoizationTable<($($break_cycles_arg_type,)*), $break_cycles_return_type>,
       )*
       $(
         $function: $crate::internal::MemoizationTable<($($arg_type,)*), $return_type>,
@@ -205,6 +247,25 @@ macro_rules! query_group {
         }
       )*
       $(
+        fn $break_cycles_function(
+          &self,
+          $(
+            $break_cycles_arg : $break_cycles_arg_type
+          ),*
+        ) -> $break_cycles_return_type {
+          self.$break_cycles_function.break_cycles_internal_memoized_call(
+            ($(
+              $break_cycles_arg,
+            )*),
+            |($($break_cycles_arg,)*)| {
+              // Force the use of &dyn $trait, so that we don't rule out separate compilation later.
+              $break_cycles_function(self as &dyn $trait, $($break_cycles_arg),*)
+            },
+            &self.__unwinding_cycles,
+          ).unwrap_or($break_cycles_default_value)
+        }
+      )*
+      $(
         fn $function(
           &self,
           $(
@@ -215,11 +276,11 @@ macro_rules! query_group {
             ($(
               $arg,
             )*),
-            |args| {
-              let ($($arg,)*) = args;
+            |($($arg,)*)| {
               // Force the use of &dyn $trait, so that we don't rule out separate compilation later.
               $function(self as &dyn $trait, $($arg),*)
-            }
+            },
+            &self.__unwinding_cycles,
           )
         }
       )*
@@ -228,8 +289,12 @@ macro_rules! query_group {
     impl $(<$($type_param),*>)? $database_struct $(<$($type_param),*>)? {
       $struct_vis fn new($($input_function: $input_type),*) -> Self {
         Self {
+          __unwinding_cycles: ::core::cell::Cell::new(0),
           $(
             $input_function,
+          )*
+          $(
+            $break_cycles_function: Default::default(),
           )*
           $(
             $function: Default::default(),
@@ -242,16 +307,23 @@ macro_rules! query_group {
 
 #[doc(hidden)]
 pub mod internal {
-    use std::cell::RefCell;
-    use std::collections::{HashMap, HashSet};
+    use std::cell::{Cell, RefCell};
+    use std::collections::HashMap;
     use std::hash::Hash;
+
+    #[derive(Copy, Clone, PartialEq, Eq)]
+    enum FoundCycle {
+        No,
+        Yes,
+    }
+
     pub struct MemoizationTable<Args, Return>
     where
         Args: Clone + Eq + Hash,
         Return: Clone,
     {
         memoized: RefCell<HashMap<Args, Return>>,
-        active: RefCell<HashSet<Args>>,
+        active: RefCell<HashMap<Args, FoundCycle>>,
     }
 
     // Separate `impl` instead of `#[derive(Default)]` because the `derive` would
@@ -262,7 +334,7 @@ pub mod internal {
         Return: Clone,
     {
         fn default() -> Self {
-            Self { memoized: RefCell::new(HashMap::new()), active: RefCell::new(HashSet::new()) }
+            Self { memoized: RefCell::new(HashMap::new()), active: RefCell::new(HashMap::new()) }
         }
     }
 
@@ -271,23 +343,66 @@ pub mod internal {
         Args: Clone + Eq + Hash,
         Return: Clone,
     {
-        pub fn internal_memoized_call<F>(&self, args: Args, f: F) -> Return
+        pub fn internal_memoized_call<F>(
+            &self,
+            args: Args,
+            f: F,
+            unwinding_cycles: &Cell<u32>,
+        ) -> Return
+        where
+            F: FnOnce(Args) -> Return,
+        {
+            self.break_cycles_internal_memoized_call(args, f, unwinding_cycles)
+                .expect("Cycle detected: a memoized function depends on its own return value")
+        }
+    }
+
+    impl<Args, Return> MemoizationTable<Args, Return>
+    where
+        Args: Clone + Eq + Hash,
+        Return: Clone,
+    {
+        pub fn break_cycles_internal_memoized_call<F>(
+            &self,
+            args: Args,
+            f: F,
+            unwinding_cycles: &Cell<u32>,
+        ) -> Option<Return>
         where
             F: FnOnce(Args) -> Return,
         {
             if let Some(return_value) = self.memoized.borrow().get(&args) {
-                return return_value.clone();
+                return Some(return_value.clone());
             }
-            if self.active.borrow().contains(&args) {
-                panic!("Cycle detected: a memoized function depends on its own return value");
+            if let Some(found_cycle) = self.active.borrow_mut().get_mut(&args) {
+                // We're in a cycle.
+                if *found_cycle == FoundCycle::No {
+                    // Only increase the count if we haven't hit this cycle before.
+                    unwinding_cycles.set(unwinding_cycles.get() + 1);
+                }
+                *found_cycle = FoundCycle::Yes;
+                return None;
             }
-            let args_cloned = args.clone();
-            self.active.borrow_mut().insert(args_cloned);
+            self.active.borrow_mut().insert(args.clone(), FoundCycle::No);
             let return_value = f(args.clone());
-            self.active.borrow_mut().remove(&args);
-            let return_value_cloned = return_value.clone();
-            self.memoized.borrow_mut().insert(args, return_value_cloned);
-            return_value
+            let found_cycle = self
+                .active
+                .borrow_mut()
+                .remove(&args)
+                .expect("This call frame inserted args and nobody removed them");
+
+            if found_cycle == FoundCycle::Yes {
+                // We did hit outselves in a cycle but now we've broken out of it.
+                // If we hit ourselves multiple times, we were careful to only increment this
+                // count once.
+                unwinding_cycles.set(unwinding_cycles.get() - 1);
+            }
+            if unwinding_cycles.get() == 0 {
+                // No cycles, we can safely cache the result knowing that we haven't depended on
+                // any cycle default values.
+                self.memoized.borrow_mut().insert(args, return_value.clone());
+            }
+            Some(return_value)
         }
     }
 }
@@ -295,7 +410,7 @@ pub mod internal {
 #[cfg(test)]
 pub mod tests {
     use googletest::prelude::*;
-    use std::cell::Cell;
+    use std::cell::{Cell, RefCell};
     use std::rc::Rc;
 
     #[gtest]
@@ -387,6 +502,111 @@ pub mod tests {
         }
         let db = Database::new();
         db.add10(1);
+    }
+
+    #[gtest]
+    fn test_break_cycles_with_option() {
+        crate::query_group! {
+          pub trait Add10 {
+            #[break_cycles_with = None]
+            fn add10(&self, arg: i32) -> Option<i32>;
+          }
+          pub struct Database;
+        }
+        fn add10(db: &dyn Add10, arg: i32) -> Option<i32> {
+            db.add10(arg)
+        }
+        let db = Database::new();
+        assert_eq!(db.add10(1), None);
+    }
+
+    #[gtest]
+    fn test_break_cycles_with_sentinel() {
+        crate::query_group! {
+          pub trait Add10 {
+            #[break_cycles_with = -1]
+            fn add10(&self, arg: i32) -> i32;
+          }
+          pub struct Database;
+        }
+        fn add10(db: &dyn Add10, arg: i32) -> i32 {
+            db.add10(arg)
+        }
+        let db = Database::new();
+        assert_eq!(db.add10(1), -1);
+    }
+
+    #[gtest]
+    fn test_calls_in_cycle_are_not_memoized() {
+        crate::query_group! {
+          pub trait Table {
+            #[input]
+            fn logging(&self) -> Rc<RefCell<Vec<String>>>;
+
+            #[input]
+            fn records(&self) -> &'static [Record];
+
+            #[break_cycles_with = false]
+            fn is_unsafe(&self, name: &'static str) -> bool;
+
+            fn record(&self, name: &'static str) -> Record;
+          }
+          pub struct Database;
+        }
+
+        #[derive(Clone)]
+        struct Record {
+            name: &'static str,
+            is_unsafe: bool,
+            fields: &'static [&'static str],
+        }
+
+        // Returns whether or not a record is unsafe, checking recursively.
+        fn is_unsafe(db: &dyn Table, name: &'static str) -> bool {
+            let record = db.record(name);
+            let outcome =
+                record.is_unsafe || record.fields.iter().any(|&field| db.is_unsafe(field));
+            db.logging().borrow_mut().push(format!("is_unsafe({name}) = {outcome}"));
+            outcome
+        }
+
+        // Helper function so we can refer to records by name instead of by index.
+        fn record(db: &dyn Table, name: &'static str) -> Record {
+            db.records()
+                .iter()
+                .find(|record| record.name == name)
+                .expect("Record not found")
+                .clone()
+        }
+
+        let logging = Rc::default();
+
+        let db = Database::new(
+            Rc::clone(&logging),
+            &[
+                Record { name: "A", is_unsafe: false, fields: &["B", "Unsafe"] },
+                Record { name: "B", is_unsafe: false, fields: &["A"] },
+                Record { name: "Unsafe", is_unsafe: true, fields: &[] },
+            ],
+        );
+        // When checking if A is unsafe, it will first ask B, which will try to ask A
+        // again, defaulting to false. So B says "I guess I'm safe", but _doesn't_
+        // memoize that result. A will then see that it has Unsafe which is unsafe, so A
+        // will memoize itself as unsafe. But when we go to ask B if it's unsafe now, it
+        // will have correctly _not_ memoized that it's safe, and so it will ask
+        // A again, which will again say "I am unsafe", and so B will correctly memoize
+        // that it's unsafe.
+        assert!(db.is_unsafe("A"));
+        assert!(db.is_unsafe("B"));
+        assert_eq!(
+            logging.borrow().clone(),
+            vec![
+                "is_unsafe(B) = false".to_string(), // this is the cycle-default value
+                "is_unsafe(Unsafe) = true".to_string(),
+                "is_unsafe(A) = true".to_string(),
+                "is_unsafe(B) = true".to_string(), // as we can see, the default wasn't memoized
+            ]
+        );
     }
 
     #[gtest]
