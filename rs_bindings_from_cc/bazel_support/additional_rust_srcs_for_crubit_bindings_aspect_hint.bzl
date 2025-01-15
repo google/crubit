@@ -53,7 +53,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
 additional_rust_srcs_for_crubit_bindings = rule(
     attrs = {
         "srcs": attr.label_list(
-            doc = "The Rust source files to be incldued in addition to generated Rust bindings.",
+            doc = "The Rust source files to be included in addition to generated Rust bindings.",
             allow_files = True,
             mandatory = True,
         ),
