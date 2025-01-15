@@ -11,11 +11,10 @@ use ffi_types::SourceLocationDocComment;
 use ir::{Comment, GenericItem, UnsupportedItem, IR};
 use proc_macro2::TokenStream;
 use quote::quote;
-use std::rc::Rc;
 
 /// Top-level comments that help identify where the generated bindings came
 /// from.
-pub fn generate_top_level_comment(ir: Rc<IR>) -> String {
+pub fn generate_top_level_comment(ir: &IR) -> String {
     // The "@generated" marker is an informal convention for identifying
     // automatically generated code.  This marker is recognized by `rustfmt`
     // (see the `format_generated_files` option [1]) and some other tools.
@@ -112,6 +111,7 @@ mod tests {
     use googletest::prelude::*;
     use ir::{ItemId, UnsupportedItemKind};
     use ir_testing::make_ir_from_items;
+    use std::rc::Rc;
     use token_stream_matchers::assert_rs_matches;
 
     #[gtest]
@@ -207,18 +207,28 @@ mod tests {
         }
     }
 
-    fn db_for_test(source_loc_doc_comment: SourceLocationDocComment) -> Database {
-        Database::new(
-            Rc::new(make_ir_from_items([])),
-            Rc::new(ErrorReport::new()),
-            Rc::new(FatalErrors::new()),
-            source_loc_doc_comment,
-        )
+    struct TestDbFactory {
+        ir: IR,
+        errors: ErrorReport,
+        fatal_errors: FatalErrors,
+    }
+    impl TestDbFactory {
+        fn new() -> Self {
+            Self {
+                ir: make_ir_from_items([]),
+                errors: ErrorReport::new(),
+                fatal_errors: FatalErrors::new(),
+            }
+        }
+        fn make_db(&self, source_loc_doc_comment: SourceLocationDocComment) -> Database {
+            Database::new(&self.ir, &self.errors, &self.fatal_errors, source_loc_doc_comment)
+        }
     }
 
     #[gtest]
     fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
-        let db = db_for_test(SourceLocationDocComment::Enabled);
+        let factory = TestDbFactory::new();
+        let db = factory.make_db(SourceLocationDocComment::Enabled);
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_static_message(
@@ -238,7 +248,8 @@ mod tests {
     /// For these, we omit the mention of the location.
     #[gtest]
     fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
-        let db = db_for_test(SourceLocationDocComment::Enabled);
+        let factory = TestDbFactory::new();
+        let db = factory.make_db(SourceLocationDocComment::Enabled);
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_static_message(
@@ -255,7 +266,8 @@ mod tests {
 
     #[gtest]
     fn test_generate_unsupported_item_with_source_loc_disabled() -> Result<()> {
-        let db = db_for_test(SourceLocationDocComment::Disabled);
+        let factory = TestDbFactory::new();
+        let db = factory.make_db(SourceLocationDocComment::Disabled);
         let actual = generate_unsupported(
             &db,
             &UnsupportedItem::new_with_static_message(

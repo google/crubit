@@ -85,8 +85,15 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     let rustfmt_config_path: OsString =
         std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
     catch_unwind(|| {
-        let (error_report, errors) = ErrorReport::new_rc_or_ignore(generate_error_report);
-        let fatal_errors = Rc::new(FatalErrors::new());
+        let error_report: Option<ErrorReport>;
+        let errors: &dyn ErrorReporting = if generate_error_report {
+            error_report = Some(ErrorReport::new());
+            error_report.as_ref().unwrap()
+        } else {
+            error_report = None;
+            &error_report::IgnoreErrors
+        };
+        let fatal_errors = FatalErrors::new();
         let Bindings { rs_api, rs_api_impl } = generate_bindings(
             json,
             crubit_support_path_format,
@@ -94,7 +101,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
             &rustfmt_exe_path,
             &rustfmt_config_path,
             errors,
-            fatal_errors.clone(),
+            &fatal_errors,
             generate_source_loc_doc_comment,
         )
         .unwrap();
@@ -122,14 +129,14 @@ fn generate_bindings(
     clang_format_exe_path: &OsStr,
     rustfmt_exe_path: &OsStr,
     rustfmt_config_path: &OsStr,
-    errors: Rc<dyn ErrorReporting>,
-    fatal_errors: Rc<dyn ReportFatalError>,
+    errors: &dyn ErrorReporting,
+    fatal_errors: &dyn ReportFatalError,
     generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<Bindings> {
-    let ir = Rc::new(deserialize_ir(json)?);
+    let ir = deserialize_ir(json)?;
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(
-        ir.clone(),
+        &ir,
         crubit_support_path_format,
         errors,
         fatal_errors,
@@ -147,7 +154,7 @@ fn generate_bindings(
     };
     let rs_api_impl = cc_tokens_to_formatted_string(rs_api_impl, Path::new(clang_format_exe_path))?;
 
-    let top_level_comment = generate_top_level_comment(ir.clone());
+    let top_level_comment = generate_top_level_comment(&ir);
     // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
     // be needed when `@generated` comment/keyword is present...
     let rs_api = format!(
@@ -502,13 +509,13 @@ impl From<NoBindingsReason> for Error {
 // Returns the Rust code implementing bindings, plus any auxiliary C++ code
 // needed to support it.
 fn generate_bindings_tokens(
-    ir: Rc<IR>,
+    ir: &IR,
     crubit_support_path_format: &str,
-    errors: Rc<dyn ErrorReporting>,
-    fatal_errors: Rc<dyn ReportFatalError>,
+    errors: &dyn ErrorReporting,
+    fatal_errors: &dyn ReportFatalError,
     generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<BindingsTokens> {
-    let db = Database::new(ir.clone(), errors, fatal_errors, generate_source_loc_doc_comment);
+    let db = Database::new(ir, errors, fatal_errors, generate_source_loc_doc_comment);
     let mut items = vec![];
     let mut thunks = vec![];
     let mut cc_details = vec![
@@ -1066,12 +1073,12 @@ pub(crate) mod tests {
     }
 
     pub fn generate_bindings_tokens(ir: IR) -> Result<BindingsTokens> {
-        let fatal_errors = Rc::new(FatalErrors::new());
+        let fatal_errors = FatalErrors::new();
         let tokens = super::generate_bindings_tokens(
-            Rc::new(ir),
+            &ir,
             "crubit/rs_bindings_support",
-            Rc::new(error_report::IgnoreErrors),
-            fatal_errors.clone(),
+            &error_report::IgnoreErrors,
+            &fatal_errors,
             SourceLocationDocComment::Enabled,
         )?;
         let fatal = fatal_errors.take_string();
@@ -1081,13 +1088,28 @@ pub(crate) mod tests {
         Ok(tokens)
     }
 
-    pub fn db_from_cc(cc_src: &str) -> Result<Database> {
-        Ok(Database::new(
-            Rc::new(ir_from_cc(cc_src)?),
-            Rc::new(ErrorReport::new()),
-            Rc::new(FatalErrors::new()),
-            SourceLocationDocComment::Enabled,
-        ))
+    struct DbFactory {
+        ir: IR,
+        errors: ErrorReport,
+        fatal_errors: FatalErrors,
+    }
+
+    impl DbFactory {
+        fn from_cc(cc_str: &str) -> Result<Self> {
+            Ok(Self {
+                ir: ir_from_cc(cc_str)?,
+                errors: ErrorReport::new(),
+                fatal_errors: FatalErrors::new(),
+            })
+        }
+        fn make_db(&self) -> Database {
+            Database::new(
+                &self.ir,
+                &self.errors,
+                &self.fatal_errors,
+                SourceLocationDocComment::Enabled,
+            )
+        }
     }
 
     #[gtest]
@@ -1693,7 +1715,8 @@ pub(crate) mod tests {
                 "LIFETIMES",
                 if test.lifetimes { "#pragma clang lifetime_elision" } else { "" },
             );
-            let db = db_from_cc(&cc_input)?;
+            let db_factory = DbFactory::from_cc(&cc_input)?;
+            let db = db_factory.make_db();
             let ir = db.ir();
 
             let f = retrieve_func(&ir, "func");
@@ -1709,12 +1732,12 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
-        let db = db_from_cc(
-            "#pragma clang lifetime_elision
+        let cc_input = "#pragma clang lifetime_elision
             struct SomeStruct {};
             void foo(const SomeStruct& foo_param);
-            void bar(SomeStruct& bar_param);",
-        )?;
+            void bar(SomeStruct& bar_param);";
+        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db = db_factory.make_db();
         let ir = db.ir();
         let record = ir.records().next().unwrap();
         let foo_func = retrieve_func(&ir, "foo");
@@ -1741,10 +1764,10 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_rs_type_kind_is_shared_ref_to_without_lifetimes() -> Result<()> {
-        let db = db_from_cc(
-            "struct SomeStruct {};
-             void foo(const SomeStruct& foo_param);",
-        )?;
+        let cc_input = "struct SomeStruct {};
+             void foo(const SomeStruct& foo_param);";
+        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db = db_factory.make_db();
         let ir = db.ir();
         let record = ir.records().next().unwrap();
         let foo_func = retrieve_func(&ir, "foo");
@@ -1762,13 +1785,13 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_rs_type_kind_lifetimes() -> Result<()> {
-        let db = db_from_cc(
-            r#"
+        let cc_input = r#"
             #pragma clang lifetime_elision
             using TypeAlias = int&;
             struct SomeStruct {};
-            void foo(int a, int& b, int&& c, int* d, int** e, TypeAlias f, SomeStruct g); "#,
-        )?;
+            void foo(int a, int& b, int&& c, int* d, int** e, TypeAlias f, SomeStruct g); "#;
+        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db = db_factory.make_db();
         let ir = db.ir();
         let func = retrieve_func(&ir, "foo");
         let ret = db.rs_type_kind(func.return_type.rs_type.clone())?;
@@ -1793,7 +1816,9 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_rs_type_kind_lifetimes_raw_ptr() -> Result<()> {
-        let db = db_from_cc("void foo(int* a);")?;
+        let cc_input = "void foo(int* a);";
+        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db = db_factory.make_db();
         let ir = db.ir();
         let f = retrieve_func(&ir, "foo");
         let a = db.rs_type_kind(f.params[0].type_.rs_type.clone())?;
@@ -1803,14 +1828,14 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_rs_type_kind_rejects_func_ptr_that_returns_struct_by_value() -> Result<()> {
-        let db = db_from_cc(
-            r#"
+        let cc_input = r#"
             struct SomeStruct {
               int field;
             };
             SomeStruct (*get_ptr_to_func())();
-        "#,
-        )?;
+        "#;
+        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db = db_factory.make_db();
         let ir = db.ir();
         let f = retrieve_func(&ir, "get_ptr_to_func");
 
@@ -1828,14 +1853,14 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_rs_type_kind_rejects_func_ptr_that_takes_struct_by_value() -> Result<()> {
-        let db = db_from_cc(
-            r#"
+        let cc_input = r#"
             struct SomeStruct {
               int field;
             };
             void (*get_ptr_to_func())(SomeStruct);
-        "#,
-        )?;
+        "#;
+        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db = db_factory.make_db();
         let ir = db.ir();
         let f = retrieve_func(&ir, "get_ptr_to_func");
 

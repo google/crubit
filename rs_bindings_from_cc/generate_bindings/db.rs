@@ -60,19 +60,18 @@ impl Drop for FatalErrors {
 }
 
 memoized::query_group! {
-    pub(crate) trait BindingsGenerator {
+    pub(crate) trait BindingsGenerator<'db> {
         #[input]
-        fn ir(&self) -> Rc<IR>;
+        fn ir(&self) -> &'db IR;
 
         #[input]
-        fn errors(&self) -> Rc<dyn ErrorReporting>;
-
+        fn errors(&self) -> &'db dyn ErrorReporting;
         /// A collection of errors that should cause bindings generation to fail.
         ///
         /// These errors should be issued only in response to misusage of Crubit itself, such as
         /// incorrect use of Crubit-specific annotations.
         #[input]
-        fn fatal_errors(&self) -> Rc<dyn ReportFatalError>;
+        fn fatal_errors(&self) -> &'db dyn ReportFatalError;
 
         #[input]
         fn generate_source_loc_doc_comment(&self) -> SourceLocationDocComment;
