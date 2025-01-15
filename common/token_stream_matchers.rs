@@ -44,7 +44,7 @@ macro_rules! assert_cc_matches {
         $crate::internal::match_tokens(
             &$input,
             &$pattern,
-            &$crate::internal::cc_tokens_to_formatted_string_for_tests,
+            $crate::internal::cc_tokens_to_formatted_string_for_tests,
         )
         .expect("input unexpectedly didn't match the pattern");
     };
@@ -58,7 +58,7 @@ macro_rules! assert_rs_matches {
         $crate::internal::match_tokens(
             &$input,
             &$pattern,
-            &$crate::internal::rs_tokens_to_formatted_string_for_tests,
+            $crate::internal::rs_tokens_to_formatted_string_for_tests,
         )
         .expect("input unexpectedly didn't match the pattern");
     };
@@ -73,7 +73,7 @@ macro_rules! assert_cc_not_matches {
         $crate::internal::mismatch_tokens(
             &$input,
             &$pattern,
-            &$crate::internal::cc_tokens_to_formatted_string_for_tests,
+            $crate::internal::cc_tokens_to_formatted_string_for_tests,
         )
         .unwrap();
     };
@@ -87,7 +87,7 @@ macro_rules! assert_rs_not_matches {
         $crate::internal::mismatch_tokens(
             &$input,
             &$pattern,
-            &$crate::internal::rs_tokens_to_formatted_string_for_tests,
+            $crate::internal::rs_tokens_to_formatted_string_for_tests,
         )
         .unwrap();
     };
@@ -123,7 +123,7 @@ pub mod internal {
             Mismatch {
                 match_length: 0,
                 messages: vec![
-                    "not even a partial match of the pattern throughout the input".to_string(),
+                    "not even a partial match of the pattern throughout the input".to_string()
                 ],
             }
         }
@@ -144,14 +144,11 @@ pub mod internal {
         }
     }
 
-    pub fn match_tokens<ToStringFn>(
+    pub fn match_tokens(
         input: &TokenStream,
         pattern: &TokenStream,
-        to_string_fn: &ToStringFn,
-    ) -> Result<()>
-    where
-        ToStringFn: Fn(TokenStream) -> Result<String>,
-    {
+        to_string_fn: fn(TokenStream) -> Result<String>,
+    ) -> Result<()> {
         // `match_tokens` behaves as if the `pattern` implicitly had a wildcard `...` at
         // the beginning and the end.  Therefore an empty `pattern` is most
         // likely a mistake.
@@ -195,14 +192,11 @@ pub mod internal {
         Err(error)
     }
 
-    pub fn mismatch_tokens<ToStringFn>(
+    pub fn mismatch_tokens(
         input: &TokenStream,
         pattern: &TokenStream,
-        to_string_fn: &ToStringFn,
-    ) -> Result<()>
-    where
-        ToStringFn: Fn(TokenStream) -> Result<String>,
-    {
+        to_string_fn: fn(TokenStream) -> Result<String>,
+    ) -> Result<()> {
         if match_tokens(input, pattern, to_string_fn).is_ok() {
             let input_string = to_string_fn(input.clone())?;
             Err(anyhow!(format!(
@@ -505,7 +499,7 @@ fn foo() {}
                 match_tokens(
                     &quote! {struct A { int a; int b; };},
                     &quote! {struct B},
-                    &cc_tokens_to_formatted_string_for_tests
+                    cc_tokens_to_formatted_string_for_tests
                 )
                 .expect_err("unexpected match")
             ),
@@ -532,7 +526,7 @@ Caused by:
                 match_tokens(
                     &quote! {struct A { a: i64, b: i64 }},
                     &quote! {struct B},
-                    &rs_tokens_to_formatted_string_for_tests,
+                    rs_tokens_to_formatted_string_for_tests,
                 )
                 .expect_err("unexpected match")
             ),
@@ -556,7 +550,7 @@ Caused by:
                 match_tokens(
                     &quote! {fn foo() {}},
                     &quote! {fn foo() {} struct X {}},
-                    &rs_tokens_to_formatted_string_for_tests
+                    rs_tokens_to_formatted_string_for_tests
                 )
                 .expect_err("unexpected match")
             ),
@@ -577,7 +571,7 @@ fn foo() {}
                 match_tokens(
                     &quote! {fn foo() {}},
                     &quote! {fn foo() ()},
-                    &rs_tokens_to_formatted_string_for_tests
+                    rs_tokens_to_formatted_string_for_tests
                 )
                 .expect_err("unexpected match")
             ),
@@ -598,7 +592,7 @@ fn foo() {}
                 match_tokens(
                     &quote! {fn foo() { let a = 1; let b = 2; }},
                     &quote! {fn foo() { let a = 1; let c = 2; }},
-                    &rs_tokens_to_formatted_string_for_tests
+                    rs_tokens_to_formatted_string_for_tests
                 )
                 .expect_err("unexpected match")
             ),
@@ -644,7 +638,7 @@ fn foo() {}
                 match_tokens(
                     &quote! {impl Drop { fn drop(&mut self) { drop_impl(); }}},
                     &quote! {fn drop(&mut self) {}},
-                    &rs_tokens_to_formatted_string_for_tests
+                    rs_tokens_to_formatted_string_for_tests
                 )
                 .expect_err("unexpected match")
             ),
@@ -665,7 +659,7 @@ impl Drop {
                 match_tokens(
                     &quote! {impl Drop { fn drop(&mut self) { drop_impl1(); drop_impl2(); }}},
                     &quote! {fn drop(&mut self) { drop_impl1(); }},
-                    &rs_tokens_to_formatted_string_for_tests
+                    rs_tokens_to_formatted_string_for_tests
                 )
                 .expect_err("unexpected match")
             ),
@@ -736,7 +730,7 @@ impl Drop {
                 match_tokens(
                     &quote! { [ a b b ] },
                     &quote! { [ a ... c ]},
-                    &|tokens: TokenStream| Ok(tokens.to_string())
+                    |tokens: TokenStream| Ok(tokens.to_string())
                 )
                 .expect_err("unexpected match")
             ),
@@ -752,7 +746,7 @@ impl Drop {
                 match_tokens(
                     &quote! {[ a b b ]},
                     &quote! { [ a ... b c ]},
-                    &|tokens: TokenStream| Ok(tokens.to_string())
+                    |tokens: TokenStream| Ok(tokens.to_string())
                 )
                 .expect_err("unexpected match")
             ),

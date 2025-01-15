@@ -22,8 +22,7 @@
 #[macro_export]
 macro_rules! assert_ir_matches {
     ($ir:expr, $pattern:expr $(,)*) => {
-        $crate::internal::match_ir(&$ir, &$pattern)
-            .expect("input unexpectedly didn't match the pattern");
+        $crate::internal::assert_ir_matches_fn(&$ir, &$pattern)
     };
 }
 
@@ -32,7 +31,7 @@ macro_rules! assert_ir_matches {
 #[macro_export]
 macro_rules! assert_ir_not_matches {
     ($ir:expr, $pattern:expr $(,)*) => {
-        $crate::internal::mismatch_ir(&$ir, &$pattern).unwrap();
+        $crate::internal::assert_ir_not_matches_fn(&$ir, &$pattern)
     };
 }
 
@@ -45,13 +44,7 @@ macro_rules! assert_ir_not_matches {
 #[macro_export]
 macro_rules! assert_items_match {
     ($items:expr, $patterns:expr $(,)*) => {
-        assert_eq!($items.len(), $patterns.len());
-        for (idx, (item, pattern)) in $items.into_iter().zip($patterns).enumerate() {
-            $crate::internal::match_item(&item, &pattern).expect(&format!(
-                "input at position {} unexpectedly didn't match the pattern",
-                &idx
-            ));
-        }
+        $crate::internal::assert_items_match_fn(&*$items, &*$patterns)
     };
 }
 
@@ -67,20 +60,24 @@ pub mod internal {
         rs_tokens_to_formatted_string, rs_tokens_to_formatted_string_for_tests,
     };
 
-    pub fn match_ir(ir: &IR, pattern: &TokenStream) -> Result<()> {
+    #[track_caller]
+    pub fn assert_ir_matches_fn(ir: &IR, pattern: &TokenStream) {
         token_stream_matchers::internal::match_tokens(
-            &ir_to_token_stream(ir)?,
+            &ir_to_token_stream(ir).expect("Failed to convert IR to token stream"),
             pattern,
-            &ir_to_string,
+            ir_to_string,
         )
+        .expect("input unexpectedly didn't match the pattern");
     }
 
-    pub fn mismatch_ir(ir: &IR, pattern: &TokenStream) -> Result<()> {
+    #[track_caller]
+    pub fn assert_ir_not_matches_fn(ir: &IR, pattern: &TokenStream) {
         token_stream_matchers::internal::mismatch_tokens(
-            &ir_to_token_stream(ir)?,
+            &ir_to_token_stream(ir).expect("Failed to convert IR to token stream"),
             pattern,
-            &ir_to_string,
+            ir_to_string,
         )
+        .unwrap()
     }
 
     fn ir_to_token_stream(ir: &IR) -> Result<TokenStream> {
@@ -109,11 +106,21 @@ pub mod internal {
         Ok(snippet)
     }
 
-    pub fn match_item(item: &Item, pattern: &TokenStream) -> Result<()> {
+    #[track_caller]
+    pub fn assert_items_match_fn(items: &[&Item], patterns: &[TokenStream]) {
+        assert_eq!(items.len(), patterns.len());
+        for (idx, (item, pattern)) in items.iter().zip(patterns).enumerate() {
+            if match_item(item, pattern).is_err() {
+                panic!("input at position `{idx}` unexpectedly didn't match the pattern")
+            }
+        }
+    }
+
+    fn match_item(item: &Item, pattern: &TokenStream) -> Result<()> {
         token_stream_matchers::internal::match_tokens(
             &item_to_token_stream(item)?,
             pattern,
-            &ir_to_string,
+            ir_to_string,
         )
     }
 
