@@ -71,7 +71,7 @@ memoized::query_group! {
 
       fn support_header(&self, suffix: &'tcx str) -> CcInclude;
 
-      fn repr_attrs(&self, did: DefId) -> Rc<[rustc_attr::ReprAttr]>;
+      fn repr_attrs(&self, did: DefId) -> Rc<[rustc_attr_data_structures::ReprAttr]>;
 
       fn reexported_symbol_canonical_name_mapping(&self) -> HashMap<DefId, FullyQualifiedName>;
 

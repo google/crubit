@@ -5,7 +5,7 @@
 #![deny(rustc::internal)]
 
 extern crate rustc_ast;
-extern crate rustc_attr;
+extern crate rustc_attr_parsing;
 extern crate rustc_hir;
 extern crate rustc_infer;
 extern crate rustc_middle;
@@ -47,7 +47,7 @@ use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use rustc_attr::find_deprecation;
+use rustc_attr_parsing::find_deprecation;
 use rustc_hir::def::{DefKind, Res};
 use rustc_hir::{HirId, Item, ItemKind, Node, UseKind, UsePath};
 use rustc_middle::dep_graph::DepContext;
