@@ -200,24 +200,24 @@ macro_rules! query_group {
     $trait_vis trait $trait $(<$($type_param),*>)?{
       $(
         $(#[doc = $input_doc])*
-        fn $input_function(&self) -> $input_type
-      ;)*
+        fn $input_function(&self) -> $input_type { unimplemented!() }
+      )*
       $(
         fn $break_cycles_function(
           &self,
           $(
             $break_cycles_arg : $break_cycles_arg_type
           ),*
-        ) -> $break_cycles_return_type
-      ;)*
+        ) -> $break_cycles_return_type { _ = ($($break_cycles_arg),*); unimplemented!() }
+      )*
       $(
         fn $function(
           &self,
           $(
             $arg : $arg_type
           ),*
-        ) -> $return_type
-      ;)*
+        ) -> $return_type { _ = ($($arg),*); unimplemented!() }
+      )*
     }
 
     // Now we can generate a database struct that contains the lookup tables.

@@ -185,9 +185,11 @@ fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<ApiSnipp
     let underlying_type = db
         .rs_type_kind(type_alias.underlying_type.rs_type.clone())
         .with_context(|| format!("Failed to format underlying type for {}", type_alias))?;
+
+    let underlying_type_tokens = underlying_type.to_token_stream(db);
     Ok(quote! {
         #doc_comment
-        pub type #ident = #underlying_type;
+        pub type #ident = #underlying_type_tokens;
     }
     .into())
 }
@@ -356,9 +358,13 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<ApiSnippets> {
                 "Type bindings for {cpp_type} suppressed due to being mapped to \
                     an existing Rust type ({rs_type})",
                 cpp_type = type_override.debug_name(&ir),
+                rs_type = rs_type.display(db),
             );
             let assertions = if let Some(size_align) = &type_override.size_align {
-                generate_struct_and_union::rs_size_align_assertions(rs_type, size_align)
+                generate_struct_and_union::rs_size_align_assertions(
+                    rs_type.to_token_stream(db),
+                    size_align,
+                )
             } else {
                 quote! {}
             };
@@ -1722,7 +1728,7 @@ pub(crate) mod tests {
             let f = retrieve_func(&ir, "func");
             let t = db.rs_type_kind(f.params[0].type_.rs_type.clone())?;
 
-            let fmt = t.to_token_stream().to_string();
+            let fmt = t.to_token_stream(&db).to_string();
             assert_eq!(test.rs, fmt, "Testing: {}", test_name);
 
             assert_eq!(test.is_copy, t.implements_copy(), "Testing: {}", test_name);

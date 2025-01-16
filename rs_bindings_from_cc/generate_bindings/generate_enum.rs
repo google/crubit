@@ -59,22 +59,23 @@ pub fn generate_enum(db: &Database, enum_: &Enum) -> Result<ApiSnippets> {
         };
         quote! {pub const #ident: #name = #name(#value);}
     });
+    let underlying_type_tokens = underlying_type.to_token_stream(db);
 
     let item = quote! {
         #[repr(transparent)]
         #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
         #[__crubit::annotate(cpp_type=#fully_qualified_cc_name)]
-        pub struct #name(#underlying_type);
+        pub struct #name(#underlying_type_tokens);
         impl #name {
             #(#enumerators)*
         }
-        impl From<#underlying_type> for #name {
-            fn from(value: #underlying_type) -> #name {
+        impl From<#underlying_type_tokens> for #name {
+            fn from(value: #underlying_type_tokens) -> #name {
                 #name(value)
             }
         }
-        impl From<#name> for #underlying_type {
-            fn from(value: #name) -> #underlying_type {
+        impl From<#name> for #underlying_type_tokens {
+            fn from(value: #name) -> #underlying_type_tokens {
                 value.0
             }
         }

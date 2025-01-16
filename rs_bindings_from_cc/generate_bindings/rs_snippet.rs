@@ -172,12 +172,13 @@ pub fn format_generic_params<'a, T: ToTokens>(
 }
 
 pub fn format_generic_params_replacing_by_self<'a>(
+    db: &dyn BindingsGenerator,
     types: impl IntoIterator<Item = &'a RsTypeKind>,
     trait_record: Option<&Record>,
 ) -> TokenStream {
     format_generic_params(
         [],
-        types.into_iter().map(|ty| ty.to_token_stream_replacing_by_self(trait_record)),
+        types.into_iter().map(|ty| ty.to_token_stream_replacing_by_self(db, trait_record)),
     )
 }
 
@@ -560,7 +561,7 @@ impl RsTypeKind {
     ///
     /// In particular, anything representing a pointer with unknown lifetime is
     /// unsafe.
-    pub fn is_unsafe(&self) -> bool {
+    pub fn is_unsafe(&self, _db: &dyn BindingsGenerator) -> bool {
         // TODO(b/383284829): Make unsafe types propogate covariantly (e.g., pointer in
         // public field of a struct makes the struct unsafe, FuncPtr with unsafe return
         // type is itself an unsafe type).
@@ -595,6 +596,7 @@ impl RsTypeKind {
     /// merge these two functions.
     pub fn required_crubit_features(
         &self,
+        db: &dyn BindingsGenerator,
         enabled_features: flagset::FlagSet<CrubitFeature>,
         type_location: TypeLocation,
     ) -> (flagset::FlagSet<CrubitFeature>, String) {
@@ -624,8 +626,11 @@ impl RsTypeKind {
             require_feature(
                 CrubitFeature::Experimental,
                 Some(&|| {
-                    format!("<internal link>_relocatable_error: {self} is not rust-movable")
-                        .into()
+                    format!(
+                        "<internal link>_relocatable_error: {} is not rust-movable",
+                        self.display(db),
+                    )
+                    .into()
                 }),
             )
         }
@@ -651,7 +656,9 @@ impl RsTypeKind {
                 }
                 RsTypeKind::IncompleteRecord { .. } => require_feature(
                     CrubitFeature::Experimental,
-                    Some(&|| format!("{rs_type_kind} is not a complete type)").into()),
+                    Some(&|| {
+                        format!("{} is not a complete type)", rs_type_kind.display(db)).into()
+                    }),
                 ),
                 // Here, we can very carefully be non-recursive into the _structure_ of the type.
                 //
@@ -675,7 +682,10 @@ impl RsTypeKind {
                     } else if record.defining_target.is_some() {
                         require_feature(
                             CrubitFeature::Experimental,
-                            Some(&|| format!("{rs_type_kind} is a template instantiation").into()),
+                            Some(&|| {
+                                format!("{} is a template instantiation", rs_type_kind.display(db),)
+                                    .into()
+                            }),
                         )
                     }
                 }
@@ -761,11 +771,15 @@ impl RsTypeKind {
         }
     }
 
-    pub fn format_as_return_type_fragment(&self, self_record: Option<&Record>) -> TokenStream {
+    pub fn format_as_return_type_fragment(
+        &self,
+        db: &dyn BindingsGenerator,
+        self_record: Option<&Record>,
+    ) -> TokenStream {
         match self {
             RsTypeKind::Primitive(PrimitiveType::Unit) => quote! {},
             other_type => {
-                let other_type_ = other_type.to_token_stream_replacing_by_self(self_record);
+                let other_type_ = other_type.to_token_stream_replacing_by_self(db, self_record);
                 quote! { -> #other_type_ }
             }
         }
@@ -912,17 +926,21 @@ impl RsTypeKind {
     }
     /// Similar to to_token_stream, but replacing RsTypeKind:Record with Self
     /// when the underlying Record matches the given one.
-    pub fn to_token_stream_replacing_by_self(&self, self_record: Option<&Record>) -> TokenStream {
+    pub fn to_token_stream_replacing_by_self(
+        &self,
+        db: &dyn BindingsGenerator,
+        self_record: Option<&Record>,
+    ) -> TokenStream {
         match self {
             RsTypeKind::Pointer { pointee, mutability } => {
                 let mutability = mutability.format_for_pointer();
-                let pointee_ = pointee.to_token_stream_replacing_by_self(self_record);
+                let pointee_ = pointee.to_token_stream_replacing_by_self(db, self_record);
                 quote! {* #mutability #pointee_}
             }
             RsTypeKind::Reference { referent, mutability, lifetime } => {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
-                let referent_ = referent.to_token_stream_replacing_by_self(self_record);
+                let referent_ = referent.to_token_stream_replacing_by_self(db, self_record);
                 let reference = quote! {& #lifetime #mut_ #referent_};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
@@ -935,7 +953,7 @@ impl RsTypeKind {
                 }
             }
             RsTypeKind::RvalueReference { referent, mutability, lifetime } => {
-                let referent_ = referent.to_token_stream_replacing_by_self(self_record);
+                let referent_ = referent.to_token_stream_replacing_by_self(db, self_record);
                 // TODO(b/239661934): Add a `use ::ctor::RvalueReference` (etc.) to the crate.
                 if mutability == &Mutability::Mut {
                     quote! {::ctor::RvalueReference<#lifetime, #referent_>}
@@ -944,12 +962,11 @@ impl RsTypeKind {
                 }
             }
             RsTypeKind::FuncPtr { abi, return_type, param_types } => {
-                let param_types_: Vec<TokenStream> = param_types
+                let param_types_ = param_types
                     .iter()
-                    .map(|type_| type_.to_token_stream_replacing_by_self(self_record))
-                    .collect();
-                let return_frag = return_type.format_as_return_type_fragment(self_record);
-                let unsafe_ = if param_types.iter().any(|p| p.is_unsafe()) {
+                    .map(|type_| type_.to_token_stream_replacing_by_self(db, self_record));
+                let return_frag = return_type.format_as_return_type_fragment(db, self_record);
+                let unsafe_ = if param_types.iter().any(|p| p.is_unsafe(db)) {
                     quote! {unsafe}
                 } else {
                     quote! {}
@@ -960,31 +977,45 @@ impl RsTypeKind {
                 if self_record == Some(record) {
                     quote! { Self }
                 } else {
-                    self.to_token_stream()
+                    self.to_token_stream(db)
                 }
             }
             RsTypeKind::Slice(t) => {
-                let type_arg = t.to_token_stream_replacing_by_self(self_record);
+                let type_arg = t.to_token_stream_replacing_by_self(db, self_record);
                 quote! {[#type_arg]}
             }
             RsTypeKind::Option(t) => {
-                let type_arg = t.to_token_stream_replacing_by_self(self_record);
-                // TODO(jeanpierreda): This should likely be `::core::option::Option`.
+                let type_arg = t.to_token_stream_replacing_by_self(db, self_record);
                 quote! {Option<#type_arg>}
             }
-            RsTypeKind::BridgeType { .. } => self.to_token_stream(),
-            RsTypeKind::TypeMapOverride { .. } => self.to_token_stream(),
-            _ => self.to_token_stream(),
+            RsTypeKind::BridgeType { .. } => self.to_token_stream(db),
+            RsTypeKind::TypeMapOverride { .. } => self.to_token_stream(db),
+            _ => self.to_token_stream(db),
         }
+    }
+
+    /// Returns a `Display`able type for this `RsTypeKind`.
+    pub fn display<'a, 'db>(
+        &'a self,
+        db: &'a dyn BindingsGenerator<'db>,
+    ) -> impl std::fmt::Display + use<'a, 'db> {
+        DisplayRsTypeKind { rs_type_kind: self, db }
     }
 }
 
-impl std::fmt::Display for RsTypeKind {
+/// A type that implements [`std::fmt::Display`] for [`RsTypeKind`], which
+/// requires a [`BindingsGenerator`] to be able to format the type.
+pub struct DisplayRsTypeKind<'a, 'db> {
+    rs_type_kind: &'a RsTypeKind,
+    db: &'a dyn BindingsGenerator<'db>,
+}
+
+impl std::fmt::Display for DisplayRsTypeKind<'_, '_> {
     // Formats the token stream of the RsTypeKind to a string. Note that this can
     // include extra whitespace, where we'd ideally remove it, but it is hard to
     // remove whitespace without invoking rustfmt.
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        match write_unformatted_tokens(f, self.to_token_stream()) {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match write_unformatted_tokens(f, self.rs_type_kind.to_token_stream(self.db)) {
             Ok(_) => Ok(()),
             Err(e) => {
                 // Honestly this should never happen, but we should spit out something.
@@ -1049,21 +1080,19 @@ pub fn map_to_supported_generic(
     })
 }
 
-impl ToTokens for RsTypeKind {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.to_token_stream().to_tokens(tokens)
-    }
-
-    fn to_token_stream(&self) -> TokenStream {
+impl RsTypeKind {
+    pub fn to_token_stream(&self, db: &dyn BindingsGenerator) -> TokenStream {
         match self {
             RsTypeKind::Pointer { pointee, mutability } => {
                 let mutability = mutability.format_for_pointer();
-                quote! {* #mutability #pointee}
+                let pointee_tokens = pointee.to_token_stream(db);
+                quote! {* #mutability #pointee_tokens}
             }
             RsTypeKind::Reference { referent, mutability, lifetime } => {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
-                let reference = quote! {& #lifetime #mut_ #referent};
+                let referent_tokens = referent.to_token_stream(db);
+                let reference = quote! {& #lifetime #mut_ #referent_tokens};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
                     // `Pin`. This either requires deciding how to qualify pin at
@@ -1076,20 +1105,22 @@ impl ToTokens for RsTypeKind {
             }
             RsTypeKind::RvalueReference { referent, mutability, lifetime } => {
                 // TODO(b/239661934): Add a `use ::ctor::RvalueReference` (etc.) to the crate.
+                let referent_tokens = referent.to_token_stream(db);
                 if mutability == &Mutability::Mut {
-                    quote! {::ctor::RvalueReference<#lifetime, #referent>}
+                    quote! {::ctor::RvalueReference<#lifetime, #referent_tokens>}
                 } else {
-                    quote! {::ctor::ConstRvalueReference<#lifetime, #referent>}
+                    quote! {::ctor::ConstRvalueReference<#lifetime, #referent_tokens>}
                 }
             }
             RsTypeKind::FuncPtr { abi, return_type, param_types } => {
-                let return_frag = return_type.format_as_return_type_fragment(None);
-                let unsafe_ = if param_types.iter().any(|p| p.is_unsafe()) {
+                let return_frag = return_type.format_as_return_type_fragment(db, None);
+                let param_types_tokens = param_types.iter().map(|ty| ty.to_token_stream(db));
+                let unsafe_ = if param_types.iter().any(|p| p.is_unsafe(db)) {
                     quote! {unsafe}
                 } else {
                     quote! {}
                 };
-                quote! { #unsafe_ extern #abi fn( #( #param_types ),* ) #return_frag }
+                quote! { #unsafe_ extern #abi fn( #( #param_types_tokens ),* ) #return_frag }
             }
             RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => {
                 let record_ident = make_rs_ident(incomplete_record.rs_name.as_ref());
@@ -1100,7 +1131,7 @@ impl ToTokens for RsTypeKind {
                     let inner_types_str = known_generic_monomorphization
                         .type_args
                         .iter()
-                        .map(|t| t.to_token_stream())
+                        .map(|t| t.to_token_stream(db))
                         .take(1)
                         .collect::<Vec<_>>();
                     let rust_generic_name =
@@ -1122,12 +1153,13 @@ impl ToTokens for RsTypeKind {
             }
             RsTypeKind::Primitive(primitive) => quote! {#primitive},
             RsTypeKind::Slice(t) => {
-                let type_arg = t.to_token_stream();
+                let type_arg = t.to_token_stream(db);
                 quote! {[#type_arg]}
             }
             RsTypeKind::Option(t) => {
                 // TODO(jeanpierreda): This should likely be `::core::option::Option`.
-                quote! {Option<#t>}
+                let type_arg = t.to_token_stream(db);
+                quote! {Option<#type_arg>}
             }
             RsTypeKind::BridgeType { name, .. } => {
                 let name_parts: Vec<_> = name.split("::").map(make_rs_ident).collect();
@@ -1212,6 +1244,9 @@ mod tests {
         assert_eq!(vec!["fn", "A", "B", "C"], dfs_names);
     }
 
+    struct EmptyDatabase;
+    impl<'db> BindingsGenerator<'db> for EmptyDatabase {}
+
     #[gtest]
     fn test_lifetime_elision_for_references() {
         let referent = Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_abi: true });
@@ -1220,7 +1255,7 @@ mod tests {
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),
         };
-        assert_rs_matches!(quote! {#reference}, quote! {&T});
+        assert_rs_matches!(reference.to_token_stream(&EmptyDatabase), quote! {&T});
     }
 
     #[gtest]
@@ -1231,7 +1266,10 @@ mod tests {
             mutability: Mutability::Mut,
             lifetime: Lifetime::new("_"),
         };
-        assert_rs_matches!(quote! {#reference}, quote! {RvalueReference<'_, T>});
+        assert_rs_matches!(
+            reference.to_token_stream(&EmptyDatabase),
+            quote! {RvalueReference<'_, T>}
+        );
     }
 
     #[gtest]
@@ -1288,6 +1326,7 @@ mod tests {
             },
         ] {
             let (missing_features, reason) = func_ptr.required_crubit_features(
+                &EmptyDatabase,
                 <flagset::FlagSet<CrubitFeature>>::default(),
                 TypeLocation::Other,
             );

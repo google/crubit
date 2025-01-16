@@ -145,8 +145,11 @@ pub fn required_crubit_features(
                                 type_location: TypeLocation,
                                 context: &dyn Fn() -> Rc<str>| {
         for target in item.defining_target().into_iter().chain(item.owning_target()) {
-            let (missing, desc) = rs_type_kind
-                .required_crubit_features(ir.target_crubit_features(target), type_location);
+            let (missing, desc) = rs_type_kind.required_crubit_features(
+                db,
+                ir.target_crubit_features(target),
+                type_location,
+            );
             if !missing.is_empty() {
                 let context = context();
                 let capability_description = if desc.is_empty() {

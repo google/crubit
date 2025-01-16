@@ -13,7 +13,7 @@ use error_report::{bail, ensure};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
-use quote::{quote, ToTokens};
+use quote::quote;
 use std::collections::{BTreeSet, HashMap};
 use std::iter;
 use std::rc::Rc;
@@ -134,7 +134,7 @@ fn get_field_rs_type_kind_for_layout(
     for target in record.defining_target.iter().chain([&record.owning_target]) {
         let enabled_features = db.ir().target_crubit_features(target);
         let (missing_features, reason) =
-            type_kind.required_crubit_features(enabled_features, TypeLocation::Other);
+            type_kind.required_crubit_features(db, enabled_features, TypeLocation::Other);
         ensure!(
             missing_features.is_empty(),
             "missing features: [{missing_features}]: {reason}",
@@ -419,7 +419,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
             let field_type = match field_rs_type_kind {
                 Err(_) => bit_padding(end - field.offset),
                 Ok(type_kind) => {
-                    let mut formatted = quote! {#type_kind};
+                    let mut formatted = type_kind.to_token_stream(db);
                     if should_implement_drop(record) || record.is_union() {
                         if needs_manually_drop(&type_kind) {
                             // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
@@ -642,7 +642,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
     features.insert(make_rs_ident("register_tool"));
 
     let record_trait_assertions = {
-        let record_type_name = RsTypeKind::new_record(db, record.clone(), &ir)?.to_token_stream();
+        let record_type_name = RsTypeKind::new_record(db, record.clone(), ir)?.to_token_stream(db);
         let mut assertions: Vec<TokenStream> = vec![];
         let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
             assertions.push(quote! {
@@ -690,11 +690,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
     })
 }
 
-pub fn rs_size_align_assertions(
-    type_name: impl ToTokens,
-    size_align: &ir::SizeAlign,
-) -> TokenStream {
-    let type_name = type_name.into_token_stream();
+pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAlign) -> TokenStream {
     let size = Literal::usize_unsuffixed(size_align.size);
     let alignment = Literal::usize_unsuffixed(size_align.alignment);
     quote! {
@@ -794,7 +790,7 @@ fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<To
             let type_ident = db.rs_type_kind(rs_type).with_context(|| {
                 format!("Failed to format type for field {:?} on record {:?}", field, record)
             })?;
-            types.push(type_ident);
+            types.push(type_ident.to_token_stream(db));
             field_offsets.push(Literal::usize_unsuffixed(field.offset / 8));
             if field.size == 0 {
                 // These fields are not generated at all, so they need to be documented here.
@@ -856,8 +852,8 @@ fn cc_struct_upcast_impl(db: &Database, record: &Rc<Record>, ir: &IR) -> Result<
         let base_record: &Rc<Record> = ir
             .find_decl(base.base_record_id)
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
-        let base_name = RsTypeKind::new_record(db, base_record.clone(), ir)?.into_token_stream();
-        let derived_name = RsTypeKind::new_record(db, record.clone(), ir)?.into_token_stream();
+        let base_name = RsTypeKind::new_record(db, base_record.clone(), ir)?.to_token_stream(db);
+        let derived_name = RsTypeKind::new_record(db, record.clone(), ir)?.to_token_stream(db);
         let body;
         if let Some(offset) = base.offset {
             let offset = Literal::i64_unsuffixed(offset);

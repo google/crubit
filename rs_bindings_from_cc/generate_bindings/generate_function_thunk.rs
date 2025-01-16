@@ -133,7 +133,7 @@ pub fn generate_function_thunk(
     let mut param_idents = param_idents.iter();
     let mut out_param = None;
     let mut out_param_ident = None;
-    let mut return_type_fragment = return_type.format_as_return_type_fragment(None);
+    let mut return_type_fragment = return_type.format_as_return_type_fragment(db, None);
     if func.name == UnqualifiedIdentifier::Constructor {
         // For constructors, inject MaybeUninit into the type of `__this_` parameter.
         let Some(first_param) = param_types.next() else {
@@ -141,17 +141,22 @@ pub fn generate_function_thunk(
         };
         let RsTypeKind::Reference { referent, lifetime, mutability: Mutability::Mut } = first_param
         else {
-            bail!("Expected first constructor parameter to be a mutable reference, got: {first_param}")
+            bail!(
+                "Expected first constructor parameter to be a mutable reference, got: {}",
+                first_param.display(db)
+            )
         };
         let lifetime = lifetime.format_for_reference();
-        out_param = Some(quote! { & #lifetime mut ::core::mem::MaybeUninit< #referent > });
+        let referent_tokens = referent.to_token_stream(db);
+        out_param = Some(quote! { & #lifetime mut ::core::mem::MaybeUninit< #referent_tokens > });
         out_param_ident = Some(param_idents.next().unwrap().clone());
     } else if !return_type.is_c_abi_compatible_by_value() {
+        let return_type_tokens = return_type.to_token_stream(db);
         // For return types that can't be passed by value, create a new out parameter.
         // The lifetime doesn't matter, so we can insert a new anonymous lifetime here.
         // TODO(yongheng): Switch to `void*`.
         out_param = Some(quote! {
-            &mut ::core::mem::MaybeUninit< #return_type >
+            &mut ::core::mem::MaybeUninit< #return_type_tokens >
         });
         out_param_ident = Some(make_rs_ident("__return"));
         return_type_fragment = quote! {};
@@ -165,11 +170,12 @@ pub fn generate_function_thunk(
 
     let generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
     let param_idents = out_param_ident.as_ref().into_iter().chain(param_idents);
-    let param_types = out_param.into_iter().chain(param_types.map(|t| {
-        if !t.is_c_abi_compatible_by_value() {
-            quote! {&mut #t}
+    let param_types = out_param.into_iter().chain(param_types.map(|param_type| {
+        let param_type_tokens = param_type.to_token_stream(db);
+        if !param_type.is_c_abi_compatible_by_value() {
+            quote! {&mut #param_type_tokens}
         } else {
-            quote! {#t}
+            param_type_tokens
         }
     }));
 

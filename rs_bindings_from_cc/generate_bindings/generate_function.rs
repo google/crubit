@@ -119,12 +119,16 @@ impl TraitName {
     ///
     /// This is used to remove the record whose trait implementation is being
     /// generated.
-    fn to_token_stream_removing_trait_record(&self, trait_record: Option<&Record>) -> TokenStream {
+    fn to_token_stream_removing_trait_record(
+        &self,
+        db: &dyn BindingsGenerator,
+        trait_record: Option<&Record>,
+    ) -> TokenStream {
         match self {
             Self::UnpinConstructor { name, params } | Self::Other { name, params, .. } => {
                 let name_as_token_stream = name.parse::<TokenStream>().unwrap();
                 let formatted_params =
-                    format_generic_params_replacing_by_self(&**params, trait_record);
+                    format_generic_params_replacing_by_self(db, &**params, trait_record);
                 quote! {#name_as_token_stream #formatted_params}
             }
             Self::PartialEq { param } => {
@@ -132,6 +136,7 @@ impl TraitName {
                     quote! {PartialEq}
                 } else {
                     let formatted_params = format_generic_params_replacing_by_self(
+                        db,
                         core::slice::from_ref(&**param),
                         trait_record,
                     );
@@ -143,6 +148,7 @@ impl TraitName {
                     quote! {PartialOrd}
                 } else {
                     let formatted_params = format_generic_params_replacing_by_self(
+                        db,
                         core::slice::from_ref(&**param),
                         trait_record,
                     );
@@ -151,16 +157,16 @@ impl TraitName {
             }
             Self::CtorNew(arg_types) => {
                 let formatted_arg_types =
-                    format_tuple_except_singleton_replacing_by_self(arg_types, trait_record);
+                    format_tuple_except_singleton_replacing_by_self(db, arg_types, trait_record);
                 quote! { ::ctor::CtorNew < #formatted_arg_types > }
             }
         }
     }
 }
 
-impl ToTokens for TraitName {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.to_token_stream_removing_trait_record(None).to_tokens(tokens)
+impl TraitName {
+    fn to_token_stream(&self, db: &dyn BindingsGenerator) -> TokenStream {
+        self.to_token_stream_removing_trait_record(db, None)
     }
 }
 
@@ -401,12 +407,13 @@ fn is_friend_of_record_not_visible_by_adl(
 ///
 /// Returns the `RsTypeKind` and `Record` of the underlying record type.
 fn type_by_value_or_under_const_ref<'a>(
+    db: &dyn BindingsGenerator,
     kind: &'a mut RsTypeKind,
     value_desc: &str,
     errors: &Errors,
 ) -> ErrorsOr<(&'a RsTypeKind, &'a Rc<Record>)> {
     // Pre-record `kind_string` before any adjustments occur.
-    let kind_string = kind.to_string();
+    let kind_string = kind.display(db).to_string();
     match *kind {
         RsTypeKind::Reference { referent: ref lhs, ref mut mutability, .. } => {
             if !mutability.is_const() {
@@ -431,6 +438,7 @@ fn type_by_value_or_under_const_ref<'a>(
 }
 
 fn api_func_shape_for_operator_eq(
+    db: &dyn BindingsGenerator,
     func: &Func,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
@@ -440,8 +448,8 @@ fn api_func_shape_for_operator_eq(
         panic!("Expected operator== to have exactly two parameters. Found: {func:?}");
     };
 
-    let lhs_ty = type_by_value_or_under_const_ref(param_1, "first operator== param", errors);
-    let rhs_ty = type_by_value_or_under_const_ref(param_2, "second operator== param", errors);
+    let lhs_ty = type_by_value_or_under_const_ref(db, param_1, "first operator== param", errors);
+    let rhs_ty = type_by_value_or_under_const_ref(db, param_2, "second operator== param", errors);
     let ((_, lhs_record), (param, _)) = (lhs_ty?, rhs_ty?);
     let param = Rc::new(param.clone());
     let func_name = make_rs_ident("eq");
@@ -463,8 +471,8 @@ fn api_func_shape_for_operator_lt(
     let [param_1, param_2] = param_types else {
         panic!("Expected operator< to have exactly two parameters. Found: {func:?}")
     };
-    let lhs_ty = type_by_value_or_under_const_ref(param_1, "first operator< param", errors);
-    let rhs_ty = type_by_value_or_under_const_ref(param_2, "second operator< param", errors);
+    let lhs_ty = type_by_value_or_under_const_ref(db, param_1, "first operator< param", errors);
+    let rhs_ty = type_by_value_or_under_const_ref(db, param_2, "second operator< param", errors);
     let ((_, lhs_record), (param, rhs_record)) = (lhs_ty?, rhs_ty?);
     // Even though Rust and C++ allow operator< to be implemented on different
     // types, we don't generate bindings for them at this moment. The
@@ -545,6 +553,7 @@ fn api_func_shape_for_operator_assign(
 }
 
 fn expect_possibly_incomplete_record<'a>(
+    db: &dyn BindingsGenerator,
     type_kind: &'a RsTypeKind,
     value_desc: &str,
     errors: &Errors,
@@ -553,20 +562,23 @@ fn expect_possibly_incomplete_record<'a>(
         RsTypeKind::Record { record, .. } => Ok(record),
         RsTypeKind::IncompleteRecord { .. } => bail_to_errors!(
             errors,
-            "Incomplete record types are not yet supported as {value_desc}, found {type_kind}",
+            "Incomplete record types are not yet supported as {value_desc}, found {}",
+            type_kind.display(db),
         ),
         _ => bail_to_errors!(
             errors,
-            "Expected {value_desc} to be a record or incomplete record, found {type_kind}"
+            "Expected {value_desc} to be a record or incomplete record, found {}",
+            type_kind.display(db),
         ),
     }
 }
 
 fn record_type_of_compound_assignment<'a>(
+    db: &dyn BindingsGenerator,
     lhs_type: &'a mut RsTypeKind,
     errors: &Errors,
 ) -> ErrorsOr<&'a Rc<Record>> {
-    let lhs_str = lhs_type.to_string();
+    let lhs_str = lhs_type.display(db).to_string();
     let fix_mutability = |mutability: &mut Mutability| {
         if mutability.is_const() {
             errors.add(anyhow!(
@@ -586,17 +598,17 @@ fn record_type_of_compound_assignment<'a>(
         }
         RsTypeKind::Reference { referent, mutability, .. } => {
             fix_mutability(mutability);
-            expect_possibly_incomplete_record(referent, "compound assignment first parameter", errors)?
+            expect_possibly_incomplete_record(db, referent, "compound assignment first parameter", errors)?
         }
         RsTypeKind::RvalueReference { referent, mutability, .. } => {
             errors.add(anyhow!("Compound assignment with rvalue reference is not yet supported (b/219826128), found {lhs_str}"));
             fix_mutability(mutability);
-            expect_possibly_incomplete_record(referent, "compound assignment first parameter", errors)?
+            expect_possibly_incomplete_record(db, referent, "compound assignment first parameter", errors)?
         }
         RsTypeKind::Pointer { pointee, mutability } => {
             errors.add(anyhow!("Compound assignment operators are not yet supported for pointers with unknown lifetime (b/219826128), found {lhs_str}"));
             fix_mutability(mutability);
-            expect_possibly_incomplete_record(pointee, "compound assignment first parameter", errors)?
+            expect_possibly_incomplete_record(db, pointee, "compound assignment first parameter", errors)?
         }
         _ => panic!("Compound assignment operator defined, but first parameter is not a record or reference: {lhs_str}"),
     };
@@ -629,7 +641,7 @@ fn api_func_shape_for_operator(
         report_fatal_func_error(db, func, "Unsafe annotations on operators are not supported");
     }
     match op.name.as_ref() {
-        "==" => api_func_shape_for_operator_eq(func, param_types, errors),
+        "==" => api_func_shape_for_operator_eq(db, func, param_types, errors),
         "<=>" => {
             bail_to_errors!(errors, "Three-way comparison operator not yet supported (b/219827738)")
         }
@@ -649,7 +661,7 @@ fn api_func_shape_for_operator(
             materialize_ctor_in_caller(func, param_types);
             let trait_name = op_metadata.trait_name;
             if op_metadata.is_compound_assignment {
-                let record = record_type_of_compound_assignment(&mut param_types[0], errors)?;
+                let record = record_type_of_compound_assignment(db, &mut param_types[0], errors)?;
                 let func_name = make_rs_ident(op_metadata.method_name);
                 let impl_kind = ImplKind::Trait {
                     record: record.clone(),
@@ -676,7 +688,7 @@ fn api_func_shape_for_operator(
                         )
                     },
                     RsTypeKind::Reference { referent, .. } => (
-                        expect_possibly_incomplete_record(referent, "first operator parameter", errors)?,
+                        expect_possibly_incomplete_record(db, referent, "first operator parameter", errors)?,
                         ImplFor::RefT,
                     ),
                     RsTypeKind::RvalueReference { .. } => {
@@ -685,7 +697,7 @@ fn api_func_shape_for_operator(
                             "Rvalue reference types are not yet supported as first parameter of operators (b/219826128)",
                         )
                     }
-                    _ => bail_to_errors!(errors, "Non-record-nor-reference operator parameters are not yet supported, found {}", &param_types[0]),
+                    _ => bail_to_errors!(errors, "Non-record-nor-reference operator parameters are not yet supported, found {}", param_types[0].display(db)),
                 };
 
                 let func_name = make_rs_ident(op_metadata.method_name);
@@ -898,7 +910,7 @@ fn api_func_shape(
     }
 
     let is_unsafe = match func.safety_annotation {
-        SafetyAnnotation::Unannotated => param_types.iter().any(|p| p.is_unsafe()),
+        SafetyAnnotation::Unannotated => param_types.iter().any(|p| p.is_unsafe(db)),
         SafetyAnnotation::Unsafe => true,
         SafetyAnnotation::DisableUnsafe => false,
     };
@@ -1062,7 +1074,8 @@ fn adjust_param_types_for_trait_impl(
             };
             if !is_record_clonable(db, param_record.clone()) {
                 errors.add(anyhow!(
-                    "Argument {i} of Rust trait `{trait_name:?}` requires a const reference, but the C++ implementation takes non-cloneable record `{param_type}` by value",
+                    "Argument {i} of Rust trait `{trait_name:?}` requires a const reference, but the C++ implementation takes non-cloneable record `{}` by value",
+                    param_type.display(db),
                 ));
                 return Default::default();
             }
@@ -1077,7 +1090,9 @@ fn adjust_param_types_for_trait_impl(
     ParamValueAdjustments { clone_prefixes, clone_suffixes }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn generate_func_body(
+    db: &dyn BindingsGenerator,
     impl_kind: &ImplKind,
     crate_root_path: TokenStream,
     return_type: &RsTypeKind,
@@ -1126,7 +1141,7 @@ fn generate_func_body(
                         }
                         _ => None,
                     };
-                    return_type.to_token_stream_replacing_by_self(record)
+                    return_type.to_token_stream_replacing_by_self(db, record)
                 };
                 if return_type.is_unpin() {
                     quote! {
@@ -1314,6 +1329,7 @@ pub fn generate_function(
         thunk_prepare,
         thunk_args,
     } = errors.consolidate_on_err(function_signature(
+        db,
         &mut features,
         &func,
         &impl_kind,
@@ -1356,6 +1372,7 @@ pub fn generate_function(
 
         let func_body = if reportable_status.is_ok() {
             generate_func_body(
+                db,
                 &impl_kind,
                 crate_root_path,
                 &return_type,
@@ -1505,8 +1522,8 @@ pub fn generate_function(
                 }
             } else if let TraitName::PartialOrd { param } = &trait_name {
                 let quoted_param_or_self = match impl_for {
-                    ImplFor::T => param.to_token_stream_replacing_by_self(Some(&trait_record)),
-                    ImplFor::RefT => quote! { #param },
+                    ImplFor::T => param.to_token_stream_replacing_by_self(db, Some(&trait_record)),
+                    ImplFor::RefT => param.to_token_stream(db),
                 };
                 quote! {
                     #[inline(always)]
@@ -1537,6 +1554,7 @@ pub fn generate_function(
                 TraitName::CtorNew(params) => {
                     if params.len() == 1 {
                         let single_param_ = format_tuple_except_singleton_replacing_by_self(
+                            db,
                             params,
                             Some(&trait_record),
                         );
@@ -1569,12 +1587,11 @@ pub fn generate_function(
             };
             let (trait_name_without_trait_record, impl_for) = match impl_for {
                 ImplFor::T => (
-                    trait_name.to_token_stream_removing_trait_record(Some(&trait_record)),
+                    trait_name.to_token_stream_removing_trait_record(db, Some(&trait_record)),
                     quote! { #full_record_qualifier #record_name },
                 ),
                 ImplFor::RefT => {
-                    let param = &param_types[0];
-                    (quote! { #trait_name }, quote! { #param })
+                    (trait_name.to_token_stream(db), param_types[0].to_token_stream(db))
                 }
             };
             api_func = quote! {
@@ -1588,7 +1605,10 @@ pub fn generate_function(
             };
             function_id = FunctionId {
                 self_type: Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap()),
-                function_path: syn::parse2(quote! { #trait_name :: #func_name }).unwrap(),
+                function_path: {
+                    let trait_name_tokens = trait_name.to_token_stream(db);
+                    syn::parse2(quote! { #trait_name_tokens :: #func_name }).unwrap()
+                },
             };
         }
     }
@@ -1651,7 +1671,9 @@ struct BindingsSignature {
 /// * For C++ constructors, remove `self` from the Rust side (as it becomes the
 ///   return value), retaining it on the C++ side / thunk args.
 /// * serialize a `()` as the empty string.
+#[allow(clippy::too_many_arguments)]
 fn function_signature(
+    db: &dyn BindingsGenerator,
     features: &mut BTreeSet<Ident>,
     func: &Func,
     impl_kind: &ImplKind,
@@ -1690,16 +1712,16 @@ fn function_signature(
             }
             // The generated bindings require a move constructor.
             if !type_.is_move_constructible() {
-                errors.add(anyhow!("Non-movable, non-trivial_abi type '{type_}' is not supported by value as parameter #{i}"));
+                errors.add(anyhow!("Non-movable, non-trivial_abi type '{}' is not supported by value as parameter #{i}", type_.display(db)));
             }
             let quoted_type_or_self = if let Some(impl_record) = impl_kind_record {
                 if should_replace_by_self {
-                    type_.to_token_stream_replacing_by_self(Some(impl_record))
+                    type_.to_token_stream_replacing_by_self(db, Some(impl_record))
                 } else {
-                    quote! {#type_}
+                    type_.to_token_stream(db)
                 }
             } else {
-                quote! {#type_}
+                type_.to_token_stream(db)
             };
             features.insert(make_rs_ident("impl_trait_in_assoc_type"));
             api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#quoted_type_or_self>});
@@ -1708,12 +1730,12 @@ fn function_signature(
         } else {
             let quoted_type_or_self = if let Some(impl_record) = impl_kind_record {
                 if should_replace_by_self {
-                    type_.to_token_stream_replacing_by_self(Some(impl_record))
+                    type_.to_token_stream_replacing_by_self(db, Some(impl_record))
                 } else {
-                    quote! {#type_}
+                    type_.to_token_stream(db)
                 }
             } else {
-                quote! {#type_}
+                type_.to_token_stream(db)
             };
             if type_.is_c_abi_compatible_by_value() {
                 api_params.push(quote! {#ident: #quoted_type_or_self});
@@ -1737,7 +1759,8 @@ fn function_signature(
         Some(TraitName::PartialOrd { .. } | TraitName::PartialEq { .. }) => {
             if *return_type != RsTypeKind::Primitive(PrimitiveType::bool) {
                 errors.add(anyhow!(
-                    "comparison operator return type must be `bool`, found: {return_type}",
+                    "comparison operator return type must be `bool`, found: {}",
+                    return_type.display(db),
                 ));
                 *return_type = RsTypeKind::Primitive(PrimitiveType::bool);
             }
@@ -1756,7 +1779,7 @@ fn function_signature(
                 .ok_or_else(|| {
                     anyhow!(
                         "Expected pointer/reference for `__this` parameter, found {}",
-                        param_types[0]
+                        param_types[0].display(db)
                     )
                 })?
                 .clone();
@@ -1764,7 +1787,10 @@ fn function_signature(
 
             // Grab the `__this` lifetime to remove it from the lifetime parameters.
             let this_lifetime = param_types[0].lifetime().ok_or_else(|| {
-                anyhow!("Missing lifetime for `__this` parameter type: {}", param_types[0])
+                anyhow!(
+                    "Missing lifetime for `__this` parameter type: {}",
+                    param_types[0].display(db)
+                )
             })?;
 
             // Drop `__this` parameter from the public Rust API.
@@ -1779,19 +1805,26 @@ fn function_signature(
             {
                 bail!(
                     "The lifetime of `__this` is unexpectedly also used by another \
-                    parameter: {type_still_dependent_on_removed_lifetime}",
+                    parameter: {}",
+                    type_still_dependent_on_removed_lifetime.display(db)
                 );
             }
 
             // CtorNew groups parameters into a tuple.
             if let Some(TraitName::CtorNew(args_type)) = trait_name {
                 let args_type = if let Some(impl_record) = impl_kind_record {
-                    format_tuple_except_singleton_replacing_by_self(args_type, Some(impl_record))
+                    format_tuple_except_singleton_replacing_by_self(
+                        db,
+                        args_type,
+                        Some(impl_record),
+                    )
                 } else {
-                    format_tuple_except_singleton(args_type)
+                    format_tuple_except_singleton(
+                        args_type.iter().map(|rs_type_kind| rs_type_kind.to_token_stream(db)),
+                    )
                 };
                 api_params = vec![quote! {args: #args_type}];
-                let thunk_vars = format_tuple_except_singleton(&thunk_args);
+                let thunk_vars = format_tuple_except_singleton(thunk_args.iter().cloned());
                 thunk_prepare.extend(quote! {let #thunk_vars = args;});
             }
         }
@@ -1801,9 +1834,9 @@ fn function_signature(
     let return_type_fragment = if return_type == &RsTypeKind::Primitive(PrimitiveType::Unit) {
         quote! {}
     } else {
-        let ty = quoted_return_type.unwrap_or_else(|| quote! {#return_type});
+        let ty = quoted_return_type.unwrap_or_else(|| return_type.to_token_stream(db));
         if return_type.is_unpin() {
-            quote! {#ty}
+            ty
         } else {
             // TODO(jeanpierreda): use `-> impl Ctor` instead of `-> Self::X` where `X = impl
             // Ctor`. The latter requires `impl_trait_in_assoc_type`, the former
@@ -1895,30 +1928,35 @@ fn function_signature(
 /// * [] => ()
 /// * [x] => x  // equivalent to (x), but lint-free.
 /// * [x, y] => (x, y)
-fn format_tuple_except_singleton<T: ToTokens>(items: &[T]) -> TokenStream {
-    match items {
-        [singleton] => quote! {#singleton},
-        items => quote! {(#(#items),*)},
-    }
+fn format_tuple_except_singleton(iter: impl IntoIterator<Item = TokenStream>) -> TokenStream {
+    let mut items = iter.into_iter();
+    let Some(first) = items.next() else {
+        return quote! { () };
+    };
+
+    let Some(second) = items.next() else {
+        // If there's no second item, then return the first _without_ parens.
+        return first;
+    };
+
+    quote! { (#first, #second #(, #items)*) }
 }
 
 fn format_tuple_except_singleton_replacing_by_self(
+    db: &dyn BindingsGenerator,
     items: &[RsTypeKind],
     trait_record: Option<&Record>,
 ) -> TokenStream {
     match items {
-        [singleton] => {
-            let singleton_or_self = singleton.to_token_stream_replacing_by_self(trait_record);
-            quote! {#singleton_or_self}
-        }
+        [singleton] => singleton.to_token_stream_replacing_by_self(db, trait_record),
         items => {
             let mut elements_of_tuple = quote! {};
             for (type_index, type_) in items.iter().enumerate() {
-                let quoted_type_or_self = type_.to_token_stream_replacing_by_self(trait_record);
+                let quoted_type_or_self = type_.to_token_stream_replacing_by_self(db, trait_record);
                 if type_index > 0 {
                     (quote! {, #quoted_type_or_self }).to_tokens(&mut elements_of_tuple);
                 } else {
-                    (quote! { #quoted_type_or_self }).to_tokens(&mut elements_of_tuple);
+                    quoted_type_or_self.to_tokens(&mut elements_of_tuple);
                 }
             }
             quote! { ( #elements_of_tuple ) }
@@ -2995,12 +3033,12 @@ mod tests {
 
     #[gtest]
     fn test_format_tuple_except_singleton() {
-        fn format(xs: &[TokenStream]) -> TokenStream {
+        fn format(xs: Vec<TokenStream>) -> TokenStream {
             format_tuple_except_singleton(xs)
         }
-        assert_rs_matches!(format(&[]), quote! {()});
-        assert_rs_matches!(format(&[quote! {a}]), quote! {a});
-        assert_rs_matches!(format(&[quote! {a}, quote! {b}]), quote! {(a, b)});
+        assert_rs_matches!(format(vec![]), quote! {()});
+        assert_rs_matches!(format(vec![quote! {a}]), quote! {a});
+        assert_rs_matches!(format(vec![quote! {a}, quote! {b}]), quote! {(a, b)});
     }
 
     #[gtest]
