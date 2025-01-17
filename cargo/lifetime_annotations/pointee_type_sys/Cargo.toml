@@ -2,7 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the cc_libary pointee_type_sys.
+# Automatically @generated Cargo.toml for the cc_library pointee_type_sys.
 
 [package]
 name = "pointee_type_sys"

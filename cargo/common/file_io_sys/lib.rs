@@ -2,4 +2,4 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Automatically @generated lib.rs for the cc_libary file_io.
+// Automatically @generated lib.rs for the cc_library file_io.

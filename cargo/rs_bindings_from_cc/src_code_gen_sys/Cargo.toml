@@ -2,7 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the cc_libary src_code_gen_sys.
+# Automatically @generated Cargo.toml for the cc_library src_code_gen_sys.
 
 [package]
 name = "src_code_gen_sys"

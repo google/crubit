@@ -2,8 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Automatically @generated build.rs for the cc_libary
-// recording_diagnostic_consumer.
+// Automatically @generated build.rs for the cc_library recording_diagnostic_consumer.
 
 const PATH_TO_SRC_ROOT: &str = "../../..";
 

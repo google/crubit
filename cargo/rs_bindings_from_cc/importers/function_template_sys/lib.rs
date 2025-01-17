@@ -2,6 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Automatically @generated lib.rs for the cc_libary function_template.
+// Automatically @generated lib.rs for the cc_library function_template.
 
 extern crate cc_ir_sys;

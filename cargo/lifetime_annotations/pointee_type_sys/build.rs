@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Automatically @generated build.rs for the cc_libary pointee_type.
+// Automatically @generated build.rs for the cc_library pointee_type.
 
 const PATH_TO_SRC_ROOT: &str = "../../..";
 

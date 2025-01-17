@@ -2,6 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Automatically @generated lib.rs for the cc_libary lifetime_symbol_table.
+// Automatically @generated lib.rs for the cc_library lifetime_symbol_table.
 
 extern crate lifetime_sys;

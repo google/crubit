@@ -2,6 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Automatically @generated lib.rs for the cc_libary ast_convert.
+// Automatically @generated lib.rs for the cc_library ast_convert.
 
 extern crate cc_ir_sys;

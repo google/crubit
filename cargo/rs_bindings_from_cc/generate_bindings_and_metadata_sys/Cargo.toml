@@ -2,7 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the cc_libary generate_bindings_and_metadata_sys.
+# Automatically @generated Cargo.toml for the cc_library generate_bindings_and_metadata_sys.
 
 [package]
 name = "generate_bindings_and_metadata_sys"

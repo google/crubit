@@ -2,7 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the cc_libary type_map_override_sys.
+# Automatically @generated Cargo.toml for the cc_library type_map_override_sys.
 
 [package]
 name = "type_map_override_sys"
