@@ -449,7 +449,7 @@ fn generate_fields<'tcx>(
     // If the ADT has multiple variants, then we need to use the layout of each
     // variant. The `layout.fields` just contains the tag.
     let fields_shape = match layout_variants {
-        Variants::Single { .. } => vec![&layout.fields],
+        Variants::Single { .. } | Variants::Empty => vec![&layout.fields],
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
             variants.iter().map(|variant| &variant.fields).collect_vec()
         }
@@ -468,7 +468,7 @@ fn generate_fields<'tcx>(
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
             variants.iter().map(|layout| layout.size.bytes() - tag_size_with_padding).collect_vec()
         }
-        Variants::Single { .. } => {
+        Variants::Single { .. } | Variants::Empty => {
             vec![core.alignment_in_bytes]
         }
     };
@@ -476,7 +476,7 @@ fn generate_fields<'tcx>(
     // The size of each variant. Note for enums, this removes the size (and padding)
     // for the tag.
     let layout_size = match layout_variants {
-        Variants::Single { .. } => vec![layout.size().bytes()],
+        Variants::Single { .. } | Variants::Empty => vec![layout.size().bytes()],
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => variants
             .iter()
             .map(|variant| variant.size.bytes() - tag_size_with_padding)
@@ -948,7 +948,7 @@ fn generate_fields<'tcx>(
 
                 // Get tokens for the tag, if it exists.
                 let tag_enum = match layout_variants {
-                    Variants::Single { .. } => quote! {},
+                    Variants::Single { .. } | Variants::Empty => quote! {},
                     Variants::Multiple { tag, .. } => {
                         let tag_ty = get_scalar_int_type(db, *tag);
 
@@ -1006,7 +1006,7 @@ fn generate_fields<'tcx>(
                             .map(|layout| layout.align.abi.bytes() - tag_size_with_padding)
                             .collect_vec()
                     }
-                    Variants::Single { .. } => {
+                    Variants::Single { .. } | Variants::Empty => {
                         vec![core.alignment_in_bytes]
                     }
                 };

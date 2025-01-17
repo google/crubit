@@ -115,7 +115,11 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
             let id = br.kind.get_id().unwrap_or(fn_def_id);
             ty::BoundRegionKind::Named(id, name)
         });
-        ty::Region::new_late_param(tcx, fn_def_id, *new_kind)
+        ty::Region::new_late_param(
+            tcx,
+            fn_def_id,
+            ty::LateParamRegionKind::from_bound(br.var, *new_kind),
+        )
     };
     tcx.instantiate_bound_regions_uncached(sig, region_f)
 }
@@ -279,7 +283,7 @@ pub fn get_scalar_int_type<'tcx>(db: &dyn BindingsGenerator<'tcx>, scalar: Scala
 // variants. If given a layout with a single variant, returns 0.
 pub fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
     match layout.variants() {
-        Variants::Single { .. } => 0,
+        Variants::Single { .. } | Variants::Empty => 0,
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
             let mut variant_offsets = variants.iter().map(|variant| match &variant.fields {
                 FieldsShape::Arbitrary { offsets, .. } => {

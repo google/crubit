@@ -1297,7 +1297,7 @@ fn generate_item(
                .. } if !generics.params.is_empty() => {
             bail!("Generic types are not supported yet (b/259749095)");
         },
-        Item { kind: ItemKind::Fn(..), .. } => db.generate_function(def_id).map(Some),
+        Item { kind: ItemKind::Fn{..}, .. } => db.generate_function(def_id).map(Some),
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } => {
             let attributes = crubit_attr::get_attrs(tcx, def_id.to_def_id()).unwrap();
             if let Some(cpp_type) = attributes.cpp_type {
