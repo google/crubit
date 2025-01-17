@@ -18,6 +18,8 @@ fn test_safe_signature_or_annotation_is_safe() {
 #[deny(unused_unsafe)]
 fn test_unsafe_signature_or_annotation_is_unsafe() {
     unsafe { SafeSignatureButAnnotatedUnsafe() };
+    unsafe { SafeSignatureButAnnotatedUnsafeBuffer() };
     unsafe { UnsafeSignatureButAnnotatedUnsafe(core::ptr::null_mut()) };
+    unsafe { UnsafeSignatureButAnnotatedUnsafeBuffer(core::ptr::null_mut()) };
     unsafe { UnsafeSignatureWithoutAnnotation(core::ptr::null_mut()) };
 }

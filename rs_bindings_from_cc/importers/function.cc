@@ -53,7 +53,8 @@ struct Errors {
   }
 };
 
-SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
+SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
+                                           Errors& errors) {
   absl::StatusOr<std::optional<AnnotateArgs>> maybe_args =
       GetAnnotateAttrArgs(decl, "crubit_override_unsafe");
   if (!maybe_args.ok()) {
@@ -80,6 +81,21 @@ SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
   } else {
     return SafetyAnnotation::kDisableUnsafe;
   }
+}
+
+SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
+  SafetyAnnotation crubit = GetCrubitSafetyAnnotation(decl, errors);
+  if (!decl.specific_attrs<clang::UnsafeBufferUsageAttr>().empty()) {
+    if (crubit == SafetyAnnotation::kUnannotated ||
+        crubit == SafetyAnnotation::kUnsafe) {
+      return SafetyAnnotation::kUnsafe;
+    } else {
+      errors.Add(FormattedError::Static(
+          "Function is annotated with both `[[clang::unsafe_buffer_usage]]` "
+          "and `CRUBIT_UNSAFE`"));
+    }
+  }
+  return crubit;
 }
 
 }  // namespace

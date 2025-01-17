@@ -136,7 +136,8 @@ inline std::ostream& operator<<(std::ostream& o, const LifetimeName& l) {
 }
 
 // Whether a function is annotated with `CRUBIT_UNSAFE` or
-// `CRUBIT_DISABLE_UNSAFE`.
+// `CRUBIT_DISABLE_UNSAFE`. `[[clang::unsafe_buffer_usage]]` is also considered
+// unsafe.
 enum class SafetyAnnotation : char { kDisableUnsafe, kUnsafe, kUnannotated };
 
 // A C++ type involved in the bindings. It has the knowledge of how the type

@@ -1,17 +1,7 @@
 load("@rules_rust//rust:defs.bzl", "rust_binary")
-load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
     "golden_test",
-)
-
-crubit_test_cc_library(
-    name = "unsafe_attributes",
-    srcs = ["unsafe_attributes.cc"],
-    hdrs = ["unsafe_attributes.h"],
-    deps = [
-        "//support:annotations",
-    ],
 )
 
 cc_library(

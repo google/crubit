@@ -6,7 +6,9 @@
 
 void SafeSignatureWithoutAnnotation() {}
 void SafeSignatureButAnnotatedUnsafe() {}
+void SafeSignatureButAnnotatedUnsafeBuffer() {}
 void SafeSignatureButAnnotatedSafe() {}
 void UnsafeSignatureWithoutAnnotation(void*) {}
 void UnsafeSignatureButAnnotatedUnsafe(void*) {}
+void UnsafeSignatureButAnnotatedUnsafeBuffer(void*) {}
 void UnsafeSignatureButAnnotatedSafe(void*) {}
