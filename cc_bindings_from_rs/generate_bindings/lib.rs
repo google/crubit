@@ -3476,7 +3476,7 @@ pub mod tests {
                    extern "C" fn ...(
                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::Point>
                    ) -> () {
-                       __ret_slot.write({ <::rust_out::Point as ::core::default::Default>::default() });
+                       __ret_slot.write(<::rust_out::Point as ::core::default::Default>::default());
                    }
                 }
             );
@@ -3605,7 +3605,7 @@ pub mod tests {
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::Point>
                     ) -> () {
                         __ret_slot.write(
-                            { <::rust_out::Point as ::core::clone::Clone>::clone(__self) }
+                            <::rust_out::Point as ::core::clone::Clone>::clone(__self)
                         );
                     }
                     #[unsafe(no_mangle)]
@@ -3805,7 +3805,7 @@ pub mod tests {
                     extern "C" fn ...(
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                     ) -> () {
-                        __ret_slot.write({ ::rust_out::TypeUnderTest::pass_by_value() });
+                        __ret_slot.write(::rust_out::TypeUnderTest::pass_by_value());
                     }
                     ...
                 }
@@ -3926,7 +3926,7 @@ pub mod tests {
                     extern "C" fn ...(
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                     ) -> () {
-                        __ret_slot.write({ ::rust_out::TypeUnderTest::pass_by_value() });
+                        __ret_slot.write(::rust_out::TypeUnderTest::pass_by_value());
                     }
                     ...
                 }
@@ -4064,7 +4064,7 @@ pub mod tests {
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>
                     ) -> () {
                         __ret_slot.write(
-                           { <::rust_out::SomeStruct as ::core::default::Default>::default() }
+                           <::rust_out::SomeStruct as ::core::default::Default>::default()
                         );
                     }
                     #[unsafe(no_mangle)]
@@ -4518,7 +4518,7 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     ...
-                    extern "C" fn ... (...) -> () {...({ <::rust_out::SomeUnion as ::core::clone::Clone>::clone(__self...) })...}
+                    extern "C" fn ... (...) -> () {...(<::rust_out::SomeUnion as ::core::clone::Clone>::clone(__self...))...}
                     ...
                     extern "C" fn ... (...) -> () {...<::rust_out::SomeUnion as ::core::clone::Clone>::clone_from(__self, source)...}
                     ...

@@ -26,13 +26,13 @@ const _: () = assert!(::std::mem::align_of::<::uses_rust_golden::Foo>() == 4);
 extern "C" fn __crubit_thunk_create(
     __ret_slot: &mut ::core::mem::MaybeUninit<::uses_rust_golden::Foo>,
 ) -> () {
-    __ret_slot.write({ ::uses_rust_golden::Foo::create() });
+    __ret_slot.write(::uses_rust_golden::Foo::create());
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_bar(
     __ret_slot: &mut ::core::mem::MaybeUninit<::uses_rust_golden::Bar>,
 ) -> () {
-    __ret_slot.write({ ::uses_rust_golden::Foo::bar() });
+    __ret_slot.write(::uses_rust_golden::Foo::bar());
 }
 const _: () = assert!(::core::mem::offset_of!(::uses_rust_golden::Foo, bar) == 4);
 #[unsafe(no_mangle)]

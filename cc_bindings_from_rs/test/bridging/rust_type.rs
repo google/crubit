@@ -15,12 +15,27 @@ pub struct TheRustType {
     pub x: i32,
 }
 
+#[derive(Default, Clone)]
+pub struct NonTriviallyDestructable {
+    pub field: i32,
+}
+
+impl Drop for NonTriviallyDestructable {
+    fn drop(&mut self) {
+        self.field = 123;
+    }
+}
+
 pub fn create_new(x: i32) -> TheRustType {
     TheRustType { x }
 }
 
 pub fn get_x(data: TheRustType) -> i32 {
     data.x
+}
+
+pub fn into_something_else(data: TheRustType) -> NonTriviallyDestructable {
+    NonTriviallyDestructable { field: data.x }
 }
 
 mod type_converters {

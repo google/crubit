@@ -26,5 +26,11 @@ TEST(TypeBridging, StructToPointerTest) {
   EXPECT_EQ(x, 2);
 }
 
+TEST(TypeBridging, StructConversionTest) {
+  crubit::test::TheCppType cpp_type = rust_type::create_new(1);
+
+  EXPECT_EQ(rust_type::into_something_else(cpp_type).field, 1);
+}
+
 }  // namespace
 }  // namespace crubit

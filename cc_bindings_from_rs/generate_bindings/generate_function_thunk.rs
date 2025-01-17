@@ -223,8 +223,6 @@ pub fn generate_thunk_impl<'tcx>(
     match is_bridged_type(db, sig.output())? {
         None => {
             thunk_body = quote! {
-                #( #fn_args_conversions )*
-
                 #fully_qualified_fn_name( #( #fn_args ),* )
             };
 
@@ -233,7 +231,12 @@ pub fn generate_thunk_impl<'tcx>(
                     __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
                 });
                 thunk_ret_type = quote! { () };
-                thunk_body = quote! { __ret_slot.write({ #thunk_body }); };
+                thunk_body = quote! { __ret_slot.write(#thunk_body); };
+            };
+
+            thunk_body = quote! {
+                #( #fn_args_conversions )*
+                #thunk_body
             };
         }
         Some(BridgedType { cpp_type, conversion_info, .. }) => {

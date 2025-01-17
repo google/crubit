@@ -1594,7 +1594,7 @@ pub mod tests {
                         i: i32,
                         __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::S>
                     ) -> () {
-                        __ret_slot.write({ ::rust_out::create(i) });
+                        __ret_slot.write(::rust_out::create(i));
                     }
                 }
             );

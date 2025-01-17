@@ -22,7 +22,7 @@ extern "C" fn __crubit_thunk_default(
         ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
     >,
 ) -> () {
-    __ret_slot.write({ <::non_trivially_destructible_rust_golden::NonTriviallyDestructable as::core::default::Default>::default() });
+    __ret_slot.write(<::non_trivially_destructible_rust_golden::NonTriviallyDestructable as::core::default::Default>::default());
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_drop(
@@ -39,7 +39,7 @@ extern "C" fn __crubit_thunk_clone<'__anon1>(
         ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
     >,
 ) -> () {
-    __ret_slot.write({ <::non_trivially_destructible_rust_golden::NonTriviallyDestructable as::core::clone::Clone>::clone(__self) });
+    __ret_slot.write(<::non_trivially_destructible_rust_golden::NonTriviallyDestructable as::core::clone::Clone>::clone(__self));
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_clone_ufrom<'__anon1, '__anon2>(
@@ -68,5 +68,5 @@ extern "C" fn __crubit_thunk_return_uby_uvalue(
         ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
     >,
 ) -> () {
-    __ret_slot.write({ ::non_trivially_destructible_rust_golden::return_by_value() });
+    __ret_slot.write(::non_trivially_destructible_rust_golden::return_by_value());
 }
