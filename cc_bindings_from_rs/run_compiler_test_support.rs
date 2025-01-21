@@ -81,6 +81,27 @@ where
     F: for<'tcx> FnOnce(TyCtxt<'tcx>) -> T + Send,
     T: Send,
 {
+    let mut output: Option<T> = None;
+    let output_ref = &mut output;
+    run_compiler_for_testing_impl(
+        source.into(),
+        Box::new(move |tcx| {
+            *output_ref = Some(callback(tcx));
+        }),
+    );
+    output.unwrap()
+}
+
+/// A non-generic implementation of `run_compiler_for_testing`.
+///
+/// This is used to ensure that the body of `run_compiler_for_testing` is not recompiled for every
+/// invocation. This saves some targets
+/// (e.g. `//cc_bindings_from_rs/generate_bindings:bindings_test`)
+/// several minutes of compilation time.
+fn run_compiler_for_testing_impl(
+    source: String,
+    callback: Box<dyn for<'tcx> FnOnce(TyCtxt<'tcx>) + Send + '_>,
+) {
     const TEST_FILENAME: &str = "crubit_unittests.rs";
 
     // Setting `output_types` that will trigger code gen - otherwise some parts of
@@ -117,7 +138,7 @@ where
         crate_check_cfg: Default::default(),
         input: Input::Str {
             name: rustc_span::FileName::Custom(TEST_FILENAME.to_string()),
-            input: source.into(),
+            input: source,
         },
         output_file: None,
         output_dir: None,
@@ -159,7 +180,7 @@ where
             panic!("Test input compilation failed while linting")
         }
         result
-    })
+    });
 }
 
 /// Finds the definition id of a Rust item with the specified `name`.
