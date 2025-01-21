@@ -221,7 +221,7 @@ mod tests {
             }
         }
         fn make_db(&self, source_loc_doc_comment: SourceLocationDocComment) -> Database {
-            Database::new(&self.ir, &self.errors, &self.fatal_errors, source_loc_doc_comment)
+            crate::new_database(&self.ir, &self.errors, &self.fatal_errors, source_loc_doc_comment)
         }
     }
 

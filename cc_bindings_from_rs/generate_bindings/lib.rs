@@ -43,7 +43,7 @@ use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{
     format_cc_includes, make_rs_ident, CcConstQualifier, CcInclude, NamespaceQualifier,
 };
-use error_report::{anyhow, bail, ensure};
+use error_report::{anyhow, bail, ensure, ErrorReporting};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -98,6 +98,42 @@ fn add_include_guard(db: &dyn BindingsGenerator<'_>, cc_api: TokenStream) -> Res
             })
         }
     }
+}
+
+pub fn new_database<'db>(
+    tcx: TyCtxt<'db>,
+    crubit_support_path_format: Rc<str>,
+    default_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+    crate_name_to_include_paths: Rc<HashMap<Rc<str>, Vec<CcInclude>>>,
+    crate_name_to_features: Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>,
+    crate_name_to_namespace: Rc<HashMap<Rc<str>, Rc<str>>>,
+    crate_renames: Rc<HashMap<Rc<str>, Rc<str>>>,
+    errors: Rc<dyn ErrorReporting>,
+    no_thunk_name_mangling: bool,
+    h_out_include_guard: IncludeGuard,
+) -> Database<'db> {
+    Database::new(
+        tcx,
+        crubit_support_path_format,
+        default_features,
+        crate_name_to_include_paths,
+        crate_name_to_features,
+        crate_name_to_namespace,
+        crate_renames,
+        errors,
+        no_thunk_name_mangling,
+        h_out_include_guard,
+        support_header,
+        repr_attrs,
+        reexported_symbol_canonical_name_mapping,
+        format_ty_for_cc,
+        generate_default_ctor,
+        generate_copy_ctor_and_assignment_operator,
+        generate_move_ctor_and_assignment_operator,
+        generate_item,
+        generate_function,
+        generate_adt_core,
+    )
 }
 
 pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
@@ -4786,7 +4822,7 @@ pub mod tests {
         tcx: TyCtxt,
         features: impl Into<flagset::FlagSet<crubit_feature::CrubitFeature>>,
     ) -> Database {
-        Database::new(
+        new_database(
             tcx,
             /* crubit_support_path_format= */ "<crubit/support/for/tests/{header}>".into(),
             /* default_features= */ Default::default(),

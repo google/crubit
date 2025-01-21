@@ -220,6 +220,14 @@ macro_rules! query_group {
       )*
     }
 
+    // Avoid having to repeat the `$type_param` metavariable below, since its repetition
+    // should not be zipped with other metavariable repetitions.
+    // This also avoids having to repeat out `&dyn $trait $(<$($type_param),*>)?` all over the
+    // place.
+    macro_rules! dyn_trait {
+      () => { &dyn $trait $(<$($type_param),*>)? };
+    }
+
     // Now we can generate a database struct that contains the lookup tables.
     $struct_vis struct $database_struct $(<$($type_param),*>)? {
       __unwinding_cycles: ::core::cell::Cell<u32>,
@@ -229,10 +237,18 @@ macro_rules! query_group {
       $(
         // Note that we store $break_cycles_return_type here, not Option<$break_cycles_return_type>.
         // This is because we don't cache failed calls.
-        $break_cycles_function: $crate::internal::MemoizationTable<($($break_cycles_arg_type,)*), $break_cycles_return_type>,
+        $break_cycles_function: $crate::internal::FnAndTable<
+            fn(dyn_trait!(), $($break_cycles_arg_type),*) -> $break_cycles_return_type,
+            ($($break_cycles_arg_type,)*),
+            $break_cycles_return_type
+          >,
       )*
       $(
-        $function: $crate::internal::MemoizationTable<($($arg_type,)*), $return_type>,
+        $function: $crate::internal::FnAndTable<
+            fn(dyn_trait!(), $($arg_type),*) -> $return_type,
+            ($($arg_type,)*),
+            $return_type
+          >,
       )*
     }
 
@@ -253,13 +269,13 @@ macro_rules! query_group {
             $break_cycles_arg : $break_cycles_arg_type
           ),*
         ) -> $break_cycles_return_type {
-          self.$break_cycles_function.break_cycles_internal_memoized_call(
+          self.$break_cycles_function.table.break_cycles_internal_memoized_call(
             ($(
               $break_cycles_arg,
             )*),
             |($($break_cycles_arg,)*)| {
               // Force the use of &dyn $trait, so that we don't rule out separate compilation later.
-              $break_cycles_function(self as &dyn $trait, $($break_cycles_arg),*)
+              (self.$break_cycles_function.fn_ptr)(self as &dyn $trait, $($break_cycles_arg),*)
             },
             &self.__unwinding_cycles,
           ).unwrap_or($break_cycles_default_value)
@@ -272,13 +288,13 @@ macro_rules! query_group {
             $arg : $arg_type
           ),*
         ) -> $return_type {
-          self.$function.internal_memoized_call(
+          self.$function.table.internal_memoized_call(
             ($(
               $arg,
             )*),
             |($($arg,)*)| {
               // Force the use of &dyn $trait, so that we don't rule out separate compilation later.
-              $function(self as &dyn $trait, $($arg),*)
+              (self.$function.fn_ptr)(self as &dyn $trait, $($arg),*)
             },
             &self.__unwinding_cycles,
           )
@@ -287,17 +303,27 @@ macro_rules! query_group {
     }
     // and the new() function for initialization.
     impl $(<$($type_param),*>)? $database_struct $(<$($type_param),*>)? {
-      $struct_vis fn new($($input_function: $input_type),*) -> Self {
+      $struct_vis fn new(
+          $($input_function: $input_type,)*
+          $($break_cycles_function: fn(dyn_trait!(), $($break_cycles_arg_type),*) -> $break_cycles_return_type,)*
+          $($function: fn(dyn_trait!(), $($arg_type),*) -> $return_type,)*
+      ) -> Self {
         Self {
           __unwinding_cycles: ::core::cell::Cell::new(0),
           $(
             $input_function,
           )*
           $(
-            $break_cycles_function: Default::default(),
+            $break_cycles_function: $crate::internal::FnAndTable {
+              fn_ptr: $break_cycles_function,
+              table: Default::default(),
+            },
           )*
           $(
-            $function: Default::default(),
+            $function: $crate::internal::FnAndTable {
+              fn_ptr: $function,
+              table: Default::default(),
+            },
           )*
         }
       }
@@ -315,6 +341,15 @@ pub mod internal {
     enum FoundCycle {
         No,
         Yes,
+    }
+
+    pub struct FnAndTable<F, Args, Return>
+    where
+        Args: Clone + Eq + Hash,
+        Return: Clone,
+    {
+        pub fn_ptr: F,
+        pub table: MemoizationTable<Args, Return>,
     }
 
     pub struct MemoizationTable<Args, Return>
@@ -431,7 +466,7 @@ pub mod tests {
             db.call_counter().set(db.call_counter().get() + 1);
             arg + 10
         }
-        let db = Database::new(Rc::new(Cell::new(0)));
+        let db = Database::new(Rc::new(Cell::new(0)), add10);
 
         assert_eq!(db.add10(100), 110);
         assert_eq!(db.call_counter().get(), 1);
@@ -468,7 +503,7 @@ pub mod tests {
             arg
         }
         let count = Cell::new(0);
-        let db = Database::new(&count);
+        let db = Database::new(&count, add10, identity);
 
         assert_eq!(db.add10(&100), 110);
         assert_eq!(count.get(), 1);
@@ -500,7 +535,7 @@ pub mod tests {
         fn add10(db: &dyn Add10, arg: i32) -> i32 {
             db.add10(arg) // infinite recursion!
         }
-        let db = Database::new();
+        let db = Database::new(add10);
         db.add10(1);
     }
 
@@ -516,7 +551,7 @@ pub mod tests {
         fn add10(db: &dyn Add10, arg: i32) -> Option<i32> {
             db.add10(arg)
         }
-        let db = Database::new();
+        let db = Database::new(add10);
         assert_eq!(db.add10(1), None);
     }
 
@@ -532,7 +567,7 @@ pub mod tests {
         fn add10(db: &dyn Add10, arg: i32) -> i32 {
             db.add10(arg)
         }
-        let db = Database::new();
+        let db = Database::new(add10);
         assert_eq!(db.add10(1), -1);
     }
 
@@ -588,6 +623,8 @@ pub mod tests {
                 Record { name: "B", is_unsafe: false, fields: &["A"] },
                 Record { name: "Unsafe", is_unsafe: true, fields: &[] },
             ],
+            is_unsafe,
+            record,
         );
         // When checking if A is unsafe, it will first ask B, which will try to ask A
         // again, defaulting to false. So B says "I guess I'm safe", but _doesn't_
@@ -627,7 +664,7 @@ pub mod tests {
                 arg + 10
             }
         }
-        let db = Database::new(Rc::new(Cell::new(0)));
+        let db = Database::new(Rc::new(Cell::new(0)), add10);
 
         assert_eq!(db.add10(100), 110);
         assert_eq!(db.call_counter().get(), 1);
@@ -662,7 +699,7 @@ pub mod tests {
             db.call_counter().set(db.call_counter().get() + 1);
             Rc::new(0)
         }
-        let db = Database::new(Rc::new(Cell::new(0)));
+        let db = Database::new(Rc::new(Cell::new(0)), argless_function);
 
         assert_eq!(db.call_counter().get(), 0);
         let argless_return = db.argless_function();

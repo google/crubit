@@ -78,7 +78,7 @@ fn new_db<'tcx>(
     for (name, renamed) in &cmdline.crate_rename {
         crate_renames.insert(name.as_str().into(), renamed.as_str().into());
     }
-    Database::new(
+    generate_bindings::new_database(
         tcx,
         crubit_support_path_format,
         cmdline.default_crate_features,

@@ -512,6 +512,26 @@ impl From<NoBindingsReason> for Error {
     }
 }
 
+pub(crate) fn new_database<'db>(
+    ir: &'db IR,
+    errors: &'db dyn ErrorReporting,
+    fatal_errors: &'db dyn ReportFatalError,
+    generate_source_loc_doc_comment: SourceLocationDocComment,
+) -> Database<'db> {
+    Database::new(
+        ir,
+        errors,
+        fatal_errors,
+        generate_source_loc_doc_comment,
+        rs_type_kind,
+        generate_function::generate_function,
+        generate_function::overloaded_funcs,
+        generate_function::is_record_clonable,
+        generate_function::get_binding,
+        generate_struct_and_union::collect_unqualified_member_functions,
+    )
+}
+
 // Returns the Rust code implementing bindings, plus any auxiliary C++ code
 // needed to support it.
 fn generate_bindings_tokens(
@@ -521,7 +541,7 @@ fn generate_bindings_tokens(
     fatal_errors: &dyn ReportFatalError,
     generate_source_loc_doc_comment: SourceLocationDocComment,
 ) -> Result<BindingsTokens> {
-    let db = Database::new(ir, errors, fatal_errors, generate_source_loc_doc_comment);
+    let db = new_database(ir, errors, fatal_errors, generate_source_loc_doc_comment);
     let mut items = vec![];
     let mut thunks = vec![];
     let mut cc_details = vec![
@@ -1109,7 +1129,7 @@ pub(crate) mod tests {
             })
         }
         fn make_db(&self) -> Database {
-            Database::new(
+            new_database(
                 &self.ir,
                 &self.errors,
                 &self.fatal_errors,

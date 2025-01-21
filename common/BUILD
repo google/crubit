@@ -151,7 +151,7 @@ rust_library(
     srcs = ["memoized.rs"],
 )
 
-crubit_rust_test(
+rust_test(
     name = "memoized_test",
     crate = ":memoized",
     deps = [

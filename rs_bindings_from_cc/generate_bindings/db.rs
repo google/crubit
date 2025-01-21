@@ -2,13 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::generate_function::{
-    generate_function, get_binding, is_record_clonable, overloaded_funcs, FunctionId,
-    GeneratedFunction, ImplKind,
-};
-use crate::generate_struct_and_union::collect_unqualified_member_functions;
+use crate::generate_function::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::RsTypeKind;
-use crate::rs_type_kind;
 use arc_anyhow::Result;
 use error_report::ErrorReporting;
 use ffi_types::SourceLocationDocComment;
