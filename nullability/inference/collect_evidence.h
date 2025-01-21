@@ -28,6 +28,7 @@
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
 
@@ -83,8 +84,26 @@ class SortedFingerprintVector {
   SortedFingerprintVector &operator=(const SortedFingerprintVector &) = delete;
   explicit SortedFingerprintVector(std::vector<SlotFingerprint> &&V)
       : Vector(std::move(V)) {
-    std::sort(Vector.begin(), Vector.end());
-    Vector.erase(std::unique(Vector.begin(), Vector.end()), Vector.end());
+    if (!std::is_sorted(Vector.begin(), Vector.end())) {
+      // Performance is much improved if the incoming vector is already sorted,
+      // but this is not a requirement.
+      llvm::errs() << "Previous inferences are not sorted. Performance may be "
+                      "degraded.\n";
+      std::sort(Vector.begin(), Vector.end());
+    }
+    auto EndOfUnique = std::unique(Vector.begin(), Vector.end());
+    if (EndOfUnique != Vector.end()) {
+      // Duplicate fingerprints are not expected, and can cause incorrect
+      // inference results, but only for symbols that have the same fingerprint.
+      // Do not crash, to avoid invalidating all the other results, but do log
+      // in case this very unexpected event occurs.
+      llvm::errs() << "Found duplicate fingerprints in previous inferences.\n";
+      for (auto It = EndOfUnique; It != Vector.end(); ++It) {
+        // Logs all but the first instance of each duplicate fingerprint.
+        llvm::errs() << "Duplicate fingerprint: " << *It << "\n";
+      }
+      Vector.erase(EndOfUnique, Vector.end());
+    }
   }
 
   bool contains(SlotFingerprint Fingerprint) const {
