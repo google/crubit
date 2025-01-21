@@ -3,19 +3,19 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // TODO(b/381888123): Seperate out enum generation.
-use crate::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
-use crate::db::BindingsGenerator;
 use crate::format_cc_ident;
 use crate::generate_doc_comment;
 use crate::{
     crate_features, format_ty_for_cc, generate_const, generate_deprecated_tag,
     generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
     get_tag_size_with_padding, is_exported, is_public_or_supported_export,
-    post_analysis_typing_env, FullyQualifiedName, RsSnippet, SugaredTy, TraitThunks, TypeLocation,
+    post_analysis_typing_env, RsSnippet, TraitThunks,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::CcInclude;
+use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
+use database::{AdtCoreBindings, BindingsGenerator, FullyQualifiedName, SugaredTy, TypeLocation};
 use error_report::{anyhow, ensure};
 use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
@@ -23,74 +23,18 @@ use quote::format_ident;
 use quote::quote;
 use quote::ToTokens;
 use rustc_hir::{AssocItemKind, ItemKind};
-use rustc_middle::ty::{self, Ty, TyCtxt};
+use rustc_middle::ty::{self, TyCtxt};
 use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use rustc_target::abi::{FieldsShape, VariantIdx, Variants};
 use std::collections::{BTreeSet, HashSet};
-use std::hash::{Hash, Hasher};
 use std::iter::once;
 use std::rc::Rc;
 
-/// Represents bindings for the "core" part of an algebraic data type (an ADT -
-/// a struct, an enum, or a union) in a way that supports later injecting the
-/// other parts like so:
-///
-/// ```
-/// quote! {
-///     #keyword #alignment #name final {
-///         #core
-///         #decls_of_other_parts  // (e.g. struct fields, methods, etc.)
-///     }
-/// }
-/// ```
-///
-/// `keyword`, `name` are stored separately, to support formatting them as a
-/// forward declaration - e.g. `struct SomeStruct`.
-#[derive(Clone)]
-pub struct AdtCoreBindings<'tcx> {
-    /// DefId of the ADT.
-    pub def_id: DefId,
-
-    /// C++ tag - e.g. `struct`, `class`, `enum`, or `union`.  This isn't always
-    /// a direct mapping from Rust (e.g. a Rust `enum` might end up being
-    /// represented as an opaque C++ `struct`).
-    pub keyword: TokenStream,
-
-    /// C++ translation of the ADT identifier - e.g. `SomeStruct`.
-    ///
-    /// A _short_ name is sufficient (i.e. there is no need to use a
-    /// namespace-qualified name), for `CcSnippet`s that are emitted into
-    /// the same namespace as the ADT.  (This seems to be all the snippets
-    /// today.)
-    pub cc_short_name: TokenStream,
-
-    /// Rust spelling of the ADT type - e.g.
-    /// `::some_crate::some_module::SomeStruct`.
-    pub rs_fully_qualified_name: TokenStream,
-
-    pub self_ty: Ty<'tcx>,
-    pub alignment_in_bytes: u64,
-    pub size_in_bytes: u64,
-}
-
-// AdtCoreBindings are a pure (and memoized...) function of the def_id.
-impl PartialEq for AdtCoreBindings<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.def_id == other.def_id
-    }
-}
-
-impl Eq for AdtCoreBindings<'_> {}
-impl Hash for AdtCoreBindings<'_> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.def_id.hash(state);
-    }
-}
-
-impl<'tcx> AdtCoreBindings<'tcx> {
-    pub fn needs_drop(&self, tcx: TyCtxt<'tcx>) -> bool {
-        self.self_ty.needs_drop(tcx, post_analysis_typing_env(tcx, self.def_id))
-    }
+pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
+    bindings: &AdtCoreBindings<'tcx>,
+    tcx: TyCtxt<'tcx>,
+) -> bool {
+    bindings.self_ty.needs_drop(tcx, post_analysis_typing_env(tcx, bindings.def_id))
 }
 
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
@@ -109,7 +53,7 @@ pub fn generate_adt<'tcx>(
 
     let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
 
-    let destructor_snippets = if core.needs_drop(tcx) {
+    let destructor_snippets = if adt_core_bindings_needs_drop(&core, tcx) {
         let drop_trait_id =
             tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
         let TraitThunks {

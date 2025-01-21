@@ -4,17 +4,17 @@
 
 // Create the right string reprensentation of a type or an identifier.
 
-use crate::code_snippet::{CcPrerequisites, CcSnippet};
-use crate::db::BindingsGenerator;
 use crate::generate_function::check_fn_sig;
 use crate::generate_function_thunk::is_thunk_required;
 use crate::{
     check_feature_enabled_on_self_and_all_deps, check_slice_layout, count_regions, get_layout,
     is_public_or_supported_export, matches_qualified_name, AllowReferences, CcType,
-    FineGrainedFeature, FullyQualifiedName, SugaredTy, TypeLocation,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{CcInclude, NamespaceQualifier};
+use database::code_snippet::{CcPrerequisites, CcSnippet};
+use database::BindingsGenerator;
+use database::{FineGrainedFeature, FullyQualifiedName, SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -39,6 +39,10 @@ pub fn format_top_level_ns_for_crate(db: &dyn BindingsGenerator<'_>, krate: Crat
     }
 }
 
+pub fn format_cc_ident_symbol(db: &dyn BindingsGenerator, ident: Symbol) -> Result<TokenStream> {
+    format_cc_ident(db, ident.as_str())
+}
+
 pub fn format_cc_ident(db: &dyn BindingsGenerator, ident: &str) -> Result<TokenStream> {
     // TODO(b/254104998): Check whether the crate where the identifier is defined is
     // enabled for the feature. Right now if the dep enables the feature but the
@@ -55,14 +59,6 @@ pub fn format_cc_ident(db: &dyn BindingsGenerator, ident: &str) -> Result<TokenS
     } else {
         code_gen_utils::format_cc_ident(ident)
     }
-}
-
-pub fn format_ns_path_for_cc(
-    db: &dyn BindingsGenerator<'_>,
-    ns: &NamespaceQualifier,
-) -> Result<TokenStream> {
-    let idents = ns.0.iter().map(|s| format_cc_ident(db, s)).collect::<Result<Vec<_>>>()?;
-    Ok(quote! { #(#idents::)* })
 }
 
 pub fn create_canonical_name_from_foreign_path(

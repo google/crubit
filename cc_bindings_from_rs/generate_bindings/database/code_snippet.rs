@@ -41,11 +41,10 @@ pub struct CcPrerequisites {
     pub fwd_decls: HashSet<LocalDefId>,
 
     /// Set of Crubit feature flags required for the CcSnippet to be valid.
-    pub(crate) required_features: flagset::FlagSet<FineGrainedFeature>,
+    pub required_features: flagset::FlagSet<FineGrainedFeature>,
 }
 
 impl CcPrerequisites {
-    #[cfg(test)]
     pub fn is_empty(&self) -> bool {
         let Self { includes, defs, fwd_decls, required_features } = self;
         includes.is_empty()

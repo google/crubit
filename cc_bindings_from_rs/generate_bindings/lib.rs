@@ -14,25 +14,21 @@ extern crate rustc_target;
 extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 
-mod code_snippet;
-mod db;
 mod format_type;
 mod generate_function;
 mod generate_function_thunk;
 mod generate_struct_and_union;
 mod query_compiler;
 
-use crate::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
-pub use crate::db::{BindingsGenerator, Database};
 use crate::format_type::{
     create_canonical_name_from_foreign_path, ensure_ty_is_pointer_like, format_cc_ident,
-    format_ns_path_for_cc, format_param_types_for_cc, format_region_as_cc_lifetime,
+    format_cc_ident_symbol, format_param_types_for_cc, format_region_as_cc_lifetime,
     format_region_as_rs_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
     format_ty_for_cc, format_ty_for_rs, is_bridged_type, BridgedType, BridgedTypeConversionInfo,
 };
 use crate::generate_function::generate_function;
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
-use crate::generate_struct_and_union::{generate_adt, generate_adt_core, AdtCoreBindings};
+use crate::generate_struct_and_union::{generate_adt, generate_adt_core};
 use crate::query_compiler::{
     count_regions, does_type_implement_trait, get_layout, get_scalar_int_type,
     get_tag_size_with_padding, is_c_abi_compatible_by_value, is_directly_public, is_exported,
@@ -40,16 +36,20 @@ use crate::query_compiler::{
     public_free_items_in_mod, repr_attrs,
 };
 use arc_anyhow::{Context, Error, Result};
-use code_gen_utils::{
-    format_cc_includes, make_rs_ident, CcConstQualifier, CcInclude, NamespaceQualifier,
+use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
+use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
+use database::{
+    AdtCoreBindings, BindingsGenerator, FineGrainedFeature, FullyQualifiedName, SugaredTy,
+    TypeLocation,
 };
-use error_report::{anyhow, bail, ensure, ErrorReporting};
+pub use database::{Database, IncludeGuard};
+use error_report::{anyhow, bail, ErrorReporting};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use rustc_attr_parsing::find_deprecation;
 use rustc_hir::def::{DefKind, Res};
-use rustc_hir::{HirId, Item, ItemKind, Node, UseKind, UsePath};
+use rustc_hir::{Item, ItemKind, Node, UseKind, UsePath};
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt};
@@ -57,16 +57,9 @@ use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use rustc_target::abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
 use std::collections::{BTreeSet, HashMap, HashSet};
-use std::hash::Hash;
 use std::iter::once;
 use std::rc::Rc;
 use std::slice;
-
-#[derive(Clone, Debug, Hash)]
-pub enum IncludeGuard {
-    PragmaOnce,
-    Guard(String),
-}
 
 fn support_header<'tcx>(db: &dyn BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcInclude {
     CcInclude::support_lib_header(db.crubit_support_path_format(), suffix.into())
@@ -126,6 +119,8 @@ pub fn new_database<'db>(
         support_header,
         repr_attrs,
         reexported_symbol_canonical_name_mapping,
+        format_cc_ident_symbol,
+        format_top_level_ns_for_crate,
         format_ty_for_cc,
         generate_default_ctor,
         generate_copy_ctor_and_assignment_operator,
@@ -245,260 +240,6 @@ fn format_with_cc_body(
             __NEWLINE__ }  __NEWLINE__
         })
     }
-}
-
-flagset::flags! {
-    /// An "expanded" version of CrubitFeature that includes specific cc_bindings_from_rs features.
-    /// This allows them to be converted into more readable error messages: rather than simply
-    /// stating "<big thing> requires experimental", we can say it requires experimental because
-    /// it needs e.g. "references".
-    enum FineGrainedFeature : u8 {
-        References,
-        LifetimeReuse,
-        PossibleMutableAliasing,
-        NonFreeReferenceParams,
-        EscapeCppReservedKeyword,
-        RustChar,
-    }
-}
-
-impl FineGrainedFeature {
-    fn ensure_crubit_feature(
-        self,
-        crubit_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
-    ) -> Result<()> {
-        use crubit_feature::CrubitFeature::*;
-        match self {
-            Self::References => {
-                ensure!(
-                    crubit_features.contains(Experimental),
-                    "support for references of non-function-param types requires {}",
-                    Experimental.aspect_hint()
-                )
-            }
-            Self::LifetimeReuse => {
-                ensure!(
-                    crubit_features.contains(Experimental),
-                    "support for multiple uses of a lifetime parameter requires {}",
-                    Experimental.aspect_hint()
-                )
-            }
-            Self::NonFreeReferenceParams => {
-                ensure!(
-                    crubit_features.contains(Experimental),
-                    "support for bound reference lifetimes (such as 'static) requires {}",
-                    Experimental.aspect_hint()
-                )
-            }
-            Self::PossibleMutableAliasing => {
-                ensure!(
-                    crubit_features.contains(Experimental),
-                    "support for functions taking a mutable reference, and which may alias in C++, requires {}",
-                    Experimental.aspect_hint()
-                )
-            }
-            Self::EscapeCppReservedKeyword => {
-                ensure!(
-                    crubit_features.contains(Experimental),
-                    "support for escaping C++ reserved keywords requires {}",
-                    Experimental.aspect_hint()
-                )
-            }
-            Self::RustChar => {
-                ensure!(
-                    crubit_features.contains(Experimental),
-                    "support for the Rust `char` type requires {}",
-                    Experimental.aspect_hint()
-                )
-            }
-        }
-        Ok(())
-    }
-}
-
-/// Represents the fully qualified name of a Rust item (e.g. of a `struct` or a
-/// function).
-#[derive(Clone, Debug, PartialEq)]
-struct FullyQualifiedName {
-    /// Name of the crate that defines the item.
-    /// For example, this would be `std` for `std::cmp::Ordering`.
-    krate: Symbol,
-
-    /// Configurable top-level namespace of the C++ bindings.
-    /// For example, this would be `::foo` for `foo::bar::baz::qux`.
-    cpp_top_level_ns: Symbol,
-
-    /// Path to the module where the item is located.
-    /// For example, this would be `cmp` for `std::cmp::Ordering`.
-    /// The path may contain multiple modules - e.g. `foo::bar::baz`.
-    rs_mod_path: NamespaceQualifier,
-    /// The C++ namespace to use for the symbol excluding the top-level
-    /// namespace.
-    cpp_ns_path: NamespaceQualifier,
-
-    /// Rust name of the item.
-    /// For example, this would be:
-    /// * `Some("Ordering")` for `std::cmp::Ordering`.
-    /// * `None` for `ItemKind::Use` - e.g.: `use submodule::*`
-    rs_name: Option<Symbol>,
-
-    /// The C++ name to use for the symbol.
-    ///
-    /// For example, the following struct
-    /// ```
-    /// #[__crubit::annotate(cpp_name="Bar")]
-    /// struct Foo { ... }
-    /// ```
-    /// will be generated as a C++ struct named `Bar` instead of `Foo`.
-    cpp_name: Option<Symbol>,
-
-    /// The fully-qualified C++ type to use for this, if this was originally a
-    /// C++ type.
-    ///
-    /// For example, if a type has `#[__crubit::annotate(cpp_type="x::y")]`,
-    /// then cpp_type will be `Some(x::y)`.
-    cpp_type: Option<Symbol>,
-}
-
-impl FullyQualifiedName {
-    /// Computes a `FullyQualifiedName` for `def_id`.
-    ///
-    /// May panic if `def_id` is an invalid id.
-    // TODO(b/259724276): This function's results should be memoized.
-    fn new(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Self {
-        if let Some(canonical_name) = db.reexported_symbol_canonical_name_mapping().get(&def_id) {
-            return canonical_name.clone();
-        }
-
-        let tcx = db.tcx();
-        let krate = tcx.crate_name(def_id.krate);
-        let cpp_top_level_ns = format_top_level_ns_for_crate(db, def_id.krate);
-
-        // Crash OK: these attributes are introduced by crubit itself, and "should
-        // never" be malformed.
-        let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
-        let cpp_type = attributes.cpp_type;
-
-        let mut full_path = tcx.def_path(def_id).data; // mod_path + name
-        let name = full_path.pop().expect("At least the item's name should be present");
-        let rs_name = name.data.get_opt_name();
-        let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).or(rs_name);
-
-        let mod_path = NamespaceQualifier::new(
-            full_path
-                .into_iter()
-                .filter_map(|p| p.data.get_opt_name())
-                .map(|s| Rc::<str>::from(s.as_str())),
-        );
-
-        Self {
-            krate,
-            cpp_top_level_ns,
-            rs_mod_path: mod_path.clone(),
-            cpp_ns_path: mod_path,
-            rs_name,
-            cpp_name,
-            cpp_type,
-        }
-    }
-
-    fn format_for_cc(&self, db: &dyn BindingsGenerator<'_>) -> Result<TokenStream> {
-        if let Some(path) = self.cpp_type {
-            let path = format_cc_ident(db, path.as_str())?;
-            return Ok(quote! {#path});
-        }
-
-        let name = self
-            .cpp_name
-            .as_ref()
-            .expect("`format_for_cc` can't be called on name-less item kinds");
-
-        let cpp_top_level_ns = format_cc_ident(db, self.cpp_top_level_ns.as_str())?;
-        let ns_path = format_ns_path_for_cc(db, &self.cpp_ns_path)?;
-        let name = format_cc_ident(db, name.as_str())?;
-        Ok(quote! { :: #cpp_top_level_ns:: #ns_path #name })
-    }
-
-    fn format_for_rs(&self) -> TokenStream {
-        let name =
-            self.rs_name.as_ref().expect("`format_for_rs` can't be called on name-less item kinds");
-
-        let krate = make_rs_ident(self.krate.as_str());
-        let mod_path = self.rs_mod_path.format_for_rs();
-        let name = make_rs_ident(name.as_str());
-        quote! { :: #krate :: #mod_path #name }
-    }
-}
-
-mod sugared_ty {
-    use super::*;
-    /// A Ty, optionally attached to its `hir::Ty` counterpart, if any.
-    ///
-    /// The rustc_hir::Ty is used only for detecting type aliases (or other
-    /// optional sugar), unrelated to the actual concrete type. It
-    /// necessarily disappears if, for instance, the type is plugged in from
-    /// a generic. There's no way to tell, in the bindings for
-    /// Vec<c_char>::len(), that `T` came from the type alias
-    /// `c_char`, instead of a plain `i8` or `u8`.
-    #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-    pub(super) struct SugaredTy<'tcx> {
-        mid: Ty<'tcx>,
-        /// The HirId of the corresponding HirTy. We store it as a HirId so that
-        /// it's hashable.
-        hir_id: Option<HirId>,
-    }
-
-    impl<'tcx> std::fmt::Display for SugaredTy<'tcx> {
-        fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-            std::fmt::Display::fmt(&self.mid, f)
-        }
-    }
-
-    impl<'tcx> SugaredTy<'tcx> {
-        pub fn new(mid: Ty<'tcx>, hir: Option<&rustc_hir::Ty<'tcx>>) -> Self {
-            Self { mid, hir_id: hir.map(|hir| hir.hir_id) }
-        }
-
-        /// Returns the rustc_middle::Ty this represents.
-        pub fn mid(&self) -> Ty<'tcx> {
-            self.mid
-        }
-
-        /// Returns the rustc_hir::Ty this represents, if any.
-        pub fn hir(&self, db: &dyn BindingsGenerator<'tcx>) -> Option<&'tcx rustc_hir::Ty<'tcx>> {
-            let hir_id = self.hir_id?;
-            let hir_ty = db.tcx().hir_node(hir_id).expect_ty();
-            debug_assert_eq!(hir_ty.hir_id, hir_id);
-            Some(hir_ty)
-        }
-    }
-}
-use sugared_ty::SugaredTy;
-
-/// Location where a type is used.
-#[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
-enum TypeLocation {
-    /// The top-level return type.
-    ///
-    /// The "top-level" part can be explained by looking at an example of `fn
-    /// foo() -> *const T`:
-    /// - The top-level return type `*const T` is in the `FnReturn` location
-    /// - The nested pointee type `T` is in the `Other` location
-    FnReturn,
-
-    /// The top-level parameter type.
-    ///
-    /// The "top-level" part can be explained by looking at an example of:
-    /// `fn foo(param: *const T)`:
-    /// - The top-level parameter type `*const T` is in the `FnParam` location
-    /// - The nested pointee type `T` is in the `Other` location
-    // TODO(b/278141494, b/278141418): Once `const` and `static` items are supported,
-    // we may want to apply parameter-like formatting to their types (e.g. have
-    // `format_ty_for_cc` emit `T&` rather than `T*`).
-    FnParam,
-
-    /// Other location (e.g. pointee type, field type, etc.).
-    Other,
 }
 
 fn symbols_from_extern_crate(db: &dyn BindingsGenerator<'_>) -> Vec<(DefId, FullyQualifiedName)> {
@@ -1154,7 +895,7 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
     ) -> Result<ApiSnippets> {
         let tcx = db.tcx();
         let adt_cc_name = &core.cc_short_name;
-        if core.needs_drop(tcx) {
+        if generate_struct_and_union::adt_core_bindings_needs_drop(&core, tcx) {
             let has_default_ctor = db.generate_default_ctor(core.clone()).is_ok();
             let is_unpin = core.self_ty.is_unpin(tcx, post_analysis_typing_env(tcx, core.def_id));
             if has_default_ctor && is_unpin {

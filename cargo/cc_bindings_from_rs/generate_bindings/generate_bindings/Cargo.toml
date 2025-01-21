@@ -15,8 +15,8 @@ path = "../../../../cc_bindings_from_rs/generate_bindings/lib.rs"
 crubit_attr = { path = "../../../../cargo/cc_bindings_from_rs/crubit_attr" }
 run_compiler = { path = "../../../../cargo/cc_bindings_from_rs/run_compiler" }
 toposort = { path = "../../../../cargo/cc_bindings_from_rs/toposort" }
+database = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/database/database" }
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils" }
-memoized = { path = "../../../../cargo/common/memoized" }
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow" }
 error_report = { path = "../../../../cargo/common/error_report" }
 itertools.workspace = true

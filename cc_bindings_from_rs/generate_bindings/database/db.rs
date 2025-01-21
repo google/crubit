@@ -2,13 +2,19 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use crate::adt_core_bindings::AdtCoreBindings;
 use crate::code_snippet::{ApiSnippets, CcSnippet};
-use crate::{AdtCoreBindings, FullyQualifiedName, IncludeGuard, SugaredTy, TypeLocation};
+use crate::fully_qualified_name::FullyQualifiedName;
+use crate::include_guard::IncludeGuard;
+use crate::sugared_ty::SugaredTy;
+use crate::type_location::TypeLocation;
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
 use error_report::ErrorReporting;
+use proc_macro2::TokenStream;
 use rustc_middle::ty::TyCtxt;
-use rustc_span::def_id::{DefId, LocalDefId};
+use rustc_span::def_id::{CrateNum, DefId, LocalDefId};
+use rustc_span::Symbol;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -68,6 +74,10 @@ memoized::query_group! {
       fn repr_attrs(&self, did: DefId) -> Rc<[rustc_attr_data_structures::ReprAttr]>;
 
       fn reexported_symbol_canonical_name_mapping(&self) -> HashMap<DefId, FullyQualifiedName>;
+
+      fn format_cc_ident(&self, ident: Symbol) -> Result<TokenStream>;
+
+      fn format_top_level_ns_for_crate(&self, krate: CrateNum) -> Symbol;
 
       fn format_ty_for_cc(
           &self,

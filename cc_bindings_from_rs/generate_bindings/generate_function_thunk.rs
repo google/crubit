@@ -2,10 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::db::BindingsGenerator;
-
-use crate::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
-use crate::generate_struct_and_union::AdtCoreBindings;
 use crate::{
     does_type_implement_trait, ensure_ty_is_pointer_like, format_cc_ident,
     format_param_types_for_cc, format_region_as_rs_lifetime, format_ret_ty_for_cc,
@@ -17,6 +13,8 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::CcConstQualifier;
+use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
+use database::{AdtCoreBindings, BindingsGenerator};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::Ident;

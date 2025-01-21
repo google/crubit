@@ -17,8 +17,6 @@ package(
 rust_library(
     name = "generate_bindings",
     srcs = [
-        "code_snippet.rs",
-        "db.rs",
         "format_type.rs",
         "generate_function.rs",
         "generate_function_thunk.rs",
@@ -33,11 +31,11 @@ rust_library(
         "//cc_bindings_from_rs:crubit_attr",
         "//cc_bindings_from_rs:run_compiler",
         "//cc_bindings_from_rs:toposort",
+        "//cc_bindings_from_rs/generate_bindings/database",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:error_report",
-        "//common:memoized",
         "@crate_index//:flagset",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",

@@ -2,9 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Query the rust compiler.
-use crate::db::BindingsGenerator;
+//! Query the rust compiler.
+
 use arc_anyhow::Result;
+use database::BindingsGenerator;
 use error_report::anyhow;
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
 use rustc_attr_data_structures::IntType;
