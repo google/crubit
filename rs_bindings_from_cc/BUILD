@@ -165,6 +165,19 @@ cc_library(
 )
 
 cc_library(
+    name = "annotations_consumer",
+    srcs = ["annotations_consumer.cc"],
+    hdrs = ["annotations_consumer.h"],
+    deps = [
+        ":cc_ir",
+        "//common:annotation_reader",
+        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/strings:string_view",
+        "@llvm-project//clang:ast",
+    ],
+)
+
+cc_library(
     name = "cmdline",
     srcs = ["cmdline.cc"],
     hdrs = ["cmdline.h"],

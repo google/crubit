@@ -13,6 +13,26 @@
 #define CRUBIT_OVERRIDE_UNSAFE(function_is_unsafe) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_override_unsafe", function_is_unsafe)
 
+// This annotation configures a user-defined rust name for a C++ declaration.
+// If the user-defined rust name conflicts with an existing name, bindings for
+// both the annotated decl and the conflicting decl will fail, and be treated as
+// overloads.
+//
+// For example, this C++ header:
+//
+// ```c++
+// CRUBIT_RUST_NAME(foo)
+// int bar() { return 42; }
+// ```
+//
+// Becomes this Rust interface:
+//
+// ```rust
+// pub fn foo() -> i32;  // returns 42
+// ```
+#define CRUBIT_RUST_NAME(crubit_rust_name) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_rust_name", crubit_rust_name)
+
 // This annotation is used to mark a function as `unsafe` to Rust callers.
 //
 // For example, this C++ header:
