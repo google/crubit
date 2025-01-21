@@ -2,11 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::db::BindingsGenerator;
-
-use crate::rs_snippet::{format_generic_params, unique_lifetimes, Mutability, RsTypeKind};
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
+use database::db::BindingsGenerator;
+use database::rs_snippet::{format_generic_params, unique_lifetimes, Mutability, RsTypeKind};
 use error_report::{anyhow, bail};
 use ir::*;
 use itertools::Itertools;

@@ -4,9 +4,9 @@
 
 // Generate comments for the bindings.
 
-use crate::code_snippet::ApiSnippets;
-use crate::db::{BindingsGenerator, Database};
 use arc_anyhow::Result;
+use database::code_snippet::ApiSnippets;
+use database::{BindingsGenerator, Database};
 use ffi_types::SourceLocationDocComment;
 use ir::{Comment, GenericItem, UnsupportedItem, IR};
 use proc_macro2::TokenStream;
@@ -105,8 +105,8 @@ pub fn generate_comment(comment: &Comment) -> Result<ApiSnippets> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::FatalErrors;
     use arc_anyhow::Result;
+    use database::db::FatalErrors;
     use error_report::ErrorReport;
     use googletest::prelude::*;
     use ir::{ItemId, UnsupportedItemKind};

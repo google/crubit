@@ -2,19 +2,19 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::db::BindingsGenerator;
 use crate::generate_function_thunk::{
     generate_function_thunk, generate_function_thunk_impl, thunk_ident,
     thunk_ident_for_derived_member_function,
 };
-use crate::ApiSnippets;
-
-use crate::rs_snippet::{
+use arc_anyhow::{Context, Result};
+use code_gen_utils::make_rs_ident;
+use database::code_snippet::ApiSnippets;
+use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
+use database::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
     should_derive_clone, unique_lifetimes, Lifetime, Mutability, PrimitiveType, RsTypeKind,
 };
-use arc_anyhow::{Context, Result};
-use code_gen_utils::make_rs_ident;
+use database::BindingsGenerator;
 use error_report::{anyhow, bail, ErrorList};
 use errors::{bail_to_errors, Errors, ErrorsOr};
 use ir::*;
@@ -27,265 +27,58 @@ use std::ptr;
 use std::rc::Rc;
 use std::sync::LazyLock;
 
-#[derive(Clone)]
-pub struct GeneratedFunction {
-    /// The generated Rust function.
-    pub snippets: Rc<ApiSnippets>,
-    /// The function's ID.
-    pub id: Rc<FunctionId>,
-    /// The status of function generation.
-    /// If this is `Err`, the function or trait impl exists, but is not
-    /// callable.
-    pub status: Result<()>,
-}
-
-/// Uniquely identifies a generated Rust function.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct FunctionId {
-    // If the function is on a trait impl, contains the name of the Self type for
-    // which the trait is being implemented.
-    self_type: Option<syn::Path>,
-    // Fully qualified path of the function. For functions in impl blocks, this
-    // includes the name of the type or trait on which the function is being
-    // implemented, e.g. `Default::default`.
-    pub function_path: syn::Path,
-}
-
-/// The name of a one-function trait, with extra entries for
-/// specially-understood traits and families of traits.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum TraitName {
-    /// The constructor trait for !Unpin types, with a list of parameter types.
-    /// For example, `CtorNew(vec![])` is the default constructor.
-    CtorNew(Rc<[RsTypeKind]>),
-    /// An Unpin constructor trait, e.g. From or Clone, with a list of parameter
-    /// types.
-    UnpinConstructor {
-        name: Rc<str>,
-        // /// Clonable, comparable token stream, which can be copied into a new TokenStream.
-        // #[repr(transparent)]
-        // struct TokenArray(Rc<[TokenTree]>);
-        // // impl From<TokenStream> for TokenArray, From<TokenArray> for TokenStream, PartialEq,
-        // Eq, Hash, etc.
-
-        // This avoids deferred parsing.
-
-        // I just can't figure out how to make the equality check not prohibitively ugly:
-
-        // impl PartialEq for TokenArray {
-        //   fn eq(&self, other: &TokenArray) {
-        //     struct EqTokenTree<'a>(&'a TokenTree);
-        //     impl PartialEq for EqTokenTree {
-        //       fn eq(&self, other: &EqTokenTree) {
-        //         match (&self.0, &other.0) {
-        //           (Group(g1), Group(g2)) => g1.delimiter() == g2.delimiter(),
-        //           (Ident(i1), Ident(i2)) => i1 == i2,
-        //           (Punct(p1), Punct(p2)) => p1.as_char() == p2.as_char(),
-        //           (Literal(l1), Literal(l2)) => /* can't find a better way to do this */
-        // l1.to_string() == l2.to_string(),           _ => False,
-        //         }
-        //       }
-        //     }
-        //     self.0.iter().map(EqTokenTree).eq(other.0.iter().map(EqTokenTree))
-        //   }
-        // }
-        params: Rc<[RsTypeKind]>,
-    },
-    /// The PartialEq trait.
-    PartialEq { param: Rc<RsTypeKind> },
-    /// The PartialOrd trait.
-    PartialOrd { param: Rc<RsTypeKind> },
-    /// Any other trait, e.g. Eq.
-    Other { name: Rc<str>, params: Rc<[RsTypeKind]>, is_unsafe_fn: bool },
-}
-
-impl TraitName {
-    /// Returns the generic parameters in this trait name.
-    fn params(&self) -> &[RsTypeKind] {
-        match self {
-            Self::CtorNew(params)
-            | Self::UnpinConstructor { params, .. }
-            | Self::Other { params, .. } => params,
-            Self::PartialEq { param } | Self::PartialOrd { param } => core::slice::from_ref(param),
+/// Similar to to_tokens but removing a given record type from the list of
+/// generic args
+///
+/// This is used to remove the record whose trait implementation is being
+/// generated.
+fn trait_name_to_token_stream_removing_trait_record(
+    db: &dyn BindingsGenerator,
+    trait_name: &TraitName,
+    trait_record: Option<&Record>,
+) -> TokenStream {
+    use TraitName::*;
+    match trait_name {
+        UnpinConstructor { name, params } | Other { name, params, .. } => {
+            let name_as_token_stream = name.parse::<TokenStream>().unwrap();
+            let formatted_params =
+                format_generic_params_replacing_by_self(db, &**params, trait_record);
+            quote! {#name_as_token_stream #formatted_params}
         }
-    }
-
-    /// Returns the lifetimes used in this trait name.
-    pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + '_ {
-        self.params().iter().flat_map(|p| p.lifetimes())
-    }
-    /// Similar to to_tokens but removing a given record type from the list of
-    /// generic args
-    ///
-    /// This is used to remove the record whose trait implementation is being
-    /// generated.
-    fn to_token_stream_removing_trait_record(
-        &self,
-        db: &dyn BindingsGenerator,
-        trait_record: Option<&Record>,
-    ) -> TokenStream {
-        match self {
-            Self::UnpinConstructor { name, params } | Self::Other { name, params, .. } => {
-                let name_as_token_stream = name.parse::<TokenStream>().unwrap();
-                let formatted_params =
-                    format_generic_params_replacing_by_self(db, &**params, trait_record);
-                quote! {#name_as_token_stream #formatted_params}
+        PartialEq { param } => {
+            if trait_record.is_some() && param.is_record(trait_record.unwrap()) {
+                quote! {PartialEq}
+            } else {
+                let formatted_params = format_generic_params_replacing_by_self(
+                    db,
+                    core::slice::from_ref(&**param),
+                    trait_record,
+                );
+                quote! {PartialEq #formatted_params}
             }
-            Self::PartialEq { param } => {
-                if trait_record.is_some() && param.is_record(trait_record.unwrap()) {
-                    quote! {PartialEq}
-                } else {
-                    let formatted_params = format_generic_params_replacing_by_self(
-                        db,
-                        core::slice::from_ref(&**param),
-                        trait_record,
-                    );
-                    quote! {PartialEq #formatted_params}
-                }
+        }
+        PartialOrd { param } => {
+            if trait_record.is_some() && param.is_record(trait_record.unwrap()) {
+                quote! {PartialOrd}
+            } else {
+                let formatted_params = format_generic_params_replacing_by_self(
+                    db,
+                    core::slice::from_ref(&**param),
+                    trait_record,
+                );
+                quote! {PartialOrd #formatted_params}
             }
-            Self::PartialOrd { param } => {
-                if trait_record.is_some() && param.is_record(trait_record.unwrap()) {
-                    quote! {PartialOrd}
-                } else {
-                    let formatted_params = format_generic_params_replacing_by_self(
-                        db,
-                        core::slice::from_ref(&**param),
-                        trait_record,
-                    );
-                    quote! {PartialOrd #formatted_params}
-                }
-            }
-            Self::CtorNew(arg_types) => {
-                let formatted_arg_types =
-                    format_tuple_except_singleton_replacing_by_self(db, arg_types, trait_record);
-                quote! { ::ctor::CtorNew < #formatted_arg_types > }
-            }
+        }
+        CtorNew(arg_types) => {
+            let formatted_arg_types =
+                format_tuple_except_singleton_replacing_by_self(db, arg_types, trait_record);
+            quote! { ::ctor::CtorNew < #formatted_arg_types > }
         }
     }
 }
 
-impl TraitName {
-    fn to_token_stream(&self, db: &dyn BindingsGenerator) -> TokenStream {
-        self.to_token_stream_removing_trait_record(db, None)
-    }
-}
-
-/// The kind of the `impl` block the function needs to be generated in.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ImplKind {
-    /// Used for free functions for which we don't want the `impl` block.
-    None { is_unsafe: bool },
-    /// Used for inherent methods for which we need an `impl SomeStruct { ... }`
-    /// block.
-    Struct {
-        /// For example, `SomeStruct`.
-        record: Rc<Record>,
-        is_unsafe: bool,
-        /// Whether to format the first parameter as "self" (e.g. `__this:
-        /// &mut T` -> `&mut self`)
-        format_first_param_as_self: bool,
-    },
-    /// Used for trait methods for which we need an `impl TraitName for
-    /// SomeStruct { ... }` block.
-    Trait {
-        /// For example, `SomeStruct`.
-        record: Rc<Record>,
-        /// For example, `quote!{ From<i32> }`.
-        trait_name: TraitName,
-        /// Reference style for the `impl` block and self parameters.
-        impl_for: ImplFor,
-
-        /// The generic params of trait `impl` (e.g. `vec!['b]`).
-        /// These start empty and only later are mutated into the
-        /// correct value.
-        trait_generic_params: Rc<[Lifetime]>,
-
-        /// Whether to format the first parameter as "self" (e.g. `__this:
-        /// &mut T` -> `&mut self`)
-        format_first_param_as_self: bool,
-        /// Whether to drop the C++ function's return value and return unit
-        /// instead.
-        drop_return: bool,
-
-        /// If this trait's method returns an associated type, it has this name.
-        /// For example, this is `Output` on
-        /// [`Add`](https://doc.rust-lang.org/std/ops/trait.Add.html).
-        associated_return_type: Option<Ident>,
-
-        /// Whether args should always be const references in Rust, even if they
-        /// are by value in C++.
-        ///
-        /// For example, the traits for == and < only accept const reference
-        /// parameters, but C++ allows values.
-        force_const_reference_params: bool,
-    },
-}
-impl ImplKind {
-    fn new_trait(
-        trait_name: TraitName,
-        record: Rc<Record>,
-        format_first_param_as_self: bool,
-        force_const_reference_params: bool,
-    ) -> Self {
-        ImplKind::Trait {
-            record,
-            trait_name,
-            impl_for: ImplFor::T,
-            trait_generic_params: Rc::new([]),
-            format_first_param_as_self,
-            drop_return: false,
-            associated_return_type: None,
-            force_const_reference_params,
-        }
-    }
-    fn format_first_param_as_self(&self) -> bool {
-        matches!(
-            self,
-            Self::Trait { format_first_param_as_self: true, .. }
-                | Self::Struct { format_first_param_as_self: true, .. }
-        )
-    }
-    /// Returns whether the function is defined as `unsafe fn ...`.
-    fn is_unsafe(&self) -> bool {
-        matches!(
-            self,
-            Self::None { is_unsafe: true, .. }
-                | Self::Struct { is_unsafe: true, .. }
-                | Self::Trait { trait_name: TraitName::Other { is_unsafe_fn: true, .. }, .. }
-        )
-    }
-}
-
-/// Whether the impl block is for T, and the receivers take self by reference,
-/// or the impl block is for a reference to T, and the method receivers take
-/// self by value.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ImplFor {
-    /// Implement the trait for `T` directly.
-    ///
-    /// ```
-    /// impl Trait for T {
-    ///     fn const_method<'a>(&'a self);
-    ///     fn mut_method<'a>(&'a mut self);
-    ///     fn pin_method<'a>(Pin<&'a mut self>);
-    /// }
-    /// ```
-    T,
-    /// Implement the trait for `&T`, `&mut T`, or `Pin<&mut T>`, depending on
-    /// the Rust type of the self parameter.
-    ///
-    /// ```
-    /// impl<'a> Trait for &'a T {
-    ///     fn const_method(self);
-    /// }
-    /// impl<'a> Trait for &'a mut UnpinT {
-    ///     fn mut_method(self);
-    /// }
-    /// impl<'a> Trait for Pin<&'a mut NonUnpinT> {
-    ///     fn pin_method(self);
-    /// }
-    /// ```
-    RefT,
+fn trait_name_to_token_stream(db: &dyn BindingsGenerator, trait_name: &TraitName) -> TokenStream {
+    trait_name_to_token_stream_removing_trait_record(db, trait_name, None)
 }
 
 /// Returns whether an argument of this type causes ADL to include the `record`.
@@ -1587,12 +1380,17 @@ pub fn generate_function(
             };
             let (trait_name_without_trait_record, impl_for) = match impl_for {
                 ImplFor::T => (
-                    trait_name.to_token_stream_removing_trait_record(db, Some(&trait_record)),
+                    trait_name_to_token_stream_removing_trait_record(
+                        db,
+                        &trait_name,
+                        Some(&trait_record),
+                    ),
                     quote! { #full_record_qualifier #record_name },
                 ),
-                ImplFor::RefT => {
-                    (trait_name.to_token_stream(db), param_types[0].to_token_stream(db))
-                }
+                ImplFor::RefT => (
+                    trait_name_to_token_stream(db, &trait_name),
+                    param_types[0].to_token_stream(db),
+                ),
             };
             api_func = quote! {
                 #unimplemented_trait_def
@@ -1606,7 +1404,7 @@ pub fn generate_function(
             function_id = FunctionId {
                 self_type: Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap()),
                 function_path: {
-                    let trait_name_tokens = trait_name.to_token_stream(db);
+                    let trait_name_tokens = trait_name_to_token_stream(db, &trait_name);
                     syn::parse2(quote! { #trait_name_tokens :: #func_name }).unwrap()
                 },
             };

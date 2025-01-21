@@ -8,14 +8,13 @@ load(
 )
 
 rust_library(
-    name = "generate_bindings",
+    name = "database",
     srcs = [
-        "generate_comment.rs",
-        "generate_enum.rs",
-        "generate_function.rs",
-        "generate_function_thunk.rs",
-        "generate_struct_and_union.rs",
+        "code_snippet.rs",
+        "db.rs",
+        "function_types.rs",
         "lib.rs",
+        "rs_snippet.rs",
     ],
     visibility = [
         "//rs_bindings_from_cc:__subpackages__",
@@ -27,27 +26,26 @@ rust_library(
         "//common:error_report",
         "//common:errors",
         "//common:ffi_types",
+        "//common:memoized",
         "//common:token_stream_printer",
         "//rs_bindings_from_cc:ir",
-        "//rs_bindings_from_cc/generate_bindings/database",
         "@crate_index//:flagset",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
+        "@crate_index//:serde_json",
         "@crate_index//:syn",
     ],
 )
 
 multiplatform_rust_test(
-    name = "generate_bindings_test",
-    crate = ":generate_bindings",
+    name = "database_test",
+    crate = ":database",
     tags = ["not_run:arm"],
     deps = [
         "//common:multiplatform_testing",
         "//common:token_stream_matchers",
         "//rs_bindings_from_cc:ir_matchers",
-        "//rs_bindings_from_cc:ir_testing",
         "@crate_index//:googletest",
-        "@crate_index//:static_assertions",
     ],
 )

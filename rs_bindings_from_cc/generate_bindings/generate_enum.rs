@@ -2,12 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Generate bindings for C++ enum.
-use crate::code_snippet::ApiSnippets;
-use crate::db::{BindingsGenerator, Database};
 use crate::generate_comment::generate_unsupported;
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
+/// Generate bindings for C++ enum.
+use database::code_snippet::ApiSnippets;
+use database::{BindingsGenerator, Database};
 use ir::{Enum, UnqualifiedIdentifier, UnsupportedItem, UnsupportedItemPath};
 use proc_macro2::Literal;
 use quote::{quote, ToTokens};

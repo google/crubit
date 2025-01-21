@@ -25,7 +25,7 @@ pub struct FfiBindings {
 }
 
 #[derive(Clone, Debug, Default)]
-pub(crate) struct ApiSnippets {
+pub struct ApiSnippets {
     /// Main API - for example:
     /// - A Rust definition of a function (with a doc comment),
     /// - A Rust definition of a struct (with a doc comment).
@@ -52,7 +52,7 @@ impl From<TokenStream> for ApiSnippets {
 }
 
 /// Source code for generated bindings.
-pub(crate) struct Bindings {
+pub struct Bindings {
     // Rust source code.
     pub rs_api: String,
     // C++ source code.
@@ -62,7 +62,7 @@ pub(crate) struct Bindings {
 /// Source code for generated bindings, as tokens.
 ///
 /// This is public within the crate for testing purposes.
-pub(crate) struct BindingsTokens {
+pub struct BindingsTokens {
     // Rust source code.
     pub rs_api: TokenStream,
     // C++ source code.

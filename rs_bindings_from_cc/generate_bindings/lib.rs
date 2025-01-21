@@ -3,31 +3,27 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![allow(clippy::collapsible_else_if)]
 
-mod code_snippet;
-mod db;
 mod generate_comment;
 mod generate_enum;
 mod generate_function;
 mod generate_function_thunk;
 mod generate_struct_and_union;
-mod rs_snippet;
 
-use code_snippet::{
+use arc_anyhow::{Context, Error, Result};
+use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
+use database::code_snippet::{
     required_crubit_features, ApiSnippets, Bindings, BindingsTokens, FfiBindings,
     RequiredCrubitFeature,
 };
-use db::{BindingsGenerator, Database, FatalErrors, ReportFatalError};
+use database::db::{BindingsGenerator, Database, FatalErrors, ReportFatalError};
+use database::rs_snippet::{CratePath, Lifetime, Mutability, PrimitiveType, RsTypeKind};
+use error_report::{anyhow, bail, ensure, ErrorReport, ErrorReporting};
+use ffi_types::*;
 use generate_comment::{
     generate_comment, generate_doc_comment, generate_top_level_comment, generate_unsupported,
 };
 use generate_enum::generate_enum;
 use generate_struct_and_union::{generate_incomplete_record, generate_record};
-
-use crate::rs_snippet::{CratePath, Lifetime, Mutability, PrimitiveType, RsTypeKind};
-use arc_anyhow::{Context, Error, Result};
-use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
-use error_report::{anyhow, bail, ensure, ErrorReport, ErrorReporting};
-use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
