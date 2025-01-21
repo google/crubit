@@ -71,6 +71,9 @@ memoized::query_group! {
         #[input]
         fn generate_source_loc_doc_comment(&self) -> SourceLocationDocComment;
 
+        #[break_cycles_with = Ok(false)]
+        fn is_rs_type_kind_unsafe(&self, rs_type_kind: RsTypeKind) -> Result<bool>;
+
         fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
 
         fn generate_function(&self, func: Rc<Func>, record_overwrite: Option<Rc<Record>>) -> Result<Option<GeneratedFunction>>;

@@ -519,6 +519,7 @@ pub(crate) fn new_database<'db>(
         errors,
         fatal_errors,
         generate_source_loc_doc_comment,
+        is_rs_type_kind_unsafe,
         rs_type_kind,
         generate_function::generate_function,
         generate_function::overloaded_funcs,
@@ -667,6 +668,60 @@ fn generate_bindings_tokens(
 /// Formats a C++ identifier.  Panics if `ident` is a C++ reserved keyword.
 fn format_cc_ident(ident: &str) -> TokenStream {
     code_gen_utils::format_cc_ident(ident).expect("IR should only contain valid C++ identifiers")
+}
+
+fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<bool> {
+    match rs_type_kind {
+        RsTypeKind::Pointer { .. } => Ok(true),
+        RsTypeKind::Reference { referent: t, .. }
+        | RsTypeKind::RvalueReference { referent: t, .. }
+        | RsTypeKind::TypeAlias { underlying_type: t, .. }
+        | RsTypeKind::Slice(t)
+        | RsTypeKind::Option(t) => db.is_rs_type_kind_unsafe(t.as_ref().clone()),
+        RsTypeKind::FuncPtr { return_type, param_types, .. } => {
+            // Easier to do this imperatively when Result is involved...
+            if db.is_rs_type_kind_unsafe(return_type.as_ref().clone())? {
+                return Ok(true);
+            }
+            for param_type in param_types.iter().cloned() {
+                if db.is_rs_type_kind_unsafe(param_type)? {
+                    return Ok(true);
+                }
+            }
+            Ok(false)
+        }
+        RsTypeKind::IncompleteRecord { .. } => {
+            // TODO(b/390474240): Add a way to mark a forward declaration as being an unsafe
+            // type.
+            Ok(false)
+        }
+        RsTypeKind::Enum { .. }
+        | RsTypeKind::Primitive(..)
+        | RsTypeKind::TypeMapOverride { .. } => Ok(false),
+        // TODO(b/390621592): Should bridge types just delegate to the underlying type?
+        RsTypeKind::BridgeType { original_type: record, .. }
+        | RsTypeKind::Record { record, .. } => {
+            if record.is_unsafe_type {
+                return Ok(true);
+            }
+            if record.record_type == RecordType::Union {
+                return Ok(true);
+            }
+            for field in &record.fields {
+                if field.access != AccessSpecifier::Public {
+                    continue;
+                }
+                let Ok(mapped_type) = &field.type_ else {
+                    continue;
+                };
+                let field_rs_type_kind = db.rs_type_kind(mapped_type.rs_type.clone())?;
+                if db.is_rs_type_kind_unsafe(field_rs_type_kind)? {
+                    return Ok(true);
+                }
+            }
+            Ok(false)
+        }
+    }
 }
 
 fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind> {

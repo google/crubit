@@ -200,7 +200,7 @@ macro_rules! query_group {
     $trait_vis trait $trait $(<$($type_param),*>)?{
       $(
         $(#[doc = $input_doc])*
-        fn $input_function(&self) -> $input_type { unimplemented!() }
+        fn $input_function(&self) -> $input_type { unimplemented!(concat!("input function '", stringify!($input_function), "'")) }
       )*
       $(
         fn $break_cycles_function(
@@ -208,7 +208,7 @@ macro_rules! query_group {
           $(
             $break_cycles_arg : $break_cycles_arg_type
           ),*
-        ) -> $break_cycles_return_type { _ = ($($break_cycles_arg),*); unimplemented!() }
+        ) -> $break_cycles_return_type { _ = ($($break_cycles_arg),*); unimplemented!(concat!("break cycles function '", stringify!($break_cycles_function), "'")) }
       )*
       $(
         fn $function(
@@ -216,7 +216,7 @@ macro_rules! query_group {
           $(
             $arg : $arg_type
           ),*
-        ) -> $return_type { _ = ($($arg),*); unimplemented!() }
+        ) -> $return_type { _ = ($($arg),*); unimplemented!(concat!("function '", stringify!($function), "'")) }
       )*
     }
 
@@ -235,8 +235,6 @@ macro_rules! query_group {
         $input_function: $input_type,
       )*
       $(
-        // Note that we store $break_cycles_return_type here, not Option<$break_cycles_return_type>.
-        // This is because we don't cache failed calls.
         $break_cycles_function: $crate::internal::FnAndTable<
             fn(dyn_trait!(), $($break_cycles_arg_type),*) -> $break_cycles_return_type,
             ($($break_cycles_arg_type,)*),
