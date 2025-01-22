@@ -540,7 +540,7 @@ We propose using a pragma or suitable comment string to mark source files where
 lifetime elision is allowed, e.g.:
 
 ```c++
-#pragma lifetime_elision
+#pragma clang lifetime_elision
 ```
 
 ### Static member variables and non-member variables {#static-member-variables-and-non-member-variables}
