@@ -112,4 +112,16 @@ mod tests {
         assert_eq!(100 * 200, simple_functions::apply_binary_op(100, 200, Some(multiply)),);
         assert_eq!(300 + 400, simple_functions::apply_binary_op(300, 400, Some(add)),);
     }
+
+    #[gtest]
+    fn test_llvm_no_mangle_marker() {
+        use simple_functions::llvm_no_mangle_marker;
+        assert_eq!(llvm_no_mangle_marker(), 42);
+    }
+
+    #[gtest]
+    fn asm_name_with_dollar_sign() {
+        use simple_functions::asm_name_with_dollar_sign;
+        assert_eq!(asm_name_with_dollar_sign(), 42);
+    }
 }

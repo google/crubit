@@ -11,7 +11,10 @@ use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
+use std::borrow::Cow;
+use std::fmt::Write;
 use std::rc::Rc;
+use unicode_ident::is_xid_continue;
 
 /// If we know the original C++ function is codegenned and already compatible
 /// with `extern "C"` calling convention we skip creating/calling the C++ thunk
@@ -188,13 +191,46 @@ pub fn generate_function_thunk(
     })
 }
 
+// Converts `mangled_name` into a string that can be used within an identifier.
+// All characters in the result are guaranteed to be from the XID_Continue class (though not
+// necessarily XID_Start, so the fragment can't be used at the start of an identifier).
+//
+// The escaping scheme is not collision-free, i.e. two different inputs may map to the same output.
+// In practice, though, collisions are extremely unlikely, and other aspects of the way we create
+// thunk names may also cause (very unlikely) collisions.
+fn ident_fragment_from_mangled_name(mangled_name: &str) -> Cow<str> {
+    // LLVM identifiers use the `\01` prefix to suppress mangling:
+    // https://llvm.org/docs/LangRef.html#identifiers
+    // We won't be passing the name to LLVM anyway, so we simply strip the prefix if present.
+    let mangled_name = mangled_name.strip_prefix('\u{1}').unwrap_or(mangled_name);
+
+    if mangled_name.chars().all(is_xid_continue) {
+        return mangled_name.into();
+    }
+
+    let mut ident_name = String::new();
+
+    for c in mangled_name.chars() {
+        if is_xid_continue(c) {
+            ident_name.push(c);
+        } else {
+            let _ = write!(ident_name, "_u{}_", c as u32);
+        }
+    }
+
+    ident_name.into()
+}
+
 pub fn thunk_ident(func: &Func) -> Ident {
     let odr_suffix = if func.is_member_or_descendant_of_class_template {
         func.owning_target.convert_to_cc_identifier()
     } else {
         String::new()
     };
-    format_ident!("__rust_thunk__{}{odr_suffix}", func.mangled_name.as_ref())
+    format_ident!(
+        "__rust_thunk__{}{odr_suffix}",
+        ident_fragment_from_mangled_name(func.mangled_name.as_ref())
+    )
 }
 
 pub fn thunk_ident_for_derived_member_function(func: &Func, derived_record: Rc<Record>) -> Ident {
@@ -205,7 +241,7 @@ pub fn thunk_ident_for_derived_member_function(func: &Func, derived_record: Rc<R
     };
     format_ident!(
         "__rust_thunk__{}{odr_suffix}_{}",
-        func.mangled_name.as_ref(),
+        ident_fragment_from_mangled_name(func.mangled_name.as_ref()),
         derived_record.rs_name.as_ref()
     )
 }

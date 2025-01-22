@@ -38,3 +38,7 @@ int multiply_with_keyword_named_parameters(int self, int crate, int super) {
 
 int (*get_pointer_to_multiply_function())(int, int) { return multiply; }
 int (&get_reference_to_multiply_function())(int, int) { return multiply; }
+
+int llvm_no_mangle_marker() { return 42; }
+
+int asm_name_with_dollar_sign() { return 42; }
