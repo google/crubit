@@ -18,7 +18,6 @@ mod format_type;
 mod generate_function;
 mod generate_function_thunk;
 mod generate_struct_and_union;
-mod query_compiler;
 
 use crate::format_type::{
     create_canonical_name_from_foreign_path, ensure_ty_is_pointer_like, format_cc_ident,
@@ -29,12 +28,6 @@ use crate::format_type::{
 use crate::generate_function::generate_function;
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{generate_adt, generate_adt_core};
-use crate::query_compiler::{
-    count_regions, does_type_implement_trait, get_layout, get_scalar_int_type,
-    get_tag_size_with_padding, is_c_abi_compatible_by_value, is_directly_public, is_exported,
-    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env,
-    public_free_items_in_mod, repr_attrs,
-};
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
@@ -46,6 +39,12 @@ pub use database::{Database, IncludeGuard};
 use error_report::{anyhow, bail, ErrorReporting};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
+use query_compiler::{
+    count_regions, does_type_implement_trait, get_layout, get_scalar_int_type,
+    get_tag_size_with_padding, is_c_abi_compatible_by_value, is_directly_public, is_exported,
+    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env,
+    public_free_items_in_mod, repr_attrs,
+};
 use quote::{format_ident, quote};
 use rustc_attr_parsing::find_deprecation;
 use rustc_hir::def::{DefKind, Res};
@@ -93,6 +92,14 @@ fn add_include_guard(db: &dyn BindingsGenerator<'_>, cc_api: TokenStream) -> Res
     }
 }
 
+/// Wrap `repr_attrs` for use as a database function.
+fn repr_attrs_from_db(
+    db: &dyn BindingsGenerator<'_>,
+    def_id: DefId,
+) -> Rc<[rustc_attr_data_structures::ReprAttr]> {
+    repr_attrs(db.tcx(), def_id)
+}
+
 pub fn new_database<'db>(
     tcx: TyCtxt<'db>,
     crubit_support_path_format: Rc<str>,
@@ -117,7 +124,7 @@ pub fn new_database<'db>(
         no_thunk_name_mangling,
         h_out_include_guard,
         support_header,
-        repr_attrs,
+        repr_attrs_from_db,
         reexported_symbol_canonical_name_mapping,
         format_cc_ident_symbol,
         format_top_level_ns_for_crate,
@@ -573,7 +580,7 @@ fn collect_alias_from_use(
 
     let mut aliases = vec![];
     if def_kind == DefKind::Mod {
-        for (item_def_id, item_def_kind) in public_free_items_in_mod(db, def_id) {
+        for (item_def_id, item_def_kind) in public_free_items_in_mod(db.tcx(), def_id) {
             let item_name = tcx.item_name(item_def_id).to_string();
             // TODO(b/350772554): Support export Enum fields.
             if !item_name.is_empty() {

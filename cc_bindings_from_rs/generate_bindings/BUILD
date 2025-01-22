@@ -22,12 +22,12 @@ rust_library(
         "generate_function_thunk.rs",
         "generate_struct_and_union.rs",
         "lib.rs",
-        "query_compiler.rs",
     ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
+        ":query_compiler",
         "//cc_bindings_from_rs:crubit_attr",
         "//cc_bindings_from_rs:run_compiler",
         "//cc_bindings_from_rs:toposort",
@@ -54,5 +54,19 @@ crubit_rust_test(
         "//cc_bindings_from_rs:run_compiler_test_support",
         "//common:token_stream_matchers",
         "@crate_index//:itertools",
+    ],
+)
+
+rust_library(
+    name = "query_compiler",
+    srcs = [
+        "query_compiler.rs",
+    ],
+    # LINT.IfChange
+    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
+    deps = [
+        "//common:arc_anyhow",
+        "//common:error_report",
     ],
 )

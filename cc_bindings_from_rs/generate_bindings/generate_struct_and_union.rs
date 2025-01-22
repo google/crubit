@@ -894,7 +894,7 @@ fn generate_fields<'tcx>(
                 let tag_enum = match layout_variants {
                     Variants::Single { .. } | Variants::Empty => quote! {},
                     Variants::Multiple { tag, .. } => {
-                        let tag_ty = get_scalar_int_type(db, *tag);
+                        let tag_ty = get_scalar_int_type(db.tcx(), *tag);
 
                         let tag_tokens = format_ty_for_cc(
                             db,

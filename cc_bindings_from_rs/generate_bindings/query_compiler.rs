@@ -1,11 +1,12 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![feature(rustc_private)]
+#![deny(rustc::internal)]
 
 //! Query the rust compiler.
 
 use arc_anyhow::Result;
-use database::BindingsGenerator;
 use error_report::anyhow;
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
 use rustc_attr_data_structures::IntType;
@@ -125,15 +126,11 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
     tcx.instantiate_bound_regions_uncached(sig, region_f)
 }
 
-pub fn public_free_items_in_mod(
-    db: &dyn BindingsGenerator<'_>,
-    def_id: DefId,
-) -> Vec<(DefId, DefKind)> {
+pub fn public_free_items_in_mod(tcx: TyCtxt, def_id: DefId) -> Vec<(DefId, DefKind)> {
     let mut items = vec![];
     if def_id.as_local().is_none() {
         return items;
     }
-    let tcx = db.tcx();
     let local_mod_def_id = LocalModDefId::new_unchecked(def_id.as_local().unwrap());
     for item_id in tcx.hir_module_items(local_mod_def_id).free_items() {
         let item_local_def_id: LocalDefId = item_id.owner_id.def_id;
@@ -216,11 +213,7 @@ fn convert_interger_type_to_int_type(input: IntegerType) -> IntType {
 
 // TODO: Replace calls to this function with direct call to `repr.transparent()`
 // and `repr.c()` etc.
-pub fn repr_attrs(
-    db: &dyn BindingsGenerator<'_>,
-    def_id: DefId,
-) -> Rc<[rustc_attr_data_structures::ReprAttr]> {
-    let tcx = db.tcx();
+pub fn repr_attrs(tcx: TyCtxt, def_id: DefId) -> Rc<[rustc_attr_data_structures::ReprAttr]> {
     let mut result = Vec::new();
     let ty = tcx.type_of(def_id).instantiate_identity();
     match ty.kind() {
@@ -258,8 +251,7 @@ pub fn repr_attrs(
 // Converts a scalar integer to a Ty.
 // We assume the scalar represents an integer, and not a float or a pointer.
 // https://doc.rust-lang.org/beta/nightly-rustc/rustc_abi/enum.Primitive.html
-pub fn get_scalar_int_type<'tcx>(db: &dyn BindingsGenerator<'tcx>, scalar: Scalar) -> Ty<'tcx> {
-    let tcx = db.tcx();
+pub fn get_scalar_int_type<'tcx>(tcx: TyCtxt<'tcx>, scalar: Scalar) -> Ty<'tcx> {
     match scalar.primitive() {
         Primitive::Int(scalar_int, signed) => {
             // Map the corresponding primitive to rust type.

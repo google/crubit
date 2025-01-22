@@ -12,6 +12,7 @@ edition = "2021"
 path = "../../../../cc_bindings_from_rs/generate_bindings/lib.rs"
 
 [dependencies]
+query_compiler = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/query_compiler" }
 crubit_attr = { path = "../../../../cargo/cc_bindings_from_rs/crubit_attr" }
 run_compiler = { path = "../../../../cargo/cc_bindings_from_rs/run_compiler" }
 toposort = { path = "../../../../cargo/cc_bindings_from_rs/toposort" }
