@@ -309,6 +309,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         build_info = build_info,
         stamp = False,
         experimental_use_cc_common_link = False,
+        lint_files = [],
     )
 
     # TODO(b/282958841): The `collect_inputs` call above should take the `data`
