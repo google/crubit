@@ -51,7 +51,6 @@ ast_matchers::internal::Matcher<Stmt> isPointerReturn();
 ast_matchers::internal::Matcher<CXXCtorInitializer> isCtorMemberInitializer();
 ast_matchers::internal::Matcher<Stmt> isZeroParamConstMemberCall();
 ast_matchers::internal::Matcher<Stmt> isZeroParamConstMemberOperatorCall();
-ast_matchers::internal::Matcher<Stmt> isOptionalOperatorArrowCall();
 ast_matchers::internal::Matcher<Stmt> isNonConstMemberCall();
 ast_matchers::internal::Matcher<Stmt> isNonConstMemberOperatorCall();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerArrowMemberExpr();

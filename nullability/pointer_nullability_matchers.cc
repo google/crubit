@@ -118,13 +118,6 @@ Matcher<Stmt> isZeroParamConstMemberOperatorCall() {
       callee(cxxMethodDecl(parameterCountIs(0), isConst())));
 }
 
-Matcher<Stmt> isOptionalOperatorArrowCall() {
-  return cxxOperatorCallExpr(
-      hasOverloadedOperatorName("->"),
-      callee(cxxMethodDecl(ofClass(hasAnyName(
-          "::std::optional", "::absl::optional", "::folly::Optional")))));
-}
-
 Matcher<Stmt> isNonConstMemberCall() {
   return cxxMemberCallExpr(callee(cxxMethodDecl(unless(isConst()))));
 }

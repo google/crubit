@@ -1106,7 +1106,7 @@ TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembersInExpr) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, OptionalOperatorArrowCall) {
+TEST(PointerNullabilityTest, OptionalOperatorArrowAndStarCall) {
   // Check that repeated accesses to a pointer behind an optional are considered
   // to yield the same pointer -- but only if the optional is not modified in
   // the meantime.
@@ -1116,6 +1116,9 @@ TEST(PointerNullabilityTest, OptionalOperatorArrowCall) {
     struct optional {
       bool has_value() const;
       T* operator->();
+      const T* operator->() const;
+      const T& operator*() const;
+      const T& value() const;
     };
     }  // namespace std
 
@@ -1128,8 +1131,47 @@ TEST(PointerNullabilityTest, OptionalOperatorArrowCall) {
       *opt1->p;  // [[unsafe]]
       if (opt1->p != nullptr) {
         *opt1->p;
+        *((*opt1).p);
+        *(opt1.value().p);
         opt1 = opt2;
         *opt1->p;  // [[unsafe]]
+      }
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, StatusOrOperatorArrowAndStarCall) {
+  // Check that repeated accesses to a pointer behind a StatusOr (or similar
+  // smart pointer-like class) are considered to yield the same pointer --
+  // but only if it is not modified in the meantime.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    namespace absl {
+    template <typename T>
+    class StatusOr {
+     public:
+      bool ok() const;
+      const T& operator*() const&;
+      T& operator*() &;
+      const T* operator->() const;
+      T* operator->();
+      const T& value() const;
+      T& value();
+    };
+    }  // namespace absl
+
+    struct S {
+      int* _Nullable p;
+    };
+
+    void target(absl::StatusOr<S> sor1, absl::StatusOr<S> sor2) {
+      if (!sor1.ok() || !sor2.ok()) return;
+      *sor1->p;  // [[unsafe]]
+      if (sor1->p != nullptr) {
+        *sor1->p;
+        *((*sor1).p);
+        *(sor1.value().p);
+        sor1 = sor2;
+        *sor1->p;  // [[unsafe]]
       }
     }
   )cc"));

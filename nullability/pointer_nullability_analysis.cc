@@ -40,6 +40,7 @@
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/MatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/RecordOps.h"
+#include "clang/Analysis/FlowSensitive/SmartPointerAccessorCaching.h"
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/Builtins.h"
@@ -1245,6 +1246,19 @@ void transferValue_AccessorCall(
   }
 }
 
+std::function<void(StorageLocation &)>
+initCallbackForStorageLocationIfSmartPointer(absl::Nonnull<const CallExpr *> CE,
+                                             dataflow::Environment &Env) {
+  if (!isSupportedSmartPointerType(CE->getType()))
+    return [](StorageLocation &Loc) {};
+  return [CE, &Env](StorageLocation &Loc) {
+    setSmartPointerValue(cast<RecordStorageLocation>(Loc),
+                         cast<PointerValue>(Env.createValue(
+                             underlyingRawPointerType(CE->getType()))),
+                         Env);
+  };
+}
+
 void handleConstMemberCall(
     absl::Nonnull<const CallExpr *> CE,
     absl::Nullable<dataflow::RecordStorageLocation *> RecordLoc,
@@ -1257,13 +1271,8 @@ void handleConstMemberCall(
   if (RecordLoc != nullptr && isSupportedSmartPointerType(CE->getType())) {
     StorageLocation *Loc =
         State.Lattice.getOrCreateConstMethodReturnStorageLocation(
-            *RecordLoc, CE, State.Env, [&](StorageLocation &Loc) {
-              setSmartPointerValue(
-                  cast<RecordStorageLocation>(Loc),
-                  cast<PointerValue>(State.Env.createValue(
-                      underlyingRawPointerType(CE->getType()))),
-                  State.Env);
-            });
+            *RecordLoc, CE, State.Env,
+            initCallbackForStorageLocationIfSmartPointer(CE, State.Env));
     if (Loc == nullptr) return;
 
     if (CE->isGLValue()) {
@@ -1313,18 +1322,6 @@ void transferValue_ConstMemberOperatorCall(
     TransferState<PointerNullabilityLattice> &State) {
   auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
       State.Env.getStorageLocation(*OCE->getArg(0)));
-  handleConstMemberCall(OCE, RecordLoc, Result, State);
-}
-
-void transferValue_OptionalOperatorArrowCall(
-    absl::Nonnull<const CXXOperatorCallExpr *> OCE,
-    const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
-      State.Env.getStorageLocation(*OCE->getArg(0)));
-  // `optional::operator->` isn't necessarily const, but it behaves the way we
-  // model "const member calls": It always returns the same pointer if the
-  // optional wasn't mutated in the meantime.
   handleConstMemberCall(OCE, RecordLoc, Result, State);
 }
 
@@ -1841,13 +1838,50 @@ auto buildValueTransferer() {
                                         transferValue_WeakPtrLockCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSupportedPointerAccessorCall(),
                                         transferValue_AccessorCall)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(
+          dataflow::isSmartPointerLikeOperatorStar(),
+          [](const CXXOperatorCallExpr *CE,
+             const MatchFinder::MatchResult &Result,
+             TransferState<PointerNullabilityLattice> &State) {
+            auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
+                State.Env.getStorageLocation(*CE->getArg(0)));
+            dataflow::transferSmartPointerLikeCachedDeref(
+                CE, RecordLoc, State,
+                initCallbackForStorageLocationIfSmartPointer(CE, State.Env));
+          })
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(
+          dataflow::isSmartPointerLikeOperatorArrow(),
+          [](const CXXOperatorCallExpr *CE,
+             const MatchFinder::MatchResult &Result,
+             TransferState<PointerNullabilityLattice> &State) {
+            auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
+                State.Env.getStorageLocation(*CE->getArg(0)));
+            dataflow::transferSmartPointerLikeCachedGet(
+                CE, RecordLoc, State,
+                initCallbackForStorageLocationIfSmartPointer(CE, State.Env));
+          })
+      .CaseOfCFGStmt<CXXMemberCallExpr>(
+          dataflow::isSmartPointerLikeValueMethodCall(),
+          [](const CXXMemberCallExpr *CE,
+             const MatchFinder::MatchResult &Result,
+             TransferState<PointerNullabilityLattice> &State) {
+            dataflow::transferSmartPointerLikeCachedDeref(
+                CE, getImplicitObjectLocation(*CE, State.Env), State,
+                initCallbackForStorageLocationIfSmartPointer(CE, State.Env));
+          })
+      .CaseOfCFGStmt<CXXMemberCallExpr>(
+          dataflow::isSmartPointerLikeGetMethodCall(),
+          [](const CXXMemberCallExpr *CE,
+             const MatchFinder::MatchResult &Result,
+             TransferState<PointerNullabilityLattice> &State) {
+            dataflow::transferSmartPointerLikeCachedGet(
+                CE, getImplicitObjectLocation(*CE, State.Env), State,
+                initCallbackForStorageLocationIfSmartPointer(CE, State.Env));
+          })
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),
                                         transferValue_ConstMemberCall)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isZeroParamConstMemberOperatorCall(),
                                           transferValue_ConstMemberOperatorCall)
-      .CaseOfCFGStmt<CXXOperatorCallExpr>(
-          isOptionalOperatorArrowCall(),
-          transferValue_OptionalOperatorArrowCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isNonConstMemberCall(),
                                         transferValue_NonConstMemberCall)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(
