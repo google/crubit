@@ -312,6 +312,7 @@ bool IsKnownAttr(const clang::Attr& attr) {
          clang::isa<clang::TrivialABIAttr>(attr) ||
          clang::isa<clang::PreferredNameAttr>(attr) ||
          clang::isa<clang::OwnerAttr>(attr) ||
+         clang::isa<clang::WarnUnusedResultAttr>(attr) ||
          clang::isa<clang::PointerAttr>(attr);
 }
 
@@ -520,6 +521,13 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   bool is_effectively_final = record_decl->isEffectivelyFinal() ||
                               record_decl->isUnion() ||
                               FinalOverrides().contains(preferred_cc_name);
+
+  std::optional<std::string> nodiscard;
+  if (const auto* attr = record_decl->getAttr<clang::WarnUnusedResultAttr>();
+      attr != nullptr) {
+    nodiscard.emplace(attr->getMessage());
+  }
+
   auto item_ids = ictx_.GetItemIdsInSourceOrder(record_decl);
   item_ids.erase(std::remove_if(item_ids.begin(), item_ids.end(),
                                 [&](ItemId item_id) {
@@ -571,6 +579,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .is_trivial_abi = record_decl->canPassInRegisters(),
       .is_inheritable = !is_effectively_final,
       .is_abstract = record_decl->isAbstract(),
+      .nodiscard = std::move(nodiscard),
       .record_type = *record_type,
       .is_aggregate = record_decl->isAggregate(),
       .is_anon_record_with_typedef = anon_typedef != nullptr,

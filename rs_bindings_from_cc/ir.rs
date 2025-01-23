@@ -755,6 +755,9 @@ pub struct Record {
     pub is_trivial_abi: bool,
     pub is_inheritable: bool,
     pub is_abstract: bool,
+    /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
+    /// string is used.
+    pub nodiscard: Option<Rc<str>>,
     pub record_type: RecordType,
     pub is_aggregate: bool,
     pub is_anon_record_with_typedef: bool,

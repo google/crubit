@@ -687,6 +687,10 @@ struct Record {
   // Whether this type is abstract.
   bool is_abstract = false;
 
+  // Whether this type is annotated with [[clang::warn_unused_result]].
+  // https://clang.llvm.org/docs/AttributeReference.html#nodiscard-warn-unused-result
+  std::optional<std::string> nodiscard = std::nullopt;
+
   // Whether this `Record` corresponds to a C++ `union`, `struct`, or `class`.
   RecordType record_type;
 

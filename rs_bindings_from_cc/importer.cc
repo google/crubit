@@ -955,6 +955,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
             case TypeNullable:
             case TypeNonNull:
             case TypeNullUnspecified:
+            case WarnUnusedResult:
               return true;
             default:
               return false;

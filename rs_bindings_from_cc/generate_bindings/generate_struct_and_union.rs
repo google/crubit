@@ -615,10 +615,22 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
         quote! {impl !Sync for #ident {}}
     };
 
+    let must_use = match &record.nodiscard {
+        None => quote! {},
+        Some(message) => {
+            if message.is_empty() {
+                quote! { #[must_use] }
+            } else {
+                quote! { #[must_use = #message] }
+            }
+        }
+    };
+
     let record_tokens = quote! {
         #doc_comment
         #derives
         #recursively_pinned_attribute
+        #must_use
         #[repr(#( #repr_attributes ),*)]
         #[__crubit::annotate(cpp_type=#fully_qualified_cc_name)]
         pub #record_kind #ident {
