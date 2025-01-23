@@ -630,13 +630,6 @@ fn test_struct_with_unsafe_annotation() {
 
 #[gtest]
 fn test_conflicting_unsafe_annotation() {
-    // This test demonstrates the current behavior when we have conflicting
-    // `crubit_override_unsafe` annotations.
-    // TODO(mboehme): I think this behavior isn't desirable:
-    // - We mark the struct as safe, even though one declaration calls it unsafe.
-    // - But regardless, I think we shouldn't even be trying to consolidate
-    //   conflicting annotations; instead, we should diagnose the conflict as an
-    //   error.
     let ir = ir_from_cc(
         r#"
         struct [[clang::annotate("crubit_override_unsafe", true)]] S;
@@ -647,14 +640,17 @@ fn test_conflicting_unsafe_annotation() {
     )
     .unwrap();
 
+    assert_ir_not_matches!(ir, quote! { Record { ... "S" ... } });
     assert_ir_matches!(
         ir,
-        quote! {
-            Record {
-                rs_name: "S", ...
-                is_unsafe_type: false, ...
-            }
-        }
+        quote! { UnsupportedItem {
+            name: "S",
+            kind: Type,
+            path: Some(UnsupportedItemPath { ident: "S", enclosing_item_id: None, }),
+            errors: [FormattedError {
+                ..., message: "Different declarations have inconsistent `crubit_override_unsafe` annotations.", ...
+            }], ...
+        }}
     );
 }
 

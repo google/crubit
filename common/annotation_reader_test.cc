@@ -51,5 +51,101 @@ TEST(GetAnnotateAttrArgsTest, FailureDoubleAnnotation) {
               "Only one `foo` annotation may be placed on a declaration.")));
 }
 
+TEST(AnnotationReaderTest, GetAnnotateAttrFailureArgNotIntegralOrString) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo", 1.0)]] extern int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  ASSERT_THAT(GetAnnotateAttrArgs(var, "foo"),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Arguments of `foo` annotation must be of "
+                                 "integral type or string literals")));
+}
+
+TEST(AnnotationReaderTest, GetAnnotateAttrSuccessConsistentAnnotations) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo", "arg1", 1)]] extern int i;
+    [[clang::annotate("foo", "arg1", 1)]] extern int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  ASSERT_THAT(GetAnnotateAttrArgs(var, "foo"), IsOkAndHolds(Ne(std::nullopt)));
+}
+
+TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingIntArgs) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo", 1)]] extern int i;
+    [[clang::annotate("foo", 2)]] extern int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  ASSERT_THAT(
+      GetAnnotateAttrArgs(var, "foo"),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr(
+              "Different declarations have inconsistent `foo` annotations.")));
+}
+
+TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingStringArgs) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo", "1")]] extern int i;
+    [[clang::annotate("foo", "2")]] extern int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  ASSERT_THAT(
+      GetAnnotateAttrArgs(var, "foo"),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr(
+              "Different declarations have inconsistent `foo` annotations.")));
+}
+
+TEST(AnnotationReaderTest, GetAnnotateAttrFailureConflictingArgCounts) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo")]] extern int i;
+    [[clang::annotate("foo", 1)]] extern int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  ASSERT_THAT(
+      GetAnnotateAttrArgs(var, "foo"),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr(
+              "Different declarations have inconsistent `foo` annotations.")));
+}
+
+TEST(AnnotationReaderTest,
+     GetAnnotateAttrSuccessAnnotationMissingFromDefinition) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo")]] extern int i;
+    int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  ASSERT_THAT(GetAnnotateAttrArgs(var, "foo"), IsOkAndHolds(Ne(std::nullopt)));
+}
+
+TEST(AnnotationReaderTest,
+     GetAnnotateAttrSuccessAnnotationMissingFromForwardDeclaration) {
+  clang::TestAST ast(R"cc(
+    extern int i;
+    [[clang::annotate("foo")]] int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  ASSERT_THAT(GetAnnotateAttrArgs(var, "foo"), IsOkAndHolds(Ne(std::nullopt)));
+}
+
 }  // namespace
 }  // namespace crubit

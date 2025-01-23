@@ -32,6 +32,8 @@ cc_library(
     srcs = ["annotation_reader.cc"],
     hdrs = ["annotation_reader.h"],
     deps = [
+        ":status_macros",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
