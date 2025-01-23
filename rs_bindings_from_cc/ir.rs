@@ -802,6 +802,18 @@ impl Record {
             RecordType::Struct | RecordType::Class => false,
         }
     }
+
+    /// Returns a `TokenStream` containing the C++ tag kind for this record.
+    ///
+    /// This is the `struct`, `union`, or `class` keyword, or nothing if this
+    /// is an anonymous record with a typedef.
+    pub fn cc_tag_kind(&self) -> TokenStream {
+        if self.is_anon_record_with_typedef {
+            quote! {}
+        } else {
+            self.record_type.into_token_stream()
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1604,6 +1616,13 @@ impl IR {
 
     pub fn crate_root_path(&self) -> Option<Rc<str>> {
         self.flat_ir.crate_root_path.clone()
+    }
+
+    pub fn crate_root_path_tokens(&self) -> TokenStream {
+        match self.crate_root_path().as_deref().map(make_rs_ident) {
+            None => quote! { crate },
+            Some(crate_root_path) => quote! { crate :: #crate_root_path },
+        }
     }
 
     pub fn get_functions_by_name(

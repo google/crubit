@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::Result;
-use code_gen_utils::make_rs_ident;
+use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
 use database::db::BindingsGenerator;
 use database::rs_snippet::{format_generic_params, unique_lifetimes, Mutability, RsTypeKind};
 use error_report::{anyhow, bail};
@@ -261,14 +261,14 @@ pub fn generate_function_thunk_impl(
             quote! { operator #name }
         }
         UnqualifiedIdentifier::Identifier(id) => {
-            let fn_ident = crate::format_cc_ident(&id.identifier);
+            let fn_ident = expect_format_cc_ident(&id.identifier);
             match func.member_func_metadata.as_ref() {
                 Some(meta) => {
                     if meta.instance_method_metadata.is_some() {
                         quote! { #fn_ident }
                     } else {
                         let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
-                        let record_ident = crate::format_cc_ident(record.cc_name.as_ref());
+                        let record_ident = expect_format_cc_ident(record.cc_name.as_ref());
                         let namespace_qualifier = ir.namespace_qualifier(record).format_for_cc()?;
                         quote! { #namespace_qualifier #record_ident :: #fn_ident }
                     }
@@ -292,7 +292,7 @@ pub fn generate_function_thunk_impl(
     };
 
     let mut param_idents =
-        func.params.iter().map(|p| crate::format_cc_ident(&p.identifier.identifier)).collect_vec();
+        func.params.iter().map(|p| expect_format_cc_ident(&p.identifier.identifier)).collect_vec();
 
     let mut conversion_externs = quote! {};
     let mut conversion_stmts = quote! {};
@@ -309,8 +309,8 @@ pub fn generate_function_thunk_impl(
             if arg_type.is_bridge_type() {
                 match &arg_type {
                     RsTypeKind::BridgeType { rust_to_cpp_converter, .. } => {
-                        let convert_function = crate::format_cc_ident(rust_to_cpp_converter);
-                        let ident = crate::format_cc_ident(&p.identifier.identifier);
+                        let convert_function = expect_format_cc_ident(rust_to_cpp_converter);
+                        let ident = expect_format_cc_ident(&p.identifier.identifier);
                         let cpp_ident = convert_ident(&ident);
                         conversion_externs.extend(quote! {
                             extern "C" void #convert_function(void* rust_struct, void* cpp_struct);
@@ -340,7 +340,7 @@ pub fn generate_function_thunk_impl(
         .params
         .iter()
         .map(|p| {
-            let mut ident = crate::format_cc_ident(&p.identifier.identifier);
+            let mut ident = expect_format_cc_ident(&p.identifier.identifier);
             if db.rs_type_kind(p.type_.rs_type.clone())?.is_bridge_type() {
                 let formatted_ident = convert_ident(&ident);
                 ident = quote! { &(#formatted_ident.val) };
@@ -371,14 +371,14 @@ pub fn generate_function_thunk_impl(
     let is_return_value_c_abi_compatible = return_type_kind.is_c_abi_compatible_by_value();
 
     let return_type_name = if !is_return_value_c_abi_compatible {
-        param_idents.insert(0, crate::format_cc_ident("__return"));
+        param_idents.insert(0, expect_format_cc_ident("__return"));
         // In order to be modified, the return type can't be const.
         let mut cc_return_type = func.return_type.cpp_type.clone();
         cc_return_type.is_const = false;
         let return_type_name = crate::format_cpp_type(&cc_return_type, &ir)?;
         match &return_type_kind {
             RsTypeKind::BridgeType { cpp_to_rust_converter, .. } => {
-                let convert_function = crate::format_cc_ident(cpp_to_rust_converter);
+                let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
                 conversion_externs.extend(quote! {
                     extern "C" void #convert_function(void* cpp_struct, void* rust_struct);
                 });
@@ -408,7 +408,7 @@ pub fn generate_function_thunk_impl(
                 .first()
                 .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
 
-            let this_arg = crate::format_cc_ident(&this_param.identifier.identifier);
+            let this_arg = expect_format_cc_ident(&this_param.identifier.identifier);
             let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
                 quote! {std::move(*#this_arg).}
             } else {
@@ -427,7 +427,7 @@ pub fn generate_function_thunk_impl(
         let out_param = &param_idents[0];
         match &return_type_kind {
             RsTypeKind::BridgeType { cpp_to_rust_converter, .. } => {
-                let convert_function = crate::format_cc_ident(cpp_to_rust_converter);
+                let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
                 quote! {
                     auto __original_cpp_struct = #return_expr;
                     #convert_function(&__original_cpp_struct, #out_param)
@@ -490,7 +490,7 @@ mod tests {
                 inline void f(MyTypedefDecl a, void* b, int c) {}
             "#,
         )?;
-        let BindingsTokens { rs_api_impl, .. } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api_impl, .. } = generate_bindings_tokens_for_test(ir)?;
         assert_cc_matches!(
             rs_api_impl,
             quote! {

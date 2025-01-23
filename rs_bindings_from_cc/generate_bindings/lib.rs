@@ -3,40 +3,45 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![allow(clippy::collapsible_else_if)]
 
-mod generate_comment;
-mod generate_enum;
 mod generate_function;
 mod generate_function_thunk;
 mod generate_struct_and_union;
 
 use arc_anyhow::{Context, Error, Result};
-use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
+use code_gen_utils::{expect_format_cc_ident, format_cc_includes, make_rs_ident, CcInclude};
 use database::code_snippet::{
-    required_crubit_features, ApiSnippets, Bindings, BindingsTokens, FfiBindings,
-    RequiredCrubitFeature,
+    required_crubit_features, ApiSnippets, BindingsTokens, RequiredCrubitFeature,
 };
-use database::db::{BindingsGenerator, Database, FatalErrors, ReportFatalError};
+use database::db::{BindingsGenerator, Database, ReportFatalError};
 use database::rs_snippet::{CratePath, Lifetime, Mutability, PrimitiveType, RsTypeKind};
-use error_report::{anyhow, bail, ensure, ErrorReport, ErrorReporting};
+use error_report::{anyhow, bail, ensure, ErrorReporting};
 use ffi_types::*;
-use generate_comment::{
-    generate_comment, generate_doc_comment, generate_top_level_comment, generate_unsupported,
-};
+use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};
 use generate_enum::generate_enum;
 use generate_struct_and_union::{generate_incomplete_record, generate_record};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::quote;
 use std::collections::BTreeSet;
-use std::ffi::{OsStr, OsString};
-use std::panic::catch_unwind;
-use std::path::Path;
-use std::process;
 use std::rc::Rc;
-use token_stream_printer::{
-    cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
-};
+
+#[cfg(not(test))]
+mod non_test_imports {
+    pub(crate) use database::code_snippet::{Bindings, FfiBindings};
+    pub(crate) use database::db::FatalErrors;
+    pub(crate) use error_report::ErrorReport;
+    pub(crate) use generate_comment::generate_top_level_comment;
+    pub(crate) use std::ffi::{OsStr, OsString};
+    pub(crate) use std::panic::catch_unwind;
+    pub(crate) use std::path::Path;
+    pub(crate) use std::process;
+    pub(crate) use token_stream_printer::{
+        cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
+    };
+}
+#[cfg(not(test))]
+use non_test_imports::*;
 
 /// Deserializes IR from `json` and generates bindings source code.
 ///
@@ -61,6 +66,9 @@ use token_stream_printer::{
 ///      input params: `json`, `crubit_support_path_format`, `rustfmt_exe_path`,
 ///      and `rustfmt_config_path`
 ///    * function passes ownership of the returned value to the caller
+// NOTE: This is cfg'd out for tests to prevent linker errors due to linking in both the
+// test and non-test versions of this crate.
+#[cfg(not(test))]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn GenerateBindingsImpl(
     json: FfiU8Slice,
@@ -119,6 +127,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     .unwrap_or_else(|_| process::abort())
 }
 
+#[cfg(not(test))]
 fn generate_bindings(
     json: &[u8],
     crubit_support_path_format: &str,
@@ -508,7 +517,8 @@ impl From<NoBindingsReason> for Error {
     }
 }
 
-pub(crate) fn new_database<'db>(
+/// Creats a new database. Public for testing.
+pub fn new_database<'db>(
     ir: &'db IR,
     errors: &'db dyn ErrorReporting,
     fatal_errors: &'db dyn ReportFatalError,
@@ -529,9 +539,11 @@ pub(crate) fn new_database<'db>(
     )
 }
 
-// Returns the Rust code implementing bindings, plus any auxiliary C++ code
-// needed to support it.
-fn generate_bindings_tokens(
+/// Returns the Rust code implementing bindings, plus any auxiliary C++ code
+/// needed to support it.
+//
+/// Public for use in `generate_bindings_tokens_for_test`.
+pub fn generate_bindings_tokens(
     ir: &IR,
     crubit_support_path_format: &str,
     errors: &dyn ErrorReporting,
@@ -663,11 +675,6 @@ fn generate_bindings_tokens(
         },
         rs_api_impl: quote! {#(#cc_details  __NEWLINE__ __NEWLINE__ )*},
     })
-}
-
-/// Formats a C++ identifier.  Panics if `ident` is a C++ reserved keyword.
-fn format_cc_ident(ident: &str) -> TokenStream {
-    code_gen_utils::format_cc_ident(ident).expect("IR should only contain valid C++ identifiers")
 }
 
 fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<bool> {
@@ -901,12 +908,12 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
 
 fn cpp_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
     let tagless = cc_tagless_type_name_for_record(record, ir)?;
-    let tag_kind = cc_tag_kind(record);
+    let tag_kind = record.cc_tag_kind();
     Ok(quote! { #tag_kind #tagless })
 }
 
 fn cc_tagless_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
-    let ident = crate::format_cc_ident(record.cc_name.as_ref());
+    let ident = expect_format_cc_ident(record.cc_name.as_ref());
     let namespace_qualifier = ir.namespace_qualifier(record).format_for_cc()?;
     Ok(quote! { #namespace_qualifier #ident })
 }
@@ -914,19 +921,19 @@ fn cc_tagless_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStre
 fn cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
     match item {
         Item::IncompleteRecord(incomplete_record) => {
-            let ident = crate::format_cc_ident(incomplete_record.cc_name.as_ref());
+            let ident = expect_format_cc_ident(incomplete_record.cc_name.as_ref());
             let namespace_qualifier = ir.namespace_qualifier(incomplete_record).format_for_cc()?;
             let tag_kind = incomplete_record.record_type;
             Ok(quote! { #tag_kind #namespace_qualifier #ident })
         }
         Item::Record(record) => cpp_type_name_for_record(record, ir),
         Item::Enum(enum_) => {
-            let ident = crate::format_cc_ident(&enum_.identifier.identifier);
+            let ident = expect_format_cc_ident(&enum_.identifier.identifier);
             let qualifier = cc_qualified_path_prefix(item, ir)?;
             Ok(quote! { #qualifier #ident })
         }
         Item::TypeAlias(type_alias) => {
-            let ident = crate::format_cc_ident(&type_alias.identifier.identifier);
+            let ident = expect_format_cc_ident(&type_alias.identifier.identifier);
             let qualifier = cc_qualified_path_prefix(item, ir)?;
             Ok(quote! { #qualifier #ident })
         }
@@ -954,14 +961,6 @@ fn cc_qualified_path_prefix(item: &ir::Item, ir: &ir::IR) -> Result<TokenStream>
             Ok(quote! {#name ::})
         }
         _ => bail!("Unexpected enclosing item: {item:?}"),
-    }
-}
-
-fn cc_tag_kind(record: &ir::Record) -> TokenStream {
-    if record.is_anon_record_with_typedef {
-        quote! {}
-    } else {
-        record.record_type.into_token_stream()
     }
 }
 
@@ -1056,13 +1055,6 @@ fn format_cpp_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Resul
     }
 }
 
-pub(crate) fn crate_root_path_tokens(ir: &IR) -> TokenStream {
-    match ir.crate_root_path().as_deref().map(make_rs_ident) {
-        None => quote! { crate },
-        Some(crate_root_path) => quote! { crate :: #crate_root_path },
-    }
-}
-
 fn generate_rs_api_impl_includes(
     db: &Database,
     crubit_support_path_format: &str,
@@ -1129,70 +1121,18 @@ pub(crate) mod tests {
     use arc_anyhow::Result;
     use googletest::prelude::*;
     use ir_testing::{retrieve_func, with_lifetime_macros};
+    pub(crate) use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_record};
     use static_assertions::{assert_impl_all, assert_not_impl_any};
+    pub(crate) use test_generators::{generate_bindings_tokens_for_test, TestDbFactory};
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
     use token_stream_printer::rs_tokens_to_formatted_string_for_tests;
 
-    pub fn ir_from_cc(header: &str) -> Result<IR> {
-        ir_testing::ir_from_cc(multiplatform_testing::test_platform(), header)
-    }
-    pub fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
-        ir_testing::ir_from_cc_dependency(
-            multiplatform_testing::test_platform(),
-            header,
-            dep_header,
-        )
-    }
-    pub fn ir_record(name: &str) -> Record {
-        ir_testing::ir_record(multiplatform_testing::test_platform(), name)
-    }
-
-    pub fn generate_bindings_tokens(ir: IR) -> Result<BindingsTokens> {
-        let fatal_errors = FatalErrors::new();
-        let tokens = super::generate_bindings_tokens(
-            &ir,
-            "crubit/rs_bindings_support",
-            &error_report::IgnoreErrors,
-            &fatal_errors,
-            SourceLocationDocComment::Enabled,
-        )?;
-        let fatal = fatal_errors.take_string();
-        if !fatal.is_empty() {
-            bail!("Fatal errors:{}", fatal)
-        }
-        Ok(tokens)
-    }
-
-    struct DbFactory {
-        ir: IR,
-        errors: ErrorReport,
-        fatal_errors: FatalErrors,
-    }
-
-    impl DbFactory {
-        fn from_cc(cc_str: &str) -> Result<Self> {
-            Ok(Self {
-                ir: ir_from_cc(cc_str)?,
-                errors: ErrorReport::new(),
-                fatal_errors: FatalErrors::new(),
-            })
-        }
-        fn make_db(&self) -> Database {
-            new_database(
-                &self.ir,
-                &self.errors,
-                &self.fatal_errors,
-                SourceLocationDocComment::Enabled,
-            )
-        }
-    }
-
     #[gtest]
     fn test_disable_thread_safety_warnings() -> Result<()> {
         let ir = ir_from_cc("inline void foo() {}")?;
-        let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
+        let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
             quote! {
@@ -1211,7 +1151,7 @@ pub(crate) mod tests {
     #[gtest]
     fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
         let ir = ir_from_cc(r#" int (*get_ptr_to_func())(float, double); "#)?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -1251,7 +1191,7 @@ pub(crate) mod tests {
     #[gtest]
     fn test_func_ref() -> Result<()> {
         let ir = ir_from_cc(r#" int (&get_ref_to_func())(float, double); "#)?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -1270,7 +1210,7 @@ pub(crate) mod tests {
             r#"
             int (* $a get_ptr_to_func())(float, double); "#,
         ))?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
         assert_cc_matches!(rs_api, {
             let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=33\n\
                            Error while generating bindings for item 'get_ptr_to_func':\n\
@@ -1283,7 +1223,7 @@ pub(crate) mod tests {
     #[gtest]
     fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
         let ir = ir_from_cc(r#" const int* (*get_ptr_to_func())(const int*); "#)?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -1365,7 +1305,7 @@ pub(crate) mod tests {
                 }
             );
 
-            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
             // Check that the custom "vectorcall" ABI gets propagated into the
             // return type (i.e. into `extern "vectorcall" fn`).
             assert_rs_matches!(
@@ -1439,7 +1379,7 @@ pub(crate) mod tests {
             // This test is quite similar to `test_func_ptr_thunk` - the main
             // difference is verification of the `__attribute__((vectorcall))` in
             // the expected signature of the generated thunk below.
-            let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
+            let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;
             assert_cc_matches!(
                 rs_api_impl,
                 quote! {
@@ -1464,7 +1404,7 @@ pub(crate) mod tests {
                 double f_c_calling_convention(double p1, double p2);
             "#,
             )?;
-            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
             assert_rs_matches!(
                 rs_api,
                 quote! {
@@ -1529,7 +1469,8 @@ pub(crate) mod tests {
              struct SecondStruct {};",
         )?;
 
-        let rs_api = rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens(ir)?.rs_api)?;
+        let rs_api =
+            rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens_for_test(ir)?.rs_api)?;
 
         let idx = |s: &str| rs_api.find(s).ok_or_else(|| anyhow!("'{}' missing", s));
 
@@ -1554,7 +1495,7 @@ pub(crate) mod tests {
     #[gtest]
     fn test_no_impl_drop() -> Result<()> {
         let ir = ir_from_cc("struct Trivial {};")?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {impl Drop});
         assert_rs_not_matches!(rs_api, quote! {impl ::ctor::PinnedDrop});
         Ok(())
@@ -1572,7 +1513,7 @@ pub(crate) mod tests {
                 NontrivialStruct nts;
             };"#,
         )?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -1610,7 +1551,7 @@ pub(crate) mod tests {
                 int x;
             };"#,
         )?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -1648,7 +1589,7 @@ pub(crate) mod tests {
                 inline void f(MyTypedefDecl t) {}
             "#,
         )?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -1792,7 +1733,7 @@ pub(crate) mod tests {
                 "LIFETIMES",
                 if test.lifetimes { "#pragma clang lifetime_elision" } else { "" },
             );
-            let db_factory = DbFactory::from_cc(&cc_input)?;
+            let db_factory = TestDbFactory::from_cc(&cc_input)?;
             let db = db_factory.make_db();
             let ir = db.ir();
 
@@ -1813,7 +1754,7 @@ pub(crate) mod tests {
             struct SomeStruct {};
             void foo(const SomeStruct& foo_param);
             void bar(SomeStruct& bar_param);";
-        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db_factory = TestDbFactory::from_cc(cc_input)?;
         let db = db_factory.make_db();
         let ir = db.ir();
         let record = ir.records().next().unwrap();
@@ -1843,7 +1784,7 @@ pub(crate) mod tests {
     fn test_rs_type_kind_is_shared_ref_to_without_lifetimes() -> Result<()> {
         let cc_input = "struct SomeStruct {};
              void foo(const SomeStruct& foo_param);";
-        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db_factory = TestDbFactory::from_cc(cc_input)?;
         let db = db_factory.make_db();
         let ir = db.ir();
         let record = ir.records().next().unwrap();
@@ -1867,7 +1808,7 @@ pub(crate) mod tests {
             using TypeAlias = int&;
             struct SomeStruct {};
             void foo(int a, int& b, int&& c, int* d, int** e, TypeAlias f, SomeStruct g); "#;
-        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db_factory = TestDbFactory::from_cc(cc_input)?;
         let db = db_factory.make_db();
         let ir = db.ir();
         let func = retrieve_func(&ir, "foo");
@@ -1894,7 +1835,7 @@ pub(crate) mod tests {
     #[gtest]
     fn test_rs_type_kind_lifetimes_raw_ptr() -> Result<()> {
         let cc_input = "void foo(int* a);";
-        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db_factory = TestDbFactory::from_cc(cc_input)?;
         let db = db_factory.make_db();
         let ir = db.ir();
         let f = retrieve_func(&ir, "foo");
@@ -1911,7 +1852,7 @@ pub(crate) mod tests {
             };
             SomeStruct (*get_ptr_to_func())();
         "#;
-        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db_factory = TestDbFactory::from_cc(cc_input)?;
         let db = db_factory.make_db();
         let ir = db.ir();
         let f = retrieve_func(&ir, "get_ptr_to_func");
@@ -1936,7 +1877,7 @@ pub(crate) mod tests {
             };
             void (*get_ptr_to_func())(SomeStruct);
         "#;
-        let db_factory = DbFactory::from_cc(cc_input)?;
+        let db_factory = TestDbFactory::from_cc(cc_input)?;
         let db = db_factory.make_db();
         let ir = db.ir();
         let f = retrieve_func(&ir, "get_ptr_to_func");
@@ -1956,7 +1897,7 @@ pub(crate) mod tests {
     #[gtest]
     fn test_rust_keywords_are_escaped_in_rs_api_file() -> Result<()> {
         let ir = ir_from_cc("struct type { int dyn; };")?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
         assert_rs_matches!(rs_api, quote! { struct r#type { ... r#dyn: ::core::ffi::c_int ... } });
         Ok(())
     }
@@ -1964,7 +1905,7 @@ pub(crate) mod tests {
     #[gtest]
     fn test_rust_keywords_are_not_escaped_in_rs_api_impl_file() -> Result<()> {
         let ir = ir_from_cc("struct type { int dyn; };")?;
-        let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
+        let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
             quote! { static_assert(CRUBIT_OFFSET_OF(dyn, struct type) ... ) }
@@ -1974,7 +1915,7 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_namespace_module_items() -> Result<()> {
-        let rs_api = generate_bindings_tokens(ir_from_cc(
+        let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
             r#"
             namespace test_namespace_bindings {
                 int func();
@@ -2012,7 +1953,7 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_detail_outside_of_namespace_module() -> Result<()> {
-        let rs_api = generate_bindings_tokens(ir_from_cc(
+        let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
             r#"
             namespace test_namespace_bindings {
                 int f();
@@ -2043,7 +1984,7 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_assertions_outside_of_namespace_module() -> Result<()> {
-        let rs_api = generate_bindings_tokens(ir_from_cc(
+        let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
             r#"
             namespace test_namespace_bindings {
                 struct S {
@@ -2075,7 +2016,7 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_reopened_namespaces() -> Result<()> {
-        let rs_api = generate_bindings_tokens(ir_from_cc(
+        let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
             r#"
         namespace test_namespace_bindings {
         namespace inner {}
@@ -2113,7 +2054,7 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_qualified_identifiers_in_impl_file() -> Result<()> {
-        let rs_api_impl = generate_bindings_tokens(ir_from_cc(
+        let rs_api_impl = generate_bindings_tokens_for_test(ir_from_cc(
             r#"
         namespace test_namespace_bindings {
             inline void f() {};
@@ -2142,7 +2083,7 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_inline_namespace() -> Result<()> {
-        let rs_api = generate_bindings_tokens(ir_from_cc(
+        let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
             r#"
             namespace test_namespace_bindings {
                 inline namespace inner {
@@ -2187,7 +2128,7 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_inline_namespace_not_marked_inline() -> Result<()> {
-        let rs_api = generate_bindings_tokens(ir_from_cc(
+        let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
             r#"
             inline namespace my_inline {}
             namespace foo {}
@@ -2233,7 +2174,7 @@ pub(crate) mod tests {
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
             crubit_feature::CrubitFeature::Supported.into();
-        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_matches!(rs_api, quote! {pub struct Enum});
         assert_rs_not_matches!(rs_api, quote! {kHidden});
         Ok(())
@@ -2261,7 +2202,7 @@ pub(crate) mod tests {
             ))?;
             *ir.target_crubit_features_mut(&ir.current_target().clone()) =
                 crubit_feature::CrubitFeature::Supported.into();
-            let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+            let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
             // The namespace, and everything in it or using it, will be missing from the
             // output.
             assert_rs_not_matches!(rs_api, quote! {NotPresent});
@@ -2290,7 +2231,7 @@ pub(crate) mod tests {
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
             crubit_feature::CrubitFeature::Supported.into();
-        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
         // The namespace, and everything in it or using it, will be missing from the
         // output.
         assert_rs_not_matches!(rs_api, quote! {NotPresent});
@@ -2317,7 +2258,7 @@ pub(crate) mod tests {
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
             crubit_feature::CrubitFeature::Supported.into();
-        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
         // The namespace, and everything in it or using it, will be missing from the
         // output.
         assert_rs_not_matches!(rs_api, quote! {NotPresent});
@@ -2336,7 +2277,7 @@ pub(crate) mod tests {
         ] {
             let mut ir = ir_from_cc(item)?;
             ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
-            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
             assert_rs_not_matches!(rs_api, quote! {NotPresent});
             assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
             let contents = rs_tokens_to_formatted_string_for_tests(rs_api)?;
@@ -2357,7 +2298,7 @@ pub(crate) mod tests {
     fn test_default_crubit_features_disabled_experimental() -> Result<()> {
         let mut ir = ir_from_cc("struct NotPresent;")?;
         ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_not_matches!(rs_api, quote! {NotPresent});
         assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
         let expected = "\
@@ -2374,7 +2315,7 @@ pub(crate) mod tests {
         for dependency in ["struct NotPresent {};"] {
             let mut ir = ir_from_cc_dependency("void Func(NotPresent);", dependency)?;
             ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
-            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+            let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
             assert_rs_not_matches!(rs_api, quote! {Func});
             assert_cc_not_matches!(rs_api_impl, quote! {Func});
             let expected = "\
@@ -2395,7 +2336,7 @@ pub(crate) mod tests {
             "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;",
         )?;
         ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_not_matches!(rs_api, quote! {Func});
         assert_cc_not_matches!(rs_api_impl, quote! {Func});
         let expected = "\
@@ -2412,7 +2353,7 @@ pub(crate) mod tests {
     ) -> Result<()> {
         let mut ir = ir_from_cc_dependency("NotPresent Func();", "struct NotPresent {};")?;
         ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_not_matches!(rs_api, quote! {Func});
         assert_cc_not_matches!(rs_api_impl, quote! {Func});
         let expected = "\
@@ -2431,7 +2372,7 @@ pub(crate) mod tests {
             "NotPresent Func();",
             "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;")?;
         ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_not_matches!(rs_api, quote! {Func});
         assert_cc_not_matches!(rs_api_impl, quote! {Func});
         let expected = "\
@@ -2449,7 +2390,7 @@ pub(crate) mod tests {
         {
             let mut ir = ir_from_cc_dependency("struct Present {NotPresent field;};", dependency)?;
             ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
-            let BindingsTokens { rs_api, rs_api_impl: _ } = generate_bindings_tokens(ir)?;
+            let BindingsTokens { rs_api, rs_api_impl: _ } = generate_bindings_tokens_for_test(ir)?;
             assert_rs_matches!(
                 rs_api,
                 quote! {
@@ -2482,7 +2423,7 @@ pub(crate) mod tests {
         )?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
             crubit_feature::CrubitFeature::Supported.into();
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_not_matches!(rs_api, quote! {NotPresent});
         assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
         Ok(())
@@ -2490,7 +2431,7 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_type_map_override_assert() -> Result<()> {
-        let rs_api = generate_bindings_tokens(ir_from_cc(
+        let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
             r#" #pragma clang lifetime_elision
                 // Broken class: uses i32 but has size 1.
                 // (These asserts would fail if this were compiled.)
@@ -2516,7 +2457,7 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_type_map_override_c_abi_incompatible() -> Result<()> {
-        let rs_api = generate_bindings_tokens(ir_from_cc(
+        let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
             r#" #pragma clang lifetime_elision
                 // Broken class: uses i32 but has size 1.
                 // (These asserts would fail if this were compiled.)
@@ -2543,7 +2484,7 @@ pub(crate) mod tests {
 
     #[gtest]
     fn test_type_map_override_c_abi_compatible() -> Result<()> {
-        let rs_api = generate_bindings_tokens(ir_from_cc(
+        let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
             r#" #pragma clang lifetime_elision
                 class
                     [[clang::annotate("crubit_internal_rust_type", "i8")]]
@@ -2572,7 +2513,7 @@ pub(crate) mod tests {
     /// We cannot generate size/align assertions for incomplete types.
     #[gtest]
     fn test_type_map_override_assert_incomplete() -> Result<()> {
-        let rs_api = generate_bindings_tokens(ir_from_cc(
+        let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
             r#" #pragma clang lifetime_elision
                 // Broken class: uses i32 but has size 1.
                 // (These asserts would fail if this were compiled.)

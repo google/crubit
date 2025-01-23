@@ -1,6 +1,7 @@
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
+    "rust_test",
 )
 load(
     "//common:multiplatform_testing.bzl",
@@ -10,8 +11,6 @@ load(
 rust_library(
     name = "generate_bindings",
     srcs = [
-        "generate_comment.rs",
-        "generate_enum.rs",
         "generate_function.rs",
         "generate_function_thunk.rs",
         "generate_struct_and_union.rs",
@@ -21,6 +20,8 @@ rust_library(
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
+        ":generate_comment",
+        ":generate_enum",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_feature",
@@ -44,11 +45,123 @@ multiplatform_rust_test(
     crate = ":generate_bindings",
     tags = ["not_run:arm"],
     deps = [
+        ":multiplatform_ir_testing",
+        ":test_generators",
         "//common:multiplatform_testing",
         "//common:token_stream_matchers",
+        "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc:ir_matchers",
         "//rs_bindings_from_cc:ir_testing",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",
+    ],
+)
+
+rust_library(
+    name = "multiplatform_ir_testing",
+    testonly = True,
+    srcs = ["multiplatform_ir_testing.rs"],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        "//common:arc_anyhow",
+        "//common:multiplatform_testing",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc:ir_testing",
+    ],
+)
+
+rust_library(
+    name = "test_generators",
+    testonly = True,
+    srcs = ["test_generators.rs"],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        ":generate_bindings",
+        ":multiplatform_ir_testing",
+        "//common:arc_anyhow",
+        "//common:error_report",
+        "//common:ffi_types",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc/generate_bindings/database",
+    ],
+)
+
+rust_library(
+    name = "generate_comment",
+    srcs = [
+        "generate_comment.rs",
+    ],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_feature",
+        "//common:error_report",
+        "//common:ffi_types",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc/generate_bindings/database",
+        "@crate_index//:itertools",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+    ],
+)
+
+rust_test(
+    name = "generate_comment_test",
+    srcs = ["generate_comment_test.rs"],
+    tags = ["not_run:arm"],
+    deps = [
+        ":generate_bindings",
+        ":generate_comment",
+        "//common:arc_anyhow",
+        "//common:error_report",
+        "//common:ffi_types",
+        "//common:token_stream_matchers",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc:ir_matchers",
+        "//rs_bindings_from_cc:ir_testing",
+        "//rs_bindings_from_cc/generate_bindings/database",
+        "@crate_index//:googletest",
+        "@crate_index//:quote",
+    ],
+)
+
+rust_library(
+    name = "generate_enum",
+    srcs = [
+        "generate_enum.rs",
+    ],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        ":generate_comment",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc/generate_bindings/database",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+    ],
+)
+
+multiplatform_rust_test(
+    name = "generate_enum_test",
+    srcs = ["generate_enum_test.rs"],
+    tags = ["not_run:arm"],
+    deps = [
+        ":generate_bindings",
+        ":multiplatform_ir_testing",
+        ":test_generators",
+        "//common:arc_anyhow",
+        "//common:token_stream_matchers",
+        "@crate_index//:googletest",
+        "@crate_index//:quote",
     ],
 )
