@@ -3,7 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 """Supporting macro for multiplatform code."""
 
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
+load(
+    "@rules_rust//rust:defs.bzl",
+    "rust_test",
+)
 
 _PLATFORMS = [
     "x86_linux",
@@ -23,7 +26,11 @@ def multiplatform_rust_test(name, **kwargs):
     for platform in _PLATFORMS:
         rustc_env["CRUBIT_TEST_PLATFORM"] = platform
         test_name = name + "-" + platform
-        crubit_rust_test(
+
+        # Note: we use `rust_test` rather than `crubit_rust_test` because we want unit tests to
+        # run using the current build platform, not the platform built with the updated version
+        # of crubit.
+        rust_test(
             name = test_name,
             **kwargs
         )
