@@ -1269,22 +1269,23 @@ void handleConstMemberCall(
   // treatment is different from booleans or raw pointers, which are
   // represented as Values.
   if (RecordLoc != nullptr && isSupportedSmartPointerType(CE->getType())) {
-    StorageLocation *Loc =
-        State.Lattice.getOrCreateConstMethodReturnStorageLocation(
-            *RecordLoc, CE, State.Env,
-            initCallbackForStorageLocationIfSmartPointer(CE, State.Env));
-    if (Loc == nullptr) return;
+    const FunctionDecl *DirectCallee = CE->getDirectCallee();
+    if (DirectCallee == nullptr) return;
 
+    StorageLocation &Loc =
+        State.Lattice.getOrCreateConstMethodReturnStorageLocation(
+            *RecordLoc, DirectCallee, State.Env,
+            initCallbackForStorageLocationIfSmartPointer(CE, State.Env));
     if (CE->isGLValue()) {
       // If the call to the const method returns a reference to a smart pointer,
       // we can use link the call expression to the smart pointer via
       // setStorageLocation.
-      State.Env.setStorageLocation(*CE, *Loc);
+      State.Env.setStorageLocation(*CE, Loc);
     } else {
       // If the call to the const method returns a smart pointer by value, we
       // need to use CopyRecord to link the smart pointer to the result object
       // of the call expression.
-      copyRecord(*cast<RecordStorageLocation>(Loc),
+      copyRecord(cast<RecordStorageLocation>(Loc),
                  State.Env.getResultObjectLocation(*CE), State.Env);
     }
     return;
