@@ -12,6 +12,9 @@ use proc_macro2::Ident;
 use std::collections::HashSet;
 use std::rc::Rc;
 
+#[unsafe(no_mangle)]
+pub fn test_again() {}
+
 /// Reporter for fatal errors that will cause bindings generation to fail.
 pub trait ReportFatalError {
     /// Reports a fatal error that will cause bindings generation to fail.

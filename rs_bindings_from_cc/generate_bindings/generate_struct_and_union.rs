@@ -5,10 +5,12 @@
 
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
+use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::ApiSnippets;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind, TypeLocation};
 use database::{BindingsGenerator, Database};
 use error_report::{bail, ensure};
+use generate_comment::generate_doc_comment;
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
@@ -16,30 +18,6 @@ use quote::quote;
 use std::collections::{BTreeSet, HashMap};
 use std::iter;
 use std::rc::Rc;
-
-// TODO(jeanpierreda): Make this a method on RsTypeKind, or on Record?
-pub(crate) fn should_implement_drop(record: &Record) -> bool {
-    match record.destructor {
-        // TODO(b/202258760): Only omit destructor if `Copy` is specified.
-        SpecialMemberFunc::Trivial => false,
-
-        // TODO(b/212690698): Avoid calling into the C++ destructor (e.g. let
-        // Rust drive `drop`-ing) to avoid (somewhat unergonomic) ManuallyDrop
-        // if we can ask Rust to preserve C++ field destruction order in
-        // NontrivialMembers case.
-        SpecialMemberFunc::NontrivialMembers => true,
-
-        // The `impl Drop` for NontrivialUserDefined needs to call into the
-        // user-defined destructor on C++ side.
-        SpecialMemberFunc::NontrivialUserDefined => true,
-
-        // TODO(b/213516512): Today the IR doesn't contain Func entries for
-        // deleted functions/destructors/etc. But, maybe we should generate
-        // `impl Drop` in this case? With `unreachable!`? With
-        // `std::mem::forget`?
-        SpecialMemberFunc::Unavailable => false,
-    }
-}
 
 /// Returns whether fields of type `ty` need to be wrapped in `ManuallyDrop<T>`
 /// to prevent the fields from being destructed twice (once by the C++
@@ -102,7 +80,7 @@ fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
 ///
 /// See docs/struct_layout
 fn get_field_rs_type_kind_for_layout(
-    db: &Database,
+    db: &dyn BindingsGenerator,
     record: &Record,
     field: &Field,
 ) -> Result<RsTypeKind> {
@@ -146,7 +124,7 @@ fn get_field_rs_type_kind_for_layout(
     // one users get.
     //
     // Users can still work around this with accessor functions.
-    if should_implement_drop(record) && !record.is_union() && needs_manually_drop(&type_kind) {
+    if record.should_implement_drop() && !record.is_union() && needs_manually_drop(&type_kind) {
         for target in record.defining_target.iter().chain([&record.owning_target]) {
             let enabled_features = db.ir().target_crubit_features(target);
             ensure!(
@@ -248,6 +226,111 @@ fn filter_out_ambiguous_member_functions(
         .collect()
 }
 
+fn field_definition(
+    db: &dyn BindingsGenerator,
+    record: &Record,
+    field: Option<&ir::Field>,
+    field_index: usize,
+    prev_end: usize,
+    offset: usize,
+    end: usize,
+    desc: &[String],
+    override_alignment: &mut bool,
+    field_copy_trait_assertions: &mut Vec<TokenStream>,
+) -> Result<TokenStream> {
+    // opaque blob representations are always unaligned, even though the actual C++
+    // field might be aligned. To put the current field at the right offset, we
+    // might need to insert some extra padding.
+    //
+    // No padding should be needed if the type of the current field is
+    // known (i.e. if the current field is correctly aligned based on
+    // its original type).
+    //
+    // We also don't need padding if we're in a union.
+    let padding_size_in_bits = if record.is_union()
+        || (field.is_some()
+            && get_field_rs_type_kind_for_layout(db, record, field.unwrap()).is_ok())
+    {
+        0
+    } else {
+        let padding_start = (prev_end + 7) / 8 * 8; // round up to byte boundary
+        offset - padding_start
+    };
+
+    let padding = if padding_size_in_bits == 0 {
+        quote! {}
+    } else {
+        let padding_name = make_rs_ident(&format!("__padding{}", field_index));
+        let padding_type = bit_padding(padding_size_in_bits);
+        quote! { #padding_name: #padding_type, }
+    };
+
+    // Bitfields get represented by private padding to ensure overall
+    // struct layout is compatible.
+    if field.is_none() {
+        let name = make_rs_ident(&format!("__bitfields{}", field_index));
+        let bitfield_padding = bit_padding(end - offset);
+        *override_alignment = true;
+        return Ok(quote! {
+            __NEWLINE__ #(  __COMMENT__ #desc )*
+            #padding #name: #bitfield_padding
+        });
+    }
+    let field = field.unwrap();
+
+    let ident = make_rs_field_ident(field, field_index);
+    let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
+    let doc_comment = match &field_rs_type_kind {
+        Ok(_) => generate_doc_comment(
+            field.doc_comment.as_deref(),
+            None,
+            db.generate_source_loc_doc_comment(),
+        ),
+        Err(msg) => {
+            *override_alignment = true;
+            let supplemental_text =
+                format!("Reason for representing this field as a blob of bytes:\n{:#}", msg);
+            let new_text = match &field.doc_comment {
+                None => supplemental_text,
+                Some(old_text) => format!("{}\n\n{}", old_text.as_ref(), supplemental_text),
+            };
+            generate_doc_comment(
+                Some(new_text.as_str()),
+                None,
+                db.generate_source_loc_doc_comment(),
+            )
+        }
+    };
+    let access = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
+        quote! { pub }
+    } else {
+        quote! { pub(crate) }
+    };
+
+    let field_type = match field_rs_type_kind {
+        Err(_) => bit_padding(end - field.offset),
+        Ok(type_kind) => {
+            let mut formatted = type_kind.to_token_stream(db);
+            if record.should_implement_drop() || record.is_union() {
+                if needs_manually_drop(&type_kind) {
+                    // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
+                    // if we can ask Rust to preserve field destruction order if the
+                    // destructor is the SpecialMemberFunc::NontrivialMembers
+                    // case.
+                    formatted = quote! { ::core::mem::ManuallyDrop<#formatted> }
+                } else {
+                    field_copy_trait_assertions.push(quote! {
+                        static_assertions::assert_impl_all!(#formatted: Copy);
+                    });
+                }
+            };
+            formatted
+        }
+    };
+
+    Ok(quote! { #padding #doc_comment #access #ident: #field_type })
+}
+
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets> {
@@ -266,26 +349,36 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
     let qualified_ident = {
         quote! { #crate_root_path:: #namespace_qualifier #ident }
     };
-    let doc_comment = crate::generate_doc_comment(
+    let doc_comment = generate_doc_comment(
         record.doc_comment.as_deref(),
         Some(&record.source_loc),
         db.generate_source_loc_doc_comment(),
     );
     let mut field_copy_trait_assertions: Vec<TokenStream> = vec![];
 
-    let fields_with_bounds = (record.fields.iter())
+    struct FieldWithLayout<'a> {
+        /// The IR field. Note that bitfields are represented as `None`.
+        ir: Option<&'a ir::Field>,
+        /// The offset of the field in the struct.
+        offset: usize,
+        /// The offset of the end of the field or `None` for opaque fields.
+        end: Option<usize>,
+        description: Vec<String>,
+    }
+
+    let fields_with_bounds: Vec<FieldWithLayout> = (record.fields.iter())
         .filter(|field| field.size != 0)
         .map(|field| {
-            (
+            FieldWithLayout {
                 // We don't represent bitfields directly in Rust. We drop the field itself here
                 // and only retain the offset information. Adjacent bitfields then get merged in
                 // the next step.
-                if field.is_bitfield { None } else { Some(field) },
-                field.offset,
+                ir: if field.is_bitfield { None } else { Some(field) },
+                offset: field.offset,
                 // We retain the end offset of fields only if we have a matching Rust type
                 // to represent them. Otherwise we'll fill up all the space to the next field.
                 // See: docs/struct_layout
-                match get_field_rs_type_kind_for_layout(db, record, field) {
+                end: match get_field_rs_type_kind_for_layout(db, record, field) {
                     // Regular field
                     Ok(_rs_type) => Some(field.offset + field.size),
                     // Opaque field
@@ -297,21 +390,28 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
                         }
                     }
                 },
-                vec![format!(
+                description: vec![format!(
                     "{} : {} bits",
                     field.identifier.as_ref().map(|i| i.identifier.clone()).unwrap_or("".into()),
                     field.size
                 )],
-            )
-        })
-        // Merge consecutive bitfields. This is necessary, because they may share storage in the
-        // same byte.
-        .coalesce(|first, second| match (first, second) {
-            ((None, offset, _, desc1), (None, _, end, desc2)) => {
-                Ok((None, offset, end, [desc1, desc2].concat()))
             }
-            pair => Err(pair),
-        });
+        })
+        // Merge consecutive bitfields. This is necessary because they may share storage in the
+        // same byte.
+        .coalesce(|first, second| {
+            if first.ir.is_none() && second.ir.is_none() {
+                Ok(FieldWithLayout {
+                    ir: None,
+                    offset: first.offset,
+                    end: second.end,
+                    description: [first.description, second.description].concat(),
+                })
+            } else {
+                Err((first, second))
+            }
+        })
+        .collect();
 
     let mut override_alignment = record.override_alignment;
 
@@ -322,144 +422,59 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
     //   there.
     // This uses two separate `map` invocations on purpose to limit available state.
     let field_definitions = iter::once(None)
-        .chain(fields_with_bounds.clone().map(Some))
+        .chain(fields_with_bounds.iter().map(Some))
         .chain(iter::once(None))
         .tuple_windows()
-        .map(|(prev, cur, next)| {
-            let (field, offset, end, desc) = cur.unwrap();
-            let prev_end = prev.as_ref().and_then(|(_, _, e, _)| *e).unwrap_or(offset);
-            let next_offset = next.map(|(_, o, _, _)| o);
-            let end = end.or(next_offset).unwrap_or(record.size_align.size * 8);
+        .enumerate()
+        .map(|(index, (prev, cur, next))| {
+            let cur = cur.unwrap();
+            let prev_end = prev.and_then(|p| p.end).unwrap_or(cur.offset);
+            let next_offset = next.map(|n| n.offset);
+            let end = cur.end.or(next_offset).unwrap_or(record.size_align.size * 8);
 
-            if let Some((Some(prev_field), _, Some(prev_end), _)) = prev {
+            if let Some(&FieldWithLayout { ir: Some(prev_ir), end: Some(prev_end), .. }) = prev {
                 assert!(
-                    record.is_union() || prev_end <= offset,
+                    record.is_union() || prev_end <= cur.offset,
                     "Unexpected offset+size for field {:?} in record {}",
-                    prev_field,
+                    prev_ir,
                     record.cc_name.as_ref()
                 );
             }
-
-            (field, prev_end, offset, end, desc)
-        })
-        .enumerate()
-        .map(|(field_index, (field, prev_end, offset, end, desc))| {
-            // opaque blob representations are always unaligned, even though the actual C++
-            // field might be aligned. To put the current field at the right offset, we
-            // might need to insert some extra padding.
-            //
-            // No padding should be needed if the type of the current field is
-            // known (i.e. if the current field is correctly aligned based on
-            // its original type).
-            //
-            // We also don't need padding if we're in a union.
-            let padding_size_in_bits = if record.is_union()
-                || (field.is_some()
-                    && get_field_rs_type_kind_for_layout(db, record, field.unwrap()).is_ok())
-            {
-                0
-            } else {
-                let padding_start = (prev_end + 7) / 8 * 8; // round up to byte boundary
-                offset - padding_start
-            };
-
-            let padding = if padding_size_in_bits == 0 {
-                quote! {}
-            } else {
-                let padding_name = make_rs_ident(&format!("__padding{}", field_index));
-                let padding_type = bit_padding(padding_size_in_bits);
-                quote! { #padding_name: #padding_type, }
-            };
-
-            // Bitfields get represented by private padding to ensure overall
-            // struct layout is compatible.
-            if field.is_none() {
-                let name = make_rs_ident(&format!("__bitfields{}", field_index));
-                let bitfield_padding = bit_padding(end - offset);
-                override_alignment = true;
-                return Ok(quote! {
-                    __NEWLINE__ #(  __COMMENT__ #desc )*
-                    #padding #name: #bitfield_padding
-                });
-            }
-            let field = field.unwrap();
-
-            let ident = make_rs_field_ident(field, field_index);
-            let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
-            let doc_comment = match &field_rs_type_kind {
-                Ok(_) => crate::generate_doc_comment(
-                    field.doc_comment.as_deref(),
-                    None,
-                    db.generate_source_loc_doc_comment(),
-                ),
-                Err(msg) => {
-                    override_alignment = true;
-                    let supplemental_text = format!(
-                        "Reason for representing this field as a blob of bytes:\n{:#}",
-                        msg
-                    );
-                    let new_text = match &field.doc_comment {
-                        None => supplemental_text,
-                        Some(old_text) => format!("{}\n\n{}", old_text.as_ref(), supplemental_text),
-                    };
-                    crate::generate_doc_comment(
-                        Some(new_text.as_str()),
-                        None,
-                        db.generate_source_loc_doc_comment(),
-                    )
-                }
-            };
-            let access = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
-                quote! { pub }
-            } else {
-                quote! { pub(crate) }
-            };
-
-            let field_type = match field_rs_type_kind {
-                Err(_) => bit_padding(end - field.offset),
-                Ok(type_kind) => {
-                    let mut formatted = type_kind.to_token_stream(db);
-                    if should_implement_drop(record) || record.is_union() {
-                        if needs_manually_drop(&type_kind) {
-                            // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
-                            // if we can ask Rust to preserve field destruction order if the
-                            // destructor is the SpecialMemberFunc::NontrivialMembers
-                            // case.
-                            formatted = quote! { ::core::mem::ManuallyDrop<#formatted> }
-                        } else {
-                            field_copy_trait_assertions.push(quote! {
-                                static_assertions::assert_impl_all!(#formatted: Copy);
-                            });
-                        }
-                    };
-                    formatted
-                }
-            };
-
-            Ok(quote! { #padding #doc_comment #access #ident: #field_type })
+            field_definition(
+                db,
+                record,
+                cur.ir,
+                index,
+                prev_end,
+                cur.offset,
+                end,
+                &cur.description,
+                &mut override_alignment,
+                &mut field_copy_trait_assertions,
+            )
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let field_offset_assertions = fields_with_bounds
+    let field_offset_assertions: Vec<TokenStream> = fields_with_bounds
+        .iter()
         .enumerate()
-        .map(|(field_index, (field, _, _, _))| {
-            if let Some(field) = field {
-                let field_ident = make_rs_field_ident(field, field_index);
+        .map(|(field_index, field_with_layout)| {
+            let Some(field) = field_with_layout.ir else {
+                return quote! {};
+            };
+            let field_ident = make_rs_field_ident(field, field_index);
 
-                // The assertion below reinforces that the division by 8 on the next line is
-                // justified (because the bitfields have been coallesced / filtered out
-                // earlier).
-                assert_eq!(field.offset % 8, 0);
-                let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
+            // The assertion below reinforces that the division by 8 on the next line is
+            // justified (because the bitfields have been coallesced / filtered out
+            // earlier).
+            assert_eq!(field.offset % 8, 0);
+            let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
 
-                let actual_offset_expr = quote! {
-                    ::core::mem::offset_of!(#qualified_ident, #field_ident)
-                };
-                quote! {
-                    assert!(#actual_offset_expr == #expected_offset);
-                }
-            } else {
-                quote! {}
+            let actual_offset_expr = quote! {
+                ::core::mem::offset_of!(#qualified_ident, #field_ident)
+            };
+            quote! {
+                assert!(#actual_offset_expr == #expected_offset);
             }
         })
         .collect_vec();
@@ -484,7 +499,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
         // coherence rules: PhantomPinned isn't enough to prove to Rust that a
         // blanket impl that requires Unpin doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
         features.insert(make_rs_ident("negative_impls"));
-        if should_implement_drop(record) {
+        if record.should_implement_drop() {
             quote! {#[::ctor::recursively_pinned(PinnedDrop)]}
         } else {
             quote! {#[::ctor::recursively_pinned]}
@@ -528,7 +543,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
         quote! {}
     };
 
-    let fully_qualified_cc_name = crate::cc_tagless_type_name_for_record(record, &ir)?.to_string();
+    let fully_qualified_cc_name = cpp_tagless_type_name_for_record(record, &ir)?.to_string();
 
     let mut record_generated_items = record
         .child_item_ids
@@ -675,7 +690,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
             add_assertion(assert_impl_macro, trait_name);
         };
         add_conditional_assertion(should_derive_copy(record), quote! { Copy });
-        add_conditional_assertion(should_implement_drop(record), quote! { Drop });
+        add_conditional_assertion(record.should_implement_drop(), quote! { Drop });
         assertions
     };
     let size_align_assertions = rs_size_align_assertions(qualified_ident, &record.size_align);
@@ -805,7 +820,7 @@ fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<To
             field_offsets.push(Literal::usize_unsuffixed(field.offset / 8));
             if field.size == 0 {
                 // These fields are not generated at all, so they need to be documented here.
-                doc_comments.push(crate::generate_doc_comment(
+                doc_comments.push(generate_doc_comment(
                     field.doc_comment.as_deref(),
                     None,
                     db.generate_source_loc_doc_comment(),
@@ -876,8 +891,8 @@ fn cc_struct_upcast_impl(db: &Database, record: &Rc<Record>, ir: &IR) -> Result<
                 base = base_record.mangled_cc_name,
                 odr_suffix = record.owning_target.convert_to_cc_identifier(),
             ));
-            let base_cc_name = crate::cpp_type_name_for_record(base_record.as_ref(), ir)?;
-            let derived_cc_name = crate::cpp_type_name_for_record(record.as_ref(), ir)?;
+            let base_cc_name = cpp_type_name_for_record(base_record.as_ref(), ir)?;
+            let derived_cc_name = cpp_type_name_for_record(record.as_ref(), ir)?;
             cc_impls.push(quote! {
                 extern "C" const #base_cc_name& #cast_fn_name(const #derived_cc_name& from) {
                     return from;

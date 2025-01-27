@@ -817,6 +817,29 @@ impl Record {
             self.record_type.into_token_stream()
         }
     }
+
+    pub fn should_implement_drop(&self) -> bool {
+        match self.destructor {
+            // TODO(b/202258760): Only omit destructor if `Copy` is specified.
+            SpecialMemberFunc::Trivial => false,
+
+            // TODO(b/212690698): Avoid calling into the C++ destructor (e.g. let
+            // Rust drive `drop`-ing) to avoid (somewhat unergonomic) ManuallyDrop
+            // if we can ask Rust to preserve C++ field destruction order in
+            // NontrivialMembers case.
+            SpecialMemberFunc::NontrivialMembers => true,
+
+            // The `impl Drop` for NontrivialUserDefined needs to call into the
+            // user-defined destructor on C++ side.
+            SpecialMemberFunc::NontrivialUserDefined => true,
+
+            // TODO(b/213516512): Today the IR doesn't contain Func entries for
+            // deleted functions/destructors/etc. But, maybe we should generate
+            // `impl Drop` in this case? With `unreachable!`? With
+            // `std::mem::forget`?
+            SpecialMemberFunc::Unavailable => false,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

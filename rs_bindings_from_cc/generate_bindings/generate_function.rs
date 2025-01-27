@@ -2,10 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::generate_function_thunk::{
-    generate_function_thunk, generate_function_thunk_impl, thunk_ident,
-    thunk_ident_for_derived_member_function,
-};
 use arc_anyhow::{Context, Result};
 use code_gen_utils::make_rs_ident;
 use database::code_snippet::ApiSnippets;
@@ -17,6 +13,11 @@ use database::rs_snippet::{
 use database::BindingsGenerator;
 use error_report::{anyhow, bail, ErrorList};
 use errors::{bail_to_errors, Errors, ErrorsOr};
+use generate_comment::generate_doc_comment;
+use generate_function_thunk::{
+    generate_function_thunk, generate_function_thunk_impl, thunk_ident,
+    thunk_ident_for_derived_member_function,
+};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -548,7 +549,7 @@ fn api_func_shape_for_destructor(
     };
     // Note: to avoid double-destruction of the fields, they are all wrapped in
     // ManuallyDrop in this case. See `generate_record`.
-    if !crate::generate_struct_and_union::should_implement_drop(record) {
+    if !record.should_implement_drop() {
         return None;
     }
     if record.is_unpin() {
@@ -1260,7 +1261,7 @@ pub fn generate_function(
         }
     };
 
-    let doc_comment = crate::generate_doc_comment(
+    let doc_comment = generate_doc_comment(
         func.doc_comment.as_deref(),
         Some(&func.source_loc),
         db.generate_source_loc_doc_comment(),

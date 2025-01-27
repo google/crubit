@@ -11,8 +11,6 @@ load(
 rust_library(
     name = "generate_bindings",
     srcs = [
-        "generate_function.rs",
-        "generate_function_thunk.rs",
         "generate_struct_and_union.rs",
         "lib.rs",
     ],
@@ -20,8 +18,11 @@ rust_library(
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
+        ":cpp_type_name",
         ":generate_comment",
         ":generate_enum",
+        ":generate_function",
+        ":generate_function_thunk",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_feature",
@@ -64,28 +65,19 @@ multiplatform_rust_test(
     ],
 )
 
-multiplatform_rust_test(
-    name = "generate_function_test",
-    srcs = ["generate_function_test.rs"],
-    tags = ["not_run:arm"],
+rust_library(
+    name = "cpp_type_name",
+    srcs = ["cpp_type_name.rs"],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
     deps = [
-        ":generate_bindings",
-        ":multiplatform_ir_testing",
-        ":test_generators",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
-        "//common:crubit_feature",
-        "//common:multiplatform_testing",
-        "//common:token_stream_matchers",
-        "//common:token_stream_printer",
+        "//common:error_report",
         "//rs_bindings_from_cc:ir",
-        "//rs_bindings_from_cc:ir_matchers",
-        "//rs_bindings_from_cc:ir_testing",
-        "//rs_bindings_from_cc/generate_bindings/database",
-        "@crate_index//:googletest",
+        "@crate_index//:proc-macro2",
         "@crate_index//:quote",
-        "@crate_index//:static_assertions",
-        "@crate_index//:syn",
     ],
 )
 
@@ -220,5 +212,77 @@ multiplatform_rust_test(
         "//common:token_stream_matchers",
         "@crate_index//:googletest",
         "@crate_index//:quote",
+    ],
+)
+
+rust_library(
+    name = "generate_function_thunk",
+    srcs = [
+        "generate_function_thunk.rs",
+    ],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        ":cpp_type_name",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:error_report",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc/generate_bindings/database",
+        "@crate_index//:itertools",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+        "@crate_index//:syn",
+        "@crate_index//:unicode-ident",
+    ],
+)
+
+rust_library(
+    name = "generate_function",
+    srcs = [
+        "generate_function.rs",
+    ],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        ":generate_comment",
+        ":generate_function_thunk",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:error_report",
+        "//common:errors",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc/generate_bindings/database",
+        "@crate_index//:itertools",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+        "@crate_index//:syn",
+    ],
+)
+
+multiplatform_rust_test(
+    name = "generate_function_test",
+    srcs = ["generate_function_test.rs"],
+    tags = ["not_run:arm"],
+    deps = [
+        ":generate_bindings",
+        ":multiplatform_ir_testing",
+        ":test_generators",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_feature",
+        "//common:multiplatform_testing",
+        "//common:token_stream_matchers",
+        "//common:token_stream_printer",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc:ir_matchers",
+        "//rs_bindings_from_cc:ir_testing",
+        "//rs_bindings_from_cc/generate_bindings/database",
+        "@crate_index//:googletest",
+        "@crate_index//:quote",
+        "@crate_index//:static_assertions",
+        "@crate_index//:syn",
     ],
 )

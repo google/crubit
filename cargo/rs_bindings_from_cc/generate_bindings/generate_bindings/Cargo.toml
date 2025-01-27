@@ -12,8 +12,11 @@ edition = "2021"
 path = "../../../../rs_bindings_from_cc/generate_bindings/lib.rs"
 
 [dependencies]
+cpp_type_name = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/cpp_type_name" }
 generate_comment = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_comment" }
 generate_enum = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_enum" }
+generate_function = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_function" }
+generate_function_thunk = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_function_thunk" }
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow" }
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils" }
 crubit_feature = { path = "../../../../cargo/common/crubit_feature" }

@@ -304,7 +304,7 @@ pub fn generate_function_thunk_impl(
         .params
         .iter()
         .map(|p| {
-            let cpp_type = crate::format_cpp_type(&p.type_.cpp_type, &ir)?;
+            let cpp_type = cpp_type_name::format_cpp_type(&p.type_.cpp_type, &ir)?;
             let arg_type = db.rs_type_kind(p.type_.rs_type.clone())?;
             if arg_type.is_bridge_type() {
                 match &arg_type {
@@ -375,7 +375,7 @@ pub fn generate_function_thunk_impl(
         // In order to be modified, the return type can't be const.
         let mut cc_return_type = func.return_type.cpp_type.clone();
         cc_return_type.is_const = false;
-        let return_type_name = crate::format_cpp_type(&cc_return_type, &ir)?;
+        let return_type_name = cpp_type_name::format_cpp_type(&cc_return_type, &ir)?;
         match &return_type_kind {
             RsTypeKind::BridgeType { cpp_to_rust_converter, .. } => {
                 let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
@@ -390,7 +390,7 @@ pub fn generate_function_thunk_impl(
         };
         quote! {void}
     } else {
-        crate::format_cpp_type(&func.return_type.cpp_type, &ir)?
+        cpp_type_name::format_cpp_type(&func.return_type.cpp_type, &ir)?
     };
 
     let this_ref_qualification =
@@ -452,7 +452,7 @@ pub fn generate_function_thunk_impl(
                 if ty.type_args.len() != 1 {
                     bail!("Invalid reference type (need exactly 1 type argument): {:?}", ty);
                 }
-                let nested_type = crate::format_cpp_type(&ty.type_args[0], &ir)?;
+                let nested_type = cpp_type_name::format_cpp_type(&ty.type_args[0], &ir)?;
                 quote! {
                     #nested_type && lvalue = #return_expr;
                     return &lvalue
