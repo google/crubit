@@ -62,9 +62,6 @@
 // CRUBIT_INTERNAL_RUST_TYPE. For all other types, C ABI compatibility can be
 // inferred automatically, and overriding the decision is always a bug.
 //
-// TODO(b/284512049): This also currently assumes copyability. It should only
-// assume movability.
-//
 // SAFETY:
 //   If the type is not ABI-compatible with its Rust equivalent, the behavior is
 //   undefined.
