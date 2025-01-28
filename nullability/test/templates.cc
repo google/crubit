@@ -91,8 +91,8 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       T0 *unknownTPtr;
       T0 *_Nullable nullableTPtr;
       T0 *_Nonnull nonnullTPtr;
-      T0 getT();
 
+      T0 getT();
       T0 *getUnknownTPtr();
       T0 *_Nullable getNullableTPtr();
       T0 *_Nonnull getNonnullTPtr();
@@ -1250,6 +1250,92 @@ TEST(PointerNullabilityTest, CallInstantiatedMember) {
     };
     void target(Sink<Nonnull<int *>> &S) {
       S.eat(nullptr);  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CallInstantiatedFreeFunction) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    void eat(T p);
+
+    void target() {
+      eat<int *_Nullable>(nullptr);
+      eat<int *_Nonnull>(nullptr);  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CallAnnotatedTemplateParam) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    void eat(T *_Nonnull p);
+
+    void target(int *_Nullable p, int *_Nonnull q) {
+      eat(p);  // [[unsafe]]
+      eat(q);
+    }
+  )cc"));
+}
+
+// Tests for when the "target" itself is a templated function.
+
+// Case that is unsafe independent of the template arguments (already annotated)
+TEST(PointerNullabilityTest, BodyIndependentOfTemplateArgsAnnotatedParam) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    void target(T *_Nullable p) {
+      T *v = p;
+      *v;  // [[unsafe]]
+    }
+
+    void instantiation() { target<int>(nullptr); }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, BodyIndependentOfTemplateArgAnnotatedCall) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    T *_Nullable getNullable();
+
+    template <typename T>
+    void target() {
+      T *v = getNullable<T>();
+      *v;  // [[unsafe]]
+    }
+
+    void instantiation() { target<int>(); }
+  )cc"));
+}
+
+// Case is unsafe that is partly dependent on the template arguments.
+// - The *v is unsafe independently (and we flag it).
+// - The T v = nullptr perhaps should be unsafe when T is _Nonnull but
+//   we currently do not get access to that annotation information.
+TEST(PointerNullabilityTest, BodyPartlyDependentOnTemplateArgs) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    void target() {
+      T v = nullptr;
+      *v;  // [[unsafe]]
+    }
+
+    void instantiation() { target<int *_Nonnull>(); }
+  )cc"));
+}
+
+// Case that is dependent on the template arguments.
+TEST(PointerNullabilityTest, BodyDependentOnTemplateArgs) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    void target(T p) {
+      *p;
+    }
+
+    void instantiation() {
+      // This should make the *p above unsafe, but verification doesn't yet
+      // handle this (b/268347355).
+      target<int *_Nullable>(nullptr);
     }
   )cc"));
 }

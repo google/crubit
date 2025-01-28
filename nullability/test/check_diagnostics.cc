@@ -74,8 +74,15 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang) {
   }
 
   bool Success = true;
+  // We already checked MatchResult is not empty above, but we skip
+  // isTemplated() functions. Make sure we didn't skip every MatchResult.
+  bool FoundMatch = false;
   for (const ast_matchers::BoundNodes &BN : MatchResult) {
     const auto *Target = BN.getNodeAs<ValueDecl>("target");
+    // Skip templates and only analyze instantiations
+    // (where isTemplated is false)
+    if (Target->isTemplated()) continue;
+    FoundMatch = true;
 
     llvm::DenseMap<unsigned, std::string> Annotations =
         dataflow::test::buildLineToAnnotationMapping(
@@ -131,6 +138,11 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang) {
 
       ADD_FAILURE() << ErrorMessage;
     }
+  }
+  if (!FoundMatch) {
+    ADD_FAILURE() << "didn't find target declaration (after skipping templated "
+                     "functions) -- add an instantiation?";
+    return false;
   }
 
   return Success;

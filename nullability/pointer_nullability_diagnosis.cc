@@ -7,9 +7,7 @@
 #include <cstdint>
 #include <iterator>
 #include <memory>
-#include <optional>
 #include <string>
-#include <utility>
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
@@ -763,6 +761,8 @@ diagnosePointerNullability(const ValueDecl *VD,
   constexpr std::int32_t MaxBlockVisits = 20'000;
 
   llvm::SmallVector<PointerNullabilityDiagnostic> Diags;
+  // Skip templated functions where we don't have full type information, but
+  // allow template instantiations (not isTemplated()).
   if (VD->isTemplated()) return Diags;
 
   ASTContext &Ctx = VD->getASTContext();
