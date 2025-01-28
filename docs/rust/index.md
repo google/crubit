@@ -31,6 +31,10 @@ called from C++, and how to actually use it from C++. The quick summary is:
 *   To see the generated C++ API, right click the `"path/to/example_crate.h"`
     include in Cider, and select "Go to Definition".
 
+    NOTE: In some cases the generated file in Cider may be out of date. If it
+    isn't refreshing, you can manually inspect the bindings using the workaround
+    command in b/391395849.
+
 ### Write a `rust_library` target {#rust_library}
 
 The first part of creating a library that can be used by Crubit is to write a
