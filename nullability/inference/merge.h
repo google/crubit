@@ -24,7 +24,7 @@ SlotPartial partialFromEvidence(const Evidence &);
 // The merging of partials is commutative and associative.
 void mergePartials(SlotPartial &LHS, const SlotPartial &RHS);
 // Form a nullability conclusion from a set of evidence.
-SlotInference finalize(const SlotPartial &);
+SlotInference finalize(const SlotPartial &, bool EnableSoftRules = true);
 
 struct InferResult {
   Nullability Nullability;
@@ -32,8 +32,14 @@ struct InferResult {
   bool Trivial = false;
 };
 // Final inference decision, based on event counts.
+//
+// If EnableSoftRules is true, this will use heuristics to infer nullability
+// when the event counts do not strictly require a particular nullability for
+// safety.
+//
 // TODO: once this interface sticks, move to a dedicated file.
-InferResult infer(llvm::ArrayRef<unsigned> EventCounts);
+InferResult infer(llvm::ArrayRef<unsigned> EventCounts,
+                  bool EnableSoftRules = true);
 
 // Combines local evidence about a slot's nullability to form a global
 // conclusion. All evidence must for be the same slot, and there must be some.

@@ -46,7 +46,7 @@ void mergePartials(SlotPartial &LHS, const SlotPartial &RHS) {
 }
 
 // Form a nullability conclusion from a set of evidence.
-SlotInference finalize(const SlotPartial &P) {
+SlotInference finalize(const SlotPartial &P, bool EnableSoftRules) {
   SlotInference Inference;
   if (P.kind_count_size() == 0) return Inference;
 
@@ -66,7 +66,7 @@ SlotInference finalize(const SlotPartial &P) {
 
   std::array<unsigned, Evidence::Kind_MAX + 1> KindCounts = {};
   for (auto [Kind, Count] : P.kind_count()) KindCounts[Kind] = Count;
-  auto Result = infer(KindCounts);
+  auto Result = infer(KindCounts, EnableSoftRules);
   Inference.set_nullability(Result.Nullability);
   if (Result.Conflict) Inference.set_conflict(true);
   if (Result.Trivial) Inference.set_trivial(true);
@@ -86,7 +86,7 @@ void update(std::optional<InferResult> &Result,
 }
 }  // namespace
 
-InferResult infer(llvm::ArrayRef<unsigned> Counts) {
+InferResult infer(llvm::ArrayRef<unsigned> Counts, bool EnableSoftRules) {
   CHECK_EQ(Counts.size(), Evidence::Kind_MAX + 1);
   // Annotations take precedence over everything.
   // If some other evidence is incompatible with an annotation, that's not
@@ -127,6 +127,8 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts) {
   if (Counts[Evidence::ABORT_IF_NULL]) update(Result, Nullability::NONNULL);
   if (Counts[Evidence::ARITHMETIC]) update(Result, Nullability::NONNULL);
   if (Result) return *Result;
+
+  if (!EnableSoftRules) return {Nullability::UNKNOWN};
 
   // Optional "soft" inference heuristics.
   // These do not report conflicts.
