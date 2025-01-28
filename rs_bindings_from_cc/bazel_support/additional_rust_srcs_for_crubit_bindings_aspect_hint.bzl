@@ -68,6 +68,11 @@ For modules which are not existing namespace names, use `pub mod` statement in t
     doc = """
 Defines an aspect hint that is used to pass extra Rust source files to `rs_bindings_from_cc` tool's
 `extra_rs_srcs` CLI argument.
+
+Note: to use `std` in the extra Rust source files, you must use:
+```rust
+extern crate std;
+```
 """,
 )
 
