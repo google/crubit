@@ -267,7 +267,7 @@ macro_rules! query_group {
             $break_cycles_arg : $break_cycles_arg_type
           ),*
         ) -> $break_cycles_return_type {
-          self.$break_cycles_function.table.break_cycles_internal_memoized_call(
+          self.$break_cycles_function.table.internal_memoized_call(
             ($(
               $break_cycles_arg,
             )*),
@@ -295,6 +295,8 @@ macro_rules! query_group {
               (self.$function.fn_ptr)(self as &dyn $trait, $($arg),*)
             },
             &self.__unwinding_cycles,
+          ).unwrap_or_else(
+            || panic!("Cycle detected: '{}' depends on its own return value", stringify!($function)),
           )
         }
       )*
@@ -377,25 +379,6 @@ pub mod internal {
         Return: Clone,
     {
         pub fn internal_memoized_call<F>(
-            &self,
-            args: Args,
-            f: F,
-            unwinding_cycles: &Cell<u32>,
-        ) -> Return
-        where
-            F: FnOnce(Args) -> Return,
-        {
-            self.break_cycles_internal_memoized_call(args, f, unwinding_cycles)
-                .expect("Cycle detected: a memoized function depends on its own return value")
-        }
-    }
-
-    impl<Args, Return> MemoizationTable<Args, Return>
-    where
-        Args: Clone + Eq + Hash,
-        Return: Clone,
-    {
-        pub fn break_cycles_internal_memoized_call<F>(
             &self,
             args: Args,
             f: F,
@@ -520,9 +503,7 @@ pub mod tests {
     }
 
     #[gtest]
-    #[should_panic(
-        expected = "Cycle detected: a memoized function depends on its own return value"
-    )]
+    #[should_panic(expected = "Cycle detected: 'add10' depends on its own return value")]
     fn test_cycle() {
         crate::query_group! {
           pub trait Add10 {
