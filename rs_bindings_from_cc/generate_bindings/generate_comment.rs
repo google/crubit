@@ -11,6 +11,7 @@ use ffi_types::SourceLocationDocComment;
 use ir::{Comment, GenericItem, UnsupportedItem, IR};
 use proc_macro2::TokenStream;
 use quote::quote;
+use std::fmt::Write as _;
 
 /// Top-level comments that help identify where the generated bindings came
 /// from.
@@ -85,13 +86,17 @@ pub fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<Api
         _ => "",
     };
 
-    let mut message = format!(
-        "{source_loc}{}Error while generating bindings for item '{}':\n",
-        if source_loc.is_empty() { "" } else { "\n" },
-        item.name.as_ref(),
-    );
+    let mut message = String::new();
+    if !source_loc.is_empty() {
+        writeln!(&mut message, "{source_loc}").unwrap();
+    }
+    writeln!(&mut message, "Error while generating bindings for item '{}':", item.name.as_ref())
+        .unwrap();
     for (index, error) in item.errors().iter().enumerate() {
-        message = format!("{message}{}{:#}", if index == 0 { "" } else { "\n\n" }, error);
+        if index != 0 {
+            message.push_str("\n\n");
+        }
+        write!(&mut message, "{error:#}").unwrap();
     }
     Ok(ApiSnippets { main_api: quote! { __COMMENT__ #message }, ..Default::default() })
 }
