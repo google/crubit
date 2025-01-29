@@ -45,7 +45,8 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN15PolymorphicBaseC1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                     );
                 },
             )
@@ -62,7 +63,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN15PolymorphicBaseC1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -117,7 +119,8 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN16PolymorphicBase2C1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                     );
                 },
             )
@@ -134,7 +137,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase2 {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN16PolymorphicBase2C1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -196,7 +200,8 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                     );
                 },
             )
@@ -213,7 +218,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicDerived {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -239,7 +245,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for PolymorphicDeriv
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -288,11 +295,11 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicBase>,
+        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseC1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicBase>,
+        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseC1ERKS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: &'b crate::PolymorphicBase,
         );
         pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseaSERKS_<'a, 'b>(
@@ -302,11 +309,11 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicBase2>,
+        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicBase2>,
+        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1ERKS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: &'b crate::PolymorphicBase2,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2aSERKS_<'a, 'b>(
@@ -319,15 +326,15 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2D1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicDerived>,
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicDerived>,
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1ERKS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: &'b crate::PolymorphicDerived,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::PolymorphicDerived>,
+        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::PolymorphicDerived>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedD1Ev<'a>(

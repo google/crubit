@@ -31,7 +31,9 @@ impl Default for FirstStruct {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11FirstStructC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN11FirstStructC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -42,7 +44,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for FirstStruct {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11FirstStructC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN11FirstStructC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -86,7 +91,9 @@ impl Default for SecondStruct {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN12SecondStructC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN12SecondStructC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -97,7 +104,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SecondStruct {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN12SecondStructC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN12SecondStructC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -130,11 +140,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::FirstStruct>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::FirstStruct>,
+        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::FirstStruct>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN11FirstStructaSERKS_<'a, 'b>(
@@ -146,11 +154,9 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::FirstStruct>,
         ) -> &'a mut crate::FirstStruct;
         pub(crate) unsafe fn __rust_thunk___Z10first_funcv() -> ::core::ffi::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::SecondStruct>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::SecondStruct>,
+        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::SecondStruct>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN12SecondStructaSERKS_<'a, 'b>(

@@ -1325,7 +1325,7 @@ fn test_union_with_constructors() -> Result<()> {
                 fn default() -> Self {
                     let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
-                        crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1Ev(&mut tmp);
+                        crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
                         tmp.assume_init()
                     }
                 }
@@ -1341,7 +1341,7 @@ fn test_union_with_constructors() -> Result<()> {
                 fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
                     let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
-                        crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1EOS_(&mut tmp, __param_0);
+                        crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1EOS_(&raw mut tmp as *mut ::core::ffi::c_void, __param_0);
                         tmp.assume_init()
                     }
                 }

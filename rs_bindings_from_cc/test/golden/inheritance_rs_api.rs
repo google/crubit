@@ -41,7 +41,7 @@ impl Default for Base0 {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN5Base0C1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN5Base0C1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
             tmp.assume_init()
         }
     }
@@ -52,7 +52,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Base0 {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN5Base0C1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN5Base0C1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -97,7 +100,7 @@ impl Default for Base1 {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN5Base1C1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN5Base1C1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
             tmp.assume_init()
         }
     }
@@ -108,7 +111,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Base1 {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN5Base1C1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN5Base1C1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -150,7 +156,7 @@ impl Default for Base2 {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN5Base2C1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN5Base2C1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
             tmp.assume_init()
         }
     }
@@ -161,7 +167,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Base2 {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN5Base2C1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN5Base2C1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -201,7 +210,7 @@ impl Default for Derived {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN7DerivedC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN7DerivedC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
             tmp.assume_init()
         }
     }
@@ -212,7 +221,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Derived {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN7DerivedC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN7DerivedC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -271,7 +283,8 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN12VirtualBase1C1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                     );
                 },
             )
@@ -288,7 +301,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase1 {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN12VirtualBase1C1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -314,7 +328,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase1 {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN12VirtualBase1C1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -377,7 +392,8 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN12VirtualBase2C1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                     );
                 },
             )
@@ -394,7 +410,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase2 {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN12VirtualBase2C1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -420,7 +437,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase2 {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN12VirtualBase2C1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -483,7 +501,8 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN14VirtualDerivedC1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                     );
                 },
             )
@@ -500,7 +519,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN14VirtualDerivedC1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -526,7 +546,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN14VirtualDerivedC1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -624,7 +645,9 @@ impl Default for MethodBase1 {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11MethodBase1C1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN11MethodBase1C1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -635,7 +658,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11MethodBase1C1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN11MethodBase1C1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -702,7 +728,9 @@ impl Default for MethodBase2 {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11MethodBase2C1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN11MethodBase2C1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -713,7 +741,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11MethodBase2C1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN11MethodBase2C1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -766,7 +797,9 @@ impl Default for MethodDerived {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13MethodDerivedC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN13MethodDerivedC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -777,7 +810,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodDerived {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13MethodDerivedC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN13MethodDerivedC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -839,11 +875,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN5Base0C1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Base0>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN5Base0C1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Base0>,
+        pub(crate) unsafe fn __rust_thunk___ZN5Base0C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5Base0C1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::Base0>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN5Base0aSERKS_<'a, 'b>(
@@ -854,11 +888,9 @@ mod detail {
             __this: &'a mut crate::Base0,
             __param_0: ::ctor::RvalueReference<'b, crate::Base0>,
         ) -> &'a mut crate::Base0;
-        pub(crate) unsafe fn __rust_thunk___ZN5Base1C1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Base1>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN5Base1C1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Base1>,
+        pub(crate) unsafe fn __rust_thunk___ZN5Base1C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5Base1C1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::Base1>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN5Base1aSERKS_<'a, 'b>(
@@ -869,11 +901,9 @@ mod detail {
             __this: &'a mut crate::Base1,
             __param_0: ::ctor::RvalueReference<'b, crate::Base1>,
         ) -> &'a mut crate::Base1;
-        pub(crate) unsafe fn __rust_thunk___ZN5Base2C1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Base2>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN5Base2C1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Base2>,
+        pub(crate) unsafe fn __rust_thunk___ZN5Base2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5Base2C1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::Base2>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN5Base2aSERKS_<'a, 'b>(
@@ -884,11 +914,9 @@ mod detail {
             __this: &'a mut crate::Base2,
             __param_0: ::ctor::RvalueReference<'b, crate::Base2>,
         ) -> &'a mut crate::Base2;
-        pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Derived>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Derived>,
+        pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::Derived>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN7DerivedaSERKS_<'a, 'b>(
@@ -899,15 +927,13 @@ mod detail {
             __this: &'a mut crate::Derived,
             __param_0: ::ctor::RvalueReference<'b, crate::Derived>,
         ) -> &'a mut crate::Derived;
-        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase1>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase1>,
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1ERKS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: &'b crate::VirtualBase1,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase1>,
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase1>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1aSERKS_<'a, 'b>(
@@ -921,15 +947,13 @@ mod detail {
         pub fn __crubit_dynamic_upcast__12VirtualBase1__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
             from: *const crate::VirtualBase1,
         ) -> *const crate::Base1;
-        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase2>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase2>,
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1ERKS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: &'b crate::VirtualBase2,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualBase2>,
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase2>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2aSERKS_<'a, 'b>(
@@ -943,15 +967,15 @@ mod detail {
         pub fn __crubit_dynamic_upcast__12VirtualBase2__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
             from: *const crate::VirtualBase2,
         ) -> *const crate::Base1;
-        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualDerived>,
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualDerived>,
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1ERKS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: &'b crate::VirtualDerived,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::VirtualDerived>,
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualDerived>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedaSERKS_<'a, 'b>(
@@ -975,11 +999,9 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::MyAbstractClass>,
             __param_0: &'b crate::MyAbstractClass,
         ) -> ::core::pin::Pin<&'a mut crate::MyAbstractClass>;
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase1>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase1>,
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodBase1>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1aSERKS_<'a, 'b>(
@@ -1007,11 +1029,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase110Colliding2Ev<'a>(
             __this: &'a mut crate::MethodBase1,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2C1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase2>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2C1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::MethodBase2>,
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2C1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodBase2>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2aSERKS_<'a, 'b>(
@@ -1030,11 +1050,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase210Colliding2Ev<'a>(
             __this: &'a mut crate::MethodBase2,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::MethodDerived>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::MethodDerived>,
+        pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodDerived>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedaSERKS_<'a, 'b>(

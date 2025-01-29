@@ -31,7 +31,7 @@ impl Default for r#type {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN4typeC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN4typeC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
             tmp.assume_init()
         }
     }
@@ -42,7 +42,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for r#type {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN4typeC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN4typeC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -81,11 +84,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN4typeC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::r#type>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN4typeC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::r#type>,
+        pub(crate) unsafe fn __rust_thunk___ZN4typeC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN4typeC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::r#type>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN4typeaSERKS_<'a, 'b>(

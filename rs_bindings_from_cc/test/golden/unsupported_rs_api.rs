@@ -41,7 +41,9 @@ impl Default for TrivialCustomType {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -52,7 +54,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -105,7 +110,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialCustom
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -155,7 +161,9 @@ impl Default for ContainingStruct {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN16ContainingStructC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN16ContainingStructC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -166,7 +174,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN16ContainingStructC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN16ContainingStructC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -197,11 +208,11 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::TrivialCustomType>,
+        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::TrivialCustomType>,
+        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::TrivialCustomType>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeaSERKS_<'a, 'b>(
@@ -213,15 +224,15 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::TrivialCustomType>,
         ) -> &'a mut crate::TrivialCustomType;
         #[link_name = "_ZN20NontrivialCustomTypeC1EOS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::NontrivialCustomType>,
+        pub(crate) unsafe fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::NontrivialCustomType>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::ContainingStruct>,
+        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::ContainingStruct>,
+        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::ContainingStruct>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructaSERKS_<'a, 'b>(

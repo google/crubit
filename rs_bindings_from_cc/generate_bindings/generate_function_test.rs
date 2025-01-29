@@ -99,15 +99,15 @@ fn test_simple_function_with_types_from_other_target() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub fn DoSomething(mut param: dependency::ParamStruct)
-                -> dependency::ReturnStruct {
-                 unsafe {
-                     let mut __return =
-                         ::core::mem::MaybeUninit::<dependency::ReturnStruct>::uninit();
-                     crate::detail::__rust_thunk___Z11DoSomething11ParamStruct(
-                         &mut __return, &mut param);
-                     __return.assume_init()
-                 }
+            pub fn DoSomething(mut param: dependency::ParamStruct) -> dependency::ReturnStruct {
+                unsafe {
+                    let mut __return = ::core::mem::MaybeUninit::<dependency::ReturnStruct>::uninit();
+                    crate::detail::__rust_thunk___Z11DoSomething11ParamStruct(
+                       &raw mut __return as *mut ::core::ffi::c_void,
+                       &mut param
+                    );
+                    __return.assume_init()
+                }
             }
         }
     );
@@ -119,7 +119,7 @@ fn test_simple_function_with_types_from_other_target() -> Result<()> {
             use super::*;
             unsafe extern "C" {
                 pub(crate) unsafe fn __rust_thunk___Z11DoSomething11ParamStruct(
-                    __return: &mut ::core::mem::MaybeUninit<dependency::ReturnStruct>,
+                    __return: *mut ::core::ffi::c_void,
                     param: &mut dependency::ParamStruct
                 );
             }
@@ -382,7 +382,7 @@ fn test_impl_default_explicitly_defaulted_constructor() -> Result<()> {
                 fn default() -> Self {
                     let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
-                        crate::detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(&mut tmp);
+                        crate::detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
                         tmp.assume_init()
                     }
                 }
@@ -486,7 +486,7 @@ fn test_impl_from_for_1_arg_constructor() -> Result<()> {
                     fn from(i: ::core::ffi::c_int) -> Self {
                         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
-                            crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&mut tmp, i);
+                            crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&raw mut tmp as *mut ::core::ffi::c_void, i);
                             tmp.assume_init()
                         }
                     }
@@ -519,7 +519,7 @@ fn test_impl_from_for_implicit_conversion_from_reference() -> Result<()> {
                     let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
                         crate::detail::__rust_thunk___ZN15StructUnderTestC1ERK15SomeOtherStruct(
-                            &mut tmp, other);
+                            &raw mut tmp as *mut ::core::ffi::c_void, other);
                         tmp.assume_init()
                     }
                 }
@@ -1231,12 +1231,12 @@ fn test_nonunpin_0_arg_constructor() -> Result<()> {
             impl ::ctor::CtorNew<()> for HasConstructor {
                 type CtorType = impl ::ctor::Ctor<Output = Self>;
 
-                #[inline (always)]
+                #[inline(always)]
                 fn ctor_new(args: ()) -> Self::CtorType {
                     let () = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(::core::pin::Pin::into_inner_unchecked(dest));
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void);
                         })
                     }
                 }
@@ -1269,7 +1269,7 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
                     let input = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(::core::pin::Pin::into_inner_unchecked(dest), input);
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void, input);
                         })
                     }
                 }
@@ -1302,7 +1302,7 @@ fn test_nonunpin_2_arg_constructor() -> Result<()> {
                     let (input1, input2) = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(::core::pin::Pin::into_inner_unchecked(dest), input1, input2);
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void, input1, input2);
                         })
                     }
                 }
@@ -1353,7 +1353,7 @@ fn test_nonunpin_by_value_params() -> Result<()> {
                     let (x, y, b) = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1ERKiS_S_(::core::pin::Pin::into_inner_unchecked(dest), x, y, b);
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1ERKiS_S_(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void, x, y, b);
                         })
                     }
                 }
@@ -1381,7 +1381,7 @@ fn test_nonunpin_return() -> Result<()> {
             -> impl ::ctor::Ctor<Output=crate::Nontrivial> + use<'a, 'b> {
                 unsafe {
                     ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<crate::Nontrivial>>| {
-                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::core::pin::Pin::into_inner_unchecked(dest), x, y);
+                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void, x, y);
                     })
                 }
 
@@ -1419,7 +1419,7 @@ fn test_nonunpin_const_return() -> Result<()> {
             -> impl ::ctor::Ctor<Output=crate::Nontrivial> + use<'a, 'b> {
                 unsafe {
                     ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<crate::Nontrivial>>| {
-                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::core::pin::Pin::into_inner_unchecked(dest), x, y);
+                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void, x, y);
                     })
                 }
 
@@ -1496,7 +1496,7 @@ fn test_unpin_by_value_return() -> Result<()> {
             pub fn foo() -> crate::Trivial {
                 unsafe {
                     let mut __return = ::core::mem::MaybeUninit::<crate::Trivial>::uninit();
-                    crate::detail::__rust_thunk___Z3foov(&mut __return);
+                    crate::detail::__rust_thunk___Z3foov(&raw mut __return as *mut ::core::ffi::c_void);
                     __return.assume_init()
                 }
             }
@@ -1506,7 +1506,7 @@ fn test_unpin_by_value_return() -> Result<()> {
         rs_api,
         quote! {
             pub(crate) unsafe fn __rust_thunk___Z3foov(
-                __return: &mut ::core::mem::MaybeUninit<crate::Trivial>
+                __return: *mut ::core::ffi::c_void
             );
         }
     );
@@ -1609,7 +1609,7 @@ fn test_nonunpin_return_assign() -> Result<()> {
                         let _ = ::ctor::emplace!(::ctor::FnCtor::new(
                             move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                                 crate::detail::__rust_thunk___ZN10NontrivialaSERKS_(
-                                    ::core::pin::Pin::into_inner_unchecked(dest),
+                                    ::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void,
                                     self,
                                     other
                                 );
@@ -1697,7 +1697,7 @@ fn test_nonunpin_trait_param() -> Result<()> {
                     let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
                         crate::detail::__rust_thunk___ZN7TrivialC1E10Nontrivial(
-                            &mut tmp,
+                            &raw mut tmp as *mut ::core::ffi::c_void,
                             __param_0
                         );
                         tmp.assume_init()

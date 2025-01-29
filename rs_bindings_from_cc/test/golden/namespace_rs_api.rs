@@ -35,7 +35,9 @@ pub mod test_namespace_bindings {
         fn default() -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings1SC1Ev(&mut tmp);
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings1SC1Ev(
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                );
                 tmp.assume_init()
             }
         }
@@ -47,7 +49,8 @@ pub mod test_namespace_bindings {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings1SC1EOS0_(
-                    &mut tmp, __param_0,
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    __param_0,
                 );
                 tmp.assume_init()
             }
@@ -102,7 +105,7 @@ pub fn identity(mut s: crate::test_namespace_bindings::S) -> crate::test_namespa
     unsafe {
         let mut __return = ::core::mem::MaybeUninit::<crate::test_namespace_bindings::S>::uninit();
         crate::detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(
-            &mut __return,
+            &raw mut __return as *mut ::core::ffi::c_void,
             &mut s,
         );
         __return.assume_init()
@@ -135,7 +138,7 @@ pub mod test_namespace_bindings_reopened_0 {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev(
-                        &mut tmp,
+                        &raw mut tmp as *mut ::core::ffi::c_void,
                     );
                     tmp.assume_init()
                 }
@@ -147,7 +150,7 @@ pub mod test_namespace_bindings_reopened_0 {
             fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
-                    crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_(&mut tmp,__param_0);
+                    crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
                     tmp.assume_init()
                 }
             }
@@ -229,7 +232,7 @@ pub mod test_namespace_bindings_inline {
             fn default() -> Self {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
-                    crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(&mut tmp);
+                    crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(&raw mut tmp as*mut::core::ffi::c_void);
                     tmp.assume_init()
                 }
             }
@@ -240,7 +243,7 @@ pub mod test_namespace_bindings_inline {
             fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
-                    crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1EOS1_(&mut tmp,__param_0);
+                    crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1EOS1_(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
                     tmp.assume_init()
                 }
             }
@@ -305,11 +308,11 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1SC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::S>,
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1SC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1SC1EOS0_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::S>,
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1SC1EOS0_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1SaSERKS0_<'a, 'b>(
@@ -327,23 +330,18 @@ mod detail {
         #[link_name = "_ZN23test_namespace_bindings5inner1iEv"]
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings5inner1iEv();
         pub(crate) unsafe fn __rust_thunk___Z8identityN23test_namespace_bindings1SE(
-            __return: &mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::S>,
+            __return: *mut ::core::ffi::c_void,
             s: &mut crate::test_namespace_bindings::S,
         );
         #[link_name = "_ZN32test_namespace_bindings_reopened1xEv"]
         pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened1xEv();
-        pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<
-                crate::test_namespace_bindings_reopened::inner::S,
-            >,
+        pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_<
-            'a,
             'b,
         >(
-            __this: &'a mut ::core::mem::MaybeUninit<
-                crate::test_namespace_bindings_reopened::inner::S,
-            >,
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::test_namespace_bindings_reopened::inner::S,
@@ -371,20 +369,13 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1zENS0_1SE(
             s: &mut crate::test_namespace_bindings_reopened::inner::S,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev<
-            'a,
-        >(
-            __this: &'a mut ::core::mem::MaybeUninit<
-                crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
-            >,
+        pub(crate) unsafe fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1EOS1_<
-            'a,
             'b,
         >(
-            __this: &'a mut ::core::mem::MaybeUninit<
-                crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
-            >,
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,

@@ -38,7 +38,9 @@ impl Default for EmptyUnion {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN10EmptyUnionC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -49,7 +51,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN10EmptyUnionC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -93,7 +98,8 @@ impl ::ctor::CtorNew<()> for Nontrivial {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN10NontrivialC1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                     );
                 },
             )
@@ -110,7 +116,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Nontrivial {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -159,7 +166,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for TriviallyCopyableButNontriviallyDestructi
         unsafe {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(::core::pin::Pin::into_inner_unchecked(dest),__param_0);
+                    crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(::core::pin::Pin::into_inner_unchecked(dest)as*mut _ as*mut::core::ffi::c_void,__param_0);
                 },
             )
         }
@@ -199,7 +206,9 @@ impl Default for NonEmptyUnion {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -210,7 +219,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for NonEmptyUnion {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -330,7 +342,9 @@ impl Default for UnionWithOpaqueField {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -341,7 +355,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithOpaqueField {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -383,7 +400,9 @@ impl Default for TrivialButInheritable {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN21TrivialButInheritableC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN21TrivialButInheritableC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -394,7 +413,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialButInheritable {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN21TrivialButInheritableC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN21TrivialButInheritableC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -436,7 +458,9 @@ impl Default for UnionWithInheritable {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithInheritableC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN20UnionWithInheritableC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -447,7 +471,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithInheritable {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithInheritableC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN20UnionWithInheritableC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -486,7 +513,9 @@ impl Default for TypedefUnion {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN12TypedefUnionC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN12TypedefUnionC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -497,7 +526,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for TypedefUnion {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN12TypedefUnionC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN12TypedefUnionC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -539,7 +571,9 @@ impl Default for TypedefUnionWithInheritable {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -551,7 +585,8 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for TypedefUnionWithInheritable
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_(
-                &mut tmp, __param_0,
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
             );
             tmp.assume_init()
         }
@@ -580,11 +615,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::EmptyUnion>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::EmptyUnion>,
+        pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::EmptyUnion>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionaSERKS_<'a, 'b>(
@@ -596,12 +629,10 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::EmptyUnion>,
         ) -> &'a mut crate::EmptyUnion;
         #[link_name = "_ZN10NontrivialC1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Nontrivial>,
-        );
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN10NontrivialC1EOS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Nontrivial>,
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::Nontrivial>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_<
@@ -612,12 +643,9 @@ mod detail {
             __param_0: &'b crate::TriviallyCopyableButNontriviallyDestructible,
         ) -> ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>;
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_<
-            'a,
             'b,
         >(
-            __this: &'a mut ::core::mem::MaybeUninit<
-                crate::TriviallyCopyableButNontriviallyDestructible,
-            >,
+            __this: *mut ::core::ffi::c_void,
             __param_0: &'b crate::TriviallyCopyableButNontriviallyDestructible,
         );
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<
@@ -625,11 +653,9 @@ mod detail {
         >(
             __this: ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::NonEmptyUnion>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::NonEmptyUnion>,
+        pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::NonEmptyUnion>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionaSERKS_<'a, 'b>(
@@ -648,11 +674,11 @@ mod detail {
             __this: &'a mut crate::NonCopyUnion2,
             __param_0: ::ctor::RvalueReference<'b, crate::NonCopyUnion2>,
         ) -> &'a mut crate::NonCopyUnion2;
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::UnionWithOpaqueField>,
+        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::UnionWithOpaqueField>,
+        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::UnionWithOpaqueField>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldaSERKS_<'a, 'b>(
@@ -663,11 +689,11 @@ mod detail {
             __this: &'a mut crate::UnionWithOpaqueField,
             __param_0: ::ctor::RvalueReference<'b, crate::UnionWithOpaqueField>,
         ) -> &'a mut crate::UnionWithOpaqueField;
-        pub(crate) unsafe fn __rust_thunk___ZN21TrivialButInheritableC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::TrivialButInheritable>,
+        pub(crate) unsafe fn __rust_thunk___ZN21TrivialButInheritableC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN21TrivialButInheritableC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::TrivialButInheritable>,
+        pub(crate) unsafe fn __rust_thunk___ZN21TrivialButInheritableC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::TrivialButInheritable>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN21TrivialButInheritableaSERKS_<'a, 'b>(
@@ -678,11 +704,11 @@ mod detail {
             __this: &'a mut crate::TrivialButInheritable,
             __param_0: ::ctor::RvalueReference<'b, crate::TrivialButInheritable>,
         ) -> &'a mut crate::TrivialButInheritable;
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::UnionWithInheritable>,
+        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::UnionWithInheritable>,
+        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::UnionWithInheritable>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableaSERKS_<'a, 'b>(
@@ -693,11 +719,9 @@ mod detail {
             __this: &'a mut crate::UnionWithInheritable,
             __param_0: ::ctor::RvalueReference<'b, crate::UnionWithInheritable>,
         ) -> &'a mut crate::UnionWithInheritable;
-        pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::TypedefUnion>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::TypedefUnion>,
+        pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnion>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionaSERKS_<'a, 'b>(
@@ -708,11 +732,11 @@ mod detail {
             __this: &'a mut crate::TypedefUnion,
             __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnion>,
         ) -> &'a mut crate::TypedefUnion;
-        pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::TypedefUnionWithInheritable>,
+        pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::TypedefUnionWithInheritable>,
+        pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableaSERKS_<'a, 'b>(

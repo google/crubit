@@ -1336,7 +1336,7 @@ fn test_type_map_override_c_abi_incompatible() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn __rust_thunk___Z4Makev(__return: &mut ::core::mem::MaybeUninit<i8>);
+            pub(crate) unsafe fn __rust_thunk___Z4Makev(__return: *mut ::core::ffi::c_void);
         }
     );
     Ok(())

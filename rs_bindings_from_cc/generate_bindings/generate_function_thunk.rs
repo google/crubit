@@ -128,7 +128,6 @@ pub fn generate_function_thunk(
     } else {
         quote! {}
     };
-    let lifetimes: Vec<_> = unique_lifetimes(param_types).collect();
 
     // The first parameter is the output parameter, if any.
     let mut param_types = param_types.iter();
@@ -149,20 +148,17 @@ pub fn generate_function_thunk(
             )
         };
         let lifetime = lifetime.format_for_reference();
-        let referent_tokens = referent.to_token_stream(db);
-        out_param = Some(quote! { & #lifetime mut ::core::mem::MaybeUninit< #referent_tokens > });
+        out_param = Some(quote! { *mut ::core::ffi::c_void });
         out_param_ident = Some(param_idents.next().unwrap().clone());
     } else if !return_type.is_c_abi_compatible_by_value() {
-        let return_type_tokens = return_type.to_token_stream(db);
         // For return types that can't be passed by value, create a new out parameter.
-        // The lifetime doesn't matter, so we can insert a new anonymous lifetime here.
-        // TODO(yongheng): Switch to `void*`.
-        out_param = Some(quote! {
-            &mut ::core::mem::MaybeUninit< #return_type_tokens >
-        });
+        out_param = Some(quote! { *mut ::core::ffi::c_void });
         out_param_ident = Some(make_rs_ident("__return"));
         return_type_fragment = quote! {};
     }
+
+    // Of the remaining lifetimes, collect them.
+    let lifetimes: Vec<_> = unique_lifetimes(param_types.clone()).collect();
 
     let thunk_ident = if let Some(derived_record) = derived_record {
         thunk_ident_for_derived_member_function(func, derived_record)

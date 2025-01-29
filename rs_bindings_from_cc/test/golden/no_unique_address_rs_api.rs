@@ -65,7 +65,7 @@ impl Default for Struct {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN6StructC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN6StructC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
             tmp.assume_init()
         }
     }
@@ -76,7 +76,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Struct {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN6StructC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN6StructC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -105,7 +108,11 @@ impl Struct {
     pub fn Make(f1: ::core::ffi::c_int, f2: ::core::ffi::c_char) -> crate::Struct {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN6Struct4MakeEic(&mut __return, f1, f2);
+            crate::detail::__rust_thunk___ZN6Struct4MakeEic(
+                &raw mut __return as *mut ::core::ffi::c_void,
+                f1,
+                f2,
+            );
             __return.assume_init()
         }
     }
@@ -149,7 +156,9 @@ impl Default for PaddingBetweenFields {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -160,7 +169,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for PaddingBetweenFields {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -189,7 +201,11 @@ impl PaddingBetweenFields {
     pub fn Make(f1: ::core::ffi::c_char, f2: ::core::ffi::c_int) -> crate::PaddingBetweenFields {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(&mut __return, f1, f2);
+            crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(
+                &raw mut __return as *mut ::core::ffi::c_void,
+                f1,
+                f2,
+            );
             __return.assume_init()
         }
     }
@@ -225,7 +241,8 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                     );
                 },
             )
@@ -242,7 +259,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding_InnerStruct {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -322,7 +340,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding {
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -348,7 +367,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FieldInTailPaddi
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         __param_0,
                     );
                 },
@@ -406,7 +426,8 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_char, ::core::ffi::c_ch
             ::ctor::FnCtor::new(
                 move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
                     crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1Eicc(
-                        ::core::pin::Pin::into_inner_unchecked(dest),
+                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
+                            as *mut ::core::ffi::c_void,
                         inner_int,
                         inner_char,
                         outer_char,
@@ -421,11 +442,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN6StructC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Struct>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN6StructC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::Struct>,
+        pub(crate) unsafe fn __rust_thunk___ZN6StructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN6StructC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::Struct>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6StructaSERKS_<'a, 'b>(
@@ -437,15 +456,15 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::Struct>,
         ) -> &'a mut crate::Struct;
         pub(crate) unsafe fn __rust_thunk___ZN6Struct4MakeEic(
-            __return: &mut ::core::mem::MaybeUninit<crate::Struct>,
+            __return: *mut ::core::ffi::c_void,
             f1: ::core::ffi::c_int,
             f2: ::core::ffi::c_char,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFieldsC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::PaddingBetweenFields>,
+        pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFieldsC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFieldsC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::PaddingBetweenFields>,
+        pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFieldsC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::PaddingBetweenFields>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFieldsaSERKS_<'a, 'b>(
@@ -457,15 +476,15 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::PaddingBetweenFields>,
         ) -> &'a mut crate::PaddingBetweenFields;
         pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFields4MakeEci(
-            __return: &mut ::core::mem::MaybeUninit<crate::PaddingBetweenFields>,
+            __return: *mut ::core::ffi::c_void,
             f1: ::core::ffi::c_char,
             f2: ::core::ffi::c_int,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::FieldInTailPadding_InnerStruct>,
+        pub(crate) unsafe fn __rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN30FieldInTailPadding_InnerStructC1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::FieldInTailPadding_InnerStruct>,
+        pub(crate) unsafe fn __rust_thunk___ZN30FieldInTailPadding_InnerStructC1ERKS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: &'b crate::FieldInTailPadding_InnerStruct,
         );
         pub(crate) unsafe fn __rust_thunk___ZN30FieldInTailPadding_InnerStructaSERKS_<'a, 'b>(
@@ -475,12 +494,12 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN30FieldInTailPadding_InnerStructD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::FieldInTailPadding_InnerStruct>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingC1ERKS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::FieldInTailPadding>,
+        pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingC1ERKS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: &'b crate::FieldInTailPadding,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::FieldInTailPadding>,
+        pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::FieldInTailPadding>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingD1Ev<'a>(
@@ -494,8 +513,8 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::FieldInTailPadding>,
             __param_0: ::ctor::RvalueReference<'b, crate::FieldInTailPadding>,
         ) -> ::core::pin::Pin<&'a mut crate::FieldInTailPadding>;
-        pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingC1Eicc<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::FieldInTailPadding>,
+        pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingC1Eicc(
+            __this: *mut ::core::ffi::c_void,
             inner_int: ::core::ffi::c_int,
             inner_char: ::core::ffi::c_char,
             outer_char: ::core::ffi::c_char,

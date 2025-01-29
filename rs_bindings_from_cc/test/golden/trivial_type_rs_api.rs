@@ -41,7 +41,9 @@ pub mod ns {
         fn default() -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk___ZN2ns7TrivialC1Ev(&mut tmp);
+                crate::detail::__rust_thunk___ZN2ns7TrivialC1Ev(
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                );
                 tmp.assume_init()
             }
         }
@@ -52,7 +54,10 @@ pub mod ns {
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk___ZN2ns7TrivialC1EOS0_(&mut tmp, __param_0);
+                crate::detail::__rust_thunk___ZN2ns7TrivialC1EOS0_(
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
                 tmp.assume_init()
             }
         }
@@ -142,7 +147,9 @@ pub mod ns {
         fn default() -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1Ev(&mut tmp);
+                crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1Ev(
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                );
                 tmp.assume_init()
             }
         }
@@ -153,7 +160,10 @@ pub mod ns {
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_(&mut tmp, __param_0);
+                crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_(
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
                 tmp.assume_init()
             }
         }
@@ -182,7 +192,7 @@ pub mod ns {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<crate::ns::Trivial>::uninit();
             crate::detail::__rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
-                &mut __return,
+                &raw mut __return as *mut ::core::ffi::c_void,
                 &mut trivial,
             );
             __return.assume_init()
@@ -196,7 +206,7 @@ pub mod ns {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<crate::ns::TrivialNonfinal>::uninit();
             crate::detail::__rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
-                &mut __return,
+                &raw mut __return as *mut ::core::ffi::c_void,
                 &mut trivial,
             );
             __return.assume_init()
@@ -276,11 +286,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::Trivial>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1EOS0_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::Trivial>,
+        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1EOS0_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::Trivial>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialaSERKS0_<'a, 'b>(
@@ -315,11 +323,11 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv<'a>(
             __this: ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN2ns15TrivialNonfinalC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
+        pub(crate) unsafe fn __rust_thunk___ZN2ns15TrivialNonfinalC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
+        pub(crate) unsafe fn __rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN2ns15TrivialNonfinalaSERKS0_<'a, 'b>(
@@ -331,11 +339,11 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
         ) -> &'a mut crate::ns::TrivialNonfinal;
         pub(crate) unsafe fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
-            __return: &mut ::core::mem::MaybeUninit<crate::ns::Trivial>,
+            __return: *mut ::core::ffi::c_void,
             trivial: &mut crate::ns::Trivial,
         );
         pub(crate) unsafe fn __rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
-            __return: &mut ::core::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
+            __return: *mut ::core::ffi::c_void,
             trivial: &mut crate::ns::TrivialNonfinal,
         );
         #[link_name = "_ZN2ns16TakesByReferenceERNS_7TrivialE"]

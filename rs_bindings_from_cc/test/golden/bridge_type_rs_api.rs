@@ -19,7 +19,9 @@
 pub fn ReturnCppStruct() -> RustStruct {
     unsafe {
         let mut __return = ::core::mem::MaybeUninit::<RustStruct>::uninit();
-        crate::detail::__rust_thunk___Z15ReturnCppStructv(&mut __return);
+        crate::detail::__rust_thunk___Z15ReturnCppStructv(
+            &raw mut __return as *mut ::core::ffi::c_void,
+        );
         __return.assume_init()
     }
 }
@@ -39,9 +41,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___Z15ReturnCppStructv(
-            __return: &mut ::core::mem::MaybeUninit<RustStruct>,
-        );
+        pub(crate) unsafe fn __rust_thunk___Z15ReturnCppStructv(__return: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z13TakeCppStruct9CppStruct(__param_0: &mut RustStruct);
     }
 }

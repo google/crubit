@@ -896,100 +896,94 @@ fn generate_func_body(
     thunk_args: Vec<TokenStream>,
 ) -> TokenStream {
     let ParamValueAdjustments { clone_prefixes, clone_suffixes } = param_value_adjustments;
-    match &impl_kind {
-        ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. } => {
-            // SAFETY: A user-defined constructor is not guaranteed to
-            // initialize all the fields. To make the `assume_init()` call
-            // below safe, the memory is zero-initialized first. This is a
-            // bit safer, because zero-initialized memory represents a valid
-            // value for the currently supported field types (this may
-            // change once the bindings generator starts supporting
-            // reference fields). TODO(b/213243309): Double-check if
-            // zero-initialization is desirable here.
-            quote! {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-                unsafe {
-                    #crate_root_path::detail::#thunk_ident( &mut tmp #( , #thunk_args )* );
-                    tmp.assume_init()
-                }
+
+    if let ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. } = &impl_kind {
+        // SAFETY: A user-defined constructor is not guaranteed to
+        // initialize all the fields. To make the `assume_init()` call
+        // below safe, the memory is zero-initialized first. This is a
+        // bit safer, because zero-initialized memory represents a valid
+        // value for the currently supported field types (this may
+        // change once the bindings generator starts supporting
+        // reference fields). TODO(b/213243309): Double-check if
+        // zero-initialization is desirable here.
+        quote! {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                #crate_root_path::detail::#thunk_ident( &raw mut tmp as *mut ::core::ffi::c_void #( , #thunk_args )* );
+                tmp.assume_init()
             }
         }
-        _ => {
-            // Note: for the time being, all !Unpin values are treated as if they were not
-            // trivially relocatable. We could, in the special case of trivial !Unpin types,
-            // not generate the thunk at all, but this would be a bit of extra work.
-            //
-            // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
-            let mut body = if return_type.is_c_abi_compatible_by_value() {
+    } else {
+        // Note: for the time being, all !Unpin values are treated as if they were not
+        // trivially relocatable. We could, in the special case of trivial !Unpin types,
+        // not generate the thunk at all, but this would be a bit of extra work.
+        //
+        // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
+        let mut body = if return_type.is_c_abi_compatible_by_value() {
+            quote! {
+                #crate_root_path::detail::#thunk_ident(
+                    #( #clone_prefixes #thunk_args #clone_suffixes ),*
+                )
+            }
+        } else {
+            let return_type_or_self = {
+                let record = match impl_kind {
+                    ImplKind::Struct { ref record, .. }
+                    | ImplKind::Trait { ref record, impl_for: ImplFor::T, .. } => Some(&**record),
+                    _ => None,
+                };
+                return_type.to_token_stream_replacing_by_self(db, record)
+            };
+            if return_type.is_unpin() {
                 quote! {
+                    let mut __return = ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
                     #crate_root_path::detail::#thunk_ident(
-                        #( #clone_prefixes #thunk_args #clone_suffixes ),*
-                    )
+                        &raw mut __return as *mut ::core::ffi::c_void
+                        #( , #clone_prefixes #thunk_args #clone_suffixes )*
+                    );
+                    __return.assume_init()
                 }
             } else {
-                let return_type_or_self = {
-                    let record = match impl_kind {
-                        ImplKind::Struct { ref record, .. }
-                        | ImplKind::Trait { ref record, impl_for: ImplFor::T, .. } => {
-                            Some(&**record)
-                        }
-                        _ => None,
-                    };
-                    return_type.to_token_stream_replacing_by_self(db, record)
-                };
-                if return_type.is_unpin() {
-                    quote! {
-                        let mut __return =
-                            ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
+                // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
+                // MaybeUninit<T> in Pin if T is !Unpin. It should understand
+                // 'structural pinning', so that we do not need into_inner_unchecked()
+                // here.
+                quote! {
+                    ::ctor::FnCtor::new(
+                        move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<#return_type_or_self>>| {
                         #crate_root_path::detail::#thunk_ident(
-                            &mut __return
-                            #( , #clone_prefixes #thunk_args #clone_suffixes )*
+                            ::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void
+                            #( , #thunk_args )*
                         );
-                        __return.assume_init()
-                    }
-                } else {
-                    // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
-                    // MaybeUninit<T> in Pin if T is !Unpin. It should understand
-                    // 'structural pinning', so that we do not need into_inner_unchecked()
-                    // here.
-                    quote! {
-                        ::ctor::FnCtor::new(
-                            move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<
-                                                                    #return_type_or_self>>| {
-                            #crate_root_path::detail::#thunk_ident(
-                                ::core::pin::Pin::into_inner_unchecked(dest)
-                                #( , #thunk_args )*
-                            );
-                        })
-                    }
+                    })
                 }
-            };
-            // Discard the return value if requested (for example, when calling a C++
-            // operator that returns a value from a Rust trait that returns
-            // unit).
-            if let ImplKind::Trait { drop_return: true, .. } = impl_kind {
-                if return_type.is_unpin() {
-                    // If it's unpin, just discard it:
-                    body = quote! { #body; };
-                } else {
-                    // Otherwise, in order to discard the return value and return void, we
-                    // need to run the constructor.
-                    body = quote! {let _ = ::ctor::emplace!(#body);};
-                }
+            }
+        };
+        // Discard the return value if requested (for example, when calling a C++
+        // operator that returns a value from a Rust trait that returns
+        // unit).
+        if let ImplKind::Trait { drop_return: true, .. } = impl_kind {
+            if return_type.is_unpin() {
+                // If it's unpin, just discard it:
+                body = quote! { #body; };
+            } else {
+                // Otherwise, in order to discard the return value and return void, we
+                // need to run the constructor.
+                body = quote! {let _ = ::ctor::emplace!(#body);};
+            }
 
-                // We would need to do this, but it's no longer used:
-                //    return_type = RsTypeKind::Primitive(PrimitiveType::Unit);
-                let _ = return_type; // proof that we don't need to update it.
-            }
-            // Only need to wrap everything in an `unsafe { ... }` block if
-            // the *whole* api function is safe.
-            if !impl_kind.is_unsafe() {
-                body = quote! { unsafe { #body } };
-            }
-            quote! {
-                #thunk_prepare
-                #body
-            }
+            // We would need to do this, but it's no longer used:
+            //    return_type = RsTypeKind::Primitive(PrimitiveType::Unit);
+            let _ = return_type; // proof that we don't need to update it.
+        }
+        // Only need to wrap everything in an `unsafe { ... }` block if
+        // the *whole* api function is safe.
+        if !impl_kind.is_unsafe() {
+            body = quote! { unsafe { #body } };
+        }
+        quote! {
+            #thunk_prepare
+            #body
         }
     }
 }

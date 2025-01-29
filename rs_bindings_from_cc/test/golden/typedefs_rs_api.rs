@@ -31,7 +31,9 @@ impl Default for SomeStruct {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN10SomeStructC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -42,7 +44,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -90,7 +95,9 @@ impl Default for SomeOtherStruct {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN15SomeOtherStructC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN15SomeOtherStructC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -101,7 +108,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN15SomeOtherStructC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN15SomeOtherStructC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -140,7 +150,9 @@ impl Default for SomeUnion {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN9SomeUnionC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN9SomeUnionC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -151,7 +163,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeUnion {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN9SomeUnionC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN9SomeUnionC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -193,7 +208,9 @@ impl Default for SomeOtherUnion {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN14SomeOtherUnionC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN14SomeOtherUnionC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -204,7 +221,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN14SomeOtherUnionC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN14SomeOtherUnionC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -237,11 +257,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeStruct>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeStruct>,
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN10SomeStructaSERKS_<'a, 'b>(
@@ -252,11 +270,11 @@ mod detail {
             __this: &'a mut crate::SomeStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         ) -> &'a mut crate::SomeStruct;
-        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherStruct>,
+        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherStruct>,
+        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherStruct>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructaSERKS_<'a, 'b>(
@@ -267,11 +285,9 @@ mod detail {
             __this: &'a mut crate::SomeOtherStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherStruct>,
         ) -> &'a mut crate::SomeOtherStruct;
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeUnion>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeUnion>,
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionaSERKS_<'a, 'b>(
@@ -282,11 +298,11 @@ mod detail {
             __this: &'a mut crate::SomeUnion,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
         ) -> &'a mut crate::SomeUnion;
-        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherUnion>,
+        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::SomeOtherUnion>,
+        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionaSERKS_<'a, 'b>(

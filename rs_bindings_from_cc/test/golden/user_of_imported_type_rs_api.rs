@@ -20,7 +20,10 @@
 pub fn UsesImportedType(mut t: trivial_type_cc::ns::Trivial) -> trivial_type_cc::ns::Trivial {
     unsafe {
         let mut __return = ::core::mem::MaybeUninit::<trivial_type_cc::ns::Trivial>::uninit();
-        crate::detail::__rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(&mut __return, &mut t);
+        crate::detail::__rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
+            &raw mut __return as *mut ::core::ffi::c_void,
+            &mut t,
+        );
         __return.assume_init()
     }
 }
@@ -43,7 +46,9 @@ impl Default for UserOfImportedType {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -54,7 +59,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for UserOfImportedType {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -83,14 +91,14 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
-            __return: &mut ::core::mem::MaybeUninit<trivial_type_cc::ns::Trivial>,
+            __return: *mut ::core::ffi::c_void,
             t: &mut trivial_type_cc::ns::Trivial,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::UserOfImportedType>,
+        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::UserOfImportedType>,
+        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::UserOfImportedType>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeaSERKS_<'a, 'b>(

@@ -53,7 +53,9 @@ impl Default for WithBitfields {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13WithBitfieldsC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN13WithBitfieldsC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -64,7 +66,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for WithBitfields {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13WithBitfieldsC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN13WithBitfieldsC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -110,7 +115,9 @@ impl Default for AlignmentRegressionTest {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN23AlignmentRegressionTestC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN23AlignmentRegressionTestC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
             tmp.assume_init()
         }
     }
@@ -121,7 +128,10 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AlignmentRegressionTest {
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN23AlignmentRegressionTestC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN23AlignmentRegressionTestC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
             tmp.assume_init()
         }
     }
@@ -152,11 +162,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::WithBitfields>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::WithBitfields>,
+        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::WithBitfields>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsaSERKS_<'a, 'b>(
@@ -167,11 +175,11 @@ mod detail {
             __this: &'a mut crate::WithBitfields,
             __param_0: ::ctor::RvalueReference<'b, crate::WithBitfields>,
         ) -> &'a mut crate::WithBitfields;
-        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::AlignmentRegressionTest>,
+        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestC1EOS_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::AlignmentRegressionTest>,
+        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::AlignmentRegressionTest>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestaSERKS_<'a, 'b>(

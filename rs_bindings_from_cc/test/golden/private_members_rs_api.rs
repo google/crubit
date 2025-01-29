@@ -39,7 +39,9 @@ pub mod test_namespace_bindings {
         fn default() -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(&mut tmp);
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                );
                 tmp.assume_init()
             }
         }
@@ -51,7 +53,8 @@ pub mod test_namespace_bindings {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassC1EOS0_(
-                    &mut tmp, __param_0,
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    __param_0,
                 );
                 tmp.assume_init()
             }
@@ -107,11 +110,11 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev<'a>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::SomeClass>,
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1EOS0_<'a, 'b>(
-            __this: &'a mut ::core::mem::MaybeUninit<crate::test_namespace_bindings::SomeClass>,
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1EOS0_<'b>(
+            __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::SomeClass>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassaSERKS0_<'a, 'b>(
