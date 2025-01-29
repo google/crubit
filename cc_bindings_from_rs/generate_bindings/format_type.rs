@@ -511,7 +511,7 @@ pub fn format_ty_for_cc<'tcx>(
 /// `core::ffi` (AKA `std::ffi`).
 ///
 /// TODO(b/283258442): Also handle `libc` aliases.
-pub fn format_core_alias_for_cc<'tcx>(
+fn format_core_alias_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: SugaredTy<'tcx>,
 ) -> Option<CcSnippet> {
@@ -740,15 +740,27 @@ pub fn format_region_as_rs_lifetime(region: &ty::Region) -> TokenStream {
     quote! { #lifetime }
 }
 
+/// A Rust type that bridges to a particular pre-existing C++ type.
+///
+/// Bridged types may be representation-equivalent such that pointers to one may be treated as
+/// pointers to the other, or they may require conversion functions (in which case they can only
+/// be passed by-value).
 pub struct BridgedType {
+    /// The spelling of the C++ type of the item.
     pub cpp_type: CcType,
+    /// Path to the header file that declares the type specified in `cpp_type`.
     pub cpp_type_include: Symbol,
     pub conversion_info: BridgedTypeConversionInfo,
 }
 
+/// A description of what method is used to convert between values of the Rust and C++ types.
 pub enum BridgedTypeConversionInfo {
+    /// The types are representation-equivalent and can be transmuted using simple pointer casts.
     PointerLikeTransmute,
-    ExternCFuncConverters { cpp_to_rust_converter: Symbol, rust_to_cpp_converter: Symbol },
+    ExternCFuncConverters {
+        cpp_to_rust_converter: Symbol,
+        rust_to_cpp_converter: Symbol,
+    },
 }
 
 /// Returns an error if `ty` is not pointer-like.
