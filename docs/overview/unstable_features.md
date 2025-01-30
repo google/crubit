@@ -138,6 +138,23 @@ Until it is stabilized, or the cost/benefit becomes worthwhile, we can work
 around it by using `Result`, and converting when a `Result` is passed or
 returned by value.
 
+### `fn_traits`
+
+Much like `try_traits_v2`, we'd like to support C++ "function objects" which
+implement the call operator. In Rust, without `fn_traits`, the API is
+awkward: given a `foo` of type `std::function`, `absl::AnyInvocable`, or
+`absl::FunctionRef`, you cannot just write `foo()` to call it, because it cannot
+implement the `Fn*` family of traits. This makes these types less convenient to
+use than they are in C++, requiring something like `foo.as_closure()()` to
+create a closure out of a `FunctionRef` or similar.
+
+(Another use case we've examined in the past: in addition to implementing
+function objects, `fn_traits` could also be used to implement overloading,
+including overloaded function objects. For example, an overloaded function
+could, instead, be a constant with many different implementations of `Fn`, for
+different parameter types. Though, this ends up looking a bit
+odd: `(mystruct.overloaded)()`)
+
 ### `min_specialization`
 
 We have many use cases for `min_specialization`, including bindings for C++
