@@ -18,9 +18,10 @@ has_grte_isystem=0
 stl_isystem="third_party/stl/cxx17"
 # TODO(b/324159705): Remove old include/c++/v1 paths once libc++ runtimes on
 # demand is on by default.
-cc_std_lib_isystem_old="nowhere/llvm/toolchain/include/c++/v1"
+# TODO(mboehme): If we remove the `crubit_flavor_transition` from the
+# `cc_std_test` rule, we need to add the "stable" versions of these paths so
+# that the test passes in the stable configuration.
 cc_std_lib_unstable_isystem_old="nowhere/llvm/toolchain/include/c++/v1"
-cc_std_lib_isystem="nowhere/llvm/src/libcxx/include/*"
 cc_std_lib_unstable_isystem="nowhere/llvm/src/libcxx/include/*"
 clang_builtin_isystem="third_party/llvm/llvm-project/clang/lib/Headers"
 grte_isystem="third_party/grte/v5_.*/release/usr/grte/v5/include"
@@ -48,9 +49,7 @@ while [[ $# -gt 0 ]]; do
         shift;
         if [[ "$1" = "$stl_isystem" ]]; then
             has_stl_isystem=1
-        elif [[ "$1" = "$cc_std_lib_isystem_old" ]] || \
-             [[ "$1" = "$cc_std_lib_unstable_isystem_old" ]] || \
-             [[ "$1" =~ ${cc_std_lib_isystem} ]] || \
+        elif [[ "$1" = "$cc_std_lib_unstable_isystem_old" ]] || \
              [[ "$1" =~ ${cc_std_lib_unstable_isystem} ]] ; then
             if [[  "$has_stl_isystem" = 0 ]]; then
                 fail "C++ standard library headers appear before STL headers"

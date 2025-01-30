@@ -58,6 +58,8 @@ cc_std_test = rule(
     attrs = {
         "dep": attr.label(
             aspects = [rust_bindings_from_cc_aspect, get_args_aspect],
+            # TODO(mboehme): Consider removing this transition so that we can run thed test both for
+            # the stable and the unstable configuration.
             cfg = crubit_flavor_transition,
         ),
         "_include_directives_checker": attr.label(
