@@ -42,41 +42,9 @@ extern "C" struct ns::Trivial* __rust_thunk___ZN2ns7TrivialaSEOS0_(
   return &__this->operator=(std::move(*__param_0));
 }
 
-static_assert(CRUBIT_SIZEOF(struct ns::TrivialNonfinal) == 4);
-static_assert(alignof(struct ns::TrivialNonfinal) == 4);
-static_assert(CRUBIT_OFFSET_OF(trivial_field, struct ns::TrivialNonfinal) == 0);
-
-extern "C" void __rust_thunk___ZN2ns15TrivialNonfinalC1Ev(
-    struct ns::TrivialNonfinal* __this) {
-  crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_(
-    struct ns::TrivialNonfinal* __this, struct ns::TrivialNonfinal* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct ns::TrivialNonfinal*
-__rust_thunk___ZN2ns15TrivialNonfinalaSERKS0_(
-    struct ns::TrivialNonfinal* __this,
-    const struct ns::TrivialNonfinal* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct ns::TrivialNonfinal*
-__rust_thunk___ZN2ns15TrivialNonfinalaSEOS0_(
-    struct ns::TrivialNonfinal* __this, struct ns::TrivialNonfinal* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 extern "C" void __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
     struct ns::Trivial* __return, struct ns::Trivial* trivial) {
   new (__return) auto(ns::TakesByValue(std::move(*trivial)));
-}
-extern "C" void
-__rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
-    struct ns::TrivialNonfinal* __return, struct ns::TrivialNonfinal* trivial) {
-  new (__return) auto(ns::TakesTrivialNonfinalByValue(std::move(*trivial)));
 }
 
 #pragma clang diagnostic pop
