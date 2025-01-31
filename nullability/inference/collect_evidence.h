@@ -7,8 +7,6 @@
 
 #include <algorithm>
 #include <memory>
-#include <string>
-#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -16,6 +14,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
+#include "nullability/inference/usr_cache.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pragma.h"
 #include "clang/AST/ASTContext.h"
@@ -23,7 +22,6 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Basic/SourceLocation.h"
-#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
@@ -31,10 +29,6 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
-
-using USRCache = llvm::DenseMap<const Decl *, std::string>;
-
-std::string_view getOrGenerateUSR(USRCache &Cache, const Decl &);
 
 /// Describes the direction of flow for a piece of evidence between a virtual
 /// method and its overrides.

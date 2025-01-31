@@ -14,6 +14,7 @@ cc_library(
         ":inferable",
         ":inference_cc_proto",
         ":slot_fingerprint",
+        ":usr_cache",
         "//nullability:ast_helpers",
         "//nullability:loc_filter",
         "//nullability:macro_arg_capture",
@@ -42,6 +43,7 @@ cc_test(
         ":collect_evidence",
         ":inference_cc_proto",
         ":slot_fingerprint",
+        ":usr_cache",
         "//nullability:pragma",
         "//nullability:type_nullability",
         "@llvm-project//clang:analysis",
@@ -122,6 +124,7 @@ cc_library(
         ":inference_cc_proto",
         ":merge",
         ":slot_fingerprint",
+        ":usr_cache",
         "//nullability:pragma",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@llvm-project//clang:ast",
@@ -290,6 +293,17 @@ cc_library(
         "//nullability/test:test_headers",
         "@llvm-project//clang:frontend",
         "@llvm-project//clang:testing",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "usr_cache",
+    srcs = ["usr_cache.cc"],
+    hdrs = ["usr_cache.h"],
+    deps = [
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:index",
         "@llvm-project//llvm:Support",
     ],
 )

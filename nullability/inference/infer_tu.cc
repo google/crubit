@@ -12,6 +12,7 @@
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/merge.h"
 #include "nullability/inference/slot_fingerprint.h"
+#include "nullability/inference/usr_cache.h"
 #include "nullability/pragma.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"

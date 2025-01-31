@@ -12,6 +12,7 @@
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
+#include "nullability/inference/usr_cache.h"
 #include "nullability/pragma.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTConsumer.h"

@@ -22,6 +22,7 @@
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
+#include "nullability/inference/usr_cache.h"
 #include "nullability/loc_filter.h"
 #include "nullability/macro_arg_capture.h"
 #include "nullability/pointer_nullability.h"
@@ -81,15 +82,6 @@ using ::clang::dataflow::WatchedLiteralsSolver;
 using ConcreteNullabilityCache =
     absl::flat_hash_map<const Decl *,
                         std::optional<const PointerTypeNullability>>;
-
-std::string_view getOrGenerateUSR(USRCache &Cache, const Decl &Decl) {
-  auto [It, Inserted] = Cache.try_emplace(&Decl);
-  if (Inserted) {
-    llvm::SmallString<128> USR;
-    if (!index::generateUSRForDecl(&Decl, USR)) It->second = USR.str();
-  }
-  return It->second;
-}
 
 static llvm::DenseSet<absl::Nonnull<const CXXMethodDecl *>> getOverridden(
     absl::Nonnull<const CXXMethodDecl *> Derived) {
