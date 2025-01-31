@@ -147,6 +147,7 @@ cc_library(
     deps = [
         ":inferable",
         ":inference_cc_proto",
+        ":usr_cache",
         "//nullability:annotations",
         "//nullability:loc_filter",
         "//nullability:type_nullability",

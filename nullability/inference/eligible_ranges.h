@@ -7,9 +7,12 @@
 
 #include <optional>
 #include <ostream>
+#include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "nullability/inference/inference.proto.h"
+#include "nullability/inference/usr_cache.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/DeclBase.h"
 #include "llvm/ADT/StringRef.h"
@@ -17,8 +20,13 @@
 namespace clang::tidy::nullability {
 
 struct EligibleRange {
+  // If empty, this range is not associated with an inferable slot.
   std::optional<Slot> Slot;
   SlotRange Range;
+  // Only set when this range is collected by whole-AST `getEligibleRanges`. In
+  // other cases, the caller already has the Decl and can compute the USR
+  // themselves.
+  std::optional<std::string> USR;
 
   // Enable GoogleTest to print EligibleRange to ease debugging of tests.
   // NOLINTNEXTLINE(readability-identifier-naming) must match GoogleTest naming.
@@ -26,6 +34,11 @@ struct EligibleRange {
     *OS << "Slot: ";
     if (Range.Slot)
       *OS << *Range.Slot;
+    else
+      *OS << "nullopt";
+    *OS << "USR: ";
+    if (Range.USR)
+      *OS << *Range.USR;
     else
       *OS << "nullopt";
     *OS << "\nRange: {" << Range.Range.DebugString() << "}\n";
@@ -49,8 +62,12 @@ EligibleRanges getInferenceRanges(const Decl& D,
 
 /// Collects the ranges of types written in the given AST that are eligible for
 /// nullability annotations.
+///
+/// Sets the `USR` for each EligibleRange if `USRs` is not null and the USR can
+/// be retrieved from `USRs` or be generated.
 EligibleRanges getEligibleRanges(ASTContext& Ctx,
                                  const TypeNullabilityDefaults& Defaults,
+                                 absl::Nullable<USRCache*> USRs = nullptr,
                                  bool RestrictToMainFileOrHeader = false);
 
 /// Return the given string ref without any escaped newline prefixes.

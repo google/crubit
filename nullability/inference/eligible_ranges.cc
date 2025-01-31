@@ -11,6 +11,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -18,6 +19,7 @@
 #include "nullability/annotations.h"
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
+#include "nullability/inference/usr_cache.h"
 #include "nullability/loc_filter.h"
 #include "nullability/type_nullability.h"
 #include "third_party/llvm/llvm-project/clang-tools-extra/clang-tidy/utils/LexerUtils.h"
@@ -537,13 +539,15 @@ EligibleRanges getInferenceRanges(const Decl &D,
 namespace {
 struct Walker : public RecursiveASTVisitor<Walker> {
   Walker(const TypeNullabilityDefaults &Defaults,
-         std::unique_ptr<LocFilter> LocFilter)
-      : Defaults(Defaults), LocFilter(std::move(LocFilter)) {}
+         std::unique_ptr<LocFilter> LocFilter, absl::Nullable<USRCache *> USRs)
+      : Defaults(Defaults), LocFilter(std::move(LocFilter)), USRs(USRs) {}
 
   // Must outlive the walker.
   const TypeNullabilityDefaults &Defaults;
   EligibleRanges Out;
   std::unique_ptr<LocFilter> LocFilter;
+  // Must outlive the walker.
+  absl::Nullable<USRCache *> USRs;
 
   // We can't walk the nullabilities in templates themselves, but walking the
   // instantiations will let us at least see the templates that get used.
@@ -553,6 +557,13 @@ struct Walker : public RecursiveASTVisitor<Walker> {
   void insertPointerRanges(absl::Nonnull<const DeclT *> Decl) {
     if (!LocFilter->check(Decl->getBeginLoc())) return;
     EligibleRanges Ranges = getEligibleRanges(*Decl, Defaults);
+    if (USRs) {
+      for (EligibleRange &Range : Ranges) {
+        std::string_view USR = getOrGenerateUSR(*USRs, *Decl);
+        if (!USR.empty()) Range.USR = std::string(USR);
+      }
+    }
+
     Out.reserve(Out.size() + Ranges.size());
     std::move(Ranges.begin(), Ranges.end(), std::back_inserter(Out));
   }
@@ -587,9 +598,11 @@ struct Walker : public RecursiveASTVisitor<Walker> {
 
 EligibleRanges getEligibleRanges(ASTContext &Ctx,
                                  const TypeNullabilityDefaults &Defaults,
+                                 absl::Nullable<USRCache *> USRs,
                                  bool RestrictToMainFileOrHeader) {
   Walker W(Defaults,
-           getLocFilter(Ctx.getSourceManager(), RestrictToMainFileOrHeader));
+           getLocFilter(Ctx.getSourceManager(), RestrictToMainFileOrHeader),
+           USRs);
   W.TraverseAST(Ctx);
   return std::move(W.Out);
 }
