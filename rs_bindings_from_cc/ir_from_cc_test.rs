@@ -93,7 +93,7 @@ fn test_function() {
                 has_c_calling_convention: true,
                 is_member_or_descendant_of_class_template: false,
                 safety_annotation: Unannotated,
-                source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
+                source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3",
                 id: ItemId(...),
                 enclosing_item_id: None,
                 adl_enclosing_record: None,
@@ -2524,7 +2524,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
               unknown_attr: None,
               doc_comment: Some(...),
               bridge_type_info: None,
-              source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=15",
+              source_loc: "Generated from: ir_from_cc_virtual_header.h;l=15",
               unambiguous_public_bases: [],
               fields: [Field {
                   identifier: Some("derived_field"), ...
@@ -4176,8 +4176,8 @@ fn test_source_location_with_macro() {
         let ir = ir_from_cc(cc_snippet).unwrap();
         assert_ir_matches!(ir, expected);
     };
-    let loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
-        Expanded at: google3/ir_from_cc_virtual_header.h;l=7";
+    let loc = "Generated from: ir_from_cc_virtual_header.h;l=5\n\
+        Expanded at: ir_from_cc_virtual_header.h;l=7";
     assert_matches(
         r#"
 #define NO_OP_FUNC(func_name) \
@@ -4187,16 +4187,16 @@ NO_OP_FUNC(no_op_func_to_test_source_location_with_macro);"#,
         quote! {Func { ..., source_loc: #loc, ... } },
     );
 
-    let loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=4\n\
-        Expanded at: google3/ir_from_cc_virtual_header.h;l=5";
+    let loc = "Generated from: ir_from_cc_virtual_header.h;l=4\n\
+        Expanded at: ir_from_cc_virtual_header.h;l=5";
     assert_matches(
         r#"
 #define TYPE_ALIAS_TO_INT(type_alias) using type_alias = int;
 TYPE_ALIAS_TO_INT(MyIntToTestSourceLocationWithMacro);"#,
         quote! {TypeAlias { ..., source_loc: #loc, ... } },
     );
-    let loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=4\n\
-        Expanded at: google3/ir_from_cc_virtual_header.h;l=6";
+    let loc = "Generated from: ir_from_cc_virtual_header.h;l=4\n\
+        Expanded at: ir_from_cc_virtual_header.h;l=6";
     assert_matches(
         r#"
 #define TEMPLATE_NO_OP_FUNC(func_name) \
@@ -4205,8 +4205,8 @@ template <typename T> void func_name() {};
         quote! {UnsupportedItem { ..., source_loc: Some(#loc,), ... } },
     );
 
-    let loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
-        Expanded at: google3/ir_from_cc_virtual_header.h;l=6";
+    let loc = "Generated from: ir_from_cc_virtual_header.h;l=5\n\
+        Expanded at: ir_from_cc_virtual_header.h;l=6";
     assert_matches(
         r#"
 #define DEFINE_EMPTY_ENUM(enum_name) \
@@ -4215,8 +4215,8 @@ DEFINE_EMPTY_ENUM(EmptyEnumToTestSourceLocationWithMacro);"#,
         quote! {Enum { ..., source_loc: #loc, ... } },
     );
 
-    let loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
-        Expanded at: google3/ir_from_cc_virtual_header.h;l=6";
+    let loc = "Generated from: ir_from_cc_virtual_header.h;l=5\n\
+        Expanded at: ir_from_cc_virtual_header.h;l=6";
     assert_matches(
         r#"
 #define DEFINE_EMPTY_STRUCT(struct_name) \
@@ -4234,23 +4234,23 @@ fn test_source_location() {
     };
     assert_matches(
         "void no_op_func_to_test_source_location();",
-        quote! {Func { ..., source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3", ... } },
+        quote! {Func { ..., source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
     );
     assert_matches(
         r#"typedef float SomeTypedefToTestSourceLocation;"#,
-        quote! {TypeAlias { ..., source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3", ... } },
+        quote! {TypeAlias { ..., source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
     );
     assert_matches(
         r#"  template <typename T> void unsupported_templated_func_to_test_source_location() {}"#,
-        quote! {UnsupportedItem { ..., source_loc: Some("Generated from: google3/ir_from_cc_virtual_header.h;l=3"), ... } },
+        quote! {UnsupportedItem { ..., source_loc: Some("Generated from: ir_from_cc_virtual_header.h;l=3"), ... } },
     );
     assert_matches(
         r#"enum SomeEmptyEnumToTestSourceLocation {};"#,
-        quote! {Enum { ..., source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3", ... } },
+        quote! {Enum { ..., source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
     );
     assert_matches(
         r#"struct SomeEmptyStructToTestSourceLocation {};"#,
-        quote! {Record { ..., source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3", ... } },
+        quote! {Record { ..., source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
     );
 }
 
@@ -4260,8 +4260,8 @@ fn test_source_location_with_macro_defined_in_another_file() {
 #define MyIntTypeAliasToTestSourceLocation(type_alias_name) using type_alias_name = int;"#;
     let header = "MyIntTypeAliasToTestSourceLocation(my_int);";
     let ir = ir_from_cc_dependency(header, dependency_header).unwrap();
-    let expected_source_loc = "Generated from: google3/test/dependency_header.h;l=2\n\
-                               Expanded at: google3/ir_from_cc_virtual_header.h;l=3";
+    let expected_source_loc = "Generated from: test/dependency_header.h;l=2\n\
+                               Expanded at: ir_from_cc_virtual_header.h;l=3";
     assert_ir_matches!(
         ir,
         quote! {
@@ -4281,7 +4281,7 @@ fn test_source_location_class_template_specialization() {
     let cc_snippet = "template <typename T> class MyClassTemplateToTestSourceLocation { T t_; };
     using MyClassTemplateSpecializationToTestSourceLocation = MyClassTemplateToTestSourceLocation<bool>;";
     let ir = ir_from_cc(cc_snippet).unwrap();
-    let expected_source_loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=4";
+    let expected_source_loc = "Generated from: ir_from_cc_virtual_header.h;l=4";
     assert_ir_matches!(
         ir,
         quote! {

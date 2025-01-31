@@ -179,7 +179,7 @@ bindings_attrs = {
         default = "@@//rs_bindings_from_cc/bazel_support:deps_for_bindings",
     ),
     "_clang_format": attr.label(
-        default = "//third_party/crosstool/google3_users:stable_clang-format",
+        default = "",
         executable = True,
         allow_single_file = True,
         cfg = "exec",

@@ -276,11 +276,7 @@ impl ToTokens for CcInclude {
             Self::AbseilHeader(path) => {
                 // TODO(b/368434564): Remove the copybara transform here.
                 // In google, these are prefixed with "third_party/".
-                // copybara:strip_begin
-                const PREFIX: &str = "third_party/absl";
-                /* copybara:strip_end_and_replace
                 const PREFIX: &str = "absl";
-                */
                 let path = format!("{PREFIX}/{path}");
                 quote! { __HASH_TOKEN__ include #path __NEWLINE__ }.to_tokens(tokens)
             }

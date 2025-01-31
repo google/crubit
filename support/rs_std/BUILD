@@ -58,9 +58,9 @@ crubit_cc_test(
     srcs = ["slice_ref_test.cc"],
     deps = [
         ":slice_ref",
-        "//testing/base/public:gmock_no_google3",
-        "//testing/fuzzing:fuzztest_gunit_main_no_google3",
-        "//testing/fuzzing:fuzztest_no_google3",
         "@abseil-cpp//absl/types:span",
+        "@com_google_fuzztest//:fuzztest",
+        "@com_google_fuzztest//:fuzztest_gtest_main",
+        "@com_google_googletest//:gmock",
     ],
 )

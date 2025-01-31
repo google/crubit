@@ -100,7 +100,7 @@ fn test_func_ptr_with_non_static_lifetime() -> Result<()> {
     ))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_cc_matches!(rs_api, {
-        let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=33\n\
+        let txt = "Generated from: ir_from_cc_virtual_header.h;l=33\n\
                        Error while generating bindings for item 'get_ptr_to_func':\n\
                        Unable to get lifetime annotations: Type may not be annotated with lifetimes";
         quote! { __COMMENT__ #txt }
@@ -480,7 +480,7 @@ fn test_type_alias() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            #[doc = " MyTypedefDecl doc comment\n \n Generated from: google3/ir_from_cc_virtual_header.h;l=5"]
+            #[doc = " MyTypedefDecl doc comment\n \n Generated from: ir_from_cc_virtual_header.h;l=5"]
             pub type MyTypedefDecl = ::core::ffi::c_int;
         }
     );
@@ -1147,7 +1147,7 @@ fn test_default_crubit_features_disabled_supported() -> Result<()> {
         // using a string comparison and leaving off the end, because the exact reason
         // why differs per item.
         let expected = "\
-            // Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+            // Generated from: ir_from_cc_virtual_header.h;l=3\n\
             // Error while generating bindings for item 'NotPresent':\n\
             // Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
             // //test:testing_target needs [//features:supported] for NotPresent";
@@ -1181,7 +1181,7 @@ fn test_default_crubit_features_disabled_dependency_supported_function_parameter
         assert_rs_not_matches!(rs_api, quote! {Func});
         assert_cc_not_matches!(rs_api_impl, quote! {Func});
         let expected = "\
-            Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+            Generated from: ir_from_cc_virtual_header.h;l=3\n\
             Error while generating bindings for item 'Func':\n\
             Failed to format type of parameter 0: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
             //test:dependency needs [//features:supported] for NotPresent";
@@ -1202,7 +1202,7 @@ fn test_default_crubit_features_disabled_dependency_experimental_function_parame
     assert_rs_not_matches!(rs_api, quote! {Func});
     assert_cc_not_matches!(rs_api_impl, quote! {Func});
     let expected = "\
-        Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+        Generated from: ir_from_cc_virtual_header.h;l=3\n\
         Error while generating bindings for item 'Func':\n\
         Failed to format type of parameter 0: Can't generate bindings for NotPresentTemplate<int>, because of missing required features (<internal link>):\n\
         //test:dependency needs [//features:experimental] for NotPresentTemplate<int> (crate::__CcTemplateInst18NotPresentTemplateIiE is a template instantiation)";
@@ -1218,7 +1218,7 @@ fn test_default_crubit_features_disabled_dependency_supported_function_return_ty
     assert_rs_not_matches!(rs_api, quote! {Func});
     assert_cc_not_matches!(rs_api_impl, quote! {Func});
     let expected = "\
-        Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+        Generated from: ir_from_cc_virtual_header.h;l=3\n\
         Error while generating bindings for item 'Func':\n\
         Failed to format return type: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
         //test:dependency needs [//features:supported] for NotPresent";
@@ -1237,7 +1237,7 @@ fn test_default_crubit_features_disabled_dependency_experimental_function_return
     assert_rs_not_matches!(rs_api, quote! {Func});
     assert_cc_not_matches!(rs_api_impl, quote! {Func});
     let expected = "\
-        Generated from: google3/ir_from_cc_virtual_header.h;l=3\n\
+        Generated from: ir_from_cc_virtual_header.h;l=3\n\
         Error while generating bindings for item 'Func':\n\
         Failed to format return type: Can't generate bindings for NotPresentTemplate<int>, because of missing required features (<internal link>):\n\
         //test:dependency needs [//features:experimental] for NotPresentTemplate<int> (crate::__CcTemplateInst18NotPresentTemplateIiE is a template instantiation)";

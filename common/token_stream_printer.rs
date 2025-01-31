@@ -24,7 +24,7 @@ pub const RUSTFMT_EXE_PATH_FOR_TESTING: &str =
     "third_party/crosstool/rust/unstable/main_sysroot/bin/rustfmt";
 
 pub const CLANG_FORMAT_EXE_PATH_FOR_TESTING: &str =
-    "third_party/crosstool/google3_users/clang-format";
+    "clang-format";
 
 impl RustfmtConfig {
     /// Creates a config that will invoke `rustfmt` at the given

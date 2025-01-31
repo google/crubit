@@ -8,7 +8,7 @@ source gbash.sh || exit
 source module gbash_unit.sh
 
 readonly RS_BINDINGS_FROM_CC="${RUNFILES}/rs_bindings_from_cc/rs_bindings_from_cc"
-readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${RUNFILES}/google3/third_party/crosstool/google3_users/clang-format"
+readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${RUNFILES}/clang-format"
 readonly DEFAULT_RUSTFMT_EXE_PATH="third_party/crosstool/rust/unstable/rustfmt_for_crubit_aspects"
 
 function quote_escape() {

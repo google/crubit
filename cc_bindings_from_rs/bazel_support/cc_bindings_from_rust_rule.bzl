@@ -390,7 +390,7 @@ cc_bindings_from_rust_aspect = aspect(
             default = "@bazel_tools//tools/cpp:current_cc_toolchain",
         ),
         "_clang_format": attr.label(
-            default = "//third_party/crosstool/google3_users:stable_clang-format",
+            default = "",
             executable = True,
             allow_single_file = True,
             cfg = "exec",

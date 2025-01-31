@@ -22,12 +22,12 @@ function delete_all_test_outputs() {
 readonly CC_BINDINGS_FROM_RS_PATH="${RUNFILES}/cc_bindings_from_rs/cc_bindings_from_rs"
 readonly SYSROOT_PATH="${RUNFILES}/${G3_SYSROOT_PATH}"
 readonly RUSTFMT_PATH="third_party/crosstool/rust/unstable/main_sysroot/bin/rustfmt"
-readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${RUNFILES}/google3/third_party/crosstool/google3_users/clang-format"
+readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${RUNFILES}/clang-format"
 
 # When using a rustc --target json, copy it (dereferencing symlinks) to an
 # arbitrary location using a consistent filename.
-# See cs/GOOGLE3_RUSTC_TARGET_JSON for code related to this.
-readonly TARGET_JSON_PATH="${TEST_TMPDIR}/google3_rustc_target.json"
+# See (internal link) for code related to this.
+readonly TARGET_JSON_PATH="${TEST_TMPDIR}/rustc_target.json"
 function rustc_target_arg() {
   if [[ ! -z "${RUSTC_TARGET_PATH}" ]]; then
     cp -L "${RUSTC_TARGET_PATH}" "${TARGET_JSON_PATH}"

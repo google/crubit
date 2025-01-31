@@ -338,7 +338,7 @@ fn test_doc_comment_func() -> Result<()> {
         // leading space is intentional so there is a space between /// and the text of the
         // comment
         quote! {
-            #[doc = " Doc Comment\n with two lines\n \n Generated from: google3/ir_from_cc_virtual_header.h;l=6"]
+            #[doc = " Doc Comment\n with two lines\n \n Generated from: ir_from_cc_virtual_header.h;l=6"]
             #[inline(always)]
             pub fn func
         }
@@ -445,7 +445,7 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_not_matches!(rs_api, quote! {impl From});
     assert_rs_matches!(rs_api, {
-        let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=34\n\
+        let txt = "Generated from: ir_from_cc_virtual_header.h;l=34\n\
                        Error while generating bindings for item 'Foo::Foo':\n\
                        The lifetime of `__this` is \
                            unexpectedly also used by another parameter: &'a::core::ffi::c_int";
@@ -1078,7 +1078,7 @@ fn test_overloaded_functions() -> Result<()> {
 
     // Cannot overload free functions.
     assert_cc_matches!(rs_api, {
-        let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=4\n\
+        let txt = "Generated from: ir_from_cc_virtual_header.h;l=4\n\
                        Error while generating bindings for item 'f':\n\
                        Cannot generate bindings for overloaded function";
         quote! { __COMMENT__ #txt }
@@ -1087,7 +1087,7 @@ fn test_overloaded_functions() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {pub fn f(i: ::core::ffi::c_int)});
 
     assert_cc_matches!(rs_api, {
-        let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=7\n\
+        let txt = "Generated from: ir_from_cc_virtual_header.h;l=7\n\
                        Error while generating bindings for item 'S1::f':\n\
                        Cannot generate bindings for overloaded function";
         quote! { __COMMENT__ #txt }

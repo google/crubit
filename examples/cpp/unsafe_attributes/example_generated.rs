@@ -55,12 +55,12 @@ pub unsafe fn UnsafeBasedOnBoolean() {
     crate::detail::__rust_thunk___Z20UnsafeBasedOnBooleanv()
 }
 
-// Generated from: google3/nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
+// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>':
 // Can't generate bindings for std::integral_constant<bool, false>, because of missing required features (<internal link>):
 // //examples/cpp/unsafe_attributes:example_lib needs [//features:experimental] for std::integral_constant<bool, false> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE is a template instantiation)
 
-// Generated from: google3/nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
+// Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>':
 // Can't generate bindings for std::integral_constant<bool, true>, because of missing required features (<internal link>):
 // //examples/cpp/unsafe_attributes:example_lib needs [//features:experimental] for std::integral_constant<bool, true> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE is a template instantiation)

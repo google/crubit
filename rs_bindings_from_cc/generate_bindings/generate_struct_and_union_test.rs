@@ -46,7 +46,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
         rs_api,
         quote! {
             impl __CcTemplateInst10MyTemplateIiE {
-                #[doc = " Generated from: google3/test/dependency_header.h;l=5"]
+                #[doc = " Generated from: test/dependency_header.h;l=5"]
                 #[inline(always)]
                 pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> ::core::ffi::c_int { unsafe {
                     crate::detail::__rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget(
@@ -982,7 +982,7 @@ fn test_doc_comment_record() -> Result<()> {
     assert_rs_matches!(
         generate_bindings_tokens_for_test(ir)?.rs_api,
         quote! {
-            #[doc = " Doc Comment\n \n  * with bullet\n \n Generated from: google3/ir_from_cc_virtual_header.h;l=6"]
+            #[doc = " Doc Comment\n \n  * with bullet\n \n Generated from: ir_from_cc_virtual_header.h;l=6"]
             #[derive(Clone, Copy)]
             #[repr(C)]
             #[__crubit::annotate(cpp_type="SomeStruct")]

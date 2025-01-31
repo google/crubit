@@ -41,7 +41,7 @@ rust_bindings_from_cc_binary = rule(
                    "C++ code."),
         ),
         "_clang_format": attr.label(
-            default = "//third_party/crosstool/google3_users:stable_clang-format",
+            default = "",
             executable = True,
             allow_single_file = True,
             cfg = "exec",

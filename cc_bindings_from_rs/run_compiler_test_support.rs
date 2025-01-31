@@ -50,14 +50,14 @@ pub fn get_sysroot_for_testing() -> PathBuf {
 /// a "real" file (not a symlink). This function sets this up by copying the
 /// target path passed via the RUSTC_TARGET_PATH env var to a file with the
 /// expected name in a temporary directory.
-/// See cs/GOOGLE3_RUSTC_TARGET_JSON for code related to this.
+/// See (internal link) for code related to this.
 pub fn setup_rustc_target_for_testing(target_dir: &Path) -> Option<String> {
     assert!(target_dir.exists(), "target dir '{}' doesn't exist", target_dir.display());
     if let Ok(original_target) = &std::env::var("RUSTC_TARGET_PATH") {
         let loc = &Path::new(original_target);
         assert!(loc.exists(), "target json path '{}' doesn't exist", loc.display());
         assert!(loc.is_file(), "target json path '{}' doesn't point to a file", loc.display());
-        let target = target_dir.join("google3_rustc_target.json");
+        let target = target_dir.join("rustc_target.json");
         std::fs::copy(loc, &target).unwrap_or_else(|_| {
             panic!("failed to copy target_json from '{}' to '{}'", loc.display(), target.display())
         });

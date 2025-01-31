@@ -131,12 +131,12 @@ fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
         &db,
         &UnsupportedItem::new_with_static_message(
             &db.ir(),
-            &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
+            &TestItem { source_loc: Some("Generated from: some/header;l=1".into()) },
             /* path= */ None,
             "unsupported_message",
         ),
     )?;
-    let expected = "Generated from: google3/some/header;l=1\nError while generating bindings for item 'test_item':\nunsupported_message";
+    let expected = "Generated from: some/header;l=1\nError while generating bindings for item 'test_item':\nunsupported_message";
     assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
     Ok(())
 }
@@ -170,7 +170,7 @@ fn test_generate_unsupported_item_with_source_loc_disabled() -> Result<()> {
         &db,
         &UnsupportedItem::new_with_static_message(
             &db.ir(),
-            &TestItem { source_loc: Some("Generated from: google3/some/header;l=1".into()) },
+            &TestItem { source_loc: Some("Generated from: some/header;l=1".into()) },
             /* path= */ None,
             "unsupported_message",
         ),

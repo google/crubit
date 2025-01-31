@@ -33,7 +33,7 @@ constexpr absl::string_view kDefaultRustfmtExePath =
     "third_party/crosstool/rust/unstable/main_sysroot/bin/rustfmt";
 
 constexpr absl::string_view kDefaultClangFormatExePath =
-    "third_party/crosstool/google3_users/clang-format";
+    "clang-format";
 
 /// Returns a Cmdline for the given header.
 Cmdline MakeCmdline(std::string header) {
