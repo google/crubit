@@ -197,24 +197,23 @@ def _toolchain_headers_in_header_analysis_action_test_impl(ctx):
     analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "CppHeaderAnalysis"][0]
     inputs = analysis_action.inputs.to_list()
     inttypes = [i.path for i in inputs if "inttypes.h" in i.path]
-    asserts.equals(
+    asserts.true(
         env,
-        "nowhere/llvm/src/libcxx/include/inttypes.h",
-        inttypes[0],
+        "nowhere/llvm/src/libcxx/include/inttypes.h" in inttypes,
+        "inttypes: %s" % inttypes,
     )
     asserts.true(
         env,
-        inttypes[1] in [
+        any([path in [
             "//nowhere/libc_x86include/inttypes.h",
             "//nowhere/libc_arminclude/inttypes.h",
-            "third_party/grte/v5_diorite_acc/release/usr/grte/v5/include/inttypes.h",
-            "third_party/grte/v5_diorite_imc/release/usr/grte/v5/include/inttypes.h",
-        ],
+        ] for path in inttypes]),
+        "inttypes: %s" % inttypes,
     )
-    asserts.equals(
+    asserts.true(
         env,
-        "third_party/llvm/llvm-project/clang/lib/Headers/inttypes.h",
-        inttypes[2],
+        "third_party/llvm/llvm-project/clang/lib/Headers/inttypes.h" in inttypes,
+        "inttypes: %s" % inttypes,
     )
 
     return analysistest.end(env)
