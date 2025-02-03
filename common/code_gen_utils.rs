@@ -201,7 +201,7 @@ impl NamespaceQualifier {
 pub enum CcInclude {
     /// Represents a system header, e.g., `cstdef`, which will be included by
     /// angular brackets.
-    SystemHeader(&'static str),
+    SystemHeader(Rc<str>),
     /// Represents an Abseil header, e.g., `base/no_destructor.h`.
     AbseilHeader(&'static str),
     /// Represents a user header, which will be included by quotes.
@@ -217,39 +217,51 @@ impl CcInclude {
     /// C++ types like `std::size_t` or `std::ptrdiff_t`.  See
     /// https://en.cppreference.com/w/cpp/header/cstddef
     pub fn cstddef() -> Self {
-        Self::SystemHeader("cstddef")
+        Self::SystemHeader("cstddef".into())
     }
 
     /// Creates a `CcInclude` that represents `#include <cstdint>` and provides
     /// C++ types like `std::int16_t` or `std::uint32_t`.  See
     /// https://en.cppreference.com/w/cpp/header/cstdint
     pub fn cstdint() -> Self {
-        Self::SystemHeader("cstdint")
+        Self::SystemHeader("cstdint".into())
     }
 
     /// Creates a `CcInclude` that represents `#include <memory>`.
     /// See https://en.cppreference.com/w/cpp/header/memory
     pub fn memory() -> Self {
-        Self::SystemHeader("memory")
+        Self::SystemHeader("memory".into())
     }
 
     /// Creates a `CcInclude` that represents `#include <utility>` and provides
     /// C++ functions like `std::move` and C++ types like `std::tuple`.
     /// See https://en.cppreference.com/w/cpp/header/utility
     pub fn utility() -> Self {
-        Self::SystemHeader("utility")
+        Self::SystemHeader("utility".into())
     }
 
     /// Creates a `CcInclude` that represents `#include <type_traits>` and
     /// provides C++ APIs like `std::is_trivially_copy_constructible_v`.
     /// See https://en.cppreference.com/w/cpp/header/type_traits
     pub fn type_traits() -> Self {
-        Self::SystemHeader("type_traits")
+        Self::SystemHeader("type_traits".into())
     }
 
     /// Creates a user include: `#include "some/path/to/header.h"`.
     pub fn user_header(path: Rc<str>) -> Self {
         Self::UserHeader(path)
+    }
+
+    /// Creates a `CcInclude` and detects whether it's a system header or a user
+    /// header based on the path.
+    ///
+    /// System headers are included by angular brackets, e.g., `#include <cstddef>`.
+    /// User headers are included by quotes, e.g., `#include "some/path/to/header.h"`.
+    pub fn from_path(path: &str) -> Self {
+        match (path.starts_with("<"), path.ends_with(">")) {
+            (true, true) => Self::SystemHeader(Rc::from(&path[1..path.len() - 1])),
+            _ => Self::UserHeader(Rc::from(path)),
+        }
     }
 
     /// Creates an abseil include: `#include "third_party/absl/foo.h"`.

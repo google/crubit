@@ -315,7 +315,7 @@ pub fn format_ty_for_cc<'tcx>(
             let mut prereqs = CcPrerequisites::default();
 
             if let Some(BridgedType { cpp_type_include, .. }) = is_bridged_type(db, ty.mid())? {
-                prereqs.includes.insert(CcInclude::user_header(cpp_type_include.as_str().into()));
+                prereqs.includes.insert(CcInclude::from_path(cpp_type_include.as_str()));
             } else {
                 ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
                 ensure!(
