@@ -113,6 +113,18 @@ For each feature we use, we document the following:
 *   **Exit strategy:** Do not release, or release but with degraded
     AddressSanitizer results that hide bugs.
 
+### `cfg_accessible`
+
+*   **Crubit feature:** N/A, used internally by Crubit
+*   **Use case:** Crubit uses rustc as a library, which is subject to
+    backwards-incompatible changes. `cfg_accessible` makes it much easier to
+    write code which is compatible with two versions of rustc at the same time.
+*   **Exit strategy:** If `cfg_accessible` changes during the very same update
+    we are trying to be compatible with, we can't use it in the first place. If
+    it changes in a future version, then the update has already completed
+    successfully, so we can delete the usage (keeping the `cfg_accessible` usage
+    that is currently used, and deleting the other one).
+
 ## Unstable features **not** used by Crubit {#rejected}
 
 The following features are ones we'd hypothetically like to use, but do not.
