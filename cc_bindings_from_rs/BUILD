@@ -122,7 +122,7 @@ rust_library(
         "run_compiler.rs",
     ],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private"],
+    rustc_flags = ["-Zallow-features=rustc_private,cfg_accessible"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//common:arc_anyhow",
@@ -134,7 +134,7 @@ crubit_rust_test(
     name = "run_compiler_test",
     crate = ":run_compiler",
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private"],
+    rustc_flags = ["-Zallow-features=rustc_private,cfg_accessible"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":run_compiler_test_support",

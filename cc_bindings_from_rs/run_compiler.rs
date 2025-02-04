@@ -4,7 +4,7 @@
 
 //! The `run_compiler` crate mostly wraps and simplifies a subset of APIs
 //! from the `rustc_driver` crate, providing an easy way to `run_compiler`.
-#![feature(rustc_private)]
+#![feature(rustc_private, cfg_accessible)]
 #![deny(rustc::internal)]
 
 extern crate rustc_driver;
@@ -75,6 +75,16 @@ where
         Self { args, callback_or_result: Either::Left(callback) }
     }
 
+    #[cfg_accessible(rustc_driver::run_compiler)]
+    fn run_internal(&mut self) -> () {
+        rustc_driver::run_compiler(self.args, self)
+    }
+
+    #[cfg_accessible(rustc_driver::RunCompiler)]
+    fn run_internal(&mut self) -> () {
+        rustc_driver::RunCompiler::new(self.args, self).run()
+    }
+
     /// Runs Rust compiler, and then invokes the stored callback (with
     /// `TyCtxt` of the parsed+analyzed Rust crate as the callback's
     /// argument), and then finally returns the combined results
@@ -87,7 +97,7 @@ where
             (),
             rustc_span::fatal_error::FatalError,
         > = rustc_driver::catch_fatal_errors(|| {
-            rustc_driver::RunCompiler::new(self.args, &mut self).run()
+            self.run_internal();
         });
 
         match catch_fatal_errors_result {
