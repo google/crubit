@@ -629,6 +629,22 @@ void checkParmVarDeclWithPointerDefaultArg(
                    Callee, Parm.getIdentifier()});
 }
 
+void checkAnnotationsConsistentHelper(
+    QualType T, QualType CanonicalT, const FileID &File,
+    const FileID &CanonicalFile, SourceRange Range, SourceRange CanonicalRange,
+    llvm::SmallVector<PointerNullabilityDiagnostic> &Diags,
+    const TypeNullabilityDefaults &Defaults,
+    PointerNullabilityDiagnostic::ErrorCode ErrorCode) {
+  TypeNullability Nullability = getTypeNullability(T, File, Defaults);
+  TypeNullability CanonicalNullability =
+      getTypeNullability(CanonicalT, CanonicalFile, Defaults);
+  if (Nullability != CanonicalNullability) {
+    Diags.push_back({ErrorCode, PointerNullabilityDiagnostic::Context::Other,
+                     CharSourceRange::getTokenRange(Range), nullptr, nullptr,
+                     CharSourceRange::getTokenRange(CanonicalRange)});
+  }
+}
+
 void checkAnnotationsConsistent(
     absl::Nonnull<const ValueDecl *> VD,
     llvm::SmallVector<PointerNullabilityDiagnostic> &Diags,
@@ -639,24 +655,37 @@ void checkAnnotationsConsistent(
   // canonical decl, there is nothing to do.
   if (VD == CanonicalDecl) return;
 
-  TypeNullability Canonical = getTypeNullability(*CanonicalDecl, Defaults);
-  TypeNullability Cur = getTypeNullability(*VD, Defaults);
-  if (Cur != Canonical) {
-    // If the ValueDecl has a body (such as a function or method definition),
-    // skip printing the entire body in the diagnostic.
-    auto SrcRange =
-        VD->hasBody()
-            ? CharSourceRange::getCharRange(
-                  VD->getBeginLoc(),
-                  // Print up to (but not including) the first statement of
-                  // the body, which is often the open brace
-                  VD->getBody()->getBeginLoc())
-            : CharSourceRange::getTokenRange(VD->getSourceRange());
-    Diags.push_back(
-        {PointerNullabilityDiagnostic::ErrorCode::InconsistentAnnotations,
-         PointerNullabilityDiagnostic::Context::Other, SrcRange, nullptr,
-         nullptr,
-         CharSourceRange::getTokenRange(CanonicalDecl->getSourceRange())});
+  auto FileID =
+      VD->getASTContext().getSourceManager().getFileID(VD->getLocation());
+  auto CanonicalFileID =
+      CanonicalDecl->getASTContext().getSourceManager().getFileID(
+          CanonicalDecl->getLocation());
+  const auto *Func = dyn_cast<FunctionDecl>(VD);
+  if (Func != nullptr) {
+    const auto *FuncCanonical = cast<FunctionDecl>(CanonicalDecl);
+    unsigned int NumParams = Func->getNumParams();
+    CHECK(NumParams <= FuncCanonical->getNumParams());
+    for (unsigned int I = 0; I < NumParams; ++I) {
+      const auto *Parm = Func->getParamDecl(I);
+      const auto *ParmCanonical = FuncCanonical->getParamDecl(I);
+      checkAnnotationsConsistentHelper(
+          Parm->getType(), ParmCanonical->getType(), FileID, CanonicalFileID,
+          Parm->getSourceRange(), ParmCanonical->getSourceRange(), Diags,
+          Defaults,
+          PointerNullabilityDiagnostic::ErrorCode::
+              InconsistentAnnotationsForParameter);
+    }
+    checkAnnotationsConsistentHelper(
+        Func->getReturnType(), FuncCanonical->getReturnType(), FileID,
+        CanonicalFileID, Func->getReturnTypeSourceRange(),
+        FuncCanonical->getReturnTypeSourceRange(), Diags, Defaults,
+        PointerNullabilityDiagnostic::ErrorCode::
+            InconsistentAnnotationsForReturn);
+  } else {
+    checkAnnotationsConsistentHelper(
+        VD->getType(), CanonicalDecl->getType(), FileID, CanonicalFileID,
+        VD->getSourceRange(), CanonicalDecl->getSourceRange(), Diags, Defaults,
+        PointerNullabilityDiagnostic::ErrorCode::InconsistentAnnotations);
   }
 }
 
