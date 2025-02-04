@@ -776,13 +776,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                         rs_imported_crate_name(&incomplete_record.owning_target, &ir),
                     )),
                 }),
-                Item::Record(record) => {
-                    if record.bridge_type_info.is_some() {
-                        RsTypeKind::new_bridge_type(record.clone())
-                    } else {
-                        RsTypeKind::new_record(db, record.clone(), &ir)
-                    }
-                }
+                Item::Record(record) => RsTypeKind::new_record(db, record.clone(), ir),
                 Item::Enum(enum_) => RsTypeKind::new_enum(enum_.clone(), &ir),
                 Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias.clone()),
                 Item::TypeMapOverride(type_map_override) => {

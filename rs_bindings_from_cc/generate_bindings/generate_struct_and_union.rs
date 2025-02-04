@@ -339,7 +339,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
     {
         return Ok(ApiSnippets::default());
     }
-    if record_rs_type_kind.is_bridge_type() || record.bridge_type_info.is_some() {
+    if record_rs_type_kind.is_bridge_type() {
         return Ok(ApiSnippets::default());
     }
     let ir = db.ir();

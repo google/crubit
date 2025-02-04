@@ -480,6 +480,14 @@ impl RsTypeKind {
     }
 
     pub fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>, ir: &IR) -> Result<Self> {
+        if let Some(bridge_type_info) = &record.bridge_type_info {
+            return Ok(RsTypeKind::BridgeType {
+                name: bridge_type_info.bridge_type.clone(),
+                cpp_to_rust_converter: bridge_type_info.cpp_to_rust_converter.clone(),
+                rust_to_cpp_converter: bridge_type_info.rust_to_cpp_converter.clone(),
+                original_type: record,
+            });
+        }
         let crate_path = Rc::new(CratePath::new(
             ir,
             ir.namespace_qualifier(&record),
@@ -500,19 +508,6 @@ impl RsTypeKind {
             rs_imported_crate_name(&enum_.owning_target, ir),
         ));
         Ok(RsTypeKind::Enum { enum_, crate_path })
-    }
-
-    pub fn new_bridge_type(original_record: Rc<Record>) -> Result<Self> {
-        let Some(bridge_type_info) = &original_record.bridge_type_info else {
-            bail!("Record does not have bridge type info: {:?}", original_record);
-        };
-
-        Ok(RsTypeKind::BridgeType {
-            name: bridge_type_info.bridge_type.clone(),
-            cpp_to_rust_converter: bridge_type_info.cpp_to_rust_converter.clone(),
-            rust_to_cpp_converter: bridge_type_info.rust_to_cpp_converter.clone(),
-            original_type: original_record,
-        })
     }
 
     pub fn new_type_map_override(
@@ -697,12 +692,22 @@ impl RsTypeKind {
                 RsTypeKind::Slice { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Option { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::BridgeType { original_type, .. } => {
-                    if TEMPLATE_INSTANTIATION_ALLOWLIST
-                        .contains(&original_type.cc_preferred_name.as_ref())
+                    if original_type.template_specialization.is_none()
+                        || TEMPLATE_INSTANTIATION_ALLOWLIST
+                            .contains(&original_type.cc_preferred_name.as_ref())
                     {
                         require_feature(CrubitFeature::Supported, None)
                     } else {
-                        require_feature(CrubitFeature::Experimental, None)
+                        require_feature(
+                            CrubitFeature::Experimental,
+                            Some(&|| {
+                                format!(
+                                    "{} is a bridged template instantiation",
+                                    rs_type_kind.display(db),
+                                )
+                                .into()
+                            }),
+                        )
                     }
                 }
                 RsTypeKind::TypeMapOverride { .. } => {
