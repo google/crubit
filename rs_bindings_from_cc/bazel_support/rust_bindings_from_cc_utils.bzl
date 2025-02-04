@@ -107,35 +107,7 @@ def generate_and_compile_bindings(
     # TODO(b/216587072): Remove this hacky escaping and use the import! macro once available
     crate_name = escape_cpp_target_name(ctx.label.package, ctx.label.name)
 
-    # Compile the "_rust_api.rs" file together with extra_rs_srcs.
-    dep_variant_info = compile_rust(
-        ctx,
-        attr,
-        rs_output,
-        extra_rs_srcs_relocated,
-        deps_for_rs_file,
-        crate_name,
-        # TODO(b/322303104) For now, we don't generate baseline_coverage.dat for generated rust
-        # bindings, because the baseline_coverage.dat this compile action generates conflicts with
-        # the .dat file with the underlying cc_library. Once bazel supports baseline_coverage.dat
-        # for aspects, we can remove this option.
-        include_coverage = False,
-        force_all_deps_direct = True,
-    )
-
-    # If the target has no public headers, then we should skip the thunks and the generated
-    # bindings as linker inputs. But we still need to populate the dependencies since not every C++
-    # target is layering check clean.
-    if not has_public_headers:
-        # Intentionally doesn't include the `.o` compiled from `target_rust_impl_api.rs`.
-        cc_info = cc_common.merge_cc_infos(cc_infos = deps_for_cc_file)
-        dep_variant_info = DepVariantInfo(
-            crate_info = dep_variant_info.crate_info,
-            dep_info = dep_variant_info.dep_info,
-            cc_info = cc_info,  # Intentionally doesn't include `.a` compiled from `target_rust_api.rs`.
-            build_info = None,
-        )
-    else:
+    if has_public_headers:
         # Compile the "_rust_api_impl.cc" file
         cc_info = compile_cc(
             ctx,
@@ -147,10 +119,46 @@ def generate_and_compile_bindings(
             extra_cc_compilation_action_inputs,
             extra_hdrs = public_hdrs,
         )
+    else:
+        # If the target has no public headers, then we should skip the thunks and the generated
+        # bindings as linker inputs. But we still need to populate the dependencies since not every C++
+        # target is layering check clean.
+        cc_info = cc_common.merge_cc_infos(cc_infos = deps_for_cc_file)
+
+    # Compile the "_rust_api.rs" file together with extra_rs_srcs.
+    dep_variant_info = compile_rust(
+        ctx,
+        attr,
+        rs_output,
+        extra_rs_srcs_relocated,
+        [
+            # Bindings depend on the thunks at link time.
+            DepVariantInfo(cc_info = cc_info),
+        ] + deps_for_rs_file,
+        crate_name,
+        # TODO(b/322303104) For now, we don't generate baseline_coverage.dat for generated rust
+        # bindings, because the baseline_coverage.dat this compile action generates conflicts with
+        # the .dat file with the underlying cc_library. Once bazel supports baseline_coverage.dat
+        # for aspects, we can remove this option.
+        include_coverage = False,
+        force_all_deps_direct = True,
+    )
+
+    if not has_public_headers:
+        # When there are no public headers to process by Crubit (for example because cc_library
+        # doesn't have `hdrs`, or it doesn't opt-in to Crubit), there won't be any generated
+        # bindings. To avoid unnecessarily increasing the number of linker inputs we don't put
+        # these empty Rust archives into the CcInfo used by C++ rules that depend on this target.
+        dep_variant_info = DepVariantInfo(
+            crate_info = dep_variant_info.crate_info,
+            dep_info = dep_variant_info.dep_info,
+            cc_info = cc_info,
+            build_info = None,
+        )
 
     return [
         RustBindingsFromCcInfo(
-            cc_info = cc_info,
+            cc_info = dep_variant_info.cc_info,
             dep_variant_info = dep_variant_info,
             target_args = target_args,
             namespaces = namespaces_output,
@@ -163,7 +171,7 @@ def generate_and_compile_bindings(
         OutputGroupInfo(out = depset([x for x in [cc_output, rs_output, namespaces_output, error_report_output] if x != None])),
         # The C++ bindings of the generated Rust bindings are the original C++ file.
         CcBindingsFromRustInfo(
-            cc_info = cc_info,
+            cc_info = dep_variant_info.cc_info,
             crate_key = crate_name,
             headers = public_hdrs,
             features = [],
