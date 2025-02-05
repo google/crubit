@@ -640,6 +640,28 @@ fn test_copy_derives_dtor_nontrivial_self() {
     }
 }
 
+/// If a base class is a bridge type, it doesn't exist at all, and can't be upcasted to.
+#[gtest]
+fn test_bridged_base_class() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_bridge_type", "BridgedBase"),
+            clang::annotate("crubit_bridge_type_rust_to_cpp_converter",
+                         "rust_to_cpp_converter"),
+            clang::annotate("crubit_bridge_type_cpp_to_rust_converter",
+                         "cpp_to_rust_converter")]] Base {
+            int x;
+        };
+
+        struct Derived : Base {};
+    "#,
+    )?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_not_matches!(rs_api, quote! { Base });
+    assert_rs_not_matches!(rs_api, quote! { BridgedBase });
+    Ok(())
+}
+
 #[gtest]
 fn test_base_class_subobject_layout() -> Result<()> {
     let ir = ir_from_cc(

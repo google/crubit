@@ -878,7 +878,12 @@ fn cc_struct_upcast_impl(db: &Database, record: &Rc<Record>, ir: &IR) -> Result<
         let base_record: &Rc<Record> = ir
             .find_decl(base.base_record_id)
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
-        let base_name = RsTypeKind::new_record(db, base_record.clone(), ir)?.to_token_stream(db);
+        let base_type = RsTypeKind::new_record(db, base_record.clone(), ir)?;
+        if base_type.is_bridge_type() {
+            // The base class isn't directly represented in Rust, so we can't upcast to it.
+            continue;
+        }
+        let base_name = base_type.to_token_stream(db);
         let derived_name = RsTypeKind::new_record(db, record.clone(), ir)?.to_token_stream(db);
         let body;
         if let Some(offset) = base.offset {
