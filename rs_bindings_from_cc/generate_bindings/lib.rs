@@ -21,8 +21,7 @@ use error_report::{anyhow, bail, ensure, ErrorReporting};
 use ffi_types::*;
 use generate_comment::generate_top_level_comment;
 use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};
-use generate_enum::generate_enum;
-use generate_struct_and_union::{generate_incomplete_record, generate_record};
+use generate_struct_and_union::generate_incomplete_record;
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
@@ -165,7 +164,7 @@ fn generate_bindings(
     Ok(Bindings { rs_api, rs_api_impl })
 }
 
-fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<ApiSnippets> {
+fn generate_type_alias(db: &dyn BindingsGenerator, type_alias: &TypeAlias) -> Result<ApiSnippets> {
     // Skip the type alias if it maps to a bridge type.
     let rs_type_kind = RsTypeKind::new_type_alias(db, Rc::new(type_alias.clone()))?;
     if rs_type_kind.is_bridge_type() {
@@ -189,7 +188,7 @@ fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<ApiSnipp
     .into())
 }
 
-fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<ApiSnippets> {
+fn generate_namespace(db: &dyn BindingsGenerator, namespace: &Namespace) -> Result<ApiSnippets> {
     let ir = db.ir();
     let mut items = vec![];
     let mut thunks = vec![];
@@ -277,37 +276,46 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<ApiSnippet
 
 /// Returns generated bindings for an item, or `Err` if bindings generation
 /// failed in such a way as to make the generated bindings as a whole invalid.
-fn generate_item(db: &Database, item: &Item) -> Result<ApiSnippets> {
-    match generate_item_impl(db, item) {
-        Ok(generated) => Ok(generated),
-        Err(err) => {
-            let ir = db.ir();
-            if has_bindings(db, item) != HasBindings::Yes {
-                // We didn't guarantee that bindings would exist, so it is not invalid to
-                // write down the error but continue.
-                return generate_unsupported(
-                    db,
-                    // FIXME(cramertj): get paths here in more cases. It may be that
-                    // `generate_item_impl` failed in such a way that the path is still available.
-                    &UnsupportedItem::new_with_cause(&ir, item, /* path= */ None, err),
-                );
-            }
-            Err(err)
+fn generate_item(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnippets> {
+    let err = match generate_item_impl(db, item) {
+        Ok(generated) => return Ok(generated),
+        Err(err) => err,
+    };
+
+    // We didn't guarantee that bindings would exist, so it is not invalid to
+    // write down the error but continue.
+    let unsupported_item = match item {
+        Item::Enum(enum_) => {
+            // For now, we special case on enums because they previously reported their own errors from generate_enum and it has more information than the general case.
+            let unsupported_item_path = UnsupportedItemPath {
+                ident: UnqualifiedIdentifier::Identifier(enum_.identifier.clone()),
+                enclosing_item_id: enum_.enclosing_item_id,
+            };
+            UnsupportedItem::new_with_cause(db.ir(), enum_, Some(unsupported_item_path), err)
         }
-    }
+        _ => {
+            if has_bindings(db, item) == HasBindings::Yes {
+                return Err(err);
+            }
+            // FIXME(cramertj): get paths here in more cases. It may be that
+            // `generate_item_impl` failed in such a way that the path is still available.
+            UnsupportedItem::new_with_cause(db.ir(), item, /* path= */ None, err)
+        }
+    };
+
+    Ok(generate_unsupported(db, &unsupported_item))
 }
 
 /// The implementation of generate_item, without the error recovery logic.
 ///
 /// Returns Err if bindings could not be generated for this item.
-fn generate_item_impl(db: &Database, item: &Item) -> Result<ApiSnippets> {
+fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnippets> {
     let ir = db.ir();
     if let Some(owning_target) = item.owning_target() {
         if !ir.is_current_target(owning_target) {
             return Ok(ApiSnippets::default());
         }
     }
-    let overloaded_funcs = db.overloaded_funcs();
     let generated_item = match item {
         Item::Func(func) => match db.generate_function(func.clone(), None)? {
             None => ApiSnippets::default(),
@@ -318,7 +326,7 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<ApiSnippets> {
                     // uncallable function item.
                     db.errors().report(e);
                 }
-                if overloaded_funcs.contains(&generated_function.id) {
+                if db.overloaded_funcs().contains(&generated_function.id) {
                     bail!("Cannot generate bindings for overloaded function")
                 } else {
                     (*generated_function.snippets).clone()
@@ -328,10 +336,10 @@ fn generate_item_impl(db: &Database, item: &Item) -> Result<ApiSnippets> {
         Item::IncompleteRecord(incomplete_record) => {
             generate_incomplete_record(db, incomplete_record)?
         }
-        Item::Record(record) => generate_record(db, record)?,
-        Item::Enum(enum_) => generate_enum(db, enum_)?,
+        Item::Record(record) => db.generate_record(Rc::clone(record))?,
+        Item::Enum(enum_) => db.generate_enum(Rc::clone(enum_))?,
         Item::TypeAlias(type_alias) => generate_type_alias(db, type_alias)?,
-        Item::UnsupportedItem(unsupported) => generate_unsupported(db, unsupported)?,
+        Item::UnsupportedItem(unsupported) => generate_unsupported(db, unsupported),
         Item::Comment(comment) => generate_comment(comment)?,
         Item::Namespace(namespace) => generate_namespace(db, namespace)?,
         Item::UseMod(use_mod) => {
@@ -479,6 +487,14 @@ fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
                 error,
             }),
         },
+        Item::Enum(enum_) => match db.generate_enum(Rc::clone(enum_)) {
+            Ok(_) => HasBindings::Yes,
+            Err(error) => HasBindings::No(NoBindingsReason::DependencyFailed {
+                context: enum_.debug_name(ir),
+                error,
+            }),
+        },
+        // TODO(b/392882224): Records might not generated if an error occurs in generation.
         _ => HasBindings::Yes,
     }
 }
@@ -520,6 +536,8 @@ pub fn new_database<'db>(
         fatal_errors,
         generate_source_loc_doc_comment,
         is_rs_type_kind_unsafe,
+        generate_enum::generate_enum,
+        generate_struct_and_union::generate_record,
         rs_type_kind,
         generate_function::generate_function,
         generate_function::overloaded_funcs,

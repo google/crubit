@@ -140,14 +140,12 @@ pub fn generate_function_thunk(
         let Some(first_param) = param_types.next() else {
             bail!("Constructors should have at least one parameter (__this), but none were found.")
         };
-        let RsTypeKind::Reference { referent, lifetime, mutability: Mutability::Mut } = first_param
-        else {
+        let RsTypeKind::Reference { mutability: Mutability::Mut, .. } = first_param else {
             bail!(
                 "Expected first constructor parameter to be a mutable reference, got: {}",
                 first_param.display(db)
             )
         };
-        let lifetime = lifetime.format_for_reference();
         out_param = Some(quote! { *mut ::core::ffi::c_void });
         out_param_ident = Some(param_idents.next().unwrap().clone());
     } else if !return_type.is_c_abi_compatible_by_value() {

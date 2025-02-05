@@ -29,4 +29,8 @@ enum class NonEmptyBoolClass : bool { k1, k2 = true };
 enum class NonEmptyIntClass : unsigned int { k1, k2 = 4294967295 };
 enum class NonEmptyCharClass : char { k1, k2 = 'a' };
 
+enum ForwardDeclared : int;
+
+ForwardDeclared do_not_generate_bindings_for_me();
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ENUMS_H_

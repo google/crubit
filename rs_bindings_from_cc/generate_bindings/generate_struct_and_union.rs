@@ -8,7 +8,7 @@ use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::ApiSnippets;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind, TypeLocation};
-use database::{BindingsGenerator, Database};
+use database::BindingsGenerator;
 use error_report::{bail, ensure};
 use generate_comment::generate_doc_comment;
 use ir::*;
@@ -45,7 +45,7 @@ fn needs_manually_drop(ty: &RsTypeKind) -> bool {
 
 /// Generates Rust source code for a given incomplete record declaration.
 pub fn generate_incomplete_record(
-    db: &Database,
+    db: &dyn BindingsGenerator,
     incomplete_record: &IncompleteRecord,
 ) -> Result<ApiSnippets> {
     let ident = make_rs_ident(incomplete_record.rs_name.as_ref());
@@ -333,7 +333,7 @@ fn field_definition(
 
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
-pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets> {
+pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<ApiSnippets> {
     let record_rs_type_kind = RsTypeKind::new_record(db, record.clone(), &db.ir())?;
     if let RsTypeKind::Record { known_generic_monomorphization: Some(_), .. } = record_rs_type_kind
     {
@@ -345,7 +345,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
     let ident = make_rs_ident(record.rs_name.as_ref());
-    let namespace_qualifier = ir.namespace_qualifier(record).format_for_rs();
+    let namespace_qualifier = ir.namespace_qualifier(&record).format_for_rs();
     let qualified_ident = {
         quote! { #crate_root_path:: #namespace_qualifier #ident }
     };
@@ -378,7 +378,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
                 // We retain the end offset of fields only if we have a matching Rust type
                 // to represent them. Otherwise we'll fill up all the space to the next field.
                 // See: docs/struct_layout
-                end: match get_field_rs_type_kind_for_layout(db, record, field) {
+                end: match get_field_rs_type_kind_for_layout(db, &record, field) {
                     // Regular field
                     Ok(_rs_type) => Some(field.offset + field.size),
                     // Opaque field
@@ -442,7 +442,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
             }
             field_definition(
                 db,
-                record,
+                &record,
                 cur.ir,
                 index,
                 prev_end,
@@ -480,7 +480,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
         .collect_vec();
     let mut features = BTreeSet::new();
 
-    let derives = generate_derives(record);
+    let derives = generate_derives(&record);
     let derives = if derives.is_empty() {
         quote! {}
     } else {
@@ -543,7 +543,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
         quote! {}
     };
 
-    let fully_qualified_cc_name = cpp_tagless_type_name_for_record(record, &ir)?.to_string();
+    let fully_qualified_cc_name = cpp_tagless_type_name_for_record(&record, ir)?.to_string();
 
     let mut record_generated_items = record
         .child_item_ids
@@ -559,7 +559,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
     let generated_inherited_functions: Vec<ApiSnippets> = filter_out_ambiguous_member_functions(
         db,
         record.clone(),
-        collect_unqualified_member_functions_from_all_bases(db, record),
+        collect_unqualified_member_functions_from_all_bases(db, &record),
     )
     .iter()
     .filter_map(|unambiguous_base_class_member_function| -> Option<ApiSnippets> {
@@ -581,11 +581,11 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
         crubit_features |= ir.target_crubit_features(defining_target);
     }
     if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
-        record_generated_items.push(cc_struct_upcast_impl(db, record, &ir)?);
+        record_generated_items.push(cc_struct_upcast_impl(db, &record, ir)?);
     }
     let no_unique_address_accessors =
         if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
-            cc_struct_no_unique_address_impl(db, record)?
+            cc_struct_no_unique_address_impl(db, &record)?
         } else {
             quote! {}
         };
@@ -601,7 +601,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
 
     let mut items = vec![];
     let mut thunks_from_record_items = vec![];
-    let mut thunk_impls_from_record_items = vec![cc_struct_layout_assertion(db, record)?];
+    let mut thunk_impls_from_record_items = vec![cc_struct_layout_assertion(db, &record)?];
     let mut assertions_from_record_items = vec![];
 
     for generated in record_generated_items {
@@ -675,7 +675,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
                 static_assertions::#assert_impl_macro (#record_type_name: #trait_name);
             });
         };
-        if should_derive_clone(record) {
+        if should_derive_clone(&record) {
             add_assertion(quote! { assert_impl_all! }, quote! { Clone });
         } else {
             // Can't `assert_not_impl_any!` here, because `Clone` may be
@@ -689,7 +689,7 @@ pub fn generate_record(db: &Database, record: &Rc<Record>) -> Result<ApiSnippets
             };
             add_assertion(assert_impl_macro, trait_name);
         };
-        add_conditional_assertion(should_derive_copy(record), quote! { Copy });
+        add_conditional_assertion(should_derive_copy(&record), quote! { Copy });
         add_conditional_assertion(record.should_implement_drop(), quote! { Drop });
         assertions
     };
@@ -743,7 +743,7 @@ pub fn generate_derives(record: &Record) -> Vec<Ident> {
     derives
 }
 
-fn cc_struct_layout_assertion(db: &Database, record: &Record) -> Result<TokenStream> {
+fn cc_struct_layout_assertion(db: &dyn BindingsGenerator, record: &Record) -> Result<TokenStream> {
     let record_ident = expect_format_cc_ident(record.cc_name.as_ref());
     let namespace_qualifier = db.ir().namespace_qualifier(record).format_for_cc()?;
     let tag_kind = record.cc_tag_kind();
@@ -788,7 +788,10 @@ fn cc_struct_layout_assertion(db: &Database, record: &Record) -> Result<TokenStr
 }
 
 /// Returns the accessor functions for no_unique_address member variables.
-fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<TokenStream> {
+fn cc_struct_no_unique_address_impl(
+    db: &dyn BindingsGenerator,
+    record: &Record,
+) -> Result<TokenStream> {
     let mut fields = vec![];
     let mut types = vec![];
     let mut field_offsets = vec![];
@@ -870,7 +873,11 @@ fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<To
 
 /// Returns the implementation of base class conversions, for converting a type
 /// to its unambiguous public base classes.
-fn cc_struct_upcast_impl(db: &Database, record: &Rc<Record>, ir: &IR) -> Result<ApiSnippets> {
+fn cc_struct_upcast_impl(
+    db: &dyn BindingsGenerator,
+    record: &Rc<Record>,
+    ir: &IR,
+) -> Result<ApiSnippets> {
     let mut impls = Vec::with_capacity(record.unambiguous_public_bases.len());
     let mut thunks = vec![];
     let mut cc_impls = vec![];

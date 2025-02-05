@@ -6,7 +6,7 @@
 
 use arc_anyhow::Result;
 use database::code_snippet::ApiSnippets;
-use database::{BindingsGenerator, Database};
+use database::BindingsGenerator;
 use ffi_types::SourceLocationDocComment;
 use ir::{Comment, GenericItem, UnsupportedItem, IR};
 use proc_macro2::TokenStream;
@@ -73,7 +73,7 @@ pub fn generate_doc_comment(
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.
-pub fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<ApiSnippets> {
+pub fn generate_unsupported(db: &dyn BindingsGenerator, item: &UnsupportedItem) -> ApiSnippets {
     for error in item.errors() {
         db.errors().report(error);
     }
@@ -98,7 +98,8 @@ pub fn generate_unsupported(db: &Database, item: &UnsupportedItem) -> Result<Api
         }
         write!(&mut message, "{error:#}").unwrap();
     }
-    Ok(ApiSnippets { main_api: quote! { __COMMENT__ #message }, ..Default::default() })
+
+    ApiSnippets { main_api: quote! { __COMMENT__ #message }, ..Default::default() }
 }
 
 /// Generates Rust source code for a given `Comment`.

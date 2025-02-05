@@ -135,7 +135,7 @@ fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
             /* path= */ None,
             "unsupported_message",
         ),
-    )?;
+    );
     let expected = "Generated from: some/header;l=1\nError while generating bindings for item 'test_item':\nunsupported_message";
     assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
     Ok(())
@@ -156,7 +156,7 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
             /* path= */ None,
             "unsupported_message",
         ),
-    )?;
+    );
     let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
     assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
     Ok(())
@@ -174,7 +174,7 @@ fn test_generate_unsupported_item_with_source_loc_disabled() -> Result<()> {
             /* path= */ None,
             "unsupported_message",
         ),
-    )?;
+    );
     let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
     assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
     Ok(())

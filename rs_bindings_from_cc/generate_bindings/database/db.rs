@@ -2,12 +2,13 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use crate::code_snippet::ApiSnippets;
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::RsTypeKind;
 use arc_anyhow::Result;
 use error_report::ErrorReporting;
 use ffi_types::SourceLocationDocComment;
-use ir::{Func, Record, RsType, UnqualifiedIdentifier, IR};
+use ir::{Enum, Func, Record, RsType, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
 use std::collections::HashSet;
 use std::rc::Rc;
@@ -76,6 +77,10 @@ memoized::query_group! {
 
         #[break_cycles_with = Ok(false)]
         fn is_rs_type_kind_unsafe(&self, rs_type_kind: RsTypeKind) -> Result<bool>;
+
+        fn generate_enum(&self, enum_: Rc<Enum>) -> Result<ApiSnippets>;
+
+        fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets>;
 
         fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
 

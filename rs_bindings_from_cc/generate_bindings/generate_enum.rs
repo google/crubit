@@ -7,32 +7,25 @@
 use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
 use database::code_snippet::ApiSnippets;
-use database::{BindingsGenerator, Database};
-use generate_comment::generate_unsupported;
-use ir::{Enum, UnqualifiedIdentifier, UnsupportedItem, UnsupportedItemPath};
+use database::BindingsGenerator;
+use error_report::bail;
+use ir::Enum;
 use proc_macro2::Literal;
 use quote::{quote, ToTokens};
 use std::collections::BTreeSet;
+use std::rc::Rc;
 
-pub fn generate_enum(db: &Database, enum_: &Enum) -> Result<ApiSnippets> {
+pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnippets> {
     let ident = expect_format_cc_ident(&enum_.identifier.identifier);
-    let namespace_qualifier = db.ir().namespace_qualifier(enum_).format_for_cc()?;
+    let namespace_qualifier = db.ir().namespace_qualifier(&enum_).format_for_cc()?;
     let fully_qualified_cc_name = quote! { #namespace_qualifier #ident }.to_string();
     let name = make_rs_ident(&enum_.identifier.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.rs_type.clone())?;
     let Some(enumerators) = &enum_.enumerators else {
-        return generate_unsupported(
-            db,
-            &UnsupportedItem::new_with_static_message(
-                &db.ir(),
-                enum_,
-                Some(UnsupportedItemPath {
-                    ident: UnqualifiedIdentifier::Identifier(enum_.identifier.clone()),
-                    enclosing_item_id: enum_.enclosing_item_id,
-                }),
-                "b/322391132: Forward-declared (opaque) enums are not supported yet",
-            ),
-        );
+        bail!(
+            "b/322391132: Forward-declared (opaque) enums are not supported yet: {}",
+            enum_.identifier.identifier
+        )
     };
     let enumerators = enumerators.iter().map(|enumerator| {
         if let Some(unknown_attr) = &enumerator.unknown_attr {
