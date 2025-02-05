@@ -126,9 +126,10 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
       if (auto ns = follow_mod_path_to_ns(mod_path); ns.has_value()) {
         enclosing_namespace = std::move(ns);
       } else {
-        return absl::InvalidArgumentError(
-            "Specified a namespace path that does not exist. If "
-            "you want to create a new module, use pub mod.");
+        return absl::InvalidArgumentError(absl::Substitute(
+            "Specified a namespace path '$0' that does not exist. If "
+            "you want to create a new module, use pub mod.",
+            mod_path));
       }
     }
     use_mods.push_back(UseModFromSrc{
