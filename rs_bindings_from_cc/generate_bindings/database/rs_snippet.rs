@@ -1045,11 +1045,13 @@ pub fn map_to_supported_generic(
             return None;
         }
         let arg_type = arg.type_.clone().unwrap();
-        let arg_type_kind = db.rs_type_kind(arg_type.rs_type.clone());
-        if arg_type_kind.is_err() {
+        let Ok(arg_type_kind) = db.rs_type_kind(arg_type.rs_type.clone()) else {
+            return None;
+        };
+        if arg_type_kind.is_bridge_type() {
             return None;
         }
-        type_args.push(arg_type_kind.unwrap());
+        type_args.push(arg_type_kind);
     }
 
     let rust_generic_name = match (template_name.as_str(), &type_args[..]) {

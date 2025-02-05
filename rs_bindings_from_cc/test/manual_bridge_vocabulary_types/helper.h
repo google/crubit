@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <string>
 #include <vector>
 
 // std::unique_ptr begins
@@ -38,12 +39,17 @@ inline int UseUniquePtrByRefForNonTrivialType(
   return p->x;
 }
 
+inline std::unique_ptr<std::string> MakeUniquePtrString() {
+  return std::make_unique<std::string>("hello, world");
+}
+
 // std::unique_ptr ends
 
 // std::vector begins
 inline size_t UseVectorByValue(std::vector<int> v) { return v.size(); }
 inline size_t UseVectorByRef(std::vector<int>& v) { return v.size(); }
 inline std::vector<int> MakeVector(int value) { return {value}; }
+inline std::vector<std::string> MakeVectorString() { return {"hello, world"}; }
 // std::vector ends
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_HELPER_LIB_H_
