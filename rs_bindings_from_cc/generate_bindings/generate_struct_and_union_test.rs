@@ -380,8 +380,7 @@ fn test_struct_with_only_bitfields() -> Result<()> {
 #[gtest]
 fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
     // This test input causes `field_decl->getName()` to return an empty string.
-    // This example is based on `struct timex` from
-    // /usr/grte/v5/include/bits/timex.h
+    // This example is based on `struct timex` from bits/timex.h
     let ir = ir_from_cc(
         r#"
         struct SomeStruct {
