@@ -448,6 +448,7 @@ cc_library(
 
 multiplatform_rust_test(
     name = "ir_from_cc_test",
+    timeout = "long",
     srcs = ["ir_from_cc_test.rs"],
     tags = ["not_run:arm"],
     deps = [
