@@ -429,7 +429,7 @@ fn create_string_bridge_type(record: &Record) -> Result<RsTypeKind> {
     if owning_crate == "cc_std" {
         return Err(anyhow!("Disable the original std::string in cc_std"));
     }
-    let name = "cc_std::std::string";
+    let name = "::cc_std::std::string";
     Ok(RsTypeKind::BridgeType {
         name: Rc::from(name),
         cpp_to_rust_converter: Rc::from("cpp_string_to_rust_string"),
@@ -1064,7 +1064,7 @@ pub fn map_to_supported_generic(
             {
                 return None;
             }
-            "cc_std::std::unique_ptr"
+            "::cc_std::std::unique_ptr"
         }
         ("std::vector", [_t, RsTypeKind::Record { record, .. }]) => {
             let allocator = record.template_specialization.as_ref()?;
@@ -1075,7 +1075,7 @@ pub fn map_to_supported_generic(
             {
                 return None;
             }
-            "cc_std::std::Vector"
+            "::cc_std::std::Vector"
         }
         _ => return None,
     };
@@ -1139,12 +1139,23 @@ impl RsTypeKind {
                         .type_args
                         .iter()
                         .map(|t| t.to_token_stream(db))
-                        .take(1)
-                        .collect::<Vec<_>>();
+                        .take(1);
                     let rust_generic_name =
                         known_generic_monomorphization.rust_generic_name.as_ref();
-                    let rust_generic_name_parts: Vec<_> =
-                        rust_generic_name.split("::").map(make_rs_ident).collect();
+                    // Better to panic here than to silently generate invalid code.
+                    assert!(
+                        !rust_generic_name.is_empty(),
+                        "Empty rust generic name for known generic monomorphization"
+                    );
+                    let rust_generic_name_parts =
+                        rust_generic_name.split("::").enumerate().map(|(i, part)| {
+                            if i == 0 && part.is_empty() {
+                                // Path has a leading "::", e.g., "::cc_std::std::string".
+                                quote! {}
+                            } else {
+                                make_rs_ident(part).to_token_stream()
+                            }
+                        });
                     return quote! { #(#rust_generic_name_parts)::* <#(#inner_types_str),*>};
                 }
                 let ident = make_rs_ident(record.rs_name.as_ref());
@@ -1168,9 +1179,19 @@ impl RsTypeKind {
                 let type_arg = t.to_token_stream(db);
                 quote! {Option<#type_arg>}
             }
-            RsTypeKind::BridgeType { name, .. } => {
-                let name_parts: Vec<_> = name.split("::").map(make_rs_ident).collect();
-                quote! { #(#name_parts)::* }
+            RsTypeKind::BridgeType { name, original_type, .. } => {
+                let is_crate_path = name.starts_with("::");
+                // If the name starts with "::", then it is a crate path. In this case, we
+                // need to skip the first part of the split, since it returns the empty string.
+                let name_parts = name.split("::").skip(is_crate_path as usize).map(make_rs_ident);
+                let path_lead = if is_crate_path {
+                    quote! {}
+                } else if db.ir().is_current_target(&original_type.owning_target) {
+                    quote! {crate}
+                } else {
+                    make_rs_ident(original_type.owning_target.target_name()).to_token_stream()
+                };
+                quote! { #path_lead::#(#name_parts)::* }
             }
             RsTypeKind::TypeMapOverride { name, .. } => {
                 name.parse().expect("Invalid RsType::name in the IR")

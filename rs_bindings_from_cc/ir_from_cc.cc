@@ -62,7 +62,7 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
     // If a namespace is open more than once, we pick the last one of them as
     // it will serve as the canonical namespace without any number suffix in
     // the name.
-    if (top_level_item_id_set.contains(ns->canonical_namespace_id)) {
+    if (top_level_item_id_set.contains(ns->id)) {
       name_to_top_level_ns[ns->name.Ident()] = ns->id;
     }
     id_to_namespace.insert({ns->id, ns});
