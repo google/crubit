@@ -151,6 +151,9 @@ rust_library(
     data = [
         "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
     ],
+    proc_macro_deps = [
+        "@crate_index//:rustversion",
+    ],
     rustc_flags = ["--cfg=oss"],
     deps = [
         "@crate_index//:itertools",
