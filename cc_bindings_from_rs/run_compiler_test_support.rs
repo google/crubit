@@ -95,17 +95,8 @@ where
 static using_internal_features_static: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
 
-// Clean up these rustversion'ed functions ASAP. Basically we can't use since() and before()
-// until the next release of Google's toolchain happens internally, but also that release needs
-// this hackery in order to proceed cleanly. Sigh.
-#[rustversion::nightly(2025-01-27)] // really since(2025-01-27) but we can't use that yet
 fn using_internal_features() -> &'static std::sync::atomic::AtomicBool {
     &using_internal_features_static
-}
-
-#[rustversion::not(nightly(2025-01-27))] // really before(2025-01-27) but we can't use that yet
-fn using_internal_features() -> std::sync::Arc<std::sync::atomic::AtomicBool> {
-    std::sync::Arc::new(false.into())
 }
 
 /// A non-generic implementation of `run_compiler_for_testing`.
