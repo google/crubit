@@ -10,6 +10,18 @@ cc_library(
 )
 
 cc_library(
+    name = "forwarding_functions",
+    srcs = ["forwarding_functions.cc"],
+    hdrs = ["forwarding_functions.h"],
+    deps = [
+        "@abseil-cpp//absl/base:nullability",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
     name = "pointer_nullability_lattice",
     srcs = ["pointer_nullability_lattice.cc"],
     hdrs = ["pointer_nullability_lattice.h"],
@@ -126,6 +138,7 @@ cc_library(
     hdrs = ["pointer_nullability_diagnosis.h"],
     visibility = ["//nullability/test:__pkg__"],
     deps = [
+        ":forwarding_functions",
         ":pointer_nullability",
         ":pointer_nullability_analysis",
         ":pointer_nullability_lattice",

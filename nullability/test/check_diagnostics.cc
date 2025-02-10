@@ -5,6 +5,7 @@
 #include "nullability/test/check_diagnostics.h"
 
 #include <algorithm>
+#include <array>
 #include <iterator>
 #include <memory>
 #include <vector>
@@ -148,11 +149,22 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang) {
   return Success;
 }
 
+// Run in C++17 and C++20 mode to cover differences in the AST between modes
+// (e.g. C++20 can contain `CXXRewrittenBinaryOperator`).
+static constexpr std::array<TestLanguage, 2> CXXLanguagesToTest = {
+    TestLanguage::Lang_CXX17, TestLanguage::Lang_CXX20};
+
 bool checkDiagnostics(llvm::StringRef SourceCode) {
-  // Run in C++17 and C++20 mode to cover differences in the AST between modes
-  // (e.g. C++20 can contain `CXXRewrittenBinaryOperator`).
-  for (TestLanguage Lang : {TestLanguage::Lang_CXX17, TestLanguage::Lang_CXX20})
+  for (TestLanguage Lang : CXXLanguagesToTest)
     if (!checkDiagnostics(SourceCode, Lang)) return false;
+  return true;
+}
+
+bool checkDiagnosticsWithMin(llvm::StringRef SourceCode, TestLanguage Min) {
+  for (TestLanguage Lang : CXXLanguagesToTest) {
+    if (Lang < Min) continue;
+    if (!checkDiagnostics(SourceCode, Lang)) return false;
+  }
   return true;
 }
 

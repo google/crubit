@@ -761,6 +761,7 @@ TEST void unusualSmartPointerTypeOperatorsInBase() {
 namespace free_standing_operator_calls {
 
 struct A {
+  explicit A(int X) : X(X) {}
   int X;
 };
 

@@ -17,6 +17,18 @@ template<class T> struct remove_pointer<T* const volatile> { using type = T; };
 
 template<class T> using remove_pointer_t = typename remove_pointer<T>::type;
 
+template <bool, class T = void>
+struct enable_if {};
+template <class T>
+struct enable_if<true, T> {
+  using type = T;
+};
+
+template <class>
+inline const bool __is_unbounded_array_v = false;
+template <class T>
+inline const bool __is_unbounded_array_v<T[]> = true;
+
 }  // namespace std
 
 #endif  // CRUBIT_NULLABILITY_TEST_TYPE_TRAITS_

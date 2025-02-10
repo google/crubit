@@ -7,6 +7,9 @@
 #ifndef CRUBIT_NULLABILITY_TEST_MEMORY_
 #define CRUBIT_NULLABILITY_TEST_MEMORY_
 
+#include <type_traits>
+#include <utility>
+
 namespace std {
 
 // Adding some definitions here for convenience that really belong in other
@@ -109,8 +112,17 @@ public:
 
 // We're restricting ourselves to just some of the overloads that are required
 // to provide sufficient test coverage.
-template <class T, class... Args>
-unique_ptr<T> make_unique(Args &&...args);
+template <class T, class... Args, enable_if<!__is_array(T), int>::type = 0>
+unique_ptr<T> make_unique(Args&&... args) {
+  return unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
+template <class T, enable_if<__is_unbounded_array_v<T>, int>::type = 0>
+unique_ptr<T> make_unique(size_t n) {
+  using ET = remove_extent<T>::type;
+  return unique_ptr<T>(new ET[n]);
+}
+
 template <class T>
 unique_ptr<T> make_unique_for_overwrite();
 template <class T>

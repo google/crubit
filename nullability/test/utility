@@ -25,6 +25,15 @@ struct remove_reference<T &&> {
 template <class T>
 constexpr typename remove_reference<T>::type &&move(T &&);
 
+template <class T>
+inline constexpr T &&forward(typename remove_reference<T>::type &t) {
+  return static_cast<T&&>(t);
+}
+template <class T>
+inline constexpr T &&forward(typename remove_reference<T>::type &&t) {
+  return static_cast<T&&>(t);
+}
+
 }  // namespace std
 
 #endif  // CRUBIT_NULLABILITY_TEST_UTILITY_

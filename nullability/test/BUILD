@@ -179,6 +179,22 @@ cc_test(
     ],
 )
 
+nullability_test(
+    name = "forwarding_functions",
+    srcs = ["forwarding_functions.cc"],
+)
+
+cc_test(
+    name = "forwarding_functions_diagnosis",
+    srcs = ["forwarding_functions_diagnosis.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//clang:testing",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
 cc_test(
     name = "function_calls",
     srcs = ["function_calls.cc"],

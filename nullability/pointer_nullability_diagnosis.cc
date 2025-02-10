@@ -4,6 +4,7 @@
 
 #include "nullability/pointer_nullability_diagnosis.h"
 
+#include <cassert>
 #include <cstdint>
 #include <iterator>
 #include <memory>
@@ -11,6 +12,7 @@
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
+#include "nullability/forwarding_functions.h"
 #include "nullability/pointer_nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_lattice.h"
@@ -23,6 +25,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/Stmt.h"
+#include "clang/AST/TemplateBase.h"
 #include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
@@ -47,6 +50,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/raw_ostream.h"
 
 #define DEBUG_TYPE "nullability-diagnostic"
 
@@ -393,14 +397,113 @@ SmallVector<PointerNullabilityDiagnostic> diagnosePointerDifference(
   return Diagnostics;
 }
 
+SmallVector<PointerNullabilityDiagnostic> diagnoseConstructorCall(
+    ArrayRef<const Expr *> ConstructorArgs, const CXXConstructorDecl *CtorDecl,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  auto *CalleeFPT = CtorDecl->getType()->getAs<FunctionProtoType>();
+  if (!CalleeFPT) return {};
+  // ctor's type is void(Args), so its nullability == arg nullability.
+  auto CtorNullability =
+      getTypeNullability(*CtorDecl, State.Lattice.defaults());
+  return diagnoseArgumentCompatibility(
+      *CalleeFPT, CtorNullability, CtorDecl->getAsFunction()->parameters(),
+      ConstructorArgs, CtorDecl, State.Env, *Result.Context);
+}
+
+SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
+    absl::Nonnull<const CXXConstructExpr *> CE,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  const CXXConstructorDecl *CtorDecl = CE->getConstructor();
+  ArrayRef<const Expr *> ConstructorArgs(CE->getArgs(), CE->getNumArgs());
+  return diagnoseConstructorCall(ConstructorArgs, CtorDecl, Result, State);
+}
+
+SmallVector<PointerNullabilityDiagnostic> diagnoseMakeUniqueConstructExpr(
+    absl::Nonnull<const CallExpr *> MakeUniqueCall,
+    absl::Nonnull<const CXXConstructExpr *> CEInMakeUnique,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  CXXConstructorDecl *CtorDecl = CEInMakeUnique->getConstructor();
+  // Use the arguments from the `MakeUniqueCall`, which has the
+  // call-site nullability information from the `State`, instead of the
+  // arguments from `CEInMakeUnique`.
+  ArrayRef<const Expr *> ConstructorArgs(MakeUniqueCall->getArgs(),
+                                         MakeUniqueCall->getNumArgs());
+  SmallVector<const Expr *> CopyOfArgs;
+  if (CEInMakeUnique->getNumArgs() > MakeUniqueCall->getNumArgs()) {
+    // Perhaps there are default arguments. Append them to the end of the
+    // argument list, so that we get the same number of arguments as a
+    // real constructor call.
+    CopyOfArgs.insert(CopyOfArgs.end(), ConstructorArgs.begin(),
+                      ConstructorArgs.end());
+    for (unsigned I = MakeUniqueCall->getNumArgs();
+         I < CEInMakeUnique->getNumArgs(); ++I) {
+      CHECK(CEInMakeUnique->getArg(I)->isDefaultArgument());
+      CopyOfArgs.push_back(CEInMakeUnique->getArg(I));
+    }
+    ConstructorArgs = CopyOfArgs;
+  }
+  return diagnoseConstructorCall(ConstructorArgs, CtorDecl, Result, State);
+}
+
+SmallVector<PointerNullabilityDiagnostic> diagnoseMakeUniqueParenInitListExpr(
+    absl::Nonnull<const CallExpr *> MakeUniqueCall,
+    absl::Nonnull<const CXXParenListInitExpr *> InitListInMakeUnique,
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+  if (!InitListInMakeUnique->getType()->isRecordType()) return {};
+
+  RecordInitListHelper InitListHelper(InitListInMakeUnique);
+  SmallVector<PointerNullabilityDiagnostic> Diagnostics;
+  // Use the arguments from the `MakeUniqueCall`, which has the
+  // call-site nullability information from the `State`, instead of the
+  // `field_inits` from `InitListInMakeUnique`.
+  int I = 0;
+  for (auto [Field, Init] : InitListHelper.field_inits()) {
+    // The make_unique call can have fewer arguments than fields in the struct.
+    // The rest should be `ImplicitValueInitExpr` or default constructor calls.
+    const Expr *Arg;
+    if (I < MakeUniqueCall->getNumArgs()) {
+      Arg = MakeUniqueCall->getArg(I);
+    } else {
+      CHECK(isa<ImplicitValueInitExpr>(Init) || isa<CXXConstructExpr>(Init));
+      Arg = Init;
+    }
+    Diagnostics.append(diagnoseAssignmentLike(
+        Field->getType(), getTypeNullability(*Field, State.Lattice.defaults()),
+        Arg, State.Env, *Result.Context,
+        PointerNullabilityDiagnostic::Context::Initializer));
+    ++I;
+  }
+  return Diagnostics;
+}
+
 SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
     absl::Nonnull<const CallExpr *> CE, const MatchFinder::MatchResult &Result,
     const DiagTransferState &State) {
-  // __assert_nullability is a special-case.
+  // Handle some special cases first.
   if (auto *FD = CE->getDirectCallee()) {
+    // __assert_nullability is a special-case (for testing)
     if (FD->getDeclName().isIdentifier() &&
         FD->getName() == "__assert_nullability") {
       return diagnoseAssertNullabilityCall(CE, State, *Result.Context);
+    }
+    // std::make_unique is a special-case: we want to verify the underlying
+    // constructor call or initializer list.
+    if (const Expr *Initializer = getUnderlyingInitExprInStdMakeUnique(*FD)) {
+      if (const auto *ConstructExpr = dyn_cast<CXXConstructExpr>(Initializer)) {
+        return diagnoseMakeUniqueConstructExpr(CE, ConstructExpr, Result,
+                                               State);
+      }
+      if (const auto *ParenInitList =
+              dyn_cast<CXXParenListInitExpr>(Initializer)) {
+        return diagnoseMakeUniqueParenInitListExpr(CE, ParenInitList, Result,
+                                                   State);
+      }
+      llvm::errs()
+          << "Nullability: Unexpected initializer expression in make_unique: "
+          << Initializer->getStmtClassName() << " in "
+          << CE->getBeginLoc().printToString(Result.Context->getSourceManager())
+          << "\n";
+      assert(false);
     }
   }
 
@@ -452,22 +555,6 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
       *CalleeType, ParamNullability, Params, Args,
       dyn_cast_or_null<FunctionDecl>(CE->getCalleeDecl()), State.Env,
       *Result.Context);
-}
-
-SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
-    absl::Nonnull<const CXXConstructExpr *> CE,
-    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
-  auto *CalleeFPT = CE->getConstructor()->getType()->getAs<FunctionProtoType>();
-  if (!CalleeFPT) return {};
-  ArrayRef<const Expr *> ConstructorArgs(CE->getArgs(), CE->getNumArgs());
-  // ctor's type is void(Args), so its nullability == arg nullability.
-  auto CtorNullability =
-      getTypeNullability(*CE->getConstructor(), State.Lattice.defaults());
-
-  return diagnoseArgumentCompatibility(
-      *CalleeFPT, CtorNullability,
-      CE->getConstructor()->getAsFunction()->parameters(), ConstructorArgs,
-      CE->getConstructor(), State.Env, *Result.Context);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
