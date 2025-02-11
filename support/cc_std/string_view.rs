@@ -32,6 +32,8 @@ impl string_view {
     }
 }
 
+pub type raw_string_view = string_view;
+
 /// Equivalent to `as_raw_bytes()`.
 impl From<string_view> for *const [u8] {
     fn from(sv: string_view) -> Self {

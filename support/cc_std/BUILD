@@ -25,6 +25,7 @@ filegroup(
             "vector_partial_eq.rs",
             "unique_ptr.rs",
             "string.rs",
+            "string_view.rs",
         ],
     ),
 )
@@ -125,6 +126,7 @@ additional_rust_srcs_for_crubit_bindings(
     name = "manually_bridged_types",
     srcs = [
         "string.rs",
+        "string_view.rs",
         "unique_ptr.rs",
         "vector.rs",
         "vector_partial_eq.rs",
