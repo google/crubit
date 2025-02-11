@@ -12,10 +12,10 @@ inline constexpr llvm::StringLiteral ClangNullable = "_Nullable";
 inline constexpr llvm::StringLiteral ClangNonnull = "_Nonnull";
 inline constexpr llvm::StringLiteral ClangUnknown = "_Null_unspecified";
 
-inline constexpr llvm::StringLiteral AbslMacroNullable = "ABSL_NULLABLE";
-inline constexpr llvm::StringLiteral AbslMacroNonnull = "ABSL_NONNULL";
+inline constexpr llvm::StringLiteral AbslMacroNullable = "absl_nullable";
+inline constexpr llvm::StringLiteral AbslMacroNonnull = "absl_nonnull";
 inline constexpr llvm::StringLiteral AbslMacroUnknown =
-    "ABSL_NULLABILITY_UNKNOWN";
+    "absl_nullability_unknown";
 
 inline constexpr llvm::StringLiteral AbslTemplateNamespace = "absl";
 inline constexpr llvm::StringLiteral AbslTemplateNullable = "Nullable";

@@ -109,9 +109,9 @@ class SortedFingerprintVector {
 };
 
 struct PreviousInferences {
-  const std::shared_ptr<const SortedFingerprintVector> ABSL_NONNULL Nullable =
+  const std::shared_ptr<const SortedFingerprintVector> absl_nonnull Nullable =
       std::make_shared<const SortedFingerprintVector>();
-  const std::shared_ptr<const SortedFingerprintVector> ABSL_NONNULL Nonnull =
+  const std::shared_ptr<const SortedFingerprintVector> absl_nonnull Nonnull =
       std::make_shared<const SortedFingerprintVector>();
 };
 
