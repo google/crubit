@@ -141,7 +141,7 @@ fn cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
         }
         Item::Record(record) => cpp_type_name_for_record(record, ir),
         Item::Enum(enum_) => {
-            let ident = expect_format_cc_ident(&enum_.identifier.identifier);
+            let ident = expect_format_cc_ident(&enum_.rs_name.identifier);
             let qualifier = cpp_qualified_path_prefix(item, ir)?;
             Ok(quote! { #qualifier #ident })
         }

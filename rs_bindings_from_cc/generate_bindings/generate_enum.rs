@@ -16,15 +16,15 @@ use std::collections::BTreeSet;
 use std::rc::Rc;
 
 pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnippets> {
-    let ident = expect_format_cc_ident(&enum_.identifier.identifier);
+    let ident = expect_format_cc_ident(&enum_.rs_name.identifier);
     let namespace_qualifier = db.ir().namespace_qualifier(&enum_).format_for_cc()?;
     let fully_qualified_cc_name = quote! { #namespace_qualifier #ident }.to_string();
-    let name = make_rs_ident(&enum_.identifier.identifier);
+    let name = make_rs_ident(&enum_.rs_name.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.rs_type.clone())?;
     let Some(enumerators) = &enum_.enumerators else {
         bail!(
             "b/322391132: Forward-declared (opaque) enums are not supported yet: {}",
-            enum_.identifier.identifier
+            enum_.cc_name.identifier
         )
     };
     let enumerators = enumerators.iter().map(|enumerator| {

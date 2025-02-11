@@ -744,7 +744,8 @@ struct Enumerator {
 struct Enum {
   llvm::json::Value ToJson() const;
 
-  Identifier identifier;
+  Identifier cc_name;
+  Identifier rs_name;
   ItemId id;
   BazelLabel owning_target;
   std::string source_loc;

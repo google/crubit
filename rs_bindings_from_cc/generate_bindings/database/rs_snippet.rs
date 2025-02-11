@@ -1162,7 +1162,7 @@ impl RsTypeKind {
                 quote! { #crate_path #ident }
             }
             RsTypeKind::Enum { enum_, crate_path } => {
-                let ident = make_rs_ident(&enum_.identifier.identifier);
+                let ident = make_rs_ident(&enum_.rs_name.identifier);
                 quote! { #crate_path #ident }
             }
             RsTypeKind::TypeAlias { type_alias, crate_path, .. } => {

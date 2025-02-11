@@ -850,7 +850,8 @@ impl Record {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Enum {
-    pub identifier: Identifier,
+    pub cc_name: Identifier,
+    pub rs_name: Identifier,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub source_loc: Rc<str>,
@@ -871,7 +872,7 @@ impl GenericItem for Enum {
         self.id
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.identifier.identifier.clone()
+        self.rs_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Type

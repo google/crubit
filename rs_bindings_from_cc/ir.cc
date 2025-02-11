@@ -591,7 +591,8 @@ llvm::json::Value Enumerator::ToJson() const {
 
 llvm::json::Value Enum::ToJson() const {
   llvm::json::Object enum_ir{
-      {"identifier", identifier},
+      {"cc_name", cc_name},
+      {"rs_name", rs_name},
       {"id", id},
       {"owning_target", owning_target},
       {"source_loc", source_loc},

@@ -200,7 +200,7 @@ fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> 
         Item::Enum(enum_) => {
             // For now, we special case on enums because they previously reported their own errors from generate_enum and it has more information than the general case.
             let unsupported_item_path = UnsupportedItemPath {
-                ident: UnqualifiedIdentifier::Identifier(enum_.identifier.clone()),
+                ident: UnqualifiedIdentifier::Identifier(enum_.cc_name.clone()),
                 enclosing_item_id: enum_.enclosing_item_id,
             };
             UnsupportedItem::new_with_cause(db.ir(), &enum_, Some(unsupported_item_path), err)

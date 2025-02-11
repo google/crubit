@@ -98,7 +98,8 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
 
   ictx_.MarkAsSuccessfullyImported(enum_decl);
   return Enum{
-      .identifier = *enum_name,
+      .cc_name = *enum_name,
+      .rs_name = *enum_name,
       .id = ictx_.GenerateItemId(enum_decl),
       .owning_target = ictx_.GetOwningTarget(enum_decl),
       .source_loc = ictx_.ConvertSourceLocation(enum_decl->getBeginLoc()),
