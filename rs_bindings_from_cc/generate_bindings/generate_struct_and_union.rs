@@ -552,7 +552,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
             let item: &Item = ir.find_decl(*id).with_context(|| {
                 format!("Failed to look up `record.child_item_ids` for {:?}", record)
             })?;
-            crate::generate_item(db, item)
+            db.generate_item(item.clone())
         })
         .collect::<Result<Vec<ApiSnippets>>>()?;
 

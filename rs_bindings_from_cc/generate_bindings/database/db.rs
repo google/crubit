@@ -80,6 +80,8 @@ memoized::query_group! {
 
         fn generate_enum(&self, enum_: Rc<Enum>) -> Result<ApiSnippets>;
 
+        fn generate_item(&self, item: ir::Item) -> Result<ApiSnippets>;
+
         fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets>;
 
         fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;

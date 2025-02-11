@@ -16,7 +16,7 @@ path = "lib.rs"
 [dependencies]
 cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys" }
 cc_ffi_types_sys = { path = "../../../cargo/common/cc_ffi_types_sys" }
-generate_bindings = { path = "../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings" }
+cc_api = { path = "../../../cargo/rs_bindings_from_cc/generate_bindings/cc_api" }
 
 
 [build-dependencies]

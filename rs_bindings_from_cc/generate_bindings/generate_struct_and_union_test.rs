@@ -5,7 +5,7 @@
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
 use database::code_snippet::BindingsTokens;
-use generate_bindings::generate_struct_and_union::generate_derives;
+use generate_struct_and_union::generate_derives;
 use googletest::prelude::gtest;
 use ir_testing::with_lifetime_macros;
 use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_record};

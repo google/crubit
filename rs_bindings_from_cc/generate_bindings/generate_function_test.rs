@@ -6,7 +6,7 @@ use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{format_generic_params, Lifetime};
-use generate_bindings::generate_function_thunk::thunk_ident;
+use generate_function_thunk::thunk_ident;
 use googletest::prelude::{assert_that, contains_substring, gtest, OrFail as _};
 use ir::{Func, Item, UnqualifiedIdentifier};
 use ir_testing::{retrieve_func, with_lifetime_macros};

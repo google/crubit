@@ -3,121 +3,32 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![allow(clippy::collapsible_else_if)]
 
-pub use generate_function;
-pub use generate_function_thunk;
-pub mod generate_struct_and_union;
-
-use arc_anyhow::{Context, Error, Result};
+use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
-use database::code_snippet::{
-    required_crubit_features, ApiSnippets, BindingsTokens, RequiredCrubitFeature,
-};
-use database::code_snippet::{Bindings, FfiBindings};
-use database::db::FatalErrors;
+use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens};
 use database::db::{BindingsGenerator, Database, ReportFatalError};
-use database::rs_snippet::{CratePath, Lifetime, Mutability, PrimitiveType, RsTypeKind};
-use error_report::ErrorReport;
-use error_report::{anyhow, bail, ensure, ErrorReporting};
-use ffi_types::*;
+use database::rs_snippet::RsTypeKind;
+use error_report::{bail, ErrorReporting};
+use ffi_types::SourceLocationDocComment;
 use generate_comment::generate_top_level_comment;
 use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};
 use generate_struct_and_union::generate_incomplete_record;
+use has_bindings::{has_bindings, HasBindings};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
+use rs_type_kind::rs_type_kind;
 use std::collections::BTreeSet;
-use std::ffi::{OsStr, OsString};
-use std::panic::catch_unwind;
+use std::ffi::OsStr;
 use std::path::Path;
-use std::process;
 use std::rc::Rc;
 use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
 };
 
 /// Deserializes IR from `json` and generates bindings source code.
-///
-/// This function panics on error.
-///
-/// # Safety
-///
-/// Expectations:
-///    * `json` should be a FfiU8Slice for a valid array of bytes with the given
-///      size.
-///    * `crubit_support_path_format` should be a FfiU8Slice for a valid array
-///      of bytes representing an UTF8-encoded string
-///    * `rustfmt_exe_path` and `rustfmt_config_path` should both be a
-///      FfiU8Slice for a valid array of bytes representing an UTF8-encoded
-///      string (without the UTF-8 requirement, it seems that Rust doesn't offer
-///      a way to convert to OsString on Windows)
-///    * `json`, `crubit_support_path_format`, `rustfmt_exe_path`, and
-///      `rustfmt_config_path` shouldn't change during the call.
-///
-/// Ownership:
-///    * function doesn't take ownership of (in other words it borrows) the
-///      input params: `json`, `crubit_support_path_format`, `rustfmt_exe_path`,
-///      and `rustfmt_config_path`
-///    * function passes ownership of the returned value to the caller
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn GenerateBindingsImpl(
-    json: FfiU8Slice,
-    crubit_support_path_format: FfiU8Slice,
-    clang_format_exe_path: FfiU8Slice,
-    rustfmt_exe_path: FfiU8Slice,
-    rustfmt_config_path: FfiU8Slice,
-    generate_error_report: bool,
-    generate_source_loc_doc_comment: SourceLocationDocComment,
-) -> FfiBindings {
-    let json: &[u8] = json.as_slice();
-    let crubit_support_path_format: &str =
-        std::str::from_utf8(crubit_support_path_format.as_slice()).unwrap();
-    let clang_format_exe_path: OsString =
-        std::str::from_utf8(clang_format_exe_path.as_slice()).unwrap().into();
-    let rustfmt_exe_path: OsString =
-        std::str::from_utf8(rustfmt_exe_path.as_slice()).unwrap().into();
-    let rustfmt_config_path: OsString =
-        std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
-    catch_unwind(|| {
-        let error_report: Option<ErrorReport>;
-        let errors: &dyn ErrorReporting = if generate_error_report {
-            error_report = Some(ErrorReport::new());
-            error_report.as_ref().unwrap()
-        } else {
-            error_report = None;
-            &error_report::IgnoreErrors
-        };
-        let fatal_errors = FatalErrors::new();
-        let Bindings { rs_api, rs_api_impl } = generate_bindings(
-            json,
-            crubit_support_path_format,
-            &clang_format_exe_path,
-            &rustfmt_exe_path,
-            &rustfmt_config_path,
-            errors,
-            &fatal_errors,
-            generate_source_loc_doc_comment,
-        )
-        .unwrap();
-        FfiBindings {
-            rs_api: FfiU8SliceBox::from_boxed_slice(rs_api.into_bytes().into_boxed_slice()),
-            rs_api_impl: FfiU8SliceBox::from_boxed_slice(
-                rs_api_impl.into_bytes().into_boxed_slice(),
-            ),
-            error_report: FfiU8SliceBox::from_boxed_slice(
-                error_report
-                    .map(|s| s.to_json_string().into_bytes().into_boxed_slice())
-                    .unwrap_or_else(|| Box::new([])),
-            ),
-            fatal_errors: FfiU8SliceBox::from_boxed_slice(
-                fatal_errors.take_string().into_bytes().into_boxed_slice(),
-            ),
-        }
-    })
-    .unwrap_or_else(|_| process::abort())
-}
-
-fn generate_bindings(
+pub fn generate_bindings(
     json: &[u8],
     crubit_support_path_format: &str,
     clang_format_exe_path: &OsStr,
@@ -156,6 +67,7 @@ fn generate_bindings(
         #![rustfmt::skip]\n\
         {rs_api}"
     );
+
     let rs_api_impl = format!(
         "{top_level_comment}\n\
         {rs_api_impl}"
@@ -197,10 +109,10 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: &Namespace) -> Resu
     let mut features = BTreeSet::new();
 
     for item_id in namespace.child_item_ids.iter() {
-        let item = ir.find_decl(*item_id).with_context(|| {
+        let item: &Item = ir.find_decl(*item_id).with_context(|| {
             format!("Failed to look up namespace.child_item_ids for {:?}", namespace)
         })?;
-        let generated = generate_item(db, item)?;
+        let generated = db.generate_item(item.clone())?;
         items.push(generated.main_api);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
@@ -276,8 +188,8 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: &Namespace) -> Resu
 
 /// Returns generated bindings for an item, or `Err` if bindings generation
 /// failed in such a way as to make the generated bindings as a whole invalid.
-fn generate_item(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnippets> {
-    let err = match generate_item_impl(db, item) {
+fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> {
+    let err = match generate_item_impl(db, &item) {
         Ok(generated) => return Ok(generated),
         Err(err) => err,
     };
@@ -291,15 +203,15 @@ fn generate_item(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnippets>
                 ident: UnqualifiedIdentifier::Identifier(enum_.identifier.clone()),
                 enclosing_item_id: enum_.enclosing_item_id,
             };
-            UnsupportedItem::new_with_cause(db.ir(), enum_, Some(unsupported_item_path), err)
+            UnsupportedItem::new_with_cause(db.ir(), &enum_, Some(unsupported_item_path), err)
         }
         _ => {
-            if has_bindings(db, item) == HasBindings::Yes {
+            if has_bindings(db, &item) == HasBindings::Yes {
                 return Err(err);
             }
             // FIXME(cramertj): get paths here in more cases. It may be that
             // `generate_item_impl` failed in such a way that the path is still available.
-            UnsupportedItem::new_with_cause(db.ir(), item, /* path= */ None, err)
+            UnsupportedItem::new_with_cause(db.ir(), &item, /* path= */ None, err)
         }
     };
 
@@ -390,139 +302,6 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
     Ok(generated_item)
 }
 
-#[derive(Clone, PartialEq, Eq)]
-enum HasBindings {
-    /// This item is guaranteed to have bindings. If the translation unit
-    /// defining the item fails to generate bindings for it, it will not
-    /// compile.
-    Yes,
-
-    /// This item is not guaranteed to have bindings. There is no way to tell if
-    /// bindings were generated unless the item is defined in the current
-    /// translation unit.
-    Maybe,
-
-    /// These bindings are guaranteed not to exist.
-    No(NoBindingsReason),
-}
-
-#[derive(Clone, PartialEq, Eq)]
-enum NoBindingsReason {
-    MissingRequiredFeatures {
-        context: Rc<str>,
-        missing_features: Vec<RequiredCrubitFeature>,
-    },
-    DependencyFailed {
-        context: Rc<str>,
-        error: Error,
-    },
-    /// This is directly unsupported.
-    Unsupported {
-        context: Rc<str>,
-        error: Error,
-    },
-}
-
-#[must_use]
-fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
-    let ir = db.ir();
-
-    match required_crubit_features(db, item) {
-        Ok(missing_features) if missing_features.is_empty() => {}
-        Ok(missing_features) => {
-            return HasBindings::No(NoBindingsReason::MissingRequiredFeatures {
-                context: item.debug_name(&db.ir()),
-                missing_features,
-            });
-        }
-        Err(error) => {
-            return HasBindings::No(NoBindingsReason::DependencyFailed {
-                context: item.debug_name(&db.ir()),
-                error,
-            });
-        }
-    }
-
-    if let Some(parent) = item.enclosing_item_id() {
-        let parent = ir.find_untyped_decl(parent);
-
-        match has_bindings(db, parent) {
-            HasBindings::No(no_parent_bindings) => {
-                return HasBindings::No(NoBindingsReason::DependencyFailed {
-                    context: item.debug_name(&ir),
-                    error: no_parent_bindings.into(),
-                });
-            }
-            HasBindings::Maybe => {
-                // This shouldn't happen, Maybe is meant for Func items.
-                return HasBindings::No(NoBindingsReason::DependencyFailed {
-                    context: item.debug_name(&ir),
-                    error: anyhow!("parent item might not be defined"),
-                });
-            }
-            HasBindings::Yes => {}
-        }
-
-        // TODO(b/200067824): Allow nested type items inside records.
-        if item.is_type_definition() {
-            if let ir::Item::Record(_) = parent {
-                return HasBindings::No(NoBindingsReason::Unsupported {
-                    context: item.debug_name(&ir),
-                    error: anyhow!(
-                        "b/200067824: type definitions nested inside records are not yet supported"
-                    ),
-                });
-            }
-        }
-    }
-
-    match item {
-        // Function bindings aren't guaranteed, because they don't _need_ to be guaranteed. We
-        // choose not to generate code which relies on functions existing in other TUs.
-        Item::Func(..) => HasBindings::Maybe,
-        Item::TypeAlias(alias) => match db.rs_type_kind(alias.underlying_type.rs_type.clone()) {
-            Ok(_) => HasBindings::Yes,
-            Err(error) => HasBindings::No(NoBindingsReason::DependencyFailed {
-                context: alias.debug_name(&ir),
-                error,
-            }),
-        },
-        Item::Enum(enum_) => match db.generate_enum(Rc::clone(enum_)) {
-            Ok(_) => HasBindings::Yes,
-            Err(error) => HasBindings::No(NoBindingsReason::DependencyFailed {
-                context: enum_.debug_name(ir),
-                error,
-            }),
-        },
-        // TODO(b/392882224): Records might not generated if an error occurs in generation.
-        _ => HasBindings::Yes,
-    }
-}
-
-impl From<NoBindingsReason> for Error {
-    fn from(reason: NoBindingsReason) -> Error {
-        match reason {
-            NoBindingsReason::MissingRequiredFeatures { context, missing_features } => {
-                // This maybe could use .context(), but the ordering is backward.
-                let mut all_missing = vec![];
-                for missing in missing_features {
-                    all_missing.push(missing.to_string());
-                }
-                anyhow!(
-                    "Can't generate bindings for {context}, because of missing required features (<internal link>):\n{}",
-                    all_missing.join("\n")
-                )
-            }
-            NoBindingsReason::DependencyFailed { context, error } => error.context(format!(
-                "Can't generate bindings for {context} due to missing bindings for its dependency"
-            )),
-            NoBindingsReason::Unsupported { context, error } => error.context(format!(
-                "Can't generate bindings for {context}, because it is unsupported"
-            )),
-        }
-    }
-}
-
 /// Creats a new database. Public for testing.
 pub fn new_database<'db>(
     ir: &'db IR,
@@ -537,6 +316,7 @@ pub fn new_database<'db>(
         generate_source_loc_doc_comment,
         is_rs_type_kind_unsafe,
         generate_enum::generate_enum,
+        generate_item,
         generate_struct_and_union::generate_record,
         rs_type_kind,
         generate_function::generate_function,
@@ -581,9 +361,9 @@ pub fn generate_bindings_tokens(
     features.insert(make_rs_ident("cfg_sanitize"));
 
     for top_level_item_id in ir.top_level_item_ids() {
-        let item =
+        let item: &Item =
             ir.find_decl(*top_level_item_id).context("Failed to look up ir.top_level_item_ids")?;
-        let generated = generate_item(&db, item)?;
+        let generated = db.generate_item(item.clone())?;
         items.push(generated.main_api);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
@@ -735,175 +515,6 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
                 }
             }
             Ok(false)
-        }
-    }
-}
-
-fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind> {
-    match &ty {
-        ir::RsType::UnknownAttr { unknown_attr } => {
-            // In most places, we only bail for unknown attributes in supported. However,
-            // it's difficult and expensive to generate an RsTypeKind differently
-            // depending on the translation unit for the item that contains it.
-            // Rather than trying to keep going in experimental, we bail
-            // unconditionally.
-            //
-            // The correct fix for this error is to add support for the attributes which are
-            // not yet understood, but need to be used in practice.
-            bail!("unknown attribute(s): {unknown_attr}")
-        }
-        ir::RsType::ItemIdType { decl_id } => {
-            let ir = db.ir();
-            let item = ir.find_untyped_decl(*decl_id);
-            let fallback_type = match item {
-                // Type aliases are unique among items, in that if the item defining the alias fails
-                // to receive bindings, we can still use the aliased type.
-                ir::Item::TypeAlias(alias) => Some(&alias.underlying_type.rs_type),
-                _ => None,
-            };
-            match (has_bindings(db, item), fallback_type) {
-                (HasBindings::Yes, _) => {}
-                // Additionally, we should not "see through" type aliases that are specifically not
-                // on targets that intend to support Rust users of those type aliases.
-                // (If we did, then a C++ library owner could break Rust callers, which is a
-                // maintenance responsibility that they did not sign up for!)
-                (has_bindings, Some(fallback_type))
-                    if !matches!(
-                        has_bindings,
-                        HasBindings::No(NoBindingsReason::MissingRequiredFeatures { .. })
-                    ) =>
-                {
-                    return db.rs_type_kind(fallback_type.clone());
-                }
-                (HasBindings::Maybe, _) => {
-                    bail!(
-                        "Type {} may or may not exist, and cannot be used.",
-                        item.debug_name(&ir)
-                    );
-                }
-                (HasBindings::No(reason), _) => {
-                    return Err(reason.into());
-                }
-            }
-            match item {
-                Item::IncompleteRecord(incomplete_record) => Ok(RsTypeKind::IncompleteRecord {
-                    incomplete_record: incomplete_record.clone(),
-                    crate_path: Rc::new(CratePath::new(
-                        &ir,
-                        ir.namespace_qualifier(incomplete_record),
-                        rs_imported_crate_name(&incomplete_record.owning_target, &ir),
-                    )),
-                }),
-                Item::Record(record) => RsTypeKind::new_record(db, record.clone(), ir),
-                Item::Enum(enum_) => RsTypeKind::new_enum(enum_.clone(), &ir),
-                Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias.clone()),
-                Item::TypeMapOverride(type_map_override) => {
-                    RsTypeKind::new_type_map_override(db, type_map_override)
-                }
-                other_item => bail!("Item does not define a type: {other_item:?}"),
-            }
-        }
-        ir::RsType::NamedType { name, lifetime_args, type_args } => {
-            let ir = db.ir();
-            // The lambdas deduplicate code needed by multiple `match` branches.
-            let get_type_args = || -> Result<Vec<RsTypeKind>> {
-                type_args.iter().map(|type_arg| db.rs_type_kind(type_arg.clone())).collect()
-            };
-            let get_pointee = || -> Result<Rc<RsTypeKind>> {
-                if type_args.len() != 1 {
-                    bail!("Missing pointee/referent type (need exactly 1 type argument): {:?}", ty);
-                }
-                // TODO(b/351976044): Support bridge types by pointer/reference.
-                let pointee = get_type_args()?.pop().unwrap();
-                if pointee.is_bridge_type() {
-                    bail!("Bridging types are not supported as pointee/referent types.");
-                }
-                Ok(Rc::new(pointee))
-            };
-            let get_lifetime = || -> Result<Lifetime> {
-                if lifetime_args.len() != 1 {
-                    bail!(
-                        "Missing reference lifetime (need exactly 1 lifetime argument): {:?}",
-                        ty
-                    );
-                }
-                let lifetime_id = lifetime_args[0];
-                ir.get_lifetime(lifetime_id)
-                    .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))
-                    .map(Lifetime::from)
-            };
-
-            let result = match name.as_ref() {
-                "*mut" => {
-                    RsTypeKind::Pointer { pointee: get_pointee()?, mutability: Mutability::Mut }
-                }
-                "*const" => {
-                    RsTypeKind::Pointer { pointee: get_pointee()?, mutability: Mutability::Const }
-                }
-                "&mut" => RsTypeKind::Reference {
-                    referent: get_pointee()?,
-                    mutability: Mutability::Mut,
-                    lifetime: get_lifetime()?,
-                },
-                "&" => RsTypeKind::Reference {
-                    referent: get_pointee()?,
-                    mutability: Mutability::Const,
-                    lifetime: get_lifetime()?,
-                },
-                "#RvalueReference mut" => RsTypeKind::RvalueReference {
-                    referent: get_pointee()?,
-                    mutability: Mutability::Mut,
-                    lifetime: get_lifetime()?,
-                },
-                "#RvalueReference const" => RsTypeKind::RvalueReference {
-                    referent: get_pointee()?,
-                    mutability: Mutability::Const,
-                    lifetime: get_lifetime()?,
-                },
-                "Option" => {
-                    let mut type_args = get_type_args()?;
-                    ensure!(
-                        type_args.len() == 1,
-                        "Option should have exactly 1 type argument (got {})",
-                        type_args.len()
-                    );
-                    RsTypeKind::Option(Rc::new(type_args.remove(0)))
-                }
-                name => {
-                    let mut type_args = get_type_args()?;
-
-                    if let Some(primitive) = PrimitiveType::from_str(name) {
-                        if !type_args.is_empty() {
-                            bail!("{name} type must not have type arguments: {:?}", ty);
-                        }
-                        RsTypeKind::Primitive(primitive)
-                    } else if let Some(abi) = name.strip_prefix("#funcPtr ") {
-                        // Assert that function pointers in the IR either have static lifetime or
-                        // no lifetime.
-                        if let Ok(lifetime) = get_lifetime() {
-                            assert_eq!(lifetime.0.as_ref(), "static");
-                        }
-
-                        assert!(
-                            !type_args.is_empty(),
-                            "In well-formed IR function pointers include at least the return type",
-                        );
-                        ensure!(
-                            type_args.iter().all(|t| t.is_c_abi_compatible_by_value()),
-                            "Either the return type or some of the parameter types require \
-                            an FFI thunk (and function pointers don't have a thunk)",
-                        );
-                        RsTypeKind::FuncPtr {
-                            abi: abi.into(),
-                            return_type: Rc::new(type_args.remove(type_args.len() - 1)),
-                            param_types: Rc::from(type_args),
-                        }
-                    } else {
-                        bail!("Unknown type: {name}")
-                    }
-                }
-            };
-            Ok(result)
         }
     }
 }

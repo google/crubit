@@ -17,6 +17,9 @@ generate_comment = { path = "../../../../cargo/rs_bindings_from_cc/generate_bind
 generate_enum = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_enum" }
 generate_function = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_function" }
 generate_function_thunk = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_function_thunk" }
+generate_struct_and_union = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_struct_and_union" }
+has_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/has_bindings" }
+rs_type_kind = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/rs_type_kind" }
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow" }
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils" }
 crubit_feature = { path = "../../../../cargo/common/crubit_feature" }

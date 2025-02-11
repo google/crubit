@@ -16,7 +16,6 @@ use std::cell::OnceCell;
 use std::collections::hash_map::{Entry, HashMap};
 use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
-use std::io::Read;
 use std::rc::Rc;
 
 /// Common data about all items.
@@ -64,9 +63,9 @@ where
     }
 }
 
-/// Deserialize `IR` from JSON given as a reader.
-pub fn deserialize_ir<R: Read>(reader: R) -> Result<IR> {
-    let flat_ir = serde_json::from_reader(reader)?;
+/// Deserialize `IR` from JSON bytes.
+pub fn deserialize_ir(bytes: &[u8]) -> Result<IR> {
+    let flat_ir = serde_json::from_slice(bytes)?;
     Ok(make_ir(flat_ir))
 }
 

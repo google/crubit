@@ -9,9 +9,24 @@ load(
 )
 
 rust_library(
+    name = "cc_api",
+    srcs = [
+        "cc_api.rs",
+    ],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        ":generate_bindings",
+        "//common:error_report",
+        "//common:ffi_types",
+        "//rs_bindings_from_cc/generate_bindings/database",
+    ],
+)
+
+rust_library(
     name = "generate_bindings",
     srcs = [
-        "generate_struct_and_union.rs",
         "lib.rs",
     ],
     visibility = [
@@ -23,6 +38,9 @@ rust_library(
         ":generate_enum",
         ":generate_function",
         ":generate_function_thunk",
+        ":generate_struct_and_union",
+        ":has_bindings",
+        ":rs_type_kind",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_feature",
@@ -81,12 +99,36 @@ rust_library(
     ],
 )
 
+rust_library(
+    name = "generate_struct_and_union",
+    srcs = [
+        "generate_struct_and_union.rs",
+    ],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        ":cpp_type_name",
+        ":generate_comment",
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_feature",
+        "//common:error_report",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc/generate_bindings/database",
+        "@crate_index//:itertools",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+    ],
+)
+
 multiplatform_rust_test(
     name = "generate_struct_and_union_test",
     srcs = ["generate_struct_and_union_test.rs"],
     tags = ["not_run:arm"],
     deps = [
         ":generate_bindings",
+        ":generate_struct_and_union",
         ":multiplatform_ir_testing",
         ":test_generators",
         "//common:arc_anyhow",
@@ -269,6 +311,7 @@ multiplatform_rust_test(
     tags = ["not_run:arm"],
     deps = [
         ":generate_bindings",
+        ":generate_function_thunk",
         ":multiplatform_ir_testing",
         ":test_generators",
         "//common:arc_anyhow",
@@ -285,5 +328,36 @@ multiplatform_rust_test(
         "@crate_index//:quote",
         "@crate_index//:static_assertions",
         "@crate_index//:syn",
+    ],
+)
+
+rust_library(
+    name = "has_bindings",
+    srcs = [
+        "has_bindings.rs",
+    ],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        "//common:arc_anyhow",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc/generate_bindings/database",
+    ],
+)
+
+rust_library(
+    name = "rs_type_kind",
+    srcs = [
+        "rs_type_kind.rs",
+    ],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        ":has_bindings",
+        "//common:arc_anyhow",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc/generate_bindings/database",
     ],
 )

@@ -4,6 +4,6 @@
 
 // Automatically @generated lib.rs for the cc_library src_code_gen.
 
+extern crate cc_api;
 extern crate cc_ffi_types_sys;
 extern crate cc_ir_sys;
-extern crate generate_bindings;
