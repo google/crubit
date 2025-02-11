@@ -120,17 +120,20 @@ TEST(PointerNullabilityTest, MakeUniqueNewViaInitListInsteadOfConstructor) {
           int *_Nullable p;
           int *_Nonnull q;
           int x;
+          int y = -1;
+          int z = {};
+          bool b = z;
           S1 s1b;
         };
 
         void target(int x, int *_Nullable p) {
           if (x == 0) {
-            new S2{x, new int, p, x, S1{x}};  // [[unsafe]]
+            new S2{x, new int, p, x, 0, 1, false, S1{x}};  // [[unsafe]]
           } else if (x == 1) {
             // Try `x` vs `S1{x}` to test implicit conversion.
             // That will make an unrelated CXXConstructExpr within the body of
             // make_unique<S2> to set up the argument for `s1a`.
-            std::make_unique<S2>(x, new int, p, x, S1{x});  // [[unsafe]]
+            std::make_unique<S2>(x, new int, p, x, 0, 1, false, S1{x});  // [[unsafe]]
           } else if (x == 2) {
             // Test fewer arguments than fields.
             std::make_unique<S2>(x, p, p);  // [[unsafe]]

@@ -459,12 +459,13 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMakeUniqueParenInitListExpr(
   int I = 0;
   for (auto [Field, Init] : InitListHelper.field_inits()) {
     // The make_unique call can have fewer arguments than fields in the struct.
-    // The rest should be `ImplicitValueInitExpr` or default constructor calls.
+    // The rest should be various kinds of default initializers.
     const Expr *Arg;
     if (I < MakeUniqueCall->getNumArgs()) {
       Arg = MakeUniqueCall->getArg(I);
     } else {
-      CHECK(isa<ImplicitValueInitExpr>(Init) || isa<CXXConstructExpr>(Init));
+      assert(isa<ImplicitValueInitExpr>(Init) || isa<CXXConstructExpr>(Init) ||
+             isa<CXXDefaultInitExpr>(Init));
       Arg = Init;
     }
     Diagnostics.append(diagnoseAssignmentLike(
