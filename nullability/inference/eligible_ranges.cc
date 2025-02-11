@@ -555,6 +555,8 @@ struct Walker : public RecursiveASTVisitor<Walker> {
 
   template <typename DeclT>
   void insertPointerRanges(absl::Nonnull<const DeclT *> Decl) {
+    // We can't walk the nullabilities in dependent contexts.
+    if (Decl->getDeclContext()->isDependentContext()) return;
     if (!LocFilter->check(Decl->getBeginLoc())) return;
     EligibleRanges Ranges = getEligibleRanges(*Decl, Defaults);
     if (USRs) {
@@ -569,6 +571,8 @@ struct Walker : public RecursiveASTVisitor<Walker> {
   }
 
   bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
+    // We can't walk the nullabilities of dependent contexts.
+    if (FD->isDependentContext()) return true;
     insertPointerRanges(FD);
     return true;
   }
@@ -581,7 +585,8 @@ struct Walker : public RecursiveASTVisitor<Walker> {
   bool VisitVarDecl(absl::Nonnull<const VarDecl *> VD) {
     // We'll see these as part of function decls.
     if (isa<ParmVarDecl>(VD)) return true;
-
+    // We can't walk the nullabilities in templates.
+    if (VD->isTemplated()) return true;
     insertPointerRanges(VD);
     return true;
   }

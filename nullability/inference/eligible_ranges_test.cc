@@ -2044,6 +2044,34 @@ TEST(GetEligibleRangesFromASTTest, AutoFunctionTemplateSyntax) {
                                  eligibleRange(0, Input.range("local_two")))));
 }
 
+// This is a crash repro related to a function template's return type that is
+// somehow not itself dependent, but has a nested name specifier which is a
+// dependent type.
+TEST(GetEligibleRangesFromASTTest, NonDependentTypeWithDependentTypeNamespace) {
+  std::string Input = R"cc(
+    template <typename T>
+    struct Inner {
+      typedef int Alias;
+    };
+
+    template <typename T>
+    struct Outer {
+      typedef Inner<bool> InnerAlias;
+    };
+
+    template <typename T>
+    Outer<T>::InnerAlias::Alias* Foo() {
+      return nullptr;
+    }
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestAST TU(getAugmentedTestInputs(Input, Pragmas));
+  TypeNullabilityDefaults Defaults(TU.context(), Pragmas);
+
+  EXPECT_THAT(getEligibleRanges(TU.context(), Defaults), IsEmpty());
+}
+
 TEST(skipEscapedNewLinePrefixesTest, NoPrefix) {
   EXPECT_EQ(skipEscapedNewLinePrefixes(""), "");
   EXPECT_EQ(skipEscapedNewLinePrefixes("foo"), "foo");
