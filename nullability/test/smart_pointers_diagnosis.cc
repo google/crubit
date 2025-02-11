@@ -457,7 +457,7 @@ TEST(SmartPointerTest, UserDefinedSmartPointerComplexAssignmentOperator) {
     };
 
     void target(OtherType& other) {
-      Nonnull<MySmartPtr<int>> p;
+      Nonnull<MySmartPtr<int>> p;  // [[unsafe]]
       p = other;
     }
   )cc"));

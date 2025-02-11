@@ -63,6 +63,7 @@ using ast_matchers::callExpr;
 using ast_matchers::cxxConstructExpr;
 using ast_matchers::cxxMemberCallExpr;
 using ast_matchers::cxxOperatorCallExpr;
+using ast_matchers::declStmt;
 using ast_matchers::expr;
 using ast_matchers::findAll;
 using ast_matchers::hasArgument;
@@ -607,6 +608,21 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseInitListExpr(
   return Diagnostics;
 }
 
+SmallVector<PointerNullabilityDiagnostic> diagnoseDeclStmt(
+    absl::Nonnull<const DeclStmt *> DS, const MatchFinder::MatchResult &Result,
+    const DiagTransferState &State) {
+  SmallVector<PointerNullabilityDiagnostic> Diagnostics;
+  for (const Decl *D : DS->decls()) {
+    if (auto *VD = dyn_cast<VarDecl>(D); VD && VD->hasInit()) {
+      Diagnostics.append(diagnoseAssignmentLike(
+          VD->getType(), getTypeNullability(*VD, State.Lattice.defaults()),
+          VD->getInit(), State.Env, *Result.Context,
+          PointerNullabilityDiagnostic::Context::Initializer));
+    }
+  }
+  return Diagnostics;
+}
+
 SmallVector<PointerNullabilityDiagnostic> diagnoseMovedFromNonnullSmartPointer(
     absl::Nonnull<const Expr *> E, const MatchFinder::MatchResult &,
     const DiagTransferState &State) {
@@ -835,6 +851,7 @@ DiagTransferFunc pointerNullabilityDiagnoserBefore() {
                                          diagnoseMemberInitializer)
       // Check compatibility of initializer lists.
       .CaseOfCFGStmt<InitListExpr>(initListExpr(), diagnoseInitListExpr)
+      .CaseOfCFGStmt<DeclStmt>(declStmt(), diagnoseDeclStmt)
       .Build();
 }
 

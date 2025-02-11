@@ -262,8 +262,37 @@ TEST(PointerNullabilityTest, ArraySubscript) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, DeclarationWithInit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    // The following global variable initializations are not checked, because
+    // the check doesn't look at global variable declarations, and maybe also
+    // because the test infra doesn't look outside the target function. When
+    // fixing b/395869919, we should address both and remove the TODO below to
+    // enable the [[unsafe]] expectation for the initialization of
+    // global_nonnull with nullptr.
+    int *_Nonnull global_nonnull = nullptr;  // TODO: b/395869919 - [[unsafe]]
+    int *_Nonnull global_nonnull_safe = new int;
+    int *_Nullable global_nullable = nullptr;
+    int *global_unknown = nullptr;
+
+    void target(int *_Nullable nullable) {
+      int *_Nonnull local_nonnull_decl_with_init = nullptr;  // [[unsafe]]
+      int *_Nonnull local_nonnull_decl_with_init_nullable = nullable;  // [[unsafe]]
+      int *_Nonnull a = nullptr,  // [[unsafe]]
+          *_Nonnull b = nullptr;  // [[unsafe]]
+      int *_Nonnull c = new int;
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, Assignment) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
+    int *_Null_unspecified getUnknown();
+
+    int *_Nonnull global_nonnull = new int;
+    int *_Nullable global_nullable = nullptr;
+    int *global_unknown = getUnknown();
+
     void target(int *_Nonnull nonnull, int *_Nullable nullable, int *unknown) {
       nonnull = new int;
       nonnull = nullptr;  // [[unsafe]]
@@ -277,6 +306,25 @@ TEST(PointerNullabilityTest, Assignment) {
       // Check that we can handle cases where there isn't just a simple
       // `DeclRefExpr` on the left-hand side.
       *(&nonnull) = nullptr;  // [[unsafe]]
+
+      nonnull = nullable;  // [[unsafe]]
+      unknown = nullable;
+
+      global_nonnull = nullptr;   // [[unsafe]]
+      global_nonnull = nullable;  // [[unsafe]]
+      global_nonnull = getUnknown();
+      global_unknown = nullptr;
+      global_unknown = nullable;
+
+      int *_Nonnull local_nonnull = new int;
+      local_nonnull = new int;
+      local_nonnull = nullptr;   // [[unsafe]]
+      local_nonnull = nullable;  // [[unsafe]]
+      local_nonnull = getUnknown();
+      int *_Null_unspecified local_unknown = getUnknown();
+      local_unknown = getUnknown();
+      local_unknown = new int;
+      local_unknown = nullptr;
     }
   )cc"));
 }
