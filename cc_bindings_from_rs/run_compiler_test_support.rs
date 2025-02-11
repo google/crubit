@@ -177,7 +177,7 @@ fn run_compiler_for_testing_impl(
             // errors that the earlier stages might miss.  This helps ensure that the
             // test inputs are valid Rust (even if `callback` wouldn't
             // have triggered full analysis).
-            catch_unwind(AssertUnwindSafe(|| tcx.ensure().analysis(())))
+            catch_unwind(AssertUnwindSafe(|| tcx_ensure_ok_analysis(&tcx)))
                 .expect("Test input compilation failed while analyzing");
             callback(tcx)
         });
@@ -188,6 +188,16 @@ fn run_compiler_for_testing_impl(
         }
         result
     });
+}
+
+#[rustversion::since(2025-01-31)]
+fn tcx_ensure_ok_analysis(tcx: &TyCtxt) {
+    tcx.ensure_ok().analysis(())
+}
+
+#[rustversion::before(2025-01-31)]
+fn tcx_ensure_ok_analysis(tcx: &TyCtxt) {
+    tcx.ensure().analysis(())
 }
 
 /// Finds the definition id of a Rust item with the specified `name`.
