@@ -500,8 +500,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
 
   ictx_.MarkAsSuccessfullyImported(record_decl);
   if (!record_decl->isCompleteDefinition()) {
-    return IncompleteRecord{.cc_name = std::move(cc_name),
-                            .rs_name = std::move(rs_name),
+    return IncompleteRecord{.cc_name = Identifier(cc_name),
+                            .rs_name = Identifier(rs_name),
                             .id = ictx_.GenerateItemId(record_decl),
                             .owning_target = ictx_.GetOwningTarget(record_decl),
                             .unknown_attr = std::move(unknown_attr),
@@ -550,8 +550,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   }
 
   auto record = Record{
-      .rs_name = std::move(rs_name),
-      .cc_name = std::move(cc_name),
+      .rs_name = Identifier(rs_name),
+      .cc_name = Identifier(cc_name),
       .cc_preferred_name = std::move(preferred_cc_name),
       .mangled_cc_name = ictx_.GetMangledName(record_decl),
       .id = ictx_.GenerateItemId(record_decl),

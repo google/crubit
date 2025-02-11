@@ -48,7 +48,7 @@ pub fn generate_incomplete_record(
     db: &dyn BindingsGenerator,
     incomplete_record: &IncompleteRecord,
 ) -> Result<ApiSnippets> {
-    let ident = make_rs_ident(incomplete_record.rs_name.as_ref());
+    let ident = make_rs_ident(incomplete_record.rs_name.identifier.as_ref());
     let namespace_qualifier = db.ir().namespace_qualifier(incomplete_record).format_for_cc()?;
     let symbol = quote! {#namespace_qualifier #ident}.to_string();
     Ok(quote! {
@@ -344,7 +344,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     }
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
-    let ident = make_rs_ident(record.rs_name.as_ref());
+    let ident = make_rs_ident(record.rs_name.identifier.as_ref());
     let namespace_qualifier = ir.namespace_qualifier(&record).format_for_rs();
     let qualified_ident = {
         quote! { #crate_root_path:: #namespace_qualifier #ident }
@@ -744,7 +744,7 @@ pub fn generate_derives(record: &Record) -> Vec<Ident> {
 }
 
 fn cc_struct_layout_assertion(db: &dyn BindingsGenerator, record: &Record) -> Result<TokenStream> {
-    let record_ident = expect_format_cc_ident(record.cc_name.as_ref());
+    let record_ident = expect_format_cc_ident(record.cc_name.identifier.as_ref());
     let namespace_qualifier = db.ir().namespace_qualifier(record).format_for_cc()?;
     let tag_kind = record.cc_tag_kind();
     let field_assertions = record
@@ -837,7 +837,7 @@ fn cc_struct_no_unique_address_impl(
     if fields.is_empty() {
         return Ok(quote! {});
     }
-    let ident = make_rs_ident(record.rs_name.as_ref());
+    let ident = make_rs_ident(record.rs_name.identifier.as_ref());
     // SAFETY: even if there is a named field in Rust for this subobject, it is not
     // safe to just cast the pointer. A `struct S {[[no_unique_address]] A a;
     // char b};` will be represented in Rust using a too-short field `a` (e.g.

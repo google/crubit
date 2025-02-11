@@ -21,6 +21,7 @@
 #include "rs_bindings_from_cc/collect_namespaces.h"
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/Support/raw_ostream.h"
@@ -31,7 +32,8 @@ std::string InstantiationsAsJson(
     const BindingsAndMetadata& bindings_and_metadata) {
   llvm::json::Object obj;
   for (const auto& entry : bindings_and_metadata.instantiations) {
-    obj[entry.first] = entry.second;
+    obj[llvm::StringRef(entry.first.Ident())] =
+        std::string(entry.second.Ident());
   }
   return std::string(llvm::formatv("{0:2}", llvm::json::Value(std::move(obj))));
 }

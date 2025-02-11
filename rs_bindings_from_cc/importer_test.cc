@@ -34,7 +34,7 @@ using ::testing::VariantWith;
 
 std::optional<ItemId> DeclIdForRecord(const IR& ir, absl::string_view rs_name) {
   for (const Record* record : ir.get_items_if<Record>()) {
-    if (record->rs_name == rs_name) {
+    if (record->rs_name.Ident() == rs_name) {
       return record->id;
     }
   }
@@ -85,7 +85,7 @@ MATCHER_P(IdentifierIs, identifier, "") {
 }
 
 // Matches an Record node that has the given `rs_name`.
-MATCHER_P(RsNameIs, rs_name, "") { return arg.rs_name == rs_name; }
+MATCHER_P(RsNameIs, rs_name, "") { return arg.rs_name.Ident() == rs_name; }
 
 // Matches an IR node that has the given doc comment.
 MATCHER_P(DocCommentIs, doc_comment, "") {

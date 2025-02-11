@@ -87,7 +87,7 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
   ASSERT_THAT(result.instantiations, IsEmpty());
 }
 
-absl::StatusOr<absl::flat_hash_map<std::string, std::string>>
+absl::StatusOr<absl::flat_hash_map<Identifier, Identifier>>
 GetInstantiationsFor(absl::string_view header_content,
                      absl::string_view rust_source) {
   std::string a_rs_path = WriteFileForCurrentTest("a.rs", rust_source);
@@ -122,9 +122,10 @@ TEST(GenerateBindingsAndMetadataTest,
                            )cc",
                            "cc_template!{ExpectedTemplate<bool>}"));
 
-  ASSERT_THAT(instantiations,
-              ElementsAre(Pair("ExpectedTemplate<bool>",
-                               "__CcTemplateInst16ExpectedTemplateIbE")));
+  ASSERT_THAT(
+      instantiations,
+      ElementsAre(Pair(Identifier("ExpectedTemplate<bool>"),
+                       Identifier("__CcTemplateInst16ExpectedTemplateIbE"))));
 }
 
 TEST(GenerateBindingsAndMetadataTest,
@@ -142,9 +143,10 @@ TEST(GenerateBindingsAndMetadataTest,
                            )cc",
                            "cc_template!{ExpectedTemplate<bool>}"));
 
-  ASSERT_THAT(instantiations,
-              ElementsAre(Pair("ExpectedTemplate<bool>",
-                               "__CcTemplateInst16ExpectedTemplateIbE")));
+  ASSERT_THAT(
+      instantiations,
+      ElementsAre(Pair(Identifier("ExpectedTemplate<bool>"),
+                       Identifier("__CcTemplateInst16ExpectedTemplateIbE"))));
 }
 
 TEST(GenerateBindingsAndMetadataTest,
@@ -162,9 +164,10 @@ TEST(GenerateBindingsAndMetadataTest,
                            )cc",
                            "cc_template!{ExpectedTemplate<bool>}"));
 
-  ASSERT_THAT(instantiations,
-              ElementsAre(Pair("ExpectedTemplate<bool>",
-                               "__CcTemplateInst16ExpectedTemplateIbE")));
+  ASSERT_THAT(
+      instantiations,
+      ElementsAre(Pair(Identifier("ExpectedTemplate<bool>"),
+                       Identifier("__CcTemplateInst16ExpectedTemplateIbE"))));
 }
 
 TEST(GenerateBindingsAndMetadataTest,
@@ -179,9 +182,10 @@ TEST(GenerateBindingsAndMetadataTest,
                            )cc",
                            "cc_template!{ExpectedTemplate<bool>}"));
 
-  ASSERT_THAT(instantiations,
-              ElementsAre(Pair("ExpectedTemplate<bool>",
-                               "__CcTemplateInst16ExpectedTemplateIbE")));
+  ASSERT_THAT(
+      instantiations,
+      ElementsAre(Pair(Identifier("ExpectedTemplate<bool>"),
+                       Identifier("__CcTemplateInst16ExpectedTemplateIbE"))));
 }
 
 TEST(GenerateBindingsAndMetadataTest,
@@ -194,9 +198,10 @@ TEST(GenerateBindingsAndMetadataTest,
                            )cc",
                            "cc_template!{ExpectedTemplate<bool>}"));
 
-  ASSERT_THAT(instantiations,
-              ElementsAre(Pair("ExpectedTemplate<bool>",
-                               "__CcTemplateInst16ExpectedTemplateIbE")));
+  ASSERT_THAT(
+      instantiations,
+      ElementsAre(Pair(Identifier("ExpectedTemplate<bool>"),
+                       Identifier("__CcTemplateInst16ExpectedTemplateIbE"))));
 }
 
 TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {

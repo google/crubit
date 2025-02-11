@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use std::collections::hash_map::HashMap;
+use std::rc::Rc;
 use std::sync::LazyLock;
 
 use arc_anyhow::Result;
@@ -115,8 +116,8 @@ pub fn ir_record(platform: multiplatform_testing::Platform, name: &str) -> Recor
     for item in ir.items() {
         if let Item::Record(record) = item {
             let mut record = (**record).clone();
-            record.rs_name = name.into();
-            record.cc_name = name.into();
+            record.rs_name = Rc::new(Identifier { identifier: name.into() });
+            record.cc_name = Rc::new(Identifier { identifier: name.into() });
             return record;
         }
     }

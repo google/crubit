@@ -1274,9 +1274,9 @@ pub fn generate_function(
             let record_name;
             if let Some(ref derived_record) = derived_record {
                 // Generate the bindings for the derived record.
-                record_name = make_rs_ident(derived_record.rs_name.as_ref());
+                record_name = make_rs_ident(derived_record.rs_name.identifier.as_ref());
             } else {
-                record_name = make_rs_ident(record.rs_name.as_ref());
+                record_name = make_rs_ident(record.rs_name.identifier.as_ref());
             };
             let error_lifetime_generic = match &error_lifetime_param {
                 Some(lifetime) => quote! { <#lifetime> },
@@ -1332,7 +1332,7 @@ pub fn generate_function(
                 quote! {}
             };
 
-            let record_name = make_rs_ident(trait_record.rs_name.as_ref());
+            let record_name = make_rs_ident(trait_record.rs_name.identifier.as_ref());
             let extra_items;
             let trait_lifetime_params = error_lifetime_param.as_slice();
             // NOTE: `trait_generic_params` may include lifetimes!

@@ -94,7 +94,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                        args.rustfmt_config_path, generate_error_report,
                        args.generate_source_location_in_doc_comment));
 
-  absl::flat_hash_map<std::string, std::string> instantiations;
+  absl::flat_hash_map<Identifier, Identifier> instantiations;
   std::optional<const Namespace*> ns =
       FindNamespace(ir, kInstantiationsNamespaceName);
   if (ns.has_value()) {

@@ -870,7 +870,7 @@ fn test_doc_comment() -> Result<()> {
     )?;
     let comments: HashMap<_, _> = ir
         .records()
-        .map(|r| (r.rs_name.as_ref(), r.doc_comment.as_ref().unwrap().as_ref()))
+        .map(|r| (r.rs_name.identifier.as_ref(), r.doc_comment.as_ref().unwrap().as_ref()))
         .collect();
 
     assert_eq!(comments["DocCommentSlashes"], "Doc comment\n\n * with three slashes");
@@ -1405,8 +1405,14 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
     )?;
 
     // Verify that there is only 1 record for each specialization.
-    assert_eq!(1, ir.records().filter(|r| r.cc_name.as_ref() == "MyStruct<int>").count());
-    assert_eq!(1, ir.records().filter(|r| r.cc_name.as_ref() == "MyStruct<float>").count());
+    assert_eq!(
+        1,
+        ir.records().filter(|r| r.cc_name.identifier.as_ref() == "MyStruct<int>").count()
+    );
+    assert_eq!(
+        1,
+        ir.records().filter(|r| r.cc_name.identifier.as_ref() == "MyStruct<float>").count()
+    );
     let functions = ir
         .functions()
         .filter(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id("MyMethod")))
@@ -1445,8 +1451,8 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
     let class_template_specialization_names = ir
         .top_level_item_ids()
         .filter_map(|id| match ir.find_decl(*id).unwrap() {
-            ir::Item::Record(r) if r.rs_name.contains("__CcTemplateInst") => {
-                Some(r.rs_name.as_ref())
+            ir::Item::Record(r) if r.rs_name.identifier.contains("__CcTemplateInst") => {
+                Some(r.rs_name.identifier.as_ref())
             }
             _ => None,
         })
@@ -1520,14 +1526,14 @@ fn test_templates_inheritance() -> Result<()> {
     assert_eq!(
         1,
         ir.records()
-            .filter(|r| r.cc_name.contains("ClassTemplateDerivedFromClassTemplate"))
+            .filter(|r| r.cc_name.identifier.contains("ClassTemplateDerivedFromClassTemplate"))
             .count()
     );
 
     // BaseTemplate is *not* instantiated in the generated bindings/IR.  The derived
     // class's bindings work fine without the bindings for the base class (this
     // is also true for non-templated base/derived classes).
-    assert_eq!(0, ir.records().filter(|r| r.cc_name.contains("BaseTemplate")).count());
+    assert_eq!(0, ir.records().filter(|r| r.cc_name.identifier.contains("BaseTemplate")).count());
     Ok(())
 }
 
@@ -2604,7 +2610,8 @@ fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet()
 #[gtest]
 fn test_dont_import_injected_class_name() {
     let ir = ir_from_cc("struct SomeStruct {};").unwrap();
-    let names = ir.records().map(|r| r.rs_name.as_ref()).filter(|n| n.contains("SomeStruct"));
+    let names =
+        ir.records().map(|r| r.rs_name.identifier.as_ref()).filter(|n| n.contains("SomeStruct"));
     // if we do support nested structs, we should not emit record for injected class
     // name
     assert_eq!(names.count(), 1);
@@ -2721,7 +2728,7 @@ fn test_class() {
 #[gtest]
 fn test_struct_forward_declaration() {
     let ir = ir_from_cc("struct Struct;").unwrap();
-    assert!(!ir.records().any(|r| r.rs_name.as_ref() == "Struct"));
+    assert!(!ir.records().any(|r| r.rs_name.identifier.as_ref() == "Struct"));
 }
 
 #[gtest]
@@ -2860,8 +2867,10 @@ fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&
     mut func_predicate: F,
     expected_metadata: &Option<ir::InstanceMethodMetadata>,
 ) {
-    let record =
-        ir.records().find(|r| r.rs_name.as_ref() == record_name).expect("Struct not found");
+    let record = ir
+        .records()
+        .find(|r| r.rs_name.identifier.as_ref() == record_name)
+        .expect("Struct not found");
     let function = ir.functions().find(|f| func_predicate(f));
     let meta = function
         .expect("Function not found")
@@ -3153,7 +3162,7 @@ fn test_elided_lifetimes() {
 
 fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     let r = ir.records().next().expect("IR should contain `struct S`");
-    assert_eq!(r.rs_name.as_ref(), "S");
+    assert_eq!(r.rs_name.identifier.as_ref(), "S");
     assert!(r.is_trivial_abi);
 
     let f = ir
@@ -3191,7 +3200,7 @@ fn test_operator_names() {
         .filter(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
             if let Some(Ok(r)) = ir.record_for_member_func(f).map(<&Rc<Record>>::try_from) {
-                r.rs_name.as_ref() == "SomeStruct"
+                r.rs_name.identifier.as_ref() == "SomeStruct"
             } else {
                 false
             }
@@ -3746,7 +3755,7 @@ fn test_enclosing_item_ids() {
         .iter()
         .all(|item| item.enclosing_item_id() == Some(inner_namespace.id)));
 
-    let record = ir.records().find(|r| r.rs_name.as_ref() == "S").unwrap();
+    let record = ir.records().find(|r| r.rs_name.identifier.as_ref() == "S").unwrap();
     let record_items: Vec<&Item> =
         record.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
     for item in record_items.iter() {

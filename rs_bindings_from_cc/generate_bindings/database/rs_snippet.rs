@@ -1130,7 +1130,7 @@ impl RsTypeKind {
                 quote! { #unsafe_ extern #abi fn( #( #param_types_tokens ),* ) #return_frag }
             }
             RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => {
-                let record_ident = make_rs_ident(incomplete_record.rs_name.as_ref());
+                let record_ident = make_rs_ident(incomplete_record.rs_name.identifier.as_ref());
                 quote! { #crate_path #record_ident }
             }
             RsTypeKind::Record { record, crate_path, known_generic_monomorphization } => {
@@ -1158,7 +1158,7 @@ impl RsTypeKind {
                         });
                     return quote! { #(#rust_generic_name_parts)::* <#(#inner_types_str),*>};
                 }
-                let ident = make_rs_ident(record.rs_name.as_ref());
+                let ident = make_rs_ident(record.rs_name.identifier.as_ref());
                 quote! { #crate_path #ident }
             }
             RsTypeKind::Enum { enum_, crate_path } => {

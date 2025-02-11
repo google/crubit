@@ -28,7 +28,7 @@ struct BindingsAndMetadata {
   NamespacesHierarchy namespaces;
   // C++ class templates explicitly instantiated in this TU and their Rust
   // struct name.
-  absl::flat_hash_map<std::string, std::string> instantiations;
+  absl::flat_hash_map<Identifier, Identifier> instantiations;
   // A JSON error report, if requested.
   std::string error_report;
 };

@@ -308,8 +308,16 @@ class Identifier {
   }
 
   absl::string_view Ident() const { return identifier_; }
-
   llvm::json::Value ToJson() const;
+
+  template <typename H>
+  friend H AbslHashValue(H h, const Identifier& i) {
+    return H::combine(std::move(h), i.identifier_);
+  }
+
+  bool operator==(const Identifier& other) const {
+    return identifier_ == other.identifier_;
+  }
 
  private:
   std::string identifier_;
@@ -616,8 +624,8 @@ struct Record {
   // `rs_name` and `cc_name` are typically equal, but they may be different for
   // template instantiations (when `cc_name` is similar to `MyStruct<int>` and
   // `rs_name` is similar to "__CcTemplateInst8MyStructIiE").
-  std::string rs_name;
-  std::string cc_name;
+  Identifier rs_name;
+  Identifier cc_name;
   std::string cc_preferred_name;
   std::string mangled_cc_name;
 
@@ -716,8 +724,8 @@ struct Record {
 // A forward-declared record (e.g. `struct Foo;`)
 struct IncompleteRecord {
   llvm::json::Value ToJson() const;
-  std::string cc_name;
-  std::string rs_name;
+  Identifier cc_name;
+  Identifier rs_name;
   ItemId id;
   BazelLabel owning_target;
   std::optional<std::string> unknown_attr;

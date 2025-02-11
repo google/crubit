@@ -277,6 +277,12 @@ impl Debug for Identifier {
     }
 }
 
+impl PartialEq<str> for Identifier {
+    fn eq(&self, other: &str) -> bool {
+        self.identifier.as_ref() == other
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IntegerConstant {
@@ -622,8 +628,8 @@ pub struct BaseClass {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IncompleteRecord {
-    pub cc_name: Rc<str>,
-    pub rs_name: Rc<str>,
+    pub cc_name: Rc<Identifier>,
+    pub rs_name: Rc<Identifier>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     /// A human-readable list of attributes that Crubit doesn't understand.
@@ -641,7 +647,7 @@ impl GenericItem for IncompleteRecord {
         self.id
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.cc_name.clone()
+        self.cc_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Type
@@ -721,8 +727,8 @@ pub struct TraitDerives {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Record {
-    pub rs_name: Rc<str>,
-    pub cc_name: Rc<str>,
+    pub rs_name: Rc<Identifier>,
+    pub cc_name: Rc<Identifier>,
     pub cc_preferred_name: Rc<str>,
     pub mangled_cc_name: Rc<str>,
     pub id: ItemId,
@@ -769,7 +775,7 @@ impl GenericItem for Record {
         self.id
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.cc_name.clone()
+        self.cc_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Type

@@ -236,7 +236,7 @@ pub fn thunk_ident_for_derived_member_function(func: &Func, derived_record: Rc<R
     format_ident!(
         "__rust_thunk__{}{odr_suffix}_{}",
         ident_fragment_from_mangled_name(func.mangled_name.as_ref()),
-        derived_record.rs_name.as_ref()
+        derived_record.rs_name.identifier.as_ref()
     )
 }
 
@@ -262,7 +262,8 @@ pub fn generate_function_thunk_impl(
                         quote! { #fn_ident }
                     } else {
                         let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
-                        let record_ident = expect_format_cc_ident(record.cc_name.as_ref());
+                        let record_ident =
+                            expect_format_cc_ident(record.cc_name.identifier.as_ref());
                         let namespace_qualifier = ir.namespace_qualifier(record).format_for_cc()?;
                         quote! { #namespace_qualifier #record_ident :: #fn_ident }
                     }
