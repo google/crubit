@@ -15,7 +15,10 @@ use std::fmt::Write as _;
 
 /// Top-level comments that help identify where the generated bindings came
 /// from.
-pub fn generate_top_level_comment(ir: &IR) -> String {
+pub fn generate_top_level_comment(
+    ir: &IR,
+    source_loc_doc_comment: SourceLocationDocComment,
+) -> String {
     // The "@generated" marker is an informal convention for identifying
     // automatically generated code.  This marker is recognized by `rustfmt`
     // (see the `format_generated_files` option [1]) and some other tools.
@@ -31,24 +34,37 @@ pub fn generate_top_level_comment(ir: &IR) -> String {
     // TODO(b/255784681): Consider including cmdline arguments.
     let target = &ir.current_target().0;
 
-    let crubit_features = {
+    let mut result = format!(
+        "// Automatically @generated Rust bindings for the following C++ target:\n\
+            // {target}\n"
+    );
+
+    if source_loc_doc_comment == SourceLocationDocComment::Enabled {
+        // Write the features.
+        result.push_str(
+            "\
+            // Features: ",
+        );
+
         let mut crubit_features: Vec<&str> = ir
             .target_crubit_features(ir.current_target())
             .into_iter()
             .map(|feature| feature.short_name())
             .collect();
         crubit_features.sort();
-        if crubit_features.is_empty() {
-            "<none>".to_string()
+
+        if let Some((last_feature, features)) = crubit_features.split_last() {
+            for feature in features {
+                result.push_str(feature);
+                result.push_str(", ");
+            }
+            result.push_str(last_feature);
         } else {
-            crubit_features.join(", ")
+            result.push_str("<none>");
         }
-    };
-    format!(
-        "// Automatically @generated Rust bindings for the following C++ target:\n\
-            // {target}\n\
-            // Features: {crubit_features}\n"
-    )
+        result.push('\n');
+    }
+    result
 }
 
 pub fn generate_doc_comment(

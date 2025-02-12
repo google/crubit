@@ -59,7 +59,7 @@ pub fn generate_bindings(
     };
     let rs_api_impl = cc_tokens_to_formatted_string(rs_api_impl, Path::new(clang_format_exe_path))?;
 
-    let top_level_comment = generate_top_level_comment(&ir);
+    let top_level_comment = generate_top_level_comment(&ir, generate_source_loc_doc_comment);
     // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
     // be needed when `@generated` comment/keyword is present...
     let rs_api = format!(

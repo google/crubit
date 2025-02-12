@@ -4,7 +4,6 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/golden:unions_cc
-// Features: experimental, supported
 
 #![rustfmt::skip]
 #![feature(
