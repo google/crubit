@@ -92,12 +92,8 @@ where
     output.unwrap()
 }
 
-static using_internal_features_static: std::sync::atomic::AtomicBool =
+static USING_INTERNAL_FEATURES: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
-
-fn using_internal_features() -> &'static std::sync::atomic::AtomicBool {
-    &using_internal_features_static
-}
 
 /// A non-generic implementation of `run_compiler_for_testing`.
 ///
@@ -160,7 +156,7 @@ fn run_compiler_for_testing_impl(
         locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES.to_vec(),
         ice_file: None,
         expanded_args: vec![],
-        using_internal_features: using_internal_features(),
+        using_internal_features: &USING_INTERNAL_FEATURES,
     };
 
     rustc_interface::interface::run_compiler(config, |compiler| {
