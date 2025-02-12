@@ -179,7 +179,7 @@ pub fn required_crubit_features(
     match item {
         Item::UnsupportedItem(..) => {}
         Item::Func(func) => {
-            if func.name == UnqualifiedIdentifier::Destructor {
+            if func.rs_name == UnqualifiedIdentifier::Destructor {
                 // We support destructors in supported even though they use some features we
                 // don't generally support with that feature set, because in this
                 // particular case, it's safe.

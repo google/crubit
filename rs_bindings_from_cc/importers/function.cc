@@ -485,7 +485,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   CHECK_OK(return_type);
 
   return Func{
-      .name = *translated_name,
+      .cc_name = *translated_name,
+      .rs_name = *translated_name,
       .owning_target = ictx_.GetOwningTarget(function_decl),
       .doc_comment = std::move(doc_comment),
       .mangled_name = ictx_.GetMangledName(function_decl),

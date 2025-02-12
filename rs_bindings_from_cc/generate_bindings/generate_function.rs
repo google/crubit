@@ -709,7 +709,7 @@ fn api_func_shape(
         SafetyAnnotation::DisableUnsafe => false,
     };
 
-    match &func.name {
+    match &func.rs_name {
         UnqualifiedIdentifier::Operator(op) => {
             api_func_shape_for_operator(db, func, maybe_record, param_types, op, errors).ok()
         }

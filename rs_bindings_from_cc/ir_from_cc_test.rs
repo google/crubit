@@ -29,7 +29,8 @@ fn test_function() {
         ir,
         quote! {
             Func {
-                name: "f",
+                cc_name: "f",
+                rs_name: "f",
                 owning_target: BazelLabel("//test:testing_target"),
                 mangled_name: "_Z1fii",
                 doc_comment: None,
@@ -109,7 +110,8 @@ fn test_function_with_asm_label() {
         ir,
         quote! {
             Func {
-                name: "f", ...
+                cc_name: "f",
+                rs_name: "f", ...
                 mangled_name: "foo", ...
             }
         }
@@ -123,7 +125,8 @@ fn test_function_with_unnamed_parameters() {
         ir,
         quote! {
             Func {
-                name: "f", ...
+                cc_name: "f",
+                rs_name: "f", ...
                 mangled_name: "_Z1fii", ...
                 params: [
                     FuncParam {
@@ -145,7 +148,8 @@ fn test_unescapable_rust_keywords_in_function_parameters() {
         ir,
         quote! {
             Func {
-                name: "f", ...
+                cc_name: "f",
+                rs_name: "f", ...
                 params: [
                     FuncParam {
                         ... identifier: "__param_0", ...
@@ -289,7 +293,7 @@ fn test_function_with_custom_calling_convention() {
         ir,
         quote! {
             Func {
-                name: "f_vectorcall", ...
+                cc_name: "f_vectorcall", ...
                 mangled_name: "_Z12f_vectorcallii", ...
                 has_c_calling_convention: false, ...
             }
@@ -300,8 +304,8 @@ fn test_function_with_custom_calling_convention() {
 #[gtest]
 fn test_functions_from_dependency_are_not_emitted() -> Result<()> {
     let ir = ir_from_cc_dependency("int Add(int a, int b);", "int Multiply(int a, int b);")?;
-    assert_ir_matches!(ir, quote! { Func { name: "Add" ... } });
-    assert_ir_not_matches!(ir, quote! { Func { name: "Multiply" ... } });
+    assert_ir_matches!(ir, quote! { Func { cc_name: "Add" ... } });
+    assert_ir_not_matches!(ir, quote! { Func { cc_name: "Multiply" ... } });
     Ok(())
 }
 
@@ -721,9 +725,9 @@ fn test_record_private_member_functions_not_present() {
     )
     .unwrap();
 
-    assert_ir_matches!(ir, quote! { Func { name: "public_method" ... } });
-    assert_ir_not_matches!(ir, quote! { Func { name: "protected_method" ... } });
-    assert_ir_not_matches!(ir, quote! { Func { name: "private_method" ... } });
+    assert_ir_matches!(ir, quote! { Func { cc_name: "public_method" ... } });
+    assert_ir_not_matches!(ir, quote! { Func { cc_name: "protected_method" ... } });
+    assert_ir_not_matches!(ir, quote! { Func { cc_name: "private_method" ... } });
 }
 
 #[gtest]
@@ -742,9 +746,9 @@ fn test_record_private_static_member_functions_not_present() {
     )
     .unwrap();
 
-    assert_ir_matches!(ir, quote! { Func { name: "public_method" ... } });
-    assert_ir_not_matches!(ir, quote! { Func { name: "protected_method" ... } });
-    assert_ir_not_matches!(ir, quote! { Func { name: "private_method" ... } });
+    assert_ir_matches!(ir, quote! { Func { cc_name: "public_method" ... } });
+    assert_ir_not_matches!(ir, quote! { Func { cc_name: "protected_method" ... } });
+    assert_ir_not_matches!(ir, quote! { Func { cc_name: "private_method" ... } });
 }
 
 #[gtest]
@@ -920,7 +924,7 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
     let comments: HashMap<&str, Option<&str>> = ir
         .functions()
         .map(|f| {
-            if let UnqualifiedIdentifier::Identifier(id) = &f.name {
+            if let UnqualifiedIdentifier::Identifier(id) = &f.rs_name {
                 (id.identifier.as_ref(), f.doc_comment.as_deref())
             } else {
                 panic!("No constructors/destructors expected in this test.")
@@ -1284,7 +1288,8 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
         ir,
         quote! {
           Func {
-            name: "GetValue",
+            cc_name: "GetValue",
+            rs_name: "GetValue",
             owning_target: BazelLabel("//test:testing_target"),
             mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv", ...
             doc_comment: Some("Doc comment of GetValue method."), ...
@@ -1304,7 +1309,8 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
         ir,
         quote! {
           Func {
-              name: "operator=",
+              cc_name: "operator=",
+              rs_name: "operator=",
               owning_target: BazelLabel("//test:testing_target"),
               mangled_name: "_ZN23test_namespace_bindings8MyStructIiEaSERKS1_", ...
               doc_comment: None, ...
@@ -1374,7 +1380,8 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
         ir,
         quote! {
           Func {
-            name: "GetValue",
+            cc_name: "GetValue",
+            rs_name: "GetValue",
             owning_target: BazelLabel("//test:testing_target"),
             mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv", ...
             doc_comment: Some("Doc comment of the GetValue method specialization for T=int."), ...
@@ -1415,7 +1422,7 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
     );
     let functions = ir
         .functions()
-        .filter(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id("MyMethod")))
+        .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("MyMethod")))
         .collect_vec();
 
     // Verify that there is only 1 function per instantiation.
@@ -1470,7 +1477,7 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
 
     let method_mangled_names = ir
         .functions()
-        .filter_map(|f| match &f.name {
+        .filter_map(|f| match &f.rs_name {
             UnqualifiedIdentifier::Identifier(id) if id.identifier.as_ref() == "MyMethod" => {
                 Some(f.mangled_name.as_ref())
             }
@@ -1568,7 +1575,7 @@ fn test_aliased_class_template_instantiated_in_header() -> Result<()> {
           }
         }
     );
-    assert_ir_matches!(ir, quote! { Func { name: "GetValue", ...  } });
+    assert_ir_matches!(ir, quote! { Func { ...rs_name: "GetValue", ...  } });
     Ok(())
 }
 
@@ -1601,7 +1608,7 @@ fn test_aliased_class_template_partially_instantiated_in_header() -> Result<()> 
           }
         }
     );
-    assert_ir_matches!(ir, quote! { Func { name: "GetValue", ...  } });
+    assert_ir_matches!(ir, quote! { Func { cc_name: "GetValue", rs_name: "GetValue", ...  } });
     Ok(())
 }
 
@@ -1628,7 +1635,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
         ir,
         quote! {
             Func {
-                name: "GetSum", ...
+                cc_name: "GetSum", ...
                 mangled_name: "_ZN8MyStructIJiiEE6GetSumEii", ...
                 params: [
                     FuncParam {
@@ -1681,7 +1688,8 @@ fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
         ir,
         quote! {
           Func {
-            name: "MyFunction",
+            cc_name: "MyFunction",
+            rs_name: "MyFunction",
             owning_target: BazelLabel("//test:testing_target"), ...
             return_type: MappedType {
                 rs_type: ItemIdType {
@@ -1732,7 +1740,8 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
         ir,
         quote! {
           Func {
-            name: "MyFunction",
+            cc_name: "MyFunction",
+            rs_name: "MyFunction",
             owning_target: BazelLabel("//test:testing_target"), ...
             params: [FuncParam {
                 type_: MappedType {
@@ -1882,7 +1891,8 @@ fn test_template_with_decltype_and_with_auto() -> Result<()> {
         ir,
         quote! {
             Func {
-               name: "TemplatedAdd", ...
+              cc_name: "TemplatedAdd",
+               rs_name: "TemplatedAdd", ...
                return_type: MappedType {
                    rs_type: NamedType { name: "::core::ffi::c_longlong", ... },
                    cpp_type: CcType { name: Some("long long"), ... },
@@ -1919,7 +1929,8 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
         ir,
         quote! {
             Func {
-               name: "GetConstRef", ...
+               cc_name: "GetConstRef",
+               rs_name: "GetConstRef", ...
                return_type: MappedType {
                    rs_type: NamedType {
                        name: "&", ...
@@ -1941,7 +1952,8 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
         ir,
         quote! {
             Func {
-               name: "GetRef", ...
+               cc_name: "GetRef",
+               rs_name: "GetRef", ...
                return_type: MappedType {
                    rs_type: NamedType {
                        name: "&mut", ...
@@ -1988,7 +2000,8 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
         ir,
         quote! {
             Func {
-               name: "GetConstRef", ...
+              cc_name: "GetConstRef",
+               rs_name: "GetConstRef", ...
                return_type: MappedType {
                    rs_type: NamedType {
                        name: "&", ...
@@ -2010,7 +2023,8 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
         ir,
         quote! {
             Func {
-               name: "GetRef", ...
+              cc_name: "GetRef",
+               rs_name: "GetRef", ...
                return_type: MappedType {
                    rs_type: NamedType {
                        name: "&", ...
@@ -2121,7 +2135,7 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
         ir,
         quote! {
             Func { ...
-                name: "GetValue", ...
+                rs_name: "GetValue", ...
                 owning_target: BazelLabel(#dependency), ...
             }
         }
@@ -2133,7 +2147,7 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
         ir,
         quote! {
             Func { ...
-                name: "GetValue", ...
+                rs_name: "GetValue", ...
                 owning_target: BazelLabel(#current_target), ...
             }
         }
@@ -2228,7 +2242,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
         ir,
         quote! {
             Func { ...
-                name: "GetValue", ...
+                rs_name: "GetValue", ...
                 owning_target: BazelLabel(#dependency), ...
             }
         }
@@ -2240,7 +2254,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
         ir,
         quote! {
             Func { ...
-                name: "GetValue", ...
+                rs_name: "GetValue", ...
                 owning_target: BazelLabel(#current_target), ...
             }
         }
@@ -2263,7 +2277,7 @@ fn test_well_known_types_check_namespaces() -> Result<()> {
         ir,
         quote! {
           Func { ...
-            name: "f", ...
+            rs_name: "f", ...
             params: [
              FuncParam {
               type_: MappedType {
@@ -2645,7 +2659,8 @@ fn test_integer_typedef_usage() -> Result<()> {
     assert_ir_matches!(
         ir,
         quote! { Func {
-         name: "f", ...
+         cc_name: "f",
+         rs_name: "f", ...
          params: [
            FuncParam {
             type_: MappedType {
@@ -2854,8 +2869,10 @@ fn test_member_function_params() {
         "#,
     )
     .unwrap();
-    let foo_func =
-        ir.functions().find(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id("Foo"))).unwrap();
+    let foo_func = ir
+        .functions()
+        .find(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("Foo")))
+        .unwrap();
     let param_names: Vec<_> =
         foo_func.params.iter().map(|p| p.identifier.identifier.as_ref()).collect();
     assert_eq!(param_names, vec!["__this", "x", "y"]);
@@ -2895,7 +2912,7 @@ fn assert_member_function_has_instance_method_metadata(
     assert_member_function_with_predicate_has_instance_method_metadata(
         &ir,
         "Struct",
-        |f| f.name == UnqualifiedIdentifier::Identifier(ir_id(name)),
+        |f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id(name)),
         expected_metadata,
     );
 }
@@ -2988,7 +3005,9 @@ fn test_member_function_rvalue_ref_qualified_this_param_type() {
 
     let rvalue_ref_method = ir
         .functions()
-        .find(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_qualified_method")))
+        .find(|f| {
+            f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_qualified_method"))
+        })
         .unwrap();
     let this_param = &rvalue_ref_method.params[0].type_.rs_type.name();
     assert_eq!(this_param.unwrap(), "#RvalueReference mut");
@@ -2996,7 +3015,8 @@ fn test_member_function_rvalue_ref_qualified_this_param_type() {
     let rvalue_ref_const_method = ir
         .functions()
         .find(|f| {
-            f.name == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_const_qualified_method"))
+            f.rs_name
+                == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_const_qualified_method"))
         })
         .unwrap();
     let const_this_param = &rvalue_ref_const_method.params[0];
@@ -3017,7 +3037,7 @@ fn test_member_function_explicit_constructor() {
     assert_member_function_with_predicate_has_instance_method_metadata(
         &ir,
         "SomeStruct",
-        |f| f.name == UnqualifiedIdentifier::Constructor,
+        |f| f.rs_name == UnqualifiedIdentifier::Constructor,
         &Some(ir::InstanceMethodMetadata {
             reference: ir::ReferenceQualification::Unqualified,
             is_const: false,
@@ -3039,7 +3059,7 @@ fn test_member_function_constructor() {
         assert_member_function_with_predicate_has_instance_method_metadata(
             &ir,
             "SomeStruct",
-            |f| f.name == UnqualifiedIdentifier::Constructor,
+            |f| f.rs_name == UnqualifiedIdentifier::Constructor,
             &Some(ir::InstanceMethodMetadata {
                 reference: ir::ReferenceQualification::Unqualified,
                 is_const: false,
@@ -3051,7 +3071,7 @@ fn test_member_function_constructor() {
 
 fn get_func_names(definition: &str) -> Vec<ir::UnqualifiedIdentifier> {
     let ir = ir_from_cc(definition).unwrap();
-    ir.functions().map(|f| f.name.clone()).collect()
+    ir.functions().map(|f| f.rs_name.clone()).collect()
 }
 
 #[gtest]
@@ -3167,7 +3187,7 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
 
     let f = ir
         .functions()
-        .find(|f| matches!(&f.name, UnqualifiedIdentifier::Constructor) && f.params.len() == 1)
+        .find(|f| matches!(&f.rs_name, UnqualifiedIdentifier::Constructor) && f.params.len() == 1)
         .expect("IR should contain the default constructor");
     assert_eq!(f.lifetime_params.len(), 1);
 
@@ -3205,7 +3225,7 @@ fn test_operator_names() {
                 false
             }
         })
-        .flat_map(|f| match &f.name {
+        .flat_map(|f| match &f.rs_name {
             UnqualifiedIdentifier::Operator(op) => Some(op.name.as_ref()),
             _ => None,
         })
@@ -3478,8 +3498,10 @@ fn test_comment_has_item_id() {
 #[gtest]
 fn test_function_has_item_id() {
     let ir = ir_from_cc("int foo();").unwrap();
-    let function =
-        ir.functions().find(|i| i.name == UnqualifiedIdentifier::Identifier(ir_id("foo"))).unwrap();
+    let function = ir
+        .functions()
+        .find(|i| i.rs_name == UnqualifiedIdentifier::Identifier(ir_id("foo")))
+        .unwrap();
     assert_ne!(function.id, ItemId::new_for_testing(0));
 }
 
@@ -3526,7 +3548,7 @@ fn test_top_level_items() {
               }
             },
             quote! {
-              Func { ... name: "top_level_func" ... }
+              Func { ... rs_name: "top_level_func" ... }
             },
             quote! {
               Namespace { ... name: "top_level_namespace" ... }
@@ -3568,20 +3590,20 @@ fn test_record_items() {
         record_items,
         vec![
             quote! {
-              Func { ... name: Constructor ... }
+              Func { ... rs_name: Constructor ... }
             },
             quote! {
-              Func { ... name: Constructor ... }
+              Func { ... rs_name: Constructor ... }
             },
             quote! {
               // Unsupported parameter
               UnsupportedItem { ... name: "TopLevelStruct::TopLevelStruct", ... }
             },
             quote! {
-              Func { ... name: Destructor ... }
+              Func { ... rs_name: Destructor ... }
             },
             quote! {
-              Func { ... name: "operator=" ... }
+              Func { ... rs_name: "operator=" ... }
             },
             quote! {
               // Unsupported parameter
@@ -3593,14 +3615,14 @@ fn test_record_items() {
               }
             },
             quote! {
-              ... Func { ... name: "bar" ... }
+              ... Func { ... rs_name: "bar" ... }
             },
             quote! {
               ... UnsupportedItem { ... name: "TopLevelStruct::Nested" ... }
             },
             quote! {
               ...Func {
-                ... name: "baz" ...
+                ... rs_name: "baz" ...
               }
             },
             quote! {
@@ -3669,7 +3691,7 @@ fn test_namespaces() {
               }
             },
             quote! {
-              Func { ... name: "function_within_namespace" ... }
+              Func { ... rs_name: "function_within_namespace" ... }
             },
             quote! {
               Namespace { ... name: "inner_namespace" ... }
@@ -3711,7 +3733,7 @@ fn test_nested_namespace_definition() {
     assert_items_match!(
         inner_namespace_items,
         vec![quote! {
-          Func { ... name: "func" ... }
+          Func { ... rs_name: "func" ... }
         },]
     );
 }
@@ -3985,7 +4007,7 @@ fn test_function_redeclared_as_friend() {
     // item.)
     let functions = ir
         .functions()
-        .filter(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id("bar")))
+        .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("bar")))
         .collect_vec();
     assert_eq!(1, functions.len());
     let function_id = functions[0].id;
@@ -4014,14 +4036,15 @@ fn test_function_redeclared_as_friend() {
                     ] ...
                     enclosing_item_id: None ...
                 }),
-                Func(Func { name: Constructor ...  }),
-                Func(Func { name: Constructor ...  }),
+                Func(Func { cc_name: Constructor, rs_name: Constructor ...  }),
+                Func(Func { cc_name: Constructor, rs_name: Constructor ...  }),
                 UnsupportedItem(UnsupportedItem { name: "SomeClass::SomeClass" ...  }),
-                Func(Func { name: Destructor ...  }),
-                Func(Func { name: "operator=" ...  }),
+                Func(Func { cc_name: Destructor, rs_name: Destructor ...  }),
+                Func(Func { cc_name: "operator=", rs_name: "operator=" ...  }),
                 UnsupportedItem(UnsupportedItem { name: "SomeClass::operator=" ...  }),
                 Func(Func {
-                    name: "bar" ...
+                    cc_name: "bar",
+                    rs_name: "bar" ...
                     enclosing_item_id: None ...
                     adl_enclosing_record: Some(ItemId(...)) ...
                 }),
@@ -4046,7 +4069,7 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
     // item.)
     let functions = ir
         .functions()
-        .filter(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id("f")))
+        .filter(|f| f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("f")))
         .collect_vec();
     assert_eq!(1, functions.len());
     let function_id = functions[0].id;
@@ -4065,7 +4088,8 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
                     enclosing_item_id: None ...
                 }),
                 Func(Func {
-                    name: "f" ...
+                    cc_name: "f",
+                    rs_name: "f" ...
                     enclosing_item_id: Some(ItemId(...)) ...
                 }),
                 Namespace(Namespace {
@@ -4126,14 +4150,14 @@ fn test_friend() {
         ir,
         quote! {
             ...
-            Func { ... name: "Invisible", ... adl_enclosing_record: Some(...) ... } ...
+            Func { ... rs_name: "Invisible", ... adl_enclosing_record: Some(...) ... } ...
         }
     );
     assert_ir_matches!(
         ir,
         quote! {
             ...
-            Func { ... name: "VisibleByADL", ... adl_enclosing_record: Some(...) ... } ...
+            Func { ... rs_name: "VisibleByADL", ... adl_enclosing_record: Some(...) ... } ...
         }
     );
 }
@@ -4152,7 +4176,7 @@ fn generate_member_func_with_visibility(record_type: &str, visibility: &str) -> 
 fn test_private_method() {
     let ir_with_function = quote! {
       ...
-      Func { ... name: "myfunc", ... }
+      Func { ... rs_name: "myfunc", ... }
       ...
     };
     for (record_type, visibility, expect_function) in vec![

@@ -180,7 +180,7 @@ pub fn collect_unqualified_member_functions(
             };
 
             if let Item::Func(member_function) = child_item {
-                if let UnqualifiedIdentifier::Identifier(_) = &member_function.name {
+                if let UnqualifiedIdentifier::Identifier(_) = &member_function.rs_name {
                     return Some(member_function.clone());
                 }
             }
@@ -202,14 +202,14 @@ fn filter_out_ambiguous_member_functions(
     let derived_member_functions = db
         .collect_unqualified_member_functions(derived_record.clone())
         .iter()
-        .map(|func| (func.name.clone(), func.clone()))
+        .map(|func| (func.rs_name.clone(), func.clone()))
         .collect::<HashMap<_, _>>();
     let mut func_counter = HashMap::<_, (&Rc<Func>, u32)>::new();
     for func in inherited_functions.iter() {
         let Ok(Some(_)) = db.generate_function(func.clone(), None) else {
             continue;
         };
-        let unqualified_name = &func.name;
+        let unqualified_name = &func.rs_name;
         if derived_member_functions.contains_key(unqualified_name) {
             continue;
         }
@@ -222,7 +222,7 @@ fn filter_out_ambiguous_member_functions(
         .values()
         .filter_map(|(func, count)| if *count == 1 { Some((*func).clone()) } else { None })
         // Sort by name to make the output deterministic.
-        .sorted_by_key(|func| func.name.identifier_as_str().unwrap().to_string())
+        .sorted_by_key(|func| func.rs_name.identifier_as_str().unwrap().to_string())
         .collect()
 }
 

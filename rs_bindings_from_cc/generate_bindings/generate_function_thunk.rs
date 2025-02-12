@@ -135,7 +135,7 @@ pub fn generate_function_thunk(
     let mut out_param = None;
     let mut out_param_ident = None;
     let mut return_type_fragment = return_type.format_as_return_type_fragment(db, None);
-    if func.name == UnqualifiedIdentifier::Constructor {
+    if func.rs_name == UnqualifiedIdentifier::Constructor {
         // For constructors, inject MaybeUninit into the type of `__this_` parameter.
         let Some(first_param) = param_types.next() else {
             bail!("Constructors should have at least one parameter (__this), but none were found.")
@@ -249,7 +249,7 @@ pub fn generate_function_thunk_impl(
     }
     let ir = db.ir();
     let thunk_ident = thunk_ident(func);
-    let implementation_function = match &func.name {
+    let implementation_function = match &func.rs_name {
         UnqualifiedIdentifier::Operator(op) => {
             let name = syn::parse_str::<TokenStream>(&op.name)?;
             quote! { operator #name }
@@ -389,7 +389,7 @@ pub fn generate_function_thunk_impl(
     };
 
     let this_ref_qualification =
-        func.member_func_metadata.as_ref().and_then(|meta| match &func.name {
+        func.member_func_metadata.as_ref().and_then(|meta| match &func.rs_name {
             UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
             UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => meta
                 .instance_method_metadata

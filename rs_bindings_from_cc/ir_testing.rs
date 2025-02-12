@@ -128,7 +128,7 @@ pub fn ir_record(platform: multiplatform_testing::Platform, name: &str) -> Recor
 /// Panics if no such function could be found.
 pub fn retrieve_func<'a>(ir: &'a IR, name: &str) -> &'a Func {
     for func in ir.functions() {
-        if func.name == ir::UnqualifiedIdentifier::Identifier(ir_id(name)) {
+        if func.rs_name == ir::UnqualifiedIdentifier::Identifier(ir_id(name)) {
             return func;
         }
     }

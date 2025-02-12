@@ -162,7 +162,7 @@ fn make_ir(flat_ir: FlatIR) -> IR {
             _ => None,
         })
         .for_each(|f| {
-            function_name_to_functions.entry(f.name.clone()).or_default().push(f.clone());
+            function_name_to_functions.entry(f.rs_name.clone()).or_default().push(f.clone());
         });
 
     IR {
@@ -492,7 +492,8 @@ pub enum SafetyAnnotation {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Func {
-    pub name: UnqualifiedIdentifier,
+    pub cc_name: UnqualifiedIdentifier,
+    pub rs_name: UnqualifiedIdentifier,
     pub owning_target: BazelLabel,
     pub mangled_name: Rc<str>,
     pub doc_comment: Option<Rc<str>>,
@@ -544,7 +545,7 @@ impl GenericItem for Func {
         let record: Option<Rc<str>> = ir.record_for_member_func(self).map(|r| r.debug_name(ir));
         let record: Option<&str> = record.as_deref();
 
-        let func_name = match &self.name {
+        let func_name = match &self.rs_name {
             UnqualifiedIdentifier::Identifier(id) => id.identifier.to_string(),
             UnqualifiedIdentifier::Operator(op) => op.cc_name(),
             UnqualifiedIdentifier::Destructor => {

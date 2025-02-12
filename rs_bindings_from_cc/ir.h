@@ -442,7 +442,8 @@ struct MemberFuncMetadata {
 struct Func {
   llvm::json::Value ToJson() const;
 
-  UnqualifiedIdentifier name;
+  UnqualifiedIdentifier cc_name;
+  UnqualifiedIdentifier rs_name;
   BazelLabel owning_target;
   std::optional<std::string> doc_comment;
   std::string mangled_name;

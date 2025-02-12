@@ -67,7 +67,7 @@ template <typename T>
 UnqualifiedIdentifier GetName(const T& x) {
   return x.identifier;
 }
-UnqualifiedIdentifier GetName(const Func& x) { return x.name; }
+UnqualifiedIdentifier GetName(const Func& x) { return x.cc_name; }
 UnqualifiedIdentifier GetName(const Namespace& x) { return x.name; }
 
 // Matches an IR node that has the given identifier.

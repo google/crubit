@@ -363,7 +363,8 @@ static std::string SafetyAnnotationToString(
 
 llvm::json::Value Func::ToJson() const {
   llvm::json::Object func{
-      {"name", name},
+      {"cc_name", cc_name},
+      {"rs_name", rs_name},
       {"owning_target", owning_target},
       {"doc_comment", doc_comment},
       {"mangled_name", mangled_name},
