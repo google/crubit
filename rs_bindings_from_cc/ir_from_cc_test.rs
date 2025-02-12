@@ -1136,7 +1136,8 @@ fn test_typedef() -> Result<()> {
         ir,
         quote! {
           TypeAlias {
-            identifier: "MyTypedefDecl",
+            cc_name: "MyTypedefDecl",
+            rs_name: "MyTypedefDecl",
             id: ItemId(...),
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypedefDecl."),
@@ -1151,7 +1152,8 @@ fn test_typedef() -> Result<()> {
         ir,
         quote! {
           TypeAlias {
-            identifier: "MyTypeAliasDecl",
+            cc_name: "MyTypeAliasDecl",
+            rs_name: "MyTypeAliasDecl",
             id: ItemId(...),
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypeAliasDecl."),
@@ -1184,7 +1186,7 @@ fn test_typedef_duplicate() -> Result<()> {
         ir,
         quote! {
           TypeAlias {
-            identifier: "MyTypeAlias",
+            cc_name: "MyTypeAlias",
             ...
             doc_comment: Some("First doc comment."),
             ...
@@ -1202,12 +1204,12 @@ fn test_typedef_duplicate() -> Result<()> {
         ir,
         quote! {
           TypeAlias {
-            identifier: "MyTypeAlias",
+            cc_name: "MyTypeAlias",
             ...
           }
           ...
           TypeAlias {
-            identifier: "MyTypeAlias",
+            cc_name: "MyTypeAlias",
             ...
           }
         }
@@ -1266,7 +1268,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
         ir,
         quote! {
           TypeAlias {
-            identifier: "MyTypeAlias", ...
+            cc_name: "MyTypeAlias", ...
             owning_target: BazelLabel("//test:testing_target"), ...
             doc_comment: Some("Doc comment of MyTypeAlias."), ...
             underlying_type: MappedType {
@@ -2090,7 +2092,7 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
         ir,
         quote! {
             TypeAlias { ...
-                identifier: "MyAliasOfTemplate", ...
+                cc_name: "MyAliasOfTemplate", ...
                 owning_target: BazelLabel(#dependency), ...
             }
         }
@@ -2099,7 +2101,7 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
         ir,
         quote! {
             TypeAlias { ...
-                identifier: "MyAliasOfTemplate", ...
+                cc_name: "MyAliasOfTemplate", ...
                 owning_target: BazelLabel(#current_target), ...
             }
         }
@@ -2200,7 +2202,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
         ir,
         quote! {
             TypeAlias { ...
-                identifier: "MyAliasOfTemplate", ...
+                cc_name: "MyAliasOfTemplate", ...
                 owning_target: BazelLabel(#dependency), ...
             }
         }
@@ -2209,7 +2211,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
         ir,
         quote! {
             TypeAlias { ...
-                identifier: "MyAliasOfTemplate", ...
+                cc_name: "MyAliasOfTemplate", ...
                 owning_target: BazelLabel(#current_target), ...
             }
         }
@@ -2322,7 +2324,7 @@ fn test_ignore_typedef_but_import_struct_from_c() {
 fn test_typedef_and_import_struct_from_c() {
     let ir = ir_from_cc("typedef struct MyStruct {} MyTypedef;").unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
-    assert_ir_matches!(ir, quote! { TypeAlias { identifier: "MyTypedef" ... } });
+    assert_ir_matches!(ir, quote! { TypeAlias { cc_name: "MyTypedef" ... } });
 }
 
 #[gtest]
@@ -2332,7 +2334,7 @@ fn test_import_struct_typedef_from_different_decl_context() {
     )
     .unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
-    assert_ir_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
+    assert_ir_matches!(ir, quote! { TypeAlias { cc_name: "MyStruct" ... } });
 }
 
 // TODO(b/214901011): This only worked because we didn't generate bindings for
@@ -2382,7 +2384,7 @@ fn test_ignore_typedef_but_import_union_from_c() {
 fn test_typedef_and_import_union_from_c() {
     let ir = ir_from_cc("typedef union MyUnion {} MyTypedef;").unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
-    assert_ir_matches!(ir, quote! { TypeAlias { identifier: "MyTypedef" ... } });
+    assert_ir_matches!(ir, quote! { TypeAlias { cc_name: "MyTypedef" ... } });
 }
 
 #[gtest]
@@ -2392,7 +2394,7 @@ fn test_import_union_typedef_from_different_decl_context() {
     )
     .unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
-    assert_ir_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
+    assert_ir_matches!(ir, quote! { TypeAlias { cc_name: "MyUnion" ... } });
 }
 
 // TODO(b/214901011): This only worked because we didn't generate bindings for

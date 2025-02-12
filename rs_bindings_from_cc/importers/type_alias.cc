@@ -86,7 +86,8 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   }
   ictx_.MarkAsSuccessfullyImported(decl);
   return TypeAlias{
-      .identifier = *identifier,
+      .cc_name = *identifier,
+      .rs_name = *identifier,
       .id = ictx_.GenerateItemId(decl),
       .owning_target = ictx_.GetOwningTarget(decl),
       .doc_comment = ictx_.GetComment(decl),

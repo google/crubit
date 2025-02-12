@@ -764,7 +764,8 @@ inline std::ostream& operator<<(std::ostream& o, const Record& r) {
 struct TypeAlias {
   llvm::json::Value ToJson() const;
 
-  Identifier identifier;
+  Identifier cc_name;
+  Identifier rs_name;
   ItemId id;
   BazelLabel owning_target;
   std::optional<std::string> doc_comment;

@@ -320,7 +320,7 @@ decltype(IR::items) ItemsWithoutBuiltins(const IR& ir) {
 
   for (const auto& item : ir.items) {
     if (const auto* type_alias = std::get_if<TypeAlias>(&item)) {
-      if (type_alias->identifier.Ident() == "__builtin_ms_va_list") {
+      if (type_alias->cc_name.Ident() == "__builtin_ms_va_list") {
         continue;
       }
     }

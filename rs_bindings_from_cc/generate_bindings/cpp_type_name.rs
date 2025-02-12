@@ -146,7 +146,7 @@ fn cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
             Ok(quote! { #qualifier #ident })
         }
         Item::TypeAlias(type_alias) => {
-            let ident = expect_format_cc_ident(&type_alias.identifier.identifier);
+            let ident = expect_format_cc_ident(&type_alias.cc_name.identifier);
             let qualifier = cpp_qualified_path_prefix(item, ir)?;
             Ok(quote! { #qualifier #ident })
         }

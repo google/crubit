@@ -1166,7 +1166,7 @@ impl RsTypeKind {
                 quote! { #crate_path #ident }
             }
             RsTypeKind::TypeAlias { type_alias, crate_path, .. } => {
-                let ident = make_rs_ident(&type_alias.identifier.identifier);
+                let ident = make_rs_ident(&type_alias.rs_name.identifier);
                 quote! { #crate_path #ident }
             }
             RsTypeKind::Primitive(primitive) => quote! {#primitive},

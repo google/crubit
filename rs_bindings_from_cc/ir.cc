@@ -610,7 +610,8 @@ llvm::json::Value Enum::ToJson() const {
 
 llvm::json::Value TypeAlias::ToJson() const {
   llvm::json::Object type_alias{
-      {"identifier", identifier},
+      {"cc_name", cc_name},
+      {"rs_name", rs_name},
       {"id", id},
       {"owning_target", owning_target},
       {"unknown_attr", unknown_attr},

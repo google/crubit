@@ -82,7 +82,7 @@ fn generate_type_alias(db: &dyn BindingsGenerator, type_alias: &TypeAlias) -> Re
     if rs_type_kind.is_bridge_type() {
         return Ok(ApiSnippets::default());
     }
-    let ident = make_rs_ident(&type_alias.identifier.identifier);
+    let ident = make_rs_ident(&type_alias.rs_name.identifier);
     let doc_comment = generate_doc_comment(
         type_alias.doc_comment.as_deref(),
         Some(&type_alias.source_loc),

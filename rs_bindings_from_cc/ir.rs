@@ -898,7 +898,8 @@ pub struct Enumerator {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TypeAlias {
-    pub identifier: Identifier,
+    pub cc_name: Identifier,
+    pub rs_name: Identifier,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub doc_comment: Option<Rc<str>>,
@@ -914,7 +915,7 @@ impl GenericItem for TypeAlias {
         self.id
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.identifier.identifier.clone()
+        self.rs_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Type
@@ -929,7 +930,7 @@ impl GenericItem for TypeAlias {
 
 impl Display for TypeAlias {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} ({}, {})", self.identifier, self.owning_target, self.source_loc)
+        write!(f, "{} ({}, {})", self.rs_name, self.owning_target, self.source_loc)
     }
 }
 
