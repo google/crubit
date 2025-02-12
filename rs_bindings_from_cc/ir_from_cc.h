@@ -40,6 +40,7 @@ struct IrFromCcOptions final {
   absl::Span<const std::string> extra_instantiations = {};
   absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
       crubit_features = {};
+  absl::string_view driver_path = "rs_bindings_from_cc_driver";
 
   // Not an argument, just here to prevent the options struct from being
   // copied/moved with nontrivial lifetime implications.

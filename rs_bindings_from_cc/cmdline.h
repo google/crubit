@@ -23,6 +23,7 @@ namespace crubit {
 // The command line arguments to Crubit.
 struct CmdlineArgs {
   BazelLabel current_target;
+  std::string driver_path;
   std::string cc_out;
   std::string rs_out;
   std::string ir_out;

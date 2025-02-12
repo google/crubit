@@ -220,7 +220,9 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
   if (!clang::tooling::runToolOnCodeWithArgs(
           std::make_unique<FrontendAction>(invocation),
           virtual_input_file_content, args_as_strings, kVirtualInputPath,
-          "rs_bindings_from_cc",
+          // Passing the path to the driver script here allows Clang to find the
+          // resource directory relative to this path.
+          options.driver_path,
           std::make_shared<clang::PCHContainerOperations>(), file_contents)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Could not compile header contents");

@@ -333,7 +333,9 @@ decltype(IR::items) ItemsWithoutBuiltins(const IR& ir) {
 TEST(ImporterTest, Noop) {
   // Nothing interesting there, but also not empty, so that the header gets
   // generated.
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({" "}));
+  IrFromCcOptions options;
+  options.extra_source_code_for_testing = " ";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({.extra_source_code_for_testing = " "}));
 
   EXPECT_THAT(ItemsWithoutBuiltins(ir), IsEmpty());
 }

@@ -31,6 +31,8 @@
 ABSL_FLAG(bool, do_nothing, false,
           "if set to true the tool will produce empty files "
           "(useful for testing Bazel integration)");
+ABSL_FLAG(std::string, driver_path, "",
+          "path to the rs_bindings_from_cc_driver script");
 ABSL_FLAG(std::string, rs_out, "",
           "output path for the Rust source file with bindings");
 ABSL_FLAG(std::string, cc_out, "",
@@ -181,6 +183,7 @@ absl::Status ParseTargetArgs(absl::string_view target_args_str,
 absl::StatusOr<Cmdline> Cmdline::FromFlags() {
   auto args = CmdlineArgs{
       .current_target = BazelLabel(absl::GetFlag(FLAGS_target)),
+      .driver_path = absl::GetFlag(FLAGS_driver_path),
       .cc_out = absl::GetFlag(FLAGS_cc_out),
       .rs_out = absl::GetFlag(FLAGS_rs_out),
       .ir_out = absl::GetFlag(FLAGS_ir_out),

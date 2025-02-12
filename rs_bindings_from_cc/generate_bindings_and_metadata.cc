@@ -80,7 +80,8 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                  .extra_rs_srcs = args.extra_rs_srcs,
                  .clang_args = clang_args_view,
                  .extra_instantiations = requested_instantiations,
-                 .crubit_features = args.target_to_features}));
+                 .crubit_features = args.target_to_features,
+                 .driver_path = args.driver_path}));
 
   if (!args.instantiations_out.empty()) {
     ir.crate_root_path = "__cc_template_instantiations_rs_api";
