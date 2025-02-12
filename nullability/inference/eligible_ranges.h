@@ -34,15 +34,15 @@ struct EligibleRange {
   friend void PrintTo(const EligibleRange& Range, std::ostream* OS) {
     *OS << "Slot: ";
     if (Range.Slot)
-      *OS << *Range.Slot;
+      *OS << *Range.Slot << "\n";
     else
-      *OS << "nullopt";
+      *OS << "nullopt\n";
     *OS << "USR: ";
     if (Range.USR)
-      *OS << *Range.USR;
+      *OS << *Range.USR << "\n";
     else
-      *OS << "nullopt";
-    *OS << "\nRange: {" << Range.Range.DebugString() << "}\n";
+      *OS << "nullopt\n";
+    *OS << "Range: {" << Range.Range.DebugString() << "}\n";
   }
 };
 using EligibleRanges = std::vector<EligibleRange>;
