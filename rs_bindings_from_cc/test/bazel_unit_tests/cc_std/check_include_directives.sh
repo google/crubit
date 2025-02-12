@@ -44,11 +44,8 @@ pattern="#include <\.\.\.> search starts here: \+"
 pattern+="third_party/stl/cxx17 \+"
 pattern+="third_party/stl/itanium_abi \+"
 pattern+="nowhere/llvm/src/libcxx/include \+"
-pattern+="third_party/llvm/llvm-project/clang/lib/Headers \+"
-# May contain an additional include path here.
-pattern+="\([^[:blank:]]\+ \+\)\?"
-pattern+="third_party/grte/v5_[[:alnum:]_]\+/release/usr/grte/v5/include \+"
 pattern+="nowhere/llvm/toolchain/lib/clang/google3-trunk/include \+"
+pattern+="third_party/grte/v5_[[:alnum:]_]\+/release/usr/grte/v5/include \+"
 pattern+="End of search list\."
 
 # We don't want to assume that the installed grep supports PCRE mode, so we
