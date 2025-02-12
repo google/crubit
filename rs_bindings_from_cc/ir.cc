@@ -703,7 +703,8 @@ llvm::json::Value Namespace::ToJson() const {
   }
 
   llvm::json::Object ns{
-      {"name", name},
+      {"cc_name", cc_name},
+      {"rs_name", rs_name},
       {"id", id},
       {"canonical_namespace_id", canonical_namespace_id},
       {"unknown_attr", unknown_attr},

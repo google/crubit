@@ -133,9 +133,9 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: &Namespace) -> Resu
         ir.is_last_reopened_namespace(namespace.id, namespace.canonical_namespace_id)?;
 
     let name = if is_canonical_namespace_module {
-        make_rs_ident(&namespace.name.identifier)
+        make_rs_ident(&namespace.rs_name.identifier)
     } else {
-        make_rs_ident(&format!("{}_{}", &namespace.name.identifier, reopened_namespace_idx))
+        make_rs_ident(&format!("{}_{}", &namespace.rs_name.identifier, reopened_namespace_idx))
     };
 
     let use_stmt_for_previous_namespace = if reopened_namespace_idx == 0 {
@@ -143,7 +143,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: &Namespace) -> Resu
     } else {
         let previous_namespace_ident = make_rs_ident(&format!(
             "{}_{}",
-            &namespace.name.identifier,
+            &namespace.rs_name.identifier,
             reopened_namespace_idx - 1
         ));
         // unused_imports warns a re-export of an empty module. Currently, there is no

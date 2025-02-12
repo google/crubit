@@ -62,7 +62,7 @@ class NamespaceTrie {
 
   // Creates a node from a Namespace and inserts it into the trie.
   void InsertNode(int parent_idx, const Namespace* ns) {
-    auto name = ns->name.Ident();
+    auto name = ns->cc_name.Ident();
     auto parent = &trie_nodes_[parent_idx];
     int child_idx;
     if (parent->child_name_to_idx.find(name) ==
@@ -105,7 +105,7 @@ class NamespaceTrie {
   // Creates a trie node from the top level namespace and inserts it into the
   // trie.
   void InsertTopLevel(const Namespace* ns) {
-    auto name = ns->name.Ident();
+    auto name = ns->rs_name.Ident();
     int node_idx;
     if (top_level_name_to_idx_.find(name) == top_level_name_to_idx_.end()) {
       node_idx = trie_nodes_.size();

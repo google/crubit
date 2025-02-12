@@ -2758,7 +2758,7 @@ fn test_struct_forward_declaration_in_namespace() -> Result<()> {
 
     assert_eq!(1, ir.namespaces().count());
     let ns = ir.namespaces().next().unwrap();
-    assert_eq!("MyNamespace", ns.name.identifier.as_ref());
+    assert_eq!("MyNamespace", ns.rs_name.identifier.as_ref());
     assert_eq!(1, ns.child_item_ids.len());
 
     let ns_id = ns.id;
@@ -2767,7 +2767,8 @@ fn test_struct_forward_declaration_in_namespace() -> Result<()> {
         ir,
         quote! {
             Namespace(Namespace {
-                name: "MyNamespace" ...
+                cc_name: "MyNamespace",
+                rs_name: "MyNamespace" ...
                 id: ItemId(#ns_id) ...
                 child_item_ids: [ItemId(#child_id)] ...
                 enclosing_item_id: None ...
@@ -3551,7 +3552,7 @@ fn test_top_level_items() {
               Func { ... rs_name: "top_level_func" ... }
             },
             quote! {
-              Namespace { ... name: "top_level_namespace" ... }
+              Namespace { ... rs_name: "top_level_namespace" ... }
             },
             quote! {
               Comment {
@@ -3659,7 +3660,8 @@ fn test_namespaces() {
     )
     .unwrap();
 
-    let namespace = ir.namespaces().find(|n| n.name == ir_id("test_namespace_bindings")).unwrap();
+    let namespace =
+        ir.namespaces().find(|n| n.rs_name == ir_id("test_namespace_bindings")).unwrap();
     let namespace_items =
         namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
 
@@ -3668,7 +3670,8 @@ fn test_namespaces() {
         quote! {
             ...
             Namespace {
-                name: "test_namespace_bindings" ...
+                cc_name: "test_namespace_bindings",
+                rs_name: "test_namespace_bindings" ...
                 id: ItemId(...) ...
                 canonical_namespace_id: ItemId(...) ...
                 owning_target: BazelLabel("//test:testing_target") ...
@@ -3694,7 +3697,7 @@ fn test_namespaces() {
               Func { ... rs_name: "function_within_namespace" ... }
             },
             quote! {
-              Namespace { ... name: "inner_namespace" ... }
+              Namespace { ... rs_name: "inner_namespace" ... }
             },
             quote! {
               Comment {
@@ -3715,18 +3718,19 @@ fn test_nested_namespace_definition() {
     )
     .unwrap();
 
-    let namespace = ir.namespaces().find(|n| n.name == ir_id("test_namespace_bindings")).unwrap();
+    let namespace =
+        ir.namespaces().find(|n| n.rs_name == ir_id("test_namespace_bindings")).unwrap();
     let namespace_items =
         namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
 
     assert_items_match!(
         namespace_items,
         vec![quote! {
-          Namespace { ... name: "inner" ... }
+          Namespace { ... rs_name: "inner" ... }
         },]
     );
 
-    let inner_namespace = ir.namespaces().find(|n| n.name == ir_id("inner")).unwrap();
+    let inner_namespace = ir.namespaces().find(|n| n.rs_name == ir_id("inner")).unwrap();
     let inner_namespace_items =
         inner_namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
 
@@ -3762,14 +3766,15 @@ fn test_enclosing_item_ids() {
     )
     .unwrap();
 
-    let namespace = ir.namespaces().find(|n| n.name == ir_id("test_namespace_bindings")).unwrap();
+    let namespace =
+        ir.namespaces().find(|n| n.rs_name == ir_id("test_namespace_bindings")).unwrap();
     let namespace_items: Vec<&Item> =
         namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
 
     assert_eq!(namespace.enclosing_item_id, None);
     assert!(namespace_items.iter().all(|item| item.enclosing_item_id() == Some(namespace.id)));
 
-    let inner_namespace = ir.namespaces().find(|n| n.name == ir_id("inner")).unwrap();
+    let inner_namespace = ir.namespaces().find(|n| n.rs_name == ir_id("inner")).unwrap();
     let inner_namespace_items: Vec<&Item> =
         inner_namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
 
@@ -3810,7 +3815,8 @@ fn test_namespace_canonical_id() {
         quote! {
             ...
             Namespace {
-                name: "test_namespace_bindings" ...
+                cc_name: "test_namespace_bindings",
+                rs_name: "test_namespace_bindings" ...
                 id: ItemId(...) ...
                 canonical_namespace_id: ItemId(...) ...
             }
@@ -3843,19 +3849,19 @@ fn test_reopened_namespaces() {
         quote! {
             ...
             Namespace(Namespace {
-                name: "test_namespace_bindings" ...
+                cc_name: "test_namespace_bindings" ...
             })
             ...
             Namespace(Namespace {
-              name: "inner" ...
+              cc_name: "inner" ...
             })
             ...
             Namespace(Namespace {
-              name: "test_namespace_bindings" ...
+              cc_name: "test_namespace_bindings" ...
             })
             ...
             Namespace(Namespace {
-              name: "inner" ...
+              cc_name: "inner" ...
             })
             ...
         }
@@ -3877,7 +3883,7 @@ fn test_namespace_stored_data_in_ir() {
     .unwrap();
 
     let outer_namespaces =
-        ir.namespaces().filter(|ns| ns.name == ir_id("test_namespace_bindings")).collect_vec();
+        ir.namespaces().filter(|ns| ns.rs_name == ir_id("test_namespace_bindings")).collect_vec();
     assert_eq!(outer_namespaces.len(), 2);
 
     assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[0].id).unwrap(), 0);
@@ -3896,7 +3902,7 @@ fn test_namespace_stored_data_in_ir() {
         )
         .unwrap());
 
-    let inner_namespaces = ir.namespaces().filter(|ns| ns.name == ir_id("inner")).collect_vec();
+    let inner_namespaces = ir.namespaces().filter(|ns| ns.rs_name == ir_id("inner")).collect_vec();
     assert_eq!(inner_namespaces.len(), 3);
 
     assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[0].id).unwrap(), 0);
@@ -3981,10 +3987,10 @@ fn test_inline_namespace() {
         quote! {
             ...
             Namespace(Namespace {
-                name: "test_namespace_bindings" ...
+                cc_name: "test_namespace_bindings" ...
             }) ...
             Namespace(Namespace {
-                name: "inner" ...
+                cc_name: "inner" ...
             }) ...
         }
     );
@@ -4083,7 +4089,8 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
             items: [
                 ...
                 Namespace(Namespace {
-                    name: "ns" ...
+                    cc_name: "ns",
+                    rs_name: "ns" ...
                     child_item_ids: [ItemId(#function_id)] ...
                     enclosing_item_id: None ...
                 }),
@@ -4093,7 +4100,8 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
                     enclosing_item_id: Some(ItemId(...)) ...
                 }),
                 Namespace(Namespace {
-                    name: "ns" ...
+                    cc_name: "ns",
+                    rs_name: "ns" ...
                     child_item_ids: [] ...
                 }),
             ]

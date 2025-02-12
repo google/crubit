@@ -46,7 +46,8 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
         namespace_decl, UnsupportedItem::Kind::kType, std::nullopt,
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
-  return Namespace{.name = *identifier,
+  return Namespace{.cc_name = *identifier,
+                   .rs_name = *identifier,
                    .id = ictx_.GenerateItemId(namespace_decl),
                    .canonical_namespace_id =
                        ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()),

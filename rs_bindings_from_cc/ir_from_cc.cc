@@ -63,7 +63,7 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
     // it will serve as the canonical namespace without any number suffix in
     // the name.
     if (top_level_item_id_set.contains(ns->id)) {
-      name_to_top_level_ns[ns->name.Ident()] = ns->id;
+      name_to_top_level_ns[ns->cc_name.Ident()] = ns->id;
     }
     id_to_namespace.insert({ns->id, ns});
   }
@@ -87,7 +87,7 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
       bool found = false;
       for (auto child_id : id_to_namespace[ns_id]->child_item_ids) {
         if (id_to_namespace.contains(child_id) &&
-            id_to_namespace[child_id]->name.Ident() == part) {
+            id_to_namespace[child_id]->cc_name.Ident() == part) {
           ns_id = child_id;
           found = true;
           break;

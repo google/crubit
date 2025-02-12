@@ -1100,7 +1100,8 @@ impl GenericItem for Comment {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Namespace {
-    pub name: Identifier,
+    pub cc_name: Identifier,
+    pub rs_name: Identifier,
     pub id: ItemId,
     pub canonical_namespace_id: ItemId,
     /// A human-readable list of attributes that Crubit doesn't understand.
@@ -1117,7 +1118,7 @@ impl GenericItem for Namespace {
         self.id
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.name.to_string().into()
+        self.rs_name.to_string().into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Type
@@ -1676,7 +1677,7 @@ impl IR {
         while let Some(parent_id) = enclosing_item_id {
             match self.find_decl(parent_id).expect("No item found for enclosing_item_id") {
                 Item::Namespace(ns) => {
-                    namespaces.push(ns.name.identifier.clone());
+                    namespaces.push(ns.rs_name.identifier.clone());
                     enclosing_item_id = ns.enclosing_item_id;
                 }
                 // TODO(b/200067824): This can lead to bugs, if this is used without checking for a

@@ -896,7 +896,8 @@ inline std::ostream& operator<<(std::ostream& o, const Comment& r) {
 struct Namespace {
   llvm::json::Value ToJson() const;
 
-  Identifier name;
+  Identifier cc_name;
+  Identifier rs_name;
   ItemId id;
   ItemId canonical_namespace_id;
   std::optional<std::string> unknown_attr;

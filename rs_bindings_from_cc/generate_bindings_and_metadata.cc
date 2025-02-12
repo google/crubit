@@ -27,7 +27,7 @@ namespace crubit {
 std::optional<const Namespace*> FindNamespace(const IR& ir,
                                               absl::string_view name) {
   for (const auto* ns : ir.get_items_if<Namespace>()) {
-    if (ns->name.Ident() == kInstantiationsNamespaceName) {
+    if (ns->cc_name.Ident() == kInstantiationsNamespaceName) {
       return ns;
     }
   }
