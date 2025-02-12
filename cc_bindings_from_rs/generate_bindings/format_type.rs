@@ -515,6 +515,22 @@ fn format_core_alias_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: SugaredTy<'tcx>,
 ) -> Option<CcSnippet> {
+    use rustc_hir::definitions::{DefPathData::TypeNs, DisambiguatedDefPathData};
+    fn matches_type_path(actual: &[DisambiguatedDefPathData], expected: &[&str]) -> bool {
+        if actual.len() != expected.len() {
+            return false;
+        }
+        for i in 0..actual.len() {
+            let TypeNs(actual_elem) = actual[i].data else {
+                return false;
+            };
+            if actual_elem.as_str() != expected[i] {
+                return false;
+            }
+        }
+        true
+    }
+
     let tcx = db.tcx();
     let hir_ty = ty.hir(db)?;
     let rustc_hir::TyKind::Path(rustc_hir::QPath::Resolved(None, path)) = &hir_ty.kind else {
@@ -530,13 +546,14 @@ fn format_core_alias_for_cc<'tcx>(
     if tcx.crate_name(def_path.krate) != sym::core {
         return None;
     };
-    let [module, item] = def_path.data.as_slice() else {
+    let [module_path @ .., item] = def_path.data.as_slice() else { return None };
+    // Primitives are defined in both `core::ffi` and `core::ffi::primitives
+    if !matches_type_path(module_path, &["ffi"])
+        && !matches_type_path(module_path, &["ffi", "primitives"])
+    {
         return None;
-    };
-    if module.data != rustc_hir::definitions::DefPathData::TypeNs(sym::ffi) {
-        return None;
-    };
-    let rustc_hir::definitions::DefPathData::TypeNs(item) = item.data else {
+    }
+    let TypeNs(item) = item.data else {
         return None;
     };
     let cpp_type = match item.as_str() {
