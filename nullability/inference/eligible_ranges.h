@@ -15,6 +15,7 @@
 #include "nullability/inference/usr_cache.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/DeclBase.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
@@ -60,15 +61,16 @@ EligibleRanges getEligibleRanges(const Decl& D,
 EligibleRanges getInferenceRanges(const Decl& D,
                                   const TypeNullabilityDefaults& Defaults);
 
-/// Collects the ranges of types written in the given AST that are eligible for
-/// nullability annotations.
+/// Runs `Func` with an EligibleRange for each type written in the given AST
+/// that is eligible for a nullability annotation.
 ///
-/// Sets the `USR` for each EligibleRange if `USRs` is not null and the USR can
-/// be retrieved from `USRs` or be generated.
-EligibleRanges getEligibleRanges(ASTContext& Ctx,
-                                 const TypeNullabilityDefaults& Defaults,
-                                 absl::Nullable<USRCache*> USRs = nullptr,
-                                 bool RestrictToMainFileOrHeader = false);
+/// Includes the `USR` in each EligibleRange if `USRs` is not null and the USR
+/// can be retrieved from `USRs` or be generated.
+void forAllEligibleRanges(llvm::function_ref<void(const EligibleRange&)> Func,
+                          ASTContext& Ctx,
+                          const TypeNullabilityDefaults& Defaults,
+                          absl::Nullable<USRCache*> USRs = nullptr,
+                          bool RestrictToMainFileOrHeader = false);
 
 /// Return the given string ref without any escaped newline prefixes.
 /// Does not support backslashes spelled with trigraphs.

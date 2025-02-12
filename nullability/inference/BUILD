@@ -2,6 +2,7 @@
 
 load("@bazel_tools//tools/build_defs/cc:cc_embed_data.bzl", "cc_embed_data")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("//third_party/bazel_rules/rules_cc/cc:cc_library.bzl", "cc_library")
 load("//third_party/protobuf/bazel:proto_library.bzl", "proto_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -168,6 +169,7 @@ cc_test(
     deps = [
         ":augmented_test_inputs",
         ":eligible_ranges",
+        ":eligible_ranges_for_test",
         ":inference_cc_proto",
         "//nullability:pragma",
         "//nullability:proto_matchers",
@@ -306,6 +308,17 @@ cc_library(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:index",
         "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "eligible_ranges_for_test",
+    testonly = True,
+    hdrs = ["eligible_ranges_for_test.h"],
+    deps = [
+        ":eligible_ranges",
+        "//nullability:type_nullability",
+        "@llvm-project//clang:ast",
     ],
 )
 

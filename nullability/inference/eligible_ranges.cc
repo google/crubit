@@ -4,10 +4,8 @@
 
 #include "nullability/inference/eligible_ranges.h"
 
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
-#include <iterator>
 #include <memory>
 #include <optional>
 #include <string>
@@ -43,6 +41,7 @@
 #include "clang/Lex/Lexer.h"
 #include "clang/Lex/Token.h"
 #include "clang/Tooling/Transformer/SourceCode.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -538,13 +537,17 @@ EligibleRanges getInferenceRanges(const Decl &D,
 
 namespace {
 struct Walker : public RecursiveASTVisitor<Walker> {
-  Walker(const TypeNullabilityDefaults &Defaults,
+  Walker(llvm::function_ref<void(const EligibleRange &)> Func,
+         const TypeNullabilityDefaults &Defaults,
          std::unique_ptr<LocFilter> LocFilter, absl::Nullable<USRCache *> USRs)
-      : Defaults(Defaults), LocFilter(std::move(LocFilter)), USRs(USRs) {}
+      : Func(Func),
+        Defaults(Defaults),
+        LocFilter(std::move(LocFilter)),
+        USRs(USRs) {}
 
+  llvm::function_ref<void(const EligibleRange &)> Func;
   // Must outlive the walker.
   const TypeNullabilityDefaults &Defaults;
-  EligibleRanges Out;
   std::unique_ptr<LocFilter> LocFilter;
   // Must outlive the walker.
   absl::Nullable<USRCache *> USRs;
@@ -566,8 +569,9 @@ struct Walker : public RecursiveASTVisitor<Walker> {
       }
     }
 
-    Out.reserve(Out.size() + Ranges.size());
-    std::move(Ranges.begin(), Ranges.end(), std::back_inserter(Out));
+    for (const EligibleRange &Range : Ranges) {
+      Func(Range);
+    }
   }
 
   bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
@@ -601,15 +605,15 @@ struct Walker : public RecursiveASTVisitor<Walker> {
 };
 }  // namespace
 
-EligibleRanges getEligibleRanges(ASTContext &Ctx,
-                                 const TypeNullabilityDefaults &Defaults,
-                                 absl::Nullable<USRCache *> USRs,
-                                 bool RestrictToMainFileOrHeader) {
-  Walker W(Defaults,
+void forAllEligibleRanges(llvm::function_ref<void(const EligibleRange &)> Func,
+                          ASTContext &Ctx,
+                          const TypeNullabilityDefaults &Defaults,
+                          absl::Nullable<USRCache *> USRs,
+                          bool RestrictToMainFileOrHeader) {
+  Walker W(Func, Defaults,
            getLocFilter(Ctx.getSourceManager(), RestrictToMainFileOrHeader),
            USRs);
   W.TraverseAST(Ctx);
-  return std::move(W.Out);
 }
 
 }  // namespace clang::tidy::nullability

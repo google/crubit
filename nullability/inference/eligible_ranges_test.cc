@@ -12,6 +12,7 @@
 #include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
 #include "nullability/inference/augmented_test_inputs.h"
+#include "nullability/inference/eligible_ranges_for_test.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/pragma.h"
 #include "nullability/proto_matchers.h"
