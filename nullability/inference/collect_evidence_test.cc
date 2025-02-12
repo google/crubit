@@ -1635,6 +1635,30 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
                            evidence(_, _, functionNamed("operator="))));
 }
 
+TEST(SmartPointerCollectEvidenceFromDefinitionTest,
+     DefaultFieldInitializerAbsentUnknownAssignmentInConstructor) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    std::unique_ptr<int> getUnknown();
+
+    struct Target {
+      Target() { I = getUnknown(); }
+      std::unique_ptr<int> I;
+    };
+  )cc";
+
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
+      // By the end of the constructor body, the field is no longer default
+      // initialized to null, but is assigned from an unknown.
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                                    fieldNamed("Target::I")),
+                           // evidence for the move assignment operator for
+                           // unique_ptr, which we don't care much about.
+                           evidence(_, _, functionNamed("operator="))));
+}
+
 // This is a crash repro.
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,
      CopyConstructorExitingWithUnmodeledField) {

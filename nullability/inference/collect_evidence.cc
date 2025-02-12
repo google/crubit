@@ -1402,6 +1402,7 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference() {
 // exit block of the constructor body.
 static void collectEvidenceFromConstructorExitBlock(
     const clang::Decl &MaybeConstructor, const Environment &ExitEnv,
+    const Formula &InferableSlotsConstraint,
     llvm::function_ref<EvidenceEmitter> Emit) {
   auto *Ctor = dyn_cast<CXXConstructorDecl>(&MaybeConstructor);
   if (!Ctor) return;
@@ -1448,7 +1449,7 @@ static void collectEvidenceFromConstructorExitBlock(
     // here.
     if (!hasPointerNullState(*PV)) return;
 
-    if (isNullable(*PV, ExitEnv)) {
+    if (isNullable(*PV, ExitEnv, &InferableSlotsConstraint)) {
       Emit(*Field, Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
            Ctor->isImplicit() ? Field->getBeginLoc() : Ctor->getBeginLoc());
     }
@@ -1646,7 +1647,7 @@ llvm::Error collectEvidenceFromDefinition(
   if (std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>
           &ExitBlockResult = Results[ACFG->getCFG().getExit().getBlockID()]) {
     collectEvidenceFromConstructorExitBlock(Definition, ExitBlockResult->Env,
-                                            Emit);
+                                            InferableSlotsConstraint, Emit);
   }
 
   return llvm::Error::success();
