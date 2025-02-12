@@ -61,6 +61,16 @@ TEST(PrimitiveTypesTest, MaybeUninitTest) {
   static_assert(std::is_same_v<int32_t*, decltype(ptr_mut)>);
 }
 
+TEST(PrimitiveTypesTest, ArgumentTypes) {
+  namespace types = primitive_types::argument_types;
+
+  char* c_char_ptr = nullptr;
+  types::c_char_ptr_arg(c_char_ptr);
+
+  char* c_char_mut_ptr = nullptr;
+  types::c_char_mut_ptr_arg(c_char_mut_ptr);
+}
+
 TEST(PrimitiveTypesTest, ReturnTypes) {
   namespace types = primitive_types::return_types;
 
@@ -74,6 +84,13 @@ TEST(PrimitiveTypesTest, ReturnTypes) {
 
   static_assert(std::is_same_v<decltype(types::c_char()), char>);
   EXPECT_EQ(types::c_char(), 0);
+
+  static_assert(std::is_same_v<decltype(types::c_char_mut_ptr()), char*>);
+  EXPECT_EQ(types::c_char_mut_ptr(), nullptr);
+
+  static_assert(
+      std::is_same_v<decltype(types::c_char_const_ptr()), const char*>);
+  EXPECT_EQ(types::c_char_const_ptr(), nullptr);
 
   static_assert(std::is_same_v<decltype(types::c_schar()), signed char>);
   EXPECT_EQ(types::c_schar(), 0);
@@ -156,6 +173,7 @@ TEST(PrimitiveTypesTest, FieldTypes) {
   static_assert(std::is_same_v<decltype(Types::c_void_const_ptr), const void*>);
 
   static_assert(std::is_same_v<decltype(Types::c_char), char>);
+
   static_assert(std::is_same_v<decltype(Types::c_schar), signed char>);
   static_assert(std::is_same_v<decltype(Types::c_uchar), unsigned char>);
   static_assert(std::is_same_v<decltype(Types::c_short), short>);

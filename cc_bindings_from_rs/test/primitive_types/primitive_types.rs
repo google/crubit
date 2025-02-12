@@ -53,6 +53,13 @@ pub mod test_maybe_uninit {
 extern "C" fn i8_func(_: i8) {}
 extern "C" fn c_char_func(_: core::ffi::c_char) {}
 
+pub mod argument_types {
+    use core::ffi;
+
+    pub fn c_char_ptr_arg(_: *const ffi::c_char) {}
+    pub fn c_char_mut_ptr_arg(_: *mut ffi::c_char) {}
+}
+
 pub mod return_types {
     use core::ffi;
 
@@ -67,6 +74,13 @@ pub mod return_types {
     pub fn c_char() -> ffi::c_char {
         0
     }
+    pub fn c_char_mut_ptr() -> *mut ffi::c_char {
+        core::ptr::null_mut()
+    }
+    pub fn c_char_const_ptr() -> *const ffi::c_char {
+        core::ptr::null()
+    }
+
     pub fn c_schar() -> ffi::c_schar {
         0
     }
