@@ -1777,20 +1777,25 @@ void collectEvidenceFromTargetDeclaration(
   }
 }
 
-EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
-                                      bool RestrictToMainFileOrHeader) {
+void EvidenceSites::forDefinitionsAndForDeclarations(
+    ForEach ForDefinitions, ForEach ForDeclarations, ASTContext &Ctx,
+    bool RestrictToMainFileOrHeader) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
-    Walker(std::unique_ptr<LocFilter> LocFilter)
-        : LocFilter(std::move(LocFilter)) {}
+    Walker(ForEach ForDefinitions, ForEach ForDeclarations,
+           std::unique_ptr<LocFilter> LocFilter)
+        : ForDefinitions(ForDefinitions),
+          ForDeclarations(ForDeclarations),
+          LocFilter(std::move(LocFilter)) {}
 
-    EvidenceSites Out;
+    ForEach ForDefinitions;
+    ForEach ForDeclarations;
     std::unique_ptr<LocFilter> LocFilter;
 
     bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
       if (!LocFilter->check(FD->getBeginLoc())) {
         return true;
       }
-      if (isInferenceTarget(*FD)) Out.Declarations.insert(FD);
+      if (isInferenceTarget(*FD)) ForDeclarations(*FD);
 
       // Visiting template instantiations is fine, these are valid functions!
       // But we'll be limited in what we can infer.
@@ -1804,7 +1809,7 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
           (!FD->isImplicit() ||
            (isa<CXXConstructorDecl>(FD) &&
             cast<CXXConstructorDecl>(FD)->isDefaultConstructor()));
-      if (IsUsefulDefinition) Out.Definitions.insert(FD);
+      if (IsUsefulDefinition) ForDefinitions(*FD);
 
       return true;
     }
@@ -1813,7 +1818,7 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
       if (!LocFilter->check(FD->getBeginLoc())) {
         return true;
       }
-      if (isInferenceTarget(*FD)) Out.Declarations.insert(FD);
+      if (isInferenceTarget(*FD)) ForDeclarations(*FD);
       return true;
     }
 
@@ -1822,21 +1827,31 @@ EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
         return true;
       }
       if (isInferenceTarget(*VD)) {
-        Out.Declarations.insert(VD);
+        ForDeclarations(*VD);
       }
       // Variable initializers outside of function bodies may contain evidence
       // we won't otherwise see, even if the variable is not an inference
       // target.
       if (VD->hasInit() && !VD->isTemplated() &&
           (!VD->getDeclContext()->isFunctionOrMethod() || VD->isInitCapture()))
-        Out.Definitions.insert(VD);
+        ForDefinitions(*VD);
       return true;
     }
   };
 
-  Walker W(getLocFilter(Ctx.getSourceManager(), RestrictToMainFileOrHeader));
+  Walker W(ForDefinitions, ForDeclarations,
+           getLocFilter(Ctx.getSourceManager(), RestrictToMainFileOrHeader));
   W.TraverseAST(Ctx);
-  return std::move(W.Out);
+}
+
+EvidenceSites EvidenceSites::discover(ASTContext &Ctx,
+                                      bool RestrictToMainFileOrHeader) {
+  EvidenceSites Out;
+  forDefinitionsAndForDeclarations(
+      [&Out](const Decl &D) { Out.Definitions.insert(&D); },
+      [&Out](const Decl &D) { Out.Declarations.insert(&D); }, Ctx,
+      RestrictToMainFileOrHeader);
+  return Out;
 }
 
 }  // namespace clang::tidy::nullability

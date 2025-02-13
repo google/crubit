@@ -149,12 +149,12 @@ void collectEvidenceFromTargetDeclaration(const clang::Decl &,
 /// inference.
 struct EvidenceSites {
   /// Declarations of inferable symbols.
-  llvm::DenseSet<const Decl *> Declarations;
+  llvm::DenseSet<const Decl * absl_nonnull> Declarations;
   /// Definitions (e.g. function body, variable initializer) that can be
   /// analyzed.
   /// This will always be concrete code, not a template pattern. These may be
   /// passed to collectEvidenceFromDefinition().
-  llvm::DenseSet<const Decl *> Definitions;
+  llvm::DenseSet<const Decl * absl_nonnull> Definitions;
 
   /// Find the evidence sites within the provided AST. If
   /// RestrictToMainFileOrHeader is true, only looks for evidence sites in the
@@ -162,6 +162,16 @@ struct EvidenceSites {
   /// considered to be in the main file or header.
   static EvidenceSites discover(ASTContext &,
                                 bool RestrictToMainFileOrHeader = false);
+
+  using ForEach = llvm::function_ref<void(const Decl &)>;
+  /// For each evidence site with the provided AST, calls the provided
+  /// callback(s). A single Decl may be passed to both callbacks if it is also a
+  /// useful definition. If RestrictToMainFileOrHeader is true, only looks for
+  /// evidence sites in the main file or its associated header. Implicit
+  /// declarations are never considered to be in the main file or header.
+  static void forDefinitionsAndForDeclarations(
+      ForEach ForDefinitions, ForEach ForDeclarations, ASTContext &Ctx,
+      bool RestrictToMainFileOrHeader = false);
 };
 
 /// Returns the slot number for the I'th parameter (0-based).
