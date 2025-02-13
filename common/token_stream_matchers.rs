@@ -159,6 +159,11 @@ pub mod internal {
               Or maybe you want to use `TokenStream::is_empty`?)"
         );
 
+        if token_stream_matchers_fastpath::match_tokens_fast(input, pattern).is_ok() {
+            return Ok(());
+        }
+        // The error messages are still better than the ones from the fastpath, so we use them below.
+
         let iter = input.clone().into_iter();
         let mut best_mismatch = Mismatch::for_no_partial_match();
 
@@ -166,7 +171,9 @@ pub mod internal {
         while let Some(mut iter) = stack.pop() {
             loop {
                 match match_prefix(iter.clone(), pattern.clone(), false) {
-                    MatchInfo::Match { input_suffix: _ } => return Ok(()),
+                    MatchInfo::Match { input_suffix: _ } => {
+                        panic!("Internal error: fastpath failed to match, but slow path succeeded")
+                    }
                     MatchInfo::Mismatch(mismatch) => {
                         if best_mismatch.match_length < mismatch.match_length {
                             best_mismatch = mismatch
@@ -197,7 +204,7 @@ pub mod internal {
         pattern: &TokenStream,
         to_string_fn: fn(TokenStream) -> Result<String>,
     ) -> Result<()> {
-        if match_tokens(input, pattern, to_string_fn).is_ok() {
+        if token_stream_matchers_fastpath::match_tokens_fast(input, pattern).is_ok() {
             let input_string = to_string_fn(input.clone())?;
             Err(anyhow!(format!(
                 "input unexpectedly matched the pattern. input:\n\n```\n{}\n```",
@@ -208,13 +215,11 @@ pub mod internal {
         }
     }
 
-    // This implementation uses naive backtracking algorithm that is in the worst
-    // case O(2^n) in the number of wildcards. In practice this is not so bad
-    // because wildcards only match their current group, they don't descend into
-    // subtrees and they don't match outside. Still, it may be possible to
-    // reimplement this using NFA and end up with simpler, more regular code
-    // while still providing reasonable error messages on mismatch.
-    // TODO(hlopko): Try to reimplement matching using NFA.
+    // This implementation uses a naive backtracking algorithm that is in the worst
+    // case O(2^n) in the number of wildcards. There is a parallel implementation, in fastpath,
+    // which uses a finite state automaton and is O(n), but it produces worse error messages.
+    // So, when tests are failing, they fall back to this implementation, which is significantly
+    // slower (at least 10x slower, probably more), but gives better error messages.
     fn match_prefix(
         input: impl Iterator<Item = TokenTree> + Clone,
         pattern: TokenStream,
@@ -230,7 +235,7 @@ pub mod internal {
             }
         };
         while let Some(actual_token) = input_iter.next() {
-            if is_whitespace_token(&actual_token) {
+            if token_stream_matchers_fastpath::is_whitespace_token(&actual_token) {
                 continue;
             }
 
@@ -325,10 +330,6 @@ pub mod internal {
         iter::once(token).chain(iter).collect::<TokenStream>()
     }
 
-    fn is_whitespace_token(token: &TokenTree) -> bool {
-        matches!(token, TokenTree::Ident(id) if id == "__NEWLINE__" || id == "__SPACE__")
-    }
-
     fn is_wildcard(pattern: TokenStream) -> bool {
         format!("{}", pattern) == "..."
     }
@@ -364,7 +365,9 @@ pub mod internal {
                         if input_suffix
                             .clone()
                             .into_iter()
-                            .filter(|token| !is_whitespace_token(token))
+                            .filter(|token| {
+                                !token_stream_matchers_fastpath::is_whitespace_token(token)
+                            })
                             .count()
                             != 0
                         {

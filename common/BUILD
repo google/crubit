@@ -250,6 +250,7 @@ rust_library(
         "//:__subpackages__",
     ],
     deps = [
+        ":token_stream_matchers_fastpath",
         ":token_stream_printer",
         "@crate_index//:anyhow",
         "@crate_index//:proc-macro2",
@@ -258,6 +259,7 @@ rust_library(
 
 crubit_rust_test(
     name = "token_stream_matchers_test",
+    timeout = "short",
     crate = ":token_stream_matchers",
     tags = [
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
@@ -265,6 +267,18 @@ crubit_rust_test(
     deps = [
         "@crate_index//:googletest",
         "@crate_index//:quote",
+    ],
+)
+
+rust_library(
+    name = "token_stream_matchers_fastpath",
+    testonly = 1,
+    srcs = ["token_stream_matchers_fastpath.rs"],
+    visibility = ["//visibility:private"],
+    deps = [
+        ":token_stream_printer",
+        "@crate_index//:anyhow",
+        "@crate_index//:proc-macro2",
     ],
 )
 
