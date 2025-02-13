@@ -18,12 +18,12 @@ use database::{FineGrainedFeature, FullyQualifiedName, SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::TokenStream;
 use quote::quote;
+use rustc_abi::{BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
 use rustc_hir::def::Res;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
-use rustc_target::abi::{BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
 use std::rc::Rc;
 
 pub fn format_top_level_ns_for_crate(db: &dyn BindingsGenerator<'_>, krate: CrateNum) -> Symbol {
@@ -464,7 +464,7 @@ pub fn format_ty_for_cc<'tcx>(
             // `is_thunk_required` check above implies `extern "C"` (or `"C-unwind"`).
             // This assertion reinforces that the generated C++ code doesn't need
             // to use calling convention attributes like `_stdcall`, etc.
-            assert!(matches!(sig.abi, rustc_target::spec::abi::Abi::C { .. }));
+            assert!(matches!(sig.abi, rustc_abi::ExternAbi::C { .. }));
 
             // C++ references are not rebindable and therefore can't be used to replicate
             // semantics of Rust field types (or, say, element types of Rust

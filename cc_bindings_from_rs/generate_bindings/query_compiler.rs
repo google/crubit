@@ -8,6 +8,8 @@
 
 use arc_anyhow::Result;
 use error_report::anyhow;
+use rustc_abi::IntegerType;
+use rustc_abi::{FieldIdx, FieldsShape, Integer, Layout, Primitive, Scalar, Variants};
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
 use rustc_attr_data_structures::IntType;
 use rustc_hir::def::DefKind;
@@ -15,8 +17,6 @@ use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::ty::{self, IntTy, Region, Ty, TyCtxt, UintTy};
 use rustc_span::def_id::{DefId, LocalDefId, LocalModDefId};
 use rustc_span::symbol::Symbol;
-use rustc_target::abi::IntegerType;
-use rustc_target::abi::{FieldIdx, FieldsShape, Integer, Layout, Primitive, Scalar, Variants};
 use rustc_trait_selection::infer::InferCtxtExt;
 use std::collections::HashMap;
 use std::rc::Rc;

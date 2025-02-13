@@ -46,6 +46,7 @@ use query_compiler::{
     public_free_items_in_mod, repr_attrs,
 };
 use quote::{format_ident, quote};
+use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
 use rustc_attr_parsing::find_deprecation;
 use rustc_hir::def::{DefKind, Res};
 use rustc_hir::{Item, ItemKind, Node, UseKind, UsePath};
@@ -54,7 +55,6 @@ use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
-use rustc_target::abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;

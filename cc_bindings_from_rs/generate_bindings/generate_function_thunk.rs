@@ -361,12 +361,12 @@ pub fn is_thunk_required(sig: &ty::FnSig) -> Result<()> {
         // "C" ABI is okay: since https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html has been
         // accepted, a Rust panic that "escapes" a "C" ABI function is a defined crash. See
         // https://doc.rust-lang.org/nomicon/ffi.html#ffi-and-unwinding.
-        rustc_target::spec::abi::Abi::C { unwind: false } => (),
+        rustc_abi::ExternAbi::C { unwind: false } => (),
 
         // This requires a thunk if the calling C++ frames use `-fno-exceptions`, as it is
         // UB. However, we leave this to the caller: if you use `extern "C-unwind"`, we assume you
         // know what you are doing and do not block you from integrating with exception-enabled C++.
-        rustc_target::spec::abi::Abi::C { unwind: true } => (),
+        rustc_abi::ExternAbi::C { unwind: true } => (),
 
         // All other ABIs trigger thunk generation.  This covers Rust ABI functions, but also
         // ABIs that theoretically are understood both by C++ and Rust (e.g. see
