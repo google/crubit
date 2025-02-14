@@ -134,7 +134,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
     absl::Nonnull<const Expr *> RHS, const Environment &Env, ASTContext &Ctx,
     PointerNullabilityDiagnostic::Context DiagCtx,
     absl::Nullable<const clang::NamedDecl *> Callee = nullptr,
-    absl::Nullable<const clang::IdentifierInfo *> ParamName = nullptr) {
+    absl::Nullable<const clang::IdentifierInfo *> ParamName = nullptr,
+    CharSourceRange LHSRange = {}) {
   LHSType = LHSType.getNonReferenceType();
   // For now, we just check whether the top-level pointer type is compatible.
   // TODO: examine inner nullability too, considering variance.
@@ -144,7 +145,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
   if (!RHSType->isNullPtrType() && !isSupportedPointerType(RHSType)) return {};
 
   return LHSNullability.front().concrete() == NullabilityKind::NonNull
-             ? diagnoseNonnullExpected(RHS, Env, DiagCtx, Callee, ParamName)
+             ? diagnoseNonnullExpected(RHS, Env, DiagCtx, Callee, ParamName,
+                                       LHSRange)
              : SmallVector<PointerNullabilityDiagnostic>{};
 }
 
@@ -583,9 +585,24 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   CHECK(CI->isAnyMemberInitializer());
   auto *Member = CI->getAnyMember();
+  const auto *InitExpr = CI->getInit();
+  // Sometimes the initializing expression is a call to the default constructor
+  // of a member (often in the default constructor of the member's parent class)
+  // in which case the diagnostic will simply highlight the start of the
+  // member's parent constructor, potentially confusing the developer. In such
+  // cases, we want the diagnostic to instead highlight the member that is being
+  // initialized.
+  if (!CI->isWritten() && dyn_cast<CXXConstructExpr>(InitExpr)) {
+    return diagnoseAssignmentLike(
+        Member->getType(),
+        getTypeNullability(*Member, State.Lattice.defaults()), InitExpr,
+        State.Env, *Result.Context,
+        PointerNullabilityDiagnostic::Context::InitializerLHS, nullptr, nullptr,
+        CharSourceRange::getTokenRange(Member->getSourceRange()));
+  }
   return diagnoseAssignmentLike(
       Member->getType(), getTypeNullability(*Member, State.Lattice.defaults()),
-      CI->getInit(), State.Env, *Result.Context,
+      InitExpr, State.Env, *Result.Context,
       PointerNullabilityDiagnostic::Context::Initializer);
 }
 
