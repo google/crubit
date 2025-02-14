@@ -5,7 +5,7 @@
 use database::code_snippet::{Bindings, FfiBindings};
 use database::db::FatalErrors;
 use error_report::{ErrorReport, ErrorReporting};
-use ffi_types::{FfiU8Slice, FfiU8SliceBox, SourceLocationDocComment};
+use ffi_types::{Environment, FfiU8Slice, FfiU8SliceBox};
 use generate_bindings::generate_bindings;
 use std::ffi::OsString;
 use std::panic::catch_unwind;
@@ -42,7 +42,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     rustfmt_exe_path: FfiU8Slice,
     rustfmt_config_path: FfiU8Slice,
     generate_error_report: bool,
-    generate_source_loc_doc_comment: SourceLocationDocComment,
+    environment: Environment,
 ) -> FfiBindings {
     let json: &[u8] = json.as_slice();
     let crubit_support_path_format: &str =
@@ -71,7 +71,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
             &rustfmt_config_path,
             errors,
             &fatal_errors,
-            generate_source_loc_doc_comment,
+            environment,
         )
         .unwrap();
         FfiBindings {

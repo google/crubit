@@ -93,7 +93,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
       GenerateBindings(ir, args.crubit_support_path_format,
                        args.clang_format_exe_path, args.rustfmt_exe_path,
                        args.rustfmt_config_path, generate_error_report,
-                       args.generate_source_location_in_doc_comment));
+                       args.environment));
 
   absl::flat_hash_map<Identifier, Identifier> instantiations;
   std::optional<const Namespace*> ns =

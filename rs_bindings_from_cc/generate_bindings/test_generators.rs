@@ -8,7 +8,7 @@ use arc_anyhow::Result;
 use database::code_snippet::BindingsTokens;
 use database::db::{Database, FatalErrors};
 use error_report::{bail, ErrorReport};
-use ffi_types::SourceLocationDocComment;
+use ffi_types::Environment;
 use generate_bindings::{generate_bindings_tokens, new_database};
 use ir::IR;
 use multiplatform_ir_testing::ir_from_cc;
@@ -20,7 +20,7 @@ pub fn generate_bindings_tokens_for_test(ir: IR) -> Result<BindingsTokens> {
         "crubit/rs_bindings_support",
         &error_report::IgnoreErrors,
         &fatal_errors,
-        SourceLocationDocComment::Enabled,
+        Environment::Production,
     )?;
     let fatal = fatal_errors.take_string();
     if !fatal.is_empty() {
@@ -44,6 +44,6 @@ impl TestDbFactory {
         })
     }
     pub fn make_db(&self) -> Database {
-        new_database(&self.ir, &self.errors, &self.fatal_errors, SourceLocationDocComment::Enabled)
+        new_database(&self.ir, &self.errors, &self.fatal_errors, Environment::Production)
     }
 }

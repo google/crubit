@@ -7,7 +7,7 @@
 use arc_anyhow::Result;
 use database::code_snippet::ApiSnippets;
 use database::BindingsGenerator;
-use ffi_types::SourceLocationDocComment;
+use ffi_types::Environment;
 use ir::{Comment, GenericItem, UnsupportedItem, IR};
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -15,10 +15,7 @@ use std::fmt::Write as _;
 
 /// Top-level comments that help identify where the generated bindings came
 /// from.
-pub fn generate_top_level_comment(
-    ir: &IR,
-    source_loc_doc_comment: SourceLocationDocComment,
-) -> String {
+pub fn generate_top_level_comment(ir: &IR, environment: Environment) -> String {
     // The "@generated" marker is an informal convention for identifying
     // automatically generated code.  This marker is recognized by `rustfmt`
     // (see the `format_generated_files` option [1]) and some other tools.
@@ -39,7 +36,7 @@ pub fn generate_top_level_comment(
             // {target}\n"
     );
 
-    if source_loc_doc_comment == SourceLocationDocComment::Enabled {
+    if environment == Environment::Production {
         // Write the features.
         result.push_str(
             "\
@@ -70,11 +67,11 @@ pub fn generate_top_level_comment(
 pub fn generate_doc_comment(
     comment: Option<&str>,
     source_loc: Option<&str>,
-    generate_source_loc_doc_comment: SourceLocationDocComment,
+    environment: Environment,
 ) -> TokenStream {
-    let source_loc = match generate_source_loc_doc_comment {
-        SourceLocationDocComment::Enabled => source_loc,
-        SourceLocationDocComment::Disabled => None,
+    let source_loc = match environment {
+        Environment::Production => source_loc,
+        Environment::GoldenTest => None,
     };
     let (comment, sep, source_loc) = match (comment, source_loc) {
         (None, None) => return quote! {},
@@ -96,9 +93,7 @@ pub fn generate_unsupported(db: &dyn BindingsGenerator, item: &UnsupportedItem) 
 
     let source_loc = item.source_loc();
     let source_loc = match &source_loc {
-        Some(loc) if db.generate_source_loc_doc_comment() == SourceLocationDocComment::Enabled => {
-            loc.as_ref()
-        }
+        Some(loc) if db.environment() == Environment::Production => loc.as_ref(),
         _ => "",
     };
 

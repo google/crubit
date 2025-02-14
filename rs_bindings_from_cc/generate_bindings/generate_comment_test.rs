@@ -8,7 +8,7 @@ use arc_anyhow::Result;
 use database::db::FatalErrors;
 use database::{BindingsGenerator, Database};
 use error_report::ErrorReport;
-use ffi_types::SourceLocationDocComment;
+use ffi_types::Environment;
 use generate_bindings::new_database;
 use generate_comment::{generate_doc_comment, generate_unsupported};
 use googletest::prelude::gtest;
@@ -19,68 +19,60 @@ use std::rc::Rc;
 use token_stream_matchers::assert_rs_matches;
 
 #[gtest]
-fn test_generate_doc_comment_with_no_comment_with_no_source_loc_with_source_loc_enabled() {
-    let actual = generate_doc_comment(None, None, SourceLocationDocComment::Enabled);
+fn test_generate_doc_comment_with_no_comment_with_no_source_loc_with_environment_production() {
+    let actual = generate_doc_comment(None, None, Environment::Production);
     assert!(actual.is_empty());
 }
 
 #[gtest]
-fn test_generate_doc_comment_with_no_comment_with_source_loc_with_source_loc_enabled() {
-    let actual = generate_doc_comment(
-        None,
-        Some("google3/some/header;l=11"),
-        SourceLocationDocComment::Enabled,
-    );
+fn test_generate_doc_comment_with_no_comment_with_source_loc_with_environment_production() {
+    let actual =
+        generate_doc_comment(None, Some("google3/some/header;l=11"), Environment::Production);
     assert_rs_matches!(actual, quote! {#[doc = " google3/some/header;l=11"]});
 }
 
 #[gtest]
-fn test_generate_doc_comment_with_comment_with_source_loc_with_source_loc_enabled() {
+fn test_generate_doc_comment_with_comment_with_source_loc_with_environment_production() {
     let actual = generate_doc_comment(
         Some("Some doc comment"),
         Some("google3/some/header;l=12"),
-        SourceLocationDocComment::Enabled,
+        Environment::Production,
     );
     assert_rs_matches!(actual, quote! {#[doc = " Some doc comment\n \n google3/some/header;l=12"]});
 }
 
 #[gtest]
-fn test_generate_doc_comment_with_comment_with_no_source_loc_with_source_loc_enabled() {
-    let actual =
-        generate_doc_comment(Some("Some doc comment"), None, SourceLocationDocComment::Enabled);
+fn test_generate_doc_comment_with_comment_with_no_source_loc_with_environment_production() {
+    let actual = generate_doc_comment(Some("Some doc comment"), None, Environment::Production);
     assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
 }
 
 #[gtest]
-fn test_no_generate_doc_comment_with_no_comment_with_no_source_loc_with_source_loc_disabled() {
-    let actual = generate_doc_comment(None, None, SourceLocationDocComment::Disabled);
+fn test_no_generate_doc_comment_with_no_comment_with_no_source_loc_with_environment_golden_test() {
+    let actual = generate_doc_comment(None, None, Environment::GoldenTest);
     assert!(actual.is_empty());
 }
 
 #[gtest]
-fn test_no_generate_doc_comment_with_no_comment_with_source_loc_with_source_loc_disabled() {
-    let actual = generate_doc_comment(
-        None,
-        Some("google3/some/header;l=13"),
-        SourceLocationDocComment::Disabled,
-    );
+fn test_no_generate_doc_comment_with_no_comment_with_source_loc_with_environment_golden_test() {
+    let actual =
+        generate_doc_comment(None, Some("google3/some/header;l=13"), Environment::GoldenTest);
     assert!(actual.is_empty());
 }
 
 #[gtest]
-fn test_no_generate_doc_comment_with_comment_with_source_loc_with_source_loc_disabled() {
+fn test_no_generate_doc_comment_with_comment_with_source_loc_with_environment_golden_test() {
     let actual = generate_doc_comment(
         Some("Some doc comment"),
         Some("google3/some/header;l=14"),
-        SourceLocationDocComment::Disabled,
+        Environment::GoldenTest,
     );
     assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
 }
 
 #[gtest]
-fn test_no_generate_doc_comment_with_comment_with_no_source_loc_with_source_loc_disabled() {
-    let actual =
-        generate_doc_comment(Some("Some doc comment"), None, SourceLocationDocComment::Disabled);
+fn test_no_generate_doc_comment_with_comment_with_no_source_loc_with_environment_golden_test() {
+    let actual = generate_doc_comment(Some("Some doc comment"), None, Environment::GoldenTest);
     assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
 }
 
@@ -118,15 +110,15 @@ impl TestDbFactory {
             fatal_errors: FatalErrors::new(),
         }
     }
-    fn make_db(&self, source_loc_doc_comment: SourceLocationDocComment) -> Database {
-        new_database(&self.ir, &self.errors, &self.fatal_errors, source_loc_doc_comment)
+    fn make_db(&self, environment: Environment) -> Database {
+        new_database(&self.ir, &self.errors, &self.fatal_errors, environment)
     }
 }
 
 #[gtest]
-fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
+fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
     let factory = TestDbFactory::new();
-    let db = factory.make_db(SourceLocationDocComment::Enabled);
+    let db = factory.make_db(Environment::Production);
     let actual = generate_unsupported(
         &db,
         &UnsupportedItem::new_with_static_message(
@@ -147,7 +139,7 @@ fn test_generate_unsupported_item_with_source_loc_enabled() -> Result<()> {
 #[gtest]
 fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
     let factory = TestDbFactory::new();
-    let db = factory.make_db(SourceLocationDocComment::Enabled);
+    let db = factory.make_db(Environment::Production);
     let actual = generate_unsupported(
         &db,
         &UnsupportedItem::new_with_static_message(
@@ -163,9 +155,9 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
 }
 
 #[gtest]
-fn test_generate_unsupported_item_with_source_loc_disabled() -> Result<()> {
+fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
     let factory = TestDbFactory::new();
-    let db = factory.make_db(SourceLocationDocComment::Disabled);
+    let db = factory.make_db(Environment::GoldenTest);
     let actual = generate_unsupported(
         &db,
         &UnsupportedItem::new_with_static_message(

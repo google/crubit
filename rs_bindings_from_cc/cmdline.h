@@ -34,8 +34,7 @@ struct CmdlineArgs {
   std::string rustfmt_config_path;
   std::string error_report_out;
   bool do_nothing = true;
-  SourceLocationDocComment generate_source_location_in_doc_comment =
-      SourceLocationDocComment::Enabled;
+  Environment environment = Environment::Production;
 
   std::vector<HeaderName> public_headers;
   absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets;
@@ -73,6 +72,11 @@ namespace internal {
 // Parses --target_args into CmdlineArgs. Only exposed so it can be unit tested.
 absl::Status ParseTargetArgs(absl::string_view target_args_str,
                              CmdlineArgs& args);
+
+// Parses --environment into CmdlineArgs. Only exposed so it can
+// be unit tested.
+absl::Status ParseEnvironment(absl::string_view environment_str,
+                              CmdlineArgs& args);
 }  // namespace internal
 
 // Expands paramfiles (@path/to/file) in-place in argv.

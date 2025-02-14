@@ -1255,11 +1255,8 @@ pub fn generate_function(
         }
     };
 
-    let doc_comment = generate_doc_comment(
-        func.doc_comment.as_deref(),
-        Some(&func.source_loc),
-        db.generate_source_loc_doc_comment(),
-    );
+    let doc_comment =
+        generate_doc_comment(func.doc_comment.as_deref(), Some(&func.source_loc), db.environment());
     let api_func: TokenStream;
     let function_id: FunctionId;
     match impl_kind {

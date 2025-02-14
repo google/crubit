@@ -7,7 +7,7 @@ use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::RsTypeKind;
 use arc_anyhow::Result;
 use error_report::ErrorReporting;
-use ffi_types::SourceLocationDocComment;
+use ffi_types::Environment;
 use ir::{Enum, Func, Record, RsType, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
 use std::collections::HashSet;
@@ -73,7 +73,7 @@ memoized::query_group! {
         fn fatal_errors(&self) -> &'db dyn ReportFatalError;
 
         #[input]
-        fn generate_source_loc_doc_comment(&self) -> SourceLocationDocComment;
+        fn environment(&self) -> Environment;
 
         #[break_cycles_with = Ok(false)]
         fn is_rs_type_kind_unsafe(&self, rs_type_kind: RsTypeKind) -> Result<bool>;

@@ -281,11 +281,7 @@ fn field_definition(
     let ident = make_rs_field_ident(field, field_index);
     let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
     let doc_comment = match &field_rs_type_kind {
-        Ok(_) => generate_doc_comment(
-            field.doc_comment.as_deref(),
-            None,
-            db.generate_source_loc_doc_comment(),
-        ),
+        Ok(_) => generate_doc_comment(field.doc_comment.as_deref(), None, db.environment()),
         Err(msg) => {
             *override_alignment = true;
             let supplemental_text =
@@ -294,11 +290,7 @@ fn field_definition(
                 None => supplemental_text,
                 Some(old_text) => format!("{}\n\n{}", old_text.as_ref(), supplemental_text),
             };
-            generate_doc_comment(
-                Some(new_text.as_str()),
-                None,
-                db.generate_source_loc_doc_comment(),
-            )
+            generate_doc_comment(Some(new_text.as_str()), None, db.environment())
         }
     };
     let access = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
@@ -352,7 +344,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     let doc_comment = generate_doc_comment(
         record.doc_comment.as_deref(),
         Some(&record.source_loc),
-        db.generate_source_loc_doc_comment(),
+        db.environment(),
     );
     let mut field_copy_trait_assertions: Vec<TokenStream> = vec![];
 
@@ -826,7 +818,7 @@ fn cc_struct_no_unique_address_impl(
                 doc_comments.push(generate_doc_comment(
                     field.doc_comment.as_deref(),
                     None,
-                    db.generate_source_loc_doc_comment(),
+                    db.environment(),
                 ));
             } else {
                 // all other fields already have a doc-comment at the point they were defined.

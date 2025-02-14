@@ -25,6 +25,7 @@ ABSL_DECLARE_FLAG(std::vector<std::string>, srcs_to_scan_for_instantiations);
 ABSL_DECLARE_FLAG(std::string, instantiations_out);
 ABSL_DECLARE_FLAG(std::string, namespaces_out);
 ABSL_DECLARE_FLAG(std::string, error_report_out);
+ABSL_DECLARE_FLAG(std::string, environment);
 ABSL_DECLARE_FLAG(bool, generate_source_location_in_doc_comment);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_FLAGS_H_

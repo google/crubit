@@ -9,7 +9,7 @@ use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens};
 use database::db::{BindingsGenerator, Database, ReportFatalError};
 use database::rs_snippet::RsTypeKind;
 use error_report::{bail, ErrorReporting};
-use ffi_types::SourceLocationDocComment;
+use ffi_types::Environment;
 use generate_comment::generate_top_level_comment;
 use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};
 use generate_struct_and_union::generate_incomplete_record;
@@ -36,7 +36,7 @@ pub fn generate_bindings(
     rustfmt_config_path: &OsStr,
     errors: &dyn ErrorReporting,
     fatal_errors: &dyn ReportFatalError,
-    generate_source_loc_doc_comment: SourceLocationDocComment,
+    environment: Environment,
 ) -> Result<Bindings> {
     let ir = deserialize_ir(json)?;
 
@@ -45,7 +45,7 @@ pub fn generate_bindings(
         crubit_support_path_format,
         errors,
         fatal_errors,
-        generate_source_loc_doc_comment,
+        environment,
     )?;
     let rs_api = {
         let rustfmt_exe_path = Path::new(rustfmt_exe_path);
@@ -59,7 +59,7 @@ pub fn generate_bindings(
     };
     let rs_api_impl = cc_tokens_to_formatted_string(rs_api_impl, Path::new(clang_format_exe_path))?;
 
-    let top_level_comment = generate_top_level_comment(&ir, generate_source_loc_doc_comment);
+    let top_level_comment = generate_top_level_comment(&ir, environment);
     // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
     // be needed when `@generated` comment/keyword is present...
     let rs_api = format!(
@@ -86,7 +86,7 @@ fn generate_type_alias(db: &dyn BindingsGenerator, type_alias: &TypeAlias) -> Re
     let doc_comment = generate_doc_comment(
         type_alias.doc_comment.as_deref(),
         Some(&type_alias.source_loc),
-        db.generate_source_loc_doc_comment(),
+        db.environment(),
     );
     let underlying_type = db
         .rs_type_kind(type_alias.underlying_type.rs_type.clone())
@@ -307,13 +307,13 @@ pub fn new_database<'db>(
     ir: &'db IR,
     errors: &'db dyn ErrorReporting,
     fatal_errors: &'db dyn ReportFatalError,
-    generate_source_loc_doc_comment: SourceLocationDocComment,
+    environment: Environment,
 ) -> Database<'db> {
     Database::new(
         ir,
         errors,
         fatal_errors,
-        generate_source_loc_doc_comment,
+        environment,
         is_rs_type_kind_unsafe,
         generate_enum::generate_enum,
         generate_item,
@@ -336,9 +336,9 @@ pub fn generate_bindings_tokens(
     crubit_support_path_format: &str,
     errors: &dyn ErrorReporting,
     fatal_errors: &dyn ReportFatalError,
-    generate_source_loc_doc_comment: SourceLocationDocComment,
+    environment: Environment,
 ) -> Result<BindingsTokens> {
-    let db = new_database(ir, errors, fatal_errors, generate_source_loc_doc_comment);
+    let db = new_database(ir, errors, fatal_errors, environment);
     let mut items = vec![];
     let mut thunks = vec![];
     let mut cc_details = vec![
