@@ -1208,6 +1208,71 @@ TEST(PointerNullabilityTest, Accessor_BaseObjectReturnedByReference) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, GetReferenceThenCallAccessor) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct C {
+      int* _Nullable property() const { return x; }
+      int* _Nullable x = nullptr;
+    };
+    C& foo();
+    void target() {
+      const C& c = foo();
+      if (c.property() != nullptr) {
+        *c.property();
+      }
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, AccessorToGetReferenceThenCallAccessor) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct C {
+      int* _Nullable property() const { return x; }
+      int* _Nullable x = nullptr;
+    };
+
+    struct SmartPtrLike {
+      C& operator*() const;
+      C* operator->() const;
+      C* get() const;
+    };
+
+    void target(SmartPtrLike& d) {
+      const C& obj = *d;
+      if (obj.property() != nullptr) {
+        *obj.property();
+      }
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest,
+     GetReferenceThenAccessNestedPointerThroughRefField) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct A {
+      int* _Nullable x;
+    };
+
+    struct B {
+      const A& f;
+    };
+
+    struct C {
+      B& nonConstGetRef();
+    };
+
+    void target(C c) {
+      B& b = c.nonConstGetRef();
+      if (b.f.x == nullptr) return;
+      // TODO(b/396431434): This should be safe. However we currently don't get
+      // a storage location for `b.f` when we dynamically create the parent
+      // storage location for `b` from the `nonConstGetRef` call. Then
+      // we fail to get nullability properties for `b.f.x`.
+      *b.f.x;  // [[unsafe]]
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, MethodNoParamsUndefinedValue) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct C {

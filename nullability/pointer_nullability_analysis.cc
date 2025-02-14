@@ -1232,16 +1232,20 @@ void transferValue_AccessorCall(
     TransferState<PointerNullabilityLattice> &State) {
   auto *member = Result.Nodes.getNodeAs<clang::ValueDecl>("member-decl");
   PointerValue *PointerVal = nullptr;
+  StorageLocation *FieldLoc = nullptr;
   if (dataflow::RecordStorageLocation *RecordLoc =
           dataflow::getImplicitObjectLocation(*MCE, State.Env)) {
-    StorageLocation *Loc = RecordLoc->getChild(*member);
-    PointerVal = dyn_cast_or_null<PointerValue>(State.Env.getValue(*Loc));
+    FieldLoc = RecordLoc->getChild(*member);
+    PointerVal = dyn_cast_or_null<PointerValue>(State.Env.getValue(*FieldLoc));
   }
   if (!PointerVal) {
     PointerVal = ensureRawPointerHasValue(MCE, State.Env);
   }
   if (PointerVal) {
     State.Env.setValue(*MCE, *PointerVal);
+    if (FieldLoc != nullptr) {
+      State.Env.setValue(*FieldLoc, *PointerVal);
+    }
     initPointerFromTypeNullability(*PointerVal, MCE, State);
   }
 }
