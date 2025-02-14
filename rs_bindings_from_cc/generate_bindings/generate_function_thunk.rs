@@ -301,27 +301,20 @@ pub fn generate_function_thunk_impl(
         .map(|p| {
             let cpp_type = cpp_type_name::format_cpp_type(&p.type_.cpp_type, &ir)?;
             let arg_type = db.rs_type_kind(p.type_.rs_type.clone())?;
-            if arg_type.is_bridge_type() {
-                match &arg_type {
-                    RsTypeKind::BridgeType { rust_to_cpp_converter, .. } => {
-                        let convert_function = expect_format_cc_ident(rust_to_cpp_converter);
-                        let ident = expect_format_cc_ident(&p.identifier.identifier);
-                        let cpp_ident = convert_ident(&ident);
-                        conversion_externs.extend(quote! {
-                            extern "C" void #convert_function(void* rust_struct, void* cpp_struct);
-                        });
-                        conversion_stmts.extend(quote! {
-                            ::crubit::LazyInit<#cpp_type> #cpp_ident;
-                        });
-                        conversion_stmts.extend(quote! {
-                            #convert_function(#ident, &#cpp_ident.val);
-                        });
-                        Ok(quote! { void* })
-                    }
-                    _ => {
-                        bail!("Invalid bridge type: {:?}", arg_type);
-                    }
-                }
+            if let RsTypeKind::BridgeType { rust_to_cpp_converter, .. } = &arg_type {
+                let convert_function = expect_format_cc_ident(rust_to_cpp_converter);
+                let ident = expect_format_cc_ident(&p.identifier.identifier);
+                let cpp_ident = convert_ident(&ident);
+                conversion_externs.extend(quote! {
+                    extern "C" void #convert_function(void* rust_struct, void* cpp_struct);
+                });
+                conversion_stmts.extend(quote! {
+                    ::crubit::LazyInit<#cpp_type> #cpp_ident;
+                });
+                conversion_stmts.extend(quote! {
+                    #convert_function(#ident, &#cpp_ident.val);
+                });
+                Ok(quote! { void* })
             } else if !arg_type.is_c_abi_compatible_by_value() {
                 // non-Unpin types are wrapped by a pointer in the thunk.
                 Ok(quote! {#cpp_type *})
