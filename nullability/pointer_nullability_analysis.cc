@@ -1280,7 +1280,11 @@ void handleConstMemberCall(
   // represented as Values.
   if (isSupportedSmartPointerType(CE->getType())) {
     const FunctionDecl *DirectCallee = CE->getDirectCallee();
-    if (DirectCallee == nullptr) return;
+    if (DirectCallee == nullptr) {
+      // Perform default handling
+      transferValue_CallExpr(CE, Result, State);
+      return;
+    }
 
     StorageLocation &Loc =
         State.Lattice.getOrCreateConstMethodReturnStorageLocation(
@@ -1307,7 +1311,11 @@ void handleConstMemberCall(
                           CE->getType()->isBooleanType())) {
     Value *Val = State.Lattice.getOrCreateConstMethodReturnValue(*RecordLoc, CE,
                                                                  State.Env);
-    if (Val == nullptr) return;
+    if (Val == nullptr) {
+      // Perform default handling
+      transferValue_CallExpr(CE, Result, State);
+      return;
+    }
 
     State.Env.setValue(*CE, *Val);
     if (auto *PointerVal = dyn_cast<PointerValue>(Val))
