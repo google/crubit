@@ -1193,8 +1193,6 @@ TEST(CollectEvidenceFromDefinitionTest, ConstAccessorDereferencedAfterCheck) {
   EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-// Special modeling of accessors is not implemented for accessors returning
-// references.
 TEST(CollectEvidenceFromDefinitionTest,
      ReferenceConstAccessorDereferencedAfterCheck) {
   static constexpr llvm::StringRef Src = R"cc(
@@ -1209,10 +1207,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
-              UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
-                                            Evidence::UNCHECKED_DEREFERENCE,
-                                            functionNamed("accessor"))));
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
 TEST(CollectEvidenceFromDefinitionTest,

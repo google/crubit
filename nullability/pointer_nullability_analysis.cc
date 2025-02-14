@@ -1268,11 +1268,17 @@ void handleConstMemberCall(
     absl::Nullable<dataflow::RecordStorageLocation *> RecordLoc,
     const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
+  if (RecordLoc == nullptr) {
+    // Perform default handling
+    transferValue_CallExpr(CE, Result, State);
+    return;
+  }
+
   // If the const method returns a smart pointer, handle it separately.
   // Smart pointers are represented as RecordStorangeLocations, so their
   // treatment is different from booleans or raw pointers, which are
   // represented as Values.
-  if (RecordLoc != nullptr && isSupportedSmartPointerType(CE->getType())) {
+  if (isSupportedSmartPointerType(CE->getType())) {
     const FunctionDecl *DirectCallee = CE->getDirectCallee();
     if (DirectCallee == nullptr) return;
 
@@ -1297,9 +1303,8 @@ void handleConstMemberCall(
 
   // If the const method returns a raw pointer or boolean (represented as
   // Values) handle them appropriately.
-  if (RecordLoc != nullptr && CE->isPRValue() &&
-      (isSupportedRawPointerType(CE->getType()) ||
-       CE->getType()->isBooleanType())) {
+  if (CE->isPRValue() && (isSupportedRawPointerType(CE->getType()) ||
+                          CE->getType()->isBooleanType())) {
     Value *Val = State.Lattice.getOrCreateConstMethodReturnValue(*RecordLoc, CE,
                                                                  State.Env);
     if (Val == nullptr) return;
@@ -1307,6 +1312,17 @@ void handleConstMemberCall(
     State.Env.setValue(*CE, *Val);
     if (auto *PointerVal = dyn_cast<PointerValue>(Val))
       initPointerFromTypeNullability(*PointerVal, CE, State);
+    return;
+  }
+
+  // If the const method returns a reference, handle it separately.
+  const FunctionDecl *DirectCallee = CE->getDirectCallee();
+  if (DirectCallee != nullptr &&
+      DirectCallee->getReturnType()->isReferenceType()) {
+    StorageLocation &Loc =
+        State.Lattice.getOrCreateConstMethodReturnStorageLocation(
+            *RecordLoc, DirectCallee, State.Env, [](StorageLocation &Loc) {});
+    State.Env.setStorageLocation(*CE, Loc);
     return;
   }
 

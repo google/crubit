@@ -801,7 +801,6 @@ TEST(PointerNullabilityTest, ConstMethodNoImpl) {
   )cc"));
 }
 
-// Special modeling of accessors is not implemented for accessors references.
 TEST(PointerNullabilityTest, ConstMethodReturnsReference) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct C {
@@ -810,7 +809,7 @@ TEST(PointerNullabilityTest, ConstMethodReturnsReference) {
     };
     void target() {
       C obj;
-      if (obj.property() != nullptr) *obj.property();  // [[unsafe]]
+      if (obj.property() != nullptr) *obj.property();
     }
   )cc"));
 }
