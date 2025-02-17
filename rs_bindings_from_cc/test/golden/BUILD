@@ -57,7 +57,6 @@ rust_bindings_from_cc_cli_flag(
         "//features:experimental",
         ":disable_source_location_in_doc_comment",
     ],
-    copts = ["-Wno-google3-inline-namespace"],
     deps = [
         ((d + "_cc") if d in TESTS else d)
         for d in (DEPS[name] if name in DEPS else [])
@@ -93,7 +92,6 @@ cc_library(
         ":disable_source_location_in_doc_comment",
         "//features:experimental",
     ],
-    copts = ["-Wno-google3-inline-namespace"],
 )
 
 golden_test(

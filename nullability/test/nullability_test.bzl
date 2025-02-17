@@ -22,7 +22,7 @@ def nullability_test(name, srcs):
 
     # Additional target to verify that the source file builds with non-mock headers.
     # TODO Add support for nested directories, like `absl`, so we can verify against real headers in
-    # google3.
+    # the production repo.
     native.cc_library(
         name = name + "_compile_test",
         srcs = srcs + ["nullability_test.h", "nullability_annotations.h", "check.h"],

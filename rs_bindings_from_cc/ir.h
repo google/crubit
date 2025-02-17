@@ -82,8 +82,7 @@ class HeaderName {
   }
 
  private:
-  // Header pathname in the format suitable for a google3-relative quote
-  // include.
+  // Header pathname in the format suitable for a quote include.
   std::string name_;
 };
 

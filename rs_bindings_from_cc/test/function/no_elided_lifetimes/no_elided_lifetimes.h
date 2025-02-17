@@ -16,7 +16,6 @@
 //    mostly about safety of using Rust references.
 // 2) We want to test the simplest possible scenario that shows the unsafety
 //    problem.  Therefore we test with `int` rather than with a struct.
-//    NOLINTNEXTLINE(google3-readability-pass-trivial-by-value)
 void StorePointer(const int& int_ref);
 int ReadStoredPointer();
 

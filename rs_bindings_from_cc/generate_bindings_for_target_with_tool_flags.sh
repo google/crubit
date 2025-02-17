@@ -7,7 +7,7 @@
 # Bazel flags, most typically --config=asan, and then use this binary as a tool
 # in a Bazel build that generates bindings for some target.
 
-if [[ "${PWD}" != *'/google3'* ]]; then
+if [[ "${PWD}" != *'/repo_root'* ]]; then
   echo "Usage: Please run this script from within a client."
   exit 1
 fi

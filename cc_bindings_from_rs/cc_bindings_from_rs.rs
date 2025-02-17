@@ -422,7 +422,6 @@ namespace test_crate {
 
 namespace public_module {
 "#,
- // TODO(b/261185414): Avoid assuming that all source code paths are google3 paths.
 format!("// Generated from: {temp_dir_str}/test_crate.rs;l=2"),
 r#"void public_function();
 
@@ -469,7 +468,6 @@ namespace test_crate {
 
 namespace public_module {
 "#,
- // TODO(b/261185414): Avoid assuming that all source code paths are google3 paths.
 format!("// Generated from: {temp_dir_str}/test_crate.rs;l=2"),
 r#"void public_function();
 

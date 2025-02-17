@@ -45,11 +45,11 @@ pub fn get_sysroot_for_testing() -> PathBuf {
 
 /// If a rustc --target arg is necessary, sets it up and returns its value.
 ///
-/// In google3, we use a target json in some configurations. Its filename needs
-/// to match the one used to build the rust standard libraries, and it must be
-/// a "real" file (not a symlink). This function sets this up by copying the
-/// target path passed via the RUSTC_TARGET_PATH env var to a file with the
-/// expected name in a temporary directory.
+/// We use a target json in some configurations. Its filename needs to match the
+/// one used to build the rust standard libraries, and it must be a "real" file
+/// (not a symlink). This function sets this up by copying the target path
+/// passed via the RUSTC_TARGET_PATH env var to a file with the expected name in
+/// a temporary directory.
 /// See (internal link) for code related to this.
 pub fn setup_rustc_target_for_testing(target_dir: &Path) -> Option<String> {
     assert!(target_dir.exists(), "target dir '{}' doesn't exist", target_dir.display());

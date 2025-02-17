@@ -1031,16 +1031,7 @@ fn generate_source_location(tcx: TyCtxt, local_def_id: LocalDefId) -> String {
     let file_name = file.name.prefer_local().to_string();
     // Note: line_index starts at 0, while CodeSearch starts indexing at 1.
     let line_number = lines[0].line_index + 1;
-    let google3_prefix = {
-        // If rustc_span::FileName isn't a 'real' file, then it's surrounded by by angle
-        // brackets, thus don't prepend "google3/" prefix.
-        if file.name.is_real() {
-            "google3/"
-        } else {
-            ""
-        }
-    };
-    format!("{google3_prefix}{file_name};l={line_number}")
+    format!("{file_name};l={line_number}")
 }
 
 /// Formats the doc comment (if any) associated with the item identified by

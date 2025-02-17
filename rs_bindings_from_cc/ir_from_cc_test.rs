@@ -896,10 +896,9 @@ fn test_doc_comment() -> Result<()> {
 
 #[gtest]
 fn test_doc_comment_vs_tooling_directives() -> Result<()> {
-    let ir = ir_from_cc(
-        r#" // Doc comment for `f1`
-            // NOLINTNEXTLINE(google3-readability-pass-trivial-by-value)
-            void f1();
+    let ir = ir_from_cc(concat!(
+        " // Doc comment for `f1`\n",
+        r#" void f1();
 
             // Doc comment for `f2`
             // // NOLINT
@@ -912,14 +911,14 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
             void f4();
 
             // No closing paren still suppresses
-            // NOLINTNEXTLINE(google3-readability
-            void f5();
+        "#,
+        r#" void f5();
 
             // Multiple, comma-separated directives listed in parens
             // NOLINTNEXTLINE(foo,bar)
             void f6();
         "#,
-    )?;
+    ))?;
 
     let comments: HashMap<&str, Option<&str>> = ir
         .functions()

@@ -810,15 +810,13 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
   // Spelling location: where the macro is originally defined.
   // Expansion location: where the macro is expanded.
   const clang::SourceLocation& spelling_loc = sm.getSpellingLoc(loc);
-  // TODO(b/261185414): The "google3" prefix should probably come from a command
-  // line argument.
   // TODO(b/261185414): Consider linking to the symbol instead of to the line
   // number to avoid wrong links while generated files have not caught up.
   constexpr absl::string_view kGeneratedFrom = "Generated from";
   constexpr absl::string_view kExpandedAt = "Expanded at";
   constexpr auto kSourceLocationFunc =
       [](absl::string_view origin, absl::string_view filename, uint32_t line) {
-        return absl::Substitute("$0: google3/$1;l=$2", origin, filename, line);
+        return absl::Substitute("$0: $1;l=$2", origin, filename, line);
       };
   constexpr absl::string_view kSourceLocUnknown = "<unknown location>";
   std::string spelling_loc_str;

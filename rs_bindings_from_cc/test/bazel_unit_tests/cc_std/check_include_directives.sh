@@ -44,7 +44,6 @@ pattern="#include <\.\.\.> search starts here: \+"
 pattern+="third_party/stl/cxx17 \+"
 pattern+="third_party/stl/itanium_abi \+"
 pattern+="nowhere/llvm/src/libcxx/include \+"
-pattern+="nowhere/llvm/toolchain/lib/clang/google3-trunk/include \+"
 pattern+="End of search list\."
 
 # We don't want to assume that the installed grep supports PCRE mode, so we

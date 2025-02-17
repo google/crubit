@@ -18,7 +18,6 @@ crubit_test_cc_library(
     ],
 )
 
-# A test to check that this can actually happen in google3.
 crubit_cc_test(
     name = "test_cc",
     srcs = [
