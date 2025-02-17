@@ -26,19 +26,18 @@ fn test_generate_doc_comment_with_no_comment_with_no_source_loc_with_environment
 
 #[gtest]
 fn test_generate_doc_comment_with_no_comment_with_source_loc_with_environment_production() {
-    let actual =
-        generate_doc_comment(None, Some("google3/some/header;l=11"), Environment::Production);
-    assert_rs_matches!(actual, quote! {#[doc = " google3/some/header;l=11"]});
+    let actual = generate_doc_comment(None, Some("some/header;l=11"), Environment::Production);
+    assert_rs_matches!(actual, quote! {#[doc = " some/header;l=11"]});
 }
 
 #[gtest]
 fn test_generate_doc_comment_with_comment_with_source_loc_with_environment_production() {
     let actual = generate_doc_comment(
         Some("Some doc comment"),
-        Some("google3/some/header;l=12"),
+        Some("some/header;l=12"),
         Environment::Production,
     );
-    assert_rs_matches!(actual, quote! {#[doc = " Some doc comment\n \n google3/some/header;l=12"]});
+    assert_rs_matches!(actual, quote! {#[doc = " Some doc comment\n \n some/header;l=12"]});
 }
 
 #[gtest]
@@ -55,8 +54,7 @@ fn test_no_generate_doc_comment_with_no_comment_with_no_source_loc_with_environm
 
 #[gtest]
 fn test_no_generate_doc_comment_with_no_comment_with_source_loc_with_environment_golden_test() {
-    let actual =
-        generate_doc_comment(None, Some("google3/some/header;l=13"), Environment::GoldenTest);
+    let actual = generate_doc_comment(None, Some("some/header;l=13"), Environment::GoldenTest);
     assert!(actual.is_empty());
 }
 
@@ -64,7 +62,7 @@ fn test_no_generate_doc_comment_with_no_comment_with_source_loc_with_environment
 fn test_no_generate_doc_comment_with_comment_with_source_loc_with_environment_golden_test() {
     let actual = generate_doc_comment(
         Some("Some doc comment"),
-        Some("google3/some/header;l=14"),
+        Some("some/header;l=14"),
         Environment::GoldenTest,
     );
     assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
