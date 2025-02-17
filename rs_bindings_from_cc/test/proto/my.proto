@@ -1,0 +1,11 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+edition = "2023";
+
+package my_package;
+
+message MyMessage {
+  int64 my_num = 1;
+}
