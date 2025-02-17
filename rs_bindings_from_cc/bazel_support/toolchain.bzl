@@ -6,7 +6,6 @@
 
 load(
     "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
-    "GrteToolchainInfo",
     "RustBindingsFromCcToolchainInfo",
 )
 
@@ -33,21 +32,5 @@ rs_bindings_from_cc_toolchain = rule(
         "builtin_headers": attr.label_list(allow_files = True),
         "stl_headers": attr.label_list(allow_files = True),
         "is_on_demand": attr.bool(),
-    },
-)
-
-def _grte_toolchain_impl(ctx):
-    return [
-        platform_common.ToolchainInfo(
-            grte_toolchain_info = GrteToolchainInfo(
-                grte_headers = ctx.files.grte_headers,
-            ),
-        ),
-    ]
-
-grte_toolchain = rule(
-    implementation = _grte_toolchain_impl,
-    attrs = {
-        "grte_headers": attr.label_list(allow_files = True),
     },
 )

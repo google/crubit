@@ -52,10 +52,3 @@ RustBindingsFromCcToolchainInfo = provider(
         "is_on_demand": "Whether this is a dynamically built binary or not",
     },
 )
-
-GrteToolchainInfo = provider(
-    doc = """A provider for the GRTE toolchain data, provided as a toolchain on our side.""",
-    fields = {
-        "grte_headers": "The list of GRTE headers",
-    },
-)

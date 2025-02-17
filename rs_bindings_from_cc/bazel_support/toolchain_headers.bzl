@@ -37,8 +37,9 @@ def _add_prefix(strings, prefix):
 def _bindings_for_toolchain_headers_impl(ctx):
     toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"].rs_bindings_from_cc_toolchain_info
     builtin_headers = toolchain.builtin_headers
-    grte_headers = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:grte_toolchain_type"].grte_toolchain_info.grte_headers
-    stl_headers = toolchain.stl_headers + grte_headers + ctx.files.extra_hdrs
+
+    stl_headers = toolchain.stl_headers + ctx.files.extra_hdrs
+
     std_files = ctx.attr._stl[CcInfo].compilation_context.headers.to_list() + stl_headers
     std_and_builtin_files = depset(direct = stl_headers + builtin_headers, transitive = [ctx.attr._stl[CcInfo].compilation_context.headers])
 
@@ -111,7 +112,6 @@ bindings_for_toolchain_headers = rule(
         "@rules_rust//rust:toolchain_type",
         "@bazel_tools//tools/cpp:toolchain_type",
         "@@//rs_bindings_from_cc/bazel_support:toolchain_type",
-        "@@//rs_bindings_from_cc/bazel_support:grte_toolchain_type",
     ],
     fragments = ["cpp", "google_cpp"],
 )

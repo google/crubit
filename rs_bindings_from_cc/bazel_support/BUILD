@@ -161,8 +161,3 @@ toolchain_type(
     name = "toolchain_type",
     visibility = ["//:__subpackages__"],
 )
-
-toolchain_type(
-    name = "grte_toolchain_type",
-    visibility = ["//:__subpackages__"],
-)

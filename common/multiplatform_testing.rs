@@ -16,8 +16,8 @@ pub enum Platform {
 impl Platform {
     pub fn target_triple(self) -> &'static str {
         match self {
-            Platform::X86Linux => "x86_64-grtev4-linux-gnu",
-            Platform::ArmLinux => "aarch64-grtev4-linux-gnu",
+            Platform::X86Linux => "x86_64-unknown-linux-gnu",
+            Platform::ArmLinux => "aarch64-unknown-linux-gnu",
         }
     }
 }
