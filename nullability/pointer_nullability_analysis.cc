@@ -1600,6 +1600,7 @@ void transferType_CastExpr(absl::Nonnull<const CastExpr *> CE,
       case CK_IntToOCLSampler:
       case CK_HLSLVectorTruncation:
       case CK_HLSLArrayRValue:
+      case CK_HLSLAggregateSplatCast:
       case CK_HLSLElementwiseCast:
         return unspecifiedNullability(CE);
 
