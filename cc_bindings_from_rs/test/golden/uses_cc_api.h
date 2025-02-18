@@ -241,9 +241,11 @@ extern "C" void __crubit_thunk_create(
     ::uses_rust::__crubit_internal::Foo* __ret_ptr);
 }
 inline ::uses_rust::__crubit_internal::Foo Foo::create() {
-  crubit::Slot<::uses_rust::__crubit_internal::Foo> __ret_slot;
-  __crubit_internal::__crubit_thunk_create(__ret_slot.Get());
-  return std::move(__ret_slot).AssumeInitAndTakeValue();
+  crubit::Slot<::uses_rust::__crubit_internal::Foo>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create(__return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -251,9 +253,11 @@ extern "C" void __crubit_thunk_bar(
     ::uses_rust::__crubit_internal::Bar* __ret_ptr);
 }
 inline ::uses_rust::__crubit_internal::Bar Foo::bar() {
-  crubit::Slot<::uses_rust::__crubit_internal::Bar> __ret_slot;
-  __crubit_internal::__crubit_thunk_bar(__ret_slot.Get());
-  return std::move(__ret_slot).AssumeInitAndTakeValue();
+  crubit::Slot<::uses_rust::__crubit_internal::Bar>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_bar(__return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void Foo::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Foo, i));

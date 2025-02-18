@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
 use std::ffi::{OsStr, OsString};
 use std::io::Write as _;
@@ -76,7 +76,9 @@ pub fn rs_tokens_to_formatted_string(
     tokens: TokenStream,
     config: &RustfmtConfig,
 ) -> Result<String> {
-    rustfmt(tokens_to_string(tokens)?, config)
+    let tokens_string = tokens_to_string(tokens)?;
+    let err = format!("Failed to rustfmt the following Rust tokens:\n\n{tokens_string}");
+    rustfmt(tokens_string, config).context(err)
 }
 
 /// Like `rs_tokens_to_formatted_string`, but always using a Crubit-internal,

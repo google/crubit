@@ -44,6 +44,7 @@ TESTS = [name[:-3] for name in glob(
 
 [cc_bindings_from_rust(
     name = name + "_cc_api",
+    testonly = 1,
     crate = ":" + name + "_rust",
 ) for name in TESTS]
 

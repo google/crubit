@@ -6,6 +6,7 @@
 // struct_with_conflicting_fields_and_member_functions_rust_golden
 // Features: experimental, supported
 
+#![allow(unused_unsafe)]
 #![allow(improper_ctypes_definitions)]
 
 const _: () = assert!(
@@ -17,16 +18,16 @@ const _: () = assert!(
         == 4
 );
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_a<'__anon1>(
+unsafe extern "C" fn __crubit_thunk_a<'__anon1>(
     __self: &'__anon1 ::struct_with_conflicting_fields_and_member_functions_rust_golden::X,
 ) -> i32 {
-    ::struct_with_conflicting_fields_and_member_functions_rust_golden::X::a(__self)
+    unsafe { ::struct_with_conflicting_fields_and_member_functions_rust_golden::X::a(__self) }
 }
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_b<'__anon1>(
+unsafe extern "C" fn __crubit_thunk_b<'__anon1>(
     __self: &'__anon1 ::struct_with_conflicting_fields_and_member_functions_rust_golden::X,
 ) -> i32 {
-    ::struct_with_conflicting_fields_and_member_functions_rust_golden::X::b(__self)
+    unsafe { ::struct_with_conflicting_fields_and_member_functions_rust_golden::X::b(__self) }
 }
 const _: () = assert!(
     ::core::mem::offset_of!(

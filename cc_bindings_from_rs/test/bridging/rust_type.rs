@@ -38,6 +38,14 @@ pub fn into_something_else(data: TheRustType) -> NonTriviallyDestructable {
     NonTriviallyDestructable { field: data.x }
 }
 
+pub fn create_in_tuple(x: i32) -> (TheRustType,) {
+    (TheRustType { x },)
+}
+
+pub fn get_x_from_tuple(data: (TheRustType,)) -> i32 {
+    data.0.x
+}
+
 mod type_converters {
     use super::*;
     use std::ffi::c_int;

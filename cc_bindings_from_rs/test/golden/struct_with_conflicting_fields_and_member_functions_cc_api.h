@@ -85,7 +85,8 @@ extern "C" std::int32_t __crubit_thunk_a(
 }
 inline std::int32_t X::a() const
     [[clang::annotate_type("lifetime", "__anon1")]] {
-  return __crubit_internal::__crubit_thunk_a(*this);
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_a(self);
 }
 
 namespace __crubit_internal {
@@ -95,7 +96,8 @@ extern "C" std::int32_t __crubit_thunk_b(
 }
 inline std::int32_t X::b() const
     [[clang::annotate_type("lifetime", "__anon1")]] {
-  return __crubit_internal::__crubit_thunk_b(*this);
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_b(self);
 }
 inline void X::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(X, a_));

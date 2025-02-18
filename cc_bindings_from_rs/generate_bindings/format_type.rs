@@ -210,18 +210,22 @@ pub fn format_ty_for_cc<'tcx>(
                 bail!("The never type `!` is only supported as a return type (b/254507801)");
             }
         },
-        ty::TyKind::Tuple(types) => {
-            if types.len() == 0 {
-                match location {
-                    TypeLocation::FnReturn => keyword(quote! { void }),
-                    _ => {
-                        // TODO(b/254507801): Maybe translate into `crubit::Unit`?
-                        bail!("`()` / `void` is only supported as a return type (b/254507801)");
-                    }
-                }
+        ty::TyKind::Tuple(_) => {
+            let types = ty.as_tuple(db).unwrap();
+            if types.is_empty() && matches!(location, TypeLocation::FnReturn) {
+                keyword(quote! { void })
             } else {
-                // TODO(b/254099023): Add support for tuples.
-                bail!("Tuples are not supported yet: {} (b/254099023)", ty);
+                let mut prereqs = CcPrerequisites::default();
+                prereqs.includes.insert(CcInclude::tuple());
+
+                let mut cc_types = Vec::with_capacity(types.len());
+                for element_type in types {
+                    cc_types.push(
+                        db.format_ty_for_cc(element_type, TypeLocation::Other)?
+                            .into_tokens(&mut prereqs),
+                    );
+                }
+                CcSnippet { prereqs, tokens: quote! { std::tuple<#(#cc_types),*> } }
             }
         }
 
@@ -582,11 +586,7 @@ pub fn format_ret_ty_for_cc<'tcx>(
     sig_mid: &ty::FnSig<'tcx>,
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
 ) -> Result<CcSnippet> {
-    let hir = sig_hir.and_then(|sig_hir| match sig_hir.output {
-        rustc_hir::FnRetTy::Return(hir_ty) => Some(hir_ty),
-        _ => None,
-    });
-    db.format_ty_for_cc(SugaredTy::new(sig_mid.output(), hir), TypeLocation::FnReturn)
+    db.format_ty_for_cc(SugaredTy::fn_output(sig_mid, sig_hir), TypeLocation::FnReturn)
         .context("Error formatting function return type")
 }
 
@@ -603,50 +603,38 @@ pub fn format_param_types_for_cc<'tcx>(
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
     allow_references: AllowReferences,
 ) -> Result<Vec<CcSnippet>> {
-    if let Some(sig_hir) = sig_hir {
-        assert_eq!(
-            sig_mid.inputs().len(),
-            sig_hir.inputs.len(),
-            "internal error: MIR and HIR function signatures do not line up"
-        );
-    }
-
     let region_counts = std::cell::LazyCell::new(|| count_regions(sig_mid));
 
-    sig_mid
-        .inputs()
-        .iter()
-        .enumerate()
-        .map(|(i, &mid)| {
-            let hir = sig_hir.map(|sig_hir| &sig_hir.inputs[i]);
-            let mut cc_type = db
-                .format_ty_for_cc(SugaredTy::new(mid, hir), TypeLocation::FnParam)
-                .with_context(|| format!("Error handling parameter #{i}"))?;
-            if allow_references == AllowReferences::Safe {
-                // In parameter position, format_ty_for_cc defaults to allowing free
-                // (non-static) references. We need to decide which references we
-                // allow -- in this case, we choose to allow references _only_ if
-                // the reference cannot mutably alias, and does not have any lifetime
-                // requirements from the caller.
-                match mid.kind() {
-                    ty::TyKind::Ref(input_region, .., Mutability::Not) => {
-                        if region_counts[input_region] > 1 {
-                            cc_type.prereqs.required_features |= FineGrainedFeature::LifetimeReuse;
-                        }
+    let param_types = SugaredTy::fn_inputs(sig_mid, sig_hir);
+    let mut snippets = Vec::with_capacity(param_types.len());
+    for i in 0..param_types.len() {
+        let mut cc_type = db
+            .format_ty_for_cc(param_types.index(i), TypeLocation::FnParam)
+            .with_context(|| format!("Error handling parameter #{i}"))?;
+        if allow_references == AllowReferences::Safe {
+            // In parameter position, format_ty_for_cc defaults to allowing free
+            // (non-static) references. We need to decide which references we
+            // allow -- in this case, we choose to allow references _only_ if
+            // the reference cannot mutably alias, and does not have any lifetime
+            // requirements from the caller.
+            match param_types.index(i).mid().kind() {
+                ty::TyKind::Ref(input_region, .., Mutability::Not) => {
+                    if region_counts[input_region] > 1 {
+                        cc_type.prereqs.required_features |= FineGrainedFeature::LifetimeReuse;
                     }
-                    ty::TyKind::Ref(input_region, .., Mutability::Mut) => {
-                        if region_counts.len() > 1 || region_counts[input_region] > 1 {
-                            cc_type.prereqs.required_features |=
-                                FineGrainedFeature::PossibleMutableAliasing;
-                        }
-                    }
-                    _ => {}
                 }
+                ty::TyKind::Ref(input_region, .., Mutability::Mut) => {
+                    if region_counts.len() > 1 || region_counts[input_region] > 1 {
+                        cc_type.prereqs.required_features |=
+                            FineGrainedFeature::PossibleMutableAliasing;
+                    }
+                }
+                _ => {}
             }
-
-            Ok(cc_type)
-        })
-        .collect()
+        }
+        snippets.push(cc_type);
+    }
+    Ok(snippets)
 }
 
 /// Format a supported `repr(transparent)` pointee type
@@ -686,12 +674,11 @@ pub fn format_ty_for_rs<'tcx>(
             .parse()
             .expect("rustc_middle::ty::Ty::to_string() should produce no parsing errors"),
         ty::TyKind::Tuple(types) => {
-            if types.len() == 0 {
-                quote! { () }
-            } else {
-                // TODO(b/254099023): Add support for tuples.
-                bail!("Tuples are not supported yet: {} (b/254099023)", ty);
-            }
+            let rs_types = types
+                .iter()
+                .map(|ty| format_ty_for_rs(db, ty))
+                .collect::<Result<Vec<TokenStream>>>()?;
+            quote! { (#(#rs_types,)*) }
         }
         ty::TyKind::Adt(adt, substs) => {
             let is_bridged_type = is_bridged_type(db, ty)?.is_some();
@@ -1161,6 +1148,21 @@ pub mod tests {
                 cc: "std :: int32_t & [[clang :: annotate_type (\"lifetime\" , \"__anon1\")]]",
                 includes: ["<cstdint>"]
             ),
+            case!(
+                rs: "()",
+                cc: "std::tuple < >",
+                includes: ["<tuple>"]
+            ),
+            case!(
+                rs: "(i32,)",
+                cc: "std::tuple<std::int32_t>",
+                includes: ["<cstdint>", "<tuple>"]
+            ),
+            case!(
+                rs: "(i32, i32)",
+                cc: "std::tuple<std::int32_t, std::int32_t>",
+                includes: ["<cstdint>", "<tuple>"]
+            ),
         ];
         let preamble = quote! {
             #![allow(unused_parens)]
@@ -1280,18 +1282,10 @@ pub mod tests {
         let testcases = [
             // ( <Rust type>, <expected error message> )
             (
-                "()", // Empty TyKind::Tuple
-                "`()` / `void` is only supported as a return type (b/254507801)",
-            ),
-            (
                 // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
                 // details).
                 "!", // TyKind::Never
                 "The never type `!` is only supported as a return type (b/254507801)",
-            ),
-            (
-                "(i32, i32)", // Non-empty TyKind::Tuple
-                "Tuples are not supported yet: (i32, i32) (b/254099023)",
             ),
             (
                 "&'static &'static i32", // TyKind::Ref (nested reference - referent of reference)
@@ -1481,10 +1475,6 @@ pub mod tests {
         // `Err(...)`.
         let testcases = [
             // ( <Rust type>, <expected error message> )
-            (
-                "(i32, i32)", // Non-empty TyKind::Tuple
-                "Tuples are not supported yet: (i32, i32) (b/254099023)",
-            ),
             (
                 "[i32; 42]", // TyKind::Array
                 "The following Rust type is not supported yet: [i32; 42]",

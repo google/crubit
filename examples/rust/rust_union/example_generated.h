@@ -77,7 +77,8 @@ extern "C" void __crubit_thunk_set_ua(
 }
 inline void ReprRustUnion::set_a(std::int32_t a)
     [[clang::annotate_type("lifetime", "__anon1")]] {
-  return __crubit_internal::__crubit_thunk_set_ua(*this, a);
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_set_ua(self, a);
 }
 
 namespace __crubit_internal {
@@ -88,7 +89,8 @@ extern "C" void __crubit_thunk_set_ub(
 }
 inline void ReprRustUnion::set_b(double b)
     [[clang::annotate_type("lifetime", "__anon1")]] {
-  return __crubit_internal::__crubit_thunk_set_ub(*this, b);
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_set_ub(self, b);
 }
 inline void ReprRustUnion::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ReprRustUnion, __opaque_blob_of_bytes));

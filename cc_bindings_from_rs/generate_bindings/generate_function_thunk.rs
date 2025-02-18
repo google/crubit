@@ -4,10 +4,10 @@
 
 use crate::{
     does_type_implement_trait, ensure_ty_is_pointer_like, format_cc_ident,
-    format_param_types_for_cc, format_region_as_rs_lifetime, format_ret_ty_for_cc,
-    format_ty_for_rs, is_bridged_type, is_c_abi_compatible_by_value,
-    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, AllowReferences,
-    BridgedType, BridgedTypeConversionInfo, CcType, FullyQualifiedName, RsSnippet,
+    format_param_types_for_cc, format_ret_ty_for_cc, format_ty_for_rs, is_bridged_type,
+    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions,
+    post_analysis_typing_env, AllowReferences, BridgedType, BridgedTypeConversionInfo,
+    FullyQualifiedName, RsSnippet,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
@@ -17,11 +17,9 @@ use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
 use database::{AdtCoreBindings, BindingsGenerator};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
-use proc_macro2::Ident;
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::format_ident;
 use quote::quote;
-use rustc_hir::Safety;
 use rustc_middle::ty::{self, Ty};
 use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
@@ -29,7 +27,29 @@ use rustc_type_ir::RegionKind;
 use std::collections::{BTreeSet, HashMap};
 use std::ops::AddAssign;
 
-/// Formats a C++ function declaration of a thunk that wraps a Rust function.
+/// Returns a C ABI-compatible C type to pass a tuple, or `None` if `possibly_tuple_ty` is not a
+/// tuple.
+///
+/// Tuples are passed via a pointer to an array of `void*` where
+/// each pointer points to the corresponding element of the tuple.
+fn tuple_c_abi_c_type(possibly_tuple_ty: ty::Ty) -> Option<TokenStream> {
+    let ty::TyKind::Tuple(_) = possibly_tuple_ty.kind() else { return None };
+    // Sized array types are sadly not usable by-pointer in C++.
+    Some(quote! { void** })
+}
+
+/// Returns a C ABI-compatible Rust type to pass a tuple, or `None` if `possibly_tuple_ty` is not a
+/// tuple.
+///
+/// Tuples are passed via a pointer to an array of `*const c_void` where
+/// each pointer points to the corresponding element of the tuple.
+fn tuple_c_abi_rs_type(possibly_tuple_ty: ty::Ty) -> Option<TokenStream> {
+    let ty::TyKind::Tuple(tuple_tys) = possibly_tuple_ty.kind() else { return None };
+    let num_elements = tuple_tys.len();
+    Some(quote! { *const [*const core::ffi::c_void; #num_elements] })
+}
+
+/// Formats a C++ declaration of a C-ABI-compatible-function wrapper around a Rust function.
 pub fn generate_thunk_decl<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
@@ -57,6 +77,8 @@ pub fn generate_thunk_decl<'tcx>(
                     }
                 } else if is_c_abi_compatible_by_value(ty) {
                     Ok(quote! { #cpp_type })
+                } else if let Some(tuple_abi) = tuple_c_abi_c_type(ty) {
+                    Ok(tuple_abi)
                 } else if let Some(adt_def) = ty.ty_adt_def() {
                     let core = db.generate_adt_core(adt_def.did())?;
                     db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
@@ -70,9 +92,13 @@ pub fn generate_thunk_decl<'tcx>(
             .collect::<Result<Vec<_>>>()?
     };
 
+    // Types which are not C-ABI compatible by-value are returned via out-pointer parameters.
     let thunk_ret_type: TokenStream;
     if is_c_abi_compatible_by_value(sig_mid.output()) {
         thunk_ret_type = main_api_ret_type;
+    } else if let Some(tuple_abi) = tuple_c_abi_c_type(sig_mid.output()) {
+        thunk_ret_type = quote! { void };
+        thunk_params.push(quote! { #tuple_abi __ret_ptr });
     } else {
         thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
@@ -84,6 +110,269 @@ pub fn generate_thunk_decl<'tcx>(
                 extern "C" #thunk_ret_type #thunk_name ( #( #thunk_params ),* );
             }
         },
+    })
+}
+
+/// Creates Rust code to convert a bridged type from a C ABI type to a Rust type.
+///
+/// Expects an exising local of type `cpp_type` named `local_name` and shadows it
+/// with a local of type `ty` named `local_name`.
+fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    ty: ty::Ty<'tcx>,
+    BridgedType { conversion_info, .. }: &BridgedType,
+    local_name: &Ident,
+    extern_c_decls: &mut BTreeSet<ExternCDecl>,
+) -> Result<TokenStream> {
+    let rs_type = format_ty_for_rs(db, ty)
+        .with_context(|| format!("Error handling parameter `{local_name}`"))?;
+
+    let temp_name = format_ident!("__crubit_temp");
+    let rs_out_decl = quote! {
+        let mut #temp_name =
+            ::core::mem::MaybeUninit::<#rs_type>::uninit();
+    };
+
+    let convert = match conversion_info {
+        BridgedTypeConversionInfo::PointerLikeTransmute => quote! {
+            #temp_name.write(::core::mem::transmute(#local_name));
+        },
+        BridgedTypeConversionInfo::ExternCFuncConverters { cpp_to_rust_converter, .. } => {
+            let cpp_to_rust_converter_ident = add_extern_c_decl(
+                extern_c_decls,
+                ExternCDeclKind::CppToRustConverter,
+                *cpp_to_rust_converter,
+            );
+            quote! {
+                #cpp_to_rust_converter_ident(#local_name,#temp_name.as_mut_ptr() as *mut core::ffi::c_void);
+            }
+        }
+    };
+
+    Ok(quote! {
+        let #local_name = {
+            #rs_out_decl
+            #convert
+            #temp_name.assume_init()
+        };
+    })
+}
+
+/// Converts a local named `local_name` from its C ABI-compatible type
+/// `*const [*const core::ffi::c_void; <tuple_tys.len()>]` to a tuple of Rust types.
+fn convert_tuple_from_c_abi_to_rust<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    tuple_tys: &[ty::Ty<'tcx>],
+    local_name: &Ident,
+    extern_c_decls: &mut BTreeSet<ExternCDecl>,
+) -> Result<TokenStream> {
+    let mut read_elements = Vec::with_capacity(tuple_tys.len());
+    for (i, element_type) in tuple_tys.iter().copied().enumerate() {
+        let element_c_abi_type = c_abi_for_param_type(db, element_type)?;
+        let element_local_name = format_ident!("{local_name}_{i}");
+        let from_c_abi_to_rust = convert_value_from_c_abi_to_rust(
+            db,
+            element_type,
+            &element_local_name,
+            extern_c_decls,
+        )?;
+        read_elements.push(quote! { {
+            let #element_local_name: #element_c_abi_type = ((*#local_name)[#i] as *const #element_c_abi_type).read();
+            #from_c_abi_to_rust
+            #element_local_name
+        } });
+    }
+    Ok(quote! {
+        let #local_name = (#(#read_elements,)*);
+    })
+}
+
+/// Returns code to convert a local named `local_name` from its C ABI-compatible type to its Rust
+/// type.
+fn convert_value_from_c_abi_to_rust<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    ty: ty::Ty<'tcx>,
+    local_name: &Ident,
+    extern_c_decls: &mut BTreeSet<ExternCDecl>,
+) -> Result<TokenStream> {
+    if let Some(bridged) = is_bridged_type(db, ty)? {
+        return convert_bridged_type_from_c_abi_to_rust(
+            db,
+            ty,
+            &bridged,
+            local_name,
+            extern_c_decls,
+        );
+    }
+    if is_c_abi_compatible_by_value(ty) {
+        return Ok(quote! {});
+    }
+    if let ty::TyKind::Tuple(tuple_tys) = ty.kind() {
+        return convert_tuple_from_c_abi_to_rust(db, tuple_tys, local_name, extern_c_decls);
+    }
+    // Non-C-ABI-compatible-by-value types are passed by
+    // `&mut MaybeUninit<T>` reference, so we need to read out the value.
+    Ok(quote! { let #local_name = #local_name.assume_init_read(); })
+}
+
+fn c_abi_for_param_type<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    ty: ty::Ty<'tcx>,
+) -> Result<TokenStream> {
+    if is_bridged_type(db, ty)?.is_some() {
+        Ok(quote! { *const core::ffi::c_void })
+    } else if is_c_abi_compatible_by_value(ty) {
+        let rs_type = format_ty_for_rs(db, ty)?;
+        Ok(quote! { #rs_type })
+    } else if let Some(tuple_abi) = tuple_c_abi_rs_type(ty) {
+        Ok(quote! { #tuple_abi })
+    } else {
+        let rs_type = format_ty_for_rs(db, ty)?;
+        Ok(quote! { &mut ::core::mem::MaybeUninit<#rs_type> })
+    }
+}
+
+/// Returns a list of the non-'static lifetimes referenced in the function signature.
+///
+/// This list is used to create the lifetime generic parameters of the generated function thunk.
+fn unique_late_bound_regions_in_fn_sig(sig: &ty::FnSig) -> Vec<syn::Lifetime> {
+    let mut regions = sig
+        .inputs()
+        .iter()
+        .copied()
+        .chain(std::iter::once(sig.output()))
+        .flat_map(|ty| {
+            ty.walk().filter_map(|generic_arg| match generic_arg.unpack() {
+                ty::GenericArgKind::Const(_) | ty::GenericArgKind::Type(_) => None,
+                ty::GenericArgKind::Lifetime(region) => Some(region),
+            })
+        })
+        .filter(|region| match region.kind() {
+            RegionKind::ReStatic => false,
+            RegionKind::ReLateParam(_) => true,
+            _ => panic!("Unexpected region kind: {region}"),
+        })
+        .map(|region| {
+            let name = region
+                .get_name()
+                .expect("Caller should use `liberate_and_deanonymize_late_bound_regions`");
+            syn::Lifetime::new(name.as_str(), proc_macro2::Span::call_site())
+        })
+        .collect_vec();
+    regions.sort_unstable();
+    regions.dedup();
+    regions
+}
+
+/// Returns an iterator which yields arbitrary unique names for the parameters
+/// of the function identified by `fn_def_id`.
+fn thunk_param_names(tcx: ty::TyCtxt<'_>, fn_def_id: DefId) -> impl Iterator<Item = Ident> + '_ {
+    tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, ident)| {
+        if ident.as_str().is_empty() {
+            format_ident!("__param_{i}")
+        } else if ident.name == kw::SelfLower {
+            format_ident!("__self")
+        } else {
+            make_rs_ident(ident.as_str())
+        }
+    })
+}
+
+enum ExternCDeclKind {
+    /// The function is a Rust to C++ converter.
+    RustToCppConverter,
+    /// The function is a C++ to Rust converter.
+    CppToRustConverter,
+}
+
+fn add_extern_c_decl(
+    extern_c_decls: &mut BTreeSet<ExternCDecl>,
+    kind: ExternCDeclKind,
+    symbol: Symbol,
+) -> Ident {
+    let converter_ident = make_rs_ident(symbol.as_str());
+    let decl = match kind {
+        ExternCDeclKind::RustToCppConverter => {
+            quote! {
+                fn #converter_ident(
+                    rs_in: *const core::ffi::c_void,
+                    cpp_out: *mut core::ffi::c_void);
+            }
+        }
+        ExternCDeclKind::CppToRustConverter => {
+            quote! {
+                fn #converter_ident(
+                    cpp_in: *const core::ffi::c_void,
+                    rs_out: *mut core::ffi::c_void);
+            }
+        }
+    };
+    extern_c_decls.insert(ExternCDecl { symbol, decl });
+    converter_ident
+}
+
+/// Writes a Rust value out into the memory pointed to a `*mut c_void` pointed to by `c_ptr`.
+fn write_rs_value_to_c_abi_ptr<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    rs_value: &Ident,
+    c_ptr: &Ident,
+    rs_type: ty::Ty<'tcx>,
+    extern_c_decls: &mut BTreeSet<ExternCDecl>,
+) -> Result<TokenStream> {
+    let write_directly = || -> Result<TokenStream> {
+        let rs_type_tokens = format_ty_for_rs(db, rs_type)?;
+        Ok(quote! { (#c_ptr as *mut #rs_type_tokens).write(#rs_value); })
+    };
+    Ok(if let Some(BridgedType { conversion_info, .. }) = is_bridged_type(db, rs_type)? {
+        match conversion_info {
+            BridgedTypeConversionInfo::PointerLikeTransmute => {
+                ensure_ty_is_pointer_like(db, rs_type)?;
+                write_directly()?
+            }
+            BridgedTypeConversionInfo::ExternCFuncConverters { rust_to_cpp_converter, .. } => {
+                let rust_to_cpp_converter_ident = add_extern_c_decl(
+                    extern_c_decls,
+                    ExternCDeclKind::RustToCppConverter,
+                    rust_to_cpp_converter,
+                );
+                quote! {
+                    #rust_to_cpp_converter_ident(
+                        std::ptr::from_ref(&#rs_value) as *const core::ffi::c_void,
+                        #c_ptr);
+                }
+            }
+        }
+    } else if is_c_abi_compatible_by_value(rs_type) {
+        write_directly()?
+    } else if let ty::TyKind::Tuple(tuple_tys) = rs_type.kind() {
+        let num_elements = tuple_tys.len();
+        let rs_element_names =
+            (0..num_elements).map(|i| format_ident!("{rs_value}_{i}")).collect_vec();
+        let ptr_member_names =
+            (0..num_elements).map(|i| format_ident!("{c_ptr}_{i}")).collect_vec();
+        let unpack = quote! {
+            let (#(#rs_element_names,)*) = #rs_value;
+            let [#(#ptr_member_names),*] = *(#c_ptr as *mut [*mut core::ffi::c_void; #num_elements]);
+        };
+        let write_elements = (0..num_elements)
+            .map(|i| {
+                write_rs_value_to_c_abi_ptr(
+                    db,
+                    &rs_element_names[i],
+                    &ptr_member_names[i],
+                    tuple_tys[i],
+                    extern_c_decls,
+                )
+            })
+            .collect::<Result<TokenStream>>()?;
+        quote! {
+            #unpack
+            #write_elements
+        }
+    } else if rs_type.ty_adt_def().is_some() {
+        write_directly()?
+    } else {
+        bail!("Attempted to write out unknown type from Rust to C")
     })
 }
 
@@ -106,15 +395,7 @@ pub fn generate_thunk_impl<'tcx>(
 ) -> Result<RsSnippet> {
     let tcx = db.tcx();
     let param_names_and_types: Vec<(Ident, Ty)> = {
-        let param_names = tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, ident)| {
-            if ident.as_str().is_empty() {
-                format_ident!("__param_{i}")
-            } else if ident.name == kw::SelfLower {
-                format_ident!("__self")
-            } else {
-                make_rs_ident(ident.as_str())
-            }
-        });
+        let param_names = thunk_param_names(tcx, fn_def_id);
         let param_types = sig.inputs().iter().copied();
         param_names.zip(param_types).collect_vec()
     };
@@ -122,233 +403,74 @@ pub fn generate_thunk_impl<'tcx>(
     let mut thunk_params = param_names_and_types
         .iter()
         .map(|(param_name, ty)| {
-            let rs_type = format_ty_for_rs(db, *ty)
+            let c_abi_type = c_abi_for_param_type(db, *ty)
                 .with_context(|| format!("Error handling parameter `{param_name}`"))?;
-
-            if let Some(BridgedType { cpp_type: CcType::Other(_), .. }) = is_bridged_type(db, *ty)?
-            {
-                Ok(quote! { #param_name: *const core::ffi::c_void })
-            } else if let Some(BridgedType { cpp_type: CcType::Pointer { cv, .. }, .. }) =
-                is_bridged_type(db, *ty)?
-            {
-                match cv {
-                    CcConstQualifier::Mut => Ok(quote! { #param_name: *mut core::ffi::c_void }),
-                    CcConstQualifier::Const => Ok(quote! { #param_name: *const core::ffi::c_void }),
-                }
-            } else if is_c_abi_compatible_by_value(*ty) {
-                Ok(quote! { #param_name: #rs_type })
-            } else {
-                Ok(quote! { #param_name: &mut ::core::mem::MaybeUninit<#rs_type> })
-            }
+            Ok(quote! { #param_name: #c_abi_type })
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<Result<Vec<TokenStream>>>()?;
 
     let mut extern_c_decls = BTreeSet::new();
 
+    // Convert all parameters from their C ABI types to their Rust types.
     let fn_args_conversions = param_names_and_types
         .iter()
-        .map(|(param_name, ty)| match is_bridged_type(db, *ty)? {
-            None => Ok(quote! {}),
-            Some(BridgedType { cpp_type, conversion_info, .. }) => {
-                let rs_type = format_ty_for_rs(db, *ty)
-                    .with_context(|| format!("Error handling parameter `{param_name}`"))?;
-
-                let rs_out_varname = format_ident!("__crubit_{}_uninit", param_name);
-                let rs_out_decl = quote! {
-                    let mut #rs_out_varname =
-                        ::core::mem::MaybeUninit::<#rs_type>::uninit();
-                };
-
-                match conversion_info {
-                    BridgedTypeConversionInfo::PointerLikeTransmute => Ok(quote! {
-                        #rs_out_decl
-
-                        unsafe { #rs_out_varname.write(::core::mem::transmute(#param_name)); }
-                    }),
-                    BridgedTypeConversionInfo::ExternCFuncConverters {
-                        cpp_to_rust_converter,
-                        ..
-                    } => {
-                        let cpp_to_rust_converter_ident =
-                            make_rs_ident(cpp_to_rust_converter.as_str());
-                        let cpp_in_ty =
-                            if let CcType::Pointer { cv: CcConstQualifier::Mut, .. } = cpp_type {
-                                quote! { *mut core::ffi::c_void }
-                            } else {
-                                quote! { *const core::ffi::c_void }
-                            };
-
-                        extern_c_decls.insert(ExternCDecl {
-                            symbol: cpp_to_rust_converter,
-                            decl: quote! {
-                                fn #cpp_to_rust_converter_ident(cpp_in: #cpp_in_ty,
-                                    rs_out: *mut core::ffi::c_void);
-                            },
-                        });
-
-                        Ok(quote! {
-                            #rs_out_decl
-
-                            unsafe { #cpp_to_rust_converter_ident(#param_name,
-                                #rs_out_varname.as_mut_ptr() as *mut core::ffi::c_void); }
-                        })
-                    }
-                }
-            }
+        .map(|(param_name, ty)| {
+            convert_value_from_c_abi_to_rust(db, *ty, param_name, &mut extern_c_decls)
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<Result<Vec<TokenStream>>>()?;
 
-    let mut thunk_ret_type = format_ty_for_rs(db, sig.output())?;
+    let fn_args: Vec<Ident> =
+        param_names_and_types.into_iter().map(|(rs_name, _ty)| rs_name).collect();
+    let output_is_bridged = is_bridged_type(db, sig.output())?;
 
-    let fn_args = param_names_and_types
-        .iter()
-        .map(|(rs_name, ty)| {
-            if is_bridged_type(db, *ty)?.is_some() {
-                let rs_out_varname = format_ident!("__crubit_{}_uninit", rs_name);
-                Ok(quote! { unsafe { #rs_out_varname.assume_init() } })
-            } else if is_c_abi_compatible_by_value(*ty) {
-                Ok(quote! { #rs_name })
-            } else if let Safety::Unsafe = sig.safety {
-                // The whole call will be wrapped in `unsafe` below.
-                Ok(quote! { #rs_name.assume_init_read() })
-            } else {
-                Ok(quote! { unsafe { #rs_name.assume_init_read() } })
-            }
-        })
-        .collect::<Result<Vec<_>>>()?;
-    let mut thunk_body;
-
-    match is_bridged_type(db, sig.output())? {
-        None => {
-            thunk_body = quote! {
-                #fully_qualified_fn_name( #( #fn_args ),* )
-            };
-
-            if !is_c_abi_compatible_by_value(sig.output()) {
-                thunk_params.push(quote! {
-                    __ret_slot: &mut ::core::mem::MaybeUninit<#thunk_ret_type>
-                });
-                thunk_ret_type = quote! { () };
-                thunk_body = quote! { __ret_slot.write(#thunk_body); };
-            };
-
-            thunk_body = quote! {
-                #( #fn_args_conversions )*
-                #thunk_body
-            };
-        }
-        Some(BridgedType { cpp_type, conversion_info, .. }) => {
-            let cpp_out_ty = match cpp_type {
-                CcType::Pointer { cv: CcConstQualifier::Mut, .. } => {
-                    quote! { *mut *mut core::ffi::c_void }
-                }
-                CcType::Pointer { cv: CcConstQualifier::Const, .. } => {
-                    quote! { *mut *const core::ffi::c_void }
-                }
-                CcType::Other(_) => quote! { *mut core::ffi::c_void },
-            };
-
-            thunk_params.push(quote! {
-                __ret_ptr: #cpp_out_ty
-            });
-            thunk_ret_type = quote! { () };
-
-            let thunk_body_common = quote! {
-                #( #fn_args_conversions )*
-
-                let rs_val = #fully_qualified_fn_name( #( #fn_args ),* );
-            };
-
-            thunk_body = match conversion_info {
-                BridgedTypeConversionInfo::PointerLikeTransmute => {
-                    ensure_ty_is_pointer_like(db, sig.output())?;
-
-                    quote! {
-                        #thunk_body_common
-
-                        unsafe { __ret_ptr.write(::core::mem::transmute(rs_val)); }
-                    }
-                }
-                BridgedTypeConversionInfo::ExternCFuncConverters {
-                    rust_to_cpp_converter, ..
-                } => {
-                    let rust_to_cpp_converter_ident = make_rs_ident(rust_to_cpp_converter.as_str());
-
-                    extern_c_decls.insert(ExternCDecl {
-                        symbol: rust_to_cpp_converter,
-                        decl: quote! {
-                        fn #rust_to_cpp_converter_ident(rs_in: *const core::ffi::c_void,
-                            cpp_out: #cpp_out_ty);
-                        },
-                    });
-
-                    quote! {
-                        #thunk_body_common
-
-                        unsafe {
-                            #rust_to_cpp_converter_ident(
-                                std::ptr::from_ref(&rs_val) as *const core::ffi::c_void,
-                                __ret_ptr);
-                        }
-                    }
-                }
-            };
-        }
-    };
-
-    // Wrap the call in an unsafe block, for the sake of RFC #2585
-    // `unsafe_block_in_unsafe_fn`.
-    if let Safety::Unsafe = sig.safety {
-        thunk_body = quote! {unsafe {#thunk_body}};
+    let thunk_return_type;
+    let thunk_return_expression;
+    if output_is_bridged.is_none() && is_c_abi_compatible_by_value(sig.output()) {
+        // The output is not bridged and is C ABI compatible by-value, so we can just return
+        // the result directly, and no out-param is needed.
+        thunk_return_type = format_ty_for_rs(db, sig.output())?;
+        thunk_return_expression = quote! {
+            #fully_qualified_fn_name( #( #fn_args ),* )
+        };
+    } else {
+        let return_ptr_ident = format_ident!("__ret_ptr");
+        let rs_return_value_ident = format_ident!("__rs_return_value");
+        thunk_return_type = quote! { () };
+        thunk_params.push(quote! {
+            #return_ptr_ident: *mut core::ffi::c_void
+        });
+        let write_return_value = write_rs_value_to_c_abi_ptr(
+            db,
+            &rs_return_value_ident,
+            &return_ptr_ident,
+            sig.output(),
+            &mut extern_c_decls,
+        )?;
+        thunk_return_expression = quote! {
+            let #rs_return_value_ident = #fully_qualified_fn_name( #( #fn_args ),* );
+            #write_return_value
+        };
     }
 
-    let generic_params = {
-        let regions = sig
-            .inputs()
-            .iter()
-            .copied()
-            .chain(std::iter::once(sig.output()))
-            .flat_map(|ty| {
-                ty.walk().filter_map(|generic_arg| match generic_arg.unpack() {
-                    ty::GenericArgKind::Const(_) | ty::GenericArgKind::Type(_) => None,
-                    ty::GenericArgKind::Lifetime(region) => Some(region),
-                })
-            })
-            .filter(|region| match region.kind() {
-                RegionKind::ReStatic => false,
-                RegionKind::ReLateParam(_) => true,
-                _ => panic!("Unexpected region kind: {region}"),
-            })
-            .sorted_by_key(|region| {
-                region
-                    .get_name()
-                    .expect("Caller should use `liberate_and_deanonymize_late_bound_regions`")
-            })
-            .dedup()
-            .collect_vec();
+    let lifetime_generics = {
+        let regions = unique_late_bound_regions_in_fn_sig(sig);
         if regions.is_empty() {
             quote! {}
         } else {
-            let lifetimes = regions.into_iter().map(|region| format_region_as_rs_lifetime(&region));
-            quote! { < #( #lifetimes ),* > }
+            quote! { < #( #regions ),* > }
         }
     };
 
     let thunk_name = make_rs_ident(thunk_name);
-    let unsafe_qualifier = if let Safety::Unsafe = sig.safety {
-        quote! {unsafe}
-    } else {
-        quote! {}
-    };
-
     Ok(RsSnippet {
         tokens: quote! {
             #[unsafe(no_mangle)]
-            #unsafe_qualifier extern "C" fn #thunk_name #generic_params (
+            unsafe extern "C" fn #thunk_name #lifetime_generics (
                 #( #thunk_params ),*
-            ) -> #thunk_ret_type {
-                #thunk_body
-            }
+            ) -> #thunk_return_type { unsafe {
+                #(#fn_args_conversions)*
+                #thunk_return_expression
+            } }
         },
         extern_c_decls,
     })

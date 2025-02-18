@@ -49,8 +49,10 @@ pub fn is_cpp_reserved_keyword(ident: &str) -> bool {
 }
 
 /// Formats a C++ identifier. Panics if `ident` is a C++ reserved keyword.
+#[track_caller]
 pub fn expect_format_cc_ident(ident: &str) -> TokenStream {
-    format_cc_ident(ident).expect("IR should only contain valid C++ identifiers")
+    format_cc_ident(ident)
+        .unwrap_or_else(|err| panic!("Can't format `{ident}` as a C++ identifier: {err}"))
 }
 
 /// Formats a C++ (qualified) identifier. Returns an error when `ident` is a C++
@@ -238,6 +240,13 @@ impl CcInclude {
     /// See https://en.cppreference.com/w/cpp/header/utility
     pub fn utility() -> Self {
         Self::SystemHeader("utility".into())
+    }
+
+    /// Creates a `CcInclude` that represents `#include <tuple>` and provides
+    /// C++ `std::tuple`, `std::tie`, etc.
+    /// See https://en.cppreference.com/w/cpp/header/utility
+    pub fn tuple() -> Self {
+        Self::SystemHeader("tuple".into())
     }
 
     /// Creates a `CcInclude` that represents `#include <type_traits>` and

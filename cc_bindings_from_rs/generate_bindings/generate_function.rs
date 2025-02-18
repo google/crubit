@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::format_cc_ident;
+use crate::format_type::{format_cc_ident, format_ty_for_cc};
 use crate::generate_doc_comment;
 use crate::generate_function_thunk::{generate_thunk_decl, generate_thunk_impl, is_thunk_required};
 use crate::{
@@ -12,20 +12,22 @@ use crate::{
     BridgedType, CcType, FullyQualifiedName, RsSnippet,
 };
 use arc_anyhow::{Context, Result};
-use code_gen_utils::escape_non_identifier_chars;
-use code_gen_utils::make_rs_ident;
-use code_gen_utils::CcInclude;
+use code_gen_utils::{
+    escape_non_identifier_chars, expect_format_cc_ident, make_rs_ident, CcInclude,
+};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::BindingsGenerator;
+use database::{SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
-use proc_macro2::TokenStream;
+use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 use rustc_hir::Node;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
-use rustc_span::symbol::kw;
+use rustc_span::symbol::{kw, Symbol};
+use std::collections::BTreeSet;
 
 #[derive(Debug, Eq, PartialEq)]
 enum FunctionKind {
@@ -52,6 +54,256 @@ impl FunctionKind {
     }
 }
 
+fn thunk_name(
+    db: &dyn BindingsGenerator,
+    def_id: DefId,
+    export_name: Option<Symbol>,
+    needs_thunk: bool,
+) -> String {
+    let tcx = db.tcx();
+    let symbol_name = if db.no_thunk_name_mangling() {
+        if let Some(export_name) = export_name {
+            export_name.to_string()
+        } else {
+            FullyQualifiedName::new(db, def_id)
+                .rs_name
+                .expect("Functions are assumed to always have a name")
+                .to_string()
+        }
+    } else {
+        // Call to `mono` is ok - `generics_of` have been checked above.
+        let instance = ty::Instance::mono(tcx, def_id);
+        tcx.symbol_name(instance).name.to_string()
+    };
+    let target_path_mangled_hash = if db.no_thunk_name_mangling() {
+        "".to_string()
+    } else {
+        format!("{}_", tcx.crate_hash(LOCAL_CRATE).to_hex())
+    };
+    if needs_thunk {
+        format!(
+            "__crubit_thunk_{}{}",
+            target_path_mangled_hash,
+            &escape_non_identifier_chars(&symbol_name)
+        )
+    } else {
+        symbol_name
+    }
+}
+
+/// Returns a vector of identifiers `{prefix}_{i}` for `i` in `[0, n)`.
+fn ident_for_each(prefix: &str, n: usize) -> Vec<TokenStream> {
+    (0..n).map(|i| expect_format_cc_ident(&format!("{prefix}_{i}"))).collect()
+}
+
+/// Converts a C++ value to a C-ABI-compatible type.
+///
+/// * `db` - the bindings generator
+/// * `cc_ident` - the name of the C++ lvalue.
+/// * `ty` - the Rust type of the parameter
+/// * `post_analysis_typing_env` - the typing environment, used to determine if the type is
+///   trivially destructible (no drop glue).
+/// * `includes` - an output parameter used to store the set of C++ includes required
+/// * `statements` - an output parameter used to store the C++ statements performing the conversion
+///
+/// Returns a `TokenStream` containing an expression that evaluates to the
+/// C-ABI-compatible version of the type.
+fn cc_param_to_c_abi<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    cc_ident: TokenStream,
+    ty: SugaredTy<'tcx>,
+    post_analysis_typing_env: ty::TypingEnv<'tcx>,
+    includes: &mut BTreeSet<CcInclude>,
+    statements: &mut TokenStream,
+) -> Result<TokenStream> {
+    Ok(if let Some(BridgedType { cpp_type, .. }) = is_bridged_type(db, ty.mid())? {
+        if let CcType::Pointer { .. } = cpp_type {
+            cc_ident
+        } else {
+            quote! { & #cc_ident }
+        }
+    } else if is_c_abi_compatible_by_value(ty.mid()) {
+        cc_ident
+    } else if let Some(tuple_tys) = ty.as_tuple(db) {
+        let n = tuple_tys.len();
+        let c_abi_names = ident_for_each(&format!("{cc_ident}_cabi"), n);
+
+        // Create a statement defining a local for the C ABI representation of each tuple element.
+        // This is necessary in order to ensure that we have a non-temporary value to point to
+        // in the `result_name` array below.
+        //
+        // Locals of unknown type use `auto&&` in order to avoid changing the type of the
+        // expression.
+        for (i, c_abi_name) in c_abi_names.iter().enumerate() {
+            let tuple_element_name = expect_format_cc_ident(&format!("{cc_ident}_{i}"));
+            // Needed to avoid `proc_macro2` interpolating `1usize` instead of `1`.
+            let i_literal = Literal::usize_unsuffixed(i);
+            statements.extend(quote! {
+                auto&& #tuple_element_name = std::get<#i_literal>(#cc_ident);
+            });
+            let converted_value = cc_param_to_c_abi(
+                db,
+                tuple_element_name.clone(),
+                tuple_tys.index(i),
+                post_analysis_typing_env,
+                includes,
+                statements,
+            )?;
+            if matches!(tuple_tys.index(i).mid().kind(), ty::TyKind::Tuple(_)) {
+                // Elements which are arrays must be referenced again in order
+                // to properly convert them to pointers.
+                //
+                // Note that `converted_value` here is a `result_name` array lvalue,
+                // never a temporary, so it's fine to take its address in the RHS.
+                statements.extend(quote! {
+                    auto* #c_abi_name = &#converted_value;
+                });
+            } else {
+                statements.extend(quote! {
+                    auto&& #c_abi_name = #converted_value;
+                });
+            }
+        }
+        let result_name = expect_format_cc_ident(&format!("{cc_ident}_cabi"));
+        statements.extend(quote! {
+            void* #result_name[] = { #(&#c_abi_names),* };
+        });
+        quote! {
+            #result_name
+        }
+    } else if !ty.mid().needs_drop(db.tcx(), post_analysis_typing_env) {
+        // As an optimization, if the type is trivially destructible, we don't
+        // need to move it to a new NoDestructor location. We can directly copy the
+        // bytes.
+        quote! { & #cc_ident }
+    } else {
+        // The implementation will copy the bytes, we just need to leave the variable
+        // behind in a valid moved-from state.
+        // TODO(jeanpierreda): Ideally, the Rust code should C++-move instead of memcpy,
+        // allowing us to avoid one extra memcpy: we could move it directly into its
+        // target location, instead of moving to a temporary that we memcpy to its
+        // target location.
+        includes.insert(db.support_header("internal/slot.h"));
+        let slot_name = &expect_format_cc_ident(&format!("{cc_ident}_slot"));
+        statements.extend(quote! {
+            crubit::Slot #slot_name((std::move(#cc_ident)));
+        });
+        quote! { #slot_name.Get() }
+    })
+}
+
+struct ReturnConversion {
+    /// The name of a variable holding a pointer to storage of the C-ABI-compatible version of
+    /// the return type.
+    storage_name: TokenStream,
+    /// An expression that unpacks the return value from the storage location.
+    unpack_expr: TokenStream,
+}
+
+fn format_ty_for_cc_amending_prereqs<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    ty: SugaredTy<'tcx>,
+    prereqs: &mut CcPrerequisites,
+) -> Result<TokenStream> {
+    let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
+        format_ty_for_cc(db, ty, TypeLocation::Other)?;
+    *prereqs += ty_prereqs;
+    Ok(cc_type)
+}
+
+fn cc_return_value_from_c_abi<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    ident: TokenStream,
+    ty: SugaredTy<'tcx>,
+    prereqs: &mut CcPrerequisites,
+    storage_statements: &mut TokenStream,
+) -> Result<ReturnConversion> {
+    let storage_name = &expect_format_cc_ident(&format!("__{ident}_storage"));
+    if let Some(attrs) = is_bridged_type(db, ty.mid())? {
+        let cpp_type = format_cc_ident(db, attrs.cpp_type.as_ref())?;
+        // Below, we use a union to allocate uninitialized memory that fits cpp_type.
+        // The union prevents the type from being default constructed. It's
+        // the responsibility of the thunk to properly initialize the
+        // memory. In the union's destructor we use std::destroy_at to call
+        // the cpp_type's destructor after the value has been moved on return.
+        let union_type = expect_format_cc_ident(&format!("__{ident}_crubit_return_union"));
+        let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
+        storage_statements.extend(quote! {
+            union #union_type {
+                constexpr #union_type() {}
+                ~#union_type() { std::destroy_at(&this->val); }
+                #cpp_type val;
+            } #local_name;
+            auto* #storage_name = &#local_name.val;
+        });
+        Ok(ReturnConversion {
+            storage_name: storage_name.clone(),
+            unpack_expr: quote! {
+                std::move(#local_name.val)
+            },
+        })
+    } else if is_c_abi_compatible_by_value(ty.mid()) {
+        let cc_type = &format_ty_for_cc_amending_prereqs(db, ty, prereqs)?;
+        let local_name = &expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
+        storage_statements.extend(quote! {
+            #cc_type #local_name;
+            #cc_type* #storage_name = &#local_name;
+        });
+        Ok(ReturnConversion {
+            storage_name: storage_name.clone(),
+            unpack_expr: quote! { *#storage_name },
+        })
+    } else if let Some(tuple_tys) = ty.as_tuple(db) {
+        let n = tuple_tys.len();
+        let mut storage_names = Vec::with_capacity(n);
+        let mut unpack_exprs = Vec::with_capacity(n);
+        for i in 0..n {
+            let tuple_element_ident = expect_format_cc_ident(&format!("{ident}_{i}"));
+            let ReturnConversion {
+                storage_name: element_storage_name,
+                unpack_expr: element_unpack_expr,
+            } = cc_return_value_from_c_abi(
+                db,
+                tuple_element_ident,
+                tuple_tys.index(i),
+                prereqs,
+                storage_statements,
+            )?;
+            storage_names.push(element_storage_name);
+            unpack_exprs.push(element_unpack_expr);
+        }
+        storage_statements.extend(quote! {
+            void* #storage_name[] = { #(#storage_names),* };
+        });
+        Ok(ReturnConversion {
+            storage_name: storage_name.clone(),
+            unpack_expr: quote! { std::make_tuple(#(#unpack_exprs),*) },
+        })
+    } else {
+        if let Some(adt_def) = ty.mid().ty_adt_def() {
+            let core = db.generate_adt_core(adt_def.did())?;
+            // Note: the error here is an ApiSnippets which is not propagated.
+            db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
+                anyhow!("Can't pass the return type by value without a move constructor")
+            })?;
+        }
+        let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
+        let cc_type = format_ty_for_cc_amending_prereqs(db, ty, prereqs)?;
+        storage_statements.extend(quote! {
+            crubit::Slot<#cc_type> #local_name;
+            auto* #storage_name = #local_name.Get();
+        });
+        prereqs.includes.insert(CcInclude::utility()); // for `std::move`
+        prereqs.includes.insert(db.support_header("internal/slot.h"));
+        Ok(ReturnConversion {
+            storage_name: storage_name.clone(),
+            unpack_expr: quote! {
+                std::move(#local_name).AssumeInitAndTakeValue()
+            },
+        })
+    }
+}
+
 /// Formats a function with the given `local_def_id`.
 ///
 /// Will panic if `local_def_id`
@@ -72,43 +324,13 @@ pub fn generate_function(
     let (sig_mid, sig_hir) = get_fn_sig(tcx, local_def_id);
     check_fn_sig(&sig_mid)?;
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.
-    let has_export_name = tcx.get_attr(def_id, rustc_span::symbol::sym::export_name).is_some();
+    let export_name: Option<Symbol> = tcx
+        .get_attr(def_id, rustc_span::symbol::sym::export_name)
+        .map(|attr| attr.value_str().expect("export_name is a string"));
+    let has_export_name = export_name.is_some();
     let has_no_mangle = tcx.get_attr(def_id, rustc_span::symbol::sym::no_mangle).is_some();
     let needs_thunk = is_thunk_required(&sig_mid).is_err() || (!has_no_mangle && !has_export_name);
-    let thunk_name = {
-        let symbol_name = if db.no_thunk_name_mangling() {
-            if has_export_name {
-                tcx.get_attr(def_id, rustc_span::symbol::sym::export_name)
-                    .unwrap()
-                    .value_str()
-                    .expect("export_name is a string")
-                    .to_string()
-            } else {
-                FullyQualifiedName::new(db, def_id)
-                    .rs_name
-                    .expect("Functions are assumed to always have a name")
-                    .to_string()
-            }
-        } else {
-            // Call to `mono` is ok - `generics_of` have been checked above.
-            let instance = ty::Instance::mono(tcx, def_id);
-            tcx.symbol_name(instance).name.to_string()
-        };
-        let target_path_mangled_hash = if db.no_thunk_name_mangling() {
-            "".to_string()
-        } else {
-            format!("{}_", tcx.crate_hash(LOCAL_CRATE).to_hex())
-        };
-        if needs_thunk {
-            format!(
-                "__crubit_thunk_{}{}",
-                target_path_mangled_hash,
-                &escape_non_identifier_chars(&symbol_name)
-            )
-        } else {
-            symbol_name.to_string()
-        }
-    };
+    let thunk_name = thunk_name(db, def_id, export_name, needs_thunk);
 
     let fully_qualified_fn_name = FullyQualifiedName::new(db, def_id);
     let unqualified_rust_fn_name =
@@ -123,7 +345,7 @@ pub fn generate_function(
     struct Param<'tcx> {
         cc_name: TokenStream,
         cpp_type: TokenStream,
-        ty: Ty<'tcx>,
+        ty: SugaredTy<'tcx>,
     }
     let params = {
         let names = tcx.fn_arg_names(def_id).iter();
@@ -131,11 +353,11 @@ pub fn generate_function(
             format_param_types_for_cc(db, &sig_mid, Some(sig_hir), AllowReferences::Safe)?;
         names
             .enumerate()
-            .zip(sig_mid.inputs().iter())
+            .zip(SugaredTy::fn_inputs(&sig_mid, Some(sig_hir)))
             .zip(cpp_types)
-            .map(|(((i, name), &ty), cpp_type)| {
+            .map(|(((i, name), ty), cpp_type)| {
                 let cc_name = format_cc_ident(db, name.as_str())
-                    .unwrap_or_else(|_err| format_cc_ident(db, &format!("__param_{i}")).unwrap());
+                    .unwrap_or_else(|_err| expect_format_cc_ident(&format!("__param_{i}")));
                 let cpp_type = cpp_type.into_tokens(&mut main_api_prereqs);
                 Param { cc_name, cpp_type, ty }
             })
@@ -155,10 +377,10 @@ pub fn generate_function(
         Node::ImplItem(_) => match tcx.fn_arg_names(def_id).first() {
             Some(arg_name) if arg_name.name == kw::SelfLower => {
                 let self_ty = self_ty.expect("ImplItem => non-None `self_ty`");
-                if params[0].ty == self_ty {
+                if params[0].ty.mid() == self_ty {
                     FunctionKind::MethodTakingSelfByValue
                 } else {
-                    match params[0].ty.kind() {
+                    match params[0].ty.mid().kind() {
                         ty::TyKind::Ref(_, referent_ty, _) if *referent_ty == self_ty => {
                             FunctionKind::MethodTakingSelfByRef
                         }
@@ -173,7 +395,7 @@ pub fn generate_function(
     let method_qualifiers = match method_kind {
         FunctionKind::Free | FunctionKind::StaticMethod => quote! {},
         FunctionKind::MethodTakingSelfByValue => quote! { && },
-        FunctionKind::MethodTakingSelfByRef => match params[0].ty.kind() {
+        FunctionKind::MethodTakingSelfByRef => match params[0].ty.mid().kind() {
             ty::TyKind::Ref(region, _, mutability) => {
                 let lifetime_annotation = format_region_as_cc_lifetime(region);
                 let mutability = match mutability {
@@ -279,82 +501,47 @@ pub fn generate_function(
             generate_thunk_decl(db, &sig_mid, Some(sig_hir), &thunk_name, AllowReferences::Safe)?
                 .into_tokens(&mut prereqs);
 
+        let mut statements = TokenStream::new();
         let mut thunk_args = params
             .iter()
             .enumerate()
-            .map(|(i, Param { cc_name, cpp_type, ty, .. })| {
-                if let Some(BridgedType { cpp_type: cpp_type2, .. }) = is_bridged_type(db, *ty)? {
-                    if let CcType::Pointer { .. } = cpp_type2 {
-                        Ok(quote! { #cc_name })
-                    } else {
-                        Ok(quote! { & #cc_name })
-                    }
-                } else if i == 0 && method_kind.has_self_param() {
-                    if method_kind == FunctionKind::MethodTakingSelfByValue {
-                        Ok(quote! { this })
-                    } else {
-                        Ok(quote! { *this })
-                    }
-                } else if is_c_abi_compatible_by_value(*ty) {
-                    Ok(quote! { #cc_name })
-                } else if !ty.needs_drop(tcx, post_analysis_typing_env(tcx, def_id)) {
-                    // As an optimization, if the type is trivially destructible, we don't
-                    // need to move it to a new NoDestructor location. We can directly copy the
-                    // bytes.
-                    Ok(quote! { & #cc_name })
-                } else {
-                    // The implementation will copy the bytes, we just need to leave the variable
-                    // behind in a valid moved-from state.
-                    // TODO(jeanpierreda): Ideally, the Rust code should C++-move instead of memcpy,
-                    // allowing us to avoid one extra memcpy: we could move it directly into its
-                    // target location, instead of moving to a temporary that we memcpy to its
-                    // target location.
-                    prereqs.includes.insert(db.support_header("internal/slot.h"));
-                    Ok(quote! { crubit::Slot<#cpp_type>(std::move(#cc_name)).Get() })
+            .map(|(i, Param { cc_name, ty, .. })| {
+                if i == 0 && method_kind.has_self_param() {
+                    statements.extend(quote! { auto&& #cc_name = *this; });
                 }
+                cc_param_to_c_abi(
+                    db,
+                    cc_name.clone(),
+                    *ty,
+                    post_analysis_typing_env(tcx, def_id),
+                    &mut prereqs.includes,
+                    &mut statements,
+                )
             })
-            .collect::<Result<Vec<_>>>()?;
-        let impl_body: TokenStream;
-        if let Some(attrs) = is_bridged_type(db, sig_mid.output())? {
-            let cpp_type = format_cc_ident(db, attrs.cpp_type.as_ref())?;
-            thunk_args.push(quote! { &__ret_val_holder.val });
+            .collect::<Result<Vec<TokenStream>>>()?;
 
-            // Below, we use a union to allocate uninitialized memory that fits cpp_type.
-            // The union prevents the type from being default constructed. It's
-            // the responsibility of the thunk to properly initialize the
-            // memory. In the union's destructor we use std::destroy_at to call
-            // the cpp_type's destructor after the value has been moved on return.
-            impl_body = quote! {
-                union __crubit_return_union {
-                    constexpr __crubit_return_union() {}
-                    ~__crubit_return_union() { std::destroy_at(&this->val); }
-                    #cpp_type val;
-                } __ret_val_holder;
-
-                __crubit_internal :: #thunk_name( #( #thunk_args ),* );
-
-                return std::move(__ret_val_holder.val);
-            };
-        } else if is_c_abi_compatible_by_value(sig_mid.output()) {
-            impl_body = quote! {
-                return __crubit_internal :: #thunk_name( #( #thunk_args ),* );
-            };
-        } else {
-            if let Some(adt_def) = sig_mid.output().ty_adt_def() {
-                let core = db.generate_adt_core(adt_def.did())?;
-                db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
-                    anyhow!("Can't pass the return type by value without a move constructor")
-                })?;
+        let rs_return_type = SugaredTy::fn_output(&sig_mid, Some(sig_hir));
+        let impl_body: TokenStream = if is_bridged_type(db, rs_return_type.mid())?.is_none()
+            && is_c_abi_compatible_by_value(rs_return_type.mid())
+        {
+            quote! {
+                return __crubit_internal::#thunk_name(#( #thunk_args ),*);
             }
-            thunk_args.push(quote! { __ret_slot.Get() });
-            impl_body = quote! {
-                crubit::Slot<#main_api_ret_type> __ret_slot;
-                __crubit_internal :: #thunk_name( #( #thunk_args ),* );
-                return std::move(__ret_slot).AssumeInitAndTakeValue();
-            };
-            prereqs.includes.insert(CcInclude::utility()); // for `std::move`
-            prereqs.includes.insert(db.support_header("internal/slot.h"));
+        } else {
+            let ReturnConversion { storage_name, unpack_expr } = cc_return_value_from_c_abi(
+                db,
+                expect_format_cc_ident("return_value"),
+                rs_return_type,
+                &mut prereqs,
+                &mut statements,
+            )?;
+            thunk_args.push(quote! { #storage_name });
+            quote! {
+                __crubit_internal::#thunk_name(#( #thunk_args ),*);
+                return #unpack_expr;
+            }
         };
+
         CcSnippet {
             prereqs,
             tokens: quote! {
@@ -362,6 +549,7 @@ pub fn generate_function(
                 #thunk_decl
                 inline #main_api_ret_type #struct_name #main_api_fn_name (
                         #( #main_api_params ),* ) #method_qualifiers {
+                    #statements
                     #impl_body
                 }
                 __NEWLINE__
@@ -495,8 +683,8 @@ pub mod tests {
             assert_rs_matches!(
                 bindings.cc_api_impl,
                 quote! {
-                    extern "C" fn ...() -> i32 {
-                        ::rust_out::SomeStruct::public_static_method()
+                    unsafe extern "C" fn ...() -> i32 {
+                        unsafe { ::rust_out::SomeStruct::public_static_method() }
                     }
                 }
             );
@@ -922,8 +1110,8 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn __crubit_thunk_foo() -> () {
-                         ::rust_out::foo()
+                    unsafe extern "C" fn __crubit_thunk_foo() -> () {
+                         unsafe { ::rust_out::foo() }
                     }
                 }
             );
@@ -989,9 +1177,9 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C"
+                    unsafe extern "C"
                     fn ...(i: i32) -> i32 {
-                        ::rust_out::foo(i)
+                        unsafe { ::rust_out::foo(i) }
                     }
                 }
             );
@@ -1229,21 +1417,6 @@ pub mod tests {
         });
     }
 
-    #[test]
-    fn test_format_item_unsupported_fn_ret_type() {
-        let test_src = r#"
-                pub fn foo() -> (i32, i32) { (123, 456) }
-            "#;
-        test_format_item(test_src, "foo", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "Error formatting function return type: \
-                       Tuples are not supported yet: (i32, i32) (b/254099023)"
-            );
-        });
-    }
-
     /// This test verifies handling of inferred, anonymous lifetimes.
     ///
     /// Note that `Region::get_name_or_anon()` may return the same name (e.g.
@@ -1285,8 +1458,8 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...<'__anon1>(arg: &'__anon1 i32) -> &'__anon1 i32 {
-                        ::rust_out::foo(arg)
+                    unsafe extern "C" fn ...<'__anon1>(arg: &'__anon1 i32) -> &'__anon1 i32 {
+                        unsafe { ::rust_out::foo(arg) }
                     }
                 }
             );
@@ -1367,7 +1540,7 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...<'a, 'foo, '__anon1, '__anon2>(
+                    unsafe extern "C" fn ...<'__anon1, '__anon2, 'a, 'foo>(
                         arg1: &'a i32,
                         arg2: &'foo i32,
                         arg3: &'foo i32,
@@ -1375,7 +1548,7 @@ pub mod tests {
                         arg5: &'__anon1 i32,
                         arg6: &'__anon2 i32
                     ) -> &'foo i32 {
-                        ::rust_out::foo(arg1, arg2, arg3, arg4, arg5, arg6)
+                        unsafe { ::rust_out::foo(arg1, arg2, arg3, arg4, arg5, arg6) }
                     }
                 }
             );
@@ -1467,9 +1640,9 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C"
+                    unsafe extern "C"
                     fn ...(x: f64, y: f64) -> f64 {
-                        ::rust_out::add(x, y)
+                        unsafe { ::rust_out::add(x, y) }
                     }
                 }
             );
@@ -1505,7 +1678,8 @@ pub mod tests {
                     unsafe extern "C"
                     fn ...(...) -> i32 {
                         unsafe {
-                            ::rust_out::transmute_slice(..., ..., ..., s.assume_init_read() )
+                            let s = s.assume_init_read();
+                            ::rust_out::transmute_slice(..., ..., ..., s)
                         }
                     }
                 }
@@ -1544,9 +1718,12 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C"
+                    unsafe extern "C"
                     fn ...(s: &mut ::core::mem::MaybeUninit<::rust_out::S>) -> i32 {
-                        ::rust_out::into_i32(unsafe { s.assume_init_read() })
+                        unsafe {
+                            let s = s.assume_init_read();
+                            ::rust_out::into_i32(s)
+                        }
                     }
                 }
             );
@@ -1578,9 +1755,10 @@ pub mod tests {
                     }
                     ...
                     inline ::rust_out::S create(std::int32_t i) {
-                        crubit::Slot<::rust_out::S> __ret_slot;
-                        __crubit_internal::...(i, __ret_slot.Get());
-                        return std::move(__ret_slot).AssumeInitAndTakeValue();
+                        crubit::Slot<::rust_out::S> __return_value_ret_val_holder;
+                        auto* __return_value_storage = __return_value_ret_val_holder.Get();
+                        __crubit_internal::...(i, __return_value_storage);
+                        return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
                     }
                 }
             );
@@ -1588,12 +1766,15 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C"
+                    unsafe extern "C"
                     fn ...(
                         i: i32,
-                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::S>
+                        __ret_ptr: *mut core::ffi::c_void
                     ) -> () {
-                        __ret_slot.write(::rust_out::create(i));
+                        unsafe {
+                            let __rs_return_value = ::rust_out::create(i);
+                            (__ret_ptr as *mut ::rust_out::S).write(__rs_return_value);
+                        }
                     }
                 }
             );
@@ -1648,9 +1829,9 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C"
+                    unsafe extern "C"
                     fn ...(x: f64, y: f64) -> f64 {
-                        ::rust_out::add(x, y)
+                        unsafe { ::rust_out::add(x, y) }
                     }
                 }
             );
@@ -1746,8 +1927,8 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
-                        ::rust_out::foo(__param_0, __param_1)
+                    unsafe extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
+                        unsafe { ::rust_out::foo(__param_0, __param_1) }
                     }
                 }
             );
@@ -1793,43 +1974,15 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...(
+                    unsafe extern "C" fn ...(
                         __param_0: &mut ::core::mem::MaybeUninit<::rust_out::S>
                     ) -> i32 {
-                        ::rust_out::func(unsafe {__param_0.assume_init_read() })
+                        unsafe {
+                            let __param_0 = __param_0.assume_init_read();
+                            ::rust_out::func(__param_0)
+                        }
                     }
                 }
-            );
-        });
-    }
-
-    #[test]
-    fn test_format_item_unsupported_fn_param_type() {
-        let test_src = r#"
-                pub fn foo(_param: (i32, i32)) {}
-            "#;
-        test_format_item(test_src, "foo", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "Error handling parameter #0: \
-                             Tuples are not supported yet: (i32, i32) (b/254099023)"
-            );
-        });
-    }
-
-    #[test]
-    fn test_format_item_unsupported_fn_param_type_unit() {
-        let test_src = r#"
-                #[unsafe(no_mangle)]
-                pub fn fn_with_params(_param: ()) {}
-            "#;
-        test_format_item(test_src, "fn_with_params", |result| {
-            let err = result.unwrap_err();
-            assert_eq!(
-                err,
-                "Error handling parameter #0: \
-                             `()` / `void` is only supported as a return type (b/254507801)"
             );
         });
     }

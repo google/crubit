@@ -495,12 +495,13 @@ inline void public_function() {
 // test_crate
 // Features: <none>
 
+#![allow(unused_unsafe)]
 #![allow(improper_ctypes_definitions)]
 
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
+unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
 -> () {
-    ::test_crate::public_module::public_function()
+    unsafe { ::test_crate::public_module::public_function() }
 }
 "#,
         );

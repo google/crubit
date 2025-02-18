@@ -6,9 +6,10 @@
 // type_aliases_rust_golden
 // Features: experimental, supported
 
+#![allow(unused_unsafe)]
 #![allow(improper_ctypes_definitions)]
 
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_func_uusing_ualias() -> i32 {
-    ::type_aliases_rust_golden::test_type_aliases::func_using_alias()
+unsafe extern "C" fn __crubit_thunk_func_uusing_ualias() -> i32 {
+    unsafe { ::type_aliases_rust_golden::test_type_aliases::func_using_alias() }
 }

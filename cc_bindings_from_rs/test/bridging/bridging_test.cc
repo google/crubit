@@ -32,5 +32,12 @@ TEST(TypeBridging, StructConversionTest) {
   EXPECT_EQ(rust_type::into_something_else(cpp_type).field, 1);
 }
 
+TEST(TypeBridging, NestedInTest) {
+  std::tuple<crubit::test::TheCppType> cpp_type =
+      rust_type::create_in_tuple(37);
+  EXPECT_EQ(rust_type::get_x(std::get<0>(cpp_type)), 37);
+  EXPECT_EQ(rust_type::get_x_from_tuple(cpp_type), 37);
+}
+
 }  // namespace
 }  // namespace crubit

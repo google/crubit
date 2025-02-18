@@ -107,6 +107,9 @@ class Slot {
   };
 };
 
+template <typename T>
+Slot(T) -> Slot<T>;
+
 }  // namespace crubit
 
 #endif  // CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_

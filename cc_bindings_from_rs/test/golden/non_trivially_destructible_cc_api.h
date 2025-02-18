@@ -130,10 +130,8 @@ extern "C" void __crubit_thunk_take_uby_uvalue(
 }
 inline void take_by_value(
     ::non_trivially_destructible_rust::NonTriviallyDestructable _x) {
-  return __crubit_internal::__crubit_thunk_take_uby_uvalue(
-      crubit::Slot<::non_trivially_destructible_rust::NonTriviallyDestructable>(
-          std::move(_x))
-          .Get());
+  crubit::Slot _x_slot((std::move(_x)));
+  return __crubit_internal::__crubit_thunk_take_uby_uvalue(_x_slot.Get());
 }
 
 namespace __crubit_internal {
@@ -143,9 +141,10 @@ extern "C" void __crubit_thunk_return_uby_uvalue(
 inline ::non_trivially_destructible_rust::NonTriviallyDestructable
 return_by_value() {
   crubit::Slot<::non_trivially_destructible_rust::NonTriviallyDestructable>
-      __ret_slot;
-  __crubit_internal::__crubit_thunk_return_uby_uvalue(__ret_slot.Get());
-  return std::move(__ret_slot).AssumeInitAndTakeValue();
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_return_uby_uvalue(__return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace non_trivially_destructible_rust

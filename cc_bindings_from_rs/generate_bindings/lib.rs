@@ -22,8 +22,8 @@ mod generate_struct_and_union;
 use crate::format_type::{
     create_canonical_name_from_foreign_path, ensure_ty_is_pointer_like, format_cc_ident,
     format_cc_ident_symbol, format_param_types_for_cc, format_region_as_cc_lifetime,
-    format_region_as_rs_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
-    format_ty_for_cc, format_ty_for_rs, is_bridged_type, BridgedType, BridgedTypeConversionInfo,
+    format_ret_ty_for_cc, format_top_level_ns_for_crate, format_ty_for_cc, format_ty_for_rs,
+    is_bridged_type, BridgedType, BridgedTypeConversionInfo,
 };
 use crate::generate_function::generate_function;
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
@@ -187,6 +187,8 @@ pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
 
     let cc_api_impl = quote! {
         #top_comment
+
+        #![allow(unused_unsafe)]
 
         // `rust_builtin_type_abi_assumptions.md` documents why the generated
         // bindings need to relax the `improper_ctypes_definitions` warning
@@ -1647,9 +1649,9 @@ pub mod tests {
                 bindings.cc_api_impl,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C"
+                    unsafe extern "C"
                     fn ...() -> () {
-                        ::rust_out::some_module::some_func()
+                        unsafe { ::rust_out::some_module::some_func() }
                     }
                 }
             );
@@ -2143,13 +2145,15 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn __crubit_thunk_foo(__param_0: *const core::ffi::c_void) -> () {
-                        let mut __crubit___param_0_uninit =
-                            ::core::mem::MaybeUninit::<::rust_out::RustTypeView>::uninit();
+                    unsafe extern "C" fn __crubit_thunk_foo(__param_0: *const core::ffi::c_void) -> () {
                         unsafe {
-                            __crubit___param_0_uninit.write(::core::mem::transmute(__param_0));
+                            let __param_0 = {
+                                let mut __crubit_temp = ::core::mem::MaybeUninit::<::rust_out::RustTypeView>::uninit();
+                                __crubit_temp.write(::core::mem::transmute(__param_0));
+                                __crubit_temp.assume_init()
+                            };
+                            ::rust_out::foo(__param_0)
                         }
-                        ::rust_out::foo(unsafe { __crubit___param_0_uninit.assume_init() })
                     }
                 }
             );
@@ -2224,16 +2228,18 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn __crubit_thunk_foo(__param_0: *const core::ffi::c_void) -> () {
-                        let mut __crubit___param_0_uninit =
-                            ::core::mem::MaybeUninit::<::rust_out::RustTypeView>::uninit();
+                    unsafe extern "C" fn __crubit_thunk_foo(__param_0: *const core::ffi::c_void) -> () {
                         unsafe {
-                            cpp_pointer_to_rust_struct(
-                                __param_0,
-                                __crubit___param_0_uninit.as_mut_ptr() as *mut core::ffi::c_void
-                            );
+                            let __param_0 = {
+                                let mut __crubit_temp = ::core::mem::MaybeUninit::<::rust_out::RustTypeView>::uninit();
+                                cpp_pointer_to_rust_struct(
+                                    __param_0,
+                                    __crubit_temp.as_mut_ptr() as *mut core::ffi::c_void
+                                );
+                                __crubit_temp.assume_init()
+                            };
+                            ::rust_out::foo(__param_0)
                         }
-                        ::rust_out::foo(unsafe { __crubit___param_0_uninit.assume_init() })
                     }
                 }
             );
@@ -2293,16 +2299,15 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn __crubit_thunk_foo(_a: *const core::ffi::c_void) -> () {
-                        let mut __crubit__a_uninit =
-                            ::core::mem::MaybeUninit::<::rust_out::RustType>::uninit();
+                    unsafe extern "C" fn __crubit_thunk_foo(_a: *const core::ffi::c_void) -> () {
                         unsafe {
-                            convert_cpp_to_rust_type(
-                                _a,
-                                __crubit__a_uninit.as_mut_ptr() as *mut core::ffi::c_void
-                            );
+                            let _a = {
+                                let mut __crubit_temp = ::core::mem::MaybeUninit::<::rust_out::RustType>::uninit();
+                                convert_cpp_to_rust_type(_a, __crubit_temp.as_mut_ptr() as *mut core::ffi::c_void);
+                                __crubit_temp.assume_init()
+                            };
+                            ::rust_out::foo(_a)
                         }
-                        ::rust_out::foo(unsafe { __crubit__a_uninit.assume_init() })
                     }
                 }
             );
@@ -2365,9 +2370,11 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn __crubit_thunk_foo(__ret_ptr: *mut *mut core::ffi::c_void) -> () {
-                        let rs_val = ::rust_out::foo();
-                        unsafe { __ret_ptr.write(::core::mem::transmute(rs_val)); }
+                    unsafe extern "C" fn __crubit_thunk_foo(__ret_ptr: *mut core::ffi::c_void) -> () {
+                        unsafe {
+                            let __rs_return_value = ::rust_out::foo();
+                            (__ret_ptr as *mut ::rust_out::RustTypeOwned).write(__rs_return_value);
+                        }
                     }
                 }
             );
@@ -2387,13 +2394,14 @@ pub mod tests {
                     }
 
                     inline CppType* foo() {
-                        union __crubit_return_union {
-                            constexpr __crubit_return_union() {}
-                            ~__crubit_return_union() { std::destroy_at(&this->val); }
-                            CppType* val;
-                        } __ret_val_holder;
-                        __crubit_internal::__crubit_thunk_foo(&__ret_val_holder.val);
-                        return std::move(__ret_val_holder.val);
+                      union __return_value_crubit_return_union {
+                        constexpr __return_value_crubit_return_union() {}
+                        ~__return_value_crubit_return_union() { std::destroy_at(&this->val); }
+                        CppType* val;
+                      } __return_value_ret_val_holder;
+                      auto* __return_value_storage = &__return_value_ret_val_holder.val;
+                      __crubit_internal::__crubit_thunk_foo(__return_value_storage);
+                      return std::move(__return_value_ret_val_holder.val);
                     }
                 }
             );
@@ -2438,7 +2446,7 @@ pub mod tests {
             assert_rs_matches!(
                 extern_c_decl.decl,
                 quote! {
-                    fn cpp_pointer_to_rust_struct(cpp_in: *mut core::ffi::c_void,
+                    fn cpp_pointer_to_rust_struct(cpp_in: *const core::ffi::c_void,
                         rs_out: *mut core::ffi::c_void);
                 }
             );
@@ -2485,7 +2493,7 @@ pub mod tests {
                 quote! {
                     fn rust_struct_to_cpp_pointer(
                         rs_in: *const core::ffi::c_void,
-                        cpp_out: *mut *mut core::ffi::c_void
+                        cpp_out: *mut core::ffi::c_void
                     );
                 }
             );
@@ -2494,11 +2502,11 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn __crubit_thunk_foo(__ret_ptr: *mut *mut core::ffi::c_void) -> () {
-                        let rs_val = ::rust_out::foo();
+                    unsafe extern "C" fn __crubit_thunk_foo(__ret_ptr: *mut core::ffi::c_void) -> () {
                         unsafe {
+                            let __rs_return_value = ::rust_out::foo();
                             rust_struct_to_cpp_pointer(
-                                std::ptr::from_ref(&rs_val) as *const core::ffi::c_void,
+                                std::ptr::from_ref(&__rs_return_value) as *const core::ffi::c_void,
                                 __ret_ptr
                             );
                         }
@@ -2521,13 +2529,14 @@ pub mod tests {
                     }
 
                     inline CppType* foo() {
-                        union __crubit_return_union {
-                            constexpr __crubit_return_union() {}
-                            ~__crubit_return_union() { std::destroy_at(&this->val); }
-                            CppType* val;
-                        } __ret_val_holder;
-                        __crubit_internal::__crubit_thunk_foo(&__ret_val_holder.val);
-                        return std::move(__ret_val_holder.val);
+                        union __return_value_crubit_return_union {
+                          constexpr __return_value_crubit_return_union() {}
+                          ~__return_value_crubit_return_union() { std::destroy_at(&this->val); }
+                          CppType* val;
+                        } __return_value_ret_val_holder;
+                        auto* __return_value_storage = &__return_value_ret_val_holder.val;
+                        __crubit_internal::__crubit_thunk_foo(__return_value_storage);
+                        return std::move(__return_value_ret_val_holder.val);
                     }
                 }
             );
@@ -2586,11 +2595,11 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn __crubit_thunk_foo(__ret_ptr: *mut core::ffi::c_void) -> () {
-                        let rs_val = ::rust_out::foo();
+                    unsafe extern "C" fn __crubit_thunk_foo(__ret_ptr: *mut core::ffi::c_void) -> () {
                         unsafe {
+                            let __rs_return_value = ::rust_out::foo();
                             rust_to_cpp_converter(
-                                std::ptr::from_ref(&rs_val) as *const core::ffi::c_void,
+                                std::ptr::from_ref(&__rs_return_value) as *const core::ffi::c_void,
                                 __ret_ptr
                             );
                         }
@@ -2613,13 +2622,14 @@ pub mod tests {
                     }
 
                     inline cpp_ns::CppType foo() {
-                        union __crubit_return_union {
-                            constexpr __crubit_return_union() {}
-                            ~__crubit_return_union() { std::destroy_at(&this->val); }
-                            cpp_ns::CppType val;
-                        } __ret_val_holder;
-                        __crubit_internal::__crubit_thunk_foo(&__ret_val_holder.val);
-                        return std::move(__ret_val_holder.val);
+                        union __return_value_crubit_return_union {
+                          constexpr __return_value_crubit_return_union() {}
+                          ~__return_value_crubit_return_union() { std::destroy_at(&this->val); }
+                          cpp_ns::CppType val;
+                        } __return_value_ret_val_holder;
+                        auto* __return_value_storage = &__return_value_ret_val_holder.val;
+                        __crubit_internal::__crubit_thunk_foo(__return_value_storage);
+                        return std::move(__return_value_ret_val_holder.val);
                     }
                 }
             );
@@ -2773,8 +2783,8 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...(x: f32, y: f32) -> f32 {
-                        ::rust_out::Math::add_i32(x, y)
+                    unsafe extern "C" fn ...(x: f32, y: f32) -> f32 {
+                        unsafe { ::rust_out::Math::add_i32(x, y) }
                     }
                 }
             );
@@ -2868,8 +2878,8 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...<'a>(x: &'a i32) -> i32 {
-                        ::rust_out::SomeStruct::fn_taking_reference(x)
+                    unsafe extern "C" fn ...<'a>(x: &'a i32) -> i32 {
+                        unsafe { ::rust_out::SomeStruct::fn_taking_reference(x) }
                     }
                 },
             );
@@ -2939,7 +2949,8 @@ pub mod tests {
                     extern "C" float ...(::rust_out::SomeStruct*);
                     }
                     inline float SomeStruct::into_f32() && {
-                      return __crubit_internal::...(this);
+                      auto&& self = *this;
+                      return __crubit_internal::...(&self);
                     }
                 },
             );
@@ -2948,8 +2959,11 @@ pub mod tests {
                 quote! {
                     ...
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...(__self: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>) -> f32 {
-                        ::rust_out::SomeStruct::into_f32(unsafe { __self.assume_init_read() })
+                    unsafe extern "C" fn ...(__self: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>) -> f32 {
+                        unsafe {
+                            let __self = __self.assume_init_read();
+                            ::rust_out::SomeStruct::into_f32(__self)
+                        }
                     }
                     ...
                 },
@@ -3015,7 +3029,8 @@ pub mod tests {
                     }
                     inline float SomeStruct::get_f32()
                         const [[clang::annotate_type("lifetime", "__anon1")]] {
-                      return __crubit_internal::...(*this);
+                      auto&& self = *this;
+                      return __crubit_internal::...(self);
                     }
                 },
             );
@@ -3023,8 +3038,8 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...<'__anon1>(__self: &'__anon1 ::rust_out::SomeStruct) -> f32 {
-                        ::rust_out::SomeStruct::get_f32(__self)
+                    unsafe extern "C" fn ...<'__anon1>(__self: &'__anon1 ::rust_out::SomeStruct) -> f32 {
+                        unsafe { ::rust_out::SomeStruct::get_f32(__self) }
                     }
                     ...
                 },
@@ -3087,7 +3102,8 @@ pub mod tests {
                     }
                     inline void SomeStruct::set_f32(float new_value)
                             [[clang::annotate_type("lifetime", "__anon1")]] {
-                      return __crubit_internal::...(*this, new_value);
+                      auto&& self = *this;
+                      return __crubit_internal::...(self, new_value);
                     }
                 },
             );
@@ -3095,11 +3111,11 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...<'__anon1>(
+                    unsafe extern "C" fn ...<'__anon1>(
                         __self: &'__anon1 mut ::rust_out::SomeStruct,
                         new_value: f32
                     ) -> () {
-                        ::rust_out::SomeStruct::set_f32(__self, new_value)
+                        unsafe { ::rust_out::SomeStruct::set_f32(__self, new_value) }
                     }
                     ...
                 },
@@ -3247,12 +3263,16 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details.tokens,
                 quote! {
-                   #[unsafe(no_mangle)]
-                   extern "C" fn ...(
-                       __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::Point>
-                   ) -> () {
-                       __ret_slot.write(<::rust_out::Point as ::core::default::Default>::default());
-                   }
+                    #[unsafe(no_mangle)]
+                    unsafe extern "C" fn ...(
+                        __ret_ptr: *mut core::ffi::c_void
+                    ) -> () {
+                        unsafe {
+                            let __rs_return_value =
+                                <::rust_out::Point as ::core::default::Default>::default();
+                            (__ret_ptr as *mut ::rust_out::Point).write(__rs_return_value);
+                        }
+                    }
                 }
             );
         });
@@ -3375,20 +3395,22 @@ pub mod tests {
                 result.rs_details.tokens,
                 quote! {
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...<'__anon1>(
+                    unsafe extern "C" fn ...<'__anon1>(
                         __self: &'__anon1 ::rust_out::Point,
-                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::Point>
+                        __ret_ptr: *mut core::ffi::c_void
                     ) -> () {
-                        __ret_slot.write(
-                            <::rust_out::Point as ::core::clone::Clone>::clone(__self)
-                        );
+                        unsafe {
+                            let __rs_return_value =
+                                <::rust_out::Point as ::core::clone::Clone>::clone(__self);
+                            (__ret_ptr as *mut ::rust_out::Point).write(__rs_return_value);
+                        }
                     }
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...<'__anon1, '__anon2>(
+                    unsafe extern "C" fn ...<'__anon1, '__anon2>(
                         __self: &'__anon1 mut ::rust_out::Point,
                         source: &'__anon2 ::rust_out::Point
                     ) -> () {
-                        <::rust_out::Point as ::core::clone::Clone>::clone_from(__self, source)
+                        unsafe { <::rust_out::Point as ::core::clone::Clone>::clone_from(__self, source) }
                     }
                 }
             );
@@ -3560,9 +3582,10 @@ pub mod tests {
                     extern "C" void ...(::rust_out::TypeUnderTest* __ret_ptr);
                     }
                     inline ::rust_out::TypeUnderTest TypeUnderTest::pass_by_value() {
-                      crubit::Slot<::rust_out::TypeUnderTest> __ret_slot;
-                      __crubit_internal::...(__ret_slot.Get());
-                      return std::move(__ret_slot).AssumeInitAndTakeValue();
+                      crubit::Slot<::rust_out::TypeUnderTest> __return_value_ret_val_holder;
+                      auto* __return_value_storage = __return_value_ret_val_holder.Get();
+                      __crubit_internal::...(__return_value_storage);
+                      return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
                     }
                 }
             );
@@ -3571,16 +3594,19 @@ pub mod tests {
                 quote! {
                     ...
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...(
+                    unsafe extern "C" fn ...(
                         __self: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                     ) {
                         unsafe { __self.assume_init_drop() };
                     }
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...(
-                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
+                    unsafe extern "C" fn ...(
+                        __ret_ptr: *mut core::ffi::c_void
                     ) -> () {
-                        __ret_slot.write(::rust_out::TypeUnderTest::pass_by_value());
+                        unsafe {
+                            let __rs_return_value = ::rust_out::TypeUnderTest::pass_by_value();
+                            (__ret_ptr as *mut ::rust_out::TypeUnderTest).write(__rs_return_value);
+                        }
                     }
                     ...
                 }
@@ -3680,9 +3706,10 @@ pub mod tests {
                     extern "C" void ...(::rust_out::TypeUnderTest* __ret_ptr);
                     }
                     inline ::rust_out::TypeUnderTest TypeUnderTest::pass_by_value() {
-                      crubit::Slot<::rust_out::TypeUnderTest> __ret_slot;
-                      __crubit_internal::...(__ret_slot.Get());
-                      return std::move(__ret_slot).AssumeInitAndTakeValue();
+                        crubit::Slot<::rust_out::TypeUnderTest> __return_value_ret_val_holder;
+                        auto* __return_value_storage = __return_value_ret_val_holder.Get();
+                        __crubit_internal::__crubit_thunk_pass_uby_uvalue(__return_value_storage);
+                        return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
                     }
                     ...
                 }
@@ -3697,11 +3724,13 @@ pub mod tests {
                     ) {
                         unsafe { __self.assume_init_drop() };
                     }
+                    ...
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...(
-                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
-                    ) -> () {
-                        __ret_slot.write(::rust_out::TypeUnderTest::pass_by_value());
+                    unsafe extern "C" fn ...(__ret_ptr: *mut core::ffi::c_void) -> () {
+                        unsafe {
+                            let __rs_return_value = ::rust_out::TypeUnderTest::pass_by_value();
+                            (__ret_ptr as *mut ::rust_out::TypeUnderTest).write(__rs_return_value);
+                        }
                     }
                     ...
                 }
@@ -3835,12 +3864,13 @@ pub mod tests {
                 quote! {
                     ...
                     #[unsafe(no_mangle)]
-                    extern "C" fn ...(
-                        __ret_slot: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>
+                    unsafe extern "C" fn ...(
+                        __ret_ptr: *mut core::ffi::c_void
                     ) -> () {
-                        __ret_slot.write(
-                           <::rust_out::SomeStruct as ::core::default::Default>::default()
-                        );
+                        unsafe {
+                            let __rs_return_value = <::rust_out::SomeStruct as ::core::default::Default>::default();
+                            (__ret_ptr as *mut ::rust_out::SomeStruct).write(__rs_return_value);
+                        }
                     }
                     #[unsafe(no_mangle)]
                     extern "C" fn ...(
@@ -4292,11 +4322,23 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs_details.tokens,
                 quote! {
-                    ...
-                    extern "C" fn ... (...) -> () {...(<::rust_out::SomeUnion as ::core::clone::Clone>::clone(__self...))...}
-                    ...
-                    extern "C" fn ... (...) -> () {...<::rust_out::SomeUnion as ::core::clone::Clone>::clone_from(__self, source)...}
-                    ...
+                    #[unsafe(no_mangle)]
+                    unsafe extern "C" fn ...<'__anon1>(
+                        __self: &'__anon1 ::rust_out::SomeUnion,
+                        __ret_ptr: *mut core::ffi::c_void
+                    ) -> () {
+                        unsafe {
+                            let __rs_return_value = <::rust_out::SomeUnion as ::core::clone::Clone>::clone(__self);
+                            (__ret_ptr as *mut ::rust_out::SomeUnion).write(__rs_return_value);
+                        }
+                    }
+                    #[unsafe(no_mangle)]
+                    unsafe extern "C" fn ...<'__anon1, '__anon2>(
+                        __self: &'__anon1 mut ::rust_out::SomeUnion,
+                        source: &'__anon2 ::rust_out::SomeUnion
+                    ) -> () {
+                        unsafe { <::rust_out::SomeUnion as ::core::clone::Clone>::clone_from(__self, source) }
+                    }
                 }
             );
         })

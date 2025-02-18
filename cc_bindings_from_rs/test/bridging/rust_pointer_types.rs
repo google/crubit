@@ -45,7 +45,6 @@ pub fn get_x_from_view(view: RustView) -> i32 {
 mod type_converters {
     use super::*;
     use std::ffi::{c_int, c_void};
-    use std::marker::PhantomData;
 
     #[no_mangle]
     pub unsafe extern "C" fn crubit_test_rust_owned_struct_to_cpp_owned_pointer(
