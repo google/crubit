@@ -356,8 +356,7 @@ fn reexported_symbol_canonical_name_mapping(
         name_map.insert(def_id, fully_qualified_name);
     }
     let aliases =
-        tcx.hir()
-            .items()
+        tcx.hir_free_items()
             .filter_map(|item_id| {
                 let local_def_id: LocalDefId = item_id.owner_id.def_id;
                 if let Item { ident, kind: ItemKind::Use(use_path, use_kind), .. } =
@@ -1208,8 +1207,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     let mut extern_c_decls = BTreeSet::new();
     let mut main_apis = HashMap::<LocalDefId, CcSnippet>::new();
     let formatted_items = tcx
-        .hir()
-        .items()
+        .hir_free_items()
         .filter_map(|item_id| {
             let def_id: LocalDefId = item_id.owner_id.def_id;
             db.generate_item(def_id)

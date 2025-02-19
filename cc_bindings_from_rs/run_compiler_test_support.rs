@@ -199,7 +199,7 @@ fn tcx_ensure_ok_analysis(tcx: &TyCtxt) {
 /// Finds the definition id of a Rust item with the specified `name`.
 /// Panics if no such item is found, or if there is more than one match.
 pub fn find_def_id_by_name(tcx: TyCtxt, name: &str) -> LocalDefId {
-    let hir_items = || tcx.hir().items().map(|item_id| tcx.hir().item(item_id));
+    let hir_items = || tcx.hir_free_items().map(|item_id| tcx.hir_item(item_id));
     let items_with_matching_name =
         hir_items().filter(|item| item.ident.name.as_str() == name).collect_vec();
     match *items_with_matching_name.as_slice() {
