@@ -24,8 +24,8 @@ namespace non_trivially_destructible_rust {
 // cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=6
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: non_trivially_destructible_rust_golden :: "
-    "NonTriviallyDestructable") alignas(4)
-    [[clang::trivial_abi]] NonTriviallyDestructable final {
+    "NonTriviallyDestructable") alignas(4) [[clang::trivial_abi]]
+NonTriviallyDestructable final {
  public:
   // Default::default
   NonTriviallyDestructable();

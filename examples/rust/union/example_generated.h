@@ -20,8 +20,8 @@ namespace example_crate {
 
 // Generated from: examples/rust/union/example.rs;l=6
 union CRUBIT_INTERNAL_RUST_TYPE(
-    ":: example_crate_golden :: ReprCUnion") alignas(8)
-    [[clang::trivial_abi]] ReprCUnion final {
+    ":: example_crate_golden :: ReprCUnion") alignas(8) [[clang::trivial_abi]]
+ReprCUnion final {
  public:
   // Default::default
   ReprCUnion();
