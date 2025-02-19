@@ -92,7 +92,7 @@ impl std::error::Error for FormattedError {}
 macro_rules! anyhow {
     ($fmt:literal $(,)?) => {
         $crate::FormattedError::new_static(
-            $fmt,
+            #[allow(clippy::literal_string_with_formatting_args)] $fmt,
             $crate::macro_internal::format_args!($fmt),
         )
     };
@@ -101,7 +101,7 @@ macro_rules! anyhow {
     };
     ($fmt:expr, $($arg:tt)*) => {
         $crate::FormattedError::new_static(
-            $fmt,
+            #[allow(clippy::literal_string_with_formatting_args)] $fmt,
             $crate::macro_internal::format_args!($fmt, $($arg)*),
         )
     };
